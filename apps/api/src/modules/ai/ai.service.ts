@@ -11,12 +11,19 @@ import { SummaryGenerator } from './summary-generator';
 import { ServiceService } from '../service/service.service';
 import { AvailabilityService } from '../availability/availability.service';
 import { BookingService } from '../booking/booking.service';
+import { MessageService } from '../message/message.service';
+import { MessagingService } from '../messaging/messaging.service';
 
 interface AiSettings {
   enabled: boolean;
   autoReplySuggestions: boolean;
   bookingAssistant: boolean;
   personality: string;
+  autoReply: {
+    enabled: boolean;
+    mode: 'all' | 'selected';
+    selectedIntents: string[];
+  };
 }
 
 const DEFAULT_AI_SETTINGS: AiSettings = {
@@ -24,6 +31,11 @@ const DEFAULT_AI_SETTINGS: AiSettings = {
   autoReplySuggestions: true,
   bookingAssistant: true,
   personality: 'friendly and professional',
+  autoReply: {
+    enabled: false,
+    mode: 'all',
+    selectedIntents: ['GENERAL', 'BOOK_APPOINTMENT', 'CANCEL', 'RESCHEDULE', 'INQUIRY'],
+  },
 };
 
 const MAX_AI_CALLS_PER_DAY = 500;
@@ -46,11 +58,24 @@ export class AiService {
     private serviceService: ServiceService,
     private availabilityService: AvailabilityService,
     private bookingService: BookingService,
+    private messageService: MessageService,
+    private messagingService: MessagingService,
   ) {}
 
   private getAiSettings(business: any): AiSettings {
     const raw = business.aiSettings || {};
-    return { ...DEFAULT_AI_SETTINGS, ...(typeof raw === 'object' ? raw : {}) };
+    const merged = { ...DEFAULT_AI_SETTINGS, ...(typeof raw === 'object' ? raw : {}) };
+    // Deep merge autoReply
+    if (typeof raw === 'object' && raw.autoReply) {
+      merged.autoReply = { ...DEFAULT_AI_SETTINGS.autoReply, ...raw.autoReply };
+    }
+    return merged;
+  }
+
+  private shouldAutoReplyForIntent(settings: AiSettings, intent: string): boolean {
+    if (!settings.autoReply?.enabled) return false;
+    if (settings.autoReply.mode === 'all') return true;
+    return settings.autoReply.selectedIntents?.includes(intent) || false;
   }
 
   private checkRateLimit(businessId: string): boolean {
@@ -123,6 +148,26 @@ export class AiService {
         .map((m) => `${m.direction === 'INBOUND' ? 'Customer' : 'Staff'}: ${m.content}`)
         .join('\n');
 
+      // Load customer data for context
+      const conversation = await this.prisma.conversation.findUnique({
+        where: { id: conversationId },
+      });
+      const customerData = conversation?.customerId
+        ? await this.prisma.customer.findUnique({ where: { id: conversation.customerId } })
+        : null;
+      const upcomingBookings = customerData
+        ? await this.getCustomerUpcomingBookings(customerData.id, businessId)
+        : [];
+      const customerContext = customerData
+        ? {
+            name: customerData.name,
+            phone: customerData.phone,
+            email: (customerData as any).email || undefined,
+            tags: (customerData as any).tags || [],
+            upcomingBookings,
+          }
+        : undefined;
+
       // 1. Detect intent
       const intentResult = await this.intentDetector.detect(messageContent, recentContext || undefined);
 
@@ -141,9 +186,6 @@ export class AiService {
       });
 
       // Load conversation metadata for active flow detection
-      const conversation = await this.prisma.conversation.findUnique({
-        where: { id: conversationId },
-      });
       const metadata = (conversation?.metadata as any) || {};
 
       // Flow priority: active state in metadata takes precedence over detected intent
@@ -160,33 +202,39 @@ export class AiService {
         // Determine which flow to run based on active state or new intent
         if (hasActiveBooking) {
           bookingState = await this.runBookingAssistant(
-            businessId, conversationId, messageContent, intentResult, business.name, settings.personality,
+            businessId, conversationId, messageContent, intentResult, business.name, settings.personality, customerContext,
           );
         } else if (hasActiveCancel) {
           cancelState = await this.runCancelAssistant(
-            businessId, conversationId, messageContent, business.name, settings.personality,
+            businessId, conversationId, messageContent, business.name, settings.personality, customerContext,
           );
         } else if (hasActiveReschedule) {
           rescheduleState = await this.runRescheduleAssistant(
-            businessId, conversationId, messageContent, business.name, settings.personality,
+            businessId, conversationId, messageContent, business.name, settings.personality, customerContext,
           );
         } else if (intentResult.intent === 'BOOK_APPOINTMENT') {
           bookingState = await this.runBookingAssistant(
-            businessId, conversationId, messageContent, intentResult, business.name, settings.personality,
+            businessId, conversationId, messageContent, intentResult, business.name, settings.personality, customerContext,
           );
         } else if (intentResult.intent === 'CANCEL') {
           // Clear any other flow states before starting cancel
           await this.clearAllFlowStates(conversationId);
           cancelState = await this.runCancelAssistant(
-            businessId, conversationId, messageContent, business.name, settings.personality,
+            businessId, conversationId, messageContent, business.name, settings.personality, customerContext,
           );
         } else if (intentResult.intent === 'RESCHEDULE') {
           // Clear any other flow states before starting reschedule
           await this.clearAllFlowStates(conversationId);
           rescheduleState = await this.runRescheduleAssistant(
-            businessId, conversationId, messageContent, business.name, settings.personality,
+            businessId, conversationId, messageContent, business.name, settings.personality, customerContext,
           );
         }
+      }
+
+      // Handle transfer to human
+      if (intentResult.intent === 'TRANSFER_TO_HUMAN' && !metadata.transferredToHuman) {
+        await this.handleTransferToHuman(businessId, conversationId, metadata);
+        return;
       }
 
       // Use assistant's suggestedResponse as draft if available; otherwise generate a draft
@@ -209,6 +257,7 @@ export class AiService {
           settings.personality,
           recentContext || undefined,
           activeServiceNames,
+          customerContext,
         );
         draftText = draft.draftText;
       }
@@ -236,17 +285,45 @@ export class AiService {
         await this.generateAndStoreSummary(conversationId);
       }
 
-      // Broadcast AI results via WebSocket
-      this.inboxGateway.emitToBusinessRoom(businessId, 'ai:suggestions', {
-        conversationId,
-        messageId,
-        intent: intentResult.intent,
-        confidence: intentResult.confidence,
-        draftText,
-        bookingState,
-        cancelState,
-        rescheduleState,
-      });
+      // Auto-reply logic
+      const isTransferred = !!metadata.transferredToHuman;
+      const shouldAutoReply = draftText
+        && settings.autoReply?.enabled
+        && !isTransferred
+        && this.shouldAutoReplyForIntent(settings, intentResult.intent);
+
+      if (shouldAutoReply) {
+        try {
+          // Find default staff (owner) for sending
+          const defaultStaff = await this.prisma.staff.findFirst({
+            where: { businessId, role: 'OWNER' },
+          });
+          if (defaultStaff) {
+            const provider = this.messagingService.getProvider();
+            await this.messageService.sendMessage(businessId, conversationId, defaultStaff.id, draftText, provider);
+            this.inboxGateway.emitToBusinessRoom(businessId, 'ai:auto-replied', {
+              conversationId,
+              messageId,
+              intent: intentResult.intent,
+              draftText,
+            });
+          }
+        } catch (err: any) {
+          this.logger.error(`Auto-reply failed: ${err.message}`);
+        }
+      } else {
+        // Broadcast AI results via WebSocket (draft mode)
+        this.inboxGateway.emitToBusinessRoom(businessId, 'ai:suggestions', {
+          conversationId,
+          messageId,
+          intent: intentResult.intent,
+          confidence: intentResult.confidence,
+          draftText,
+          bookingState,
+          cancelState,
+          rescheduleState,
+        });
+      }
     } catch (error: any) {
       this.logger.error(`AI processing failed for message ${messageId}: ${error.message}`);
     }
@@ -259,6 +336,7 @@ export class AiService {
     intentResult: IntentResult,
     businessName: string,
     personality: string,
+    customerContext?: any,
   ): Promise<BookingStateData | null> {
     try {
       const conversation = await this.prisma.conversation.findUnique({
@@ -293,6 +371,7 @@ export class AiService {
         messageContent, currentState, {
           businessName, personality, services: activeServices,
           availableSlots, extractedEntities: intentResult.extractedEntities,
+          customerContext,
         },
       );
 
@@ -314,6 +393,7 @@ export class AiService {
     messageContent: string,
     businessName: string,
     personality: string,
+    customerContext?: any,
   ): Promise<CancelStateData | null> {
     try {
       const conversation = await this.prisma.conversation.findUnique({
@@ -328,6 +408,7 @@ export class AiService {
       const newState = await this.cancelAssistant.process(
         messageContent, currentState, {
           businessName, personality, upcomingBookings,
+          customerContext,
         },
       );
 
@@ -349,6 +430,7 @@ export class AiService {
     messageContent: string,
     businessName: string,
     personality: string,
+    customerContext?: any,
   ): Promise<RescheduleStateData | null> {
     try {
       const conversation = await this.prisma.conversation.findUnique({
@@ -375,6 +457,7 @@ export class AiService {
       const newState = await this.rescheduleAssistant.process(
         messageContent, currentState, {
           businessName, personality, upcomingBookings, availableSlots,
+          customerContext,
         },
       );
 
@@ -388,6 +471,60 @@ export class AiService {
       this.logger.error(`Reschedule assistant failed: ${error.message}`);
       return null;
     }
+  }
+
+  private async handleTransferToHuman(
+    businessId: string,
+    conversationId: string,
+    metadata: any,
+  ): Promise<void> {
+    try {
+      // Find default staff (owner)
+      const defaultStaff = await this.prisma.staff.findFirst({
+        where: { businessId, role: 'OWNER' },
+      });
+      if (!defaultStaff) {
+        this.logger.warn('No owner staff found for transfer');
+        return;
+      }
+
+      // Assign conversation to staff and mark as transferred
+      await this.prisma.conversation.update({
+        where: { id: conversationId },
+        data: {
+          assignedToId: defaultStaff.id,
+          metadata: { ...metadata, transferredToHuman: true },
+        },
+      });
+
+      // Auto-send handoff message
+      const handoffMessage = "I'm connecting you with a team member who can help you further.";
+      const provider = this.messagingService.getProvider();
+      await this.messageService.sendMessage(businessId, conversationId, defaultStaff.id, handoffMessage, provider);
+
+      // Broadcast transfer event
+      this.inboxGateway.emitToBusinessRoom(businessId, 'ai:transferred', {
+        conversationId,
+        assignedTo: { id: defaultStaff.id, name: defaultStaff.name },
+      });
+    } catch (error: any) {
+      this.logger.error(`Transfer to human failed: ${error.message}`);
+    }
+  }
+
+  async resumeAutoReply(businessId: string, conversationId: string): Promise<void> {
+    const conversation = await this.prisma.conversation.findFirst({
+      where: { id: conversationId, businessId },
+    });
+    if (!conversation) return;
+
+    const metadata = (conversation.metadata as any) || {};
+    await this.prisma.conversation.update({
+      where: { id: conversationId },
+      data: {
+        metadata: { ...metadata, transferredToHuman: false },
+      },
+    });
   }
 
   private async clearAllFlowStates(conversationId: string): Promise<void> {

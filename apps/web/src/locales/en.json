@@ -339,7 +339,9 @@
     "translations": "Translations",
     "translations_desc": "Manage translations and customize text for your preferred language",
     "ai_settings": "AI Settings",
-    "ai_settings_desc": "Configure AI-powered reply suggestions, intent detection, and booking assistant"
+    "ai_settings_desc": "Configure AI-powered reply suggestions, intent detection, and booking assistant",
+    "account_import": "Account & Import",
+    "account_import_desc": "Manage customer data, import contacts, and export records"
   },
 
   "translations": {
@@ -438,8 +440,14 @@
       "services": "Define Services",
       "hours": "Working Hours",
       "templates": "Templates",
+      "customers": "Import Customers",
       "finish": "Test & Finish"
-    }
+    },
+    "customers_title": "Import Customers",
+    "customers_subtitle": "Import your existing customer contacts to get started quickly.",
+    "add_manually": "Add Manually",
+    "add_manually_desc": "Go to the customers page to add customers one by one.",
+    "go_to_customers": "Go to Customers"
   },
 
   "ai": {
@@ -499,7 +507,43 @@
     "booking_assistant_toggle": "Booking Assistant",
     "booking_assistant_toggle_desc": "Automatically start the booking flow when a customer wants to book",
     "personality_label": "AI Personality",
-    "personality_desc": "Describe the tone and style for AI-generated replies"
+    "personality_desc": "Describe the tone and style for AI-generated replies",
+    "auto_reply_toggle": "Enable Auto-Reply",
+    "auto_reply_toggle_desc": "AI will automatically send responses instead of drafting them for review",
+    "auto_reply_mode_all": "All message types",
+    "auto_reply_mode_selected": "Selected message types only",
+    "auto_replied_notification": "AI auto-replied to a message",
+    "transferred_notification": "Conversation transferred to {{name}}",
+    "resume_auto_reply": "Resume Auto-Reply",
+    "auto_reply_resumed": "Auto-reply resumed for this conversation",
+    "auto_reply_resume_failed": "Failed to resume auto-reply",
+    "intent_transfer_to_human": "Transfer to Human"
+  },
+
+  "import": {
+    "page_title": "Account & Import",
+    "modal_title": "Import Customers",
+    "csv_title": "Import from CSV",
+    "csv_desc": "Upload a CSV file with customer data. Required column: phone. Optional: name, email, tags.",
+    "csv_drop_zone": "Click to select a CSV file",
+    "csv_format_hint": "CSV format: name, phone, email, tags (semicolon-separated)",
+    "csv_success": "Import complete: {{created}} created, {{skipped}} skipped",
+    "csv_failed": "CSV import failed",
+    "csv_result": "Created: {{created}}, Skipped: {{skipped}} duplicates, Errors: {{errors}}",
+    "conversations_title": "Create Profiles from Conversations",
+    "conversations_desc": "Use AI to extract customer profile data from existing conversation history.",
+    "conversations_success": "Profile generation complete: {{updated}} profiles updated",
+    "conversations_failed": "Conversation import failed",
+    "conversations_result": "Created: {{created}}, Updated: {{updated}} profiles",
+    "include_messages": "Include past messages for AI profile creation",
+    "include_messages_hint": "AI will analyze message content to extract names, emails, and tags",
+    "generate_profiles": "Generate Profiles",
+    "import_button": "Import",
+    "export_title": "Export Customers",
+    "export_desc": "Download all customer data as a CSV file.",
+    "export_button": "Download CSV",
+    "export_success": "Customers exported successfully",
+    "export_failed": "Export failed"
   },
 
   "status": {

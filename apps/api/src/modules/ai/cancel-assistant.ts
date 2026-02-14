@@ -32,6 +32,7 @@ export class CancelAssistant {
         time: string;
         staffName?: string;
       }>;
+      customerContext?: { name: string; phone: string; email?: string; tags: string[] };
     },
   ): Promise<CancelStateData> {
     const state = currentState?.state || 'IDENTIFY_BOOKING';
@@ -58,8 +59,14 @@ export class CancelAssistant {
       };
     }
 
+    let customerInfo = '';
+    if (context.customerContext) {
+      customerInfo = `\nCustomer: ${context.customerContext.name} (${context.customerContext.phone})`;
+    }
+
     const systemPrompt = `You are a cancellation assistant for "${context.businessName}".
-Personality: ${context.personality || 'friendly and professional'}
+Personality: ${context.personality || 'friendly and professional'}${customerInfo}
+Use the customer's name naturally in your responses.
 You help customers cancel their appointments through a conversational flow.
 
 Current cancellation state: ${state}

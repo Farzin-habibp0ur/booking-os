@@ -7,7 +7,8 @@ export type IntentCategory =
   | 'RESCHEDULE'
   | 'INQUIRY'
   | 'CONFIRMATION'
-  | 'GENERAL';
+  | 'GENERAL'
+  | 'TRANSFER_TO_HUMAN';
 
 export interface IntentResult {
   intent: IntentCategory;
@@ -21,7 +22,7 @@ export interface IntentResult {
 }
 
 const SYSTEM_PROMPT = `You are an intent classifier for a booking/appointment business. Analyze the customer's message and return a JSON object with:
-- intent: one of BOOK_APPOINTMENT, CANCEL, RESCHEDULE, INQUIRY, CONFIRMATION, GENERAL
+- intent: one of BOOK_APPOINTMENT, CANCEL, RESCHEDULE, INQUIRY, CONFIRMATION, TRANSFER_TO_HUMAN, GENERAL
 - confidence: 0.0 to 1.0
 - extractedEntities: optional object with service, date, time, staffName if mentioned
 
@@ -31,6 +32,7 @@ Rules:
 - RESCHEDULE: customer wants to change the time of an existing appointment
 - INQUIRY: customer is asking about services, pricing, availability, or hours
 - CONFIRMATION: customer is confirming or acknowledging something (yes, ok, sure, sounds good)
+- TRANSFER_TO_HUMAN: customer wants to talk to a real person, human agent, staff member, or manager (e.g. "talk to a human", "speak to someone", "real person", "transfer me", "I want to speak with a person")
 - GENERAL: greetings, thanks, or anything that doesn't fit above
 
 Return ONLY valid JSON, no markdown or explanation.`;

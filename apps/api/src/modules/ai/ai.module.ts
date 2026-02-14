@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { AiController } from './ai.controller';
 import { AiService } from './ai.service';
 import { ClaudeClient } from './claude.client';
@@ -8,13 +8,17 @@ import { BookingAssistant } from './booking-assistant';
 import { CancelAssistant } from './cancel-assistant';
 import { RescheduleAssistant } from './reschedule-assistant';
 import { SummaryGenerator } from './summary-generator';
+import { ProfileExtractor } from './profile-extractor';
 import { BusinessModule } from '../business/business.module';
 import { ServiceModule } from '../service/service.module';
 import { AvailabilityModule } from '../availability/availability.module';
 import { BookingModule } from '../booking/booking.module';
+import { MessageModule } from '../message/message.module';
 
 @Module({
-  imports: [BusinessModule, ServiceModule, AvailabilityModule, BookingModule],
+  // MessagingModule is @Global() so no need to import it here
+  // MessageModule uses forwardRef to break circular: AiModule -> MessageModule -> MessagingModule -> AiModule
+  imports: [BusinessModule, ServiceModule, AvailabilityModule, BookingModule, forwardRef(() => MessageModule)],
   controllers: [AiController],
   providers: [
     AiService,
@@ -25,7 +29,8 @@ import { BookingModule } from '../booking/booking.module';
     CancelAssistant,
     RescheduleAssistant,
     SummaryGenerator,
+    ProfileExtractor,
   ],
-  exports: [AiService],
+  exports: [AiService, ProfileExtractor],
 })
 export class AiModule {}

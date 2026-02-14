@@ -67,6 +67,7 @@ export default function InboxPage() {
   const [aiCancelState, setAiCancelState] = useState<any>(null);
   const [aiRescheduleState, setAiRescheduleState] = useState<any>(null);
   const [aiSummary, setAiSummary] = useState<string>('');
+  const [transferredToHuman, setTransferredToHuman] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const pollRef = useRef<ReturnType<typeof setInterval>>(undefined);
   const msgPollRef = useRef<ReturnType<typeof setInterval>>(undefined);
@@ -130,6 +131,22 @@ export default function InboxPage() {
         if (data.rescheduleState) setAiRescheduleState(data.rescheduleState);
       }
     }, []),
+    'ai:auto-replied': useCallback((data: any) => {
+      if (selectedRef.current && data.conversationId === selectedRef.current.id) {
+        loadMessages(selectedRef.current.id);
+      }
+      toast(t('ai.auto_replied_notification'), 'info');
+      loadConversations();
+    }, []),
+    'ai:transferred': useCallback((data: any) => {
+      if (selectedRef.current && data.conversationId === selectedRef.current.id) {
+        setTransferredToHuman(true);
+        loadMessages(selectedRef.current.id);
+      }
+      toast(t('ai.transferred_notification', { name: data.assignedTo?.name || '' }), 'info');
+      loadConversations();
+      loadFilterCounts();
+    }, []),
   });
 
   useEffect(() => {
@@ -161,6 +178,7 @@ export default function InboxPage() {
       setAiBookingState(meta.aiBookingState || null);
       setAiCancelState(meta.aiCancelState || null);
       setAiRescheduleState(meta.aiRescheduleState || null);
+      setTransferredToHuman(!!meta.transferredToHuman);
       // Clear per-message AI state
       setAiDraftText('');
       setAiIntent(undefined);
@@ -324,6 +342,18 @@ export default function InboxPage() {
     } catch (e) { console.error(e); }
   };
 
+  const resumeAutoReply = async () => {
+    if (!selected) return;
+    try {
+      await api.post(`/ai/conversations/${selected.id}/resume-auto-reply`);
+      setTransferredToHuman(false);
+      toast(t('ai.auto_reply_resumed'));
+    } catch (e) {
+      toast(t('ai.auto_reply_resume_failed'), 'error');
+      console.error(e);
+    }
+  };
+
   const insertTemplate = (template: any) => {
     let text = template.body;
     if (customer) text = text.replace(/\{\{customerName\}\}/g, customer.name || '');
@@ -451,6 +481,11 @@ export default function InboxPage() {
                     </div>
                   )}
                 </div>
+                {transferredToHuman && (
+                  <button onClick={resumeAutoReply} className="text-xs text-purple-600 hover:text-purple-700 border border-purple-300 bg-purple-50 px-2 py-1 rounded flex items-center gap-1">
+                    <Zap size={12} /> {t('ai.resume_auto_reply')}
+                  </button>
+                )}
                 <button onClick={closeConversation} className="text-xs text-gray-500 hover:text-gray-700 border px-2 py-1 rounded">{t('inbox.close_conversation')}</button>
                 <button onClick={() => setShowBookingForm(!showBookingForm)} className="flex items-center gap-1 bg-blue-600 text-white px-3 py-1.5 rounded-md text-sm hover:bg-blue-700">
                   <Plus size={14} /> {t('inbox.new_booking')}

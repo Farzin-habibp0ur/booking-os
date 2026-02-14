@@ -31,12 +31,20 @@ export class BookingAssistant {
       services: Array<{ id: string; name: string; durationMins: number; price: number; category: string }>;
       availableSlots?: Array<{ time: string; display: string; staffId: string; staffName: string }>;
       extractedEntities?: { service?: string; date?: string; time?: string; staffName?: string };
+      customerContext?: { name: string; phone: string; email?: string; tags: string[]; upcomingBookings: Array<{ serviceName: string; date: string; time: string }> };
     },
   ): Promise<BookingStateData> {
     const state = currentState?.state || 'IDENTIFY_SERVICE';
 
+    let customerInfo = '';
+    if (context.customerContext) {
+      customerInfo = `\nCustomer: ${context.customerContext.name} (${context.customerContext.phone})`;
+      if (context.customerContext.tags.length) customerInfo += ` | Tags: ${context.customerContext.tags.join(', ')}`;
+    }
+
     const systemPrompt = `You are a booking assistant for "${context.businessName}".
-Personality: ${context.personality || 'friendly and professional'}
+Personality: ${context.personality || 'friendly and professional'}${customerInfo}
+Use the customer's name naturally in your responses.
 You help customers book appointments through a conversational flow.
 
 Current booking state: ${state}

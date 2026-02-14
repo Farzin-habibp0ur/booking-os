@@ -1,21 +1,23 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { useI18n } from '@/lib/i18n';
-import { Check, ChevronLeft, ChevronRight, Building2, MessageCircle, Users, Scissors, Clock, FileText, Rocket, Plus, X, Trash2 } from 'lucide-react';
+import { useToast } from '@/lib/toast';
+import { Check, ChevronLeft, ChevronRight, Building2, MessageCircle, Users, Scissors, Clock, FileText, Upload, Rocket, Plus, X, Trash2, Loader2 } from 'lucide-react';
 
-const STEP_KEYS = ['business', 'whatsapp', 'staff', 'services', 'hours', 'templates', 'finish'] as const;
+const STEP_KEYS = ['business', 'whatsapp', 'staff', 'services', 'hours', 'templates', 'customers', 'finish'] as const;
 
-const STEP_ICONS = [Building2, MessageCircle, Users, Scissors, Clock, FileText, Rocket];
+const STEP_ICONS = [Building2, MessageCircle, Users, Scissors, Clock, FileText, Upload, Rocket];
 
 const DAYS_KEYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 
 export default function SetupPage() {
   const router = useRouter();
   const { t } = useI18n();
+  const { toast } = useToast();
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(true);
 
@@ -42,6 +44,16 @@ export default function SetupPage() {
 
   // Templates
   const [templates, setTemplates] = useState<any[]>([]);
+
+  // Customer Import
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [csvPreview, setCsvPreview] = useState<Array<{ name: string; phone: string; email: string; tags: string }>>([]);
+  const [csvImporting, setCsvImporting] = useState(false);
+  const [csvResult, setCsvResult] = useState<{ created: number; skipped: number; errors: number } | null>(null);
+  const [includeMessages, setIncludeMessages] = useState(true);
+  const [convImporting, setConvImporting] = useState(false);
+  const [convResult, setConvResult] = useState<{ created: number; updated: number } | null>(null);
 
   useEffect(() => {
     loadData();
@@ -112,6 +124,60 @@ export default function SetupPage() {
       dayOfWeek: h.dayOfWeek, startTime: h.startTime, endTime: h.endTime, isOff: h.isOff,
     }));
     await api.patch(`/staff/${staffId}/working-hours`, { hours });
+  };
+
+  const handleCsvSelect = (file: File) => {
+    setCsvFile(file);
+    setCsvResult(null);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const content = e.target?.result as string;
+      const lines = content.split('\n').filter((l) => l.trim());
+      if (lines.length < 2) return;
+      const header = lines[0].split(',').map((h) => h.trim().toLowerCase());
+      const nameIdx = header.findIndex((h) => h === 'name');
+      const phoneIdx = header.findIndex((h) => h === 'phone');
+      const emailIdx = header.findIndex((h) => h === 'email');
+      const tagsIdx = header.findIndex((h) => h === 'tags');
+      const rows = lines.slice(1, 11).map((line) => {
+        const cols = line.split(',').map((c) => c.trim());
+        return {
+          name: nameIdx >= 0 ? cols[nameIdx] || '' : '',
+          phone: phoneIdx >= 0 ? cols[phoneIdx] || '' : '',
+          email: emailIdx >= 0 ? cols[emailIdx] || '' : '',
+          tags: tagsIdx >= 0 ? cols[tagsIdx] || '' : '',
+        };
+      });
+      setCsvPreview(rows);
+    };
+    reader.readAsText(file);
+  };
+
+  const importCsv = async () => {
+    if (!csvFile) return;
+    setCsvImporting(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', csvFile);
+      const result = await api.upload<{ created: number; skipped: number; errors: number }>('/customers/import-csv', formData);
+      setCsvResult(result);
+      toast(t('import.csv_success', { created: result.created, skipped: result.skipped }));
+    } catch (e) {
+      toast(t('import.csv_failed'), 'error');
+    }
+    setCsvImporting(false);
+  };
+
+  const importFromConversations = async () => {
+    setConvImporting(true);
+    try {
+      const result = await api.post<{ created: number; updated: number }>('/customers/import-from-conversations', { includeMessages });
+      setConvResult(result);
+      toast(t('import.conversations_success', { updated: result.updated }));
+    } catch (e) {
+      toast(t('import.conversations_failed'), 'error');
+    }
+    setConvImporting(false);
   };
 
   const handleNext = async () => {
@@ -396,8 +462,104 @@ export default function SetupPage() {
           </div>
         )}
 
-        {/* Step 7: Test & Finish */}
+        {/* Step 7: Import Customers */}
         {step === 6 && (
+          <div className="space-y-4">
+            <div className="bg-white rounded-lg border p-6 space-y-4">
+              <h2 className="text-lg font-semibold">{t('setup.customers_title')}</h2>
+              <p className="text-sm text-gray-500">{t('setup.customers_subtitle')}</p>
+            </div>
+
+            {/* CSV Import Card */}
+            <div className="bg-white rounded-lg border p-6 space-y-4">
+              <div className="flex items-center gap-2">
+                <FileText size={18} className="text-blue-600" />
+                <h3 className="font-medium text-sm">{t('import.csv_title')}</h3>
+              </div>
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:border-blue-400 transition-colors"
+              >
+                <Upload size={20} className="mx-auto text-gray-400 mb-1" />
+                <p className="text-xs text-gray-600">{csvFile ? csvFile.name : t('import.csv_drop_zone')}</p>
+              </div>
+              <input ref={fileInputRef} type="file" accept=".csv" className="hidden" onChange={(e) => e.target.files?.[0] && handleCsvSelect(e.target.files[0])} />
+
+              {csvPreview.length > 0 && (
+                <div className="border rounded overflow-auto max-h-32">
+                  <table className="w-full text-xs">
+                    <thead className="bg-gray-50 border-b">
+                      <tr>
+                        <th className="text-left p-1.5">{t('common.name')}</th>
+                        <th className="text-left p-1.5">{t('common.phone')}</th>
+                        <th className="text-left p-1.5">{t('common.email')}</th>
+                        <th className="text-left p-1.5">{t('common.tags')}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {csvPreview.map((row, i) => (
+                        <tr key={i}>
+                          <td className="p-1.5">{row.name}</td>
+                          <td className="p-1.5">{row.phone}</td>
+                          <td className="p-1.5">{row.email}</td>
+                          <td className="p-1.5">{row.tags}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {csvFile && (
+                <button onClick={importCsv} disabled={csvImporting} className="bg-blue-600 text-white px-3 py-1.5 rounded text-sm hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2">
+                  {csvImporting && <Loader2 size={14} className="animate-spin" />}
+                  {t('import.import_button')}
+                </button>
+              )}
+              {csvResult && (
+                <p className="text-xs text-green-700 bg-green-50 border border-green-200 rounded p-2">
+                  {t('import.csv_result', { created: csvResult.created, skipped: csvResult.skipped, errors: csvResult.errors })}
+                </p>
+              )}
+            </div>
+
+            {/* Conversation Import Card */}
+            <div className="bg-white rounded-lg border p-6 space-y-4">
+              <div className="flex items-center gap-2">
+                <Users size={18} className="text-purple-600" />
+                <h3 className="font-medium text-sm">{t('import.conversations_title')}</h3>
+              </div>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={includeMessages} onChange={(e) => setIncludeMessages(e.target.checked)} className="rounded text-purple-600" />
+                <span className="text-xs">{t('import.include_messages')}</span>
+              </label>
+              <button onClick={importFromConversations} disabled={convImporting} className="bg-purple-600 text-white px-3 py-1.5 rounded text-sm hover:bg-purple-700 disabled:opacity-50 flex items-center gap-2">
+                {convImporting && <Loader2 size={14} className="animate-spin" />}
+                {t('import.generate_profiles')}
+              </button>
+              {convResult && (
+                <p className="text-xs text-green-700 bg-green-50 border border-green-200 rounded p-2">
+                  {t('import.conversations_result', { created: convResult.created, updated: convResult.updated })}
+                </p>
+              )}
+            </div>
+
+            {/* Manual Card */}
+            <div className="bg-white rounded-lg border p-6">
+              <div className="flex items-center gap-2 mb-2">
+                <Plus size={18} className="text-gray-600" />
+                <h3 className="font-medium text-sm">{t('setup.add_manually')}</h3>
+              </div>
+              <p className="text-xs text-gray-500">{t('setup.add_manually_desc')}</p>
+              <button onClick={() => router.push('/customers')} className="mt-3 text-sm text-blue-600 hover:text-blue-700 font-medium">
+                {t('setup.go_to_customers')} &rarr;
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 8: Test & Finish */}
+        {step === 7 && (
           <div className="bg-white rounded-lg border p-6 space-y-6">
             <h2 className="text-lg font-semibold">{t('setup.finish_title')}</h2>
             <p className="text-sm text-gray-500">{t('setup.finish_subtitle')}</p>

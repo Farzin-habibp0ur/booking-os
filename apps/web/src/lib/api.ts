@@ -60,6 +60,31 @@ class ApiClient {
   del<T>(path: string) {
     return this.request<T>(path, { method: 'DELETE' });
   }
+
+  async upload<T>(path: string, formData: FormData): Promise<T> {
+    const token = this.getToken();
+    const headers: Record<string, string> = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const res = await fetch(`${API_URL}${path}`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+
+    if (res.status === 401) {
+      this.setToken(null);
+      if (typeof window !== 'undefined') window.location.href = '/login';
+      throw new Error('Unauthorized');
+    }
+
+    if (!res.ok) {
+      const error = await res.json().catch(() => ({ message: 'Upload failed' }));
+      throw new Error(error.message || `HTTP ${res.status}`);
+    }
+
+    return res.json();
+  }
 }
 
 export const api = new ApiClient();

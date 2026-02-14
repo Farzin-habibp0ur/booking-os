@@ -1,5 +1,6 @@
-import { Controller, Get, Post, Patch, Param, Body, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Param, Body, Query, UseGuards, UseInterceptors, UploadedFile, BadRequestException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { CustomerService } from './customer.service';
 import { BusinessId } from '../../common/decorators';
 import { TenantGuard } from '../../common/tenant.guard';
@@ -36,5 +37,46 @@ export class CustomerController {
   @Get(':id/bookings')
   bookings(@BusinessId() businessId: string, @Param('id') id: string) {
     return this.customerService.getBookings(businessId, id);
+  }
+
+  @Post('import-csv')
+  @UseInterceptors(FileInterceptor('file'))
+  async importCsv(
+    @BusinessId() businessId: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    if (!file) throw new BadRequestException('No file uploaded');
+
+    const content = file.buffer.toString('utf-8');
+    const lines = content.split('\n').filter((l) => l.trim());
+    if (lines.length < 2) throw new BadRequestException('CSV must have a header and at least one data row');
+
+    const header = lines[0].split(',').map((h) => h.trim().toLowerCase());
+    const nameIdx = header.findIndex((h) => h === 'name');
+    const phoneIdx = header.findIndex((h) => h === 'phone');
+    const emailIdx = header.findIndex((h) => h === 'email');
+    const tagsIdx = header.findIndex((h) => h === 'tags');
+
+    if (phoneIdx === -1) throw new BadRequestException('CSV must have a "phone" column');
+
+    const customers = lines.slice(1).map((line) => {
+      const cols = line.split(',').map((c) => c.trim());
+      return {
+        name: nameIdx >= 0 ? cols[nameIdx] || '' : '',
+        phone: cols[phoneIdx] || '',
+        email: emailIdx >= 0 ? cols[emailIdx] || undefined : undefined,
+        tags: tagsIdx >= 0 && cols[tagsIdx] ? cols[tagsIdx].split(';').map((t) => t.trim()).filter(Boolean) : [],
+      };
+    }).filter((c) => c.phone);
+
+    return this.customerService.bulkCreate(businessId, customers);
+  }
+
+  @Post('import-from-conversations')
+  async importFromConversations(
+    @BusinessId() businessId: string,
+    @Body() body: { includeMessages?: boolean },
+  ) {
+    return this.customerService.createFromConversations(businessId, body.includeMessages !== false);
   }
 }

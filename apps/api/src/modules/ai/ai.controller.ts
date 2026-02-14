@@ -22,15 +22,24 @@ export class AiController {
       autoReplySuggestions: true,
       bookingAssistant: true,
       personality: 'friendly and professional',
+      autoReply: {
+        enabled: false,
+        mode: 'all',
+        selectedIntents: ['GENERAL', 'BOOK_APPOINTMENT', 'CANCEL', 'RESCHEDULE', 'INQUIRY'],
+      },
     };
-    const raw = business.aiSettings || {};
-    return { ...defaults, ...(typeof raw === 'object' ? raw : {}) };
+    const raw = (business.aiSettings || {}) as any;
+    const merged = { ...defaults, ...(typeof raw === 'object' ? raw : {}) };
+    if (typeof raw === 'object' && raw.autoReply) {
+      merged.autoReply = { ...defaults.autoReply, ...raw.autoReply };
+    }
+    return merged;
   }
 
   @Patch('settings')
   async updateSettings(
     @BusinessId() businessId: string,
-    @Body() body: { enabled?: boolean; autoReplySuggestions?: boolean; bookingAssistant?: boolean; personality?: string },
+    @Body() body: { enabled?: boolean; autoReplySuggestions?: boolean; bookingAssistant?: boolean; personality?: string; autoReply?: { enabled: boolean; mode: 'all' | 'selected'; selectedIntents: string[] } },
   ) {
     return this.businessService.updateAiSettings(businessId, body);
   }
@@ -92,6 +101,15 @@ export class AiController {
     @Param('id') conversationId: string,
   ) {
     await this.aiService.clearRescheduleState(businessId, conversationId);
+    return { ok: true };
+  }
+
+  @Post('conversations/:id/resume-auto-reply')
+  async resumeAutoReply(
+    @BusinessId() businessId: string,
+    @Param('id') conversationId: string,
+  ) {
+    await this.aiService.resumeAutoReply(businessId, conversationId);
     return { ok: true };
   }
 }

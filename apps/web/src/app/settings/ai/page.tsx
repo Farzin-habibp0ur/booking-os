@@ -10,7 +10,20 @@ interface AiSettings {
   autoReplySuggestions: boolean;
   bookingAssistant: boolean;
   personality: string;
+  autoReply: {
+    enabled: boolean;
+    mode: 'all' | 'selected';
+    selectedIntents: string[];
+  };
 }
+
+const INTENT_OPTIONS = [
+  { key: 'GENERAL', labelKey: 'ai.intent_general' },
+  { key: 'BOOK_APPOINTMENT', labelKey: 'ai.intent_book_appointment' },
+  { key: 'CANCEL', labelKey: 'ai.intent_cancel' },
+  { key: 'RESCHEDULE', labelKey: 'ai.intent_reschedule' },
+  { key: 'INQUIRY', labelKey: 'ai.intent_inquiry' },
+];
 
 export default function AiSettingsPage() {
   const { t } = useI18n();
@@ -19,6 +32,11 @@ export default function AiSettingsPage() {
     autoReplySuggestions: true,
     bookingAssistant: true,
     personality: 'friendly and professional',
+    autoReply: {
+      enabled: false,
+      mode: 'all',
+      selectedIntents: ['GENERAL', 'BOOK_APPOINTMENT', 'CANCEL', 'RESCHEDULE', 'INQUIRY'],
+    },
   });
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -34,6 +52,17 @@ export default function AiSettingsPage() {
     await api.patch('/ai/settings', settings);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
+  };
+
+  const toggleIntent = (intent: string) => {
+    const current = settings.autoReply.selectedIntents;
+    const updated = current.includes(intent)
+      ? current.filter((i) => i !== intent)
+      : [...current, intent];
+    setSettings({
+      ...settings,
+      autoReply: { ...settings.autoReply, selectedIntents: updated },
+    });
   };
 
   if (loading) return <div className="p-6"><p className="text-gray-400">{t('common.loading')}</p></div>;
@@ -101,6 +130,79 @@ export default function AiSettingsPage() {
                 />
                 <div className="w-9 h-5 bg-gray-200 peer-focus:ring-2 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600" />
               </label>
+            </div>
+
+            <hr />
+
+            {/* Auto-Reply Section */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium">{t('ai.auto_reply_toggle')}</p>
+                  <p className="text-xs text-gray-500">{t('ai.auto_reply_toggle_desc')}</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={settings.autoReply.enabled}
+                    onChange={(e) => setSettings({
+                      ...settings,
+                      autoReply: { ...settings.autoReply, enabled: e.target.checked },
+                    })}
+                    className="sr-only peer"
+                  />
+                  <div className="w-9 h-5 bg-gray-200 peer-focus:ring-2 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600" />
+                </label>
+              </div>
+
+              {settings.autoReply.enabled && (
+                <div className="ml-4 space-y-3 border-l-2 border-purple-200 pl-4">
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="autoReplyMode"
+                        checked={settings.autoReply.mode === 'all'}
+                        onChange={() => setSettings({
+                          ...settings,
+                          autoReply: { ...settings.autoReply, mode: 'all' },
+                        })}
+                        className="text-purple-600"
+                      />
+                      <span className="text-sm">{t('ai.auto_reply_mode_all')}</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="autoReplyMode"
+                        checked={settings.autoReply.mode === 'selected'}
+                        onChange={() => setSettings({
+                          ...settings,
+                          autoReply: { ...settings.autoReply, mode: 'selected' },
+                        })}
+                        className="text-purple-600"
+                      />
+                      <span className="text-sm">{t('ai.auto_reply_mode_selected')}</span>
+                    </label>
+                  </div>
+
+                  {settings.autoReply.mode === 'selected' && (
+                    <div className="space-y-2 mt-2">
+                      {INTENT_OPTIONS.map((opt) => (
+                        <label key={opt.key} className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={settings.autoReply.selectedIntents.includes(opt.key)}
+                            onChange={() => toggleIntent(opt.key)}
+                            className="rounded text-purple-600"
+                          />
+                          <span className="text-sm">{t(opt.labelKey)}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             <hr />

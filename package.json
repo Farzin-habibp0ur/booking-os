@@ -2,6 +2,7 @@
   "name": "booking-os",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "npm@11.8.0",
   "workspaces": [
     "apps/*",
     "packages/*"
@@ -16,6 +17,7 @@
     "db:studio": "npm run studio --workspace=@booking-os/db"
   },
   "devDependencies": {
+    "@types/multer": "^2.0.0",
     "turbo": "^2.3.0",
     "typescript": "^5.7.0"
   }

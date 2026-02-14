@@ -339,7 +339,9 @@
     "translations": "Traducciones",
     "translations_desc": "Gestiona traducciones y personaliza el texto de tu idioma preferido",
     "ai_settings": "Configuración de IA",
-    "ai_settings_desc": "Configura sugerencias de respuesta, detección de intención y asistente de reservas con IA"
+    "ai_settings_desc": "Configura sugerencias de respuesta, detección de intención y asistente de reservas con IA",
+    "account_import": "Cuenta e importacion",
+    "account_import_desc": "Gestiona datos de clientes, importa contactos y exporta registros"
   },
 
   "translations": {
@@ -438,8 +440,14 @@
       "services": "Servicios",
       "hours": "Horarios",
       "templates": "Plantillas",
+      "customers": "Importar clientes",
       "finish": "Finalizar"
-    }
+    },
+    "customers_title": "Importar clientes",
+    "customers_subtitle": "Importa tus contactos de clientes existentes para comenzar rapidamente.",
+    "add_manually": "Agregar manualmente",
+    "add_manually_desc": "Ve a la pagina de clientes para agregar clientes uno por uno.",
+    "go_to_customers": "Ir a clientes"
   },
 
   "ai": {
@@ -499,7 +507,43 @@
     "booking_assistant_toggle": "Asistente de reservas",
     "booking_assistant_toggle_desc": "Iniciar automáticamente el flujo de reservas cuando un cliente quiere agendar",
     "personality_label": "Personalidad de IA",
-    "personality_desc": "Describe el tono y estilo para las respuestas generadas por IA"
+    "personality_desc": "Describe el tono y estilo para las respuestas generadas por IA",
+    "auto_reply_toggle": "Activar respuesta automatica",
+    "auto_reply_toggle_desc": "La IA enviara respuestas automaticamente en lugar de crear borradores para revision",
+    "auto_reply_mode_all": "Todos los tipos de mensajes",
+    "auto_reply_mode_selected": "Solo tipos de mensajes seleccionados",
+    "auto_replied_notification": "La IA respondio automaticamente a un mensaje",
+    "transferred_notification": "Conversacion transferida a {{name}}",
+    "resume_auto_reply": "Reanudar respuesta automatica",
+    "auto_reply_resumed": "Respuesta automatica reanudada para esta conversacion",
+    "auto_reply_resume_failed": "Error al reanudar respuesta automatica",
+    "intent_transfer_to_human": "Transferir a humano"
+  },
+
+  "import": {
+    "page_title": "Cuenta e importacion",
+    "modal_title": "Importar clientes",
+    "csv_title": "Importar desde CSV",
+    "csv_desc": "Sube un archivo CSV con datos de clientes. Columna requerida: phone. Opcionales: name, email, tags.",
+    "csv_drop_zone": "Haz clic para seleccionar un archivo CSV",
+    "csv_format_hint": "Formato CSV: name, phone, email, tags (separados por punto y coma)",
+    "csv_success": "Importacion completa: {{created}} creados, {{skipped}} omitidos",
+    "csv_failed": "Error en la importacion CSV",
+    "csv_result": "Creados: {{created}}, Omitidos: {{skipped}} duplicados, Errores: {{errors}}",
+    "conversations_title": "Crear perfiles desde conversaciones",
+    "conversations_desc": "Usa IA para extraer datos de perfil de clientes del historial de conversaciones.",
+    "conversations_success": "Generacion de perfiles completa: {{updated}} perfiles actualizados",
+    "conversations_failed": "Error en la importacion de conversaciones",
+    "conversations_result": "Creados: {{created}}, Actualizados: {{updated}} perfiles",
+    "include_messages": "Incluir mensajes anteriores para la creacion de perfiles con IA",
+    "include_messages_hint": "La IA analizara el contenido de los mensajes para extraer nombres, correos y etiquetas",
+    "generate_profiles": "Generar perfiles",
+    "import_button": "Importar",
+    "export_title": "Exportar clientes",
+    "export_desc": "Descarga todos los datos de clientes como archivo CSV.",
+    "export_button": "Descargar CSV",
+    "export_success": "Clientes exportados exitosamente",
+    "export_failed": "Error en la exportacion"
   },
 
   "status": {

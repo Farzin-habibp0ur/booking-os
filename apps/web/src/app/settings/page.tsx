@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import { FileText, Languages, Sparkles } from 'lucide-react';
+import { FileText, Languages, Sparkles, Upload } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 
 export default function SettingsPage() {
@@ -104,6 +104,18 @@ export default function SettingsPage() {
             <div>
               <p className="text-sm font-medium">{t('settings.ai_settings')}</p>
               <p className="text-xs text-gray-500">{t('settings.ai_settings_desc')}</p>
+            </div>
+          </button>
+          <button
+            onClick={() => router.push('/settings/account')}
+            className="flex items-center gap-3 w-full text-left p-3 rounded-lg hover:bg-gray-50 border"
+          >
+            <div className="w-9 h-9 bg-green-50 rounded-lg flex items-center justify-center">
+              <Upload size={18} className="text-green-600" />
+            </div>
+            <div>
+              <p className="text-sm font-medium">{t('settings.account_import')}</p>
+              <p className="text-xs text-gray-500">{t('settings.account_import_desc')}</p>
             </div>
           </button>
         </div>
