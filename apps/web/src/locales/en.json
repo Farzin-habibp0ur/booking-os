@@ -337,7 +337,9 @@
     "message_templates": "Message Templates",
     "message_templates_desc": "Manage confirmation, reminder, and follow-up templates",
     "translations": "Translations",
-    "translations_desc": "Manage translations and customize text for your preferred language"
+    "translations_desc": "Manage translations and customize text for your preferred language",
+    "ai_settings": "AI Settings",
+    "ai_settings_desc": "Configure AI-powered reply suggestions, intent detection, and booking assistant"
   },
 
   "translations": {
@@ -438,6 +440,42 @@
       "templates": "Templates",
       "finish": "Test & Finish"
     }
+  },
+
+  "ai": {
+    "suggestions_label": "AI Suggestions",
+    "intent_book_appointment": "Booking",
+    "intent_cancel": "Cancellation",
+    "intent_reschedule": "Reschedule",
+    "intent_inquiry": "Inquiry",
+    "intent_confirmation": "Confirmation",
+    "intent_general": "General",
+    "summary_label": "AI Summary",
+    "refresh_summary": "Refresh summary",
+    "summary_refreshed": "Summary updated",
+    "summary_refresh_failed": "Failed to refresh summary",
+    "booking_assistant": "Booking Assistant",
+    "booking_service": "Service",
+    "booking_date": "Date",
+    "booking_time": "Time",
+    "booking_staff": "Staff",
+    "booking_step_identify_service": "Identifying service...",
+    "booking_step_identify_date": "Selecting date...",
+    "booking_step_identify_time": "Choosing time slot...",
+    "booking_step_confirm": "Ready to confirm!",
+    "confirm_booking": "Confirm Booking",
+    "booking_confirmed": "Booking created successfully!",
+    "booking_confirm_failed": "Failed to create booking",
+    "settings_title": "AI Settings",
+    "settings_description": "Configure AI-powered features for your inbox. AI helps detect customer intent, suggest replies, and assist with bookings.",
+    "enable_ai": "Enable AI Features",
+    "enable_ai_desc": "Turn on AI-powered intent detection and reply suggestions",
+    "auto_reply_suggestions": "Auto Reply Suggestions",
+    "auto_reply_suggestions_desc": "Show AI-generated reply suggestions in the inbox",
+    "booking_assistant_toggle": "Booking Assistant",
+    "booking_assistant_toggle_desc": "Automatically start the booking flow when a customer wants to book",
+    "personality_label": "AI Personality",
+    "personality_desc": "Describe the tone and style for AI-generated replies"
   },
 
   "status": {

@@ -73,4 +73,8 @@ export class InboxGateway implements OnGatewayConnection, OnGatewayDisconnect {
   notifyBookingUpdate(businessId: string, booking: unknown) {
     this.emitToBusinessRoom(businessId, 'booking:update', booking);
   }
+
+  notifyAiSuggestions(businessId: string, data: unknown) {
+    this.emitToBusinessRoom(businessId, 'ai:suggestions', data);
+  }
 }

@@ -12,6 +12,9 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import BookingFormModal from '@/components/booking-form-modal';
+import AiSuggestions from '@/components/ai-suggestions';
+import AiBookingPanel from '@/components/ai-booking-panel';
+import AiSummary from '@/components/ai-summary';
 
 type Filter = 'all' | 'unassigned' | 'mine' | 'overdue' | 'waiting' | 'snoozed' | 'closed';
 
@@ -57,6 +60,11 @@ export default function InboxPage() {
   const [showQuickReplies, setShowQuickReplies] = useState(false);
   const [convTags, setConvTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState('');
+  const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
+  const [aiIntent, setAiIntent] = useState<string | undefined>();
+  const [aiConfidence, setAiConfidence] = useState<number | undefined>();
+  const [aiBookingState, setAiBookingState] = useState<any>(null);
+  const [aiSummary, setAiSummary] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const pollRef = useRef<ReturnType<typeof setInterval>>(undefined);
   const msgPollRef = useRef<ReturnType<typeof setInterval>>(undefined);
@@ -110,6 +118,14 @@ export default function InboxPage() {
         loadCustomerBookings(selectedRef.current.customerId);
       }
     }, []),
+    'ai:suggestions': useCallback((data: any) => {
+      if (selectedRef.current && data.conversationId === selectedRef.current.id) {
+        setAiSuggestions(data.suggestions || []);
+        setAiIntent(data.intent);
+        setAiConfidence(data.confidence);
+        if (data.bookingState) setAiBookingState(data.bookingState);
+      }
+    }, []),
   });
 
   useEffect(() => {
@@ -135,6 +151,14 @@ export default function InboxPage() {
       loadNotes(selected.id);
       setConvTags(selected.tags || []);
       setSidebarTab('info');
+      // Load AI metadata from conversation
+      const meta = selected.metadata || {};
+      setAiSummary(meta.aiSummary || '');
+      setAiBookingState(meta.aiBookingState || null);
+      // Clear per-message AI state
+      setAiSuggestions([]);
+      setAiIntent(undefined);
+      setAiConfidence(undefined);
       msgPollRef.current = setInterval(() => loadMessages(selected.id), 15000);
     }
     return () => clearInterval(msgPollRef.current);
@@ -444,6 +468,14 @@ export default function InboxPage() {
               <div ref={messagesEndRef} />
             </div>
 
+            {/* AI Suggestions */}
+            <AiSuggestions
+              intent={aiIntent}
+              confidence={aiConfidence}
+              suggestions={aiSuggestions}
+              onSendSuggestion={(text) => sendMessage(text)}
+            />
+
             {/* Quick replies */}
             {showQuickReplies && (
               <div className="px-3 pb-1 bg-white border-t">
@@ -531,6 +563,26 @@ export default function InboxPage() {
                   </div>
                 )}
               </div>
+
+              {/* AI Summary */}
+              <AiSummary
+                conversationId={selected.id}
+                summary={aiSummary}
+                onSummaryUpdated={(s) => setAiSummary(s)}
+              />
+
+              {/* AI Booking Assistant */}
+              {aiBookingState && (
+                <AiBookingPanel
+                  conversationId={selected.id}
+                  bookingState={aiBookingState}
+                  onBookingConfirmed={() => {
+                    setAiBookingState(null);
+                    if (customer) loadCustomerBookings(customer.id);
+                  }}
+                  onCancelled={() => setAiBookingState(null)}
+                />
+              )}
 
               <div className="p-4 border-b">
                 <span className="text-xs font-semibold text-gray-500 uppercase">{t('inbox.conversation_tags')}</span>
