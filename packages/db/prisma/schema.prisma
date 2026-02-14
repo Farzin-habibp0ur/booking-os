@@ -16,6 +16,7 @@ model Business {
   verticalPack  String   @default("general")
   packConfig    Json     @default("{}")
   defaultLocale String   @default("en")
+  aiSettings    Json     @default("{}")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 

@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, Query, Headers, ForbiddenException, BadRequestException } from '@nestjs/common';
+import { Controller, Post, Get, Body, Query, Headers, ForbiddenException, BadRequestException, Inject, forwardRef } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
 import { PrismaService } from '../../common/prisma.service';
@@ -6,6 +6,7 @@ import { CustomerService } from '../customer/customer.service';
 import { ConversationService } from '../conversation/conversation.service';
 import { InboxGateway } from '../../common/inbox.gateway';
 import { MessagingService } from './messaging.service';
+import { AiService } from '../ai/ai.service';
 
 @Controller('webhook')
 export class WebhookController {
@@ -16,6 +17,7 @@ export class WebhookController {
     private inboxGateway: InboxGateway,
     private messagingService: MessagingService,
     private configService: ConfigService,
+    @Inject(forwardRef(() => AiService)) private aiService: AiService,
   ) {}
 
   private verifyHmac(body: string, signature: string | undefined): boolean {
@@ -101,6 +103,11 @@ export class WebhookController {
     // Notify via WebSocket
     this.inboxGateway.notifyNewMessage(business.id, message);
     this.inboxGateway.notifyConversationUpdate(business.id, updatedConversation);
+
+    // Fire-and-forget AI processing (async, doesn't block webhook response)
+    this.aiService
+      .processInboundMessage(business.id, conversation.id, message.id, body.body)
+      .catch((err) => console.error('[AI] Processing error:', err.message));
 
     return { ok: true, conversationId: conversation.id, messageId: message.id };
   }

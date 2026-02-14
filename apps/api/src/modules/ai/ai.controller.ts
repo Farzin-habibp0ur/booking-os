@@ -1,0 +1,63 @@
+import { Controller, Get, Patch, Post, Body, Param, UseGuards, BadRequestException } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+import { TenantGuard } from '../../common/tenant.guard';
+import { BusinessId, CurrentUser } from '../../common/decorators';
+import { BusinessService } from '../business/business.service';
+import { AiService } from './ai.service';
+
+@Controller('ai')
+@UseGuards(AuthGuard('jwt'), TenantGuard)
+export class AiController {
+  constructor(
+    private businessService: BusinessService,
+    private aiService: AiService,
+  ) {}
+
+  @Get('settings')
+  async getSettings(@BusinessId() businessId: string) {
+    const business = await this.businessService.findById(businessId);
+    if (!business) throw new BadRequestException('Business not found');
+    const defaults = {
+      enabled: false,
+      autoReplySuggestions: true,
+      bookingAssistant: true,
+      personality: 'friendly and professional',
+    };
+    const raw = business.aiSettings || {};
+    return { ...defaults, ...(typeof raw === 'object' ? raw : {}) };
+  }
+
+  @Patch('settings')
+  async updateSettings(
+    @BusinessId() businessId: string,
+    @Body() body: { enabled?: boolean; autoReplySuggestions?: boolean; bookingAssistant?: boolean; personality?: string },
+  ) {
+    return this.businessService.updateAiSettings(businessId, body);
+  }
+
+  @Post('conversations/:id/summary')
+  async generateSummary(
+    @BusinessId() businessId: string,
+    @Param('id') conversationId: string,
+  ) {
+    const summary = await this.aiService.generateAndStoreSummary(conversationId);
+    return { summary };
+  }
+
+  @Post('conversations/:id/booking-confirm')
+  async confirmBooking(
+    @BusinessId() businessId: string,
+    @Param('id') conversationId: string,
+  ) {
+    return this.aiService.confirmBooking(businessId, conversationId);
+  }
+
+  @Post('conversations/:id/booking-cancel')
+  async cancelBooking(
+    @BusinessId() businessId: string,
+    @Param('id') conversationId: string,
+  ) {
+    await this.aiService.clearBookingState(businessId, conversationId);
+    return { ok: true };
+  }
+}

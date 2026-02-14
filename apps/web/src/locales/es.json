@@ -337,7 +337,9 @@
     "message_templates": "Plantillas de mensajes",
     "message_templates_desc": "Gestiona plantillas de confirmación, recordatorio y seguimiento",
     "translations": "Traducciones",
-    "translations_desc": "Gestiona traducciones y personaliza el texto de tu idioma preferido"
+    "translations_desc": "Gestiona traducciones y personaliza el texto de tu idioma preferido",
+    "ai_settings": "Configuración de IA",
+    "ai_settings_desc": "Configura sugerencias de respuesta, detección de intención y asistente de reservas con IA"
   },
 
   "translations": {
@@ -438,6 +440,42 @@
       "templates": "Plantillas",
       "finish": "Finalizar"
     }
+  },
+
+  "ai": {
+    "suggestions_label": "Sugerencias IA",
+    "intent_book_appointment": "Reserva",
+    "intent_cancel": "Cancelación",
+    "intent_reschedule": "Reagendar",
+    "intent_inquiry": "Consulta",
+    "intent_confirmation": "Confirmación",
+    "intent_general": "General",
+    "summary_label": "Resumen IA",
+    "refresh_summary": "Actualizar resumen",
+    "summary_refreshed": "Resumen actualizado",
+    "summary_refresh_failed": "Error al actualizar resumen",
+    "booking_assistant": "Asistente de reservas",
+    "booking_service": "Servicio",
+    "booking_date": "Fecha",
+    "booking_time": "Hora",
+    "booking_staff": "Personal",
+    "booking_step_identify_service": "Identificando servicio...",
+    "booking_step_identify_date": "Seleccionando fecha...",
+    "booking_step_identify_time": "Eligiendo horario...",
+    "booking_step_confirm": "¡Listo para confirmar!",
+    "confirm_booking": "Confirmar reserva",
+    "booking_confirmed": "¡Reserva creada exitosamente!",
+    "booking_confirm_failed": "Error al crear la reserva",
+    "settings_title": "Configuración de IA",
+    "settings_description": "Configura las funciones de IA para tu bandeja. La IA ayuda a detectar la intención del cliente, sugerir respuestas y asistir con reservas.",
+    "enable_ai": "Activar funciones de IA",
+    "enable_ai_desc": "Activar detección de intención y sugerencias de respuesta con IA",
+    "auto_reply_suggestions": "Sugerencias automáticas",
+    "auto_reply_suggestions_desc": "Mostrar sugerencias de respuesta generadas por IA en la bandeja",
+    "booking_assistant_toggle": "Asistente de reservas",
+    "booking_assistant_toggle_desc": "Iniciar automáticamente el flujo de reservas cuando un cliente quiere agendar",
+    "personality_label": "Personalidad de IA",
+    "personality_desc": "Describe el tono y estilo para las respuestas generadas por IA"
   },
 
   "status": {
