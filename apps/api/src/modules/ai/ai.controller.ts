@@ -60,4 +60,38 @@ export class AiController {
     await this.aiService.clearBookingState(businessId, conversationId);
     return { ok: true };
   }
+
+  @Post('conversations/:id/cancel-confirm')
+  async confirmCancelAppointment(
+    @BusinessId() businessId: string,
+    @Param('id') conversationId: string,
+  ) {
+    return this.aiService.confirmCancel(businessId, conversationId);
+  }
+
+  @Post('conversations/:id/cancel-dismiss')
+  async dismissCancel(
+    @BusinessId() businessId: string,
+    @Param('id') conversationId: string,
+  ) {
+    await this.aiService.clearCancelState(businessId, conversationId);
+    return { ok: true };
+  }
+
+  @Post('conversations/:id/reschedule-confirm')
+  async confirmReschedule(
+    @BusinessId() businessId: string,
+    @Param('id') conversationId: string,
+  ) {
+    return this.aiService.confirmReschedule(businessId, conversationId);
+  }
+
+  @Post('conversations/:id/reschedule-dismiss')
+  async dismissReschedule(
+    @BusinessId() businessId: string,
+    @Param('id') conversationId: string,
+  ) {
+    await this.aiService.clearRescheduleState(businessId, conversationId);
+    return { ok: true };
+  }
 }
