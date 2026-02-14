@@ -1,0 +1,247 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Business {
+  id           String   @id @default(cuid())
+  name         String
+  slug         String   @unique
+  phone        String?
+  timezone     String   @default("UTC")
+  verticalPack String   @default("general")
+  packConfig   Json     @default("{}")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  staff             Staff[]
+  customers         Customer[]
+  services          Service[]
+  bookings          Booking[]
+  conversations     Conversation[]
+  reminders         Reminder[]
+  messageTemplates  MessageTemplate[]
+
+  @@map("businesses")
+}
+
+model Staff {
+  id           String   @id @default(cuid())
+  businessId   String
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         String   @default("AGENT")
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  business      Business           @relation(fields: [businessId], references: [id])
+  bookings      Booking[]
+  conversations Conversation[]     @relation("AssignedConversations")
+  messages      Message[]          @relation("SentMessages")
+  notes         ConversationNote[] @relation("StaffNotes")
+  workingHours  WorkingHours[]
+  timeOff       TimeOff[]
+
+  @@index([businessId])
+  @@map("staff")
+}
+
+model Customer {
+  id           String   @id @default(cuid())
+  businessId   String
+  name         String
+  phone        String
+  email        String?
+  tags         String[] @default([])
+  customFields Json     @default("{}")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  business      Business       @relation(fields: [businessId], references: [id])
+  bookings      Booking[]
+  conversations Conversation[]
+
+  @@unique([businessId, phone])
+  @@index([businessId])
+  @@map("customers")
+}
+
+model Service {
+  id             String   @id @default(cuid())
+  businessId     String
+  name           String
+  description    String?
+  durationMins   Int
+  price          Float    @default(0)
+  category       String   @default("General")
+  isActive       Boolean  @default(true)
+  depositRequired Boolean @default(false)
+  bufferBefore   Int      @default(0)
+  bufferAfter    Int      @default(0)
+  customFields   Json     @default("{}")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  business Business  @relation(fields: [businessId], references: [id])
+  bookings Booking[]
+
+  @@index([businessId])
+  @@map("services")
+}
+
+model Booking {
+  id             String   @id @default(cuid())
+  businessId     String
+  customerId     String
+  serviceId      String
+  staffId        String?
+  conversationId String?
+  status         String   @default("PENDING")
+  startTime      DateTime
+  endTime        DateTime
+  notes          String?
+  customFields   Json     @default("{}")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  business     Business      @relation(fields: [businessId], references: [id])
+  customer     Customer      @relation(fields: [customerId], references: [id])
+  service      Service       @relation(fields: [serviceId], references: [id])
+  staff        Staff?        @relation(fields: [staffId], references: [id])
+  conversation Conversation? @relation(fields: [conversationId], references: [id])
+  reminders    Reminder[]
+
+  @@index([businessId])
+  @@index([businessId, startTime])
+  @@index([businessId, status])
+  @@map("bookings")
+}
+
+model Conversation {
+  id            String    @id @default(cuid())
+  businessId    String
+  customerId    String
+  assignedToId  String?
+  channel       String    @default("WHATSAPP")
+  status        String    @default("OPEN")
+  lastMessageAt DateTime?
+  snoozedUntil  DateTime?
+  tags          String[]  @default([])
+  metadata      Json      @default("{}")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  business   Business           @relation(fields: [businessId], references: [id])
+  customer   Customer           @relation(fields: [customerId], references: [id])
+  assignedTo Staff?             @relation("AssignedConversations", fields: [assignedToId], references: [id])
+  messages   Message[]
+  bookings   Booking[]
+  notes      ConversationNote[]
+
+  @@index([businessId])
+  @@index([businessId, status])
+  @@map("conversations")
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  conversationId String
+  direction      String
+  senderStaffId  String?
+  content        String
+  contentType    String   @default("TEXT")
+  externalId     String?
+  metadata       Json     @default("{}")
+  createdAt      DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id])
+  senderStaff  Staff?       @relation("SentMessages", fields: [senderStaffId], references: [id])
+
+  @@index([conversationId])
+  @@map("messages")
+}
+
+model Reminder {
+  id          String    @id @default(cuid())
+  businessId  String
+  bookingId   String
+  templateId  String?
+  scheduledAt DateTime
+  sentAt      DateTime?
+  status      String    @default("PENDING")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  business Business         @relation(fields: [businessId], references: [id])
+  booking  Booking          @relation(fields: [bookingId], references: [id])
+  template MessageTemplate? @relation(fields: [templateId], references: [id])
+
+  @@index([businessId])
+  @@index([status, scheduledAt])
+  @@map("reminders")
+}
+
+model MessageTemplate {
+  id         String   @id @default(cuid())
+  businessId String
+  name       String
+  category   String   @default("CUSTOM")
+  body       String
+  variables  String[] @default([])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  business  Business   @relation(fields: [businessId], references: [id])
+  reminders Reminder[]
+
+  @@index([businessId])
+  @@map("message_templates")
+}
+
+model ConversationNote {
+  id             String   @id @default(cuid())
+  conversationId String
+  staffId        String
+  content        String
+  createdAt      DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id])
+  staff        Staff        @relation("StaffNotes", fields: [staffId], references: [id])
+
+  @@index([conversationId])
+  @@map("conversation_notes")
+}
+
+model WorkingHours {
+  id        String @id @default(cuid())
+  staffId   String
+  dayOfWeek Int    // 0=Sunday, 1=Monday, ..., 6=Saturday
+  startTime String // "09:00" (HH:mm format)
+  endTime   String // "17:00" (HH:mm format)
+  isOff     Boolean @default(false)
+
+  staff Staff @relation(fields: [staffId], references: [id])
+
+  @@unique([staffId, dayOfWeek])
+  @@map("working_hours")
+}
+
+model TimeOff {
+  id        String   @id @default(cuid())
+  staffId   String
+  startDate DateTime
+  endDate   DateTime
+  reason    String?
+  createdAt DateTime @default(now())
+
+  staff Staff @relation(fields: [staffId], references: [id])
+
+  @@index([staffId])
+  @@map("time_off")
+}

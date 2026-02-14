@@ -1,0 +1,22 @@
+{
+  "name": "booking-os",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npx turbo dev",
+    "build": "npx turbo build",
+    "lint": "npx turbo lint",
+    "db:generate": "npm run generate --workspace=@booking-os/db",
+    "db:migrate": "npm run migrate --workspace=@booking-os/db",
+    "db:seed": "npm run seed --workspace=@booking-os/db",
+    "db:studio": "npm run studio --workspace=@booking-os/db"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.0",
+    "typescript": "^5.7.0"
+  }
+}

@@ -1,0 +1,148 @@
+import { Injectable, BadRequestException } from '@nestjs/common';
+import { PrismaService } from '../../common/prisma.service';
+
+@Injectable()
+export class BookingService {
+  constructor(private prisma: PrismaService) {}
+
+  async findAll(businessId: string, query: {
+    status?: string; staffId?: string; customerId?: string;
+    dateFrom?: string; dateTo?: string; page?: number; pageSize?: number;
+  }) {
+    const page = Number(query.page) || 1;
+    const pageSize = Number(query.pageSize) || 20;
+    const where: any = { businessId };
+    if (query.status) where.status = query.status;
+    if (query.staffId) where.staffId = query.staffId;
+    if (query.customerId) where.customerId = query.customerId;
+    if (query.dateFrom || query.dateTo) {
+      where.startTime = {};
+      if (query.dateFrom) where.startTime.gte = new Date(query.dateFrom);
+      if (query.dateTo) where.startTime.lte = new Date(query.dateTo);
+    }
+
+    const [data, total] = await Promise.all([
+      this.prisma.booking.findMany({
+        where,
+        include: { customer: true, service: true, staff: true },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        orderBy: { startTime: 'asc' },
+      }),
+      this.prisma.booking.count({ where }),
+    ]);
+    return { data, total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
+  }
+
+  async findById(businessId: string, id: string) {
+    return this.prisma.booking.findFirst({
+      where: { id, businessId },
+      include: { customer: true, service: true, staff: true, conversation: true, reminders: true },
+    });
+  }
+
+  async create(businessId: string, data: {
+    customerId: string; serviceId: string; staffId?: string;
+    conversationId?: string; startTime: string; notes?: string; customFields?: any;
+  }) {
+    const service = await this.prisma.service.findFirst({ where: { id: data.serviceId, businessId } });
+    if (!service) throw new BadRequestException('Service not found');
+
+    const startTime = new Date(data.startTime);
+    const endTime = new Date(startTime.getTime() + service.durationMins * 60000);
+
+    // Conflict detection
+    if (data.staffId) {
+      const conflict = await this.prisma.booking.findFirst({
+        where: {
+          businessId,
+          staffId: data.staffId,
+          status: { in: ['PENDING', 'CONFIRMED', 'IN_PROGRESS'] },
+          startTime: { lt: endTime },
+          endTime: { gt: startTime },
+        },
+      });
+      if (conflict) throw new BadRequestException('Staff has a conflicting booking at this time');
+    }
+
+    const booking = await this.prisma.booking.create({
+      data: {
+        businessId,
+        customerId: data.customerId,
+        serviceId: data.serviceId,
+        staffId: data.staffId,
+        conversationId: data.conversationId,
+        startTime,
+        endTime,
+        notes: data.notes,
+        customFields: data.customFields || {},
+        status: 'CONFIRMED',
+      },
+      include: { customer: true, service: true, staff: true },
+    });
+
+    // Auto-create 24h reminder
+    const reminderTime = new Date(startTime.getTime() - 24 * 60 * 60 * 1000);
+    if (reminderTime > new Date()) {
+      await this.prisma.reminder.create({
+        data: {
+          businessId,
+          bookingId: booking.id,
+          scheduledAt: reminderTime,
+          status: 'PENDING',
+        },
+      });
+    }
+
+    return booking;
+  }
+
+  async update(businessId: string, id: string, data: any) {
+    if (data.startTime) {
+      const booking = await this.prisma.booking.findFirst({ where: { id, businessId }, include: { service: true } });
+      if (booking) {
+        data.startTime = new Date(data.startTime);
+        data.endTime = new Date(data.startTime.getTime() + booking.service.durationMins * 60000);
+      }
+    }
+    return this.prisma.booking.update({
+      where: { id, businessId },
+      data,
+      include: { customer: true, service: true, staff: true },
+    });
+  }
+
+  async updateStatus(businessId: string, id: string, status: string) {
+    const booking = await this.prisma.booking.update({
+      where: { id, businessId },
+      data: { status },
+      include: { customer: true, service: true, staff: true },
+    });
+
+    // Cancel pending reminders if booking is cancelled/no-show
+    if (['CANCELLED', 'NO_SHOW'].includes(status)) {
+      await this.prisma.reminder.updateMany({
+        where: { bookingId: id, status: 'PENDING' },
+        data: { status: 'CANCELLED' },
+      });
+    }
+
+    return booking;
+  }
+
+  async getCalendar(businessId: string, dateFrom: string, dateTo: string, staffId?: string) {
+    const where: any = {
+      businessId,
+      status: { in: ['PENDING', 'CONFIRMED', 'IN_PROGRESS'] },
+      startTime: { gte: new Date(dateFrom) },
+      endTime: { lte: new Date(dateTo) },
+    };
+    if (staffId) where.staffId = staffId;
+
+    return this.prisma.booking.findMany({
+      where,
+      include: { customer: true, service: true, staff: true },
+      orderBy: { startTime: 'asc' },
+    });
+  }
+}
