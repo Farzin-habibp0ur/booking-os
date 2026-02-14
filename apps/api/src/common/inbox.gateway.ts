@@ -5,6 +5,8 @@ import {
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 
 @WebSocketGateway({
   cors: {
@@ -15,10 +17,39 @@ export class InboxGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server!: Server;
 
+  constructor(
+    private jwtService: JwtService,
+    private configService: ConfigService,
+  ) {}
+
   handleConnection(client: Socket) {
-    const businessId = client.handshake.query.businessId as string;
-    if (businessId) {
-      client.join(`business:${businessId}`);
+    try {
+      const token =
+        (client.handshake.auth?.token as string) ||
+        (client.handshake.query.token as string);
+
+      if (!token) {
+        client.emit('error', { message: 'Authentication required' });
+        client.disconnect();
+        return;
+      }
+
+      const payload = this.jwtService.verify(token, {
+        secret: this.configService.get<string>('JWT_SECRET'),
+      });
+
+      if (!payload.businessId) {
+        client.emit('error', { message: 'Invalid token' });
+        client.disconnect();
+        return;
+      }
+
+      // Store user info on socket for future use
+      (client as any).user = payload;
+      client.join(`business:${payload.businessId}`);
+    } catch {
+      client.emit('error', { message: 'Invalid or expired token' });
+      client.disconnect();
     }
   }
 

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma.service';
 
-interface TimeSlot {
+export interface TimeSlot {
   time: string; // ISO string
   display: string; // "09:00"
   staffId: string;
@@ -117,14 +117,26 @@ export class AvailabilityService {
     return allSlots;
   }
 
-  async getStaffWorkingHours(staffId: string) {
+  async getStaffWorkingHours(businessId: string, staffId: string) {
+    // Verify staff belongs to this business
+    const staff = await this.prisma.staff.findFirst({
+      where: { id: staffId, businessId },
+    });
+    if (!staff) return [];
+
     return this.prisma.workingHours.findMany({
       where: { staffId },
       orderBy: { dayOfWeek: 'asc' },
     });
   }
 
-  async setStaffWorkingHours(staffId: string, hours: { dayOfWeek: number; startTime: string; endTime: string; isOff: boolean }[]) {
+  async setStaffWorkingHours(businessId: string, staffId: string, hours: { dayOfWeek: number; startTime: string; endTime: string; isOff: boolean }[]) {
+    // Verify staff belongs to this business
+    const staff = await this.prisma.staff.findFirst({
+      where: { id: staffId, businessId },
+    });
+    if (!staff) throw new Error('Staff not found');
+
     // Upsert each day
     for (const h of hours) {
       await this.prisma.workingHours.upsert({
@@ -133,17 +145,29 @@ export class AvailabilityService {
         update: { startTime: h.startTime, endTime: h.endTime, isOff: h.isOff },
       });
     }
-    return this.getStaffWorkingHours(staffId);
+    return this.getStaffWorkingHours(businessId, staffId);
   }
 
-  async getStaffTimeOff(staffId: string) {
+  async getStaffTimeOff(businessId: string, staffId: string) {
+    // Verify staff belongs to this business
+    const staff = await this.prisma.staff.findFirst({
+      where: { id: staffId, businessId },
+    });
+    if (!staff) return [];
+
     return this.prisma.timeOff.findMany({
       where: { staffId, endDate: { gte: new Date() } },
       orderBy: { startDate: 'asc' },
     });
   }
 
-  async addTimeOff(staffId: string, data: { startDate: string; endDate: string; reason?: string }) {
+  async addTimeOff(businessId: string, staffId: string, data: { startDate: string; endDate: string; reason?: string }) {
+    // Verify staff belongs to this business
+    const staff = await this.prisma.staff.findFirst({
+      where: { id: staffId, businessId },
+    });
+    if (!staff) throw new Error('Staff not found');
+
     return this.prisma.timeOff.create({
       data: {
         staffId,
@@ -154,7 +178,16 @@ export class AvailabilityService {
     });
   }
 
-  async removeTimeOff(id: string) {
+  async removeTimeOff(businessId: string, id: string) {
+    // Verify time-off belongs to a staff member of this business
+    const timeOff = await this.prisma.timeOff.findUnique({
+      where: { id },
+      include: { staff: { select: { businessId: true } } },
+    });
+    if (!timeOff || timeOff.staff.businessId !== businessId) {
+      throw new Error('Time off entry not found');
+    }
+
     return this.prisma.timeOff.delete({ where: { id } });
   }
 }

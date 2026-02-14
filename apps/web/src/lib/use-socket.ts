@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useAuth } from './auth';
 
@@ -11,10 +11,10 @@ type EventHandler = (data: any) => void;
 let globalSocket: Socket | null = null;
 let listenerCount = 0;
 
-function getSocket(businessId: string): Socket {
+function getSocket(token: string): Socket {
   if (!globalSocket || globalSocket.disconnected) {
     globalSocket = io(SOCKET_URL, {
-      query: { businessId },
+      auth: { token },
       transports: ['websocket', 'polling'],
       autoConnect: true,
     });
@@ -23,14 +23,14 @@ function getSocket(businessId: string): Socket {
 }
 
 export function useSocket(events: Record<string, EventHandler>) {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const handlersRef = useRef(events);
   handlersRef.current = events;
 
   useEffect(() => {
-    if (!user?.businessId) return;
+    if (!user?.businessId || !token) return;
 
-    const socket = getSocket(user.businessId);
+    const socket = getSocket(token);
     listenerCount++;
 
     const boundHandlers: [string, EventHandler][] = Object.entries(handlersRef.current).map(
@@ -50,5 +50,5 @@ export function useSocket(events: Record<string, EventHandler>) {
         listenerCount = 0;
       }
     };
-  }, [user?.businessId]);
+  }, [user?.businessId, token]);
 }

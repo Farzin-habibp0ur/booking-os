@@ -22,17 +22,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    // Support both bcrypt and sha256 (for seeded dev data)
-    let valid = false;
-    if (staff.passwordHash.startsWith('$2')) {
-      // bcrypt hash
-      valid = await bcrypt.compare(password, staff.passwordHash);
-    } else {
-      // sha256 hash (dev seed)
-      const crypto = await import('crypto');
-      const sha256 = crypto.createHash('sha256').update(password).digest('hex');
-      valid = sha256 === staff.passwordHash;
-    }
+    const valid = await bcrypt.compare(password, staff.passwordHash);
 
     if (!valid) {
       throw new UnauthorizedException('Invalid credentials');

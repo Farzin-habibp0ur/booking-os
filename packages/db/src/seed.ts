@@ -1,11 +1,10 @@
 import { PrismaClient } from '@prisma/client';
-import * as crypto from 'crypto';
+import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
-// Simple password hash for dev (bcrypt will be used in the actual app)
-function hashPassword(password: string): string {
-  return crypto.createHash('sha256').update(password).digest('hex');
+async function hashPassword(password: string): Promise<string> {
+  return bcrypt.hash(password, 12);
 }
 
 async function main() {
@@ -15,6 +14,7 @@ async function main() {
   await prisma.message.deleteMany();
   await prisma.reminder.deleteMany();
   await prisma.booking.deleteMany();
+  await prisma.conversationNote.deleteMany();
   await prisma.conversation.deleteMany();
   await prisma.messageTemplate.deleteMany();
   await prisma.timeOff.deleteMany();
@@ -47,7 +47,7 @@ async function main() {
       businessId: business.id,
       name: 'Dr. Sarah Chen',
       email: 'sarah@glowclinic.com',
-      passwordHash: hashPassword('password123'),
+      passwordHash: await hashPassword('password123'),
       role: 'OWNER',
     },
   });
@@ -57,7 +57,7 @@ async function main() {
       businessId: business.id,
       name: 'Maria Garcia',
       email: 'maria@glowclinic.com',
-      passwordHash: hashPassword('password123'),
+      passwordHash: await hashPassword('password123'),
       role: 'AGENT',
     },
   });

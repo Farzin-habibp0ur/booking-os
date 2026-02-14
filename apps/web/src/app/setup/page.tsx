@@ -86,7 +86,9 @@ export default function SetupPage() {
 
   const addStaff = async () => {
     if (!newStaffName || !newStaffEmail) return;
-    await api.post('/staff', { name: newStaffName, email: newStaffEmail, password: 'password123', role: newStaffRole });
+    const tempPassword = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+    await api.post('/staff', { name: newStaffName, email: newStaffEmail, password: tempPassword, role: newStaffRole });
+    alert(`Staff member created. Temporary password: ${tempPassword}\nPlease share it securely and ask them to change it.`);
     setNewStaffName(''); setNewStaffEmail(''); setNewStaffRole('AGENT');
     const updated = await api.get<any[]>('/staff');
     setStaffList(updated);

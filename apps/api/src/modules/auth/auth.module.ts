@@ -13,10 +13,25 @@ import { JwtStrategy } from './jwt.strategy';
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        secret: config.get('JWT_SECRET', 'dev-secret-change-in-production'),
-        signOptions: { expiresIn: config.get('JWT_EXPIRATION', '1d') },
-      }),
+      useFactory: (config: ConfigService) => {
+        const secret = config.get<string>('JWT_SECRET');
+        const isProduction = config.get('NODE_ENV') === 'production';
+
+        if (isProduction && (!secret || secret === 'change-me-in-production' || secret === 'dev-secret-change-in-production')) {
+          throw new Error('JWT_SECRET must be set to a strong, unique value in production');
+        }
+
+        return {
+          secret: secret || 'dev-secret-change-in-production',
+          signOptions: {
+            expiresIn: config.get('JWT_EXPIRATION', '15m'),
+            algorithm: 'HS256',
+          },
+          verifyOptions: {
+            algorithms: ['HS256'],
+          },
+        };
+      },
     }),
   ],
   controllers: [AuthController],

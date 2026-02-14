@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('sarah@glowclinic.com');
-  const [password, setPassword] = useState('password123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
@@ -61,7 +61,9 @@ export default function LoginPage() {
             {loading ? 'Signing in...' : 'Sign in'}
           </button>
         </form>
-        <p className="text-xs text-gray-400 text-center mt-4">Demo: sarah@glowclinic.com / password123</p>
+        {process.env.NODE_ENV === 'development' && (
+          <p className="text-xs text-gray-400 text-center mt-4">Dev: sarah@glowclinic.com / password123</p>
+        )}
       </div>
     </div>
   );
