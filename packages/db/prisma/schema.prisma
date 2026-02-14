@@ -13,10 +13,11 @@ model Business {
   slug         String   @unique
   phone        String?
   timezone     String   @default("UTC")
-  verticalPack String   @default("general")
-  packConfig   Json     @default("{}")
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  verticalPack  String   @default("general")
+  packConfig    Json     @default("{}")
+  defaultLocale String   @default("en")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   staff             Staff[]
   customers         Customer[]
@@ -25,6 +26,7 @@ model Business {
   conversations     Conversation[]
   reminders         Reminder[]
   messageTemplates  MessageTemplate[]
+  translations      Translation[]
 
   @@map("businesses")
 }
@@ -36,6 +38,7 @@ model Staff {
   email        String   @unique
   passwordHash String
   role         String   @default("AGENT")
+  locale       String?
   isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -244,4 +247,20 @@ model TimeOff {
 
   @@index([staffId])
   @@map("time_off")
+}
+
+model Translation {
+  id         String   @id @default(cuid())
+  businessId String
+  locale     String
+  key        String
+  value      String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id])
+
+  @@unique([businessId, locale, key])
+  @@index([businessId, locale])
+  @@map("translations")
 }

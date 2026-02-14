@@ -4,6 +4,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { api } from '@/lib/api';
 import { useSocket } from '@/lib/use-socket';
 import { useToast } from '@/lib/toast';
+import { useI18n } from '@/lib/i18n';
 import {
   Send, Plus, User, Phone, Tag, Search, MessageSquare,
   Clock, AlertCircle, UserCheck, Archive, Inbox as InboxIcon,
@@ -19,33 +20,21 @@ interface FilterCounts {
   waiting: number; snoozed: number; closed: number;
 }
 
-const FILTERS: { key: Filter; label: string; icon: any }[] = [
-  { key: 'all', label: 'All', icon: InboxIcon },
-  { key: 'unassigned', label: 'Unassigned', icon: UserCheck },
-  { key: 'mine', label: 'Mine', icon: User },
-  { key: 'overdue', label: 'Overdue', icon: AlertCircle },
-  { key: 'waiting', label: 'Waiting', icon: Clock },
-  { key: 'snoozed', label: 'Snoozed', icon: AlarmClock },
-  { key: 'closed', label: 'Closed', icon: Archive },
-];
+const FILTER_ICONS: Record<Filter, any> = {
+  all: InboxIcon, unassigned: UserCheck, mine: User, overdue: AlertCircle,
+  waiting: Clock, snoozed: AlarmClock, closed: Archive,
+};
 
-const QUICK_REPLIES = [
-  'Thank you!',
-  'I\'ll check and get back to you.',
-  'Your appointment is confirmed.',
-  'Can you share your availability?',
-  'We\'ll follow up shortly.',
-];
-
-const SNOOZE_OPTIONS = [
-  { label: '1 hour', hours: 1 },
-  { label: '3 hours', hours: 3 },
-  { label: 'Tomorrow 9am', hours: -1 }, // special
-  { label: '1 day', hours: 24 },
-  { label: '3 days', hours: 72 },
+const SNOOZE_HOURS = [
+  { key: '1h', hours: 1 },
+  { key: '3h', hours: 3 },
+  { key: 'tomorrow', hours: -1 },
+  { key: '1d', hours: 24 },
+  { key: '3d', hours: 72 },
 ];
 
 export default function InboxPage() {
+  const { t } = useI18n();
   const [conversations, setConversations] = useState<any[]>([]);
   const [selected, setSelected] = useState<any>(null);
   const [messages, setMessages] = useState<any[]>([]);
@@ -74,17 +63,41 @@ export default function InboxPage() {
   const selectedRef = useRef<any>(null);
   const { toast } = useToast();
 
-  // Keep a ref to selected so socket handlers can access current value
+  const FILTER_KEYS: Filter[] = ['all', 'unassigned', 'mine', 'overdue', 'waiting', 'snoozed', 'closed'];
+
+  const FILTER_LABELS: Record<Filter, string> = {
+    all: t('inbox.filter_all'),
+    unassigned: t('inbox.filter_unassigned'),
+    mine: t('inbox.filter_mine'),
+    overdue: t('inbox.filter_overdue'),
+    waiting: t('inbox.filter_waiting'),
+    snoozed: t('inbox.filter_snoozed'),
+    closed: t('inbox.filter_closed'),
+  };
+
+  const QUICK_REPLIES = [
+    t('inbox.quick_reply_1'),
+    t('inbox.quick_reply_2'),
+    t('inbox.quick_reply_3'),
+    t('inbox.quick_reply_4'),
+    t('inbox.quick_reply_5'),
+  ];
+
+  const SNOOZE_LABELS: Record<string, string> = {
+    '1h': t('inbox.snooze_1h'),
+    '3h': t('inbox.snooze_3h'),
+    'tomorrow': t('inbox.snooze_tomorrow'),
+    '1d': t('inbox.snooze_1d'),
+    '3d': t('inbox.snooze_3d'),
+  };
+
   selectedRef.current = selected;
 
-  // WebSocket: listen for real-time events
   useSocket({
     'message:new': useCallback((msg: any) => {
-      // Refresh messages if the message belongs to the currently selected conversation
       if (selectedRef.current && msg.conversationId === selectedRef.current.id) {
         loadMessages(selectedRef.current.id);
       }
-      // Always refresh conversation list + counts
       loadConversations();
       loadFilterCounts();
     }, []),
@@ -93,7 +106,6 @@ export default function InboxPage() {
       loadFilterCounts();
     }, []),
     'booking:update': useCallback((_booking: any) => {
-      // Refresh customer bookings in sidebar
       if (selectedRef.current?.customerId) {
         loadCustomerBookings(selectedRef.current.customerId);
       }
@@ -108,7 +120,6 @@ export default function InboxPage() {
 
   useEffect(() => {
     loadConversations();
-    // Reduced polling frequency — WebSocket handles real-time, this is just a fallback
     pollRef.current = setInterval(() => {
       loadConversations();
       loadFilterCounts();
@@ -124,7 +135,6 @@ export default function InboxPage() {
       loadNotes(selected.id);
       setConvTags(selected.tags || []);
       setSidebarTab('info');
-      // Reduced message polling — WebSocket handles real-time
       msgPollRef.current = setInterval(() => loadMessages(selected.id), 15000);
     }
     return () => clearInterval(msgPollRef.current);
@@ -134,7 +144,6 @@ export default function InboxPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Global keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -197,7 +206,7 @@ export default function InboxPage() {
       await loadConversations();
       await loadFilterCounts();
     } catch (e) {
-      toast('Failed to send message', 'error');
+      toast(t('inbox.failed_to_send'), 'error');
       console.error(e);
     }
     setSending(false);
@@ -209,21 +218,21 @@ export default function InboxPage() {
       const updated = await api.patch<any>(`/conversations/${selected.id}/assign`, { staffId });
       setSelected(updated);
       setShowAssignDropdown(false);
-      toast(staffId ? `Assigned to ${updated.assignedTo?.name}` : 'Unassigned');
+      toast(staffId ? t('inbox.assigned_success', { name: updated.assignedTo?.name || '' }) : t('inbox.unassigned_success'));
       await loadConversations();
       await loadFilterCounts();
-    } catch (e) { toast('Failed to assign', 'error'); console.error(e); }
+    } catch (e) { toast(t('inbox.failed_to_assign'), 'error'); console.error(e); }
   };
 
   const closeConversation = async () => {
     if (!selected) return;
     try {
       await api.patch(`/conversations/${selected.id}/status`, { status: 'RESOLVED' });
-      toast('Conversation closed');
+      toast(t('inbox.conversation_closed'));
       setSelected(null);
       await loadConversations();
       await loadFilterCounts();
-    } catch (e) { toast('Failed to close', 'error'); console.error(e); }
+    } catch (e) { toast(t('inbox.failed_to_close'), 'error'); console.error(e); }
   };
 
   const snoozeConversation = async (hours: number) => {
@@ -239,11 +248,11 @@ export default function InboxPage() {
     try {
       await api.patch(`/conversations/${selected.id}/snooze`, { until: until.toISOString() });
       setShowSnoozeMenu(false);
-      toast('Conversation snoozed');
+      toast(t('inbox.conversation_snoozed'));
       setSelected(null);
       await loadConversations();
       await loadFilterCounts();
-    } catch (e) { toast('Failed to snooze', 'error'); console.error(e); }
+    } catch (e) { toast(t('inbox.failed_to_snooze'), 'error'); console.error(e); }
   };
 
   const addNote = async () => {
@@ -251,16 +260,16 @@ export default function InboxPage() {
     try {
       await api.post(`/conversations/${selected.id}/notes`, { content: newNote });
       setNewNote('');
-      toast('Note added');
+      toast(t('inbox.note_added'));
       await loadNotes(selected.id);
-    } catch (e) { toast('Failed to add note', 'error'); console.error(e); }
+    } catch (e) { toast(t('inbox.failed_to_add_note'), 'error'); console.error(e); }
   };
 
   const deleteNote = async (noteId: string) => {
     if (!selected) return;
     try {
       await api.del(`/conversations/${selected.id}/notes/${noteId}`);
-      toast('Note deleted');
+      toast(t('inbox.note_deleted'));
       await loadNotes(selected.id);
     } catch (e) { console.error(e); }
   };
@@ -272,13 +281,13 @@ export default function InboxPage() {
       await api.patch(`/conversations/${selected.id}/tags`, { tags });
       setConvTags(tags);
       setNewTag('');
-      toast(`Tag "${tag}" added`);
+      toast(t('inbox.tag_added', { tag }));
     } catch (e) { console.error(e); }
   };
 
   const removeConvTag = async (tag: string) => {
     if (!selected) return;
-    const tags = convTags.filter((t) => t !== tag);
+    const tags = convTags.filter((tg) => tg !== tag);
     try {
       await api.patch(`/conversations/${selected.id}/tags`, { tags });
       setConvTags(tags);
@@ -305,9 +314,10 @@ export default function InboxPage() {
     <div className="flex h-full">
       {/* Filter sidebar */}
       <div className="w-48 border-r bg-gray-50 flex flex-col">
-        <div className="p-3 border-b"><h2 className="font-semibold text-sm text-gray-700">Filters</h2></div>
+        <div className="p-3 border-b"><h2 className="font-semibold text-sm text-gray-700">{t('inbox.title')}</h2></div>
         <div className="flex-1 py-1">
-          {FILTERS.map(({ key, label, icon: Icon }) => {
+          {FILTER_KEYS.map((key) => {
+            const Icon = FILTER_ICONS[key];
             const count = filterCounts[key] || 0;
             return (
               <button
@@ -318,7 +328,7 @@ export default function InboxPage() {
                   activeFilter === key ? 'bg-blue-50 text-blue-700 font-medium border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-100',
                 )}
               >
-                <div className="flex items-center gap-2"><Icon size={15} /><span>{label}</span></div>
+                <div className="flex items-center gap-2"><Icon size={15} /><span>{FILTER_LABELS[key]}</span></div>
                 {count > 0 && (
                   <span className={cn('text-[10px] px-1.5 py-0.5 rounded-full min-w-[20px] text-center',
                     key === 'overdue' ? 'bg-red-100 text-red-700' :
@@ -336,10 +346,10 @@ export default function InboxPage() {
       {/* Conversation list */}
       <div className="w-80 border-r bg-white flex flex-col">
         <div className="p-3 border-b space-y-2">
-          <h2 className="font-semibold">Inbox</h2>
+          <h2 className="font-semibold">{t('inbox.title')}</h2>
           <div className="relative">
             <Search size={14} className="absolute left-2.5 top-2.5 text-gray-400" />
-            <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search by name or phone..." className="w-full pl-8 pr-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder={t('inbox.search_placeholder')} className="w-full pl-8 pr-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
             {searchQuery && <button onClick={() => setSearchQuery('')} className="absolute right-2.5 top-2.5 text-gray-400 hover:text-gray-600"><X size={14} /></button>}
           </div>
         </div>
@@ -349,14 +359,14 @@ export default function InboxPage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
                   {c.isOverdue && <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" />}
-                  <p className="text-sm font-medium truncate">{c.customer?.name || 'Unknown'}</p>
+                  <p className="text-sm font-medium truncate">{c.customer?.name || t('common.unknown')}</p>
                 </div>
                 <div className="flex items-center gap-1">
-                  {c.isNew && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 font-medium">New</span>}
+                  {c.isNew && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 font-medium">{t('inbox.new_badge')}</span>}
                   {c.status === 'SNOOZED' && <AlarmClock size={12} className="text-purple-500" />}
                 </div>
               </div>
-              <p className="text-xs text-gray-500 truncate mt-0.5">{c.messages?.[0]?.content || 'No messages'}</p>
+              <p className="text-xs text-gray-500 truncate mt-0.5">{c.messages?.[0]?.content || t('dashboard.no_messages')}</p>
               <div className="flex items-center justify-between mt-1">
                 <div className="flex items-center gap-1.5">
                   <span className={cn('text-[9px] px-1.5 py-0.5 rounded-full',
@@ -364,16 +374,15 @@ export default function InboxPage() {
                     c.status === 'WAITING' ? 'bg-yellow-100 text-yellow-700' :
                     c.status === 'SNOOZED' ? 'bg-purple-100 text-purple-700' :
                     c.status === 'RESOLVED' ? 'bg-gray-100 text-gray-500' : 'bg-gray-100 text-gray-600',
-                  )}>{c.status}</span>
+                  )}>{t(`status.${c.status.toLowerCase()}`)}</span>
                   {c.assignedTo && <span className="text-[9px] text-gray-400">{c.assignedTo.name}</span>}
                 </div>
                 {c.lastMessageAt && <span className="text-[9px] text-gray-400">{formatRelativeTime(c.lastMessageAt)}</span>}
               </div>
-              {/* Conversation tags */}
               {c.tags?.length > 0 && (
                 <div className="flex gap-1 mt-1">
-                  {c.tags.slice(0, 3).map((t: string) => (
-                    <span key={t} className="text-[8px] bg-blue-50 text-blue-600 px-1 py-0.5 rounded">{t}</span>
+                  {c.tags.slice(0, 3).map((tg: string) => (
+                    <span key={tg} className="text-[8px] bg-blue-50 text-blue-600 px-1 py-0.5 rounded">{tg}</span>
                   ))}
                 </div>
               )}
@@ -382,7 +391,7 @@ export default function InboxPage() {
           {conversations.length === 0 && (
             <div className="text-center p-6">
               <InboxIcon size={32} className="mx-auto text-gray-300 mb-2" />
-              <p className="text-gray-400 text-sm">{searchQuery ? `No results for "${searchQuery}"` : 'No conversations in this filter.'}</p>
+              <p className="text-gray-400 text-sm">{searchQuery ? t('inbox.no_search_results', { query: searchQuery }) : t('inbox.no_conversations')}</p>
             </div>
           )}
         </div>
@@ -398,24 +407,23 @@ export default function InboxPage() {
                 <p className="text-xs text-gray-500">{selected.customer?.phone}</p>
               </div>
               <div className="flex items-center gap-2">
-                {/* Snooze button */}
                 <div className="relative">
                   <button onClick={() => setShowSnoozeMenu(!showSnoozeMenu)} className="text-xs text-gray-500 hover:text-purple-600 border px-2 py-1 rounded flex items-center gap-1">
-                    <AlarmClock size={12} /> Snooze
+                    <AlarmClock size={12} /> {t('inbox.snooze')}
                   </button>
                   {showSnoozeMenu && (
                     <div className="absolute right-0 mt-1 w-40 bg-white border rounded-md shadow-lg z-20">
-                      {SNOOZE_OPTIONS.map((opt) => (
-                        <button key={opt.label} onClick={() => snoozeConversation(opt.hours)} className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 border-b last:border-0">
-                          {opt.label}
+                      {SNOOZE_HOURS.map((opt) => (
+                        <button key={opt.key} onClick={() => snoozeConversation(opt.hours)} className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 border-b last:border-0">
+                          {SNOOZE_LABELS[opt.key]}
                         </button>
                       ))}
                     </div>
                   )}
                 </div>
-                <button onClick={closeConversation} className="text-xs text-gray-500 hover:text-gray-700 border px-2 py-1 rounded">Close</button>
+                <button onClick={closeConversation} className="text-xs text-gray-500 hover:text-gray-700 border px-2 py-1 rounded">{t('inbox.close_conversation')}</button>
                 <button onClick={() => setShowBookingForm(!showBookingForm)} className="flex items-center gap-1 bg-blue-600 text-white px-3 py-1.5 rounded-md text-sm hover:bg-blue-700">
-                  <Plus size={14} /> Booking
+                  <Plus size={14} /> {t('inbox.new_booking')}
                 </button>
               </div>
             </div>
@@ -454,21 +462,21 @@ export default function InboxPage() {
               {showTemplates && (
                 <div className="mb-2 border rounded-md bg-white shadow-lg max-h-48 overflow-auto">
                   <div className="px-3 py-2 border-b bg-gray-50 flex items-center justify-between">
-                    <span className="text-xs font-medium text-gray-600">Templates</span>
+                    <span className="text-xs font-medium text-gray-600">{t('inbox.templates')}</span>
                     <button onClick={() => setShowTemplates(false)} className="text-gray-400 hover:text-gray-600"><X size={14} /></button>
                   </div>
-                  {templates.map((t) => (
-                    <button key={t.id} onClick={() => insertTemplate(t)} className="w-full text-left px-3 py-2 hover:bg-gray-50 border-b last:border-0">
-                      <p className="text-sm font-medium">{t.name}</p>
-                      <p className="text-xs text-gray-500 truncate">{t.body}</p>
+                  {templates.map((tpl) => (
+                    <button key={tpl.id} onClick={() => insertTemplate(tpl)} className="w-full text-left px-3 py-2 hover:bg-gray-50 border-b last:border-0">
+                      <p className="text-sm font-medium">{tpl.name}</p>
+                      <p className="text-xs text-gray-500 truncate">{tpl.body}</p>
                     </button>
                   ))}
                 </div>
               )}
               <div className="flex gap-2 items-end">
                 <div className="flex gap-0.5">
-                  <button onClick={() => setShowTemplates(!showTemplates)} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded" title="Templates"><FileText size={18} /></button>
-                  <button onClick={() => setShowQuickReplies(!showQuickReplies)} className={cn('p-2 rounded', showQuickReplies ? 'text-blue-600 bg-blue-50' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100')} title="Quick replies"><Zap size={18} /></button>
+                  <button onClick={() => setShowTemplates(!showTemplates)} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded" title={t('inbox.templates')}><FileText size={18} /></button>
+                  <button onClick={() => setShowQuickReplies(!showQuickReplies)} className={cn('p-2 rounded', showQuickReplies ? 'text-blue-600 bg-blue-50' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100')} title={t('inbox.quick_replies')}><Zap size={18} /></button>
                 </div>
                 <textarea
                   value={newMessage} onChange={(e) => setNewMessage(e.target.value)}
@@ -476,7 +484,7 @@ export default function InboxPage() {
                     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
                     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); sendMessage(); }
                   }}
-                  placeholder="Type a message..." rows={1}
+                  placeholder={t('inbox.type_message')} rows={1}
                   className="flex-1 border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none min-h-[38px] max-h-24"
                   style={{ height: 'auto' }}
                   onInput={(e) => { const el = e.currentTarget; el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 96) + 'px'; }}
@@ -488,8 +496,8 @@ export default function InboxPage() {
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-gray-400">
             <MessageSquare size={48} className="mb-3 text-gray-300" />
-            <p className="font-medium">Select a conversation</p>
-            <p className="text-sm">Choose a conversation from the list to start messaging</p>
+            <p className="font-medium">{t('inbox.select_conversation')}</p>
+            <p className="text-sm">{t('inbox.select_conversation_hint')}</p>
           </div>
         )}
       </div>
@@ -497,17 +505,15 @@ export default function InboxPage() {
       {/* Customer sidebar */}
       {selected && customer && (
         <div className="w-72 border-l bg-white overflow-auto">
-          {/* Tabs */}
           <div className="flex border-b">
-            <button onClick={() => setSidebarTab('info')} className={cn('flex-1 py-2.5 text-xs font-medium text-center', sidebarTab === 'info' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500')}>Info</button>
+            <button onClick={() => setSidebarTab('info')} className={cn('flex-1 py-2.5 text-xs font-medium text-center', sidebarTab === 'info' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500')}>{t('inbox.info_tab')}</button>
             <button onClick={() => setSidebarTab('notes')} className={cn('flex-1 py-2.5 text-xs font-medium text-center relative', sidebarTab === 'notes' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500')}>
-              Notes {notes.length > 0 && <span className="ml-1 text-[9px] bg-yellow-100 text-yellow-700 px-1 py-0.5 rounded-full">{notes.length}</span>}
+              {t('inbox.notes_tab')} {notes.length > 0 && <span className="ml-1 text-[9px] bg-yellow-100 text-yellow-700 px-1 py-0.5 rounded-full">{notes.length}</span>}
             </button>
           </div>
 
           {sidebarTab === 'info' && (
             <>
-              {/* Customer profile */}
               <div className="p-4 border-b">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-sm">
@@ -521,37 +527,35 @@ export default function InboxPage() {
                 {customer.email && <p className="text-xs text-gray-500 mb-2">{customer.email}</p>}
                 {customer.tags?.length > 0 && (
                   <div className="flex flex-wrap gap-1 mb-2">
-                    {customer.tags.map((t: string) => <span key={t} className="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{t}</span>)}
+                    {customer.tags.map((tg: string) => <span key={tg} className="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{tg}</span>)}
                   </div>
                 )}
               </div>
 
-              {/* Conversation tags */}
               <div className="p-4 border-b">
-                <span className="text-xs font-semibold text-gray-500 uppercase">Conversation Tags</span>
+                <span className="text-xs font-semibold text-gray-500 uppercase">{t('inbox.conversation_tags')}</span>
                 <div className="flex flex-wrap gap-1 mt-2">
-                  {convTags.map((t) => (
-                    <span key={t} className="inline-flex items-center gap-0.5 text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">
-                      {t} <button onClick={() => removeConvTag(t)} className="hover:text-red-500"><X size={8} /></button>
+                  {convTags.map((tg) => (
+                    <span key={tg} className="inline-flex items-center gap-0.5 text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">
+                      {tg} <button onClick={() => removeConvTag(tg)} className="hover:text-red-500"><X size={8} /></button>
                     </span>
                   ))}
                   <input value={newTag} onChange={(e) => setNewTag(e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addConvTag(newTag); } }}
-                    placeholder="+ tag" className="text-[10px] border rounded px-1.5 py-0.5 w-14 focus:w-24 transition-all" />
+                    placeholder={t('inbox.add_tag_placeholder')} className="text-[10px] border rounded px-1.5 py-0.5 w-14 focus:w-24 transition-all" />
                 </div>
               </div>
 
-              {/* Assignment */}
               <div className="p-4 border-b">
-                <span className="text-xs font-semibold text-gray-500 uppercase">Assigned to</span>
+                <span className="text-xs font-semibold text-gray-500 uppercase">{t('inbox.assigned_to')}</span>
                 <div className="relative mt-1">
                   <button onClick={() => setShowAssignDropdown(!showAssignDropdown)} className="w-full flex items-center justify-between border rounded-md px-2.5 py-1.5 text-sm hover:bg-gray-50">
-                    <span>{selected.assignedTo?.name || 'Unassigned'}</span>
+                    <span>{selected.assignedTo?.name || t('common.unassigned')}</span>
                     <ChevronDown size={14} className="text-gray-400" />
                   </button>
                   {showAssignDropdown && (
                     <div className="absolute z-10 mt-1 w-full bg-white border rounded-md shadow-lg">
-                      <button onClick={() => assignConversation(null)} className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 border-b">Unassign</button>
+                      <button onClick={() => assignConversation(null)} className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 border-b">{t('inbox.unassign')}</button>
                       {staffList.map((s) => (
                         <button key={s.id} onClick={() => assignConversation(s.id)} className={cn('w-full text-left px-3 py-2 text-sm hover:bg-gray-50', selected.assignedTo?.id === s.id && 'bg-blue-50 text-blue-700')}>{s.name}</button>
                       ))}
@@ -559,37 +563,35 @@ export default function InboxPage() {
                   )}
                 </div>
                 {!selected.assignedTo && (
-                  <button onClick={() => assignConversation(staffList[0]?.id)} className="mt-2 text-xs text-blue-600 hover:text-blue-700 font-medium">Assign to me</button>
+                  <button onClick={() => assignConversation(staffList[0]?.id)} className="mt-2 text-xs text-blue-600 hover:text-blue-700 font-medium">{t('inbox.assign_to_me')}</button>
                 )}
               </div>
 
-              {/* Snoozed info */}
               {selected.status === 'SNOOZED' && selected.snoozedUntil && (
                 <div className="p-4 border-b bg-purple-50">
                   <div className="flex items-center gap-1.5 text-purple-700 text-xs">
                     <AlarmClock size={12} />
-                    <span>Snoozed until {new Date(selected.snoozedUntil).toLocaleString()}</span>
+                    <span>{t('inbox.snoozed_until', { datetime: new Date(selected.snoozedUntil).toLocaleString() })}</span>
                   </div>
                 </div>
               )}
 
-              {/* Bookings */}
               <div className="p-4 border-b">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-semibold text-gray-500 uppercase">Bookings</span>
-                  <button onClick={() => setShowBookingForm(true)} className="text-xs text-blue-600 hover:text-blue-700">+ New</button>
+                  <span className="text-xs font-semibold text-gray-500 uppercase">{t('inbox.bookings_section')}</span>
+                  <button onClick={() => setShowBookingForm(true)} className="text-xs text-blue-600 hover:text-blue-700">{t('inbox.bookings_new')}</button>
                 </div>
                 {customerBookings.filter((b: any) => ['PENDING', 'CONFIRMED'].includes(b.status)).slice(0, 3).map((b: any) => (
                   <div key={b.id} className="border rounded p-2 mb-1.5">
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-medium">{b.service?.name}</p>
-                      <span className={cn('text-[9px] px-1.5 py-0.5 rounded-full', b.status === 'CONFIRMED' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700')}>{b.status}</span>
+                      <span className={cn('text-[9px] px-1.5 py-0.5 rounded-full', b.status === 'CONFIRMED' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700')}>{t(`status.${b.status.toLowerCase()}`)}</span>
                     </div>
                     <p className="text-xs text-gray-500 mt-0.5">{new Date(b.startTime).toLocaleDateString()} at {new Date(b.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                   </div>
                 ))}
                 {customerBookings.filter((b: any) => ['PENDING', 'CONFIRMED'].includes(b.status)).length === 0 && (
-                  <p className="text-xs text-gray-400">No upcoming bookings</p>
+                  <p className="text-xs text-gray-400">{t('inbox.no_upcoming_bookings')}</p>
                 )}
               </div>
             </>
@@ -597,15 +599,13 @@ export default function InboxPage() {
 
           {sidebarTab === 'notes' && (
             <div className="p-4">
-              {/* Add note */}
               <div className="mb-4">
-                <textarea value={newNote} onChange={(e) => setNewNote(e.target.value)} placeholder="Add an internal note..." rows={3} className="w-full border rounded-md px-3 py-2 text-sm resize-none" />
+                <textarea value={newNote} onChange={(e) => setNewNote(e.target.value)} placeholder={t('inbox.add_note_placeholder')} rows={3} className="w-full border rounded-md px-3 py-2 text-sm resize-none" />
                 <button onClick={addNote} disabled={!newNote.trim()} className="mt-1 bg-yellow-500 text-white px-3 py-1.5 rounded-md text-xs hover:bg-yellow-600 disabled:opacity-50 w-full">
-                  <StickyNote size={12} className="inline mr-1" /> Add Note
+                  <StickyNote size={12} className="inline mr-1" /> {t('inbox.add_note')}
                 </button>
               </div>
 
-              {/* Notes list */}
               <div className="space-y-3">
                 {notes.map((n) => (
                   <div key={n.id} className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
@@ -619,7 +619,7 @@ export default function InboxPage() {
                   </div>
                 ))}
                 {notes.length === 0 && (
-                  <p className="text-xs text-gray-400 text-center py-4">No notes yet. Add one above.</p>
+                  <p className="text-xs text-gray-400 text-center py-4">{t('inbox.no_notes')}</p>
                 )}
               </div>
             </div>

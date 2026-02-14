@@ -6,11 +6,13 @@ import { api } from '@/lib/api';
 import { Search, Plus, ChevronRight, Users } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { usePack } from '@/lib/vertical-pack';
+import { useI18n } from '@/lib/i18n';
 import { TableRowSkeleton, EmptyState } from '@/components/skeleton';
 
 export default function CustomersPage() {
   const router = useRouter();
   const pack = usePack();
+  const { t } = useI18n();
   const [customers, setCustomers] = useState<any>({ data: [], total: 0 });
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -31,11 +33,11 @@ export default function CustomersPage() {
     <div className="p-6">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-2xl font-bold">{pack.labels.customer}s</h1>
-          <p className="text-sm text-gray-500">{customers.total || customers.data?.length || 0} total {pack.labels.customer.toLowerCase()}s</p>
+          <h1 className="text-2xl font-bold">{t('customers.title', { entity: pack.labels.customer })}</h1>
+          <p className="text-sm text-gray-500">{t('customers.total_count', { count: customers.total || customers.data?.length || 0, entity: pack.labels.customer.toLowerCase() })}</p>
         </div>
         <button onClick={() => setShowForm(true)} className="flex items-center gap-1 bg-blue-600 text-white px-3 py-2 rounded-md text-sm hover:bg-blue-700">
-          <Plus size={16} /> Add {pack.labels.customer}
+          <Plus size={16} /> {t('customers.add_button', { entity: pack.labels.customer })}
         </button>
       </div>
 
@@ -45,22 +47,22 @@ export default function CustomersPage() {
           <input
             value={search}
             onChange={(e) => { setSearch(e.target.value); if (!e.target.value) load(''); }}
-            placeholder="Search by name, phone, or email..."
+            placeholder={t('customers.search_placeholder')}
             className="w-full border rounded-md pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
-        <button type="submit" className="border rounded-md px-4 py-2 text-sm hover:bg-gray-50">Search</button>
+        <button type="submit" className="border rounded-md px-4 py-2 text-sm hover:bg-gray-50">{t('common.search')}</button>
       </form>
 
       <div className="bg-white border rounded-lg overflow-hidden">
         <table className="w-full">
           <thead className="bg-gray-50 border-b">
             <tr>
-              <th className="text-left p-3 text-xs font-medium text-gray-500 uppercase">Name</th>
-              <th className="text-left p-3 text-xs font-medium text-gray-500 uppercase">Phone</th>
-              <th className="text-left p-3 text-xs font-medium text-gray-500 uppercase">Email</th>
-              <th className="text-left p-3 text-xs font-medium text-gray-500 uppercase">Tags</th>
-              <th className="text-left p-3 text-xs font-medium text-gray-500 uppercase">Created</th>
+              <th className="text-left p-3 text-xs font-medium text-gray-500 uppercase">{t('common.name')}</th>
+              <th className="text-left p-3 text-xs font-medium text-gray-500 uppercase">{t('common.phone')}</th>
+              <th className="text-left p-3 text-xs font-medium text-gray-500 uppercase">{t('common.email')}</th>
+              <th className="text-left p-3 text-xs font-medium text-gray-500 uppercase">{t('common.tags')}</th>
+              <th className="text-left p-3 text-xs font-medium text-gray-500 uppercase">{t('common.date')}</th>
               <th className="w-8"></th>
             </tr>
           </thead>
@@ -90,9 +92,9 @@ export default function CustomersPage() {
         {!loading && (!customers.data || customers.data.length === 0) && (
           <EmptyState
             icon={Users}
-            title={`No ${pack.labels.customer.toLowerCase()}s found`}
-            description={search ? `No results for "${search}".` : `Add your first ${pack.labels.customer.toLowerCase()} to get started.`}
-            action={!search ? { label: `Add ${pack.labels.customer}`, onClick: () => setShowForm(true) } : undefined}
+            title={t('customers.no_customers', { entity: pack.labels.customer.toLowerCase() })}
+            description={search ? t('customers.no_search_results', { query: search }) : t('customers.add_first', { entity: pack.labels.customer.toLowerCase() })}
+            action={!search ? { label: t('customers.add_button', { entity: pack.labels.customer }), onClick: () => setShowForm(true) } : undefined}
           />
         )}
       </div>
@@ -103,6 +105,8 @@ export default function CustomersPage() {
 }
 
 function CustomerForm({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
+  const { t } = useI18n();
+  const pack = usePack();
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
@@ -116,14 +120,14 @@ function CustomerForm({ onClose, onCreated }: { onClose: () => void; onCreated: 
   return (
     <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-md">
-        <h2 className="text-lg font-semibold mb-4">Add Customer</h2>
+        <h2 className="text-lg font-semibold mb-4">{t('customers.add_title', { entity: pack.labels.customer })}</h2>
         <form onSubmit={handleSubmit} className="space-y-3">
-          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" required className="w-full border rounded px-3 py-2 text-sm" />
-          <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone (E.164)" required className="w-full border rounded px-3 py-2 text-sm" />
-          <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email (optional)" type="email" className="w-full border rounded px-3 py-2 text-sm" />
+          <input value={name} onChange={(e) => setName(e.target.value)} placeholder={t('customers.name_placeholder')} required className="w-full border rounded px-3 py-2 text-sm" />
+          <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={t('customers.phone_placeholder')} required className="w-full border rounded px-3 py-2 text-sm" />
+          <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('customers.email_placeholder')} type="email" className="w-full border rounded px-3 py-2 text-sm" />
           <div className="flex gap-2 justify-end">
-            <button type="button" onClick={onClose} className="px-4 py-2 border rounded text-sm">Cancel</button>
-            <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded text-sm">Create</button>
+            <button type="button" onClick={onClose} className="px-4 py-2 border rounded text-sm">{t('common.cancel')}</button>
+            <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded text-sm">{t('common.create')}</button>
           </div>
         </form>
       </div>

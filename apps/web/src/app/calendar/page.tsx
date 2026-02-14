@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { api } from '@/lib/api';
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { useI18n } from '@/lib/i18n';
 import BookingFormModal from '@/components/booking-form-modal';
 import BookingDetailModal from '@/components/booking-detail-modal';
 
@@ -20,6 +21,7 @@ const STATUS_COLORS: Record<string, { bg: string; border: string; text: string }
 };
 
 export default function CalendarPage() {
+  const { t } = useI18n();
   const [bookings, setBookings] = useState<any[]>([]);
   const [staff, setStaff] = useState<any[]>([]);
   const [selectedStaff, setSelectedStaff] = useState<string[]>([]);
@@ -150,10 +152,10 @@ export default function CalendarPage() {
       {/* Top bar */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-4">
-          <h1 className="text-2xl font-bold">Calendar</h1>
+          <h1 className="text-2xl font-bold">{t('calendar.title')}</h1>
           <div className="flex items-center gap-1">
             <button onClick={() => navigate(-1)} className="p-1 hover:bg-gray-100 rounded"><ChevronLeft size={20} /></button>
-            <button onClick={() => setCurrentDate(new Date())} className="px-3 py-1 border rounded text-sm hover:bg-gray-50">Today</button>
+            <button onClick={() => setCurrentDate(new Date())} className="px-3 py-1 border rounded text-sm hover:bg-gray-50">{t('calendar.today')}</button>
             <button onClick={() => navigate(1)} className="p-1 hover:bg-gray-100 rounded"><ChevronRight size={20} /></button>
           </div>
           <h2 className="text-lg text-gray-600">
@@ -184,15 +186,15 @@ export default function CalendarPage() {
 
           {/* View toggle */}
           <div className="flex gap-0.5 bg-gray-100 rounded-md p-0.5">
-            <button onClick={() => setView('day')} className={cn('px-3 py-1 rounded text-sm', view === 'day' && 'bg-white shadow-sm font-medium')}>Day</button>
-            <button onClick={() => setView('week')} className={cn('px-3 py-1 rounded text-sm', view === 'week' && 'bg-white shadow-sm font-medium')}>Week</button>
+            <button onClick={() => setView('day')} className={cn('px-3 py-1 rounded text-sm', view === 'day' && 'bg-white shadow-sm font-medium')}>{t('calendar.view_day')}</button>
+            <button onClick={() => setView('week')} className={cn('px-3 py-1 rounded text-sm', view === 'week' && 'bg-white shadow-sm font-medium')}>{t('calendar.view_week')}</button>
           </div>
 
           <button
             onClick={() => { setRescheduleMode(false); setSelectedBooking(null); setPrefillDate(currentDate.toISOString().split('T')[0]); setPrefillTime(''); setPrefillStaffId(''); setBookingFormOpen(true); }}
             className="flex items-center gap-1 bg-blue-600 text-white px-3 py-1.5 rounded-md text-sm hover:bg-blue-700"
           >
-            <Plus size={14} /> New Booking
+            <Plus size={14} /> {t('calendar.new_booking')}
           </button>
         </div>
       </div>
@@ -271,10 +273,10 @@ export default function CalendarPage() {
                               {' – '}
                               {new Date(b.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </p>
-                            <p className="text-xs text-gray-400 mt-1">with {b.staff?.name}</p>
+                            <p className="text-xs text-gray-400 mt-1">{t('calendar.with_staff', { name: b.staff?.name })}</p>
                             <span className={cn('inline-block text-[10px] px-1.5 py-0.5 rounded-full mt-1',
                               STATUS_COLORS[b.status]?.bg, STATUS_COLORS[b.status]?.text?.replace('line-through', ''),
-                            )}>{b.status}</span>
+                            )}>{t(`status.${b.status.toLowerCase()}`)}</span>
                           </div>
                         )}
                       </div>
@@ -353,8 +355,8 @@ export default function CalendarPage() {
         {bookings.length === 0 && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="text-center">
-              <p className="text-gray-400">No bookings scheduled</p>
-              <p className="text-sm text-gray-300">Click on the calendar to create one</p>
+              <p className="text-gray-400">{t('calendar.no_bookings')}</p>
+              <p className="text-sm text-gray-300">{t('calendar.click_to_create')}</p>
             </div>
           </div>
         )}

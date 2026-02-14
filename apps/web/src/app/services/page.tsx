@@ -5,6 +5,7 @@ import { api } from '@/lib/api';
 import { Plus, Pencil, Clock, DollarSign, Shield, Timer } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { usePack } from '@/lib/vertical-pack';
+import { useI18n } from '@/lib/i18n';
 
 export default function ServicesPage() {
   const [services, setServices] = useState<any[]>([]);
@@ -12,6 +13,7 @@ export default function ServicesPage() {
   const [editing, setEditing] = useState<any>(null);
   const [showInactive, setShowInactive] = useState(false);
   const pack = usePack();
+  const { t } = useI18n();
 
   const load = () => api.get<any[]>('/services').then(setServices);
 
@@ -29,16 +31,16 @@ export default function ServicesPage() {
     <div className="p-6">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-2xl font-bold">{pack.labels.service}s</h1>
-          <p className="text-sm text-gray-500 mt-1">{services.filter((s) => s.isActive !== false).length} active {pack.labels.service.toLowerCase()}s</p>
+          <h1 className="text-2xl font-bold">{t('services.title', { entity: pack.labels.service })}</h1>
+          <p className="text-sm text-gray-500 mt-1">{t('services.active_count', { count: services.filter((s) => s.isActive !== false).length, entity: pack.labels.service.toLowerCase() })}</p>
         </div>
         <div className="flex items-center gap-3">
           <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
             <input type="checkbox" checked={showInactive} onChange={(e) => setShowInactive(e.target.checked)} className="rounded" />
-            Show inactive
+            {t('services.show_inactive')}
           </label>
           <button onClick={() => { setEditing(null); setShowForm(true); }} className="flex items-center gap-1 bg-blue-600 text-white px-3 py-2 rounded-md text-sm hover:bg-blue-700">
-            <Plus size={16} /> Add {pack.labels.service}
+            <Plus size={16} /> {t('services.add_button', { entity: pack.labels.service })}
           </button>
         </div>
       </div>
@@ -57,10 +59,10 @@ export default function ServicesPage() {
                       <div className="flex items-center gap-2">
                         <h3 className="font-semibold">{s.name}</h3>
                         {s.isActive === false && (
-                          <span className="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full">Inactive</span>
+                          <span className="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full">{t('services.inactive_badge')}</span>
                         )}
                         {s.depositRequired && (
-                          <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full">Deposit</span>
+                          <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full">{t('services.deposit_badge')}</span>
                         )}
                       </div>
                       {s.description && <p className="text-xs text-gray-500 mt-1 line-clamp-2">{s.description}</p>}
@@ -70,14 +72,14 @@ export default function ServicesPage() {
                     </button>
                   </div>
                   <div className="flex items-center gap-4 mt-3 text-sm text-gray-600">
-                    <span className="flex items-center gap-1"><Clock size={12} /> {s.durationMins} min</span>
-                    <span className="flex items-center gap-1"><DollarSign size={12} /> {s.price > 0 ? `$${s.price}` : 'Free'}</span>
+                    <span className="flex items-center gap-1"><Clock size={12} /> {s.durationMins} {t('services.min_short')}</span>
+                    <span className="flex items-center gap-1"><DollarSign size={12} /> {s.price > 0 ? `$${s.price}` : t('services.price_free')}</span>
                   </div>
                   {(s.bufferBefore > 0 || s.bufferAfter > 0) && (
                     <div className="flex items-center gap-3 mt-2 text-xs text-gray-400">
                       <Timer size={10} />
-                      {s.bufferBefore > 0 && <span>{s.bufferBefore}min before</span>}
-                      {s.bufferAfter > 0 && <span>{s.bufferAfter}min after</span>}
+                      {s.bufferBefore > 0 && <span>{t('services.buffer_before', { count: s.bufferBefore })}</span>}
+                      {s.bufferAfter > 0 && <span>{t('services.buffer_after', { count: s.bufferAfter })}</span>}
                     </div>
                   )}
                 </div>
@@ -89,7 +91,7 @@ export default function ServicesPage() {
 
       {filtered.length === 0 && (
         <div className="text-center py-12 text-gray-400">
-          <p>No services yet. Add your first service to get started.</p>
+          <p>{t('services.no_services')}</p>
         </div>
       )}
 
@@ -106,6 +108,7 @@ export default function ServicesPage() {
 }
 
 function ServiceForm({ initial, onClose, onSaved, onToggleActive }: { initial?: any; onClose: () => void; onSaved: () => void; onToggleActive?: () => void }) {
+  const { t } = useI18n();
   const [name, setName] = useState(initial?.name || '');
   const [description, setDescription] = useState(initial?.description || '');
   const [durationMins, setDurationMins] = useState(initial?.durationMins || 30);
@@ -138,62 +141,62 @@ function ServiceForm({ initial, onClose, onSaved, onToggleActive }: { initial?: 
   return (
     <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
-        <h2 className="text-lg font-semibold mb-4">{initial ? 'Edit' : 'Add'} Service</h2>
+        <h2 className="text-lg font-semibold mb-4">{initial ? t('services.form_title_edit') : t('services.form_title_add')}</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1">Name *</label>
-            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Botox, Consultation" required className="w-full border rounded px-3 py-2 text-sm" />
+            <label className="block text-sm font-medium mb-1">{t('services.name_label')}</label>
+            <input value={name} onChange={(e) => setName(e.target.value)} placeholder={t('services.name_placeholder')} required className="w-full border rounded px-3 py-2 text-sm" />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Description</label>
-            <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Brief description of the service" rows={2} className="w-full border rounded px-3 py-2 text-sm" />
+            <label className="block text-sm font-medium mb-1">{t('services.description_label')}</label>
+            <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t('services.description_placeholder')} rows={2} className="w-full border rounded px-3 py-2 text-sm" />
           </div>
 
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block text-sm font-medium mb-1">Duration (min) *</label>
+              <label className="block text-sm font-medium mb-1">{t('services.duration_label')}</label>
               <input value={durationMins} onChange={(e) => setDurationMins(e.target.value)} type="number" min="5" step="5" required className="w-full border rounded px-3 py-2 text-sm" />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Price ($) *</label>
+              <label className="block text-sm font-medium mb-1">{t('services.price_label')}</label>
               <input value={price} onChange={(e) => setPrice(e.target.value)} type="number" step="0.01" min="0" required className="w-full border rounded px-3 py-2 text-sm" />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Category *</label>
-              <input value={category} onChange={(e) => setCategory(e.target.value)} placeholder="General" required className="w-full border rounded px-3 py-2 text-sm" />
+              <label className="block text-sm font-medium mb-1">{t('services.category_label')}</label>
+              <input value={category} onChange={(e) => setCategory(e.target.value)} placeholder={t('services.category_placeholder')} required className="w-full border rounded px-3 py-2 text-sm" />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium mb-1">Buffer Before (min)</label>
+              <label className="block text-sm font-medium mb-1">{t('services.buffer_before_label')}</label>
               <input value={bufferBefore} onChange={(e) => setBufferBefore(e.target.value)} type="number" min="0" step="5" className="w-full border rounded px-3 py-2 text-sm" />
-              <p className="text-[10px] text-gray-400 mt-0.5">Prep time before appointment</p>
+              <p className="text-[10px] text-gray-400 mt-0.5">{t('services.buffer_before_hint')}</p>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Buffer After (min)</label>
+              <label className="block text-sm font-medium mb-1">{t('services.buffer_after_label')}</label>
               <input value={bufferAfter} onChange={(e) => setBufferAfter(e.target.value)} type="number" min="0" step="5" className="w-full border rounded px-3 py-2 text-sm" />
-              <p className="text-[10px] text-gray-400 mt-0.5">Cleanup time after appointment</p>
+              <p className="text-[10px] text-gray-400 mt-0.5">{t('services.buffer_after_hint')}</p>
             </div>
           </div>
 
           <label className="flex items-center gap-2 cursor-pointer">
             <input type="checkbox" checked={depositRequired} onChange={(e) => setDepositRequired(e.target.checked)} className="rounded" />
-            <span className="text-sm">Require deposit for this service</span>
+            <span className="text-sm">{t('services.deposit_required')}</span>
           </label>
 
           <div className="flex items-center justify-between pt-2 border-t">
             <div>
               {initial && onToggleActive && (
                 <button type="button" onClick={onToggleActive} className={cn('text-sm px-3 py-1.5 rounded', initial.isActive !== false ? 'text-red-600 hover:bg-red-50' : 'text-green-600 hover:bg-green-50')}>
-                  {initial.isActive !== false ? 'Deactivate' : 'Reactivate'}
+                  {initial.isActive !== false ? t('services.deactivate') : t('services.reactivate')}
                 </button>
               )}
             </div>
             <div className="flex gap-2">
-              <button type="button" onClick={onClose} className="px-4 py-2 border rounded text-sm">Cancel</button>
-              <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">{initial ? 'Update' : 'Create'}</button>
+              <button type="button" onClick={onClose} className="px-4 py-2 border rounded text-sm">{t('common.cancel')}</button>
+              <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">{initial ? t('common.update') : t('common.create')}</button>
             </div>
           </div>
         </form>

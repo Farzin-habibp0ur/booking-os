@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { usePack } from '@/lib/vertical-pack';
+import { useI18n } from '@/lib/i18n';
 import { TableRowSkeleton, EmptyState } from '@/components/skeleton';
 import { BookOpen } from 'lucide-react';
 import BookingDetailModal from '@/components/booking-detail-modal';
@@ -26,6 +27,7 @@ export default function BookingsPage() {
   const [detailOpen, setDetailOpen] = useState(false);
   const [rescheduleOpen, setRescheduleOpen] = useState(false);
   const pack = usePack();
+  const { t } = useI18n();
 
   const load = () => {
     const params = statusFilter ? `?status=${statusFilter}&pageSize=50` : '?pageSize=50';
@@ -54,10 +56,10 @@ export default function BookingsPage() {
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold">{pack.labels.booking}s</h1>
+        <h1 className="text-2xl font-bold">{t('bookings.title', { entity: pack.labels.booking })}</h1>
         <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="border rounded-md px-3 py-2 text-sm">
-          <option value="">All statuses</option>
-          {Object.keys(statusColors).map((s) => <option key={s} value={s}>{s}</option>)}
+          <option value="">{t('bookings.all_statuses')}</option>
+          {Object.keys(statusColors).map((s) => <option key={s} value={s}>{t(`status.${s.toLowerCase()}`)}</option>)}
         </select>
       </div>
 
@@ -67,9 +69,9 @@ export default function BookingsPage() {
             <tr>
               <th className="text-left p-3 text-xs font-medium text-gray-500 uppercase">{pack.labels.customer}</th>
               <th className="text-left p-3 text-xs font-medium text-gray-500 uppercase">{pack.labels.service}</th>
-              <th className="text-left p-3 text-xs font-medium text-gray-500 uppercase">Staff</th>
-              <th className="text-left p-3 text-xs font-medium text-gray-500 uppercase">Date & Time</th>
-              <th className="text-left p-3 text-xs font-medium text-gray-500 uppercase">Status</th>
+              <th className="text-left p-3 text-xs font-medium text-gray-500 uppercase">{t('common.name')}</th>
+              <th className="text-left p-3 text-xs font-medium text-gray-500 uppercase">{t('bookings.date_time')}</th>
+              <th className="text-left p-3 text-xs font-medium text-gray-500 uppercase">{t('common.status')}</th>
             </tr>
           </thead>
           <tbody className="divide-y">
@@ -80,12 +82,12 @@ export default function BookingsPage() {
                 <tr key={b.id} onClick={() => handleRowClick(b)} className="hover:bg-gray-50 cursor-pointer">
                   <td className="p-3 text-sm font-medium">{b.customer?.name}</td>
                   <td className="p-3 text-sm">{b.service?.name}</td>
-                  <td className="p-3 text-sm text-gray-600">{b.staff?.name || 'Unassigned'}</td>
+                  <td className="p-3 text-sm text-gray-600">{b.staff?.name || t('common.unassigned')}</td>
                   <td className="p-3 text-sm text-gray-600">
                     {new Date(b.startTime).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}
                   </td>
                   <td className="p-3">
-                    <span className={cn('text-xs px-2 py-0.5 rounded-full', statusColors[b.status])}>{b.status}</span>
+                    <span className={cn('text-xs px-2 py-0.5 rounded-full', statusColors[b.status])}>{t(`status.${b.status.toLowerCase()}`)}</span>
                   </td>
                 </tr>
               ))
@@ -95,8 +97,8 @@ export default function BookingsPage() {
         {!loading && bookings.data.length === 0 && (
           <EmptyState
             icon={BookOpen}
-            title={`No ${pack.labels.booking.toLowerCase()}s found`}
-            description={statusFilter ? `No ${pack.labels.booking.toLowerCase()}s with status "${statusFilter}".` : `Create your first ${pack.labels.booking.toLowerCase()} from the calendar or inbox.`}
+            title={t('bookings.no_bookings', { entity: pack.labels.booking.toLowerCase() })}
+            description={statusFilter ? t('bookings.no_bookings_status', { entity: pack.labels.booking.toLowerCase(), status: t(`status.${statusFilter.toLowerCase()}`) }) : t('bookings.create_first', { entity: pack.labels.booking.toLowerCase() })}
           />
         )}
       </div>

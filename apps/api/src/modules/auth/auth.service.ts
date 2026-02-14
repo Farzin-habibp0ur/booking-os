@@ -87,12 +87,14 @@ export class AuthService {
       name: staff.name,
       email: staff.email,
       role: staff.role,
+      locale: staff.locale,
       businessId: staff.businessId,
       business: {
         id: staff.business.id,
         name: staff.business.name,
         slug: staff.business.slug,
         verticalPack: staff.business.verticalPack,
+        defaultLocale: staff.business.defaultLocale,
       },
     };
   }

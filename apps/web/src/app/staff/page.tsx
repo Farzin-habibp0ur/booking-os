@@ -4,10 +4,12 @@ import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { Plus, ChevronDown, ChevronRight, Clock, CalendarOff, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { useI18n } from '@/lib/i18n';
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 export default function StaffPage() {
+  const { t } = useI18n();
   const [staffList, setStaffList] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -83,9 +85,9 @@ export default function StaffPage() {
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold">Staff</h1>
+        <h1 className="text-2xl font-bold">{t('staff.title')}</h1>
         <button onClick={() => setShowForm(true)} className="flex items-center gap-1 bg-blue-600 text-white px-3 py-2 rounded-md text-sm hover:bg-blue-700">
-          <Plus size={16} /> Add Staff
+          <Plus size={16} /> {t('staff.add_button')}
         </button>
       </div>
 
@@ -94,10 +96,10 @@ export default function StaffPage() {
           <thead className="bg-gray-50 border-b">
             <tr>
               <th className="w-8"></th>
-              <th className="text-left p-3 text-xs font-medium text-gray-500 uppercase">Name</th>
-              <th className="text-left p-3 text-xs font-medium text-gray-500 uppercase">Email</th>
-              <th className="text-left p-3 text-xs font-medium text-gray-500 uppercase">Role</th>
-              <th className="text-left p-3 text-xs font-medium text-gray-500 uppercase">Status</th>
+              <th className="text-left p-3 text-xs font-medium text-gray-500 uppercase">{t('common.name')}</th>
+              <th className="text-left p-3 text-xs font-medium text-gray-500 uppercase">{t('common.email')}</th>
+              <th className="text-left p-3 text-xs font-medium text-gray-500 uppercase">{t('staff.role')}</th>
+              <th className="text-left p-3 text-xs font-medium text-gray-500 uppercase">{t('common.status')}</th>
             </tr>
           </thead>
           <tbody className="divide-y">
@@ -117,7 +119,7 @@ export default function StaffPage() {
                   </td>
                   <td className="p-3">
                     <span className={cn('text-xs', s.isActive ? 'text-green-600' : 'text-red-600')}>
-                      {s.isActive ? 'Active' : 'Inactive'}
+                      {s.isActive ? t('common.active') : t('common.inactive')}
                     </span>
                   </td>
                 </tr>
@@ -131,13 +133,13 @@ export default function StaffPage() {
                             onClick={(e) => { e.stopPropagation(); setTab('hours'); }}
                             className={cn('flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm', tab === 'hours' ? 'bg-white border shadow-sm font-medium' : 'text-gray-500 hover:bg-white/50')}
                           >
-                            <Clock size={14} /> Working Hours
+                            <Clock size={14} /> {t('staff.working_hours')}
                           </button>
                           <button
                             onClick={(e) => { e.stopPropagation(); setTab('timeoff'); }}
                             className={cn('flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm', tab === 'timeoff' ? 'bg-white border shadow-sm font-medium' : 'text-gray-500 hover:bg-white/50')}
                           >
-                            <CalendarOff size={14} /> Time Off
+                            <CalendarOff size={14} /> {t('staff.time_off')}
                             {(timeOff[s.id]?.length || 0) > 0 && (
                               <span className="bg-orange-100 text-orange-700 text-[10px] px-1.5 py-0.5 rounded-full">{timeOff[s.id].length}</span>
                             )}
@@ -150,7 +152,7 @@ export default function StaffPage() {
                             <div className="bg-white border rounded-lg divide-y">
                               {(workingHours[s.id] || []).map((h: any) => (
                                 <div key={h.dayOfWeek} className="flex items-center gap-3 px-4 py-2.5">
-                                  <div className="w-24 text-sm font-medium">{DAYS[h.dayOfWeek]}</div>
+                                  <div className="w-24 text-sm font-medium">{t(`days.${DAYS[h.dayOfWeek].toLowerCase()}`)}</div>
                                   <label className="flex items-center gap-2 cursor-pointer min-w-[80px]">
                                     <input
                                       type="checkbox"
@@ -158,7 +160,7 @@ export default function StaffPage() {
                                       onChange={() => updateHour(s.id, h.dayOfWeek, 'isOff', !h.isOff)}
                                       className="rounded"
                                     />
-                                    <span className={cn('text-xs', h.isOff ? 'text-red-500' : 'text-green-600')}>{h.isOff ? 'Off' : 'Working'}</span>
+                                    <span className={cn('text-xs', h.isOff ? 'text-red-500' : 'text-green-600')}>{h.isOff ? t('common.off') : t('common.working')}</span>
                                   </label>
                                   {!h.isOff && (
                                     <>
@@ -168,7 +170,7 @@ export default function StaffPage() {
                                         onChange={(e) => updateHour(s.id, h.dayOfWeek, 'startTime', e.target.value)}
                                         className="border rounded px-2 py-1 text-sm"
                                       />
-                                      <span className="text-gray-400 text-sm">to</span>
+                                      <span className="text-gray-400 text-sm">{t('common.to')}</span>
                                       <input
                                         type="time"
                                         value={h.endTime}
@@ -186,7 +188,7 @@ export default function StaffPage() {
                                 disabled={saving}
                                 className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700 disabled:opacity-50"
                               >
-                                {saving ? 'Saving...' : 'Save Hours'}
+                                {saving ? t('common.saving') : t('staff.save_hours')}
                               </button>
                             </div>
                           </div>
@@ -213,24 +215,24 @@ export default function StaffPage() {
                               </div>
                             )}
                             <div className="bg-white border rounded-lg p-4 space-y-3">
-                              <p className="text-sm font-medium">Add Time Off</p>
+                              <p className="text-sm font-medium">{t('staff.add_time_off')}</p>
                               <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                  <label className="text-xs text-gray-500">Start Date</label>
+                                  <label className="text-xs text-gray-500">{t('staff.start_date')}</label>
                                   <input type="date" value={toStart} onChange={(e) => setToStart(e.target.value)} className="w-full border rounded px-3 py-2 text-sm" />
                                 </div>
                                 <div>
-                                  <label className="text-xs text-gray-500">End Date</label>
+                                  <label className="text-xs text-gray-500">{t('staff.end_date')}</label>
                                   <input type="date" value={toEnd} onChange={(e) => setToEnd(e.target.value)} className="w-full border rounded px-3 py-2 text-sm" />
                                 </div>
                               </div>
-                              <input value={toReason} onChange={(e) => setToReason(e.target.value)} placeholder="Reason (optional)" className="w-full border rounded px-3 py-2 text-sm" />
+                              <input value={toReason} onChange={(e) => setToReason(e.target.value)} placeholder={t('staff.reason_placeholder')} className="w-full border rounded px-3 py-2 text-sm" />
                               <button
                                 onClick={() => addTimeOff(s.id)}
                                 disabled={!toStart || !toEnd}
                                 className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700 disabled:opacity-50"
                               >
-                                Add Time Off
+                                {t('staff.add_time_off')}
                               </button>
                             </div>
                           </div>
@@ -251,6 +253,7 @@ export default function StaffPage() {
 }
 
 function StaffForm({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
+  const { t } = useI18n();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -265,19 +268,19 @@ function StaffForm({ onClose, onCreated }: { onClose: () => void; onCreated: () 
   return (
     <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-md">
-        <h2 className="text-lg font-semibold mb-4">Add Staff Member</h2>
+        <h2 className="text-lg font-semibold mb-4">{t('staff.add_title')}</h2>
         <form onSubmit={handleSubmit} className="space-y-3">
-          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" required className="w-full border rounded px-3 py-2 text-sm" />
-          <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" type="email" required className="w-full border rounded px-3 py-2 text-sm" />
-          <input value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" type="password" required className="w-full border rounded px-3 py-2 text-sm" />
+          <input value={name} onChange={(e) => setName(e.target.value)} placeholder={t('staff.name_placeholder')} required className="w-full border rounded px-3 py-2 text-sm" />
+          <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('staff.email_placeholder')} type="email" required className="w-full border rounded px-3 py-2 text-sm" />
+          <input value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t('staff.password_placeholder')} type="password" required className="w-full border rounded px-3 py-2 text-sm" />
           <select value={role} onChange={(e) => setRole(e.target.value)} className="w-full border rounded px-3 py-2 text-sm">
-            <option value="AGENT">Agent</option>
-            <option value="ADMIN">Admin</option>
-            <option value="OWNER">Owner</option>
+            <option value="AGENT">{t('staff.role_agent')}</option>
+            <option value="ADMIN">{t('staff.role_admin')}</option>
+            <option value="OWNER">{t('staff.role_owner')}</option>
           </select>
           <div className="flex gap-2 justify-end">
-            <button type="button" onClick={onClose} className="px-4 py-2 border rounded text-sm">Cancel</button>
-            <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded text-sm">Create</button>
+            <button type="button" onClick={onClose} className="px-4 py-2 border rounded text-sm">{t('common.cancel')}</button>
+            <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded text-sm">{t('common.create')}</button>
           </div>
         </form>
       </div>

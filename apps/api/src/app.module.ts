@@ -19,6 +19,7 @@ import { ReportsModule } from './modules/reports/reports.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { TemplateModule } from './modules/template/template.module';
 import { AvailabilityModule } from './modules/availability/availability.module';
+import { TranslationModule } from './modules/translation/translation.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { AvailabilityModule } from './modules/availability/availability.module';
     DashboardModule,
     TemplateModule,
     AvailabilityModule,
+    TranslationModule,
   ],
 })
 export class AppModule {}

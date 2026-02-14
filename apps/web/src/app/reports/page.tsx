@@ -3,15 +3,16 @@
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
+import { useI18n } from '@/lib/i18n';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   AreaChart, Area, PieChart, Pie, Cell,
 } from 'recharts';
 
 const PERIOD_OPTIONS = [
-  { label: '7 days', value: 7 },
-  { label: '30 days', value: 30 },
-  { label: '90 days', value: 90 },
+  { label: '7 days', value: 7, key: 'period_7d' },
+  { label: '30 days', value: 30, key: 'period_30d' },
+  { label: '90 days', value: 90, key: 'period_90d' },
 ];
 
 const PIE_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#6b7280'];
@@ -25,9 +26,10 @@ const STATUS_COLORS: Record<string, string> = {
   CANCELLED: '#6b7280',
 };
 
-const DAYS_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const DAYS_SHORT = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
 
 export default function ReportsPage() {
+  const { t } = useI18n();
   const [days, setDays] = useState(30);
   const [bookingsData, setBookingsData] = useState<any[]>([]);
   const [revenueData, setRevenueData] = useState<any[]>([]);
@@ -57,7 +59,7 @@ export default function ReportsPage() {
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Reports</h1>
+        <h1 className="text-2xl font-bold">{t('reports.title')}</h1>
         <div className="flex gap-1 bg-gray-100 rounded-lg p-0.5">
           {PERIOD_OPTIONS.map((p) => (
             <button
@@ -66,7 +68,7 @@ export default function ReportsPage() {
               className={cn('px-3 py-1.5 rounded-md text-sm transition-colors',
                 days === p.value ? 'bg-white shadow-sm font-medium' : 'text-gray-500 hover:text-gray-700')}
             >
-              {p.label}
+              {t(`reports.${p.key}`)}
             </button>
           ))}
         </div>
@@ -74,16 +76,16 @@ export default function ReportsPage() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-4 gap-4">
-        <SummaryCard label="Total Bookings" value={totalBookings} />
-        <SummaryCard label="Revenue" value={`$${Math.round(totalRevenue).toLocaleString()}`} />
-        <SummaryCard label="No-Show Rate" value={noShowData ? `${noShowData.rate}%` : '—'} accent={noShowData?.rate > 15 ? 'red' : 'green'} />
-        <SummaryCard label="Avg Response" value={responseData ? `${responseData.avgMinutes}m` : '—'} accent={responseData?.avgMinutes > 15 ? 'red' : 'green'} />
+        <SummaryCard label={t('reports.total_bookings')} value={totalBookings} />
+        <SummaryCard label={t('reports.revenue')} value={`$${Math.round(totalRevenue).toLocaleString()}`} />
+        <SummaryCard label={t('reports.no_show_rate')} value={noShowData ? `${noShowData.rate}%` : '—'} accent={noShowData?.rate > 15 ? 'red' : 'green'} />
+        <SummaryCard label={t('reports.avg_response')} value={responseData ? `${responseData.avgMinutes}m` : '—'} accent={responseData?.avgMinutes > 15 ? 'red' : 'green'} />
       </div>
 
       {/* Row 1: Bookings Over Time + Revenue */}
       <div className="grid grid-cols-2 gap-6">
         <div className="bg-white border rounded-lg p-4">
-          <h2 className="font-semibold mb-4">Bookings Over Time</h2>
+          <h2 className="font-semibold mb-4">{t('reports.bookings_over_time')}</h2>
           <ResponsiveContainer width="100%" height={220}>
             <AreaChart data={bookingsData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -96,13 +98,13 @@ export default function ReportsPage() {
         </div>
 
         <div className="bg-white border rounded-lg p-4">
-          <h2 className="font-semibold mb-4">Revenue Over Time</h2>
+          <h2 className="font-semibold mb-4">{t('reports.revenue_over_time')}</h2>
           <ResponsiveContainer width="100%" height={220}>
             <AreaChart data={revenueData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
               <XAxis dataKey="date" tick={{ fontSize: 10 }} tickFormatter={(d) => d.slice(5)} />
               <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `$${v}`} />
-              <Tooltip formatter={(v: number) => [`$${v}`, 'Revenue']} />
+              <Tooltip formatter={(v: number) => [`$${v}`, t('reports.revenue')]} />
               <Area type="monotone" dataKey="revenue" stroke="#10b981" fill="#10b981" fillOpacity={0.1} strokeWidth={2} />
             </AreaChart>
           </ResponsiveContainer>
@@ -112,9 +114,9 @@ export default function ReportsPage() {
       {/* Row 2: Service Breakdown + Status Breakdown */}
       <div className="grid grid-cols-2 gap-6">
         <div className="bg-white border rounded-lg p-4">
-          <h2 className="font-semibold mb-4">Service Popularity</h2>
+          <h2 className="font-semibold mb-4">{t('reports.service_popularity')}</h2>
           {serviceData.length === 0 ? (
-            <p className="text-gray-400 text-sm py-8 text-center">No booking data yet</p>
+            <p className="text-gray-400 text-sm py-8 text-center">{t('reports.no_data')}</p>
           ) : (
             <div className="space-y-3">
               {serviceData.map((s, i) => {
@@ -136,9 +138,9 @@ export default function ReportsPage() {
         </div>
 
         <div className="bg-white border rounded-lg p-4">
-          <h2 className="font-semibold mb-4">Booking Status Breakdown</h2>
+          <h2 className="font-semibold mb-4">{t('reports.status_breakdown')}</h2>
           {statusData.length === 0 ? (
-            <p className="text-gray-400 text-sm py-8 text-center">No booking data yet</p>
+            <p className="text-gray-400 text-sm py-8 text-center">{t('reports.no_data')}</p>
           ) : (
             <div className="flex items-center gap-6">
               <ResponsiveContainer width={160} height={160}>
@@ -156,7 +158,7 @@ export default function ReportsPage() {
                   <div key={s.status} className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: STATUS_COLORS[s.status] || '#6b7280' }} />
-                      <span className="text-sm">{s.status.replace('_', ' ')}</span>
+                      <span className="text-sm">{t(`status.${s.status.toLowerCase()}`)}</span>
                     </div>
                     <div className="text-right">
                       <span className="text-sm font-medium">{s.count}</span>
@@ -172,20 +174,20 @@ export default function ReportsPage() {
 
       {/* Row 3: Staff Performance */}
       <div className="bg-white border rounded-lg p-4">
-        <h2 className="font-semibold mb-4">Staff Performance</h2>
+        <h2 className="font-semibold mb-4">{t('reports.staff_performance')}</h2>
         {staffData.length === 0 ? (
-          <p className="text-gray-400 text-sm py-4 text-center">No staff booking data yet</p>
+          <p className="text-gray-400 text-sm py-4 text-center">{t('reports.no_staff_data')}</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left p-2 text-xs font-medium text-gray-500 uppercase">Staff</th>
-                  <th className="text-right p-2 text-xs font-medium text-gray-500 uppercase">Total Bookings</th>
-                  <th className="text-right p-2 text-xs font-medium text-gray-500 uppercase">Completed</th>
-                  <th className="text-right p-2 text-xs font-medium text-gray-500 uppercase">No-Shows</th>
-                  <th className="text-right p-2 text-xs font-medium text-gray-500 uppercase">No-Show Rate</th>
-                  <th className="text-right p-2 text-xs font-medium text-gray-500 uppercase">Revenue</th>
+                  <th className="text-left p-2 text-xs font-medium text-gray-500 uppercase">{t('nav.staff')}</th>
+                  <th className="text-right p-2 text-xs font-medium text-gray-500 uppercase">{t('reports.total_bookings_col')}</th>
+                  <th className="text-right p-2 text-xs font-medium text-gray-500 uppercase">{t('reports.completed_col')}</th>
+                  <th className="text-right p-2 text-xs font-medium text-gray-500 uppercase">{t('reports.no_shows_col')}</th>
+                  <th className="text-right p-2 text-xs font-medium text-gray-500 uppercase">{t('reports.no_show_rate_col')}</th>
+                  <th className="text-right p-2 text-xs font-medium text-gray-500 uppercase">{t('reports.revenue_col')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -213,7 +215,7 @@ export default function ReportsPage() {
       {peakData && (
         <div className="grid grid-cols-2 gap-6">
           <div className="bg-white border rounded-lg p-4">
-            <h2 className="font-semibold mb-4">Bookings by Hour</h2>
+            <h2 className="font-semibold mb-4">{t('reports.bookings_by_hour')}</h2>
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={(peakData.byHour || []).filter((h: any) => h.hour >= 7 && h.hour <= 20)}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -226,9 +228,9 @@ export default function ReportsPage() {
           </div>
 
           <div className="bg-white border rounded-lg p-4">
-            <h2 className="font-semibold mb-4">Bookings by Day of Week</h2>
+            <h2 className="font-semibold mb-4">{t('reports.bookings_by_day')}</h2>
             <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={(peakData.byDay || []).map((d: any) => ({ ...d, name: DAYS_SHORT[d.day] }))}>
+              <BarChart data={(peakData.byDay || []).map((d: any) => ({ ...d, name: t(`days_short.${DAYS_SHORT[d.day]}`) }))}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="name" tick={{ fontSize: 10 }} />
                 <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />

@@ -8,8 +8,9 @@ interface User {
   name: string;
   email: string;
   role: string;
+  locale: string | null;
   businessId: string;
-  business: { id: string; name: string; slug: string; verticalPack: string };
+  business: { id: string; name: string; slug: string; verticalPack: string; defaultLocale: string };
 }
 
 interface AuthContextType {
