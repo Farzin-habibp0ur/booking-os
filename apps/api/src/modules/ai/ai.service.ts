@@ -3,8 +3,10 @@ import { PrismaService } from '../../common/prisma.service';
 import { InboxGateway } from '../../common/inbox.gateway';
 import { ClaudeClient } from './claude.client';
 import { IntentDetector, IntentResult } from './intent-detector';
-import { ReplyGenerator, ReplySuggestion } from './reply-generator';
+import { ReplyGenerator, DraftReply } from './reply-generator';
 import { BookingAssistant, BookingStateData } from './booking-assistant';
+import { CancelAssistant, CancelStateData } from './cancel-assistant';
+import { RescheduleAssistant, RescheduleStateData } from './reschedule-assistant';
 import { SummaryGenerator } from './summary-generator';
 import { ServiceService } from '../service/service.service';
 import { AvailabilityService } from '../availability/availability.service';
@@ -38,6 +40,8 @@ export class AiService {
     private intentDetector: IntentDetector,
     private replyGenerator: ReplyGenerator,
     private bookingAssistant: BookingAssistant,
+    private cancelAssistant: CancelAssistant,
+    private rescheduleAssistant: RescheduleAssistant,
     private summaryGenerator: SummaryGenerator,
     private serviceService: ServiceService,
     private availabilityService: AvailabilityService,
@@ -62,6 +66,28 @@ export class AiService {
     }
     entry.count++;
     return true;
+  }
+
+  private async getCustomerUpcomingBookings(customerId: string, businessId: string) {
+    const bookings = await this.prisma.booking.findMany({
+      where: {
+        customerId,
+        businessId,
+        status: { in: ['PENDING', 'CONFIRMED'] },
+        startTime: { gt: new Date() },
+      },
+      include: { service: true, staff: true },
+      orderBy: { startTime: 'asc' },
+    });
+    return bookings.map((b: any) => ({
+      id: b.id,
+      serviceId: b.serviceId,
+      serviceName: b.service?.name || '',
+      date: b.startTime.toISOString().split('T')[0],
+      time: b.startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      staffId: b.staffId || undefined,
+      staffName: b.staff?.name || undefined,
+    }));
   }
 
   async processInboundMessage(
@@ -114,15 +140,69 @@ export class AiService {
         },
       });
 
-      // 2. Generate reply suggestions
-      let suggestions: ReplySuggestion[] = [];
-      if (settings.autoReplySuggestions) {
+      // Load conversation metadata for active flow detection
+      const conversation = await this.prisma.conversation.findUnique({
+        where: { id: conversationId },
+      });
+      const metadata = (conversation?.metadata as any) || {};
+
+      // Flow priority: active state in metadata takes precedence over detected intent
+      const hasActiveBooking = !!metadata.aiBookingState;
+      const hasActiveCancel = !!metadata.aiCancelState;
+      const hasActiveReschedule = !!metadata.aiRescheduleState;
+
+      let bookingState: BookingStateData | null = null;
+      let cancelState: CancelStateData | null = null;
+      let rescheduleState: RescheduleStateData | null = null;
+      let draftText = '';
+
+      if (settings.bookingAssistant) {
+        // Determine which flow to run based on active state or new intent
+        if (hasActiveBooking) {
+          bookingState = await this.runBookingAssistant(
+            businessId, conversationId, messageContent, intentResult, business.name, settings.personality,
+          );
+        } else if (hasActiveCancel) {
+          cancelState = await this.runCancelAssistant(
+            businessId, conversationId, messageContent, business.name, settings.personality,
+          );
+        } else if (hasActiveReschedule) {
+          rescheduleState = await this.runRescheduleAssistant(
+            businessId, conversationId, messageContent, business.name, settings.personality,
+          );
+        } else if (intentResult.intent === 'BOOK_APPOINTMENT') {
+          bookingState = await this.runBookingAssistant(
+            businessId, conversationId, messageContent, intentResult, business.name, settings.personality,
+          );
+        } else if (intentResult.intent === 'CANCEL') {
+          // Clear any other flow states before starting cancel
+          await this.clearAllFlowStates(conversationId);
+          cancelState = await this.runCancelAssistant(
+            businessId, conversationId, messageContent, business.name, settings.personality,
+          );
+        } else if (intentResult.intent === 'RESCHEDULE') {
+          // Clear any other flow states before starting reschedule
+          await this.clearAllFlowStates(conversationId);
+          rescheduleState = await this.runRescheduleAssistant(
+            businessId, conversationId, messageContent, business.name, settings.personality,
+          );
+        }
+      }
+
+      // Use assistant's suggestedResponse as draft if available; otherwise generate a draft
+      const assistantDraft = bookingState?.suggestedResponse
+        || cancelState?.suggestedResponse
+        || rescheduleState?.suggestedResponse;
+
+      if (assistantDraft) {
+        draftText = assistantDraft;
+      } else if (settings.autoReplySuggestions) {
         const services = await this.serviceService.findAll(businessId);
         const activeServiceNames = services
           .filter((s: any) => s.isActive)
           .map((s: any) => s.name);
 
-        suggestions = await this.replyGenerator.generate(
+        const draft: DraftReply = await this.replyGenerator.generate(
           messageContent,
           intentResult.intent,
           business.name,
@@ -130,8 +210,11 @@ export class AiService {
           recentContext || undefined,
           activeServiceNames,
         );
+        draftText = draft.draftText;
+      }
 
-        // Store suggestions in message metadata
+      // Store draft in message metadata
+      if (draftText) {
         await this.prisma.message.update({
           where: { id: messageId },
           data: {
@@ -140,40 +223,29 @@ export class AiService {
                 intent: intentResult.intent,
                 confidence: intentResult.confidence,
                 extractedEntities: intentResult.extractedEntities,
-                suggestions: suggestions.map((s) => s.text),
+                draftText,
               },
             },
           },
         });
       }
 
-      // 3. Booking assistant (if intent is BOOK_APPOINTMENT)
-      let bookingState: BookingStateData | null = null;
-      if (settings.bookingAssistant && intentResult.intent === 'BOOK_APPOINTMENT') {
-        bookingState = await this.runBookingAssistant(
-          businessId,
-          conversationId,
-          messageContent,
-          intentResult,
-          business.name,
-          settings.personality,
-        );
-      }
-
-      // 4. Conversation summary (every 5th message)
+      // Conversation summary (every 5th message)
       const messageCount = await this.prisma.message.count({ where: { conversationId } });
       if (messageCount % 5 === 0) {
         await this.generateAndStoreSummary(conversationId);
       }
 
-      // 5. Broadcast AI results via WebSocket
+      // Broadcast AI results via WebSocket
       this.inboxGateway.emitToBusinessRoom(businessId, 'ai:suggestions', {
         conversationId,
         messageId,
         intent: intentResult.intent,
         confidence: intentResult.confidence,
-        suggestions: suggestions.map((s) => s.text),
+        draftText,
         bookingState,
+        cancelState,
+        rescheduleState,
       });
     } catch (error: any) {
       this.logger.error(`AI processing failed for message ${messageId}: ${error.message}`);
@@ -189,14 +261,12 @@ export class AiService {
     personality: string,
   ): Promise<BookingStateData | null> {
     try {
-      // Get current booking state from conversation metadata
       const conversation = await this.prisma.conversation.findUnique({
         where: { id: conversationId },
       });
       const metadata = (conversation?.metadata as any) || {};
       const currentState: BookingStateData | null = metadata.aiBookingState || null;
 
-      // Get services
       const services = await this.serviceService.findAll(businessId);
       const activeServices = services.filter((s: any) => s.isActive).map((s: any) => ({
         id: s.id,
@@ -206,48 +276,29 @@ export class AiService {
         category: s.category,
       }));
 
-      // Get available slots if we know the service and date
       let availableSlots: any[] | undefined;
       const serviceId = currentState?.serviceId;
       const date = currentState?.date || intentResult.extractedEntities?.date;
       if (serviceId && date) {
         const slots = await this.availabilityService.getAvailableSlots(
-          businessId,
-          date,
-          serviceId,
+          businessId, date, serviceId,
         );
         availableSlots = slots
           .filter((s) => s.available)
           .slice(0, 10)
-          .map((s) => ({
-            time: s.time,
-            display: s.display,
-            staffId: s.staffId,
-            staffName: s.staffName,
-          }));
+          .map((s) => ({ time: s.time, display: s.display, staffId: s.staffId, staffName: s.staffName }));
       }
 
       const newState = await this.bookingAssistant.process(
-        messageContent,
-        currentState,
-        {
-          businessName,
-          personality,
-          services: activeServices,
-          availableSlots,
-          extractedEntities: intentResult.extractedEntities,
+        messageContent, currentState, {
+          businessName, personality, services: activeServices,
+          availableSlots, extractedEntities: intentResult.extractedEntities,
         },
       );
 
-      // Store booking state in conversation metadata
       await this.prisma.conversation.update({
         where: { id: conversationId },
-        data: {
-          metadata: {
-            ...metadata,
-            aiBookingState: newState,
-          },
-        },
+        data: { metadata: { ...metadata, aiBookingState: newState } },
       });
 
       return newState;
@@ -255,6 +306,107 @@ export class AiService {
       this.logger.error(`Booking assistant failed: ${error.message}`);
       return null;
     }
+  }
+
+  private async runCancelAssistant(
+    businessId: string,
+    conversationId: string,
+    messageContent: string,
+    businessName: string,
+    personality: string,
+  ): Promise<CancelStateData | null> {
+    try {
+      const conversation = await this.prisma.conversation.findUnique({
+        where: { id: conversationId },
+      });
+      if (!conversation) return null;
+      const metadata = (conversation.metadata as any) || {};
+      const currentState: CancelStateData | null = metadata.aiCancelState || null;
+
+      const upcomingBookings = await this.getCustomerUpcomingBookings(conversation.customerId, businessId);
+
+      const newState = await this.cancelAssistant.process(
+        messageContent, currentState, {
+          businessName, personality, upcomingBookings,
+        },
+      );
+
+      await this.prisma.conversation.update({
+        where: { id: conversationId },
+        data: { metadata: { ...metadata, aiCancelState: newState } },
+      });
+
+      return newState;
+    } catch (error: any) {
+      this.logger.error(`Cancel assistant failed: ${error.message}`);
+      return null;
+    }
+  }
+
+  private async runRescheduleAssistant(
+    businessId: string,
+    conversationId: string,
+    messageContent: string,
+    businessName: string,
+    personality: string,
+  ): Promise<RescheduleStateData | null> {
+    try {
+      const conversation = await this.prisma.conversation.findUnique({
+        where: { id: conversationId },
+      });
+      if (!conversation) return null;
+      const metadata = (conversation.metadata as any) || {};
+      const currentState: RescheduleStateData | null = metadata.aiRescheduleState || null;
+
+      const upcomingBookings = await this.getCustomerUpcomingBookings(conversation.customerId, businessId);
+
+      // Get available slots if we know the service and new date
+      let availableSlots: any[] | undefined;
+      if (currentState?.serviceId && currentState?.newDate) {
+        const slots = await this.availabilityService.getAvailableSlots(
+          businessId, currentState.newDate, currentState.serviceId,
+        );
+        availableSlots = slots
+          .filter((s) => s.available)
+          .slice(0, 10)
+          .map((s) => ({ time: s.time, display: s.display, staffId: s.staffId, staffName: s.staffName }));
+      }
+
+      const newState = await this.rescheduleAssistant.process(
+        messageContent, currentState, {
+          businessName, personality, upcomingBookings, availableSlots,
+        },
+      );
+
+      await this.prisma.conversation.update({
+        where: { id: conversationId },
+        data: { metadata: { ...metadata, aiRescheduleState: newState } },
+      });
+
+      return newState;
+    } catch (error: any) {
+      this.logger.error(`Reschedule assistant failed: ${error.message}`);
+      return null;
+    }
+  }
+
+  private async clearAllFlowStates(conversationId: string): Promise<void> {
+    const conversation = await this.prisma.conversation.findUnique({
+      where: { id: conversationId },
+    });
+    if (!conversation) return;
+    const metadata = (conversation.metadata as any) || {};
+    await this.prisma.conversation.update({
+      where: { id: conversationId },
+      data: {
+        metadata: {
+          ...metadata,
+          aiBookingState: null,
+          aiCancelState: null,
+          aiRescheduleState: null,
+        },
+      },
+    });
   }
 
   async generateAndStoreSummary(conversationId: string): Promise<string> {
@@ -316,17 +468,12 @@ export class AiService {
       startTime: bookingState.slotIso,
     });
 
-    // Clear booking state
     await this.prisma.conversation.update({
       where: { id: conversationId },
-      data: {
-        metadata: { ...metadata, aiBookingState: null },
-      },
+      data: { metadata: { ...metadata, aiBookingState: null } },
     });
 
-    // Notify
     this.inboxGateway.notifyBookingUpdate(businessId, booking);
-
     return booking;
   }
 
@@ -339,9 +486,89 @@ export class AiService {
     const metadata = (conversation.metadata as any) || {};
     await this.prisma.conversation.update({
       where: { id: conversationId },
-      data: {
-        metadata: { ...metadata, aiBookingState: null },
-      },
+      data: { metadata: { ...metadata, aiBookingState: null } },
+    });
+  }
+
+  async confirmCancel(
+    businessId: string,
+    conversationId: string,
+  ): Promise<any> {
+    const conversation = await this.prisma.conversation.findFirst({
+      where: { id: conversationId, businessId },
+    });
+    if (!conversation) throw new Error('Conversation not found');
+
+    const metadata = (conversation.metadata as any) || {};
+    const cancelState: CancelStateData | undefined = metadata.aiCancelState;
+    if (!cancelState) throw new Error('No cancel state found');
+    if (cancelState.state !== 'CONFIRM_CANCEL') throw new Error('Cancel not ready for confirmation');
+    if (!cancelState.bookingId) throw new Error('No booking identified');
+
+    const booking = await this.bookingService.updateStatus(businessId, cancelState.bookingId, 'CANCELLED');
+
+    await this.prisma.conversation.update({
+      where: { id: conversationId },
+      data: { metadata: { ...metadata, aiCancelState: null } },
+    });
+
+    this.inboxGateway.notifyBookingUpdate(businessId, booking);
+    return booking;
+  }
+
+  async clearCancelState(businessId: string, conversationId: string): Promise<void> {
+    const conversation = await this.prisma.conversation.findFirst({
+      where: { id: conversationId, businessId },
+    });
+    if (!conversation) return;
+
+    const metadata = (conversation.metadata as any) || {};
+    await this.prisma.conversation.update({
+      where: { id: conversationId },
+      data: { metadata: { ...metadata, aiCancelState: null } },
+    });
+  }
+
+  async confirmReschedule(
+    businessId: string,
+    conversationId: string,
+  ): Promise<any> {
+    const conversation = await this.prisma.conversation.findFirst({
+      where: { id: conversationId, businessId },
+    });
+    if (!conversation) throw new Error('Conversation not found');
+
+    const metadata = (conversation.metadata as any) || {};
+    const rescheduleState: RescheduleStateData | undefined = metadata.aiRescheduleState;
+    if (!rescheduleState) throw new Error('No reschedule state found');
+    if (rescheduleState.state !== 'CONFIRM_RESCHEDULE') throw new Error('Reschedule not ready for confirmation');
+    if (!rescheduleState.bookingId || !rescheduleState.newSlotIso) {
+      throw new Error('Missing booking or new time slot');
+    }
+
+    const booking = await this.bookingService.update(businessId, rescheduleState.bookingId, {
+      startTime: rescheduleState.newSlotIso,
+    });
+
+    await this.prisma.conversation.update({
+      where: { id: conversationId },
+      data: { metadata: { ...metadata, aiRescheduleState: null } },
+    });
+
+    this.inboxGateway.notifyBookingUpdate(businessId, booking);
+    return booking;
+  }
+
+  async clearRescheduleState(businessId: string, conversationId: string): Promise<void> {
+    const conversation = await this.prisma.conversation.findFirst({
+      where: { id: conversationId, businessId },
+    });
+    if (!conversation) return;
+
+    const metadata = (conversation.metadata as any) || {};
+    await this.prisma.conversation.update({
+      where: { id: conversationId },
+      data: { metadata: { ...metadata, aiRescheduleState: null } },
     });
   }
 }

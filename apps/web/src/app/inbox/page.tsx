@@ -60,10 +60,12 @@ export default function InboxPage() {
   const [showQuickReplies, setShowQuickReplies] = useState(false);
   const [convTags, setConvTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState('');
-  const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
+  const [aiDraftText, setAiDraftText] = useState<string>('');
   const [aiIntent, setAiIntent] = useState<string | undefined>();
   const [aiConfidence, setAiConfidence] = useState<number | undefined>();
   const [aiBookingState, setAiBookingState] = useState<any>(null);
+  const [aiCancelState, setAiCancelState] = useState<any>(null);
+  const [aiRescheduleState, setAiRescheduleState] = useState<any>(null);
   const [aiSummary, setAiSummary] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const pollRef = useRef<ReturnType<typeof setInterval>>(undefined);
@@ -120,10 +122,12 @@ export default function InboxPage() {
     }, []),
     'ai:suggestions': useCallback((data: any) => {
       if (selectedRef.current && data.conversationId === selectedRef.current.id) {
-        setAiSuggestions(data.suggestions || []);
+        setAiDraftText(data.draftText || '');
         setAiIntent(data.intent);
         setAiConfidence(data.confidence);
         if (data.bookingState) setAiBookingState(data.bookingState);
+        if (data.cancelState) setAiCancelState(data.cancelState);
+        if (data.rescheduleState) setAiRescheduleState(data.rescheduleState);
       }
     }, []),
   });
@@ -155,8 +159,10 @@ export default function InboxPage() {
       const meta = selected.metadata || {};
       setAiSummary(meta.aiSummary || '');
       setAiBookingState(meta.aiBookingState || null);
+      setAiCancelState(meta.aiCancelState || null);
+      setAiRescheduleState(meta.aiRescheduleState || null);
       // Clear per-message AI state
-      setAiSuggestions([]);
+      setAiDraftText('');
       setAiIntent(undefined);
       setAiConfidence(undefined);
       msgPollRef.current = setInterval(() => loadMessages(selected.id), 15000);
@@ -468,12 +474,13 @@ export default function InboxPage() {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* AI Suggestions */}
+            {/* AI Draft Response */}
             <AiSuggestions
               intent={aiIntent}
               confidence={aiConfidence}
-              suggestions={aiSuggestions}
-              onSendSuggestion={(text) => sendMessage(text)}
+              draftText={aiDraftText}
+              onSendDraft={(text) => sendMessage(text)}
+              onDismiss={() => setAiDraftText('')}
             />
 
             {/* Quick replies */}
@@ -575,12 +582,41 @@ export default function InboxPage() {
               {aiBookingState && (
                 <AiBookingPanel
                   conversationId={selected.id}
+                  mode="book"
                   bookingState={aiBookingState}
-                  onBookingConfirmed={() => {
+                  onConfirmed={() => {
                     setAiBookingState(null);
                     if (customer) loadCustomerBookings(customer.id);
                   }}
-                  onCancelled={() => setAiBookingState(null)}
+                  onDismissed={() => setAiBookingState(null)}
+                />
+              )}
+
+              {/* AI Cancel Assistant */}
+              {aiCancelState && (
+                <AiBookingPanel
+                  conversationId={selected.id}
+                  mode="cancel"
+                  cancelState={aiCancelState}
+                  onConfirmed={() => {
+                    setAiCancelState(null);
+                    if (customer) loadCustomerBookings(customer.id);
+                  }}
+                  onDismissed={() => setAiCancelState(null)}
+                />
+              )}
+
+              {/* AI Reschedule Assistant */}
+              {aiRescheduleState && (
+                <AiBookingPanel
+                  conversationId={selected.id}
+                  mode="reschedule"
+                  rescheduleState={aiRescheduleState}
+                  onConfirmed={() => {
+                    setAiRescheduleState(null);
+                    if (customer) loadCustomerBookings(customer.id);
+                  }}
+                  onDismissed={() => setAiRescheduleState(null)}
                 />
               )}
 

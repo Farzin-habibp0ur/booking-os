@@ -2,9 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ClaudeClient } from './claude.client';
 import { IntentCategory } from './intent-detector';
 
-export interface ReplySuggestion {
-  text: string;
-  type: 'quick' | 'detailed';
+export interface DraftReply {
+  draftText: string;
 }
 
 @Injectable()
@@ -20,20 +19,22 @@ export class ReplyGenerator {
     personality: string,
     recentContext?: string,
     services?: string[],
-  ): Promise<ReplySuggestion[]> {
-    const systemPrompt = `You are a reply suggestion engine for "${businessName}", a booking/appointment business.
+  ): Promise<DraftReply> {
+    const systemPrompt = `You are a reply drafting engine for "${businessName}", a booking/appointment business.
 Personality: ${personality || 'friendly and professional'}
 The customer's intent is: ${intent}
 
-Generate 2-3 short reply suggestions the staff can send to the customer via WhatsApp.
-- Keep replies concise (1-2 sentences max)
+Generate ONE complete, well-crafted draft response that the staff can review, edit, and send to the customer via WhatsApp.
+- Write a full, natural response (2-4 sentences)
 - Match the personality described above
-- If the intent is BOOK_APPOINTMENT, one suggestion should ask about preferred service/time
-- If the intent is CANCEL, one suggestion should confirm the cancellation sympathetically
+- If the intent is BOOK_APPOINTMENT, ask about preferred service/time and guide them
+- If the intent is CANCEL, acknowledge sympathetically and offer to help with cancellation
+- If the intent is RESCHEDULE, acknowledge and offer to help find a new time
 - If the intent is INQUIRY and services are provided, reference relevant services
+- If the intent is GENERAL, respond warmly and offer assistance
 ${services?.length ? `\nAvailable services: ${services.join(', ')}` : ''}
 
-Return a JSON array of objects with "text" (the reply) and "type" ("quick" for short, "detailed" for longer).
+Return a JSON object with "draftText" (the complete draft response).
 Return ONLY valid JSON, no markdown or explanation.`;
 
     const userMessage = recentContext
@@ -45,18 +46,14 @@ Return ONLY valid JSON, no markdown or explanation.`;
         'haiku',
         systemPrompt,
         [{ role: 'user', content: userMessage }],
-        512,
+        1024,
       );
 
       const parsed = JSON.parse(response);
-      if (!Array.isArray(parsed)) return [];
-      return parsed.slice(0, 3).map((s: any) => ({
-        text: s.text || '',
-        type: s.type === 'detailed' ? 'detailed' : 'quick',
-      }));
+      return { draftText: parsed.draftText || '' };
     } catch (error: any) {
       this.logger.error(`Reply generation failed: ${error.message}`);
-      return [];
+      return { draftText: '' };
     }
   }
 }

@@ -5,6 +5,8 @@ import { ClaudeClient } from './claude.client';
 import { IntentDetector } from './intent-detector';
 import { ReplyGenerator } from './reply-generator';
 import { BookingAssistant } from './booking-assistant';
+import { CancelAssistant } from './cancel-assistant';
+import { RescheduleAssistant } from './reschedule-assistant';
 import { SummaryGenerator } from './summary-generator';
 import { BusinessModule } from '../business/business.module';
 import { ServiceModule } from '../service/service.module';
@@ -20,6 +22,8 @@ import { BookingModule } from '../booking/booking.module';
     IntentDetector,
     ReplyGenerator,
     BookingAssistant,
+    CancelAssistant,
+    RescheduleAssistant,
     SummaryGenerator,
   ],
   exports: [AiService],
