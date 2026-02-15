@@ -190,6 +190,16 @@ export default function InboxPage() {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // Restore AI draft from last inbound message metadata if no draft is currently showing
+    if (messages.length > 0 && !aiDraftText) {
+      const lastInbound = [...messages].reverse().find((m: any) => m.direction === 'INBOUND');
+      const aiMeta = lastInbound?.metadata?.ai;
+      if (aiMeta?.draftText) {
+        setAiDraftText(aiMeta.draftText);
+        setAiIntent(aiMeta.intent);
+        setAiConfidence(aiMeta.confidence);
+      }
+    }
   }, [messages]);
 
   useEffect(() => {
