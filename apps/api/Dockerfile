@@ -30,7 +30,7 @@ RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nestjs
 
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/apps/api/dist ./dist/apps/api
+COPY --from=builder /app/apps/api/dist ./dist
 COPY --from=builder /app/package.json ./
 
 # Copy only required package artifacts (not all of packages/)
