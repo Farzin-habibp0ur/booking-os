@@ -30,13 +30,25 @@ RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nestjs
 
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/apps/api/dist ./dist
-COPY --from=builder /app/packages ./packages
+COPY --from=builder /app/apps/api/dist ./dist/apps/api
 COPY --from=builder /app/package.json ./
+
+# Copy only required package artifacts (not all of packages/)
+COPY --from=builder /app/packages/db/prisma ./packages/db/prisma
+COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
+COPY --from=builder /app/packages/shared/package.json ./packages/shared/
+COPY --from=builder /app/packages/messaging-provider/dist ./packages/messaging-provider/dist
+COPY --from=builder /app/packages/messaging-provider/package.json ./packages/messaging-provider/
+COPY --from=builder /app/packages/db/dist ./packages/db/dist
+COPY --from=builder /app/packages/db/package.json ./packages/db/
+
+# Copy entrypoint script
+COPY scripts/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 USER nestjs
 
 EXPOSE 3001
 ENV API_PORT=3001
 
-CMD ["node", "dist/apps/api/src/main"]
+ENTRYPOINT ["docker-entrypoint.sh"]
