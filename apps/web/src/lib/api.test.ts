@@ -21,7 +21,7 @@ Object.defineProperty(window, 'localStorage', {
 
 // Mock window.location
 delete (window as any).location;
-window.location = { href: '' } as any;
+window.location = { href: '', pathname: '/dashboard' } as any;
 
 describe('ApiClient', () => {
   beforeEach(() => {
