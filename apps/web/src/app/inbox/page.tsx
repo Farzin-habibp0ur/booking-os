@@ -133,6 +133,9 @@ export default function InboxPage() {
     }, []),
     'ai:auto-replied': useCallback((data: any) => {
       if (selectedRef.current && data.conversationId === selectedRef.current.id) {
+        setAiDraftText('');
+        setAiIntent(undefined);
+        setAiConfidence(undefined);
         loadMessages(selectedRef.current.id);
       }
       toast(t('ai.auto_replied_notification'), 'info');
