@@ -36,7 +36,7 @@ export class EmailService {
   }
 
   async send(options: EmailOptions): Promise<boolean> {
-    const from = options.from || this.configService.get('EMAIL_FROM', 'noreply@booking-os.com');
+    const from = options.from || this.configService.get<string>('EMAIL_FROM') || 'noreply@booking-os.com';
 
     if (!this.apiKey || this.provider === 'none') {
       this.logger.log(`[Email] Would send to ${options.to}: ${options.subject}`);
