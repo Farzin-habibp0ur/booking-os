@@ -8,6 +8,8 @@ import { BookingAssistant, BookingStateData } from './booking-assistant';
 import { CancelAssistant, CancelStateData } from './cancel-assistant';
 import { RescheduleAssistant, RescheduleStateData } from './reschedule-assistant';
 import { SummaryGenerator } from './summary-generator';
+import { ProfileCollector } from './profile-collector';
+import { checkProfileCompleteness, PROFILE_FIELDS } from '@booking-os/shared';
 import { ServiceService } from '../service/service.service';
 import { AvailabilityService } from '../availability/availability.service';
 import { BookingService } from '../booking/booking.service';
@@ -55,6 +57,7 @@ export class AiService {
     private cancelAssistant: CancelAssistant,
     private rescheduleAssistant: RescheduleAssistant,
     private summaryGenerator: SummaryGenerator,
+    private profileCollector: ProfileCollector,
     private serviceService: ServiceService,
     private availabilityService: AvailabilityService,
     private bookingService: BookingService,
@@ -197,10 +200,18 @@ export class AiService {
       let cancelState: CancelStateData | null = null;
       let rescheduleState: RescheduleStateData | null = null;
       let draftText = '';
+      let goto_draft = false;
+      let profileJustCollected = false;
 
       if (settings.bookingAssistant) {
         // Determine which flow to run based on active state or new intent
-        if (hasActiveBooking) {
+        if (hasActiveBooking && metadata.aiBookingState?.state === 'COLLECT_PROFILE') {
+          // Handle profile collection flow
+          bookingState = await this.handleProfileCollection(
+            businessId, conversationId, messageContent, business, settings, customerData, customerContext,
+          );
+          if (bookingState?.state === 'CONFIRM') profileJustCollected = true;
+        } else if (hasActiveBooking) {
           bookingState = await this.runBookingAssistant(
             businessId, conversationId, messageContent, intentResult, business.name, settings.personality, customerContext,
           );
@@ -243,26 +254,63 @@ export class AiService {
 
       // Auto-confirm: when auto-reply enabled and booking/cancel/reschedule reaches final state
       if (isAutoReplyEnabled && bookingState?.state === 'CONFIRM' && bookingState.serviceId && bookingState.slotIso) {
-        try {
-          const booking = await this.confirmBooking(businessId, conversationId);
-          const customerName = customerContext?.name || 'there';
-          const confirmMsg = `Great news, ${customerName}! Your ${bookingState.serviceName} appointment has been confirmed for ${bookingState.date} at ${bookingState.time}${bookingState.staffName ? ` with ${bookingState.staffName}` : ''}. We look forward to seeing you! ✨`;
-          const defaultStaff = await this.prisma.staff.findFirst({ where: { businessId, role: 'OWNER' } });
-          if (defaultStaff) {
-            const provider = this.messagingService.getProvider();
-            await this.messageService.sendMessage(businessId, conversationId, defaultStaff.id, confirmMsg, provider);
+        // Check profile completeness before auto-confirming (skip if profile was just collected)
+        const requiredFields: string[] = (business.packConfig as any)?.requiredProfileFields || [];
+        if (!profileJustCollected && requiredFields.length > 0 && customerData) {
+          const { complete, missingFields } = checkProfileCompleteness(
+            { name: customerData.name, email: (customerData as any).email, customFields: (customerData as any).customFields || {} },
+            requiredFields,
+          );
+          if (!complete) {
+            // Transition to COLLECT_PROFILE instead of auto-confirming
+            const result = await this.profileCollector.collect(messageContent, {
+              customerName: customerData.name,
+              businessName: business.name,
+              personality: settings.personality,
+              missingFields,
+              alreadyCollected: {},
+            });
+            const updatedBookingState: BookingStateData = {
+              ...bookingState,
+              state: 'COLLECT_PROFILE',
+              missingFields: result.missingFields,
+              collectedFields: result.collectedFields,
+              suggestedResponse: result.suggestedResponse,
+            };
+            const convMeta = (conversation?.metadata as any) || {};
+            await this.prisma.conversation.update({
+              where: { id: conversationId },
+              data: { metadata: { ...convMeta, aiBookingState: updatedBookingState } },
+            });
+            bookingState = updatedBookingState;
+            // Fall through to draft flow with the profile collector's suggested response
+            draftText = result.suggestedResponse;
+            // Skip the normal auto-confirm, continue to draft/auto-reply below
+            goto_draft = true;
           }
-          this.inboxGateway.emitToBusinessRoom(businessId, 'ai:auto-replied', {
-            conversationId, messageId, intent: 'BOOK_APPOINTMENT', draftText: confirmMsg,
-          });
-          this.inboxGateway.emitToBusinessRoom(businessId, 'ai:suggestions', {
-            conversationId, messageId, intent: 'BOOK_APPOINTMENT',
-            confidence: intentResult.confidence, draftText: '', bookingState: null, cancelState: null, rescheduleState: null,
-          });
-          return;
-        } catch (err: any) {
-          this.logger.error(`Auto-confirm booking failed: ${err.message}`);
-          // Fall through to normal draft flow
+        }
+        if (!goto_draft) {
+          try {
+            const booking = await this.confirmBooking(businessId, conversationId);
+            const customerName = customerContext?.name || 'there';
+            const confirmMsg = `Great news, ${customerName}! Your ${bookingState.serviceName} appointment has been confirmed for ${bookingState.date} at ${bookingState.time}${bookingState.staffName ? ` with ${bookingState.staffName}` : ''}. We look forward to seeing you! ✨`;
+            const defaultStaff = await this.prisma.staff.findFirst({ where: { businessId, role: 'OWNER' } });
+            if (defaultStaff) {
+              const provider = this.messagingService.getProvider();
+              await this.messageService.sendMessage(businessId, conversationId, defaultStaff.id, confirmMsg, provider);
+            }
+            this.inboxGateway.emitToBusinessRoom(businessId, 'ai:auto-replied', {
+              conversationId, messageId, intent: 'BOOK_APPOINTMENT', draftText: confirmMsg,
+            });
+            this.inboxGateway.emitToBusinessRoom(businessId, 'ai:suggestions', {
+              conversationId, messageId, intent: 'BOOK_APPOINTMENT',
+              confidence: intentResult.confidence, draftText: '', bookingState: null, cancelState: null, rescheduleState: null,
+            });
+            return;
+          } catch (err: any) {
+            this.logger.error(`Auto-confirm booking failed: ${err.message}`);
+            // Fall through to normal draft flow
+          }
         }
       }
 
@@ -836,5 +884,183 @@ export class AiService {
       where: { id: conversationId },
       data: { metadata: { ...metadata, aiRescheduleState: null } },
     });
+  }
+
+  private async handleProfileCollection(
+    businessId: string,
+    conversationId: string,
+    messageContent: string,
+    business: any,
+    settings: AiSettings,
+    customerData: any,
+    customerContext?: any,
+  ): Promise<BookingStateData | null> {
+    try {
+      const conversation = await this.prisma.conversation.findUnique({
+        where: { id: conversationId },
+      });
+      if (!conversation) return null;
+      const metadata = (conversation.metadata as any) || {};
+      const currentState: BookingStateData = metadata.aiBookingState;
+      if (!currentState) return null;
+
+      const requiredFields: string[] = (business.packConfig as any)?.requiredProfileFields || [];
+      const previouslyCollected = currentState.collectedFields || {};
+
+      // Check what's still missing considering previously collected fields
+      const mergedCustomer = {
+        name: customerData?.name || '',
+        email: customerData?.email || previouslyCollected.email || null,
+        customFields: { ...(customerData?.customFields || {}), ...previouslyCollected },
+      };
+      const { missingFields } = checkProfileCompleteness(mergedCustomer, requiredFields);
+
+      const result = await this.profileCollector.collect(messageContent, {
+        customerName: customerData?.name || 'there',
+        businessName: business.name,
+        personality: settings.personality,
+        missingFields,
+        alreadyCollected: previouslyCollected,
+      });
+
+      // Merge newly collected fields
+      const allCollected = { ...previouslyCollected, ...result.collectedFields };
+
+      if (result.allCollected || result.missingFields.length === 0) {
+        // Save collected fields to customer record
+        if (customerData) {
+          const updateData: any = {};
+          if (allCollected.email) updateData.email = allCollected.email;
+          if (allCollected.firstName || allCollected.lastName) {
+            const first = allCollected.firstName || customerData.name.split(' ')[0] || '';
+            const last = allCollected.lastName || customerData.name.split(' ').slice(1).join(' ') || '';
+            updateData.name = `${first} ${last}`.trim();
+          }
+          // Save remaining fields to customFields
+          const customFieldUpdates: Record<string, any> = { ...(customerData.customFields || {}) };
+          for (const [key, value] of Object.entries(allCollected)) {
+            if (key !== 'email' && key !== 'firstName' && key !== 'lastName') {
+              customFieldUpdates[key] = value;
+            }
+          }
+          updateData.customFields = customFieldUpdates;
+          await this.prisma.customer.update({
+            where: { id: customerData.id },
+            data: updateData,
+          });
+        }
+
+        // Transition back to CONFIRM
+        const newState: BookingStateData = {
+          ...currentState,
+          state: 'CONFIRM',
+          missingFields: undefined,
+          collectedFields: undefined,
+          suggestedResponse: currentState.suggestedResponse,
+        };
+        await this.prisma.conversation.update({
+          where: { id: conversationId },
+          data: { metadata: { ...metadata, aiBookingState: newState } },
+        });
+        return newState;
+      }
+
+      // Still collecting
+      const newState: BookingStateData = {
+        ...currentState,
+        state: 'COLLECT_PROFILE',
+        missingFields: result.missingFields,
+        collectedFields: allCollected,
+        suggestedResponse: result.suggestedResponse,
+      };
+      await this.prisma.conversation.update({
+        where: { id: conversationId },
+        data: { metadata: { ...metadata, aiBookingState: newState } },
+      });
+      return newState;
+    } catch (error: any) {
+      this.logger.error(`Profile collection failed: ${error.message}`);
+      return null;
+    }
+  }
+
+  async customerChat(
+    businessId: string,
+    customerId: string,
+    question: string,
+  ): Promise<{ answer: string }> {
+    const business = await this.prisma.business.findUnique({ where: { id: businessId } });
+    if (!business) throw new Error('Business not found');
+
+    const customer = await this.prisma.customer.findFirst({
+      where: { id: customerId, businessId },
+    });
+    if (!customer) throw new Error('Customer not found');
+
+    // Load all bookings
+    const bookings = await this.prisma.booking.findMany({
+      where: { customerId, businessId },
+      include: { service: true, staff: true },
+      orderBy: { startTime: 'desc' },
+    });
+
+    // Load conversations and recent messages
+    const conversations = await this.prisma.conversation.findMany({
+      where: { customerId, businessId },
+    });
+    const conversationIds = conversations.map((c) => c.id);
+    const messages = conversationIds.length > 0
+      ? await this.prisma.message.findMany({
+          where: { conversationId: { in: conversationIds } },
+          orderBy: { createdAt: 'desc' },
+          take: 50,
+        })
+      : [];
+
+    const totalSpent = bookings
+      .filter((b: any) => b.status === 'COMPLETED')
+      .reduce((sum, b: any) => sum + (b.service?.price || 0), 0);
+
+    const bookingsList = bookings.map((b: any) => {
+      const date = b.startTime.toISOString().split('T')[0];
+      const time = b.startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      return `- ${date} ${time}: ${b.service?.name || 'Unknown'} (${b.status})${b.staff ? ` with ${b.staff.name}` : ''}`;
+    }).join('\n');
+
+    const messagesList = messages
+      .reverse()
+      .map((m) => {
+        const date = m.createdAt.toISOString().split('T')[0];
+        return `[${date}] ${m.direction === 'INBOUND' ? 'Customer' : 'Staff'}: ${m.content}`;
+      })
+      .join('\n');
+
+    const systemPrompt = `You are an AI assistant for ${business.name}. A staff member is asking about a customer.
+
+CUSTOMER PROFILE:
+- Name: ${customer.name}
+- Phone: ${customer.phone}
+- Email: ${(customer as any).email || 'N/A'}
+- Tags: ${((customer as any).tags || []).join(', ') || 'None'}
+- Custom fields: ${JSON.stringify((customer as any).customFields || {})}
+- Customer since: ${customer.createdAt.toISOString().split('T')[0]}
+
+BOOKING HISTORY (${bookings.length} total, $${Math.round(totalSpent)} spent):
+${bookingsList || 'No bookings'}
+
+RECENT CONVERSATIONS:
+${messagesList || 'No messages'}
+
+Answer the staff's question based on this data. Be concise and helpful.
+If the data doesn't contain the answer, say so honestly.`;
+
+    const response = await this.claude.complete(
+      'sonnet',
+      systemPrompt,
+      [{ role: 'user', content: question }],
+      1024,
+    );
+
+    return { answer: response };
   }
 }

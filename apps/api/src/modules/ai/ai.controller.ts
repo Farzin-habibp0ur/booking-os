@@ -112,4 +112,14 @@ export class AiController {
     await this.aiService.resumeAutoReply(businessId, conversationId);
     return { ok: true };
   }
+
+  @Post('customers/:id/chat')
+  async customerChat(
+    @BusinessId() businessId: string,
+    @Param('id') customerId: string,
+    @Body() body: { question: string },
+  ) {
+    if (!body.question?.trim()) throw new BadRequestException('Question is required');
+    return this.aiService.customerChat(businessId, customerId, body.question);
+  }
 }

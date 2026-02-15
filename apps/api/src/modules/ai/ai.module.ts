@@ -9,6 +9,7 @@ import { CancelAssistant } from './cancel-assistant';
 import { RescheduleAssistant } from './reschedule-assistant';
 import { SummaryGenerator } from './summary-generator';
 import { ProfileExtractor } from './profile-extractor';
+import { ProfileCollector } from './profile-collector';
 import { BusinessModule } from '../business/business.module';
 import { ServiceModule } from '../service/service.module';
 import { AvailabilityModule } from '../availability/availability.module';
@@ -30,6 +31,7 @@ import { MessageModule } from '../message/message.module';
     RescheduleAssistant,
     SummaryGenerator,
     ProfileExtractor,
+    ProfileCollector,
   ],
   exports: [AiService, ProfileExtractor],
 })

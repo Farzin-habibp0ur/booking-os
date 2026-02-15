@@ -35,6 +35,7 @@ async function main() {
       packConfig: {
         requireConsultation: true,
         medicalFormRequired: true,
+        requiredProfileFields: ['firstName', 'email'],
       },
       aiSettings: {
         enabled: true,

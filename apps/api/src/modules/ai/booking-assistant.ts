@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ClaudeClient } from './claude.client';
 
-export type BookingState = 'IDENTIFY_SERVICE' | 'IDENTIFY_DATE' | 'IDENTIFY_TIME' | 'CONFIRM';
+export type BookingState = 'IDENTIFY_SERVICE' | 'IDENTIFY_DATE' | 'IDENTIFY_TIME' | 'CONFIRM' | 'COLLECT_PROFILE';
 
 export interface BookingStateData {
   state: BookingState;
@@ -14,6 +14,8 @@ export interface BookingStateData {
   slotIso?: string;
   suggestedResponse?: string;
   availableOptions?: string[];
+  missingFields?: string[];
+  collectedFields?: Record<string, string>;
 }
 
 @Injectable()

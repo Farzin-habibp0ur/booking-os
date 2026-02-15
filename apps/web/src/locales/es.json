@@ -225,7 +225,16 @@
     "select_placeholder": "— Seleccionar —",
     "full_name": "Nombre completo",
     "customer_since": "Cliente desde",
-    "no_tags": "Sin etiquetas"
+    "no_tags": "Sin etiquetas",
+    "ai_chat_tab": "Chat IA",
+    "chat_placeholder": "Pregunta sobre este cliente...",
+    "chat_welcome": "Preguntame cualquier cosa sobre {{name}}. Tengo acceso a su perfil, historial de reservas e historial de conversaciones.",
+    "chat_error": "Lo siento, no pude procesar esa pregunta. Intenta de nuevo.",
+    "chip_summarize": "Resume este cliente",
+    "chip_treatments": "Que tratamientos ha tenido?",
+    "chip_upcoming": "Tiene citas proximas?",
+    "chip_allergies": "Tiene alergias o notas medicas?",
+    "next_appointment": "Proxima cita"
   },
 
   "services": {
@@ -342,6 +351,8 @@
     "ai_settings_desc": "Configura sugerencias de respuesta, detección de intención y asistente de reservas con IA",
     "account_import": "Cuenta e importacion",
     "account_import_desc": "Gestiona datos de clientes, importa contactos y exporta registros",
+    "profile_fields": "Requisitos de perfil",
+    "profile_fields_desc": "Configura que campos del perfil del cliente son obligatorios antes de confirmar reservas automaticamente",
     "setup_wizard": "Asistente de configuracion",
     "setup_wizard_desc": "Vuelve a ejecutar el asistente de configuracion para actualizar tu negocio"
   },
@@ -442,6 +453,7 @@
       "services": "Servicios",
       "hours": "Horarios",
       "templates": "Plantillas",
+      "profile": "Requisitos",
       "customers": "Importar clientes",
       "finish": "Finalizar"
     },
@@ -449,7 +461,12 @@
     "customers_subtitle": "Importa tus contactos de clientes existentes para comenzar rapidamente.",
     "add_manually": "Agregar manualmente",
     "add_manually_desc": "Ve a la pagina de clientes para agregar clientes uno por uno.",
-    "go_to_customers": "Ir a clientes"
+    "go_to_customers": "Ir a clientes",
+    "profile_title": "Requisitos de perfil",
+    "profile_subtitle": "Elige que campos son obligatorios antes de confirmar una reserva automaticamente. La IA recopilara la informacion faltante de forma conversacional.",
+    "profile_category_basic": "Informacion basica",
+    "profile_category_medical": "Informacion medica",
+    "profile_note": "Los campos seleccionados seran recopilados por la IA antes de confirmar reservas. Puedes cambiar esto en cualquier momento en Configuracion."
   },
 
   "ai": {

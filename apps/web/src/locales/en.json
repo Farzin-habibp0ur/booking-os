@@ -225,7 +225,16 @@
     "select_placeholder": "— Select —",
     "full_name": "Full Name",
     "customer_since": "Customer Since",
-    "no_tags": "No tags"
+    "no_tags": "No tags",
+    "ai_chat_tab": "AI Chat",
+    "chat_placeholder": "Ask about this customer...",
+    "chat_welcome": "Ask me anything about {{name}}. I have access to their profile, booking history, and conversation history.",
+    "chat_error": "Sorry, I couldn't process that question. Please try again.",
+    "chip_summarize": "Summarize this customer",
+    "chip_treatments": "What treatments have they had?",
+    "chip_upcoming": "Any upcoming appointments?",
+    "chip_allergies": "Are there any allergies or medical notes?",
+    "next_appointment": "Next Appointment"
   },
 
   "services": {
@@ -342,6 +351,8 @@
     "ai_settings_desc": "Configure AI-powered reply suggestions, intent detection, and booking assistant",
     "account_import": "Account & Import",
     "account_import_desc": "Manage customer data, import contacts, and export records",
+    "profile_fields": "Profile Requirements",
+    "profile_fields_desc": "Configure which customer profile fields are required before auto-confirming bookings",
     "setup_wizard": "Setup Wizard",
     "setup_wizard_desc": "Re-run the onboarding wizard to update your business configuration"
   },
@@ -442,6 +453,7 @@
       "services": "Define Services",
       "hours": "Working Hours",
       "templates": "Templates",
+      "profile": "Profile Reqs",
       "customers": "Import Customers",
       "finish": "Test & Finish"
     },
@@ -449,7 +461,12 @@
     "customers_subtitle": "Import your existing customer contacts to get started quickly.",
     "add_manually": "Add Manually",
     "add_manually_desc": "Go to the customers page to add customers one by one.",
-    "go_to_customers": "Go to Customers"
+    "go_to_customers": "Go to Customers",
+    "profile_title": "Profile Requirements",
+    "profile_subtitle": "Choose which fields are required before a booking can be auto-confirmed. The AI will collect missing info conversationally.",
+    "profile_category_basic": "Basic Information",
+    "profile_category_medical": "Medical Information",
+    "profile_note": "Selected fields will be collected by AI before confirming bookings. You can change this anytime in Settings."
   },
 
   "ai": {

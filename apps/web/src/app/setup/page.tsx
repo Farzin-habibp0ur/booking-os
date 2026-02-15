@@ -6,11 +6,12 @@ import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/lib/toast';
-import { Check, ChevronLeft, ChevronRight, Building2, MessageCircle, Users, Scissors, Clock, FileText, Upload, Rocket, Plus, X, Trash2, Loader2 } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, Building2, MessageCircle, Users, Scissors, Clock, FileText, Upload, Rocket, Plus, X, Trash2, Loader2, ClipboardCheck } from 'lucide-react';
+import { PROFILE_FIELDS } from '@booking-os/shared';
 
-const STEP_KEYS = ['business', 'whatsapp', 'staff', 'services', 'hours', 'templates', 'customers', 'finish'] as const;
+const STEP_KEYS = ['business', 'whatsapp', 'staff', 'services', 'hours', 'templates', 'profile', 'customers', 'finish'] as const;
 
-const STEP_ICONS = [Building2, MessageCircle, Users, Scissors, Clock, FileText, Upload, Rocket];
+const STEP_ICONS = [Building2, MessageCircle, Users, Scissors, Clock, FileText, ClipboardCheck, Upload, Rocket];
 
 const DAYS_KEYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 
@@ -45,6 +46,9 @@ export default function SetupPage() {
   // Templates
   const [templates, setTemplates] = useState<any[]>([]);
 
+  // Profile requirements
+  const [requiredProfileFields, setRequiredProfileFields] = useState<string[]>(['firstName']);
+
   // Customer Import
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [csvFile, setCsvFile] = useState<File | null>(null);
@@ -69,6 +73,9 @@ export default function SetupPage() {
       ]);
       setBizName(biz.name || '');
       setTimezone(biz.timezone || 'America/Los_Angeles');
+      if (biz.packConfig?.requiredProfileFields) {
+        setRequiredProfileFields(biz.packConfig.requiredProfileFields);
+      }
       setStaffList(staffRes || []);
       setServices(svcRes?.data || svcRes || []);
       setTemplates(tplRes || []);
@@ -180,9 +187,14 @@ export default function SetupPage() {
     setConvImporting(false);
   };
 
+  const saveProfileRequirements = async () => {
+    await api.patch('/business', { packConfig: { requiredProfileFields } });
+  };
+
   const handleNext = async () => {
     if (step === 0) await saveBusiness();
     if (step === 4 && selectedStaffForHours) await saveWorkingHours(selectedStaffForHours);
+    if (step === 6) await saveProfileRequirements();
     if (step < STEP_KEYS.length - 1) setStep(step + 1);
   };
 
@@ -477,8 +489,52 @@ export default function SetupPage() {
           </div>
         )}
 
-        {/* Step 7: Import Customers */}
+        {/* Step 7: Profile Requirements */}
         {step === 6 && (
+          <div className="bg-white rounded-lg border p-6 space-y-4">
+            <h2 className="text-lg font-semibold">{t('setup.profile_title')}</h2>
+            <p className="text-sm text-gray-500">{t('setup.profile_subtitle')}</p>
+
+            {(['basic', 'medical'] as const).map((category) => {
+              const fields = PROFILE_FIELDS.filter((f) => f.category === category);
+              if (fields.length === 0) return null;
+              return (
+                <div key={category}>
+                  <h3 className="text-xs font-semibold text-gray-500 uppercase mb-2">
+                    {t(`setup.profile_category_${category}` as any)}
+                  </h3>
+                  <div className="border rounded-lg divide-y">
+                    {fields.map((field) => (
+                      <label key={field.key} className="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-gray-50">
+                        <div>
+                          <p className="text-sm font-medium">{field.label}</p>
+                          <p className="text-xs text-gray-500">{field.type}</p>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={requiredProfileFields.includes(field.key)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setRequiredProfileFields([...requiredProfileFields, field.key]);
+                            } else {
+                              setRequiredProfileFields(requiredProfileFields.filter((k) => k !== field.key));
+                            }
+                          }}
+                          className="rounded text-blue-600 w-4 h-4"
+                        />
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+
+            <p className="text-xs text-gray-400">{t('setup.profile_note')}</p>
+          </div>
+        )}
+
+        {/* Step 8: Import Customers */}
+        {step === 7 && (
           <div className="space-y-4">
             <div className="bg-white rounded-lg border p-6 space-y-4">
               <h2 className="text-lg font-semibold">{t('setup.customers_title')}</h2>
@@ -573,8 +629,8 @@ export default function SetupPage() {
           </div>
         )}
 
-        {/* Step 8: Test & Finish */}
-        {step === 7 && (
+        {/* Step 9: Test & Finish */}
+        {step === 8 && (
           <div className="bg-white rounded-lg border p-6 space-y-6">
             <h2 className="text-lg font-semibold">{t('setup.finish_title')}</h2>
             <p className="text-sm text-gray-500">{t('setup.finish_subtitle')}</p>
