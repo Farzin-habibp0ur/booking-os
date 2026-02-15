@@ -36,7 +36,7 @@ export default function SetupPage() {
   const [services, setServices] = useState<any[]>([]);
   const [newSvcName, setNewSvcName] = useState('');
   const [newSvcDuration, setNewSvcDuration] = useState(30);
-  const [newSvcPrice, setNewSvcPrice] = useState(0);
+  const [newSvcPrice, setNewSvcPrice] = useState('');
 
   // Working hours
   const [staffHours, setStaffHours] = useState<Record<string, any[]>>({});
@@ -104,8 +104,8 @@ export default function SetupPage() {
 
   const addService = async () => {
     if (!newSvcName) return;
-    await api.post('/services', { name: newSvcName, durationMins: Number(newSvcDuration), price: Number(newSvcPrice), category: 'General' });
-    setNewSvcName(''); setNewSvcDuration(30); setNewSvcPrice(0);
+    await api.post('/services', { name: newSvcName, durationMins: Number(newSvcDuration), price: Number(newSvcPrice) || 0, category: 'General' });
+    setNewSvcName(''); setNewSvcDuration(30); setNewSvcPrice('');
     const updated = await api.get<any>('/services');
     setServices(updated?.data || updated || []);
   };
@@ -346,7 +346,22 @@ export default function SetupPage() {
                       <p className="text-sm font-medium">{s.name}</p>
                       <p className="text-xs text-gray-500">{s.durationMins} {t('services.min_short')} · {s.price > 0 ? `$${s.price}` : t('services.price_free')}</p>
                     </div>
-                    <span className="text-xs text-gray-400">{s.category}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-400">{s.category}</span>
+                      <button
+                        onClick={async () => {
+                          try {
+                            await api.del(`/services/${s.id}`);
+                            const updated = await api.get<any>('/services');
+                            setServices(updated?.data || updated || []);
+                          } catch (e) { console.error(e); }
+                        }}
+                        className="text-gray-400 hover:text-red-500 transition-colors p-1"
+                        title={t('common.delete')}
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -362,7 +377,7 @@ export default function SetupPage() {
                 </div>
                 <div>
                   <label className="text-xs text-gray-500">{t('setup.price_label')}</label>
-                  <input value={newSvcPrice} onChange={(e) => setNewSvcPrice(Number(e.target.value))} type="number" step="0.01" className="w-full border rounded-md px-3 py-2 text-sm" />
+                  <input value={newSvcPrice} onChange={(e) => setNewSvcPrice(e.target.value)} type="number" step="0.01" placeholder="0" className="w-full border rounded-md px-3 py-2 text-sm" />
                 </div>
               </div>
               <button onClick={addService} disabled={!newSvcName} className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700 disabled:opacity-50">

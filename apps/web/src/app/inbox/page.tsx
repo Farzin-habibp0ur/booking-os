@@ -192,12 +192,21 @@ export default function InboxPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     // Restore AI draft from last inbound message metadata if no draft is currently showing
     if (messages.length > 0 && !aiDraftText) {
-      const lastInbound = [...messages].reverse().find((m: any) => m.direction === 'INBOUND');
-      const aiMeta = lastInbound?.metadata?.ai;
-      if (aiMeta?.draftText) {
-        setAiDraftText(aiMeta.draftText);
-        setAiIntent(aiMeta.intent);
-        setAiConfidence(aiMeta.confidence);
+      const reversed = [...messages].reverse();
+      const lastInbound = reversed.find((m: any) => m.direction === 'INBOUND');
+      if (lastInbound) {
+        const aiMeta = lastInbound.metadata?.ai;
+        if (aiMeta?.draftText) {
+          // Don't restore if an outbound message was already sent after this inbound
+          // (means draft was already sent or auto-replied)
+          const lastInboundIdx = messages.indexOf(lastInbound);
+          const hasOutboundAfter = messages.slice(lastInboundIdx + 1).some((m: any) => m.direction === 'OUTBOUND');
+          if (!hasOutboundAfter) {
+            setAiDraftText(aiMeta.draftText);
+            setAiIntent(aiMeta.intent);
+            setAiConfidence(aiMeta.confidence);
+          }
+        }
       }
     }
   }, [messages]);
