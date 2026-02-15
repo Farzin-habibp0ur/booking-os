@@ -27,10 +27,8 @@ export class WebhookController {
   private verifyHmac(body: string, signature: string | undefined): boolean {
     const secret = this.configService.get<string>('WEBHOOK_SECRET');
     if (!secret) {
-      // In production, WEBHOOK_SECRET is required
-      const isProduction = this.configService.get('NODE_ENV') === 'production';
-      if (isProduction) return false;
-      return true; // Dev mode: allow unsigned requests
+      this.logger.warn('WEBHOOK_SECRET not configured — rejecting webhook request');
+      return false;
     }
     if (!signature) return false;
 

@@ -3,10 +3,11 @@ import { AuthGuard } from '@nestjs/passport';
 import { BusinessService } from './business.service';
 import { BusinessId } from '../../common/decorators';
 import { TenantGuard } from '../../common/tenant.guard';
+import { RolesGuard, Roles } from '../../common/guards/roles.guard';
 import { UpdateBusinessDto } from '../../common/dto';
 
 @Controller('business')
-@UseGuards(AuthGuard('jwt'), TenantGuard)
+@UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
 export class BusinessController {
   constructor(private businessService: BusinessService) {}
 
@@ -16,6 +17,7 @@ export class BusinessController {
   }
 
   @Patch()
+  @Roles('OWNER')
   update(@BusinessId() businessId: string, @Body() body: UpdateBusinessDto) {
     return this.businessService.update(businessId, body);
   }

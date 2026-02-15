@@ -18,16 +18,21 @@ export class StaffService {
     return this.config.get<string>('WEB_URL') || 'http://localhost:3000';
   }
 
+  private static readonly SAFE_SELECT = {
+    id: true, name: true, email: true, role: true, isActive: true, createdAt: true,
+  } as const;
+
   async findAll(businessId: string) {
-    return this.prisma.staff.findMany({
+    // Two queries: one safe (no passwordHash), one to check invite status
+    const staff = await this.prisma.staff.findMany({
       where: { businessId },
-      select: { id: true, name: true, email: true, role: true, isActive: true, passwordHash: true, createdAt: true },
+      select: { ...StaffService.SAFE_SELECT, passwordHash: true },
       orderBy: { createdAt: 'asc' },
-    }).then(staff => staff.map(s => ({
+    });
+    return staff.map(({ passwordHash, ...s }) => ({
       ...s,
-      invitePending: !s.passwordHash && s.isActive,
-      passwordHash: undefined,
-    })));
+      invitePending: !passwordHash && s.isActive,
+    }));
   }
 
   async create(businessId: string, data: { name: string; email: string; password: string; role: string }) {
@@ -52,6 +57,7 @@ export class StaffService {
     return this.prisma.staff.update({
       where: { id, businessId },
       data: { isActive: false },
+      select: StaffService.SAFE_SELECT,
     });
   }
 

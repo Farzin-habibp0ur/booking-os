@@ -108,27 +108,40 @@ describe('ConversationService', () => {
   });
 
   describe('getNotes', () => {
-    it('returns notes for conversation', async () => {
+    it('returns notes for conversation scoped to business', async () => {
       const notes = [{ id: 'n1', content: 'Hello' }];
+      prisma.conversation.findFirst.mockResolvedValue({ id: 'conv1', businessId: 'biz1' } as any);
       prisma.conversationNote.findMany.mockResolvedValue(notes as any);
 
-      const result = await conversationService.getNotes('conv1');
+      const result = await conversationService.getNotes('biz1', 'conv1');
 
       expect(result).toEqual(notes);
+      expect(prisma.conversation.findFirst).toHaveBeenCalledWith({
+        where: { id: 'conv1', businessId: 'biz1' },
+      });
       expect(prisma.conversationNote.findMany).toHaveBeenCalledWith({
         where: { conversationId: 'conv1' },
         include: { staff: { select: { id: true, name: true } } },
         orderBy: { createdAt: 'desc' },
       });
     });
+
+    it('returns empty array when conversation not found', async () => {
+      prisma.conversation.findFirst.mockResolvedValue(null);
+
+      const result = await conversationService.getNotes('biz1', 'conv1');
+
+      expect(result).toEqual([]);
+    });
   });
 
   describe('addNote', () => {
-    it('creates a note with staff reference', async () => {
+    it('creates a note with staff reference scoped to business', async () => {
       const note = { id: 'n1', content: 'Note text', staffId: 'staff1' };
+      prisma.conversation.findFirst.mockResolvedValue({ id: 'conv1', businessId: 'biz1' } as any);
       prisma.conversationNote.create.mockResolvedValue(note as any);
 
-      const result = await conversationService.addNote('conv1', 'staff1', 'Note text');
+      const result = await conversationService.addNote('biz1', 'conv1', 'staff1', 'Note text');
 
       expect(result).toEqual(note);
       expect(prisma.conversationNote.create).toHaveBeenCalledWith({
@@ -136,17 +149,32 @@ describe('ConversationService', () => {
         include: { staff: { select: { id: true, name: true } } },
       });
     });
+
+    it('throws when conversation not found', async () => {
+      prisma.conversation.findFirst.mockResolvedValue(null);
+
+      await expect(conversationService.addNote('biz1', 'conv1', 'staff1', 'text'))
+        .rejects.toThrow('Conversation not found');
+    });
   });
 
   describe('deleteNote', () => {
-    it('deletes note by id', async () => {
+    it('deletes note by id scoped to business', async () => {
+      prisma.conversation.findFirst.mockResolvedValue({ id: 'conv1', businessId: 'biz1' } as any);
       prisma.conversationNote.delete.mockResolvedValue({ id: 'n1' } as any);
 
-      await conversationService.deleteNote('n1');
+      await conversationService.deleteNote('biz1', 'conv1', 'n1');
 
       expect(prisma.conversationNote.delete).toHaveBeenCalledWith({
         where: { id: 'n1' },
       });
+    });
+
+    it('throws when conversation not found', async () => {
+      prisma.conversation.findFirst.mockResolvedValue(null);
+
+      await expect(conversationService.deleteNote('biz1', 'conv1', 'n1'))
+        .rejects.toThrow('Conversation not found');
     });
   });
 

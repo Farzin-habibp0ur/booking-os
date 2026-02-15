@@ -64,9 +64,8 @@ export class InboxGateway implements OnGatewayConnection, OnGatewayDisconnect, O
 
   handleConnection(client: Socket) {
     try {
-      const token =
-        (client.handshake.auth?.token as string) ||
-        (client.handshake.query.token as string);
+      // Only accept token from auth header, not query params (prevents token leakage in logs/URLs)
+      const token = client.handshake.auth?.token as string;
 
       if (!token) {
         client.emit('error', { message: 'Authentication required' });

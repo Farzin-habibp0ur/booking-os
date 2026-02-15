@@ -211,8 +211,14 @@ export class ConversationService {
     return snoozed.length;
   }
 
-  // --- Notes ---
-  async getNotes(conversationId: string) {
+  // --- Notes (tenant-scoped) ---
+  async getNotes(businessId: string, conversationId: string) {
+    // Verify the conversation belongs to this business
+    const conversation = await this.prisma.conversation.findFirst({
+      where: { id: conversationId, businessId },
+    });
+    if (!conversation) return [];
+
     return this.prisma.conversationNote.findMany({
       where: { conversationId },
       include: { staff: { select: { id: true, name: true } } },
@@ -220,14 +226,26 @@ export class ConversationService {
     });
   }
 
-  async addNote(conversationId: string, staffId: string, content: string) {
+  async addNote(businessId: string, conversationId: string, staffId: string, content: string) {
+    // Verify the conversation belongs to this business
+    const conversation = await this.prisma.conversation.findFirst({
+      where: { id: conversationId, businessId },
+    });
+    if (!conversation) throw new Error('Conversation not found');
+
     return this.prisma.conversationNote.create({
       data: { conversationId, staffId, content },
       include: { staff: { select: { id: true, name: true } } },
     });
   }
 
-  async deleteNote(noteId: string) {
+  async deleteNote(businessId: string, conversationId: string, noteId: string) {
+    // Verify the conversation belongs to this business
+    const conversation = await this.prisma.conversation.findFirst({
+      where: { id: conversationId, businessId },
+    });
+    if (!conversation) throw new Error('Conversation not found');
+
     return this.prisma.conversationNote.delete({ where: { id: noteId } });
   }
 

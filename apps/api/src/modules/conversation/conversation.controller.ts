@@ -65,18 +65,18 @@ export class ConversationController {
   }
 
   @Get(':id/notes')
-  getNotes(@Param('id') id: string) {
-    return this.conversationService.getNotes(id);
+  getNotes(@BusinessId() businessId: string, @Param('id') id: string) {
+    return this.conversationService.getNotes(businessId, id);
   }
 
   @Post(':id/notes')
-  addNote(@Param('id') id: string, @CurrentUser('sub') staffId: string, @Body() body: AddNoteDto) {
-    return this.conversationService.addNote(id, staffId, body.content);
+  addNote(@BusinessId() businessId: string, @Param('id') id: string, @CurrentUser('sub') staffId: string, @Body() body: AddNoteDto) {
+    return this.conversationService.addNote(businessId, id, staffId, body.content);
   }
 
   @Delete(':id/notes/:noteId')
-  deleteNote(@Param('noteId') noteId: string) {
-    return this.conversationService.deleteNote(noteId);
+  deleteNote(@BusinessId() businessId: string, @Param('id') id: string, @Param('noteId') noteId: string) {
+    return this.conversationService.deleteNote(businessId, id, noteId);
   }
 
   @Post(':id/booking')

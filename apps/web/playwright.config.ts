@@ -4,14 +4,13 @@ export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: 1,
+  retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
   timeout: 30000,
 
   use: {
     baseURL: 'http://localhost:3000',
-    headless: true,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
@@ -25,18 +24,16 @@ export default defineConfig({
 
   webServer: [
     {
-      command: 'npm run dev --workspace=@booking-os/api',
-      url: 'http://localhost:3001/api/v1',
-      timeout: 60000,
-      reuseExistingServer: true,
-      cwd: '../..',
+      command: 'cd ../api && npm run dev',
+      url: 'http://localhost:3001/api/v1/health',
+      reuseExistingServer: !process.env.CI,
+      timeout: 30000,
     },
     {
-      command: 'npm run dev --workspace=@booking-os/web',
+      command: 'npm run dev',
       url: 'http://localhost:3000',
-      timeout: 60000,
-      reuseExistingServer: true,
-      cwd: '../..',
+      reuseExistingServer: !process.env.CI,
+      timeout: 30000,
     },
   ],
 });

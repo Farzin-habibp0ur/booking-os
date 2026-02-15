@@ -70,8 +70,9 @@ export class UpdateBookingDto {
 }
 
 export class UpdateBookingStatusDto {
-  @IsString()
-  @IsNotEmpty()
+  @IsEnum(['PENDING', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'NO_SHOW'], {
+    message: 'status must be one of: PENDING, CONFIRMED, IN_PROGRESS, COMPLETED, CANCELLED, NO_SHOW',
+  })
   status!: string;
 }
 
@@ -193,8 +194,7 @@ export class CreateStaffDto {
   @IsNotEmpty()
   password!: string;
 
-  @IsString()
-  @IsNotEmpty()
+  @IsEnum(['OWNER', 'AGENT'], { message: 'role must be one of: OWNER, AGENT' })
   role!: string;
 }
 
@@ -207,7 +207,7 @@ export class UpdateStaffDto {
   @IsOptional()
   email?: string;
 
-  @IsString()
+  @IsEnum(['OWNER', 'AGENT'], { message: 'role must be one of: OWNER, AGENT' })
   @IsOptional()
   role?: string;
 }
@@ -312,8 +312,9 @@ export class CreateBookingFromConversationDto {
 }
 
 export class UpdateConversationStatusDto {
-  @IsString()
-  @IsNotEmpty()
+  @IsEnum(['OPEN', 'WAITING', 'SNOOZED', 'RESOLVED'], {
+    message: 'status must be one of: OPEN, WAITING, SNOOZED, RESOLVED',
+  })
   status!: string;
 }
 
@@ -465,7 +466,7 @@ export class InviteStaffDto {
   @IsNotEmpty()
   name!: string;
 
-  @IsString()
+  @IsEnum(['OWNER', 'AGENT'], { message: 'role must be one of: OWNER, AGENT' })
   @IsOptional()
   role?: string;
 }

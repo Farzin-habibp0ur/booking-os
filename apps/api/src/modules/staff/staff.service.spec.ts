@@ -51,9 +51,9 @@ describe('StaffService', () => {
 
       expect(result).toHaveLength(2);
       expect(result[0].invitePending).toBe(false);
-      expect(result[0].passwordHash).toBeUndefined();
+      expect((result[0] as any).passwordHash).toBeUndefined();
       expect(result[1].invitePending).toBe(true);
-      expect(result[1].passwordHash).toBeUndefined();
+      expect((result[1] as any).passwordHash).toBeUndefined();
     });
   });
 

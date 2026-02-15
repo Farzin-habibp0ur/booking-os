@@ -98,8 +98,8 @@ describe('WebhookController', () => {
     });
   });
 
-  describe('Dev mode behavior', () => {
-    it('should allow unsigned requests in development', async () => {
+  describe('Security enforcement', () => {
+    it('should reject unsigned requests even in development (no dev bypass)', async () => {
       configService.get.mockImplementation((key: string, defaultValue?: any) => {
         if (key === 'WEBHOOK_SECRET') return undefined;
         if (key === 'NODE_ENV') return 'development';
@@ -108,10 +108,9 @@ describe('WebhookController', () => {
 
       const body = { from: '+1234567890', body: 'test', externalId: 'ext1' };
 
-      // Will proceed past signature check (will fail at business lookup)
       await expect(
         controller.inbound(body as any, undefined),
-      ).rejects.toThrow('No business found');
+      ).rejects.toThrow('Invalid webhook signature');
     });
   });
 });

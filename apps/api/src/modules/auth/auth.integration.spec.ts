@@ -292,7 +292,9 @@ describe('Auth Integration', () => {
         .send({ currentPassword: 'password123', newPassword: 'newpassword123' });
 
       expect(res.status).toBe(201);
-      expect(res.body).toEqual({ ok: true });
+      expect(res.body.ok).toBe(true);
+      expect(res.body.accessToken).toBeDefined();
+      expect(res.body.refreshToken).toBeDefined();
     });
 
     it('returns 401 without auth token', async () => {

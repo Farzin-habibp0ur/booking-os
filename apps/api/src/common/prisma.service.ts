@@ -22,6 +22,8 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
   }
 
   async onModuleInit() {
+    // Set query timeout (30 seconds) to prevent long-running queries
+    await this.$executeRawUnsafe('SET statement_timeout = 30000');
     await this.$connect();
     this.logger.log('Database connected');
   }

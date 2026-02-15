@@ -292,7 +292,7 @@ describe('AuthService', () => {
   });
 
   describe('changePassword', () => {
-    it('verifies current password and updates hash', async () => {
+    it('verifies current password, updates hash, and revokes tokens', async () => {
       prisma.staff.findUnique.mockResolvedValue(mockStaff as any);
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
       (bcrypt.hash as jest.Mock).mockResolvedValue('$new-hash');
@@ -300,12 +300,15 @@ describe('AuthService', () => {
 
       const result = await authService.changePassword('staff1', 'oldpass', 'newpass123');
 
-      expect(result).toEqual({ ok: true });
+      expect(result.ok).toBe(true);
+      expect(result.accessToken).toBe('mock-token');
+      expect(result.refreshToken).toBe('mock-token');
       expect(bcrypt.compare).toHaveBeenCalledWith('oldpass', '$2b$10$hashedpassword');
       expect(prisma.staff.update).toHaveBeenCalledWith({
         where: { id: 'staff1' },
         data: { passwordHash: '$new-hash' },
       });
+      expect(tokenService.revokeTokens).toHaveBeenCalledWith('sarah@glowclinic.com', 'PASSWORD_RESET');
     });
 
     it('throws on wrong current password', async () => {
@@ -315,6 +318,46 @@ describe('AuthService', () => {
       await expect(
         authService.changePassword('staff1', 'wrongpass', 'newpass123'),
       ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('brute-force protection', () => {
+    it('locks account after 5 failed attempts', async () => {
+      prisma.staff.findUnique.mockResolvedValue(mockStaff as any);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(false);
+
+      // Fail 5 times
+      for (let i = 0; i < 5; i++) {
+        await expect(
+          authService.login('sarah@glowclinic.com', 'wrong'),
+        ).rejects.toThrow(UnauthorizedException);
+      }
+
+      // 6th attempt should be locked
+      await expect(
+        authService.login('sarah@glowclinic.com', 'password123'),
+      ).rejects.toThrow('Account temporarily locked');
+    });
+
+    it('clears failed attempts on successful login', async () => {
+      prisma.staff.findUnique.mockResolvedValue(mockStaff as any);
+      (bcrypt.compare as jest.Mock).mockResolvedValueOnce(false);
+      (bcrypt.compare as jest.Mock).mockResolvedValueOnce(false);
+      (bcrypt.compare as jest.Mock).mockResolvedValueOnce(true);
+
+      // Fail twice
+      await expect(authService.login('sarah@glowclinic.com', 'wrong')).rejects.toThrow();
+      await expect(authService.login('sarah@glowclinic.com', 'wrong')).rejects.toThrow();
+
+      // Succeed
+      const result = await authService.login('sarah@glowclinic.com', 'password123');
+      expect(result.accessToken).toBeDefined();
+
+      // After success, fail again should count from 0
+      (bcrypt.compare as jest.Mock).mockResolvedValue(false);
+      for (let i = 0; i < 4; i++) {
+        await expect(authService.login('sarah@glowclinic.com', 'wrong')).rejects.toThrow('Invalid credentials');
+      }
     });
   });
 

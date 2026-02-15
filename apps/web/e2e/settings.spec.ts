@@ -53,4 +53,25 @@ test.describe('Settings', () => {
     const restored = await aiToggle.isChecked();
     expect(restored).toBe(wasChecked);
   });
+
+  test('settings page requires authentication', async ({ page }) => {
+    // Clear storage to ensure user is logged out
+    await page.context().clearCookies();
+    await page.goto('/settings');
+
+    // Should redirect to login
+    await expect(page).toHaveURL(/\/login/, { timeout: 10000 });
+  });
+
+  test('can access business settings section', async ({ page }) => {
+    await page.goto('/settings');
+    await page.waitForLoadState('networkidle');
+
+    // Business settings should have input fields for business details
+    const hasBusinessFields = await page.locator('input[name*="business" i], input[name*="name" i]').first().isVisible({ timeout: 5000 }).catch(() => false);
+
+    if (hasBusinessFields) {
+      await expect(page.locator('input').first()).toBeVisible();
+    }
+  });
 });

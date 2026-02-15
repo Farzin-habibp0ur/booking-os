@@ -5,10 +5,12 @@ class ApiClient {
 
   setToken(token: string | null) {
     this.token = token;
-    if (token) {
-      localStorage.setItem('token', token);
-    } else {
-      localStorage.removeItem('token');
+    if (typeof window !== 'undefined') {
+      if (token) {
+        localStorage.setItem('token', token);
+      } else {
+        localStorage.removeItem('token');
+      }
     }
   }
 
@@ -25,9 +27,14 @@ class ApiClient {
       'Content-Type': 'application/json',
       ...((options.headers as Record<string, string>) || {}),
     };
+    // Send Bearer token as fallback; httpOnly cookies are sent automatically
     if (token) headers['Authorization'] = `Bearer ${token}`;
 
-    const res = await fetch(`${API_URL}${path}`, { ...options, headers });
+    const res = await fetch(`${API_URL}${path}`, {
+      ...options,
+      headers,
+      credentials: 'include', // Send cookies with every request
+    });
 
     if (res.status === 401) {
       this.setToken(null);
@@ -70,6 +77,7 @@ class ApiClient {
       method: 'POST',
       headers,
       body: formData,
+      credentials: 'include',
     });
 
     if (res.status === 401) {

@@ -1,6 +1,9 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import * as Sentry from '@sentry/nestjs';
+import helmet from 'helmet';
+import { json } from 'express';
+import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/all-exceptions.filter';
 
@@ -18,6 +21,15 @@ async function bootstrap() {
     rawBody: true, // Required for Stripe webhook signature verification
   });
   const logger = new Logger('Bootstrap');
+
+  // Security headers
+  app.use(helmet());
+
+  // Cookie parsing for httpOnly token auth
+  app.use(cookieParser());
+
+  // Body size limit (1MB default, raw body for Stripe webhooks handled by rawBody option)
+  app.use(json({ limit: '1mb' }));
 
   app.setGlobalPrefix('api/v1');
 

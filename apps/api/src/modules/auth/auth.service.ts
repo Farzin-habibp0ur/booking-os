@@ -6,8 +6,13 @@ import { PrismaService } from '../../common/prisma.service';
 import { TokenService } from '../../common/token.service';
 import { EmailService } from '../email/email.service';
 
+const MAX_FAILED_ATTEMPTS = 5;
+const LOCKOUT_MINUTES = 15;
+
 @Injectable()
 export class AuthService {
+  private failedAttempts = new Map<string, { count: number; lockedUntil?: Date }>();
+
   constructor(
     private prisma: PrismaService,
     private jwt: JwtService,
@@ -15,6 +20,26 @@ export class AuthService {
     private tokenService: TokenService,
     private emailService: EmailService,
   ) {}
+
+  private checkBruteForce(email: string): void {
+    const entry = this.failedAttempts.get(email);
+    if (entry?.lockedUntil && entry.lockedUntil > new Date()) {
+      throw new UnauthorizedException('Account temporarily locked. Please try again later.');
+    }
+  }
+
+  private recordFailedAttempt(email: string): void {
+    const entry = this.failedAttempts.get(email) || { count: 0 };
+    entry.count++;
+    if (entry.count >= MAX_FAILED_ATTEMPTS) {
+      entry.lockedUntil = new Date(Date.now() + LOCKOUT_MINUTES * 60 * 1000);
+    }
+    this.failedAttempts.set(email, entry);
+  }
+
+  private clearFailedAttempts(email: string): void {
+    this.failedAttempts.delete(email);
+  }
 
   private getRefreshSecret(): string {
     return this.config.get<string>('JWT_REFRESH_SECRET')
@@ -84,21 +109,26 @@ export class AuthService {
   }
 
   async login(email: string, password: string) {
+    this.checkBruteForce(email);
+
     const staff = await this.prisma.staff.findUnique({
       where: { email },
       include: { business: true },
     });
 
     if (!staff || !staff.isActive || !staff.passwordHash) {
+      this.recordFailedAttempt(email);
       throw new UnauthorizedException('Invalid credentials');
     }
 
     const valid = await bcrypt.compare(password, staff.passwordHash);
 
     if (!valid) {
+      this.recordFailedAttempt(email);
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    this.clearFailedAttempts(email);
     const tokens = this.issueTokens(staff);
 
     return {
@@ -203,7 +233,12 @@ export class AuthService {
       data: { passwordHash },
     });
 
-    return { ok: true };
+    // Invalidate all existing tokens by revoking refresh tokens
+    await this.tokenService.revokeTokens(staff.email, 'PASSWORD_RESET');
+
+    // Issue new tokens for the current session
+    const tokens = this.issueTokens(staff);
+    return { ok: true, ...tokens };
   }
 
   async acceptInvite(token: string, password: string) {
