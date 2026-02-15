@@ -3,9 +3,17 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
-import { useI18n } from '@/lib/i18n';
+import { useI18n, I18nProvider } from '@/lib/i18n';
 
-export default function LoginPage() {
+export default function LoginPageWrapper() {
+  return (
+    <I18nProvider>
+      <LoginPage />
+    </I18nProvider>
+  );
+}
+
+function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
