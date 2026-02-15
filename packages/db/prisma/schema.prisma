@@ -39,7 +39,7 @@ model Staff {
   businessId   String
   name         String
   email        String   @unique
-  passwordHash String
+  passwordHash String?
   role         String   @default("AGENT")
   locale       String?
   isActive     Boolean  @default(true)
@@ -315,4 +315,20 @@ model AiUsage {
   @@unique([businessId, date])
   @@index([businessId])
   @@map("ai_usage")
+}
+
+model Token {
+  id         String    @id @default(cuid())
+  token      String    @unique
+  type       String    // PASSWORD_RESET, STAFF_INVITE
+  email      String
+  businessId String?
+  staffId    String?
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([token])
+  @@index([email, type])
+  @@map("tokens")
 }

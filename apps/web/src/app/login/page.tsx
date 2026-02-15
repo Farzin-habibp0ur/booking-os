@@ -1,19 +1,24 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import { useI18n, I18nProvider } from '@/lib/i18n';
 
 export default function LoginPageWrapper() {
   return (
     <I18nProvider>
-      <LoginPage />
+      <Suspense fallback={null}>
+        <LoginPage />
+      </Suspense>
     </I18nProvider>
   );
 }
 
 function LoginPage() {
+  const searchParams = useSearchParams();
+  const resetSuccess = searchParams.get('reset') === 'success';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -42,6 +47,11 @@ function LoginPage() {
         <h1 className="text-2xl font-bold text-center mb-2">{t('login.title')}</h1>
         <p className="text-gray-500 text-center mb-6">{t('login.subtitle')}</p>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {resetSuccess && (
+            <div className="bg-green-50 text-green-700 p-3 rounded text-sm">
+              Password reset successful. You can now sign in with your new password.
+            </div>
+          )}
           {error && <div className="bg-red-50 text-red-600 p-3 rounded text-sm">{error}</div>}
           <div>
             <label className="block text-sm font-medium mb-1">{t('login.email_label')}</label>
@@ -54,7 +64,12 @@ function LoginPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">{t('login.password_label')}</label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-sm font-medium">{t('login.password_label')}</label>
+              <Link href="/forgot-password" className="text-xs text-blue-600 hover:underline">
+                Forgot password?
+              </Link>
+            </div>
             <input
               type="password"
               value={password}
@@ -71,6 +86,12 @@ function LoginPage() {
             {loading ? t('login.signing_in') : t('login.sign_in')}
           </button>
         </form>
+        <p className="text-sm text-center mt-4 text-gray-500">
+          Don't have an account?{' '}
+          <Link href="/signup" className="text-blue-600 hover:underline">
+            Sign up
+          </Link>
+        </p>
         {process.env.NODE_ENV === 'development' && (
           <p className="text-xs text-gray-400 text-center mt-4">{t('login.dev_hint')}</p>
         )}

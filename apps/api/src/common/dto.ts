@@ -10,6 +10,7 @@ import {
   IsEmail,
   IsNotEmpty,
   Min,
+  MinLength,
   ValidateNested,
   ArrayMinSize,
 } from 'class-validator';
@@ -398,4 +399,73 @@ export class WebhookInboundDto {
   @IsString()
   @IsOptional()
   businessPhone?: string;
+}
+
+// ---- Auth DTOs ----
+
+export class SignupDto {
+  @IsString()
+  @IsNotEmpty()
+  businessName!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  ownerName!: string;
+
+  @IsEmail()
+  email!: string;
+
+  @IsString()
+  @MinLength(8)
+  password!: string;
+}
+
+export class ForgotPasswordDto {
+  @IsEmail()
+  email!: string;
+}
+
+export class ResetPasswordDto {
+  @IsString()
+  @IsNotEmpty()
+  token!: string;
+
+  @IsString()
+  @MinLength(8)
+  newPassword!: string;
+}
+
+export class ChangePasswordDto {
+  @IsString()
+  @IsNotEmpty()
+  currentPassword!: string;
+
+  @IsString()
+  @MinLength(8)
+  newPassword!: string;
+}
+
+export class AcceptInviteDto {
+  @IsString()
+  @IsNotEmpty()
+  token!: string;
+
+  @IsString()
+  @MinLength(8)
+  password!: string;
+}
+
+// ---- Staff Invitation DTOs ----
+
+export class InviteStaffDto {
+  @IsEmail()
+  email!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  name!: string;
+
+  @IsString()
+  @IsOptional()
+  role?: string;
 }

@@ -5,7 +5,7 @@ import { AvailabilityService } from '../availability/availability.service';
 import { BusinessId } from '../../common/decorators';
 import { TenantGuard } from '../../common/tenant.guard';
 import { RolesGuard, Roles } from '../../common/roles.guard';
-import { CreateStaffDto, UpdateStaffDto, SetWorkingHoursDto, AddTimeOffDto } from '../../common/dto';
+import { CreateStaffDto, UpdateStaffDto, SetWorkingHoursDto, AddTimeOffDto, InviteStaffDto } from '../../common/dto';
 
 @Controller('staff')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
@@ -24,6 +24,24 @@ export class StaffController {
   @Roles('OWNER', 'ADMIN')
   create(@BusinessId() businessId: string, @Body() body: CreateStaffDto) {
     return this.staffService.create(businessId, body);
+  }
+
+  @Post('invite')
+  @Roles('OWNER', 'ADMIN')
+  invite(@BusinessId() businessId: string, @Body() body: InviteStaffDto) {
+    return this.staffService.inviteStaff(businessId, body);
+  }
+
+  @Post(':id/resend-invite')
+  @Roles('OWNER', 'ADMIN')
+  resendInvite(@BusinessId() businessId: string, @Param('id') id: string) {
+    return this.staffService.resendInvite(businessId, id);
+  }
+
+  @Delete(':id/invite')
+  @Roles('OWNER', 'ADMIN')
+  revokeInvite(@BusinessId() businessId: string, @Param('id') id: string) {
+    return this.staffService.revokeInvite(businessId, id);
   }
 
   @Patch(':id')

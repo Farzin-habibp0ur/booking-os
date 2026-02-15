@@ -127,4 +127,19 @@ export class EmailService {
       `,
     });
   }
+
+  async sendStaffInvitation(to: string, data: { name: string; businessName: string; inviteUrl: string }) {
+    return this.send({
+      to,
+      subject: `You've been invited to join ${data.businessName} on Booking OS`,
+      html: `
+        <h2>You're Invited!</h2>
+        <p>Hi ${data.name},</p>
+        <p>You've been invited to join <strong>${data.businessName}</strong> on Booking OS.</p>
+        <p>Click the link below to set your password and get started:</p>
+        <p><a href="${data.inviteUrl}">Accept Invitation</a></p>
+        <p>This invitation expires in 48 hours.</p>
+      `,
+    });
+  }
 }

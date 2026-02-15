@@ -17,6 +17,13 @@ export default function SettingsPage() {
   const [timezone, setTimezone] = useState('');
   const [saved, setSaved] = useState(false);
 
+  // Change password state
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSaved, setPasswordSaved] = useState(false);
+
   useEffect(() => {
     api.get<any>('/business').then((b) => {
       setBusiness(b);
@@ -30,6 +37,28 @@ export default function SettingsPage() {
     await api.patch('/business', { name, phone, timezone });
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
+  };
+
+  const handleChangePassword = async () => {
+    setPasswordError('');
+    if (newPassword.length < 8) {
+      setPasswordError('Password must be at least 8 characters');
+      return;
+    }
+    if (newPassword !== confirmNewPassword) {
+      setPasswordError('Passwords do not match');
+      return;
+    }
+    try {
+      await api.post('/auth/change-password', { currentPassword, newPassword });
+      setPasswordSaved(true);
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmNewPassword('');
+      setTimeout(() => setPasswordSaved(false), 3000);
+    } catch (err: any) {
+      setPasswordError(err.message || 'Failed to change password');
+    }
   };
 
   return (
@@ -66,6 +95,52 @@ export default function SettingsPage() {
           {saved && <span className="text-green-600 text-sm">{t('common.saved')}</span>}
         </div>
       </div>
+      {/* Change Password */}
+      <div className="bg-white border rounded-lg p-6 mt-6 space-y-4">
+        <h2 className="font-semibold">Change Password</h2>
+        {passwordError && <div className="bg-red-50 text-red-600 p-3 rounded text-sm">{passwordError}</div>}
+        <div>
+          <label className="block text-sm font-medium mb-1">Current password</label>
+          <input
+            type="password"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            className="w-full border rounded px-3 py-2 text-sm"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">New password</label>
+          <input
+            type="password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            className="w-full border rounded px-3 py-2 text-sm"
+            minLength={8}
+            placeholder="Minimum 8 characters"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Confirm new password</label>
+          <input
+            type="password"
+            value={confirmNewPassword}
+            onChange={(e) => setConfirmNewPassword(e.target.value)}
+            className="w-full border rounded px-3 py-2 text-sm"
+            minLength={8}
+          />
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleChangePassword}
+            disabled={!currentPassword || !newPassword || !confirmNewPassword}
+            className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700 disabled:opacity-50"
+          >
+            Update password
+          </button>
+          {passwordSaved && <span className="text-green-600 text-sm">Password updated</span>}
+        </div>
+      </div>
+
       {/* Quick links */}
       <div className="bg-white border rounded-lg p-6 mt-6">
         <h2 className="font-semibold mb-3">{t('settings.more_settings')}</h2>

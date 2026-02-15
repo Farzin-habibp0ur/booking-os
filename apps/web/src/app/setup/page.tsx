@@ -6,7 +6,7 @@ import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { useI18n, I18nProvider } from '@/lib/i18n';
 import { useToast } from '@/lib/toast';
-import { Check, ChevronLeft, ChevronRight, Building2, MessageCircle, Users, Scissors, Clock, FileText, Upload, Rocket, Plus, X, Trash2, Loader2, ClipboardCheck, Copy, Pencil } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, Building2, MessageCircle, Users, Scissors, Clock, FileText, Upload, Rocket, Plus, X, Trash2, Loader2, ClipboardCheck, Pencil, Mail, RefreshCw } from 'lucide-react';
 import { PROFILE_FIELDS } from '@booking-os/shared';
 
 const STEP_KEYS = ['business', 'whatsapp', 'staff', 'services', 'hours', 'templates', 'profile', 'customers', 'finish'] as const;
@@ -61,8 +61,9 @@ function SetupPage() {
   // Profile requirements
   const [requiredProfileFields, setRequiredProfileFields] = useState<string[]>(['firstName']);
 
-  // Staff password display
-  const [lastCreatedPassword, setLastCreatedPassword] = useState<string | null>(null);
+  // Staff invitation
+  const [inviteSending, setInviteSending] = useState(false);
+  const [lastInvitedEmail, setLastInvitedEmail] = useState<string | null>(null);
 
   // Customer Import
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -116,18 +117,27 @@ function SetupPage() {
 
   const addStaff = async () => {
     if (!newStaffName || !newStaffEmail) return;
-    const tempPassword = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
-    await api.post('/staff', { name: newStaffName, email: newStaffEmail, password: tempPassword, role: newStaffRole });
-    setLastCreatedPassword(tempPassword);
-    setNewStaffName(''); setNewStaffEmail(''); setNewStaffRole('AGENT');
-    const updated = await api.get<any[]>('/staff');
-    setStaffList(updated);
+    setInviteSending(true);
+    try {
+      await api.post('/staff/invite', { name: newStaffName, email: newStaffEmail, role: newStaffRole });
+      setLastInvitedEmail(newStaffEmail);
+      setNewStaffName(''); setNewStaffEmail(''); setNewStaffRole('AGENT');
+      const updated = await api.get<any[]>('/staff');
+      setStaffList(updated);
+      toast('Invitation sent');
+    } catch (err: any) {
+      toast(err.message || 'Failed to send invitation', 'error');
+    }
+    setInviteSending(false);
   };
 
-  const copyPasswordToClipboard = async () => {
-    if (!lastCreatedPassword) return;
-    await navigator.clipboard.writeText(lastCreatedPassword);
-    toast('Password copied to clipboard');
+  const resendInvite = async (staffId: string) => {
+    try {
+      await api.post(`/staff/${staffId}/resend-invite`);
+      toast('Invitation resent');
+    } catch (err: any) {
+      toast(err.message || 'Failed to resend invitation', 'error');
+    }
   };
 
   const addService = async () => {
@@ -364,33 +374,45 @@ function SetupPage() {
                       <p className="text-sm font-medium">{s.name}</p>
                       <p className="text-xs text-gray-500">{s.email}</p>
                     </div>
-                    <span className="text-xs bg-gray-100 px-2 py-0.5 rounded-full">{s.role}</span>
+                    <div className="flex items-center gap-2">
+                      {s.invitePending ? (
+                        <>
+                          <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full flex items-center gap-1">
+                            <Mail size={10} /> Invite pending
+                          </span>
+                          <button
+                            onClick={() => resendInvite(s.id)}
+                            className="text-gray-400 hover:text-blue-500 p-1"
+                            title="Resend invitation"
+                          >
+                            <RefreshCw size={14} />
+                          </button>
+                        </>
+                      ) : (
+                        <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full flex items-center gap-1">
+                          <Check size={10} /> Active
+                        </span>
+                      )}
+                      <span className="text-xs bg-gray-100 px-2 py-0.5 rounded-full">{s.role}</span>
+                    </div>
                   </div>
                 ))}
               </div>
             )}
 
-            {lastCreatedPassword && (
-              <div className="border border-amber-200 bg-amber-50 rounded-lg p-4 space-y-2">
-                <p className="text-sm font-medium text-amber-800">Staff member created</p>
-                <p className="text-xs text-amber-700">Temporary password (share securely, ask them to change it):</p>
-                <div className="flex items-center gap-2">
-                  <code className="bg-white border border-amber-200 rounded px-3 py-1.5 text-sm font-mono tracking-wider">
-                    {'•'.repeat(8)}
-                  </code>
-                  <button
-                    onClick={copyPasswordToClipboard}
-                    className="flex items-center gap-1 bg-amber-600 text-white px-3 py-1.5 rounded text-xs hover:bg-amber-700"
-                  >
-                    <Copy size={12} /> Copy
-                  </button>
-                  <button
-                    onClick={() => setLastCreatedPassword(null)}
-                    className="text-amber-600 hover:text-amber-800 p-1"
-                  >
-                    <X size={14} />
-                  </button>
-                </div>
+            {lastInvitedEmail && (
+              <div className="border border-green-200 bg-green-50 rounded-lg p-4 space-y-1">
+                <p className="text-sm font-medium text-green-800">Invitation sent</p>
+                <p className="text-xs text-green-700">
+                  An invitation email has been sent to <strong>{lastInvitedEmail}</strong>.
+                  They'll receive a link to set their password and join the team.
+                </p>
+                <button
+                  onClick={() => setLastInvitedEmail(null)}
+                  className="text-xs text-green-600 hover:text-green-800 mt-1"
+                >
+                  Dismiss
+                </button>
               </div>
             )}
 
@@ -406,8 +428,8 @@ function SetupPage() {
                   <option value="ADMIN">{t('setup.role_admin')}</option>
                   <option value="OWNER">{t('setup.role_owner')}</option>
                 </select>
-                <button onClick={addStaff} disabled={!newStaffName || !newStaffEmail} className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700 disabled:opacity-50">
-                  <Plus size={14} className="inline mr-1" /> {t('common.add')}
+                <button onClick={addStaff} disabled={!newStaffName || !newStaffEmail || inviteSending} className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700 disabled:opacity-50 flex items-center gap-1">
+                  {inviteSending ? <Loader2 size={14} className="animate-spin" /> : <Mail size={14} />} {inviteSending ? 'Sending...' : 'Send invite'}
                 </button>
               </div>
             </div>
