@@ -10,12 +10,6 @@ export const aestheticPack: VerticalPackDefinition = {
   customerFields: [
     { key: 'isMedicalFlagged', type: 'boolean', label: 'Medical Flag' },
     { key: 'allergies', type: 'text', label: 'Known Allergies' },
-    {
-      key: 'skinType',
-      type: 'select',
-      label: 'Skin Type',
-      options: ['I', 'II', 'III', 'IV', 'V', 'VI'],
-    },
   ],
   bookingFields: [
     { key: 'isConsultation', type: 'boolean', label: 'Consultation Visit' },

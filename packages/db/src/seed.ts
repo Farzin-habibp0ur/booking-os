@@ -165,7 +165,6 @@ async function main() {
         email: 'emma@example.com',
         tags: ['VIP', 'Regular'],
         customFields: {
-          skinType: 'III',
           allergies: 'None known',
           isMedicalFlagged: false,
         },
@@ -178,7 +177,6 @@ async function main() {
         phone: '+14155550202',
         tags: ['New'],
         customFields: {
-          skinType: 'II',
           allergies: 'Latex',
           isMedicalFlagged: true,
         },
@@ -192,7 +190,6 @@ async function main() {
         email: 'sofia@example.com',
         tags: ['Regular'],
         customFields: {
-          skinType: 'IV',
           allergies: 'None',
           isMedicalFlagged: false,
         },
