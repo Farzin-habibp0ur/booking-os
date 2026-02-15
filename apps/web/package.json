@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "test": "jest",
-    "lint": "tsc --noEmit",
+    "lint": "eslint . && tsc --noEmit",
     "test:e2e": "playwright test"
   },
   "dependencies": {

@@ -4,6 +4,7 @@ import * as Sentry from '@sentry/nestjs';
 import helmet from 'helmet';
 import { json } from 'express';
 import cookieParser from 'cookie-parser';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/all-exceptions.filter';
 
@@ -32,6 +33,19 @@ async function bootstrap() {
   app.use(json({ limit: '1mb' }));
 
   app.setGlobalPrefix('api/v1');
+
+  // Swagger API docs (non-production only)
+  if (process.env.NODE_ENV !== 'production') {
+    const swaggerConfig = new DocumentBuilder()
+      .setTitle('Booking OS API')
+      .setDescription('REST API for the Booking OS platform')
+      .setVersion('0.1.0')
+      .addBearerAuth()
+      .build();
+    const document = SwaggerModule.createDocument(app, swaggerConfig);
+    SwaggerModule.setup('api/docs', app, document);
+    logger.log('Swagger docs available at /api/docs');
+  }
 
   // Dynamic CORS: use CORS_ORIGINS env var in production, fallback to localhost for dev
   const corsOrigins = process.env.CORS_ORIGINS

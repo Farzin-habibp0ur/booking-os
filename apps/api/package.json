@@ -8,7 +8,7 @@
     "start": "ts-node -r tsconfig-paths/register --transpileOnly src/main.ts",
     "start:prod": "node dist/main",
     "test": "jest",
-    "lint": "tsc --noEmit"
+    "lint": "eslint . && tsc --noEmit"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.74.0",
