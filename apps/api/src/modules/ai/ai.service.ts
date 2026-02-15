@@ -81,46 +81,69 @@ export class AiService {
     return settings.autoReply.selectedIntents?.includes(intent) || false;
   }
 
-  private checkRateLimit(businessId: string): boolean {
+  private async checkRateLimit(businessId: string): Promise<boolean> {
     const today = new Date().toISOString().split('T')[0];
     const entry = this.dailyCalls.get(businessId);
+
+    // Cache miss or stale date — load from DB
     if (!entry || entry.date !== today) {
-      this.dailyCalls.set(businessId, { count: 1, date: today });
-      this.persistAiUsage(businessId, 1, today);
+      const dbRecord = await this.prisma.aiUsage.findUnique({
+        where: { businessId_date: { businessId, date: today } },
+      });
+      const currentCount = dbRecord?.count ?? 0;
+      this.dailyCalls.set(businessId, { count: currentCount, date: today });
+
+      if (currentCount >= MAX_AI_CALLS_PER_DAY) {
+        this.logger.warn(`Business ${businessId} exceeded daily AI call limit`);
+        return false;
+      }
+
+      const newCount = currentCount + 1;
+      this.dailyCalls.set(businessId, { count: newCount, date: today });
+      this.persistAiUsage(businessId, newCount, today);
       return true;
     }
+
     if (entry.count >= MAX_AI_CALLS_PER_DAY) {
       this.logger.warn(`Business ${businessId} exceeded daily AI call limit`);
       return false;
     }
+
     entry.count++;
     this.persistAiUsage(businessId, entry.count, today);
     return true;
   }
 
   private persistAiUsage(businessId: string, count: number, date: string) {
-    // Fire-and-forget: persist usage to DB for dashboard visibility
-    this.prisma.business.update({
-      where: { id: businessId },
-      data: {
-        aiSettings: {
-          // We merge with existing settings in the service layer
-          // This is a simplified approach; a dedicated AiUsage table would be better at scale
-        },
-      },
-    }).catch(() => {
-      // Non-critical — just log
+    // Fire-and-forget: upsert usage to dedicated AiUsage table
+    this.prisma.aiUsage.upsert({
+      where: { businessId_date: { businessId, date } },
+      update: { count },
+      create: { businessId, date, count },
+    }).catch((err) => {
+      this.logger.error(`Failed to persist AI usage: ${err.message}`);
     });
   }
 
-  getAiUsage(businessId: string): { count: number; date: string; limit: number } {
+  async getAiUsage(businessId: string): Promise<{ count: number; date: string; limit: number }> {
     const today = new Date().toISOString().split('T')[0];
+
+    // Try in-memory cache first
     const entry = this.dailyCalls.get(businessId);
-    return {
-      count: entry?.date === today ? entry.count : 0,
-      date: today,
-      limit: MAX_AI_CALLS_PER_DAY,
-    };
+    if (entry && entry.date === today) {
+      return { count: entry.count, date: today, limit: MAX_AI_CALLS_PER_DAY };
+    }
+
+    // Fallback to DB
+    const dbRecord = await this.prisma.aiUsage.findUnique({
+      where: { businessId_date: { businessId, date: today } },
+    });
+    const count = dbRecord?.count ?? 0;
+
+    // Populate cache
+    this.dailyCalls.set(businessId, { count, date: today });
+
+    return { count, date: today, limit: MAX_AI_CALLS_PER_DAY };
   }
 
   private async getCustomerUpcomingBookings(customerId: string, businessId: string) {
@@ -164,7 +187,7 @@ export class AiService {
         return;
       }
 
-      if (!this.checkRateLimit(businessId)) return;
+      if (!(await this.checkRateLimit(businessId))) return;
 
       // Get recent messages for context
       const recentMessages = await this.prisma.message.findMany({

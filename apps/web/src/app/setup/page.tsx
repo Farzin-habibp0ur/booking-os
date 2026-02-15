@@ -6,7 +6,7 @@ import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { useI18n, I18nProvider } from '@/lib/i18n';
 import { useToast } from '@/lib/toast';
-import { Check, ChevronLeft, ChevronRight, Building2, MessageCircle, Users, Scissors, Clock, FileText, Upload, Rocket, Plus, X, Trash2, Loader2, ClipboardCheck, Copy } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, Building2, MessageCircle, Users, Scissors, Clock, FileText, Upload, Rocket, Plus, X, Trash2, Loader2, ClipboardCheck, Copy, Pencil } from 'lucide-react';
 import { PROFILE_FIELDS } from '@booking-os/shared';
 
 const STEP_KEYS = ['business', 'whatsapp', 'staff', 'services', 'hours', 'templates', 'profile', 'customers', 'finish'] as const;
@@ -46,6 +46,10 @@ function SetupPage() {
   const [newSvcName, setNewSvcName] = useState('');
   const [newSvcDuration, setNewSvcDuration] = useState(30);
   const [newSvcPrice, setNewSvcPrice] = useState('');
+  const [editingSvcId, setEditingSvcId] = useState<string | null>(null);
+  const [editSvcName, setEditSvcName] = useState('');
+  const [editSvcDuration, setEditSvcDuration] = useState(30);
+  const [editSvcPrice, setEditSvcPrice] = useState('');
 
   // Working hours
   const [staffHours, setStaffHours] = useState<Record<string, any[]>>({});
@@ -132,6 +136,31 @@ function SetupPage() {
     setNewSvcName(''); setNewSvcDuration(30); setNewSvcPrice('');
     const updated = await api.get<any>('/services');
     setServices(updated?.data || updated || []);
+  };
+
+  const startEditService = (svc: any) => {
+    setEditingSvcId(svc.id);
+    setEditSvcName(svc.name);
+    setEditSvcDuration(svc.durationMins);
+    setEditSvcPrice(String(svc.price || ''));
+  };
+
+  const saveEditService = async () => {
+    if (!editingSvcId || !editSvcName) return;
+    try {
+      await api.patch(`/services/${editingSvcId}`, {
+        name: editSvcName,
+        durationMins: Number(editSvcDuration),
+        price: Number(editSvcPrice) || 0,
+      });
+      const updated = await api.get<any>('/services');
+      setServices(updated?.data || updated || []);
+    } catch (e) { console.error(e); }
+    setEditingSvcId(null);
+  };
+
+  const cancelEditService = () => {
+    setEditingSvcId(null);
   };
 
   const updateHourForDay = async (staffId: string, dayOfWeek: number, field: string, value: any) => {
@@ -394,27 +423,60 @@ function SetupPage() {
             {services.length > 0 && (
               <div className="border rounded-lg divide-y">
                 {services.filter((s: any) => s.isActive !== false).map((s: any) => (
-                  <div key={s.id} className="flex items-center justify-between px-4 py-3">
-                    <div>
-                      <p className="text-sm font-medium">{s.name}</p>
-                      <p className="text-xs text-gray-500">{s.durationMins} {t('services.min_short')} · {s.price > 0 ? `$${s.price}` : t('services.price_free')}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-400">{s.category}</span>
-                      <button
-                        onClick={async () => {
-                          try {
-                            await api.del(`/services/${s.id}`);
-                            const updated = await api.get<any>('/services');
-                            setServices(updated?.data || updated || []);
-                          } catch (e) { console.error(e); }
-                        }}
-                        className="text-gray-400 hover:text-red-500 transition-colors p-1"
-                        title={t('common.delete')}
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
+                  <div key={s.id} className="px-4 py-3">
+                    {editingSvcId === s.id ? (
+                      <div className="space-y-2">
+                        <input value={editSvcName} onChange={(e) => setEditSvcName(e.target.value)} className="w-full border rounded-md px-3 py-1.5 text-sm" />
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="text-xs text-gray-500">{t('setup.duration_label')}</label>
+                            <input value={editSvcDuration} onChange={(e) => setEditSvcDuration(Number(e.target.value))} type="number" className="w-full border rounded-md px-3 py-1.5 text-sm" />
+                          </div>
+                          <div>
+                            <label className="text-xs text-gray-500">{t('setup.price_label')}</label>
+                            <input value={editSvcPrice} onChange={(e) => setEditSvcPrice(e.target.value)} type="number" step="0.01" className="w-full border rounded-md px-3 py-1.5 text-sm" />
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <button onClick={saveEditService} className="bg-blue-600 text-white px-3 py-1 rounded text-xs hover:bg-blue-700">
+                            <Check size={12} className="inline mr-1" /> {t('common.save') || 'Save'}
+                          </button>
+                          <button onClick={cancelEditService} className="border px-3 py-1 rounded text-xs hover:bg-gray-50">
+                            {t('common.cancel') || 'Cancel'}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium">{s.name}</p>
+                          <p className="text-xs text-gray-500">{s.durationMins} {t('services.min_short')} · {s.price > 0 ? `$${s.price}` : t('services.price_free')}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-400">{s.category}</span>
+                          <button
+                            onClick={() => startEditService(s)}
+                            className="text-gray-400 hover:text-blue-500 transition-colors p-1"
+                            title="Edit"
+                          >
+                            <Pencil size={14} />
+                          </button>
+                          <button
+                            onClick={async () => {
+                              try {
+                                await api.del(`/services/${s.id}`);
+                                const updated = await api.get<any>('/services');
+                                setServices(updated?.data || updated || []);
+                              } catch (e) { console.error(e); }
+                            }}
+                            className="text-gray-400 hover:text-red-500 transition-colors p-1"
+                            title={t('common.delete')}
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

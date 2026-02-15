@@ -29,6 +29,7 @@ model Business {
   messageTemplates  MessageTemplate[]
   translations      Translation[]
   subscription      Subscription?
+  aiUsage           AiUsage[]
 
   @@map("businesses")
 }
@@ -300,4 +301,18 @@ model Payment {
 
   @@index([bookingId])
   @@map("payments")
+}
+
+model AiUsage {
+  id         String   @id @default(cuid())
+  businessId String
+  date       String   // "2024-01-15" format
+  count      Int      @default(0)
+  updatedAt  DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id])
+
+  @@unique([businessId, date])
+  @@index([businessId])
+  @@map("ai_usage")
 }

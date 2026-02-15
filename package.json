@@ -16,7 +16,7 @@
     "db:seed": "npm run seed --workspace=@booking-os/db",
     "db:studio": "npm run studio --workspace=@booking-os/db",
     "test": "npx turbo test",
-    "test:e2e": "npx turbo test:e2e"
+    "test:e2e": "npx playwright test --config apps/web/playwright.config.ts"
   },
   "devDependencies": {
     "@types/multer": "^2.0.0",
