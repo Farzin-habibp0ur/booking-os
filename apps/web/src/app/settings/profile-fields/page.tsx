@@ -35,18 +35,18 @@ export default function ProfileFieldsPage() {
   };
 
   if (loading) {
-    return <div className="p-6 flex items-center justify-center h-64"><p className="text-gray-400">{t('common.loading')}</p></div>;
+    return <div className="p-6 flex items-center justify-center h-64"><p className="text-slate-400">{t('common.loading')}</p></div>;
   }
 
   return (
     <div className="p-6 max-w-2xl">
       <div className="flex items-center gap-3 mb-6">
-        <button onClick={() => router.push('/settings')} className="p-1.5 rounded-lg hover:bg-gray-100">
+        <button onClick={() => router.push('/settings')} className="p-1.5 rounded-xl hover:bg-slate-100 transition-colors">
           <ArrowLeft size={18} />
         </button>
         <div>
-          <h1 className="text-2xl font-bold">{t('settings.profile_fields')}</h1>
-          <p className="text-sm text-gray-500">{t('settings.profile_fields_desc')}</p>
+          <h1 className="text-2xl font-serif font-semibold text-slate-900">{t('settings.profile_fields')}</h1>
+          <p className="text-sm text-slate-500">{t('settings.profile_fields_desc')}</p>
         </div>
       </div>
 
@@ -55,16 +55,16 @@ export default function ProfileFieldsPage() {
           const fields = PROFILE_FIELDS.filter((f) => f.category === category);
           if (fields.length === 0) return null;
           return (
-            <div key={category} className="bg-white border rounded-lg p-6">
-              <h3 className="text-xs font-semibold text-gray-500 uppercase mb-3">
+            <div key={category} className="bg-white rounded-2xl shadow-soft p-6">
+              <h3 className="text-xs font-semibold text-slate-500 uppercase mb-3">
                 {t(`setup.profile_category_${category}` as any)}
               </h3>
-              <div className="border rounded-lg divide-y">
+              <div className="border border-slate-100 rounded-xl divide-y">
                 {fields.map((field) => (
-                  <label key={field.key} className="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-gray-50">
+                  <label key={field.key} className="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-slate-50 transition-colors">
                     <div>
                       <p className="text-sm font-medium">{field.label}</p>
-                      <p className="text-xs text-gray-500">{field.type}</p>
+                      <p className="text-xs text-slate-500">{field.type}</p>
                     </div>
                     <input
                       type="checkbox"
@@ -76,7 +76,7 @@ export default function ProfileFieldsPage() {
                           setRequiredFields(requiredFields.filter((k) => k !== field.key));
                         }
                       }}
-                      className="rounded text-blue-600 w-4 h-4"
+                      className="rounded text-sage-600 w-4 h-4"
                     />
                   </label>
                 ))}
@@ -90,7 +90,7 @@ export default function ProfileFieldsPage() {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700 disabled:opacity-50"
+          className="bg-sage-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-sage-700 transition-colors disabled:opacity-50"
         >
           {saving ? t('common.saving') : t('settings.save_changes')}
         </button>

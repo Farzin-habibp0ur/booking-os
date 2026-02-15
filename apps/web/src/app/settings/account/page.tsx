@@ -101,25 +101,25 @@ export default function AccountSettingsPage() {
   return (
     <div className="p-6 max-w-2xl">
       <div className="flex items-center gap-2 mb-6">
-        <Upload size={24} className="text-blue-600" />
-        <h1 className="text-2xl font-bold">{t('import.page_title')}</h1>
+        <Upload size={24} className="text-sage-600" />
+        <h1 className="text-2xl font-serif font-semibold text-slate-900">{t('import.page_title')}</h1>
       </div>
 
       {/* CSV Import */}
-      <div className="bg-white border rounded-lg p-6 space-y-4 mb-6">
+      <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4 mb-6">
         <div className="flex items-center gap-2">
-          <FileText size={18} className="text-blue-600" />
+          <FileText size={18} className="text-sage-600" />
           <h2 className="font-semibold">{t('import.csv_title')}</h2>
         </div>
-        <p className="text-sm text-gray-500">{t('import.csv_desc')}</p>
+        <p className="text-sm text-slate-500">{t('import.csv_desc')}</p>
 
         <div
           onClick={() => fileInputRef.current?.click()}
-          className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors"
+          className="border-2 border-dashed rounded-xl p-6 text-center cursor-pointer hover:border-sage-500 hover:bg-sage-50 transition-colors"
         >
-          <Upload size={24} className="mx-auto text-gray-400 mb-2" />
-          <p className="text-sm text-gray-600">{csvFile ? csvFile.name : t('import.csv_drop_zone')}</p>
-          <p className="text-xs text-gray-400 mt-1">{t('import.csv_format_hint')}</p>
+          <Upload size={24} className="mx-auto text-slate-400 mb-2" />
+          <p className="text-sm text-slate-600">{csvFile ? csvFile.name : t('import.csv_drop_zone')}</p>
+          <p className="text-xs text-slate-400 mt-1">{t('import.csv_format_hint')}</p>
         </div>
         <input
           ref={fileInputRef}
@@ -130,9 +130,9 @@ export default function AccountSettingsPage() {
         />
 
         {csvPreview.length > 0 && (
-          <div className="border rounded overflow-auto max-h-48">
+          <div className="border border-slate-100 rounded-xl overflow-auto max-h-48">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b">
+              <thead className="bg-slate-50 border-b">
                 <tr>
                   <th className="text-left p-2 text-xs">{t('common.name')}</th>
                   <th className="text-left p-2 text-xs">{t('common.phone')}</th>
@@ -158,7 +158,7 @@ export default function AccountSettingsPage() {
           <button
             onClick={importCsv}
             disabled={csvImporting}
-            className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+            className="bg-sage-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-sage-700 transition-colors disabled:opacity-50 flex items-center gap-2"
           >
             {csvImporting && <Loader2 size={14} className="animate-spin" />}
             {t('import.import_button')}
@@ -166,8 +166,8 @@ export default function AccountSettingsPage() {
         )}
 
         {csvResult && (
-          <div className="bg-green-50 border border-green-200 rounded p-3 text-sm">
-            <p className="text-green-700">
+          <div className="bg-sage-50 border border-sage-200 rounded-xl p-3 text-sm">
+            <p className="text-sage-700">
               {t('import.csv_result', { created: csvResult.created, skipped: csvResult.skipped, errors: csvResult.errors })}
             </p>
           </div>
@@ -175,36 +175,36 @@ export default function AccountSettingsPage() {
       </div>
 
       {/* Conversation Import */}
-      <div className="bg-white border rounded-lg p-6 space-y-4 mb-6">
+      <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4 mb-6">
         <div className="flex items-center gap-2">
-          <Users size={18} className="text-purple-600" />
+          <Users size={18} className="text-lavender-600" />
           <h2 className="font-semibold">{t('import.conversations_title')}</h2>
         </div>
-        <p className="text-sm text-gray-500">{t('import.conversations_desc')}</p>
+        <p className="text-sm text-slate-500">{t('import.conversations_desc')}</p>
 
         <label className="flex items-center gap-2 cursor-pointer">
           <input
             type="checkbox"
             checked={includeMessages}
             onChange={(e) => setIncludeMessages(e.target.checked)}
-            className="rounded text-purple-600"
+            className="rounded text-lavender-600"
           />
           <span className="text-sm">{t('import.include_messages')}</span>
         </label>
-        <p className="text-xs text-gray-400">{t('import.include_messages_hint')}</p>
+        <p className="text-xs text-slate-400">{t('import.include_messages_hint')}</p>
 
         <button
           onClick={importFromConversations}
           disabled={convImporting}
-          className="bg-purple-600 text-white px-4 py-2 rounded text-sm hover:bg-purple-700 disabled:opacity-50 flex items-center gap-2"
+          className="bg-lavender-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-lavender-700 transition-colors disabled:opacity-50 flex items-center gap-2"
         >
           {convImporting && <Loader2 size={14} className="animate-spin" />}
           {t('import.generate_profiles')}
         </button>
 
         {convResult && (
-          <div className="bg-green-50 border border-green-200 rounded p-3 text-sm">
-            <p className="text-green-700">
+          <div className="bg-sage-50 border border-sage-200 rounded-xl p-3 text-sm">
+            <p className="text-sage-700">
               {t('import.conversations_result', { created: convResult.created, updated: convResult.updated })}
             </p>
           </div>
@@ -212,15 +212,15 @@ export default function AccountSettingsPage() {
       </div>
 
       {/* Export */}
-      <div className="bg-white border rounded-lg p-6 space-y-4">
+      <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
         <div className="flex items-center gap-2">
-          <Download size={18} className="text-green-600" />
+          <Download size={18} className="text-sage-600" />
           <h2 className="font-semibold">{t('import.export_title')}</h2>
         </div>
-        <p className="text-sm text-gray-500">{t('import.export_desc')}</p>
+        <p className="text-sm text-slate-500">{t('import.export_desc')}</p>
         <button
           onClick={exportCustomers}
-          className="border px-4 py-2 rounded text-sm hover:bg-gray-50 flex items-center gap-2"
+          className="border border-slate-200 px-4 py-2 rounded-xl text-sm hover:bg-slate-50 transition-colors flex items-center gap-2"
         >
           <Download size={14} /> {t('import.export_button')}
         </button>

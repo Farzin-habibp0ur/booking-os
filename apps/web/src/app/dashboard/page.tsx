@@ -12,12 +12,12 @@ import {
 } from 'lucide-react';
 
 const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
-  PENDING: { bg: 'bg-yellow-100', text: 'text-yellow-700' },
-  CONFIRMED: { bg: 'bg-blue-100', text: 'text-blue-700' },
-  IN_PROGRESS: { bg: 'bg-purple-100', text: 'text-purple-700' },
-  COMPLETED: { bg: 'bg-green-100', text: 'text-green-700' },
-  NO_SHOW: { bg: 'bg-red-100', text: 'text-red-700' },
-  CANCELLED: { bg: 'bg-gray-100', text: 'text-gray-700' },
+  PENDING: { bg: 'bg-lavender-50', text: 'text-lavender-900' },
+  CONFIRMED: { bg: 'bg-sage-50', text: 'text-sage-900' },
+  IN_PROGRESS: { bg: 'bg-amber-50', text: 'text-amber-700' },
+  COMPLETED: { bg: 'bg-sage-50', text: 'text-sage-900' },
+  NO_SHOW: { bg: 'bg-red-50', text: 'text-red-700' },
+  CANCELLED: { bg: 'bg-slate-100', text: 'text-slate-600' },
 };
 
 export default function DashboardPage() {
@@ -50,8 +50,8 @@ export default function DashboardPage() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">{t('dashboard.title')}</h1>
-          <p className="text-sm text-gray-500">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</p>
+          <h1 className="text-3xl font-serif font-semibold text-slate-900">{t('dashboard.title')}</h1>
+          <p className="text-sm text-slate-400 mt-1">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</p>
         </div>
       </div>
 
@@ -86,40 +86,40 @@ export default function DashboardPage() {
 
       {/* Secondary metrics row */}
       <div className="grid grid-cols-3 gap-4">
-        <div className="bg-white border rounded-lg p-4">
+        <div className="bg-white rounded-2xl shadow-soft p-6">
           <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-500">{t('dashboard.no_show_rate')}</p>
-            <AlertCircle size={16} className={m.noShowRate > 15 ? 'text-red-500' : 'text-green-500'} />
+            <p className="text-sm text-slate-500">{t('dashboard.no_show_rate')}</p>
+            <AlertCircle size={16} className={m.noShowRate > 15 ? 'text-red-500' : 'text-sage-600'} />
           </div>
-          <p className="text-2xl font-bold mt-1">{m.noShowRate}%</p>
-          <div className="w-full bg-gray-100 rounded-full h-1.5 mt-2">
-            <div className={cn('h-1.5 rounded-full', m.noShowRate > 15 ? 'bg-red-500' : m.noShowRate > 5 ? 'bg-amber-500' : 'bg-green-500')} style={{ width: `${Math.min(m.noShowRate, 100)}%` }} />
+          <p className="text-2xl font-serif font-bold mt-1">{m.noShowRate}%</p>
+          <div className="w-full bg-slate-100 rounded-full h-1.5 mt-2">
+            <div className={cn('h-1.5 rounded-full', m.noShowRate > 15 ? 'bg-red-400' : m.noShowRate > 5 ? 'bg-amber-400' : 'bg-sage-500')} style={{ width: `${Math.min(m.noShowRate, 100)}%` }} />
           </div>
         </div>
 
-        <div className="bg-white border rounded-lg p-4">
-          <p className="text-sm text-gray-500">{t('dashboard.avg_response_time')}</p>
-          <p className="text-2xl font-bold mt-1">{m.avgResponseTimeMins}<span className="text-sm font-normal text-gray-400"> {t('dashboard.min_short')}</span></p>
-          <p className={cn('text-xs mt-1', m.avgResponseTimeMins <= 5 ? 'text-green-600' : m.avgResponseTimeMins <= 15 ? 'text-amber-600' : 'text-red-600')}>
+        <div className="bg-white rounded-2xl shadow-soft p-6">
+          <p className="text-sm text-slate-500">{t('dashboard.avg_response_time')}</p>
+          <p className="text-2xl font-serif font-bold mt-1">{m.avgResponseTimeMins}<span className="text-sm font-sans font-normal text-slate-400"> {t('dashboard.min_short')}</span></p>
+          <p className={cn('text-xs mt-1', m.avgResponseTimeMins <= 5 ? 'text-sage-600' : m.avgResponseTimeMins <= 15 ? 'text-amber-600' : 'text-red-600')}>
             {m.avgResponseTimeMins <= 5 ? t('dashboard.excellent') : m.avgResponseTimeMins <= 15 ? t('dashboard.good') : t('dashboard.needs_improvement')}
           </p>
         </div>
 
         {/* Status Breakdown */}
-        <div className="bg-white border rounded-lg p-4">
-          <p className="text-sm text-gray-500 mb-2">{t('dashboard.this_week_by_status')}</p>
+        <div className="bg-white rounded-2xl shadow-soft p-6">
+          <p className="text-sm text-slate-500 mb-2">{t('dashboard.this_week_by_status')}</p>
           <div className="space-y-1.5">
             {(data.statusBreakdown || []).map((s: any) => (
               <div key={s.status} className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
                   <div className={cn('w-2 h-2 rounded-full', STATUS_COLORS[s.status]?.bg || 'bg-gray-300')} />
-                  <span className="text-xs text-gray-600">{t(`status.${s.status.toLowerCase()}`)}</span>
+                  <span className="text-xs text-slate-600">{t(`status.${s.status.toLowerCase()}`)}</span>
                 </div>
                 <span className="text-xs font-medium">{s.count}</span>
               </div>
             ))}
             {(!data.statusBreakdown || data.statusBreakdown.length === 0) && (
-              <p className="text-xs text-gray-400">{t('dashboard.no_bookings_this_week')}</p>
+              <p className="text-xs text-slate-400">{t('dashboard.no_bookings_this_week')}</p>
             )}
           </div>
         </div>
@@ -128,30 +128,30 @@ export default function DashboardPage() {
       {/* Today's Appointments + Unassigned */}
       <div className="grid grid-cols-2 gap-6">
         {/* Today's Appointments */}
-        <div className="bg-white rounded-lg border">
-          <div className="flex items-center justify-between p-4 border-b">
-            <h2 className="font-semibold">{t('dashboard.todays_appointments')}</h2>
-            <button onClick={() => router.push('/calendar')} className="text-xs text-blue-600 hover:underline flex items-center gap-1">
+        <div className="bg-white rounded-2xl shadow-soft">
+          <div className="flex items-center justify-between p-6 pb-4">
+            <h2 className="font-semibold text-slate-900">{t('dashboard.todays_appointments')}</h2>
+            <button onClick={() => router.push('/calendar')} className="text-xs text-sage-600 hover:text-sage-700 flex items-center gap-1 transition-colors">
               {t('dashboard.view_calendar')} <ArrowRight size={12} />
             </button>
           </div>
-          <div className="p-4">
+          <div className="px-6 pb-6">
             {data.todayBookings.length === 0 ? (
               <div className="text-center py-6">
-                <Calendar size={24} className="mx-auto text-gray-300 mb-2" />
-                <p className="text-gray-400 text-sm">{t('dashboard.no_appointments_today')}</p>
+                <Calendar size={24} className="mx-auto text-slate-300 mb-2" />
+                <p className="text-slate-400 text-sm">{t('dashboard.no_appointments_today')}</p>
               </div>
             ) : (
               <div className="space-y-2">
                 {data.todayBookings.map((b: any) => (
-                  <div key={b.id} className="flex items-center justify-between p-2.5 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                  <div key={b.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-50/60 hover:bg-slate-50 transition-colors">
                     <div className="flex items-center gap-3">
                       <div className="text-center min-w-[48px]">
-                        <p className="text-sm font-bold">{new Date(b.startTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</p>
+                        <p className="text-sm font-semibold text-slate-900">{new Date(b.startTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</p>
                       </div>
                       <div>
-                        <p className="text-sm font-medium">{b.customer?.name}</p>
-                        <p className="text-xs text-gray-500">{b.service?.name}{b.staff ? ` · ${b.staff.name}` : ''}</p>
+                        <p className="text-sm font-medium text-slate-800">{b.customer?.name}</p>
+                        <p className="text-xs text-slate-500">{b.service?.name}{b.staff ? ` · ${b.staff.name}` : ''}</p>
                       </div>
                     </div>
                     <span className={cn('text-[10px] px-2 py-0.5 rounded-full font-medium', STATUS_COLORS[b.status]?.bg, STATUS_COLORS[b.status]?.text)}>
@@ -165,33 +165,33 @@ export default function DashboardPage() {
         </div>
 
         {/* Unassigned Conversations */}
-        <div className="bg-white rounded-lg border">
-          <div className="flex items-center justify-between p-4 border-b">
-            <h2 className="font-semibold">{t('dashboard.unassigned_conversations')}</h2>
-            <button onClick={() => router.push('/inbox?filter=unassigned')} className="text-xs text-blue-600 hover:underline flex items-center gap-1">
+        <div className="bg-white rounded-2xl shadow-soft">
+          <div className="flex items-center justify-between p-6 pb-4">
+            <h2 className="font-semibold text-slate-900">{t('dashboard.unassigned_conversations')}</h2>
+            <button onClick={() => router.push('/inbox?filter=unassigned')} className="text-xs text-sage-600 hover:text-sage-700 flex items-center gap-1 transition-colors">
               {t('dashboard.view_inbox')} <ArrowRight size={12} />
             </button>
           </div>
-          <div className="p-4">
+          <div className="px-6 pb-6">
             {data.unassignedConversations.length === 0 ? (
               <div className="text-center py-6">
-                <CheckCircle2 size={24} className="mx-auto text-green-300 mb-2" />
-                <p className="text-gray-400 text-sm">{t('dashboard.all_caught_up')}</p>
+                <CheckCircle2 size={24} className="mx-auto text-sage-300 mb-2" />
+                <p className="text-slate-400 text-sm">{t('dashboard.all_caught_up')}</p>
               </div>
             ) : (
               <div className="space-y-2">
                 {data.unassignedConversations.map((c: any) => (
-                  <div key={c.id} className="flex items-center justify-between p-2.5 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer" onClick={() => router.push('/inbox')}>
+                  <div key={c.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-50/60 hover:bg-slate-50 transition-colors cursor-pointer" onClick={() => router.push('/inbox')}>
                     <div>
-                      <p className="text-sm font-medium">{c.customer?.name}</p>
-                      <p className="text-xs text-gray-500 truncate max-w-[220px]">
+                      <p className="text-sm font-medium text-slate-800">{c.customer?.name}</p>
+                      <p className="text-xs text-slate-500 truncate max-w-[220px]">
                         {c.messages?.[0]?.content || t('dashboard.no_messages')}
                       </p>
                     </div>
                     <div className="text-right">
-                      <span className="text-[10px] bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">{t('dashboard.unassigned_badge')}</span>
+                      <span className="text-[10px] bg-lavender-50 text-lavender-900 px-2.5 py-0.5 rounded-full font-medium">{t('dashboard.unassigned_badge')}</span>
                       {c.lastMessageAt && (
-                        <p className="text-[10px] text-gray-400 mt-1">{timeAgo(new Date(c.lastMessageAt), t)}</p>
+                        <p className="text-[10px] text-slate-400 mt-1">{timeAgo(new Date(c.lastMessageAt), t)}</p>
                       )}
                     </div>
                   </div>
@@ -209,23 +209,23 @@ function MetricCard({ icon: Icon, color, label, value, subtitle, trend }: {
   icon: any; color: string; label: string; value: string | number; subtitle?: string; trend?: 'up' | 'down' | 'flat';
 }) {
   const colorMap: Record<string, string> = {
-    blue: 'text-blue-600 bg-blue-50',
-    green: 'text-green-600 bg-green-50',
-    purple: 'text-purple-600 bg-purple-50',
-    orange: 'text-orange-600 bg-orange-50',
+    blue: 'text-sage-600 bg-sage-50',
+    green: 'text-sage-700 bg-sage-50',
+    purple: 'text-lavender-600 bg-lavender-50',
+    orange: 'text-amber-600 bg-amber-50',
   };
 
   return (
-    <div className="bg-white rounded-lg border p-4">
+    <div className="bg-white rounded-2xl shadow-soft p-6">
       <div className="flex items-start justify-between">
-        <div className={cn('p-2 rounded-lg', colorMap[color])}><Icon size={18} /></div>
-        {trend === 'up' && <TrendingUp size={14} className="text-green-500" />}
-        {trend === 'down' && <TrendingDown size={14} className="text-red-500" />}
+        <div className={cn('p-2.5 rounded-xl', colorMap[color])}><Icon size={18} /></div>
+        {trend === 'up' && <TrendingUp size={14} className="text-sage-500" />}
+        {trend === 'down' && <TrendingDown size={14} className="text-red-400" />}
       </div>
-      <p className="text-2xl font-bold mt-3">{value}</p>
-      <p className="text-xs text-gray-500">{label}</p>
+      <p className="text-2xl font-serif font-bold mt-3 text-slate-900">{value}</p>
+      <p className="text-xs text-slate-500">{label}</p>
       {subtitle && (
-        <p className={cn('text-[11px] mt-0.5', trend === 'up' ? 'text-green-600' : trend === 'down' ? 'text-red-600' : 'text-gray-400')}>
+        <p className={cn('text-[11px] mt-0.5', trend === 'up' ? 'text-sage-600' : trend === 'down' ? 'text-red-500' : 'text-slate-400')}>
           {subtitle}
         </p>
       )}

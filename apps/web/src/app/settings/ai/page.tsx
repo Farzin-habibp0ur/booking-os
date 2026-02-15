@@ -65,23 +65,23 @@ export default function AiSettingsPage() {
     });
   };
 
-  if (loading) return <div className="p-6"><p className="text-gray-400">{t('common.loading')}</p></div>;
+  if (loading) return <div className="p-6"><p className="text-slate-400">{t('common.loading')}</p></div>;
 
   return (
     <div className="p-6 max-w-2xl">
       <div className="flex items-center gap-2 mb-6">
-        <Sparkles size={24} className="text-purple-600" />
-        <h1 className="text-2xl font-bold">{t('ai.settings_title')}</h1>
+        <Sparkles size={24} className="text-lavender-600" />
+        <h1 className="text-2xl font-serif font-semibold text-slate-900">{t('ai.settings_title')}</h1>
       </div>
 
-      <div className="bg-white border rounded-lg p-6 space-y-6">
-        <p className="text-sm text-gray-500">{t('ai.settings_description')}</p>
+      <div className="bg-white rounded-2xl shadow-soft p-6 space-y-6">
+        <p className="text-sm text-slate-500">{t('ai.settings_description')}</p>
 
         {/* Master toggle */}
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium">{t('ai.enable_ai')}</p>
-            <p className="text-xs text-gray-500">{t('ai.enable_ai_desc')}</p>
+            <p className="text-xs text-slate-500">{t('ai.enable_ai_desc')}</p>
           </div>
           <label className="relative inline-flex items-center cursor-pointer">
             <input
@@ -90,7 +90,7 @@ export default function AiSettingsPage() {
               onChange={(e) => setSettings({ ...settings, enabled: e.target.checked })}
               className="sr-only peer"
             />
-            <div className="w-9 h-5 bg-gray-200 peer-focus:ring-2 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600" />
+            <div className="w-9 h-5 bg-slate-200 peer-focus:ring-2 peer-focus:ring-lavender-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-lavender-600" />
           </label>
         </div>
 
@@ -102,7 +102,7 @@ export default function AiSettingsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium">{t('ai.auto_reply_suggestions')}</p>
-                <p className="text-xs text-gray-500">{t('ai.auto_reply_suggestions_desc')}</p>
+                <p className="text-xs text-slate-500">{t('ai.auto_reply_suggestions_desc')}</p>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
@@ -111,7 +111,7 @@ export default function AiSettingsPage() {
                   onChange={(e) => setSettings({ ...settings, autoReplySuggestions: e.target.checked })}
                   className="sr-only peer"
                 />
-                <div className="w-9 h-5 bg-gray-200 peer-focus:ring-2 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600" />
+                <div className="w-9 h-5 bg-slate-200 peer-focus:ring-2 peer-focus:ring-lavender-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-lavender-600" />
               </label>
             </div>
 
@@ -119,7 +119,7 @@ export default function AiSettingsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium">{t('ai.booking_assistant_toggle')}</p>
-                <p className="text-xs text-gray-500">{t('ai.booking_assistant_toggle_desc')}</p>
+                <p className="text-xs text-slate-500">{t('ai.booking_assistant_toggle_desc')}</p>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
@@ -128,7 +128,7 @@ export default function AiSettingsPage() {
                   onChange={(e) => setSettings({ ...settings, bookingAssistant: e.target.checked })}
                   className="sr-only peer"
                 />
-                <div className="w-9 h-5 bg-gray-200 peer-focus:ring-2 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600" />
+                <div className="w-9 h-5 bg-slate-200 peer-focus:ring-2 peer-focus:ring-lavender-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-lavender-600" />
               </label>
             </div>
 
@@ -139,7 +139,7 @@ export default function AiSettingsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium">{t('ai.auto_reply_toggle')}</p>
-                  <p className="text-xs text-gray-500">{t('ai.auto_reply_toggle_desc')}</p>
+                  <p className="text-xs text-slate-500">{t('ai.auto_reply_toggle_desc')}</p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
@@ -151,12 +151,12 @@ export default function AiSettingsPage() {
                     })}
                     className="sr-only peer"
                   />
-                  <div className="w-9 h-5 bg-gray-200 peer-focus:ring-2 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600" />
+                  <div className="w-9 h-5 bg-slate-200 peer-focus:ring-2 peer-focus:ring-lavender-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-lavender-600" />
                 </label>
               </div>
 
               {settings.autoReply.enabled && (
-                <div className="ml-4 space-y-3 border-l-2 border-purple-200 pl-4">
+                <div className="ml-4 space-y-3 border-l-2 border-lavender-200 pl-4">
                   <div className="space-y-2">
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input
@@ -167,7 +167,7 @@ export default function AiSettingsPage() {
                           ...settings,
                           autoReply: { ...settings.autoReply, mode: 'all' },
                         })}
-                        className="text-purple-600"
+                        className="text-lavender-600"
                       />
                       <span className="text-sm">{t('ai.auto_reply_mode_all')}</span>
                     </label>
@@ -180,7 +180,7 @@ export default function AiSettingsPage() {
                           ...settings,
                           autoReply: { ...settings.autoReply, mode: 'selected' },
                         })}
-                        className="text-purple-600"
+                        className="text-lavender-600"
                       />
                       <span className="text-sm">{t('ai.auto_reply_mode_selected')}</span>
                     </label>
@@ -210,23 +210,23 @@ export default function AiSettingsPage() {
             {/* Personality */}
             <div>
               <label className="block text-sm font-medium mb-1">{t('ai.personality_label')}</label>
-              <p className="text-xs text-gray-500 mb-2">{t('ai.personality_desc')}</p>
+              <p className="text-xs text-slate-500 mb-2">{t('ai.personality_desc')}</p>
               <textarea
                 value={settings.personality}
                 onChange={(e) => setSettings({ ...settings, personality: e.target.value })}
                 rows={3}
                 placeholder="e.g. friendly and professional"
-                className="w-full border rounded-md px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-lavender-500"
               />
             </div>
           </>
         )}
 
         <div className="flex items-center gap-3">
-          <button onClick={handleSave} className="bg-purple-600 text-white px-4 py-2 rounded text-sm hover:bg-purple-700">
+          <button onClick={handleSave} className="bg-lavender-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-lavender-700 transition-colors">
             {t('settings.save_changes')}
           </button>
-          {saved && <span className="text-green-600 text-sm">{t('common.saved')}</span>}
+          {saved && <span className="text-sage-600 text-sm">{t('common.saved')}</span>}
         </div>
       </div>
     </div>

@@ -16,11 +16,11 @@ function AcceptInviteForm() {
 
   if (!token) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="bg-white p-8 rounded-lg shadow-sm border w-full max-w-md text-center">
-          <h1 className="text-2xl font-bold mb-2">Invalid invitation</h1>
-          <p className="text-gray-500 mb-4">This invitation link is invalid or has expired.</p>
-          <Link href="/login" className="text-blue-600 hover:underline text-sm">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#FCFCFD' }}>
+        <div className="bg-white p-8 rounded-3xl shadow-soft w-full max-w-md text-center">
+          <h1 className="text-2xl font-serif font-semibold text-slate-900 mb-2">Invalid invitation</h1>
+          <p className="text-slate-500 mb-4">This invitation link is invalid or has expired.</p>
+          <Link href="/login" className="text-sage-600 hover:underline text-sm">
             Go to sign in
           </Link>
         </div>
@@ -51,19 +51,19 @@ function AcceptInviteForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="bg-white p-8 rounded-lg shadow-sm border w-full max-w-md">
-        <h1 className="text-2xl font-bold text-center mb-2">Accept invitation</h1>
-        <p className="text-gray-500 text-center mb-6">Set your password to join the team.</p>
+    <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#FCFCFD' }}>
+      <div className="bg-white p-8 rounded-3xl shadow-soft w-full max-w-md">
+        <h1 className="text-2xl font-serif font-semibold text-slate-900 text-center mb-2">Accept invitation</h1>
+        <p className="text-slate-500 text-center mb-6">Set your password to join the team.</p>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {error && <div className="bg-red-50 text-red-600 p-3 rounded text-sm">{error}</div>}
+          {error && <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm">{error}</div>}
           <div>
             <label className="block text-sm font-medium mb-1">Password</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sage-500"
               minLength={8}
               placeholder="Minimum 8 characters"
               required
@@ -75,7 +75,7 @@ function AcceptInviteForm() {
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sage-500"
               minLength={8}
               required
             />
@@ -83,7 +83,7 @@ function AcceptInviteForm() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 text-white py-2 rounded-md text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+            className="w-full bg-slate-900 text-white py-2 rounded-xl text-sm font-medium hover:bg-slate-800 disabled:opacity-50 transition-colors"
           >
             {loading ? 'Setting up...' : 'Set password & join'}
           </button>
@@ -95,7 +95,7 @@ function AcceptInviteForm() {
 
 export default function AcceptInvitePage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gray-50"><p className="text-gray-400">Loading...</p></div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#FCFCFD' }}><p className="text-slate-400">Loading...</p></div>}>
       <AcceptInviteForm />
     </Suspense>
   );

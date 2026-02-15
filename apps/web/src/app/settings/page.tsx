@@ -63,40 +63,40 @@ export default function SettingsPage() {
 
   return (
     <div className="p-6 max-w-2xl">
-      <h1 className="text-2xl font-bold mb-6">{t('settings.title')}</h1>
+      <h1 className="text-2xl font-serif font-semibold text-slate-900 mb-6">{t('settings.title')}</h1>
 
-      <div className="bg-white border rounded-lg p-6 space-y-4">
+      <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
         <h2 className="font-semibold">{t('settings.business_info')}</h2>
 
         <div>
           <label className="block text-sm font-medium mb-1">{t('settings.business_name')}</label>
-          <input value={name} onChange={(e) => setName(e.target.value)} className="w-full border rounded px-3 py-2 text-sm" />
+          <input value={name} onChange={(e) => setName(e.target.value)} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" />
         </div>
 
         <div>
           <label className="block text-sm font-medium mb-1">{t('settings.phone')}</label>
-          <input value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full border rounded px-3 py-2 text-sm" />
+          <input value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" />
         </div>
 
         <div>
           <label className="block text-sm font-medium mb-1">{t('settings.timezone')}</label>
-          <input value={timezone} onChange={(e) => setTimezone(e.target.value)} className="w-full border rounded px-3 py-2 text-sm" />
+          <input value={timezone} onChange={(e) => setTimezone(e.target.value)} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" />
         </div>
 
         <div>
           <label className="block text-sm font-medium mb-1">{t('settings.vertical_pack')}</label>
-          <input value={business?.verticalPack || ''} disabled className="w-full border rounded px-3 py-2 text-sm bg-gray-50" />
+          <input value={business?.verticalPack || ''} disabled className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm bg-slate-50" />
         </div>
 
         <div className="flex items-center gap-3">
-          <button onClick={handleSave} className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700">
+          <button onClick={handleSave} className="bg-sage-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-sage-700 transition-colors">
             {t('settings.save_changes')}
           </button>
-          {saved && <span className="text-green-600 text-sm">{t('common.saved')}</span>}
+          {saved && <span className="text-sage-600 text-sm">{t('common.saved')}</span>}
         </div>
       </div>
       {/* Change Password */}
-      <div className="bg-white border rounded-lg p-6 mt-6 space-y-4">
+      <div className="bg-white rounded-2xl shadow-soft p-6 mt-6 space-y-4">
         <h2 className="font-semibold">{t('settings.change_password')}</h2>
         {passwordError && <div className="bg-red-50 text-red-600 p-3 rounded text-sm">{passwordError}</div>}
         <div>
@@ -105,7 +105,7 @@ export default function SettingsPage() {
             type="password"
             value={currentPassword}
             onChange={(e) => setCurrentPassword(e.target.value)}
-            className="w-full border rounded px-3 py-2 text-sm"
+            className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
           />
         </div>
         <div>
@@ -114,7 +114,7 @@ export default function SettingsPage() {
             type="password"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-            className="w-full border rounded px-3 py-2 text-sm"
+            className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
             minLength={8}
             placeholder={t('settings.password_placeholder')}
           />
@@ -125,7 +125,7 @@ export default function SettingsPage() {
             type="password"
             value={confirmNewPassword}
             onChange={(e) => setConfirmNewPassword(e.target.value)}
-            className="w-full border rounded px-3 py-2 text-sm"
+            className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
             minLength={8}
           />
         </div>
@@ -133,88 +133,88 @@ export default function SettingsPage() {
           <button
             onClick={handleChangePassword}
             disabled={!currentPassword || !newPassword || !confirmNewPassword}
-            className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700 disabled:opacity-50"
+            className="bg-sage-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-sage-700 transition-colors disabled:opacity-50"
           >
             {t('settings.update_password')}
           </button>
-          {passwordSaved && <span className="text-green-600 text-sm">{t('settings.password_updated')}</span>}
+          {passwordSaved && <span className="text-sage-600 text-sm">{t('settings.password_updated')}</span>}
         </div>
       </div>
 
       {/* Quick links */}
-      <div className="bg-white border rounded-lg p-6 mt-6">
+      <div className="bg-white rounded-2xl shadow-soft p-6 mt-6">
         <h2 className="font-semibold mb-3">{t('settings.more_settings')}</h2>
         <div className="space-y-2">
           <button
             onClick={() => router.push('/settings/templates')}
-            className="flex items-center gap-3 w-full text-left p-3 rounded-lg hover:bg-gray-50 border"
+            className="flex items-center gap-3 w-full text-left p-3 rounded-xl hover:bg-slate-50 border border-slate-100 transition-colors"
           >
-            <div className="w-9 h-9 bg-blue-50 rounded-lg flex items-center justify-center">
-              <FileText size={18} className="text-blue-600" />
+            <div className="w-9 h-9 bg-sage-50 rounded-lg flex items-center justify-center">
+              <FileText size={18} className="text-sage-600" />
             </div>
             <div>
               <p className="text-sm font-medium">{t('settings.message_templates')}</p>
-              <p className="text-xs text-gray-500">{t('settings.message_templates_desc')}</p>
+              <p className="text-xs text-slate-500">{t('settings.message_templates_desc')}</p>
             </div>
           </button>
           <button
             onClick={() => router.push('/settings/translations')}
-            className="flex items-center gap-3 w-full text-left p-3 rounded-lg hover:bg-gray-50 border"
+            className="flex items-center gap-3 w-full text-left p-3 rounded-xl hover:bg-slate-50 border border-slate-100 transition-colors"
           >
-            <div className="w-9 h-9 bg-purple-50 rounded-lg flex items-center justify-center">
-              <Languages size={18} className="text-purple-600" />
+            <div className="w-9 h-9 bg-lavender-50 rounded-lg flex items-center justify-center">
+              <Languages size={18} className="text-lavender-600" />
             </div>
             <div>
               <p className="text-sm font-medium">{t('settings.translations')}</p>
-              <p className="text-xs text-gray-500">{t('settings.translations_desc')}</p>
+              <p className="text-xs text-slate-500">{t('settings.translations_desc')}</p>
             </div>
           </button>
           <button
             onClick={() => router.push('/settings/profile-fields')}
-            className="flex items-center gap-3 w-full text-left p-3 rounded-lg hover:bg-gray-50 border"
+            className="flex items-center gap-3 w-full text-left p-3 rounded-xl hover:bg-slate-50 border border-slate-100 transition-colors"
           >
             <div className="w-9 h-9 bg-teal-50 rounded-lg flex items-center justify-center">
               <ClipboardCheck size={18} className="text-teal-600" />
             </div>
             <div>
               <p className="text-sm font-medium">{t('settings.profile_fields')}</p>
-              <p className="text-xs text-gray-500">{t('settings.profile_fields_desc')}</p>
+              <p className="text-xs text-slate-500">{t('settings.profile_fields_desc')}</p>
             </div>
           </button>
           <button
             onClick={() => router.push('/settings/ai')}
-            className="flex items-center gap-3 w-full text-left p-3 rounded-lg hover:bg-gray-50 border"
+            className="flex items-center gap-3 w-full text-left p-3 rounded-xl hover:bg-slate-50 border border-slate-100 transition-colors"
           >
-            <div className="w-9 h-9 bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg flex items-center justify-center">
-              <Sparkles size={18} className="text-purple-600" />
+            <div className="w-9 h-9 bg-lavender-50 rounded-lg flex items-center justify-center">
+              <Sparkles size={18} className="text-lavender-600" />
             </div>
             <div>
               <p className="text-sm font-medium">{t('settings.ai_settings')}</p>
-              <p className="text-xs text-gray-500">{t('settings.ai_settings_desc')}</p>
+              <p className="text-xs text-slate-500">{t('settings.ai_settings_desc')}</p>
             </div>
           </button>
           <button
             onClick={() => router.push('/settings/account')}
-            className="flex items-center gap-3 w-full text-left p-3 rounded-lg hover:bg-gray-50 border"
+            className="flex items-center gap-3 w-full text-left p-3 rounded-xl hover:bg-slate-50 border border-slate-100 transition-colors"
           >
             <div className="w-9 h-9 bg-green-50 rounded-lg flex items-center justify-center">
-              <Upload size={18} className="text-green-600" />
+              <Upload size={18} className="text-sage-600" />
             </div>
             <div>
               <p className="text-sm font-medium">{t('settings.account_import')}</p>
-              <p className="text-xs text-gray-500">{t('settings.account_import_desc')}</p>
+              <p className="text-xs text-slate-500">{t('settings.account_import_desc')}</p>
             </div>
           </button>
           <button
             onClick={() => router.push('/setup')}
-            className="flex items-center gap-3 w-full text-left p-3 rounded-lg hover:bg-gray-50 border"
+            className="flex items-center gap-3 w-full text-left p-3 rounded-xl hover:bg-slate-50 border border-slate-100 transition-colors"
           >
             <div className="w-9 h-9 bg-orange-50 rounded-lg flex items-center justify-center">
               <Settings2 size={18} className="text-orange-600" />
             </div>
             <div>
               <p className="text-sm font-medium">{t('settings.setup_wizard')}</p>
-              <p className="text-xs text-gray-500">{t('settings.setup_wizard_desc')}</p>
+              <p className="text-xs text-slate-500">{t('settings.setup_wizard_desc')}</p>
             </div>
           </button>
         </div>

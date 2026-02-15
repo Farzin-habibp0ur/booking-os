@@ -35,19 +35,19 @@ export default function AiSummary({ conversationId, summary, onSummaryUpdated }:
     <div className="p-4 border-b">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-1.5">
-          <Sparkles size={13} className="text-purple-500" />
-          <span className="text-xs font-semibold text-gray-500 uppercase">{t('ai.summary_label')}</span>
+          <Sparkles size={13} className="text-lavender-500" />
+          <span className="text-xs font-semibold text-slate-500 uppercase">{t('ai.summary_label')}</span>
         </div>
         <button
           onClick={refreshSummary}
           disabled={refreshing}
-          className="text-gray-400 hover:text-purple-600 transition-colors"
+          className="text-slate-400 hover:text-lavender-600 transition-colors"
           title={t('ai.refresh_summary')}
         >
           {refreshing ? <Loader2 size={13} className="animate-spin" /> : <RefreshCw size={13} />}
         </button>
       </div>
-      <p className="text-xs text-gray-600 leading-relaxed">{summary}</p>
+      <p className="text-xs text-slate-600 leading-relaxed">{summary}</p>
     </div>
   );
 }

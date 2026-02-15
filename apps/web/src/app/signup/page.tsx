@@ -35,19 +35,19 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="bg-white p-8 rounded-lg shadow-sm border w-full max-w-md">
-        <h1 className="text-2xl font-bold text-center mb-2">Create your account</h1>
-        <p className="text-gray-500 text-center mb-6">Set up your business on Booking OS</p>
+    <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#FCFCFD' }}>
+      <div className="bg-white p-8 rounded-3xl shadow-soft w-full max-w-md">
+        <h1 className="text-2xl font-serif font-semibold text-slate-900 text-center mb-2">Create your account</h1>
+        <p className="text-slate-500 text-center mb-6">Set up your business on Booking OS</p>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {error && <div className="bg-red-50 text-red-600 p-3 rounded text-sm">{error}</div>}
+          {error && <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm">{error}</div>}
           <div>
             <label className="block text-sm font-medium mb-1">Business name</label>
             <input
               type="text"
               value={businessName}
               onChange={(e) => setBusinessName(e.target.value)}
-              className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sage-500"
               placeholder="Glow Clinic"
               required
             />
@@ -58,7 +58,7 @@ export default function SignupPage() {
               type="text"
               value={ownerName}
               onChange={(e) => setOwnerName(e.target.value)}
-              className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sage-500"
               placeholder="Sarah Johnson"
               required
             />
@@ -69,7 +69,7 @@ export default function SignupPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sage-500"
               required
             />
           </div>
@@ -79,7 +79,7 @@ export default function SignupPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sage-500"
               minLength={8}
               placeholder="Minimum 8 characters"
               required
@@ -88,14 +88,14 @@ export default function SignupPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 text-white py-2 rounded-md text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+            className="w-full bg-slate-900 text-white py-2 rounded-xl text-sm font-medium hover:bg-slate-800 disabled:opacity-50 transition-colors"
           >
             {loading ? 'Creating account...' : 'Create account'}
           </button>
         </form>
-        <p className="text-sm text-center mt-4 text-gray-500">
+        <p className="text-sm text-center mt-4 text-slate-500">
           Already have an account?{' '}
-          <Link href="/login" className="text-blue-600 hover:underline">
+          <Link href="/login" className="text-sage-600 hover:underline">
             Sign in
           </Link>
         </p>

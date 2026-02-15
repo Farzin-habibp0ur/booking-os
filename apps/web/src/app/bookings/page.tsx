@@ -11,11 +11,11 @@ import BookingDetailModal from '@/components/booking-detail-modal';
 import BookingFormModal from '@/components/booking-form-modal';
 
 const statusColors: Record<string, string> = {
-  PENDING: 'bg-yellow-100 text-yellow-700',
-  CONFIRMED: 'bg-blue-100 text-blue-700',
-  IN_PROGRESS: 'bg-purple-100 text-purple-700',
-  COMPLETED: 'bg-green-100 text-green-700',
-  CANCELLED: 'bg-gray-100 text-gray-600',
+  PENDING: 'bg-lavender-100 text-lavender-700',
+  CONFIRMED: 'bg-sage-100 text-sage-700',
+  IN_PROGRESS: 'bg-amber-100 text-amber-700',
+  COMPLETED: 'bg-sage-50 text-sage-900',
+  CANCELLED: 'bg-slate-100 text-slate-600',
   NO_SHOW: 'bg-red-100 text-red-700',
 };
 
@@ -56,22 +56,22 @@ export default function BookingsPage() {
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold">{t('bookings.title', { entity: pack.labels.booking })}</h1>
-        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="border rounded-md px-3 py-2 text-sm">
+        <h1 className="text-2xl font-serif font-semibold text-slate-900">{t('bookings.title', { entity: pack.labels.booking })}</h1>
+        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="border border-slate-200 rounded-xl px-3 py-2 text-sm transition-colors">
           <option value="">{t('bookings.all_statuses')}</option>
           {Object.keys(statusColors).map((s) => <option key={s} value={s}>{t(`status.${s.toLowerCase()}`)}</option>)}
         </select>
       </div>
 
-      <div className="bg-white border rounded-lg overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-soft overflow-hidden">
         <table className="w-full">
-          <thead className="bg-gray-50 border-b">
+          <thead className="bg-slate-50 border-b">
             <tr>
-              <th className="text-left p-3 text-xs font-medium text-gray-500 uppercase">{pack.labels.customer}</th>
-              <th className="text-left p-3 text-xs font-medium text-gray-500 uppercase">{pack.labels.service}</th>
-              <th className="text-left p-3 text-xs font-medium text-gray-500 uppercase">{t('common.name')}</th>
-              <th className="text-left p-3 text-xs font-medium text-gray-500 uppercase">{t('bookings.date_time')}</th>
-              <th className="text-left p-3 text-xs font-medium text-gray-500 uppercase">{t('common.status')}</th>
+              <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">{pack.labels.customer}</th>
+              <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">{pack.labels.service}</th>
+              <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">{t('common.name')}</th>
+              <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">{t('bookings.date_time')}</th>
+              <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">{t('common.status')}</th>
             </tr>
           </thead>
           <tbody className="divide-y">
@@ -79,11 +79,11 @@ export default function BookingsPage() {
               Array.from({ length: 5 }).map((_, i) => <TableRowSkeleton key={i} cols={5} />)
             ) : (
               bookings.data.map((b: any) => (
-                <tr key={b.id} onClick={() => handleRowClick(b)} className="hover:bg-gray-50 cursor-pointer">
+                <tr key={b.id} onClick={() => handleRowClick(b)} className="hover:bg-slate-50 cursor-pointer">
                   <td className="p-3 text-sm font-medium">{b.customer?.name}</td>
                   <td className="p-3 text-sm">{b.service?.name}</td>
-                  <td className="p-3 text-sm text-gray-600">{b.staff?.name || t('common.unassigned')}</td>
-                  <td className="p-3 text-sm text-gray-600">
+                  <td className="p-3 text-sm text-slate-600">{b.staff?.name || t('common.unassigned')}</td>
+                  <td className="p-3 text-sm text-slate-600">
                     {new Date(b.startTime).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}
                   </td>
                   <td className="p-3">

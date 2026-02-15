@@ -401,8 +401,8 @@ export default function InboxPage() {
   return (
     <div className="flex h-full">
       {/* Filter sidebar */}
-      <div className="w-48 border-r bg-gray-50 flex flex-col">
-        <div className="p-3 border-b"><h2 className="font-semibold text-sm text-gray-700">{t('inbox.title')}</h2></div>
+      <div className="w-48 border-r bg-slate-50 flex flex-col">
+        <div className="p-3 border-b"><h2 className="font-semibold text-sm text-slate-700">{t('inbox.title')}</h2></div>
         <div className="flex-1 py-1">
           {FILTER_KEYS.map((key) => {
             const Icon = FILTER_ICONS[key];
@@ -413,16 +413,16 @@ export default function InboxPage() {
                 onClick={() => { setActiveFilter(key); setSelected(null); }}
                 className={cn(
                   'w-full flex items-center justify-between px-3 py-2 text-sm transition-colors',
-                  activeFilter === key ? 'bg-blue-50 text-blue-700 font-medium border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-100',
+                  activeFilter === key ? 'bg-sage-50 text-sage-700 font-medium border-r-2 border-sage-600' : 'text-slate-600 hover:bg-slate-100',
                 )}
               >
                 <div className="flex items-center gap-2"><Icon size={15} /><span>{FILTER_LABELS[key]}</span></div>
                 {count > 0 && (
                   <span className={cn('text-[10px] px-1.5 py-0.5 rounded-full min-w-[20px] text-center',
                     key === 'overdue' ? 'bg-red-100 text-red-700' :
-                    key === 'unassigned' ? 'bg-orange-100 text-orange-700' :
-                    key === 'snoozed' ? 'bg-purple-100 text-purple-700' :
-                    'bg-gray-200 text-gray-600',
+                    key === 'unassigned' ? 'bg-orange-50 text-orange-700' :
+                    key === 'snoozed' ? 'bg-lavender-100 text-lavender-700' :
+                    'bg-slate-200 text-slate-600',
                   )}>{count}</span>
                 )}
               </button>
@@ -436,41 +436,41 @@ export default function InboxPage() {
         <div className="p-3 border-b space-y-2">
           <h2 className="font-semibold">{t('inbox.title')}</h2>
           <div className="relative">
-            <Search size={14} className="absolute left-2.5 top-2.5 text-gray-400" />
-            <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder={t('inbox.search_placeholder')} className="w-full pl-8 pr-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            {searchQuery && <button onClick={() => setSearchQuery('')} className="absolute right-2.5 top-2.5 text-gray-400 hover:text-gray-600"><X size={14} /></button>}
+            <Search size={14} className="absolute left-2.5 top-2.5 text-slate-400" />
+            <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder={t('inbox.search_placeholder')} className="w-full pl-8 pr-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-sage-500" />
+            {searchQuery && <button onClick={() => setSearchQuery('')} className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600"><X size={14} /></button>}
           </div>
         </div>
         <div className="flex-1 overflow-auto">
           {conversations.map((c) => (
-            <div key={c.id} onClick={() => setSelected(c)} className={cn('p-3 border-b cursor-pointer hover:bg-gray-50 transition-colors', selected?.id === c.id && 'bg-blue-50')}>
+            <div key={c.id} onClick={() => setSelected(c)} className={cn('p-3 border-b cursor-pointer hover:bg-slate-50 transition-colors', selected?.id === c.id && 'bg-sage-50')}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
                   {c.isOverdue && <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" />}
                   <p className="text-sm font-medium truncate">{c.customer?.name || t('common.unknown')}</p>
                 </div>
                 <div className="flex items-center gap-1">
-                  {c.isNew && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 font-medium">{t('inbox.new_badge')}</span>}
-                  {c.status === 'SNOOZED' && <AlarmClock size={12} className="text-purple-500" />}
+                  {c.isNew && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-sage-100 text-sage-700 font-medium">{t('inbox.new_badge')}</span>}
+                  {c.status === 'SNOOZED' && <AlarmClock size={12} className="text-lavender-500" />}
                 </div>
               </div>
-              <p className="text-xs text-gray-500 truncate mt-0.5">{c.messages?.[0]?.content || t('dashboard.no_messages')}</p>
+              <p className="text-xs text-slate-500 truncate mt-0.5">{c.messages?.[0]?.content || t('dashboard.no_messages')}</p>
               <div className="flex items-center justify-between mt-1">
                 <div className="flex items-center gap-1.5">
                   <span className={cn('text-[9px] px-1.5 py-0.5 rounded-full',
-                    c.status === 'OPEN' ? 'bg-green-100 text-green-700' :
-                    c.status === 'WAITING' ? 'bg-yellow-100 text-yellow-700' :
-                    c.status === 'SNOOZED' ? 'bg-purple-100 text-purple-700' :
-                    c.status === 'RESOLVED' ? 'bg-gray-100 text-gray-500' : 'bg-gray-100 text-gray-600',
+                    c.status === 'OPEN' ? 'bg-sage-50 text-sage-700' :
+                    c.status === 'WAITING' ? 'bg-amber-50 text-amber-700' :
+                    c.status === 'SNOOZED' ? 'bg-lavender-100 text-lavender-700' :
+                    c.status === 'RESOLVED' ? 'bg-slate-100 text-slate-500' : 'bg-slate-100 text-slate-600',
                   )}>{t(`status.${c.status.toLowerCase()}`)}</span>
-                  {c.assignedTo && <span className="text-[9px] text-gray-400">{c.assignedTo.name}</span>}
+                  {c.assignedTo && <span className="text-[9px] text-slate-400">{c.assignedTo.name}</span>}
                 </div>
-                {c.lastMessageAt && <span className="text-[9px] text-gray-400">{formatRelativeTime(c.lastMessageAt)}</span>}
+                {c.lastMessageAt && <span className="text-[9px] text-slate-400">{formatRelativeTime(c.lastMessageAt)}</span>}
               </div>
               {c.tags?.length > 0 && (
                 <div className="flex gap-1 mt-1">
                   {c.tags.slice(0, 3).map((tg: string) => (
-                    <span key={tg} className="text-[8px] bg-blue-50 text-blue-600 px-1 py-0.5 rounded">{tg}</span>
+                    <span key={tg} className="text-[8px] bg-sage-50 text-sage-600 px-1 py-0.5 rounded">{tg}</span>
                   ))}
                 </div>
               )}
@@ -478,31 +478,31 @@ export default function InboxPage() {
           ))}
           {conversations.length === 0 && (
             <div className="text-center p-6">
-              <InboxIcon size={32} className="mx-auto text-gray-300 mb-2" />
-              <p className="text-gray-400 text-sm">{searchQuery ? t('inbox.no_search_results', { query: searchQuery }) : t('inbox.no_conversations')}</p>
+              <InboxIcon size={32} className="mx-auto text-slate-300 mb-2" />
+              <p className="text-slate-400 text-sm">{searchQuery ? t('inbox.no_search_results', { query: searchQuery }) : t('inbox.no_conversations')}</p>
             </div>
           )}
         </div>
       </div>
 
       {/* Message thread */}
-      <div className="flex-1 flex flex-col bg-gray-50">
+      <div className="flex-1 flex flex-col bg-slate-50">
         {selected ? (
           <>
             <div className="p-3 border-b bg-white flex items-center justify-between">
               <div>
                 <p className="font-medium">{selected.customer?.name}</p>
-                <p className="text-xs text-gray-500">{selected.customer?.phone}</p>
+                <p className="text-xs text-slate-500">{selected.customer?.phone}</p>
               </div>
               <div className="flex items-center gap-2">
                 <div className="relative">
-                  <button onClick={() => setShowSnoozeMenu(!showSnoozeMenu)} className="text-xs text-gray-500 hover:text-purple-600 border px-2 py-1 rounded flex items-center gap-1">
+                  <button onClick={() => setShowSnoozeMenu(!showSnoozeMenu)} className="text-xs text-slate-500 hover:text-lavender-600 border px-2 py-1 rounded flex items-center gap-1">
                     <AlarmClock size={12} /> {t('inbox.snooze')}
                   </button>
                   {showSnoozeMenu && (
                     <div className="absolute right-0 mt-1 w-40 bg-white border rounded-md shadow-lg z-20">
                       {SNOOZE_HOURS.map((opt) => (
-                        <button key={opt.key} onClick={() => snoozeConversation(opt.hours)} className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 border-b last:border-0">
+                        <button key={opt.key} onClick={() => snoozeConversation(opt.hours)} className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50 border-b last:border-0">
                           {SNOOZE_LABELS[opt.key]}
                         </button>
                       ))}
@@ -510,12 +510,12 @@ export default function InboxPage() {
                   )}
                 </div>
                 {transferredToHuman && (
-                  <button onClick={resumeAutoReply} className="text-xs text-purple-600 hover:text-purple-700 border border-purple-300 bg-purple-50 px-2 py-1 rounded flex items-center gap-1">
+                  <button onClick={resumeAutoReply} className="text-xs text-lavender-600 hover:text-lavender-700 border border-lavender-300 bg-lavender-50 px-2 py-1 rounded flex items-center gap-1">
                     <Zap size={12} /> {t('ai.resume_auto_reply')}
                   </button>
                 )}
-                <button onClick={closeConversation} className="text-xs text-gray-500 hover:text-gray-700 border px-2 py-1 rounded">{t('inbox.close_conversation')}</button>
-                <button onClick={() => setShowBookingForm(!showBookingForm)} className="flex items-center gap-1 bg-blue-600 text-white px-3 py-1.5 rounded-md text-sm hover:bg-blue-700">
+                <button onClick={closeConversation} className="text-xs text-slate-500 hover:text-slate-700 border px-2 py-1 rounded">{t('inbox.close_conversation')}</button>
+                <button onClick={() => setShowBookingForm(!showBookingForm)} className="flex items-center gap-1 bg-sage-600 text-white px-3 py-1.5 rounded-md text-sm hover:bg-sage-700">
                   <Plus size={14} /> {t('inbox.new_booking')}
                 </button>
               </div>
@@ -525,10 +525,10 @@ export default function InboxPage() {
             <div className="flex-1 overflow-auto p-4 space-y-3">
               {messages.map((m) => (
                 <div key={m.id} className={cn('flex', m.direction === 'OUTBOUND' ? 'justify-end' : 'justify-start')}>
-                  <div className={cn('max-w-[70%] p-3 rounded-lg text-sm', m.direction === 'OUTBOUND' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white border rounded-bl-none')}>
-                    {m.senderStaff && <p className={cn('text-[10px] mb-1', m.direction === 'OUTBOUND' ? 'text-blue-200' : 'text-gray-400')}>{m.senderStaff.name}</p>}
+                  <div className={cn('max-w-[70%] p-3 rounded-lg text-sm', m.direction === 'OUTBOUND' ? 'bg-sage-600 text-white rounded-br-none' : 'bg-white shadow-soft-sm rounded-xl rounded-bl-none')}>
+                    {m.senderStaff && <p className={cn('text-[10px] mb-1', m.direction === 'OUTBOUND' ? 'text-sage-200' : 'text-slate-400')}>{m.senderStaff.name}</p>}
                     <p className="whitespace-pre-wrap">{m.content}</p>
-                    <p className={cn('text-[10px] mt-1', m.direction === 'OUTBOUND' ? 'text-blue-200' : 'text-gray-400')}>
+                    <p className={cn('text-[10px] mt-1', m.direction === 'OUTBOUND' ? 'text-sage-200' : 'text-slate-400')}>
                       {new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
@@ -551,7 +551,7 @@ export default function InboxPage() {
               <div className="px-3 pb-1 bg-white border-t">
                 <div className="flex flex-wrap gap-1.5 py-2">
                   {QUICK_REPLIES.map((qr) => (
-                    <button key={qr} onClick={() => sendMessage(qr)} className="text-xs bg-gray-100 hover:bg-blue-50 hover:text-blue-700 px-2.5 py-1.5 rounded-full transition-colors">
+                    <button key={qr} onClick={() => sendMessage(qr)} className="text-xs bg-slate-100 hover:bg-sage-50 hover:text-sage-700 px-2.5 py-1.5 rounded-full transition-colors">
                       {qr}
                     </button>
                   ))}
@@ -563,22 +563,22 @@ export default function InboxPage() {
             <div className="p-3 border-t bg-white">
               {showTemplates && (
                 <div className="mb-2 border rounded-md bg-white shadow-lg max-h-48 overflow-auto">
-                  <div className="px-3 py-2 border-b bg-gray-50 flex items-center justify-between">
-                    <span className="text-xs font-medium text-gray-600">{t('inbox.templates')}</span>
-                    <button onClick={() => setShowTemplates(false)} className="text-gray-400 hover:text-gray-600"><X size={14} /></button>
+                  <div className="px-3 py-2 border-b bg-slate-50 flex items-center justify-between">
+                    <span className="text-xs font-medium text-slate-600">{t('inbox.templates')}</span>
+                    <button onClick={() => setShowTemplates(false)} className="text-slate-400 hover:text-slate-600"><X size={14} /></button>
                   </div>
                   {templates.map((tpl) => (
-                    <button key={tpl.id} onClick={() => insertTemplate(tpl)} className="w-full text-left px-3 py-2 hover:bg-gray-50 border-b last:border-0">
+                    <button key={tpl.id} onClick={() => insertTemplate(tpl)} className="w-full text-left px-3 py-2 hover:bg-slate-50 border-b last:border-0">
                       <p className="text-sm font-medium">{tpl.name}</p>
-                      <p className="text-xs text-gray-500 truncate">{tpl.body}</p>
+                      <p className="text-xs text-slate-500 truncate">{tpl.body}</p>
                     </button>
                   ))}
                 </div>
               )}
               <div className="flex gap-2 items-end">
                 <div className="flex gap-0.5">
-                  <button onClick={() => setShowTemplates(!showTemplates)} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded" title={t('inbox.templates')}><FileText size={18} /></button>
-                  <button onClick={() => setShowQuickReplies(!showQuickReplies)} className={cn('p-2 rounded', showQuickReplies ? 'text-blue-600 bg-blue-50' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100')} title={t('inbox.quick_replies')}><Zap size={18} /></button>
+                  <button onClick={() => setShowTemplates(!showTemplates)} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded" title={t('inbox.templates')}><FileText size={18} /></button>
+                  <button onClick={() => setShowQuickReplies(!showQuickReplies)} className={cn('p-2 rounded', showQuickReplies ? 'text-sage-600 bg-sage-50' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100')} title={t('inbox.quick_replies')}><Zap size={18} /></button>
                 </div>
                 <textarea
                   value={newMessage} onChange={(e) => setNewMessage(e.target.value)}
@@ -587,17 +587,17 @@ export default function InboxPage() {
                     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); sendMessage(); }
                   }}
                   placeholder={t('inbox.type_message')} rows={1}
-                  className="flex-1 border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none min-h-[38px] max-h-24"
+                  className="flex-1 border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sage-500 resize-none min-h-[38px] max-h-24"
                   style={{ height: 'auto' }}
                   onInput={(e) => { const el = e.currentTarget; el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 96) + 'px'; }}
                 />
-                <button onClick={() => sendMessage()} disabled={sending || !newMessage.trim()} className="bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700 disabled:opacity-50 flex-shrink-0"><Send size={18} /></button>
+                <button onClick={() => sendMessage()} disabled={sending || !newMessage.trim()} className="bg-sage-600 text-white p-2 rounded-md hover:bg-sage-700 disabled:opacity-50 flex-shrink-0"><Send size={18} /></button>
               </div>
             </div>
           </>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-gray-400">
-            <MessageSquare size={48} className="mb-3 text-gray-300" />
+          <div className="flex-1 flex flex-col items-center justify-center text-slate-400">
+            <MessageSquare size={48} className="mb-3 text-slate-300" />
             <p className="font-medium">{t('inbox.select_conversation')}</p>
             <p className="text-sm">{t('inbox.select_conversation_hint')}</p>
           </div>
@@ -608,9 +608,9 @@ export default function InboxPage() {
       {selected && customer && (
         <div className="w-72 border-l bg-white overflow-auto">
           <div className="flex border-b">
-            <button onClick={() => setSidebarTab('info')} className={cn('flex-1 py-2.5 text-xs font-medium text-center', sidebarTab === 'info' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500')}>{t('inbox.info_tab')}</button>
-            <button onClick={() => setSidebarTab('notes')} className={cn('flex-1 py-2.5 text-xs font-medium text-center relative', sidebarTab === 'notes' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500')}>
-              {t('inbox.notes_tab')} {notes.length > 0 && <span className="ml-1 text-[9px] bg-yellow-100 text-yellow-700 px-1 py-0.5 rounded-full">{notes.length}</span>}
+            <button onClick={() => setSidebarTab('info')} className={cn('flex-1 py-2.5 text-xs font-medium text-center', sidebarTab === 'info' ? 'text-sage-600 border-b-2 border-sage-600' : 'text-slate-500')}>{t('inbox.info_tab')}</button>
+            <button onClick={() => setSidebarTab('notes')} className={cn('flex-1 py-2.5 text-xs font-medium text-center relative', sidebarTab === 'notes' ? 'text-sage-600 border-b-2 border-sage-600' : 'text-slate-500')}>
+              {t('inbox.notes_tab')} {notes.length > 0 && <span className="ml-1 text-[9px] bg-amber-50 text-amber-700 px-1 py-0.5 rounded-full">{notes.length}</span>}
             </button>
           </div>
 
@@ -618,18 +618,18 @@ export default function InboxPage() {
             <>
               <div className="p-4 border-b">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-sm">
+                  <div className="w-10 h-10 rounded-full bg-sage-100 flex items-center justify-center text-sage-600 font-semibold text-sm">
                     {(customer.name || '?')[0].toUpperCase()}
                   </div>
                   <div>
                     <p className="font-semibold text-sm">{customer.name}</p>
-                    <p className="text-xs text-gray-500">{customer.phone}</p>
+                    <p className="text-xs text-slate-500">{customer.phone}</p>
                   </div>
                 </div>
-                {customer.email && <p className="text-xs text-gray-500 mb-2">{customer.email}</p>}
+                {customer.email && <p className="text-xs text-slate-500 mb-2">{customer.email}</p>}
                 {customer.tags?.length > 0 && (
                   <div className="flex flex-wrap gap-1 mb-2">
-                    {customer.tags.map((tg: string) => <span key={tg} className="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{tg}</span>)}
+                    {customer.tags.map((tg: string) => <span key={tg} className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">{tg}</span>)}
                   </div>
                 )}
               </div>
@@ -684,10 +684,10 @@ export default function InboxPage() {
               )}
 
               <div className="p-4 border-b">
-                <span className="text-xs font-semibold text-gray-500 uppercase">{t('inbox.conversation_tags')}</span>
+                <span className="text-xs font-semibold text-slate-500 uppercase">{t('inbox.conversation_tags')}</span>
                 <div className="flex flex-wrap gap-1 mt-2">
                   {convTags.map((tg) => (
-                    <span key={tg} className="inline-flex items-center gap-0.5 text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">
+                    <span key={tg} className="inline-flex items-center gap-0.5 text-[10px] bg-sage-50 text-sage-700 px-2 py-0.5 rounded-full">
                       {tg} <button onClick={() => removeConvTag(tg)} className="hover:text-red-500"><X size={8} /></button>
                     </span>
                   ))}
@@ -698,29 +698,29 @@ export default function InboxPage() {
               </div>
 
               <div className="p-4 border-b">
-                <span className="text-xs font-semibold text-gray-500 uppercase">{t('inbox.assigned_to')}</span>
+                <span className="text-xs font-semibold text-slate-500 uppercase">{t('inbox.assigned_to')}</span>
                 <div className="relative mt-1">
-                  <button onClick={() => setShowAssignDropdown(!showAssignDropdown)} className="w-full flex items-center justify-between border rounded-md px-2.5 py-1.5 text-sm hover:bg-gray-50">
+                  <button onClick={() => setShowAssignDropdown(!showAssignDropdown)} className="w-full flex items-center justify-between border rounded-md px-2.5 py-1.5 text-sm hover:bg-slate-50">
                     <span>{selected.assignedTo?.name || t('common.unassigned')}</span>
-                    <ChevronDown size={14} className="text-gray-400" />
+                    <ChevronDown size={14} className="text-slate-400" />
                   </button>
                   {showAssignDropdown && (
                     <div className="absolute z-10 mt-1 w-full bg-white border rounded-md shadow-lg">
-                      <button onClick={() => assignConversation(null)} className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 border-b">{t('inbox.unassign')}</button>
+                      <button onClick={() => assignConversation(null)} className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50 border-b">{t('inbox.unassign')}</button>
                       {staffList.map((s) => (
-                        <button key={s.id} onClick={() => assignConversation(s.id)} className={cn('w-full text-left px-3 py-2 text-sm hover:bg-gray-50', selected.assignedTo?.id === s.id && 'bg-blue-50 text-blue-700')}>{s.name}</button>
+                        <button key={s.id} onClick={() => assignConversation(s.id)} className={cn('w-full text-left px-3 py-2 text-sm hover:bg-slate-50', selected.assignedTo?.id === s.id && 'bg-sage-50 text-sage-700')}>{s.name}</button>
                       ))}
                     </div>
                   )}
                 </div>
                 {!selected.assignedTo && (
-                  <button onClick={() => assignConversation(staffList[0]?.id)} className="mt-2 text-xs text-blue-600 hover:text-blue-700 font-medium">{t('inbox.assign_to_me')}</button>
+                  <button onClick={() => assignConversation(staffList[0]?.id)} className="mt-2 text-xs text-sage-600 hover:text-sage-700 font-medium">{t('inbox.assign_to_me')}</button>
                 )}
               </div>
 
               {selected.status === 'SNOOZED' && selected.snoozedUntil && (
-                <div className="p-4 border-b bg-purple-50">
-                  <div className="flex items-center gap-1.5 text-purple-700 text-xs">
+                <div className="p-4 border-b bg-lavender-50">
+                  <div className="flex items-center gap-1.5 text-lavender-700 text-xs">
                     <AlarmClock size={12} />
                     <span>{t('inbox.snoozed_until', { datetime: new Date(selected.snoozedUntil).toLocaleString() })}</span>
                   </div>
@@ -729,20 +729,20 @@ export default function InboxPage() {
 
               <div className="p-4 border-b">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-semibold text-gray-500 uppercase">{t('inbox.bookings_section')}</span>
-                  <button onClick={() => setShowBookingForm(true)} className="text-xs text-blue-600 hover:text-blue-700">{t('inbox.bookings_new')}</button>
+                  <span className="text-xs font-semibold text-slate-500 uppercase">{t('inbox.bookings_section')}</span>
+                  <button onClick={() => setShowBookingForm(true)} className="text-xs text-sage-600 hover:text-sage-700">{t('inbox.bookings_new')}</button>
                 </div>
                 {customerBookings.filter((b: any) => ['PENDING', 'CONFIRMED'].includes(b.status)).slice(0, 3).map((b: any) => (
                   <div key={b.id} className="border rounded p-2 mb-1.5">
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-medium">{b.service?.name}</p>
-                      <span className={cn('text-[9px] px-1.5 py-0.5 rounded-full', b.status === 'CONFIRMED' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700')}>{t(`status.${b.status.toLowerCase()}`)}</span>
+                      <span className={cn('text-[9px] px-1.5 py-0.5 rounded-full', b.status === 'CONFIRMED' ? 'bg-sage-50 text-sage-700' : 'bg-amber-50 text-amber-700')}>{t(`status.${b.status.toLowerCase()}`)}</span>
                     </div>
-                    <p className="text-xs text-gray-500 mt-0.5">{new Date(b.startTime).toLocaleDateString()} at {new Date(b.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                    <p className="text-xs text-slate-500 mt-0.5">{new Date(b.startTime).toLocaleDateString()} at {new Date(b.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                   </div>
                 ))}
                 {customerBookings.filter((b: any) => ['PENDING', 'CONFIRMED'].includes(b.status)).length === 0 && (
-                  <p className="text-xs text-gray-400">{t('inbox.no_upcoming_bookings')}</p>
+                  <p className="text-xs text-slate-400">{t('inbox.no_upcoming_bookings')}</p>
                 )}
               </div>
             </>
@@ -762,15 +762,15 @@ export default function InboxPage() {
                   <div key={n.id} className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
                     <p className="text-sm whitespace-pre-wrap">{n.content}</p>
                     <div className="flex items-center justify-between mt-2">
-                      <p className="text-[10px] text-gray-400">
+                      <p className="text-[10px] text-slate-400">
                         {n.staff?.name} · {new Date(n.createdAt).toLocaleString()}
                       </p>
-                      <button onClick={() => deleteNote(n.id)} className="text-gray-400 hover:text-red-500"><Trash2 size={12} /></button>
+                      <button onClick={() => deleteNote(n.id)} className="text-slate-400 hover:text-red-500"><Trash2 size={12} /></button>
                     </div>
                   </div>
                 ))}
                 {notes.length === 0 && (
-                  <p className="text-xs text-gray-400 text-center py-4">{t('inbox.no_notes')}</p>
+                  <p className="text-xs text-slate-400 text-center py-4">{t('inbox.no_notes')}</p>
                 )}
               </div>
             </div>

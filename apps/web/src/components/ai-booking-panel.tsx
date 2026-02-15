@@ -92,7 +92,7 @@ const MODE_CONFIG: Record<PanelMode, {
   book: {
     icon: CalendarCheck,
     titleKey: 'ai.booking_assistant',
-    colorClass: 'text-purple-600',
+    colorClass: 'text-lavender-600',
     stepCount: 4,
     stateSteps: BOOK_STEPS,
     confirmState: 'CONFIRM',
@@ -197,14 +197,14 @@ export default function AiBookingPanel({
   const isConfirmReady = currentStateStr === config.confirmState;
 
   // Color scheme per mode
-  const progressColor = mode === 'cancel' ? 'bg-red-500' : mode === 'reschedule' ? 'bg-orange-500' : 'bg-purple-500';
+  const progressColor = mode === 'cancel' ? 'bg-red-500' : mode === 'reschedule' ? 'bg-orange-500' : 'bg-lavender-500';
   const btnColor = mode === 'cancel'
     ? 'bg-red-600 hover:bg-red-700'
     : mode === 'reschedule'
       ? 'bg-orange-600 hover:bg-orange-700'
-      : 'bg-purple-600 hover:bg-purple-700';
-  const stepTextColor = mode === 'cancel' ? 'text-red-500' : mode === 'reschedule' ? 'text-orange-500' : 'text-purple-500';
-  const titleColor = mode === 'cancel' ? 'text-red-700' : mode === 'reschedule' ? 'text-orange-700' : 'text-purple-700';
+      : 'bg-lavender-600 hover:bg-lavender-700';
+  const stepTextColor = mode === 'cancel' ? 'text-red-500' : mode === 'reschedule' ? 'text-orange-500' : 'text-lavender-600';
+  const titleColor = mode === 'cancel' ? 'text-red-700' : mode === 'reschedule' ? 'text-orange-700' : 'text-lavender-900';
 
   return (
     <div className="p-4 border-b">
@@ -213,7 +213,7 @@ export default function AiBookingPanel({
           <Icon size={14} className={config.colorClass} />
           <span className={cn('text-xs font-semibold uppercase', titleColor)}>{t(config.titleKey)}</span>
         </div>
-        <button onClick={handleDismiss} disabled={dismissing} className="text-gray-400 hover:text-red-500">
+        <button onClick={handleDismiss} disabled={dismissing} className="text-slate-400 hover:text-red-500">
           {dismissing ? <Loader2 size={14} className="animate-spin" /> : <X size={14} />}
         </button>
       </div>
@@ -225,7 +225,7 @@ export default function AiBookingPanel({
             key={step}
             className={cn(
               'h-1 flex-1 rounded-full',
-              step <= currentStep ? progressColor : 'bg-gray-200',
+              step <= currentStep ? progressColor : 'bg-slate-200',
             )}
           />
         ))}
@@ -235,7 +235,7 @@ export default function AiBookingPanel({
       <div className="space-y-1.5 text-xs">
         {infoRows.map((row) => (
           <div key={row.label} className="flex justify-between">
-            <span className="text-gray-500">{row.label}</span>
+            <span className="text-slate-500">{row.label}</span>
             <span className="font-medium">{row.value}</span>
           </div>
         ))}
@@ -251,7 +251,7 @@ export default function AiBookingPanel({
         <button
           onClick={handleConfirm}
           disabled={confirming}
-          className={cn('mt-3 w-full text-white py-2 rounded-md text-sm disabled:opacity-50 flex items-center justify-center gap-1.5', btnColor)}
+          className={cn('mt-3 w-full text-white py-2 rounded-xl text-sm disabled:opacity-50 flex items-center justify-center gap-1.5 transition-colors', btnColor)}
         >
           {confirming ? <Loader2 size={14} className="animate-spin" /> : <Icon size={14} />}
           {t(config.confirmLabelKey)}

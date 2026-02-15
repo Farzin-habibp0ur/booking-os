@@ -85,40 +85,40 @@ export default function StaffPage() {
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold">{t('staff.title')}</h1>
-        <button onClick={() => setShowForm(true)} className="flex items-center gap-1 bg-blue-600 text-white px-3 py-2 rounded-md text-sm hover:bg-blue-700">
+        <h1 className="text-2xl font-serif font-semibold text-slate-900">{t('staff.title')}</h1>
+        <button onClick={() => setShowForm(true)} className="flex items-center gap-1 bg-sage-600 text-white px-3 py-2 rounded-xl text-sm hover:bg-sage-700 transition-colors">
           <Plus size={16} /> {t('staff.add_button')}
         </button>
       </div>
 
-      <div className="bg-white border rounded-lg overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-soft overflow-hidden">
         <table className="w-full">
-          <thead className="bg-gray-50 border-b">
+          <thead className="bg-slate-50 border-b">
             <tr>
               <th className="w-8"></th>
-              <th className="text-left p-3 text-xs font-medium text-gray-500 uppercase">{t('common.name')}</th>
-              <th className="text-left p-3 text-xs font-medium text-gray-500 uppercase">{t('common.email')}</th>
-              <th className="text-left p-3 text-xs font-medium text-gray-500 uppercase">{t('staff.role')}</th>
-              <th className="text-left p-3 text-xs font-medium text-gray-500 uppercase">{t('common.status')}</th>
+              <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">{t('common.name')}</th>
+              <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">{t('common.email')}</th>
+              <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">{t('staff.role')}</th>
+              <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">{t('common.status')}</th>
             </tr>
           </thead>
           <tbody className="divide-y">
             {staffList.map((s) => (
               <>
-                <tr key={s.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => toggleExpand(s.id)}>
+                <tr key={s.id} className="hover:bg-slate-50 cursor-pointer" onClick={() => toggleExpand(s.id)}>
                   <td className="pl-3">
-                    {expandedId === s.id ? <ChevronDown size={14} className="text-gray-400" /> : <ChevronRight size={14} className="text-gray-400" />}
+                    {expandedId === s.id ? <ChevronDown size={14} className="text-slate-400" /> : <ChevronRight size={14} className="text-slate-400" />}
                   </td>
                   <td className="p-3 text-sm font-medium">{s.name}</td>
-                  <td className="p-3 text-sm text-gray-600">{s.email}</td>
+                  <td className="p-3 text-sm text-slate-600">{s.email}</td>
                   <td className="p-3">
                     <span className={cn('text-xs px-2 py-0.5 rounded-full',
-                      s.role === 'OWNER' ? 'bg-purple-100 text-purple-700' :
-                      s.role === 'ADMIN' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'
+                      s.role === 'OWNER' ? 'bg-lavender-100 text-lavender-700' :
+                      s.role === 'ADMIN' ? 'bg-sage-100 text-sage-700' : 'bg-slate-100 text-slate-700'
                     )}>{s.role}</span>
                   </td>
                   <td className="p-3">
-                    <span className={cn('text-xs', s.isActive ? 'text-green-600' : 'text-red-600')}>
+                    <span className={cn('text-xs', s.isActive ? 'text-sage-600' : 'text-red-600')}>
                       {s.isActive ? t('common.active') : t('common.inactive')}
                     </span>
                   </td>
@@ -126,18 +126,18 @@ export default function StaffPage() {
                 {expandedId === s.id && (
                   <tr key={`${s.id}-expanded`}>
                     <td colSpan={5} className="p-0">
-                      <div className="bg-gray-50 border-t p-4">
+                      <div className="bg-slate-50 border-t p-4">
                         {/* Tabs */}
                         <div className="flex gap-1 mb-4">
                           <button
                             onClick={(e) => { e.stopPropagation(); setTab('hours'); }}
-                            className={cn('flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm', tab === 'hours' ? 'bg-white border shadow-sm font-medium' : 'text-gray-500 hover:bg-white/50')}
+                            className={cn('flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm transition-colors', tab === 'hours' ? 'bg-white border shadow-sm font-medium' : 'text-slate-500 hover:bg-white/50')}
                           >
                             <Clock size={14} /> {t('staff.working_hours')}
                           </button>
                           <button
                             onClick={(e) => { e.stopPropagation(); setTab('timeoff'); }}
-                            className={cn('flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm', tab === 'timeoff' ? 'bg-white border shadow-sm font-medium' : 'text-gray-500 hover:bg-white/50')}
+                            className={cn('flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm transition-colors', tab === 'timeoff' ? 'bg-white border shadow-sm font-medium' : 'text-slate-500 hover:bg-white/50')}
                           >
                             <CalendarOff size={14} /> {t('staff.time_off')}
                             {(timeOff[s.id]?.length || 0) > 0 && (
@@ -149,7 +149,7 @@ export default function StaffPage() {
                         {/* Working Hours Tab */}
                         {tab === 'hours' && (
                           <div>
-                            <div className="bg-white border rounded-lg divide-y">
+                            <div className="bg-white border border-slate-100 rounded-xl divide-y">
                               {(workingHours[s.id] || []).map((h: any) => (
                                 <div key={h.dayOfWeek} className="flex items-center gap-3 px-4 py-2.5">
                                   <div className="w-24 text-sm font-medium">{t(`days.${DAYS[h.dayOfWeek].toLowerCase()}`)}</div>
@@ -160,7 +160,7 @@ export default function StaffPage() {
                                       onChange={() => updateHour(s.id, h.dayOfWeek, 'isOff', !h.isOff)}
                                       className="rounded"
                                     />
-                                    <span className={cn('text-xs', h.isOff ? 'text-red-500' : 'text-green-600')}>{h.isOff ? t('common.off') : t('common.working')}</span>
+                                    <span className={cn('text-xs', h.isOff ? 'text-red-500' : 'text-sage-600')}>{h.isOff ? t('common.off') : t('common.working')}</span>
                                   </label>
                                   {!h.isOff && (
                                     <>
@@ -168,14 +168,14 @@ export default function StaffPage() {
                                         type="time"
                                         value={h.startTime}
                                         onChange={(e) => updateHour(s.id, h.dayOfWeek, 'startTime', e.target.value)}
-                                        className="border rounded px-2 py-1 text-sm"
+                                        className="border border-slate-200 rounded-lg px-2 py-1 text-sm"
                                       />
-                                      <span className="text-gray-400 text-sm">{t('common.to')}</span>
+                                      <span className="text-slate-400 text-sm">{t('common.to')}</span>
                                       <input
                                         type="time"
                                         value={h.endTime}
                                         onChange={(e) => updateHour(s.id, h.dayOfWeek, 'endTime', e.target.value)}
-                                        className="border rounded px-2 py-1 text-sm"
+                                        className="border border-slate-200 rounded-lg px-2 py-1 text-sm"
                                       />
                                     </>
                                   )}
@@ -186,7 +186,7 @@ export default function StaffPage() {
                               <button
                                 onClick={() => saveHours(s.id)}
                                 disabled={saving}
-                                className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700 disabled:opacity-50"
+                                className="bg-sage-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-sage-700 disabled:opacity-50 transition-colors"
                               >
                                 {saving ? t('common.saving') : t('staff.save_hours')}
                               </button>
@@ -198,39 +198,39 @@ export default function StaffPage() {
                         {tab === 'timeoff' && (
                           <div>
                             {(timeOff[s.id] || []).length > 0 && (
-                              <div className="bg-white border rounded-lg divide-y mb-3">
+                              <div className="bg-white border border-slate-100 rounded-xl divide-y mb-3">
                                 {(timeOff[s.id] || []).map((t: any) => (
                                   <div key={t.id} className="flex items-center justify-between px-4 py-2.5">
                                     <div>
                                       <p className="text-sm font-medium">
                                         {new Date(t.startDate).toLocaleDateString()} — {new Date(t.endDate).toLocaleDateString()}
                                       </p>
-                                      {t.reason && <p className="text-xs text-gray-500">{t.reason}</p>}
+                                      {t.reason && <p className="text-xs text-slate-500">{t.reason}</p>}
                                     </div>
-                                    <button onClick={() => removeTimeOff(s.id, t.id)} className="text-red-500 hover:text-red-700 p-1">
+                                    <button onClick={() => removeTimeOff(s.id, t.id)} className="text-red-500 hover:text-red-700 p-1 transition-colors">
                                       <Trash2 size={14} />
                                     </button>
                                   </div>
                                 ))}
                               </div>
                             )}
-                            <div className="bg-white border rounded-lg p-4 space-y-3">
+                            <div className="bg-white border border-slate-100 rounded-xl p-4 space-y-3">
                               <p className="text-sm font-medium">{t('staff.add_time_off')}</p>
                               <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                  <label className="text-xs text-gray-500">{t('staff.start_date')}</label>
-                                  <input type="date" value={toStart} onChange={(e) => setToStart(e.target.value)} className="w-full border rounded px-3 py-2 text-sm" />
+                                  <label className="text-xs text-slate-500">{t('staff.start_date')}</label>
+                                  <input type="date" value={toStart} onChange={(e) => setToStart(e.target.value)} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" />
                                 </div>
                                 <div>
-                                  <label className="text-xs text-gray-500">{t('staff.end_date')}</label>
-                                  <input type="date" value={toEnd} onChange={(e) => setToEnd(e.target.value)} className="w-full border rounded px-3 py-2 text-sm" />
+                                  <label className="text-xs text-slate-500">{t('staff.end_date')}</label>
+                                  <input type="date" value={toEnd} onChange={(e) => setToEnd(e.target.value)} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" />
                                 </div>
                               </div>
-                              <input value={toReason} onChange={(e) => setToReason(e.target.value)} placeholder={t('staff.reason_placeholder')} className="w-full border rounded px-3 py-2 text-sm" />
+                              <input value={toReason} onChange={(e) => setToReason(e.target.value)} placeholder={t('staff.reason_placeholder')} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" />
                               <button
                                 onClick={() => addTimeOff(s.id)}
                                 disabled={!toStart || !toEnd}
-                                className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700 disabled:opacity-50"
+                                className="bg-sage-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-sage-700 disabled:opacity-50 transition-colors"
                               >
                                 {t('staff.add_time_off')}
                               </button>
@@ -267,20 +267,20 @@ function StaffForm({ onClose, onCreated }: { onClose: () => void; onCreated: () 
 
   return (
     <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md">
-        <h2 className="text-lg font-semibold mb-4">{t('staff.add_title')}</h2>
+      <div className="bg-white rounded-2xl shadow-soft-lg p-6 w-full max-w-md">
+        <h2 className="text-lg font-serif font-semibold text-slate-900 mb-4">{t('staff.add_title')}</h2>
         <form onSubmit={handleSubmit} className="space-y-3">
-          <input value={name} onChange={(e) => setName(e.target.value)} placeholder={t('staff.name_placeholder')} required className="w-full border rounded px-3 py-2 text-sm" />
-          <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('staff.email_placeholder')} type="email" required className="w-full border rounded px-3 py-2 text-sm" />
-          <input value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t('staff.password_placeholder')} type="password" required className="w-full border rounded px-3 py-2 text-sm" />
-          <select value={role} onChange={(e) => setRole(e.target.value)} className="w-full border rounded px-3 py-2 text-sm">
+          <input value={name} onChange={(e) => setName(e.target.value)} placeholder={t('staff.name_placeholder')} required className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" />
+          <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('staff.email_placeholder')} type="email" required className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" />
+          <input value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t('staff.password_placeholder')} type="password" required className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" />
+          <select value={role} onChange={(e) => setRole(e.target.value)} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm">
             <option value="AGENT">{t('staff.role_agent')}</option>
             <option value="ADMIN">{t('staff.role_admin')}</option>
             <option value="OWNER">{t('staff.role_owner')}</option>
           </select>
           <div className="flex gap-2 justify-end">
-            <button type="button" onClick={onClose} className="px-4 py-2 border rounded text-sm">{t('common.cancel')}</button>
-            <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded text-sm">{t('common.create')}</button>
+            <button type="button" onClick={onClose} className="px-4 py-2 border border-slate-200 rounded-xl text-sm transition-colors">{t('common.cancel')}</button>
+            <button type="submit" className="px-4 py-2 bg-sage-600 text-white rounded-xl text-sm hover:bg-sage-700 transition-colors">{t('common.create')}</button>
           </div>
         </form>
       </div>

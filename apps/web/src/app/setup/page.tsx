@@ -259,17 +259,17 @@ function SetupPage() {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-screen"><p className="text-gray-400">{t('common.loading')}</p></div>;
+    return <div className="flex items-center justify-center h-screen"><p className="text-slate-400 font-serif">{t('common.loading')}</p></div>;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen" style={{ backgroundColor: '#FCFCFD' }}>
       {/* Progress bar */}
-      <div className="bg-white border-b">
+      <div className="bg-white border-b border-slate-100 shadow-soft-sm">
         <div className="max-w-4xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between mb-3">
-            <h1 className="text-xl font-bold">{t('setup.title')}</h1>
-            <span className="text-sm text-gray-500">{t('setup.step_label', { current: step + 1, total: STEP_KEYS.length })}</span>
+            <h1 className="text-xl font-serif font-semibold text-slate-900">{t('setup.title')}</h1>
+            <span className="text-sm text-slate-500">{t('setup.step_label', { current: step + 1, total: STEP_KEYS.length })}</span>
           </div>
           <div className="flex gap-1">
             {STEP_KEYS.map((s, i) => (
@@ -278,7 +278,7 @@ function SetupPage() {
                 onClick={() => setStep(i)}
                 className={cn(
                   'flex-1 h-2 rounded-full transition-colors',
-                  i < step ? 'bg-green-500' : i === step ? 'bg-blue-600' : 'bg-gray-200',
+                  i < step ? 'bg-sage-500' : i === step ? 'bg-sage-600' : 'bg-slate-200',
                 )}
               />
             ))}
@@ -290,7 +290,7 @@ function SetupPage() {
                 onClick={() => setStep(i)}
                 className={cn(
                   'flex-1 text-center text-[10px] transition-colors',
-                  i <= step ? 'text-gray-700 font-medium' : 'text-gray-400',
+                  i <= step ? 'text-slate-700 font-medium' : 'text-slate-400',
                 )}
               >
                 {t(`setup.steps.${s}`)}
@@ -304,16 +304,16 @@ function SetupPage() {
       <div className="max-w-2xl mx-auto px-6 py-8">
         {/* Step 1: Business Info */}
         {step === 0 && (
-          <div className="bg-white rounded-lg border p-6 space-y-4">
-            <h2 className="text-lg font-semibold">{t('setup.business_title')}</h2>
-            <p className="text-sm text-gray-500">{t('setup.business_subtitle')}</p>
+          <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
+            <h2 className="text-lg font-serif font-semibold text-slate-900">{t('setup.business_title')}</h2>
+            <p className="text-sm text-slate-500">{t('setup.business_subtitle')}</p>
             <div>
               <label className="block text-sm font-medium mb-1">{t('setup.business_name_label')}</label>
-              <input value={bizName} onChange={(e) => setBizName(e.target.value)} className="w-full border rounded-md px-3 py-2 text-sm" placeholder={t('setup.business_name_placeholder')} />
+              <input value={bizName} onChange={(e) => setBizName(e.target.value)} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" placeholder={t('setup.business_name_placeholder')} />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">{t('setup.timezone_label')}</label>
-              <select value={timezone} onChange={(e) => setTimezone(e.target.value)} className="w-full border rounded-md px-3 py-2 text-sm">
+              <select value={timezone} onChange={(e) => setTimezone(e.target.value)} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm">
                 {['America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles', 'America/Phoenix', 'Europe/London', 'Europe/Paris', 'Asia/Dubai', 'Asia/Singapore', 'Australia/Sydney', 'UTC'].map((tz) => (
                   <option key={tz} value={tz}>{tz}</option>
                 ))}
@@ -321,7 +321,7 @@ function SetupPage() {
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">{t('setup.currency_label')}</label>
-              <select value={currency} onChange={(e) => setCurrency(e.target.value)} className="w-full border rounded-md px-3 py-2 text-sm">
+              <select value={currency} onChange={(e) => setCurrency(e.target.value)} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm">
                 {['USD', 'EUR', 'GBP', 'AED', 'AUD', 'CAD', 'SGD'].map((c) => (
                   <option key={c} value={c}>{c}</option>
                 ))}
@@ -332,29 +332,29 @@ function SetupPage() {
 
         {/* Step 2: Connect WhatsApp */}
         {step === 1 && (
-          <div className="bg-white rounded-lg border p-6 space-y-4">
-            <h2 className="text-lg font-semibold">{t('setup.whatsapp_title')}</h2>
-            <p className="text-sm text-gray-500">{t('setup.whatsapp_subtitle')}</p>
-            <div className="border rounded-lg p-4 bg-green-50">
+          <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
+            <h2 className="text-lg font-serif font-semibold text-slate-900">{t('setup.whatsapp_title')}</h2>
+            <p className="text-sm text-slate-500">{t('setup.whatsapp_subtitle')}</p>
+            <div className="border border-slate-100 rounded-xl p-4 bg-green-50">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center">
                   <MessageCircle size={20} className="text-white" />
                 </div>
                 <div>
                   <p className="font-medium text-sm">{t('setup.whatsapp_api')}</p>
-                  <p className="text-xs text-gray-500">{t('setup.whatsapp_api_desc')}</p>
+                  <p className="text-xs text-slate-500">{t('setup.whatsapp_api_desc')}</p>
                 </div>
               </div>
               <div className="mt-4 flex gap-2">
-                <button className="bg-green-600 text-white px-4 py-2 rounded-md text-sm hover:bg-green-700">
+                <button className="bg-green-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-green-700">
                   {t('setup.connect_whatsapp')}
                 </button>
-                <button onClick={handleNext} className="border px-4 py-2 rounded-md text-sm hover:bg-gray-50">
+                <button onClick={handleNext} className="border px-4 py-2 rounded-xl text-sm hover:bg-slate-50">
                   {t('setup.skip_for_now')}
                 </button>
               </div>
             </div>
-            <div className="text-xs text-gray-400 mt-2">
+            <div className="text-xs text-slate-400 mt-2">
               {t('setup.whatsapp_note')}
             </div>
           </div>
@@ -362,17 +362,17 @@ function SetupPage() {
 
         {/* Step 3: Add Staff */}
         {step === 2 && (
-          <div className="bg-white rounded-lg border p-6 space-y-4">
-            <h2 className="text-lg font-semibold">{t('setup.staff_title')}</h2>
-            <p className="text-sm text-gray-500">{t('setup.staff_subtitle')}</p>
+          <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
+            <h2 className="text-lg font-serif font-semibold text-slate-900">{t('setup.staff_title')}</h2>
+            <p className="text-sm text-slate-500">{t('setup.staff_subtitle')}</p>
 
             {staffList.length > 0 && (
-              <div className="border rounded-lg divide-y">
+              <div className="border border-slate-100 rounded-xl divide-y">
                 {staffList.map((s) => (
                   <div key={s.id} className="flex items-center justify-between px-4 py-3">
                     <div>
                       <p className="text-sm font-medium">{s.name}</p>
-                      <p className="text-xs text-gray-500">{s.email}</p>
+                      <p className="text-xs text-slate-500">{s.email}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       {s.invitePending ? (
@@ -382,7 +382,7 @@ function SetupPage() {
                           </span>
                           <button
                             onClick={() => resendInvite(s.id)}
-                            className="text-gray-400 hover:text-blue-500 p-1"
+                            className="text-slate-400 hover:text-sage-500 p-1"
                             title="Resend invitation"
                           >
                             <RefreshCw size={14} />
@@ -393,7 +393,7 @@ function SetupPage() {
                           <Check size={10} /> Active
                         </span>
                       )}
-                      <span className="text-xs bg-gray-100 px-2 py-0.5 rounded-full">{s.role}</span>
+                      <span className="text-xs bg-slate-100 px-2 py-0.5 rounded-full">{s.role}</span>
                     </div>
                   </div>
                 ))}
@@ -419,16 +419,16 @@ function SetupPage() {
             <div className="border-t pt-4 space-y-3">
               <p className="text-sm font-medium">{t('setup.add_another_staff')}</p>
               <div className="grid grid-cols-2 gap-3">
-                <input value={newStaffName} onChange={(e) => setNewStaffName(e.target.value)} placeholder={t('common.name')} className="border rounded-md px-3 py-2 text-sm" />
-                <input value={newStaffEmail} onChange={(e) => setNewStaffEmail(e.target.value)} placeholder={t('common.email')} type="email" className="border rounded-md px-3 py-2 text-sm" />
+                <input value={newStaffName} onChange={(e) => setNewStaffName(e.target.value)} placeholder={t('common.name')} className="border border-slate-200 rounded-xl px-3 py-2 text-sm" />
+                <input value={newStaffEmail} onChange={(e) => setNewStaffEmail(e.target.value)} placeholder={t('common.email')} type="email" className="border border-slate-200 rounded-xl px-3 py-2 text-sm" />
               </div>
               <div className="flex gap-3">
-                <select value={newStaffRole} onChange={(e) => setNewStaffRole(e.target.value)} className="border rounded-md px-3 py-2 text-sm">
+                <select value={newStaffRole} onChange={(e) => setNewStaffRole(e.target.value)} className="border border-slate-200 rounded-xl px-3 py-2 text-sm">
                   <option value="AGENT">{t('setup.role_agent')}</option>
                   <option value="ADMIN">{t('setup.role_admin')}</option>
                   <option value="OWNER">{t('setup.role_owner')}</option>
                 </select>
-                <button onClick={addStaff} disabled={!newStaffName || !newStaffEmail || inviteSending} className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700 disabled:opacity-50 flex items-center gap-1">
+                <button onClick={addStaff} disabled={!newStaffName || !newStaffEmail || inviteSending} className="bg-sage-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-sage-700 disabled:opacity-50 flex items-center gap-1">
                   {inviteSending ? <Loader2 size={14} className="animate-spin" /> : <Mail size={14} />} {inviteSending ? 'Sending...' : 'Send invite'}
                 </button>
               </div>
@@ -438,32 +438,32 @@ function SetupPage() {
 
         {/* Step 4: Define Services */}
         {step === 3 && (
-          <div className="bg-white rounded-lg border p-6 space-y-4">
-            <h2 className="text-lg font-semibold">{t('setup.services_title')}</h2>
-            <p className="text-sm text-gray-500">{t('setup.services_subtitle')}</p>
+          <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
+            <h2 className="text-lg font-serif font-semibold text-slate-900">{t('setup.services_title')}</h2>
+            <p className="text-sm text-slate-500">{t('setup.services_subtitle')}</p>
 
             {services.length > 0 && (
-              <div className="border rounded-lg divide-y">
+              <div className="border border-slate-100 rounded-xl divide-y">
                 {services.filter((s: any) => s.isActive !== false).map((s: any) => (
                   <div key={s.id} className="px-4 py-3">
                     {editingSvcId === s.id ? (
                       <div className="space-y-2">
-                        <input value={editSvcName} onChange={(e) => setEditSvcName(e.target.value)} className="w-full border rounded-md px-3 py-1.5 text-sm" />
+                        <input value={editSvcName} onChange={(e) => setEditSvcName(e.target.value)} className="w-full border border-slate-200 rounded-xl px-3 py-1.5 text-sm" />
                         <div className="grid grid-cols-2 gap-2">
                           <div>
-                            <label className="text-xs text-gray-500">{t('setup.duration_label')}</label>
-                            <input value={editSvcDuration} onChange={(e) => setEditSvcDuration(Number(e.target.value))} type="number" className="w-full border rounded-md px-3 py-1.5 text-sm" />
+                            <label className="text-xs text-slate-500">{t('setup.duration_label')}</label>
+                            <input value={editSvcDuration} onChange={(e) => setEditSvcDuration(Number(e.target.value))} type="number" className="w-full border border-slate-200 rounded-xl px-3 py-1.5 text-sm" />
                           </div>
                           <div>
-                            <label className="text-xs text-gray-500">{t('setup.price_label')}</label>
-                            <input value={editSvcPrice} onChange={(e) => setEditSvcPrice(e.target.value)} type="number" step="0.01" className="w-full border rounded-md px-3 py-1.5 text-sm" />
+                            <label className="text-xs text-slate-500">{t('setup.price_label')}</label>
+                            <input value={editSvcPrice} onChange={(e) => setEditSvcPrice(e.target.value)} type="number" step="0.01" className="w-full border border-slate-200 rounded-xl px-3 py-1.5 text-sm" />
                           </div>
                         </div>
                         <div className="flex gap-2">
-                          <button onClick={saveEditService} className="bg-blue-600 text-white px-3 py-1 rounded text-xs hover:bg-blue-700">
+                          <button onClick={saveEditService} className="bg-sage-600 text-white px-3 py-1 rounded text-xs hover:bg-sage-700">
                             <Check size={12} className="inline mr-1" /> {t('common.save') || 'Save'}
                           </button>
-                          <button onClick={cancelEditService} className="border px-3 py-1 rounded text-xs hover:bg-gray-50">
+                          <button onClick={cancelEditService} className="border px-3 py-1 rounded text-xs hover:bg-slate-50">
                             {t('common.cancel') || 'Cancel'}
                           </button>
                         </div>
@@ -472,13 +472,13 @@ function SetupPage() {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-sm font-medium">{s.name}</p>
-                          <p className="text-xs text-gray-500">{s.durationMins} {t('services.min_short')} · {s.price > 0 ? `$${s.price}` : t('services.price_free')}</p>
+                          <p className="text-xs text-slate-500">{s.durationMins} {t('services.min_short')} · {s.price > 0 ? `$${s.price}` : t('services.price_free')}</p>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-xs text-gray-400">{s.category}</span>
+                          <span className="text-xs text-slate-400">{s.category}</span>
                           <button
                             onClick={() => startEditService(s)}
-                            className="text-gray-400 hover:text-blue-500 transition-colors p-1"
+                            className="text-slate-400 hover:text-sage-500 transition-colors p-1"
                             title="Edit"
                           >
                             <Pencil size={14} />
@@ -491,7 +491,7 @@ function SetupPage() {
                                 setServices(updated?.data || updated || []);
                               } catch (e) { console.error(e); }
                             }}
-                            className="text-gray-400 hover:text-red-500 transition-colors p-1"
+                            className="text-slate-400 hover:text-red-500 transition-colors p-1"
                             title={t('common.delete')}
                           >
                             <Trash2 size={14} />
@@ -506,18 +506,18 @@ function SetupPage() {
 
             <div className="border-t pt-4 space-y-3">
               <p className="text-sm font-medium">{t('setup.add_service')}</p>
-              <input value={newSvcName} onChange={(e) => setNewSvcName(e.target.value)} placeholder={t('setup.service_name_placeholder')} className="w-full border rounded-md px-3 py-2 text-sm" />
+              <input value={newSvcName} onChange={(e) => setNewSvcName(e.target.value)} placeholder={t('setup.service_name_placeholder')} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" />
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-gray-500">{t('setup.duration_label')}</label>
-                  <input value={newSvcDuration} onChange={(e) => setNewSvcDuration(Number(e.target.value))} type="number" className="w-full border rounded-md px-3 py-2 text-sm" />
+                  <label className="text-xs text-slate-500">{t('setup.duration_label')}</label>
+                  <input value={newSvcDuration} onChange={(e) => setNewSvcDuration(Number(e.target.value))} type="number" className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" />
                 </div>
                 <div>
-                  <label className="text-xs text-gray-500">{t('setup.price_label')}</label>
-                  <input value={newSvcPrice} onChange={(e) => setNewSvcPrice(e.target.value)} type="number" step="0.01" placeholder="0" className="w-full border rounded-md px-3 py-2 text-sm" />
+                  <label className="text-xs text-slate-500">{t('setup.price_label')}</label>
+                  <input value={newSvcPrice} onChange={(e) => setNewSvcPrice(e.target.value)} type="number" step="0.01" placeholder="0" className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" />
                 </div>
               </div>
-              <button onClick={addService} disabled={!newSvcName} className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700 disabled:opacity-50">
+              <button onClick={addService} disabled={!newSvcName} className="bg-sage-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-sage-700 disabled:opacity-50">
                 <Plus size={14} className="inline mr-1" /> {t('setup.add_service_button')}
               </button>
             </div>
@@ -526,9 +526,9 @@ function SetupPage() {
 
         {/* Step 5: Working Hours */}
         {step === 4 && (
-          <div className="bg-white rounded-lg border p-6 space-y-4">
-            <h2 className="text-lg font-semibold">{t('setup.hours_title')}</h2>
-            <p className="text-sm text-gray-500">{t('setup.hours_subtitle')}</p>
+          <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
+            <h2 className="text-lg font-serif font-semibold text-slate-900">{t('setup.hours_title')}</h2>
+            <p className="text-sm text-slate-500">{t('setup.hours_subtitle')}</p>
 
             {staffList.length > 1 && (
               <div className="flex gap-2">
@@ -540,8 +540,8 @@ function SetupPage() {
                       if (!staffHours[s.id]) await loadWorkingHours(s.id);
                     }}
                     className={cn(
-                      'px-3 py-1.5 rounded-md text-sm',
-                      selectedStaffForHours === s.id ? 'bg-blue-600 text-white' : 'bg-gray-100 hover:bg-gray-200',
+                      'px-3 py-1.5 rounded-xl text-sm',
+                      selectedStaffForHours === s.id ? 'bg-sage-600 text-white' : 'bg-slate-100 hover:bg-slate-200',
                     )}
                   >
                     {s.name}
@@ -550,7 +550,7 @@ function SetupPage() {
               </div>
             )}
 
-            <div className="border rounded-lg divide-y">
+            <div className="border border-slate-100 rounded-xl divide-y">
               {(staffHours[selectedStaffForHours] || []).map((h: any) => (
                 <div key={h.dayOfWeek} className="flex items-center gap-3 px-4 py-2.5">
                   <div className="w-24 text-sm font-medium">{t(`days.${DAYS_KEYS[h.dayOfWeek]}`)}</div>
@@ -561,7 +561,7 @@ function SetupPage() {
                       onChange={(e) => updateHourForDay(selectedStaffForHours, h.dayOfWeek, 'isOff', !e.target.checked)}
                       className="rounded"
                     />
-                    <span className="text-xs text-gray-500">{h.isOff ? t('common.off') : t('common.working')}</span>
+                    <span className="text-xs text-slate-500">{h.isOff ? t('common.off') : t('common.working')}</span>
                   </label>
                   {!h.isOff && (
                     <>
@@ -571,7 +571,7 @@ function SetupPage() {
                         onChange={(e) => updateHourForDay(selectedStaffForHours, h.dayOfWeek, 'startTime', e.target.value)}
                         className="border rounded px-2 py-1 text-sm"
                       />
-                      <span className="text-gray-400">{t('common.to')}</span>
+                      <span className="text-slate-400">{t('common.to')}</span>
                       <input
                         type="time"
                         value={h.endTime}
@@ -588,52 +588,52 @@ function SetupPage() {
 
         {/* Step 6: Templates */}
         {step === 5 && (
-          <div className="bg-white rounded-lg border p-6 space-y-4">
-            <h2 className="text-lg font-semibold">{t('setup.templates_title')}</h2>
-            <p className="text-sm text-gray-500">{t('setup.templates_subtitle')}</p>
+          <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
+            <h2 className="text-lg font-serif font-semibold text-slate-900">{t('setup.templates_title')}</h2>
+            <p className="text-sm text-slate-500">{t('setup.templates_subtitle')}</p>
 
             <div className="space-y-3">
               {templates.map((tpl) => (
-                <div key={tpl.id} className="border rounded-lg p-4">
+                <div key={tpl.id} className="border border-slate-100 rounded-xl p-4">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <p className="text-sm font-medium">{tpl.name}</p>
-                      <span className="text-[10px] bg-gray-100 px-2 py-0.5 rounded-full">{tpl.category}</span>
+                      <span className="text-[10px] bg-slate-100 px-2 py-0.5 rounded-full">{tpl.category}</span>
                     </div>
                   </div>
-                  <p className="text-sm text-gray-600 bg-gray-50 rounded p-2">{tpl.body}</p>
+                  <p className="text-sm text-slate-600 bg-slate-50 rounded p-2">{tpl.body}</p>
                   <div className="flex flex-wrap gap-1 mt-2">
                     {tpl.variables?.map((v: string) => (
-                      <span key={v} className="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded">{`{{${v}}}`}</span>
+                      <span key={v} className="text-[10px] bg-sage-50 text-sage-600 px-1.5 py-0.5 rounded">{`{{${v}}}`}</span>
                     ))}
                   </div>
                 </div>
               ))}
             </div>
-            <p className="text-xs text-gray-400">{t('setup.templates_note')}</p>
+            <p className="text-xs text-slate-400">{t('setup.templates_note')}</p>
           </div>
         )}
 
         {/* Step 7: Profile Requirements */}
         {step === 6 && (
-          <div className="bg-white rounded-lg border p-6 space-y-4">
-            <h2 className="text-lg font-semibold">{t('setup.profile_title')}</h2>
-            <p className="text-sm text-gray-500">{t('setup.profile_subtitle')}</p>
+          <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
+            <h2 className="text-lg font-serif font-semibold text-slate-900">{t('setup.profile_title')}</h2>
+            <p className="text-sm text-slate-500">{t('setup.profile_subtitle')}</p>
 
             {(['basic', 'medical'] as const).map((category) => {
               const fields = PROFILE_FIELDS.filter((f) => f.category === category);
               if (fields.length === 0) return null;
               return (
                 <div key={category}>
-                  <h3 className="text-xs font-semibold text-gray-500 uppercase mb-2">
+                  <h3 className="text-xs font-semibold text-slate-500 uppercase mb-2">
                     {t(`setup.profile_category_${category}` as any)}
                   </h3>
-                  <div className="border rounded-lg divide-y">
+                  <div className="border border-slate-100 rounded-xl divide-y">
                     {fields.map((field) => (
-                      <label key={field.key} className="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-gray-50">
+                      <label key={field.key} className="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-slate-50">
                         <div>
                           <p className="text-sm font-medium">{field.label}</p>
-                          <p className="text-xs text-gray-500">{field.type}</p>
+                          <p className="text-xs text-slate-500">{field.type}</p>
                         </div>
                         <input
                           type="checkbox"
@@ -645,7 +645,7 @@ function SetupPage() {
                               setRequiredProfileFields(requiredProfileFields.filter((k) => k !== field.key));
                             }
                           }}
-                          className="rounded text-blue-600 w-4 h-4"
+                          className="rounded text-sage-600 w-4 h-4"
                         />
                       </label>
                     ))}
@@ -654,37 +654,37 @@ function SetupPage() {
               );
             })}
 
-            <p className="text-xs text-gray-400">{t('setup.profile_note')}</p>
+            <p className="text-xs text-slate-400">{t('setup.profile_note')}</p>
           </div>
         )}
 
         {/* Step 8: Import Customers */}
         {step === 7 && (
           <div className="space-y-4">
-            <div className="bg-white rounded-lg border p-6 space-y-4">
-              <h2 className="text-lg font-semibold">{t('setup.customers_title')}</h2>
-              <p className="text-sm text-gray-500">{t('setup.customers_subtitle')}</p>
+            <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
+              <h2 className="text-lg font-serif font-semibold text-slate-900">{t('setup.customers_title')}</h2>
+              <p className="text-sm text-slate-500">{t('setup.customers_subtitle')}</p>
             </div>
 
             {/* CSV Import Card */}
-            <div className="bg-white rounded-lg border p-6 space-y-4">
+            <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
               <div className="flex items-center gap-2">
-                <FileText size={18} className="text-blue-600" />
+                <FileText size={18} className="text-sage-600" />
                 <h3 className="font-medium text-sm">{t('import.csv_title')}</h3>
               </div>
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:border-blue-400 transition-colors"
+                className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:border-sage-400 transition-colors"
               >
-                <Upload size={20} className="mx-auto text-gray-400 mb-1" />
-                <p className="text-xs text-gray-600">{csvFile ? csvFile.name : t('import.csv_drop_zone')}</p>
+                <Upload size={20} className="mx-auto text-slate-400 mb-1" />
+                <p className="text-xs text-slate-600">{csvFile ? csvFile.name : t('import.csv_drop_zone')}</p>
               </div>
               <input ref={fileInputRef} type="file" accept=".csv" className="hidden" onChange={(e) => e.target.files?.[0] && handleCsvSelect(e.target.files[0])} />
 
               {csvPreview.length > 0 && (
                 <div className="border rounded overflow-auto max-h-32">
                   <table className="w-full text-xs">
-                    <thead className="bg-gray-50 border-b">
+                    <thead className="bg-slate-50 border-b">
                       <tr>
                         <th className="text-left p-1.5">{t('common.name')}</th>
                         <th className="text-left p-1.5">{t('common.phone')}</th>
@@ -707,7 +707,7 @@ function SetupPage() {
               )}
 
               {csvFile && (
-                <button onClick={importCsv} disabled={csvImporting} className="bg-blue-600 text-white px-3 py-1.5 rounded text-sm hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2">
+                <button onClick={importCsv} disabled={csvImporting} className="bg-sage-600 text-white px-3 py-1.5 rounded text-sm hover:bg-sage-700 disabled:opacity-50 flex items-center gap-2">
                   {csvImporting && <Loader2 size={14} className="animate-spin" />}
                   {t('import.import_button')}
                 </button>
@@ -720,16 +720,16 @@ function SetupPage() {
             </div>
 
             {/* Conversation Import Card */}
-            <div className="bg-white rounded-lg border p-6 space-y-4">
+            <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
               <div className="flex items-center gap-2">
-                <Users size={18} className="text-purple-600" />
+                <Users size={18} className="text-lavender-600" />
                 <h3 className="font-medium text-sm">{t('import.conversations_title')}</h3>
               </div>
               <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" checked={includeMessages} onChange={(e) => setIncludeMessages(e.target.checked)} className="rounded text-purple-600" />
+                <input type="checkbox" checked={includeMessages} onChange={(e) => setIncludeMessages(e.target.checked)} className="rounded text-lavender-600" />
                 <span className="text-xs">{t('import.include_messages')}</span>
               </label>
-              <button onClick={importFromConversations} disabled={convImporting} className="bg-purple-600 text-white px-3 py-1.5 rounded text-sm hover:bg-purple-700 disabled:opacity-50 flex items-center gap-2">
+              <button onClick={importFromConversations} disabled={convImporting} className="bg-lavender-600 text-white px-3 py-1.5 rounded text-sm hover:bg-lavender-700 disabled:opacity-50 flex items-center gap-2">
                 {convImporting && <Loader2 size={14} className="animate-spin" />}
                 {t('import.generate_profiles')}
               </button>
@@ -741,13 +741,13 @@ function SetupPage() {
             </div>
 
             {/* Manual Card */}
-            <div className="bg-white rounded-lg border p-6">
+            <div className="bg-white rounded-2xl shadow-soft p-6">
               <div className="flex items-center gap-2 mb-2">
-                <Plus size={18} className="text-gray-600" />
+                <Plus size={18} className="text-slate-600" />
                 <h3 className="font-medium text-sm">{t('setup.add_manually')}</h3>
               </div>
-              <p className="text-xs text-gray-500">{t('setup.add_manually_desc')}</p>
-              <button onClick={() => router.push('/customers')} className="mt-3 text-sm text-blue-600 hover:text-blue-700 font-medium">
+              <p className="text-xs text-slate-500">{t('setup.add_manually_desc')}</p>
+              <button onClick={() => router.push('/customers')} className="mt-3 text-sm text-sage-600 hover:text-sage-700 font-medium">
                 {t('setup.go_to_customers')} &rarr;
               </button>
             </div>
@@ -756,33 +756,33 @@ function SetupPage() {
 
         {/* Step 9: Test & Finish */}
         {step === 8 && (
-          <div className="bg-white rounded-lg border p-6 space-y-6">
-            <h2 className="text-lg font-semibold">{t('setup.finish_title')}</h2>
-            <p className="text-sm text-gray-500">{t('setup.finish_subtitle')}</p>
+          <div className="bg-white rounded-2xl shadow-soft p-6 space-y-6">
+            <h2 className="text-lg font-serif font-semibold text-slate-900">{t('setup.finish_title')}</h2>
+            <p className="text-sm text-slate-500">{t('setup.finish_subtitle')}</p>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="border rounded-lg p-4">
-                <p className="text-2xl font-bold text-blue-600">{staffList.length}</p>
-                <p className="text-sm text-gray-500">{t('setup.staff_members')}</p>
+              <div className="border border-slate-100 rounded-xl p-4">
+                <p className="text-2xl font-serif font-bold text-sage-600">{staffList.length}</p>
+                <p className="text-sm text-slate-500">{t('setup.staff_members')}</p>
               </div>
-              <div className="border rounded-lg p-4">
-                <p className="text-2xl font-bold text-blue-600">{services.filter((s: any) => s.isActive !== false).length}</p>
-                <p className="text-sm text-gray-500">{t('setup.services_count')}</p>
+              <div className="border border-slate-100 rounded-xl p-4">
+                <p className="text-2xl font-serif font-bold text-sage-600">{services.filter((s: any) => s.isActive !== false).length}</p>
+                <p className="text-sm text-slate-500">{t('setup.services_count')}</p>
               </div>
-              <div className="border rounded-lg p-4">
-                <p className="text-2xl font-bold text-blue-600">{templates.length}</p>
-                <p className="text-sm text-gray-500">{t('setup.templates_count')}</p>
+              <div className="border border-slate-100 rounded-xl p-4">
+                <p className="text-2xl font-serif font-bold text-sage-600">{templates.length}</p>
+                <p className="text-sm text-slate-500">{t('setup.templates_count')}</p>
               </div>
-              <div className="border rounded-lg p-4">
-                <p className="text-2xl font-bold text-green-600">{t('setup.ready')}</p>
-                <p className="text-sm text-gray-500">{t('setup.simulator_label')}</p>
+              <div className="border border-slate-100 rounded-xl p-4">
+                <p className="text-2xl font-serif font-bold text-sage-600">{t('setup.ready')}</p>
+                <p className="text-sm text-slate-500">{t('setup.simulator_label')}</p>
               </div>
             </div>
 
             <div className="space-y-2">
               <button
                 onClick={() => window.open('http://localhost:3002', '_blank')}
-                className="w-full border rounded-md py-2.5 text-sm hover:bg-gray-50"
+                className="w-full border rounded-xl py-2.5 text-sm hover:bg-slate-50"
               >
                 {t('setup.open_simulator')}
               </button>
@@ -793,7 +793,7 @@ function SetupPage() {
                   } catch (e) { console.error(e); }
                   router.push('/dashboard');
                 }}
-                className="w-full bg-blue-600 text-white rounded-md py-2.5 text-sm hover:bg-blue-700 font-medium"
+                className="w-full bg-sage-600 text-white rounded-xl py-2.5 text-sm hover:bg-sage-700 font-medium"
               >
                 {t('setup.go_to_dashboard')}
               </button>
@@ -803,17 +803,17 @@ function SetupPage() {
       </div>
 
       {/* Footer navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 shadow-soft-sm">
         <div className="max-w-2xl mx-auto px-6 py-3 flex justify-between">
           <button
             onClick={handleBack}
             disabled={step === 0}
-            className="flex items-center gap-1 px-4 py-2 border rounded-md text-sm hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
+            className="flex items-center gap-1 px-4 py-2 border border-slate-200 rounded-xl text-sm hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronLeft size={16} /> {t('common.back')}
           </button>
           {step < STEP_KEYS.length - 1 ? (
-            <button onClick={handleNext} className="flex items-center gap-1 bg-blue-600 text-white px-6 py-2 rounded-md text-sm hover:bg-blue-700">
+            <button onClick={handleNext} className="flex items-center gap-1 bg-sage-600 text-white px-6 py-2 rounded-xl text-sm hover:bg-sage-700">
               {t('common.next')} <ChevronRight size={16} />
             </button>
           ) : (
@@ -824,7 +824,7 @@ function SetupPage() {
                 } catch (e) { console.error(e); }
                 router.push('/dashboard');
               }}
-              className="flex items-center gap-1 bg-green-600 text-white px-6 py-2 rounded-md text-sm hover:bg-green-700"
+              className="flex items-center gap-1 bg-sage-600 text-white px-6 py-2 rounded-xl text-sm hover:bg-sage-700 transition-colors"
             >
               <Check size={16} /> {t('setup.finish_setup')}
             </button>

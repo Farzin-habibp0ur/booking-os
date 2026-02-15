@@ -133,26 +133,26 @@ export default function TranslationsPage() {
     <div className="p-6 max-w-5xl">
       {/* Header */}
       <div className="flex items-center gap-3 mb-1">
-        <button onClick={() => router.push('/settings')} className="p-1 hover:bg-gray-100 rounded">
+        <button onClick={() => router.push('/settings')} className="p-1 hover:bg-slate-100 rounded-xl transition-colors">
           <ChevronLeft size={20} />
         </button>
-        <h1 className="text-2xl font-bold">{t('translations.title')}</h1>
+        <h1 className="text-2xl font-serif font-semibold text-slate-900">{t('translations.title')}</h1>
       </div>
-      <p className="text-sm text-gray-500 mb-6 ml-9">{t('translations.description')}</p>
+      <p className="text-sm text-slate-500 mb-6 ml-9">{t('translations.description')}</p>
 
       {/* Controls */}
       <div className="flex items-center gap-3 mb-4">
         {/* Locale selector */}
         <div className="flex items-center gap-2">
           <label className="text-sm font-medium">{t('translations.locale_label')}:</label>
-          <div className="flex gap-0.5 bg-gray-100 rounded-md p-0.5">
+          <div className="flex gap-0.5 bg-slate-100 rounded-xl p-0.5">
             {SUPPORTED_LOCALES.map((l) => (
               <button
                 key={l.code}
                 onClick={() => setSelectedLocale(l.code)}
                 className={cn(
-                  'px-3 py-1.5 rounded text-sm transition-colors',
-                  selectedLocale === l.code ? 'bg-white shadow-sm font-medium' : 'text-gray-500 hover:text-gray-700',
+                  'px-3 py-1.5 rounded-xl text-sm transition-colors',
+                  selectedLocale === l.code ? 'bg-white shadow-sm font-medium' : 'text-slate-500 hover:text-slate-700',
                 )}
               >
                 {l.name}
@@ -163,12 +163,12 @@ export default function TranslationsPage() {
 
         {/* Search */}
         <div className="flex-1 relative">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t('translations.search_placeholder')}
-            className="w-full pl-9 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sage-500"
           />
         </div>
 
@@ -176,8 +176,8 @@ export default function TranslationsPage() {
         <button
           onClick={() => setShowOverridesOnly(!showOverridesOnly)}
           className={cn(
-            'flex items-center gap-1.5 px-3 py-2 rounded-md text-sm border transition-colors',
-            showOverridesOnly ? 'bg-blue-50 border-blue-200 text-blue-700' : 'hover:bg-gray-50',
+            'flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm border transition-colors',
+            showOverridesOnly ? 'bg-sage-50 border-sage-200 text-sage-700' : 'hover:bg-slate-50',
           )}
         >
           <Filter size={14} />
@@ -186,10 +186,10 @@ export default function TranslationsPage() {
       </div>
 
       {/* Stats */}
-      <div className="flex items-center gap-4 mb-4 text-sm text-gray-500">
+      <div className="flex items-center gap-4 mb-4 text-sm text-slate-500">
         <span>{filteredKeys.length} keys</span>
         {overrideCount > 0 && (
-          <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full text-xs">
+          <span className="bg-sage-50 text-sage-700 px-2 py-0.5 rounded-full text-xs">
             {t('translations.overrides_count', { count: overrideCount })}
           </span>
         )}
@@ -198,9 +198,9 @@ export default function TranslationsPage() {
       {/* Translation table grouped by section */}
       <div className="space-y-6">
         {Object.entries(groupedKeys).map(([section, keys]) => (
-          <div key={section} className="bg-white border rounded-lg overflow-hidden">
-            <div className="bg-gray-50 px-4 py-2 border-b">
-              <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">{section}</h3>
+          <div key={section} className="bg-white rounded-2xl shadow-soft overflow-hidden">
+            <div className="bg-slate-50 px-4 py-2 border-b">
+              <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">{section}</h3>
             </div>
             <div className="divide-y">
               {keys.map((key) => {
@@ -210,22 +210,22 @@ export default function TranslationsPage() {
                 const displayValue = overrides[key]?.value || defaultValue;
 
                 return (
-                  <div key={key} className={cn('px-4 py-3', hasOverride && 'bg-blue-50/30')}>
+                  <div key={key} className={cn('px-4 py-3', hasOverride && 'bg-sage-50/30')}>
                     <div className="flex items-start gap-4">
                       {/* Key */}
                       <div className="w-48 flex-shrink-0">
-                        <code className="text-xs text-gray-500 break-all">{key}</code>
+                        <code className="text-xs text-slate-500 break-all">{key}</code>
                       </div>
 
                       {/* English default */}
                       <div className="w-48 flex-shrink-0">
-                        <p className="text-xs text-gray-400 mb-0.5">{selectedLocale === 'en' ? 'Default' : 'English'}</p>
-                        <p className="text-sm text-gray-600">{allKeys[key]}</p>
+                        <p className="text-xs text-slate-400 mb-0.5">{selectedLocale === 'en' ? 'Default' : 'English'}</p>
+                        <p className="text-sm text-slate-600">{allKeys[key]}</p>
                       </div>
 
                       {/* Current value / edit */}
                       <div className="flex-1">
-                        <p className="text-xs text-gray-400 mb-0.5">
+                        <p className="text-xs text-slate-400 mb-0.5">
                           {hasOverride ? t('translations.override_column') : t('translations.default_column')}
                         </p>
                         {isEditing ? (
@@ -233,7 +233,7 @@ export default function TranslationsPage() {
                             <input
                               value={editValue}
                               onChange={(e) => setEditValue(e.target.value)}
-                              className="flex-1 border rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="flex-1 border border-slate-200 rounded-xl px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-sage-500"
                               autoFocus
                               onKeyDown={(e) => {
                                 if (e.key === 'Enter') saveOverride(key);
@@ -243,13 +243,13 @@ export default function TranslationsPage() {
                             <button
                               onClick={() => saveOverride(key)}
                               disabled={saving}
-                              className="p-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+                              className="p-1.5 bg-sage-600 text-white rounded-xl hover:bg-sage-700 transition-colors disabled:opacity-50"
                             >
                               <Check size={14} />
                             </button>
                             <button
                               onClick={() => setEditingKey(null)}
-                              className="p-1.5 border rounded hover:bg-gray-50 text-sm"
+                              className="p-1.5 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors text-sm"
                             >
                               {t('common.cancel')}
                             </button>
@@ -259,8 +259,8 @@ export default function TranslationsPage() {
                             <p
                               onClick={() => startEditing(key)}
                               className={cn(
-                                'text-sm cursor-pointer hover:bg-gray-100 rounded px-1 -mx-1 py-0.5',
-                                hasOverride ? 'text-blue-700 font-medium' : 'text-gray-700',
+                                'text-sm cursor-pointer hover:bg-slate-100 rounded px-1 -mx-1 py-0.5',
+                                hasOverride ? 'text-sage-700 font-medium' : 'text-slate-700',
                               )}
                             >
                               {displayValue}
@@ -268,7 +268,7 @@ export default function TranslationsPage() {
                             {hasOverride && (
                               <button
                                 onClick={() => resetOverride(key)}
-                                className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-50 rounded text-gray-400 hover:text-red-500 transition-opacity"
+                                className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-50 rounded text-slate-400 hover:text-red-500 transition-opacity"
                                 title="Reset to default"
                               >
                                 <RotateCcw size={12} />
@@ -287,7 +287,7 @@ export default function TranslationsPage() {
       </div>
 
       {filteredKeys.length === 0 && (
-        <div className="text-center py-12 text-gray-400">
+        <div className="text-center py-12 text-slate-400">
           <p>{t('translations.no_results')}</p>
         </div>
       )}

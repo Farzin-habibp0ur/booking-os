@@ -143,13 +143,13 @@ export default function BookingFormModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-end">
       <div className="absolute inset-0 bg-black/30" onClick={onClose} />
-      <div className="relative w-[480px] h-full bg-white shadow-xl flex flex-col">
+      <div className="relative w-[480px] h-full bg-white shadow-soft-lg flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-lg font-semibold">
+        <div className="flex items-center justify-between p-4 border-b border-slate-100">
+          <h2 className="text-lg font-serif font-semibold text-slate-900">
             {isReschedule ? 'Reschedule Booking' : 'Create Booking'}
           </h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
             <X size={20} />
           </button>
         </div>
@@ -157,7 +157,7 @@ export default function BookingFormModal({
         {/* Form */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-auto p-4 space-y-4">
           {error && (
-            <div className="flex items-center gap-2 bg-red-50 text-red-700 px-3 py-2 rounded-md text-sm">
+            <div className="flex items-center gap-2 bg-red-50 text-red-700 px-3 py-2 rounded-xl text-sm">
               <AlertCircle size={16} />
               {error}
             </div>
@@ -166,17 +166,17 @@ export default function BookingFormModal({
           {/* Customer */}
           {customerId ? (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Customer</label>
-              <div className="border rounded-md px-3 py-2 text-sm bg-gray-50">{customerName || 'Selected customer'}</div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Customer</label>
+              <div className="border border-slate-200 rounded-xl px-3 py-2 text-sm bg-slate-50">{customerName || 'Selected customer'}</div>
             </div>
           ) : (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Customer *</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Customer *</label>
               <select
                 value={selectedCustomerId}
                 onChange={(e) => setSelectedCustomerId(e.target.value)}
                 required
-                className="w-full border rounded-md px-3 py-2 text-sm"
+                className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sage-500"
               >
                 <option value="">Select customer...</option>
                 {customers.map((c) => (
@@ -188,12 +188,12 @@ export default function BookingFormModal({
 
           {/* Service */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Service *</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Service *</label>
             <select
               value={serviceId}
               onChange={(e) => { setServiceId(e.target.value); setSelectedSlot(null); }}
               required
-              className="w-full border rounded-md px-3 py-2 text-sm"
+              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sage-500"
             >
               <option value="">Select service...</option>
               {services.map((s: any) => (
@@ -206,11 +206,11 @@ export default function BookingFormModal({
 
           {/* Staff filter (optional) */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Staff (optional filter)</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Staff (optional filter)</label>
             <select
               value={selectedStaffId}
               onChange={(e) => { setSelectedStaffId(e.target.value); setSelectedSlot(null); }}
-              className="w-full border rounded-md px-3 py-2 text-sm"
+              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sage-500"
             >
               <option value="">Any available staff</option>
               {staff.map((s) => (
@@ -221,26 +221,26 @@ export default function BookingFormModal({
 
           {/* Date */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Date *</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Date *</label>
             <input
               type="date"
               value={selectedDate}
               onChange={(e) => { setSelectedDate(e.target.value); setSelectedSlot(null); }}
               min={new Date().toISOString().split('T')[0]}
               required
-              className="w-full border rounded-md px-3 py-2 text-sm"
+              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sage-500"
             />
           </div>
 
           {/* Time slots */}
           {selectedDate && serviceId && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-slate-700 mb-2">
                 Time *
-                {loadingSlots && <span className="text-gray-400 ml-2">Loading...</span>}
+                {loadingSlots && <span className="text-slate-400 ml-2">Loading...</span>}
               </label>
               {!loadingSlots && slots.length === 0 && (
-                <p className="text-sm text-gray-400 bg-gray-50 rounded-md p-3 text-center">
+                <p className="text-sm text-slate-400 bg-gray-50 rounded-md p-3 text-center">
                   No available slots on this date. Try a different date or staff member.
                 </p>
               )}
@@ -254,7 +254,7 @@ export default function BookingFormModal({
                           key={display}
                           type="button"
                           disabled
-                          className="px-2 py-1.5 rounded border text-xs text-gray-300 bg-gray-50 cursor-not-allowed"
+                          className="px-2 py-1.5 rounded-xl border text-xs text-slate-300 bg-slate-50 cursor-not-allowed"
                         >
                           {display}
                         </button>
@@ -267,10 +267,10 @@ export default function BookingFormModal({
                         type="button"
                         onClick={() => setSelectedSlot(availableStaff[0])}
                         className={cn(
-                          'px-2 py-1.5 rounded border text-xs transition-colors',
+                          'px-2 py-1.5 rounded-xl border text-xs transition-colors',
                           isSelected
-                            ? 'bg-blue-600 text-white border-blue-600'
-                            : 'bg-white hover:bg-blue-50 hover:border-blue-300',
+                            ? 'bg-sage-600 text-white border-sage-600'
+                            : 'bg-white hover:bg-sage-50 hover:border-sage-300',
                         )}
                       >
                         <span className="font-medium">{display}</span>
@@ -285,7 +285,7 @@ export default function BookingFormModal({
                 </div>
               )}
               {selectedSlot && (
-                <div className="mt-2 flex items-center gap-2 text-sm text-green-700 bg-green-50 px-3 py-1.5 rounded">
+                <div className="mt-2 flex items-center gap-2 text-sm text-sage-700 bg-sage-50 px-3 py-1.5 rounded-xl">
                   <Clock size={14} />
                   {selectedSlot.display} with {selectedSlot.staffName}
                 </div>
@@ -295,31 +295,31 @@ export default function BookingFormModal({
 
           {/* Notes */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Notes</label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Optional notes..."
               rows={2}
-              className="w-full border rounded-md px-3 py-2 text-sm resize-none"
+              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sage-500 resize-none"
             />
           </div>
         </form>
 
         {/* Footer */}
-        <div className="p-4 border-t bg-gray-50">
+        <div className="p-4 border-t border-slate-100 bg-slate-50">
           <div className="flex gap-2">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 border rounded-md py-2 text-sm hover:bg-gray-100"
+              className="flex-1 border border-slate-200 rounded-xl py-2 text-sm hover:bg-slate-100 transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleSubmit}
               disabled={submitting || !selectedSlot}
-              className="flex-1 bg-blue-600 text-white rounded-md py-2 text-sm hover:bg-blue-700 disabled:opacity-50"
+              className="flex-1 bg-sage-600 text-white rounded-xl py-2 text-sm hover:bg-sage-700 disabled:opacity-50 transition-colors"
             >
               {submitting ? 'Saving...' : isReschedule ? 'Reschedule' : 'Create Booking'}
             </button>
