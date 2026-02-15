@@ -1,11 +1,11 @@
 import request from 'supertest';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './jwt.strategy';
 import { createIntegrationApp, getAuthToken, IntegrationTestContext } from '../../test/integration-setup';
 
-jest.mock('bcrypt');
+jest.mock('bcryptjs');
 
 describe('Auth Integration', () => {
   let ctx: IntegrationTestContext;
