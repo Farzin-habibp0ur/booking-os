@@ -6,7 +6,8 @@
     "build": "nest build",
     "dev": "ts-node -r tsconfig-paths/register --transpileOnly src/main.ts",
     "start": "ts-node -r tsconfig-paths/register --transpileOnly src/main.ts",
-    "start:prod": "node dist/main"
+    "start:prod": "node dist/main",
+    "test": "jest"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.74.0",
@@ -35,10 +36,17 @@
   "devDependencies": {
     "@nestjs/cli": "^10.4.0",
     "@nestjs/schematics": "^10.2.0",
+    "@nestjs/testing": "^10.4.22",
     "@types/bcrypt": "^5.0.2",
     "@types/express": "^5.0.0",
+    "@types/jest": "^30.0.0",
     "@types/node": "^22.0.0",
     "@types/passport-jwt": "^4.0.1",
+    "@types/supertest": "^6.0.3",
+    "jest": "^30.2.0",
+    "jest-mock-extended": "^4.0.0",
+    "supertest": "^7.2.2",
+    "ts-jest": "^29.4.6",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "tsx": "^4.19.0",

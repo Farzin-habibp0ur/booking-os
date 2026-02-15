@@ -14,7 +14,9 @@
     "db:generate": "npm run generate --workspace=@booking-os/db",
     "db:migrate": "npm run migrate --workspace=@booking-os/db",
     "db:seed": "npm run seed --workspace=@booking-os/db",
-    "db:studio": "npm run studio --workspace=@booking-os/db"
+    "db:studio": "npm run studio --workspace=@booking-os/db",
+    "test": "npx turbo test",
+    "test:e2e": "npx turbo test:e2e"
   },
   "devDependencies": {
     "@types/multer": "^2.0.0",
