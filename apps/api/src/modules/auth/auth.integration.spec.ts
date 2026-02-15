@@ -3,12 +3,18 @@ import * as bcrypt from 'bcryptjs';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './jwt.strategy';
+import { TokenService } from '../../common/token.service';
+import { EmailService } from '../email/email.service';
 import { createIntegrationApp, getAuthToken, IntegrationTestContext } from '../../test/integration-setup';
+import { createMockTokenService, createMockEmailService } from '../../test/mocks';
+import { BadRequestException } from '@nestjs/common';
 
 jest.mock('bcryptjs');
 
 describe('Auth Integration', () => {
   let ctx: IntegrationTestContext;
+  let tokenService: ReturnType<typeof createMockTokenService>;
+  let emailService: ReturnType<typeof createMockEmailService>;
 
   const mockStaff = {
     id: 'staff1',
@@ -29,16 +35,30 @@ describe('Auth Integration', () => {
   };
 
   beforeAll(async () => {
+    tokenService = createMockTokenService();
+    emailService = createMockEmailService();
+
     ctx = await createIntegrationApp(
       [],
       [AuthController],
-      [AuthService, JwtStrategy],
+      [
+        AuthService,
+        JwtStrategy,
+        { provide: TokenService, useValue: tokenService },
+        { provide: EmailService, useValue: emailService },
+      ],
     );
   });
 
   afterAll(async () => {
     await ctx.app.close();
   });
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  // ---- Existing login tests ----
 
   describe('POST /api/v1/auth/login', () => {
     it('returns 201 with tokens on valid credentials', async () => {
@@ -76,6 +96,8 @@ describe('Auth Integration', () => {
       expect(res.status).toBe(401);
     });
   });
+
+  // ---- Existing me/refresh/logout tests ----
 
   describe('GET /api/v1/auth/me', () => {
     it('returns 200 with staff info when authenticated', async () => {
@@ -150,6 +172,181 @@ describe('Auth Integration', () => {
         .post('/api/v1/auth/logout');
 
       expect(res.status).toBe(401);
+    });
+  });
+
+  // ---- New signup tests ----
+
+  describe('POST /api/v1/auth/signup', () => {
+    it('returns 201 with tokens on successful signup', async () => {
+      ctx.prisma.staff.findUnique.mockResolvedValue(null);
+      ctx.prisma.business.create.mockResolvedValue({ id: 'biz-new', name: 'New Biz', slug: 'new-biz' } as any);
+      ctx.prisma.staff.create.mockResolvedValue({
+        id: 'staff-new', name: 'Jane', email: 'jane@new.com', role: 'OWNER', businessId: 'biz-new',
+      } as any);
+      (bcrypt.hash as jest.Mock).mockResolvedValue('hashed');
+
+      const res = await request(ctx.app.getHttpServer())
+        .post('/api/v1/auth/signup')
+        .send({ businessName: 'New Biz', ownerName: 'Jane', email: 'jane@new.com', password: 'password123' });
+
+      expect(res.status).toBe(201);
+      expect(res.body).toHaveProperty('accessToken');
+      expect(res.body).toHaveProperty('refreshToken');
+      expect(res.body.staff.email).toBe('jane@new.com');
+    });
+
+    it('returns 409 for duplicate email', async () => {
+      ctx.prisma.staff.findUnique.mockResolvedValue(mockStaff as any);
+
+      const res = await request(ctx.app.getHttpServer())
+        .post('/api/v1/auth/signup')
+        .send({ businessName: 'New', ownerName: 'Jane', email: 'sarah@glowclinic.com', password: 'password123' });
+
+      expect(res.status).toBe(409);
+    });
+
+    it('returns 400 for validation errors (missing fields)', async () => {
+      const res = await request(ctx.app.getHttpServer())
+        .post('/api/v1/auth/signup')
+        .send({ email: 'bad' });
+
+      expect(res.status).toBe(400);
+    });
+
+    it('returns 400 for password too short', async () => {
+      const res = await request(ctx.app.getHttpServer())
+        .post('/api/v1/auth/signup')
+        .send({ businessName: 'Biz', ownerName: 'Jane', email: 'jane@new.com', password: 'short' });
+
+      expect(res.status).toBe(400);
+    });
+  });
+
+  // ---- New forgot-password tests ----
+
+  describe('POST /api/v1/auth/forgot-password', () => {
+    it('returns 201 with {ok:true}', async () => {
+      ctx.prisma.staff.findUnique.mockResolvedValue(mockStaff as any);
+
+      const res = await request(ctx.app.getHttpServer())
+        .post('/api/v1/auth/forgot-password')
+        .send({ email: 'sarah@glowclinic.com' });
+
+      expect(res.status).toBe(201);
+      expect(res.body).toEqual({ ok: true });
+    });
+
+    it('returns 201 with {ok:true} even for non-existent email', async () => {
+      ctx.prisma.staff.findUnique.mockResolvedValue(null);
+
+      const res = await request(ctx.app.getHttpServer())
+        .post('/api/v1/auth/forgot-password')
+        .send({ email: 'nobody@test.com' });
+
+      expect(res.status).toBe(201);
+      expect(res.body).toEqual({ ok: true });
+    });
+  });
+
+  // ---- New reset-password tests ----
+
+  describe('POST /api/v1/auth/reset-password', () => {
+    it('returns 201 on valid token', async () => {
+      tokenService.validateToken.mockResolvedValue({ id: 'token1', staffId: 'staff1' } as any);
+      (bcrypt.hash as jest.Mock).mockResolvedValue('new-hash');
+      ctx.prisma.staff.update.mockResolvedValue({} as any);
+
+      const res = await request(ctx.app.getHttpServer())
+        .post('/api/v1/auth/reset-password')
+        .send({ token: 'valid-token-hex', newPassword: 'newpassword123' });
+
+      expect(res.status).toBe(201);
+      expect(res.body).toEqual({ ok: true });
+    });
+
+    it('returns 400 on invalid token', async () => {
+      tokenService.validateToken.mockRejectedValue(new BadRequestException('Invalid token'));
+
+      const res = await request(ctx.app.getHttpServer())
+        .post('/api/v1/auth/reset-password')
+        .send({ token: 'bad-token', newPassword: 'newpassword123' });
+
+      expect(res.status).toBe(400);
+    });
+  });
+
+  // ---- New change-password tests ----
+
+  describe('POST /api/v1/auth/change-password', () => {
+    it('returns 201 when authenticated with correct current password', async () => {
+      ctx.prisma.staff.findUnique.mockResolvedValue(mockStaff as any);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      (bcrypt.hash as jest.Mock).mockResolvedValue('new-hash');
+      ctx.prisma.staff.update.mockResolvedValue({} as any);
+      const token = getAuthToken(ctx.jwtService);
+
+      const res = await request(ctx.app.getHttpServer())
+        .post('/api/v1/auth/change-password')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ currentPassword: 'password123', newPassword: 'newpassword123' });
+
+      expect(res.status).toBe(201);
+      expect(res.body).toEqual({ ok: true });
+    });
+
+    it('returns 401 without auth token', async () => {
+      const res = await request(ctx.app.getHttpServer())
+        .post('/api/v1/auth/change-password')
+        .send({ currentPassword: 'password123', newPassword: 'newpassword123' });
+
+      expect(res.status).toBe(401);
+    });
+
+    it('returns 400 on wrong current password', async () => {
+      ctx.prisma.staff.findUnique.mockResolvedValue(mockStaff as any);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(false);
+      const token = getAuthToken(ctx.jwtService);
+
+      const res = await request(ctx.app.getHttpServer())
+        .post('/api/v1/auth/change-password')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ currentPassword: 'wrongpassword', newPassword: 'newpassword123' });
+
+      expect(res.status).toBe(400);
+    });
+  });
+
+  // ---- New accept-invite tests ----
+
+  describe('POST /api/v1/auth/accept-invite', () => {
+    it('returns 201 with tokens on valid invite', async () => {
+      tokenService.validateToken.mockResolvedValue({ id: 'token1', staffId: 'staff1' } as any);
+      ctx.prisma.staff.findUnique.mockResolvedValue({ ...mockStaff, passwordHash: null } as any);
+      (bcrypt.hash as jest.Mock).mockResolvedValue('invite-hash');
+      ctx.prisma.staff.update.mockResolvedValue({
+        id: 'staff1', name: 'Sarah Johnson', email: 'sarah@glowclinic.com',
+        role: 'OWNER', businessId: 'biz1', isActive: true,
+      } as any);
+
+      const res = await request(ctx.app.getHttpServer())
+        .post('/api/v1/auth/accept-invite')
+        .send({ token: 'invite-token-hex', password: 'mypassword123' });
+
+      expect(res.status).toBe(201);
+      expect(res.body).toHaveProperty('accessToken');
+      expect(res.body).toHaveProperty('refreshToken');
+      expect(res.body.staff.id).toBe('staff1');
+    });
+
+    it('returns 400 on invalid token', async () => {
+      tokenService.validateToken.mockRejectedValue(new BadRequestException('Invalid token'));
+
+      const res = await request(ctx.app.getHttpServer())
+        .post('/api/v1/auth/accept-invite')
+        .send({ token: 'bad-token', password: 'mypassword123' });
+
+      expect(res.status).toBe(400);
     });
   });
 });

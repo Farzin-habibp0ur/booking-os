@@ -14,6 +14,33 @@ export function createMockClaudeClient() {
   };
 }
 
+export function createMockTokenService() {
+  return {
+    createToken: jest.fn().mockResolvedValue('mock-token-hex'),
+    validateToken: jest.fn().mockResolvedValue({
+      id: 'token1',
+      token: 'mock-token-hex',
+      type: 'PASSWORD_RESET',
+      email: 'test@test.com',
+      businessId: 'biz1',
+      staffId: 'staff1',
+      expiresAt: new Date(Date.now() + 3600000),
+      usedAt: null,
+    }),
+    markUsed: jest.fn().mockResolvedValue(undefined),
+    revokeTokens: jest.fn().mockResolvedValue(undefined),
+  };
+}
+
+export function createMockEmailService() {
+  return {
+    send: jest.fn().mockResolvedValue(true),
+    sendPasswordReset: jest.fn().mockResolvedValue(true),
+    sendStaffInvitation: jest.fn().mockResolvedValue(true),
+    sendBookingConfirmation: jest.fn().mockResolvedValue(true),
+  };
+}
+
 export function createMockConfigService() {
   const config: Record<string, string> = {
     JWT_SECRET: 'test-secret',
