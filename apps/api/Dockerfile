@@ -27,13 +27,15 @@ RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nestjs
 
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/apps/api/dist ./apps/api/dist
+COPY --from=builder /app/apps/api/dist ./dist
 COPY --from=builder /app/packages ./packages
 COPY --from=builder /app/package.json ./
+# Copy Prisma schema for migrations
+COPY --from=builder /app/packages/db/prisma ./packages/db/prisma
 
 USER nestjs
 
 EXPOSE 3001
 ENV API_PORT=3001
 
-CMD ["node", "apps/api/dist/main"]
+CMD ["node", "dist/apps/api/src/main"]
