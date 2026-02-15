@@ -1,6 +1,6 @@
 COMPOSE = docker compose -f docker-compose.prod.yml
 
-.PHONY: build up down logs migrate seed clean ps
+.PHONY: build up down logs migrate seed clean ps deploy
 
 build:
 	$(COMPOSE) build
@@ -25,3 +25,8 @@ seed:
 
 clean:
 	$(COMPOSE) down -v --rmi local
+
+deploy:
+	git pull origin main
+	$(COMPOSE) build
+	$(COMPOSE) up -d

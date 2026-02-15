@@ -5,6 +5,7 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   lint-and-test:
@@ -48,58 +49,66 @@ jobs:
       - name: Run database migrations
         run: npx prisma migrate deploy --schema=packages/db/prisma/schema.prisma
 
+      - name: Lint (type-check)
+        run: npm run lint
+
       - name: Run tests
         run: npm test
 
-  build:
+  docker-build:
     runs-on: ubuntu-latest
     needs: lint-and-test
 
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Generate Prisma client
-        run: npx prisma generate --schema=packages/db/prisma/schema.prisma
-
-      - name: Build API
-        run: npm run build --workspace=@booking-os/api
-
-      - name: Build Web
-        run: npm run build --workspace=@booking-os/web
+      - name: Build Docker images
+        run: docker compose -f docker-compose.prod.yml build
         env:
-          NEXT_PUBLIC_API_URL: https://api.businesscommandcentre.com/api/v1
-          NEXT_PUBLIC_WS_URL: https://api.businesscommandcentre.com
+          JWT_SECRET: dummy
+          JWT_REFRESH_SECRET: dummy
+          WEBHOOK_SECRET: dummy
+          ANTHROPIC_API_KEY: dummy
+          STRIPE_SECRET_KEY: dummy
+          STRIPE_WEBHOOK_SECRET: dummy
+          STRIPE_PRICE_ID_BASIC: dummy
+          STRIPE_PRICE_ID_PRO: dummy
+          SENTRY_DSN: ""
+          WHATSAPP_PHONE_NUMBER_ID: dummy
+          WHATSAPP_ACCESS_TOKEN: dummy
+          WHATSAPP_VERIFY_TOKEN: dummy
 
   deploy:
     runs-on: ubuntu-latest
-    needs: build
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: docker-build
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Railway CLI
-        run: npm install -g @railway/cli
+      # ── Uncomment ONE of the deploy strategies below ──
 
-      - name: Run database migrations
-        run: railway run --service api npx prisma migrate deploy --schema=packages/db/prisma/schema.prisma
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      # ── Option A: SSH / VPS ──
+      # - name: Deploy to VPS
+      #   run: |
+      #     ssh ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} \
+      #       "cd /app && git pull origin main && make build && make migrate && make up"
 
-      - name: Deploy API to Railway
-        run: railway up --service api --detach
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      # ── Option B: Railway ──
+      # - name: Install Railway CLI
+      #   run: npm install -g @railway/cli
+      # - name: Run database migrations
+      #   run: railway run --service api npx prisma migrate deploy --schema=packages/db/prisma/schema.prisma
+      #   env:
+      #     RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      # - name: Deploy API
+      #   run: railway up --service api --detach
+      #   env:
+      #     RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      # - name: Deploy Web
+      #   run: railway up --service web --detach
+      #   env:
+      #     RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
-      - name: Deploy Web to Railway
-        run: railway up --service web --detach
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      - name: Deploy placeholder
+        run: echo "Deploy step not configured yet — uncomment a strategy above."
