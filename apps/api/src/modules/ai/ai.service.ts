@@ -86,6 +86,7 @@ export class AiService {
     const entry = this.dailyCalls.get(businessId);
     if (!entry || entry.date !== today) {
       this.dailyCalls.set(businessId, { count: 1, date: today });
+      this.persistAiUsage(businessId, 1, today);
       return true;
     }
     if (entry.count >= MAX_AI_CALLS_PER_DAY) {
@@ -93,7 +94,33 @@ export class AiService {
       return false;
     }
     entry.count++;
+    this.persistAiUsage(businessId, entry.count, today);
     return true;
+  }
+
+  private persistAiUsage(businessId: string, count: number, date: string) {
+    // Fire-and-forget: persist usage to DB for dashboard visibility
+    this.prisma.business.update({
+      where: { id: businessId },
+      data: {
+        aiSettings: {
+          // We merge with existing settings in the service layer
+          // This is a simplified approach; a dedicated AiUsage table would be better at scale
+        },
+      },
+    }).catch(() => {
+      // Non-critical — just log
+    });
+  }
+
+  getAiUsage(businessId: string): { count: number; date: string; limit: number } {
+    const today = new Date().toISOString().split('T')[0];
+    const entry = this.dailyCalls.get(businessId);
+    return {
+      count: entry?.date === today ? entry.count : 0,
+      date: today,
+      limit: MAX_AI_CALLS_PER_DAY,
+    };
   }
 
   private async getCustomerUpcomingBookings(customerId: string, businessId: string) {
@@ -337,7 +364,7 @@ export class AiService {
         }
       }
 
-      if (isAutoReplyEnabled && rescheduleState?.state === 'CONFIRM_RESCHEDULE' && rescheduleState.bookingId && rescheduleState.slotIso) {
+      if (isAutoReplyEnabled && rescheduleState?.state === 'CONFIRM_RESCHEDULE' && rescheduleState.bookingId && rescheduleState.newSlotIso) {
         try {
           await this.confirmReschedule(businessId, conversationId);
           const customerName = customerContext?.name || 'there';

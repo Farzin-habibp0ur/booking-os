@@ -11,6 +11,7 @@ const TEST_JWT_SECRET = 'test-secret';
 
 // Set env vars before modules load so ConfigService.get() finds them
 process.env.JWT_SECRET = TEST_JWT_SECRET;
+process.env.JWT_REFRESH_SECRET = TEST_JWT_SECRET;
 process.env.JWT_EXPIRATION = '15m';
 process.env.JWT_REFRESH_EXPIRATION = '7d';
 

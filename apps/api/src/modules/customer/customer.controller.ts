@@ -4,6 +4,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { CustomerService } from './customer.service';
 import { BusinessId } from '../../common/decorators';
 import { TenantGuard } from '../../common/tenant.guard';
+import { CreateCustomerDto, UpdateCustomerDto } from '../../common/dto';
 
 @Controller('customers')
 @UseGuards(AuthGuard('jwt'), TenantGuard)
@@ -25,12 +26,12 @@ export class CustomerController {
   }
 
   @Post()
-  create(@BusinessId() businessId: string, @Body() body: any) {
+  create(@BusinessId() businessId: string, @Body() body: CreateCustomerDto) {
     return this.customerService.create(businessId, body);
   }
 
   @Patch(':id')
-  update(@BusinessId() businessId: string, @Param('id') id: string, @Body() body: any) {
+  update(@BusinessId() businessId: string, @Param('id') id: string, @Body() body: UpdateCustomerDto) {
     return this.customerService.update(businessId, id, body);
   }
 

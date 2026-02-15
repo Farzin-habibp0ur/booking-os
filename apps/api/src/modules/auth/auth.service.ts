@@ -12,6 +12,12 @@ export class AuthService {
     private config: ConfigService,
   ) {}
 
+  private getRefreshSecret(): string {
+    return this.config.get<string>('JWT_REFRESH_SECRET')
+      || this.config.get<string>('JWT_SECRET')
+      || 'dev-secret-change-in-production';
+  }
+
   async login(email: string, password: string) {
     const staff = await this.prisma.staff.findUnique({
       where: { email },
@@ -38,6 +44,7 @@ export class AuthService {
     return {
       accessToken: this.jwt.sign(payload),
       refreshToken: this.jwt.sign(payload, {
+        secret: this.getRefreshSecret(),
         expiresIn: this.config.get('JWT_REFRESH_EXPIRATION', '7d'),
       }),
       staff: {
@@ -52,7 +59,9 @@ export class AuthService {
 
   async refresh(refreshToken: string) {
     try {
-      const payload = this.jwt.verify(refreshToken);
+      const payload = this.jwt.verify(refreshToken, {
+        secret: this.getRefreshSecret(),
+      });
       const staff = await this.prisma.staff.findUnique({
         where: { id: payload.sub },
       });
@@ -68,6 +77,7 @@ export class AuthService {
       return {
         accessToken: this.jwt.sign(newPayload),
         refreshToken: this.jwt.sign(newPayload, {
+          secret: this.getRefreshSecret(),
           expiresIn: this.config.get('JWT_REFRESH_EXPIRATION', '7d'),
         }),
       };

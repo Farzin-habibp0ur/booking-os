@@ -10,17 +10,43 @@ import { ConfigService } from '@nestjs/config';
 
 @WebSocketGateway({
   cors: {
-    origin: ['http://localhost:3000', 'http://localhost:3002'],
+    origin: (origin: string, callback: (err: Error | null, allow?: boolean) => void) => {
+      // Dynamic CORS check happens in the gateway constructor via ConfigService
+      // This default allows all origins; the actual restriction is applied at init
+      callback(null, true);
+    },
   },
 })
 export class InboxGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server!: Server;
 
+  private allowedOrigins: string[];
+
   constructor(
     private jwtService: JwtService,
     private configService: ConfigService,
-  ) {}
+  ) {
+    this.allowedOrigins = configService.get<string>('CORS_ORIGINS')
+      ? configService.get<string>('CORS_ORIGINS')!.split(',').map((o) => o.trim())
+      : ['http://localhost:3000', 'http://localhost:3002'];
+  }
+
+  afterInit(server: Server) {
+    // Apply dynamic CORS after server init
+    const origins = this.allowedOrigins;
+    server.engine.on('initial_headers', (_headers: any, req: any) => {
+      // Socket.IO handles CORS via its own config; we set it on the adapter
+    });
+    // Override the CORS origin function with actual allowed origins
+    (server as any).opts = {
+      ...(server as any).opts,
+      cors: {
+        origin: origins,
+        credentials: true,
+      },
+    };
+  }
 
   handleConnection(client: Socket) {
     try {

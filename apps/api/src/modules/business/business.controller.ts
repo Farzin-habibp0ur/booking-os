@@ -3,6 +3,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { BusinessService } from './business.service';
 import { BusinessId } from '../../common/decorators';
 import { TenantGuard } from '../../common/tenant.guard';
+import { UpdateBusinessDto } from '../../common/dto';
 
 @Controller('business')
 @UseGuards(AuthGuard('jwt'), TenantGuard)
@@ -15,7 +16,7 @@ export class BusinessController {
   }
 
   @Patch()
-  update(@BusinessId() businessId: string, @Body() body: any) {
+  update(@BusinessId() businessId: string, @Body() body: UpdateBusinessDto) {
     return this.businessService.update(businessId, body);
   }
 }

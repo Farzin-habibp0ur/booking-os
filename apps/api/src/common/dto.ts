@@ -1,0 +1,401 @@
+import {
+  IsString,
+  IsOptional,
+  IsNumber,
+  IsArray,
+  IsObject,
+  IsEnum,
+  IsDateString,
+  IsBoolean,
+  IsEmail,
+  IsNotEmpty,
+  Min,
+  ValidateNested,
+  ArrayMinSize,
+} from 'class-validator';
+import { Type } from 'class-transformer';
+
+// ---- Booking DTOs ----
+
+export class CreateBookingDto {
+  @IsString()
+  @IsNotEmpty()
+  customerId!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  serviceId!: string;
+
+  @IsString()
+  @IsOptional()
+  staffId?: string;
+
+  @IsString()
+  @IsOptional()
+  conversationId?: string;
+
+  @IsDateString()
+  startTime!: string;
+
+  @IsString()
+  @IsOptional()
+  notes?: string;
+
+  @IsObject()
+  @IsOptional()
+  customFields?: Record<string, unknown>;
+}
+
+export class UpdateBookingDto {
+  @IsString()
+  @IsOptional()
+  serviceId?: string;
+
+  @IsString()
+  @IsOptional()
+  staffId?: string;
+
+  @IsDateString()
+  @IsOptional()
+  startTime?: string;
+
+  @IsString()
+  @IsOptional()
+  notes?: string;
+
+  @IsObject()
+  @IsOptional()
+  customFields?: Record<string, unknown>;
+}
+
+export class UpdateBookingStatusDto {
+  @IsString()
+  @IsNotEmpty()
+  status!: string;
+}
+
+// ---- Customer DTOs ----
+
+export class CreateCustomerDto {
+  @IsString()
+  @IsNotEmpty()
+  name!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  phone!: string;
+
+  @IsEmail()
+  @IsOptional()
+  email?: string;
+
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  tags?: string[];
+
+  @IsObject()
+  @IsOptional()
+  customFields?: Record<string, unknown>;
+}
+
+export class UpdateCustomerDto {
+  @IsString()
+  @IsOptional()
+  name?: string;
+
+  @IsString()
+  @IsOptional()
+  phone?: string;
+
+  @IsEmail()
+  @IsOptional()
+  email?: string;
+
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  tags?: string[];
+
+  @IsObject()
+  @IsOptional()
+  customFields?: Record<string, unknown>;
+}
+
+// ---- Service DTOs ----
+
+export class CreateServiceDto {
+  @IsString()
+  @IsNotEmpty()
+  name!: string;
+
+  @IsNumber()
+  @Min(1)
+  durationMins!: number;
+
+  @IsNumber()
+  @Min(0)
+  price!: number;
+
+  @IsString()
+  @IsOptional()
+  category?: string;
+
+  @IsString()
+  @IsOptional()
+  description?: string;
+
+  @IsObject()
+  @IsOptional()
+  customFields?: Record<string, unknown>;
+}
+
+export class UpdateServiceDto {
+  @IsString()
+  @IsOptional()
+  name?: string;
+
+  @IsNumber()
+  @Min(1)
+  @IsOptional()
+  durationMins?: number;
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  price?: number;
+
+  @IsString()
+  @IsOptional()
+  category?: string;
+
+  @IsString()
+  @IsOptional()
+  description?: string;
+
+  @IsObject()
+  @IsOptional()
+  customFields?: Record<string, unknown>;
+}
+
+// ---- Staff DTOs ----
+
+export class CreateStaffDto {
+  @IsString()
+  @IsNotEmpty()
+  name!: string;
+
+  @IsEmail()
+  email!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  password!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  role!: string;
+}
+
+export class UpdateStaffDto {
+  @IsString()
+  @IsOptional()
+  name?: string;
+
+  @IsEmail()
+  @IsOptional()
+  email?: string;
+
+  @IsString()
+  @IsOptional()
+  role?: string;
+}
+
+// ---- Business DTOs ----
+
+export class UpdateBusinessDto {
+  @IsString()
+  @IsOptional()
+  name?: string;
+
+  @IsString()
+  @IsOptional()
+  phone?: string;
+
+  @IsString()
+  @IsOptional()
+  timezone?: string;
+
+  @IsString()
+  @IsOptional()
+  verticalPack?: string;
+
+  @IsObject()
+  @IsOptional()
+  packConfig?: Record<string, unknown>;
+
+  @IsString()
+  @IsOptional()
+  defaultLocale?: string;
+
+  @IsObject()
+  @IsOptional()
+  aiSettings?: Record<string, unknown>;
+}
+
+// ---- Template DTOs ----
+
+export class CreateTemplateDto {
+  @IsString()
+  @IsNotEmpty()
+  name!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  category!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  body!: string;
+
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  variables?: string[];
+}
+
+export class UpdateTemplateDto {
+  @IsString()
+  @IsOptional()
+  name?: string;
+
+  @IsString()
+  @IsOptional()
+  category?: string;
+
+  @IsString()
+  @IsOptional()
+  body?: string;
+
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  variables?: string[];
+}
+
+// ---- Conversation DTOs ----
+
+export class CreateBookingFromConversationDto {
+  @IsString()
+  @IsNotEmpty()
+  customerId!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  serviceId!: string;
+
+  @IsString()
+  @IsOptional()
+  staffId?: string;
+
+  @IsDateString()
+  startTime!: string;
+
+  @IsString()
+  @IsOptional()
+  notes?: string;
+
+  @IsObject()
+  @IsOptional()
+  customFields?: Record<string, unknown>;
+}
+
+export class UpdateConversationStatusDto {
+  @IsString()
+  @IsNotEmpty()
+  status!: string;
+}
+
+export class AssignConversationDto {
+  @IsString()
+  @IsOptional()
+  staffId!: string | null;
+}
+
+export class SnoozeConversationDto {
+  @IsDateString()
+  until!: string;
+}
+
+export class UpdateTagsDto {
+  @IsArray()
+  @IsString({ each: true })
+  tags!: string[];
+}
+
+export class AddNoteDto {
+  @IsString()
+  @IsNotEmpty()
+  content!: string;
+}
+
+// ---- Working Hours DTO ----
+
+export class WorkingHoursEntryDto {
+  @IsNumber()
+  dayOfWeek!: number;
+
+  @IsString()
+  @IsNotEmpty()
+  startTime!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  endTime!: string;
+
+  @IsBoolean()
+  isOff!: boolean;
+}
+
+export class SetWorkingHoursDto {
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => WorkingHoursEntryDto)
+  hours!: WorkingHoursEntryDto[];
+}
+
+export class AddTimeOffDto {
+  @IsDateString()
+  startDate!: string;
+
+  @IsDateString()
+  endDate!: string;
+
+  @IsString()
+  @IsOptional()
+  reason?: string;
+}
+
+// ---- Webhook DTOs ----
+
+export class WebhookInboundDto {
+  @IsString()
+  @IsNotEmpty()
+  from!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  body!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  externalId!: string;
+
+  @IsString()
+  @IsOptional()
+  timestamp?: string;
+
+  @IsString()
+  @IsOptional()
+  businessPhone?: string;
+}

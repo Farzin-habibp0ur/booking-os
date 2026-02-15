@@ -4,6 +4,14 @@ import { ConversationService } from './conversation.service';
 import { BookingService } from '../booking/booking.service';
 import { BusinessId, CurrentUser } from '../../common/decorators';
 import { TenantGuard } from '../../common/tenant.guard';
+import {
+  CreateBookingFromConversationDto,
+  UpdateConversationStatusDto,
+  AssignConversationDto,
+  SnoozeConversationDto,
+  UpdateTagsDto,
+  AddNoteDto,
+} from '../../common/dto';
 
 @Controller('conversations')
 @UseGuards(AuthGuard('jwt'), TenantGuard)
@@ -32,22 +40,22 @@ export class ConversationController {
   }
 
   @Patch(':id/assign')
-  assign(@BusinessId() businessId: string, @Param('id') id: string, @Body() body: { staffId: string | null }) {
+  assign(@BusinessId() businessId: string, @Param('id') id: string, @Body() body: AssignConversationDto) {
     return this.conversationService.assign(businessId, id, body.staffId);
   }
 
   @Patch(':id/status')
-  updateStatus(@BusinessId() businessId: string, @Param('id') id: string, @Body() body: { status: string }) {
+  updateStatus(@BusinessId() businessId: string, @Param('id') id: string, @Body() body: UpdateConversationStatusDto) {
     return this.conversationService.updateStatus(businessId, id, body.status);
   }
 
   @Patch(':id/snooze')
-  snooze(@BusinessId() businessId: string, @Param('id') id: string, @Body() body: { until: string }) {
+  snooze(@BusinessId() businessId: string, @Param('id') id: string, @Body() body: SnoozeConversationDto) {
     return this.conversationService.snooze(businessId, id, new Date(body.until));
   }
 
   @Patch(':id/tags')
-  updateTags(@BusinessId() businessId: string, @Param('id') id: string, @Body() body: { tags: string[] }) {
+  updateTags(@BusinessId() businessId: string, @Param('id') id: string, @Body() body: UpdateTagsDto) {
     return this.conversationService.updateTags(businessId, id, body.tags);
   }
 
@@ -62,7 +70,7 @@ export class ConversationController {
   }
 
   @Post(':id/notes')
-  addNote(@Param('id') id: string, @CurrentUser('sub') staffId: string, @Body() body: { content: string }) {
+  addNote(@Param('id') id: string, @CurrentUser('sub') staffId: string, @Body() body: AddNoteDto) {
     return this.conversationService.addNote(id, staffId, body.content);
   }
 
@@ -72,7 +80,7 @@ export class ConversationController {
   }
 
   @Post(':id/booking')
-  createBooking(@BusinessId() businessId: string, @Param('id') id: string, @Body() body: any) {
+  createBooking(@BusinessId() businessId: string, @Param('id') id: string, @Body() body: CreateBookingFromConversationDto) {
     return this.bookingService.create(businessId, { ...body, conversationId: id });
   }
 }

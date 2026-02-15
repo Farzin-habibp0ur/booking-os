@@ -197,11 +197,14 @@ export default function InboxPage() {
       if (lastInbound) {
         const aiMeta = lastInbound.metadata?.ai;
         if (aiMeta?.draftText) {
-          // Don't restore if an outbound message was already sent after this inbound
-          // (means draft was already sent or auto-replied)
+          // Don't restore if an outbound message exists after this inbound
+          // (means draft was already sent manually or auto-replied)
           const lastInboundIdx = messages.indexOf(lastInbound);
-          const hasOutboundAfter = messages.slice(lastInboundIdx + 1).some((m: any) => m.direction === 'OUTBOUND');
-          if (!hasOutboundAfter) {
+          const outboundAfter = messages.slice(lastInboundIdx + 1).filter((m: any) => m.direction === 'OUTBOUND');
+          const hasOutboundAfter = outboundAfter.length > 0;
+          // Also check if any outbound message content matches the draft (auto-reply case)
+          const draftAlreadySent = outboundAfter.some((m: any) => m.content === aiMeta.draftText);
+          if (!hasOutboundAfter && !draftAlreadySent) {
             setAiDraftText(aiMeta.draftText);
             setAiIntent(aiMeta.intent);
             setAiConfidence(aiMeta.confidence);

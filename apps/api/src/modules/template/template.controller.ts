@@ -3,6 +3,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { TemplateService } from './template.service';
 import { BusinessId } from '../../common/decorators';
 import { TenantGuard } from '../../common/tenant.guard';
+import { CreateTemplateDto, UpdateTemplateDto } from '../../common/dto';
 
 @Controller('templates')
 @UseGuards(AuthGuard('jwt'), TenantGuard)
@@ -20,12 +21,12 @@ export class TemplateController {
   }
 
   @Post()
-  create(@BusinessId() businessId: string, @Body() body: { name: string; category: string; body: string; variables?: string[] }) {
+  create(@BusinessId() businessId: string, @Body() body: CreateTemplateDto) {
     return this.templateService.create(businessId, body);
   }
 
   @Patch(':id')
-  update(@BusinessId() businessId: string, @Param('id') id: string, @Body() body: any) {
+  update(@BusinessId() businessId: string, @Param('id') id: string, @Body() body: UpdateTemplateDto) {
     return this.templateService.update(businessId, id, body);
   }
 

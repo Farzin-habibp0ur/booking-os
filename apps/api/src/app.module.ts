@@ -21,6 +21,10 @@ import { TemplateModule } from './modules/template/template.module';
 import { AvailabilityModule } from './modules/availability/availability.module';
 import { TranslationModule } from './modules/translation/translation.module';
 import { AiModule } from './modules/ai/ai.module';
+import { HealthModule } from './modules/health/health.module';
+import { BillingModule } from './modules/billing/billing.module';
+import { EmailModule } from './modules/email/email.module';
+import { QueueModule } from './common/queue/queue.module';
 
 @Module({
   imports: [
@@ -46,6 +50,10 @@ import { AiModule } from './modules/ai/ai.module';
     AvailabilityModule,
     TranslationModule,
     AiModule,
+    HealthModule,
+    BillingModule,
+    EmailModule,
+    QueueModule,
   ],
 })
 export class AppModule {}

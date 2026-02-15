@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, Query, Headers, ForbiddenException, BadRequestException, Inject, forwardRef } from '@nestjs/common';
+import { Controller, Post, Get, Body, Query, Headers, RawBody, ForbiddenException, BadRequestException, Inject, forwardRef, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
 import { PrismaService } from '../../common/prisma.service';
@@ -7,9 +7,13 @@ import { ConversationService } from '../conversation/conversation.service';
 import { InboxGateway } from '../../common/inbox.gateway';
 import { MessagingService } from './messaging.service';
 import { AiService } from '../ai/ai.service';
+import { WebhookInboundDto } from '../../common/dto';
+import { WhatsAppCloudProvider } from '@booking-os/messaging-provider';
 
 @Controller('webhook')
 export class WebhookController {
+  private readonly logger = new Logger(WebhookController.name);
+
   constructor(
     private prisma: PrismaService,
     private customerService: CustomerService,
@@ -22,74 +26,89 @@ export class WebhookController {
 
   private verifyHmac(body: string, signature: string | undefined): boolean {
     const secret = this.configService.get<string>('WEBHOOK_SECRET');
-    if (!secret) return true; // No secret configured — dev mode
+    if (!secret) {
+      // In production, WEBHOOK_SECRET is required
+      const isProduction = this.configService.get('NODE_ENV') === 'production';
+      if (isProduction) return false;
+      return true; // Dev mode: allow unsigned requests
+    }
     if (!signature) return false;
 
     const expected = crypto
       .createHmac('sha256', secret)
       .update(body)
       .digest('hex');
-    return crypto.timingSafeEqual(
-      Buffer.from(signature),
-      Buffer.from(expected),
-    );
+    const sigBuf = Buffer.from(signature);
+    const expBuf = Buffer.from(expected);
+    if (sigBuf.length !== expBuf.length) return false;
+    return crypto.timingSafeEqual(sigBuf, expBuf);
   }
 
-  @Post('inbound')
-  async inbound(
-    @Body() body: { from: string; body: string; externalId: string; timestamp?: string; businessPhone?: string },
-    @Headers('x-webhook-signature') signature?: string,
+  // Meta WhatsApp webhook verification (GET challenge-response)
+  @Get('whatsapp')
+  whatsappVerify(
+    @Query('hub.mode') mode: string,
+    @Query('hub.verify_token') token: string,
+    @Query('hub.challenge') challenge: string,
   ) {
-    // Verify HMAC signature if WEBHOOK_SECRET is configured
-    const webhookSecret = this.configService.get<string>('WEBHOOK_SECRET');
-    if (webhookSecret) {
-      if (!this.verifyHmac(JSON.stringify(body), signature)) {
-        throw new ForbiddenException('Invalid webhook signature');
+    const verifyToken = this.configService.get<string>('WHATSAPP_VERIFY_TOKEN');
+    if (mode === 'subscribe' && token === verifyToken) {
+      this.logger.log('WhatsApp webhook verified');
+      return parseInt(challenge);
+    }
+    throw new ForbiddenException('Webhook verification failed');
+  }
+
+  // Meta WhatsApp inbound messages (POST from Meta webhook)
+  @Post('whatsapp')
+  async whatsappInbound(@Body() payload: any) {
+    const messages = WhatsAppCloudProvider.parseInboundWebhook(payload);
+
+    for (const msg of messages) {
+      try {
+        await this.processInboundMessage(msg.from, msg.body, msg.externalId, undefined);
+      } catch (err: any) {
+        this.logger.error(`WhatsApp inbound processing error: ${err.message}`);
       }
     }
 
-    // Find business by phone — require businessPhone or fallback to first business only in dev
+    // Meta requires 200 response within 5 seconds
+    return 'EVENT_RECEIVED';
+  }
+
+  private async processInboundMessage(
+    from: string,
+    body: string,
+    externalId: string,
+    businessPhone: string | undefined,
+  ) {
+    // Find business
     let business;
-    if (body.businessPhone) {
+    if (businessPhone) {
       business = await this.prisma.business.findFirst({
-        where: { phone: body.businessPhone },
+        where: { phone: businessPhone },
       });
     }
     if (!business) {
       const isDev = this.configService.get('NODE_ENV') !== 'production';
-      if (!isDev) {
-        throw new BadRequestException('Business not found');
-      }
+      if (!isDev) throw new BadRequestException('Business not found');
       business = await this.prisma.business.findFirst();
     }
     if (!business) throw new BadRequestException('No business found');
 
-    // Find or create customer
-    const customer = await this.customerService.findOrCreateByPhone(
-      business.id,
-      body.from,
-      body.from,
-    );
+    const customer = await this.customerService.findOrCreateByPhone(business.id, from, from);
+    const conversation = await this.conversationService.findOrCreate(business.id, customer.id, 'WHATSAPP');
 
-    // Find or create conversation
-    const conversation = await this.conversationService.findOrCreate(
-      business.id,
-      customer.id,
-      'WHATSAPP',
-    );
-
-    // Create message
     const message = await this.prisma.message.create({
       data: {
         conversationId: conversation.id,
         direction: 'INBOUND',
-        content: body.body,
+        content: body,
         contentType: 'TEXT',
-        externalId: body.externalId,
+        externalId,
       },
     });
 
-    // Update conversation
     const updatedConversation = await this.prisma.conversation.update({
       where: { id: conversation.id },
       data: { lastMessageAt: new Date(), status: 'OPEN' },
@@ -100,16 +119,34 @@ export class WebhookController {
       },
     });
 
-    // Notify via WebSocket
     this.inboxGateway.notifyNewMessage(business.id, message);
     this.inboxGateway.notifyConversationUpdate(business.id, updatedConversation);
 
-    // Fire-and-forget AI processing (async, doesn't block webhook response)
     this.aiService
-      .processInboundMessage(business.id, conversation.id, message.id, body.body)
-      .catch((err) => console.error('[AI] Processing error:', err.message));
+      .processInboundMessage(business.id, conversation.id, message.id, body)
+      .catch((err) => this.logger.error(`AI processing error: ${err.message}`));
 
-    return { ok: true, conversationId: conversation.id, messageId: message.id };
+    return { conversationId: conversation.id, messageId: message.id };
+  }
+
+  @Post('inbound')
+  async inbound(
+    @Body() body: WebhookInboundDto,
+    @Headers('x-webhook-signature') signature?: string,
+  ) {
+    // Verify HMAC signature
+    if (!this.verifyHmac(JSON.stringify(body), signature)) {
+      throw new ForbiddenException('Invalid webhook signature');
+    }
+
+    const result = await this.processInboundMessage(
+      body.from,
+      body.body,
+      body.externalId,
+      body.businessPhone,
+    );
+
+    return { ok: true, ...result };
   }
 
   // Simulator-only: poll for outbound messages — only available in development

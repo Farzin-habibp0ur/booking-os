@@ -6,7 +6,7 @@ import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { useI18n, I18nProvider } from '@/lib/i18n';
 import { useToast } from '@/lib/toast';
-import { Check, ChevronLeft, ChevronRight, Building2, MessageCircle, Users, Scissors, Clock, FileText, Upload, Rocket, Plus, X, Trash2, Loader2, ClipboardCheck } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, Building2, MessageCircle, Users, Scissors, Clock, FileText, Upload, Rocket, Plus, X, Trash2, Loader2, ClipboardCheck, Copy } from 'lucide-react';
 import { PROFILE_FIELDS } from '@booking-os/shared';
 
 const STEP_KEYS = ['business', 'whatsapp', 'staff', 'services', 'hours', 'templates', 'profile', 'customers', 'finish'] as const;
@@ -56,6 +56,9 @@ function SetupPage() {
 
   // Profile requirements
   const [requiredProfileFields, setRequiredProfileFields] = useState<string[]>(['firstName']);
+
+  // Staff password display
+  const [lastCreatedPassword, setLastCreatedPassword] = useState<string | null>(null);
 
   // Customer Import
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -111,10 +114,16 @@ function SetupPage() {
     if (!newStaffName || !newStaffEmail) return;
     const tempPassword = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
     await api.post('/staff', { name: newStaffName, email: newStaffEmail, password: tempPassword, role: newStaffRole });
-    alert(`Staff member created. Temporary password: ${tempPassword}\nPlease share it securely and ask them to change it.`);
+    setLastCreatedPassword(tempPassword);
     setNewStaffName(''); setNewStaffEmail(''); setNewStaffRole('AGENT');
     const updated = await api.get<any[]>('/staff');
     setStaffList(updated);
+  };
+
+  const copyPasswordToClipboard = async () => {
+    if (!lastCreatedPassword) return;
+    await navigator.clipboard.writeText(lastCreatedPassword);
+    toast('Password copied to clipboard');
   };
 
   const addService = async () => {
@@ -329,6 +338,30 @@ function SetupPage() {
                     <span className="text-xs bg-gray-100 px-2 py-0.5 rounded-full">{s.role}</span>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {lastCreatedPassword && (
+              <div className="border border-amber-200 bg-amber-50 rounded-lg p-4 space-y-2">
+                <p className="text-sm font-medium text-amber-800">Staff member created</p>
+                <p className="text-xs text-amber-700">Temporary password (share securely, ask them to change it):</p>
+                <div className="flex items-center gap-2">
+                  <code className="bg-white border border-amber-200 rounded px-3 py-1.5 text-sm font-mono tracking-wider">
+                    {'•'.repeat(8)}
+                  </code>
+                  <button
+                    onClick={copyPasswordToClipboard}
+                    className="flex items-center gap-1 bg-amber-600 text-white px-3 py-1.5 rounded text-xs hover:bg-amber-700"
+                  >
+                    <Copy size={12} /> Copy
+                  </button>
+                  <button
+                    onClick={() => setLastCreatedPassword(null)}
+                    className="text-amber-600 hover:text-amber-800 p-1"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
               </div>
             )}
 
