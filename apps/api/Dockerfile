@@ -15,8 +15,11 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 # Generate Prisma client
 RUN npx prisma generate --schema=packages/db/prisma/schema.prisma
-# Build the API
-RUN npm run build --workspace=@booking-os/api
+# Build shared packages first, then the API
+RUN npm run build --workspace=@booking-os/shared && \
+    npm run build --workspace=@booking-os/db && \
+    npm run build --workspace=@booking-os/messaging-provider && \
+    npm run build --workspace=@booking-os/api
 
 # Stage 3: Production
 FROM node:20-alpine AS runner
@@ -30,8 +33,6 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/apps/api/dist ./dist
 COPY --from=builder /app/packages ./packages
 COPY --from=builder /app/package.json ./
-# Copy Prisma schema for migrations
-COPY --from=builder /app/packages/db/prisma ./packages/db/prisma
 
 USER nestjs
 
