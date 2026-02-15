@@ -12,8 +12,10 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV NEXT_PUBLIC_API_URL=https://api-production-c841.up.railway.app/api/v1
-ENV NEXT_PUBLIC_WS_URL=https://api-production-c841.up.railway.app
+ARG NEXT_PUBLIC_API_URL=https://api.businesscommandcentre.com/api/v1
+ARG NEXT_PUBLIC_WS_URL=https://api.businesscommandcentre.com
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_WS_URL=$NEXT_PUBLIC_WS_URL
 
 # Build shared package first (web imports from it)
 RUN npm run build --workspace=@booking-os/shared
