@@ -42,11 +42,11 @@ export default function SettingsPage() {
   const handleChangePassword = async () => {
     setPasswordError('');
     if (newPassword.length < 8) {
-      setPasswordError('Password must be at least 8 characters');
+      setPasswordError(t('settings.password_min_length'));
       return;
     }
     if (newPassword !== confirmNewPassword) {
-      setPasswordError('Passwords do not match');
+      setPasswordError(t('settings.passwords_no_match'));
       return;
     }
     try {
@@ -57,7 +57,7 @@ export default function SettingsPage() {
       setConfirmNewPassword('');
       setTimeout(() => setPasswordSaved(false), 3000);
     } catch (err: any) {
-      setPasswordError(err.message || 'Failed to change password');
+      setPasswordError(err.message || t('settings.password_change_failed'));
     }
   };
 
@@ -97,10 +97,10 @@ export default function SettingsPage() {
       </div>
       {/* Change Password */}
       <div className="bg-white border rounded-lg p-6 mt-6 space-y-4">
-        <h2 className="font-semibold">Change Password</h2>
+        <h2 className="font-semibold">{t('settings.change_password')}</h2>
         {passwordError && <div className="bg-red-50 text-red-600 p-3 rounded text-sm">{passwordError}</div>}
         <div>
-          <label className="block text-sm font-medium mb-1">Current password</label>
+          <label className="block text-sm font-medium mb-1">{t('settings.current_password')}</label>
           <input
             type="password"
             value={currentPassword}
@@ -109,18 +109,18 @@ export default function SettingsPage() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">New password</label>
+          <label className="block text-sm font-medium mb-1">{t('settings.new_password')}</label>
           <input
             type="password"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             className="w-full border rounded px-3 py-2 text-sm"
             minLength={8}
-            placeholder="Minimum 8 characters"
+            placeholder={t('settings.password_placeholder')}
           />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Confirm new password</label>
+          <label className="block text-sm font-medium mb-1">{t('settings.confirm_password')}</label>
           <input
             type="password"
             value={confirmNewPassword}
@@ -135,9 +135,9 @@ export default function SettingsPage() {
             disabled={!currentPassword || !newPassword || !confirmNewPassword}
             className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700 disabled:opacity-50"
           >
-            Update password
+            {t('settings.update_password')}
           </button>
-          {passwordSaved && <span className="text-green-600 text-sm">Password updated</span>}
+          {passwordSaved && <span className="text-green-600 text-sm">{t('settings.password_updated')}</span>}
         </div>
       </div>
 

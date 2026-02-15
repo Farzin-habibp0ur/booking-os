@@ -64,7 +64,11 @@
     "password_label": "Contraseña",
     "sign_in": "Iniciar sesión",
     "signing_in": "Iniciando sesión...",
-    "dev_hint": "Dev: sarah@glowclinic.com / password123"
+    "dev_hint": "Dev: sarah@glowclinic.com / password123",
+    "forgot_password": "¿Olvidaste tu contraseña?",
+    "reset_success": "Contraseña restablecida exitosamente. Ahora puedes iniciar sesión con tu nueva contraseña.",
+    "no_account": "¿No tienes una cuenta?",
+    "sign_up": "Regístrate"
   },
 
   "dashboard": {
@@ -354,7 +358,17 @@
     "profile_fields": "Requisitos de perfil",
     "profile_fields_desc": "Configura que campos del perfil del cliente son obligatorios antes de confirmar reservas automaticamente",
     "setup_wizard": "Asistente de configuracion",
-    "setup_wizard_desc": "Vuelve a ejecutar el asistente de configuracion para actualizar tu negocio"
+    "setup_wizard_desc": "Vuelve a ejecutar el asistente de configuracion para actualizar tu negocio",
+    "change_password": "Cambiar contraseña",
+    "current_password": "Contraseña actual",
+    "new_password": "Nueva contraseña",
+    "confirm_password": "Confirmar nueva contraseña",
+    "password_placeholder": "Mínimo 8 caracteres",
+    "update_password": "Actualizar contraseña",
+    "password_updated": "Contraseña actualizada",
+    "password_min_length": "La contraseña debe tener al menos 8 caracteres",
+    "passwords_no_match": "Las contraseñas no coinciden",
+    "password_change_failed": "Error al cambiar la contraseña"
   },
 
   "translations": {

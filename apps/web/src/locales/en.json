@@ -64,7 +64,11 @@
     "password_label": "Password",
     "sign_in": "Sign in",
     "signing_in": "Signing in...",
-    "dev_hint": "Dev: sarah@glowclinic.com / password123"
+    "dev_hint": "Dev: sarah@glowclinic.com / password123",
+    "forgot_password": "Forgot password?",
+    "reset_success": "Password reset successful. You can now sign in with your new password.",
+    "no_account": "Don't have an account?",
+    "sign_up": "Sign up"
   },
 
   "dashboard": {
@@ -354,7 +358,17 @@
     "profile_fields": "Profile Requirements",
     "profile_fields_desc": "Configure which customer profile fields are required before auto-confirming bookings",
     "setup_wizard": "Setup Wizard",
-    "setup_wizard_desc": "Re-run the onboarding wizard to update your business configuration"
+    "setup_wizard_desc": "Re-run the onboarding wizard to update your business configuration",
+    "change_password": "Change Password",
+    "current_password": "Current password",
+    "new_password": "New password",
+    "confirm_password": "Confirm new password",
+    "password_placeholder": "Minimum 8 characters",
+    "update_password": "Update password",
+    "password_updated": "Password updated",
+    "password_min_length": "Password must be at least 8 characters",
+    "passwords_no_match": "Passwords do not match",
+    "password_change_failed": "Failed to change password"
   },
 
   "translations": {

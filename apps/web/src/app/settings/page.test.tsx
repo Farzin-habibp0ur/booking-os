@@ -94,7 +94,7 @@ describe('SettingsPage', () => {
     });
   });
 
-  test('has change password section', async () => {
+  test('has change password section with translation keys', async () => {
     mockApi.get.mockResolvedValue({
       name: 'Test Clinic',
       phone: '+1234',
@@ -105,7 +105,11 @@ describe('SettingsPage', () => {
     render(<SettingsPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('Change Password')).toBeInTheDocument();
+      expect(screen.getByText('settings.change_password')).toBeInTheDocument();
+      expect(screen.getByText('settings.current_password')).toBeInTheDocument();
+      expect(screen.getByText('settings.new_password')).toBeInTheDocument();
+      expect(screen.getByText('settings.confirm_password')).toBeInTheDocument();
+      expect(screen.getByText('settings.update_password')).toBeInTheDocument();
     });
   });
 });

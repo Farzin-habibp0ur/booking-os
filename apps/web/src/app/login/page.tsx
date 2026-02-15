@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import { useI18n, I18nProvider } from '@/lib/i18n';
+import { LanguagePicker } from '@/components/language-picker';
 
 export default function LoginPageWrapper() {
   return (
@@ -49,7 +50,7 @@ function LoginPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           {resetSuccess && (
             <div className="bg-green-50 text-green-700 p-3 rounded text-sm">
-              Password reset successful. You can now sign in with your new password.
+              {t('login.reset_success')}
             </div>
           )}
           {error && <div className="bg-red-50 text-red-600 p-3 rounded text-sm">{error}</div>}
@@ -67,7 +68,7 @@ function LoginPage() {
             <div className="flex items-center justify-between mb-1">
               <label className="block text-sm font-medium">{t('login.password_label')}</label>
               <Link href="/forgot-password" className="text-xs text-blue-600 hover:underline">
-                Forgot password?
+                {t('login.forgot_password')}
               </Link>
             </div>
             <input
@@ -87,14 +88,17 @@ function LoginPage() {
           </button>
         </form>
         <p className="text-sm text-center mt-4 text-gray-500">
-          Don't have an account?{' '}
+          {t('login.no_account')}{' '}
           <Link href="/signup" className="text-blue-600 hover:underline">
-            Sign up
+            {t('login.sign_up')}
           </Link>
         </p>
         {process.env.NODE_ENV === 'development' && (
           <p className="text-xs text-gray-400 text-center mt-4">{t('login.dev_hint')}</p>
         )}
+        <div className="flex justify-center mt-4">
+          <LanguagePicker />
+        </div>
       </div>
     </div>
   );

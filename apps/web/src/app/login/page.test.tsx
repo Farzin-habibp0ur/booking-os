@@ -32,6 +32,11 @@ jest.mock('@/lib/i18n', () => ({
   I18nProvider: ({ children }: any) => children,
 }));
 
+// Mock LanguagePicker
+jest.mock('@/components/language-picker', () => ({
+  LanguagePicker: () => <div data-testid="language-picker">LanguagePicker</div>,
+}));
+
 describe('LoginPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -147,8 +152,12 @@ describe('LoginPage', () => {
 
     render(<LoginPageWrapper />);
 
-    expect(
-      screen.getByText('Password reset successful. You can now sign in with your new password.')
-    ).toBeInTheDocument();
+    expect(screen.getByText('login.reset_success')).toBeInTheDocument();
+  });
+
+  it('renders language picker', () => {
+    render(<LoginPageWrapper />);
+
+    expect(screen.getByTestId('language-picker')).toBeInTheDocument();
   });
 });
