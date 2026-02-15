@@ -237,6 +237,81 @@ export class AiService {
         return;
       }
 
+      // Auto-reply + auto-confirm logic
+      const isTransferred = !!metadata.transferredToHuman;
+      const isAutoReplyEnabled = settings.autoReply?.enabled && !isTransferred;
+
+      // Auto-confirm: when auto-reply enabled and booking/cancel/reschedule reaches final state
+      if (isAutoReplyEnabled && bookingState?.state === 'CONFIRM' && bookingState.serviceId && bookingState.slotIso) {
+        try {
+          const booking = await this.confirmBooking(businessId, conversationId);
+          const customerName = customerContext?.name || 'there';
+          const confirmMsg = `Great news, ${customerName}! Your ${bookingState.serviceName} appointment has been confirmed for ${bookingState.date} at ${bookingState.time}${bookingState.staffName ? ` with ${bookingState.staffName}` : ''}. We look forward to seeing you! ✨`;
+          const defaultStaff = await this.prisma.staff.findFirst({ where: { businessId, role: 'OWNER' } });
+          if (defaultStaff) {
+            const provider = this.messagingService.getProvider();
+            await this.messageService.sendMessage(businessId, conversationId, defaultStaff.id, confirmMsg, provider);
+          }
+          this.inboxGateway.emitToBusinessRoom(businessId, 'ai:auto-replied', {
+            conversationId, messageId, intent: 'BOOK_APPOINTMENT', draftText: confirmMsg,
+          });
+          this.inboxGateway.emitToBusinessRoom(businessId, 'ai:suggestions', {
+            conversationId, messageId, intent: 'BOOK_APPOINTMENT',
+            confidence: intentResult.confidence, draftText: '', bookingState: null, cancelState: null, rescheduleState: null,
+          });
+          return;
+        } catch (err: any) {
+          this.logger.error(`Auto-confirm booking failed: ${err.message}`);
+          // Fall through to normal draft flow
+        }
+      }
+
+      if (isAutoReplyEnabled && cancelState?.state === 'CONFIRM_CANCEL' && cancelState.bookingId) {
+        try {
+          await this.confirmCancel(businessId, conversationId);
+          const customerName = customerContext?.name || 'there';
+          const confirmMsg = `${customerName}, your ${cancelState.serviceName || ''} appointment has been cancelled. If you'd like to rebook in the future, just let us know!`;
+          const defaultStaff = await this.prisma.staff.findFirst({ where: { businessId, role: 'OWNER' } });
+          if (defaultStaff) {
+            const provider = this.messagingService.getProvider();
+            await this.messageService.sendMessage(businessId, conversationId, defaultStaff.id, confirmMsg, provider);
+          }
+          this.inboxGateway.emitToBusinessRoom(businessId, 'ai:auto-replied', {
+            conversationId, messageId, intent: 'CANCEL', draftText: confirmMsg,
+          });
+          this.inboxGateway.emitToBusinessRoom(businessId, 'ai:suggestions', {
+            conversationId, messageId, intent: 'CANCEL',
+            confidence: intentResult.confidence, draftText: '', bookingState: null, cancelState: null, rescheduleState: null,
+          });
+          return;
+        } catch (err: any) {
+          this.logger.error(`Auto-confirm cancel failed: ${err.message}`);
+        }
+      }
+
+      if (isAutoReplyEnabled && rescheduleState?.state === 'CONFIRM_RESCHEDULE' && rescheduleState.bookingId && rescheduleState.slotIso) {
+        try {
+          await this.confirmReschedule(businessId, conversationId);
+          const customerName = customerContext?.name || 'there';
+          const confirmMsg = `${customerName}, your appointment has been rescheduled to ${rescheduleState.newDate} at ${rescheduleState.newTime}. See you then! ✨`;
+          const defaultStaff = await this.prisma.staff.findFirst({ where: { businessId, role: 'OWNER' } });
+          if (defaultStaff) {
+            const provider = this.messagingService.getProvider();
+            await this.messageService.sendMessage(businessId, conversationId, defaultStaff.id, confirmMsg, provider);
+          }
+          this.inboxGateway.emitToBusinessRoom(businessId, 'ai:auto-replied', {
+            conversationId, messageId, intent: 'RESCHEDULE', draftText: confirmMsg,
+          });
+          this.inboxGateway.emitToBusinessRoom(businessId, 'ai:suggestions', {
+            conversationId, messageId, intent: 'RESCHEDULE',
+            confidence: intentResult.confidence, draftText: '', bookingState: null, cancelState: null, rescheduleState: null,
+          });
+          return;
+        } catch (err: any) {
+          this.logger.error(`Auto-confirm reschedule failed: ${err.message}`);
+        }
+      }
+
       // Use assistant's suggestedResponse as draft if available; otherwise generate a draft
       const assistantDraft = bookingState?.suggestedResponse
         || cancelState?.suggestedResponse
@@ -285,16 +360,13 @@ export class AiService {
         await this.generateAndStoreSummary(conversationId);
       }
 
-      // Auto-reply logic
-      const isTransferred = !!metadata.transferredToHuman;
+      // Auto-reply for non-action intents (general replies)
       const shouldAutoReply = draftText
-        && settings.autoReply?.enabled
-        && !isTransferred
+        && isAutoReplyEnabled
         && this.shouldAutoReplyForIntent(settings, intentResult.intent);
 
       if (shouldAutoReply) {
         try {
-          // Find default staff (owner) for sending
           const defaultStaff = await this.prisma.staff.findFirst({
             where: { businessId, role: 'OWNER' },
           });
@@ -367,13 +439,70 @@ export class AiService {
           .map((s) => ({ time: s.time, display: s.display, staffId: s.staffId, staffName: s.staffName }));
       }
 
-      const newState = await this.bookingAssistant.process(
+      let newState = await this.bookingAssistant.process(
         messageContent, currentState, {
           businessName, personality, services: activeServices,
           availableSlots, extractedEntities: intentResult.extractedEntities,
           customerContext,
         },
       );
+
+      // Second pass: if the assistant advanced the state and we now have serviceId + date
+      // but didn't reach CONFIRM (because slots weren't available during the first pass),
+      // fetch slots and re-run so it can advance to CONFIRM in a single message round.
+      if (
+        newState.state !== 'CONFIRM'
+        && newState.serviceId
+        && newState.date
+        && !availableSlots
+      ) {
+        const slots = await this.availabilityService.getAvailableSlots(
+          businessId, newState.date, newState.serviceId,
+        );
+        const freshSlots = slots
+          .filter((s) => s.available)
+          .slice(0, 10)
+          .map((s) => ({ time: s.time, display: s.display, staffId: s.staffId, staffName: s.staffName }));
+
+        if (freshSlots.length > 0) {
+          // If the customer already specified a time, try to match it to a slot
+          const requestedTime = newState.time;
+          if (requestedTime) {
+            // Match against display format (e.g., "14:00") since slot.time is ISO
+            const matchedSlot = freshSlots.find((s) => s.display === requestedTime);
+            if (matchedSlot) {
+              // Directly advance to CONFIRM with the matched slot
+              newState = {
+                ...newState,
+                state: 'CONFIRM',
+                staffId: matchedSlot.staffId,
+                staffName: matchedSlot.staffName,
+                slotIso: matchedSlot.time, // ISO string from availability service
+                suggestedResponse: `Great news, ${customerContext?.name || 'there'}! Your ${newState.serviceName} appointment is confirmed for ${newState.date} at ${matchedSlot.display} with ${matchedSlot.staffName}. We look forward to seeing you!`,
+              };
+            } else {
+              // Time doesn't match available slots — re-run with slots to suggest alternatives
+              newState = await this.bookingAssistant.process(
+                `The customer wants ${requestedTime} but here are the available slots. Please suggest alternatives.`,
+                newState, {
+                  businessName, personality, services: activeServices,
+                  availableSlots: freshSlots, extractedEntities: intentResult.extractedEntities,
+                  customerContext,
+                },
+              );
+            }
+          } else {
+            // No time specified — re-run with slots so AI can suggest options
+            newState = await this.bookingAssistant.process(
+              messageContent, newState, {
+                businessName, personality, services: activeServices,
+                availableSlots: freshSlots, extractedEntities: intentResult.extractedEntities,
+                customerContext,
+              },
+            );
+          }
+        }
+      }
 
       await this.prisma.conversation.update({
         where: { id: conversationId },

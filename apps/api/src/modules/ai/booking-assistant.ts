@@ -42,10 +42,17 @@ export class BookingAssistant {
       if (context.customerContext.tags.length) customerInfo += ` | Tags: ${context.customerContext.tags.join(', ')}`;
     }
 
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const todayDay = dayNames[today.getDay()];
+
     const systemPrompt = `You are a booking assistant for "${context.businessName}".
 Personality: ${context.personality || 'friendly and professional'}${customerInfo}
 Use the customer's name naturally in your responses.
 You help customers book appointments through a conversational flow.
+
+IMPORTANT: Today is ${todayDay}, ${todayStr}. Use this to resolve relative dates like "next Tuesday", "tomorrow", etc. The year is ${today.getFullYear()}.
 
 Current booking state: ${state}
 ${currentState ? `Current data: ${JSON.stringify(currentState)}` : 'No booking data yet.'}
@@ -58,9 +65,11 @@ Based on the customer's message, determine the next booking state and generate a
 
 State transitions:
 - IDENTIFY_SERVICE: Match customer's request to a service. If matched, move to IDENTIFY_DATE.
-- IDENTIFY_DATE: Get the preferred date. If provided, move to IDENTIFY_TIME.
+- IDENTIFY_DATE: Get the preferred date. If provided, move to IDENTIFY_TIME. If the customer also mentions a time (e.g., "Tuesday at 2pm"), extract both date AND time.
 - IDENTIFY_TIME: Show available slots and get preferred time. If selected, move to CONFIRM.
 - CONFIRM: Summarize the booking details and ask for confirmation.
+
+IMPORTANT: If the customer provides multiple pieces of info in one message (e.g., service + date + time), skip intermediate states. For example, "Book Botox for Tuesday at 2pm" should go directly to CONFIRM if all data is available. Always extract the time as HH:MM format (e.g., "2pm" = "14:00", "10:30am" = "10:30").
 
 Return JSON with:
 - state: the next state (IDENTIFY_SERVICE, IDENTIFY_DATE, IDENTIFY_TIME, or CONFIRM)

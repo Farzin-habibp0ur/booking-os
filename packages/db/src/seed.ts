@@ -36,6 +36,17 @@ async function main() {
         requireConsultation: true,
         medicalFormRequired: true,
       },
+      aiSettings: {
+        enabled: true,
+        autoReplySuggestions: true,
+        bookingAssistant: true,
+        personality: 'friendly and professional',
+        autoReply: {
+          enabled: false,
+          mode: 'all',
+          selectedIntents: ['GENERAL', 'BOOK_APPOINTMENT', 'CANCEL', 'RESCHEDULE', 'INQUIRY'],
+        },
+      },
     },
   });
 

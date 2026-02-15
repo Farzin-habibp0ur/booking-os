@@ -249,6 +249,9 @@ export default function InboxPage() {
     try {
       await api.post(`/conversations/${selected.id}/messages`, { content: text });
       setNewMessage('');
+      setAiDraftText('');
+      setAiIntent(undefined);
+      setAiConfidence(undefined);
       setShowQuickReplies(false);
       await loadMessages(selected.id);
       await loadConversations();
