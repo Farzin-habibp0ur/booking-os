@@ -14,8 +14,8 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # Next.js inlines NEXT_PUBLIC_* at build time — declare as ARG so Railway can inject them
-ARG NEXT_PUBLIC_API_URL
-ARG NEXT_PUBLIC_WS_URL
+ARG NEXT_PUBLIC_API_URL=https://api-production-c841.up.railway.app/api/v1
+ARG NEXT_PUBLIC_WS_URL=https://api-production-c841.up.railway.app
 ARG NEXT_PUBLIC_SENTRY_DSN
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_WS_URL=$NEXT_PUBLIC_WS_URL
