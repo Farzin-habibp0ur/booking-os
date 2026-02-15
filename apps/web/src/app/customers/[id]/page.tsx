@@ -8,7 +8,7 @@ import { usePack } from '@/lib/vertical-pack';
 import { useI18n } from '@/lib/i18n';
 import {
   ArrowLeft, Phone, Mail, Calendar, Tag, Pencil, X, Check, Plus,
-  MessageSquare, Clock, Sparkles, Send, Loader2,
+  MessageSquare, Clock, Sparkles, Send, Loader2, User, MapPin,
 } from 'lucide-react';
 import BookingFormModal from '@/components/booking-form-modal';
 
@@ -156,6 +156,12 @@ export default function CustomerDetailPage() {
                 <Pencil size={14} />
               </button>
             </div>
+            {customer.name && (
+              <div className="flex items-center gap-2 text-sm">
+                <User size={14} className="text-gray-400" />
+                <span>{customer.name}</span>
+              </div>
+            )}
             <div className="flex items-center gap-2 text-sm">
               <Phone size={14} className="text-gray-400" />
               <span>{customer.phone}</span>
@@ -164,6 +170,12 @@ export default function CustomerDetailPage() {
               <div className="flex items-center gap-2 text-sm">
                 <Mail size={14} className="text-gray-400" />
                 <span>{customer.email}</span>
+              </div>
+            )}
+            {customer.customFields?.address && (
+              <div className="flex items-center gap-2 text-sm">
+                <MapPin size={14} className="text-gray-400" />
+                <span>{customer.customFields.address}</span>
               </div>
             )}
           </div>
