@@ -10,6 +10,12 @@ export class BusinessService {
   }
 
   async update(id: string, data: { name?: string; phone?: string; timezone?: string; verticalPack?: string; packConfig?: any }) {
+    // Merge packConfig with existing data instead of replacing
+    if (data.packConfig) {
+      const business = await this.prisma.business.findUnique({ where: { id } });
+      const currentConfig = (typeof business?.packConfig === 'object' && business.packConfig) ? business.packConfig as any : {};
+      data.packConfig = { ...currentConfig, ...data.packConfig };
+    }
     return this.prisma.business.update({ where: { id }, data });
   }
 

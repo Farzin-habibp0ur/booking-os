@@ -591,7 +591,12 @@ export default function SetupPage() {
                 {t('setup.open_simulator')}
               </button>
               <button
-                onClick={() => router.push('/dashboard')}
+                onClick={async () => {
+                  try {
+                    await api.patch('/business', { packConfig: { setupComplete: true } });
+                  } catch (e) { console.error(e); }
+                  router.push('/dashboard');
+                }}
                 className="w-full bg-blue-600 text-white rounded-md py-2.5 text-sm hover:bg-blue-700 font-medium"
               >
                 {t('setup.go_to_dashboard')}
@@ -616,7 +621,15 @@ export default function SetupPage() {
               {t('common.next')} <ChevronRight size={16} />
             </button>
           ) : (
-            <button onClick={() => router.push('/dashboard')} className="flex items-center gap-1 bg-green-600 text-white px-6 py-2 rounded-md text-sm hover:bg-green-700">
+            <button
+              onClick={async () => {
+                try {
+                  await api.patch('/business', { packConfig: { setupComplete: true } });
+                } catch (e) { console.error(e); }
+                router.push('/dashboard');
+              }}
+              className="flex items-center gap-1 bg-green-600 text-white px-6 py-2 rounded-md text-sm hover:bg-green-700"
+            >
               <Check size={16} /> {t('setup.finish_setup')}
             </button>
           )}

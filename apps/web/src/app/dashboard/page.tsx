@@ -27,7 +27,15 @@ export default function DashboardPage() {
   const { t } = useI18n();
 
   useEffect(() => {
-    api.get('/dashboard').then(setData).catch(console.error).finally(() => setLoading(false));
+    // Check if onboarding is complete; redirect to setup if not
+    api.get<any>('/business').then((biz) => {
+      const config = biz.packConfig || {};
+      if (!config.setupComplete) {
+        router.push('/setup');
+        return;
+      }
+      return api.get('/dashboard').then(setData);
+    }).catch(console.error).finally(() => setLoading(false));
   }, []);
 
   if (loading) return <PageSkeleton />;

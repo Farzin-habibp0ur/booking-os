@@ -19,12 +19,63 @@ npm run dev --workspace=apps/web   # Web on http://localhost:3000
 
 ---
 
-## PART 1: Login & Dashboard Overview (1-2 min)
+## PART 1: Login & Onboarding Wizard (3-4 min)
 
 ### Scene: Login
 1. Open http://localhost:3000 — you'll be redirected to the login page
 2. Enter: `sarah@glowclinic.com` / `password123`
-3. Click **Sign In** — redirected to Dashboard
+3. Click **Sign In** — automatically redirected to the **Setup Wizard** (first-time onboarding)
+
+### Scene: Onboarding Wizard
+**Talk through:**
+- "First-time users are automatically guided through a step-by-step onboarding wizard"
+- Show the progress bar at the top with 8 steps
+
+**Step 1 — Business Info:**
+- Show pre-filled business name "Glow Aesthetic Clinic"
+- Show timezone selector
+- Click **Next**
+
+**Step 2 — Connect WhatsApp:**
+- "This is where businesses connect their WhatsApp Business API"
+- "For now, we'll skip this step — our demo uses a webhook simulator"
+- Click **Skip for Now** or **Next**
+
+**Step 3 — Staff:**
+- Show existing staff: Dr. Sarah Chen (Owner), Maria Garcia (Agent)
+- "Businesses can add team members with different roles"
+- Click **Next**
+
+**Step 4 — Services:**
+- Show the 5 pre-configured services: Botox, Dermal Filler, Chemical Peel, Microneedling, Consultation
+- "Each service has a name, duration, and price"
+- Click **Next**
+
+**Step 5 — Working Hours:**
+- Show the weekly schedule grid for each staff member
+- Toggle between Dr. Sarah Chen and Maria Garcia
+- "Staff members can have different schedules"
+- Click **Next**
+
+**Step 6 — Message Templates:**
+- Show the 3 templates: 24h Reminder, Booking Confirmation, Follow-up
+- "Templates support dynamic variables like customer name, service, and time"
+- Click **Next**
+
+**Step 7 — Import Customers:**
+- "Businesses can import customers in three ways"
+- Show the 3 cards: Import from CSV, Create from Conversations, Add Manually
+- *Optional:* Upload `demo-customers.csv` to show the CSV preview + import
+- Click **Next**
+
+**Step 8 — Finish:**
+- Show the summary: staff count, services count, templates count
+- "Everything is set up — let's go to the dashboard"
+- Click **Go to Dashboard**
+
+---
+
+## PART 2: Dashboard Overview (1 min)
 
 ### Scene: Dashboard
 **Talk through:**
@@ -36,7 +87,7 @@ npm run dev --workspace=apps/web   # Web on http://localhost:3000
 
 ---
 
-## PART 2: Inbox & AI Draft Responses (3-4 min)
+## PART 3: Inbox & AI Draft Responses (3-4 min)
 
 ### Scene: Inbox Overview
 1. Click **Inbox** in sidebar
@@ -107,7 +158,7 @@ curl -X POST http://localhost:3001/api/v1/webhook/inbound \
 
 ---
 
-## PART 3: Cancellation Flow (1-2 min)
+## PART 4: Cancellation Flow (1-2 min)
 
 ### Scene: Customer Wants to Cancel
 **Run in terminal:**
@@ -133,7 +184,7 @@ curl -X POST http://localhost:3001/api/v1/webhook/inbound \
 
 ---
 
-## PART 4: Auto-Reply Mode (2-3 min)
+## PART 5: Auto-Reply Mode (2-3 min)
 
 ### Scene: Enable Auto-Reply
 1. Click **Settings** in sidebar
@@ -181,7 +232,7 @@ curl -X POST http://localhost:3001/api/v1/webhook/inbound \
 
 ---
 
-## PART 5: Human Transfer (1-2 min)
+## PART 6: Human Transfer (1-2 min)
 
 ### Scene: Customer Asks for a Human
 **Run in terminal:**
@@ -215,7 +266,7 @@ curl -X POST http://localhost:3001/api/v1/webhook/inbound \
 
 ---
 
-## PART 6: Customer Import (2-3 min)
+## PART 7: Customer Import (2-3 min)
 
 ### Scene: CSV Import
 1. Click **Customers** in sidebar
@@ -255,7 +306,7 @@ Roberto Silva,+14155551005,roberto@example.com,regular;returning
 
 ---
 
-## PART 7: Settings & Account Import (1 min)
+## PART 8: Settings & Account Import (1 min)
 
 ### Scene: Account Settings
 1. Go to **Settings**
@@ -271,7 +322,7 @@ Roberto Silva,+14155551005,roberto@example.com,regular;returning
 
 ---
 
-## PART 8: Calendar & Bookings (1 min)
+## PART 9: Calendar & Bookings (1 min)
 
 ### Scene: Calendar View
 1. Click **Calendar** in sidebar
@@ -285,7 +336,7 @@ Roberto Silva,+14155551005,roberto@example.com,regular;returning
 
 ---
 
-## PART 9: Reports & Analytics (1 min)
+## PART 10: Reports & Analytics (1 min)
 
 ### Scene: Reports
 1. Click **Reports** in sidebar
@@ -301,7 +352,7 @@ Roberto Silva,+14155551005,roberto@example.com,regular;returning
 
 ---
 
-## PART 10: Wrap Up (30 sec)
+## PART 11: Wrap Up (30 sec)
 
 **Talk through:**
 - "That's Booking OS — a complete WhatsApp-first operating system for service businesses"

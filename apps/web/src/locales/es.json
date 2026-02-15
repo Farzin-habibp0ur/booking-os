@@ -341,7 +341,9 @@
     "ai_settings": "Configuración de IA",
     "ai_settings_desc": "Configura sugerencias de respuesta, detección de intención y asistente de reservas con IA",
     "account_import": "Cuenta e importacion",
-    "account_import_desc": "Gestiona datos de clientes, importa contactos y exporta registros"
+    "account_import_desc": "Gestiona datos de clientes, importa contactos y exporta registros",
+    "setup_wizard": "Asistente de configuracion",
+    "setup_wizard_desc": "Vuelve a ejecutar el asistente de configuracion para actualizar tu negocio"
   },
 
   "translations": {

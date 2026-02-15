@@ -341,7 +341,9 @@
     "ai_settings": "AI Settings",
     "ai_settings_desc": "Configure AI-powered reply suggestions, intent detection, and booking assistant",
     "account_import": "Account & Import",
-    "account_import_desc": "Manage customer data, import contacts, and export records"
+    "account_import_desc": "Manage customer data, import contacts, and export records",
+    "setup_wizard": "Setup Wizard",
+    "setup_wizard_desc": "Re-run the onboarding wizard to update your business configuration"
   },
 
   "translations": {
