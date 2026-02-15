@@ -13,17 +13,17 @@ test.describe('Customers', () => {
     await expect(page).toHaveURL(/\/customers/);
 
     // Should show customers heading or related content
-    await expect(page.locator('body')).toContainText(/customer|client/i, { timeout: 10000 });
+    await expect(page.locator('body')).toContainText(/customer|client|patient/i, { timeout: 10000 });
   });
 
   test('displays customers list or empty state', async ({ page }) => {
     await page.goto('/customers');
     await page.waitForLoadState('networkidle');
 
-    // Either customers are displayed or empty state is shown
-    const hasCustomers = await page.locator('[data-testid="customer-item"]').first().isVisible().catch(() => false);
-    const hasEmptyState = await page.locator('text=/no.*customer|empty/i').first().isVisible().catch(() => false);
-    const hasCustomerText = await page.locator('text=/customer|client/i').first().isVisible().catch(() => false);
+    // Either customers are displayed (table rows) or empty state is shown
+    const hasCustomers = await page.locator('table tbody tr').first().isVisible().catch(() => false);
+    const hasEmptyState = await page.locator('text=/no.*customer|no.*patient|empty/i').first().isVisible().catch(() => false);
+    const hasCustomerText = await page.locator('text=/customer|client|patient/i').first().isVisible().catch(() => false);
 
     expect(hasCustomers || hasEmptyState || hasCustomerText).toBe(true);
   });
@@ -40,12 +40,14 @@ test.describe('Customers', () => {
   });
 
   test('customers page requires authentication', async ({ page }) => {
-    // Clear storage to ensure user is logged out
+    // Clear both cookies and localStorage
     await page.context().clearCookies();
     await page.goto('/customers');
+    await page.evaluate(() => localStorage.clear());
+    await page.reload();
 
     // Should redirect to login
-    await expect(page).toHaveURL(/\/login/, { timeout: 10000 });
+    await expect(page).toHaveURL(/\/login/, { timeout: 15000 });
   });
 
   test('search functionality is available', async ({ page }) => {

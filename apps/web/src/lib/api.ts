@@ -36,16 +36,15 @@ class ApiClient {
       credentials: 'include', // Send cookies with every request
     });
 
-    if (res.status === 401) {
-      this.setToken(null);
-      if (typeof window !== 'undefined') {
-        window.location.href = '/login';
-      }
-      throw new Error('Unauthorized');
-    }
-
     if (!res.ok) {
-      const error = await res.json().catch(() => ({ message: 'Request failed' }));
+      const error = await res.json().catch(() => ({ message: res.status === 401 ? 'Invalid credentials' : 'Request failed' }));
+      if (res.status === 401) {
+        this.setToken(null);
+        // Don't redirect if already on login page (let the page show the error)
+        if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
+          window.location.href = '/login';
+        }
+      }
       throw new Error(error.message || `HTTP ${res.status}`);
     }
 
@@ -80,14 +79,14 @@ class ApiClient {
       credentials: 'include',
     });
 
-    if (res.status === 401) {
-      this.setToken(null);
-      if (typeof window !== 'undefined') window.location.href = '/login';
-      throw new Error('Unauthorized');
-    }
-
     if (!res.ok) {
-      const error = await res.json().catch(() => ({ message: 'Upload failed' }));
+      const error = await res.json().catch(() => ({ message: res.status === 401 ? 'Unauthorized' : 'Upload failed' }));
+      if (res.status === 401) {
+        this.setToken(null);
+        if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
+          window.location.href = '/login';
+        }
+      }
       throw new Error(error.message || `HTTP ${res.status}`);
     }
 

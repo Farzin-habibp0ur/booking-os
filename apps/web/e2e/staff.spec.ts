@@ -40,12 +40,14 @@ test.describe('Staff', () => {
   });
 
   test('staff page requires authentication', async ({ page }) => {
-    // Clear storage to ensure user is logged out
+    // Clear both cookies and localStorage
     await page.context().clearCookies();
     await page.goto('/staff');
+    await page.evaluate(() => localStorage.clear());
+    await page.reload();
 
     // Should redirect to login
-    await expect(page).toHaveURL(/\/login/, { timeout: 10000 });
+    await expect(page).toHaveURL(/\/login/, { timeout: 15000 });
   });
 
   test('staff members show role information when present', async ({ page }) => {

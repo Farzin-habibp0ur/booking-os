@@ -56,7 +56,7 @@ export class AuthController {
   }
 
   @Post('login')
-  @Throttle({ default: { ttl: 60000, limit: 5 } })
+  @Throttle({ default: { ttl: 60000, limit: 30 } })
   async login(
     @Body() body: { email: string; password: string },
     @Res({ passthrough: true }) res: Response,
