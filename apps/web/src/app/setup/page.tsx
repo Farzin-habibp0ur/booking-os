@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
-import { useI18n } from '@/lib/i18n';
+import { useI18n, I18nProvider } from '@/lib/i18n';
 import { useToast } from '@/lib/toast';
 import { Check, ChevronLeft, ChevronRight, Building2, MessageCircle, Users, Scissors, Clock, FileText, Upload, Rocket, Plus, X, Trash2, Loader2, ClipboardCheck } from 'lucide-react';
 import { PROFILE_FIELDS } from '@booking-os/shared';
@@ -15,7 +15,15 @@ const STEP_ICONS = [Building2, MessageCircle, Users, Scissors, Clock, FileText, 
 
 const DAYS_KEYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 
-export default function SetupPage() {
+export default function SetupPageWrapper() {
+  return (
+    <I18nProvider>
+      <SetupPage />
+    </I18nProvider>
+  );
+}
+
+function SetupPage() {
   const router = useRouter();
   const { t } = useI18n();
   const { toast } = useToast();
