@@ -53,7 +53,9 @@ import { QueueModule } from './common/queue/queue.module';
     HealthModule,
     BillingModule,
     EmailModule,
-    QueueModule,
+    process.env.REDIS_URL
+      ? QueueModule.forRootWithRedis()
+      : QueueModule.forRoot(),
   ],
 })
 export class AppModule {}

@@ -3,10 +3,12 @@ import {
   WebSocketServer,
   OnGatewayConnection,
   OnGatewayDisconnect,
+  OnGatewayInit,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { Logger } from '@nestjs/common';
 
 @WebSocketGateway({
   cors: {
@@ -17,10 +19,11 @@ import { ConfigService } from '@nestjs/config';
     },
   },
 })
-export class InboxGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class InboxGateway implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit {
   @WebSocketServer()
   server!: Server;
 
+  private readonly logger = new Logger(InboxGateway.name);
   private allowedOrigins: string[];
 
   constructor(
@@ -32,20 +35,31 @@ export class InboxGateway implements OnGatewayConnection, OnGatewayDisconnect {
       : ['http://localhost:3000', 'http://localhost:3002'];
   }
 
-  afterInit(server: Server) {
-    // Apply dynamic CORS after server init
-    const origins = this.allowedOrigins;
-    server.engine.on('initial_headers', (_headers: any, req: any) => {
-      // Socket.IO handles CORS via its own config; we set it on the adapter
-    });
-    // Override the CORS origin function with actual allowed origins
+  async afterInit(server: Server) {
+    // Apply dynamic CORS
     (server as any).opts = {
       ...(server as any).opts,
       cors: {
-        origin: origins,
+        origin: this.allowedOrigins,
         credentials: true,
       },
     };
+
+    // Attach Redis adapter for multi-instance support when REDIS_URL is set
+    const redisUrl = this.configService.get<string>('REDIS_URL');
+    if (redisUrl) {
+      try {
+        const { createClient } = await import('redis');
+        const { createAdapter } = await import('@socket.io/redis-adapter');
+        const pubClient = createClient({ url: redisUrl });
+        const subClient = pubClient.duplicate();
+        await Promise.all([pubClient.connect(), subClient.connect()]);
+        server.adapter(createAdapter(pubClient, subClient) as any);
+        this.logger.log('Redis adapter attached — WebSocket events shared across instances');
+      } catch (err: any) {
+        this.logger.warn(`Failed to attach Redis adapter: ${err.message}`);
+      }
+    }
   }
 
   handleConnection(client: Socket) {
