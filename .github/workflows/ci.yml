@@ -89,29 +89,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # ── Uncomment ONE of the deploy strategies below ──
-
-      # ── Option A: SSH / VPS ──
-      # - name: Deploy to VPS
-      #   run: |
-      #     ssh ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} \
-      #       "cd /app && git pull origin main && make build && make migrate && make up"
-
-      # ── Option B: Railway ──
-      # - name: Install Railway CLI
-      #   run: npm install -g @railway/cli
-      # - name: Run database migrations
-      #   run: railway run --service api npx prisma migrate deploy --schema=packages/db/prisma/schema.prisma
-      #   env:
-      #     RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-      # - name: Deploy API
-      #   run: railway up --service api --detach
-      #   env:
-      #     RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-      # - name: Deploy Web
-      #   run: railway up --service web --detach
-      #   env:
-      #     RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-
-      - name: Deploy placeholder
-        run: echo "Deploy step not configured yet — uncomment a strategy above."
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+      - name: Run database migrations
+        run: railway run --service api npx prisma migrate deploy --schema=packages/db/prisma/schema.prisma
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      - name: Deploy API
+        run: railway up --service api --detach
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      - name: Deploy Web
+        run: railway up --service web --detach
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
