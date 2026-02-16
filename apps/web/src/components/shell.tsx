@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
@@ -22,6 +22,8 @@ import {
   TrendingUp,
   Settings,
   LogOut,
+  Menu,
+  X,
 } from 'lucide-react';
 
 export function Shell({ children }: { children: ReactNode }) {
@@ -41,6 +43,12 @@ function ShellInner({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
   const pack = usePack();
   const { t } = useI18n();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Close sidebar on route change (mobile)
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [pathname]);
 
   const role = user?.role;
 
@@ -76,47 +84,92 @@ function ShellInner({ children }: { children: ReactNode }) {
 
   const nav = allNav.filter((item) => !role || item.roles.includes(role));
 
-  return (
-    <div className="flex h-screen">
-      <aside className="w-56 bg-white border-r border-slate-100 flex flex-col">
-        <div className="p-4 border-b border-slate-100">
+  const sidebarContent = (
+    <>
+      <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+        <div>
           <h1 className="text-lg font-serif font-bold text-slate-900">{t('app.title')}</h1>
           <p className="text-xs text-slate-500 truncate">{user?.business?.name}</p>
           {pack.name !== 'general' && (
             <p className="text-[10px] text-sage-500 mt-0.5 capitalize">{pack.name} Pack</p>
           )}
         </div>
-        <nav className="flex-1 p-2 space-y-0.5">
-          {nav.map(({ href, label, icon: Icon }) => (
-            <Link
-              key={href}
-              href={href}
-              className={cn(
-                'flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition-colors',
-                pathname.startsWith(href)
-                  ? 'bg-sage-50 text-sage-700 font-medium'
-                  : 'text-slate-600 hover:bg-slate-50',
-              )}
-            >
-              <Icon size={18} />
-              {label}
-            </Link>
-          ))}
-        </nav>
-        <div className="p-2 border-t border-slate-100 space-y-1">
-          <div className="px-3 py-1">
-            <LanguagePicker />
-          </div>
-          <button
-            onClick={logout}
-            className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-slate-600 hover:bg-slate-50 w-full transition-colors"
+        <button
+          onClick={() => setSidebarOpen(false)}
+          className="md:hidden text-slate-400 hover:text-slate-600 transition-colors"
+          aria-label="Close sidebar"
+        >
+          <X size={20} />
+        </button>
+      </div>
+      <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
+        {nav.map(({ href, label, icon: Icon }) => (
+          <Link
+            key={href}
+            href={href}
+            className={cn(
+              'flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition-colors',
+              pathname.startsWith(href)
+                ? 'bg-sage-50 text-sage-700 font-medium'
+                : 'text-slate-600 hover:bg-slate-50',
+            )}
           >
-            <LogOut size={18} />
-            {t('nav.logout')}
-          </button>
+            <Icon size={18} />
+            {label}
+          </Link>
+        ))}
+      </nav>
+      <div className="p-2 border-t border-slate-100 space-y-1">
+        <div className="px-3 py-1">
+          <LanguagePicker />
         </div>
+        <button
+          onClick={logout}
+          className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-slate-600 hover:bg-slate-50 w-full transition-colors"
+        >
+          <LogOut size={18} />
+          {t('nav.logout')}
+        </button>
+      </div>
+    </>
+  );
+
+  return (
+    <div className="flex h-screen">
+      {/* Mobile top bar */}
+      <div className="fixed top-0 left-0 right-0 z-30 md:hidden bg-white border-b border-slate-100 px-4 py-3 flex items-center gap-3">
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="text-slate-600 hover:text-slate-800 transition-colors"
+          aria-label="Open menu"
+        >
+          <Menu size={22} />
+        </button>
+        <h1 className="text-sm font-serif font-bold text-slate-900 truncate">
+          {user?.business?.name || t('app.title')}
+        </h1>
+      </div>
+
+      {/* Mobile backdrop */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/20 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={cn(
+          'fixed inset-y-0 left-0 z-40 w-56 bg-white border-r border-slate-100 flex flex-col transform transition-transform duration-200',
+          'md:relative md:translate-x-0',
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full',
+        )}
+      >
+        {sidebarContent}
       </aside>
-      <main className="flex-1 overflow-auto">
+
+      <main className="flex-1 overflow-auto pt-14 md:pt-0">
         <ErrorBoundary>{children}</ErrorBoundary>
       </main>
     </div>
