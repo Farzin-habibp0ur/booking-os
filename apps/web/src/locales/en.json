@@ -390,6 +390,8 @@
     "notifications_desc": "Configure how booking confirmations, reminders, and follow-ups are sent",
     "calendar_sync": "Calendar Sync",
     "calendar_sync_desc": "Connect Google Calendar or Outlook, and get an iCal feed for any calendar app",
+    "policies": "Policies",
+    "policies_desc": "Configure cancellation and reschedule policy windows and messages",
     "booking_link": "Your Booking Link",
     "booking_link_desc": "Share this link so customers can book appointments directly.",
     "copy_link": "Copy",
@@ -778,6 +780,34 @@
     "already_have_account": "Already have an account?",
     "sign_in": "Sign in",
     "terms_text": "By signing up, you agree to our Terms and Privacy Policy"
+  },
+
+  "policy_settings": {
+    "title": "Policy Settings",
+    "description": "Define cancellation and reschedule policies that are enforced across the platform.",
+    "enable_policy": "Enable Policy Enforcement",
+    "enable_policy_desc": "When enabled, cancellations and reschedules within the configured window will be blocked",
+    "cancellation_window": "Cancellation Window",
+    "cancellation_window_desc": "Minimum hours before the appointment a cancellation is allowed",
+    "cancellation_window_unit": "hours",
+    "cancellation_text": "Cancellation Policy Text",
+    "cancellation_text_desc": "Message shown to customers when cancellation is blocked (also displayed on booking portal)",
+    "cancellation_text_placeholder": "e.g. Cancellations must be made at least 24 hours in advance.",
+    "reschedule_window": "Reschedule Window",
+    "reschedule_window_desc": "Minimum hours before the appointment a reschedule is allowed",
+    "reschedule_window_unit": "hours",
+    "reschedule_text": "Reschedule Policy Text",
+    "reschedule_text_desc": "Message shown to customers when rescheduling is blocked (also displayed on booking portal)",
+    "reschedule_text_placeholder": "e.g. Reschedules must be made at least 24 hours in advance."
+  },
+
+  "policy": {
+    "cancellation_blocked": "Cancellation not allowed",
+    "reschedule_blocked": "Reschedule not allowed",
+    "cancellation_policy": "Cancellation Policy",
+    "reschedule_policy": "Reschedule Policy",
+    "within_window": "This booking is within the {{hours}}-hour policy window.",
+    "contact_clinic": "Please contact the clinic for assistance."
   },
 
   "errors": {

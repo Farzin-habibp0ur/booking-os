@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
-import { X, Calendar, Clock, User, MessageSquare, AlertTriangle, Repeat, Send } from 'lucide-react';
+import { X, Calendar, Clock, User, MessageSquare, AlertTriangle, Repeat, Send, ShieldCheck } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useI18n } from '@/lib/i18n';
 
@@ -38,7 +38,25 @@ export default function BookingDetailModal({
   const [cancelScope, setCancelScope] = useState<'single' | 'future' | 'all' | null>(null);
   const [sendingDeposit, setSendingDeposit] = useState(false);
   const [depositSent, setDepositSent] = useState(false);
+  const [cancelPolicy, setCancelPolicy] = useState<{ allowed: boolean; reason?: string; policyText?: string } | null>(null);
+  const [reschedulePolicy, setReschedulePolicy] = useState<{ allowed: boolean; reason?: string; policyText?: string } | null>(null);
   const { t } = useI18n();
+
+  useEffect(() => {
+    if (!isOpen || !booking) return;
+    setCancelPolicy(null);
+    setReschedulePolicy(null);
+    if (['PENDING', 'PENDING_DEPOSIT', 'CONFIRMED'].includes(booking.status)) {
+      api
+        .get<any>(`/bookings/${booking.id}/policy-check?action=cancel`)
+        .then(setCancelPolicy)
+        .catch(() => {});
+      api
+        .get<any>(`/bookings/${booking.id}/policy-check?action=reschedule`)
+        .then(setReschedulePolicy)
+        .catch(() => {});
+    }
+  }, [isOpen, booking?.id, booking?.status]);
 
   if (!isOpen || !booking) return null;
 
@@ -362,22 +380,53 @@ export default function BookingDetailModal({
 
         {/* Actions */}
         <div className="p-4 border-t border-slate-100 bg-slate-50 space-y-2">
+          {/* Policy warnings */}
+          {cancelPolicy && !cancelPolicy.allowed && (
+            <div className="flex items-start gap-2 p-3 bg-orange-50 border border-orange-100 rounded-xl">
+              <ShieldCheck size={16} className="text-orange-600 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-orange-800">{t('policy.cancellation_blocked')}</p>
+                <p className="text-xs text-orange-600 mt-0.5">{cancelPolicy.reason}</p>
+                {cancelPolicy.policyText && (
+                  <p className="text-xs text-orange-600 mt-1">{cancelPolicy.policyText}</p>
+                )}
+              </div>
+            </div>
+          )}
+          {reschedulePolicy && !reschedulePolicy.allowed && (
+            <div className="flex items-start gap-2 p-3 bg-orange-50 border border-orange-100 rounded-xl">
+              <ShieldCheck size={16} className="text-orange-600 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-orange-800">{t('policy.reschedule_blocked')}</p>
+                <p className="text-xs text-orange-600 mt-0.5">{reschedulePolicy.reason}</p>
+                {reschedulePolicy.policyText && (
+                  <p className="text-xs text-orange-600 mt-1">{reschedulePolicy.policyText}</p>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Status actions */}
           {getAvailableActions().length > 0 && (
             <div className="flex gap-2">
-              {getAvailableActions().map((action) => (
-                <button
-                  key={action.status}
-                  onClick={() => handleAction(action.status, action.label)}
-                  disabled={!!updating}
-                  className={cn(
-                    'flex-1 py-2 rounded-xl text-sm font-medium',
-                    variantClasses[action.variant],
-                  )}
-                >
-                  {updating === action.status ? 'Updating...' : action.label}
-                </button>
-              ))}
+              {getAvailableActions().map((action) => {
+                const isCancelBlocked =
+                  action.status === 'CANCELLED' && cancelPolicy?.allowed === false;
+                return (
+                  <button
+                    key={action.status}
+                    onClick={() => handleAction(action.status, action.label)}
+                    disabled={!!updating || isCancelBlocked}
+                    className={cn(
+                      'flex-1 py-2 rounded-xl text-sm font-medium',
+                      isCancelBlocked ? 'opacity-50 cursor-not-allowed' : '',
+                      variantClasses[action.variant],
+                    )}
+                  >
+                    {updating === action.status ? 'Updating...' : action.label}
+                  </button>
+                );
+              })}
             </div>
           )}
 
@@ -401,7 +450,13 @@ export default function BookingDetailModal({
           {['PENDING', 'PENDING_DEPOSIT', 'CONFIRMED'].includes(booking.status) && (
             <button
               onClick={() => onReschedule(booking)}
-              className="w-full py-2 border border-slate-200 rounded-xl text-sm hover:bg-slate-100 transition-colors"
+              disabled={reschedulePolicy?.allowed === false}
+              className={cn(
+                'w-full py-2 border border-slate-200 rounded-xl text-sm transition-colors',
+                reschedulePolicy?.allowed === false
+                  ? 'opacity-50 cursor-not-allowed'
+                  : 'hover:bg-slate-100',
+              )}
             >
               Reschedule
             </button>

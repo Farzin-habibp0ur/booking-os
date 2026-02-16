@@ -35,7 +35,17 @@ export class PublicBookingController {
   @Throttle({ default: { ttl: 60000, limit: 30 } })
   async getBusiness(@Param('slug') slug: string) {
     const business = await this.resolveBusiness(slug);
-    return { name: business.name, slug: business.slug, timezone: business.timezone };
+    const policySettings =
+      typeof business.policySettings === 'object' && business.policySettings
+        ? (business.policySettings as any)
+        : {};
+    return {
+      name: business.name,
+      slug: business.slug,
+      timezone: business.timezone,
+      cancellationPolicyText: policySettings.cancellationPolicyText || '',
+      reschedulePolicyText: policySettings.reschedulePolicyText || '',
+    };
   }
 
   @Get(':slug/services')

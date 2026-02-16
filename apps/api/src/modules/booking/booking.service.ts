@@ -174,12 +174,67 @@ export class BookingService {
     return result;
   }
 
+  async checkPolicyAllowed(
+    businessId: string,
+    bookingId: string,
+    action: 'cancel' | 'reschedule',
+  ): Promise<{ allowed: boolean; reason?: string; policyText?: string; hoursRemaining?: number }> {
+    const policySettings = await this.businessService.getPolicySettings(businessId);
+    if (!policySettings || !policySettings.policyEnabled) {
+      return { allowed: true };
+    }
+
+    const booking = await this.prisma.booking.findFirst({
+      where: { id: bookingId, businessId },
+      select: { startTime: true },
+    });
+    if (!booking) return { allowed: true };
+
+    const windowHours =
+      action === 'cancel'
+        ? policySettings.cancellationWindowHours
+        : policySettings.rescheduleWindowHours;
+    const policyText =
+      action === 'cancel'
+        ? policySettings.cancellationPolicyText
+        : policySettings.reschedulePolicyText;
+
+    const hoursUntilStart =
+      (new Date(booking.startTime).getTime() - Date.now()) / 3600000;
+
+    if (hoursUntilStart < windowHours) {
+      return {
+        allowed: false,
+        reason: `Cannot ${action} within ${windowHours} hours of the appointment`,
+        policyText: policyText || undefined,
+        hoursRemaining: Math.max(0, Math.round(hoursUntilStart * 10) / 10),
+      };
+    }
+
+    return { allowed: true, policyText: policyText || undefined };
+  }
+
   async updateStatus(businessId: string, id: string, status: string) {
     // Read current booking to detect PENDING_DEPOSIT → CONFIRMED transition
     const currentBooking = await this.prisma.booking.findFirst({
       where: { id, businessId },
-      select: { status: true },
+      select: { status: true, startTime: true },
     });
+
+    // Policy enforcement for cancellations
+    if (status === 'CANCELLED' && currentBooking?.startTime) {
+      const policySettings = await this.businessService.getPolicySettings(businessId);
+      if (policySettings?.policyEnabled) {
+        const hoursUntilStart =
+          (new Date(currentBooking.startTime).getTime() - Date.now()) / 3600000;
+        if (hoursUntilStart < policySettings.cancellationWindowHours) {
+          throw new BadRequestException(
+            policySettings.cancellationPolicyText ||
+              `Cannot cancel within ${policySettings.cancellationWindowHours} hours of the appointment`,
+          );
+        }
+      }
+    }
 
     const booking = await this.prisma.booking.update({
       where: { id, businessId },

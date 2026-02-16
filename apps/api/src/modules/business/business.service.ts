@@ -100,6 +100,43 @@ export class BusinessService {
     });
   }
 
+  async getPolicySettings(id: string) {
+    const business = await this.prisma.business.findUnique({ where: { id } });
+    if (!business) return null;
+    const defaults = {
+      cancellationWindowHours: 24,
+      rescheduleWindowHours: 24,
+      cancellationPolicyText: '',
+      reschedulePolicyText: '',
+      policyEnabled: false,
+    };
+    const raw = business.policySettings || {};
+    return { ...defaults, ...(typeof raw === 'object' ? raw : {}) };
+  }
+
+  async updatePolicySettings(
+    id: string,
+    settings: {
+      cancellationWindowHours?: number;
+      rescheduleWindowHours?: number;
+      cancellationPolicyText?: string;
+      reschedulePolicyText?: string;
+      policyEnabled?: boolean;
+    },
+  ) {
+    const business = await this.prisma.business.findUnique({ where: { id } });
+    if (!business) return null;
+    const current =
+      typeof business.policySettings === 'object' && business.policySettings
+        ? (business.policySettings as any)
+        : {};
+    const merged = { ...current, ...settings };
+    return this.prisma.business.update({
+      where: { id },
+      data: { policySettings: merged },
+    });
+  }
+
   async installPack(businessId: string, packName: string) {
     let pack;
     try {

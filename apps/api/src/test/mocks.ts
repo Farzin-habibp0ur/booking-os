@@ -62,6 +62,14 @@ export function createMockBusinessService() {
     updateNotificationSettings: jest.fn().mockResolvedValue({}),
     getAiSettings: jest.fn().mockResolvedValue({}),
     updateAiSettings: jest.fn().mockResolvedValue({}),
+    getPolicySettings: jest.fn().mockResolvedValue({
+      cancellationWindowHours: 24,
+      rescheduleWindowHours: 24,
+      cancellationPolicyText: '',
+      reschedulePolicyText: '',
+      policyEnabled: false,
+    }),
+    updatePolicySettings: jest.fn().mockResolvedValue({}),
     update: jest.fn().mockResolvedValue({}),
   };
 }

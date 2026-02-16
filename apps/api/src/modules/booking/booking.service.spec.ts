@@ -716,6 +716,159 @@ describe('BookingService', () => {
     });
   });
 
+  describe('checkPolicyAllowed', () => {
+    it('returns allowed:true when policy is disabled', async () => {
+      mockBusinessService.getPolicySettings.mockResolvedValue({
+        policyEnabled: false,
+        cancellationWindowHours: 24,
+        rescheduleWindowHours: 24,
+        cancellationPolicyText: '',
+        reschedulePolicyText: '',
+      });
+
+      const result = await bookingService.checkPolicyAllowed('biz1', 'b1', 'cancel');
+
+      expect(result.allowed).toBe(true);
+    });
+
+    it('returns allowed:false when booking is within cancellation window', async () => {
+      mockBusinessService.getPolicySettings.mockResolvedValue({
+        policyEnabled: true,
+        cancellationWindowHours: 24,
+        rescheduleWindowHours: 24,
+        cancellationPolicyText: 'No cancellations within 24h',
+        reschedulePolicyText: '',
+      });
+      const soon = new Date(Date.now() + 12 * 3600000); // 12h from now
+      prisma.booking.findFirst.mockResolvedValue({ startTime: soon } as any);
+
+      const result = await bookingService.checkPolicyAllowed('biz1', 'b1', 'cancel');
+
+      expect(result.allowed).toBe(false);
+      expect(result.reason).toContain('24');
+      expect(result.policyText).toBe('No cancellations within 24h');
+    });
+
+    it('returns allowed:true when booking is outside cancellation window', async () => {
+      mockBusinessService.getPolicySettings.mockResolvedValue({
+        policyEnabled: true,
+        cancellationWindowHours: 24,
+        rescheduleWindowHours: 24,
+        cancellationPolicyText: '',
+        reschedulePolicyText: '',
+      });
+      const farAway = new Date(Date.now() + 48 * 3600000); // 48h from now
+      prisma.booking.findFirst.mockResolvedValue({ startTime: farAway } as any);
+
+      const result = await bookingService.checkPolicyAllowed('biz1', 'b1', 'cancel');
+
+      expect(result.allowed).toBe(true);
+    });
+
+    it('returns allowed:false when booking is within reschedule window', async () => {
+      mockBusinessService.getPolicySettings.mockResolvedValue({
+        policyEnabled: true,
+        cancellationWindowHours: 24,
+        rescheduleWindowHours: 48,
+        cancellationPolicyText: '',
+        reschedulePolicyText: 'No reschedules within 48h',
+      });
+      const soon = new Date(Date.now() + 36 * 3600000); // 36h from now
+      prisma.booking.findFirst.mockResolvedValue({ startTime: soon } as any);
+
+      const result = await bookingService.checkPolicyAllowed('biz1', 'b1', 'reschedule');
+
+      expect(result.allowed).toBe(false);
+      expect(result.reason).toContain('48');
+      expect(result.policyText).toBe('No reschedules within 48h');
+    });
+
+    it('returns allowed:true when booking not found', async () => {
+      mockBusinessService.getPolicySettings.mockResolvedValue({
+        policyEnabled: true,
+        cancellationWindowHours: 24,
+        rescheduleWindowHours: 24,
+        cancellationPolicyText: '',
+        reschedulePolicyText: '',
+      });
+      prisma.booking.findFirst.mockResolvedValue(null);
+
+      const result = await bookingService.checkPolicyAllowed('biz1', 'b1', 'cancel');
+
+      expect(result.allowed).toBe(true);
+    });
+  });
+
+  describe('updateStatus - policy enforcement', () => {
+    it('throws BadRequestException when cancelling within policy window', async () => {
+      mockBusinessService.getPolicySettings.mockResolvedValue({
+        policyEnabled: true,
+        cancellationWindowHours: 24,
+        cancellationPolicyText: 'Cancellations must be made 24h in advance',
+        rescheduleWindowHours: 24,
+        reschedulePolicyText: '',
+      });
+      const soon = new Date(Date.now() + 12 * 3600000);
+      prisma.booking.findFirst.mockResolvedValue({ status: 'CONFIRMED', startTime: soon } as any);
+
+      await expect(bookingService.updateStatus('biz1', 'b1', 'CANCELLED')).rejects.toThrow(
+        'Cancellations must be made 24h in advance',
+      );
+    });
+
+    it('allows cancellation when booking is outside policy window', async () => {
+      mockBusinessService.getPolicySettings.mockResolvedValue({
+        policyEnabled: true,
+        cancellationWindowHours: 24,
+        cancellationPolicyText: '',
+        rescheduleWindowHours: 24,
+        reschedulePolicyText: '',
+      });
+      const farAway = new Date(Date.now() + 48 * 3600000);
+      prisma.booking.findFirst.mockResolvedValue({ status: 'CONFIRMED', startTime: farAway } as any);
+      prisma.booking.update.mockResolvedValue({ id: 'b1', status: 'CANCELLED' } as any);
+      prisma.reminder.updateMany.mockResolvedValue({ count: 0 } as any);
+
+      const result = await bookingService.updateStatus('biz1', 'b1', 'CANCELLED');
+
+      expect(result.status).toBe('CANCELLED');
+    });
+
+    it('allows cancellation when policy is disabled', async () => {
+      mockBusinessService.getPolicySettings.mockResolvedValue({
+        policyEnabled: false,
+        cancellationWindowHours: 24,
+        cancellationPolicyText: '',
+        rescheduleWindowHours: 24,
+        reschedulePolicyText: '',
+      });
+      const soon = new Date(Date.now() + 2 * 3600000);
+      prisma.booking.findFirst.mockResolvedValue({ status: 'CONFIRMED', startTime: soon } as any);
+      prisma.booking.update.mockResolvedValue({ id: 'b1', status: 'CANCELLED' } as any);
+      prisma.reminder.updateMany.mockResolvedValue({ count: 0 } as any);
+
+      const result = await bookingService.updateStatus('biz1', 'b1', 'CANCELLED');
+
+      expect(result.status).toBe('CANCELLED');
+    });
+
+    it('uses default message when cancellation policy text is empty', async () => {
+      mockBusinessService.getPolicySettings.mockResolvedValue({
+        policyEnabled: true,
+        cancellationWindowHours: 24,
+        cancellationPolicyText: '',
+        rescheduleWindowHours: 24,
+        reschedulePolicyText: '',
+      });
+      const soon = new Date(Date.now() + 12 * 3600000);
+      prisma.booking.findFirst.mockResolvedValue({ status: 'CONFIRMED', startTime: soon } as any);
+
+      await expect(bookingService.updateStatus('biz1', 'b1', 'CANCELLED')).rejects.toThrow(
+        'Cannot cancel within 24 hours of the appointment',
+      );
+    });
+  });
+
   describe('getCalendar', () => {
     it('filters by date range and includes PENDING_DEPOSIT in status filter', async () => {
       prisma.booking.findMany.mockResolvedValue([]);

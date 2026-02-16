@@ -52,14 +52,29 @@ describe('PublicBookingController', () => {
   });
 
   describe('getBusiness', () => {
-    it('returns business info by slug', async () => {
+    it('returns business info by slug with empty policy text by default', async () => {
       prisma.business.findFirst.mockResolvedValue(mockBusiness as any);
       const result = await controller.getBusiness('glow-clinic');
       expect(result).toEqual({
         name: 'Glow Clinic',
         slug: 'glow-clinic',
         timezone: 'America/New_York',
+        cancellationPolicyText: '',
+        reschedulePolicyText: '',
       });
+    });
+
+    it('returns policy text when policySettings has text', async () => {
+      prisma.business.findFirst.mockResolvedValue({
+        ...mockBusiness,
+        policySettings: {
+          cancellationPolicyText: 'No cancellations within 24h',
+          reschedulePolicyText: 'No reschedules within 24h',
+        },
+      } as any);
+      const result = await controller.getBusiness('glow-clinic');
+      expect(result.cancellationPolicyText).toBe('No cancellations within 24h');
+      expect(result.reschedulePolicyText).toBe('No reschedules within 24h');
     });
 
     it('throws 404 for invalid slug', async () => {

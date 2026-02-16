@@ -12,12 +12,15 @@ import {
   User,
   Phone,
   Mail,
+  ShieldCheck,
 } from 'lucide-react';
 
 interface Business {
   name: string;
   slug: string;
   timezone: string;
+  cancellationPolicyText: string;
+  reschedulePolicyText: string;
 }
 interface Service {
   id: string;
@@ -511,6 +514,20 @@ export default function BookingPortalPage() {
               </div>
             )}
           </div>
+          {(business?.cancellationPolicyText || business?.reschedulePolicyText) && (
+            <div className="mt-4 bg-slate-50 rounded-xl p-4 text-left">
+              <div className="flex items-center gap-1.5 mb-2">
+                <ShieldCheck size={14} className="text-slate-500" />
+                <p className="text-xs font-medium text-slate-600">Booking Policies</p>
+              </div>
+              {business.cancellationPolicyText && (
+                <p className="text-xs text-slate-500">{business.cancellationPolicyText}</p>
+              )}
+              {business.reschedulePolicyText && (
+                <p className="text-xs text-slate-500 mt-1">{business.reschedulePolicyText}</p>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>

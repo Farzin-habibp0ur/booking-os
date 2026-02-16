@@ -18,6 +18,7 @@ model Business {
   defaultLocale String   @default("en")
   aiSettings    Json     @default("{}")
   notificationSettings Json @default("{}")
+  policySettings    Json     @default("{}")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 

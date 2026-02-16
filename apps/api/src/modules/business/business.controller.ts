@@ -5,7 +5,7 @@ import { BusinessService } from './business.service';
 import { BusinessId } from '../../common/decorators';
 import { TenantGuard } from '../../common/tenant.guard';
 import { RolesGuard, Roles } from '../../common/roles.guard';
-import { UpdateBusinessDto } from '../../common/dto';
+import { UpdateBusinessDto, UpdatePolicySettingsDto } from '../../common/dto';
 
 @ApiTags('Business')
 @Controller('business')
@@ -36,6 +36,20 @@ export class BusinessController {
     @Body() body: { channels?: string; followUpDelayHours?: number },
   ) {
     return this.businessService.updateNotificationSettings(businessId, body);
+  }
+
+  @Get('policy-settings')
+  async getPolicySettings(@BusinessId() businessId: string) {
+    return this.businessService.getPolicySettings(businessId);
+  }
+
+  @Patch('policy-settings')
+  @Roles('ADMIN')
+  async updatePolicySettings(
+    @BusinessId() businessId: string,
+    @Body() body: UpdatePolicySettingsDto,
+  ) {
+    return this.businessService.updatePolicySettings(businessId, body);
   }
 
   @Post('install-pack')

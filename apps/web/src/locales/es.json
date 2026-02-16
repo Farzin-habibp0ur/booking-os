@@ -390,6 +390,8 @@
     "notifications_desc": "Configura cómo se envían las confirmaciones, recordatorios y seguimientos de reservas",
     "calendar_sync": "Sincronización de calendario",
     "calendar_sync_desc": "Conecta Google Calendar u Outlook, y obtén un enlace iCal para cualquier app de calendario",
+    "policies": "Políticas",
+    "policies_desc": "Configura ventanas de cancelación y reprogramación y mensajes de política",
     "booking_link": "Tu enlace de reservas",
     "booking_link_desc": "Comparte este enlace para que los clientes reserven citas directamente.",
     "copy_link": "Copiar",
@@ -778,6 +780,34 @@
     "already_have_account": "¿Ya tienes una cuenta?",
     "sign_in": "Iniciar sesión",
     "terms_text": "Al registrarte, aceptas nuestros Términos y Política de Privacidad"
+  },
+
+  "policy_settings": {
+    "title": "Configuración de Políticas",
+    "description": "Define políticas de cancelación y reprogramación que se aplican en toda la plataforma.",
+    "enable_policy": "Activar aplicación de políticas",
+    "enable_policy_desc": "Cuando está activado, las cancelaciones y reprogramaciones dentro de la ventana configurada serán bloqueadas",
+    "cancellation_window": "Ventana de cancelación",
+    "cancellation_window_desc": "Horas mínimas antes de la cita para permitir una cancelación",
+    "cancellation_window_unit": "horas",
+    "cancellation_text": "Texto de política de cancelación",
+    "cancellation_text_desc": "Mensaje mostrado a los clientes cuando la cancelación es bloqueada (también se muestra en el portal de reservas)",
+    "cancellation_text_placeholder": "ej. Las cancelaciones deben realizarse con al menos 24 horas de anticipación.",
+    "reschedule_window": "Ventana de reprogramación",
+    "reschedule_window_desc": "Horas mínimas antes de la cita para permitir una reprogramación",
+    "reschedule_window_unit": "horas",
+    "reschedule_text": "Texto de política de reprogramación",
+    "reschedule_text_desc": "Mensaje mostrado a los clientes cuando la reprogramación es bloqueada (también se muestra en el portal de reservas)",
+    "reschedule_text_placeholder": "ej. Las reprogramaciones deben realizarse con al menos 24 horas de anticipación."
+  },
+
+  "policy": {
+    "cancellation_blocked": "Cancelación no permitida",
+    "reschedule_blocked": "Reprogramación no permitida",
+    "cancellation_policy": "Política de cancelación",
+    "reschedule_policy": "Política de reprogramación",
+    "within_window": "Esta reserva está dentro de la ventana de {{hours}} horas de la política.",
+    "contact_clinic": "Por favor contacta a la clínica para asistencia."
   },
 
   "errors": {

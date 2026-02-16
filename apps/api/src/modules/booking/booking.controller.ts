@@ -27,6 +27,15 @@ export class BookingController {
     return this.bookingService.getCalendar(businessId, dateFrom, dateTo, staffId);
   }
 
+  @Get(':id/policy-check')
+  policyCheck(
+    @BusinessId() businessId: string,
+    @Param('id') id: string,
+    @Query('action') action: 'cancel' | 'reschedule',
+  ) {
+    return this.bookingService.checkPolicyAllowed(businessId, id, action || 'cancel');
+  }
+
   @Get(':id')
   detail(@BusinessId() businessId: string, @Param('id') id: string) {
     return this.bookingService.findById(businessId, id);

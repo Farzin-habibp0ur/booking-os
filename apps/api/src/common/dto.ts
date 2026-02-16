@@ -258,6 +258,34 @@ export class UpdateBusinessDto {
   aiSettings?: Record<string, unknown>;
 }
 
+// ---- Policy Settings DTO ----
+
+export class UpdatePolicySettingsDto {
+  @IsNumber()
+  @Min(1)
+  @Max(168)
+  @IsOptional()
+  cancellationWindowHours?: number;
+
+  @IsNumber()
+  @Min(1)
+  @Max(168)
+  @IsOptional()
+  rescheduleWindowHours?: number;
+
+  @IsString()
+  @IsOptional()
+  cancellationPolicyText?: string;
+
+  @IsString()
+  @IsOptional()
+  reschedulePolicyText?: string;
+
+  @IsBoolean()
+  @IsOptional()
+  policyEnabled?: boolean;
+}
+
 // ---- Template DTOs ----
 
 export class CreateTemplateDto {

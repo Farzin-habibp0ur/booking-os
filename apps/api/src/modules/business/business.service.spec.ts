@@ -25,6 +25,78 @@ describe('BusinessService', () => {
     verticalPackService = module.get(VerticalPackService);
   });
 
+  describe('getPolicySettings', () => {
+    it('returns defaults when business has empty policySettings', async () => {
+      prisma.business.findUnique.mockResolvedValue({ id: 'biz1', policySettings: {} } as any);
+
+      const result = await service.getPolicySettings('biz1');
+
+      expect(result).toEqual({
+        cancellationWindowHours: 24,
+        rescheduleWindowHours: 24,
+        cancellationPolicyText: '',
+        reschedulePolicyText: '',
+        policyEnabled: false,
+      });
+    });
+
+    it('merges stored settings with defaults', async () => {
+      prisma.business.findUnique.mockResolvedValue({
+        id: 'biz1',
+        policySettings: { policyEnabled: true, cancellationWindowHours: 48 },
+      } as any);
+
+      const result = await service.getPolicySettings('biz1');
+
+      expect(result).toEqual({
+        cancellationWindowHours: 48,
+        rescheduleWindowHours: 24,
+        cancellationPolicyText: '',
+        reschedulePolicyText: '',
+        policyEnabled: true,
+      });
+    });
+
+    it('returns null when business not found', async () => {
+      prisma.business.findUnique.mockResolvedValue(null);
+
+      const result = await service.getPolicySettings('biz-nonexistent');
+
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('updatePolicySettings', () => {
+    it('merges new settings with existing', async () => {
+      prisma.business.findUnique.mockResolvedValue({
+        id: 'biz1',
+        policySettings: { policyEnabled: false, cancellationWindowHours: 24 },
+      } as any);
+      prisma.business.update.mockResolvedValue({ id: 'biz1' } as any);
+
+      await service.updatePolicySettings('biz1', { policyEnabled: true, rescheduleWindowHours: 48 });
+
+      expect(prisma.business.update).toHaveBeenCalledWith({
+        where: { id: 'biz1' },
+        data: {
+          policySettings: {
+            policyEnabled: true,
+            cancellationWindowHours: 24,
+            rescheduleWindowHours: 48,
+          },
+        },
+      });
+    });
+
+    it('returns null when business not found', async () => {
+      prisma.business.findUnique.mockResolvedValue(null);
+
+      const result = await service.updatePolicySettings('biz-nonexistent', { policyEnabled: true });
+
+      expect(result).toBeNull();
+    });
+  });
+
   describe('installPack', () => {
     const businessId = 'biz1';
 
