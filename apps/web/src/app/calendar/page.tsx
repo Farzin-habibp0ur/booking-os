@@ -13,6 +13,7 @@ const SLOT_HEIGHT = 60; // pixels per hour
 
 const STATUS_COLORS: Record<string, { bg: string; border: string; text: string }> = {
   PENDING: { bg: 'bg-lavender-50', border: 'border-l-lavender-500', text: 'text-lavender-900' },
+  PENDING_DEPOSIT: { bg: 'bg-amber-50', border: 'border-l-amber-400', text: 'text-amber-700' },
   CONFIRMED: { bg: 'bg-sage-50', border: 'border-l-sage-500', text: 'text-sage-900' },
   IN_PROGRESS: { bg: 'bg-amber-50', border: 'border-l-amber-500', text: 'text-amber-700' },
   COMPLETED: { bg: 'bg-slate-50', border: 'border-l-slate-400', text: 'text-slate-500' },

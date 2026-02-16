@@ -49,6 +49,7 @@ export function createMockNotificationService() {
     sendConsultFollowUp: jest.fn().mockResolvedValue(undefined),
     sendAftercare: jest.fn().mockResolvedValue(undefined),
     sendTreatmentCheckIn: jest.fn().mockResolvedValue(undefined),
+    sendDepositRequest: jest.fn().mockResolvedValue(undefined),
   };
 }
 

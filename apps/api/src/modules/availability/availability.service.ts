@@ -64,7 +64,7 @@ export class AvailabilityService {
         where: {
           businessId,
           staffId: staff.id,
-          status: { in: ['PENDING', 'CONFIRMED', 'IN_PROGRESS'] },
+          status: { in: ['PENDING', 'PENDING_DEPOSIT', 'CONFIRMED', 'IN_PROGRESS'] },
           startTime: { gte: dayStart },
           endTime: { lte: dayEnd },
         },

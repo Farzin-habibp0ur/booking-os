@@ -168,8 +168,8 @@ describe('BookingService', () => {
       startTime: '2026-03-01T10:00:00Z',
     };
 
-    it('creates booking with calculated endTime', async () => {
-      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', durationMins: 60 } as any);
+    it('creates booking with calculated endTime and CONFIRMED status for non-deposit service', async () => {
+      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', durationMins: 60, depositRequired: false } as any);
       prisma.booking.findFirst.mockResolvedValue(null); // no conflict
       prisma.booking.create.mockResolvedValue({ id: 'b1' } as any);
       prisma.reminder.create.mockResolvedValue({} as any);
@@ -186,6 +186,59 @@ describe('BookingService', () => {
             startTime: expectedStart,
             endTime: expectedEnd,
             status: 'CONFIRMED',
+          }),
+        }),
+      );
+    });
+
+    it('creates booking with PENDING_DEPOSIT status when service has depositRequired: true', async () => {
+      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', durationMins: 60, depositRequired: true, depositAmount: 100 } as any);
+      prisma.booking.findFirst.mockResolvedValue(null);
+      prisma.booking.create.mockResolvedValue({ id: 'b1', service: { depositRequired: true, depositAmount: 100 } } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+
+      await bookingService.create('biz1', createData);
+
+      expect(prisma.booking.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            status: 'PENDING_DEPOSIT',
+          }),
+        }),
+      );
+    });
+
+    it('sends sendDepositRequest instead of sendBookingConfirmation for deposit-required services', async () => {
+      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', durationMins: 60, depositRequired: true, depositAmount: 100 } as any);
+      prisma.booking.findFirst.mockResolvedValue(null);
+      prisma.booking.create.mockResolvedValue({
+        id: 'b1',
+        customer: {},
+        service: { depositRequired: true, depositAmount: 100 },
+        staff: {},
+      } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+
+      await bookingService.create('biz1', createData);
+
+      expect(mockNotificationService.sendDepositRequest).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'b1' }),
+      );
+      expect(mockNotificationService.sendBookingConfirmation).not.toHaveBeenCalled();
+    });
+
+    it('includes PENDING_DEPOSIT in conflict detection status filter', async () => {
+      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', durationMins: 60 } as any);
+      prisma.booking.findFirst.mockResolvedValue(null);
+      prisma.booking.create.mockResolvedValue({ id: 'b1' } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+
+      await bookingService.create('biz1', createData);
+
+      expect(prisma.booking.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            status: { in: ['PENDING', 'PENDING_DEPOSIT', 'CONFIRMED', 'IN_PROGRESS'] },
           }),
         }),
       );
@@ -286,7 +339,34 @@ describe('BookingService', () => {
   });
 
   describe('updateStatus', () => {
+    it('sends booking confirmation when transitioning from PENDING_DEPOSIT to CONFIRMED', async () => {
+      prisma.booking.findFirst.mockResolvedValue({ status: 'PENDING_DEPOSIT' } as any);
+      prisma.booking.update.mockResolvedValue({
+        id: 'b1',
+        status: 'CONFIRMED',
+        customer: { name: 'Test' },
+        service: { name: 'Botox' },
+        staff: null,
+      } as any);
+
+      await bookingService.updateStatus('biz1', 'b1', 'CONFIRMED');
+
+      expect(mockNotificationService.sendBookingConfirmation).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'b1', status: 'CONFIRMED' }),
+      );
+    });
+
+    it('does NOT send booking confirmation when transitioning from PENDING to CONFIRMED', async () => {
+      prisma.booking.findFirst.mockResolvedValue({ status: 'PENDING' } as any);
+      prisma.booking.update.mockResolvedValue({ id: 'b1', status: 'CONFIRMED' } as any);
+
+      await bookingService.updateStatus('biz1', 'b1', 'CONFIRMED');
+
+      expect(mockNotificationService.sendBookingConfirmation).not.toHaveBeenCalled();
+    });
+
     it('cancels pending reminders on CANCELLED status', async () => {
+      prisma.booking.findFirst.mockResolvedValue({ status: 'CONFIRMED' } as any);
       prisma.booking.update.mockResolvedValue({ id: 'b1', status: 'CANCELLED' } as any);
       prisma.reminder.updateMany.mockResolvedValue({ count: 1 } as any);
 
@@ -299,6 +379,7 @@ describe('BookingService', () => {
     });
 
     it('cancels pending reminders on NO_SHOW status', async () => {
+      prisma.booking.findFirst.mockResolvedValue({ status: 'CONFIRMED' } as any);
       prisma.booking.update.mockResolvedValue({ id: 'b1', status: 'NO_SHOW' } as any);
       prisma.reminder.updateMany.mockResolvedValue({ count: 1 } as any);
 
@@ -311,6 +392,7 @@ describe('BookingService', () => {
     });
 
     it('does not cancel reminders for CONFIRMED status', async () => {
+      prisma.booking.findFirst.mockResolvedValue({ status: 'PENDING' } as any);
       prisma.booking.update.mockResolvedValue({ id: 'b1', status: 'CONFIRMED' } as any);
 
       await bookingService.updateStatus('biz1', 'b1', 'CONFIRMED');
@@ -319,6 +401,7 @@ describe('BookingService', () => {
     });
 
     it('creates follow-up reminder when status becomes COMPLETED', async () => {
+      prisma.booking.findFirst.mockResolvedValue({ status: 'IN_PROGRESS' } as any);
       prisma.booking.update.mockResolvedValue({ id: 'b1', status: 'COMPLETED' } as any);
       prisma.reminder.create.mockResolvedValue({} as any);
 
@@ -335,6 +418,7 @@ describe('BookingService', () => {
     });
 
     it('creates CONSULT_FOLLOW_UP reminder when a CONSULT booking becomes COMPLETED', async () => {
+      prisma.booking.findFirst.mockResolvedValue({ status: 'IN_PROGRESS' } as any);
       prisma.booking.update.mockResolvedValue({
         id: 'b1',
         status: 'COMPLETED',
@@ -355,6 +439,7 @@ describe('BookingService', () => {
     });
 
     it('does NOT create CONSULT_FOLLOW_UP for TREATMENT bookings', async () => {
+      prisma.booking.findFirst.mockResolvedValue({ status: 'IN_PROGRESS' } as any);
       prisma.booking.update.mockResolvedValue({
         id: 'b1',
         status: 'COMPLETED',
@@ -372,6 +457,7 @@ describe('BookingService', () => {
     });
 
     it('does NOT create CONSULT_FOLLOW_UP for OTHER bookings', async () => {
+      prisma.booking.findFirst.mockResolvedValue({ status: 'IN_PROGRESS' } as any);
       prisma.booking.update.mockResolvedValue({
         id: 'b1',
         status: 'COMPLETED',
@@ -389,6 +475,7 @@ describe('BookingService', () => {
     });
 
     it('creates AFTERCARE reminder when a TREATMENT booking becomes COMPLETED', async () => {
+      prisma.booking.findFirst.mockResolvedValue({ status: 'IN_PROGRESS' } as any);
       prisma.booking.update.mockResolvedValue({
         id: 'b1',
         status: 'COMPLETED',
@@ -411,6 +498,7 @@ describe('BookingService', () => {
     });
 
     it('creates TREATMENT_CHECK_IN reminder when a TREATMENT booking becomes COMPLETED', async () => {
+      prisma.booking.findFirst.mockResolvedValue({ status: 'IN_PROGRESS' } as any);
       prisma.booking.update.mockResolvedValue({
         id: 'b1',
         status: 'COMPLETED',
@@ -433,6 +521,7 @@ describe('BookingService', () => {
     });
 
     it('does NOT create AFTERCARE/TREATMENT_CHECK_IN for CONSULT bookings', async () => {
+      prisma.booking.findFirst.mockResolvedValue({ status: 'IN_PROGRESS' } as any);
       prisma.booking.update.mockResolvedValue({
         id: 'b1',
         status: 'COMPLETED',
@@ -450,6 +539,7 @@ describe('BookingService', () => {
     });
 
     it('does NOT create AFTERCARE/TREATMENT_CHECK_IN for OTHER bookings', async () => {
+      prisma.booking.findFirst.mockResolvedValue({ status: 'IN_PROGRESS' } as any);
       prisma.booking.update.mockResolvedValue({
         id: 'b1',
         status: 'COMPLETED',
@@ -473,6 +563,7 @@ describe('BookingService', () => {
         consultFollowUpDays: 3,
         treatmentCheckInHours: 48,
       });
+      prisma.booking.findFirst.mockResolvedValue({ status: 'IN_PROGRESS' } as any);
       prisma.booking.update.mockResolvedValue({
         id: 'b1',
         status: 'COMPLETED',
@@ -497,6 +588,7 @@ describe('BookingService', () => {
     });
 
     it('schedules AFTERCARE immediately (scheduledAt ~ now)', async () => {
+      prisma.booking.findFirst.mockResolvedValue({ status: 'IN_PROGRESS' } as any);
       prisma.booking.update.mockResolvedValue({
         id: 'b1',
         status: 'COMPLETED',
@@ -524,6 +616,7 @@ describe('BookingService', () => {
         followUpDelayHours: 2,
         consultFollowUpDays: 5,
       });
+      prisma.booking.findFirst.mockResolvedValue({ status: 'IN_PROGRESS' } as any);
       prisma.booking.update.mockResolvedValue({
         id: 'b1',
         status: 'COMPLETED',
@@ -549,7 +642,7 @@ describe('BookingService', () => {
   });
 
   describe('getCalendar', () => {
-    it('filters by date range', async () => {
+    it('filters by date range and includes PENDING_DEPOSIT in status filter', async () => {
       prisma.booking.findMany.mockResolvedValue([]);
 
       await bookingService.getCalendar('biz1', '2026-03-01', '2026-03-07');
@@ -558,6 +651,7 @@ describe('BookingService', () => {
         expect.objectContaining({
           where: expect.objectContaining({
             businessId: 'biz1',
+            status: { in: ['PENDING', 'PENDING_DEPOSIT', 'CONFIRMED', 'IN_PROGRESS'] },
             startTime: { gte: new Date('2026-03-01') },
             endTime: { lte: new Date('2026-03-07') },
           }),

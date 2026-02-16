@@ -6,7 +6,7 @@ import { Plus, Pencil, Trash2, Eye, X, FileText } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useI18n } from '@/lib/i18n';
 
-const CATEGORIES = ['CONFIRMATION', 'REMINDER', 'FOLLOW_UP', 'CONSULT_FOLLOW_UP', 'AFTERCARE', 'TREATMENT_CHECK_IN', 'CANCELLATION', 'CUSTOM'];
+const CATEGORIES = ['CONFIRMATION', 'REMINDER', 'FOLLOW_UP', 'CONSULT_FOLLOW_UP', 'AFTERCARE', 'TREATMENT_CHECK_IN', 'DEPOSIT_REQUIRED', 'CANCELLATION', 'CUSTOM'];
 
 const CATEGORY_KEYS: Record<string, string> = {
   CONFIRMATION: 'templates.category_confirmation',
@@ -15,6 +15,7 @@ const CATEGORY_KEYS: Record<string, string> = {
   CONSULT_FOLLOW_UP: 'templates.category_consult_follow_up',
   AFTERCARE: 'templates.category_aftercare',
   TREATMENT_CHECK_IN: 'templates.category_treatment_check_in',
+  DEPOSIT_REQUIRED: 'templates.category_deposit_required',
   CANCELLATION: 'templates.category_cancellation',
   CUSTOM: 'templates.category_custom',
 };
@@ -127,6 +128,8 @@ export default function TemplatesPage() {
                                 ? 'bg-sage-50 text-sage-900'
                                 : tpl.category === 'TREATMENT_CHECK_IN'
                                   ? 'bg-amber-50 text-amber-700'
+                                  : tpl.category === 'DEPOSIT_REQUIRED'
+                                  ? 'bg-amber-100 text-amber-700'
                                   : tpl.category === 'CANCELLATION'
                                     ? 'bg-red-100 text-red-700'
                                     : 'bg-slate-100 text-slate-700',

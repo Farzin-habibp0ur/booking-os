@@ -421,6 +421,8 @@
     "booking_in_progress": "Reservando...",
     "booking_confirmed": "¡Reserva confirmada!",
     "booking_confirmed_desc": "Todo listo. Esperamos verte pronto.",
+    "deposit_required_title": "Depósito Requerido",
+    "deposit_required_desc": "Tu cita ha sido reservada. Se requiere un depósito de {{amount}} para confirmar tu reserva. Recibirás un enlace de pago en breve.",
     "free": "Gratis"
   },
 
@@ -502,6 +504,7 @@
     "category_consult_follow_up": "Seguimiento de consulta",
     "category_aftercare": "Cuidados posteriores",
     "category_treatment_check_in": "Seguimiento de tratamiento",
+    "category_deposit_required": "Depósito Requerido",
     "category_custom": "Personalizado",
     "no_templates": "No se encontraron plantillas. Crea tu primera plantilla.",
     "preview": "Vista previa",
@@ -691,6 +694,7 @@
     "completed": "Completada",
     "no_show": "Ausencia",
     "cancelled": "Cancelada",
+    "pending_deposit": "Depósito Pendiente",
     "open": "Abierta",
     "waiting": "En espera",
     "snoozed": "Pospuesta",

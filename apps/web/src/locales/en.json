@@ -421,6 +421,8 @@
     "booking_in_progress": "Booking...",
     "booking_confirmed": "Booking Confirmed!",
     "booking_confirmed_desc": "You're all set. We look forward to seeing you.",
+    "deposit_required_title": "Deposit Required",
+    "deposit_required_desc": "Your appointment has been reserved. A deposit of {{amount}} is required to confirm your booking. You'll receive a payment link shortly.",
     "free": "Free"
   },
 
@@ -502,6 +504,7 @@
     "category_consult_follow_up": "Consult Follow-up",
     "category_aftercare": "Aftercare",
     "category_treatment_check_in": "Treatment Check-in",
+    "category_deposit_required": "Deposit Required",
     "category_custom": "Custom",
     "no_templates": "No templates found. Create your first template.",
     "preview": "Preview",
@@ -691,6 +694,7 @@
     "completed": "Completed",
     "no_show": "No-Show",
     "cancelled": "Cancelled",
+    "pending_deposit": "Pending Deposit",
     "open": "Open",
     "waiting": "Waiting",
     "snoozed": "Snoozed",

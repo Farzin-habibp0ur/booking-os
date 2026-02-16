@@ -26,6 +26,8 @@ interface Service {
   durationMins: number;
   price: number;
   category: string;
+  depositRequired: boolean;
+  depositAmount: number | null;
 }
 interface TimeSlot {
   time: string;
@@ -36,10 +38,13 @@ interface TimeSlot {
 }
 interface BookingResult {
   id: string;
+  status: string;
   serviceName: string;
   startTime: string;
   staffName: string | null;
   businessName: string;
+  depositRequired: boolean;
+  depositAmount: number | null;
 }
 
 type Step = 'service' | 'datetime' | 'details' | 'confirm' | 'success';
@@ -470,15 +475,17 @@ export default function BookingPortalPage() {
       {step === 'success' && bookingResult && (
         <div className="bg-white rounded-2xl shadow-soft p-8 text-center">
           <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 bg-sage-50 rounded-full flex items-center justify-center">
-              <CheckCircle2 size={32} className="text-sage-600" />
+            <div className={`w-16 h-16 rounded-full flex items-center justify-center ${bookingResult.depositRequired ? 'bg-amber-50' : 'bg-sage-50'}`}>
+              <CheckCircle2 size={32} className={bookingResult.depositRequired ? 'text-amber-600' : 'text-sage-600'} />
             </div>
           </div>
           <h2 className="text-xl font-serif font-semibold text-slate-900 mb-2">
-            Booking Confirmed!
+            {bookingResult.depositRequired ? 'Deposit Required' : 'Booking Confirmed!'}
           </h2>
           <p className="text-sm text-slate-500 mb-6">
-            You&apos;re all set. We look forward to seeing you.
+            {bookingResult.depositRequired
+              ? `Your appointment has been reserved. A deposit of $${bookingResult.depositAmount || 0} is required to confirm your booking. You'll receive a payment link shortly.`
+              : "You're all set. We look forward to seeing you."}
           </p>
           <div className="bg-slate-50 rounded-xl p-4 space-y-2 text-sm text-left">
             <div className="flex justify-between">

@@ -95,13 +95,15 @@ export class BookingService {
         where: {
           businessId,
           staffId: data.staffId,
-          status: { in: ['PENDING', 'CONFIRMED', 'IN_PROGRESS'] },
+          status: { in: ['PENDING', 'PENDING_DEPOSIT', 'CONFIRMED', 'IN_PROGRESS'] },
           startTime: { lt: endTime },
           endTime: { gt: startTime },
         },
       });
       if (conflict) throw new BadRequestException('Staff has a conflicting booking at this time');
     }
+
+    const isDepositRequired = service.depositRequired === true;
 
     const booking = await this.prisma.booking.create({
       data: {
@@ -114,7 +116,7 @@ export class BookingService {
         endTime,
         notes: data.notes,
         customFields: data.customFields || {},
-        status: 'CONFIRMED',
+        status: isDepositRequired ? 'PENDING_DEPOSIT' : 'CONFIRMED',
       },
       include: { customer: true, service: true, staff: true },
     });
@@ -132,8 +134,12 @@ export class BookingService {
       });
     }
 
-    // Fire-and-forget booking confirmation notification
-    this.notificationService.sendBookingConfirmation(booking).catch(() => {});
+    // Fire-and-forget notification
+    if (isDepositRequired) {
+      this.notificationService.sendDepositRequest(booking).catch(() => {});
+    } else {
+      this.notificationService.sendBookingConfirmation(booking).catch(() => {});
+    }
 
     // Fire-and-forget calendar sync
     this.calendarSyncService.syncBookingToCalendar(booking, 'create').catch(() => {});
@@ -165,11 +171,22 @@ export class BookingService {
   }
 
   async updateStatus(businessId: string, id: string, status: string) {
+    // Read current booking to detect PENDING_DEPOSIT → CONFIRMED transition
+    const currentBooking = await this.prisma.booking.findFirst({
+      where: { id, businessId },
+      select: { status: true },
+    });
+
     const booking = await this.prisma.booking.update({
       where: { id, businessId },
       data: { status },
       include: { customer: true, service: true, staff: true },
     });
+
+    // Send booking confirmation when deposit is confirmed
+    if (status === 'CONFIRMED' && currentBooking?.status === 'PENDING_DEPOSIT') {
+      this.notificationService.sendBookingConfirmation(booking).catch(() => {});
+    }
 
     // Cancel pending reminders if booking is cancelled/no-show
     if (['CANCELLED', 'NO_SHOW'].includes(status)) {
@@ -241,7 +258,7 @@ export class BookingService {
   async getCalendar(businessId: string, dateFrom: string, dateTo: string, staffId?: string) {
     const where: any = {
       businessId,
-      status: { in: ['PENDING', 'CONFIRMED', 'IN_PROGRESS'] },
+      status: { in: ['PENDING', 'PENDING_DEPOSIT', 'CONFIRMED', 'IN_PROGRESS'] },
       startTime: { gte: new Date(dateFrom) },
       endTime: { lte: new Date(dateTo) },
     };

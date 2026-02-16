@@ -106,7 +106,7 @@ export class RecurringService {
           where: {
             businessId,
             staffId: data.staffId,
-            status: { in: ['PENDING', 'CONFIRMED', 'IN_PROGRESS'] },
+            status: { in: ['PENDING', 'PENDING_DEPOSIT', 'CONFIRMED', 'IN_PROGRESS'] },
             startTime: { lt: occurrenceEnd },
             endTime: { gt: date },
           },
@@ -218,7 +218,7 @@ export class RecurringService {
     });
     if (!series) throw new NotFoundException('Recurring series not found');
 
-    const cancellableStatuses = ['PENDING', 'CONFIRMED', 'IN_PROGRESS'];
+    const cancellableStatuses = ['PENDING', 'PENDING_DEPOSIT', 'CONFIRMED', 'IN_PROGRESS'];
     let bookingsToCancel: typeof series.bookings;
 
     if (scope === 'single') {

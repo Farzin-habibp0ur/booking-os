@@ -51,6 +51,8 @@ export class PublicBookingController {
         durationMins: true,
         price: true,
         category: true,
+        depositRequired: true,
+        depositAmount: true,
       },
       orderBy: { name: 'asc' },
     });
@@ -125,10 +127,13 @@ export class PublicBookingController {
 
     return {
       id: booking.id,
+      status: booking.status,
       serviceName: booking.service.name,
       startTime: booking.startTime,
       staffName: booking.staff?.name || null,
       businessName: business.name,
+      depositRequired: booking.service.depositRequired || false,
+      depositAmount: booking.service.depositAmount || null,
     };
   }
 }

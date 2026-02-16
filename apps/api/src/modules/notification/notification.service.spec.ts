@@ -432,6 +432,88 @@ describe('NotificationService', () => {
     });
   });
 
+  describe('sendDepositRequest', () => {
+    const depositBooking = {
+      ...mockBooking,
+      service: {
+        ...mockBooking.service,
+        depositRequired: true,
+        depositAmount: 100,
+        price: 350,
+      },
+    };
+
+    beforeEach(async () => {
+      const module = await createModule(false);
+      notificationService = module.get(NotificationService);
+    });
+
+    it('sends deposit request via both channels', async () => {
+      prisma.messageTemplate.findMany.mockResolvedValue([]);
+
+      await notificationService.sendDepositRequest(depositBooking);
+
+      expect(mockProvider.sendMessage).toHaveBeenCalledWith({
+        to: '+1234567890',
+        body: expect.stringContaining('deposit'),
+        businessId: 'biz1',
+      });
+
+      expect(emailService.send).toHaveBeenCalledWith({
+        to: 'jane@example.com',
+        subject: expect.stringContaining('Deposit required'),
+        html: expect.stringContaining('Glow Clinic'),
+      });
+    });
+
+    it('uses DEPOSIT_REQUIRED template when one exists', async () => {
+      const template = {
+        id: 'tpl-deposit',
+        body: 'Hi {{customerName}}, a deposit of ${{depositAmount}} is required for {{serviceName}}.',
+        variables: ['customerName', 'depositAmount', 'serviceName'],
+        category: 'DEPOSIT_REQUIRED',
+      };
+      prisma.messageTemplate.findMany.mockResolvedValue([template] as any);
+      templateService.resolveVariables.mockResolvedValue(
+        'Hi Jane Doe, a deposit of $100 is required for Haircut.',
+      );
+
+      await notificationService.sendDepositRequest(depositBooking);
+
+      expect(templateService.resolveVariables).toHaveBeenCalledWith(
+        template,
+        expect.objectContaining({
+          customerName: 'Jane Doe',
+          depositAmount: '100',
+          serviceName: 'Haircut',
+        }),
+      );
+    });
+
+    it('falls back to default deposit request message when no template', async () => {
+      prisma.messageTemplate.findMany.mockResolvedValue([]);
+
+      await notificationService.sendDepositRequest(depositBooking);
+
+      expect(templateService.resolveVariables).not.toHaveBeenCalled();
+      expect(mockProvider.sendMessage).toHaveBeenCalledWith({
+        to: '+1234567890',
+        body: expect.stringContaining('$100'),
+        businessId: 'biz1',
+      });
+    });
+
+    it('includes depositAmount in template context from service', async () => {
+      prisma.messageTemplate.findMany.mockResolvedValue([]);
+
+      await notificationService.sendDepositRequest(depositBooking);
+
+      // The fallback message should include $100 (depositAmount)
+      const whatsappCall = mockProvider.sendMessage.mock.calls[0];
+      expect(whatsappCall[0].body).toContain('$100');
+    });
+  });
+
   describe('email dispatch via queue', () => {
     it('queues email via BullMQ when queue available', async () => {
       const module = await createModule(true, true);

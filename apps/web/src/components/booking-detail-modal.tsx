@@ -16,6 +16,7 @@ interface BookingDetailModalProps {
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
   PENDING: { label: 'Pending', color: 'text-lavender-900', bg: 'bg-lavender-50' },
+  PENDING_DEPOSIT: { label: 'Pending Deposit', color: 'text-amber-700', bg: 'bg-amber-50' },
   CONFIRMED: { label: 'Confirmed', color: 'text-sage-900', bg: 'bg-sage-50' },
   IN_PROGRESS: { label: 'In Progress', color: 'text-amber-700', bg: 'bg-amber-50' },
   COMPLETED: { label: 'Completed', color: 'text-sage-900', bg: 'bg-sage-50' },
@@ -89,6 +90,10 @@ export default function BookingDetailModal({
     switch (booking.status) {
       case 'PENDING':
         actions.push({ status: 'CONFIRMED', label: 'Confirm', variant: 'green' });
+        actions.push({ status: 'CANCELLED', label: 'Cancel', variant: 'red' });
+        break;
+      case 'PENDING_DEPOSIT':
+        actions.push({ status: 'CONFIRMED', label: 'Confirm (Override)', variant: 'green' });
         actions.push({ status: 'CANCELLED', label: 'Cancel', variant: 'red' });
         break;
       case 'CONFIRMED':
@@ -356,7 +361,7 @@ export default function BookingDetailModal({
           )}
 
           {/* Reschedule button (available for PENDING, CONFIRMED) */}
-          {['PENDING', 'CONFIRMED'].includes(booking.status) && (
+          {['PENDING', 'PENDING_DEPOSIT', 'CONFIRMED'].includes(booking.status) && (
             <button
               onClick={() => onReschedule(booking)}
               className="w-full py-2 border border-slate-200 rounded-xl text-sm hover:bg-slate-100 transition-colors"

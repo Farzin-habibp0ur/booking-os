@@ -147,6 +147,8 @@ async function main() {
         price: 350,
         category: 'Injectables',
         kind: 'TREATMENT',
+        depositRequired: true,
+        depositAmount: 100,
         customFields: { requiresConsultation: true },
       },
     }),
@@ -303,6 +305,15 @@ async function main() {
         category: 'TREATMENT_CHECK_IN',
         body: "Hi {{customerName}}, it's been 24 hours since your {{serviceName}} at {{businessName}}. How are you feeling? Let us know if you have any questions or concerns.",
         variables: ['customerName', 'serviceName', 'businessName'],
+      },
+    }),
+    prisma.messageTemplate.create({
+      data: {
+        businessId: business.id,
+        name: 'Deposit Request',
+        category: 'DEPOSIT_REQUIRED',
+        body: 'Hi {{customerName}}, your {{serviceName}} at {{businessName}} on {{date}} at {{time}} requires a deposit of ${{depositAmount}} to confirm your booking. Please complete your payment to secure your appointment.',
+        variables: ['customerName', 'serviceName', 'businessName', 'date', 'time', 'depositAmount'],
       },
     }),
   ]);
@@ -483,6 +494,38 @@ async function main() {
   });
 
   console.log(`✅ Treatment booking with AFTERCARE and TREATMENT_CHECK_IN reminders created`);
+
+  // Create a PENDING_DEPOSIT booking for a new customer
+  const depositCustomer = await prisma.customer.create({
+    data: {
+      businessId: business.id,
+      name: 'Liam Parker',
+      phone: '+14155550204',
+      email: 'liam@example.com',
+      tags: ['New'],
+    },
+  });
+
+  const depositDate = new Date();
+  depositDate.setDate(depositDate.getDate() + 3);
+  depositDate.setHours(10, 0, 0, 0);
+
+  const depositEnd = new Date(depositDate);
+  depositEnd.setMinutes(depositEnd.getMinutes() + 30);
+
+  await prisma.booking.create({
+    data: {
+      businessId: business.id,
+      customerId: depositCustomer.id,
+      serviceId: services[0].id, // Botox Treatment (deposit required)
+      staffId: owner.id,
+      status: 'PENDING_DEPOSIT',
+      startTime: depositDate,
+      endTime: depositEnd,
+    },
+  });
+
+  console.log(`✅ PENDING_DEPOSIT booking created for ${depositCustomer.name}`);
 
   // Update business notification settings with consultFollowUpDays and treatmentCheckInHours
   await prisma.business.update({

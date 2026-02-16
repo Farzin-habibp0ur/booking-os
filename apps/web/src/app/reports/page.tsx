@@ -29,6 +29,7 @@ const PIE_COLORS = ['#8AA694', '#71907C', '#f59e0b', '#ef4444', '#9F8ECB', '#647
 
 const STATUS_COLORS: Record<string, string> = {
   PENDING: '#9F8ECB',
+  PENDING_DEPOSIT: '#f59e0b',
   CONFIRMED: '#8AA694',
   IN_PROGRESS: '#f59e0b',
   COMPLETED: '#71907C',

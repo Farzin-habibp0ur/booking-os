@@ -12,6 +12,7 @@ import BookingFormModal from '@/components/booking-form-modal';
 
 const statusColors: Record<string, string> = {
   PENDING: 'bg-lavender-100 text-lavender-700',
+  PENDING_DEPOSIT: 'bg-amber-100 text-amber-700',
   CONFIRMED: 'bg-sage-100 text-sage-700',
   IN_PROGRESS: 'bg-amber-100 text-amber-700',
   COMPLETED: 'bg-sage-50 text-sage-900',

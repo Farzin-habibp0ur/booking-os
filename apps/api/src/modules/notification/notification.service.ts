@@ -12,7 +12,7 @@ interface BookingWithRelations {
   id: string;
   businessId: string;
   customer: { id: string; name: string; phone: string; email?: string | null };
-  service: { id: string; name: string; durationMins: number };
+  service: { id: string; name: string; durationMins: number; depositRequired?: boolean; depositAmount?: number | null; price?: number };
   staff?: { id: string; name: string } | null;
   business?: { id: string; name: string } | null;
   startTime: Date;
@@ -282,6 +282,49 @@ export class NotificationService {
     }
   }
 
+  async sendDepositRequest(booking: BookingWithRelations): Promise<void> {
+    try {
+      const channels = await this.getChannelPreference(booking.businessId);
+      const business =
+        booking.business || (await this.businessService.findById(booking.businessId));
+      const businessName = business?.name || 'Our Business';
+      const depositAmount = booking.service.depositAmount || booking.service.price || 0;
+
+      const context = {
+        customerName: booking.customer.name,
+        serviceName: booking.service.name,
+        date: booking.startTime.toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        }),
+        time: booking.startTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+        staffName: booking.staff?.name || '',
+        businessName,
+        depositAmount: `${depositAmount}`,
+      };
+
+      const body = await this.resolveTemplate(booking.businessId, 'DEPOSIT_REQUIRED', context);
+
+      if (channels === 'whatsapp' || channels === 'both') {
+        await this.dispatchWhatsApp(booking.customer.phone, body, booking.businessId);
+      }
+
+      if (channels === 'email' || channels === 'both') {
+        if (booking.customer.email) {
+          const subject = `Deposit required - ${booking.service.name} at ${businessName}`;
+          const html = this.wrapInEmailHtml(body, businessName);
+          await this.dispatchEmail(booking.customer.email, subject, html);
+        }
+      }
+
+      this.logger.log(`Sent deposit request for ${booking.id} via ${channels}`);
+    } catch (error) {
+      this.logger.error(`Failed to send deposit request for ${booking.id}:`, error);
+    }
+  }
+
   private async getChannelPreference(businessId: string): Promise<'email' | 'whatsapp' | 'both'> {
     const settings = await this.businessService.getNotificationSettings(businessId);
     const channels = settings?.channels || 'both';
@@ -312,6 +355,7 @@ export class NotificationService {
       CONSULT_FOLLOW_UP: `Hi ${context.customerName}, we hope your consultation at ${context.businessName} was helpful! Ready to move forward with treatment?${context.bookingLink ? ` Book here: ${context.bookingLink}` : ''}`,
       AFTERCARE: `Hi ${context.customerName}, thank you for your ${context.serviceName} at ${context.businessName}! Here are your aftercare reminders: avoid direct sun exposure, keep the area clean, and contact us if you have any concerns.`,
       TREATMENT_CHECK_IN: `Hi ${context.customerName}, it's been 24 hours since your ${context.serviceName} at ${context.businessName}. How are you feeling? Let us know if you have any questions or concerns.`,
+      DEPOSIT_REQUIRED: `Hi ${context.customerName}, your ${context.serviceName} at ${context.businessName} on ${context.date} at ${context.time} requires a deposit of $${context.depositAmount || '0'} to confirm. Please complete your payment to secure your appointment.`,
     };
 
     return (
