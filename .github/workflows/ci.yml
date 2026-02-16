@@ -86,20 +86,20 @@ jobs:
     needs: docker-build
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
 
+    env:
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      RAILWAY_PROJECT_ID: 37eeca20-7dfe-45d9-8d29-e902a545f475
+
     steps:
       - uses: actions/checkout@v4
 
       - name: Install Railway CLI
         run: npm install -g @railway/cli
+      - name: Link Railway project
+        run: railway link --project $RAILWAY_PROJECT_ID --environment production
       - name: Run database migrations
         run: railway run --service api npx prisma migrate deploy --schema=packages/db/prisma/schema.prisma
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
       - name: Deploy API
         run: railway up --service api --detach
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
       - name: Deploy Web
         run: railway up --service web --detach
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
