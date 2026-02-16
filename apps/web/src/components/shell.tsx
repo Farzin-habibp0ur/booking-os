@@ -24,8 +24,10 @@ import {
   Settings,
   LogOut,
   Menu,
+  Search,
   X,
 } from 'lucide-react';
+import CommandPalette from '@/components/command-palette';
 
 export function Shell({ children }: { children: ReactNode }) {
   return (
@@ -45,11 +47,24 @@ function ShellInner({ children }: { children: ReactNode }) {
   const pack = usePack();
   const { t } = useI18n();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [cmdkOpen, setCmdkOpen] = useState(false);
 
   // Close sidebar on route change (mobile)
   useEffect(() => {
     setSidebarOpen(false);
   }, [pathname]);
+
+  // Cmd+K / Ctrl+K listener
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setCmdkOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
 
   const role = user?.role;
 
@@ -104,6 +119,14 @@ function ShellInner({ children }: { children: ReactNode }) {
           <X size={20} />
         </button>
       </div>
+      <button
+        onClick={() => setCmdkOpen(true)}
+        className="mx-2 mt-2 flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-slate-500 hover:bg-slate-50 transition-colors w-[calc(100%-1rem)]"
+      >
+        <Search size={16} />
+        <span className="flex-1 text-left">Search...</span>
+        <kbd className="hidden sm:inline text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">⌘K</kbd>
+      </button>
       <nav role="navigation" aria-label="Main navigation" className="flex-1 p-2 space-y-0.5 overflow-y-auto">
         {nav.map(({ href, label, icon: Icon }) => (
           <Link
@@ -183,6 +206,8 @@ function ShellInner({ children }: { children: ReactNode }) {
       <main id="main-content" className="flex-1 overflow-auto pt-14 md:pt-0">
         <ErrorBoundary>{children}</ErrorBoundary>
       </main>
+
+      <CommandPalette isOpen={cmdkOpen} onClose={() => setCmdkOpen(false)} />
     </div>
   );
 }

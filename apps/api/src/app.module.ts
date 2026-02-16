@@ -32,6 +32,7 @@ import { CalendarSyncModule } from './modules/calendar-sync/calendar-sync.module
 import { SelfServeModule } from './modules/self-serve/self-serve.module';
 import { RoiModule } from './modules/roi/roi.module';
 import { WaitlistModule } from './modules/waitlist/waitlist.module';
+import { SearchModule } from './modules/search/search.module';
 
 @Module({
   imports: [
@@ -80,6 +81,7 @@ import { WaitlistModule } from './modules/waitlist/waitlist.module';
     SelfServeModule,
     RoiModule,
     WaitlistModule,
+    SearchModule,
     process.env.REDIS_URL ? QueueModule.forRootWithRedis() : QueueModule.forRoot(),
   ],
 })
