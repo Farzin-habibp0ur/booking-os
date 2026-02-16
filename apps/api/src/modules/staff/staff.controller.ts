@@ -5,7 +5,13 @@ import { AvailabilityService } from '../availability/availability.service';
 import { BusinessId } from '../../common/decorators';
 import { TenantGuard } from '../../common/tenant.guard';
 import { RolesGuard, Roles } from '../../common/roles.guard';
-import { CreateStaffDto, UpdateStaffDto, SetWorkingHoursDto, AddTimeOffDto, InviteStaffDto } from '../../common/dto';
+import {
+  CreateStaffDto,
+  UpdateStaffDto,
+  SetWorkingHoursDto,
+  AddTimeOffDto,
+  InviteStaffDto,
+} from '../../common/dto';
 
 @Controller('staff')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
@@ -63,7 +69,11 @@ export class StaffController {
 
   @Patch(':id/working-hours')
   @Roles('OWNER', 'ADMIN')
-  setWorkingHours(@BusinessId() businessId: string, @Param('id') id: string, @Body() body: SetWorkingHoursDto) {
+  setWorkingHours(
+    @BusinessId() businessId: string,
+    @Param('id') id: string,
+    @Body() body: SetWorkingHoursDto,
+  ) {
     return this.availabilityService.setStaffWorkingHours(businessId, id, body.hours);
   }
 
@@ -74,7 +84,11 @@ export class StaffController {
 
   @Post(':id/time-off')
   @Roles('OWNER', 'ADMIN')
-  addTimeOff(@BusinessId() businessId: string, @Param('id') id: string, @Body() body: AddTimeOffDto) {
+  addTimeOff(
+    @BusinessId() businessId: string,
+    @Param('id') id: string,
+    @Body() body: AddTimeOffDto,
+  ) {
     return this.availabilityService.addTimeOff(businessId, id, body);
   }
 

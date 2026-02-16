@@ -38,7 +38,9 @@ export default function TranslationsPage() {
       : currentLocale;
   });
 
-  const [overrides, setOverrides] = useState<Record<string, { id: string; value: string; updatedAt: string }>>({});
+  const [overrides, setOverrides] = useState<
+    Record<string, { id: string; value: string; updatedAt: string }>
+  >({});
   const [search, setSearch] = useState('');
   const [showOverridesOnly, setShowOverridesOnly] = useState(false);
   const [editingKey, setEditingKey] = useState<string | null>(null);
@@ -47,11 +49,15 @@ export default function TranslationsPage() {
 
   // Get all flattened keys from the English file (source of truth)
   const allKeys = useMemo(() => flattenObject(en), []);
-  const localeDefaults = useMemo(() => flattenObject(LOCALE_FILES[selectedLocale] || {}), [selectedLocale]);
+  const localeDefaults = useMemo(
+    () => flattenObject(LOCALE_FILES[selectedLocale] || {}),
+    [selectedLocale],
+  );
 
   // Load overrides from API
   const loadOverrides = () => {
-    api.get<any[]>(`/translations/keys?locale=${selectedLocale}`)
+    api
+      .get<any[]>(`/translations/keys?locale=${selectedLocale}`)
       .then((items) => {
         const map: Record<string, { id: string; value: string; updatedAt: string }> = {};
         for (const item of items) {
@@ -76,11 +82,12 @@ export default function TranslationsPage() {
 
     if (search) {
       const q = search.toLowerCase();
-      keys = keys.filter((k) =>
-        k.toLowerCase().includes(q)
-        || allKeys[k].toLowerCase().includes(q)
-        || (localeDefaults[k] || '').toLowerCase().includes(q)
-        || (overrides[k]?.value || '').toLowerCase().includes(q)
+      keys = keys.filter(
+        (k) =>
+          k.toLowerCase().includes(q) ||
+          allKeys[k].toLowerCase().includes(q) ||
+          (localeDefaults[k] || '').toLowerCase().includes(q) ||
+          (overrides[k]?.value || '').toLowerCase().includes(q),
       );
     }
 
@@ -133,10 +140,15 @@ export default function TranslationsPage() {
     <div className="p-6 max-w-5xl">
       {/* Header */}
       <div className="flex items-center gap-3 mb-1">
-        <button onClick={() => router.push('/settings')} className="p-1 hover:bg-slate-100 rounded-xl transition-colors">
+        <button
+          onClick={() => router.push('/settings')}
+          className="p-1 hover:bg-slate-100 rounded-xl transition-colors"
+        >
           <ChevronLeft size={20} />
         </button>
-        <h1 className="text-2xl font-serif font-semibold text-slate-900">{t('translations.title')}</h1>
+        <h1 className="text-2xl font-serif font-semibold text-slate-900">
+          {t('translations.title')}
+        </h1>
       </div>
       <p className="text-sm text-slate-500 mb-6 ml-9">{t('translations.description')}</p>
 
@@ -152,7 +164,9 @@ export default function TranslationsPage() {
                 onClick={() => setSelectedLocale(l.code)}
                 className={cn(
                   'px-3 py-1.5 rounded-xl text-sm transition-colors',
-                  selectedLocale === l.code ? 'bg-white shadow-sm font-medium' : 'text-slate-500 hover:text-slate-700',
+                  selectedLocale === l.code
+                    ? 'bg-white shadow-sm font-medium'
+                    : 'text-slate-500 hover:text-slate-700',
                 )}
               >
                 {l.name}
@@ -200,7 +214,9 @@ export default function TranslationsPage() {
         {Object.entries(groupedKeys).map(([section, keys]) => (
           <div key={section} className="bg-white rounded-2xl shadow-soft overflow-hidden">
             <div className="bg-slate-50 px-4 py-2 border-b">
-              <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">{section}</h3>
+              <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">
+                {section}
+              </h3>
             </div>
             <div className="divide-y">
               {keys.map((key) => {
@@ -219,14 +235,18 @@ export default function TranslationsPage() {
 
                       {/* English default */}
                       <div className="w-48 flex-shrink-0">
-                        <p className="text-xs text-slate-400 mb-0.5">{selectedLocale === 'en' ? 'Default' : 'English'}</p>
+                        <p className="text-xs text-slate-400 mb-0.5">
+                          {selectedLocale === 'en' ? 'Default' : 'English'}
+                        </p>
                         <p className="text-sm text-slate-600">{allKeys[key]}</p>
                       </div>
 
                       {/* Current value / edit */}
                       <div className="flex-1">
                         <p className="text-xs text-slate-400 mb-0.5">
-                          {hasOverride ? t('translations.override_column') : t('translations.default_column')}
+                          {hasOverride
+                            ? t('translations.override_column')
+                            : t('translations.default_column')}
                         </p>
                         {isEditing ? (
                           <div className="flex items-center gap-2">

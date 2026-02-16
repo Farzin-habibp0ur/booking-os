@@ -8,9 +8,7 @@ export const CurrentUser = createParamDecorator(
   },
 );
 
-export const BusinessId = createParamDecorator(
-  (_data: unknown, ctx: ExecutionContext) => {
-    const request = ctx.switchToHttp().getRequest();
-    return request.user?.businessId;
-  },
-);
+export const BusinessId = createParamDecorator((_data: unknown, ctx: ExecutionContext) => {
+  const request = ctx.switchToHttp().getRequest();
+  return request.user?.businessId;
+});

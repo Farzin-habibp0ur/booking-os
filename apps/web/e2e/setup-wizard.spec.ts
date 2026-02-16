@@ -15,8 +15,16 @@ test.describe('Setup Wizard', () => {
     await expect(page.locator('text=/setup/i').first()).toBeVisible({ timeout: 15000 });
 
     // Step indicator should show step 1 info
-    const hasStepText = await page.locator('text=/step|1.*of/i').first().isVisible({ timeout: 5000 }).catch(() => false);
-    const hasProgress = await page.locator('[role="progressbar"], .step, .progress').first().isVisible({ timeout: 5000 }).catch(() => false);
+    const hasStepText = await page
+      .locator('text=/step|1.*of/i')
+      .first()
+      .isVisible({ timeout: 5000 })
+      .catch(() => false);
+    const hasProgress = await page
+      .locator('[role="progressbar"], .step, .progress')
+      .first()
+      .isVisible({ timeout: 5000 })
+      .catch(() => false);
 
     expect(hasStepText || hasProgress).toBe(true);
   });
@@ -55,7 +63,9 @@ test.describe('Setup Wizard', () => {
       await page.waitForTimeout(1000);
 
       // Go back
-      const backButton = page.locator('button:has-text("Back"), button:has-text("back"), button:has-text("Previous")').first();
+      const backButton = page
+        .locator('button:has-text("Back"), button:has-text("back"), button:has-text("Previous")')
+        .first();
       const hasBack = await backButton.isVisible({ timeout: 5000 }).catch(() => false);
 
       if (hasBack) {

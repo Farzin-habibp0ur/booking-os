@@ -70,10 +70,12 @@ export class DashboardService {
       this.prisma.conversation.count({
         where: { businessId, status: { in: ['OPEN', 'WAITING'] } },
       }),
-      this.prisma.booking.findMany({
-        where: { businessId, createdAt: { gte: monthAgo }, status: 'COMPLETED' },
-        include: { service: { select: { price: true } } },
-      }).then((bookings) => bookings.reduce((sum, b) => sum + b.service.price, 0)),
+      this.prisma.booking
+        .findMany({
+          where: { businessId, createdAt: { gte: monthAgo }, status: 'COMPLETED' },
+          include: { service: { select: { price: true } } },
+        })
+        .then((bookings) => bookings.reduce((sum, b) => sum + b.service.price, 0)),
     ]);
 
     return {

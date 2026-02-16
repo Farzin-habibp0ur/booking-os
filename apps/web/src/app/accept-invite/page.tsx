@@ -16,9 +16,14 @@ function AcceptInviteForm() {
 
   if (!token) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#FCFCFD' }}>
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ backgroundColor: '#FCFCFD' }}
+      >
         <div className="bg-white p-8 rounded-3xl shadow-soft w-full max-w-md text-center">
-          <h1 className="text-2xl font-serif font-semibold text-slate-900 mb-2">Invalid invitation</h1>
+          <h1 className="text-2xl font-serif font-semibold text-slate-900 mb-2">
+            Invalid invitation
+          </h1>
           <p className="text-slate-500 mb-4">This invitation link is invalid or has expired.</p>
           <Link href="/login" className="text-sage-600 hover:underline text-sm">
             Go to sign in
@@ -51,9 +56,14 @@ function AcceptInviteForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#FCFCFD' }}>
+    <div
+      className="min-h-screen flex items-center justify-center"
+      style={{ backgroundColor: '#FCFCFD' }}
+    >
       <div className="bg-white p-8 rounded-3xl shadow-soft w-full max-w-md">
-        <h1 className="text-2xl font-serif font-semibold text-slate-900 text-center mb-2">Accept invitation</h1>
+        <h1 className="text-2xl font-serif font-semibold text-slate-900 text-center mb-2">
+          Accept invitation
+        </h1>
         <p className="text-slate-500 text-center mb-6">Set your password to join the team.</p>
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm">{error}</div>}
@@ -95,7 +105,16 @@ function AcceptInviteForm() {
 
 export default function AcceptInvitePage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#FCFCFD' }}><p className="text-slate-400">Loading...</p></div>}>
+    <Suspense
+      fallback={
+        <div
+          className="min-h-screen flex items-center justify-center"
+          style={{ backgroundColor: '#FCFCFD' }}
+        >
+          <p className="text-slate-400">Loading...</p>
+        </div>
+      }
+    >
       <AcceptInviteForm />
     </Suspense>
   );

@@ -40,10 +40,7 @@ export async function createIntegrationApp(
       ...modules,
     ],
     controllers,
-    providers: [
-      ...providers,
-      { provide: PrismaService, useValue: prisma },
-    ],
+    providers: [...providers, { provide: PrismaService, useValue: prisma }],
   });
 
   const moduleRef: TestingModule = await moduleBuilder.compile();

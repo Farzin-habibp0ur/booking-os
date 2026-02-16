@@ -9,9 +9,27 @@ describe('PublicBookingController', () => {
   let customerService: any;
   let bookingService: any;
 
-  const mockBusiness = { id: 'biz1', name: 'Glow Clinic', slug: 'glow-clinic', timezone: 'America/New_York' };
-  const mockService = { id: 'svc1', name: 'Botox', description: 'Anti-wrinkle treatment', durationMins: 30, price: 200, category: 'Aesthetic' };
-  const mockCustomer = { id: 'cust1', name: 'Jane', phone: '+1234567890', email: null, businessId: 'biz1' };
+  const mockBusiness = {
+    id: 'biz1',
+    name: 'Glow Clinic',
+    slug: 'glow-clinic',
+    timezone: 'America/New_York',
+  };
+  const mockService = {
+    id: 'svc1',
+    name: 'Botox',
+    description: 'Anti-wrinkle treatment',
+    durationMins: 30,
+    price: 200,
+    category: 'Aesthetic',
+  };
+  const mockCustomer = {
+    id: 'cust1',
+    name: 'Jane',
+    phone: '+1234567890',
+    email: null,
+    businessId: 'biz1',
+  };
   const mockBooking = {
     id: 'book1',
     startTime: new Date('2026-03-01T10:00:00Z'),
@@ -37,7 +55,11 @@ describe('PublicBookingController', () => {
     it('returns business info by slug', async () => {
       prisma.business.findFirst.mockResolvedValue(mockBusiness as any);
       const result = await controller.getBusiness('glow-clinic');
-      expect(result).toEqual({ name: 'Glow Clinic', slug: 'glow-clinic', timezone: 'America/New_York' });
+      expect(result).toEqual({
+        name: 'Glow Clinic',
+        slug: 'glow-clinic',
+        timezone: 'America/New_York',
+      });
     });
 
     it('throws 404 for invalid slug', async () => {
@@ -64,9 +86,27 @@ describe('PublicBookingController', () => {
     it('returns available slots for a date', async () => {
       prisma.business.findFirst.mockResolvedValue(mockBusiness as any);
       availabilityService.getAvailableSlots.mockResolvedValue([
-        { time: '2026-03-01T10:00:00Z', display: '10:00', staffId: 's1', staffName: 'Sarah', available: true },
-        { time: '2026-03-01T10:30:00Z', display: '10:30', staffId: 's1', staffName: 'Sarah', available: false },
-        { time: '2026-03-01T11:00:00Z', display: '11:00', staffId: 's1', staffName: 'Sarah', available: true },
+        {
+          time: '2026-03-01T10:00:00Z',
+          display: '10:00',
+          staffId: 's1',
+          staffName: 'Sarah',
+          available: true,
+        },
+        {
+          time: '2026-03-01T10:30:00Z',
+          display: '10:30',
+          staffId: 's1',
+          staffName: 'Sarah',
+          available: false,
+        },
+        {
+          time: '2026-03-01T11:00:00Z',
+          display: '11:00',
+          staffId: 's1',
+          staffName: 'Sarah',
+          available: true,
+        },
       ]);
 
       const result = await controller.getAvailability('glow-clinic', '2026-03-01', 'svc1');
@@ -75,8 +115,12 @@ describe('PublicBookingController', () => {
     });
 
     it('throws if date or serviceId missing', async () => {
-      await expect(controller.getAvailability('glow-clinic', '', 'svc1')).rejects.toThrow(BadRequestException);
-      await expect(controller.getAvailability('glow-clinic', '2026-03-01', '')).rejects.toThrow(BadRequestException);
+      await expect(controller.getAvailability('glow-clinic', '', 'svc1')).rejects.toThrow(
+        BadRequestException,
+      );
+      await expect(controller.getAvailability('glow-clinic', '2026-03-01', '')).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 
@@ -93,7 +137,11 @@ describe('PublicBookingController', () => {
         customerPhone: '+1234567890',
       });
 
-      expect(customerService.findOrCreateByPhone).toHaveBeenCalledWith('biz1', '+1234567890', 'Jane');
+      expect(customerService.findOrCreateByPhone).toHaveBeenCalledWith(
+        'biz1',
+        '+1234567890',
+        'Jane',
+      );
       expect(bookingService.create).toHaveBeenCalledWith('biz1', {
         customerId: 'cust1',
         serviceId: 'svc1',

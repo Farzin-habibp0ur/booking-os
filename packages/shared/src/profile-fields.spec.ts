@@ -3,96 +3,60 @@ import { checkProfileCompleteness, PROFILE_FIELDS } from './profile-fields';
 describe('checkProfileCompleteness', () => {
   describe('firstName', () => {
     it('extracts firstName from full name', () => {
-      const result = checkProfileCompleteness(
-        { name: 'Jane Doe' },
-        ['firstName'],
-      );
+      const result = checkProfileCompleteness({ name: 'Jane Doe' }, ['firstName']);
       expect(result.complete).toBe(true);
       expect(result.missingFields).toEqual([]);
     });
 
     it('extracts firstName from single name', () => {
-      const result = checkProfileCompleteness(
-        { name: 'Jane' },
-        ['firstName'],
-      );
+      const result = checkProfileCompleteness({ name: 'Jane' }, ['firstName']);
       expect(result.complete).toBe(true);
     });
 
     it('marks firstName missing for empty string', () => {
-      const result = checkProfileCompleteness(
-        { name: '' },
-        ['firstName'],
-      );
+      const result = checkProfileCompleteness({ name: '' }, ['firstName']);
       expect(result.complete).toBe(false);
-      expect(result.missingFields).toEqual([
-        expect.objectContaining({ key: 'firstName' }),
-      ]);
+      expect(result.missingFields).toEqual([expect.objectContaining({ key: 'firstName' })]);
     });
 
     it('marks firstName missing for whitespace-only name', () => {
-      const result = checkProfileCompleteness(
-        { name: '   ' },
-        ['firstName'],
-      );
+      const result = checkProfileCompleteness({ name: '   ' }, ['firstName']);
       expect(result.complete).toBe(false);
     });
   });
 
   describe('lastName', () => {
     it('extracts lastName from "Jane Doe"', () => {
-      const result = checkProfileCompleteness(
-        { name: 'Jane Doe' },
-        ['lastName'],
-      );
+      const result = checkProfileCompleteness({ name: 'Jane Doe' }, ['lastName']);
       expect(result.complete).toBe(true);
     });
 
     it('marks lastName missing from single name "Jane"', () => {
-      const result = checkProfileCompleteness(
-        { name: 'Jane' },
-        ['lastName'],
-      );
+      const result = checkProfileCompleteness({ name: 'Jane' }, ['lastName']);
       expect(result.complete).toBe(false);
-      expect(result.missingFields).toEqual([
-        expect.objectContaining({ key: 'lastName' }),
-      ]);
+      expect(result.missingFields).toEqual([expect.objectContaining({ key: 'lastName' })]);
     });
 
     it('extracts lastName from multi-part name', () => {
-      const result = checkProfileCompleteness(
-        { name: 'Jane Van Doe' },
-        ['lastName'],
-      );
+      const result = checkProfileCompleteness({ name: 'Jane Van Doe' }, ['lastName']);
       expect(result.complete).toBe(true);
     });
   });
 
   describe('email', () => {
     it('present when email is a string', () => {
-      const result = checkProfileCompleteness(
-        { name: 'Jane', email: 'jane@test.com' },
-        ['email'],
-      );
+      const result = checkProfileCompleteness({ name: 'Jane', email: 'jane@test.com' }, ['email']);
       expect(result.complete).toBe(true);
     });
 
     it('missing when email is null', () => {
-      const result = checkProfileCompleteness(
-        { name: 'Jane', email: null },
-        ['email'],
-      );
+      const result = checkProfileCompleteness({ name: 'Jane', email: null }, ['email']);
       expect(result.complete).toBe(false);
-      expect(result.missingFields).toEqual([
-        expect.objectContaining({ key: 'email' }),
-      ]);
+      expect(result.missingFields).toEqual([expect.objectContaining({ key: 'email' })]);
     });
 
     it('missing when email is undefined', () => {
-      const result = checkProfileCompleteness(
-        { name: 'Jane' },
-        ['email'],
-      );
+      const result = checkProfileCompleteness({ name: 'Jane' }, ['email']);
       expect(result.complete).toBe(false);
     });
   });
@@ -107,21 +71,13 @@ describe('checkProfileCompleteness', () => {
     });
 
     it('missing when customField is absent', () => {
-      const result = checkProfileCompleteness(
-        { name: 'Jane', customFields: {} },
-        ['allergies'],
-      );
+      const result = checkProfileCompleteness({ name: 'Jane', customFields: {} }, ['allergies']);
       expect(result.complete).toBe(false);
-      expect(result.missingFields).toEqual([
-        expect.objectContaining({ key: 'allergies' }),
-      ]);
+      expect(result.missingFields).toEqual([expect.objectContaining({ key: 'allergies' })]);
     });
 
     it('missing when no customFields object at all', () => {
-      const result = checkProfileCompleteness(
-        { name: 'Jane' },
-        ['address'],
-      );
+      const result = checkProfileCompleteness({ name: 'Jane' }, ['address']);
       expect(result.complete).toBe(false);
     });
 
@@ -136,10 +92,7 @@ describe('checkProfileCompleteness', () => {
 
   describe('unknown keys', () => {
     it('skips unknown key gracefully', () => {
-      const result = checkProfileCompleteness(
-        { name: 'Jane' },
-        ['unknownField'],
-      );
+      const result = checkProfileCompleteness({ name: 'Jane' }, ['unknownField']);
       expect(result.complete).toBe(true);
       expect(result.missingFields).toEqual([]);
     });
@@ -147,10 +100,12 @@ describe('checkProfileCompleteness', () => {
 
   describe('multiple required fields', () => {
     it('returns all missing fields', () => {
-      const result = checkProfileCompleteness(
-        { name: 'Jane' },
-        ['firstName', 'lastName', 'email', 'allergies'],
-      );
+      const result = checkProfileCompleteness({ name: 'Jane' }, [
+        'firstName',
+        'lastName',
+        'email',
+        'allergies',
+      ]);
       expect(result.complete).toBe(false);
       const missingKeys = result.missingFields.map((f) => f.key);
       expect(missingKeys).toContain('lastName');
@@ -175,21 +130,13 @@ describe('checkProfileCompleteness', () => {
 
   describe('edge cases', () => {
     it('empty required keys returns complete', () => {
-      const result = checkProfileCompleteness(
-        { name: 'Jane' },
-        [],
-      );
+      const result = checkProfileCompleteness({ name: 'Jane' }, []);
       expect(result.complete).toBe(true);
     });
 
     it('missingFields contain full ProfileFieldDef objects', () => {
-      const result = checkProfileCompleteness(
-        { name: 'Jane' },
-        ['email'],
-      );
-      expect(result.missingFields[0]).toEqual(
-        PROFILE_FIELDS.find((f) => f.key === 'email'),
-      );
+      const result = checkProfileCompleteness({ name: 'Jane' }, ['email']);
+      expect(result.missingFields[0]).toEqual(PROFILE_FIELDS.find((f) => f.key === 'email'));
     });
   });
 });

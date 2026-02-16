@@ -1,4 +1,14 @@
-import { Controller, Post, Get, Body, Headers, Req, UseGuards, RawBodyRequest, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  Headers,
+  Req,
+  UseGuards,
+  RawBodyRequest,
+  BadRequestException,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Request } from 'express';
 import { BillingService } from './billing.service';
@@ -11,10 +21,7 @@ export class BillingController {
 
   @Post('checkout')
   @UseGuards(AuthGuard('jwt'), TenantGuard)
-  createCheckout(
-    @BusinessId() businessId: string,
-    @Body() body: { plan: 'basic' | 'pro' },
-  ) {
+  createCheckout(@BusinessId() businessId: string, @Body() body: { plan: 'basic' | 'pro' }) {
     return this.billingService.createCheckoutSession(businessId, body.plan);
   }
 
@@ -41,10 +48,7 @@ export class BillingController {
 
   @Post('deposit')
   @UseGuards(AuthGuard('jwt'), TenantGuard)
-  createDeposit(
-    @BusinessId() businessId: string,
-    @Body() body: { bookingId: string },
-  ) {
+  createDeposit(@BusinessId() businessId: string, @Body() body: { bookingId: string }) {
     return this.billingService.createDepositPaymentIntent(businessId, body.bookingId);
   }
 }

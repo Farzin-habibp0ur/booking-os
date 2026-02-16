@@ -31,7 +31,10 @@ export class InboxGateway implements OnGatewayConnection, OnGatewayDisconnect, O
     private configService: ConfigService,
   ) {
     this.allowedOrigins = configService.get<string>('CORS_ORIGINS')
-      ? configService.get<string>('CORS_ORIGINS')!.split(',').map((o) => o.trim())
+      ? configService
+          .get<string>('CORS_ORIGINS')!
+          .split(',')
+          .map((o) => o.trim())
       : ['http://localhost:3000', 'http://localhost:3002'];
   }
 

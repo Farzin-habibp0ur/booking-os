@@ -42,8 +42,24 @@ describe('StaffService', () => {
   describe('findAll', () => {
     it('returns staff with invitePending flag, omits passwordHash', async () => {
       const staffList = [
-        { id: 's1', name: 'Alice', email: 'a@b.com', role: 'OWNER', isActive: true, passwordHash: 'hashed', createdAt: new Date() },
-        { id: 's2', name: 'Bob', email: 'b@b.com', role: 'AGENT', isActive: true, passwordHash: null, createdAt: new Date() },
+        {
+          id: 's1',
+          name: 'Alice',
+          email: 'a@b.com',
+          role: 'OWNER',
+          isActive: true,
+          passwordHash: 'hashed',
+          createdAt: new Date(),
+        },
+        {
+          id: 's2',
+          name: 'Bob',
+          email: 'b@b.com',
+          role: 'AGENT',
+          isActive: true,
+          passwordHash: null,
+          createdAt: new Date(),
+        },
       ];
       prisma.staff.findMany.mockResolvedValue(staffList as any);
 
@@ -62,11 +78,19 @@ describe('StaffService', () => {
       prisma.staff.findUnique.mockResolvedValue(null);
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashed-pw');
       prisma.staff.create.mockResolvedValue({
-        id: 's1', name: 'Alice', email: 'a@b.com', role: 'AGENT', isActive: true, createdAt: new Date(),
+        id: 's1',
+        name: 'Alice',
+        email: 'a@b.com',
+        role: 'AGENT',
+        isActive: true,
+        createdAt: new Date(),
       } as any);
 
       const result = await staffService.create('biz1', {
-        name: 'Alice', email: 'a@b.com', password: 'password123', role: 'AGENT',
+        name: 'Alice',
+        email: 'a@b.com',
+        password: 'password123',
+        role: 'AGENT',
       });
 
       expect(result.id).toBe('s1');
@@ -85,7 +109,12 @@ describe('StaffService', () => {
       prisma.staff.findUnique.mockResolvedValue({ id: 's1' } as any);
 
       await expect(
-        staffService.create('biz1', { name: 'Alice', email: 'a@b.com', password: 'pw', role: 'AGENT' }),
+        staffService.create('biz1', {
+          name: 'Alice',
+          email: 'a@b.com',
+          password: 'pw',
+          role: 'AGENT',
+        }),
       ).rejects.toThrow(ConflictException);
     });
   });
@@ -95,7 +124,12 @@ describe('StaffService', () => {
       prisma.staff.findUnique.mockResolvedValue(null);
       prisma.business.findUnique.mockResolvedValue({ id: 'biz1', name: 'Glow Clinic' } as any);
       prisma.staff.create.mockResolvedValue({
-        id: 's1', name: 'Bob', email: 'bob@test.com', role: 'AGENT', isActive: true, createdAt: new Date(),
+        id: 's1',
+        name: 'Bob',
+        email: 'bob@test.com',
+        role: 'AGENT',
+        isActive: true,
+        createdAt: new Date(),
       } as any);
       tokenService.createToken.mockResolvedValue('invite-token-hex');
 
@@ -115,7 +149,13 @@ describe('StaffService', () => {
       const createData = prisma.staff.create.mock.calls[0][0].data;
       expect(createData.passwordHash).toBeUndefined();
 
-      expect(tokenService.createToken).toHaveBeenCalledWith('STAFF_INVITE', 'bob@test.com', 'biz1', 's1', 48);
+      expect(tokenService.createToken).toHaveBeenCalledWith(
+        'STAFF_INVITE',
+        'bob@test.com',
+        'biz1',
+        's1',
+        48,
+      );
       expect(emailService.sendStaffInvitation).toHaveBeenCalledWith(
         'bob@test.com',
         expect.objectContaining({ name: 'Bob', businessName: 'Glow Clinic' }),
@@ -134,7 +174,11 @@ describe('StaffService', () => {
   describe('resendInvite', () => {
     it('revokes old tokens, creates new, sends email', async () => {
       prisma.staff.findFirst.mockResolvedValue({
-        id: 's1', name: 'Bob', email: 'bob@test.com', passwordHash: null, businessId: 'biz1',
+        id: 's1',
+        name: 'Bob',
+        email: 'bob@test.com',
+        passwordHash: null,
+        businessId: 'biz1',
         business: { id: 'biz1', name: 'Glow Clinic' },
       } as any);
       tokenService.createToken.mockResolvedValue('new-token-hex');
@@ -143,19 +187,26 @@ describe('StaffService', () => {
 
       expect(result).toEqual({ ok: true });
       expect(tokenService.revokeTokens).toHaveBeenCalledWith('bob@test.com', 'STAFF_INVITE');
-      expect(tokenService.createToken).toHaveBeenCalledWith('STAFF_INVITE', 'bob@test.com', 'biz1', 's1', 48);
+      expect(tokenService.createToken).toHaveBeenCalledWith(
+        'STAFF_INVITE',
+        'bob@test.com',
+        'biz1',
+        's1',
+        48,
+      );
       expect(emailService.sendStaffInvitation).toHaveBeenCalled();
     });
 
     it('throws ConflictException if password already set', async () => {
       prisma.staff.findFirst.mockResolvedValue({
-        id: 's1', name: 'Bob', email: 'bob@test.com', passwordHash: 'already-set',
+        id: 's1',
+        name: 'Bob',
+        email: 'bob@test.com',
+        passwordHash: 'already-set',
         business: { id: 'biz1', name: 'Glow Clinic' },
       } as any);
 
-      await expect(
-        staffService.resendInvite('biz1', 's1'),
-      ).rejects.toThrow(ConflictException);
+      await expect(staffService.resendInvite('biz1', 's1')).rejects.toThrow(ConflictException);
     });
   });
 
@@ -177,9 +228,9 @@ describe('StaffService', () => {
     it('throws NotFoundException if not found', async () => {
       prisma.staff.findFirst.mockResolvedValue(null);
 
-      await expect(
-        staffService.revokeInvite('biz1', 'nonexistent'),
-      ).rejects.toThrow(NotFoundException);
+      await expect(staffService.revokeInvite('biz1', 'nonexistent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 });

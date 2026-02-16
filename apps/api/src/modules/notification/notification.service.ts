@@ -36,13 +36,19 @@ export class NotificationService {
   async sendBookingConfirmation(booking: BookingWithRelations): Promise<void> {
     try {
       const channels = await this.getChannelPreference(booking.businessId);
-      const business = booking.business || await this.businessService.findById(booking.businessId);
+      const business =
+        booking.business || (await this.businessService.findById(booking.businessId));
       const businessName = business?.name || 'Our Business';
 
       const context = {
         customerName: booking.customer.name,
         serviceName: booking.service.name,
-        date: booking.startTime.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),
+        date: booking.startTime.toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        }),
         time: booking.startTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
         staffName: booking.staff?.name || '',
         businessName,
@@ -71,13 +77,19 @@ export class NotificationService {
   async sendReminder(booking: BookingWithRelations): Promise<void> {
     try {
       const channels = await this.getChannelPreference(booking.businessId);
-      const business = booking.business || await this.businessService.findById(booking.businessId);
+      const business =
+        booking.business || (await this.businessService.findById(booking.businessId));
       const businessName = business?.name || 'Our Business';
 
       const context = {
         customerName: booking.customer.name,
         serviceName: booking.service.name,
-        date: booking.startTime.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),
+        date: booking.startTime.toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        }),
         time: booking.startTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
         staffName: booking.staff?.name || '',
         businessName,
@@ -106,13 +118,19 @@ export class NotificationService {
   async sendFollowUp(booking: BookingWithRelations): Promise<void> {
     try {
       const channels = await this.getChannelPreference(booking.businessId);
-      const business = booking.business || await this.businessService.findById(booking.businessId);
+      const business =
+        booking.business || (await this.businessService.findById(booking.businessId));
       const businessName = business?.name || 'Our Business';
 
       const context = {
         customerName: booking.customer.name,
         serviceName: booking.service.name,
-        date: booking.startTime.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),
+        date: booking.startTime.toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        }),
         time: booking.startTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
         staffName: booking.staff?.name || '',
         businessName,
@@ -147,7 +165,11 @@ export class NotificationService {
     return 'both';
   }
 
-  private async resolveTemplate(businessId: string, category: string, context: any): Promise<string> {
+  private async resolveTemplate(
+    businessId: string,
+    category: string,
+    context: any,
+  ): Promise<string> {
     const templates = await this.prisma.messageTemplate.findMany({
       where: { businessId, category },
     });
@@ -163,7 +185,10 @@ export class NotificationService {
       FOLLOW_UP: `Hi ${context.customerName}, thank you for visiting ${context.businessName}! We hope you enjoyed your ${context.serviceName}. We'd love to hear your feedback.`,
     };
 
-    return defaults[category] || `Hi ${context.customerName}, this is a message from ${context.businessName}.`;
+    return (
+      defaults[category] ||
+      `Hi ${context.customerName}, this is a message from ${context.businessName}.`
+    );
   }
 
   private async dispatchEmail(to: string, subject: string, html: string): Promise<void> {

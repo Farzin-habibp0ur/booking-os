@@ -76,9 +76,10 @@ export class ReportsService {
       }
     }
 
-    const avg = responseTimes.length > 0
-      ? Math.round(responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length)
-      : 0;
+    const avg =
+      responseTimes.length > 0
+        ? Math.round(responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length)
+        : 0;
 
     return { avgMinutes: avg, sampleSize: responseTimes.length };
   }
@@ -117,7 +118,10 @@ export class ReportsService {
       },
     });
 
-    const map: Record<string, { name: string; total: number; completed: number; noShows: number; revenue: number }> = {};
+    const map: Record<
+      string,
+      { name: string; total: number; completed: number; noShows: number; revenue: number }
+    > = {};
     for (const b of bookings) {
       const staff = b.staff;
       if (!staff) continue;
@@ -132,11 +136,13 @@ export class ReportsService {
       if (b.status === 'NO_SHOW') map[staff.id].noShows++;
     }
 
-    return Object.entries(map).map(([id, data]) => ({
-      staffId: id,
-      ...data,
-      noShowRate: data.total > 0 ? Math.round((data.noShows / data.total) * 100) : 0,
-    })).sort((a, b) => b.total - a.total);
+    return Object.entries(map)
+      .map(([id, data]) => ({
+        staffId: id,
+        ...data,
+        noShowRate: data.total > 0 ? Math.round((data.noShows / data.total) * 100) : 0,
+      }))
+      .sort((a, b) => b.total - a.total);
   }
 
   async revenueOverTime(businessId: string, days: number = 30) {
@@ -155,7 +161,10 @@ export class ReportsService {
       grouped[date] = (grouped[date] || 0) + b.service.price;
     }
 
-    return Object.entries(grouped).map(([date, revenue]) => ({ date, revenue: Math.round(revenue * 100) / 100 }));
+    return Object.entries(grouped).map(([date, revenue]) => ({
+      date,
+      revenue: Math.round(revenue * 100) / 100,
+    }));
   }
 
   async statusBreakdown(businessId: string, days: number = 30) {

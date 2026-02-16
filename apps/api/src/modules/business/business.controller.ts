@@ -29,7 +29,10 @@ export class BusinessController {
 
   @Patch('notification-settings')
   @Roles('OWNER')
-  async updateNotificationSettings(@BusinessId() businessId: string, @Body() body: { channels?: string; followUpDelayHours?: number }) {
+  async updateNotificationSettings(
+    @BusinessId() businessId: string,
+    @Body() body: { channels?: string; followUpDelayHours?: number },
+  ) {
     return this.businessService.updateNotificationSettings(businessId, body);
   }
 }

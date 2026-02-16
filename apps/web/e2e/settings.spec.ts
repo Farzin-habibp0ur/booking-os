@@ -34,8 +34,16 @@ test.describe('Settings', () => {
     await expect(page.locator('text=/ai/i').first()).toBeVisible({ timeout: 15000 });
 
     // The page should have some form of toggle or settings controls
-    const hasToggle = await page.locator('input[type="checkbox"]').first().isVisible({ timeout: 5000 }).catch(() => false);
-    const hasButton = await page.locator('button').first().isVisible({ timeout: 5000 }).catch(() => false);
+    const hasToggle = await page
+      .locator('input[type="checkbox"]')
+      .first()
+      .isVisible({ timeout: 5000 })
+      .catch(() => false);
+    const hasButton = await page
+      .locator('button')
+      .first()
+      .isVisible({ timeout: 5000 })
+      .catch(() => false);
 
     // AI settings page should have interactive controls
     expect(hasToggle || hasButton).toBe(true);
@@ -57,7 +65,11 @@ test.describe('Settings', () => {
     await page.waitForLoadState('networkidle');
 
     // Business settings should have input fields for business details
-    const hasBusinessFields = await page.locator('input[name*="business" i], input[name*="name" i]').first().isVisible({ timeout: 5000 }).catch(() => false);
+    const hasBusinessFields = await page
+      .locator('input[name*="business" i], input[name*="name" i]')
+      .first()
+      .isVisible({ timeout: 5000 })
+      .catch(() => false);
 
     if (hasBusinessFields) {
       await expect(page.locator('input').first()).toBeVisible();

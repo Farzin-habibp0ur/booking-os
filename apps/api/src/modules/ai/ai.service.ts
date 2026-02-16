@@ -116,13 +116,15 @@ export class AiService {
 
   private persistAiUsage(businessId: string, count: number, date: string) {
     // Fire-and-forget: upsert usage to dedicated AiUsage table
-    this.prisma.aiUsage.upsert({
-      where: { businessId_date: { businessId, date } },
-      update: { count },
-      create: { businessId, date, count },
-    }).catch((err) => {
-      this.logger.error(`Failed to persist AI usage: ${err.message}`);
-    });
+    this.prisma.aiUsage
+      .upsert({
+        where: { businessId_date: { businessId, date } },
+        update: { count },
+        create: { businessId, date, count },
+      })
+      .catch((err) => {
+        this.logger.error(`Failed to persist AI usage: ${err.message}`);
+      });
   }
 
   async getAiUsage(businessId: string): Promise<{ count: number; date: string; limit: number }> {
@@ -222,7 +224,10 @@ export class AiService {
         : undefined;
 
       // 1. Detect intent
-      const intentResult = await this.intentDetector.detect(messageContent, recentContext || undefined);
+      const intentResult = await this.intentDetector.detect(
+        messageContent,
+        recentContext || undefined,
+      );
 
       // Store intent in message metadata
       await this.prisma.message.update({
@@ -258,36 +263,74 @@ export class AiService {
         if (hasActiveBooking && metadata.aiBookingState?.state === 'COLLECT_PROFILE') {
           // Handle profile collection flow
           bookingState = await this.handleProfileCollection(
-            businessId, conversationId, messageContent, business, settings, customerData, customerContext,
+            businessId,
+            conversationId,
+            messageContent,
+            business,
+            settings,
+            customerData,
+            customerContext,
           );
           if (bookingState?.state === 'CONFIRM') profileJustCollected = true;
         } else if (hasActiveBooking) {
           bookingState = await this.runBookingAssistant(
-            businessId, conversationId, messageContent, intentResult, business.name, settings.personality, customerContext,
+            businessId,
+            conversationId,
+            messageContent,
+            intentResult,
+            business.name,
+            settings.personality,
+            customerContext,
           );
         } else if (hasActiveCancel) {
           cancelState = await this.runCancelAssistant(
-            businessId, conversationId, messageContent, business.name, settings.personality, customerContext,
+            businessId,
+            conversationId,
+            messageContent,
+            business.name,
+            settings.personality,
+            customerContext,
           );
         } else if (hasActiveReschedule) {
           rescheduleState = await this.runRescheduleAssistant(
-            businessId, conversationId, messageContent, business.name, settings.personality, customerContext,
+            businessId,
+            conversationId,
+            messageContent,
+            business.name,
+            settings.personality,
+            customerContext,
           );
         } else if (intentResult.intent === 'BOOK_APPOINTMENT') {
           bookingState = await this.runBookingAssistant(
-            businessId, conversationId, messageContent, intentResult, business.name, settings.personality, customerContext,
+            businessId,
+            conversationId,
+            messageContent,
+            intentResult,
+            business.name,
+            settings.personality,
+            customerContext,
           );
         } else if (intentResult.intent === 'CANCEL') {
           // Clear any other flow states before starting cancel
           await this.clearAllFlowStates(conversationId);
           cancelState = await this.runCancelAssistant(
-            businessId, conversationId, messageContent, business.name, settings.personality, customerContext,
+            businessId,
+            conversationId,
+            messageContent,
+            business.name,
+            settings.personality,
+            customerContext,
           );
         } else if (intentResult.intent === 'RESCHEDULE') {
           // Clear any other flow states before starting reschedule
           await this.clearAllFlowStates(conversationId);
           rescheduleState = await this.runRescheduleAssistant(
-            businessId, conversationId, messageContent, business.name, settings.personality, customerContext,
+            businessId,
+            conversationId,
+            messageContent,
+            business.name,
+            settings.personality,
+            customerContext,
           );
         }
       }
@@ -303,12 +346,21 @@ export class AiService {
       const isAutoReplyEnabled = settings.autoReply?.enabled && !isTransferred;
 
       // Auto-confirm: when auto-reply enabled and booking/cancel/reschedule reaches final state
-      if (isAutoReplyEnabled && bookingState?.state === 'CONFIRM' && bookingState.serviceId && bookingState.slotIso) {
+      if (
+        isAutoReplyEnabled &&
+        bookingState?.state === 'CONFIRM' &&
+        bookingState.serviceId &&
+        bookingState.slotIso
+      ) {
         // Check profile completeness before auto-confirming (skip if profile was just collected)
         const requiredFields: string[] = (business.packConfig as any)?.requiredProfileFields || [];
         if (!profileJustCollected && requiredFields.length > 0 && customerData) {
           const { complete, missingFields } = checkProfileCompleteness(
-            { name: customerData.name, email: (customerData as any).email, customFields: (customerData as any).customFields || {} },
+            {
+              name: customerData.name,
+              email: (customerData as any).email,
+              customFields: (customerData as any).customFields || {},
+            },
             requiredFields,
           );
           if (!complete) {
@@ -344,17 +396,34 @@ export class AiService {
             const booking = await this.confirmBooking(businessId, conversationId);
             const customerName = customerContext?.name || 'there';
             const confirmMsg = `Great news, ${customerName}! Your ${bookingState.serviceName} appointment has been confirmed for ${bookingState.date} at ${bookingState.time}${bookingState.staffName ? ` with ${bookingState.staffName}` : ''}. We look forward to seeing you! ✨`;
-            const defaultStaff = await this.prisma.staff.findFirst({ where: { businessId, role: 'OWNER' } });
+            const defaultStaff = await this.prisma.staff.findFirst({
+              where: { businessId, role: 'OWNER' },
+            });
             if (defaultStaff) {
               const provider = this.messagingService.getProvider();
-              await this.messageService.sendMessage(businessId, conversationId, defaultStaff.id, confirmMsg, provider);
+              await this.messageService.sendMessage(
+                businessId,
+                conversationId,
+                defaultStaff.id,
+                confirmMsg,
+                provider,
+              );
             }
             this.inboxGateway.emitToBusinessRoom(businessId, 'ai:auto-replied', {
-              conversationId, messageId, intent: 'BOOK_APPOINTMENT', draftText: confirmMsg,
+              conversationId,
+              messageId,
+              intent: 'BOOK_APPOINTMENT',
+              draftText: confirmMsg,
             });
             this.inboxGateway.emitToBusinessRoom(businessId, 'ai:suggestions', {
-              conversationId, messageId, intent: 'BOOK_APPOINTMENT',
-              confidence: intentResult.confidence, draftText: '', bookingState: null, cancelState: null, rescheduleState: null,
+              conversationId,
+              messageId,
+              intent: 'BOOK_APPOINTMENT',
+              confidence: intentResult.confidence,
+              draftText: '',
+              bookingState: null,
+              cancelState: null,
+              rescheduleState: null,
             });
             return;
           } catch (err: any) {
@@ -369,17 +438,34 @@ export class AiService {
           await this.confirmCancel(businessId, conversationId);
           const customerName = customerContext?.name || 'there';
           const confirmMsg = `${customerName}, your ${cancelState.serviceName || ''} appointment has been cancelled. If you'd like to rebook in the future, just let us know!`;
-          const defaultStaff = await this.prisma.staff.findFirst({ where: { businessId, role: 'OWNER' } });
+          const defaultStaff = await this.prisma.staff.findFirst({
+            where: { businessId, role: 'OWNER' },
+          });
           if (defaultStaff) {
             const provider = this.messagingService.getProvider();
-            await this.messageService.sendMessage(businessId, conversationId, defaultStaff.id, confirmMsg, provider);
+            await this.messageService.sendMessage(
+              businessId,
+              conversationId,
+              defaultStaff.id,
+              confirmMsg,
+              provider,
+            );
           }
           this.inboxGateway.emitToBusinessRoom(businessId, 'ai:auto-replied', {
-            conversationId, messageId, intent: 'CANCEL', draftText: confirmMsg,
+            conversationId,
+            messageId,
+            intent: 'CANCEL',
+            draftText: confirmMsg,
           });
           this.inboxGateway.emitToBusinessRoom(businessId, 'ai:suggestions', {
-            conversationId, messageId, intent: 'CANCEL',
-            confidence: intentResult.confidence, draftText: '', bookingState: null, cancelState: null, rescheduleState: null,
+            conversationId,
+            messageId,
+            intent: 'CANCEL',
+            confidence: intentResult.confidence,
+            draftText: '',
+            bookingState: null,
+            cancelState: null,
+            rescheduleState: null,
           });
           return;
         } catch (err: any) {
@@ -387,22 +473,44 @@ export class AiService {
         }
       }
 
-      if (isAutoReplyEnabled && rescheduleState?.state === 'CONFIRM_RESCHEDULE' && rescheduleState.bookingId && rescheduleState.newSlotIso) {
+      if (
+        isAutoReplyEnabled &&
+        rescheduleState?.state === 'CONFIRM_RESCHEDULE' &&
+        rescheduleState.bookingId &&
+        rescheduleState.newSlotIso
+      ) {
         try {
           await this.confirmReschedule(businessId, conversationId);
           const customerName = customerContext?.name || 'there';
           const confirmMsg = `${customerName}, your appointment has been rescheduled to ${rescheduleState.newDate} at ${rescheduleState.newTime}. See you then! ✨`;
-          const defaultStaff = await this.prisma.staff.findFirst({ where: { businessId, role: 'OWNER' } });
+          const defaultStaff = await this.prisma.staff.findFirst({
+            where: { businessId, role: 'OWNER' },
+          });
           if (defaultStaff) {
             const provider = this.messagingService.getProvider();
-            await this.messageService.sendMessage(businessId, conversationId, defaultStaff.id, confirmMsg, provider);
+            await this.messageService.sendMessage(
+              businessId,
+              conversationId,
+              defaultStaff.id,
+              confirmMsg,
+              provider,
+            );
           }
           this.inboxGateway.emitToBusinessRoom(businessId, 'ai:auto-replied', {
-            conversationId, messageId, intent: 'RESCHEDULE', draftText: confirmMsg,
+            conversationId,
+            messageId,
+            intent: 'RESCHEDULE',
+            draftText: confirmMsg,
           });
           this.inboxGateway.emitToBusinessRoom(businessId, 'ai:suggestions', {
-            conversationId, messageId, intent: 'RESCHEDULE',
-            confidence: intentResult.confidence, draftText: '', bookingState: null, cancelState: null, rescheduleState: null,
+            conversationId,
+            messageId,
+            intent: 'RESCHEDULE',
+            confidence: intentResult.confidence,
+            draftText: '',
+            bookingState: null,
+            cancelState: null,
+            rescheduleState: null,
           });
           return;
         } catch (err: any) {
@@ -411,17 +519,16 @@ export class AiService {
       }
 
       // Use assistant's suggestedResponse as draft if available; otherwise generate a draft
-      const assistantDraft = bookingState?.suggestedResponse
-        || cancelState?.suggestedResponse
-        || rescheduleState?.suggestedResponse;
+      const assistantDraft =
+        bookingState?.suggestedResponse ||
+        cancelState?.suggestedResponse ||
+        rescheduleState?.suggestedResponse;
 
       if (assistantDraft) {
         draftText = assistantDraft;
       } else if (settings.autoReplySuggestions) {
         const services = await this.serviceService.findAll(businessId);
-        const activeServiceNames = services
-          .filter((s: any) => s.isActive)
-          .map((s: any) => s.name);
+        const activeServiceNames = services.filter((s: any) => s.isActive).map((s: any) => s.name);
 
         const draft: DraftReply = await this.replyGenerator.generate(
           messageContent,
@@ -459,9 +566,10 @@ export class AiService {
       }
 
       // Auto-reply for non-action intents (general replies)
-      const shouldAutoReply = draftText
-        && isAutoReplyEnabled
-        && this.shouldAutoReplyForIntent(settings, intentResult.intent);
+      const shouldAutoReply =
+        draftText &&
+        isAutoReplyEnabled &&
+        this.shouldAutoReplyForIntent(settings, intentResult.intent);
 
       if (shouldAutoReply) {
         try {
@@ -470,7 +578,13 @@ export class AiService {
           });
           if (defaultStaff) {
             const provider = this.messagingService.getProvider();
-            await this.messageService.sendMessage(businessId, conversationId, defaultStaff.id, draftText, provider);
+            await this.messageService.sendMessage(
+              businessId,
+              conversationId,
+              defaultStaff.id,
+              draftText,
+              provider,
+            );
             this.inboxGateway.emitToBusinessRoom(businessId, 'ai:auto-replied', {
               conversationId,
               messageId,
@@ -516,51 +630,59 @@ export class AiService {
       const currentState: BookingStateData | null = metadata.aiBookingState || null;
 
       const services = await this.serviceService.findAll(businessId);
-      const activeServices = services.filter((s: any) => s.isActive).map((s: any) => ({
-        id: s.id,
-        name: s.name,
-        durationMins: s.durationMins,
-        price: s.price,
-        category: s.category,
-      }));
+      const activeServices = services
+        .filter((s: any) => s.isActive)
+        .map((s: any) => ({
+          id: s.id,
+          name: s.name,
+          durationMins: s.durationMins,
+          price: s.price,
+          category: s.category,
+        }));
 
       let availableSlots: any[] | undefined;
       const serviceId = currentState?.serviceId;
       const date = currentState?.date || intentResult.extractedEntities?.date;
       if (serviceId && date) {
-        const slots = await this.availabilityService.getAvailableSlots(
-          businessId, date, serviceId,
-        );
+        const slots = await this.availabilityService.getAvailableSlots(businessId, date, serviceId);
         availableSlots = slots
           .filter((s) => s.available)
           .slice(0, 10)
-          .map((s) => ({ time: s.time, display: s.display, staffId: s.staffId, staffName: s.staffName }));
+          .map((s) => ({
+            time: s.time,
+            display: s.display,
+            staffId: s.staffId,
+            staffName: s.staffName,
+          }));
       }
 
-      let newState = await this.bookingAssistant.process(
-        messageContent, currentState, {
-          businessName, personality, services: activeServices,
-          availableSlots, extractedEntities: intentResult.extractedEntities,
-          customerContext,
-        },
-      );
+      let newState = await this.bookingAssistant.process(messageContent, currentState, {
+        businessName,
+        personality,
+        services: activeServices,
+        availableSlots,
+        extractedEntities: intentResult.extractedEntities,
+        customerContext,
+      });
 
       // Second pass: if the assistant advanced the state and we now have serviceId + date
       // but didn't reach CONFIRM (because slots weren't available during the first pass),
       // fetch slots and re-run so it can advance to CONFIRM in a single message round.
-      if (
-        newState.state !== 'CONFIRM'
-        && newState.serviceId
-        && newState.date
-        && !availableSlots
-      ) {
+      if (newState.state !== 'CONFIRM' && newState.serviceId && newState.date && !availableSlots) {
         const slots = await this.availabilityService.getAvailableSlots(
-          businessId, newState.date, newState.serviceId,
+          businessId,
+          newState.date,
+          newState.serviceId,
         );
         const freshSlots = slots
           .filter((s) => s.available)
           .slice(0, 10)
-          .map((s) => ({ time: s.time, display: s.display, staffId: s.staffId, staffName: s.staffName }));
+          .map((s) => ({
+            time: s.time,
+            display: s.display,
+            staffId: s.staffId,
+            staffName: s.staffName,
+          }));
 
         if (freshSlots.length > 0) {
           // If the customer already specified a time, try to match it to a slot
@@ -582,22 +704,27 @@ export class AiService {
               // Time doesn't match available slots — re-run with slots to suggest alternatives
               newState = await this.bookingAssistant.process(
                 `The customer wants ${requestedTime} but here are the available slots. Please suggest alternatives.`,
-                newState, {
-                  businessName, personality, services: activeServices,
-                  availableSlots: freshSlots, extractedEntities: intentResult.extractedEntities,
+                newState,
+                {
+                  businessName,
+                  personality,
+                  services: activeServices,
+                  availableSlots: freshSlots,
+                  extractedEntities: intentResult.extractedEntities,
                   customerContext,
                 },
               );
             }
           } else {
             // No time specified — re-run with slots so AI can suggest options
-            newState = await this.bookingAssistant.process(
-              messageContent, newState, {
-                businessName, personality, services: activeServices,
-                availableSlots: freshSlots, extractedEntities: intentResult.extractedEntities,
-                customerContext,
-              },
-            );
+            newState = await this.bookingAssistant.process(messageContent, newState, {
+              businessName,
+              personality,
+              services: activeServices,
+              availableSlots: freshSlots,
+              extractedEntities: intentResult.extractedEntities,
+              customerContext,
+            });
           }
         }
       }
@@ -630,14 +757,17 @@ export class AiService {
       const metadata = (conversation.metadata as any) || {};
       const currentState: CancelStateData | null = metadata.aiCancelState || null;
 
-      const upcomingBookings = await this.getCustomerUpcomingBookings(conversation.customerId, businessId);
-
-      const newState = await this.cancelAssistant.process(
-        messageContent, currentState, {
-          businessName, personality, upcomingBookings,
-          customerContext,
-        },
+      const upcomingBookings = await this.getCustomerUpcomingBookings(
+        conversation.customerId,
+        businessId,
       );
+
+      const newState = await this.cancelAssistant.process(messageContent, currentState, {
+        businessName,
+        personality,
+        upcomingBookings,
+        customerContext,
+      });
 
       await this.prisma.conversation.update({
         where: { id: conversationId },
@@ -667,26 +797,37 @@ export class AiService {
       const metadata = (conversation.metadata as any) || {};
       const currentState: RescheduleStateData | null = metadata.aiRescheduleState || null;
 
-      const upcomingBookings = await this.getCustomerUpcomingBookings(conversation.customerId, businessId);
+      const upcomingBookings = await this.getCustomerUpcomingBookings(
+        conversation.customerId,
+        businessId,
+      );
 
       // Get available slots if we know the service and new date
       let availableSlots: any[] | undefined;
       if (currentState?.serviceId && currentState?.newDate) {
         const slots = await this.availabilityService.getAvailableSlots(
-          businessId, currentState.newDate, currentState.serviceId,
+          businessId,
+          currentState.newDate,
+          currentState.serviceId,
         );
         availableSlots = slots
           .filter((s) => s.available)
           .slice(0, 10)
-          .map((s) => ({ time: s.time, display: s.display, staffId: s.staffId, staffName: s.staffName }));
+          .map((s) => ({
+            time: s.time,
+            display: s.display,
+            staffId: s.staffId,
+            staffName: s.staffName,
+          }));
       }
 
-      const newState = await this.rescheduleAssistant.process(
-        messageContent, currentState, {
-          businessName, personality, upcomingBookings, availableSlots,
-          customerContext,
-        },
-      );
+      const newState = await this.rescheduleAssistant.process(messageContent, currentState, {
+        businessName,
+        personality,
+        upcomingBookings,
+        availableSlots,
+        customerContext,
+      });
 
       await this.prisma.conversation.update({
         where: { id: conversationId },
@@ -727,7 +868,13 @@ export class AiService {
       // Auto-send handoff message
       const handoffMessage = "I'm connecting you with a team member who can help you further.";
       const provider = this.messagingService.getProvider();
-      await this.messageService.sendMessage(businessId, conversationId, defaultStaff.id, handoffMessage, provider);
+      await this.messageService.sendMessage(
+        businessId,
+        conversationId,
+        defaultStaff.id,
+        handoffMessage,
+        provider,
+      );
 
       // Broadcast transfer event
       this.inboxGateway.emitToBusinessRoom(businessId, 'ai:transferred', {
@@ -807,10 +954,7 @@ export class AiService {
     return summary;
   }
 
-  async confirmBooking(
-    businessId: string,
-    conversationId: string,
-  ): Promise<any> {
+  async confirmBooking(businessId: string, conversationId: string): Promise<any> {
     const conversation = await this.prisma.conversation.findFirst({
       where: { id: conversationId, businessId },
     });
@@ -854,10 +998,7 @@ export class AiService {
     });
   }
 
-  async confirmCancel(
-    businessId: string,
-    conversationId: string,
-  ): Promise<any> {
+  async confirmCancel(businessId: string, conversationId: string): Promise<any> {
     const conversation = await this.prisma.conversation.findFirst({
       where: { id: conversationId, businessId },
     });
@@ -866,10 +1007,15 @@ export class AiService {
     const metadata = (conversation.metadata as any) || {};
     const cancelState: CancelStateData | undefined = metadata.aiCancelState;
     if (!cancelState) throw new Error('No cancel state found');
-    if (cancelState.state !== 'CONFIRM_CANCEL') throw new Error('Cancel not ready for confirmation');
+    if (cancelState.state !== 'CONFIRM_CANCEL')
+      throw new Error('Cancel not ready for confirmation');
     if (!cancelState.bookingId) throw new Error('No booking identified');
 
-    const booking = await this.bookingService.updateStatus(businessId, cancelState.bookingId, 'CANCELLED');
+    const booking = await this.bookingService.updateStatus(
+      businessId,
+      cancelState.bookingId,
+      'CANCELLED',
+    );
 
     await this.prisma.conversation.update({
       where: { id: conversationId },
@@ -893,10 +1039,7 @@ export class AiService {
     });
   }
 
-  async confirmReschedule(
-    businessId: string,
-    conversationId: string,
-  ): Promise<any> {
+  async confirmReschedule(businessId: string, conversationId: string): Promise<any> {
     const conversation = await this.prisma.conversation.findFirst({
       where: { id: conversationId, businessId },
     });
@@ -905,7 +1048,8 @@ export class AiService {
     const metadata = (conversation.metadata as any) || {};
     const rescheduleState: RescheduleStateData | undefined = metadata.aiRescheduleState;
     if (!rescheduleState) throw new Error('No reschedule state found');
-    if (rescheduleState.state !== 'CONFIRM_RESCHEDULE') throw new Error('Reschedule not ready for confirmation');
+    if (rescheduleState.state !== 'CONFIRM_RESCHEDULE')
+      throw new Error('Reschedule not ready for confirmation');
     if (!rescheduleState.bookingId || !rescheduleState.newSlotIso) {
       throw new Error('Missing booking or new time slot');
     }
@@ -983,7 +1127,8 @@ export class AiService {
           if (allCollected.email) updateData.email = allCollected.email;
           if (allCollected.firstName || allCollected.lastName) {
             const first = allCollected.firstName || customerData.name.split(' ')[0] || '';
-            const last = allCollected.lastName || customerData.name.split(' ').slice(1).join(' ') || '';
+            const last =
+              allCollected.lastName || customerData.name.split(' ').slice(1).join(' ') || '';
             updateData.name = `${first} ${last}`.trim();
           }
           // Save remaining fields to customFields
@@ -1059,23 +1204,26 @@ export class AiService {
       where: { customerId, businessId },
     });
     const conversationIds = conversations.map((c) => c.id);
-    const messages = conversationIds.length > 0
-      ? await this.prisma.message.findMany({
-          where: { conversationId: { in: conversationIds } },
-          orderBy: { createdAt: 'desc' },
-          take: 50,
-        })
-      : [];
+    const messages =
+      conversationIds.length > 0
+        ? await this.prisma.message.findMany({
+            where: { conversationId: { in: conversationIds } },
+            orderBy: { createdAt: 'desc' },
+            take: 50,
+          })
+        : [];
 
     const totalSpent = bookings
       .filter((b: any) => b.status === 'COMPLETED')
       .reduce((sum, b: any) => sum + (b.service?.price || 0), 0);
 
-    const bookingsList = bookings.map((b: any) => {
-      const date = b.startTime.toISOString().split('T')[0];
-      const time = b.startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      return `- ${date} ${time}: ${b.service?.name || 'Unknown'} (${b.status})${b.staff ? ` with ${b.staff.name}` : ''}`;
-    }).join('\n');
+    const bookingsList = bookings
+      .map((b: any) => {
+        const date = b.startTime.toISOString().split('T')[0];
+        const time = b.startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        return `- ${date} ${time}: ${b.service?.name || 'Unknown'} (${b.status})${b.staff ? ` with ${b.staff.name}` : ''}`;
+      })
+      .join('\n');
 
     const messagesList = messages
       .reverse()

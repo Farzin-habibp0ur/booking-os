@@ -5,7 +5,12 @@ import { PrismaService } from '../../common/prisma.service';
 import { NotificationService } from '../notification/notification.service';
 import { BusinessService } from '../business/business.service';
 import { CalendarSyncService } from '../calendar-sync/calendar-sync.service';
-import { createMockPrisma, createMockNotificationService, createMockBusinessService, createMockCalendarSyncService } from '../../test/mocks';
+import {
+  createMockPrisma,
+  createMockNotificationService,
+  createMockBusinessService,
+  createMockCalendarSyncService,
+} from '../../test/mocks';
 
 describe('BookingService', () => {
   let bookingService: BookingService;
@@ -129,7 +134,14 @@ describe('BookingService', () => {
       expect(result).toEqual(booking);
       expect(prisma.booking.findFirst).toHaveBeenCalledWith({
         where: { id: 'b1', businessId: 'biz1' },
-        include: { customer: true, service: true, staff: true, conversation: true, reminders: true, recurringSeries: { select: { id: true } } },
+        include: {
+          customer: true,
+          service: true,
+          staff: true,
+          conversation: true,
+          reminders: true,
+          recurringSeries: { select: { id: true } },
+        },
       });
     });
   });
@@ -168,18 +180,14 @@ describe('BookingService', () => {
     it('throws on missing service', async () => {
       prisma.service.findFirst.mockResolvedValue(null);
 
-      await expect(
-        bookingService.create('biz1', createData),
-      ).rejects.toThrow(BadRequestException);
+      await expect(bookingService.create('biz1', createData)).rejects.toThrow(BadRequestException);
     });
 
     it('throws on staff conflict', async () => {
       prisma.service.findFirst.mockResolvedValue({ id: 'svc1', durationMins: 60 } as any);
       prisma.booking.findFirst.mockResolvedValue({ id: 'conflict' } as any);
 
-      await expect(
-        bookingService.create('biz1', createData),
-      ).rejects.toThrow(BadRequestException);
+      await expect(bookingService.create('biz1', createData)).rejects.toThrow(BadRequestException);
     });
 
     it('auto-creates 24h reminder when booking is >24h away', async () => {
@@ -189,7 +197,11 @@ describe('BookingService', () => {
       prisma.booking.create.mockResolvedValue({ id: 'b1' } as any);
       prisma.reminder.create.mockResolvedValue({} as any);
 
-      await bookingService.create('biz1', { ...createData, startTime: futureDate, staffId: undefined });
+      await bookingService.create('biz1', {
+        ...createData,
+        startTime: futureDate,
+        staffId: undefined,
+      });
 
       expect(prisma.reminder.create).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -204,7 +216,12 @@ describe('BookingService', () => {
     it('sends booking confirmation notification after create', async () => {
       prisma.service.findFirst.mockResolvedValue({ id: 'svc1', durationMins: 60 } as any);
       prisma.booking.findFirst.mockResolvedValue(null);
-      prisma.booking.create.mockResolvedValue({ id: 'b1', customer: {}, service: {}, staff: {} } as any);
+      prisma.booking.create.mockResolvedValue({
+        id: 'b1',
+        customer: {},
+        service: {},
+        staff: {},
+      } as any);
       prisma.reminder.create.mockResolvedValue({} as any);
 
       await bookingService.create('biz1', createData);
@@ -220,7 +237,11 @@ describe('BookingService', () => {
       prisma.booking.findFirst.mockResolvedValue(null);
       prisma.booking.create.mockResolvedValue({ id: 'b1' } as any);
 
-      await bookingService.create('biz1', { ...createData, startTime: soonDate, staffId: undefined });
+      await bookingService.create('biz1', {
+        ...createData,
+        startTime: soonDate,
+        staffId: undefined,
+      });
 
       expect(prisma.reminder.create).not.toHaveBeenCalled();
     });

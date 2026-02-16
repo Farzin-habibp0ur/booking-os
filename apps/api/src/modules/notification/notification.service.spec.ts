@@ -67,7 +67,9 @@ describe('NotificationService', () => {
 
     businessService = {
       findById: jest.fn().mockResolvedValue({ id: 'biz1', name: 'Glow Clinic' }),
-      getNotificationSettings: jest.fn().mockResolvedValue({ channels: 'both', followUpDelayHours: 2 }),
+      getNotificationSettings: jest
+        .fn()
+        .mockResolvedValue({ channels: 'both', followUpDelayHours: 2 }),
     };
 
     mockQueue = {
@@ -120,7 +122,10 @@ describe('NotificationService', () => {
     beforeEach(async () => {
       const module = await createModule(false);
       notificationService = module.get(NotificationService);
-      businessService.getNotificationSettings.mockResolvedValue({ channels: 'whatsapp', followUpDelayHours: 2 });
+      businessService.getNotificationSettings.mockResolvedValue({
+        channels: 'whatsapp',
+        followUpDelayHours: 2,
+      });
     });
 
     it('sends only WhatsApp', async () => {
@@ -137,7 +142,10 @@ describe('NotificationService', () => {
     beforeEach(async () => {
       const module = await createModule(false);
       notificationService = module.get(NotificationService);
-      businessService.getNotificationSettings.mockResolvedValue({ channels: 'email', followUpDelayHours: 2 });
+      businessService.getNotificationSettings.mockResolvedValue({
+        channels: 'email',
+        followUpDelayHours: 2,
+      });
     });
 
     it('sends only email', async () => {
@@ -189,14 +197,19 @@ describe('NotificationService', () => {
         category: 'CONFIRMATION',
       };
       prisma.messageTemplate.findMany.mockResolvedValue([template] as any);
-      templateService.resolveVariables.mockResolvedValue('Hello Jane Doe, your Haircut is confirmed!');
+      templateService.resolveVariables.mockResolvedValue(
+        'Hello Jane Doe, your Haircut is confirmed!',
+      );
 
       await notificationService.sendBookingConfirmation(mockBooking);
 
-      expect(templateService.resolveVariables).toHaveBeenCalledWith(template, expect.objectContaining({
-        customerName: 'Jane Doe',
-        serviceName: 'Haircut',
-      }));
+      expect(templateService.resolveVariables).toHaveBeenCalledWith(
+        template,
+        expect.objectContaining({
+          customerName: 'Jane Doe',
+          serviceName: 'Haircut',
+        }),
+      );
 
       expect(mockProvider.sendMessage).toHaveBeenCalledWith({
         to: '+1234567890',

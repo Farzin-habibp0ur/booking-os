@@ -68,7 +68,11 @@ describe('AuthService', () => {
     it('creates business + staff and returns tokens', async () => {
       prisma.staff.findUnique.mockResolvedValue(null);
       (bcrypt.hash as jest.Mock).mockResolvedValue('$hashed');
-      prisma.business.create.mockResolvedValue({ id: 'biz-new', name: 'New Biz', slug: 'new-biz' } as any);
+      prisma.business.create.mockResolvedValue({
+        id: 'biz-new',
+        name: 'New Biz',
+        slug: 'new-biz',
+      } as any);
       prisma.staff.create.mockResolvedValue({
         id: 'staff-new',
         name: 'Owner',
@@ -129,26 +133,26 @@ describe('AuthService', () => {
     it('throws UnauthorizedException for non-existent user', async () => {
       prisma.staff.findUnique.mockResolvedValue(null);
 
-      await expect(
-        authService.login('unknown@test.com', 'password'),
-      ).rejects.toThrow(UnauthorizedException);
+      await expect(authService.login('unknown@test.com', 'password')).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('throws UnauthorizedException for inactive user', async () => {
       prisma.staff.findUnique.mockResolvedValue({ ...mockStaff, isActive: false } as any);
 
-      await expect(
-        authService.login('sarah@glowclinic.com', 'password123'),
-      ).rejects.toThrow(UnauthorizedException);
+      await expect(authService.login('sarah@glowclinic.com', 'password123')).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('throws UnauthorizedException for wrong password', async () => {
       prisma.staff.findUnique.mockResolvedValue(mockStaff as any);
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
 
-      await expect(
-        authService.login('sarah@glowclinic.com', 'wrongpassword'),
-      ).rejects.toThrow(UnauthorizedException);
+      await expect(authService.login('sarah@glowclinic.com', 'wrongpassword')).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('signs JWT with correct payload', async () => {
@@ -182,27 +186,21 @@ describe('AuthService', () => {
         throw new Error('invalid token');
       });
 
-      await expect(
-        authService.refresh('invalid-token'),
-      ).rejects.toThrow(UnauthorizedException);
+      await expect(authService.refresh('invalid-token')).rejects.toThrow(UnauthorizedException);
     });
 
     it('throws UnauthorizedException for inactive staff on refresh', async () => {
       jwtService.verify.mockReturnValue({ sub: 'staff1' });
       prisma.staff.findUnique.mockResolvedValue({ ...mockStaff, isActive: false } as any);
 
-      await expect(
-        authService.refresh('valid-token'),
-      ).rejects.toThrow(UnauthorizedException);
+      await expect(authService.refresh('valid-token')).rejects.toThrow(UnauthorizedException);
     });
 
     it('throws UnauthorizedException when staff not found on refresh', async () => {
       jwtService.verify.mockReturnValue({ sub: 'nonexistent' });
       prisma.staff.findUnique.mockResolvedValue(null);
 
-      await expect(
-        authService.refresh('valid-token'),
-      ).rejects.toThrow(UnauthorizedException);
+      await expect(authService.refresh('valid-token')).rejects.toThrow(UnauthorizedException);
     });
   });
 
@@ -221,9 +219,7 @@ describe('AuthService', () => {
     it('throws UnauthorizedException when staff not found', async () => {
       prisma.staff.findUnique.mockResolvedValue(null);
 
-      await expect(
-        authService.getMe('nonexistent'),
-      ).rejects.toThrow(UnauthorizedException);
+      await expect(authService.getMe('nonexistent')).rejects.toThrow(UnauthorizedException);
     });
   });
 
@@ -234,7 +230,10 @@ describe('AuthService', () => {
       const result = await authService.forgotPassword('sarah@glowclinic.com');
 
       expect(result).toEqual({ ok: true });
-      expect(tokenService.revokeTokens).toHaveBeenCalledWith('sarah@glowclinic.com', 'PASSWORD_RESET');
+      expect(tokenService.revokeTokens).toHaveBeenCalledWith(
+        'sarah@glowclinic.com',
+        'PASSWORD_RESET',
+      );
       expect(tokenService.createToken).toHaveBeenCalledWith(
         'PASSWORD_RESET',
         'sarah@glowclinic.com',
@@ -285,9 +284,9 @@ describe('AuthService', () => {
     it('throws on invalid token', async () => {
       tokenService.validateToken.mockRejectedValue(new BadRequestException('Invalid token'));
 
-      await expect(
-        authService.resetPassword('bad-token', 'newpassword123'),
-      ).rejects.toThrow(BadRequestException);
+      await expect(authService.resetPassword('bad-token', 'newpassword123')).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 
@@ -308,16 +307,19 @@ describe('AuthService', () => {
         where: { id: 'staff1' },
         data: { passwordHash: '$new-hash' },
       });
-      expect(tokenService.revokeTokens).toHaveBeenCalledWith('sarah@glowclinic.com', 'PASSWORD_RESET');
+      expect(tokenService.revokeTokens).toHaveBeenCalledWith(
+        'sarah@glowclinic.com',
+        'PASSWORD_RESET',
+      );
     });
 
     it('throws on wrong current password', async () => {
       prisma.staff.findUnique.mockResolvedValue(mockStaff as any);
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
 
-      await expect(
-        authService.changePassword('staff1', 'wrongpass', 'newpass123'),
-      ).rejects.toThrow(BadRequestException);
+      await expect(authService.changePassword('staff1', 'wrongpass', 'newpass123')).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 
@@ -328,15 +330,15 @@ describe('AuthService', () => {
 
       // Fail 5 times
       for (let i = 0; i < 5; i++) {
-        await expect(
-          authService.login('sarah@glowclinic.com', 'wrong'),
-        ).rejects.toThrow(UnauthorizedException);
+        await expect(authService.login('sarah@glowclinic.com', 'wrong')).rejects.toThrow(
+          UnauthorizedException,
+        );
       }
 
       // 6th attempt should be locked
-      await expect(
-        authService.login('sarah@glowclinic.com', 'password123'),
-      ).rejects.toThrow('Account temporarily locked');
+      await expect(authService.login('sarah@glowclinic.com', 'password123')).rejects.toThrow(
+        'Account temporarily locked',
+      );
     });
 
     it('clears failed attempts on successful login', async () => {
@@ -356,7 +358,9 @@ describe('AuthService', () => {
       // After success, fail again should count from 0
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
       for (let i = 0; i < 4; i++) {
-        await expect(authService.login('sarah@glowclinic.com', 'wrong')).rejects.toThrow('Invalid credentials');
+        await expect(authService.login('sarah@glowclinic.com', 'wrong')).rejects.toThrow(
+          'Invalid credentials',
+        );
       }
     });
   });
@@ -399,9 +403,9 @@ describe('AuthService', () => {
     it('throws on invalid token', async () => {
       tokenService.validateToken.mockRejectedValue(new BadRequestException('Invalid token'));
 
-      await expect(
-        authService.acceptInvite('bad-token', 'password123'),
-      ).rejects.toThrow(BadRequestException);
+      await expect(authService.acceptInvite('bad-token', 'password123')).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 });

@@ -12,10 +12,7 @@ describe('TokenService', () => {
     prisma = createMockPrisma();
 
     const module = await Test.createTestingModule({
-      providers: [
-        TokenService,
-        { provide: PrismaService, useValue: prisma },
-      ],
+      providers: [TokenService, { provide: PrismaService, useValue: prisma }],
     }).compile();
 
     tokenService = module.get(TokenService);
@@ -75,17 +72,17 @@ describe('TokenService', () => {
     it('throws BadRequestException for missing token', async () => {
       prisma.token.findUnique.mockResolvedValue(null);
 
-      await expect(
-        tokenService.validateToken('nonexistent', 'PASSWORD_RESET'),
-      ).rejects.toThrow(BadRequestException);
+      await expect(tokenService.validateToken('nonexistent', 'PASSWORD_RESET')).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('throws BadRequestException for wrong type', async () => {
       prisma.token.findUnique.mockResolvedValue(validRecord as any);
 
-      await expect(
-        tokenService.validateToken('abc123', 'STAFF_INVITE'),
-      ).rejects.toThrow(BadRequestException);
+      await expect(tokenService.validateToken('abc123', 'STAFF_INVITE')).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('throws BadRequestException for used token', async () => {
@@ -94,9 +91,9 @@ describe('TokenService', () => {
         usedAt: new Date(),
       } as any);
 
-      await expect(
-        tokenService.validateToken('abc123', 'PASSWORD_RESET'),
-      ).rejects.toThrow(BadRequestException);
+      await expect(tokenService.validateToken('abc123', 'PASSWORD_RESET')).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('throws BadRequestException for expired token', async () => {
@@ -105,9 +102,9 @@ describe('TokenService', () => {
         expiresAt: new Date(Date.now() - 1000),
       } as any);
 
-      await expect(
-        tokenService.validateToken('abc123', 'PASSWORD_RESET'),
-      ).rejects.toThrow(BadRequestException);
+      await expect(tokenService.validateToken('abc123', 'PASSWORD_RESET')).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 

@@ -66,13 +66,13 @@ describe('AuthProvider', () => {
   it('shows loading state initially when token exists', () => {
     (api.getToken as jest.Mock).mockReturnValue('existing-token');
     (api.get as jest.Mock).mockImplementation(
-      () => new Promise(() => {}) // Never resolves
+      () => new Promise(() => {}), // Never resolves
     );
 
     render(
       <AuthProvider>
         <TestComponent />
-      </AuthProvider>
+      </AuthProvider>,
     );
 
     expect(screen.getByText('Loading...')).toBeInTheDocument();
@@ -85,7 +85,7 @@ describe('AuthProvider', () => {
     render(
       <AuthProvider>
         <TestComponent />
-      </AuthProvider>
+      </AuthProvider>,
     );
 
     await waitFor(() => {
@@ -100,7 +100,7 @@ describe('AuthProvider', () => {
     render(
       <AuthProvider>
         <TestComponent />
-      </AuthProvider>
+      </AuthProvider>,
     );
 
     await waitFor(() => {
@@ -115,7 +115,7 @@ describe('AuthProvider', () => {
     render(
       <AuthProvider>
         <TestComponent />
-      </AuthProvider>
+      </AuthProvider>,
     );
 
     await waitFor(() => {
@@ -130,7 +130,7 @@ describe('AuthProvider', () => {
     render(
       <AuthProvider>
         <TestComponent />
-      </AuthProvider>
+      </AuthProvider>,
     );
 
     await waitFor(() => {
@@ -148,7 +148,7 @@ describe('AuthProvider', () => {
     render(
       <AuthProvider>
         <TestComponent />
-      </AuthProvider>
+      </AuthProvider>,
     );
 
     await waitFor(() => {
@@ -179,7 +179,7 @@ describe('AuthProvider', () => {
     render(
       <AuthProvider>
         <TestComponent />
-      </AuthProvider>
+      </AuthProvider>,
     );
 
     await waitFor(() => {
@@ -203,12 +203,14 @@ describe('AuthProvider', () => {
     const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
 
     (api.getToken as jest.Mock).mockReturnValue(null);
-    (api.post as jest.Mock).mockImplementation(() => Promise.reject(new Error('Invalid credentials')));
+    (api.post as jest.Mock).mockImplementation(() =>
+      Promise.reject(new Error('Invalid credentials')),
+    );
 
     render(
       <AuthProvider>
         <TestComponent />
-      </AuthProvider>
+      </AuthProvider>,
     );
 
     await waitFor(() => {
@@ -221,7 +223,7 @@ describe('AuthProvider', () => {
     await act(async () => {
       loginButton.click();
       // Give time for the promise to settle
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, 50));
     });
 
     await waitFor(() => {
@@ -246,7 +248,7 @@ describe('AuthProvider', () => {
     render(
       <AuthProvider>
         <TokenComponent />
-      </AuthProvider>
+      </AuthProvider>,
     );
 
     await waitFor(() => {
@@ -270,7 +272,7 @@ describe('AuthProvider', () => {
     render(
       <AuthProvider>
         <LoadingComponent />
-      </AuthProvider>
+      </AuthProvider>,
     );
 
     // Should stop loading quickly when there's no token

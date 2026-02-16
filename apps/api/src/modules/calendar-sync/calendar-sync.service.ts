@@ -70,10 +70,7 @@ export class CalendarSyncService {
       throw new Error(`${provider} calendar is not configured`);
     }
 
-    const state = this.jwtService.sign(
-      { staffId, provider },
-      { expiresIn: '10m' },
-    );
+    const state = this.jwtService.sign({ staffId, provider }, { expiresIn: '10m' });
 
     const redirectUri = `${this.apiUrl}/api/v1/calendar-sync/callback/${provider}`;
     return providerImpl.getAuthUrl(redirectUri, state);
@@ -119,7 +116,10 @@ export class CalendarSyncService {
     });
   }
 
-  async syncBookingToCalendar(booking: BookingForSync, action: 'create' | 'update' | 'cancel'): Promise<void> {
+  async syncBookingToCalendar(
+    booking: BookingForSync,
+    action: 'create' | 'update' | 'cancel',
+  ): Promise<void> {
     if (!booking.staffId) return;
 
     const connections = await this.prisma.calendarConnection.findMany({
@@ -229,7 +229,9 @@ export class CalendarSyncService {
       const dtEnd = this.formatIcalDate(booking.endTime);
       const created = this.formatIcalDate(booking.createdAt);
       const summary = this.escapeIcal(`${booking.service.name} - ${booking.customer.name}`);
-      const description = this.escapeIcal(`Booking with ${booking.customer.name} for ${booking.service.name}`);
+      const description = this.escapeIcal(
+        `Booking with ${booking.customer.name} for ${booking.service.name}`,
+      );
 
       lines.push(
         'BEGIN:VEVENT',
@@ -282,10 +284,17 @@ export class CalendarSyncService {
   }
 
   private formatIcalDate(date: Date): string {
-    return date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+    return date
+      .toISOString()
+      .replace(/[-:]/g, '')
+      .replace(/\.\d{3}/, '');
   }
 
   private escapeIcal(text: string): string {
-    return text.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
+    return text
+      .replace(/\\/g, '\\\\')
+      .replace(/;/g, '\\;')
+      .replace(/,/g, '\\,')
+      .replace(/\n/g, '\\n');
   }
 }

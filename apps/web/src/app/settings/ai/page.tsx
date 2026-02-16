@@ -42,10 +42,13 @@ export default function AiSettingsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get<AiSettings>('/ai/settings').then((s) => {
-      setSettings(s);
-      setLoading(false);
-    }).catch(() => setLoading(false));
+    api
+      .get<AiSettings>('/ai/settings')
+      .then((s) => {
+        setSettings(s);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
   }, []);
 
   const handleSave = async () => {
@@ -65,13 +68,20 @@ export default function AiSettingsPage() {
     });
   };
 
-  if (loading) return <div className="p-6"><p className="text-slate-400">{t('common.loading')}</p></div>;
+  if (loading)
+    return (
+      <div className="p-6">
+        <p className="text-slate-400">{t('common.loading')}</p>
+      </div>
+    );
 
   return (
     <div className="p-6 max-w-2xl">
       <div className="flex items-center gap-2 mb-6">
         <Sparkles size={24} className="text-lavender-600" />
-        <h1 className="text-2xl font-serif font-semibold text-slate-900">{t('ai.settings_title')}</h1>
+        <h1 className="text-2xl font-serif font-semibold text-slate-900">
+          {t('ai.settings_title')}
+        </h1>
       </div>
 
       <div className="bg-white rounded-2xl shadow-soft p-6 space-y-6">
@@ -108,7 +118,9 @@ export default function AiSettingsPage() {
                 <input
                   type="checkbox"
                   checked={settings.autoReplySuggestions}
-                  onChange={(e) => setSettings({ ...settings, autoReplySuggestions: e.target.checked })}
+                  onChange={(e) =>
+                    setSettings({ ...settings, autoReplySuggestions: e.target.checked })
+                  }
                   className="sr-only peer"
                 />
                 <div className="w-9 h-5 bg-slate-200 peer-focus:ring-2 peer-focus:ring-lavender-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-lavender-600" />
@@ -145,10 +157,12 @@ export default function AiSettingsPage() {
                   <input
                     type="checkbox"
                     checked={settings.autoReply.enabled}
-                    onChange={(e) => setSettings({
-                      ...settings,
-                      autoReply: { ...settings.autoReply, enabled: e.target.checked },
-                    })}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        autoReply: { ...settings.autoReply, enabled: e.target.checked },
+                      })
+                    }
                     className="sr-only peer"
                   />
                   <div className="w-9 h-5 bg-slate-200 peer-focus:ring-2 peer-focus:ring-lavender-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-lavender-600" />
@@ -163,10 +177,12 @@ export default function AiSettingsPage() {
                         type="radio"
                         name="autoReplyMode"
                         checked={settings.autoReply.mode === 'all'}
-                        onChange={() => setSettings({
-                          ...settings,
-                          autoReply: { ...settings.autoReply, mode: 'all' },
-                        })}
+                        onChange={() =>
+                          setSettings({
+                            ...settings,
+                            autoReply: { ...settings.autoReply, mode: 'all' },
+                          })
+                        }
                         className="text-lavender-600"
                       />
                       <span className="text-sm">{t('ai.auto_reply_mode_all')}</span>
@@ -176,10 +192,12 @@ export default function AiSettingsPage() {
                         type="radio"
                         name="autoReplyMode"
                         checked={settings.autoReply.mode === 'selected'}
-                        onChange={() => setSettings({
-                          ...settings,
-                          autoReply: { ...settings.autoReply, mode: 'selected' },
-                        })}
+                        onChange={() =>
+                          setSettings({
+                            ...settings,
+                            autoReply: { ...settings.autoReply, mode: 'selected' },
+                          })
+                        }
                         className="text-lavender-600"
                       />
                       <span className="text-sm">{t('ai.auto_reply_mode_selected')}</span>
@@ -223,7 +241,10 @@ export default function AiSettingsPage() {
         )}
 
         <div className="flex items-center gap-3">
-          <button onClick={handleSave} className="bg-lavender-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-lavender-700 transition-colors">
+          <button
+            onClick={handleSave}
+            className="bg-lavender-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-lavender-700 transition-colors"
+          >
             {t('settings.save_changes')}
           </button>
           {saved && <span className="text-sage-600 text-sm">{t('common.saved')}</span>}

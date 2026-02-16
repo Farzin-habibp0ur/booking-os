@@ -25,9 +25,14 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#FCFCFD' }}>
+    <div
+      className="min-h-screen flex items-center justify-center"
+      style={{ backgroundColor: '#FCFCFD' }}
+    >
       <div className="bg-white p-8 rounded-3xl shadow-soft w-full max-w-md">
-        <h1 className="text-2xl font-serif font-semibold text-slate-900 text-center mb-2">Reset your password</h1>
+        <h1 className="text-2xl font-serif font-semibold text-slate-900 text-center mb-2">
+          Reset your password
+        </h1>
         <p className="text-slate-500 text-center mb-6">
           Enter your email and we'll send you a link to reset your password.
         </p>
@@ -38,10 +43,7 @@ export default function ForgotPasswordPage() {
               If an account exists for <strong>{email}</strong>, we've sent a password reset link.
               Check your email.
             </div>
-            <Link
-              href="/login"
-              className="block text-center text-sm text-sage-600 hover:underline"
-            >
+            <Link href="/login" className="block text-center text-sm text-sage-600 hover:underline">
               Back to sign in
             </Link>
           </div>

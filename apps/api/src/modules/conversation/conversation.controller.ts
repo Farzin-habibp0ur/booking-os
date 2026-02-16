@@ -1,4 +1,14 @@
-import { Controller, Get, Patch, Post, Delete, Param, Body, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Patch,
+  Post,
+  Delete,
+  Param,
+  Body,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ConversationService } from './conversation.service';
 import { BookingService } from '../booking/booking.service';
@@ -40,22 +50,38 @@ export class ConversationController {
   }
 
   @Patch(':id/assign')
-  assign(@BusinessId() businessId: string, @Param('id') id: string, @Body() body: AssignConversationDto) {
+  assign(
+    @BusinessId() businessId: string,
+    @Param('id') id: string,
+    @Body() body: AssignConversationDto,
+  ) {
     return this.conversationService.assign(businessId, id, body.staffId);
   }
 
   @Patch(':id/status')
-  updateStatus(@BusinessId() businessId: string, @Param('id') id: string, @Body() body: UpdateConversationStatusDto) {
+  updateStatus(
+    @BusinessId() businessId: string,
+    @Param('id') id: string,
+    @Body() body: UpdateConversationStatusDto,
+  ) {
     return this.conversationService.updateStatus(businessId, id, body.status);
   }
 
   @Patch(':id/snooze')
-  snooze(@BusinessId() businessId: string, @Param('id') id: string, @Body() body: SnoozeConversationDto) {
+  snooze(
+    @BusinessId() businessId: string,
+    @Param('id') id: string,
+    @Body() body: SnoozeConversationDto,
+  ) {
     return this.conversationService.snooze(businessId, id, new Date(body.until));
   }
 
   @Patch(':id/tags')
-  updateTags(@BusinessId() businessId: string, @Param('id') id: string, @Body() body: UpdateTagsDto) {
+  updateTags(
+    @BusinessId() businessId: string,
+    @Param('id') id: string,
+    @Body() body: UpdateTagsDto,
+  ) {
     return this.conversationService.updateTags(businessId, id, body.tags);
   }
 
@@ -70,17 +96,30 @@ export class ConversationController {
   }
 
   @Post(':id/notes')
-  addNote(@BusinessId() businessId: string, @Param('id') id: string, @CurrentUser('sub') staffId: string, @Body() body: AddNoteDto) {
+  addNote(
+    @BusinessId() businessId: string,
+    @Param('id') id: string,
+    @CurrentUser('sub') staffId: string,
+    @Body() body: AddNoteDto,
+  ) {
     return this.conversationService.addNote(businessId, id, staffId, body.content);
   }
 
   @Delete(':id/notes/:noteId')
-  deleteNote(@BusinessId() businessId: string, @Param('id') id: string, @Param('noteId') noteId: string) {
+  deleteNote(
+    @BusinessId() businessId: string,
+    @Param('id') id: string,
+    @Param('noteId') noteId: string,
+  ) {
     return this.conversationService.deleteNote(businessId, id, noteId);
   }
 
   @Post(':id/booking')
-  createBooking(@BusinessId() businessId: string, @Param('id') id: string, @Body() body: CreateBookingFromConversationDto) {
+  createBooking(
+    @BusinessId() businessId: string,
+    @Param('id') id: string,
+    @Body() body: CreateBookingFromConversationDto,
+  ) {
     return this.bookingService.create(businessId, { ...body, conversationId: id });
   }
 }

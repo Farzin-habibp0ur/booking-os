@@ -31,10 +31,16 @@ export default function BookingsPage() {
 
   const load = () => {
     const params = statusFilter ? `?status=${statusFilter}&pageSize=50` : '?pageSize=50';
-    api.get<any>(`/bookings${params}`).then(setBookings).catch(console.error).finally(() => setLoading(false));
+    api
+      .get<any>(`/bookings${params}`)
+      .then(setBookings)
+      .catch(console.error)
+      .finally(() => setLoading(false));
   };
 
-  useEffect(() => { load(); }, [statusFilter]);
+  useEffect(() => {
+    load();
+  }, [statusFilter]);
 
   const handleRowClick = (booking: any) => {
     setSelectedBooking(booking);
@@ -56,10 +62,20 @@ export default function BookingsPage() {
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-serif font-semibold text-slate-900">{t('bookings.title', { entity: pack.labels.booking })}</h1>
-        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="border border-slate-200 rounded-xl px-3 py-2 text-sm transition-colors">
+        <h1 className="text-2xl font-serif font-semibold text-slate-900">
+          {t('bookings.title', { entity: pack.labels.booking })}
+        </h1>
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="border border-slate-200 rounded-xl px-3 py-2 text-sm transition-colors"
+        >
           <option value="">{t('bookings.all_statuses')}</option>
-          {Object.keys(statusColors).map((s) => <option key={s} value={s}>{t(`status.${s.toLowerCase()}`)}</option>)}
+          {Object.keys(statusColors).map((s) => (
+            <option key={s} value={s}>
+              {t(`status.${s.toLowerCase()}`)}
+            </option>
+          ))}
         </select>
       </div>
 
@@ -67,38 +83,66 @@ export default function BookingsPage() {
         <table className="w-full">
           <thead className="bg-slate-50 border-b">
             <tr>
-              <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">{pack.labels.customer}</th>
-              <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">{pack.labels.service}</th>
-              <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">{t('common.name')}</th>
-              <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">{t('bookings.date_time')}</th>
-              <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">{t('common.status')}</th>
+              <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
+                {pack.labels.customer}
+              </th>
+              <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
+                {pack.labels.service}
+              </th>
+              <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
+                {t('common.name')}
+              </th>
+              <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
+                {t('bookings.date_time')}
+              </th>
+              <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
+                {t('common.status')}
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y">
-            {loading ? (
-              Array.from({ length: 5 }).map((_, i) => <TableRowSkeleton key={i} cols={5} />)
-            ) : (
-              bookings.data.map((b: any) => (
-                <tr key={b.id} onClick={() => handleRowClick(b)} className="hover:bg-slate-50 cursor-pointer">
-                  <td className="p-3 text-sm font-medium">{b.customer?.name}</td>
-                  <td className="p-3 text-sm">{b.service?.name}</td>
-                  <td className="p-3 text-sm text-slate-600">{b.staff?.name || t('common.unassigned')}</td>
-                  <td className="p-3 text-sm text-slate-600">
-                    {new Date(b.startTime).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}
-                  </td>
-                  <td className="p-3">
-                    <span className={cn('text-xs px-2 py-0.5 rounded-full', statusColors[b.status])}>{t(`status.${b.status.toLowerCase()}`)}</span>
-                  </td>
-                </tr>
-              ))
-            )}
+            {loading
+              ? Array.from({ length: 5 }).map((_, i) => <TableRowSkeleton key={i} cols={5} />)
+              : bookings.data.map((b: any) => (
+                  <tr
+                    key={b.id}
+                    onClick={() => handleRowClick(b)}
+                    className="hover:bg-slate-50 cursor-pointer"
+                  >
+                    <td className="p-3 text-sm font-medium">{b.customer?.name}</td>
+                    <td className="p-3 text-sm">{b.service?.name}</td>
+                    <td className="p-3 text-sm text-slate-600">
+                      {b.staff?.name || t('common.unassigned')}
+                    </td>
+                    <td className="p-3 text-sm text-slate-600">
+                      {new Date(b.startTime).toLocaleString('en-US', {
+                        dateStyle: 'medium',
+                        timeStyle: 'short',
+                      })}
+                    </td>
+                    <td className="p-3">
+                      <span
+                        className={cn('text-xs px-2 py-0.5 rounded-full', statusColors[b.status])}
+                      >
+                        {t(`status.${b.status.toLowerCase()}`)}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
           </tbody>
         </table>
         {!loading && bookings.data.length === 0 && (
           <EmptyState
             icon={BookOpen}
             title={t('bookings.no_bookings', { entity: pack.labels.booking.toLowerCase() })}
-            description={statusFilter ? t('bookings.no_bookings_status', { entity: pack.labels.booking.toLowerCase(), status: t(`status.${statusFilter.toLowerCase()}`) }) : t('bookings.create_first', { entity: pack.labels.booking.toLowerCase() })}
+            description={
+              statusFilter
+                ? t('bookings.no_bookings_status', {
+                    entity: pack.labels.booking.toLowerCase(),
+                    status: t(`status.${statusFilter.toLowerCase()}`),
+                  })
+                : t('bookings.create_first', { entity: pack.labels.booking.toLowerCase() })
+            }
           />
         )}
       </div>

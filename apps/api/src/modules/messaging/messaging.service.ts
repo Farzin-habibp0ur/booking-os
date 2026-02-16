@@ -1,6 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { MockProvider, WhatsAppCloudProvider, MessagingProvider } from '@booking-os/messaging-provider';
+import {
+  MockProvider,
+  WhatsAppCloudProvider,
+  MessagingProvider,
+} from '@booking-os/messaging-provider';
 
 @Injectable()
 export class MessagingService {
@@ -16,7 +20,9 @@ export class MessagingService {
       const accessToken = this.configService.get<string>('WHATSAPP_ACCESS_TOKEN');
 
       if (!phoneNumberId || !accessToken) {
-        this.logger.warn('WhatsApp Cloud API credentials not configured, falling back to MockProvider');
+        this.logger.warn(
+          'WhatsApp Cloud API credentials not configured, falling back to MockProvider',
+        );
         this.mockProvider = new MockProvider();
         this.provider = this.mockProvider;
       } else {

@@ -126,9 +126,7 @@ describe('Tenant Isolation', () => {
 
   describe('Authentication enforcement', () => {
     it('should reject requests without auth token', async () => {
-      await request(ctx.app.getHttpServer())
-        .get('/api/v1/bookings')
-        .expect(401);
+      await request(ctx.app.getHttpServer()).get('/api/v1/bookings').expect(401);
     });
 
     it('should reject requests with invalid token', async () => {

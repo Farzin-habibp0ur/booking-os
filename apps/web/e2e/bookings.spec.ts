@@ -21,9 +21,21 @@ test.describe('Bookings', () => {
     await page.waitForLoadState('networkidle');
 
     // Either bookings are displayed or empty state is shown
-    const hasBookings = await page.locator('[data-testid="booking-item"]').first().isVisible().catch(() => false);
-    const hasEmptyState = await page.locator('text=/no.*booking|empty/i').first().isVisible().catch(() => false);
-    const hasBookingText = await page.locator('text=/booking|appointment/i').first().isVisible().catch(() => false);
+    const hasBookings = await page
+      .locator('[data-testid="booking-item"]')
+      .first()
+      .isVisible()
+      .catch(() => false);
+    const hasEmptyState = await page
+      .locator('text=/no.*booking|empty/i')
+      .first()
+      .isVisible()
+      .catch(() => false);
+    const hasBookingText = await page
+      .locator('text=/booking|appointment/i')
+      .first()
+      .isVisible()
+      .catch(() => false);
 
     expect(hasBookings || hasEmptyState || hasBookingText).toBe(true);
   });

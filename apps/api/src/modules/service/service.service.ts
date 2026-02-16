@@ -12,7 +12,17 @@ export class ServiceService {
     });
   }
 
-  async create(businessId: string, data: { name: string; durationMins: number; price: number; category?: string; description?: string; customFields?: any }) {
+  async create(
+    businessId: string,
+    data: {
+      name: string;
+      durationMins: number;
+      price: number;
+      category?: string;
+      description?: string;
+      customFields?: any;
+    },
+  ) {
     return this.prisma.service.create({ data: { businessId, ...data } });
   }
 

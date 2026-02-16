@@ -10,11 +10,7 @@ import { OutlookCalendarProvider } from './providers/outlook-calendar.provider';
 @Module({
   imports: [ConfigModule],
   controllers: [CalendarSyncController, IcalFeedController],
-  providers: [
-    CalendarSyncService,
-    GoogleCalendarProvider,
-    OutlookCalendarProvider,
-  ],
+  providers: [CalendarSyncService, GoogleCalendarProvider, OutlookCalendarProvider],
   exports: [CalendarSyncService],
 })
 export class CalendarSyncModule {}

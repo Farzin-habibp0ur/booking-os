@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Delete, Param, Query, Res, UseGuards, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Param,
+  Query,
+  Res,
+  UseGuards,
+  BadRequestException,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Response } from 'express';
 import { CalendarSyncService } from './calendar-sync.service';
@@ -23,10 +33,7 @@ export class CalendarSyncController {
 
   @Post('connect/:provider')
   @UseGuards(AuthGuard('jwt'), TenantGuard)
-  async connect(
-    @CurrentUser('staffId') staffId: string,
-    @Param('provider') provider: string,
-  ) {
+  async connect(@CurrentUser('staffId') staffId: string, @Param('provider') provider: string) {
     if (!['google', 'outlook'].includes(provider)) {
       throw new BadRequestException('Invalid provider');
     }
@@ -50,10 +57,7 @@ export class CalendarSyncController {
 
   @Delete('connections/:provider')
   @UseGuards(AuthGuard('jwt'), TenantGuard)
-  async disconnect(
-    @CurrentUser('staffId') staffId: string,
-    @Param('provider') provider: string,
-  ) {
+  async disconnect(@CurrentUser('staffId') staffId: string, @Param('provider') provider: string) {
     await this.calendarSyncService.disconnect(staffId, provider);
     return { success: true };
   }

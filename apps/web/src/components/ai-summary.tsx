@@ -20,7 +20,9 @@ export default function AiSummary({ conversationId, summary, onSummaryUpdated }:
   const refreshSummary = async () => {
     setRefreshing(true);
     try {
-      const result = await api.post<{ summary: string }>(`/ai/conversations/${conversationId}/summary`);
+      const result = await api.post<{ summary: string }>(
+        `/ai/conversations/${conversationId}/summary`,
+      );
       onSummaryUpdated(result.summary);
       toast(t('ai.summary_refreshed'));
     } catch (e: any) {
@@ -36,7 +38,9 @@ export default function AiSummary({ conversationId, summary, onSummaryUpdated }:
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-1.5">
           <Sparkles size={13} className="text-lavender-500" />
-          <span className="text-xs font-semibold text-slate-500 uppercase">{t('ai.summary_label')}</span>
+          <span className="text-xs font-semibold text-slate-500 uppercase">
+            {t('ai.summary_label')}
+          </span>
         </div>
         <button
           onClick={refreshSummary}

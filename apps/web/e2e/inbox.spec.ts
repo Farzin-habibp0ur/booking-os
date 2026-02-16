@@ -25,8 +25,16 @@ test.describe('Inbox', () => {
     await page.waitForTimeout(3000);
 
     // Either conversations are listed (border-b cursor-pointer items) or the empty state shows
-    const hasConversations = await page.locator('.cursor-pointer.border-b').first().isVisible().catch(() => false);
-    const hasEmptyState = await page.locator('text=/no.*conversation/i').first().isVisible().catch(() => false);
+    const hasConversations = await page
+      .locator('.cursor-pointer.border-b')
+      .first()
+      .isVisible()
+      .catch(() => false);
+    const hasEmptyState = await page
+      .locator('text=/no.*conversation/i')
+      .first()
+      .isVisible()
+      .catch(() => false);
 
     expect(hasConversations || hasEmptyState).toBe(true);
   });

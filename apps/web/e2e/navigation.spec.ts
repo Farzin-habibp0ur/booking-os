@@ -88,8 +88,12 @@ test.describe('Navigation', () => {
     await expect(customersLink).toBeVisible({ timeout: 5000 });
 
     // Check for active state indicators (the shell uses bg-brand-50 + font-medium for active link)
-    const classes = await customersLink.getAttribute('class').catch(() => '') || '';
-    const hasActiveClass = classes.includes('bg-brand') || classes.includes('font-medium') || classes.includes('font-bold') || classes.includes('active');
+    const classes = (await customersLink.getAttribute('class').catch(() => '')) || '';
+    const hasActiveClass =
+      classes.includes('bg-brand') ||
+      classes.includes('font-medium') ||
+      classes.includes('font-bold') ||
+      classes.includes('active');
 
     expect(hasActiveClass).toBe(true);
   });

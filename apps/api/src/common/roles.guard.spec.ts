@@ -63,9 +63,9 @@ describe('RolesGuard', () => {
 
     guard.canActivate(context);
 
-    expect(reflector.getAllAndOverride).toHaveBeenCalledWith(
-      'roles',
-      [expect.any(Function), expect.any(Function)],
-    );
+    expect(reflector.getAllAndOverride).toHaveBeenCalledWith('roles', [
+      expect.any(Function),
+      expect.any(Function),
+    ]);
   });
 });

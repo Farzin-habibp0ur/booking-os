@@ -21,9 +21,21 @@ test.describe('Services', () => {
     await page.waitForLoadState('networkidle');
 
     // Either services are displayed or empty state is shown
-    const hasServices = await page.locator('[data-testid="service-item"]').first().isVisible().catch(() => false);
-    const hasEmptyState = await page.locator('text=/no.*service|empty/i').first().isVisible().catch(() => false);
-    const hasServiceText = await page.locator('text=/service|treatment/i').first().isVisible().catch(() => false);
+    const hasServices = await page
+      .locator('[data-testid="service-item"]')
+      .first()
+      .isVisible()
+      .catch(() => false);
+    const hasEmptyState = await page
+      .locator('text=/no.*service|empty/i')
+      .first()
+      .isVisible()
+      .catch(() => false);
+    const hasServiceText = await page
+      .locator('text=/service|treatment/i')
+      .first()
+      .isVisible()
+      .catch(() => false);
 
     expect(hasServices || hasEmptyState || hasServiceText).toBe(true);
   });
@@ -55,7 +67,11 @@ test.describe('Services', () => {
     await page.waitForLoadState('networkidle');
 
     // Services page might have categories or filters
-    const hasCategories = await page.locator('text=/category|type|filter/i').first().isVisible({ timeout: 5000 }).catch(() => false);
+    const hasCategories = await page
+      .locator('text=/category|type|filter/i')
+      .first()
+      .isVisible({ timeout: 5000 })
+      .catch(() => false);
 
     // This is an informational test - categories may or may not be present
     if (hasCategories) {
@@ -68,11 +84,19 @@ test.describe('Services', () => {
     await page.waitForLoadState('networkidle');
 
     // If services exist, check for price information
-    const hasServices = await page.locator('[data-testid="service-item"]').first().isVisible().catch(() => false);
+    const hasServices = await page
+      .locator('[data-testid="service-item"]')
+      .first()
+      .isVisible()
+      .catch(() => false);
 
     if (hasServices) {
       // Look for price indicators (currency symbols, price text, etc.)
-      const hasPricing = await page.locator('text=/\\$|price|cost/i').first().isVisible().catch(() => false);
+      const hasPricing = await page
+        .locator('text=/\\$|price|cost/i')
+        .first()
+        .isVisible()
+        .catch(() => false);
       expect(hasPricing).toBe(true);
     }
   });

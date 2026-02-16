@@ -32,7 +32,11 @@ test.describe('Login', () => {
     await loginViaUi(page, 'sarah@glowclinic.com', 'password123');
 
     // Look for a logout link or button in the sidebar/header
-    const logoutLink = page.locator('a[href="/login"], button:has-text("Logout"), button:has-text("Log out"), a:has-text("Logout"), a:has-text("Log out")').first();
+    const logoutLink = page
+      .locator(
+        'a[href="/login"], button:has-text("Logout"), button:has-text("Log out"), a:has-text("Logout"), a:has-text("Log out")',
+      )
+      .first();
     if (await logoutLink.isVisible({ timeout: 3000 }).catch(() => false)) {
       await logoutLink.click();
       await expect(page).toHaveURL(/\/login/, { timeout: 10000 });

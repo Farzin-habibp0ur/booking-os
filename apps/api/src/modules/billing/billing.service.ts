@@ -33,9 +33,10 @@ export class BillingService {
     const business = await this.prisma.business.findUnique({ where: { id: businessId } });
     if (!business) throw new BadRequestException('Business not found');
 
-    const priceId = plan === 'pro'
-      ? this.configService.get<string>('STRIPE_PRICE_ID_PRO')
-      : this.configService.get<string>('STRIPE_PRICE_ID_BASIC');
+    const priceId =
+      plan === 'pro'
+        ? this.configService.get<string>('STRIPE_PRICE_ID_PRO')
+        : this.configService.get<string>('STRIPE_PRICE_ID_BASIC');
 
     if (!priceId) throw new BadRequestException(`No price configured for plan: ${plan}`);
 
@@ -204,7 +205,8 @@ export class BillingService {
     });
 
     if (!booking) throw new BadRequestException('Booking not found');
-    if (!booking.service.depositRequired) throw new BadRequestException('Deposit not required for this service');
+    if (!booking.service.depositRequired)
+      throw new BadRequestException('Deposit not required for this service');
 
     const amount = booking.service.depositAmount || booking.service.price;
     if (!amount || amount <= 0) throw new BadRequestException('Invalid deposit amount');

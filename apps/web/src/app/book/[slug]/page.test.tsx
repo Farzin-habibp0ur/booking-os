@@ -25,8 +25,22 @@ const mockPublicApi = publicApi as jest.Mocked<typeof publicApi>;
 
 const mockBusiness = { name: 'Glow Clinic', slug: 'glow-clinic', timezone: 'America/New_York' };
 const mockServices = [
-  { id: 'svc1', name: 'Botox', description: 'Anti-wrinkle', durationMins: 30, price: 200, category: 'Aesthetic' },
-  { id: 'svc2', name: 'Facial', description: null, durationMins: 60, price: 0, category: 'General' },
+  {
+    id: 'svc1',
+    name: 'Botox',
+    description: 'Anti-wrinkle',
+    durationMins: 30,
+    price: 200,
+    category: 'Aesthetic',
+  },
+  {
+    id: 'svc2',
+    name: 'Facial',
+    description: null,
+    durationMins: 60,
+    price: 0,
+    category: 'General',
+  },
 ];
 
 describe('BookingPortalPage', () => {

@@ -1,7 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ClaudeClient } from './claude.client';
 
-export type RescheduleState = 'IDENTIFY_BOOKING' | 'IDENTIFY_NEW_DATE' | 'IDENTIFY_NEW_TIME' | 'CONFIRM_RESCHEDULE';
+export type RescheduleState =
+  | 'IDENTIFY_BOOKING'
+  | 'IDENTIFY_NEW_DATE'
+  | 'IDENTIFY_NEW_TIME'
+  | 'CONFIRM_RESCHEDULE';
 
 export interface RescheduleStateData {
   state: RescheduleState;
@@ -55,7 +59,11 @@ export class RescheduleAssistant {
     }
 
     // Auto-select if only one booking and we haven't identified yet
-    if (state === 'IDENTIFY_BOOKING' && context.upcomingBookings.length === 1 && !currentState?.bookingId) {
+    if (
+      state === 'IDENTIFY_BOOKING' &&
+      context.upcomingBookings.length === 1 &&
+      !currentState?.bookingId
+    ) {
       const booking = context.upcomingBookings[0];
       return {
         state: 'IDENTIFY_NEW_DATE',
@@ -138,10 +146,13 @@ Return ONLY valid JSON, no markdown.`;
       };
     } catch (error: any) {
       this.logger.error(`Reschedule assistant failed: ${error.message}`);
-      return currentState || {
-        state: 'IDENTIFY_BOOKING',
-        suggestedResponse: 'I\'d be happy to help you reschedule your appointment. Let me look up your bookings.',
-      };
+      return (
+        currentState || {
+          state: 'IDENTIFY_BOOKING',
+          suggestedResponse:
+            "I'd be happy to help you reschedule your appointment. Let me look up your bookings.",
+        }
+      );
     }
   }
 }

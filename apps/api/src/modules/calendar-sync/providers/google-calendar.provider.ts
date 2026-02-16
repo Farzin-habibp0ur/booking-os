@@ -49,7 +49,11 @@ export class GoogleCalendarProvider implements CalendarProvider {
       throw new Error('Failed to exchange Google auth code');
     }
 
-    const data = (await res.json()) as { access_token: string; refresh_token: string; expires_in: number };
+    const data = (await res.json()) as {
+      access_token: string;
+      refresh_token: string;
+      expires_in: number;
+    };
     return {
       accessToken: data.access_token,
       refreshToken: data.refresh_token,
@@ -82,7 +86,11 @@ export class GoogleCalendarProvider implements CalendarProvider {
     };
   }
 
-  async createEvent(accessToken: string, calendarId: string, event: CalendarEvent): Promise<string> {
+  async createEvent(
+    accessToken: string,
+    calendarId: string,
+    event: CalendarEvent,
+  ): Promise<string> {
     const res = await fetch(
       `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId || 'primary')}/events`,
       {
@@ -111,7 +119,12 @@ export class GoogleCalendarProvider implements CalendarProvider {
     return data.id;
   }
 
-  async updateEvent(accessToken: string, calendarId: string, eventId: string, event: CalendarEvent): Promise<void> {
+  async updateEvent(
+    accessToken: string,
+    calendarId: string,
+    eventId: string,
+    event: CalendarEvent,
+  ): Promise<void> {
     const res = await fetch(
       `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId || 'primary')}/events/${encodeURIComponent(eventId)}`,
       {

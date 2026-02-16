@@ -76,19 +76,22 @@ const RESCHEDULE_STEPS: Record<string, number> = {
   CONFIRM_RESCHEDULE: 4,
 };
 
-const MODE_CONFIG: Record<PanelMode, {
-  icon: typeof CalendarCheck;
-  titleKey: string;
-  colorClass: string;
-  stepCount: number;
-  stateSteps: Record<string, number>;
-  confirmState: string;
-  confirmEndpoint: string;
-  dismissEndpoint: string;
-  confirmLabelKey: string;
-  confirmSuccessKey: string;
-  confirmFailKey: string;
-}> = {
+const MODE_CONFIG: Record<
+  PanelMode,
+  {
+    icon: typeof CalendarCheck;
+    titleKey: string;
+    colorClass: string;
+    stepCount: number;
+    stateSteps: Record<string, number>;
+    confirmState: string;
+    confirmEndpoint: string;
+    dismissEndpoint: string;
+    confirmLabelKey: string;
+    confirmSuccessKey: string;
+    confirmFailKey: string;
+  }
+> = {
   book: {
     icon: CalendarCheck,
     titleKey: 'ai.booking_assistant',
@@ -131,7 +134,13 @@ const MODE_CONFIG: Record<PanelMode, {
 };
 
 export default function AiBookingPanel({
-  conversationId, mode, bookingState, cancelState, rescheduleState, onConfirmed, onDismissed,
+  conversationId,
+  mode,
+  bookingState,
+  cancelState,
+  rescheduleState,
+  onConfirmed,
+  onDismissed,
 }: AiBookingPanelProps) {
   const { t } = useI18n();
   const { toast } = useToast();
@@ -142,11 +151,12 @@ export default function AiBookingPanel({
   const Icon = config.icon;
 
   // Get current state string based on mode
-  const currentStateStr = mode === 'book'
-    ? (bookingState?.state || 'IDENTIFY_SERVICE')
-    : mode === 'cancel'
-      ? (cancelState?.state || 'IDENTIFY_BOOKING')
-      : (rescheduleState?.state || 'IDENTIFY_BOOKING');
+  const currentStateStr =
+    mode === 'book'
+      ? bookingState?.state || 'IDENTIFY_SERVICE'
+      : mode === 'cancel'
+        ? cancelState?.state || 'IDENTIFY_BOOKING'
+        : rescheduleState?.state || 'IDENTIFY_BOOKING';
 
   const currentStep = config.stateSteps[currentStateStr] || 1;
 
@@ -176,44 +186,72 @@ export default function AiBookingPanel({
   // Build info rows based on mode
   const infoRows: Array<{ label: string; value: string }> = [];
   if (mode === 'book' && bookingState) {
-    if (bookingState.serviceName) infoRows.push({ label: t('ai.booking_service'), value: bookingState.serviceName });
+    if (bookingState.serviceName)
+      infoRows.push({ label: t('ai.booking_service'), value: bookingState.serviceName });
     if (bookingState.date) infoRows.push({ label: t('ai.booking_date'), value: bookingState.date });
     if (bookingState.time) infoRows.push({ label: t('ai.booking_time'), value: bookingState.time });
-    if (bookingState.staffName) infoRows.push({ label: t('ai.booking_staff'), value: bookingState.staffName });
+    if (bookingState.staffName)
+      infoRows.push({ label: t('ai.booking_staff'), value: bookingState.staffName });
   } else if (mode === 'cancel' && cancelState) {
-    if (cancelState.serviceName) infoRows.push({ label: t('ai.booking_service'), value: cancelState.serviceName });
+    if (cancelState.serviceName)
+      infoRows.push({ label: t('ai.booking_service'), value: cancelState.serviceName });
     if (cancelState.date) infoRows.push({ label: t('ai.booking_date'), value: cancelState.date });
     if (cancelState.time) infoRows.push({ label: t('ai.booking_time'), value: cancelState.time });
-    if (cancelState.staffName) infoRows.push({ label: t('ai.booking_staff'), value: cancelState.staffName });
+    if (cancelState.staffName)
+      infoRows.push({ label: t('ai.booking_staff'), value: cancelState.staffName });
   } else if (mode === 'reschedule' && rescheduleState) {
-    if (rescheduleState.serviceName) infoRows.push({ label: t('ai.booking_service'), value: rescheduleState.serviceName });
-    if (rescheduleState.originalDate) infoRows.push({ label: t('ai.original_date'), value: rescheduleState.originalDate });
-    if (rescheduleState.originalTime) infoRows.push({ label: t('ai.original_time'), value: rescheduleState.originalTime });
-    if (rescheduleState.newDate) infoRows.push({ label: t('ai.new_date'), value: rescheduleState.newDate });
-    if (rescheduleState.newTime) infoRows.push({ label: t('ai.new_time'), value: rescheduleState.newTime });
-    if (rescheduleState.staffName) infoRows.push({ label: t('ai.booking_staff'), value: rescheduleState.staffName });
+    if (rescheduleState.serviceName)
+      infoRows.push({ label: t('ai.booking_service'), value: rescheduleState.serviceName });
+    if (rescheduleState.originalDate)
+      infoRows.push({ label: t('ai.original_date'), value: rescheduleState.originalDate });
+    if (rescheduleState.originalTime)
+      infoRows.push({ label: t('ai.original_time'), value: rescheduleState.originalTime });
+    if (rescheduleState.newDate)
+      infoRows.push({ label: t('ai.new_date'), value: rescheduleState.newDate });
+    if (rescheduleState.newTime)
+      infoRows.push({ label: t('ai.new_time'), value: rescheduleState.newTime });
+    if (rescheduleState.staffName)
+      infoRows.push({ label: t('ai.booking_staff'), value: rescheduleState.staffName });
   }
 
   const isConfirmReady = currentStateStr === config.confirmState;
 
   // Color scheme per mode
-  const progressColor = mode === 'cancel' ? 'bg-red-500' : mode === 'reschedule' ? 'bg-orange-500' : 'bg-lavender-500';
-  const btnColor = mode === 'cancel'
-    ? 'bg-red-600 hover:bg-red-700'
-    : mode === 'reschedule'
-      ? 'bg-orange-600 hover:bg-orange-700'
-      : 'bg-lavender-600 hover:bg-lavender-700';
-  const stepTextColor = mode === 'cancel' ? 'text-red-500' : mode === 'reschedule' ? 'text-orange-500' : 'text-lavender-600';
-  const titleColor = mode === 'cancel' ? 'text-red-700' : mode === 'reschedule' ? 'text-orange-700' : 'text-lavender-900';
+  const progressColor =
+    mode === 'cancel' ? 'bg-red-500' : mode === 'reschedule' ? 'bg-orange-500' : 'bg-lavender-500';
+  const btnColor =
+    mode === 'cancel'
+      ? 'bg-red-600 hover:bg-red-700'
+      : mode === 'reschedule'
+        ? 'bg-orange-600 hover:bg-orange-700'
+        : 'bg-lavender-600 hover:bg-lavender-700';
+  const stepTextColor =
+    mode === 'cancel'
+      ? 'text-red-500'
+      : mode === 'reschedule'
+        ? 'text-orange-500'
+        : 'text-lavender-600';
+  const titleColor =
+    mode === 'cancel'
+      ? 'text-red-700'
+      : mode === 'reschedule'
+        ? 'text-orange-700'
+        : 'text-lavender-900';
 
   return (
     <div className="p-4 border-b">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-1.5">
           <Icon size={14} className={config.colorClass} />
-          <span className={cn('text-xs font-semibold uppercase', titleColor)}>{t(config.titleKey)}</span>
+          <span className={cn('text-xs font-semibold uppercase', titleColor)}>
+            {t(config.titleKey)}
+          </span>
         </div>
-        <button onClick={handleDismiss} disabled={dismissing} className="text-slate-400 hover:text-red-500">
+        <button
+          onClick={handleDismiss}
+          disabled={dismissing}
+          className="text-slate-400 hover:text-red-500"
+        >
           {dismissing ? <Loader2 size={14} className="animate-spin" /> : <X size={14} />}
         </button>
       </div>
@@ -251,7 +289,10 @@ export default function AiBookingPanel({
         <button
           onClick={handleConfirm}
           disabled={confirming}
-          className={cn('mt-3 w-full text-white py-2 rounded-xl text-sm disabled:opacity-50 flex items-center justify-center gap-1.5 transition-colors', btnColor)}
+          className={cn(
+            'mt-3 w-full text-white py-2 rounded-xl text-sm disabled:opacity-50 flex items-center justify-center gap-1.5 transition-colors',
+            btnColor,
+          )}
         >
           {confirming ? <Loader2 size={14} className="animate-spin" /> : <Icon size={14} />}
           {t(config.confirmLabelKey)}

@@ -26,7 +26,11 @@ export class TemplateController {
   }
 
   @Patch(':id')
-  update(@BusinessId() businessId: string, @Param('id') id: string, @Body() body: UpdateTemplateDto) {
+  update(
+    @BusinessId() businessId: string,
+    @Param('id') id: string,
+    @Body() body: UpdateTemplateDto,
+  ) {
     return this.templateService.update(businessId, id, body);
   }
 

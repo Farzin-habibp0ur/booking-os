@@ -33,10 +33,17 @@ interface Slot {
 }
 
 export default function BookingFormModal({
-  isOpen, onClose, onCreated,
-  customerId, customerName, conversationId,
-  staffId: prefillStaffId, date: prefillDate, time: prefillTime,
-  rescheduleBookingId, rescheduleData,
+  isOpen,
+  onClose,
+  onCreated,
+  customerId,
+  customerName,
+  conversationId,
+  staffId: prefillStaffId,
+  date: prefillDate,
+  time: prefillTime,
+  rescheduleBookingId,
+  rescheduleData,
 }: BookingFormModalProps) {
   const [services, setServices] = useState<any[]>([]);
   const [customers, setCustomers] = useState<any[]>([]);
@@ -94,18 +101,24 @@ export default function BookingFormModal({
   // Pre-select time if provided
   useEffect(() => {
     if (prefillDate && prefillTime && slots.length > 0) {
-      const match = slots.find((s) => s.display === prefillTime && (!prefillStaffId || s.staffId === prefillStaffId));
+      const match = slots.find(
+        (s) => s.display === prefillTime && (!prefillStaffId || s.staffId === prefillStaffId),
+      );
       if (match) setSelectedSlot(match);
     }
   }, [slots, prefillDate, prefillTime]);
 
   // Fetch slots when date + service change
   useEffect(() => {
-    if (!selectedDate || !serviceId) { setSlots([]); return; }
+    if (!selectedDate || !serviceId) {
+      setSlots([]);
+      return;
+    }
     setLoadingSlots(true);
     const params = new URLSearchParams({ date: selectedDate, serviceId });
     if (selectedStaffId) params.set('staffId', selectedStaffId);
-    api.get<Slot[]>(`/availability?${params}`)
+    api
+      .get<Slot[]>(`/availability?${params}`)
       .then(setSlots)
       .catch(() => setSlots([]))
       .finally(() => setLoadingSlots(false));
@@ -113,7 +126,10 @@ export default function BookingFormModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedSlot) { setError('Please select a time slot'); return; }
+    if (!selectedSlot) {
+      setError('Please select a time slot');
+      return;
+    }
     setSubmitting(true);
     setError('');
 
@@ -145,9 +161,7 @@ export default function BookingFormModal({
         onCreated(result);
       } else {
         // Create new booking
-        const endpoint = conversationId
-          ? `/conversations/${conversationId}/booking`
-          : '/bookings';
+        const endpoint = conversationId ? `/conversations/${conversationId}/booking` : '/bookings';
         const booking = await api.post<any>(endpoint, {
           customerId: selectedCustomerId,
           serviceId,
@@ -169,11 +183,14 @@ export default function BookingFormModal({
   const isReschedule = !!rescheduleBookingId;
 
   // Group slots by time for multi-staff display
-  const groupedSlots = slots.reduce((acc, slot) => {
-    if (!acc[slot.display]) acc[slot.display] = [];
-    acc[slot.display].push(slot);
-    return acc;
-  }, {} as Record<string, Slot[]>);
+  const groupedSlots = slots.reduce(
+    (acc, slot) => {
+      if (!acc[slot.display]) acc[slot.display] = [];
+      acc[slot.display].push(slot);
+      return acc;
+    },
+    {} as Record<string, Slot[]>,
+  );
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-end">
@@ -184,7 +201,10 @@ export default function BookingFormModal({
           <h2 className="text-lg font-serif font-semibold text-slate-900">
             {isReschedule ? 'Reschedule Booking' : 'Create Booking'}
           </h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
+          <button
+            onClick={onClose}
+            className="text-slate-400 hover:text-slate-600 transition-colors"
+          >
             <X size={20} />
           </button>
         </div>
@@ -202,7 +222,9 @@ export default function BookingFormModal({
           {customerId ? (
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Customer</label>
-              <div className="border border-slate-200 rounded-xl px-3 py-2 text-sm bg-slate-50">{customerName || 'Selected customer'}</div>
+              <div className="border border-slate-200 rounded-xl px-3 py-2 text-sm bg-slate-50">
+                {customerName || 'Selected customer'}
+              </div>
             </div>
           ) : (
             <div>
@@ -215,7 +237,9 @@ export default function BookingFormModal({
               >
                 <option value="">Select customer...</option>
                 {customers.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name} ({c.phone})</option>
+                  <option key={c.id} value={c.id}>
+                    {c.name} ({c.phone})
+                  </option>
                 ))}
               </select>
             </div>
@@ -226,7 +250,10 @@ export default function BookingFormModal({
             <label className="block text-sm font-medium text-slate-700 mb-1">Service *</label>
             <select
               value={serviceId}
-              onChange={(e) => { setServiceId(e.target.value); setSelectedSlot(null); }}
+              onChange={(e) => {
+                setServiceId(e.target.value);
+                setSelectedSlot(null);
+              }}
               required
               className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sage-500"
             >
@@ -241,15 +268,22 @@ export default function BookingFormModal({
 
           {/* Staff filter (optional) */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Staff (optional filter)</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              Staff (optional filter)
+            </label>
             <select
               value={selectedStaffId}
-              onChange={(e) => { setSelectedStaffId(e.target.value); setSelectedSlot(null); }}
+              onChange={(e) => {
+                setSelectedStaffId(e.target.value);
+                setSelectedSlot(null);
+              }}
               className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sage-500"
             >
               <option value="">Any available staff</option>
               {staff.map((s) => (
-                <option key={s.id} value={s.id}>{s.name}</option>
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
               ))}
             </select>
           </div>
@@ -260,7 +294,10 @@ export default function BookingFormModal({
             <input
               type="date"
               value={selectedDate}
-              onChange={(e) => { setSelectedDate(e.target.value); setSelectedSlot(null); }}
+              onChange={(e) => {
+                setSelectedDate(e.target.value);
+                setSelectedSlot(null);
+              }}
               min={new Date().toISOString().split('T')[0]}
               required
               className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sage-500"
@@ -271,8 +308,7 @@ export default function BookingFormModal({
           {selectedDate && serviceId && (
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
-                Time *
-                {loadingSlots && <span className="text-slate-400 ml-2">Loading...</span>}
+                Time *{loadingSlots && <span className="text-slate-400 ml-2">Loading...</span>}
               </label>
               {!loadingSlots && slots.length === 0 && (
                 <p className="text-sm text-slate-400 bg-gray-50 rounded-md p-3 text-center">
@@ -351,14 +387,18 @@ export default function BookingFormModal({
                   className="rounded border-slate-300 text-sage-600 focus:ring-sage-500"
                 />
                 <Repeat size={14} className="text-slate-500" />
-                <span className="text-sm font-medium text-slate-700">{t('recurring.repeat_booking')}</span>
+                <span className="text-sm font-medium text-slate-700">
+                  {t('recurring.repeat_booking')}
+                </span>
               </label>
 
               {isRecurring && (
                 <div className="mt-3 space-y-3 pl-6">
                   {/* Days of week */}
                   <div>
-                    <label className="block text-xs font-medium text-slate-500 mb-1.5">{t('recurring.days_of_week')}</label>
+                    <label className="block text-xs font-medium text-slate-500 mb-1.5">
+                      {t('recurring.days_of_week')}
+                    </label>
                     <div className="flex gap-1">
                       {DAY_LABELS.map((label, i) => (
                         <button
@@ -384,7 +424,9 @@ export default function BookingFormModal({
 
                   {/* Frequency */}
                   <div>
-                    <label className="block text-xs font-medium text-slate-500 mb-1">{t('recurring.frequency')}</label>
+                    <label className="block text-xs font-medium text-slate-500 mb-1">
+                      {t('recurring.frequency')}
+                    </label>
                     <select
                       value={intervalWeeks}
                       onChange={(e) => setIntervalWeeks(Number(e.target.value))}
@@ -399,7 +441,9 @@ export default function BookingFormModal({
 
                   {/* End mode */}
                   <div>
-                    <label className="block text-xs font-medium text-slate-500 mb-1.5">{t('recurring.ends')}</label>
+                    <label className="block text-xs font-medium text-slate-500 mb-1.5">
+                      {t('recurring.ends')}
+                    </label>
                     <div className="space-y-2">
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input
@@ -409,7 +453,9 @@ export default function BookingFormModal({
                           onChange={() => setEndMode('count')}
                           className="text-sage-600 focus:ring-sage-500"
                         />
-                        <span className="text-sm text-slate-700">{t('recurring.after_occurrences', { count: '' })}</span>
+                        <span className="text-sm text-slate-700">
+                          {t('recurring.after_occurrences', { count: '' })}
+                        </span>
                         <input
                           type="number"
                           min={1}

@@ -35,17 +35,26 @@ export default function ProfileFieldsPage() {
   };
 
   if (loading) {
-    return <div className="p-6 flex items-center justify-center h-64"><p className="text-slate-400">{t('common.loading')}</p></div>;
+    return (
+      <div className="p-6 flex items-center justify-center h-64">
+        <p className="text-slate-400">{t('common.loading')}</p>
+      </div>
+    );
   }
 
   return (
     <div className="p-6 max-w-2xl">
       <div className="flex items-center gap-3 mb-6">
-        <button onClick={() => router.push('/settings')} className="p-1.5 rounded-xl hover:bg-slate-100 transition-colors">
+        <button
+          onClick={() => router.push('/settings')}
+          className="p-1.5 rounded-xl hover:bg-slate-100 transition-colors"
+        >
           <ArrowLeft size={18} />
         </button>
         <div>
-          <h1 className="text-2xl font-serif font-semibold text-slate-900">{t('settings.profile_fields')}</h1>
+          <h1 className="text-2xl font-serif font-semibold text-slate-900">
+            {t('settings.profile_fields')}
+          </h1>
           <p className="text-sm text-slate-500">{t('settings.profile_fields_desc')}</p>
         </div>
       </div>
@@ -61,7 +70,10 @@ export default function ProfileFieldsPage() {
               </h3>
               <div className="border border-slate-100 rounded-xl divide-y">
                 {fields.map((field) => (
-                  <label key={field.key} className="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-slate-50 transition-colors">
+                  <label
+                    key={field.key}
+                    className="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-slate-50 transition-colors"
+                  >
                     <div>
                       <p className="text-sm font-medium">{field.label}</p>
                       <p className="text-xs text-slate-500">{field.type}</p>

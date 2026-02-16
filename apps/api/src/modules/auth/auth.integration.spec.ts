@@ -5,7 +5,11 @@ import { AuthController } from './auth.controller';
 import { JwtStrategy } from './jwt.strategy';
 import { TokenService } from '../../common/token.service';
 import { EmailService } from '../email/email.service';
-import { createIntegrationApp, getAuthToken, IntegrationTestContext } from '../../test/integration-setup';
+import {
+  createIntegrationApp,
+  getAuthToken,
+  IntegrationTestContext,
+} from '../../test/integration-setup';
 import { createMockTokenService, createMockEmailService } from '../../test/mocks';
 import { BadRequestException } from '@nestjs/common';
 
@@ -114,8 +118,7 @@ describe('Auth Integration', () => {
     });
 
     it('returns 401 without auth token', async () => {
-      const res = await request(ctx.app.getHttpServer())
-        .get('/api/v1/auth/me');
+      const res = await request(ctx.app.getHttpServer()).get('/api/v1/auth/me');
 
       expect(res.status).toBe(401);
     });
@@ -168,8 +171,7 @@ describe('Auth Integration', () => {
     });
 
     it('returns 401 without auth token', async () => {
-      const res = await request(ctx.app.getHttpServer())
-        .post('/api/v1/auth/logout');
+      const res = await request(ctx.app.getHttpServer()).post('/api/v1/auth/logout');
 
       expect(res.status).toBe(401);
     });
@@ -180,15 +182,26 @@ describe('Auth Integration', () => {
   describe('POST /api/v1/auth/signup', () => {
     it('returns 201 with tokens on successful signup', async () => {
       ctx.prisma.staff.findUnique.mockResolvedValue(null);
-      ctx.prisma.business.create.mockResolvedValue({ id: 'biz-new', name: 'New Biz', slug: 'new-biz' } as any);
+      ctx.prisma.business.create.mockResolvedValue({
+        id: 'biz-new',
+        name: 'New Biz',
+        slug: 'new-biz',
+      } as any);
       ctx.prisma.staff.create.mockResolvedValue({
-        id: 'staff-new', name: 'Jane', email: 'jane@new.com', role: 'OWNER', businessId: 'biz-new',
+        id: 'staff-new',
+        name: 'Jane',
+        email: 'jane@new.com',
+        role: 'OWNER',
+        businessId: 'biz-new',
       } as any);
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashed');
 
-      const res = await request(ctx.app.getHttpServer())
-        .post('/api/v1/auth/signup')
-        .send({ businessName: 'New Biz', ownerName: 'Jane', email: 'jane@new.com', password: 'password123' });
+      const res = await request(ctx.app.getHttpServer()).post('/api/v1/auth/signup').send({
+        businessName: 'New Biz',
+        ownerName: 'Jane',
+        email: 'jane@new.com',
+        password: 'password123',
+      });
 
       expect(res.status).toBe(201);
       expect(res.body).toHaveProperty('accessToken');
@@ -199,9 +212,12 @@ describe('Auth Integration', () => {
     it('returns 409 for duplicate email', async () => {
       ctx.prisma.staff.findUnique.mockResolvedValue(mockStaff as any);
 
-      const res = await request(ctx.app.getHttpServer())
-        .post('/api/v1/auth/signup')
-        .send({ businessName: 'New', ownerName: 'Jane', email: 'sarah@glowclinic.com', password: 'password123' });
+      const res = await request(ctx.app.getHttpServer()).post('/api/v1/auth/signup').send({
+        businessName: 'New',
+        ownerName: 'Jane',
+        email: 'sarah@glowclinic.com',
+        password: 'password123',
+      });
 
       expect(res.status).toBe(409);
     });
@@ -327,8 +343,12 @@ describe('Auth Integration', () => {
       ctx.prisma.staff.findUnique.mockResolvedValue({ ...mockStaff, passwordHash: null } as any);
       (bcrypt.hash as jest.Mock).mockResolvedValue('invite-hash');
       ctx.prisma.staff.update.mockResolvedValue({
-        id: 'staff1', name: 'Sarah Johnson', email: 'sarah@glowclinic.com',
-        role: 'OWNER', businessId: 'biz1', isActive: true,
+        id: 'staff1',
+        name: 'Sarah Johnson',
+        email: 'sarah@glowclinic.com',
+        role: 'OWNER',
+        businessId: 'biz1',
+        isActive: true,
       } as any);
 
       const res = await request(ctx.app.getHttpServer())

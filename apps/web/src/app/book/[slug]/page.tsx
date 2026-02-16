@@ -3,12 +3,44 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { publicApi } from '@/lib/public-api';
-import { ChevronLeft, Clock, DollarSign, CheckCircle2, Calendar, User, Phone, Mail } from 'lucide-react';
+import {
+  ChevronLeft,
+  Clock,
+  DollarSign,
+  CheckCircle2,
+  Calendar,
+  User,
+  Phone,
+  Mail,
+} from 'lucide-react';
 
-interface Business { name: string; slug: string; timezone: string }
-interface Service { id: string; name: string; description: string | null; durationMins: number; price: number; category: string }
-interface TimeSlot { time: string; display: string; staffId: string; staffName: string; available: boolean }
-interface BookingResult { id: string; serviceName: string; startTime: string; staffName: string | null; businessName: string }
+interface Business {
+  name: string;
+  slug: string;
+  timezone: string;
+}
+interface Service {
+  id: string;
+  name: string;
+  description: string | null;
+  durationMins: number;
+  price: number;
+  category: string;
+}
+interface TimeSlot {
+  time: string;
+  display: string;
+  staffId: string;
+  staffName: string;
+  available: boolean;
+}
+interface BookingResult {
+  id: string;
+  serviceName: string;
+  startTime: string;
+  staffName: string | null;
+  businessName: string;
+}
 
 type Step = 'service' | 'datetime' | 'details' | 'confirm' | 'success';
 
@@ -23,7 +55,12 @@ const STEP_LABELS: Record<Step, string> = {
 };
 
 function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+  return new Date(dateStr).toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
 }
 
 function formatTime(dateStr: string) {
@@ -78,7 +115,9 @@ export default function BookingPortalPage() {
     setSlotsLoading(true);
     setSelectedSlot(null);
     publicApi
-      .get<TimeSlot[]>(`/public/${slug}/availability?date=${selectedDate}&serviceId=${selectedService.id}`)
+      .get<TimeSlot[]>(
+        `/public/${slug}/availability?date=${selectedDate}&serviceId=${selectedService.id}`,
+      )
       .then(setSlots)
       .catch(() => setSlots([]))
       .finally(() => setSlotsLoading(false));
@@ -123,12 +162,15 @@ export default function BookingPortalPage() {
   };
 
   // Group slots by staff
-  const groupedSlots = slots.reduce((acc, slot) => {
-    const key = slot.staffName;
-    if (!acc[key]) acc[key] = [];
-    acc[key].push(slot);
-    return acc;
-  }, {} as Record<string, TimeSlot[]>);
+  const groupedSlots = slots.reduce(
+    (acc, slot) => {
+      const key = slot.staffName;
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(slot);
+      return acc;
+    },
+    {} as Record<string, TimeSlot[]>,
+  );
 
   if (loading) {
     return (
@@ -143,7 +185,9 @@ export default function BookingPortalPage() {
       <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
         <div className="text-6xl mb-4">404</div>
         <h1 className="text-xl font-semibold text-slate-800 mb-2">Business not found</h1>
-        <p className="text-slate-500 text-sm">The booking page you&apos;re looking for doesn&apos;t exist.</p>
+        <p className="text-slate-500 text-sm">
+          The booking page you&apos;re looking for doesn&apos;t exist.
+        </p>
       </div>
     );
   }
@@ -155,9 +199,7 @@ export default function BookingPortalPage() {
       {/* Header */}
       <div className="text-center mb-6">
         <h1 className="text-2xl font-serif font-semibold text-slate-900">{business.name}</h1>
-        {step !== 'success' && (
-          <p className="text-sm text-slate-500 mt-1">Book an appointment</p>
-        )}
+        {step !== 'success' && <p className="text-sm text-slate-500 mt-1">Book an appointment</p>}
       </div>
 
       {/* Progress dots */}
@@ -182,7 +224,10 @@ export default function BookingPortalPage() {
       {step !== 'success' && (
         <div className="flex items-center gap-3 mb-4">
           {stepIndex > 0 && (
-            <button onClick={handleBack} className="text-slate-400 hover:text-slate-600 transition-colors">
+            <button
+              onClick={handleBack}
+              className="text-slate-400 hover:text-slate-600 transition-colors"
+            >
               <ChevronLeft size={20} />
             </button>
           )}
@@ -201,13 +246,18 @@ export default function BookingPortalPage() {
             services.map((svc) => (
               <button
                 key={svc.id}
-                onClick={() => { setSelectedService(svc); setStep('datetime'); }}
+                onClick={() => {
+                  setSelectedService(svc);
+                  setStep('datetime');
+                }}
                 className="w-full bg-white rounded-2xl shadow-soft p-4 text-left hover:shadow-soft-lg transition-shadow"
               >
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="font-semibold text-slate-800">{svc.name}</p>
-                    {svc.description && <p className="text-sm text-slate-500 mt-0.5">{svc.description}</p>}
+                    {svc.description && (
+                      <p className="text-sm text-slate-500 mt-0.5">{svc.description}</p>
+                    )}
                     <p className="text-xs text-slate-400 mt-1">{svc.category}</p>
                   </div>
                   <div className="text-right flex-shrink-0 ml-4">
@@ -266,9 +316,13 @@ export default function BookingPortalPage() {
             <div className="bg-white rounded-2xl shadow-soft p-4">
               <p className="text-sm font-medium text-slate-700 mb-3">Available times</p>
               {slotsLoading ? (
-                <p className="text-sm text-slate-400 py-4 text-center">Loading available times...</p>
+                <p className="text-sm text-slate-400 py-4 text-center">
+                  Loading available times...
+                </p>
               ) : slots.length === 0 ? (
-                <p className="text-sm text-slate-500 py-4 text-center">No times available on this day. Try another date.</p>
+                <p className="text-sm text-slate-500 py-4 text-center">
+                  No times available on this day. Try another date.
+                </p>
               ) : (
                 <div className="space-y-3">
                   {Object.entries(groupedSlots).map(([staffName, staffSlots]) => (
@@ -280,9 +334,13 @@ export default function BookingPortalPage() {
                         {staffSlots.map((slot) => (
                           <button
                             key={`${slot.staffId}-${slot.time}`}
-                            onClick={() => { setSelectedSlot(slot); setStep('details'); }}
+                            onClick={() => {
+                              setSelectedSlot(slot);
+                              setStep('details');
+                            }}
                             className={`px-3 py-2 rounded-xl text-sm transition-colors ${
-                              selectedSlot?.time === slot.time && selectedSlot?.staffId === slot.staffId
+                              selectedSlot?.time === slot.time &&
+                              selectedSlot?.staffId === slot.staffId
                                 ? 'bg-sage-600 text-white'
                                 : 'bg-slate-50 text-slate-700 hover:bg-sage-50 hover:text-sage-700'
                             }`}
@@ -372,7 +430,9 @@ export default function BookingPortalPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">Duration</span>
-                <span className="font-medium text-slate-800">{selectedService.durationMins} min</span>
+                <span className="font-medium text-slate-800">
+                  {selectedService.durationMins} min
+                </span>
               </div>
               <div className="border-t border-slate-100 pt-2 flex justify-between">
                 <span className="text-slate-500">Price</span>
@@ -414,8 +474,12 @@ export default function BookingPortalPage() {
               <CheckCircle2 size={32} className="text-sage-600" />
             </div>
           </div>
-          <h2 className="text-xl font-serif font-semibold text-slate-900 mb-2">Booking Confirmed!</h2>
-          <p className="text-sm text-slate-500 mb-6">You&apos;re all set. We look forward to seeing you.</p>
+          <h2 className="text-xl font-serif font-semibold text-slate-900 mb-2">
+            Booking Confirmed!
+          </h2>
+          <p className="text-sm text-slate-500 mb-6">
+            You&apos;re all set. We look forward to seeing you.
+          </p>
           <div className="bg-slate-50 rounded-xl p-4 space-y-2 text-sm text-left">
             <div className="flex justify-between">
               <span className="text-slate-500">Service</span>
@@ -423,11 +487,15 @@ export default function BookingPortalPage() {
             </div>
             <div className="flex justify-between">
               <span className="text-slate-500">Date</span>
-              <span className="font-medium text-slate-800">{formatDate(bookingResult.startTime as unknown as string)}</span>
+              <span className="font-medium text-slate-800">
+                {formatDate(bookingResult.startTime as unknown as string)}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-500">Time</span>
-              <span className="font-medium text-slate-800">{formatTime(bookingResult.startTime as unknown as string)}</span>
+              <span className="font-medium text-slate-800">
+                {formatTime(bookingResult.startTime as unknown as string)}
+              </span>
             </div>
             {bookingResult.staffName && (
               <div className="flex justify-between">

@@ -18,7 +18,10 @@ export class TemplateService {
     });
   }
 
-  async create(businessId: string, data: { name: string; category: string; body: string; variables?: string[] }) {
+  async create(
+    businessId: string,
+    data: { name: string; category: string; body: string; variables?: string[] },
+  ) {
     // Auto-extract variables from body
     const variables = data.variables || this.extractVariables(data.body);
     return this.prisma.messageTemplate.create({
@@ -47,7 +50,14 @@ export class TemplateService {
 
   async resolveVariables(
     template: { body: string; variables: string[] },
-    context: { customerName?: string; serviceName?: string; date?: string; time?: string; staffName?: string; businessName?: string },
+    context: {
+      customerName?: string;
+      serviceName?: string;
+      date?: string;
+      time?: string;
+      staffName?: string;
+      businessName?: string;
+    },
   ): Promise<string> {
     let resolved = template.body;
     const map: Record<string, string | undefined> = {

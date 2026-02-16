@@ -56,44 +56,48 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   // Fetch DB overrides when locale changes
   useEffect(() => {
     if (user?.businessId) {
-      api.get<Record<string, string>>(`/translations?locale=${locale}`)
+      api
+        .get<Record<string, string>>(`/translations?locale=${locale}`)
         .then(setOverrides)
         .catch(() => setOverrides({}));
     }
   }, [locale, user?.businessId]);
 
-  const setLocale = useCallback((newLocale: string) => {
-    setLocaleState(newLocale);
-    localStorage.setItem('locale', newLocale);
+  const setLocale = useCallback(
+    (newLocale: string) => {
+      setLocaleState(newLocale);
+      localStorage.setItem('locale', newLocale);
 
-    // Persist to staff record
-    if (user?.id) {
-      api.patch(`/staff/${user.id}`, { locale: newLocale }).catch(() => {});
-    }
-  }, [user?.id]);
-
-  const t = useCallback((key: string, vars?: Record<string, string | number>): string => {
-    // Priority: DB override → current locale JSON → English JSON → key
-    let value = overrides[key]
-      || getNestedValue(LOCALES[locale], key)
-      || getNestedValue(LOCALES['en'], key)
-      || key;
-
-    // Variable interpolation: {{variable}}
-    if (vars) {
-      for (const [k, v] of Object.entries(vars)) {
-        value = value.replace(new RegExp(`\\{\\{${k}\\}\\}`, 'g'), String(v));
+      // Persist to staff record
+      if (user?.id) {
+        api.patch(`/staff/${user.id}`, { locale: newLocale }).catch(() => {});
       }
-    }
-
-    return value;
-  }, [locale, overrides]);
-
-  return (
-    <I18nContext.Provider value={{ locale, setLocale, t }}>
-      {children}
-    </I18nContext.Provider>
+    },
+    [user?.id],
   );
+
+  const t = useCallback(
+    (key: string, vars?: Record<string, string | number>): string => {
+      // Priority: DB override → current locale JSON → English JSON → key
+      let value =
+        overrides[key] ||
+        getNestedValue(LOCALES[locale], key) ||
+        getNestedValue(LOCALES['en'], key) ||
+        key;
+
+      // Variable interpolation: {{variable}}
+      if (vars) {
+        for (const [k, v] of Object.entries(vars)) {
+          value = value.replace(new RegExp(`\\{\\{${k}\\}\\}`, 'g'), String(v));
+        }
+      }
+
+      return value;
+    },
+    [locale, overrides],
+  );
+
+  return <I18nContext.Provider value={{ locale, setLocale, t }}>{children}</I18nContext.Provider>;
 }
 
 export const useI18n = () => useContext(I18nContext);

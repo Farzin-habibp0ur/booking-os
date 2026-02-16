@@ -6,9 +6,7 @@ import { ProfileExtractor } from '../ai/profile-extractor';
 import { ClaudeClient } from '../ai/claude.client';
 
 @Module({
-  imports: [
-    MulterModule.register({ limits: { fileSize: 5 * 1024 * 1024 } }),
-  ],
+  imports: [MulterModule.register({ limits: { fileSize: 5 * 1024 * 1024 } })],
   controllers: [CustomerController],
   providers: [CustomerService, ProfileExtractor, ClaudeClient],
   exports: [CustomerService],

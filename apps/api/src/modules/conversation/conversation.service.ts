@@ -17,10 +17,18 @@ export class ConversationService {
     }
   }
 
-  async findAll(businessId: string, query: {
-    status?: string; assignedToId?: string; unassigned?: boolean;
-    search?: string; filter?: string; page?: number; pageSize?: number;
-  }) {
+  async findAll(
+    businessId: string,
+    query: {
+      status?: string;
+      assignedToId?: string;
+      unassigned?: boolean;
+      search?: string;
+      filter?: string;
+      page?: number;
+      pageSize?: number;
+    },
+  ) {
     const page = Number(query.page) || 1;
     const pageSize = Number(query.pageSize) || 20;
     const where: any = { businessId };
@@ -107,10 +115,16 @@ export class ConversationService {
     const base = { businessId };
 
     const [all, unassigned, mine, overdue, waiting, snoozed, closed] = await Promise.all([
-      this.prisma.conversation.count({ where: { ...base, status: { notIn: ['RESOLVED', 'SNOOZED'] } } }),
-      this.prisma.conversation.count({ where: { ...base, assignedToId: null, status: { notIn: ['RESOLVED', 'SNOOZED'] } } }),
+      this.prisma.conversation.count({
+        where: { ...base, status: { notIn: ['RESOLVED', 'SNOOZED'] } },
+      }),
+      this.prisma.conversation.count({
+        where: { ...base, assignedToId: null, status: { notIn: ['RESOLVED', 'SNOOZED'] } },
+      }),
       staffId
-        ? this.prisma.conversation.count({ where: { ...base, assignedToId: staffId, status: { notIn: ['RESOLVED', 'SNOOZED'] } } })
+        ? this.prisma.conversation.count({
+            where: { ...base, assignedToId: staffId, status: { notIn: ['RESOLVED', 'SNOOZED'] } },
+          })
         : Promise.resolve(0),
       this.countOverdue(businessId),
       this.prisma.conversation.count({ where: { ...base, status: 'WAITING' } }),

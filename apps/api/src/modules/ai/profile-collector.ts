@@ -78,7 +78,8 @@ Return ONLY valid JSON, no markdown.`;
       return {
         collectedFields: {},
         missingFields: context.missingFields.map((f) => f.key),
-        suggestedResponse: "I'd like to collect a bit more info before confirming. Could you share your details?",
+        suggestedResponse:
+          "I'd like to collect a bit more info before confirming. Could you share your details?",
         allCollected: false,
       };
     }

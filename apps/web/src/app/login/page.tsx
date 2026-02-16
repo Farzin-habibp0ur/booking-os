@@ -43,9 +43,14 @@ function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#FCFCFD' }}>
+    <div
+      className="min-h-screen flex items-center justify-center"
+      style={{ backgroundColor: '#FCFCFD' }}
+    >
       <div className="bg-white p-8 rounded-3xl shadow-soft w-full max-w-md">
-        <h1 className="text-2xl font-serif font-semibold text-slate-900 text-center mb-2">{t('login.title')}</h1>
+        <h1 className="text-2xl font-serif font-semibold text-slate-900 text-center mb-2">
+          {t('login.title')}
+        </h1>
         <p className="text-slate-500 text-center mb-6">{t('login.subtitle')}</p>
         <form onSubmit={handleSubmit} className="space-y-4">
           {resetSuccess && (

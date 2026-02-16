@@ -4,7 +4,11 @@ import { RecurringService } from './recurring.service';
 import { PrismaService } from '../../common/prisma.service';
 import { NotificationService } from '../notification/notification.service';
 import { CalendarSyncService } from '../calendar-sync/calendar-sync.service';
-import { createMockPrisma, createMockNotificationService, createMockCalendarSyncService } from '../../test/mocks';
+import {
+  createMockPrisma,
+  createMockNotificationService,
+  createMockCalendarSyncService,
+} from '../../test/mocks';
 
 describe('RecurringService', () => {
   let service: RecurringService;
@@ -240,10 +244,38 @@ describe('RecurringService', () => {
     const series = {
       id: 'series1',
       bookings: [
-        { id: 'b1', status: 'CONFIRMED', startTime: new Date('2026-03-03'), customer: {}, service: {}, staff: {} },
-        { id: 'b2', status: 'CONFIRMED', startTime: new Date('2026-03-10'), customer: {}, service: {}, staff: {} },
-        { id: 'b3', status: 'CONFIRMED', startTime: new Date('2026-03-17'), customer: {}, service: {}, staff: {} },
-        { id: 'b4', status: 'COMPLETED', startTime: new Date('2026-02-24'), customer: {}, service: {}, staff: {} },
+        {
+          id: 'b1',
+          status: 'CONFIRMED',
+          startTime: new Date('2026-03-03'),
+          customer: {},
+          service: {},
+          staff: {},
+        },
+        {
+          id: 'b2',
+          status: 'CONFIRMED',
+          startTime: new Date('2026-03-10'),
+          customer: {},
+          service: {},
+          staff: {},
+        },
+        {
+          id: 'b3',
+          status: 'CONFIRMED',
+          startTime: new Date('2026-03-17'),
+          customer: {},
+          service: {},
+          staff: {},
+        },
+        {
+          id: 'b4',
+          status: 'COMPLETED',
+          startTime: new Date('2026-02-24'),
+          customer: {},
+          service: {},
+          staff: {},
+        },
       ],
     };
 
@@ -286,7 +318,9 @@ describe('RecurringService', () => {
     it('throws when series not found', async () => {
       prisma.recurringSeries.findFirst.mockResolvedValue(null);
 
-      await expect(service.cancelSeries('biz1', 'missing', 'all')).rejects.toThrow(NotFoundException);
+      await expect(service.cancelSeries('biz1', 'missing', 'all')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('throws when single cancel has no bookingId', async () => {
@@ -308,9 +342,9 @@ describe('RecurringService', () => {
     it('throws when future cancel bookingId not found in series', async () => {
       prisma.recurringSeries.findFirst.mockResolvedValue(series as any);
 
-      await expect(service.cancelSeries('biz1', 'series1', 'future', 'nonexistent')).rejects.toThrow(
-        'Booking not found in series',
-      );
+      await expect(
+        service.cancelSeries('biz1', 'series1', 'future', 'nonexistent'),
+      ).rejects.toThrow('Booking not found in series');
     });
   });
 });

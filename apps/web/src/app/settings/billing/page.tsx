@@ -99,7 +99,8 @@ export default function BillingPage() {
     );
   }
 
-  const hasWarning = subscription && (subscription.status === 'past_due' || subscription.status === 'canceled');
+  const hasWarning =
+    subscription && (subscription.status === 'past_due' || subscription.status === 'canceled');
 
   return (
     <div className="p-6 max-w-3xl">
@@ -108,9 +109,7 @@ export default function BillingPage() {
         <h1 className="text-2xl font-serif font-semibold text-slate-900">{t('billing.title')}</h1>
       </div>
 
-      {error && (
-        <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm mb-4">{error}</div>
-      )}
+      {error && <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm mb-4">{error}</div>}
 
       {/* Warning banner for past_due / canceled */}
       {hasWarning && (
@@ -211,9 +210,7 @@ export default function BillingPage() {
 
           <div className="flex gap-3 pt-2">
             <button
-              onClick={() =>
-                handleCheckout(subscription.plan === 'basic' ? 'pro' : 'basic')
-              }
+              onClick={() => handleCheckout(subscription.plan === 'basic' ? 'pro' : 'basic')}
               disabled={actionLoading !== null}
               className="bg-sage-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-sage-700 transition-colors disabled:opacity-50 flex items-center gap-2"
             >

@@ -22,9 +22,7 @@ describe('EmptyState', () => {
   );
 
   it('renders title and description', () => {
-    render(
-      <EmptyState icon={MockIcon} title="Nothing here" description="Add some items" />,
-    );
+    render(<EmptyState icon={MockIcon} title="Nothing here" description="Add some items" />);
     expect(screen.getByText('Nothing here')).toBeInTheDocument();
     expect(screen.getByText('Add some items')).toBeInTheDocument();
   });

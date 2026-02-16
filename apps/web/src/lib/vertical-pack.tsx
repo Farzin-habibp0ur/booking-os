@@ -37,14 +37,21 @@ export function VerticalPackProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // First get business to know which pack
-    api.get<any>('/business').then((biz) => {
-      const packName = biz?.verticalPack || 'general';
-      // Then fetch pack definition (no auth required)
-      fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1'}/vertical-packs/${packName}`)
-        .then((r) => r.json())
-        .then((p) => { if (p?.name) setPack(p); })
-        .catch(() => {});
-    }).catch(() => {});
+    api
+      .get<any>('/business')
+      .then((biz) => {
+        const packName = biz?.verticalPack || 'general';
+        // Then fetch pack definition (no auth required)
+        fetch(
+          `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1'}/vertical-packs/${packName}`,
+        )
+          .then((r) => r.json())
+          .then((p) => {
+            if (p?.name) setPack(p);
+          })
+          .catch(() => {});
+      })
+      .catch(() => {});
   }, []);
 
   return <PackContext.Provider value={pack}>{children}</PackContext.Provider>;

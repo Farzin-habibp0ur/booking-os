@@ -21,9 +21,21 @@ test.describe('Staff', () => {
     await page.waitForLoadState('networkidle');
 
     // Either staff members are displayed or empty state is shown
-    const hasStaff = await page.locator('[data-testid="staff-item"]').first().isVisible().catch(() => false);
-    const hasEmptyState = await page.locator('text=/no.*staff|no.*team|empty/i').first().isVisible().catch(() => false);
-    const hasStaffText = await page.locator('text=/staff|team|member/i').first().isVisible().catch(() => false);
+    const hasStaff = await page
+      .locator('[data-testid="staff-item"]')
+      .first()
+      .isVisible()
+      .catch(() => false);
+    const hasEmptyState = await page
+      .locator('text=/no.*staff|no.*team|empty/i')
+      .first()
+      .isVisible()
+      .catch(() => false);
+    const hasStaffText = await page
+      .locator('text=/staff|team|member/i')
+      .first()
+      .isVisible()
+      .catch(() => false);
 
     expect(hasStaff || hasEmptyState || hasStaffText).toBe(true);
   });
@@ -55,11 +67,19 @@ test.describe('Staff', () => {
     await page.waitForLoadState('networkidle');
 
     // If staff members exist, check for role information
-    const hasStaff = await page.locator('[data-testid="staff-item"]').first().isVisible().catch(() => false);
+    const hasStaff = await page
+      .locator('[data-testid="staff-item"]')
+      .first()
+      .isVisible()
+      .catch(() => false);
 
     if (hasStaff) {
       // Look for role indicators
-      const hasRole = await page.locator('text=/role|position|admin|provider/i').first().isVisible().catch(() => false);
+      const hasRole = await page
+        .locator('text=/role|position|admin|provider/i')
+        .first()
+        .isVisible()
+        .catch(() => false);
       // Roles might not always be displayed, so this is just a check
       if (hasRole) {
         await expect(page.locator('text=/role|position|admin|provider/i').first()).toBeVisible();
@@ -72,7 +92,11 @@ test.describe('Staff', () => {
     await page.waitForLoadState('networkidle');
 
     // Staff page might have availability/schedule information
-    const hasAvailability = await page.locator('text=/availability|schedule|hours/i').first().isVisible({ timeout: 5000 }).catch(() => false);
+    const hasAvailability = await page
+      .locator('text=/availability|schedule|hours/i')
+      .first()
+      .isVisible({ timeout: 5000 })
+      .catch(() => false);
 
     // This is informational - availability may or may not be present
     if (hasAvailability) {

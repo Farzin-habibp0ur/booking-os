@@ -13,10 +13,18 @@ export class BookingService {
     private calendarSyncService: CalendarSyncService,
   ) {}
 
-  async findAll(businessId: string, query: {
-    status?: string; staffId?: string; customerId?: string;
-    dateFrom?: string; dateTo?: string; page?: number; pageSize?: number;
-  }) {
+  async findAll(
+    businessId: string,
+    query: {
+      status?: string;
+      staffId?: string;
+      customerId?: string;
+      dateFrom?: string;
+      dateTo?: string;
+      page?: number;
+      pageSize?: number;
+    },
+  ) {
     const page = Number(query.page) || 1;
     const pageSize = Number(query.pageSize) || 20;
     const where: any = { businessId };
@@ -32,7 +40,12 @@ export class BookingService {
     const [data, total] = await Promise.all([
       this.prisma.booking.findMany({
         where,
-        include: { customer: true, service: true, staff: true, recurringSeries: { select: { id: true } } },
+        include: {
+          customer: true,
+          service: true,
+          staff: true,
+          recurringSeries: { select: { id: true } },
+        },
         skip: (page - 1) * pageSize,
         take: pageSize,
         orderBy: { startTime: 'asc' },
@@ -45,15 +58,32 @@ export class BookingService {
   async findById(businessId: string, id: string) {
     return this.prisma.booking.findFirst({
       where: { id, businessId },
-      include: { customer: true, service: true, staff: true, conversation: true, reminders: true, recurringSeries: { select: { id: true } } },
+      include: {
+        customer: true,
+        service: true,
+        staff: true,
+        conversation: true,
+        reminders: true,
+        recurringSeries: { select: { id: true } },
+      },
     });
   }
 
-  async create(businessId: string, data: {
-    customerId: string; serviceId: string; staffId?: string;
-    conversationId?: string; startTime: string; notes?: string; customFields?: any;
-  }) {
-    const service = await this.prisma.service.findFirst({ where: { id: data.serviceId, businessId } });
+  async create(
+    businessId: string,
+    data: {
+      customerId: string;
+      serviceId: string;
+      staffId?: string;
+      conversationId?: string;
+      startTime: string;
+      notes?: string;
+      customFields?: any;
+    },
+  ) {
+    const service = await this.prisma.service.findFirst({
+      where: { id: data.serviceId, businessId },
+    });
     if (!service) throw new BadRequestException('Service not found');
 
     const startTime = new Date(data.startTime);
@@ -113,7 +143,10 @@ export class BookingService {
 
   async update(businessId: string, id: string, data: any) {
     if (data.startTime) {
-      const booking = await this.prisma.booking.findFirst({ where: { id, businessId }, include: { service: true } });
+      const booking = await this.prisma.booking.findFirst({
+        where: { id, businessId },
+        include: { service: true },
+      });
       if (booking) {
         data.startTime = new Date(data.startTime);
         data.endTime = new Date(data.startTime.getTime() + booking.service.durationMins * 60000);
@@ -178,7 +211,12 @@ export class BookingService {
 
     return this.prisma.booking.findMany({
       where,
-      include: { customer: true, service: true, staff: true, recurringSeries: { select: { id: true } } },
+      include: {
+        customer: true,
+        service: true,
+        staff: true,
+        recurringSeries: { select: { id: true } },
+      },
       orderBy: { startTime: 'asc' },
     });
   }

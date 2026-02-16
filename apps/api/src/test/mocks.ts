@@ -52,7 +52,9 @@ export function createMockNotificationService() {
 export function createMockBusinessService() {
   return {
     findById: jest.fn().mockResolvedValue({ id: 'biz1', name: 'Test Clinic' }),
-    getNotificationSettings: jest.fn().mockResolvedValue({ channels: 'both', followUpDelayHours: 2 }),
+    getNotificationSettings: jest
+      .fn()
+      .mockResolvedValue({ channels: 'both', followUpDelayHours: 2 }),
     updateNotificationSettings: jest.fn().mockResolvedValue({}),
     getAiSettings: jest.fn().mockResolvedValue({}),
     updateAiSettings: jest.fn().mockResolvedValue({}),

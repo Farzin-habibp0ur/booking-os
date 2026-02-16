@@ -27,11 +27,6 @@ export class AiProcessingProcessor extends WorkerHost {
       return;
     }
 
-    await aiService.processInboundMessage(
-      businessId,
-      conversationId,
-      messageId,
-      messageBody,
-    );
+    await aiService.processInboundMessage(businessId, conversationId, messageId, messageBody);
   }
 }

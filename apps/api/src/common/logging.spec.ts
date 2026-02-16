@@ -91,8 +91,7 @@ describe('Logging setup', () => {
   });
 
   it('uses x-request-id header or generates a UUID for request IDs', () => {
-    const genReqId = (req: any) =>
-      req.headers['x-request-id'] || require('crypto').randomUUID();
+    const genReqId = (req: any) => req.headers['x-request-id'] || require('crypto').randomUUID();
 
     // Uses provided header
     const customId = genReqId({ headers: { 'x-request-id': 'my-custom-id' } });
@@ -100,9 +99,7 @@ describe('Logging setup', () => {
 
     // Generates UUID when header is missing
     const generatedId = genReqId({ headers: {} });
-    expect(generatedId).toMatch(
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
-    );
+    expect(generatedId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
   });
 
   it('configures pino-pretty transport in non-production', async () => {

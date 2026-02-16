@@ -248,7 +248,7 @@ async function main() {
       {
         conversationId: conv1.id,
         direction: 'INBOUND',
-        content: 'Hi! I\'d like to book a Botox appointment for next week',
+        content: "Hi! I'd like to book a Botox appointment for next week",
         contentType: 'TEXT',
         createdAt: new Date(Date.now() - 3600000),
       },
@@ -256,7 +256,8 @@ async function main() {
         conversationId: conv1.id,
         direction: 'OUTBOUND',
         senderStaffId: agent.id,
-        content: 'Hello Emma! We\'d love to help you book that. We have availability on Tuesday and Thursday. Which works better for you?',
+        content:
+          "Hello Emma! We'd love to help you book that. We have availability on Tuesday and Thursday. Which works better for you?",
         contentType: 'TEXT',
         createdAt: new Date(Date.now() - 3000000),
       },
@@ -284,7 +285,8 @@ async function main() {
     data: {
       conversationId: conv2.id,
       direction: 'INBOUND',
-      content: 'Hello, I\'m interested in getting a consultation for dermal fillers. What\'s available?',
+      content:
+        "Hello, I'm interested in getting a consultation for dermal fillers. What's available?",
       contentType: 'TEXT',
     },
   });

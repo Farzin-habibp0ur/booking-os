@@ -41,7 +41,15 @@ describe('AuthProvider', () => {
   it('sets user after login', async () => {
     mockApi.getToken.mockReturnValue(null);
     mockApi.post.mockResolvedValue({ accessToken: 'tok123', staff: {} });
-    mockApi.get.mockResolvedValue({ id: '1', name: 'Sarah', email: 'sarah@test.com', role: 'owner', locale: null, businessId: 'b1', business: { id: 'b1', name: 'Biz', slug: 'biz', verticalPack: 'beauty', defaultLocale: 'en' } });
+    mockApi.get.mockResolvedValue({
+      id: '1',
+      name: 'Sarah',
+      email: 'sarah@test.com',
+      role: 'owner',
+      locale: null,
+      businessId: 'b1',
+      business: { id: 'b1', name: 'Biz', slug: 'biz', verticalPack: 'beauty', defaultLocale: 'en' },
+    });
 
     function LoginConsumer() {
       const { user, loading, login } = useAuth();

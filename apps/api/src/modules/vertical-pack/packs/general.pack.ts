@@ -8,9 +8,7 @@ export const generalPack: VerticalPackDefinition = {
     service: 'Service',
   },
   customerFields: [],
-  bookingFields: [
-    { key: 'notes', type: 'text', label: 'Notes' },
-  ],
+  bookingFields: [{ key: 'notes', type: 'text', label: 'Notes' }],
   serviceFields: [],
   defaultTemplates: [
     {

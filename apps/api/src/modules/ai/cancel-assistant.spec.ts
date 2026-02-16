@@ -20,10 +20,7 @@ describe('CancelAssistant', () => {
     claude = createMockClaudeClient();
 
     const module = await Test.createTestingModule({
-      providers: [
-        CancelAssistant,
-        { provide: ClaudeClient, useValue: claude },
-      ],
+      providers: [CancelAssistant, { provide: ClaudeClient, useValue: claude }],
     }).compile();
 
     assistant = module.get(CancelAssistant);
@@ -53,10 +50,12 @@ describe('CancelAssistant', () => {
   });
 
   it('asks which booking to cancel when multiple exist', async () => {
-    claude.complete.mockResolvedValue(JSON.stringify({
-      state: 'IDENTIFY_BOOKING',
-      suggestedResponse: 'Which appointment would you like to cancel?',
-    }));
+    claude.complete.mockResolvedValue(
+      JSON.stringify({
+        state: 'IDENTIFY_BOOKING',
+        suggestedResponse: 'Which appointment would you like to cancel?',
+      }),
+    );
 
     const result = await assistant.process('Cancel my appointment', null, baseContext);
     expect(result.state).toBe('IDENTIFY_BOOKING');
@@ -64,14 +63,16 @@ describe('CancelAssistant', () => {
   });
 
   it('identifies specific booking from multiple', async () => {
-    claude.complete.mockResolvedValue(JSON.stringify({
-      state: 'CONFIRM_CANCEL',
-      bookingId: 'b1',
-      serviceName: 'Botox',
-      date: '2026-03-01',
-      time: '14:00',
-      suggestedResponse: 'Cancel Botox on March 1st?',
-    }));
+    claude.complete.mockResolvedValue(
+      JSON.stringify({
+        state: 'CONFIRM_CANCEL',
+        bookingId: 'b1',
+        serviceName: 'Botox',
+        date: '2026-03-01',
+        time: '14:00',
+        suggestedResponse: 'Cancel Botox on March 1st?',
+      }),
+    );
 
     const result = await assistant.process('Cancel the Botox one', null, baseContext);
     expect(result.state).toBe('CONFIRM_CANCEL');
@@ -79,10 +80,12 @@ describe('CancelAssistant', () => {
   });
 
   it('preserves state data on partial response', async () => {
-    claude.complete.mockResolvedValue(JSON.stringify({
-      state: 'CONFIRM_CANCEL',
-      suggestedResponse: 'Confirm cancel?',
-    }));
+    claude.complete.mockResolvedValue(
+      JSON.stringify({
+        state: 'CONFIRM_CANCEL',
+        suggestedResponse: 'Confirm cancel?',
+      }),
+    );
 
     const currentState = {
       state: 'IDENTIFY_BOOKING' as const,

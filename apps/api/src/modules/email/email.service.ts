@@ -36,7 +36,8 @@ export class EmailService {
   }
 
   async send(options: EmailOptions): Promise<boolean> {
-    const from = options.from || this.configService.get<string>('EMAIL_FROM') || 'noreply@booking-os.com';
+    const from =
+      options.from || this.configService.get<string>('EMAIL_FROM') || 'noreply@booking-os.com';
 
     if (!this.apiKey || this.provider === 'none') {
       this.logger.log(`[Email] Would send to ${options.to}: ${options.subject}`);
@@ -61,7 +62,7 @@ export class EmailService {
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
+        Authorization: `Bearer ${this.apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -82,7 +83,7 @@ export class EmailService {
     const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
+        Authorization: `Bearer ${this.apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -100,7 +101,10 @@ export class EmailService {
   }
 
   // Convenience methods
-  async sendBookingConfirmation(to: string, data: { customerName: string; serviceName: string; dateTime: string; businessName: string }) {
+  async sendBookingConfirmation(
+    to: string,
+    data: { customerName: string; serviceName: string; dateTime: string; businessName: string },
+  ) {
     return this.send({
       to,
       subject: `Booking Confirmed - ${data.serviceName} at ${data.businessName}`,
@@ -128,7 +132,10 @@ export class EmailService {
     });
   }
 
-  async sendStaffInvitation(to: string, data: { name: string; businessName: string; inviteUrl: string }) {
+  async sendStaffInvitation(
+    to: string,
+    data: { name: string; businessName: string; inviteUrl: string },
+  ) {
     return this.send({
       to,
       subject: `You've been invited to join ${data.businessName} on Booking OS`,

@@ -4,7 +4,18 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import { FileText, Languages, Sparkles, Upload, Settings2, ClipboardCheck, CreditCard, Bell, Link2, CalendarDays } from 'lucide-react';
+import {
+  FileText,
+  Languages,
+  Sparkles,
+  Upload,
+  Settings2,
+  ClipboardCheck,
+  CreditCard,
+  Bell,
+  Link2,
+  CalendarDays,
+} from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 
 export default function SettingsPage() {
@@ -64,33 +75,54 @@ export default function SettingsPage() {
 
   return (
     <div className="p-6 max-w-2xl">
-      <h1 className="text-2xl font-serif font-semibold text-slate-900 mb-6">{t('settings.title')}</h1>
+      <h1 className="text-2xl font-serif font-semibold text-slate-900 mb-6">
+        {t('settings.title')}
+      </h1>
 
       <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
         <h2 className="font-semibold">{t('settings.business_info')}</h2>
 
         <div>
           <label className="block text-sm font-medium mb-1">{t('settings.business_name')}</label>
-          <input value={name} onChange={(e) => setName(e.target.value)} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" />
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
+          />
         </div>
 
         <div>
           <label className="block text-sm font-medium mb-1">{t('settings.phone')}</label>
-          <input value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" />
+          <input
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
+          />
         </div>
 
         <div>
           <label className="block text-sm font-medium mb-1">{t('settings.timezone')}</label>
-          <input value={timezone} onChange={(e) => setTimezone(e.target.value)} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" />
+          <input
+            value={timezone}
+            onChange={(e) => setTimezone(e.target.value)}
+            className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
+          />
         </div>
 
         <div>
           <label className="block text-sm font-medium mb-1">{t('settings.vertical_pack')}</label>
-          <input value={business?.verticalPack || ''} disabled className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm bg-slate-50" />
+          <input
+            value={business?.verticalPack || ''}
+            disabled
+            className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm bg-slate-50"
+          />
         </div>
 
         <div className="flex items-center gap-3">
-          <button onClick={handleSave} className="bg-sage-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-sage-700 transition-colors">
+          <button
+            onClick={handleSave}
+            className="bg-sage-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-sage-700 transition-colors"
+          >
             {t('settings.save_changes')}
           </button>
           {saved && <span className="text-sage-600 text-sm">{t('common.saved')}</span>}
@@ -99,7 +131,9 @@ export default function SettingsPage() {
       {/* Change Password */}
       <div className="bg-white rounded-2xl shadow-soft p-6 mt-6 space-y-4">
         <h2 className="font-semibold">{t('settings.change_password')}</h2>
-        {passwordError && <div className="bg-red-50 text-red-600 p-3 rounded text-sm">{passwordError}</div>}
+        {passwordError && (
+          <div className="bg-red-50 text-red-600 p-3 rounded text-sm">{passwordError}</div>
+        )}
         <div>
           <label className="block text-sm font-medium mb-1">{t('settings.current_password')}</label>
           <input
@@ -138,7 +172,9 @@ export default function SettingsPage() {
           >
             {t('settings.update_password')}
           </button>
-          {passwordSaved && <span className="text-sage-600 text-sm">{t('settings.password_updated')}</span>}
+          {passwordSaved && (
+            <span className="text-sage-600 text-sm">{t('settings.password_updated')}</span>
+          )}
         </div>
       </div>
 
@@ -153,7 +189,11 @@ export default function SettingsPage() {
           <div className="flex items-center gap-2 mt-3">
             <input
               readOnly
-              value={typeof window !== 'undefined' ? `${window.location.origin}/book/${business.slug}` : `/book/${business.slug}`}
+              value={
+                typeof window !== 'undefined'
+                  ? `${window.location.origin}/book/${business.slug}`
+                  : `/book/${business.slug}`
+              }
               className="flex-1 bg-white rounded-xl px-3 py-2 text-sm border border-slate-200"
             />
             <button

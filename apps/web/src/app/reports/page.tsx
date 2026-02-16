@@ -5,8 +5,18 @@ import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { useI18n } from '@/lib/i18n';
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  AreaChart, Area, PieChart, Pie, Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  PieChart,
+  Pie,
+  Cell,
 } from 'recharts';
 
 const PERIOD_OPTIONS = [
@@ -51,7 +61,9 @@ export default function ReportsPage() {
     api.get<any>(`/reports/peak-hours?days=${period}`).then(setPeakData);
   };
 
-  useEffect(() => { loadAll(days); }, [days]);
+  useEffect(() => {
+    loadAll(days);
+  }, [days]);
 
   const totalBookings = statusData.reduce((sum, s) => sum + s.count, 0);
   const totalRevenue = revenueData.reduce((sum, d) => sum + d.revenue, 0);
@@ -65,8 +77,12 @@ export default function ReportsPage() {
             <button
               key={p.value}
               onClick={() => setDays(p.value)}
-              className={cn('px-3 py-1.5 rounded-xl text-sm transition-colors',
-                days === p.value ? 'bg-white shadow-sm font-medium' : 'text-slate-500 hover:text-slate-700')}
+              className={cn(
+                'px-3 py-1.5 rounded-xl text-sm transition-colors',
+                days === p.value
+                  ? 'bg-white shadow-sm font-medium'
+                  : 'text-slate-500 hover:text-slate-700',
+              )}
             >
               {t(`reports.${p.key}`)}
             </button>
@@ -77,9 +93,20 @@ export default function ReportsPage() {
       {/* Summary Cards */}
       <div className="grid grid-cols-4 gap-4">
         <SummaryCard label={t('reports.total_bookings')} value={totalBookings} />
-        <SummaryCard label={t('reports.revenue')} value={`$${Math.round(totalRevenue).toLocaleString()}`} />
-        <SummaryCard label={t('reports.no_show_rate')} value={noShowData ? `${noShowData.rate}%` : '—'} accent={noShowData?.rate > 15 ? 'red' : 'green'} />
-        <SummaryCard label={t('reports.avg_response')} value={responseData ? `${responseData.avgMinutes}m` : '—'} accent={responseData?.avgMinutes > 15 ? 'red' : 'green'} />
+        <SummaryCard
+          label={t('reports.revenue')}
+          value={`$${Math.round(totalRevenue).toLocaleString()}`}
+        />
+        <SummaryCard
+          label={t('reports.no_show_rate')}
+          value={noShowData ? `${noShowData.rate}%` : '—'}
+          accent={noShowData?.rate > 15 ? 'red' : 'green'}
+        />
+        <SummaryCard
+          label={t('reports.avg_response')}
+          value={responseData ? `${responseData.avgMinutes}m` : '—'}
+          accent={responseData?.avgMinutes > 15 ? 'red' : 'green'}
+        />
       </div>
 
       {/* Row 1: Bookings Over Time + Revenue */}
@@ -92,7 +119,14 @@ export default function ReportsPage() {
               <XAxis dataKey="date" tick={{ fontSize: 10 }} tickFormatter={(d) => d.slice(5)} />
               <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
               <Tooltip />
-              <Area type="monotone" dataKey="count" stroke="#8AA694" fill="#8AA694" fillOpacity={0.1} strokeWidth={2} />
+              <Area
+                type="monotone"
+                dataKey="count"
+                stroke="#8AA694"
+                fill="#8AA694"
+                fillOpacity={0.1}
+                strokeWidth={2}
+              />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -105,7 +139,14 @@ export default function ReportsPage() {
               <XAxis dataKey="date" tick={{ fontSize: 10 }} tickFormatter={(d) => d.slice(5)} />
               <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `$${v}`} />
               <Tooltip formatter={(v: number) => [`$${v}`, t('reports.revenue')]} />
-              <Area type="monotone" dataKey="revenue" stroke="#71907C" fill="#71907C" fillOpacity={0.1} strokeWidth={2} />
+              <Area
+                type="monotone"
+                dataKey="revenue"
+                stroke="#71907C"
+                fill="#71907C"
+                fillOpacity={0.1}
+                strokeWidth={2}
+              />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -125,10 +166,18 @@ export default function ReportsPage() {
                   <div key={i}>
                     <div className="flex items-center justify-between text-sm mb-1">
                       <span className="font-medium">{s.name}</span>
-                      <span className="text-slate-500">{s.count} bookings · ${Math.round(s.revenue)}</span>
+                      <span className="text-slate-500">
+                        {s.count} bookings · ${Math.round(s.revenue)}
+                      </span>
                     </div>
                     <div className="w-full bg-slate-100 rounded-full h-2">
-                      <div className="h-2 rounded-full" style={{ width: `${(s.count / maxCount) * 100}%`, backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
+                      <div
+                        className="h-2 rounded-full"
+                        style={{
+                          width: `${(s.count / maxCount) * 100}%`,
+                          backgroundColor: PIE_COLORS[i % PIE_COLORS.length],
+                        }}
+                      />
                     </div>
                   </div>
                 );
@@ -145,7 +194,15 @@ export default function ReportsPage() {
             <div className="flex items-center gap-6">
               <ResponsiveContainer width={160} height={160}>
                 <PieChart>
-                  <Pie data={statusData} dataKey="count" nameKey="status" cx="50%" cy="50%" innerRadius={40} outerRadius={70}>
+                  <Pie
+                    data={statusData}
+                    dataKey="count"
+                    nameKey="status"
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={40}
+                    outerRadius={70}
+                  >
                     {statusData.map((s, i) => (
                       <Cell key={s.status} fill={STATUS_COLORS[s.status] || PIE_COLORS[i]} />
                     ))}
@@ -157,12 +214,17 @@ export default function ReportsPage() {
                 {statusData.map((s) => (
                   <div key={s.status} className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: STATUS_COLORS[s.status] || '#6b7280' }} />
+                      <div
+                        className="w-3 h-3 rounded-sm"
+                        style={{ backgroundColor: STATUS_COLORS[s.status] || '#6b7280' }}
+                      />
                       <span className="text-sm">{t(`status.${s.status.toLowerCase()}`)}</span>
                     </div>
                     <div className="text-right">
                       <span className="text-sm font-medium">{s.count}</span>
-                      <span className="text-xs text-slate-400 ml-1">({totalBookings > 0 ? Math.round((s.count / totalBookings) * 100) : 0}%)</span>
+                      <span className="text-xs text-slate-400 ml-1">
+                        ({totalBookings > 0 ? Math.round((s.count / totalBookings) * 100) : 0}%)
+                      </span>
                     </div>
                   </div>
                 ))}
@@ -182,12 +244,24 @@ export default function ReportsPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left p-2 text-xs font-medium text-slate-500 uppercase">{t('nav.staff')}</th>
-                  <th className="text-right p-2 text-xs font-medium text-slate-500 uppercase">{t('reports.total_bookings_col')}</th>
-                  <th className="text-right p-2 text-xs font-medium text-slate-500 uppercase">{t('reports.completed_col')}</th>
-                  <th className="text-right p-2 text-xs font-medium text-slate-500 uppercase">{t('reports.no_shows_col')}</th>
-                  <th className="text-right p-2 text-xs font-medium text-slate-500 uppercase">{t('reports.no_show_rate_col')}</th>
-                  <th className="text-right p-2 text-xs font-medium text-slate-500 uppercase">{t('reports.revenue_col')}</th>
+                  <th className="text-left p-2 text-xs font-medium text-slate-500 uppercase">
+                    {t('nav.staff')}
+                  </th>
+                  <th className="text-right p-2 text-xs font-medium text-slate-500 uppercase">
+                    {t('reports.total_bookings_col')}
+                  </th>
+                  <th className="text-right p-2 text-xs font-medium text-slate-500 uppercase">
+                    {t('reports.completed_col')}
+                  </th>
+                  <th className="text-right p-2 text-xs font-medium text-slate-500 uppercase">
+                    {t('reports.no_shows_col')}
+                  </th>
+                  <th className="text-right p-2 text-xs font-medium text-slate-500 uppercase">
+                    {t('reports.no_show_rate_col')}
+                  </th>
+                  <th className="text-right p-2 text-xs font-medium text-slate-500 uppercase">
+                    {t('reports.revenue_col')}
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -198,11 +272,20 @@ export default function ReportsPage() {
                     <td className="p-2 text-sm text-right text-sage-600">{s.completed}</td>
                     <td className="p-2 text-sm text-right text-red-600">{s.noShows}</td>
                     <td className="p-2 text-sm text-right">
-                      <span className={cn('px-2 py-0.5 rounded-full text-xs', s.noShowRate > 15 ? 'bg-red-100 text-red-700' : 'bg-sage-100 text-sage-700')}>
+                      <span
+                        className={cn(
+                          'px-2 py-0.5 rounded-full text-xs',
+                          s.noShowRate > 15
+                            ? 'bg-red-100 text-red-700'
+                            : 'bg-sage-100 text-sage-700',
+                        )}
+                      >
                         {s.noShowRate}%
                       </span>
                     </td>
-                    <td className="p-2 text-sm text-right font-medium">${Math.round(s.revenue).toLocaleString()}</td>
+                    <td className="p-2 text-sm text-right font-medium">
+                      ${Math.round(s.revenue).toLocaleString()}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -217,7 +300,9 @@ export default function ReportsPage() {
           <div className="bg-white rounded-2xl shadow-soft p-4">
             <h2 className="font-semibold mb-4">{t('reports.bookings_by_hour')}</h2>
             <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={(peakData.byHour || []).filter((h: any) => h.hour >= 7 && h.hour <= 20)}>
+              <BarChart
+                data={(peakData.byHour || []).filter((h: any) => h.hour >= 7 && h.hour <= 20)}
+              >
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="hour" tick={{ fontSize: 10 }} tickFormatter={(h) => `${h}:00`} />
                 <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
@@ -230,7 +315,12 @@ export default function ReportsPage() {
           <div className="bg-white rounded-2xl shadow-soft p-4">
             <h2 className="font-semibold mb-4">{t('reports.bookings_by_day')}</h2>
             <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={(peakData.byDay || []).map((d: any) => ({ ...d, name: t(`days_short.${DAYS_SHORT[d.day]}`) }))}>
+              <BarChart
+                data={(peakData.byDay || []).map((d: any) => ({
+                  ...d,
+                  name: t(`days_short.${DAYS_SHORT[d.day]}`),
+                }))}
+              >
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="name" tick={{ fontSize: 10 }} />
                 <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
@@ -245,11 +335,24 @@ export default function ReportsPage() {
   );
 }
 
-function SummaryCard({ label, value, accent }: { label: string; value: string | number; accent?: 'red' | 'green' }) {
+function SummaryCard({
+  label,
+  value,
+  accent,
+}: {
+  label: string;
+  value: string | number;
+  accent?: 'red' | 'green';
+}) {
   return (
     <div className="bg-white rounded-2xl shadow-soft p-4">
       <p className="text-xs text-slate-500">{label}</p>
-      <p className={cn('text-2xl font-serif font-bold mt-1', accent === 'red' ? 'text-red-600' : accent === 'green' ? 'text-sage-600' : '')}>
+      <p
+        className={cn(
+          'text-2xl font-serif font-bold mt-1',
+          accent === 'red' ? 'text-red-600' : accent === 'green' ? 'text-sage-600' : '',
+        )}
+      >
         {value}
       </p>
     </div>

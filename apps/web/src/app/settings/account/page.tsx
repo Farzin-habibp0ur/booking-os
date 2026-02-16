@@ -13,9 +13,15 @@ export default function AccountSettingsPage() {
 
   // CSV Import
   const [csvFile, setCsvFile] = useState<File | null>(null);
-  const [csvPreview, setCsvPreview] = useState<Array<{ name: string; phone: string; email: string; tags: string }>>([]);
+  const [csvPreview, setCsvPreview] = useState<
+    Array<{ name: string; phone: string; email: string; tags: string }>
+  >([]);
   const [csvImporting, setCsvImporting] = useState(false);
-  const [csvResult, setCsvResult] = useState<{ created: number; skipped: number; errors: number } | null>(null);
+  const [csvResult, setCsvResult] = useState<{
+    created: number;
+    skipped: number;
+    errors: number;
+  } | null>(null);
 
   // Conversation import
   const [includeMessages, setIncludeMessages] = useState(true);
@@ -55,7 +61,10 @@ export default function AccountSettingsPage() {
     try {
       const formData = new FormData();
       formData.append('file', csvFile);
-      const result = await api.upload<{ created: number; skipped: number; errors: number }>('/customers/import-csv', formData);
+      const result = await api.upload<{ created: number; skipped: number; errors: number }>(
+        '/customers/import-csv',
+        formData,
+      );
       setCsvResult(result);
       toast(t('import.csv_success', { created: result.created, skipped: result.skipped }));
     } catch (e: any) {
@@ -67,7 +76,10 @@ export default function AccountSettingsPage() {
   const importFromConversations = async () => {
     setConvImporting(true);
     try {
-      const result = await api.post<{ created: number; updated: number }>('/customers/import-from-conversations', { includeMessages });
+      const result = await api.post<{ created: number; updated: number }>(
+        '/customers/import-from-conversations',
+        { includeMessages },
+      );
       setConvResult(result);
       toast(t('import.conversations_success', { updated: result.updated }));
     } catch (e: any) {
@@ -81,8 +93,8 @@ export default function AccountSettingsPage() {
       const data = await api.get<any>('/customers?pageSize=10000');
       const customers = data.data || [];
       const header = 'name,phone,email,tags';
-      const rows = customers.map((c: any) =>
-        `${c.name || ''},${c.phone || ''},${c.email || ''},${(c.tags || []).join(';')}`,
+      const rows = customers.map(
+        (c: any) => `${c.name || ''},${c.phone || ''},${c.email || ''},${(c.tags || []).join(';')}`,
       );
       const csv = [header, ...rows].join('\n');
       const blob = new Blob([csv], { type: 'text/csv' });
@@ -102,7 +114,9 @@ export default function AccountSettingsPage() {
     <div className="p-6 max-w-2xl">
       <div className="flex items-center gap-2 mb-6">
         <Upload size={24} className="text-sage-600" />
-        <h1 className="text-2xl font-serif font-semibold text-slate-900">{t('import.page_title')}</h1>
+        <h1 className="text-2xl font-serif font-semibold text-slate-900">
+          {t('import.page_title')}
+        </h1>
       </div>
 
       {/* CSV Import */}
@@ -118,7 +132,9 @@ export default function AccountSettingsPage() {
           className="border-2 border-dashed rounded-xl p-6 text-center cursor-pointer hover:border-sage-500 hover:bg-sage-50 transition-colors"
         >
           <Upload size={24} className="mx-auto text-slate-400 mb-2" />
-          <p className="text-sm text-slate-600">{csvFile ? csvFile.name : t('import.csv_drop_zone')}</p>
+          <p className="text-sm text-slate-600">
+            {csvFile ? csvFile.name : t('import.csv_drop_zone')}
+          </p>
           <p className="text-xs text-slate-400 mt-1">{t('import.csv_format_hint')}</p>
         </div>
         <input
@@ -168,7 +184,11 @@ export default function AccountSettingsPage() {
         {csvResult && (
           <div className="bg-sage-50 border border-sage-200 rounded-xl p-3 text-sm">
             <p className="text-sage-700">
-              {t('import.csv_result', { created: csvResult.created, skipped: csvResult.skipped, errors: csvResult.errors })}
+              {t('import.csv_result', {
+                created: csvResult.created,
+                skipped: csvResult.skipped,
+                errors: csvResult.errors,
+              })}
             </p>
           </div>
         )}
@@ -205,7 +225,10 @@ export default function AccountSettingsPage() {
         {convResult && (
           <div className="bg-sage-50 border border-sage-200 rounded-xl p-3 text-sm">
             <p className="text-sage-700">
-              {t('import.conversations_result', { created: convResult.created, updated: convResult.updated })}
+              {t('import.conversations_result', {
+                created: convResult.created,
+                updated: convResult.updated,
+              })}
             </p>
           </div>
         )}

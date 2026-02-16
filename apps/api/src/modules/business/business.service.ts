@@ -9,11 +9,23 @@ export class BusinessService {
     return this.prisma.business.findUnique({ where: { id } });
   }
 
-  async update(id: string, data: { name?: string; phone?: string; timezone?: string; verticalPack?: string; packConfig?: any }) {
+  async update(
+    id: string,
+    data: {
+      name?: string;
+      phone?: string;
+      timezone?: string;
+      verticalPack?: string;
+      packConfig?: any;
+    },
+  ) {
     // Merge packConfig with existing data instead of replacing
     if (data.packConfig) {
       const business = await this.prisma.business.findUnique({ where: { id } });
-      const currentConfig = (typeof business?.packConfig === 'object' && business.packConfig) ? business.packConfig as any : {};
+      const currentConfig =
+        typeof business?.packConfig === 'object' && business.packConfig
+          ? (business.packConfig as any)
+          : {};
       data.packConfig = { ...currentConfig, ...data.packConfig };
     }
     return this.prisma.business.update({ where: { id }, data });
@@ -32,10 +44,21 @@ export class BusinessService {
     return { ...defaults, ...(typeof raw === 'object' ? raw : {}) };
   }
 
-  async updateAiSettings(id: string, settings: { enabled?: boolean; autoReplySuggestions?: boolean; bookingAssistant?: boolean; personality?: string }) {
+  async updateAiSettings(
+    id: string,
+    settings: {
+      enabled?: boolean;
+      autoReplySuggestions?: boolean;
+      bookingAssistant?: boolean;
+      personality?: string;
+    },
+  ) {
     const business = await this.prisma.business.findUnique({ where: { id } });
     if (!business) return null;
-    const current = (typeof business.aiSettings === 'object' && business.aiSettings) ? business.aiSettings as any : {};
+    const current =
+      typeof business.aiSettings === 'object' && business.aiSettings
+        ? (business.aiSettings as any)
+        : {};
     const merged = { ...current, ...settings };
     return this.prisma.business.update({
       where: { id },
@@ -54,10 +77,16 @@ export class BusinessService {
     return { ...defaults, ...(typeof raw === 'object' ? raw : {}) };
   }
 
-  async updateNotificationSettings(id: string, settings: { channels?: string; followUpDelayHours?: number }) {
+  async updateNotificationSettings(
+    id: string,
+    settings: { channels?: string; followUpDelayHours?: number },
+  ) {
     const business = await this.prisma.business.findUnique({ where: { id } });
     if (!business) return null;
-    const current = (typeof business.notificationSettings === 'object' && business.notificationSettings) ? business.notificationSettings as any : {};
+    const current =
+      typeof business.notificationSettings === 'object' && business.notificationSettings
+        ? (business.notificationSettings as any)
+        : {};
     const merged = { ...current, ...settings };
     return this.prisma.business.update({
       where: { id },

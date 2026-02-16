@@ -59,7 +59,11 @@ export default function CalendarSyncPage() {
   useEffect(() => {
     const connected = searchParams.get('connected');
     if (connected) {
-      setToast(t('calendar_sync.connected_success', { provider: PROVIDER_INFO[connected]?.name || connected }));
+      setToast(
+        t('calendar_sync.connected_success', {
+          provider: PROVIDER_INFO[connected]?.name || connected,
+        }),
+      );
       setTimeout(() => setToast(null), 4000);
     }
   }, [searchParams, t]);
@@ -108,11 +112,9 @@ export default function CalendarSyncPage() {
     }
   };
 
-  const isConnected = (provider: string) =>
-    connections.some((c) => c.provider === provider);
+  const isConnected = (provider: string) => connections.some((c) => c.provider === provider);
 
-  const getConnection = (provider: string) =>
-    connections.find((c) => c.provider === provider);
+  const getConnection = (provider: string) => connections.find((c) => c.provider === provider);
 
   if (loading) {
     return (
@@ -131,11 +133,7 @@ export default function CalendarSyncPage() {
         </h1>
       </div>
 
-      {toast && (
-        <div className="bg-sage-50 text-sage-900 p-3 rounded-xl text-sm mb-4">
-          {toast}
-        </div>
-      )}
+      {toast && <div className="bg-sage-50 text-sage-900 p-3 rounded-xl text-sm mb-4">{toast}</div>}
 
       {/* Connected Calendars */}
       <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
@@ -168,14 +166,10 @@ export default function CalendarSyncPage() {
                       </p>
                     )}
                     {connected && connection?.lastSyncError && (
-                      <p className="text-xs text-red-500">
-                        {connection.lastSyncError}
-                      </p>
+                      <p className="text-xs text-red-500">{connection.lastSyncError}</p>
                     )}
                     {!available && !connected && (
-                      <p className="text-xs text-slate-400">
-                        {t('calendar_sync.not_available')}
-                      </p>
+                      <p className="text-xs text-slate-400">{t('calendar_sync.not_available')}</p>
                     )}
                   </div>
                 </div>
@@ -217,9 +211,7 @@ export default function CalendarSyncPage() {
       <div className="bg-white rounded-2xl shadow-soft p-6 mt-6 space-y-4">
         <div>
           <h2 className="font-semibold">{t('calendar_sync.ical_feed')}</h2>
-          <p className="text-sm text-slate-500 mt-1">
-            {t('calendar_sync.ical_feed_desc')}
-          </p>
+          <p className="text-sm text-slate-500 mt-1">{t('calendar_sync.ical_feed_desc')}</p>
         </div>
 
         {icalUrl ? (
@@ -248,9 +240,7 @@ export default function CalendarSyncPage() {
             </button>
           </>
         ) : (
-          <p className="text-sm text-slate-400">
-            {t('calendar_sync.ical_no_connection')}
-          </p>
+          <p className="text-sm text-slate-400">{t('calendar_sync.ical_no_connection')}</p>
         )}
       </div>
     </div>

@@ -11,7 +11,15 @@ describe('RescheduleAssistant', () => {
     businessName: 'Glow Clinic',
     personality: 'friendly and professional',
     upcomingBookings: [
-      { id: 'b1', serviceId: 'svc1', serviceName: 'Botox', date: '2026-03-01', time: '14:00', staffId: 's1', staffName: 'Dr. Smith' },
+      {
+        id: 'b1',
+        serviceId: 'svc1',
+        serviceName: 'Botox',
+        date: '2026-03-01',
+        time: '14:00',
+        staffId: 's1',
+        staffName: 'Dr. Smith',
+      },
       { id: 'b2', serviceId: 'svc2', serviceName: 'Facial', date: '2026-03-05', time: '10:00' },
     ],
   };
@@ -20,10 +28,7 @@ describe('RescheduleAssistant', () => {
     claude = createMockClaudeClient();
 
     const module = await Test.createTestingModule({
-      providers: [
-        RescheduleAssistant,
-        { provide: ClaudeClient, useValue: claude },
-      ],
+      providers: [RescheduleAssistant, { provide: ClaudeClient, useValue: claude }],
     }).compile();
 
     assistant = module.get(RescheduleAssistant);
@@ -64,12 +69,14 @@ describe('RescheduleAssistant', () => {
       originalTime: '14:00',
     };
 
-    claude.complete.mockResolvedValue(JSON.stringify({
-      state: 'IDENTIFY_NEW_TIME',
-      newDate: '2026-03-08',
-      suggestedResponse: 'Here are available times for March 8th',
-      availableOptions: ['09:00', '10:00', '15:00'],
-    }));
+    claude.complete.mockResolvedValue(
+      JSON.stringify({
+        state: 'IDENTIFY_NEW_TIME',
+        newDate: '2026-03-08',
+        suggestedResponse: 'Here are available times for March 8th',
+        availableOptions: ['09:00', '10:00', '15:00'],
+      }),
+    );
 
     const result = await assistant.process('March 8th', currentState, baseContext);
     expect(result.state).toBe('IDENTIFY_NEW_TIME');
@@ -88,12 +95,14 @@ describe('RescheduleAssistant', () => {
       newDate: '2026-03-08',
     };
 
-    claude.complete.mockResolvedValue(JSON.stringify({
-      state: 'CONFIRM_RESCHEDULE',
-      newTime: '10:00',
-      newSlotIso: '2026-03-08T10:00:00',
-      suggestedResponse: 'Move from March 1st to March 8th at 10am?',
-    }));
+    claude.complete.mockResolvedValue(
+      JSON.stringify({
+        state: 'CONFIRM_RESCHEDULE',
+        newTime: '10:00',
+        newSlotIso: '2026-03-08T10:00:00',
+        suggestedResponse: 'Move from March 1st to March 8th at 10am?',
+      }),
+    );
 
     const result = await assistant.process('10am', currentState, baseContext);
     expect(result.state).toBe('CONFIRM_RESCHEDULE');
@@ -113,11 +122,13 @@ describe('RescheduleAssistant', () => {
       staffName: 'Dr. Smith',
     };
 
-    claude.complete.mockResolvedValue(JSON.stringify({
-      state: 'IDENTIFY_NEW_TIME',
-      newDate: '2026-03-08',
-      suggestedResponse: 'Pick a time',
-    }));
+    claude.complete.mockResolvedValue(
+      JSON.stringify({
+        state: 'IDENTIFY_NEW_TIME',
+        newDate: '2026-03-08',
+        suggestedResponse: 'Pick a time',
+      }),
+    );
 
     const result = await assistant.process('March 8th', currentState, baseContext);
     expect(result.bookingId).toBe('b1');
@@ -128,10 +139,12 @@ describe('RescheduleAssistant', () => {
   });
 
   it('asks which booking when multiple exist', async () => {
-    claude.complete.mockResolvedValue(JSON.stringify({
-      state: 'IDENTIFY_BOOKING',
-      suggestedResponse: 'Which appointment would you like to reschedule?',
-    }));
+    claude.complete.mockResolvedValue(
+      JSON.stringify({
+        state: 'IDENTIFY_BOOKING',
+        suggestedResponse: 'Which appointment would you like to reschedule?',
+      }),
+    );
 
     const result = await assistant.process('Reschedule', null, baseContext);
     expect(result.state).toBe('IDENTIFY_BOOKING');

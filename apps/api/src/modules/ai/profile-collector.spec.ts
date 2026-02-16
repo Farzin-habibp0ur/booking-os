@@ -25,22 +25,21 @@ describe('ProfileCollector', () => {
     claude = createMockClaudeClient();
 
     const module = await Test.createTestingModule({
-      providers: [
-        ProfileCollector,
-        { provide: ClaudeClient, useValue: claude },
-      ],
+      providers: [ProfileCollector, { provide: ClaudeClient, useValue: claude }],
     }).compile();
 
     collector = module.get(ProfileCollector);
   });
 
   it('extracts fields from customer message', async () => {
-    claude.complete.mockResolvedValue(JSON.stringify({
-      collectedFields: { email: 'jane@test.com' },
-      missingFields: ['allergies'],
-      suggestedResponse: 'Thanks! Do you have any allergies?',
-      allCollected: false,
-    }));
+    claude.complete.mockResolvedValue(
+      JSON.stringify({
+        collectedFields: { email: 'jane@test.com' },
+        missingFields: ['allergies'],
+        suggestedResponse: 'Thanks! Do you have any allergies?',
+        allCollected: false,
+      }),
+    );
 
     const result = await collector.collect('My email is jane@test.com', baseContext);
     expect(result.collectedFields).toEqual({ email: 'jane@test.com' });
@@ -49,28 +48,29 @@ describe('ProfileCollector', () => {
   });
 
   it('marks allCollected when all fields provided', async () => {
-    claude.complete.mockResolvedValue(JSON.stringify({
-      collectedFields: { email: 'jane@test.com', allergies: 'None' },
-      missingFields: [],
-      suggestedResponse: 'Perfect, confirming your booking!',
-      allCollected: true,
-    }));
-
-    const result = await collector.collect(
-      'Email is jane@test.com and no allergies',
-      baseContext,
+    claude.complete.mockResolvedValue(
+      JSON.stringify({
+        collectedFields: { email: 'jane@test.com', allergies: 'None' },
+        missingFields: [],
+        suggestedResponse: 'Perfect, confirming your booking!',
+        allCollected: true,
+      }),
     );
+
+    const result = await collector.collect('Email is jane@test.com and no allergies', baseContext);
     expect(result.allCollected).toBe(true);
     expect(result.missingFields).toEqual([]);
   });
 
   it('handles partial answers across messages', async () => {
-    claude.complete.mockResolvedValue(JSON.stringify({
-      collectedFields: { allergies: 'Penicillin' },
-      missingFields: [],
-      suggestedResponse: 'All set!',
-      allCollected: true,
-    }));
+    claude.complete.mockResolvedValue(
+      JSON.stringify({
+        collectedFields: { allergies: 'Penicillin' },
+        missingFields: [],
+        suggestedResponse: 'All set!',
+        allCollected: true,
+      }),
+    );
 
     const contextWithPrior = {
       ...baseContext,
@@ -78,17 +78,19 @@ describe('ProfileCollector', () => {
       alreadyCollected: { email: 'jane@test.com' },
     };
 
-    const result = await collector.collect('I\'m allergic to Penicillin', contextWithPrior);
+    const result = await collector.collect("I'm allergic to Penicillin", contextWithPrior);
     expect(result.collectedFields).toEqual({ allergies: 'Penicillin' });
     expect(result.allCollected).toBe(true);
   });
 
   it('defaults collectedFields to empty object on missing response field', async () => {
-    claude.complete.mockResolvedValue(JSON.stringify({
-      missingFields: ['email', 'allergies'],
-      suggestedResponse: 'Could you share your info?',
-      allCollected: false,
-    }));
+    claude.complete.mockResolvedValue(
+      JSON.stringify({
+        missingFields: ['email', 'allergies'],
+        suggestedResponse: 'Could you share your info?',
+        allCollected: false,
+      }),
+    );
 
     const result = await collector.collect('Hello', baseContext);
     expect(result.collectedFields).toEqual({});
@@ -105,12 +107,14 @@ describe('ProfileCollector', () => {
   });
 
   it('uses haiku model with 512 max tokens', async () => {
-    claude.complete.mockResolvedValue(JSON.stringify({
-      collectedFields: {},
-      missingFields: ['email'],
-      suggestedResponse: 'What is your email?',
-      allCollected: false,
-    }));
+    claude.complete.mockResolvedValue(
+      JSON.stringify({
+        collectedFields: {},
+        missingFields: ['email'],
+        suggestedResponse: 'What is your email?',
+        allCollected: false,
+      }),
+    );
 
     await collector.collect('Hi', baseContext);
 
@@ -123,12 +127,14 @@ describe('ProfileCollector', () => {
   });
 
   it('includes already collected fields in prompt', async () => {
-    claude.complete.mockResolvedValue(JSON.stringify({
-      collectedFields: {},
-      missingFields: ['allergies'],
-      suggestedResponse: 'Any allergies?',
-      allCollected: false,
-    }));
+    claude.complete.mockResolvedValue(
+      JSON.stringify({
+        collectedFields: {},
+        missingFields: ['allergies'],
+        suggestedResponse: 'Any allergies?',
+        allCollected: false,
+      }),
+    );
 
     await collector.collect('Hi', {
       ...baseContext,

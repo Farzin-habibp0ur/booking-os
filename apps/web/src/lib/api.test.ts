@@ -27,7 +27,7 @@ describe('ApiClient', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockFetch.mockReset();
-    Object.keys(mockLocalStorage).forEach(key => delete mockLocalStorage[key]);
+    Object.keys(mockLocalStorage).forEach((key) => delete mockLocalStorage[key]);
     api.setToken(null);
   });
 
@@ -80,9 +80,9 @@ describe('ApiClient', () => {
         expect.any(String),
         expect.objectContaining({
           headers: expect.objectContaining({
-            'Authorization': 'Bearer test-token',
+            Authorization: 'Bearer test-token',
           }),
-        })
+        }),
       );
     });
 
@@ -98,7 +98,7 @@ describe('ApiClient', () => {
         expect.any(String),
         expect.objectContaining({
           credentials: 'include',
-        })
+        }),
       );
     });
 
@@ -164,7 +164,7 @@ describe('ApiClient', () => {
         expect.stringContaining('/test'),
         expect.objectContaining({
           credentials: 'include',
-        })
+        }),
       );
       // GET request should not have a method property (undefined = GET)
       const callArgs = mockFetch.mock.calls[0][1];
@@ -179,7 +179,7 @@ describe('ApiClient', () => {
         expect.objectContaining({
           method: 'POST',
           body: JSON.stringify({ data: 'value' }),
-        })
+        }),
       );
     });
 
@@ -191,7 +191,7 @@ describe('ApiClient', () => {
         expect.objectContaining({
           method: 'PATCH',
           body: JSON.stringify({ data: 'updated' }),
-        })
+        }),
       );
     });
 
@@ -202,7 +202,7 @@ describe('ApiClient', () => {
         expect.stringContaining('/test'),
         expect.objectContaining({
           method: 'DELETE',
-        })
+        }),
       );
     });
   });
@@ -226,9 +226,9 @@ describe('ApiClient', () => {
           method: 'POST',
           body: formData,
           headers: expect.objectContaining({
-            'Authorization': 'Bearer test-token',
+            Authorization: 'Bearer test-token',
           }),
-        })
+        }),
       );
 
       // Ensure Content-Type is NOT set (browser will set it with boundary)

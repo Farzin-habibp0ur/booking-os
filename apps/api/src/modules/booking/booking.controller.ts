@@ -36,12 +36,20 @@ export class BookingController {
   }
 
   @Patch(':id')
-  update(@BusinessId() businessId: string, @Param('id') id: string, @Body() body: UpdateBookingDto) {
+  update(
+    @BusinessId() businessId: string,
+    @Param('id') id: string,
+    @Body() body: UpdateBookingDto,
+  ) {
     return this.bookingService.update(businessId, id, body);
   }
 
   @Patch(':id/status')
-  updateStatus(@BusinessId() businessId: string, @Param('id') id: string, @Body() body: UpdateBookingStatusDto) {
+  updateStatus(
+    @BusinessId() businessId: string,
+    @Param('id') id: string,
+    @Body() body: UpdateBookingStatusDto,
+  ) {
     return this.bookingService.updateStatus(businessId, id, body.status);
   }
 }

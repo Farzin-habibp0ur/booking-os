@@ -1,4 +1,9 @@
-import { Injectable, UnauthorizedException, ConflictException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+  BadRequestException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
@@ -42,9 +47,11 @@ export class AuthService {
   }
 
   private getRefreshSecret(): string {
-    return this.config.get<string>('JWT_REFRESH_SECRET')
-      || this.config.get<string>('JWT_SECRET')
-      || 'dev-secret-change-in-production';
+    return (
+      this.config.get<string>('JWT_REFRESH_SECRET') ||
+      this.config.get<string>('JWT_SECRET') ||
+      'dev-secret-change-in-production'
+    );
   }
 
   private issueTokens(staff: { id: string; email: string; businessId: string; role: string }) {
@@ -72,11 +79,13 @@ export class AuthService {
     const existing = await this.prisma.staff.findUnique({ where: { email: data.email } });
     if (existing) throw new ConflictException('Email already in use');
 
-    const slug = data.businessName
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '')
-      + '-' + Date.now().toString(36);
+    const slug =
+      data.businessName
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '') +
+      '-' +
+      Date.now().toString(36);
 
     const passwordHash = await bcrypt.hash(data.password, 10);
 

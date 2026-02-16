@@ -21,7 +21,11 @@ export class ServiceController {
   }
 
   @Patch(':id')
-  update(@BusinessId() businessId: string, @Param('id') id: string, @Body() body: UpdateServiceDto) {
+  update(
+    @BusinessId() businessId: string,
+    @Param('id') id: string,
+    @Body() body: UpdateServiceDto,
+  ) {
     return this.serviceService.update(businessId, id, body);
   }
 

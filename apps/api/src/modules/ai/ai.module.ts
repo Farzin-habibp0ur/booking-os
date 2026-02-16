@@ -19,7 +19,13 @@ import { MessageModule } from '../message/message.module';
 @Module({
   // MessagingModule is @Global() so no need to import it here
   // MessageModule uses forwardRef to break circular: AiModule -> MessageModule -> MessagingModule -> AiModule
-  imports: [BusinessModule, ServiceModule, AvailabilityModule, BookingModule, forwardRef(() => MessageModule)],
+  imports: [
+    BusinessModule,
+    ServiceModule,
+    AvailabilityModule,
+    BookingModule,
+    forwardRef(() => MessageModule),
+  ],
   controllers: [AiController],
   providers: [
     AiService,

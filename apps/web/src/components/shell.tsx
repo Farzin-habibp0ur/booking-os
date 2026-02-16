@@ -11,8 +11,16 @@ import { ErrorBoundary } from '@/components/error-boundary';
 import { LanguagePicker } from '@/components/language-picker';
 import { cn } from '@/lib/cn';
 import {
-  LayoutDashboard, MessageSquare, Calendar, Users, BookOpen,
-  Scissors, UserCog, BarChart3, Settings, LogOut,
+  LayoutDashboard,
+  MessageSquare,
+  Calendar,
+  Users,
+  BookOpen,
+  Scissors,
+  UserCog,
+  BarChart3,
+  Settings,
+  LogOut,
 } from 'lucide-react';
 
 export function Shell({ children }: { children: ReactNode }) {
@@ -37,9 +45,21 @@ function ShellInner({ children }: { children: ReactNode }) {
     { href: '/dashboard', label: t('nav.dashboard'), icon: LayoutDashboard },
     { href: '/inbox', label: t('nav.inbox'), icon: MessageSquare },
     { href: '/calendar', label: t('nav.calendar'), icon: Calendar },
-    { href: '/customers', label: t('nav.customers', { entity: pack.labels.customer }), icon: Users },
-    { href: '/bookings', label: t('nav.bookings', { entity: pack.labels.booking }), icon: BookOpen },
-    { href: '/services', label: t('nav.services', { entity: pack.labels.service }), icon: Scissors },
+    {
+      href: '/customers',
+      label: t('nav.customers', { entity: pack.labels.customer }),
+      icon: Users,
+    },
+    {
+      href: '/bookings',
+      label: t('nav.bookings', { entity: pack.labels.booking }),
+      icon: BookOpen,
+    },
+    {
+      href: '/services',
+      label: t('nav.services', { entity: pack.labels.service }),
+      icon: Scissors,
+    },
     { href: '/staff', label: t('nav.staff'), icon: UserCog },
     { href: '/reports', label: t('nav.reports'), icon: BarChart3 },
     { href: '/settings', label: t('nav.settings'), icon: Settings },
@@ -85,7 +105,9 @@ function ShellInner({ children }: { children: ReactNode }) {
           </button>
         </div>
       </aside>
-      <main className="flex-1 overflow-auto"><ErrorBoundary>{children}</ErrorBoundary></main>
+      <main className="flex-1 overflow-auto">
+        <ErrorBoundary>{children}</ErrorBoundary>
+      </main>
     </div>
   );
 }

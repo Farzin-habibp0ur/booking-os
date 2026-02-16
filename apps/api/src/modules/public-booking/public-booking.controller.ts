@@ -42,7 +42,14 @@ export class PublicBookingController {
     const business = await this.resolveBusiness(slug);
     const services = await this.prisma.service.findMany({
       where: { businessId: business.id, isActive: true },
-      select: { id: true, name: true, description: true, durationMins: true, price: true, category: true },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        durationMins: true,
+        price: true,
+        category: true,
+      },
       orderBy: { name: 'asc' },
     });
     return services;
@@ -84,7 +91,9 @@ export class PublicBookingController {
     },
   ) {
     if (!body.serviceId || !body.startTime || !body.customerName || !body.customerPhone) {
-      throw new BadRequestException('serviceId, startTime, customerName, and customerPhone are required');
+      throw new BadRequestException(
+        'serviceId, startTime, customerName, and customerPhone are required',
+      );
     }
 
     const business = await this.resolveBusiness(slug);

@@ -40,8 +40,7 @@ import { CalendarSyncModule } from './modules/calendar-sync/calendar-sync.module
           process.env.NODE_ENV !== 'production'
             ? { target: 'pino-pretty', options: { colorize: true } }
             : undefined,
-        genReqId: (req) =>
-          req.headers['x-request-id'] || crypto.randomUUID(),
+        genReqId: (req) => req.headers['x-request-id'] || crypto.randomUUID(),
         redact: ['req.headers.authorization', 'req.headers.cookie'],
         autoLogging: {
           ignore: (req) => req.url === '/api/v1/health',
@@ -75,9 +74,7 @@ import { CalendarSyncModule } from './modules/calendar-sync/calendar-sync.module
     NotificationModule,
     PublicBookingModule,
     CalendarSyncModule,
-    process.env.REDIS_URL
-      ? QueueModule.forRootWithRedis()
-      : QueueModule.forRoot(),
+    process.env.REDIS_URL ? QueueModule.forRootWithRedis() : QueueModule.forRoot(),
   ],
 })
 export class AppModule {}

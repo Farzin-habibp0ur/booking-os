@@ -37,7 +37,9 @@ class ApiClient {
     });
 
     if (!res.ok) {
-      const error = await res.json().catch(() => ({ message: res.status === 401 ? 'Invalid credentials' : 'Request failed' }));
+      const error = await res
+        .json()
+        .catch(() => ({ message: res.status === 401 ? 'Invalid credentials' : 'Request failed' }));
       if (res.status === 401) {
         this.setToken(null);
         // Don't redirect if already on login page (let the page show the error)
@@ -60,7 +62,10 @@ class ApiClient {
   }
 
   patch<T>(path: string, body?: unknown) {
-    return this.request<T>(path, { method: 'PATCH', body: body ? JSON.stringify(body) : undefined });
+    return this.request<T>(path, {
+      method: 'PATCH',
+      body: body ? JSON.stringify(body) : undefined,
+    });
   }
 
   del<T>(path: string) {
@@ -80,7 +85,9 @@ class ApiClient {
     });
 
     if (!res.ok) {
-      const error = await res.json().catch(() => ({ message: res.status === 401 ? 'Unauthorized' : 'Upload failed' }));
+      const error = await res
+        .json()
+        .catch(() => ({ message: res.status === 401 ? 'Unauthorized' : 'Upload failed' }));
       if (res.status === 401) {
         this.setToken(null);
         if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {

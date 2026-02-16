@@ -46,7 +46,11 @@ export class CancelAssistant {
     }
 
     // Auto-select if only one booking
-    if (state === 'IDENTIFY_BOOKING' && context.upcomingBookings.length === 1 && !currentState?.bookingId) {
+    if (
+      state === 'IDENTIFY_BOOKING' &&
+      context.upcomingBookings.length === 1 &&
+      !currentState?.bookingId
+    ) {
       const booking = context.upcomingBookings[0];
       return {
         state: 'CONFIRM_CANCEL',
@@ -112,10 +116,13 @@ Return ONLY valid JSON, no markdown.`;
       };
     } catch (error: any) {
       this.logger.error(`Cancel assistant failed: ${error.message}`);
-      return currentState || {
-        state: 'IDENTIFY_BOOKING',
-        suggestedResponse: 'I\'d be happy to help you cancel your appointment. Let me look up your bookings.',
-      };
+      return (
+        currentState || {
+          state: 'IDENTIFY_BOOKING',
+          suggestedResponse:
+            "I'd be happy to help you cancel your appointment. Let me look up your bookings.",
+        }
+      );
     }
   }
 }

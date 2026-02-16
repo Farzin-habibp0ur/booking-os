@@ -20,10 +20,13 @@ export default function NotificationSettingsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get<NotificationSettings>('/business/notification-settings').then((s) => {
-      setSettings(s);
-      setLoading(false);
-    }).catch(() => setLoading(false));
+    api
+      .get<NotificationSettings>('/business/notification-settings')
+      .then((s) => {
+        setSettings(s);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
   }, []);
 
   const handleSave = async () => {
@@ -32,13 +35,20 @@ export default function NotificationSettingsPage() {
     setTimeout(() => setSaved(false), 2000);
   };
 
-  if (loading) return <div className="p-6"><p className="text-slate-400">{t('common.loading')}</p></div>;
+  if (loading)
+    return (
+      <div className="p-6">
+        <p className="text-slate-400">{t('common.loading')}</p>
+      </div>
+    );
 
   return (
     <div className="p-6 max-w-2xl">
       <div className="flex items-center gap-2 mb-6">
         <Bell size={24} className="text-sage-600" />
-        <h1 className="text-2xl font-serif font-semibold text-slate-900">{t('notification_settings.title')}</h1>
+        <h1 className="text-2xl font-serif font-semibold text-slate-900">
+          {t('notification_settings.title')}
+        </h1>
       </div>
 
       <div className="bg-white rounded-2xl shadow-soft p-6 space-y-6">
@@ -46,8 +56,12 @@ export default function NotificationSettingsPage() {
 
         {/* Channel preference */}
         <div>
-          <p className="text-sm font-medium mb-1">{t('notification_settings.channel_preference')}</p>
-          <p className="text-xs text-slate-500 mb-3">{t('notification_settings.channel_preference_desc')}</p>
+          <p className="text-sm font-medium mb-1">
+            {t('notification_settings.channel_preference')}
+          </p>
+          <p className="text-xs text-slate-500 mb-3">
+            {t('notification_settings.channel_preference_desc')}
+          </p>
           <div className="space-y-2">
             <label className="flex items-center gap-2 cursor-pointer">
               <input
@@ -87,14 +101,21 @@ export default function NotificationSettingsPage() {
         {/* Follow-up delay */}
         <div>
           <p className="text-sm font-medium mb-1">{t('notification_settings.followup_delay')}</p>
-          <p className="text-xs text-slate-500 mb-3">{t('notification_settings.followup_delay_desc')}</p>
+          <p className="text-xs text-slate-500 mb-3">
+            {t('notification_settings.followup_delay_desc')}
+          </p>
           <div className="flex items-center gap-2">
             <input
               type="number"
               min={1}
               max={72}
               value={settings.followUpDelayHours}
-              onChange={(e) => setSettings({ ...settings, followUpDelayHours: Math.max(1, Math.min(72, Number(e.target.value) || 1)) })}
+              onChange={(e) =>
+                setSettings({
+                  ...settings,
+                  followUpDelayHours: Math.max(1, Math.min(72, Number(e.target.value) || 1)),
+                })
+              }
               className="w-20 border border-slate-200 rounded-xl px-3 py-2 text-sm"
             />
             <span className="text-sm text-slate-500">hours</span>
@@ -102,7 +123,10 @@ export default function NotificationSettingsPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <button onClick={handleSave} className="bg-sage-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-sage-700 transition-colors">
+          <button
+            onClick={handleSave}
+            className="bg-sage-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-sage-700 transition-colors"
+          >
             {t('settings.save_changes')}
           </button>
           {saved && <span className="text-sage-600 text-sm">{t('common.saved')}</span>}

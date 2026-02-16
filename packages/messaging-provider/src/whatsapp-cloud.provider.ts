@@ -67,7 +67,7 @@ export class WhatsAppCloudProvider implements MessagingProvider {
         const response = await fetch(`${this.apiBase}${path}`, {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${this.config.accessToken}`,
+            Authorization: `Bearer ${this.config.accessToken}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(body),

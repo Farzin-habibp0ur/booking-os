@@ -1,7 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ClaudeClient } from './claude.client';
 
-export type BookingState = 'IDENTIFY_SERVICE' | 'IDENTIFY_DATE' | 'IDENTIFY_TIME' | 'CONFIRM' | 'COLLECT_PROFILE';
+export type BookingState =
+  | 'IDENTIFY_SERVICE'
+  | 'IDENTIFY_DATE'
+  | 'IDENTIFY_TIME'
+  | 'CONFIRM'
+  | 'COLLECT_PROFILE';
 
 export interface BookingStateData {
   state: BookingState;
@@ -30,10 +35,22 @@ export class BookingAssistant {
     context: {
       businessName: string;
       personality: string;
-      services: Array<{ id: string; name: string; durationMins: number; price: number; category: string }>;
+      services: Array<{
+        id: string;
+        name: string;
+        durationMins: number;
+        price: number;
+        category: string;
+      }>;
       availableSlots?: Array<{ time: string; display: string; staffId: string; staffName: string }>;
       extractedEntities?: { service?: string; date?: string; time?: string; staffName?: string };
-      customerContext?: { name: string; phone: string; email?: string; tags: string[]; upcomingBookings: Array<{ serviceName: string; date: string; time: string }> };
+      customerContext?: {
+        name: string;
+        phone: string;
+        email?: string;
+        tags: string[];
+        upcomingBookings: Array<{ serviceName: string; date: string; time: string }>;
+      };
     },
   ): Promise<BookingStateData> {
     const state = currentState?.state || 'IDENTIFY_SERVICE';
@@ -41,7 +58,8 @@ export class BookingAssistant {
     let customerInfo = '';
     if (context.customerContext) {
       customerInfo = `\nCustomer: ${context.customerContext.name} (${context.customerContext.phone})`;
-      if (context.customerContext.tags.length) customerInfo += ` | Tags: ${context.customerContext.tags.join(', ')}`;
+      if (context.customerContext.tags.length)
+        customerInfo += ` | Tags: ${context.customerContext.tags.join(', ')}`;
     }
 
     const today = new Date();
@@ -110,7 +128,13 @@ Return ONLY valid JSON, no markdown.`;
       };
     } catch (error: any) {
       this.logger.error(`Booking assistant failed: ${error.message}`);
-      return currentState || { state: 'IDENTIFY_SERVICE', suggestedResponse: 'I\'d be happy to help you book an appointment! What service are you interested in?' };
+      return (
+        currentState || {
+          state: 'IDENTIFY_SERVICE',
+          suggestedResponse:
+            "I'd be happy to help you book an appointment! What service are you interested in?",
+        }
+      );
     }
   }
 }

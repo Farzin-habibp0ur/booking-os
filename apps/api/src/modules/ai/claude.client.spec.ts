@@ -143,9 +143,7 @@ describe('ClaudeClient', () => {
 
       await client.complete('haiku', 'system', [{ role: 'user', content: 'hi' }]);
 
-      expect(mockCreate).toHaveBeenCalledWith(
-        expect.objectContaining({ max_tokens: 1024 }),
-      );
+      expect(mockCreate).toHaveBeenCalledWith(expect.objectContaining({ max_tokens: 1024 }));
     });
   });
 });

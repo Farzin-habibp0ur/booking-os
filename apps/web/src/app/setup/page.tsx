@@ -6,12 +6,52 @@ import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { useI18n, I18nProvider } from '@/lib/i18n';
 import { useToast } from '@/lib/toast';
-import { Check, ChevronLeft, ChevronRight, Building2, MessageCircle, Users, Scissors, Clock, FileText, Upload, Rocket, Plus, X, Trash2, Loader2, ClipboardCheck, Pencil, Mail, RefreshCw } from 'lucide-react';
+import {
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Building2,
+  MessageCircle,
+  Users,
+  Scissors,
+  Clock,
+  FileText,
+  Upload,
+  Rocket,
+  Plus,
+  X,
+  Trash2,
+  Loader2,
+  ClipboardCheck,
+  Pencil,
+  Mail,
+  RefreshCw,
+} from 'lucide-react';
 import { PROFILE_FIELDS } from '@booking-os/shared';
 
-const STEP_KEYS = ['business', 'whatsapp', 'staff', 'services', 'hours', 'templates', 'profile', 'customers', 'finish'] as const;
+const STEP_KEYS = [
+  'business',
+  'whatsapp',
+  'staff',
+  'services',
+  'hours',
+  'templates',
+  'profile',
+  'customers',
+  'finish',
+] as const;
 
-const STEP_ICONS = [Building2, MessageCircle, Users, Scissors, Clock, FileText, ClipboardCheck, Upload, Rocket];
+const STEP_ICONS = [
+  Building2,
+  MessageCircle,
+  Users,
+  Scissors,
+  Clock,
+  FileText,
+  ClipboardCheck,
+  Upload,
+  Rocket,
+];
 
 const DAYS_KEYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 
@@ -68,9 +108,15 @@ function SetupPage() {
   // Customer Import
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [csvFile, setCsvFile] = useState<File | null>(null);
-  const [csvPreview, setCsvPreview] = useState<Array<{ name: string; phone: string; email: string; tags: string }>>([]);
+  const [csvPreview, setCsvPreview] = useState<
+    Array<{ name: string; phone: string; email: string; tags: string }>
+  >([]);
   const [csvImporting, setCsvImporting] = useState(false);
-  const [csvResult, setCsvResult] = useState<{ created: number; skipped: number; errors: number } | null>(null);
+  const [csvResult, setCsvResult] = useState<{
+    created: number;
+    skipped: number;
+    errors: number;
+  } | null>(null);
   const [includeMessages, setIncludeMessages] = useState(true);
   const [convImporting, setConvImporting] = useState(false);
   const [convResult, setConvResult] = useState<{ created: number; updated: number } | null>(null);
@@ -99,7 +145,9 @@ function SetupPage() {
         setSelectedStaffForHours(staffRes[0].id);
         await loadWorkingHours(staffRes[0].id);
       }
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error(e);
+    }
     setLoading(false);
   };
 
@@ -107,7 +155,9 @@ function SetupPage() {
     try {
       const wh = await api.get<any[]>(`/staff/${staffId}/working-hours`);
       setStaffHours((prev) => ({ ...prev, [staffId]: wh }));
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   // Step handlers
@@ -119,9 +169,15 @@ function SetupPage() {
     if (!newStaffName || !newStaffEmail) return;
     setInviteSending(true);
     try {
-      await api.post('/staff/invite', { name: newStaffName, email: newStaffEmail, role: newStaffRole });
+      await api.post('/staff/invite', {
+        name: newStaffName,
+        email: newStaffEmail,
+        role: newStaffRole,
+      });
       setLastInvitedEmail(newStaffEmail);
-      setNewStaffName(''); setNewStaffEmail(''); setNewStaffRole('AGENT');
+      setNewStaffName('');
+      setNewStaffEmail('');
+      setNewStaffRole('AGENT');
       const updated = await api.get<any[]>('/staff');
       setStaffList(updated);
       toast('Invitation sent');
@@ -142,8 +198,15 @@ function SetupPage() {
 
   const addService = async () => {
     if (!newSvcName) return;
-    await api.post('/services', { name: newSvcName, durationMins: Number(newSvcDuration), price: Number(newSvcPrice) || 0, category: 'General' });
-    setNewSvcName(''); setNewSvcDuration(30); setNewSvcPrice('');
+    await api.post('/services', {
+      name: newSvcName,
+      durationMins: Number(newSvcDuration),
+      price: Number(newSvcPrice) || 0,
+      category: 'General',
+    });
+    setNewSvcName('');
+    setNewSvcDuration(30);
+    setNewSvcPrice('');
     const updated = await api.get<any>('/services');
     setServices(updated?.data || updated || []);
   };
@@ -165,7 +228,9 @@ function SetupPage() {
       });
       const updated = await api.get<any>('/services');
       setServices(updated?.data || updated || []);
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error(e);
+    }
     setEditingSvcId(null);
   };
 
@@ -173,18 +238,26 @@ function SetupPage() {
     setEditingSvcId(null);
   };
 
-  const updateHourForDay = async (staffId: string, dayOfWeek: number, field: string, value: any) => {
+  const updateHourForDay = async (
+    staffId: string,
+    dayOfWeek: number,
+    field: string,
+    value: any,
+  ) => {
     const current = staffHours[staffId] || [];
     const day = current.find((h: any) => h.dayOfWeek === dayOfWeek);
     if (!day) return;
     const updated = { ...day, [field]: value };
-    const allHours = current.map((h: any) => h.dayOfWeek === dayOfWeek ? updated : h);
+    const allHours = current.map((h: any) => (h.dayOfWeek === dayOfWeek ? updated : h));
     setStaffHours((prev) => ({ ...prev, [staffId]: allHours }));
   };
 
   const saveWorkingHours = async (staffId: string) => {
     const hours = (staffHours[staffId] || []).map((h: any) => ({
-      dayOfWeek: h.dayOfWeek, startTime: h.startTime, endTime: h.endTime, isOff: h.isOff,
+      dayOfWeek: h.dayOfWeek,
+      startTime: h.startTime,
+      endTime: h.endTime,
+      isOff: h.isOff,
     }));
     await api.patch(`/staff/${staffId}/working-hours`, { hours });
   };
@@ -222,7 +295,10 @@ function SetupPage() {
     try {
       const formData = new FormData();
       formData.append('file', csvFile);
-      const result = await api.upload<{ created: number; skipped: number; errors: number }>('/customers/import-csv', formData);
+      const result = await api.upload<{ created: number; skipped: number; errors: number }>(
+        '/customers/import-csv',
+        formData,
+      );
       setCsvResult(result);
       toast(t('import.csv_success', { created: result.created, skipped: result.skipped }));
     } catch (e) {
@@ -234,7 +310,10 @@ function SetupPage() {
   const importFromConversations = async () => {
     setConvImporting(true);
     try {
-      const result = await api.post<{ created: number; updated: number }>('/customers/import-from-conversations', { includeMessages });
+      const result = await api.post<{ created: number; updated: number }>(
+        '/customers/import-from-conversations',
+        { includeMessages },
+      );
       setConvResult(result);
       toast(t('import.conversations_success', { updated: result.updated }));
     } catch (e) {
@@ -259,7 +338,11 @@ function SetupPage() {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-screen"><p className="text-slate-400 font-serif">{t('common.loading')}</p></div>;
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p className="text-slate-400 font-serif">{t('common.loading')}</p>
+      </div>
+    );
   }
 
   return (
@@ -269,7 +352,9 @@ function SetupPage() {
         <div className="max-w-4xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between mb-3">
             <h1 className="text-xl font-serif font-semibold text-slate-900">{t('setup.title')}</h1>
-            <span className="text-sm text-slate-500">{t('setup.step_label', { current: step + 1, total: STEP_KEYS.length })}</span>
+            <span className="text-sm text-slate-500">
+              {t('setup.step_label', { current: step + 1, total: STEP_KEYS.length })}
+            </span>
           </div>
           <div className="flex gap-1">
             {STEP_KEYS.map((s, i) => (
@@ -305,25 +390,58 @@ function SetupPage() {
         {/* Step 1: Business Info */}
         {step === 0 && (
           <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
-            <h2 className="text-lg font-serif font-semibold text-slate-900">{t('setup.business_title')}</h2>
+            <h2 className="text-lg font-serif font-semibold text-slate-900">
+              {t('setup.business_title')}
+            </h2>
             <p className="text-sm text-slate-500">{t('setup.business_subtitle')}</p>
             <div>
-              <label className="block text-sm font-medium mb-1">{t('setup.business_name_label')}</label>
-              <input value={bizName} onChange={(e) => setBizName(e.target.value)} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" placeholder={t('setup.business_name_placeholder')} />
+              <label className="block text-sm font-medium mb-1">
+                {t('setup.business_name_label')}
+              </label>
+              <input
+                value={bizName}
+                onChange={(e) => setBizName(e.target.value)}
+                className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
+                placeholder={t('setup.business_name_placeholder')}
+              />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">{t('setup.timezone_label')}</label>
-              <select value={timezone} onChange={(e) => setTimezone(e.target.value)} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm">
-                {['America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles', 'America/Phoenix', 'Europe/London', 'Europe/Paris', 'Asia/Dubai', 'Asia/Singapore', 'Australia/Sydney', 'UTC'].map((tz) => (
-                  <option key={tz} value={tz}>{tz}</option>
+              <select
+                value={timezone}
+                onChange={(e) => setTimezone(e.target.value)}
+                className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
+              >
+                {[
+                  'America/New_York',
+                  'America/Chicago',
+                  'America/Denver',
+                  'America/Los_Angeles',
+                  'America/Phoenix',
+                  'Europe/London',
+                  'Europe/Paris',
+                  'Asia/Dubai',
+                  'Asia/Singapore',
+                  'Australia/Sydney',
+                  'UTC',
+                ].map((tz) => (
+                  <option key={tz} value={tz}>
+                    {tz}
+                  </option>
                 ))}
               </select>
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">{t('setup.currency_label')}</label>
-              <select value={currency} onChange={(e) => setCurrency(e.target.value)} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm">
+              <select
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value)}
+                className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
+              >
                 {['USD', 'EUR', 'GBP', 'AED', 'AUD', 'CAD', 'SGD'].map((c) => (
-                  <option key={c} value={c}>{c}</option>
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
                 ))}
               </select>
             </div>
@@ -333,7 +451,9 @@ function SetupPage() {
         {/* Step 2: Connect WhatsApp */}
         {step === 1 && (
           <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
-            <h2 className="text-lg font-serif font-semibold text-slate-900">{t('setup.whatsapp_title')}</h2>
+            <h2 className="text-lg font-serif font-semibold text-slate-900">
+              {t('setup.whatsapp_title')}
+            </h2>
             <p className="text-sm text-slate-500">{t('setup.whatsapp_subtitle')}</p>
             <div className="border border-slate-100 rounded-xl p-4 bg-green-50">
               <div className="flex items-center gap-3">
@@ -349,21 +469,24 @@ function SetupPage() {
                 <button className="bg-green-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-green-700">
                   {t('setup.connect_whatsapp')}
                 </button>
-                <button onClick={handleNext} className="border px-4 py-2 rounded-xl text-sm hover:bg-slate-50">
+                <button
+                  onClick={handleNext}
+                  className="border px-4 py-2 rounded-xl text-sm hover:bg-slate-50"
+                >
                   {t('setup.skip_for_now')}
                 </button>
               </div>
             </div>
-            <div className="text-xs text-slate-400 mt-2">
-              {t('setup.whatsapp_note')}
-            </div>
+            <div className="text-xs text-slate-400 mt-2">{t('setup.whatsapp_note')}</div>
           </div>
         )}
 
         {/* Step 3: Add Staff */}
         {step === 2 && (
           <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
-            <h2 className="text-lg font-serif font-semibold text-slate-900">{t('setup.staff_title')}</h2>
+            <h2 className="text-lg font-serif font-semibold text-slate-900">
+              {t('setup.staff_title')}
+            </h2>
             <p className="text-sm text-slate-500">{t('setup.staff_subtitle')}</p>
 
             {staffList.length > 0 && (
@@ -393,7 +516,9 @@ function SetupPage() {
                           <Check size={10} /> Active
                         </span>
                       )}
-                      <span className="text-xs bg-slate-100 px-2 py-0.5 rounded-full">{s.role}</span>
+                      <span className="text-xs bg-slate-100 px-2 py-0.5 rounded-full">
+                        {s.role}
+                      </span>
                     </div>
                   </div>
                 ))}
@@ -404,8 +529,8 @@ function SetupPage() {
               <div className="border border-green-200 bg-green-50 rounded-lg p-4 space-y-1">
                 <p className="text-sm font-medium text-green-800">Invitation sent</p>
                 <p className="text-xs text-green-700">
-                  An invitation email has been sent to <strong>{lastInvitedEmail}</strong>.
-                  They'll receive a link to set their password and join the team.
+                  An invitation email has been sent to <strong>{lastInvitedEmail}</strong>. They'll
+                  receive a link to set their password and join the team.
                 </p>
                 <button
                   onClick={() => setLastInvitedEmail(null)}
@@ -419,17 +544,41 @@ function SetupPage() {
             <div className="border-t pt-4 space-y-3">
               <p className="text-sm font-medium">{t('setup.add_another_staff')}</p>
               <div className="grid grid-cols-2 gap-3">
-                <input value={newStaffName} onChange={(e) => setNewStaffName(e.target.value)} placeholder={t('common.name')} className="border border-slate-200 rounded-xl px-3 py-2 text-sm" />
-                <input value={newStaffEmail} onChange={(e) => setNewStaffEmail(e.target.value)} placeholder={t('common.email')} type="email" className="border border-slate-200 rounded-xl px-3 py-2 text-sm" />
+                <input
+                  value={newStaffName}
+                  onChange={(e) => setNewStaffName(e.target.value)}
+                  placeholder={t('common.name')}
+                  className="border border-slate-200 rounded-xl px-3 py-2 text-sm"
+                />
+                <input
+                  value={newStaffEmail}
+                  onChange={(e) => setNewStaffEmail(e.target.value)}
+                  placeholder={t('common.email')}
+                  type="email"
+                  className="border border-slate-200 rounded-xl px-3 py-2 text-sm"
+                />
               </div>
               <div className="flex gap-3">
-                <select value={newStaffRole} onChange={(e) => setNewStaffRole(e.target.value)} className="border border-slate-200 rounded-xl px-3 py-2 text-sm">
+                <select
+                  value={newStaffRole}
+                  onChange={(e) => setNewStaffRole(e.target.value)}
+                  className="border border-slate-200 rounded-xl px-3 py-2 text-sm"
+                >
                   <option value="AGENT">{t('setup.role_agent')}</option>
                   <option value="ADMIN">{t('setup.role_admin')}</option>
                   <option value="OWNER">{t('setup.role_owner')}</option>
                 </select>
-                <button onClick={addStaff} disabled={!newStaffName || !newStaffEmail || inviteSending} className="bg-sage-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-sage-700 disabled:opacity-50 flex items-center gap-1">
-                  {inviteSending ? <Loader2 size={14} className="animate-spin" /> : <Mail size={14} />} {inviteSending ? 'Sending...' : 'Send invite'}
+                <button
+                  onClick={addStaff}
+                  disabled={!newStaffName || !newStaffEmail || inviteSending}
+                  className="bg-sage-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-sage-700 disabled:opacity-50 flex items-center gap-1"
+                >
+                  {inviteSending ? (
+                    <Loader2 size={14} className="animate-spin" />
+                  ) : (
+                    <Mail size={14} />
+                  )}{' '}
+                  {inviteSending ? 'Sending...' : 'Send invite'}
                 </button>
               </div>
             </div>
@@ -439,85 +588,141 @@ function SetupPage() {
         {/* Step 4: Define Services */}
         {step === 3 && (
           <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
-            <h2 className="text-lg font-serif font-semibold text-slate-900">{t('setup.services_title')}</h2>
+            <h2 className="text-lg font-serif font-semibold text-slate-900">
+              {t('setup.services_title')}
+            </h2>
             <p className="text-sm text-slate-500">{t('setup.services_subtitle')}</p>
 
             {services.length > 0 && (
               <div className="border border-slate-100 rounded-xl divide-y">
-                {services.filter((s: any) => s.isActive !== false).map((s: any) => (
-                  <div key={s.id} className="px-4 py-3">
-                    {editingSvcId === s.id ? (
-                      <div className="space-y-2">
-                        <input value={editSvcName} onChange={(e) => setEditSvcName(e.target.value)} className="w-full border border-slate-200 rounded-xl px-3 py-1.5 text-sm" />
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <label className="text-xs text-slate-500">{t('setup.duration_label')}</label>
-                            <input value={editSvcDuration} onChange={(e) => setEditSvcDuration(Number(e.target.value))} type="number" className="w-full border border-slate-200 rounded-xl px-3 py-1.5 text-sm" />
+                {services
+                  .filter((s: any) => s.isActive !== false)
+                  .map((s: any) => (
+                    <div key={s.id} className="px-4 py-3">
+                      {editingSvcId === s.id ? (
+                        <div className="space-y-2">
+                          <input
+                            value={editSvcName}
+                            onChange={(e) => setEditSvcName(e.target.value)}
+                            className="w-full border border-slate-200 rounded-xl px-3 py-1.5 text-sm"
+                          />
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <label className="text-xs text-slate-500">
+                                {t('setup.duration_label')}
+                              </label>
+                              <input
+                                value={editSvcDuration}
+                                onChange={(e) => setEditSvcDuration(Number(e.target.value))}
+                                type="number"
+                                className="w-full border border-slate-200 rounded-xl px-3 py-1.5 text-sm"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-xs text-slate-500">
+                                {t('setup.price_label')}
+                              </label>
+                              <input
+                                value={editSvcPrice}
+                                onChange={(e) => setEditSvcPrice(e.target.value)}
+                                type="number"
+                                step="0.01"
+                                className="w-full border border-slate-200 rounded-xl px-3 py-1.5 text-sm"
+                              />
+                            </div>
                           </div>
-                          <div>
-                            <label className="text-xs text-slate-500">{t('setup.price_label')}</label>
-                            <input value={editSvcPrice} onChange={(e) => setEditSvcPrice(e.target.value)} type="number" step="0.01" className="w-full border border-slate-200 rounded-xl px-3 py-1.5 text-sm" />
+                          <div className="flex gap-2">
+                            <button
+                              onClick={saveEditService}
+                              className="bg-sage-600 text-white px-3 py-1 rounded text-xs hover:bg-sage-700"
+                            >
+                              <Check size={12} className="inline mr-1" />{' '}
+                              {t('common.save') || 'Save'}
+                            </button>
+                            <button
+                              onClick={cancelEditService}
+                              className="border px-3 py-1 rounded text-xs hover:bg-slate-50"
+                            >
+                              {t('common.cancel') || 'Cancel'}
+                            </button>
                           </div>
                         </div>
-                        <div className="flex gap-2">
-                          <button onClick={saveEditService} className="bg-sage-600 text-white px-3 py-1 rounded text-xs hover:bg-sage-700">
-                            <Check size={12} className="inline mr-1" /> {t('common.save') || 'Save'}
-                          </button>
-                          <button onClick={cancelEditService} className="border px-3 py-1 rounded text-xs hover:bg-slate-50">
-                            {t('common.cancel') || 'Cancel'}
-                          </button>
+                      ) : (
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium">{s.name}</p>
+                            <p className="text-xs text-slate-500">
+                              {s.durationMins} {t('services.min_short')} ·{' '}
+                              {s.price > 0 ? `$${s.price}` : t('services.price_free')}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-slate-400">{s.category}</span>
+                            <button
+                              onClick={() => startEditService(s)}
+                              className="text-slate-400 hover:text-sage-500 transition-colors p-1"
+                              title="Edit"
+                            >
+                              <Pencil size={14} />
+                            </button>
+                            <button
+                              onClick={async () => {
+                                try {
+                                  await api.del(`/services/${s.id}`);
+                                  const updated = await api.get<any>('/services');
+                                  setServices(updated?.data || updated || []);
+                                } catch (e) {
+                                  console.error(e);
+                                }
+                              }}
+                              className="text-slate-400 hover:text-red-500 transition-colors p-1"
+                              title={t('common.delete')}
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-medium">{s.name}</p>
-                          <p className="text-xs text-slate-500">{s.durationMins} {t('services.min_short')} · {s.price > 0 ? `$${s.price}` : t('services.price_free')}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-slate-400">{s.category}</span>
-                          <button
-                            onClick={() => startEditService(s)}
-                            className="text-slate-400 hover:text-sage-500 transition-colors p-1"
-                            title="Edit"
-                          >
-                            <Pencil size={14} />
-                          </button>
-                          <button
-                            onClick={async () => {
-                              try {
-                                await api.del(`/services/${s.id}`);
-                                const updated = await api.get<any>('/services');
-                                setServices(updated?.data || updated || []);
-                              } catch (e) { console.error(e); }
-                            }}
-                            className="text-slate-400 hover:text-red-500 transition-colors p-1"
-                            title={t('common.delete')}
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
+                      )}
+                    </div>
+                  ))}
               </div>
             )}
 
             <div className="border-t pt-4 space-y-3">
               <p className="text-sm font-medium">{t('setup.add_service')}</p>
-              <input value={newSvcName} onChange={(e) => setNewSvcName(e.target.value)} placeholder={t('setup.service_name_placeholder')} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" />
+              <input
+                value={newSvcName}
+                onChange={(e) => setNewSvcName(e.target.value)}
+                placeholder={t('setup.service_name_placeholder')}
+                className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
+              />
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs text-slate-500">{t('setup.duration_label')}</label>
-                  <input value={newSvcDuration} onChange={(e) => setNewSvcDuration(Number(e.target.value))} type="number" className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" />
+                  <input
+                    value={newSvcDuration}
+                    onChange={(e) => setNewSvcDuration(Number(e.target.value))}
+                    type="number"
+                    className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
+                  />
                 </div>
                 <div>
                   <label className="text-xs text-slate-500">{t('setup.price_label')}</label>
-                  <input value={newSvcPrice} onChange={(e) => setNewSvcPrice(e.target.value)} type="number" step="0.01" placeholder="0" className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" />
+                  <input
+                    value={newSvcPrice}
+                    onChange={(e) => setNewSvcPrice(e.target.value)}
+                    type="number"
+                    step="0.01"
+                    placeholder="0"
+                    className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
+                  />
                 </div>
               </div>
-              <button onClick={addService} disabled={!newSvcName} className="bg-sage-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-sage-700 disabled:opacity-50">
+              <button
+                onClick={addService}
+                disabled={!newSvcName}
+                className="bg-sage-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-sage-700 disabled:opacity-50"
+              >
                 <Plus size={14} className="inline mr-1" /> {t('setup.add_service_button')}
               </button>
             </div>
@@ -527,7 +732,9 @@ function SetupPage() {
         {/* Step 5: Working Hours */}
         {step === 4 && (
           <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
-            <h2 className="text-lg font-serif font-semibold text-slate-900">{t('setup.hours_title')}</h2>
+            <h2 className="text-lg font-serif font-semibold text-slate-900">
+              {t('setup.hours_title')}
+            </h2>
             <p className="text-sm text-slate-500">{t('setup.hours_subtitle')}</p>
 
             {staffList.length > 1 && (
@@ -541,7 +748,9 @@ function SetupPage() {
                     }}
                     className={cn(
                       'px-3 py-1.5 rounded-xl text-sm',
-                      selectedStaffForHours === s.id ? 'bg-sage-600 text-white' : 'bg-slate-100 hover:bg-slate-200',
+                      selectedStaffForHours === s.id
+                        ? 'bg-sage-600 text-white'
+                        : 'bg-slate-100 hover:bg-slate-200',
                     )}
                   >
                     {s.name}
@@ -553,29 +762,54 @@ function SetupPage() {
             <div className="border border-slate-100 rounded-xl divide-y">
               {(staffHours[selectedStaffForHours] || []).map((h: any) => (
                 <div key={h.dayOfWeek} className="flex items-center gap-3 px-4 py-2.5">
-                  <div className="w-24 text-sm font-medium">{t(`days.${DAYS_KEYS[h.dayOfWeek]}`)}</div>
+                  <div className="w-24 text-sm font-medium">
+                    {t(`days.${DAYS_KEYS[h.dayOfWeek]}`)}
+                  </div>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={!h.isOff}
-                      onChange={(e) => updateHourForDay(selectedStaffForHours, h.dayOfWeek, 'isOff', !e.target.checked)}
+                      onChange={(e) =>
+                        updateHourForDay(
+                          selectedStaffForHours,
+                          h.dayOfWeek,
+                          'isOff',
+                          !e.target.checked,
+                        )
+                      }
                       className="rounded"
                     />
-                    <span className="text-xs text-slate-500">{h.isOff ? t('common.off') : t('common.working')}</span>
+                    <span className="text-xs text-slate-500">
+                      {h.isOff ? t('common.off') : t('common.working')}
+                    </span>
                   </label>
                   {!h.isOff && (
                     <>
                       <input
                         type="time"
                         value={h.startTime}
-                        onChange={(e) => updateHourForDay(selectedStaffForHours, h.dayOfWeek, 'startTime', e.target.value)}
+                        onChange={(e) =>
+                          updateHourForDay(
+                            selectedStaffForHours,
+                            h.dayOfWeek,
+                            'startTime',
+                            e.target.value,
+                          )
+                        }
                         className="border rounded px-2 py-1 text-sm"
                       />
                       <span className="text-slate-400">{t('common.to')}</span>
                       <input
                         type="time"
                         value={h.endTime}
-                        onChange={(e) => updateHourForDay(selectedStaffForHours, h.dayOfWeek, 'endTime', e.target.value)}
+                        onChange={(e) =>
+                          updateHourForDay(
+                            selectedStaffForHours,
+                            h.dayOfWeek,
+                            'endTime',
+                            e.target.value,
+                          )
+                        }
                         className="border rounded px-2 py-1 text-sm"
                       />
                     </>
@@ -589,7 +823,9 @@ function SetupPage() {
         {/* Step 6: Templates */}
         {step === 5 && (
           <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
-            <h2 className="text-lg font-serif font-semibold text-slate-900">{t('setup.templates_title')}</h2>
+            <h2 className="text-lg font-serif font-semibold text-slate-900">
+              {t('setup.templates_title')}
+            </h2>
             <p className="text-sm text-slate-500">{t('setup.templates_subtitle')}</p>
 
             <div className="space-y-3">
@@ -598,13 +834,18 @@ function SetupPage() {
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <p className="text-sm font-medium">{tpl.name}</p>
-                      <span className="text-[10px] bg-slate-100 px-2 py-0.5 rounded-full">{tpl.category}</span>
+                      <span className="text-[10px] bg-slate-100 px-2 py-0.5 rounded-full">
+                        {tpl.category}
+                      </span>
                     </div>
                   </div>
                   <p className="text-sm text-slate-600 bg-slate-50 rounded p-2">{tpl.body}</p>
                   <div className="flex flex-wrap gap-1 mt-2">
                     {tpl.variables?.map((v: string) => (
-                      <span key={v} className="text-[10px] bg-sage-50 text-sage-600 px-1.5 py-0.5 rounded">{`{{${v}}}`}</span>
+                      <span
+                        key={v}
+                        className="text-[10px] bg-sage-50 text-sage-600 px-1.5 py-0.5 rounded"
+                      >{`{{${v}}}`}</span>
                     ))}
                   </div>
                 </div>
@@ -617,7 +858,9 @@ function SetupPage() {
         {/* Step 7: Profile Requirements */}
         {step === 6 && (
           <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
-            <h2 className="text-lg font-serif font-semibold text-slate-900">{t('setup.profile_title')}</h2>
+            <h2 className="text-lg font-serif font-semibold text-slate-900">
+              {t('setup.profile_title')}
+            </h2>
             <p className="text-sm text-slate-500">{t('setup.profile_subtitle')}</p>
 
             {(['basic', 'medical'] as const).map((category) => {
@@ -630,7 +873,10 @@ function SetupPage() {
                   </h3>
                   <div className="border border-slate-100 rounded-xl divide-y">
                     {fields.map((field) => (
-                      <label key={field.key} className="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-slate-50">
+                      <label
+                        key={field.key}
+                        className="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-slate-50"
+                      >
                         <div>
                           <p className="text-sm font-medium">{field.label}</p>
                           <p className="text-xs text-slate-500">{field.type}</p>
@@ -642,7 +888,9 @@ function SetupPage() {
                             if (e.target.checked) {
                               setRequiredProfileFields([...requiredProfileFields, field.key]);
                             } else {
-                              setRequiredProfileFields(requiredProfileFields.filter((k) => k !== field.key));
+                              setRequiredProfileFields(
+                                requiredProfileFields.filter((k) => k !== field.key),
+                              );
                             }
                           }}
                           className="rounded text-sage-600 w-4 h-4"
@@ -662,7 +910,9 @@ function SetupPage() {
         {step === 7 && (
           <div className="space-y-4">
             <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
-              <h2 className="text-lg font-serif font-semibold text-slate-900">{t('setup.customers_title')}</h2>
+              <h2 className="text-lg font-serif font-semibold text-slate-900">
+                {t('setup.customers_title')}
+              </h2>
               <p className="text-sm text-slate-500">{t('setup.customers_subtitle')}</p>
             </div>
 
@@ -677,9 +927,17 @@ function SetupPage() {
                 className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:border-sage-400 transition-colors"
               >
                 <Upload size={20} className="mx-auto text-slate-400 mb-1" />
-                <p className="text-xs text-slate-600">{csvFile ? csvFile.name : t('import.csv_drop_zone')}</p>
+                <p className="text-xs text-slate-600">
+                  {csvFile ? csvFile.name : t('import.csv_drop_zone')}
+                </p>
               </div>
-              <input ref={fileInputRef} type="file" accept=".csv" className="hidden" onChange={(e) => e.target.files?.[0] && handleCsvSelect(e.target.files[0])} />
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".csv"
+                className="hidden"
+                onChange={(e) => e.target.files?.[0] && handleCsvSelect(e.target.files[0])}
+              />
 
               {csvPreview.length > 0 && (
                 <div className="border rounded overflow-auto max-h-32">
@@ -707,14 +965,22 @@ function SetupPage() {
               )}
 
               {csvFile && (
-                <button onClick={importCsv} disabled={csvImporting} className="bg-sage-600 text-white px-3 py-1.5 rounded text-sm hover:bg-sage-700 disabled:opacity-50 flex items-center gap-2">
+                <button
+                  onClick={importCsv}
+                  disabled={csvImporting}
+                  className="bg-sage-600 text-white px-3 py-1.5 rounded text-sm hover:bg-sage-700 disabled:opacity-50 flex items-center gap-2"
+                >
                   {csvImporting && <Loader2 size={14} className="animate-spin" />}
                   {t('import.import_button')}
                 </button>
               )}
               {csvResult && (
                 <p className="text-xs text-green-700 bg-green-50 border border-green-200 rounded p-2">
-                  {t('import.csv_result', { created: csvResult.created, skipped: csvResult.skipped, errors: csvResult.errors })}
+                  {t('import.csv_result', {
+                    created: csvResult.created,
+                    skipped: csvResult.skipped,
+                    errors: csvResult.errors,
+                  })}
                 </p>
               )}
             </div>
@@ -726,16 +992,28 @@ function SetupPage() {
                 <h3 className="font-medium text-sm">{t('import.conversations_title')}</h3>
               </div>
               <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" checked={includeMessages} onChange={(e) => setIncludeMessages(e.target.checked)} className="rounded text-lavender-600" />
+                <input
+                  type="checkbox"
+                  checked={includeMessages}
+                  onChange={(e) => setIncludeMessages(e.target.checked)}
+                  className="rounded text-lavender-600"
+                />
                 <span className="text-xs">{t('import.include_messages')}</span>
               </label>
-              <button onClick={importFromConversations} disabled={convImporting} className="bg-lavender-600 text-white px-3 py-1.5 rounded text-sm hover:bg-lavender-700 disabled:opacity-50 flex items-center gap-2">
+              <button
+                onClick={importFromConversations}
+                disabled={convImporting}
+                className="bg-lavender-600 text-white px-3 py-1.5 rounded text-sm hover:bg-lavender-700 disabled:opacity-50 flex items-center gap-2"
+              >
                 {convImporting && <Loader2 size={14} className="animate-spin" />}
                 {t('import.generate_profiles')}
               </button>
               {convResult && (
                 <p className="text-xs text-green-700 bg-green-50 border border-green-200 rounded p-2">
-                  {t('import.conversations_result', { created: convResult.created, updated: convResult.updated })}
+                  {t('import.conversations_result', {
+                    created: convResult.created,
+                    updated: convResult.updated,
+                  })}
                 </p>
               )}
             </div>
@@ -747,7 +1025,10 @@ function SetupPage() {
                 <h3 className="font-medium text-sm">{t('setup.add_manually')}</h3>
               </div>
               <p className="text-xs text-slate-500">{t('setup.add_manually_desc')}</p>
-              <button onClick={() => router.push('/customers')} className="mt-3 text-sm text-sage-600 hover:text-sage-700 font-medium">
+              <button
+                onClick={() => router.push('/customers')}
+                className="mt-3 text-sm text-sage-600 hover:text-sage-700 font-medium"
+              >
                 {t('setup.go_to_customers')} &rarr;
               </button>
             </div>
@@ -757,7 +1038,9 @@ function SetupPage() {
         {/* Step 9: Test & Finish */}
         {step === 8 && (
           <div className="bg-white rounded-2xl shadow-soft p-6 space-y-6">
-            <h2 className="text-lg font-serif font-semibold text-slate-900">{t('setup.finish_title')}</h2>
+            <h2 className="text-lg font-serif font-semibold text-slate-900">
+              {t('setup.finish_title')}
+            </h2>
             <p className="text-sm text-slate-500">{t('setup.finish_subtitle')}</p>
 
             <div className="grid grid-cols-2 gap-4">
@@ -766,7 +1049,9 @@ function SetupPage() {
                 <p className="text-sm text-slate-500">{t('setup.staff_members')}</p>
               </div>
               <div className="border border-slate-100 rounded-xl p-4">
-                <p className="text-2xl font-serif font-bold text-sage-600">{services.filter((s: any) => s.isActive !== false).length}</p>
+                <p className="text-2xl font-serif font-bold text-sage-600">
+                  {services.filter((s: any) => s.isActive !== false).length}
+                </p>
                 <p className="text-sm text-slate-500">{t('setup.services_count')}</p>
               </div>
               <div className="border border-slate-100 rounded-xl p-4">
@@ -790,7 +1075,9 @@ function SetupPage() {
                 onClick={async () => {
                   try {
                     await api.patch('/business', { packConfig: { setupComplete: true } });
-                  } catch (e) { console.error(e); }
+                  } catch (e) {
+                    console.error(e);
+                  }
                   router.push('/dashboard');
                 }}
                 className="w-full bg-sage-600 text-white rounded-xl py-2.5 text-sm hover:bg-sage-700 font-medium"
@@ -813,7 +1100,10 @@ function SetupPage() {
             <ChevronLeft size={16} /> {t('common.back')}
           </button>
           {step < STEP_KEYS.length - 1 ? (
-            <button onClick={handleNext} className="flex items-center gap-1 bg-sage-600 text-white px-6 py-2 rounded-xl text-sm hover:bg-sage-700">
+            <button
+              onClick={handleNext}
+              className="flex items-center gap-1 bg-sage-600 text-white px-6 py-2 rounded-xl text-sm hover:bg-sage-700"
+            >
               {t('common.next')} <ChevronRight size={16} />
             </button>
           ) : (
@@ -821,7 +1111,9 @@ function SetupPage() {
               onClick={async () => {
                 try {
                   await api.patch('/business', { packConfig: { setupComplete: true } });
-                } catch (e) { console.error(e); }
+                } catch (e) {
+                  console.error(e);
+                }
                 router.push('/dashboard');
               }}
               className="flex items-center gap-1 bg-sage-600 text-white px-6 py-2 rounded-xl text-sm hover:bg-sage-700 transition-colors"

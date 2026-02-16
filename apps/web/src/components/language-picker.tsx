@@ -15,7 +15,9 @@ export function LanguagePicker() {
         className="text-sm bg-transparent border-none text-gray-600 cursor-pointer focus:outline-none py-0"
       >
         {SUPPORTED_LOCALES.map((l) => (
-          <option key={l.code} value={l.code}>{l.name}</option>
+          <option key={l.code} value={l.code}>
+            {l.name}
+          </option>
         ))}
       </select>
     </div>

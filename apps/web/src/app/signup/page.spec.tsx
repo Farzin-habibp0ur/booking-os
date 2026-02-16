@@ -50,7 +50,10 @@ describe('SignupPage', () => {
     render(<SignupPage />);
     await user.type(screen.getByPlaceholderText('Glow Clinic'), 'My Biz');
     await user.type(screen.getByPlaceholderText('Sarah Johnson'), 'John');
-    await user.type(document.querySelector('input[type="email"]') as HTMLInputElement, 'john@test.com');
+    await user.type(
+      document.querySelector('input[type="email"]') as HTMLInputElement,
+      'john@test.com',
+    );
     await user.type(screen.getByPlaceholderText('Minimum 8 characters'), 'password123');
     await user.click(screen.getByRole('button', { name: 'Create account' }));
 
@@ -66,7 +69,10 @@ describe('SignupPage', () => {
     render(<SignupPage />);
     await user.type(screen.getByPlaceholderText('Glow Clinic'), 'My Biz');
     await user.type(screen.getByPlaceholderText('Sarah Johnson'), 'John');
-    await user.type(document.querySelector('input[type="email"]') as HTMLInputElement, 'john@test.com');
+    await user.type(
+      document.querySelector('input[type="email"]') as HTMLInputElement,
+      'john@test.com',
+    );
     await user.type(screen.getByPlaceholderText('Minimum 8 characters'), 'password123');
     await user.click(screen.getByRole('button', { name: 'Create account' }));
 

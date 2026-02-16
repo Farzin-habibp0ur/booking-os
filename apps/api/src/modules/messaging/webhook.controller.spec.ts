@@ -12,20 +12,26 @@ import { createMockPrisma, MockPrisma } from '../../test/mocks';
 
 function buildWhatsAppPayload(externalId: string, from: string, body: string) {
   return {
-    entry: [{
-      changes: [{
-        value: {
-          metadata: { phone_number_id: 'phone1' },
-          messages: [{
-            id: externalId,
-            from,
-            type: 'text',
-            text: { body },
-            timestamp: '1700000000',
-          }],
-        },
-      }],
-    }],
+    entry: [
+      {
+        changes: [
+          {
+            value: {
+              metadata: { phone_number_id: 'phone1' },
+              messages: [
+                {
+                  id: externalId,
+                  from,
+                  type: 'text',
+                  text: { body },
+                  timestamp: '1700000000',
+                },
+              ],
+            },
+          },
+        ],
+      },
+    ],
   };
 }
 
@@ -41,10 +47,7 @@ describe('WebhookController', () => {
   const WEBHOOK_SECRET = 'test-webhook-secret';
 
   function signPayload(payload: any, secret: string): string {
-    return crypto
-      .createHmac('sha256', secret)
-      .update(JSON.stringify(payload))
-      .digest('hex');
+    return crypto.createHmac('sha256', secret).update(JSON.stringify(payload)).digest('hex');
   }
 
   beforeEach(async () => {
@@ -72,7 +75,10 @@ describe('WebhookController', () => {
         { provide: CustomerService, useValue: customerService },
         { provide: ConversationService, useValue: conversationService },
         { provide: InboxGateway, useValue: inboxGateway },
-        { provide: MessagingService, useValue: { getProvider: jest.fn(), getMockProvider: jest.fn() } },
+        {
+          provide: MessagingService,
+          useValue: { getProvider: jest.fn(), getMockProvider: jest.fn() },
+        },
         { provide: ConfigService, useValue: configService },
         { provide: AiService, useValue: aiService },
       ],
@@ -96,17 +102,17 @@ describe('WebhookController', () => {
     it('should reject unsigned requests in production', async () => {
       const body = { from: '+1234567890', body: 'test', externalId: 'ext1' };
 
-      await expect(
-        controller.inbound(body as any, undefined),
-      ).rejects.toThrow('Invalid webhook signature');
+      await expect(controller.inbound(body as any, undefined)).rejects.toThrow(
+        'Invalid webhook signature',
+      );
     });
 
     it('should reject requests with wrong signature', async () => {
       const body = { from: '+1234567890', body: 'test', externalId: 'ext1' };
 
-      await expect(
-        controller.inbound(body as any, 'wrong-signature'),
-      ).rejects.toThrow('Invalid webhook signature');
+      await expect(controller.inbound(body as any, 'wrong-signature')).rejects.toThrow(
+        'Invalid webhook signature',
+      );
     });
 
     it('should accept requests with valid signature', async () => {
@@ -114,9 +120,9 @@ describe('WebhookController', () => {
       const signature = signPayload(body, WEBHOOK_SECRET);
 
       // Will throw because of missing business, but that's after signature check
-      await expect(
-        controller.inbound(body as any, signature),
-      ).rejects.toThrow('Business not found');
+      await expect(controller.inbound(body as any, signature)).rejects.toThrow(
+        'Business not found',
+      );
     });
   });
 
@@ -127,15 +133,15 @@ describe('WebhookController', () => {
     });
 
     it('should reject invalid verify token', () => {
-      expect(() =>
-        controller.whatsappVerify('subscribe', 'wrong-token', '12345'),
-      ).toThrow('Webhook verification failed');
+      expect(() => controller.whatsappVerify('subscribe', 'wrong-token', '12345')).toThrow(
+        'Webhook verification failed',
+      );
     });
 
     it('should reject non-subscribe mode', () => {
-      expect(() =>
-        controller.whatsappVerify('unsubscribe', 'test-verify-token', '12345'),
-      ).toThrow('Webhook verification failed');
+      expect(() => controller.whatsappVerify('unsubscribe', 'test-verify-token', '12345')).toThrow(
+        'Webhook verification failed',
+      );
     });
   });
 
@@ -149,9 +155,9 @@ describe('WebhookController', () => {
 
       const body = { from: '+1234567890', body: 'test', externalId: 'ext1' };
 
-      await expect(
-        controller.inbound(body as any, undefined),
-      ).rejects.toThrow('Invalid webhook signature');
+      await expect(controller.inbound(body as any, undefined)).rejects.toThrow(
+        'Invalid webhook signature',
+      );
     });
   });
 
@@ -184,9 +190,7 @@ describe('WebhookController', () => {
 
       expect(result.status).toBe('EVENT_RECEIVED');
       expect(result.processed).toBe(1);
-      expect(result.results).toEqual([
-        { externalId: 'wamid.123', status: 'processed' },
-      ]);
+      expect(result.results).toEqual([{ externalId: 'wamid.123', status: 'processed' }]);
       expect(prisma.message.create).toHaveBeenCalledTimes(1);
     });
 
@@ -198,9 +202,7 @@ describe('WebhookController', () => {
 
       expect(result.status).toBe('EVENT_RECEIVED');
       expect(result.processed).toBe(0);
-      expect(result.results).toEqual([
-        { externalId: 'wamid.123', status: 'duplicate' },
-      ]);
+      expect(result.results).toEqual([{ externalId: 'wamid.123', status: 'duplicate' }]);
       expect(prisma.message.create).not.toHaveBeenCalled();
     });
 
@@ -220,9 +222,7 @@ describe('WebhookController', () => {
 
       expect(result.status).toBe('EVENT_RECEIVED');
       expect(result.processed).toBe(0);
-      expect(result.results).toEqual([
-        { externalId: 'wamid.123', status: 'duplicate' },
-      ]);
+      expect(result.results).toEqual([{ externalId: 'wamid.123', status: 'duplicate' }]);
     });
 
     it('should continue processing remaining messages when one fails', async () => {
@@ -239,17 +239,33 @@ describe('WebhookController', () => {
       (prisma.business.findFirst as jest.Mock).mockResolvedValue(null);
 
       const payload = {
-        entry: [{
-          changes: [{
-            value: {
-              metadata: { phone_number_id: 'phone1' },
-              messages: [
-                { id: 'wamid.1', from: '+111', type: 'text', text: { body: 'msg1' }, timestamp: '1700000000' },
-                { id: 'wamid.2', from: '+222', type: 'text', text: { body: 'msg2' }, timestamp: '1700000001' },
-              ],
-            },
-          }],
-        }],
+        entry: [
+          {
+            changes: [
+              {
+                value: {
+                  metadata: { phone_number_id: 'phone1' },
+                  messages: [
+                    {
+                      id: 'wamid.1',
+                      from: '+111',
+                      type: 'text',
+                      text: { body: 'msg1' },
+                      timestamp: '1700000000',
+                    },
+                    {
+                      id: 'wamid.2',
+                      from: '+222',
+                      type: 'text',
+                      text: { body: 'msg2' },
+                      timestamp: '1700000001',
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        ],
       };
 
       const result = await controller.whatsappInbound(payload);
@@ -263,7 +279,7 @@ describe('WebhookController', () => {
     it('should return structured JSON response with per-message status', async () => {
       // First message: new, Second message: duplicate
       (prisma.message.findUnique as jest.Mock)
-        .mockResolvedValueOnce(null)       // first: not found
+        .mockResolvedValueOnce(null) // first: not found
         .mockResolvedValueOnce(mockMessage); // second: found (duplicate)
       (prisma.business.findFirst as jest.Mock).mockResolvedValue(mockBusiness);
       customerService.findOrCreateByPhone.mockResolvedValue(mockCustomer);
@@ -272,17 +288,33 @@ describe('WebhookController', () => {
       (prisma.conversation.update as jest.Mock).mockResolvedValue(mockUpdatedConversation);
 
       const payload = {
-        entry: [{
-          changes: [{
-            value: {
-              metadata: { phone_number_id: 'phone1' },
-              messages: [
-                { id: 'wamid.new', from: '+111', type: 'text', text: { body: 'new msg' }, timestamp: '1700000000' },
-                { id: 'wamid.dup', from: '+222', type: 'text', text: { body: 'dup msg' }, timestamp: '1700000001' },
-              ],
-            },
-          }],
-        }],
+        entry: [
+          {
+            changes: [
+              {
+                value: {
+                  metadata: { phone_number_id: 'phone1' },
+                  messages: [
+                    {
+                      id: 'wamid.new',
+                      from: '+111',
+                      type: 'text',
+                      text: { body: 'new msg' },
+                      timestamp: '1700000000',
+                    },
+                    {
+                      id: 'wamid.dup',
+                      from: '+222',
+                      type: 'text',
+                      text: { body: 'dup msg' },
+                      timestamp: '1700000001',
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        ],
       };
 
       const result = await controller.whatsappInbound(payload);

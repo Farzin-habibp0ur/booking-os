@@ -15,8 +15,24 @@ describe('CalendarSyncService', () => {
   let service: CalendarSyncService;
   let prisma: ReturnType<typeof createMockPrisma>;
   let jwtService: { sign: jest.Mock; verify: jest.Mock };
-  let googleProvider: { isConfigured: jest.Mock; getAuthUrl: jest.Mock; exchangeCode: jest.Mock; createEvent: jest.Mock; updateEvent: jest.Mock; deleteEvent: jest.Mock; refreshAccessToken: jest.Mock };
-  let outlookProvider: { isConfigured: jest.Mock; getAuthUrl: jest.Mock; exchangeCode: jest.Mock; createEvent: jest.Mock; updateEvent: jest.Mock; deleteEvent: jest.Mock; refreshAccessToken: jest.Mock };
+  let googleProvider: {
+    isConfigured: jest.Mock;
+    getAuthUrl: jest.Mock;
+    exchangeCode: jest.Mock;
+    createEvent: jest.Mock;
+    updateEvent: jest.Mock;
+    deleteEvent: jest.Mock;
+    refreshAccessToken: jest.Mock;
+  };
+  let outlookProvider: {
+    isConfigured: jest.Mock;
+    getAuthUrl: jest.Mock;
+    exchangeCode: jest.Mock;
+    createEvent: jest.Mock;
+    updateEvent: jest.Mock;
+    deleteEvent: jest.Mock;
+    refreshAccessToken: jest.Mock;
+  };
 
   beforeEach(async () => {
     prisma = createMockPrisma();
@@ -62,7 +78,10 @@ describe('CalendarSyncService', () => {
         CalendarSyncService,
         { provide: PrismaService, useValue: prisma },
         { provide: JwtService, useValue: jwtService },
-        { provide: ConfigService, useValue: { get: jest.fn((key: string, def?: string) => def || '') } },
+        {
+          provide: ConfigService,
+          useValue: { get: jest.fn((key: string, def?: string) => def || '') },
+        },
         { provide: GoogleCalendarProvider, useValue: googleProvider },
         { provide: OutlookCalendarProvider, useValue: outlookProvider },
       ],

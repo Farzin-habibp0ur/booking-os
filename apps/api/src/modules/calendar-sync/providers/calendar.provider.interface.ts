@@ -8,7 +8,10 @@ export interface CalendarEvent {
 
 export interface CalendarProvider {
   getAuthUrl(redirectUri: string, state: string): string;
-  exchangeCode(code: string, redirectUri: string): Promise<{
+  exchangeCode(
+    code: string,
+    redirectUri: string,
+  ): Promise<{
     accessToken: string;
     refreshToken: string;
     expiresAt: Date;
@@ -18,6 +21,11 @@ export interface CalendarProvider {
     expiresAt: Date;
   }>;
   createEvent(accessToken: string, calendarId: string, event: CalendarEvent): Promise<string>;
-  updateEvent(accessToken: string, calendarId: string, eventId: string, event: CalendarEvent): Promise<void>;
+  updateEvent(
+    accessToken: string,
+    calendarId: string,
+    eventId: string,
+    event: CalendarEvent,
+  ): Promise<void>;
   deleteEvent(accessToken: string, calendarId: string, eventId: string): Promise<void>;
 }

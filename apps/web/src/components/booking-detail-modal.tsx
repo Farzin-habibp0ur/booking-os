@@ -23,9 +23,17 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }
   NO_SHOW: { label: 'No Show', color: 'text-red-700', bg: 'bg-red-50' },
 };
 
-export default function BookingDetailModal({ booking, isOpen, onClose, onUpdated, onReschedule }: BookingDetailModalProps) {
+export default function BookingDetailModal({
+  booking,
+  isOpen,
+  onClose,
+  onUpdated,
+  onReschedule,
+}: BookingDetailModalProps) {
   const [updating, setUpdating] = useState('');
-  const [confirmAction, setConfirmAction] = useState<{ action: string; label: string } | null>(null);
+  const [confirmAction, setConfirmAction] = useState<{ action: string; label: string } | null>(
+    null,
+  );
   const [cancelScope, setCancelScope] = useState<'single' | 'future' | 'all' | null>(null);
   const { t } = useI18n();
 
@@ -129,7 +137,12 @@ export default function BookingDetailModal({ booking, isOpen, onClose, onUpdated
                 <button
                   onClick={() => updateStatus(confirmAction.action)}
                   disabled={!!updating}
-                  className={cn('px-4 py-2 rounded-xl text-sm text-white', confirmAction.action === 'CANCELLED' ? 'bg-red-600 hover:bg-red-700' : 'bg-orange-500 hover:bg-orange-600')}
+                  className={cn(
+                    'px-4 py-2 rounded-xl text-sm text-white',
+                    confirmAction.action === 'CANCELLED'
+                      ? 'bg-red-600 hover:bg-red-700'
+                      : 'bg-orange-500 hover:bg-orange-600',
+                  )}
                 >
                   {updating ? 'Updating...' : confirmAction.label}
                 </button>
@@ -184,8 +197,16 @@ export default function BookingDetailModal({ booking, isOpen, onClose, onUpdated
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-slate-100">
           <div className="flex items-center gap-3">
-            <h2 className="text-lg font-serif font-semibold text-slate-900">{booking.customer?.name}</h2>
-            <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium', statusConfig.bg, statusConfig.color)}>
+            <h2 className="text-lg font-serif font-semibold text-slate-900">
+              {booking.customer?.name}
+            </h2>
+            <span
+              className={cn(
+                'text-xs px-2 py-0.5 rounded-full font-medium',
+                statusConfig.bg,
+                statusConfig.color,
+              )}
+            >
               {statusConfig.label}
             </span>
             {isRecurring && (
@@ -209,7 +230,10 @@ export default function BookingDetailModal({ booking, isOpen, onClose, onUpdated
               <div>
                 <p className="text-xs text-slate-500">Service</p>
                 <p className="text-sm font-medium">{booking.service?.name}</p>
-                <p className="text-xs text-slate-400">{booking.service?.durationMins} min{booking.service?.price > 0 ? ` · $${booking.service.price}` : ''}</p>
+                <p className="text-xs text-slate-400">
+                  {booking.service?.durationMins} min
+                  {booking.service?.price > 0 ? ` · $${booking.service.price}` : ''}
+                </p>
               </div>
             </div>
             <div className="flex items-start gap-2">
@@ -224,7 +248,11 @@ export default function BookingDetailModal({ booking, isOpen, onClose, onUpdated
               <div>
                 <p className="text-xs text-slate-500">Date</p>
                 <p className="text-sm font-medium">
-                  {new Date(booking.startTime).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                  {new Date(booking.startTime).toLocaleDateString('en-US', {
+                    weekday: 'short',
+                    month: 'short',
+                    day: 'numeric',
+                  })}
                 </p>
               </div>
             </div>
@@ -233,9 +261,15 @@ export default function BookingDetailModal({ booking, isOpen, onClose, onUpdated
               <div>
                 <p className="text-xs text-slate-500">Time</p>
                 <p className="text-sm font-medium">
-                  {new Date(booking.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  {new Date(booking.startTime).toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
                   {' – '}
-                  {new Date(booking.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  {new Date(booking.endTime).toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
                 </p>
               </div>
             </div>
@@ -273,11 +307,18 @@ export default function BookingDetailModal({ booking, isOpen, onClose, onUpdated
               </div>
               {booking.status !== 'PENDING' && booking.status !== 'CONFIRMED' && (
                 <div className="flex items-center gap-2 text-xs text-slate-500">
-                  <div className={cn('w-1.5 h-1.5 rounded-full',
-                    booking.status === 'COMPLETED' ? 'bg-sage-500' :
-                    booking.status === 'CANCELLED' ? 'bg-red-500' :
-                    booking.status === 'NO_SHOW' ? 'bg-red-400' : 'bg-amber-500'
-                  )} />
+                  <div
+                    className={cn(
+                      'w-1.5 h-1.5 rounded-full',
+                      booking.status === 'COMPLETED'
+                        ? 'bg-sage-500'
+                        : booking.status === 'CANCELLED'
+                          ? 'bg-red-500'
+                          : booking.status === 'NO_SHOW'
+                            ? 'bg-red-400'
+                            : 'bg-amber-500',
+                    )}
+                  />
                   {statusConfig.label} · {new Date(booking.updatedAt).toLocaleString()}
                 </div>
               )}
@@ -295,7 +336,10 @@ export default function BookingDetailModal({ booking, isOpen, onClose, onUpdated
                   key={action.status}
                   onClick={() => handleAction(action.status, action.label)}
                   disabled={!!updating}
-                  className={cn('flex-1 py-2 rounded-xl text-sm font-medium', variantClasses[action.variant])}
+                  className={cn(
+                    'flex-1 py-2 rounded-xl text-sm font-medium',
+                    variantClasses[action.variant],
+                  )}
                 >
                   {updating === action.status ? 'Updating...' : action.label}
                 </button>

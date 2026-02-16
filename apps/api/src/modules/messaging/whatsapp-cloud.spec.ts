@@ -150,9 +150,7 @@ describe('WhatsAppCloudProvider', () => {
               {
                 value: {
                   metadata: { phone_number_id: 'pn123' },
-                  messages: [
-                    { id: 'wamid.img1', from: '+1234567890', type: 'image', image: {} },
-                  ],
+                  messages: [{ id: 'wamid.img1', from: '+1234567890', type: 'image', image: {} }],
                 },
               },
             ],

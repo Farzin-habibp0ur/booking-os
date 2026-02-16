@@ -1,4 +1,13 @@
-import { Controller, Get, Patch, Post, Body, Param, UseGuards, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Patch,
+  Post,
+  Body,
+  Param,
+  UseGuards,
+  BadRequestException,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { TenantGuard } from '../../common/tenant.guard';
 import { BusinessId, CurrentUser } from '../../common/decorators';
@@ -39,33 +48,31 @@ export class AiController {
   @Patch('settings')
   async updateSettings(
     @BusinessId() businessId: string,
-    @Body() body: { enabled?: boolean; autoReplySuggestions?: boolean; bookingAssistant?: boolean; personality?: string; autoReply?: { enabled: boolean; mode: 'all' | 'selected'; selectedIntents: string[] } },
+    @Body()
+    body: {
+      enabled?: boolean;
+      autoReplySuggestions?: boolean;
+      bookingAssistant?: boolean;
+      personality?: string;
+      autoReply?: { enabled: boolean; mode: 'all' | 'selected'; selectedIntents: string[] };
+    },
   ) {
     return this.businessService.updateAiSettings(businessId, body);
   }
 
   @Post('conversations/:id/summary')
-  async generateSummary(
-    @BusinessId() businessId: string,
-    @Param('id') conversationId: string,
-  ) {
+  async generateSummary(@BusinessId() businessId: string, @Param('id') conversationId: string) {
     const summary = await this.aiService.generateAndStoreSummary(conversationId);
     return { summary };
   }
 
   @Post('conversations/:id/booking-confirm')
-  async confirmBooking(
-    @BusinessId() businessId: string,
-    @Param('id') conversationId: string,
-  ) {
+  async confirmBooking(@BusinessId() businessId: string, @Param('id') conversationId: string) {
     return this.aiService.confirmBooking(businessId, conversationId);
   }
 
   @Post('conversations/:id/booking-cancel')
-  async cancelBooking(
-    @BusinessId() businessId: string,
-    @Param('id') conversationId: string,
-  ) {
+  async cancelBooking(@BusinessId() businessId: string, @Param('id') conversationId: string) {
     await this.aiService.clearBookingState(businessId, conversationId);
     return { ok: true };
   }
@@ -79,36 +86,24 @@ export class AiController {
   }
 
   @Post('conversations/:id/cancel-dismiss')
-  async dismissCancel(
-    @BusinessId() businessId: string,
-    @Param('id') conversationId: string,
-  ) {
+  async dismissCancel(@BusinessId() businessId: string, @Param('id') conversationId: string) {
     await this.aiService.clearCancelState(businessId, conversationId);
     return { ok: true };
   }
 
   @Post('conversations/:id/reschedule-confirm')
-  async confirmReschedule(
-    @BusinessId() businessId: string,
-    @Param('id') conversationId: string,
-  ) {
+  async confirmReschedule(@BusinessId() businessId: string, @Param('id') conversationId: string) {
     return this.aiService.confirmReschedule(businessId, conversationId);
   }
 
   @Post('conversations/:id/reschedule-dismiss')
-  async dismissReschedule(
-    @BusinessId() businessId: string,
-    @Param('id') conversationId: string,
-  ) {
+  async dismissReschedule(@BusinessId() businessId: string, @Param('id') conversationId: string) {
     await this.aiService.clearRescheduleState(businessId, conversationId);
     return { ok: true };
   }
 
   @Post('conversations/:id/resume-auto-reply')
-  async resumeAutoReply(
-    @BusinessId() businessId: string,
-    @Param('id') conversationId: string,
-  ) {
+  async resumeAutoReply(@BusinessId() businessId: string, @Param('id') conversationId: string) {
     await this.aiService.resumeAutoReply(businessId, conversationId);
     return { ok: true };
   }

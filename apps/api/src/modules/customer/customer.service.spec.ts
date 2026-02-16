@@ -156,18 +156,14 @@ describe('CustomerService', () => {
     it('skips duplicates', async () => {
       prisma.customer.findFirst.mockResolvedValue({ id: 'existing' } as any);
 
-      const result = await customerService.bulkCreate('biz1', [
-        { name: 'A', phone: '+1' },
-      ]);
+      const result = await customerService.bulkCreate('biz1', [{ name: 'A', phone: '+1' }]);
 
       expect(result).toEqual({ created: 0, skipped: 1, errors: 0 });
       expect(prisma.customer.create).not.toHaveBeenCalled();
     });
 
     it('errors on missing phone', async () => {
-      const result = await customerService.bulkCreate('biz1', [
-        { name: 'A', phone: '' },
-      ]);
+      const result = await customerService.bulkCreate('biz1', [{ name: 'A', phone: '' }]);
 
       expect(result).toEqual({ created: 0, skipped: 0, errors: 1 });
     });

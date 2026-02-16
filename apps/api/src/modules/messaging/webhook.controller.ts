@@ -1,4 +1,17 @@
-import { Controller, Post, Get, Body, Query, Headers, RawBody, ForbiddenException, BadRequestException, Inject, forwardRef, Logger } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  Query,
+  Headers,
+  RawBody,
+  ForbiddenException,
+  BadRequestException,
+  Inject,
+  forwardRef,
+  Logger,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
 import { PrismaService } from '../../common/prisma.service';
@@ -32,10 +45,7 @@ export class WebhookController {
     }
     if (!signature) return false;
 
-    const expected = crypto
-      .createHmac('sha256', secret)
-      .update(body)
-      .digest('hex');
+    const expected = crypto.createHmac('sha256', secret).update(body).digest('hex');
     const sigBuf = Buffer.from(signature);
     const expBuf = Buffer.from(expected);
     if (sigBuf.length !== expBuf.length) return false;
@@ -65,7 +75,12 @@ export class WebhookController {
 
     for (const msg of messages) {
       try {
-        const result = await this.processInboundMessage(msg.from, msg.body, msg.externalId, undefined);
+        const result = await this.processInboundMessage(
+          msg.from,
+          msg.body,
+          msg.externalId,
+          undefined,
+        );
         results.push({
           externalId: msg.externalId,
           status: result.duplicate ? 'duplicate' : 'processed',
@@ -116,7 +131,11 @@ export class WebhookController {
     if (!business) throw new BadRequestException('No business found');
 
     const customer = await this.customerService.findOrCreateByPhone(business.id, from, from);
-    const conversation = await this.conversationService.findOrCreate(business.id, customer.id, 'WHATSAPP');
+    const conversation = await this.conversationService.findOrCreate(
+      business.id,
+      customer.id,
+      'WHATSAPP',
+    );
 
     let message;
     try {

@@ -20,20 +20,19 @@ describe('BookingAssistant', () => {
     claude = createMockClaudeClient();
 
     const module = await Test.createTestingModule({
-      providers: [
-        BookingAssistant,
-        { provide: ClaudeClient, useValue: claude },
-      ],
+      providers: [BookingAssistant, { provide: ClaudeClient, useValue: claude }],
     }).compile();
 
     assistant = module.get(BookingAssistant);
   });
 
   it('starts at IDENTIFY_SERVICE with no current state', async () => {
-    claude.complete.mockResolvedValue(JSON.stringify({
-      state: 'IDENTIFY_SERVICE',
-      suggestedResponse: 'What service would you like?',
-    }));
+    claude.complete.mockResolvedValue(
+      JSON.stringify({
+        state: 'IDENTIFY_SERVICE',
+        suggestedResponse: 'What service would you like?',
+      }),
+    );
 
     const result = await assistant.process('I want to book something', null, baseContext);
     expect(result.state).toBe('IDENTIFY_SERVICE');
@@ -41,12 +40,14 @@ describe('BookingAssistant', () => {
   });
 
   it('transitions to IDENTIFY_DATE when service matched', async () => {
-    claude.complete.mockResolvedValue(JSON.stringify({
-      state: 'IDENTIFY_DATE',
-      serviceId: 'svc1',
-      serviceName: 'Botox',
-      suggestedResponse: 'Great choice! When would you like?',
-    }));
+    claude.complete.mockResolvedValue(
+      JSON.stringify({
+        state: 'IDENTIFY_DATE',
+        serviceId: 'svc1',
+        serviceName: 'Botox',
+        suggestedResponse: 'Great choice! When would you like?',
+      }),
+    );
 
     const result = await assistant.process('I want Botox', null, baseContext);
     expect(result.state).toBe('IDENTIFY_DATE');
@@ -61,12 +62,14 @@ describe('BookingAssistant', () => {
       serviceName: 'Botox',
     };
 
-    claude.complete.mockResolvedValue(JSON.stringify({
-      state: 'IDENTIFY_TIME',
-      date: '2026-03-01',
-      suggestedResponse: 'Here are available times...',
-      availableOptions: ['09:00', '10:00', '14:00'],
-    }));
+    claude.complete.mockResolvedValue(
+      JSON.stringify({
+        state: 'IDENTIFY_TIME',
+        date: '2026-03-01',
+        suggestedResponse: 'Here are available times...',
+        availableOptions: ['09:00', '10:00', '14:00'],
+      }),
+    );
 
     const result = await assistant.process('March 1st', currentState, baseContext);
     expect(result.state).toBe('IDENTIFY_TIME');
@@ -82,12 +85,14 @@ describe('BookingAssistant', () => {
       date: '2026-03-01',
     };
 
-    claude.complete.mockResolvedValue(JSON.stringify({
-      state: 'CONFIRM',
-      time: '14:00',
-      slotIso: '2026-03-01T14:00:00',
-      suggestedResponse: 'Shall I confirm Botox on March 1st at 2pm?',
-    }));
+    claude.complete.mockResolvedValue(
+      JSON.stringify({
+        state: 'CONFIRM',
+        time: '14:00',
+        slotIso: '2026-03-01T14:00:00',
+        suggestedResponse: 'Shall I confirm Botox on March 1st at 2pm?',
+      }),
+    );
 
     const result = await assistant.process('2pm please', currentState, baseContext);
     expect(result.state).toBe('CONFIRM');
@@ -96,21 +101,19 @@ describe('BookingAssistant', () => {
   });
 
   it('skips to CONFIRM when all data provided at once', async () => {
-    claude.complete.mockResolvedValue(JSON.stringify({
-      state: 'CONFIRM',
-      serviceId: 'svc1',
-      serviceName: 'Botox',
-      date: '2026-03-01',
-      time: '14:00',
-      slotIso: '2026-03-01T14:00:00',
-      suggestedResponse: 'Confirm Botox March 1st at 2pm?',
-    }));
-
-    const result = await assistant.process(
-      'Book Botox for March 1st at 2pm',
-      null,
-      baseContext,
+    claude.complete.mockResolvedValue(
+      JSON.stringify({
+        state: 'CONFIRM',
+        serviceId: 'svc1',
+        serviceName: 'Botox',
+        date: '2026-03-01',
+        time: '14:00',
+        slotIso: '2026-03-01T14:00:00',
+        suggestedResponse: 'Confirm Botox March 1st at 2pm?',
+      }),
     );
+
+    const result = await assistant.process('Book Botox for March 1st at 2pm', null, baseContext);
     expect(result.state).toBe('CONFIRM');
     expect(result.serviceId).toBe('svc1');
     expect(result.date).toBe('2026-03-01');
@@ -126,11 +129,13 @@ describe('BookingAssistant', () => {
       staffName: 'Dr. Smith',
     };
 
-    claude.complete.mockResolvedValue(JSON.stringify({
-      state: 'IDENTIFY_TIME',
-      date: '2026-03-01',
-      suggestedResponse: 'Pick a time',
-    }));
+    claude.complete.mockResolvedValue(
+      JSON.stringify({
+        state: 'IDENTIFY_TIME',
+        date: '2026-03-01',
+        suggestedResponse: 'Pick a time',
+      }),
+    );
 
     const result = await assistant.process('March 1st', currentState, baseContext);
     expect(result.serviceId).toBe('svc1');
@@ -140,10 +145,12 @@ describe('BookingAssistant', () => {
   });
 
   it('uses sonnet model with 1024 max tokens', async () => {
-    claude.complete.mockResolvedValue(JSON.stringify({
-      state: 'IDENTIFY_SERVICE',
-      suggestedResponse: 'What service?',
-    }));
+    claude.complete.mockResolvedValue(
+      JSON.stringify({
+        state: 'IDENTIFY_SERVICE',
+        suggestedResponse: 'What service?',
+      }),
+    );
 
     await assistant.process('Hi', null, baseContext);
 
@@ -160,10 +167,12 @@ describe('BookingAssistant', () => {
       { time: '2026-03-01T09:00:00', display: '9:00 AM', staffId: 's1', staffName: 'Dr. Smith' },
     ];
 
-    claude.complete.mockResolvedValue(JSON.stringify({
-      state: 'IDENTIFY_TIME',
-      suggestedResponse: 'Here are available times',
-    }));
+    claude.complete.mockResolvedValue(
+      JSON.stringify({
+        state: 'IDENTIFY_TIME',
+        suggestedResponse: 'Here are available times',
+      }),
+    );
 
     await assistant.process('March 1st', null, { ...baseContext, availableSlots: slots });
 

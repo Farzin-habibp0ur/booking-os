@@ -11,10 +11,7 @@ describe('ConversationService', () => {
     prisma = createMockPrisma();
 
     const module = await Test.createTestingModule({
-      providers: [
-        ConversationService,
-        { provide: PrismaService, useValue: prisma },
-      ],
+      providers: [ConversationService, { provide: PrismaService, useValue: prisma }],
     }).compile();
 
     conversationService = module.get(ConversationService);
@@ -65,7 +62,9 @@ describe('ConversationService', () => {
     it('updates status to SNOOZED with snoozedUntil date', async () => {
       const until = new Date('2026-03-01T12:00:00Z');
       prisma.conversation.update.mockResolvedValue({
-        id: 'conv1', status: 'SNOOZED', snoozedUntil: until,
+        id: 'conv1',
+        status: 'SNOOZED',
+        snoozedUntil: until,
       } as any);
 
       const result = await conversationService.snooze('biz1', 'conv1', until);
@@ -153,8 +152,9 @@ describe('ConversationService', () => {
     it('throws when conversation not found', async () => {
       prisma.conversation.findFirst.mockResolvedValue(null);
 
-      await expect(conversationService.addNote('biz1', 'conv1', 'staff1', 'text'))
-        .rejects.toThrow('Conversation not found');
+      await expect(conversationService.addNote('biz1', 'conv1', 'staff1', 'text')).rejects.toThrow(
+        'Conversation not found',
+      );
     });
   });
 
@@ -173,15 +173,17 @@ describe('ConversationService', () => {
     it('throws when conversation not found', async () => {
       prisma.conversation.findFirst.mockResolvedValue(null);
 
-      await expect(conversationService.deleteNote('biz1', 'conv1', 'n1'))
-        .rejects.toThrow('Conversation not found');
+      await expect(conversationService.deleteNote('biz1', 'conv1', 'n1')).rejects.toThrow(
+        'Conversation not found',
+      );
     });
   });
 
   describe('updateTags', () => {
     it('updates tags array', async () => {
       prisma.conversation.update.mockResolvedValue({
-        id: 'conv1', tags: ['vip', 'new'],
+        id: 'conv1',
+        tags: ['vip', 'new'],
       } as any);
 
       const result = await conversationService.updateTags('biz1', 'conv1', ['vip', 'new']);

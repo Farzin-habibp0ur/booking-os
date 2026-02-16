@@ -48,11 +48,18 @@ export class CustomerService {
     return customer;
   }
 
-  async create(businessId: string, data: { name: string; phone: string; email?: string; tags?: string[]; customFields?: any }) {
+  async create(
+    businessId: string,
+    data: { name: string; phone: string; email?: string; tags?: string[]; customFields?: any },
+  ) {
     return this.prisma.customer.create({ data: { businessId, ...data } });
   }
 
-  async update(businessId: string, id: string, data: { name?: string; phone?: string; email?: string; tags?: string[]; customFields?: any }) {
+  async update(
+    businessId: string,
+    id: string,
+    data: { name?: string; phone?: string; email?: string; tags?: string[]; customFields?: any },
+  ) {
     return this.prisma.customer.update({ where: { id, businessId }, data });
   }
 
@@ -74,11 +81,17 @@ export class CustomerService {
 
     for (const c of customers) {
       try {
-        if (!c.phone) { errors++; continue; }
+        if (!c.phone) {
+          errors++;
+          continue;
+        }
         const existing = await this.prisma.customer.findFirst({
           where: { businessId, phone: c.phone },
         });
-        if (existing) { skipped++; continue; }
+        if (existing) {
+          skipped++;
+          continue;
+        }
         await this.prisma.customer.create({
           data: {
             businessId,
@@ -109,9 +122,7 @@ export class CustomerService {
       where: { businessId },
       include: {
         customer: true,
-        messages: includeMessages
-          ? { orderBy: { createdAt: 'asc' as const }, take: 50 }
-          : false,
+        messages: includeMessages ? { orderBy: { createdAt: 'asc' as const }, take: 50 } : false,
       },
     });
 

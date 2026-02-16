@@ -53,7 +53,10 @@ export class ClaudeClient {
       const textBlock = response.content.find((b) => b.type === 'text');
       let text = textBlock?.text || '';
       // Strip markdown code fences if present
-      text = text.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim();
+      text = text
+        .replace(/^```(?:json)?\s*\n?/i, '')
+        .replace(/\n?```\s*$/i, '')
+        .trim();
       return text;
     } catch (error: any) {
       this.logger.error(`Claude API error: ${error.message}`);

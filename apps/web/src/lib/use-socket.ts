@@ -38,7 +38,7 @@ export function useSocket(events: Record<string, EventHandler>) {
         const wrapped = (data: any) => handlersRef.current[event]?.(data);
         socket.on(event, wrapped);
         return [event, wrapped];
-      }
+      },
     );
 
     return () => {

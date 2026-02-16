@@ -47,7 +47,11 @@ export class OutlookCalendarProvider implements CalendarProvider {
       throw new Error('Failed to exchange Outlook auth code');
     }
 
-    const data = (await res.json()) as { access_token: string; refresh_token: string; expires_in: number };
+    const data = (await res.json()) as {
+      access_token: string;
+      refresh_token: string;
+      expires_in: number;
+    };
     return {
       accessToken: data.access_token,
       refreshToken: data.refresh_token,
@@ -81,7 +85,11 @@ export class OutlookCalendarProvider implements CalendarProvider {
     };
   }
 
-  async createEvent(accessToken: string, _calendarId: string, event: CalendarEvent): Promise<string> {
+  async createEvent(
+    accessToken: string,
+    _calendarId: string,
+    event: CalendarEvent,
+  ): Promise<string> {
     const res = await fetch('https://graph.microsoft.com/v1.0/me/events', {
       method: 'POST',
       headers: {
@@ -107,21 +115,29 @@ export class OutlookCalendarProvider implements CalendarProvider {
     return data.id;
   }
 
-  async updateEvent(accessToken: string, _calendarId: string, eventId: string, event: CalendarEvent): Promise<void> {
-    const res = await fetch(`https://graph.microsoft.com/v1.0/me/events/${encodeURIComponent(eventId)}`, {
-      method: 'PATCH',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
+  async updateEvent(
+    accessToken: string,
+    _calendarId: string,
+    eventId: string,
+    event: CalendarEvent,
+  ): Promise<void> {
+    const res = await fetch(
+      `https://graph.microsoft.com/v1.0/me/events/${encodeURIComponent(eventId)}`,
+      {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          subject: event.summary,
+          body: { contentType: 'text', content: event.description || '' },
+          start: { dateTime: event.startTime.toISOString(), timeZone: 'UTC' },
+          end: { dateTime: event.endTime.toISOString(), timeZone: 'UTC' },
+          location: event.location ? { displayName: event.location } : undefined,
+        }),
       },
-      body: JSON.stringify({
-        subject: event.summary,
-        body: { contentType: 'text', content: event.description || '' },
-        start: { dateTime: event.startTime.toISOString(), timeZone: 'UTC' },
-        end: { dateTime: event.endTime.toISOString(), timeZone: 'UTC' },
-        location: event.location ? { displayName: event.location } : undefined,
-      }),
-    });
+    );
 
     if (!res.ok) {
       const err = await res.text();
@@ -131,10 +147,13 @@ export class OutlookCalendarProvider implements CalendarProvider {
   }
 
   async deleteEvent(accessToken: string, _calendarId: string, eventId: string): Promise<void> {
-    const res = await fetch(`https://graph.microsoft.com/v1.0/me/events/${encodeURIComponent(eventId)}`, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
+    const res = await fetch(
+      `https://graph.microsoft.com/v1.0/me/events/${encodeURIComponent(eventId)}`,
+      {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${accessToken}` },
+      },
+    );
 
     if (!res.ok && res.status !== 404) {
       const err = await res.text();

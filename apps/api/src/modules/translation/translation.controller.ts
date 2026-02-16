@@ -11,18 +11,12 @@ export class TranslationController {
   constructor(private translationService: TranslationService) {}
 
   @Get()
-  getOverrides(
-    @BusinessId() businessId: string,
-    @Query('locale') locale: string,
-  ) {
+  getOverrides(@BusinessId() businessId: string, @Query('locale') locale: string) {
     return this.translationService.getOverrides(businessId, locale || 'en');
   }
 
   @Get('keys')
-  getAllKeys(
-    @BusinessId() businessId: string,
-    @Query('locale') locale: string,
-  ) {
+  getAllKeys(@BusinessId() businessId: string, @Query('locale') locale: string) {
     return this.translationService.getAllKeys(businessId, locale || 'en');
   }
 

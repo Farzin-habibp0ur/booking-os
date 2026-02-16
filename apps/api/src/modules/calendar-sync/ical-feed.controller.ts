@@ -7,10 +7,7 @@ export class IcalFeedController {
   constructor(private calendarSyncService: CalendarSyncService) {}
 
   @Get(':token.ics')
-  async getIcalFeed(
-    @Param('token') token: string,
-    @Res() res: Response,
-  ) {
+  async getIcalFeed(@Param('token') token: string, @Res() res: Response) {
     const feed = await this.calendarSyncService.generateIcalFeed(token);
     if (!feed) {
       throw new NotFoundException('Feed not found');

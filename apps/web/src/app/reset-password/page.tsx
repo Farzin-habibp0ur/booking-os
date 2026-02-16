@@ -16,7 +16,10 @@ function ResetPasswordForm() {
 
   if (!token) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#FCFCFD' }}>
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ backgroundColor: '#FCFCFD' }}
+      >
         <div className="bg-white p-8 rounded-3xl shadow-soft w-full max-w-md text-center">
           <h1 className="text-2xl font-serif font-semibold text-slate-900 mb-2">Invalid link</h1>
           <p className="text-slate-500 mb-4">This password reset link is invalid or has expired.</p>
@@ -47,9 +50,14 @@ function ResetPasswordForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#FCFCFD' }}>
+    <div
+      className="min-h-screen flex items-center justify-center"
+      style={{ backgroundColor: '#FCFCFD' }}
+    >
       <div className="bg-white p-8 rounded-3xl shadow-soft w-full max-w-md">
-        <h1 className="text-2xl font-serif font-semibold text-slate-900 text-center mb-2">Set new password</h1>
+        <h1 className="text-2xl font-serif font-semibold text-slate-900 text-center mb-2">
+          Set new password
+        </h1>
         <p className="text-slate-500 text-center mb-6">Enter your new password below.</p>
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm">{error}</div>}
@@ -91,7 +99,16 @@ function ResetPasswordForm() {
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#FCFCFD' }}><p className="text-slate-400">Loading...</p></div>}>
+    <Suspense
+      fallback={
+        <div
+          className="min-h-screen flex items-center justify-center"
+          style={{ backgroundColor: '#FCFCFD' }}
+        >
+          <p className="text-slate-400">Loading...</p>
+        </div>
+      }
+    >
       <ResetPasswordForm />
     </Suspense>
   );

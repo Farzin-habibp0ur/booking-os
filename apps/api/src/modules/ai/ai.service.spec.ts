@@ -242,7 +242,13 @@ describe('AiService', () => {
     };
 
     const mockMessages = [
-      { id: 'msg1', conversationId: 'conv1', content: 'Hello', direction: 'INBOUND', createdAt: new Date() },
+      {
+        id: 'msg1',
+        conversationId: 'conv1',
+        content: 'Hello',
+        direction: 'INBOUND',
+        createdAt: new Date(),
+      },
     ];
 
     beforeEach(() => {
@@ -313,7 +319,7 @@ describe('AiService', () => {
 
       // Check that upsert was called (fire-and-forget, but we can verify it was invoked)
       // Wait a tick for the async upsert
-      await new Promise(resolve => setImmediate(resolve));
+      await new Promise((resolve) => setImmediate(resolve));
 
       expect(prisma.aiUsage.upsert).toHaveBeenCalledWith({
         where: { businessId_date: { businessId: 'biz1', date: today } },
@@ -390,9 +396,9 @@ describe('AiService', () => {
     it('throws when conversation not found', async () => {
       prisma.conversation.findFirst.mockResolvedValue(null);
 
-      await expect(
-        aiService.confirmBooking('biz1', 'conv1'),
-      ).rejects.toThrow('Conversation not found');
+      await expect(aiService.confirmBooking('biz1', 'conv1')).rejects.toThrow(
+        'Conversation not found',
+      );
     });
 
     it('throws when no booking state found', async () => {
@@ -401,9 +407,9 @@ describe('AiService', () => {
         metadata: {},
       } as any);
 
-      await expect(
-        aiService.confirmBooking('biz1', 'conv1'),
-      ).rejects.toThrow('No booking state found');
+      await expect(aiService.confirmBooking('biz1', 'conv1')).rejects.toThrow(
+        'No booking state found',
+      );
     });
 
     it('throws when state is not CONFIRM', async () => {
@@ -416,9 +422,9 @@ describe('AiService', () => {
         },
       } as any);
 
-      await expect(
-        aiService.confirmBooking('biz1', 'conv1'),
-      ).rejects.toThrow('Booking not ready for confirmation');
+      await expect(aiService.confirmBooking('biz1', 'conv1')).rejects.toThrow(
+        'Booking not ready for confirmation',
+      );
     });
 
     it('throws when serviceId is missing', async () => {
@@ -432,9 +438,9 @@ describe('AiService', () => {
         },
       } as any);
 
-      await expect(
-        aiService.confirmBooking('biz1', 'conv1'),
-      ).rejects.toThrow('Missing service or time slot');
+      await expect(aiService.confirmBooking('biz1', 'conv1')).rejects.toThrow(
+        'Missing service or time slot',
+      );
     });
 
     it('throws when slotIso is missing', async () => {
@@ -448,9 +454,9 @@ describe('AiService', () => {
         },
       } as any);
 
-      await expect(
-        aiService.confirmBooking('biz1', 'conv1'),
-      ).rejects.toThrow('Missing service or time slot');
+      await expect(aiService.confirmBooking('biz1', 'conv1')).rejects.toThrow(
+        'Missing service or time slot',
+      );
     });
   });
 
@@ -482,16 +488,19 @@ describe('AiService', () => {
         where: { id: 'conv1' },
         data: { metadata: { aiCancelState: null } },
       });
-      expect(inboxGateway.notifyBookingUpdate).toHaveBeenCalledWith('biz1', { id: 'booking1', status: 'CANCELLED' });
+      expect(inboxGateway.notifyBookingUpdate).toHaveBeenCalledWith('biz1', {
+        id: 'booking1',
+        status: 'CANCELLED',
+      });
       expect(result).toEqual({ id: 'booking1', status: 'CANCELLED' });
     });
 
     it('throws when conversation not found', async () => {
       prisma.conversation.findFirst.mockResolvedValue(null);
 
-      await expect(
-        aiService.confirmCancel('biz1', 'conv1'),
-      ).rejects.toThrow('Conversation not found');
+      await expect(aiService.confirmCancel('biz1', 'conv1')).rejects.toThrow(
+        'Conversation not found',
+      );
     });
 
     it('throws when no cancel state found', async () => {
@@ -500,9 +509,9 @@ describe('AiService', () => {
         metadata: {},
       } as any);
 
-      await expect(
-        aiService.confirmCancel('biz1', 'conv1'),
-      ).rejects.toThrow('No cancel state found');
+      await expect(aiService.confirmCancel('biz1', 'conv1')).rejects.toThrow(
+        'No cancel state found',
+      );
     });
 
     it('throws when state is not CONFIRM_CANCEL', async () => {
@@ -515,9 +524,9 @@ describe('AiService', () => {
         },
       } as any);
 
-      await expect(
-        aiService.confirmCancel('biz1', 'conv1'),
-      ).rejects.toThrow('Cancel not ready for confirmation');
+      await expect(aiService.confirmCancel('biz1', 'conv1')).rejects.toThrow(
+        'Cancel not ready for confirmation',
+      );
     });
 
     it('throws when bookingId is missing', async () => {
@@ -530,9 +539,9 @@ describe('AiService', () => {
         },
       } as any);
 
-      await expect(
-        aiService.confirmCancel('biz1', 'conv1'),
-      ).rejects.toThrow('No booking identified');
+      await expect(aiService.confirmCancel('biz1', 'conv1')).rejects.toThrow(
+        'No booking identified',
+      );
     });
   });
 
@@ -559,7 +568,10 @@ describe('AiService', () => {
     it('updates booking and clears state', async () => {
       prisma.conversation.findFirst.mockResolvedValue(mockConversation as any);
       prisma.conversation.update.mockResolvedValue({} as any);
-      bookingService.update.mockResolvedValue({ id: 'booking1', startTime: new Date('2026-03-05T10:00:00Z') } as any);
+      bookingService.update.mockResolvedValue({
+        id: 'booking1',
+        startTime: new Date('2026-03-05T10:00:00Z'),
+      } as any);
 
       const result = await aiService.confirmReschedule('biz1', 'conv1');
 
@@ -577,9 +589,9 @@ describe('AiService', () => {
     it('throws when conversation not found', async () => {
       prisma.conversation.findFirst.mockResolvedValue(null);
 
-      await expect(
-        aiService.confirmReschedule('biz1', 'conv1'),
-      ).rejects.toThrow('Conversation not found');
+      await expect(aiService.confirmReschedule('biz1', 'conv1')).rejects.toThrow(
+        'Conversation not found',
+      );
     });
 
     it('throws when no reschedule state found', async () => {
@@ -588,9 +600,9 @@ describe('AiService', () => {
         metadata: {},
       } as any);
 
-      await expect(
-        aiService.confirmReschedule('biz1', 'conv1'),
-      ).rejects.toThrow('No reschedule state found');
+      await expect(aiService.confirmReschedule('biz1', 'conv1')).rejects.toThrow(
+        'No reschedule state found',
+      );
     });
 
     it('throws when state is not CONFIRM_RESCHEDULE', async () => {
@@ -603,9 +615,9 @@ describe('AiService', () => {
         },
       } as any);
 
-      await expect(
-        aiService.confirmReschedule('biz1', 'conv1'),
-      ).rejects.toThrow('Reschedule not ready for confirmation');
+      await expect(aiService.confirmReschedule('biz1', 'conv1')).rejects.toThrow(
+        'Reschedule not ready for confirmation',
+      );
     });
 
     it('throws when bookingId is missing', async () => {
@@ -619,9 +631,9 @@ describe('AiService', () => {
         },
       } as any);
 
-      await expect(
-        aiService.confirmReschedule('biz1', 'conv1'),
-      ).rejects.toThrow('Missing booking or new time slot');
+      await expect(aiService.confirmReschedule('biz1', 'conv1')).rejects.toThrow(
+        'Missing booking or new time slot',
+      );
     });
 
     it('throws when newSlotIso is missing', async () => {
@@ -635,9 +647,9 @@ describe('AiService', () => {
         },
       } as any);
 
-      await expect(
-        aiService.confirmReschedule('biz1', 'conv1'),
-      ).rejects.toThrow('Missing booking or new time slot');
+      await expect(aiService.confirmReschedule('biz1', 'conv1')).rejects.toThrow(
+        'Missing booking or new time slot',
+      );
     });
   });
 
@@ -832,10 +844,7 @@ describe('AiService', () => {
 
       await aiService.generateAndStoreSummary('conv1');
 
-      expect(summaryGenerator.generate).toHaveBeenCalledWith(
-        expect.any(Array),
-        'Previous summary',
-      );
+      expect(summaryGenerator.generate).toHaveBeenCalledWith(expect.any(Array), 'Previous summary');
     });
 
     it('returns empty string when conversation not found', async () => {
@@ -887,7 +896,11 @@ describe('AiService', () => {
     });
 
     it('calls Claude with customer data and returns answer', async () => {
-      const result = await aiService.customerChat('biz1', 'cust1', 'What is this customer\'s history?');
+      const result = await aiService.customerChat(
+        'biz1',
+        'cust1',
+        "What is this customer's history?",
+      );
 
       expect(prisma.business.findUnique).toHaveBeenCalledWith({ where: { id: 'biz1' } });
       expect(prisma.customer.findFirst).toHaveBeenCalledWith({
@@ -897,7 +910,7 @@ describe('AiService', () => {
       expect(claude.complete).toHaveBeenCalledWith(
         'sonnet',
         expect.stringContaining('Test Business'),
-        [{ role: 'user', content: 'What is this customer\'s history?' }],
+        [{ role: 'user', content: "What is this customer's history?" }],
         1024,
       );
       expect(result).toEqual({ answer: 'Customer analysis response' });
@@ -924,17 +937,17 @@ describe('AiService', () => {
     it('throws when business not found', async () => {
       prisma.business.findUnique.mockResolvedValue(null);
 
-      await expect(
-        aiService.customerChat('biz1', 'cust1', 'Question'),
-      ).rejects.toThrow('Business not found');
+      await expect(aiService.customerChat('biz1', 'cust1', 'Question')).rejects.toThrow(
+        'Business not found',
+      );
     });
 
     it('throws when customer not found', async () => {
       prisma.customer.findFirst.mockResolvedValue(null);
 
-      await expect(
-        aiService.customerChat('biz1', 'cust1', 'Question'),
-      ).rejects.toThrow('Customer not found');
+      await expect(aiService.customerChat('biz1', 'cust1', 'Question')).rejects.toThrow(
+        'Customer not found',
+      );
     });
   });
 });

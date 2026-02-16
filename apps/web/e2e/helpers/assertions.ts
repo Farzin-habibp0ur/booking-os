@@ -13,18 +13,21 @@ export async function assertDataOrEmptyState(
   emptyStatePattern: RegExp,
   fallbackTextPattern?: RegExp,
 ) {
-  const hasItems = await page.locator(itemSelector)
+  const hasItems = await page
+    .locator(itemSelector)
     .first()
     .isVisible()
     .catch(() => false);
 
-  const hasEmptyState = await page.locator(`text=${emptyStatePattern}`)
+  const hasEmptyState = await page
+    .locator(`text=${emptyStatePattern}`)
     .first()
     .isVisible()
     .catch(() => false);
 
   const hasFallbackText = fallbackTextPattern
-    ? await page.locator(`text=${fallbackTextPattern}`)
+    ? await page
+        .locator(`text=${fallbackTextPattern}`)
         .first()
         .isVisible()
         .catch(() => false)
@@ -44,11 +47,7 @@ export async function assertSidebarVisible(page: Page) {
 /**
  * Assert that a page has loaded successfully with expected content
  */
-export async function assertPageLoaded(
-  page: Page,
-  urlPattern: RegExp,
-  contentPattern: RegExp,
-) {
+export async function assertPageLoaded(page: Page, urlPattern: RegExp, contentPattern: RegExp) {
   await expect(page).toHaveURL(urlPattern);
   await expect(page.locator('body')).toContainText(contentPattern, { timeout: 10000 });
 }
@@ -57,7 +56,11 @@ export async function assertPageLoaded(
  * Check if an element exists without throwing an error
  */
 export async function elementExists(page: Page, selector: string): Promise<boolean> {
-  return page.locator(selector).first().isVisible().catch(() => false);
+  return page
+    .locator(selector)
+    .first()
+    .isVisible()
+    .catch(() => false);
 }
 
 /**

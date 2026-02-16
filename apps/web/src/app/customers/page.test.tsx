@@ -4,16 +4,27 @@ jest.mock('next/navigation', () => ({
   useSearchParams: () => new URLSearchParams(),
   useParams: () => ({ id: 'cust-1' }),
 }));
-jest.mock('next/link', () => ({ children, href, ...rest }: any) => <a href={href} {...rest}>{children}</a>);
+jest.mock('next/link', () => ({ children, href, ...rest }: any) => (
+  <a href={href} {...rest}>
+    {children}
+  </a>
+));
 jest.mock('@/lib/auth', () => ({
-  useAuth: () => ({ user: { id: '1', name: 'Sarah', role: 'OWNER', businessId: 'b1' }, loading: false }),
+  useAuth: () => ({
+    user: { id: '1', name: 'Sarah', role: 'OWNER', businessId: 'b1' },
+    loading: false,
+  }),
 }));
 jest.mock('@/lib/i18n', () => ({
   useI18n: () => ({ t: (key: string, params?: any) => key }),
   I18nProvider: ({ children }: any) => children,
 }));
 jest.mock('@/lib/vertical-pack', () => ({
-  usePack: () => ({ name: 'general', labels: { customer: 'Customer', booking: 'Booking', service: 'Service' }, customerFields: [] }),
+  usePack: () => ({
+    name: 'general',
+    labels: { customer: 'Customer', booking: 'Booking', service: 'Service' },
+    customerFields: [],
+  }),
   VerticalPackProvider: ({ children }: any) => children,
 }));
 jest.mock('@/lib/toast', () => ({
@@ -28,7 +39,11 @@ import { api } from '@/lib/api';
 const mockApi = api as jest.Mocked<typeof api>;
 jest.mock('@/components/skeleton', () => ({
   PageSkeleton: () => <div data-testid="page-skeleton" />,
-  TableRowSkeleton: () => <tr data-testid="table-skeleton"><td /></tr>,
+  TableRowSkeleton: () => (
+    <tr data-testid="table-skeleton">
+      <td />
+    </tr>
+  ),
   EmptyState: ({ title }: any) => <div data-testid="empty-state">{title}</div>,
 }));
 

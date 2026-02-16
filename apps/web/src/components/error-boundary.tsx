@@ -34,7 +34,10 @@ export class ErrorBoundary extends Component<Props, State> {
             {this.state.error?.message || 'An unexpected error occurred.'}
           </p>
           <button
-            onClick={() => { this.setState({ hasError: false, error: null }); window.location.reload(); }}
+            onClick={() => {
+              this.setState({ hasError: false, error: null });
+              window.location.reload();
+            }}
             className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700"
           >
             <RefreshCw size={14} /> Reload

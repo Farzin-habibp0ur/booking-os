@@ -5,16 +5,27 @@ jest.mock('next/navigation', () => ({
   useRouter: () => ({ push: jest.fn() }),
   useSearchParams: () => new URLSearchParams(),
 }));
-jest.mock('next/link', () => ({ children, href, ...rest }: any) => <a href={href} {...rest}>{children}</a>);
+jest.mock('next/link', () => ({ children, href, ...rest }: any) => (
+  <a href={href} {...rest}>
+    {children}
+  </a>
+));
 jest.mock('@/lib/auth', () => ({
-  useAuth: () => ({ user: { id: '1', name: 'Sarah', role: 'OWNER', businessId: 'b1' }, loading: false }),
+  useAuth: () => ({
+    user: { id: '1', name: 'Sarah', role: 'OWNER', businessId: 'b1' },
+    loading: false,
+  }),
 }));
 jest.mock('@/lib/i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
   I18nProvider: ({ children }: any) => children,
 }));
 jest.mock('@/lib/vertical-pack', () => ({
-  usePack: () => ({ name: 'general', labels: { customer: 'Customer', booking: 'Booking', service: 'Service' }, customerFields: [] }),
+  usePack: () => ({
+    name: 'general',
+    labels: { customer: 'Customer', booking: 'Booking', service: 'Service' },
+    customerFields: [],
+  }),
 }));
 jest.mock('@/lib/toast', () => ({
   useToast: () => ({ toast: jest.fn() }),

@@ -58,7 +58,10 @@ export default function CalendarPage() {
     const dateTo = new Date(dateFrom);
     dateTo.setDate(dateTo.getDate() + (view === 'week' ? 7 : 1));
 
-    api.get<any[]>(`/bookings/calendar?dateFrom=${dateFrom.toISOString()}&dateTo=${dateTo.toISOString()}`)
+    api
+      .get<
+        any[]
+      >(`/bookings/calendar?dateFrom=${dateFrom.toISOString()}&dateTo=${dateTo.toISOString()}`)
       .then(setBookings)
       .catch(console.error);
   };
@@ -138,9 +141,7 @@ export default function CalendarPage() {
 
   const toggleStaffFilter = (staffId: string) => {
     setSelectedStaff((prev) =>
-      prev.includes(staffId)
-        ? prev.filter((id) => id !== staffId)
-        : [...prev, staffId],
+      prev.includes(staffId) ? prev.filter((id) => id !== staffId) : [...prev, staffId],
     );
   };
 
@@ -152,15 +153,37 @@ export default function CalendarPage() {
       {/* Top bar */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-4">
-          <h1 className="text-2xl font-serif font-semibold text-slate-900">{t('calendar.title')}</h1>
+          <h1 className="text-2xl font-serif font-semibold text-slate-900">
+            {t('calendar.title')}
+          </h1>
           <div className="flex items-center gap-1">
-            <button onClick={() => navigate(-1)} className="p-1 hover:bg-slate-100 rounded-lg transition-colors"><ChevronLeft size={20} /></button>
-            <button onClick={() => setCurrentDate(new Date())} className="px-3 py-1 border border-slate-200 rounded-xl text-sm hover:bg-slate-50 transition-colors">{t('calendar.today')}</button>
-            <button onClick={() => navigate(1)} className="p-1 hover:bg-slate-100 rounded-lg transition-colors"><ChevronRight size={20} /></button>
+            <button
+              onClick={() => navigate(-1)}
+              className="p-1 hover:bg-slate-100 rounded-lg transition-colors"
+            >
+              <ChevronLeft size={20} />
+            </button>
+            <button
+              onClick={() => setCurrentDate(new Date())}
+              className="px-3 py-1 border border-slate-200 rounded-xl text-sm hover:bg-slate-50 transition-colors"
+            >
+              {t('calendar.today')}
+            </button>
+            <button
+              onClick={() => navigate(1)}
+              className="p-1 hover:bg-slate-100 rounded-lg transition-colors"
+            >
+              <ChevronRight size={20} />
+            </button>
           </div>
           <h2 className="text-lg text-slate-500">
             {view === 'day'
-              ? currentDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
+              ? currentDate.toLocaleDateString('en-US', {
+                  weekday: 'long',
+                  month: 'long',
+                  day: 'numeric',
+                  year: 'numeric',
+                })
               : `${days[0].toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${days[6].toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
           </h2>
         </div>
@@ -186,12 +209,35 @@ export default function CalendarPage() {
 
           {/* View toggle */}
           <div className="flex gap-0.5 bg-slate-100 rounded-xl p-0.5">
-            <button onClick={() => setView('day')} className={cn('px-3 py-1 rounded-lg text-sm transition-colors', view === 'day' && 'bg-white shadow-sm font-medium')}>{t('calendar.view_day')}</button>
-            <button onClick={() => setView('week')} className={cn('px-3 py-1 rounded-lg text-sm transition-colors', view === 'week' && 'bg-white shadow-sm font-medium')}>{t('calendar.view_week')}</button>
+            <button
+              onClick={() => setView('day')}
+              className={cn(
+                'px-3 py-1 rounded-lg text-sm transition-colors',
+                view === 'day' && 'bg-white shadow-sm font-medium',
+              )}
+            >
+              {t('calendar.view_day')}
+            </button>
+            <button
+              onClick={() => setView('week')}
+              className={cn(
+                'px-3 py-1 rounded-lg text-sm transition-colors',
+                view === 'week' && 'bg-white shadow-sm font-medium',
+              )}
+            >
+              {t('calendar.view_week')}
+            </button>
           </div>
 
           <button
-            onClick={() => { setRescheduleMode(false); setSelectedBooking(null); setPrefillDate(currentDate.toISOString().split('T')[0]); setPrefillTime(''); setPrefillStaffId(''); setBookingFormOpen(true); }}
+            onClick={() => {
+              setRescheduleMode(false);
+              setSelectedBooking(null);
+              setPrefillDate(currentDate.toISOString().split('T')[0]);
+              setPrefillTime('');
+              setPrefillStaffId('');
+              setBookingFormOpen(true);
+            }}
             className="flex items-center gap-1 bg-sage-600 text-white px-3 py-1.5 rounded-xl text-sm hover:bg-sage-700 transition-colors"
           >
             <Plus size={14} /> {t('calendar.new_booking')}
@@ -210,7 +256,8 @@ export default function CalendarPage() {
               {HOURS.map((hour) => (
                 <div key={hour} className="relative" style={{ height: SLOT_HEIGHT }}>
                   <span className="absolute -top-2 right-2 text-xs text-slate-400">
-                    {hour % 12 || 12}{hour < 12 ? 'am' : 'pm'}
+                    {hour % 12 || 12}
+                    {hour < 12 ? 'am' : 'pm'}
                   </span>
                 </div>
               ))}
@@ -245,39 +292,72 @@ export default function CalendarPage() {
                     return (
                       <div
                         key={b.id}
-                        onClick={(e) => { e.stopPropagation(); handleBookingClick(b); }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleBookingClick(b);
+                        }}
                         onMouseEnter={() => setHoveredBooking(b.id)}
                         onMouseLeave={() => setHoveredBooking(null)}
                         className={cn(
                           'absolute left-1 right-1 rounded-xl px-2 py-1 cursor-pointer transition-shadow shadow-soft-sm',
-                          colors.bg, colors.border,
+                          colors.bg,
+                          colors.border,
                           hoveredBooking === b.id && 'shadow-md ring-1 ring-sage-200',
                         )}
                         style={{ top, height, borderLeftWidth: 3 }}
                       >
-                        <p className={cn('text-xs font-medium truncate flex items-center gap-1', colors.text)}>
+                        <p
+                          className={cn(
+                            'text-xs font-medium truncate flex items-center gap-1',
+                            colors.text,
+                          )}
+                        >
                           {b.recurringSeriesId && <Repeat size={9} className="flex-shrink-0" />}
-                          {new Date(b.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          {new Date(b.startTime).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
                           {' – '}
-                          {new Date(b.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          {new Date(b.endTime).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
                         </p>
                         <p className="text-xs font-medium truncate">{b.customer?.name}</p>
-                        {height > 35 && <p className="text-[10px] text-slate-500 truncate">{b.service?.name}</p>}
+                        {height > 35 && (
+                          <p className="text-[10px] text-slate-500 truncate">{b.service?.name}</p>
+                        )}
 
                         {/* Hover tooltip */}
                         {hoveredBooking === b.id && (
                           <div className="absolute z-20 left-full top-0 ml-2 bg-white shadow-soft rounded-xl p-2.5 w-48 pointer-events-none">
                             <p className="text-sm font-medium">{b.customer?.name}</p>
-                            <p className="text-xs text-slate-500">{b.service?.name} · {b.service?.durationMins}min</p>
-                            <p className="text-xs text-slate-500 mt-1">
-                              {new Date(b.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                              {' – '}
-                              {new Date(b.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            <p className="text-xs text-slate-500">
+                              {b.service?.name} · {b.service?.durationMins}min
                             </p>
-                            <p className="text-xs text-slate-400 mt-1">{t('calendar.with_staff', { name: b.staff?.name })}</p>
-                            <span className={cn('inline-block text-[10px] px-1.5 py-0.5 rounded-full mt-1',
-                              STATUS_COLORS[b.status]?.bg, STATUS_COLORS[b.status]?.text?.replace('line-through', ''),
-                            )}>{t(`status.${b.status.toLowerCase()}`)}</span>
+                            <p className="text-xs text-slate-500 mt-1">
+                              {new Date(b.startTime).toLocaleTimeString([], {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                              {' – '}
+                              {new Date(b.endTime).toLocaleTimeString([], {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </p>
+                            <p className="text-xs text-slate-400 mt-1">
+                              {t('calendar.with_staff', { name: b.staff?.name })}
+                            </p>
+                            <span
+                              className={cn(
+                                'inline-block text-[10px] px-1.5 py-0.5 rounded-full mt-1',
+                                STATUS_COLORS[b.status]?.bg,
+                                STATUS_COLORS[b.status]?.text?.replace('line-through', ''),
+                              )}
+                            >
+                              {t(`status.${b.status.toLowerCase()}`)}
+                            </span>
                           </div>
                         )}
                       </div>
@@ -296,7 +376,8 @@ export default function CalendarPage() {
               {HOURS.map((hour) => (
                 <div key={hour} className="relative" style={{ height: SLOT_HEIGHT }}>
                   <span className="absolute -top-2 right-2 text-xs text-slate-400">
-                    {hour % 12 || 12}{hour < 12 ? 'am' : 'pm'}
+                    {hour % 12 || 12}
+                    {hour < 12 ? 'am' : 'pm'}
                   </span>
                 </div>
               ))}
@@ -307,15 +388,29 @@ export default function CalendarPage() {
               const isToday = day.toDateString() === new Date().toDateString();
               const dayBookings = bookings.filter((b) => {
                 const start = new Date(b.startTime);
-                return start.toDateString() === day.toDateString() && selectedStaff.includes(b.staffId);
+                return (
+                  start.toDateString() === day.toDateString() && selectedStaff.includes(b.staffId)
+                );
               });
 
               return (
-                <div key={day.toISOString()} className="flex-1 min-w-[120px] border-r last:border-r-0">
+                <div
+                  key={day.toISOString()}
+                  className="flex-1 min-w-[120px] border-r last:border-r-0"
+                >
                   {/* Day header */}
-                  <div className={cn('h-12 border-b flex flex-col items-center justify-center sticky top-0 bg-white z-10', isToday && 'bg-sage-50')}>
-                    <p className="text-[10px] text-slate-500 uppercase">{day.toLocaleDateString('en-US', { weekday: 'short' })}</p>
-                    <p className={cn('text-sm font-semibold', isToday && 'text-sage-600')}>{day.getDate()}</p>
+                  <div
+                    className={cn(
+                      'h-12 border-b flex flex-col items-center justify-center sticky top-0 bg-white z-10',
+                      isToday && 'bg-sage-50',
+                    )}
+                  >
+                    <p className="text-[10px] text-slate-500 uppercase">
+                      {day.toLocaleDateString('en-US', { weekday: 'short' })}
+                    </p>
+                    <p className={cn('text-sm font-semibold', isToday && 'text-sage-600')}>
+                      {day.getDate()}
+                    </p>
                   </div>
 
                   {/* Slots */}
@@ -336,15 +431,27 @@ export default function CalendarPage() {
                       return (
                         <div
                           key={b.id}
-                          onClick={(e) => { e.stopPropagation(); handleBookingClick(b); }}
-                          className={cn('absolute left-0.5 right-0.5 rounded border-l-2 px-1 py-0.5 cursor-pointer hover:shadow-md', colors.bg, colors.border)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleBookingClick(b);
+                          }}
+                          className={cn(
+                            'absolute left-0.5 right-0.5 rounded border-l-2 px-1 py-0.5 cursor-pointer hover:shadow-md',
+                            colors.bg,
+                            colors.border,
+                          )}
                           style={{ top, height, borderLeftWidth: 2 }}
                         >
                           <p className="text-[10px] font-medium truncate flex items-center gap-0.5">
                             {b.recurringSeriesId && <Repeat size={8} className="flex-shrink-0" />}
                             {b.customer?.name}
                           </p>
-                          <p className="text-[9px] text-slate-500 truncate">{new Date(b.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                          <p className="text-[9px] text-slate-500 truncate">
+                            {new Date(b.startTime).toLocaleTimeString([], {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </p>
                         </div>
                       );
                     })}
@@ -369,7 +476,10 @@ export default function CalendarPage() {
       {/* Booking form modal */}
       <BookingFormModal
         isOpen={bookingFormOpen}
-        onClose={() => { setBookingFormOpen(false); setRescheduleMode(false); }}
+        onClose={() => {
+          setBookingFormOpen(false);
+          setRescheduleMode(false);
+        }}
         onCreated={handleBookingUpdated}
         date={prefillDate}
         time={prefillTime}

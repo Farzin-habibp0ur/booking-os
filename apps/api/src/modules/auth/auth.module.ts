@@ -18,7 +18,12 @@ import { TokenService } from '../../common/token.service';
         const secret = config.get<string>('JWT_SECRET');
         const isProduction = config.get('NODE_ENV') === 'production';
 
-        if (isProduction && (!secret || secret === 'change-me-in-production' || secret === 'dev-secret-change-in-production')) {
+        if (
+          isProduction &&
+          (!secret ||
+            secret === 'change-me-in-production' ||
+            secret === 'dev-secret-change-in-production')
+        ) {
           throw new Error('JWT_SECRET must be set to a strong, unique value in production');
         }
 

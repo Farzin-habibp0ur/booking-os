@@ -22,7 +22,13 @@ const INTENT_COLORS: Record<string, string> = {
   GENERAL: 'bg-slate-100 text-slate-600',
 };
 
-export default function AiSuggestions({ intent, confidence, draftText, onSendDraft, onDismiss }: AiSuggestionsProps) {
+export default function AiSuggestions({
+  intent,
+  confidence,
+  draftText,
+  onSendDraft,
+  onDismiss,
+}: AiSuggestionsProps) {
   const { t } = useI18n();
   const [editedText, setEditedText] = useState(draftText);
 
@@ -36,9 +42,16 @@ export default function AiSuggestions({ intent, confidence, draftText, onSendDra
     <div className="px-3 py-2 bg-lavender-50 border-t border-lavender-100">
       <div className="flex items-center gap-2 mb-1.5">
         <Sparkles size={13} className="text-lavender-500" />
-        <span className="text-[10px] font-semibold text-lavender-600 uppercase tracking-wide">{t('ai.draft_label')}</span>
+        <span className="text-[10px] font-semibold text-lavender-600 uppercase tracking-wide">
+          {t('ai.draft_label')}
+        </span>
         {intent && intent !== 'GENERAL' && (
-          <span className={cn('text-[9px] px-1.5 py-0.5 rounded-full font-medium', INTENT_COLORS[intent] || INTENT_COLORS.GENERAL)}>
+          <span
+            className={cn(
+              'text-[9px] px-1.5 py-0.5 rounded-full font-medium',
+              INTENT_COLORS[intent] || INTENT_COLORS.GENERAL,
+            )}
+          >
             {t(`ai.intent_${intent.toLowerCase()}`)}
           </span>
         )}

@@ -130,7 +130,11 @@ export class AvailabilityService {
     });
   }
 
-  async setStaffWorkingHours(businessId: string, staffId: string, hours: { dayOfWeek: number; startTime: string; endTime: string; isOff: boolean }[]) {
+  async setStaffWorkingHours(
+    businessId: string,
+    staffId: string,
+    hours: { dayOfWeek: number; startTime: string; endTime: string; isOff: boolean }[],
+  ) {
     // Verify staff belongs to this business
     const staff = await this.prisma.staff.findFirst({
       where: { id: staffId, businessId },
@@ -141,7 +145,13 @@ export class AvailabilityService {
     for (const h of hours) {
       await this.prisma.workingHours.upsert({
         where: { staffId_dayOfWeek: { staffId, dayOfWeek: h.dayOfWeek } },
-        create: { staffId, dayOfWeek: h.dayOfWeek, startTime: h.startTime, endTime: h.endTime, isOff: h.isOff },
+        create: {
+          staffId,
+          dayOfWeek: h.dayOfWeek,
+          startTime: h.startTime,
+          endTime: h.endTime,
+          isOff: h.isOff,
+        },
         update: { startTime: h.startTime, endTime: h.endTime, isOff: h.isOff },
       });
     }
@@ -161,7 +171,11 @@ export class AvailabilityService {
     });
   }
 
-  async addTimeOff(businessId: string, staffId: string, data: { startDate: string; endDate: string; reason?: string }) {
+  async addTimeOff(
+    businessId: string,
+    staffId: string,
+    data: { startDate: string; endDate: string; reason?: string },
+  ) {
     // Verify staff belongs to this business
     const staff = await this.prisma.staff.findFirst({
       where: { id: staffId, businessId },

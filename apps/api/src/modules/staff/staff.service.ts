@@ -19,7 +19,12 @@ export class StaffService {
   }
 
   private static readonly SAFE_SELECT = {
-    id: true, name: true, email: true, role: true, isActive: true, createdAt: true,
+    id: true,
+    name: true,
+    email: true,
+    role: true,
+    isActive: true,
+    createdAt: true,
   } as const;
 
   async findAll(businessId: string) {
@@ -35,7 +40,10 @@ export class StaffService {
     }));
   }
 
-  async create(businessId: string, data: { name: string; email: string; password: string; role: string }) {
+  async create(
+    businessId: string,
+    data: { name: string; email: string; password: string; role: string },
+  ) {
     const existing = await this.prisma.staff.findUnique({ where: { email: data.email } });
     if (existing) throw new ConflictException('Email already in use');
     const passwordHash = await bcrypt.hash(data.password, 10);
@@ -45,7 +53,11 @@ export class StaffService {
     });
   }
 
-  async update(businessId: string, id: string, data: { name?: string; email?: string; role?: string }) {
+  async update(
+    businessId: string,
+    id: string,
+    data: { name?: string; email?: string; role?: string },
+  ) {
     return this.prisma.staff.update({
       where: { id, businessId },
       data,

@@ -99,9 +99,9 @@ describe('BillingService', () => {
     it('should throw for missing business', async () => {
       prisma.business.findUnique.mockResolvedValue(null);
 
-      await expect(
-        service.createCheckoutSession('missing', 'basic'),
-      ).rejects.toThrow('Business not found');
+      await expect(service.createCheckoutSession('missing', 'basic')).rejects.toThrow(
+        'Business not found',
+      );
     });
   });
 
@@ -118,9 +118,7 @@ describe('BillingService', () => {
     it('should throw if no subscription', async () => {
       prisma.subscription.findUnique.mockResolvedValue(null);
 
-      await expect(
-        service.createPortalSession('biz1'),
-      ).rejects.toThrow('No subscription found');
+      await expect(service.createPortalSession('biz1')).rejects.toThrow('No subscription found');
     });
   });
 
@@ -147,9 +145,9 @@ describe('BillingService', () => {
         service: { depositRequired: false },
       } as any);
 
-      await expect(
-        service.createDepositPaymentIntent('biz1', 'booking1'),
-      ).rejects.toThrow('Deposit not required');
+      await expect(service.createDepositPaymentIntent('biz1', 'booking1')).rejects.toThrow(
+        'Deposit not required',
+      );
     });
   });
 

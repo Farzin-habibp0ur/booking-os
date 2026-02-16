@@ -13,7 +13,9 @@ test.describe('Customers', () => {
     await expect(page).toHaveURL(/\/customers/);
 
     // Should show customers heading or related content
-    await expect(page.locator('body')).toContainText(/customer|client|patient/i, { timeout: 10000 });
+    await expect(page.locator('body')).toContainText(/customer|client|patient/i, {
+      timeout: 10000,
+    });
   });
 
   test('displays customers list or empty state', async ({ page }) => {
@@ -21,9 +23,21 @@ test.describe('Customers', () => {
     await page.waitForLoadState('networkidle');
 
     // Either customers are displayed (table rows) or empty state is shown
-    const hasCustomers = await page.locator('table tbody tr').first().isVisible().catch(() => false);
-    const hasEmptyState = await page.locator('text=/no.*customer|no.*patient|empty/i').first().isVisible().catch(() => false);
-    const hasCustomerText = await page.locator('text=/customer|client|patient/i').first().isVisible().catch(() => false);
+    const hasCustomers = await page
+      .locator('table tbody tr')
+      .first()
+      .isVisible()
+      .catch(() => false);
+    const hasEmptyState = await page
+      .locator('text=/no.*customer|no.*patient|empty/i')
+      .first()
+      .isVisible()
+      .catch(() => false);
+    const hasCustomerText = await page
+      .locator('text=/customer|client|patient/i')
+      .first()
+      .isVisible()
+      .catch(() => false);
 
     expect(hasCustomers || hasEmptyState || hasCustomerText).toBe(true);
   });
@@ -55,7 +69,9 @@ test.describe('Customers', () => {
     await page.waitForLoadState('networkidle');
 
     // Look for search input
-    const searchInput = page.locator('input[type="search"], input[placeholder*="search" i]').first();
+    const searchInput = page
+      .locator('input[type="search"], input[placeholder*="search" i]')
+      .first();
     const isVisible = await searchInput.isVisible({ timeout: 5000 }).catch(() => false);
 
     if (isVisible) {
