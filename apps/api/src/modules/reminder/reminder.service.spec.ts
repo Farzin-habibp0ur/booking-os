@@ -252,5 +252,100 @@ describe('ReminderService', () => {
         }),
       );
     });
+
+    describe('CONSULT_FOLLOW_UP handling', () => {
+      const consultBooking = {
+        ...mockBooking,
+        id: 'booking-consult',
+        customerId: 'cust1',
+        updatedAt: new Date('2026-02-15T10:00:00Z'),
+        service: { id: 'svc-consult', name: 'Consultation', durationMins: 20, kind: 'CONSULT' },
+      };
+
+      const consultReminder = {
+        ...mockReminder,
+        id: 'reminder-consult',
+        type: 'CONSULT_FOLLOW_UP',
+        booking: consultBooking,
+      };
+
+      it('cancels CONSULT_FOLLOW_UP when customer already has a TREATMENT booking', async () => {
+        prisma.reminder.findMany.mockResolvedValue([consultReminder] as any);
+        prisma.booking.findFirst.mockResolvedValue({ id: 'treatment-booking' } as any);
+        prisma.reminder.update.mockResolvedValue({} as any);
+
+        await reminderService.processPendingReminders();
+
+        expect(prisma.booking.findFirst).toHaveBeenCalledWith({
+          where: {
+            customerId: 'cust1',
+            businessId: 'biz1',
+            service: { kind: 'TREATMENT' },
+            createdAt: { gte: consultBooking.updatedAt },
+          },
+        });
+        expect(prisma.reminder.update).toHaveBeenCalledWith({
+          where: { id: 'reminder-consult' },
+          data: { status: 'CANCELLED' },
+        });
+        expect(mockNotificationService.sendConsultFollowUp).not.toHaveBeenCalled();
+      });
+
+      it('cancels CONSULT_FOLLOW_UP when customer opted out', async () => {
+        prisma.reminder.findMany.mockResolvedValue([consultReminder] as any);
+        prisma.booking.findFirst.mockResolvedValue(null); // no treatment booking
+        prisma.customer.findUnique.mockResolvedValue({
+          id: 'cust1',
+          customFields: { consultFollowUpOptOut: true },
+        } as any);
+        prisma.reminder.update.mockResolvedValue({} as any);
+
+        await reminderService.processPendingReminders();
+
+        expect(prisma.reminder.update).toHaveBeenCalledWith({
+          where: { id: 'reminder-consult' },
+          data: { status: 'CANCELLED' },
+        });
+        expect(mockNotificationService.sendConsultFollowUp).not.toHaveBeenCalled();
+      });
+
+      it('sends CONSULT_FOLLOW_UP when no treatment exists and no opt-out', async () => {
+        prisma.reminder.findMany.mockResolvedValue([consultReminder] as any);
+        prisma.booking.findFirst.mockResolvedValue(null); // no treatment booking
+        prisma.customer.findUnique.mockResolvedValue({
+          id: 'cust1',
+          customFields: {},
+        } as any);
+        prisma.reminder.update.mockResolvedValue({} as any);
+
+        await reminderService.processPendingReminders();
+
+        expect(mockNotificationService.sendConsultFollowUp).toHaveBeenCalledWith(consultBooking);
+        expect(prisma.reminder.update).toHaveBeenCalledWith({
+          where: { id: 'reminder-consult' },
+          data: { status: 'SENT', sentAt: expect.any(Date) },
+        });
+      });
+
+      it('marks CONSULT_FOLLOW_UP as FAILED when send throws', async () => {
+        prisma.reminder.findMany.mockResolvedValue([consultReminder] as any);
+        prisma.booking.findFirst.mockResolvedValue(null);
+        prisma.customer.findUnique.mockResolvedValue({
+          id: 'cust1',
+          customFields: {},
+        } as any);
+        prisma.reminder.update.mockResolvedValue({} as any);
+        mockNotificationService.sendConsultFollowUp.mockRejectedValueOnce(
+          new Error('Send failed'),
+        );
+
+        await reminderService.processPendingReminders();
+
+        expect(prisma.reminder.update).toHaveBeenCalledWith({
+          where: { id: 'reminder-consult' },
+          data: { status: 'FAILED' },
+        });
+      });
+    });
   });
 });

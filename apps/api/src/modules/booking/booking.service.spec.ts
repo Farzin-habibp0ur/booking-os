@@ -333,6 +333,89 @@ describe('BookingService', () => {
         }),
       });
     });
+
+    it('creates CONSULT_FOLLOW_UP reminder when a CONSULT booking becomes COMPLETED', async () => {
+      prisma.booking.update.mockResolvedValue({
+        id: 'b1',
+        status: 'COMPLETED',
+        service: { id: 'svc1', name: 'Consultation', kind: 'CONSULT' },
+      } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+
+      await bookingService.updateStatus('biz1', 'b1', 'COMPLETED');
+
+      expect(prisma.reminder.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          businessId: 'biz1',
+          bookingId: 'b1',
+          status: 'PENDING',
+          type: 'CONSULT_FOLLOW_UP',
+        }),
+      });
+    });
+
+    it('does NOT create CONSULT_FOLLOW_UP for TREATMENT bookings', async () => {
+      prisma.booking.update.mockResolvedValue({
+        id: 'b1',
+        status: 'COMPLETED',
+        service: { id: 'svc1', name: 'Botox', kind: 'TREATMENT' },
+      } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+
+      await bookingService.updateStatus('biz1', 'b1', 'COMPLETED');
+
+      const calls = prisma.reminder.create.mock.calls;
+      const consultFollowUpCalls = calls.filter(
+        (call: any) => call[0]?.data?.type === 'CONSULT_FOLLOW_UP',
+      );
+      expect(consultFollowUpCalls).toHaveLength(0);
+    });
+
+    it('does NOT create CONSULT_FOLLOW_UP for OTHER bookings', async () => {
+      prisma.booking.update.mockResolvedValue({
+        id: 'b1',
+        status: 'COMPLETED',
+        service: { id: 'svc1', name: 'General', kind: 'OTHER' },
+      } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+
+      await bookingService.updateStatus('biz1', 'b1', 'COMPLETED');
+
+      const calls = prisma.reminder.create.mock.calls;
+      const consultFollowUpCalls = calls.filter(
+        (call: any) => call[0]?.data?.type === 'CONSULT_FOLLOW_UP',
+      );
+      expect(consultFollowUpCalls).toHaveLength(0);
+    });
+
+    it('uses consultFollowUpDays from business settings for delay', async () => {
+      mockBusinessService.getNotificationSettings.mockResolvedValue({
+        channels: 'both',
+        followUpDelayHours: 2,
+        consultFollowUpDays: 5,
+      });
+      prisma.booking.update.mockResolvedValue({
+        id: 'b1',
+        status: 'COMPLETED',
+        service: { id: 'svc1', name: 'Consultation', kind: 'CONSULT' },
+      } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+
+      const before = Date.now();
+      await bookingService.updateStatus('biz1', 'b1', 'COMPLETED');
+      const after = Date.now();
+
+      const consultCall = prisma.reminder.create.mock.calls.find(
+        (call: any) => call[0]?.data?.type === 'CONSULT_FOLLOW_UP',
+      );
+      expect(consultCall).toBeDefined();
+
+      const scheduledAt = consultCall![0].data.scheduledAt as Date;
+      const expectedMin = before + 5 * 24 * 3600000;
+      const expectedMax = after + 5 * 24 * 3600000;
+      expect(scheduledAt.getTime()).toBeGreaterThanOrEqual(expectedMin);
+      expect(scheduledAt.getTime()).toBeLessThanOrEqual(expectedMax);
+    });
   });
 
   describe('getCalendar', () => {

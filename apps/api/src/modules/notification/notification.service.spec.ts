@@ -232,6 +232,84 @@ describe('NotificationService', () => {
     });
   });
 
+  describe('sendConsultFollowUp', () => {
+    beforeEach(async () => {
+      const module = await createModule(false);
+      notificationService = module.get(NotificationService);
+    });
+
+    it('sends consult follow-up via both channels', async () => {
+      prisma.messageTemplate.findMany.mockResolvedValue([]);
+      businessService.findById.mockResolvedValue({
+        id: 'biz1',
+        name: 'Glow Clinic',
+        slug: 'glow-clinic',
+      });
+
+      await notificationService.sendConsultFollowUp(mockBooking);
+
+      expect(mockProvider.sendMessage).toHaveBeenCalledWith({
+        to: '+1234567890',
+        body: expect.stringContaining('Jane Doe'),
+        businessId: 'biz1',
+      });
+
+      expect(emailService.send).toHaveBeenCalledWith({
+        to: 'jane@example.com',
+        subject: expect.stringContaining('Ready for your treatment?'),
+        html: expect.stringContaining('Glow Clinic'),
+      });
+    });
+
+    it('uses CONSULT_FOLLOW_UP template when one exists', async () => {
+      const template = {
+        id: 'tpl-consult',
+        body: 'Hi {{customerName}}, book your treatment at {{bookingLink}}!',
+        variables: ['customerName', 'bookingLink'],
+        category: 'CONSULT_FOLLOW_UP',
+      };
+      prisma.messageTemplate.findMany.mockResolvedValue([template] as any);
+      templateService.resolveVariables.mockResolvedValue(
+        'Hi Jane Doe, book your treatment at glow-clinic/book!',
+      );
+      businessService.findById.mockResolvedValue({
+        id: 'biz1',
+        name: 'Glow Clinic',
+        slug: 'glow-clinic',
+      });
+
+      // Use booking without business so findById is called (which returns slug)
+      const bookingWithoutBusiness = { ...mockBooking, business: null };
+      await notificationService.sendConsultFollowUp(bookingWithoutBusiness);
+
+      expect(templateService.resolveVariables).toHaveBeenCalledWith(
+        template,
+        expect.objectContaining({
+          customerName: 'Jane Doe',
+          bookingLink: 'glow-clinic/book',
+        }),
+      );
+    });
+
+    it('falls back to default message when no template exists', async () => {
+      prisma.messageTemplate.findMany.mockResolvedValue([]);
+      businessService.findById.mockResolvedValue({
+        id: 'biz1',
+        name: 'Glow Clinic',
+        slug: 'glow-clinic',
+      });
+
+      await notificationService.sendConsultFollowUp(mockBooking);
+
+      expect(templateService.resolveVariables).not.toHaveBeenCalled();
+      expect(mockProvider.sendMessage).toHaveBeenCalledWith({
+        to: '+1234567890',
+        body: expect.stringContaining('consultation'),
+        businessId: 'biz1',
+      });
+    });
+  });
+
   describe('email dispatch via queue', () => {
     it('queues email via BullMQ when queue available', async () => {
       const module = await createModule(true, true);

@@ -278,6 +278,15 @@ async function main() {
         variables: ['customerName', 'serviceName'],
       },
     }),
+    prisma.messageTemplate.create({
+      data: {
+        businessId: business.id,
+        name: 'Consult Follow-up',
+        category: 'CONSULT_FOLLOW_UP',
+        body: 'Hi {{customerName}}, we hope your consultation at {{businessName}} was helpful! Ready to move forward with treatment? Book here: {{bookingLink}}',
+        variables: ['customerName', 'businessName', 'bookingLink'],
+      },
+    }),
   ]);
 
   console.log(`✅ Message templates created`);
@@ -375,6 +384,55 @@ async function main() {
       status: 'PENDING',
     },
   });
+
+  // Create a completed CONSULT booking for James Thompson with a pending CONSULT_FOLLOW_UP reminder
+  const consultDate = new Date();
+  consultDate.setDate(consultDate.getDate() - 1);
+  consultDate.setHours(11, 0, 0, 0);
+
+  const consultEnd = new Date(consultDate);
+  consultEnd.setMinutes(consultEnd.getMinutes() + 20);
+
+  const consultBooking = await prisma.booking.create({
+    data: {
+      businessId: business.id,
+      customerId: customers[1].id, // James Thompson
+      serviceId: services[4].id, // Consultation
+      staffId: owner.id,
+      status: 'COMPLETED',
+      startTime: consultDate,
+      endTime: consultEnd,
+    },
+  });
+
+  const consultFollowUpTime = new Date();
+  consultFollowUpTime.setDate(consultFollowUpTime.getDate() + 2);
+
+  await prisma.reminder.create({
+    data: {
+      businessId: business.id,
+      bookingId: consultBooking.id,
+      scheduledAt: consultFollowUpTime,
+      status: 'PENDING',
+      type: 'CONSULT_FOLLOW_UP',
+    },
+  });
+
+  console.log(`✅ Consult booking and CONSULT_FOLLOW_UP reminder created`);
+
+  // Update business notification settings with consultFollowUpDays
+  await prisma.business.update({
+    where: { id: business.id },
+    data: {
+      notificationSettings: {
+        channels: 'both',
+        followUpDelayHours: 2,
+        consultFollowUpDays: 3,
+      },
+    },
+  });
+
+  console.log(`✅ Business notification settings updated`);
 
   console.log(`✅ Sample booking and reminder created`);
   console.log('\n🎉 Seed complete!');

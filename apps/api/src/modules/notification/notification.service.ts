@@ -156,6 +156,50 @@ export class NotificationService {
     }
   }
 
+  async sendConsultFollowUp(booking: BookingWithRelations): Promise<void> {
+    try {
+      const channels = await this.getChannelPreference(booking.businessId);
+      const business =
+        booking.business || (await this.businessService.findById(booking.businessId));
+      const businessName = business?.name || 'Our Business';
+      const slug = (business as any)?.slug || '';
+      const bookingLink = slug ? `${slug}/book` : '';
+
+      const context = {
+        customerName: booking.customer.name,
+        serviceName: booking.service.name,
+        date: booking.startTime.toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        }),
+        time: booking.startTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+        staffName: booking.staff?.name || '',
+        businessName,
+        bookingLink,
+      };
+
+      const body = await this.resolveTemplate(booking.businessId, 'CONSULT_FOLLOW_UP', context);
+
+      if (channels === 'whatsapp' || channels === 'both') {
+        await this.dispatchWhatsApp(booking.customer.phone, body, booking.businessId);
+      }
+
+      if (channels === 'email' || channels === 'both') {
+        if (booking.customer.email) {
+          const subject = `Ready for your treatment? - ${businessName}`;
+          const html = this.wrapInEmailHtml(body, businessName);
+          await this.dispatchEmail(booking.customer.email, subject, html);
+        }
+      }
+
+      this.logger.log(`Sent consult follow-up for ${booking.id} via ${channels}`);
+    } catch (error) {
+      this.logger.error(`Failed to send consult follow-up for ${booking.id}:`, error);
+    }
+  }
+
   private async getChannelPreference(businessId: string): Promise<'email' | 'whatsapp' | 'both'> {
     const settings = await this.businessService.getNotificationSettings(businessId);
     const channels = settings?.channels || 'both';
@@ -183,6 +227,7 @@ export class NotificationService {
       CONFIRMATION: `Hi ${context.customerName}, your appointment for ${context.serviceName} has been confirmed for ${context.date} at ${context.time}${context.staffName ? ` with ${context.staffName}` : ''}. Thank you for choosing ${context.businessName}!`,
       REMINDER: `Hi ${context.customerName}! Reminder: your ${context.serviceName} is scheduled for ${context.time}${context.staffName ? ` with ${context.staffName}` : ''} at ${context.businessName}. Reply YES to confirm.`,
       FOLLOW_UP: `Hi ${context.customerName}, thank you for visiting ${context.businessName}! We hope you enjoyed your ${context.serviceName}. We'd love to hear your feedback.`,
+      CONSULT_FOLLOW_UP: `Hi ${context.customerName}, we hope your consultation at ${context.businessName} was helpful! Ready to move forward with treatment?${context.bookingLink ? ` Book here: ${context.bookingLink}` : ''}`,
     };
 
     return (

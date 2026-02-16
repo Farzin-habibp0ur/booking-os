@@ -57,6 +57,7 @@ export class TemplateService {
       time?: string;
       staffName?: string;
       businessName?: string;
+      bookingLink?: string;
     },
   ): Promise<string> {
     let resolved = template.body;
@@ -67,6 +68,7 @@ export class TemplateService {
       time: context.time,
       staffName: context.staffName,
       businessName: context.businessName,
+      bookingLink: context.bookingLink,
     };
     for (const [key, value] of Object.entries(map)) {
       if (value) {

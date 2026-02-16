@@ -40,7 +40,39 @@ export class ReminderService {
         }
 
         const type = (reminder as any).type || 'REMINDER';
-        if (type === 'FOLLOW_UP') {
+        if (type === 'CONSULT_FOLLOW_UP') {
+          // Check if customer already booked a treatment after the consult
+          const treatmentBooking = await this.prisma.booking.findFirst({
+            where: {
+              customerId: booking.customerId,
+              businessId: booking.businessId,
+              service: { kind: 'TREATMENT' },
+              createdAt: { gte: booking.updatedAt },
+            },
+          });
+          if (treatmentBooking) {
+            await this.prisma.reminder.update({
+              where: { id: reminder.id },
+              data: { status: 'CANCELLED' },
+            });
+            continue;
+          }
+
+          // Check if customer opted out
+          const customer = await this.prisma.customer.findUnique({
+            where: { id: booking.customerId },
+          });
+          const customFields = (customer?.customFields as any) || {};
+          if (customFields.consultFollowUpOptOut) {
+            await this.prisma.reminder.update({
+              where: { id: reminder.id },
+              data: { status: 'CANCELLED' },
+            });
+            continue;
+          }
+
+          await this.notificationService.sendConsultFollowUp(booking);
+        } else if (type === 'FOLLOW_UP') {
           await this.notificationService.sendFollowUp(booking);
         } else {
           await this.notificationService.sendReminder(booking);

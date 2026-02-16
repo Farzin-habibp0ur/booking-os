@@ -195,6 +195,20 @@ export class BookingService {
           type: 'FOLLOW_UP',
         },
       });
+
+      // Schedule consult follow-up for CONSULT bookings
+      if (booking.service?.kind === 'CONSULT') {
+        const delayDays = settings?.consultFollowUpDays || 3;
+        await this.prisma.reminder.create({
+          data: {
+            businessId,
+            bookingId: id,
+            scheduledAt: new Date(Date.now() + delayDays * 24 * 3600000),
+            status: 'PENDING',
+            type: 'CONSULT_FOLLOW_UP',
+          },
+        });
+      }
     }
 
     return booking;

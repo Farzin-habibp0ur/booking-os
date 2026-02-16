@@ -433,7 +433,10 @@
     "channel_email": "Email only",
     "channel_whatsapp": "WhatsApp only",
     "followup_delay": "Follow-up Delay",
-    "followup_delay_desc": "How long after a booking is completed to send the follow-up message"
+    "followup_delay_desc": "How long after a booking is completed to send the follow-up message",
+    "consult_followup_delay": "Consult-to-Treatment Follow-up",
+    "consult_followup_delay_desc": "How many days after a consultation to send a treatment booking prompt (if the patient hasn't already booked)",
+    "consult_followup_unit": "days"
   },
 
   "billing": {
@@ -491,6 +494,7 @@
     "category_reminder": "Reminder",
     "category_follow_up": "Follow up",
     "category_cancellation": "Cancellation",
+    "category_consult_follow_up": "Consult Follow-up",
     "category_custom": "Custom",
     "no_templates": "No templates found. Create your first template.",
     "preview": "Preview",

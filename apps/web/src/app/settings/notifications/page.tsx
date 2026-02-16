@@ -8,6 +8,7 @@ import { Bell } from 'lucide-react';
 interface NotificationSettings {
   channels: 'email' | 'whatsapp' | 'both';
   followUpDelayHours: number;
+  consultFollowUpDays: number;
 }
 
 export default function NotificationSettingsPage() {
@@ -15,6 +16,7 @@ export default function NotificationSettingsPage() {
   const [settings, setSettings] = useState<NotificationSettings>({
     channels: 'both',
     followUpDelayHours: 2,
+    consultFollowUpDays: 3,
   });
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -119,6 +121,36 @@ export default function NotificationSettingsPage() {
               className="w-20 border border-slate-200 rounded-xl px-3 py-2 text-sm"
             />
             <span className="text-sm text-slate-500">hours</span>
+          </div>
+        </div>
+
+        <hr />
+
+        {/* Consult-to-Treatment Follow-up */}
+        <div>
+          <p className="text-sm font-medium mb-1">
+            {t('notification_settings.consult_followup_delay')}
+          </p>
+          <p className="text-xs text-slate-500 mb-3">
+            {t('notification_settings.consult_followup_delay_desc')}
+          </p>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              min={1}
+              max={14}
+              value={settings.consultFollowUpDays}
+              onChange={(e) =>
+                setSettings({
+                  ...settings,
+                  consultFollowUpDays: Math.max(1, Math.min(14, Number(e.target.value) || 1)),
+                })
+              }
+              className="w-20 border border-slate-200 rounded-xl px-3 py-2 text-sm"
+            />
+            <span className="text-sm text-slate-500">
+              {t('notification_settings.consult_followup_unit')}
+            </span>
           </div>
         </div>
 
