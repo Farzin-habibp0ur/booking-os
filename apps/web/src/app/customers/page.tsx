@@ -40,7 +40,7 @@ export default function CustomersPage() {
 
   return (
     <div className="p-6">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
         <div>
           <h1 className="text-2xl font-serif font-semibold text-slate-900">
             {t('customers.title', { entity: pack.labels.customer })}
@@ -52,16 +52,16 @@ export default function CustomersPage() {
             })}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
           <button
             onClick={() => setShowImport(true)}
-            className="flex items-center gap-1 border px-3 py-2 rounded-xl text-sm hover:bg-slate-50 transition-colors"
+            className="flex items-center justify-center gap-1 border px-3 py-2 rounded-xl text-sm hover:bg-slate-50 transition-colors"
           >
             <Upload size={16} /> {t('import.import_button')}
           </button>
           <button
             onClick={() => setShowForm(true)}
-            className="flex items-center gap-1 bg-sage-600 text-white px-3 py-2 rounded-xl text-sm hover:bg-sage-700 transition-colors"
+            className="flex items-center justify-center gap-1 bg-sage-600 text-white px-3 py-2 rounded-xl text-sm hover:bg-sage-700 transition-colors"
           >
             <Plus size={16} /> {t('customers.add_button', { entity: pack.labels.customer })}
           </button>
@@ -90,7 +90,8 @@ export default function CustomersPage() {
       </form>
 
       <div className="bg-white rounded-2xl shadow-soft overflow-hidden">
-        <table className="w-full">
+        <div className="overflow-x-auto">
+        <table className="w-full min-w-[640px]">
           <thead className="bg-slate-50 border-b">
             <tr>
               <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
@@ -142,6 +143,7 @@ export default function CustomersPage() {
                 ))}
           </tbody>
         </table>
+        </div>
         {!loading && (!customers.data || customers.data.length === 0) && (
           <EmptyState
             icon={Users}

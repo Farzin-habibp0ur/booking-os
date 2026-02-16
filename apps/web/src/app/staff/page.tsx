@@ -102,7 +102,8 @@ export default function StaffPage() {
       </div>
 
       <div className="bg-white rounded-2xl shadow-soft overflow-hidden">
-        <table className="w-full">
+        <div className="overflow-x-auto">
+        <table className="w-full min-w-[640px]">
           <thead className="bg-slate-50 border-b">
             <tr>
               <th className="w-8"></th>
@@ -345,6 +346,7 @@ export default function StaffPage() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       {showForm && (

@@ -152,8 +152,8 @@ export default function CalendarPage() {
   return (
     <div className="p-6 h-full flex flex-col">
       {/* Top bar */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3 mb-4">
+        <div className="flex flex-wrap items-center gap-3">
           <h1 className="text-2xl font-serif font-semibold text-slate-900">
             {t('calendar.title')}
           </h1>
@@ -191,7 +191,7 @@ export default function CalendarPage() {
 
         <div className="flex items-center gap-3">
           {/* Staff filter chips */}
-          <div className="flex items-center gap-1">
+          <div className="flex flex-wrap items-center gap-1">
             {staff.map((s) => (
               <button
                 key={s.id}

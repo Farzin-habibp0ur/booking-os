@@ -62,14 +62,14 @@ export default function BookingsPage() {
 
   return (
     <div className="p-6">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
         <h1 className="text-2xl font-serif font-semibold text-slate-900">
           {t('bookings.title', { entity: pack.labels.booking })}
         </h1>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="border border-slate-200 rounded-xl px-3 py-2 text-sm transition-colors"
+          className="border border-slate-200 rounded-xl px-3 py-2 text-sm transition-colors w-full sm:w-auto"
         >
           <option value="">{t('bookings.all_statuses')}</option>
           {Object.keys(statusColors).map((s) => (
@@ -81,7 +81,8 @@ export default function BookingsPage() {
       </div>
 
       <div className="bg-white rounded-2xl shadow-soft overflow-hidden">
-        <table className="w-full">
+        <div className="overflow-x-auto">
+        <table className="w-full min-w-[640px]">
           <thead className="bg-slate-50 border-b">
             <tr>
               <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
@@ -132,6 +133,7 @@ export default function BookingsPage() {
                 ))}
           </tbody>
         </table>
+        </div>
         {!loading && bookings.data.length === 0 && (
           <EmptyState
             icon={BookOpen}
