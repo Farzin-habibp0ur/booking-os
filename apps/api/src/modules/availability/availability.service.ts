@@ -1,5 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma.service';
+import { CalendarSyncService } from '../calendar-sync/calendar-sync.service';
 
 export interface TimeSlot {
   time: string; // ISO string
@@ -11,7 +12,12 @@ export interface TimeSlot {
 
 @Injectable()
 export class AvailabilityService {
-  constructor(private prisma: PrismaService) {}
+  private readonly logger = new Logger(AvailabilityService.name);
+
+  constructor(
+    private prisma: PrismaService,
+    private calendarSyncService: CalendarSyncService,
+  ) {}
 
   async getAvailableSlots(
     businessId: string,
@@ -71,6 +77,14 @@ export class AvailabilityService {
         select: { startTime: true, endTime: true },
       });
 
+      // Pull external calendar events for conflict detection
+      let externalEvents: { startTime: Date; endTime: Date }[] = [];
+      try {
+        externalEvents = await this.calendarSyncService.pullExternalEvents(staff.id, date);
+      } catch (error) {
+        this.logger.warn(`Failed to pull external events for staff ${staff.id}: ${error}`);
+      }
+
       // Generate slots from working hours
       const [startH, startM] = wh.startTime.split(':').map(Number);
       const [endH, endM] = wh.endTime.split(':').map(Number);
@@ -87,12 +101,19 @@ export class AvailabilityService {
         const slotEnd = new Date(slotStart);
         slotEnd.setMinutes(slotEnd.getMinutes() + durationMins);
 
-        // Check for conflicts
-        const hasConflict = existingBookings.some((b) => {
+        // Check for internal booking conflicts
+        const internalConflict = existingBookings.some((b) => {
           const bStart = new Date(b.startTime).getTime();
           const bEnd = new Date(b.endTime).getTime();
           return slotStart.getTime() < bEnd && slotEnd.getTime() > bStart;
         });
+
+        // Check for external calendar conflicts
+        const externalConflict = externalEvents.some((e) => {
+          return slotStart.getTime() < e.endTime.getTime() && slotEnd.getTime() > e.startTime.getTime();
+        });
+
+        const hasConflict = internalConflict || externalConflict;
 
         // Skip past slots
         if (slotStart.getTime() < Date.now()) continue;

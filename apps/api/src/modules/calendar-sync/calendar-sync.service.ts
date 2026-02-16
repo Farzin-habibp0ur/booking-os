@@ -116,6 +116,55 @@ export class CalendarSyncService {
     });
   }
 
+  async pullExternalEvents(
+    staffId: string,
+    date: string, // YYYY-MM-DD
+  ): Promise<CalendarEvent[]> {
+    const connections = await this.prisma.calendarConnection.findMany({
+      where: { staffId, syncEnabled: true },
+    });
+
+    const dayStart = new Date(date + 'T00:00:00Z');
+    const dayEnd = new Date(date + 'T23:59:59Z');
+    const allEvents: CalendarEvent[] = [];
+
+    for (const connection of connections) {
+      try {
+        const provider = this.getProvider(connection.provider);
+        let accessToken = decrypt(connection.accessToken);
+
+        // Refresh token if expired
+        if (connection.tokenExpiresAt && connection.tokenExpiresAt < new Date()) {
+          const refreshToken = decrypt(connection.refreshToken);
+          const refreshed = await provider.refreshAccessToken(refreshToken);
+          accessToken = refreshed.accessToken;
+
+          await this.prisma.calendarConnection.update({
+            where: { id: connection.id },
+            data: {
+              accessToken: encrypt(refreshed.accessToken),
+              tokenExpiresAt: refreshed.expiresAt,
+            },
+          });
+        }
+
+        const events = await provider.listEvents(
+          accessToken,
+          connection.calendarId || 'primary',
+          dayStart,
+          dayEnd,
+        );
+        allEvents.push(...events);
+      } catch (error) {
+        this.logger.error(
+          `Failed to pull events from ${connection.provider} for staff ${staffId}: ${error}`,
+        );
+      }
+    }
+
+    return allEvents;
+  }
+
   async syncBookingToCalendar(
     booking: BookingForSync,
     action: 'create' | 'update' | 'cancel',

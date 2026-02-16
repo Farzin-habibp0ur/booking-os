@@ -150,6 +150,54 @@ export class GoogleCalendarProvider implements CalendarProvider {
     }
   }
 
+  async listEvents(
+    accessToken: string,
+    calendarId: string,
+    timeMin: Date,
+    timeMax: Date,
+  ): Promise<CalendarEvent[]> {
+    const params = new URLSearchParams({
+      timeMin: timeMin.toISOString(),
+      timeMax: timeMax.toISOString(),
+      singleEvents: 'true',
+      orderBy: 'startTime',
+    });
+    const res = await fetch(
+      `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId || 'primary')}/events?${params.toString()}`,
+      {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      },
+    );
+
+    if (!res.ok) {
+      const err = await res.text();
+      this.logger.error(`Google list events failed: ${err}`);
+      throw new Error('Failed to list Google Calendar events');
+    }
+
+    const data = (await res.json()) as {
+      items: Array<{
+        summary?: string;
+        description?: string;
+        start?: { dateTime?: string; date?: string };
+        end?: { dateTime?: string; date?: string };
+        location?: string;
+        status?: string;
+      }>;
+    };
+
+    return (data.items || [])
+      .filter((item) => item.status !== 'cancelled')
+      .filter((item) => item.start?.dateTime && item.end?.dateTime)
+      .map((item) => ({
+        summary: item.summary || '',
+        description: item.description,
+        startTime: new Date(item.start!.dateTime!),
+        endTime: new Date(item.end!.dateTime!),
+        location: item.location,
+      }));
+  }
+
   async deleteEvent(accessToken: string, calendarId: string, eventId: string): Promise<void> {
     const res = await fetch(
       `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId || 'primary')}/events/${encodeURIComponent(eventId)}`,

@@ -28,4 +28,10 @@ export interface CalendarProvider {
     event: CalendarEvent,
   ): Promise<void>;
   deleteEvent(accessToken: string, calendarId: string, eventId: string): Promise<void>;
+  listEvents(
+    accessToken: string,
+    calendarId: string,
+    timeMin: Date,
+    timeMax: Date,
+  ): Promise<CalendarEvent[]>;
 }

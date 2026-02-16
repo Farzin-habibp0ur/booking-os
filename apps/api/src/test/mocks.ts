@@ -91,6 +91,7 @@ export function createMockCalendarSyncService() {
     generateIcalFeed: jest.fn().mockResolvedValue(null),
     getIcalFeedUrl: jest.fn().mockResolvedValue(null),
     regenerateIcalToken: jest.fn().mockResolvedValue('https://example.com/ical/new.ics'),
+    pullExternalEvents: jest.fn().mockResolvedValue([]),
   };
 }
 

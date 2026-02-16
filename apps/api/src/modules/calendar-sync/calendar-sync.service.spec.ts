@@ -23,6 +23,7 @@ describe('CalendarSyncService', () => {
     updateEvent: jest.Mock;
     deleteEvent: jest.Mock;
     refreshAccessToken: jest.Mock;
+    listEvents: jest.Mock;
   };
   let outlookProvider: {
     isConfigured: jest.Mock;
@@ -32,6 +33,7 @@ describe('CalendarSyncService', () => {
     updateEvent: jest.Mock;
     deleteEvent: jest.Mock;
     refreshAccessToken: jest.Mock;
+    listEvents: jest.Mock;
   };
 
   beforeEach(async () => {
@@ -55,6 +57,7 @@ describe('CalendarSyncService', () => {
         accessToken: 'new-access',
         expiresAt: new Date(Date.now() + 3600000),
       }),
+      listEvents: jest.fn().mockResolvedValue([]),
     };
     outlookProvider = {
       isConfigured: jest.fn().mockReturnValue(false),
@@ -71,6 +74,7 @@ describe('CalendarSyncService', () => {
         accessToken: 'new-outlook-access',
         expiresAt: new Date(Date.now() + 3600000),
       }),
+      listEvents: jest.fn().mockResolvedValue([]),
     };
 
     const module = await Test.createTestingModule({
@@ -271,6 +275,145 @@ describe('CalendarSyncService', () => {
       expect(feed).toContain('BEGIN:VEVENT');
       expect(feed).toContain('Botox - Jane');
       expect(feed).toContain('END:VCALENDAR');
+    });
+  });
+
+  describe('pullExternalEvents', () => {
+    it('returns events from connected providers', async () => {
+      prisma.calendarConnection.findMany.mockResolvedValue([
+        {
+          id: 'conn1',
+          provider: 'google',
+          accessToken: encrypt('access-token'),
+          refreshToken: encrypt('refresh-token'),
+          tokenExpiresAt: new Date(Date.now() + 3600000),
+          calendarId: 'primary',
+          syncEnabled: true,
+        },
+      ] as any);
+
+      const mockEvents = [
+        {
+          summary: 'External Meeting',
+          startTime: new Date('2026-03-01T14:00:00Z'),
+          endTime: new Date('2026-03-01T15:00:00Z'),
+        },
+      ];
+      googleProvider.listEvents.mockResolvedValue(mockEvents);
+
+      const result = await service.pullExternalEvents('staff1', '2026-03-01');
+
+      expect(result).toHaveLength(1);
+      expect(result[0].summary).toBe('External Meeting');
+      expect(googleProvider.listEvents).toHaveBeenCalledWith(
+        'access-token',
+        'primary',
+        expect.any(Date),
+        expect.any(Date),
+      );
+    });
+
+    it('returns empty array when no connections exist', async () => {
+      prisma.calendarConnection.findMany.mockResolvedValue([]);
+
+      const result = await service.pullExternalEvents('staff1', '2026-03-01');
+
+      expect(result).toEqual([]);
+    });
+
+    it('aggregates events from multiple providers', async () => {
+      prisma.calendarConnection.findMany.mockResolvedValue([
+        {
+          id: 'conn1',
+          provider: 'google',
+          accessToken: encrypt('g-access'),
+          refreshToken: encrypt('g-refresh'),
+          tokenExpiresAt: new Date(Date.now() + 3600000),
+          calendarId: 'primary',
+          syncEnabled: true,
+        },
+        {
+          id: 'conn2',
+          provider: 'outlook',
+          accessToken: encrypt('o-access'),
+          refreshToken: encrypt('o-refresh'),
+          tokenExpiresAt: new Date(Date.now() + 3600000),
+          calendarId: null,
+          syncEnabled: true,
+        },
+      ] as any);
+
+      googleProvider.listEvents.mockResolvedValue([
+        { summary: 'Google Event', startTime: new Date(), endTime: new Date() },
+      ]);
+      outlookProvider.listEvents.mockResolvedValue([
+        { summary: 'Outlook Event', startTime: new Date(), endTime: new Date() },
+      ]);
+
+      const result = await service.pullExternalEvents('staff1', '2026-03-01');
+
+      expect(result).toHaveLength(2);
+      expect(result.map((e) => e.summary)).toEqual(['Google Event', 'Outlook Event']);
+    });
+
+    it('refreshes expired token before listing events', async () => {
+      prisma.calendarConnection.findMany.mockResolvedValue([
+        {
+          id: 'conn1',
+          provider: 'google',
+          accessToken: encrypt('old-token'),
+          refreshToken: encrypt('refresh-token'),
+          tokenExpiresAt: new Date(Date.now() - 60000), // expired
+          calendarId: 'primary',
+          syncEnabled: true,
+        },
+      ] as any);
+      prisma.calendarConnection.update.mockResolvedValue({} as any);
+      googleProvider.listEvents.mockResolvedValue([]);
+
+      await service.pullExternalEvents('staff1', '2026-03-01');
+
+      expect(googleProvider.refreshAccessToken).toHaveBeenCalledWith('refresh-token');
+      expect(prisma.calendarConnection.update).toHaveBeenCalled();
+      expect(googleProvider.listEvents).toHaveBeenCalledWith(
+        'new-access',
+        'primary',
+        expect.any(Date),
+        expect.any(Date),
+      );
+    });
+
+    it('continues when one provider fails', async () => {
+      prisma.calendarConnection.findMany.mockResolvedValue([
+        {
+          id: 'conn1',
+          provider: 'google',
+          accessToken: encrypt('g-access'),
+          refreshToken: encrypt('g-refresh'),
+          tokenExpiresAt: new Date(Date.now() + 3600000),
+          calendarId: 'primary',
+          syncEnabled: true,
+        },
+        {
+          id: 'conn2',
+          provider: 'outlook',
+          accessToken: encrypt('o-access'),
+          refreshToken: encrypt('o-refresh'),
+          tokenExpiresAt: new Date(Date.now() + 3600000),
+          calendarId: null,
+          syncEnabled: true,
+        },
+      ] as any);
+
+      googleProvider.listEvents.mockRejectedValue(new Error('API error'));
+      outlookProvider.listEvents.mockResolvedValue([
+        { summary: 'Outlook Event', startTime: new Date(), endTime: new Date() },
+      ]);
+
+      const result = await service.pullExternalEvents('staff1', '2026-03-01');
+
+      expect(result).toHaveLength(1);
+      expect(result[0].summary).toBe('Outlook Event');
     });
   });
 

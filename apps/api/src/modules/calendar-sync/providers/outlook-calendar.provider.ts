@@ -146,6 +146,57 @@ export class OutlookCalendarProvider implements CalendarProvider {
     }
   }
 
+  async listEvents(
+    accessToken: string,
+    _calendarId: string,
+    timeMin: Date,
+    timeMax: Date,
+  ): Promise<CalendarEvent[]> {
+    const params = new URLSearchParams({
+      startDateTime: timeMin.toISOString(),
+      endDateTime: timeMax.toISOString(),
+      $orderby: 'start/dateTime',
+      $top: '100',
+    });
+    const res = await fetch(
+      `https://graph.microsoft.com/v1.0/me/calendarView?${params.toString()}`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          Prefer: 'outlook.timezone="UTC"',
+        },
+      },
+    );
+
+    if (!res.ok) {
+      const err = await res.text();
+      this.logger.error(`Outlook list events failed: ${err}`);
+      throw new Error('Failed to list Outlook Calendar events');
+    }
+
+    const data = (await res.json()) as {
+      value: Array<{
+        subject?: string;
+        bodyPreview?: string;
+        start?: { dateTime?: string };
+        end?: { dateTime?: string };
+        location?: { displayName?: string };
+        isCancelled?: boolean;
+      }>;
+    };
+
+    return (data.value || [])
+      .filter((item) => !item.isCancelled)
+      .filter((item) => item.start?.dateTime && item.end?.dateTime)
+      .map((item) => ({
+        summary: item.subject || '',
+        description: item.bodyPreview,
+        startTime: new Date(item.start!.dateTime! + 'Z'),
+        endTime: new Date(item.end!.dateTime! + 'Z'),
+        location: item.location?.displayName,
+      }));
+  }
+
   async deleteEvent(accessToken: string, _calendarId: string, eventId: string): Promise<void> {
     const res = await fetch(
       `https://graph.microsoft.com/v1.0/me/events/${encodeURIComponent(eventId)}`,

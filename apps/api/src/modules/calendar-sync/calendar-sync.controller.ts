@@ -77,4 +77,26 @@ export class CalendarSyncController {
     const url = await this.calendarSyncService.regenerateIcalToken(staffId);
     return { url };
   }
+
+  @Post('manual-sync')
+  @UseGuards(AuthGuard('jwt'), TenantGuard)
+  async manualSync(
+    @CurrentUser('staffId') staffId: string,
+    @Query('date') date?: string,
+  ) {
+    const syncDate = date || new Date().toISOString().split('T')[0];
+    const events = await this.calendarSyncService.pullExternalEvents(staffId, syncDate);
+    return { events, count: events.length };
+  }
+
+  @Get('external-events')
+  @UseGuards(AuthGuard('jwt'), TenantGuard)
+  async getExternalEvents(
+    @CurrentUser('staffId') staffId: string,
+    @Query('date') date?: string,
+  ) {
+    const targetDate = date || new Date().toISOString().split('T')[0];
+    const events = await this.calendarSyncService.pullExternalEvents(staffId, targetDate);
+    return { events, count: events.length };
+  }
 }

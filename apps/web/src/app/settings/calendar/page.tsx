@@ -42,6 +42,7 @@ function CalendarSyncPage() {
   const [copied, setCopied] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [regenerating, setRegenerating] = useState(false);
+  const [syncing, setSyncing] = useState<string | null>(null);
 
   const fetchData = async () => {
     try {
@@ -120,6 +121,20 @@ function CalendarSyncPage() {
     }
   };
 
+  const handleSyncNow = async (provider: string) => {
+    setSyncing(provider);
+    try {
+      const { count } = await api.post<{ count: number }>('/calendar-sync/manual-sync');
+      setToast(`Synced ${count} external event${count !== 1 ? 's' : ''}`);
+      setTimeout(() => setToast(null), 3000);
+    } catch {
+      setToast('Sync failed. Please try again.');
+      setTimeout(() => setToast(null), 3000);
+    } finally {
+      setSyncing(null);
+    }
+  };
+
   const isConnected = (provider: string) => connections.some((c) => c.provider === provider);
 
   const getConnection = (provider: string) => connections.find((c) => c.provider === provider);
@@ -185,6 +200,14 @@ function CalendarSyncPage() {
                 <div className="flex items-center gap-2">
                   {connected ? (
                     <>
+                      <button
+                        onClick={() => handleSyncNow(key)}
+                        disabled={syncing === key}
+                        className="flex items-center gap-1 text-xs text-sage-600 hover:text-sage-700 px-2 py-1 transition-colors disabled:opacity-50"
+                      >
+                        <RefreshCw size={12} className={syncing === key ? 'animate-spin' : ''} />
+                        {syncing === key ? 'Syncing...' : 'Sync Now'}
+                      </button>
                       <span className="text-xs bg-sage-50 text-sage-900 px-2 py-1 rounded-lg">
                         {t('calendar_sync.status_connected')}
                       </span>
