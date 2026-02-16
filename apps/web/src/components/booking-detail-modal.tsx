@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import { api } from '@/lib/api';
-import { X, Calendar, Clock, User, MessageSquare, AlertTriangle } from 'lucide-react';
+import { X, Calendar, Clock, User, MessageSquare, AlertTriangle, Repeat } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { useI18n } from '@/lib/i18n';
 
 interface BookingDetailModalProps {
   booking: any;
@@ -25,8 +26,12 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }
 export default function BookingDetailModal({ booking, isOpen, onClose, onUpdated, onReschedule }: BookingDetailModalProps) {
   const [updating, setUpdating] = useState('');
   const [confirmAction, setConfirmAction] = useState<{ action: string; label: string } | null>(null);
+  const [cancelScope, setCancelScope] = useState<'single' | 'future' | 'all' | null>(null);
+  const { t } = useI18n();
 
   if (!isOpen || !booking) return null;
+
+  const isRecurring = !!(booking.recurringSeriesId || booking.recurringSeries?.id);
 
   const statusConfig = STATUS_CONFIG[booking.status] || STATUS_CONFIG.PENDING;
 
@@ -43,11 +48,32 @@ export default function BookingDetailModal({ booking, isOpen, onClose, onUpdated
   };
 
   const handleAction = (action: string, label: string) => {
+    if (action === 'CANCELLED' && isRecurring) {
+      setCancelScope('single');
+      return;
+    }
     if (['CANCELLED', 'NO_SHOW'].includes(action)) {
       setConfirmAction({ action, label });
     } else {
       updateStatus(action);
     }
+  };
+
+  const handleRecurringCancel = async () => {
+    if (!cancelScope) return;
+    setUpdating('CANCELLED');
+    try {
+      const seriesId = booking.recurringSeriesId || booking.recurringSeries?.id;
+      await api.post(`/bookings/recurring/${seriesId}/cancel`, {
+        scope: cancelScope,
+        bookingId: booking.id,
+      });
+      onUpdated(booking);
+      setCancelScope(null);
+    } catch (e) {
+      console.error(e);
+    }
+    setUpdating('');
   };
 
   const getAvailableActions = () => {
@@ -112,6 +138,49 @@ export default function BookingDetailModal({ booking, isOpen, onClose, onUpdated
           </div>
         )}
 
+        {/* Recurring cancel scope picker */}
+        {cancelScope !== null && (
+          <div className="absolute inset-0 z-10 bg-white/95 rounded-2xl flex items-center justify-center">
+            <div className="text-center p-6 w-full max-w-xs">
+              <Repeat size={28} className="mx-auto text-lavender-600 mb-3" />
+              <p className="font-semibold mb-3">{t('recurring.cancel_scope_title')}</p>
+              <div className="space-y-2 mb-4">
+                {(['single', 'future', 'all'] as const).map((scope) => (
+                  <button
+                    key={scope}
+                    onClick={() => setCancelScope(scope)}
+                    className={cn(
+                      'w-full px-3 py-2 rounded-xl text-sm text-left transition-colors',
+                      cancelScope === scope
+                        ? 'bg-lavender-50 border-2 border-lavender-300 text-lavender-900'
+                        : 'border border-slate-200 hover:bg-slate-50',
+                    )}
+                  >
+                    {scope === 'single' && t('recurring.cancel_this_only')}
+                    {scope === 'future' && t('recurring.cancel_this_and_future')}
+                    {scope === 'all' && t('recurring.cancel_all')}
+                  </button>
+                ))}
+              </div>
+              <div className="flex gap-2 justify-center">
+                <button
+                  onClick={() => setCancelScope(null)}
+                  className="px-4 py-2 border rounded-xl text-sm hover:bg-slate-50"
+                >
+                  Go back
+                </button>
+                <button
+                  onClick={handleRecurringCancel}
+                  disabled={!!updating}
+                  className="px-4 py-2 rounded-xl text-sm text-white bg-red-600 hover:bg-red-700"
+                >
+                  {updating ? 'Cancelling...' : 'Cancel'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-slate-100">
           <div className="flex items-center gap-3">
@@ -119,6 +188,12 @@ export default function BookingDetailModal({ booking, isOpen, onClose, onUpdated
             <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium', statusConfig.bg, statusConfig.color)}>
               {statusConfig.label}
             </span>
+            {isRecurring && (
+              <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium bg-lavender-50 text-lavender-900">
+                <Repeat size={10} />
+                {t('recurring.recurring_badge')}
+              </span>
+            )}
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-gray-600">
             <X size={20} />

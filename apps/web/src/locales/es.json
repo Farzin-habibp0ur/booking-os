@@ -699,6 +699,26 @@
     "regenerated": "URL del feed iCal regenerada"
   },
 
+  "recurring": {
+    "repeat_booking": "Repetir esta reserva",
+    "days_of_week": "Días de la semana",
+    "frequency": "Frecuencia",
+    "every_week": "Cada semana",
+    "every_2_weeks": "Cada 2 semanas",
+    "every_3_weeks": "Cada 3 semanas",
+    "every_4_weeks": "Cada 4 semanas",
+    "ends": "Termina",
+    "after_occurrences": "Después de {{count}} ocurrencias",
+    "on_date": "En fecha",
+    "recurring_badge": "Recurrente",
+    "cancel_scope_title": "Cancelar reserva recurrente",
+    "cancel_this_only": "Solo esta reserva",
+    "cancel_this_and_future": "Esta y futuras reservas",
+    "cancel_all": "Todas las reservas de la serie",
+    "series_created": "Serie recurrente creada ({{count}} reservas)",
+    "conflict_error": "Conflicto detectado"
+  },
+
   "errors": {
     "something_went_wrong": "Algo salió mal",
     "unexpected_error": "Ocurrió un error inesperado.",

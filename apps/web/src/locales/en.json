@@ -699,6 +699,26 @@
     "regenerated": "iCal feed URL regenerated"
   },
 
+  "recurring": {
+    "repeat_booking": "Repeat this booking",
+    "days_of_week": "Days of week",
+    "frequency": "Frequency",
+    "every_week": "Every week",
+    "every_2_weeks": "Every 2 weeks",
+    "every_3_weeks": "Every 3 weeks",
+    "every_4_weeks": "Every 4 weeks",
+    "ends": "Ends",
+    "after_occurrences": "After {{count}} occurrences",
+    "on_date": "On date",
+    "recurring_badge": "Recurring",
+    "cancel_scope_title": "Cancel recurring booking",
+    "cancel_this_only": "This booking only",
+    "cancel_this_and_future": "This and future bookings",
+    "cancel_all": "All bookings in series",
+    "series_created": "Recurring series created ({{count}} bookings)",
+    "conflict_error": "Conflict detected"
+  },
+
   "errors": {
     "something_went_wrong": "Something went wrong",
     "unexpected_error": "An unexpected error occurred.",

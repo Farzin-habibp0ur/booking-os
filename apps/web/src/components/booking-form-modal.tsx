@@ -2,8 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
-import { X, Clock, User, AlertCircle } from 'lucide-react';
+import { X, Clock, User, AlertCircle, Repeat } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { useI18n } from '@/lib/i18n';
+
+const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 interface BookingFormModalProps {
   isOpen: boolean;
@@ -50,6 +53,15 @@ export default function BookingFormModal({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
+  // Recurring state
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurringDays, setRecurringDays] = useState<number[]>([]);
+  const [intervalWeeks, setIntervalWeeks] = useState(1);
+  const [endMode, setEndMode] = useState<'count' | 'date'>('count');
+  const [occurrenceCount, setOccurrenceCount] = useState(8);
+  const [endDate, setEndDate] = useState('');
+  const { t } = useI18n();
+
   useEffect(() => {
     if (!isOpen) return;
     api.get<any>('/services').then((res) => setServices(res.data || res || []));
@@ -70,6 +82,12 @@ export default function BookingFormModal({
       setNotes(rescheduleData?.notes || '');
       setError('');
       setSlots([]);
+      setIsRecurring(false);
+      setRecurringDays([]);
+      setIntervalWeeks(1);
+      setEndMode('count');
+      setOccurrenceCount(8);
+      setEndDate('');
     }
   }, [isOpen]);
 
@@ -108,6 +126,23 @@ export default function BookingFormModal({
           notes: notes || undefined,
         });
         onCreated(updated);
+      } else if (isRecurring && recurringDays.length > 0) {
+        // Create recurring series
+        const slotDate = new Date(selectedSlot.time);
+        const timeOfDay = `${slotDate.getHours().toString().padStart(2, '0')}:${slotDate.getMinutes().toString().padStart(2, '0')}`;
+        const result = await api.post<any>('/bookings/recurring', {
+          customerId: selectedCustomerId,
+          serviceId,
+          staffId: selectedSlot.staffId,
+          startDate: selectedDate,
+          timeOfDay,
+          daysOfWeek: recurringDays,
+          intervalWeeks,
+          totalCount: endMode === 'count' ? occurrenceCount : undefined,
+          endsAt: endMode === 'date' ? endDate : undefined,
+          notes: notes || undefined,
+        });
+        onCreated(result);
       } else {
         // Create new booking
         const endpoint = conversationId
@@ -304,6 +339,111 @@ export default function BookingFormModal({
               className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sage-500 resize-none"
             />
           </div>
+
+          {/* Recurring section — only in create mode */}
+          {!isReschedule && (
+            <div className="border-t border-slate-100 pt-3">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isRecurring}
+                  onChange={(e) => setIsRecurring(e.target.checked)}
+                  className="rounded border-slate-300 text-sage-600 focus:ring-sage-500"
+                />
+                <Repeat size={14} className="text-slate-500" />
+                <span className="text-sm font-medium text-slate-700">{t('recurring.repeat_booking')}</span>
+              </label>
+
+              {isRecurring && (
+                <div className="mt-3 space-y-3 pl-6">
+                  {/* Days of week */}
+                  <div>
+                    <label className="block text-xs font-medium text-slate-500 mb-1.5">{t('recurring.days_of_week')}</label>
+                    <div className="flex gap-1">
+                      {DAY_LABELS.map((label, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() =>
+                            setRecurringDays((prev) =>
+                              prev.includes(i) ? prev.filter((d) => d !== i) : [...prev, i],
+                            )
+                          }
+                          className={cn(
+                            'w-9 h-8 rounded-lg text-xs font-medium transition-colors',
+                            recurringDays.includes(i)
+                              ? 'bg-sage-600 text-white'
+                              : 'bg-slate-100 text-slate-500 hover:bg-slate-200',
+                          )}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Frequency */}
+                  <div>
+                    <label className="block text-xs font-medium text-slate-500 mb-1">{t('recurring.frequency')}</label>
+                    <select
+                      value={intervalWeeks}
+                      onChange={(e) => setIntervalWeeks(Number(e.target.value))}
+                      className="w-full border border-slate-200 rounded-xl px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-sage-500"
+                    >
+                      <option value={1}>{t('recurring.every_week')}</option>
+                      <option value={2}>{t('recurring.every_2_weeks')}</option>
+                      <option value={3}>{t('recurring.every_3_weeks')}</option>
+                      <option value={4}>{t('recurring.every_4_weeks')}</option>
+                    </select>
+                  </div>
+
+                  {/* End mode */}
+                  <div>
+                    <label className="block text-xs font-medium text-slate-500 mb-1.5">{t('recurring.ends')}</label>
+                    <div className="space-y-2">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="endMode"
+                          checked={endMode === 'count'}
+                          onChange={() => setEndMode('count')}
+                          className="text-sage-600 focus:ring-sage-500"
+                        />
+                        <span className="text-sm text-slate-700">{t('recurring.after_occurrences', { count: '' })}</span>
+                        <input
+                          type="number"
+                          min={1}
+                          max={52}
+                          value={occurrenceCount}
+                          onChange={(e) => setOccurrenceCount(Number(e.target.value))}
+                          disabled={endMode !== 'count'}
+                          className="w-16 border border-slate-200 rounded-lg px-2 py-1 text-sm text-center focus:outline-none focus:ring-2 focus:ring-sage-500 disabled:opacity-50"
+                        />
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="endMode"
+                          checked={endMode === 'date'}
+                          onChange={() => setEndMode('date')}
+                          className="text-sage-600 focus:ring-sage-500"
+                        />
+                        <span className="text-sm text-slate-700">{t('recurring.on_date')}</span>
+                        <input
+                          type="date"
+                          value={endDate}
+                          onChange={(e) => setEndDate(e.target.value)}
+                          min={selectedDate || new Date().toISOString().split('T')[0]}
+                          disabled={endMode !== 'date'}
+                          className="flex-1 border border-slate-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-sage-500 disabled:opacity-50"
+                        />
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </form>
 
         {/* Footer */}

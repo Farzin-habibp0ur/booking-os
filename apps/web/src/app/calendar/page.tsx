@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { api } from '@/lib/api';
-import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Repeat } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useI18n } from '@/lib/i18n';
 import BookingFormModal from '@/components/booking-form-modal';
@@ -255,7 +255,8 @@ export default function CalendarPage() {
                         )}
                         style={{ top, height, borderLeftWidth: 3 }}
                       >
-                        <p className={cn('text-xs font-medium truncate', colors.text)}>
+                        <p className={cn('text-xs font-medium truncate flex items-center gap-1', colors.text)}>
+                          {b.recurringSeriesId && <Repeat size={9} className="flex-shrink-0" />}
                           {new Date(b.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           {' – '}
                           {new Date(b.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -339,7 +340,10 @@ export default function CalendarPage() {
                           className={cn('absolute left-0.5 right-0.5 rounded border-l-2 px-1 py-0.5 cursor-pointer hover:shadow-md', colors.bg, colors.border)}
                           style={{ top, height, borderLeftWidth: 2 }}
                         >
-                          <p className="text-[10px] font-medium truncate">{b.customer?.name}</p>
+                          <p className="text-[10px] font-medium truncate flex items-center gap-0.5">
+                            {b.recurringSeriesId && <Repeat size={8} className="flex-shrink-0" />}
+                            {b.customer?.name}
+                          </p>
                           <p className="text-[9px] text-slate-500 truncate">{new Date(b.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                         </div>
                       );

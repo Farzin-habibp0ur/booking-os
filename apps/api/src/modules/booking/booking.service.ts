@@ -32,7 +32,7 @@ export class BookingService {
     const [data, total] = await Promise.all([
       this.prisma.booking.findMany({
         where,
-        include: { customer: true, service: true, staff: true },
+        include: { customer: true, service: true, staff: true, recurringSeries: { select: { id: true } } },
         skip: (page - 1) * pageSize,
         take: pageSize,
         orderBy: { startTime: 'asc' },
@@ -45,7 +45,7 @@ export class BookingService {
   async findById(businessId: string, id: string) {
     return this.prisma.booking.findFirst({
       where: { id, businessId },
-      include: { customer: true, service: true, staff: true, conversation: true, reminders: true },
+      include: { customer: true, service: true, staff: true, conversation: true, reminders: true, recurringSeries: { select: { id: true } } },
     });
   }
 
@@ -178,7 +178,7 @@ export class BookingService {
 
     return this.prisma.booking.findMany({
       where,
-      include: { customer: true, service: true, staff: true },
+      include: { customer: true, service: true, staff: true, recurringSeries: { select: { id: true } } },
       orderBy: { startTime: 'asc' },
     });
   }
