@@ -26,10 +26,14 @@ import {
   Pencil,
   Mail,
   RefreshCw,
+  Sparkles,
+  Stethoscope,
+  Calendar,
 } from 'lucide-react';
 import { PROFILE_FIELDS } from '@booking-os/shared';
 
 const STEP_KEYS = [
+  'clinic_type',
   'business',
   'whatsapp',
   'staff',
@@ -42,6 +46,7 @@ const STEP_KEYS = [
 ] as const;
 
 const STEP_ICONS = [
+  Sparkles,
   Building2,
   MessageCircle,
   Users,
@@ -104,6 +109,10 @@ function SetupPage() {
   // Staff invitation
   const [inviteSending, setInviteSending] = useState(false);
   const [lastInvitedEmail, setLastInvitedEmail] = useState<string | null>(null);
+
+  // Clinic type / pack install
+  const [packInstalling, setPackInstalling] = useState(false);
+  const [packInstalled, setPackInstalled] = useState<{ services: number; templates: number } | null>(null);
 
   // Customer Import
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -326,10 +335,39 @@ function SetupPage() {
     await api.patch('/business', { packConfig: { requiredProfileFields } });
   };
 
+  const installPack = async (packName: string) => {
+    setPackInstalling(true);
+    try {
+      const result = await api.post<{ installed: { services: number; templates: number } }>(
+        '/business/install-pack',
+        { packName },
+      );
+      setPackInstalled({
+        services: result.installed.services,
+        templates: result.installed.templates,
+      });
+      // Reload data so subsequent steps reflect installed defaults
+      const [svcRes, tplRes] = await Promise.all([
+        api.get<any>('/services'),
+        api.get<any[]>('/templates'),
+      ]);
+      setServices(svcRes?.data || svcRes || []);
+      setTemplates(tplRes || []);
+      const biz = await api.get<any>('/business');
+      if (biz.packConfig?.requiredProfileFields) {
+        setRequiredProfileFields(biz.packConfig.requiredProfileFields);
+      }
+      toast(t('setup.clinic_type_installed'));
+    } catch (err: any) {
+      toast(err.message || 'Failed to install pack', 'error');
+    }
+    setPackInstalling(false);
+  };
+
   const handleNext = async () => {
-    if (step === 0) await saveBusiness();
-    if (step === 4 && selectedStaffForHours) await saveWorkingHours(selectedStaffForHours);
-    if (step === 6) await saveProfileRequirements();
+    if (step === 1) await saveBusiness();
+    if (step === 5 && selectedStaffForHours) await saveWorkingHours(selectedStaffForHours);
+    if (step === 7) await saveProfileRequirements();
     if (step < STEP_KEYS.length - 1) setStep(step + 1);
   };
 
@@ -387,8 +425,104 @@ function SetupPage() {
 
       {/* Content */}
       <div className="max-w-2xl mx-auto px-6 py-8">
-        {/* Step 1: Business Info */}
+        {/* Step 0: Clinic Type */}
         {step === 0 && (
+          <div className="space-y-4">
+            <div className="bg-white rounded-2xl shadow-soft p-6 space-y-2">
+              <h2 className="text-lg font-serif font-semibold text-slate-900">
+                {t('setup.clinic_type_title')}
+              </h2>
+              <p className="text-sm text-slate-500">{t('setup.clinic_type_subtitle')}</p>
+            </div>
+
+            {packInstalled ? (
+              <div className="bg-white rounded-2xl shadow-soft p-6 space-y-3">
+                <div className="flex items-center gap-2 text-sage-600">
+                  <Check size={20} />
+                  <h3 className="font-medium">{t('setup.clinic_type_installed')}</h3>
+                </div>
+                <p className="text-sm text-slate-600">
+                  {t('setup.clinic_type_installed_detail', {
+                    services: packInstalled.services,
+                    templates: packInstalled.templates,
+                  })}
+                </p>
+                <button
+                  onClick={() => setStep(1)}
+                  className="bg-sage-600 text-white px-6 py-2 rounded-xl text-sm hover:bg-sage-700"
+                >
+                  {t('common.next')} <ChevronRight size={14} className="inline ml-1" />
+                </button>
+              </div>
+            ) : (
+              <>
+                <button
+                  onClick={() => installPack('aesthetic')}
+                  disabled={packInstalling}
+                  className="w-full bg-white rounded-2xl shadow-soft p-6 text-left hover:ring-2 hover:ring-sage-500 transition-all"
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-sage-50 flex items-center justify-center flex-shrink-0">
+                      <Sparkles size={20} className="text-sage-600" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-sm text-slate-900">
+                          {t('setup.clinic_type_aesthetic')}
+                        </p>
+                        <span className="text-[10px] bg-sage-50 text-sage-700 px-2 py-0.5 rounded-full font-medium">
+                          Recommended
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-500 mt-1">
+                        {t('setup.clinic_type_aesthetic_desc')}
+                      </p>
+                    </div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => installPack('general')}
+                  disabled={packInstalling}
+                  className="w-full bg-white rounded-2xl shadow-soft p-6 text-left hover:ring-2 hover:ring-slate-300 transition-all"
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center flex-shrink-0">
+                      <Calendar size={20} className="text-slate-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-sm text-slate-900">
+                        {t('setup.clinic_type_general')}
+                      </p>
+                      <p className="text-xs text-slate-500 mt-1">
+                        {t('setup.clinic_type_general_desc')}
+                      </p>
+                    </div>
+                  </div>
+                </button>
+
+                {packInstalling && (
+                  <div className="flex items-center justify-center gap-2 py-4 text-sm text-slate-500">
+                    <Loader2 size={16} className="animate-spin" />
+                    {t('setup.clinic_type_installing')}
+                  </div>
+                )}
+
+                <div className="text-center">
+                  <button
+                    onClick={() => setStep(1)}
+                    className="text-xs text-slate-400 hover:text-slate-600 transition-colors"
+                  >
+                    {t('setup.clinic_type_skip')}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* Step 1: Business Info */}
+        {step === 1 && (
           <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
             <h2 className="text-lg font-serif font-semibold text-slate-900">
               {t('setup.business_title')}
@@ -449,7 +583,7 @@ function SetupPage() {
         )}
 
         {/* Step 2: Connect WhatsApp */}
-        {step === 1 && (
+        {step === 2 && (
           <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
             <h2 className="text-lg font-serif font-semibold text-slate-900">
               {t('setup.whatsapp_title')}
@@ -482,7 +616,7 @@ function SetupPage() {
         )}
 
         {/* Step 3: Add Staff */}
-        {step === 2 && (
+        {step === 3 && (
           <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
             <h2 className="text-lg font-serif font-semibold text-slate-900">
               {t('setup.staff_title')}
@@ -586,7 +720,7 @@ function SetupPage() {
         )}
 
         {/* Step 4: Define Services */}
-        {step === 3 && (
+        {step === 4 && (
           <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
             <h2 className="text-lg font-serif font-semibold text-slate-900">
               {t('setup.services_title')}
@@ -730,7 +864,7 @@ function SetupPage() {
         )}
 
         {/* Step 5: Working Hours */}
-        {step === 4 && (
+        {step === 5 && (
           <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
             <h2 className="text-lg font-serif font-semibold text-slate-900">
               {t('setup.hours_title')}
@@ -821,7 +955,7 @@ function SetupPage() {
         )}
 
         {/* Step 6: Templates */}
-        {step === 5 && (
+        {step === 6 && (
           <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
             <h2 className="text-lg font-serif font-semibold text-slate-900">
               {t('setup.templates_title')}
@@ -856,7 +990,7 @@ function SetupPage() {
         )}
 
         {/* Step 7: Profile Requirements */}
-        {step === 6 && (
+        {step === 7 && (
           <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
             <h2 className="text-lg font-serif font-semibold text-slate-900">
               {t('setup.profile_title')}
@@ -907,7 +1041,7 @@ function SetupPage() {
         )}
 
         {/* Step 8: Import Customers */}
-        {step === 7 && (
+        {step === 8 && (
           <div className="space-y-4">
             <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
               <h2 className="text-lg font-serif font-semibold text-slate-900">
@@ -1036,7 +1170,7 @@ function SetupPage() {
         )}
 
         {/* Step 9: Test & Finish */}
-        {step === 8 && (
+        {step === 9 && (
           <div className="bg-white rounded-2xl shadow-soft p-6 space-y-6">
             <h2 className="text-lg font-serif font-semibold text-slate-900">
               {t('setup.finish_title')}

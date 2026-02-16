@@ -1,4 +1,4 @@
-import { Controller, Get, Patch, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Patch, Post, Body, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { BusinessService } from './business.service';
@@ -36,5 +36,11 @@ export class BusinessController {
     @Body() body: { channels?: string; followUpDelayHours?: number },
   ) {
     return this.businessService.updateNotificationSettings(businessId, body);
+  }
+
+  @Post('install-pack')
+  @Roles('ADMIN')
+  installPack(@BusinessId() businessId: string, @Body() body: { packName: string }) {
+    return this.businessService.installPack(businessId, body.packName);
   }
 }

@@ -153,6 +153,23 @@ export interface VerticalPackDefinition {
     body: string;
     variables: string[];
   }>;
+  defaultServices?: Array<{
+    name: string;
+    durationMins: number;
+    price: number;
+    category: string;
+    kind: 'CONSULT' | 'TREATMENT' | 'OTHER';
+    depositRequired?: boolean;
+    depositAmount?: number;
+  }>;
+  defaultNotificationSettings?: {
+    channels: string;
+    followUpDelayHours: number;
+    consultFollowUpDays: number;
+    treatmentCheckInHours: number;
+  };
+  defaultRequiredProfileFields?: string[];
+  defaultPackConfig?: Record<string, unknown>;
 }
 
 // ---- Messaging types ----

@@ -1,9 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma.service';
+import { VerticalPackService } from '../vertical-pack/vertical-pack.service';
 
 @Injectable()
 export class BusinessService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private verticalPackService: VerticalPackService,
+  ) {}
 
   async findById(id: string) {
     return this.prisma.business.findUnique({ where: { id } });
@@ -94,5 +98,106 @@ export class BusinessService {
       where: { id },
       data: { notificationSettings: merged },
     });
+  }
+
+  async installPack(businessId: string, packName: string) {
+    let pack;
+    try {
+      pack = this.verticalPackService.getPack(packName);
+    } catch {
+      throw new BadRequestException(`Unknown pack: ${packName}`);
+    }
+
+    // Set verticalPack on business
+    await this.prisma.business.update({
+      where: { id: businessId },
+      data: { verticalPack: packName },
+    });
+
+    // Bulk-create templates (skip if any already exist for this business)
+    const existingTemplates = await this.prisma.messageTemplate.findMany({
+      where: { businessId },
+      select: { name: true },
+    });
+    const existingTemplateNames = new Set(existingTemplates.map((t) => t.name));
+    const newTemplates = (pack.defaultTemplates || []).filter(
+      (t) => !existingTemplateNames.has(t.name),
+    );
+    if (newTemplates.length > 0) {
+      await this.prisma.messageTemplate.createMany({
+        data: newTemplates.map((t) => ({
+          businessId,
+          name: t.name,
+          category: t.category,
+          body: t.body,
+          variables: t.variables,
+        })),
+      });
+    }
+
+    // Bulk-create services (skip if any already exist for this business)
+    const existingServices = await this.prisma.service.findMany({
+      where: { businessId },
+      select: { name: true },
+    });
+    const existingServiceNames = new Set(existingServices.map((s) => s.name));
+    const newServices = (pack.defaultServices || []).filter(
+      (s) => !existingServiceNames.has(s.name),
+    );
+    if (newServices.length > 0) {
+      await this.prisma.service.createMany({
+        data: newServices.map((s) => ({
+          businessId,
+          name: s.name,
+          durationMins: s.durationMins,
+          price: s.price,
+          category: s.category,
+          kind: s.kind,
+          customFields: s.depositRequired
+            ? { depositRequired: true, depositAmount: s.depositAmount }
+            : {},
+        })),
+      });
+    }
+
+    // Set notification settings
+    if (pack.defaultNotificationSettings) {
+      await this.prisma.business.update({
+        where: { id: businessId },
+        data: { notificationSettings: pack.defaultNotificationSettings },
+      });
+    }
+
+    // Merge packConfig + requiredProfileFields
+    const business = await this.prisma.business.findUnique({ where: { id: businessId } });
+    const currentConfig =
+      typeof business?.packConfig === 'object' && business.packConfig
+        ? (business.packConfig as Record<string, unknown>)
+        : {};
+    const mergedConfig = {
+      ...currentConfig,
+      ...(pack.defaultPackConfig || {}),
+      ...(pack.defaultRequiredProfileFields
+        ? { requiredProfileFields: pack.defaultRequiredProfileFields }
+        : {}),
+    };
+    const updatedBusiness = await this.prisma.business.update({
+      where: { id: businessId },
+      data: { packConfig: mergedConfig },
+    });
+
+    // Return summary
+    const totalTemplates = await this.prisma.messageTemplate.count({ where: { businessId } });
+    const totalServices = await this.prisma.service.count({ where: { businessId } });
+
+    return {
+      business: updatedBusiness,
+      installed: {
+        templates: totalTemplates,
+        services: totalServices,
+        notificationSettings: !!pack.defaultNotificationSettings,
+        packConfig: mergedConfig,
+      },
+    };
   }
 }
