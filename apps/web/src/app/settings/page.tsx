@@ -231,18 +231,20 @@ export default function SettingsPage() {
               </div>
             </button>
           )}
-          <button
-            onClick={() => router.push('/settings/notifications')}
-            className="flex items-center gap-3 w-full text-left p-3 rounded-xl hover:bg-slate-50 border border-slate-100 transition-colors"
-          >
-            <div className="w-9 h-9 bg-sage-50 rounded-lg flex items-center justify-center">
-              <Bell size={18} className="text-sage-600" />
-            </div>
-            <div>
-              <p className="text-sm font-medium">{t('settings.notifications')}</p>
-              <p className="text-xs text-slate-500">{t('settings.notifications_desc')}</p>
-            </div>
-          </button>
+          {role === 'ADMIN' && (
+            <button
+              onClick={() => router.push('/settings/notifications')}
+              className="flex items-center gap-3 w-full text-left p-3 rounded-xl hover:bg-slate-50 border border-slate-100 transition-colors"
+            >
+              <div className="w-9 h-9 bg-sage-50 rounded-lg flex items-center justify-center">
+                <Bell size={18} className="text-sage-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium">{t('settings.notifications')}</p>
+                <p className="text-xs text-slate-500">{t('settings.notifications_desc')}</p>
+              </div>
+            </button>
+          )}
           {role === 'ADMIN' && (
             <button
               onClick={() => router.push('/settings/policies')}

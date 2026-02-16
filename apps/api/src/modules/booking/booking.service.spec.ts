@@ -1,5 +1,5 @@
 import { Test } from '@nestjs/testing';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { BookingService } from './booking.service';
 import { PrismaService } from '../../common/prisma.service';
 import { NotificationService } from '../notification/notification.service';
@@ -414,8 +414,8 @@ describe('BookingService', () => {
   });
 
   describe('updateStatus', () => {
-    it('sends booking confirmation when transitioning from PENDING_DEPOSIT to CONFIRMED', async () => {
-      prisma.booking.findFirst.mockResolvedValue({ status: 'PENDING_DEPOSIT' } as any);
+    it('sends booking confirmation when transitioning from PENDING_DEPOSIT to CONFIRMED (admin override)', async () => {
+      prisma.booking.findFirst.mockResolvedValue({ status: 'PENDING_DEPOSIT', customFields: {} } as any);
       prisma.booking.update.mockResolvedValue({
         id: 'b1',
         status: 'CONFIRMED',
@@ -424,7 +424,12 @@ describe('BookingService', () => {
         staff: null,
       } as any);
 
-      await bookingService.updateStatus('biz1', 'b1', 'CONFIRMED');
+      await bookingService.updateStatus('biz1', 'b1', 'CONFIRMED', {
+        reason: 'Client paid cash',
+        staffId: 'staff1',
+        staffName: 'Sarah',
+        role: 'ADMIN',
+      });
 
       expect(mockNotificationService.sendBookingConfirmation).toHaveBeenCalledWith(
         expect.objectContaining({ id: 'b1', status: 'CONFIRMED' }),
@@ -800,7 +805,7 @@ describe('BookingService', () => {
   });
 
   describe('updateStatus - policy enforcement', () => {
-    it('throws BadRequestException when cancelling within policy window', async () => {
+    it('throws BadRequestException when non-admin cancels within policy window', async () => {
       mockBusinessService.getPolicySettings.mockResolvedValue({
         policyEnabled: true,
         cancellationWindowHours: 24,
@@ -809,11 +814,11 @@ describe('BookingService', () => {
         reschedulePolicyText: '',
       });
       const soon = new Date(Date.now() + 12 * 3600000);
-      prisma.booking.findFirst.mockResolvedValue({ status: 'CONFIRMED', startTime: soon } as any);
+      prisma.booking.findFirst.mockResolvedValue({ status: 'CONFIRMED', startTime: soon, customFields: {} } as any);
 
-      await expect(bookingService.updateStatus('biz1', 'b1', 'CANCELLED')).rejects.toThrow(
-        'Cancellations must be made 24h in advance',
-      );
+      await expect(
+        bookingService.updateStatus('biz1', 'b1', 'CANCELLED', { role: 'AGENT', staffId: 's1', staffName: 'Agent', reason: '' }),
+      ).rejects.toThrow('Cancellations must be made 24h in advance');
     });
 
     it('allows cancellation when booking is outside policy window', async () => {
@@ -825,7 +830,7 @@ describe('BookingService', () => {
         reschedulePolicyText: '',
       });
       const farAway = new Date(Date.now() + 48 * 3600000);
-      prisma.booking.findFirst.mockResolvedValue({ status: 'CONFIRMED', startTime: farAway } as any);
+      prisma.booking.findFirst.mockResolvedValue({ status: 'CONFIRMED', startTime: farAway, customFields: {} } as any);
       prisma.booking.update.mockResolvedValue({ id: 'b1', status: 'CANCELLED' } as any);
       prisma.reminder.updateMany.mockResolvedValue({ count: 0 } as any);
 
@@ -843,7 +848,7 @@ describe('BookingService', () => {
         reschedulePolicyText: '',
       });
       const soon = new Date(Date.now() + 2 * 3600000);
-      prisma.booking.findFirst.mockResolvedValue({ status: 'CONFIRMED', startTime: soon } as any);
+      prisma.booking.findFirst.mockResolvedValue({ status: 'CONFIRMED', startTime: soon, customFields: {} } as any);
       prisma.booking.update.mockResolvedValue({ id: 'b1', status: 'CANCELLED' } as any);
       prisma.reminder.updateMany.mockResolvedValue({ count: 0 } as any);
 
@@ -861,11 +866,190 @@ describe('BookingService', () => {
         reschedulePolicyText: '',
       });
       const soon = new Date(Date.now() + 12 * 3600000);
-      prisma.booking.findFirst.mockResolvedValue({ status: 'CONFIRMED', startTime: soon } as any);
+      prisma.booking.findFirst.mockResolvedValue({ status: 'CONFIRMED', startTime: soon, customFields: {} } as any);
 
       await expect(bookingService.updateStatus('biz1', 'b1', 'CANCELLED')).rejects.toThrow(
         'Cannot cancel within 24 hours of the appointment',
       );
+    });
+  });
+
+  describe('updateStatus - admin override', () => {
+    const adminActor = { reason: 'Client paid cash', staffId: 'staff1', staffName: 'Sarah', role: 'ADMIN' };
+
+    it('allows ADMIN to confirm PENDING_DEPOSIT booking with reason', async () => {
+      prisma.booking.findFirst.mockResolvedValue({ status: 'PENDING_DEPOSIT', customFields: {} } as any);
+      prisma.booking.update.mockResolvedValue({
+        id: 'b1',
+        status: 'CONFIRMED',
+        customer: {},
+        service: {},
+        staff: null,
+      } as any);
+
+      const result = await bookingService.updateStatus('biz1', 'b1', 'CONFIRMED', adminActor);
+
+      expect(result.status).toBe('CONFIRMED');
+      expect(prisma.booking.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            customFields: expect.objectContaining({
+              overrideLog: [
+                expect.objectContaining({
+                  type: 'DEPOSIT_OVERRIDE',
+                  action: 'CONFIRMED',
+                  reason: 'Client paid cash',
+                  staffId: 'staff1',
+                  staffName: 'Sarah',
+                }),
+              ],
+            }),
+          }),
+        }),
+      );
+    });
+
+    it('throws ForbiddenException when non-ADMIN tries to confirm PENDING_DEPOSIT', async () => {
+      prisma.booking.findFirst.mockResolvedValue({ status: 'PENDING_DEPOSIT', customFields: {} } as any);
+
+      await expect(
+        bookingService.updateStatus('biz1', 'b1', 'CONFIRMED', {
+          role: 'AGENT',
+          staffId: 's1',
+          staffName: 'Agent',
+        }),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('throws BadRequestException when ADMIN tries to confirm PENDING_DEPOSIT without reason', async () => {
+      prisma.booking.findFirst.mockResolvedValue({ status: 'PENDING_DEPOSIT', customFields: {} } as any);
+
+      await expect(
+        bookingService.updateStatus('biz1', 'b1', 'CONFIRMED', {
+          role: 'ADMIN',
+          staffId: 'staff1',
+          staffName: 'Sarah',
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('allows ADMIN to cancel within policy window with reason', async () => {
+      mockBusinessService.getPolicySettings.mockResolvedValue({
+        policyEnabled: true,
+        cancellationWindowHours: 24,
+        cancellationPolicyText: 'No cancellations within 24h',
+        rescheduleWindowHours: 24,
+        reschedulePolicyText: '',
+      });
+      const soon = new Date(Date.now() + 12 * 3600000);
+      prisma.booking.findFirst.mockResolvedValue({ status: 'CONFIRMED', startTime: soon, customFields: {} } as any);
+      prisma.booking.update.mockResolvedValue({ id: 'b1', status: 'CANCELLED' } as any);
+      prisma.reminder.updateMany.mockResolvedValue({ count: 0 } as any);
+
+      const result = await bookingService.updateStatus('biz1', 'b1', 'CANCELLED', {
+        reason: 'Emergency situation',
+        staffId: 'staff1',
+        staffName: 'Sarah',
+        role: 'ADMIN',
+      });
+
+      expect(result.status).toBe('CANCELLED');
+      expect(prisma.booking.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            customFields: expect.objectContaining({
+              overrideLog: [
+                expect.objectContaining({
+                  type: 'POLICY_OVERRIDE',
+                  action: 'CANCELLED',
+                  reason: 'Emergency situation',
+                }),
+              ],
+            }),
+          }),
+        }),
+      );
+    });
+
+    it('throws BadRequestException when ADMIN cancels within policy window without reason', async () => {
+      mockBusinessService.getPolicySettings.mockResolvedValue({
+        policyEnabled: true,
+        cancellationWindowHours: 24,
+        cancellationPolicyText: 'No cancellations within 24h',
+        rescheduleWindowHours: 24,
+        reschedulePolicyText: '',
+      });
+      const soon = new Date(Date.now() + 12 * 3600000);
+      prisma.booking.findFirst.mockResolvedValue({ status: 'CONFIRMED', startTime: soon, customFields: {} } as any);
+
+      await expect(
+        bookingService.updateStatus('biz1', 'b1', 'CANCELLED', {
+          role: 'ADMIN',
+          staffId: 'staff1',
+          staffName: 'Sarah',
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('override log includes timestamp', async () => {
+      prisma.booking.findFirst.mockResolvedValue({ status: 'PENDING_DEPOSIT', customFields: {} } as any);
+      prisma.booking.update.mockResolvedValue({
+        id: 'b1',
+        status: 'CONFIRMED',
+        customer: {},
+        service: {},
+        staff: null,
+      } as any);
+
+      await bookingService.updateStatus('biz1', 'b1', 'CONFIRMED', adminActor);
+
+      const updateCall = prisma.booking.update.mock.calls[0][0];
+      const log = (updateCall.data as any).customFields.overrideLog[0];
+      expect(log.timestamp).toBeDefined();
+      expect(new Date(log.timestamp).getTime()).toBeGreaterThan(0);
+    });
+
+    it('appends to existing overrideLog', async () => {
+      prisma.booking.findFirst.mockResolvedValue({
+        status: 'PENDING_DEPOSIT',
+        customFields: {
+          overrideLog: [{ type: 'EXISTING', action: 'TEST', reason: 'old', staffId: '', staffName: '', timestamp: '2025-01-01' }],
+        },
+      } as any);
+      prisma.booking.update.mockResolvedValue({
+        id: 'b1',
+        status: 'CONFIRMED',
+        customer: {},
+        service: {},
+        staff: null,
+      } as any);
+
+      await bookingService.updateStatus('biz1', 'b1', 'CONFIRMED', adminActor);
+
+      const updateCall = prisma.booking.update.mock.calls[0][0];
+      const log = (updateCall.data as any).customFields.overrideLog;
+      expect(log).toHaveLength(2);
+      expect(log[0].type).toBe('EXISTING');
+      expect(log[1].type).toBe('DEPOSIT_OVERRIDE');
+    });
+  });
+
+  describe('checkPolicyAllowed - adminCanOverride', () => {
+    it('returns adminCanOverride:true when booking is within cancellation window', async () => {
+      mockBusinessService.getPolicySettings.mockResolvedValue({
+        policyEnabled: true,
+        cancellationWindowHours: 24,
+        rescheduleWindowHours: 24,
+        cancellationPolicyText: 'No cancellations within 24h',
+        reschedulePolicyText: '',
+      });
+      const soon = new Date(Date.now() + 12 * 3600000);
+      prisma.booking.findFirst.mockResolvedValue({ startTime: soon } as any);
+
+      const result = await bookingService.checkPolicyAllowed('biz1', 'b1', 'cancel');
+
+      expect(result.allowed).toBe(false);
+      expect(result.adminCanOverride).toBe(true);
     });
   });
 

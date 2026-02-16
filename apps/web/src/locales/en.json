@@ -810,6 +810,25 @@
     "contact_clinic": "Please contact the clinic for assistance."
   },
 
+  "override": {
+    "title": "Admin Override",
+    "reason_label": "Reason for override",
+    "reason_placeholder": "Explain why this override is needed...",
+    "reason_required": "A reason is required for admin overrides",
+    "warning": "This action overrides the standard policy. It will be logged in the booking timeline.",
+    "confirm_without_deposit": "Confirm Without Deposit",
+    "cancel_within_policy": "Cancel (Admin Override)",
+    "reschedule_within_policy": "Reschedule (Admin Override)",
+    "logged": "Override logged",
+    "contact_admin": "Contact an admin to override this policy"
+  },
+
+  "timeline": {
+    "deposit_override": "Deposit requirement overridden",
+    "policy_override": "Policy overridden",
+    "override_reason": "Reason: {{reason}}"
+  },
+
   "errors": {
     "something_went_wrong": "Something went wrong",
     "unexpected_error": "An unexpected error occurred.",

@@ -810,6 +810,25 @@
     "contact_clinic": "Por favor contacta a la clínica para asistencia."
   },
 
+  "override": {
+    "title": "Anulacion de administrador",
+    "reason_label": "Motivo de la anulacion",
+    "reason_placeholder": "Explica por que es necesaria esta anulacion...",
+    "reason_required": "Se requiere un motivo para las anulaciones de administrador",
+    "warning": "Esta accion anula la politica estandar. Se registrara en la linea de tiempo de la reserva.",
+    "confirm_without_deposit": "Confirmar sin deposito",
+    "cancel_within_policy": "Cancelar (anulacion de admin)",
+    "reschedule_within_policy": "Reprogramar (anulacion de admin)",
+    "logged": "Anulacion registrada",
+    "contact_admin": "Contacta a un administrador para anular esta politica"
+  },
+
+  "timeline": {
+    "deposit_override": "Requisito de deposito anulado",
+    "policy_override": "Politica anulada",
+    "override_reason": "Motivo: {{reason}}"
+  },
+
   "errors": {
     "something_went_wrong": "Algo salió mal",
     "unexpected_error": "Ocurrió un error inesperado.",

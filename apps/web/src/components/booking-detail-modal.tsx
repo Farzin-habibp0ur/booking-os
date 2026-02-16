@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
+import { useAuth } from '@/lib/auth';
 import { X, Calendar, Clock, User, MessageSquare, AlertTriangle, Repeat, Send, ShieldCheck } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useI18n } from '@/lib/i18n';
@@ -38,14 +39,20 @@ export default function BookingDetailModal({
   const [cancelScope, setCancelScope] = useState<'single' | 'future' | 'all' | null>(null);
   const [sendingDeposit, setSendingDeposit] = useState(false);
   const [depositSent, setDepositSent] = useState(false);
-  const [cancelPolicy, setCancelPolicy] = useState<{ allowed: boolean; reason?: string; policyText?: string } | null>(null);
-  const [reschedulePolicy, setReschedulePolicy] = useState<{ allowed: boolean; reason?: string; policyText?: string } | null>(null);
+  const [cancelPolicy, setCancelPolicy] = useState<{ allowed: boolean; reason?: string; policyText?: string; adminCanOverride?: boolean } | null>(null);
+  const [reschedulePolicy, setReschedulePolicy] = useState<{ allowed: boolean; reason?: string; policyText?: string; adminCanOverride?: boolean } | null>(null);
+  const [overrideOverlay, setOverrideOverlay] = useState<{ action: string; label: string } | null>(null);
+  const [overrideReason, setOverrideReason] = useState('');
   const { t } = useI18n();
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'ADMIN';
 
   useEffect(() => {
     if (!isOpen || !booking) return;
     setCancelPolicy(null);
     setReschedulePolicy(null);
+    setOverrideOverlay(null);
+    setOverrideReason('');
     if (['PENDING', 'PENDING_DEPOSIT', 'CONFIRMED'].includes(booking.status)) {
       api
         .get<any>(`/bookings/${booking.id}/policy-check?action=cancel`)
@@ -64,12 +71,16 @@ export default function BookingDetailModal({
 
   const statusConfig = STATUS_CONFIG[booking.status] || STATUS_CONFIG.PENDING;
 
-  const updateStatus = async (status: string) => {
+  const updateStatus = async (status: string, reason?: string) => {
     setUpdating(status);
     try {
-      const updated = await api.patch<any>(`/bookings/${booking.id}/status`, { status });
+      const payload: any = { status };
+      if (reason) payload.reason = reason;
+      const updated = await api.patch<any>(`/bookings/${booking.id}/status`, payload);
       onUpdated(updated);
       setConfirmAction(null);
+      setOverrideOverlay(null);
+      setOverrideReason('');
     } catch (e) {
       console.error(e);
     }
@@ -81,11 +92,31 @@ export default function BookingDetailModal({
       setCancelScope('single');
       return;
     }
+
+    // Deposit override: PENDING_DEPOSIT → CONFIRMED requires admin + reason
+    if (action === 'CONFIRMED' && booking.status === 'PENDING_DEPOSIT') {
+      if (!isAdmin) return;
+      setOverrideOverlay({ action, label: t('override.confirm_without_deposit') });
+      return;
+    }
+
+    // Policy override: cancel within window requires admin + reason
+    if (action === 'CANCELLED' && cancelPolicy?.allowed === false) {
+      if (!isAdmin) return;
+      setOverrideOverlay({ action, label: t('override.cancel_within_policy') });
+      return;
+    }
+
     if (['CANCELLED', 'NO_SHOW'].includes(action)) {
       setConfirmAction({ action, label });
     } else {
       updateStatus(action);
     }
+  };
+
+  const handleOverrideConfirm = () => {
+    if (!overrideOverlay || overrideReason.trim().length < 5) return;
+    updateStatus(overrideOverlay.action, overrideReason.trim());
   };
 
   const handleRecurringCancel = async () => {
@@ -126,7 +157,9 @@ export default function BookingDetailModal({
         actions.push({ status: 'CANCELLED', label: 'Cancel', variant: 'red' });
         break;
       case 'PENDING_DEPOSIT':
-        actions.push({ status: 'CONFIRMED', label: 'Confirm (Override)', variant: 'green' });
+        if (isAdmin) {
+          actions.push({ status: 'CONFIRMED', label: t('override.confirm_without_deposit'), variant: 'green' });
+        }
         actions.push({ status: 'CANCELLED', label: 'Cancel', variant: 'red' });
         break;
       case 'CONFIRMED':
@@ -152,6 +185,53 @@ export default function BookingDetailModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/30" onClick={onClose} />
       <div className="relative w-[520px] max-h-[80vh] bg-white rounded-2xl shadow-soft-lg flex flex-col">
+        {/* Override reason overlay */}
+        {overrideOverlay && (
+          <div className="absolute inset-0 z-10 bg-white/95 rounded-2xl flex items-center justify-center">
+            <div className="p-6 w-full max-w-sm">
+              <ShieldCheck size={32} className="mx-auto text-orange-500 mb-3" />
+              <p className="font-semibold mb-1 text-center">{t('override.title')}</p>
+              <p className="text-sm text-slate-500 mb-4 text-center">
+                {t('override.warning')}
+              </p>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">{t('override.reason_label')}</label>
+                <textarea
+                  value={overrideReason}
+                  onChange={(e) => setOverrideReason(e.target.value)}
+                  placeholder={t('override.reason_placeholder')}
+                  rows={3}
+                  className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-sage-500"
+                />
+                {overrideReason.length > 0 && overrideReason.trim().length < 5 && (
+                  <p className="text-xs text-red-500 mt-1">{t('override.reason_required')}</p>
+                )}
+              </div>
+              <div className="flex gap-2 justify-center">
+                <button
+                  onClick={() => { setOverrideOverlay(null); setOverrideReason(''); }}
+                  className="px-4 py-2 border rounded-xl text-sm hover:bg-slate-50"
+                >
+                  {t('common.back')}
+                </button>
+                <button
+                  onClick={handleOverrideConfirm}
+                  disabled={!!updating || overrideReason.trim().length < 5}
+                  className={cn(
+                    'px-4 py-2 rounded-xl text-sm text-white',
+                    overrideOverlay.action === 'CANCELLED'
+                      ? 'bg-red-600 hover:bg-red-700'
+                      : 'bg-sage-600 hover:bg-sage-700',
+                    'disabled:opacity-50 disabled:cursor-not-allowed',
+                  )}
+                >
+                  {updating ? 'Updating...' : overrideOverlay.label}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Confirm dialog overlay */}
         {confirmAction && (
           <div className="absolute inset-0 z-10 bg-white/95 rounded-2xl flex items-center justify-center">
@@ -352,9 +432,28 @@ export default function BookingDetailModal({
                 Created {new Date(booking.createdAt).toLocaleString()}
               </div>
               {(booking.customFields?.depositRequestLog || []).map((entry: any, i: number) => (
-                <div key={i} className="flex items-center gap-2 text-xs text-amber-700">
+                <div key={`deposit-${i}`} className="flex items-center gap-2 text-xs text-amber-700">
                   <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                   {t('booking.deposit_request_sent')} · {new Date(entry.sentAt).toLocaleString()}
+                </div>
+              ))}
+              {(booking.customFields?.overrideLog || []).map((entry: any, i: number) => (
+                <div key={`override-${i}`} className="flex items-start gap-2 text-xs text-orange-700">
+                  <ShieldCheck size={12} className="mt-0.5 flex-shrink-0" />
+                  <div>
+                    <span className="font-medium">
+                      {entry.type === 'DEPOSIT_OVERRIDE'
+                        ? t('timeline.deposit_override')
+                        : t('timeline.policy_override')}
+                    </span>
+                    {' · '}
+                    {entry.staffName || 'Admin'}
+                    {' · '}
+                    {new Date(entry.timestamp).toLocaleString()}
+                    <p className="text-orange-600 mt-0.5">
+                      {t('timeline.override_reason', { reason: entry.reason })}
+                    </p>
+                  </div>
                 </div>
               ))}
               {booking.status !== 'PENDING' && booking.status !== 'CONFIRMED' && booking.status !== 'PENDING_DEPOSIT' && (
@@ -390,6 +489,9 @@ export default function BookingDetailModal({
                 {cancelPolicy.policyText && (
                   <p className="text-xs text-orange-600 mt-1">{cancelPolicy.policyText}</p>
                 )}
+                {!isAdmin && (
+                  <p className="text-xs text-slate-500 mt-1">{t('override.contact_admin')}</p>
+                )}
               </div>
             </div>
           )}
@@ -402,6 +504,9 @@ export default function BookingDetailModal({
                 {reschedulePolicy.policyText && (
                   <p className="text-xs text-orange-600 mt-1">{reschedulePolicy.policyText}</p>
                 )}
+                {!isAdmin && (
+                  <p className="text-xs text-slate-500 mt-1">{t('override.contact_admin')}</p>
+                )}
               </div>
             </div>
           )}
@@ -411,7 +516,7 @@ export default function BookingDetailModal({
             <div className="flex gap-2">
               {getAvailableActions().map((action) => {
                 const isCancelBlocked =
-                  action.status === 'CANCELLED' && cancelPolicy?.allowed === false;
+                  action.status === 'CANCELLED' && cancelPolicy?.allowed === false && !isAdmin;
                 return (
                   <button
                     key={action.status}
@@ -428,6 +533,18 @@ export default function BookingDetailModal({
                 );
               })}
             </div>
+          )}
+
+          {/* Admin override for cancel within policy */}
+          {isAdmin && cancelPolicy?.allowed === false && (
+            <button
+              onClick={() => setOverrideOverlay({ action: 'CANCELLED', label: t('override.cancel_within_policy') })}
+              disabled={!!updating}
+              className="w-full py-2 border border-orange-300 text-orange-700 rounded-xl text-sm font-medium hover:bg-orange-50 transition-colors flex items-center justify-center gap-2"
+            >
+              <ShieldCheck size={14} />
+              {t('override.cancel_within_policy')}
+            </button>
           )}
 
           {/* Send Deposit Request button */}
@@ -450,10 +567,10 @@ export default function BookingDetailModal({
           {['PENDING', 'PENDING_DEPOSIT', 'CONFIRMED'].includes(booking.status) && (
             <button
               onClick={() => onReschedule(booking)}
-              disabled={reschedulePolicy?.allowed === false}
+              disabled={reschedulePolicy?.allowed === false && !isAdmin}
               className={cn(
                 'w-full py-2 border border-slate-200 rounded-xl text-sm transition-colors',
-                reschedulePolicy?.allowed === false
+                reschedulePolicy?.allowed === false && !isAdmin
                   ? 'opacity-50 cursor-not-allowed'
                   : 'hover:bg-slate-100',
               )}

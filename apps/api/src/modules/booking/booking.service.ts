@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma.service';
 import { NotificationService } from '../notification/notification.service';
 import { BusinessService } from '../business/business.service';
@@ -178,7 +178,7 @@ export class BookingService {
     businessId: string,
     bookingId: string,
     action: 'cancel' | 'reschedule',
-  ): Promise<{ allowed: boolean; reason?: string; policyText?: string; hoursRemaining?: number }> {
+  ): Promise<{ allowed: boolean; reason?: string; policyText?: string; hoursRemaining?: number; adminCanOverride?: boolean }> {
     const policySettings = await this.businessService.getPolicySettings(businessId);
     if (!policySettings || !policySettings.policyEnabled) {
       return { allowed: true };
@@ -208,18 +208,51 @@ export class BookingService {
         reason: `Cannot ${action} within ${windowHours} hours of the appointment`,
         policyText: policyText || undefined,
         hoursRemaining: Math.max(0, Math.round(hoursUntilStart * 10) / 10),
+        adminCanOverride: true,
       };
     }
 
     return { allowed: true, policyText: policyText || undefined };
   }
 
-  async updateStatus(businessId: string, id: string, status: string) {
+  async updateStatus(
+    businessId: string,
+    id: string,
+    status: string,
+    actor?: { reason?: string; staffId?: string; staffName?: string; role?: string },
+  ) {
     // Read current booking to detect PENDING_DEPOSIT → CONFIRMED transition
     const currentBooking = await this.prisma.booking.findFirst({
       where: { id, businessId },
-      select: { status: true, startTime: true },
+      select: { status: true, startTime: true, customFields: true },
     });
+
+    const overrideEntries: Array<{
+      type: string;
+      action: string;
+      reason: string;
+      staffId: string;
+      staffName: string;
+      timestamp: string;
+    }> = [];
+
+    // Deposit override: PENDING_DEPOSIT → CONFIRMED
+    if (status === 'CONFIRMED' && currentBooking?.status === 'PENDING_DEPOSIT') {
+      if (actor?.role !== 'ADMIN') {
+        throw new ForbiddenException('Only admins can confirm a booking without deposit');
+      }
+      if (!actor?.reason) {
+        throw new BadRequestException('A reason is required to override the deposit requirement');
+      }
+      overrideEntries.push({
+        type: 'DEPOSIT_OVERRIDE',
+        action: 'CONFIRMED',
+        reason: actor.reason,
+        staffId: actor.staffId || '',
+        staffName: actor.staffName || '',
+        timestamp: new Date().toISOString(),
+      });
+    }
 
     // Policy enforcement for cancellations
     if (status === 'CANCELLED' && currentBooking?.startTime) {
@@ -228,17 +261,45 @@ export class BookingService {
         const hoursUntilStart =
           (new Date(currentBooking.startTime).getTime() - Date.now()) / 3600000;
         if (hoursUntilStart < policySettings.cancellationWindowHours) {
-          throw new BadRequestException(
-            policySettings.cancellationPolicyText ||
-              `Cannot cancel within ${policySettings.cancellationWindowHours} hours of the appointment`,
-          );
+          // ADMIN can override with a reason
+          if (actor?.role === 'ADMIN') {
+            if (!actor?.reason) {
+              throw new BadRequestException('A reason is required to override the cancellation policy');
+            }
+            overrideEntries.push({
+              type: 'POLICY_OVERRIDE',
+              action: 'CANCELLED',
+              reason: actor.reason,
+              staffId: actor.staffId || '',
+              staffName: actor.staffName || '',
+              timestamp: new Date().toISOString(),
+            });
+          } else {
+            throw new BadRequestException(
+              policySettings.cancellationPolicyText ||
+                `Cannot cancel within ${policySettings.cancellationWindowHours} hours of the appointment`,
+            );
+          }
         }
       }
     }
 
+    // Build update data, including overrideLog if any overrides occurred
+    const updateData: any = { status };
+    if (overrideEntries.length > 0) {
+      const existingFields = (currentBooking?.customFields as any) || {};
+      const existingLog = Array.isArray(existingFields.overrideLog)
+        ? existingFields.overrideLog
+        : [];
+      updateData.customFields = {
+        ...existingFields,
+        overrideLog: [...existingLog, ...overrideEntries],
+      };
+    }
+
     const booking = await this.prisma.booking.update({
       where: { id, businessId },
-      data: { status },
+      data: updateData,
       include: { customer: true, service: true, staff: true },
     });
 

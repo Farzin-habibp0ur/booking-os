@@ -2,13 +2,14 @@ import { Controller, Get, Post, Patch, Param, Body, Query, UseGuards } from '@ne
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { BookingService } from './booking.service';
-import { BusinessId } from '../../common/decorators';
+import { BusinessId, CurrentUser } from '../../common/decorators';
 import { TenantGuard } from '../../common/tenant.guard';
+import { RolesGuard } from '../../common/roles.guard';
 import { CreateBookingDto, UpdateBookingDto, UpdateBookingStatusDto } from '../../common/dto';
 
 @ApiTags('Bookings')
 @Controller('bookings')
-@UseGuards(AuthGuard('jwt'), TenantGuard)
+@UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
 export class BookingController {
   constructor(private bookingService: BookingService) {}
 
@@ -60,8 +61,14 @@ export class BookingController {
     @BusinessId() businessId: string,
     @Param('id') id: string,
     @Body() body: UpdateBookingStatusDto,
+    @CurrentUser() user: any,
   ) {
-    return this.bookingService.updateStatus(businessId, id, body.status);
+    return this.bookingService.updateStatus(businessId, id, body.status, {
+      reason: body.reason,
+      staffId: user?.id,
+      staffName: user?.name,
+      role: user?.role,
+    });
   }
 
   @Post(':id/send-deposit-request')

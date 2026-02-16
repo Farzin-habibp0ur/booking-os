@@ -80,6 +80,11 @@ export class UpdateBookingStatusDto {
       'status must be one of: PENDING, PENDING_DEPOSIT, CONFIRMED, IN_PROGRESS, COMPLETED, CANCELLED, NO_SHOW',
   })
   status!: string;
+
+  @IsString()
+  @IsOptional()
+  @MinLength(1)
+  reason?: string;
 }
 
 // ---- Customer DTOs ----
