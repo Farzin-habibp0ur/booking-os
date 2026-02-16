@@ -61,17 +61,27 @@ export class WebhookController {
   @Post('whatsapp')
   async whatsappInbound(@Body() payload: any) {
     const messages = WhatsAppCloudProvider.parseInboundWebhook(payload);
+    const results: Array<{ externalId: string; status: 'processed' | 'duplicate' | 'error' }> = [];
 
     for (const msg of messages) {
       try {
-        await this.processInboundMessage(msg.from, msg.body, msg.externalId, undefined);
+        const result = await this.processInboundMessage(msg.from, msg.body, msg.externalId, undefined);
+        results.push({
+          externalId: msg.externalId,
+          status: result.duplicate ? 'duplicate' : 'processed',
+        });
       } catch (err: any) {
-        this.logger.error(`WhatsApp inbound processing error: ${err.message}`);
+        this.logger.error(`WhatsApp inbound processing error: ${err.message}`, err.stack);
+        results.push({ externalId: msg.externalId, status: 'error' });
       }
     }
 
     // Meta requires 200 response within 5 seconds
-    return 'EVENT_RECEIVED';
+    return {
+      status: 'EVENT_RECEIVED',
+      processed: results.filter((r) => r.status === 'processed').length,
+      results,
+    };
   }
 
   private async processInboundMessage(
@@ -79,7 +89,18 @@ export class WebhookController {
     body: string,
     externalId: string,
     businessPhone: string | undefined,
-  ) {
+  ): Promise<{ conversationId?: string; messageId?: string; duplicate?: boolean }> {
+    // Dedup: check if message with this externalId already exists
+    if (externalId) {
+      const existing = await this.prisma.message.findUnique({
+        where: { externalId },
+      });
+      if (existing) {
+        this.logger.log(`Duplicate message skipped: externalId=${externalId}`);
+        return { duplicate: true };
+      }
+    }
+
     // Find business
     let business;
     if (businessPhone) {
@@ -97,15 +118,25 @@ export class WebhookController {
     const customer = await this.customerService.findOrCreateByPhone(business.id, from, from);
     const conversation = await this.conversationService.findOrCreate(business.id, customer.id, 'WHATSAPP');
 
-    const message = await this.prisma.message.create({
-      data: {
-        conversationId: conversation.id,
-        direction: 'INBOUND',
-        content: body,
-        contentType: 'TEXT',
-        externalId,
-      },
-    });
+    let message;
+    try {
+      message = await this.prisma.message.create({
+        data: {
+          conversationId: conversation.id,
+          direction: 'INBOUND',
+          content: body,
+          contentType: 'TEXT',
+          externalId,
+        },
+      });
+    } catch (err: any) {
+      // P2002 = unique constraint violation (race condition: another request inserted first)
+      if (err.code === 'P2002' && err.meta?.target?.includes('externalId')) {
+        this.logger.log(`Duplicate message caught by constraint: externalId=${externalId}`);
+        return { duplicate: true };
+      }
+      throw err;
+    }
 
     const updatedConversation = await this.prisma.conversation.update({
       where: { id: conversation.id },
