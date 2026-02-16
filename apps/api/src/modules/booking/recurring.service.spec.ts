@@ -82,6 +82,23 @@ describe('RecurringService', () => {
 
       expect(dates).toHaveLength(52);
     });
+
+    it('returns empty array when no days match before endDate', () => {
+      // Start on a Wednesday, only request Monday, endDate before next Monday
+      const start = new Date('2026-03-04T00:00:00'); // Wednesday
+      const endDate = new Date('2026-03-05T23:59:59'); // Thursday
+      const dates = service.generateOccurrenceDates(start, '10:00', [1], 1, 10, endDate); // Monday only
+
+      expect(dates).toHaveLength(0);
+    });
+
+    it('exits naturally when count is reached via the while loop', () => {
+      // Use a single day with count=2, no endDate — exercises the natural while loop exit
+      const start = new Date('2026-03-02T00:00:00'); // Monday
+      const dates = service.generateOccurrenceDates(start, '09:00', [1], 1, 2);
+
+      expect(dates).toHaveLength(2);
+    });
   });
 
   describe('createSeries', () => {
@@ -108,6 +125,64 @@ describe('RecurringService', () => {
       prisma.booking.findFirst.mockResolvedValue({ id: 'conflict' } as any);
 
       await expect(service.createSeries('biz1', createData)).rejects.toThrow(BadRequestException);
+    });
+
+    it('throws on past start date', async () => {
+      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', durationMins: 60 } as any);
+
+      await expect(
+        service.createSeries('biz1', {
+          ...createData,
+          startDate: '2020-01-01',
+        }),
+      ).rejects.toThrow('Start date must be in the future');
+    });
+
+    it('throws when no occurrences can be generated', async () => {
+      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', durationMins: 60 } as any);
+
+      // Start date is future but endDate is before any occurrence on the requested day
+      const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      const dayAfter = new Date(Date.now() + 48 * 60 * 60 * 1000);
+      // Request a day that doesn't exist between tomorrow and dayAfter
+      const requestedDay = (tomorrow.getDay() + 3) % 7; // pick a day 3 ahead
+
+      await expect(
+        service.createSeries('biz1', {
+          ...createData,
+          startDate: tomorrow.toISOString().split('T')[0],
+          daysOfWeek: [requestedDay],
+          endsAt: dayAfter.toISOString().split('T')[0],
+          totalCount: undefined,
+        }),
+      ).rejects.toThrow('No occurrences could be generated');
+    });
+
+    it('skips conflict check when no staffId provided', async () => {
+      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', durationMins: 60 } as any);
+
+      const mockTx = {
+        recurringSeries: { create: jest.fn().mockResolvedValue({ id: 'series1' }) },
+        booking: {
+          create: jest.fn().mockResolvedValue({
+            id: 'b1',
+            customer: { name: 'Test' },
+            service: { name: 'Test Service' },
+            staff: null,
+          }),
+        },
+        reminder: { create: jest.fn().mockResolvedValue({}) },
+      };
+      prisma.$transaction.mockImplementation(async (fn: any) => fn(mockTx));
+
+      const result = await service.createSeries('biz1', {
+        ...createData,
+        staffId: undefined,
+      });
+
+      // Should not have checked for conflicts
+      expect(prisma.booking.findFirst).not.toHaveBeenCalled();
+      expect(result.bookings).toHaveLength(4);
     });
 
     it('creates series and bookings in a transaction', async () => {
@@ -212,6 +287,30 @@ describe('RecurringService', () => {
       prisma.recurringSeries.findFirst.mockResolvedValue(null);
 
       await expect(service.cancelSeries('biz1', 'missing', 'all')).rejects.toThrow(NotFoundException);
+    });
+
+    it('throws when single cancel has no bookingId', async () => {
+      prisma.recurringSeries.findFirst.mockResolvedValue(series as any);
+
+      await expect(service.cancelSeries('biz1', 'series1', 'single')).rejects.toThrow(
+        'bookingId is required for single cancel',
+      );
+    });
+
+    it('throws when future cancel has no bookingId', async () => {
+      prisma.recurringSeries.findFirst.mockResolvedValue(series as any);
+
+      await expect(service.cancelSeries('biz1', 'series1', 'future')).rejects.toThrow(
+        'bookingId is required for future cancel',
+      );
+    });
+
+    it('throws when future cancel bookingId not found in series', async () => {
+      prisma.recurringSeries.findFirst.mockResolvedValue(series as any);
+
+      await expect(service.cancelSeries('biz1', 'series1', 'future', 'nonexistent')).rejects.toThrow(
+        'Booking not found in series',
+      );
     });
   });
 });
