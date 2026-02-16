@@ -94,8 +94,6 @@ jobs:
 
       - name: Install Railway CLI
         run: npm install -g @railway/cli
-      - name: Run database migrations
-        run: railway run --service api -p 37eeca20-7dfe-45d9-8d29-e902a545f475 -e production npx prisma migrate deploy --schema=packages/db/prisma/schema.prisma
       - name: Deploy API
         run: railway up --service api -p 37eeca20-7dfe-45d9-8d29-e902a545f475 -e production --detach
       - name: Deploy Web
