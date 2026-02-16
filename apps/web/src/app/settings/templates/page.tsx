@@ -6,13 +6,15 @@ import { Plus, Pencil, Trash2, Eye, X, FileText } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useI18n } from '@/lib/i18n';
 
-const CATEGORIES = ['CONFIRMATION', 'REMINDER', 'FOLLOW_UP', 'CONSULT_FOLLOW_UP', 'CANCELLATION', 'CUSTOM'];
+const CATEGORIES = ['CONFIRMATION', 'REMINDER', 'FOLLOW_UP', 'CONSULT_FOLLOW_UP', 'AFTERCARE', 'TREATMENT_CHECK_IN', 'CANCELLATION', 'CUSTOM'];
 
 const CATEGORY_KEYS: Record<string, string> = {
   CONFIRMATION: 'templates.category_confirmation',
   REMINDER: 'templates.category_reminder',
   FOLLOW_UP: 'templates.category_follow_up',
   CONSULT_FOLLOW_UP: 'templates.category_consult_follow_up',
+  AFTERCARE: 'templates.category_aftercare',
+  TREATMENT_CHECK_IN: 'templates.category_treatment_check_in',
   CANCELLATION: 'templates.category_cancellation',
   CUSTOM: 'templates.category_custom',
 };
@@ -121,9 +123,13 @@ export default function TemplatesPage() {
                             ? 'bg-lavender-100 text-lavender-700'
                             : tpl.category === 'CONSULT_FOLLOW_UP'
                               ? 'bg-lavender-50 text-lavender-900'
-                              : tpl.category === 'CANCELLATION'
-                                ? 'bg-red-100 text-red-700'
-                                : 'bg-slate-100 text-slate-700',
+                              : tpl.category === 'AFTERCARE'
+                                ? 'bg-sage-50 text-sage-900'
+                                : tpl.category === 'TREATMENT_CHECK_IN'
+                                  ? 'bg-amber-50 text-amber-700'
+                                  : tpl.category === 'CANCELLATION'
+                                    ? 'bg-red-100 text-red-700'
+                                    : 'bg-slate-100 text-slate-700',
                     )}
                   >
                     {t(CATEGORY_KEYS[tpl.category] || 'templates.category_custom')}

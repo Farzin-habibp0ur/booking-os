@@ -209,6 +209,30 @@ export class BookingService {
           },
         });
       }
+
+      // Schedule aftercare + treatment check-in for TREATMENT bookings
+      if (booking.service?.kind === 'TREATMENT') {
+        await this.prisma.reminder.create({
+          data: {
+            businessId,
+            bookingId: id,
+            scheduledAt: new Date(),
+            status: 'PENDING',
+            type: 'AFTERCARE',
+          },
+        });
+
+        const checkInHours = settings?.treatmentCheckInHours || 24;
+        await this.prisma.reminder.create({
+          data: {
+            businessId,
+            bookingId: id,
+            scheduledAt: new Date(Date.now() + checkInHours * 3600000),
+            status: 'PENDING',
+            type: 'TREATMENT_CHECK_IN',
+          },
+        });
+      }
     }
 
     return booking;

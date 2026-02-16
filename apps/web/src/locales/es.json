@@ -436,7 +436,12 @@
     "followup_delay_desc": "Cuánto tiempo después de completar una reserva se envía el mensaje de seguimiento",
     "consult_followup_delay": "Seguimiento de consulta a tratamiento",
     "consult_followup_delay_desc": "Cuántos días después de una consulta se envía un recordatorio para reservar tratamiento (si el paciente no ha reservado aún)",
-    "consult_followup_unit": "días"
+    "consult_followup_unit": "días",
+    "aftercare_section": "Cuidados posteriores y seguimiento",
+    "aftercare_section_desc": "Las instrucciones de cuidados posteriores se envían inmediatamente después de completar un tratamiento. El mensaje de seguimiento se envía después del tiempo configurado para preguntar cómo se siente el paciente.",
+    "checkin_delay": "Retraso del seguimiento",
+    "checkin_delay_desc": "Cuánto tiempo después de completar un tratamiento se envía el mensaje de seguimiento",
+    "checkin_delay_unit": "horas"
   },
 
   "billing": {
@@ -495,6 +500,8 @@
     "category_follow_up": "Seguimiento",
     "category_cancellation": "Cancelación",
     "category_consult_follow_up": "Seguimiento de consulta",
+    "category_aftercare": "Cuidados posteriores",
+    "category_treatment_check_in": "Seguimiento de tratamiento",
     "category_custom": "Personalizado",
     "no_templates": "No se encontraron plantillas. Crea tu primera plantilla.",
     "preview": "Vista previa",

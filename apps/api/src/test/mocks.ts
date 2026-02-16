@@ -47,6 +47,8 @@ export function createMockNotificationService() {
     sendReminder: jest.fn().mockResolvedValue(undefined),
     sendFollowUp: jest.fn().mockResolvedValue(undefined),
     sendConsultFollowUp: jest.fn().mockResolvedValue(undefined),
+    sendAftercare: jest.fn().mockResolvedValue(undefined),
+    sendTreatmentCheckIn: jest.fn().mockResolvedValue(undefined),
   };
 }
 
@@ -55,7 +57,7 @@ export function createMockBusinessService() {
     findById: jest.fn().mockResolvedValue({ id: 'biz1', name: 'Test Clinic', slug: 'test-clinic' }),
     getNotificationSettings: jest
       .fn()
-      .mockResolvedValue({ channels: 'both', followUpDelayHours: 2, consultFollowUpDays: 3 }),
+      .mockResolvedValue({ channels: 'both', followUpDelayHours: 2, consultFollowUpDays: 3, treatmentCheckInHours: 24 }),
     updateNotificationSettings: jest.fn().mockResolvedValue({}),
     getAiSettings: jest.fn().mockResolvedValue({}),
     updateAiSettings: jest.fn().mockResolvedValue({}),

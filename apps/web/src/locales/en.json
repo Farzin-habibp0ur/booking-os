@@ -436,7 +436,12 @@
     "followup_delay_desc": "How long after a booking is completed to send the follow-up message",
     "consult_followup_delay": "Consult-to-Treatment Follow-up",
     "consult_followup_delay_desc": "How many days after a consultation to send a treatment booking prompt (if the patient hasn't already booked)",
-    "consult_followup_unit": "days"
+    "consult_followup_unit": "days",
+    "aftercare_section": "Aftercare & Check-in",
+    "aftercare_section_desc": "Aftercare instructions are sent immediately after a treatment is completed. The check-in message is sent after the configured delay to ask how the patient is feeling.",
+    "checkin_delay": "Check-in Delay",
+    "checkin_delay_desc": "How long after a treatment is completed to send the check-in message",
+    "checkin_delay_unit": "hours"
   },
 
   "billing": {
@@ -495,6 +500,8 @@
     "category_follow_up": "Follow up",
     "category_cancellation": "Cancellation",
     "category_consult_follow_up": "Consult Follow-up",
+    "category_aftercare": "Aftercare",
+    "category_treatment_check_in": "Treatment Check-in",
     "category_custom": "Custom",
     "no_templates": "No templates found. Create your first template.",
     "preview": "Preview",

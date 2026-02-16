@@ -9,6 +9,7 @@ interface NotificationSettings {
   channels: 'email' | 'whatsapp' | 'both';
   followUpDelayHours: number;
   consultFollowUpDays: number;
+  treatmentCheckInHours: number;
 }
 
 export default function NotificationSettingsPage() {
@@ -17,6 +18,7 @@ export default function NotificationSettingsPage() {
     channels: 'both',
     followUpDelayHours: 2,
     consultFollowUpDays: 3,
+    treatmentCheckInHours: 24,
   });
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -150,6 +152,36 @@ export default function NotificationSettingsPage() {
             />
             <span className="text-sm text-slate-500">
               {t('notification_settings.consult_followup_unit')}
+            </span>
+          </div>
+        </div>
+
+        <hr />
+
+        {/* Aftercare & Check-in */}
+        <div>
+          <p className="text-sm font-medium mb-1">
+            {t('notification_settings.aftercare_section')}
+          </p>
+          <p className="text-xs text-slate-500 mb-3">
+            {t('notification_settings.aftercare_section_desc')}
+          </p>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              min={1}
+              max={72}
+              value={settings.treatmentCheckInHours}
+              onChange={(e) =>
+                setSettings({
+                  ...settings,
+                  treatmentCheckInHours: Math.max(1, Math.min(72, Number(e.target.value) || 1)),
+                })
+              }
+              className="w-20 border border-slate-200 rounded-xl px-3 py-2 text-sm"
+            />
+            <span className="text-sm text-slate-500">
+              {t('notification_settings.checkin_delay_unit')}
             </span>
           </div>
         </div>

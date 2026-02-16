@@ -310,6 +310,128 @@ describe('NotificationService', () => {
     });
   });
 
+  describe('sendAftercare', () => {
+    beforeEach(async () => {
+      const module = await createModule(false);
+      notificationService = module.get(NotificationService);
+    });
+
+    it('sends aftercare via both channels', async () => {
+      prisma.messageTemplate.findMany.mockResolvedValue([]);
+
+      await notificationService.sendAftercare(mockBooking);
+
+      expect(mockProvider.sendMessage).toHaveBeenCalledWith({
+        to: '+1234567890',
+        body: expect.stringContaining('Jane Doe'),
+        businessId: 'biz1',
+      });
+
+      expect(emailService.send).toHaveBeenCalledWith({
+        to: 'jane@example.com',
+        subject: expect.stringContaining('Aftercare instructions'),
+        html: expect.stringContaining('Glow Clinic'),
+      });
+    });
+
+    it('uses AFTERCARE template when one exists', async () => {
+      const template = {
+        id: 'tpl-aftercare',
+        body: 'Hi {{customerName}}, aftercare for {{serviceName}}: rest and hydrate!',
+        variables: ['customerName', 'serviceName'],
+        category: 'AFTERCARE',
+      };
+      prisma.messageTemplate.findMany.mockResolvedValue([template] as any);
+      templateService.resolveVariables.mockResolvedValue(
+        'Hi Jane Doe, aftercare for Haircut: rest and hydrate!',
+      );
+
+      await notificationService.sendAftercare(mockBooking);
+
+      expect(templateService.resolveVariables).toHaveBeenCalledWith(
+        template,
+        expect.objectContaining({
+          customerName: 'Jane Doe',
+          serviceName: 'Haircut',
+        }),
+      );
+    });
+
+    it('falls back to default aftercare message when no template', async () => {
+      prisma.messageTemplate.findMany.mockResolvedValue([]);
+
+      await notificationService.sendAftercare(mockBooking);
+
+      expect(templateService.resolveVariables).not.toHaveBeenCalled();
+      expect(mockProvider.sendMessage).toHaveBeenCalledWith({
+        to: '+1234567890',
+        body: expect.stringContaining('aftercare reminders'),
+        businessId: 'biz1',
+      });
+    });
+  });
+
+  describe('sendTreatmentCheckIn', () => {
+    beforeEach(async () => {
+      const module = await createModule(false);
+      notificationService = module.get(NotificationService);
+    });
+
+    it('sends treatment check-in via both channels', async () => {
+      prisma.messageTemplate.findMany.mockResolvedValue([]);
+
+      await notificationService.sendTreatmentCheckIn(mockBooking);
+
+      expect(mockProvider.sendMessage).toHaveBeenCalledWith({
+        to: '+1234567890',
+        body: expect.stringContaining('Jane Doe'),
+        businessId: 'biz1',
+      });
+
+      expect(emailService.send).toHaveBeenCalledWith({
+        to: 'jane@example.com',
+        subject: expect.stringContaining('How are you feeling?'),
+        html: expect.stringContaining('Glow Clinic'),
+      });
+    });
+
+    it('uses TREATMENT_CHECK_IN template when one exists', async () => {
+      const template = {
+        id: 'tpl-checkin',
+        body: 'Hi {{customerName}}, how are you feeling after your {{serviceName}}?',
+        variables: ['customerName', 'serviceName'],
+        category: 'TREATMENT_CHECK_IN',
+      };
+      prisma.messageTemplate.findMany.mockResolvedValue([template] as any);
+      templateService.resolveVariables.mockResolvedValue(
+        'Hi Jane Doe, how are you feeling after your Haircut?',
+      );
+
+      await notificationService.sendTreatmentCheckIn(mockBooking);
+
+      expect(templateService.resolveVariables).toHaveBeenCalledWith(
+        template,
+        expect.objectContaining({
+          customerName: 'Jane Doe',
+          serviceName: 'Haircut',
+        }),
+      );
+    });
+
+    it('falls back to default check-in message when no template', async () => {
+      prisma.messageTemplate.findMany.mockResolvedValue([]);
+
+      await notificationService.sendTreatmentCheckIn(mockBooking);
+
+      expect(templateService.resolveVariables).not.toHaveBeenCalled();
+      expect(mockProvider.sendMessage).toHaveBeenCalledWith({
+        to: '+1234567890',
+        body: expect.stringContaining('How are you feeling'),
+        businessId: 'biz1',
+      });
+    });
+  });
+
   describe('email dispatch via queue', () => {
     it('queues email via BullMQ when queue available', async () => {
       const module = await createModule(true, true);

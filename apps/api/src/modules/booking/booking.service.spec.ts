@@ -388,6 +388,136 @@ describe('BookingService', () => {
       expect(consultFollowUpCalls).toHaveLength(0);
     });
 
+    it('creates AFTERCARE reminder when a TREATMENT booking becomes COMPLETED', async () => {
+      prisma.booking.update.mockResolvedValue({
+        id: 'b1',
+        status: 'COMPLETED',
+        service: { id: 'svc1', name: 'Botox', kind: 'TREATMENT' },
+      } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+
+      await bookingService.updateStatus('biz1', 'b1', 'COMPLETED');
+
+      const aftercareCalls = prisma.reminder.create.mock.calls.filter(
+        (call: any) => call[0]?.data?.type === 'AFTERCARE',
+      );
+      expect(aftercareCalls).toHaveLength(1);
+      expect(aftercareCalls[0][0].data).toMatchObject({
+        businessId: 'biz1',
+        bookingId: 'b1',
+        status: 'PENDING',
+        type: 'AFTERCARE',
+      });
+    });
+
+    it('creates TREATMENT_CHECK_IN reminder when a TREATMENT booking becomes COMPLETED', async () => {
+      prisma.booking.update.mockResolvedValue({
+        id: 'b1',
+        status: 'COMPLETED',
+        service: { id: 'svc1', name: 'Botox', kind: 'TREATMENT' },
+      } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+
+      await bookingService.updateStatus('biz1', 'b1', 'COMPLETED');
+
+      const checkInCalls = prisma.reminder.create.mock.calls.filter(
+        (call: any) => call[0]?.data?.type === 'TREATMENT_CHECK_IN',
+      );
+      expect(checkInCalls).toHaveLength(1);
+      expect(checkInCalls[0][0].data).toMatchObject({
+        businessId: 'biz1',
+        bookingId: 'b1',
+        status: 'PENDING',
+        type: 'TREATMENT_CHECK_IN',
+      });
+    });
+
+    it('does NOT create AFTERCARE/TREATMENT_CHECK_IN for CONSULT bookings', async () => {
+      prisma.booking.update.mockResolvedValue({
+        id: 'b1',
+        status: 'COMPLETED',
+        service: { id: 'svc1', name: 'Consultation', kind: 'CONSULT' },
+      } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+
+      await bookingService.updateStatus('biz1', 'b1', 'COMPLETED');
+
+      const calls = prisma.reminder.create.mock.calls;
+      const aftercareCalls = calls.filter((call: any) => call[0]?.data?.type === 'AFTERCARE');
+      const checkInCalls = calls.filter((call: any) => call[0]?.data?.type === 'TREATMENT_CHECK_IN');
+      expect(aftercareCalls).toHaveLength(0);
+      expect(checkInCalls).toHaveLength(0);
+    });
+
+    it('does NOT create AFTERCARE/TREATMENT_CHECK_IN for OTHER bookings', async () => {
+      prisma.booking.update.mockResolvedValue({
+        id: 'b1',
+        status: 'COMPLETED',
+        service: { id: 'svc1', name: 'General', kind: 'OTHER' },
+      } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+
+      await bookingService.updateStatus('biz1', 'b1', 'COMPLETED');
+
+      const calls = prisma.reminder.create.mock.calls;
+      const aftercareCalls = calls.filter((call: any) => call[0]?.data?.type === 'AFTERCARE');
+      const checkInCalls = calls.filter((call: any) => call[0]?.data?.type === 'TREATMENT_CHECK_IN');
+      expect(aftercareCalls).toHaveLength(0);
+      expect(checkInCalls).toHaveLength(0);
+    });
+
+    it('uses treatmentCheckInHours from business settings for check-in delay', async () => {
+      mockBusinessService.getNotificationSettings.mockResolvedValue({
+        channels: 'both',
+        followUpDelayHours: 2,
+        consultFollowUpDays: 3,
+        treatmentCheckInHours: 48,
+      });
+      prisma.booking.update.mockResolvedValue({
+        id: 'b1',
+        status: 'COMPLETED',
+        service: { id: 'svc1', name: 'Botox', kind: 'TREATMENT' },
+      } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+
+      const before = Date.now();
+      await bookingService.updateStatus('biz1', 'b1', 'COMPLETED');
+      const after = Date.now();
+
+      const checkInCall = prisma.reminder.create.mock.calls.find(
+        (call: any) => call[0]?.data?.type === 'TREATMENT_CHECK_IN',
+      );
+      expect(checkInCall).toBeDefined();
+
+      const scheduledAt = checkInCall![0].data.scheduledAt as Date;
+      const expectedMin = before + 48 * 3600000;
+      const expectedMax = after + 48 * 3600000;
+      expect(scheduledAt.getTime()).toBeGreaterThanOrEqual(expectedMin);
+      expect(scheduledAt.getTime()).toBeLessThanOrEqual(expectedMax);
+    });
+
+    it('schedules AFTERCARE immediately (scheduledAt ~ now)', async () => {
+      prisma.booking.update.mockResolvedValue({
+        id: 'b1',
+        status: 'COMPLETED',
+        service: { id: 'svc1', name: 'Botox', kind: 'TREATMENT' },
+      } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+
+      const before = Date.now();
+      await bookingService.updateStatus('biz1', 'b1', 'COMPLETED');
+      const after = Date.now();
+
+      const aftercareCall = prisma.reminder.create.mock.calls.find(
+        (call: any) => call[0]?.data?.type === 'AFTERCARE',
+      );
+      expect(aftercareCall).toBeDefined();
+
+      const scheduledAt = aftercareCall![0].data.scheduledAt as Date;
+      expect(scheduledAt.getTime()).toBeGreaterThanOrEqual(before);
+      expect(scheduledAt.getTime()).toBeLessThanOrEqual(after);
+    });
+
     it('uses consultFollowUpDays from business settings for delay', async () => {
       mockBusinessService.getNotificationSettings.mockResolvedValue({
         channels: 'both',

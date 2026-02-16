@@ -72,6 +72,10 @@ export class ReminderService {
           }
 
           await this.notificationService.sendConsultFollowUp(booking);
+        } else if (type === 'AFTERCARE') {
+          await this.notificationService.sendAftercare(booking);
+        } else if (type === 'TREATMENT_CHECK_IN') {
+          await this.notificationService.sendTreatmentCheckIn(booking);
         } else if (type === 'FOLLOW_UP') {
           await this.notificationService.sendFollowUp(booking);
         } else {

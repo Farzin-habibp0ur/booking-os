@@ -200,6 +200,88 @@ export class NotificationService {
     }
   }
 
+  async sendAftercare(booking: BookingWithRelations): Promise<void> {
+    try {
+      const channels = await this.getChannelPreference(booking.businessId);
+      const business =
+        booking.business || (await this.businessService.findById(booking.businessId));
+      const businessName = business?.name || 'Our Business';
+
+      const context = {
+        customerName: booking.customer.name,
+        serviceName: booking.service.name,
+        date: booking.startTime.toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        }),
+        time: booking.startTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+        staffName: booking.staff?.name || '',
+        businessName,
+      };
+
+      const body = await this.resolveTemplate(booking.businessId, 'AFTERCARE', context);
+
+      if (channels === 'whatsapp' || channels === 'both') {
+        await this.dispatchWhatsApp(booking.customer.phone, body, booking.businessId);
+      }
+
+      if (channels === 'email' || channels === 'both') {
+        if (booking.customer.email) {
+          const subject = `Aftercare instructions - ${booking.service.name} at ${businessName}`;
+          const html = this.wrapInEmailHtml(body, businessName);
+          await this.dispatchEmail(booking.customer.email, subject, html);
+        }
+      }
+
+      this.logger.log(`Sent aftercare for ${booking.id} via ${channels}`);
+    } catch (error) {
+      this.logger.error(`Failed to send aftercare for ${booking.id}:`, error);
+    }
+  }
+
+  async sendTreatmentCheckIn(booking: BookingWithRelations): Promise<void> {
+    try {
+      const channels = await this.getChannelPreference(booking.businessId);
+      const business =
+        booking.business || (await this.businessService.findById(booking.businessId));
+      const businessName = business?.name || 'Our Business';
+
+      const context = {
+        customerName: booking.customer.name,
+        serviceName: booking.service.name,
+        date: booking.startTime.toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        }),
+        time: booking.startTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+        staffName: booking.staff?.name || '',
+        businessName,
+      };
+
+      const body = await this.resolveTemplate(booking.businessId, 'TREATMENT_CHECK_IN', context);
+
+      if (channels === 'whatsapp' || channels === 'both') {
+        await this.dispatchWhatsApp(booking.customer.phone, body, booking.businessId);
+      }
+
+      if (channels === 'email' || channels === 'both') {
+        if (booking.customer.email) {
+          const subject = `How are you feeling? - ${businessName}`;
+          const html = this.wrapInEmailHtml(body, businessName);
+          await this.dispatchEmail(booking.customer.email, subject, html);
+        }
+      }
+
+      this.logger.log(`Sent treatment check-in for ${booking.id} via ${channels}`);
+    } catch (error) {
+      this.logger.error(`Failed to send treatment check-in for ${booking.id}:`, error);
+    }
+  }
+
   private async getChannelPreference(businessId: string): Promise<'email' | 'whatsapp' | 'both'> {
     const settings = await this.businessService.getNotificationSettings(businessId);
     const channels = settings?.channels || 'both';
@@ -228,6 +310,8 @@ export class NotificationService {
       REMINDER: `Hi ${context.customerName}! Reminder: your ${context.serviceName} is scheduled for ${context.time}${context.staffName ? ` with ${context.staffName}` : ''} at ${context.businessName}. Reply YES to confirm.`,
       FOLLOW_UP: `Hi ${context.customerName}, thank you for visiting ${context.businessName}! We hope you enjoyed your ${context.serviceName}. We'd love to hear your feedback.`,
       CONSULT_FOLLOW_UP: `Hi ${context.customerName}, we hope your consultation at ${context.businessName} was helpful! Ready to move forward with treatment?${context.bookingLink ? ` Book here: ${context.bookingLink}` : ''}`,
+      AFTERCARE: `Hi ${context.customerName}, thank you for your ${context.serviceName} at ${context.businessName}! Here are your aftercare reminders: avoid direct sun exposure, keep the area clean, and contact us if you have any concerns.`,
+      TREATMENT_CHECK_IN: `Hi ${context.customerName}, it's been 24 hours since your ${context.serviceName} at ${context.businessName}. How are you feeling? Let us know if you have any questions or concerns.`,
     };
 
     return (

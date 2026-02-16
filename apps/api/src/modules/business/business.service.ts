@@ -73,6 +73,7 @@ export class BusinessService {
       channels: 'both',
       followUpDelayHours: 2,
       consultFollowUpDays: 3,
+      treatmentCheckInHours: 24,
     };
     const raw = business.notificationSettings || {};
     return { ...defaults, ...(typeof raw === 'object' ? raw : {}) };
@@ -80,7 +81,7 @@ export class BusinessService {
 
   async updateNotificationSettings(
     id: string,
-    settings: { channels?: string; followUpDelayHours?: number; consultFollowUpDays?: number },
+    settings: { channels?: string; followUpDelayHours?: number; consultFollowUpDays?: number; treatmentCheckInHours?: number },
   ) {
     const business = await this.prisma.business.findUnique({ where: { id } });
     if (!business) return null;

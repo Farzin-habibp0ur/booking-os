@@ -253,6 +253,60 @@ describe('ReminderService', () => {
       );
     });
 
+    describe('AFTERCARE handling', () => {
+      it('routes AFTERCARE type through sendAftercare', async () => {
+        const aftercareReminder = { ...mockReminder, type: 'AFTERCARE' };
+        prisma.reminder.findMany.mockResolvedValue([aftercareReminder] as any);
+        prisma.reminder.update.mockResolvedValue({} as any);
+
+        await reminderService.processPendingReminders();
+
+        expect(mockNotificationService.sendAftercare).toHaveBeenCalledWith(mockBooking);
+        expect(mockNotificationService.sendReminder).not.toHaveBeenCalled();
+      });
+
+      it('marks AFTERCARE as FAILED when send throws', async () => {
+        const aftercareReminder = { ...mockReminder, id: 'reminder-aftercare', type: 'AFTERCARE' };
+        prisma.reminder.findMany.mockResolvedValue([aftercareReminder] as any);
+        prisma.reminder.update.mockResolvedValue({} as any);
+        mockNotificationService.sendAftercare.mockRejectedValueOnce(new Error('Send failed'));
+
+        await reminderService.processPendingReminders();
+
+        expect(prisma.reminder.update).toHaveBeenCalledWith({
+          where: { id: 'reminder-aftercare' },
+          data: { status: 'FAILED' },
+        });
+      });
+    });
+
+    describe('TREATMENT_CHECK_IN handling', () => {
+      it('routes TREATMENT_CHECK_IN type through sendTreatmentCheckIn', async () => {
+        const checkInReminder = { ...mockReminder, type: 'TREATMENT_CHECK_IN' };
+        prisma.reminder.findMany.mockResolvedValue([checkInReminder] as any);
+        prisma.reminder.update.mockResolvedValue({} as any);
+
+        await reminderService.processPendingReminders();
+
+        expect(mockNotificationService.sendTreatmentCheckIn).toHaveBeenCalledWith(mockBooking);
+        expect(mockNotificationService.sendReminder).not.toHaveBeenCalled();
+      });
+
+      it('marks TREATMENT_CHECK_IN as FAILED when send throws', async () => {
+        const checkInReminder = { ...mockReminder, id: 'reminder-checkin', type: 'TREATMENT_CHECK_IN' };
+        prisma.reminder.findMany.mockResolvedValue([checkInReminder] as any);
+        prisma.reminder.update.mockResolvedValue({} as any);
+        mockNotificationService.sendTreatmentCheckIn.mockRejectedValueOnce(new Error('Send failed'));
+
+        await reminderService.processPendingReminders();
+
+        expect(prisma.reminder.update).toHaveBeenCalledWith({
+          where: { id: 'reminder-checkin' },
+          data: { status: 'FAILED' },
+        });
+      });
+    });
+
     describe('CONSULT_FOLLOW_UP handling', () => {
       const consultBooking = {
         ...mockBooking,

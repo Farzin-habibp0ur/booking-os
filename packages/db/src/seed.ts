@@ -287,6 +287,24 @@ async function main() {
         variables: ['customerName', 'businessName', 'bookingLink'],
       },
     }),
+    prisma.messageTemplate.create({
+      data: {
+        businessId: business.id,
+        name: 'Aftercare Instructions',
+        category: 'AFTERCARE',
+        body: 'Hi {{customerName}}, thank you for your {{serviceName}} at {{businessName}}! Here are your aftercare reminders: avoid direct sun exposure, keep the area clean, and contact us if you have any concerns.',
+        variables: ['customerName', 'serviceName', 'businessName'],
+      },
+    }),
+    prisma.messageTemplate.create({
+      data: {
+        businessId: business.id,
+        name: 'Treatment Check-in',
+        category: 'TREATMENT_CHECK_IN',
+        body: "Hi {{customerName}}, it's been 24 hours since your {{serviceName}} at {{businessName}}. How are you feeling? Let us know if you have any questions or concerns.",
+        variables: ['customerName', 'serviceName', 'businessName'],
+      },
+    }),
   ]);
 
   console.log(`✅ Message templates created`);
@@ -420,7 +438,53 @@ async function main() {
 
   console.log(`✅ Consult booking and CONSULT_FOLLOW_UP reminder created`);
 
-  // Update business notification settings with consultFollowUpDays
+  // Create a completed TREATMENT booking for Emma Wilson with AFTERCARE (SENT) and TREATMENT_CHECK_IN (PENDING)
+  const treatmentDate = new Date();
+  treatmentDate.setDate(treatmentDate.getDate() - 1);
+  treatmentDate.setHours(14, 0, 0, 0);
+
+  const treatmentEnd = new Date(treatmentDate);
+  treatmentEnd.setMinutes(treatmentEnd.getMinutes() + 60);
+
+  const treatmentBooking = await prisma.booking.create({
+    data: {
+      businessId: business.id,
+      customerId: customers[0].id, // Emma Wilson
+      serviceId: services[2].id, // Chemical Peel
+      staffId: owner.id,
+      status: 'COMPLETED',
+      startTime: treatmentDate,
+      endTime: treatmentEnd,
+    },
+  });
+
+  await prisma.reminder.create({
+    data: {
+      businessId: business.id,
+      bookingId: treatmentBooking.id,
+      scheduledAt: treatmentDate,
+      status: 'SENT',
+      type: 'AFTERCARE',
+      sentAt: treatmentDate,
+    },
+  });
+
+  const checkInTime = new Date();
+  checkInTime.setHours(checkInTime.getHours() + 12);
+
+  await prisma.reminder.create({
+    data: {
+      businessId: business.id,
+      bookingId: treatmentBooking.id,
+      scheduledAt: checkInTime,
+      status: 'PENDING',
+      type: 'TREATMENT_CHECK_IN',
+    },
+  });
+
+  console.log(`✅ Treatment booking with AFTERCARE and TREATMENT_CHECK_IN reminders created`);
+
+  // Update business notification settings with consultFollowUpDays and treatmentCheckInHours
   await prisma.business.update({
     where: { id: business.id },
     data: {
@@ -428,6 +492,7 @@ async function main() {
         channels: 'both',
         followUpDelayHours: 2,
         consultFollowUpDays: 3,
+        treatmentCheckInHours: 24,
       },
     },
   });
