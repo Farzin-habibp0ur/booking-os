@@ -36,6 +36,13 @@ async function main() {
         requireConsultation: true,
         medicalFormRequired: true,
         requiredProfileFields: ['firstName', 'email'],
+        phase1: {
+          outcomeTracking: true,
+          beforeAfterPhotos: true,
+          treatmentPlans: true,
+          consentForms: true,
+          productRecommendations: true,
+        },
       },
       aiSettings: {
         enabled: true,

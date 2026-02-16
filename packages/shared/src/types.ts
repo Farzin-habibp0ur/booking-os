@@ -189,3 +189,42 @@ export interface DashboardData {
     avgResponseTimeMins: number;
   };
 }
+
+// ---- Phase 1 feature flags ----
+
+export interface Phase1Config {
+  outcomeTracking: boolean;
+  beforeAfterPhotos: boolean;
+  treatmentPlans: boolean;
+  consentForms: boolean;
+  productRecommendations: boolean;
+}
+
+export type Phase1Flag = keyof Phase1Config;
+
+export const PHASE1_DEFAULTS: Phase1Config = {
+  outcomeTracking: false,
+  beforeAfterPhotos: false,
+  treatmentPlans: false,
+  consentForms: false,
+  productRecommendations: false,
+};
+
+export function isPhase1Enabled(
+  packConfig: Record<string, unknown> | null | undefined,
+  flag: Phase1Flag,
+): boolean {
+  if (!packConfig) return false;
+  const phase1 = packConfig.phase1 as Partial<Phase1Config> | undefined;
+  if (!phase1) return false;
+  return phase1[flag] === true;
+}
+
+export function getPhase1Config(
+  packConfig: Record<string, unknown> | null | undefined,
+): Phase1Config {
+  if (!packConfig) return { ...PHASE1_DEFAULTS };
+  const phase1 = packConfig.phase1 as Partial<Phase1Config> | undefined;
+  if (!phase1) return { ...PHASE1_DEFAULTS };
+  return { ...PHASE1_DEFAULTS, ...phase1 };
+}

@@ -188,6 +188,7 @@ export class AuthService {
         slug: staff.business.slug,
         verticalPack: staff.business.verticalPack,
         defaultLocale: staff.business.defaultLocale,
+        packConfig: staff.business.packConfig as Record<string, unknown> | null,
       },
     };
   }
