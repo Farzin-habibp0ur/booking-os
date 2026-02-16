@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useI18n } from '@/lib/i18n';
@@ -24,7 +24,15 @@ const PROVIDER_INFO: Record<string, { name: string; icon: string }> = {
   outlook: { name: 'Outlook Calendar', icon: '📆' },
 };
 
-export default function CalendarSyncPage() {
+export default function CalendarSyncPageWrapper() {
+  return (
+    <Suspense fallback={null}>
+      <CalendarSyncPage />
+    </Suspense>
+  );
+}
+
+function CalendarSyncPage() {
   const { t } = useI18n();
   const searchParams = useSearchParams();
   const [connections, setConnections] = useState<Connection[]>([]);
