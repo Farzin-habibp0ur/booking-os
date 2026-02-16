@@ -117,8 +117,10 @@ All endpoints are prefixed with `/api/v1`. Interactive API docs are available at
 | Templates | `/templates` | Message and notification templates |
 | Translations | `/translations` | Multi-language support |
 | Availability | `/availability` | Staff availability and time slots |
-| Business | `/business` | Business settings and profile |
+| Business | `/business` | Business settings, profile, pack install, test booking |
+| ROI | `/roi` | ROI dashboard, weekly review, email review |
 | Vertical Packs | `/vertical-packs` | Industry-specific configurations |
+| Self-Serve | `/manage` | Customer reschedule/cancel via token links |
 | Webhook | `/webhook` | Incoming messaging webhooks |
 | Health | `/health` | API health check |
 | Public Booking | `/public` | Customer-facing booking portal |

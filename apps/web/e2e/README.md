@@ -50,6 +50,29 @@ test.beforeEach(async ({ page }) => {
 });
 ```
 
+### api-data.ts
+Provides API data helpers for workflow tests (authenticated via page.request):
+- `getServicesViaApi(page)` — Fetch services list
+- `getStaffViaApi(page)` — Fetch staff list
+- `getCustomersViaApi(page)` — Fetch customers list
+- `createBookingViaApi(page, { serviceId, staffId, customerId, startTime })` — Create a booking
+- `updateBookingStatusViaApi(page, bookingId, status)` — Update booking status
+- `sendRescheduleLinkViaApi(page, bookingId)` — Send reschedule link
+- `sendCancelLinkViaApi(page, bookingId)` — Send cancel link
+
+**Usage:**
+```typescript
+import { getServicesViaApi, createBookingViaApi } from './helpers/api-data';
+
+const services = await getServicesViaApi(page);
+const booking = await createBookingViaApi(page, {
+  serviceId: services[0].id,
+  staffId: staff[0].id,
+  customerId: customers[0].id,
+  startTime: new Date().toISOString(),
+});
+```
+
 ## Running Tests
 
 ### Run all tests
@@ -226,21 +249,20 @@ PWDEBUG=1 npx playwright test --headed --slowMo=500
 
 ## Coverage
 
-Current test coverage includes:
-- Authentication flows
+Current test coverage (54 tests, 0 failures):
+- Authentication flows (login, redirects, protected routes)
 - Protected route access
-- Main navigation
+- Main navigation (sidebar, active states, browser back/forward)
 - All primary feature pages (bookings, customers, services, staff, settings, inbox)
 - Empty states and data display
 - Search functionality
-- Browser navigation (back/forward)
-- Page titles and active states
+- Setup wizard flow
+- **End-to-end workflows:** booking lifecycle, deposit flow, consult completion, self-serve reschedule/cancel, ROI dashboard, template settings
 
 ## Future Enhancements
 
 Potential additions:
-- Form submission tests
-- Data creation/editing flows
+- Form submission tests (create/edit bookings, customers)
 - Delete operations with confirmations
 - Filter and sort functionality
 - Pagination tests

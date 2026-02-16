@@ -21,13 +21,38 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses (aes
 - **Staff management** — Roles (Admin/Service Provider/Agent), working hours per day, time off, email invitations
 - **Service catalog** — Categories, pricing, durations, buffer times, deposit requirements, soft delete
 - **Analytics & reports** — Bookings over time, revenue, service breakdown, staff performance, no-show rates, peak hours
-- **Multi-language** — English & Spanish (589 translation keys), per-business overrides, language picker in sidebar
+- **Multi-language** — English & Spanish (600+ translation keys), per-business overrides, language picker in sidebar
 - **Billing** — Stripe integration (Basic/Pro plans), checkout, customer portal, webhooks, deposit collection
 - **Calendar sync** — Google Calendar OAuth integration, iCal feed generation
 - **Public booking portal** — Customer-facing booking page at `/book/{slug}` (service selection, availability, booking)
 - **Vertical packs** — Industry-specific configs (aesthetic, salon, tutoring, general) that customize labels, required fields, and features
-- **Setup wizard** — 9-step onboarding flow for new businesses
-- **Notifications** — Email via Resend, automated booking reminders
+- **Setup wizard** — 10-step onboarding flow for new businesses with feature readiness checklist and test booking
+- **Notifications** — Email via Resend, WhatsApp, automated booking reminders, notification timeline
+
+### Phase 1: "Outcome Machine for Aesthetics" (Complete — 27/27 tasks)
+
+Phase 1 adds a full aesthetics clinic workflow on top of the core platform:
+
+- **Consult vs Treatment booking types** — ServiceKind enum (CONSULT/TREATMENT/OTHER) with badges on calendar and booking detail
+- **Aesthetics intake fields** — Clinic Intake card in inbox sidebar: concern area, desired treatment, budget, medical flags, preferred provider, contraindications, with amber dot indicators and edit mode
+- **Consult → Treatment follow-up** — Automated follow-up if consult completed but no treatment booked within configurable days
+- **Aftercare + 24h check-in** — Treatment completion triggers aftercare instructions and 24h check-in message
+- **Deposit-required bookings** — Bookings start as PENDING_DEPOSIT until paid or manager override; "Send Deposit Request" action with timeline logging
+- **Clinic policies** — Cancel/reschedule windows defined once in business settings, applied to staff and customer actions
+- **Manager override with accountability** — Authorized roles can confirm without deposit but must provide reason, recorded in timeline
+- **Customer self-serve reschedule/cancel** — Secure branded pages via token links; policy-aware slot picker; expired links show safe fallback
+- **Staff send reschedule/cancel links** — 1-click from inbox or booking detail, logged to prevent resends
+- **ROI dashboard** — Conversion, no-shows, response time, consult→treatment, utilization, deposit compliance; current vs baseline with deltas
+- **Recovered revenue estimate** — Conservative ROI estimate with visible methodology
+- **Attention needed panel** — Dashboard panels for deposit-pending bookings, overdue replies, tomorrow's schedule
+- **Go-live checklist** — Auto-updating 8-item checklist with progress bar and "Fix →" links
+- **First 10 bookings milestones** — Coaching nudges at 5 thresholds, dismissible
+- **Complete template pack** — 10 templates including cancellation confirmation, reschedule link, cancel link
+- **Template preview warnings** — Unresolved {{vars}} show amber warning + red highlight in preview
+- **Notifications in timeline** — All send events logged and rendered in booking detail with Send icon
+- **Permissions for money/policy actions** — Role boundaries for overrides, policy edits, go-live resets, link regeneration
+- **Weekly ROI review** — Week-over-week metric comparison with email review functionality
+- **E2E QA pack** — 7 Playwright workflow tests covering critical clinic journeys (54 total E2E tests)
 
 ---
 
@@ -125,14 +150,14 @@ Business (1) ──┬── (*) Staff ──── (*) WorkingHours
 
 ---
 
-## 5. API Modules (22 Controllers)
+## 5. API Modules (24 Controllers)
 
 All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 
 | Module | Route Prefix | Key Endpoints |
 |--------|-------------|---------------|
 | **Auth** | `/auth` | POST signup, login, refresh, logout, forgot-password, reset-password, change-password, accept-invite; GET me |
-| **Bookings** | `/bookings` | GET list (filtered, paginated), GET calendar view, GET/:id, POST create, PATCH/:id update, PATCH/:id/status |
+| **Bookings** | `/bookings` | GET list (filtered, paginated), GET calendar view, GET/:id, POST create, PATCH/:id update, PATCH/:id/status, POST/:id/send-deposit-request, POST/:id/send-reschedule-link, POST/:id/send-cancel-link, GET/:id/cancel-policy, GET/:id/reschedule-policy |
 | **Recurring** | `/bookings/recurring` | POST create series, GET/:seriesId, POST/:seriesId/cancel |
 | **Customers** | `/customers` | GET list (search, paginated), GET/:id, POST create, PATCH/:id, GET/:id/bookings, POST import-csv, POST import-from-conversations |
 | **Services** | `/services` | GET list, POST create, PATCH/:id, DELETE/:id (soft) |
@@ -140,14 +165,16 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 | **Conversations** | `/conversations` | GET list (filtered), GET counts, GET/:id, PATCH assign/status/snooze/tags, GET/:id/messages, POST/:id/booking, notes CRUD |
 | **Messages** | `/conversations` | POST/:id/messages (send) |
 | **Dashboard** | `/dashboard` | GET stats, GET ai-usage |
-| **Reports** | `/reports` | GET bookings-over-time, no-show-rate, response-times, service-breakdown, staff-performance, revenue-over-time, status-breakdown, peak-hours |
+| **Reports** | `/reports` | GET bookings-over-time, no-show-rate, response-times, service-breakdown, staff-performance, revenue-over-time, status-breakdown, peak-hours, consult-to-treatment-conversion, deposit-compliance-rate |
+| **ROI** | `/roi` | GET dashboard, POST go-live, GET weekly-review, POST email-review |
 | **AI** | `/ai` | GET/PATCH settings, POST summary, POST booking-confirm/cancel/reschedule flows, POST resume-auto-reply, POST customer chat |
 | **Billing** | `/billing` | POST checkout, POST portal, GET subscription, POST webhook, POST deposit |
 | **Templates** | `/templates` | Full CRUD |
 | **Translations** | `/translations` | GET (by locale), GET keys, POST upsert, DELETE |
 | **Availability** | `/availability` | GET available slots (by date, service, staff) |
-| **Business** | `/business` | GET settings, PATCH update, GET/PATCH notification-settings |
+| **Business** | `/business` | GET settings, PATCH update, GET/PATCH notification-settings, POST install-pack, POST create-test-booking |
 | **Vertical Packs** | `/vertical-packs` | GET/:name config |
+| **Self-Serve** | `/manage` | GET /reschedule/:token, POST /reschedule/:token, GET /cancel/:token, POST /cancel/:token |
 | **Webhooks** | `/webhook` | GET whatsapp (verify), POST whatsapp (inbound), POST inbound (generic HMAC), GET simulator/outbox |
 | **Health** | `/health` | GET health check |
 | **Public Booking** | `/public` | GET/:slug business info, GET/:slug/services, GET/:slug/availability, POST/:slug/book |
@@ -162,7 +189,7 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 
 ---
 
-## 6. Frontend Pages (22 Pages)
+## 6. Frontend Pages (26 Pages)
 
 | Page | Route | Description |
 |------|-------|-------------|
@@ -171,23 +198,26 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 | Forgot Password | `/forgot-password` | Password reset email |
 | Reset Password | `/reset-password?token=` | Set new password |
 | Accept Invite | `/accept-invite?token=` | Staff invitation acceptance |
-| Setup Wizard | `/setup` | 9-step onboarding (business info → WhatsApp → staff → services → hours → templates → profile fields → import → finish) |
-| Dashboard | `/dashboard` | KPI cards, today's appointments, unassigned conversations |
+| Setup Wizard | `/setup` | 10-step onboarding (clinic type → business info → WhatsApp → staff → services → hours → templates → profile fields → import → finish with readiness checklist + test booking) |
+| Dashboard | `/dashboard` | KPI cards, today's appointments, unassigned conversations, attention needed panel, go-live checklist, first-10-bookings milestones |
 | Calendar | `/calendar` | Day/week view, staff columns, click-to-book |
-| Bookings | `/bookings` | Filterable booking list with detail modal |
-| Inbox | `/inbox` | 4-panel messaging: filters, conversation list, message thread + AI suggestions, customer info sidebar |
+| Bookings | `/bookings` | Filterable booking list with detail modal, deposit request, reschedule/cancel link actions |
+| Inbox | `/inbox` | 4-panel messaging: filters, conversation list, message thread + AI suggestions, customer info sidebar with Clinic Intake card |
 | Customers | `/customers` | Searchable list with import/export |
 | Customer Detail | `/customers/[id]` | Contact info, tags, stats, AI chat, booking history, custom fields |
-| Services | `/services` | Grouped by category, full CRUD |
+| Services | `/services` | Grouped by category, full CRUD, service kind badges (CONSULT/TREATMENT/OTHER) |
 | Staff | `/staff` | Expandable table with working hours + time off |
 | Reports | `/reports` | Charts: bookings, revenue, service breakdown, staff performance, peak hours |
+| ROI Dashboard | `/roi` | ROI metrics (conversion, no-shows, response time, consult→treatment, utilization, deposit compliance), baseline comparison, recovered revenue estimate, weekly review tab |
 | Settings | `/settings` | Business info, password change, links to sub-pages |
 | AI Settings | `/settings/ai` | Toggle AI features, auto-reply config, personality |
-| Templates | `/settings/templates` | Message template CRUD with variable detection |
+| Templates | `/settings/templates` | 10 message templates with variable detection, unresolved var warnings |
 | Translations | `/settings/translations` | Per-locale translation overrides |
 | Profile Fields | `/settings/profile-fields` | Required field configuration |
 | Account & Import | `/settings/account` | CSV import/export, conversation import |
 | Public Booking | `/book/[slug]` | Customer-facing booking portal |
+| Self-Serve Reschedule | `/manage/reschedule/[token]` | Clinic-branded reschedule page with policy-aware slot picker |
+| Self-Serve Cancel | `/manage/cancel/[token]` | Clinic-branded cancel confirmation page with optional reason |
 | Calendar Sync | `/settings/calendar` | Google Calendar connection management |
 | Billing | `/settings/billing` | Stripe subscription management |
 | Notifications | `/settings/notifications` | Notification preferences |
@@ -242,11 +272,9 @@ Events emitted from the API gateway (`InboxGateway`):
 ## 9. Testing
 
 ### Current Coverage
-- **API:** 31 test suites, 353 tests (unit + integration)
-- **Web:** 14 test suites, 96 tests (component + page tests)
-- **Shared:** 1 test suite, 19 tests
-- **Total: 468 tests, all passing**
-- **E2E:** Playwright configured for web app
+- **API unit tests:** 36 test suites, 499 tests (unit + integration)
+- **E2E tests:** 54 Playwright tests (0 failures), 1 skipped
+- **Total: 553 tests, all passing**
 
 ### What's Tested
 - All AI components (intent detection, reply generation, booking/cancel/reschedule assistants, profile collector)
@@ -260,7 +288,17 @@ Events emitted from the API gateway (`InboxGateway`):
 - Dashboard service
 - Reminder service
 - Notification service
+- ROI service (dashboard, weekly review, email review)
+- Business service (install pack, create test booking)
+- Vertical pack service (aesthetic, general packs)
 - Logging + structured logs
+
+### E2E Test Coverage (Playwright)
+- Authentication flows (login, redirects, protected routes)
+- Navigation (sidebar, active states, browser history)
+- All primary pages (bookings, customers, services, staff, settings, inbox)
+- Setup wizard flow
+- **Workflow tests:** booking lifecycle, deposit flow, consult completion, self-serve reschedule/cancel pages, ROI dashboard, template settings
 
 ---
 
@@ -302,13 +340,18 @@ Key variable groups (full list in `.env.example`):
 
 The seed script (`packages/db/src/seed.ts`) creates:
 
-- **Business:** Glow Aesthetic Clinic (aesthetic vertical pack, slug: `glow-aesthetic-clinic`)
+- **Business:** Glow Aesthetic Clinic (aesthetic vertical pack, slug: `glow-aesthetic-clinic`, setupComplete: true)
 - **Staff:** Dr. Sarah Chen (Admin), Maria Garcia (Agent), Dr. Emily Park (Service Provider)
-- **Services:** Botox ($350/30min), Dermal Filler ($500/45min), Chemical Peel ($200/60min), Microneedling ($275/45min), Consultation (Free/20min)
-- **Customers:** Emma Wilson (VIP, regular), James Thompson (New, latex allergy), Sofia Rodriguez (Regular, Spanish-speaking)
-- **Working hours:** Mon-Fri 9am-5pm for both staff
-- **Message templates:** Confirmation, reminder, follow-up, cancellation
-- **Sample bookings, conversations, and messages**
+- **Services:** Consultation (Free/30min, CONSULT), Botox ($350/30min, TREATMENT, deposit required $50), Dermal Filler ($500/45min, TREATMENT), Chemical Peel ($200/45min, TREATMENT), Microneedling ($300/60min, TREATMENT)
+- **Customers:** Emma Wilson (VIP, regular), James Thompson (New, latex allergy), Sofia Rodriguez (Regular, Spanish-speaking), Liam Parker (deposit demo)
+- **Working hours:** Mon-Fri 9am-5pm for all staff
+- **Message templates:** 10 templates (Confirmation, Reminder, Follow-up, Consult Follow-up, Aftercare, Treatment Check-in, Deposit Request, Cancellation Confirmation, Reschedule Link, Cancel Link)
+- **Sample bookings:** Confirmed, completed, cancelled, PENDING_DEPOSIT bookings
+- **Sample conversations and messages**
+- **Consult booking** with CONSULT_FOLLOW_UP reminder
+- **Treatment booking** with AFTERCARE and TREATMENT_CHECK_IN reminders
+- **ROI baseline** for dashboard metrics
+- **Notification settings** with follow-up delays and check-in hours
 
 ---
 
@@ -330,9 +373,30 @@ Two design references exist:
 
 ---
 
-## 14. Backlog — What's Left to Build
+## 14. Roadmap — What's Next
 
-### P2 Features (Medium Priority)
+Phase 1 ("Outcome Machine for Aesthetics") is **complete** (27/27 tasks). The roadmap continues with:
+
+### Phase 2: Automation & Growth Engine (3-6 months)
+- Smart waitlists with auto-notification
+- No-show prediction and prevention
+- Automated rebooking campaigns
+- Revenue optimization suggestions
+- Multi-channel outreach (SMS, email campaigns)
+
+### Phase 3: Platformization + Second Vertical (6-12 months)
+- Plugin/extension system
+- Second vertical (salon, tutoring, or wellness)
+- Marketplace for integrations
+- White-label capabilities
+
+### Phase 4: Engagement OS + Benchmarking (12-24 months)
+- Industry benchmarking
+- Customer engagement scoring
+- Loyalty/rewards engine
+- Partner marketplace
+
+### Backlog (Medium Priority)
 | # | Feature | Description |
 |---|---------|-------------|
 | 13 | Customer Booking Portal | Enhanced public booking experience at `/book/{slug}` — currently basic, needs polish |
@@ -342,13 +406,7 @@ Two design references exist:
 | 18 | Global Search | Cmd+K search across bookings, customers, conversations, services |
 | 19 | Waiting List | When slots are full, allow customers to join a waitlist with auto-notification |
 
-### P3 Features (Lower Priority)
-| # | Feature | Description |
-|---|---------|-------------|
-| 20 | Test Coverage >70% | Increase from current level, add E2E tests |
-| 24 | Feature Flags | Runtime feature toggles per business |
-
-### Potential Improvements (from DESIGN_DOCUMENTATION.md)
+### Potential Improvements
 - Mobile responsiveness optimization
 - Dark mode
 - Animations/transitions
@@ -386,7 +444,7 @@ npm run dev                    # Starts all apps
 | `npm run dev` | Start all apps |
 | `npm run build` | Build all |
 | `npm run lint` | Lint all |
-| `npm run test` | Run all tests (468 tests) |
+| `npm run test` | Run all unit tests (499 tests) |
 | `npm run test:e2e` | Playwright E2E tests |
 | `npm run db:generate` | Generate Prisma client |
 | `npm run db:migrate` | Run migrations |

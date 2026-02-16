@@ -20,6 +20,19 @@
 - **Billing integration** via Stripe (basic/pro plans)
 - **Vertical packs** — industry-specific configurations (aesthetic, salon, tutoring, general)
 
+### Phase 1: Outcome Machine for Aesthetics (Complete)
+- **Consult vs Treatment types** with service kind badges (CONSULT/TREATMENT/OTHER)
+- **Aesthetics intake fields** — 7-field Clinic Intake card in inbox sidebar with amber dot indicators
+- **Automated follow-ups** — Consult → treatment follow-up, aftercare instructions, 24h check-in
+- **Deposit-required bookings** — PENDING_DEPOSIT status, send deposit request action, manager override with reason
+- **Clinic policies** — Cancel/reschedule windows enforced on staff and customer actions
+- **Customer self-serve** — Branded reschedule/cancel pages via secure token links
+- **ROI dashboard** — 6 metrics with baseline comparison, recovered revenue estimate, weekly review with email
+- **Onboarding** — Go-live checklist, first 10 bookings milestones, feature readiness checklist
+- **Template pack** — 10 templates with unresolved variable warnings
+- **Notification timeline** — All actions logged and visible in booking detail
+- **Role-based permissions** — Money/policy actions restricted with explanations
+
 ### Tech Stack
 | Layer | Technology |
 |-------|-----------|

@@ -2,11 +2,10 @@
 
 ## Pre-Demo Setup
 
-### 1. Start servers (in separate terminals)
+### 1. Start servers
 ```bash
 cd booking-os
-npm run dev --workspace=apps/api   # API on http://localhost:3001
-npm run dev --workspace=apps/web   # Web on http://localhost:3000
+npm run dev   # Starts all apps (API :3001, Web :3000, WhatsApp Simulator :3002)
 ```
 
 ### 2. Open browser
@@ -29,61 +28,85 @@ npm run dev --workspace=apps/web   # Web on http://localhost:3000
 ### Scene: Onboarding Wizard
 **Talk through:**
 - "First-time users are automatically guided through a step-by-step onboarding wizard"
-- Show the progress bar at the top with 8 steps
+- Show the progress bar at the top with 10 steps
 
-**Step 1 — Business Info:**
+**Step 1 — Clinic Type:**
+- Show two cards: **Aesthetic Clinic** (recommended) and **General Practice**
+- Click **Aesthetic Clinic** — card highlights with sage ring
+- Pack installs automatically (services, templates, settings)
+- Click **Next**
+
+**Step 2 — Business Info:**
 - Show pre-filled business name "Glow Aesthetic Clinic"
 - Show timezone selector
 - Click **Next**
 
-**Step 2 — Connect WhatsApp:**
+**Step 3 — Connect WhatsApp:**
 - "This is where businesses connect their WhatsApp Business API"
 - "For now, we'll skip this step — our demo uses a webhook simulator"
 - Click **Skip for Now** or **Next**
 
-**Step 3 — Staff:**
+**Step 4 — Staff:**
 - Show existing staff: Dr. Sarah Chen (Admin), Maria Garcia (Agent), Dr. Emily Park (Service Provider)
 - "Businesses can add team members with different roles"
 - Click **Next**
 
-**Step 4 — Services:**
-- Show the 5 pre-configured services: Botox, Dermal Filler, Chemical Peel, Microneedling, Consultation
-- "Each service has a name, duration, and price"
+**Step 5 — Services:**
+- Show the 5 pre-configured services with CONSULT/TREATMENT badges: Consultation (Free), Botox ($350, deposit required), Dermal Filler ($500), Chemical Peel ($200), Microneedling ($300)
 - Click **Next**
 
-**Step 5 — Working Hours:**
+**Step 6 — Working Hours:**
 - Show the weekly schedule grid for each staff member
 - Toggle between Dr. Sarah Chen and Maria Garcia
 - "Staff members can have different schedules"
 - Click **Next**
 
-**Step 6 — Message Templates:**
-- Show the 3 templates: 24h Reminder, Booking Confirmation, Follow-up
+**Step 7 — Message Templates:**
+- Show the 10 templates: Reminder, Confirmation, Follow-up, Consult Follow-up, Aftercare, Treatment Check-in, Deposit Request, Cancellation, Reschedule Link, Cancel Link
 - "Templates support dynamic variables like customer name, service, and time"
 - Click **Next**
 
-**Step 7 — Import Customers:**
+**Step 8 — Profile Fields:**
+- Show required field configuration
+- Click **Next**
+
+**Step 9 — Import Customers:**
 - "Businesses can import customers in three ways"
 - Show the 3 cards: Import from CSV, Create from Conversations, Add Manually
 - *Optional:* Upload `demo-customers.csv` to show the CSV preview + import
 - Click **Next**
 
-**Step 8 — Finish:**
-- Show the summary: staff count, services count, templates count
-- "Everything is set up — let's go to the dashboard"
+**Step 10 — Finish:**
+- Show **Feature Readiness Checklist** — 6 items with green/amber indicators (staff, services, templates, notifications, working hours, clinic pack)
+- Click **Create Test Booking** — success toast confirms it works
+- Click **Open WhatsApp Simulator** — opens simulator in new tab
 - Click **Go to Dashboard**
 
 ---
 
-## PART 2: Dashboard Overview (1 min)
+## PART 2: Dashboard Overview (2 min)
 
 ### Scene: Dashboard
 **Talk through:**
 - "This is the Booking OS dashboard — a WhatsApp-first operating system for service businesses"
 - Point out the **4 key metrics**: Bookings This Week, Revenue (30 days), Total Customers, Open Conversations
-- Show **Today's Appointments** section — Sofia Rodriguez has a Chemical Peel booked
-- Show **Unassigned Conversations** — Emma Wilson and James Thompson have open conversations
-- "Let's explore the inbox where AI-powered conversations happen"
+- Show **Today's Appointments** section
+- Show **Unassigned Conversations**
+
+### Scene: Attention Needed Panel (Phase 1)
+- Show **Deposit-Pending Bookings** — Liam Parker's Botox needs a deposit
+- Show **Overdue Replies** — conversations awaiting response
+- Show **Tomorrow's Schedule** — upcoming appointments
+- "These panels highlight what needs immediate attention"
+
+### Scene: Go-Live Checklist (Phase 1, ADMIN only)
+- Show the auto-updating 8-item checklist with progress bar
+- Point out "Fix →" links that navigate to the relevant settings
+- "This ensures clinics are fully set up before going live"
+
+### Scene: First 10 Bookings Milestones (Phase 1)
+- Show milestone tracker with coaching nudges
+- "We guide new clinics through their first bookings with contextual tips"
 
 ---
 
@@ -352,13 +375,110 @@ Roberto Silva,+14155551005,roberto@example.com,regular;returning
 
 ---
 
-## PART 11: Wrap Up (30 sec)
+## PART 11: Deposit Flow (Phase 1) (2 min)
+
+### Scene: Deposit-Required Booking
+1. Click **Bookings** in sidebar
+2. Find Liam Parker's booking — status shows **Pending Deposit** (amber badge)
+3. Click to open booking detail modal
+
+### Scene: Send Deposit Request
+1. Click **Send Deposit Request** button (amber border)
+2. Toast confirms "Deposit request sent!"
+3. Show the **notification timeline** at the bottom — deposit request logged with timestamp
+4. "Deposit notifications are sent via WhatsApp and/or email based on clinic settings"
+
+### Scene: Manager Override
+1. Show the **Confirm Without Deposit** button (only visible for ADMIN role)
+2. Click it — reason required popup appears
+3. Enter a reason: "VIP client, will pay at appointment"
+4. Override logged in timeline with reason
+
+---
+
+## PART 12: Clinic Intake (Phase 1) (1-2 min)
+
+### Scene: Inbox Clinic Intake Card
+1. Click **Inbox** in sidebar
+2. Click on a patient conversation
+3. In the right sidebar, show the **Clinic Intake** card
+4. Show 7 fields: Medical Flag, Allergies, Concern Area, Desired Treatment, Budget Range, Preferred Provider, Contraindications
+5. Point out **amber dots** on empty fields and the completion badge (e.g., "2/7")
+6. Click the **pencil icon** to enter edit mode
+7. Fill in some fields, click **Save**
+8. Badge updates (e.g., "5/7")
+
+---
+
+## PART 13: Self-Serve Links (Phase 1) (2 min)
+
+### Scene: Send Reschedule Link
+1. Open a booking detail modal
+2. Click **Send Reschedule Link** — toast confirms link sent
+3. Show in **notification timeline** that the link was logged
+
+### Scene: Customer Reschedule Page
+1. In a new browser tab, open the reschedule link (from notification logs or API response)
+2. Show the **clinic-branded reschedule page** with business name and booking details
+3. Show the **policy-aware slot picker** — only valid time slots are shown
+4. Select a new slot and confirm
+5. "The customer can reschedule without calling or messaging — it just works"
+
+### Scene: Send Cancel Link
+1. Back in the booking detail, click **Send Cancel Link**
+2. Open the cancel link in a new tab
+3. Show the **clinic-branded cancel page** with confirmation and optional reason
+4. "Expired or invalid links show a safe fallback — no private info revealed"
+
+---
+
+## PART 14: ROI Dashboard (Phase 1) (2 min)
+
+### Scene: ROI Metrics
+1. Click **ROI** in sidebar
+2. Show the 6 metric cards: No-show Rate, Consult → Treatment Conversion, Avg Response Time, Revenue, Utilization, Deposit Compliance
+3. Show **current vs baseline** comparison with green/red delta badges
+4. "Baseline is captured at go-live — all improvements are measured from there"
+
+### Scene: Recovered Revenue
+1. Show the **Recovered Revenue** estimate card
+2. Click **"How we calculate this"** — methodology is transparent
+3. "We only show this when there's enough data — conservative and honest"
+
+### Scene: Weekly Review
+1. Click the **Weekly Review** tab
+2. Show the week-over-week comparison table (6 metrics × 2 periods)
+3. Delta badges show what improved vs worsened
+4. Click **Email Review** — toast confirms review emailed
+5. "Pilot clinics can email this to their team every Monday"
+
+---
+
+## PART 15: Templates & Notifications (Phase 1) (1 min)
+
+### Scene: Template Pack
+1. Go to **Settings > Templates**
+2. Show all 10 templates — including Cancellation, Reschedule Link, Cancel Link
+3. Click a template to preview
+4. If any template has unresolved `{{variables}}`, show the **amber warning badge**
+5. "Templates prevent embarrassing sends — unresolved variables are flagged before sending"
+
+### Scene: Notification Timeline
+1. Open any booking detail modal
+2. Scroll to the **notification timeline** section
+3. Show Send icons with timestamps for each notification event
+4. "Every action — deposit requests, links, reminders — is logged and visible"
+
+---
+
+## PART 16: Wrap Up (30 sec)
 
 **Talk through:**
-- "That's Booking OS — a complete WhatsApp-first operating system for service businesses"
+- "That's Booking OS — a complete WhatsApp-first operating system for aesthetic clinics"
+- "Phase 1 adds the full clinic workflow: intake, deposits, consults, aftercare, self-serve, and ROI tracking"
 - "AI handles the heavy lifting: responding to customers, booking appointments, handling cancellations"
 - "Staff stay in control with draft review, selective auto-reply, and seamless human handoff"
-- "From customer import to conversation intelligence to booking management — everything in one platform"
+- "From setup wizard to ROI dashboard — everything a pilot clinic needs to prove value in 90 days"
 
 ---
 
