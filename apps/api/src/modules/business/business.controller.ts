@@ -58,6 +58,20 @@ export class BusinessController {
     return this.businessService.installPack(businessId, body.packName);
   }
 
+  @Get('waitlist-settings')
+  async getWaitlistSettings(@BusinessId() businessId: string) {
+    return this.businessService.getWaitlistSettings(businessId);
+  }
+
+  @Patch('waitlist-settings')
+  @Roles('ADMIN')
+  async updateWaitlistSettings(
+    @BusinessId() businessId: string,
+    @Body() body: { offerCount?: number; expiryMinutes?: number; quietStart?: string; quietEnd?: string },
+  ) {
+    return this.businessService.updateWaitlistSettings(businessId, body);
+  }
+
   @Post('create-test-booking')
   @Roles('ADMIN')
   createTestBooking(@BusinessId() businessId: string) {

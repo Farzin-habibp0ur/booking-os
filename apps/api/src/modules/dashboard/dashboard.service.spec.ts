@@ -2,7 +2,8 @@ import { Test } from '@nestjs/testing';
 import { DashboardService } from './dashboard.service';
 import { PrismaService } from '../../common/prisma.service';
 import { ReportsService } from '../reports/reports.service';
-import { createMockPrisma } from '../../test/mocks';
+import { WaitlistService } from '../waitlist/waitlist.service';
+import { createMockPrisma, createMockWaitlistService } from '../../test/mocks';
 
 describe('DashboardService', () => {
   let dashboardService: DashboardService;
@@ -35,6 +36,7 @@ describe('DashboardService', () => {
         DashboardService,
         { provide: PrismaService, useValue: prisma },
         { provide: ReportsService, useValue: reportsService },
+        { provide: WaitlistService, useValue: createMockWaitlistService() },
       ],
     }).compile();
 

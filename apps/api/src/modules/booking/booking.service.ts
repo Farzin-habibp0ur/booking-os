@@ -1,10 +1,11 @@
-import { Injectable, BadRequestException, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, ForbiddenException, Optional, Inject, forwardRef } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../common/prisma.service';
 import { NotificationService } from '../notification/notification.service';
 import { BusinessService } from '../business/business.service';
 import { CalendarSyncService } from '../calendar-sync/calendar-sync.service';
 import { TokenService } from '../../common/token.service';
+import { WaitlistService } from '../waitlist/waitlist.service';
 
 @Injectable()
 export class BookingService {
@@ -15,6 +16,7 @@ export class BookingService {
     private calendarSyncService: CalendarSyncService,
     private tokenService: TokenService,
     private config: ConfigService,
+    @Optional() @Inject(forwardRef(() => WaitlistService)) private waitlistService?: WaitlistService,
   ) {}
 
   async findAll(
@@ -325,6 +327,10 @@ export class BookingService {
       // Send cancellation notification
       if (status === 'CANCELLED') {
         this.notificationService.sendCancellationNotification(booking).catch(() => {});
+        // Offer open slot to waitlisted customers
+        if (this.waitlistService) {
+          this.waitlistService.offerOpenSlot(booking).catch(() => {});
+        }
       }
     }
 

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { BookingController } from './booking.controller';
 import { BookingService } from './booking.service';
 import { RecurringController } from './recurring.controller';
@@ -6,9 +6,10 @@ import { RecurringService } from './recurring.service';
 import { NotificationModule } from '../notification/notification.module';
 import { BusinessModule } from '../business/business.module';
 import { AuthModule } from '../auth/auth.module';
+import { WaitlistModule } from '../waitlist/waitlist.module';
 
 @Module({
-  imports: [NotificationModule, BusinessModule, AuthModule],
+  imports: [NotificationModule, BusinessModule, AuthModule, forwardRef(() => WaitlistModule)],
   controllers: [RecurringController, BookingController],
   providers: [BookingService, RecurringService],
   exports: [BookingService],

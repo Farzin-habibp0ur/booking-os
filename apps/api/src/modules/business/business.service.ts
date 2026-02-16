@@ -137,6 +137,35 @@ export class BusinessService {
     });
   }
 
+  async getWaitlistSettings(id: string) {
+    const business = await this.prisma.business.findUnique({ where: { id } });
+    if (!business) return null;
+    const defaults = {
+      offerCount: 3,
+      expiryMinutes: 15,
+      quietStart: '21:00',
+      quietEnd: '09:00',
+    };
+    const packConfig = (business.packConfig as any) || {};
+    const raw = packConfig.waitlist || {};
+    return { ...defaults, ...raw };
+  }
+
+  async updateWaitlistSettings(
+    id: string,
+    settings: { offerCount?: number; expiryMinutes?: number; quietStart?: string; quietEnd?: string },
+  ) {
+    const business = await this.prisma.business.findUnique({ where: { id } });
+    if (!business) return null;
+    const packConfig = (business.packConfig as any) || {};
+    const current = packConfig.waitlist || {};
+    const merged = { ...current, ...settings };
+    return this.prisma.business.update({
+      where: { id },
+      data: { packConfig: { ...packConfig, waitlist: merged } },
+    });
+  }
+
   async installPack(businessId: string, packName: string) {
     let pack;
     try {

@@ -25,6 +25,7 @@ import {
   Circle,
   X,
   Target,
+  ClipboardList,
 } from 'lucide-react';
 
 const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
@@ -183,6 +184,50 @@ export default function DashboardPage() {
           subtitle={t('dashboard.avg_response_detail', { minutes: m.avgResponseTimeMins })}
         />
       </div>
+
+      {/* Waitlist Backfill */}
+      {data.waitlistMetrics && data.waitlistMetrics.totalEntries > 0 && (
+        <div className="bg-white rounded-2xl shadow-soft p-6">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <ClipboardList size={18} className="text-sage-600" />
+              <h2 className="font-semibold text-slate-900">Waitlist Backfill</h2>
+            </div>
+            <span className="text-xs text-slate-400">Last 30 days</span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div>
+              <p className="text-2xl font-serif font-bold text-slate-900">
+                {data.waitlistMetrics.totalEntries}
+              </p>
+              <p className="text-xs text-slate-500">Waitlisted</p>
+            </div>
+            <div>
+              <p className="text-2xl font-serif font-bold text-slate-900">
+                {data.waitlistMetrics.offers}
+              </p>
+              <p className="text-xs text-slate-500">Offered</p>
+            </div>
+            <div>
+              <p className="text-2xl font-serif font-bold text-sage-600">
+                {data.waitlistMetrics.claimed}
+              </p>
+              <p className="text-xs text-slate-500">Claimed</p>
+            </div>
+            <div>
+              <p className="text-2xl font-serif font-bold text-slate-900">
+                {data.waitlistMetrics.fillRate}%
+              </p>
+              <p className="text-xs text-slate-500">Fill Rate</p>
+            </div>
+          </div>
+          {data.waitlistMetrics.avgTimeToFill > 0 && (
+            <p className="text-xs text-slate-400 mt-3">
+              Avg. time to fill: {data.waitlistMetrics.avgTimeToFill} min
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Secondary metrics row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

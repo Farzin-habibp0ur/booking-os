@@ -470,6 +470,75 @@ export class NotificationService {
     }
   }
 
+  async sendWaitlistOffer(
+    entry: { customer: { name: string; phone: string; email?: string | null }; service: { name: string }; business?: { name: string } | null },
+    slot: { date: string; time: string; staffName?: string },
+    claimLink: string,
+    businessId: string,
+  ): Promise<void> {
+    try {
+      const channels = await this.getChannelPreference(businessId);
+      const business = entry.business || (await this.businessService.findById(businessId));
+      const businessName = (business as any)?.name || 'Our Business';
+
+      const context = {
+        customerName: entry.customer.name,
+        serviceName: entry.service.name,
+        date: slot.date,
+        time: slot.time,
+        staffName: slot.staffName || '',
+        businessName,
+        claimLink,
+      };
+
+      const body = await this.resolveTemplate(businessId, 'WAITLIST_OFFER', context);
+
+      if (channels === 'whatsapp' || channels === 'both') {
+        await this.dispatchWhatsApp(entry.customer.phone, body, businessId);
+      }
+
+      if (channels === 'email' || channels === 'both') {
+        if (entry.customer.email) {
+          const subject = `A slot opened for ${entry.service.name} at ${businessName}`;
+          const html = this.wrapInEmailHtml(body, businessName);
+          await this.dispatchEmail(entry.customer.email, subject, html);
+        }
+      }
+
+      this.logger.log(`Sent waitlist offer for ${entry.service.name} to ${entry.customer.name}`);
+    } catch (error) {
+      this.logger.error(`Failed to send waitlist offer:`, error);
+    }
+  }
+
+  async sendCampaignMessage(
+    customer: { name: string; phone: string; email?: string | null },
+    body: string,
+    businessId: string,
+  ): Promise<void> {
+    try {
+      const channels = await this.getChannelPreference(businessId);
+      const business = await this.businessService.findById(businessId);
+      const businessName = (business as any)?.name || 'Our Business';
+
+      if (channels === 'whatsapp' || channels === 'both') {
+        await this.dispatchWhatsApp(customer.phone, body, businessId);
+      }
+
+      if (channels === 'email' || channels === 'both') {
+        if (customer.email) {
+          const subject = `Message from ${businessName}`;
+          const html = this.wrapInEmailHtml(body, businessName);
+          await this.dispatchEmail(customer.email, subject, html);
+        }
+      }
+
+      this.logger.log(`Sent campaign message to ${customer.name}`);
+    } catch (error) {
+      this.logger.error(`Failed to send campaign message to ${customer.name}:`, error);
+    }
+  }
+
   async logNotificationEvent(bookingId: string, type: string, category: string): Promise<void> {
     try {
       const booking = await this.prisma.booking.findUnique({
@@ -532,6 +601,8 @@ export class NotificationService {
       RESCHEDULE_LINK: `Hi ${context.customerName}, need to reschedule your ${context.serviceName} on ${context.date} at ${context.time}? Use this link: ${context.rescheduleLink || ''}`,
       CANCEL_LINK: `Hi ${context.customerName}, need to cancel your ${context.serviceName} on ${context.date} at ${context.time}? Use this link: ${context.cancelLink || ''}`,
       CANCELLATION: `Hi ${context.customerName}, your ${context.serviceName} on ${context.date} at ${context.time} at ${context.businessName} has been cancelled. Contact us if you need to rebook.`,
+      WAITLIST_OFFER: `Hi ${context.customerName}, great news! A slot has opened for ${context.serviceName} on ${context.date} at ${context.time}${context.staffName ? ` with ${context.staffName}` : ''} at ${context.businessName}. Claim it here: ${context.claimLink || ''}`,
+      CAMPAIGN: `Hi ${context.customerName}, ${context.businessName} has a message for you.`,
     };
 
     return (

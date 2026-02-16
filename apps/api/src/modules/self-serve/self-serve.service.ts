@@ -4,6 +4,7 @@ import { TokenService } from '../../common/token.service';
 import { AvailabilityService } from '../availability/availability.service';
 import { BookingService } from '../booking/booking.service';
 import { BusinessService } from '../business/business.service';
+import { WaitlistService } from '../waitlist/waitlist.service';
 
 @Injectable()
 export class SelfServeService {
@@ -13,6 +14,7 @@ export class SelfServeService {
     private availabilityService: AvailabilityService,
     private bookingService: BookingService,
     private businessService: BusinessService,
+    private waitlistService: WaitlistService,
   ) {}
 
   async validateToken(token: string, type: 'RESCHEDULE_LINK' | 'CANCEL_LINK') {
@@ -168,5 +170,91 @@ export class SelfServeService {
     });
 
     return updated;
+  }
+
+  async getWaitlistClaimSummary(token: string) {
+    const record = await this.tokenService.validateToken(token, 'WAITLIST_CLAIM');
+
+    if (!record.bookingId) {
+      throw new BadRequestException('Invalid token');
+    }
+
+    // bookingId here stores the waitlistEntry id
+    const entry = await this.prisma.waitlistEntry.findFirst({
+      where: { id: record.bookingId },
+      include: {
+        customer: { select: { id: true, name: true } },
+        service: { select: { id: true, name: true, durationMins: true, price: true } },
+        staff: { select: { id: true, name: true } },
+        business: { select: { id: true, name: true, slug: true } },
+      },
+    });
+
+    if (!entry) throw new NotFoundException('Waitlist entry not found');
+    if (entry.status !== 'OFFERED') {
+      throw new BadRequestException('This offer is no longer available');
+    }
+    if (entry.offerExpiresAt && new Date() > entry.offerExpiresAt) {
+      throw new BadRequestException('This offer has expired');
+    }
+
+    return {
+      entry: {
+        id: entry.id,
+        status: entry.status,
+        offeredSlot: entry.offeredSlot,
+        offerExpiresAt: entry.offerExpiresAt,
+        service: entry.service,
+        staff: entry.staff,
+        customer: { name: entry.customer.name },
+      },
+      business: entry.business,
+    };
+  }
+
+  async claimWaitlistSlot(token: string) {
+    const record = await this.tokenService.validateToken(token, 'WAITLIST_CLAIM');
+
+    if (!record.bookingId) {
+      throw new BadRequestException('Invalid token');
+    }
+
+    const entry = await this.prisma.waitlistEntry.findFirst({
+      where: { id: record.bookingId },
+      include: {
+        customer: true,
+        service: true,
+        staff: true,
+      },
+    });
+
+    if (!entry) throw new NotFoundException('Waitlist entry not found');
+    if (entry.status !== 'OFFERED') {
+      throw new BadRequestException('This offer is no longer available');
+    }
+    if (entry.offerExpiresAt && new Date() > entry.offerExpiresAt) {
+      throw new BadRequestException('This offer has expired');
+    }
+
+    const slot = entry.offeredSlot as any;
+    if (!slot?.startTime) {
+      throw new BadRequestException('Invalid offered slot data');
+    }
+
+    // Create the booking
+    const booking = await this.bookingService.create(entry.businessId, {
+      customerId: entry.customerId,
+      serviceId: entry.serviceId,
+      staffId: entry.staffId || undefined,
+      startTime: slot.startTime,
+    });
+
+    // Resolve the waitlist entry
+    await this.waitlistService.resolveEntry(entry.businessId, entry.id, booking.id);
+
+    // Mark token used
+    await this.tokenService.markUsed(record.id);
+
+    return booking;
   }
 }

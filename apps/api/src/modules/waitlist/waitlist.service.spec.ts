@@ -132,4 +132,124 @@ describe('WaitlistService', () => {
       await expect(service.resolveEntry('biz1', 'bad', 'book1')).rejects.toThrow(NotFoundException);
     });
   });
+
+  describe('offerOpenSlot', () => {
+    const booking = {
+      id: 'book1',
+      businessId: 'biz1',
+      serviceId: 'svc1',
+      staffId: 'staff1',
+      startTime: new Date('2026-03-15T10:00:00Z'),
+      service: { name: 'Botox' },
+      staff: { name: 'Dr. Chen' },
+    };
+
+    it('should offer slot to matching waitlist entries', async () => {
+      prisma.business.findUnique.mockResolvedValue({
+        id: 'biz1', packConfig: { waitlist: { offerCount: 2, expiryMinutes: 15, quietStart: '23:00', quietEnd: '06:00' } },
+      } as any);
+      prisma.waitlistEntry.findMany.mockResolvedValue([
+        { id: 'wl1', customerId: 'c1', customer: { id: 'c1', name: 'Alice', phone: '+1', email: 'a@b.com' }, service: { name: 'Botox' } },
+        { id: 'wl2', customerId: 'c2', customer: { id: 'c2', name: 'Bob', phone: '+2', email: 'b@b.com' }, service: { name: 'Botox' } },
+      ] as any);
+      prisma.waitlistEntry.update.mockResolvedValue({} as any);
+
+      await service.offerOpenSlot(booking);
+
+      expect(prisma.waitlistEntry.update).toHaveBeenCalledTimes(2);
+      expect(prisma.waitlistEntry.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'wl1' },
+          data: expect.objectContaining({ status: 'OFFERED' }),
+        }),
+      );
+    });
+
+    it('should skip offers during quiet hours', async () => {
+      // Mock Date to be during quiet hours (22:00)
+      const realDate = Date;
+      const mockDate = new Date('2026-03-15T22:00:00');
+      jest.spyOn(global, 'Date').mockImplementation((...args: any[]) => {
+        if (args.length === 0) return mockDate;
+        return new (realDate as any)(...args);
+      });
+      (Date as any).now = () => mockDate.getTime();
+
+      prisma.business.findUnique.mockResolvedValue({
+        id: 'biz1', packConfig: { waitlist: { quietStart: '21:00', quietEnd: '09:00' } },
+      } as any);
+
+      await service.offerOpenSlot(booking);
+
+      expect(prisma.waitlistEntry.findMany).not.toHaveBeenCalled();
+
+      jest.restoreAllMocks();
+    });
+
+    it('should not offer if no matching entries', async () => {
+      prisma.business.findUnique.mockResolvedValue({
+        id: 'biz1', packConfig: { waitlist: { quietStart: '23:00', quietEnd: '06:00' } },
+      } as any);
+      prisma.waitlistEntry.findMany.mockResolvedValue([]);
+
+      await service.offerOpenSlot(booking);
+
+      expect(prisma.waitlistEntry.update).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('getMetrics', () => {
+    it('should return waitlist metrics', async () => {
+      prisma.waitlistEntry.count
+        .mockResolvedValueOnce(10 as any)  // totalEntries
+        .mockResolvedValueOnce(6 as any)   // offeredCount
+        .mockResolvedValueOnce(4 as any);  // claimedCount
+      prisma.booking.count.mockResolvedValue(8 as any);
+      prisma.waitlistEntry.findMany.mockResolvedValue([
+        { offeredAt: new Date('2026-03-01T10:00:00Z'), claimedAt: new Date('2026-03-01T10:05:00Z') },
+        { offeredAt: new Date('2026-03-02T14:00:00Z'), claimedAt: new Date('2026-03-02T14:10:00Z') },
+      ] as any);
+
+      const metrics = await service.getMetrics('biz1', 30);
+
+      expect(metrics.totalEntries).toBe(10);
+      expect(metrics.offers).toBe(6);
+      expect(metrics.claimed).toBe(4);
+      expect(metrics.cancellations).toBe(8);
+      expect(metrics.fillRate).toBe(67); // 4/6 ≈ 67%
+      expect(metrics.avgTimeToFill).toBe(8); // avg(5,10) = 7.5 → 8 rounded
+    });
+
+    it('should return zero fill rate when no offers', async () => {
+      prisma.waitlistEntry.count
+        .mockResolvedValueOnce(0 as any)
+        .mockResolvedValueOnce(0 as any)
+        .mockResolvedValueOnce(0 as any);
+      prisma.booking.count.mockResolvedValue(0 as any);
+      prisma.waitlistEntry.findMany.mockResolvedValue([]);
+
+      const metrics = await service.getMetrics('biz1', 30);
+
+      expect(metrics.fillRate).toBe(0);
+      expect(metrics.avgTimeToFill).toBe(0);
+    });
+  });
+
+  describe('expireStaleOffers', () => {
+    it('should expire offers past their expiry time', async () => {
+      prisma.waitlistEntry.updateMany.mockResolvedValue({ count: 3 } as any);
+
+      await service.expireStaleOffers();
+
+      expect(prisma.waitlistEntry.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            status: 'OFFERED',
+            offerExpiresAt: expect.objectContaining({ lt: expect.any(Date) }),
+          }),
+          data: { status: 'EXPIRED' },
+        }),
+      );
+    });
+  });
 });

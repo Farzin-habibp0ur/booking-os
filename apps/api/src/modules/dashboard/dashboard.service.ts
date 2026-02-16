@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma.service';
 import { ReportsService } from '../reports/reports.service';
+import { WaitlistService } from '../waitlist/waitlist.service';
 
 const NUDGE_DEFINITIONS = [
   { id: 'nudge_0', threshold: 0, link: '/calendar' },
@@ -15,6 +16,7 @@ export class DashboardService {
   constructor(
     private prisma: PrismaService,
     private reportsService: ReportsService,
+    private waitlistService: WaitlistService,
   ) {}
 
   async getDashboard(businessId: string) {
@@ -223,9 +225,15 @@ export class DashboardService {
       dismissedNudges,
     };
 
+    // Waitlist backfill stats
+    const waitlistMetrics = await this.waitlistService.getMetrics(businessId, 30).catch(() => ({
+      totalEntries: 0, cancellations: 0, offers: 0, claimed: 0, avgTimeToFill: 0, fillRate: 0,
+    }));
+
     return {
       todayBookings,
       unassignedConversations,
+      waitlistMetrics,
       metrics: {
         totalBookingsThisWeek: thisWeekBookings,
         totalBookingsLastWeek: lastWeekBookings,

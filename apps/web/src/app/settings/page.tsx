@@ -16,6 +16,7 @@ import {
   Link2,
   CalendarDays,
   ShieldCheck,
+  ClipboardList,
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 
@@ -256,6 +257,20 @@ export default function SettingsPage() {
               <div>
                 <p className="text-sm font-medium">{t('settings.policies')}</p>
                 <p className="text-xs text-slate-500">{t('settings.policies_desc')}</p>
+              </div>
+            </button>
+          )}
+          {role === 'ADMIN' && (
+            <button
+              onClick={() => router.push('/settings/waitlist')}
+              className="flex items-center gap-3 w-full text-left p-3 rounded-xl hover:bg-slate-50 border border-slate-100 transition-colors"
+            >
+              <div className="w-9 h-9 bg-sage-50 rounded-lg flex items-center justify-center">
+                <ClipboardList size={18} className="text-sage-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium">Waitlist</p>
+                <p className="text-xs text-slate-500">Configure backfill offers and quiet hours</p>
               </div>
             </button>
           )}

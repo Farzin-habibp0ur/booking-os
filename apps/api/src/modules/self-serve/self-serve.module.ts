@@ -5,9 +5,10 @@ import { AuthModule } from '../auth/auth.module';
 import { AvailabilityModule } from '../availability/availability.module';
 import { BookingModule } from '../booking/booking.module';
 import { BusinessModule } from '../business/business.module';
+import { WaitlistModule } from '../waitlist/waitlist.module';
 
 @Module({
-  imports: [AuthModule, AvailabilityModule, BookingModule, BusinessModule],
+  imports: [AuthModule, AvailabilityModule, BookingModule, BusinessModule, WaitlistModule],
   controllers: [SelfServeController],
   providers: [SelfServeService],
 })

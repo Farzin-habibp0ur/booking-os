@@ -40,4 +40,16 @@ export class SelfServeController {
   cancel(@Param('token') token: string, @Body() body: { reason?: string }) {
     return this.selfServeService.executeCancel(token, body.reason);
   }
+
+  @Get('validate/waitlist-claim/:token')
+  @Throttle({ default: { ttl: 60000, limit: 30 } })
+  validateWaitlistClaimToken(@Param('token') token: string) {
+    return this.selfServeService.getWaitlistClaimSummary(token);
+  }
+
+  @Post('claim-waitlist/:token')
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
+  claimWaitlist(@Param('token') token: string) {
+    return this.selfServeService.claimWaitlistSlot(token);
+  }
 }
