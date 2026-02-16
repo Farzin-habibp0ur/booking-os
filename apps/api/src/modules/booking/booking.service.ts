@@ -2,6 +2,7 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma.service';
 import { NotificationService } from '../notification/notification.service';
 import { BusinessService } from '../business/business.service';
+import { CalendarSyncService } from '../calendar-sync/calendar-sync.service';
 
 @Injectable()
 export class BookingService {
@@ -9,6 +10,7 @@ export class BookingService {
     private prisma: PrismaService,
     private notificationService: NotificationService,
     private businessService: BusinessService,
+    private calendarSyncService: CalendarSyncService,
   ) {}
 
   async findAll(businessId: string, query: {
@@ -103,6 +105,9 @@ export class BookingService {
     // Fire-and-forget booking confirmation notification
     this.notificationService.sendBookingConfirmation(booking).catch(() => {});
 
+    // Fire-and-forget calendar sync
+    this.calendarSyncService.syncBookingToCalendar(booking, 'create').catch(() => {});
+
     return booking;
   }
 
@@ -114,11 +119,16 @@ export class BookingService {
         data.endTime = new Date(data.startTime.getTime() + booking.service.durationMins * 60000);
       }
     }
-    return this.prisma.booking.update({
+    const result = await this.prisma.booking.update({
       where: { id, businessId },
       data,
       include: { customer: true, service: true, staff: true },
     });
+
+    // Fire-and-forget calendar sync
+    this.calendarSyncService.syncBookingToCalendar(result, 'update').catch(() => {});
+
+    return result;
   }
 
   async updateStatus(businessId: string, id: string, status: string) {
@@ -134,6 +144,9 @@ export class BookingService {
         where: { bookingId: id, status: 'PENDING' },
         data: { status: 'CANCELLED' },
       });
+
+      // Fire-and-forget calendar sync — remove event
+      this.calendarSyncService.syncBookingToCalendar(booking, 'cancel').catch(() => {});
     }
 
     // Create follow-up reminder when booking is completed

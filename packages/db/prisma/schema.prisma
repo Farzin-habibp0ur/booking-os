@@ -47,13 +47,14 @@ model Staff {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  business      Business           @relation(fields: [businessId], references: [id])
-  bookings      Booking[]
-  conversations Conversation[]     @relation("AssignedConversations")
-  messages      Message[]          @relation("SentMessages")
-  notes         ConversationNote[] @relation("StaffNotes")
-  workingHours  WorkingHours[]
-  timeOff       TimeOff[]
+  business              Business              @relation(fields: [businessId], references: [id])
+  bookings              Booking[]
+  conversations         Conversation[]        @relation("AssignedConversations")
+  messages              Message[]             @relation("SentMessages")
+  notes                 ConversationNote[]    @relation("StaffNotes")
+  workingHours          WorkingHours[]
+  timeOff               TimeOff[]
+  calendarConnections   CalendarConnection[]
 
   @@index([businessId])
   @@map("staff")
@@ -113,10 +114,11 @@ model Booking {
   status         String   @default("PENDING")
   startTime      DateTime
   endTime        DateTime
-  notes          String?
-  customFields   Json     @default("{}")
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  notes                     String?
+  externalCalendarEventId   String?
+  customFields              Json     @default("{}")
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
 
   business     Business      @relation(fields: [businessId], references: [id])
   customer     Customer      @relation(fields: [customerId], references: [id])
@@ -333,4 +335,26 @@ model Token {
   @@index([token])
   @@index([email, type])
   @@map("tokens")
+}
+
+model CalendarConnection {
+  id              String    @id @default(cuid())
+  staffId         String
+  provider        String    // "google", "outlook"
+  accessToken     String    // encrypted AES-256-GCM
+  refreshToken    String    // encrypted AES-256-GCM
+  tokenExpiresAt  DateTime?
+  calendarId      String?   // e.g. "primary" for Google
+  icalFeedToken   String?   @unique  // random token for iCal feed URL
+  syncEnabled     Boolean   @default(true)
+  lastSyncedAt    DateTime?
+  lastSyncError   String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  staff Staff @relation(fields: [staffId], references: [id])
+
+  @@unique([staffId, provider])
+  @@index([staffId])
+  @@map("calendar_connections")
 }

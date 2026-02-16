@@ -4,18 +4,21 @@ import { BookingService } from './booking.service';
 import { PrismaService } from '../../common/prisma.service';
 import { NotificationService } from '../notification/notification.service';
 import { BusinessService } from '../business/business.service';
-import { createMockPrisma, createMockNotificationService, createMockBusinessService } from '../../test/mocks';
+import { CalendarSyncService } from '../calendar-sync/calendar-sync.service';
+import { createMockPrisma, createMockNotificationService, createMockBusinessService, createMockCalendarSyncService } from '../../test/mocks';
 
 describe('BookingService', () => {
   let bookingService: BookingService;
   let prisma: ReturnType<typeof createMockPrisma>;
   let mockNotificationService: ReturnType<typeof createMockNotificationService>;
   let mockBusinessService: ReturnType<typeof createMockBusinessService>;
+  let mockCalendarSyncService: ReturnType<typeof createMockCalendarSyncService>;
 
   beforeEach(async () => {
     prisma = createMockPrisma();
     mockNotificationService = createMockNotificationService();
     mockBusinessService = createMockBusinessService();
+    mockCalendarSyncService = createMockCalendarSyncService();
 
     const module = await Test.createTestingModule({
       providers: [
@@ -23,6 +26,7 @@ describe('BookingService', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: NotificationService, useValue: mockNotificationService },
         { provide: BusinessService, useValue: mockBusinessService },
+        { provide: CalendarSyncService, useValue: mockCalendarSyncService },
       ],
     }).compile();
 

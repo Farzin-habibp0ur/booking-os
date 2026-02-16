@@ -60,6 +60,20 @@ export function createMockBusinessService() {
   };
 }
 
+export function createMockCalendarSyncService() {
+  return {
+    syncBookingToCalendar: jest.fn().mockResolvedValue(undefined),
+    getConnections: jest.fn().mockResolvedValue([]),
+    getAvailableProviders: jest.fn().mockReturnValue({ google: false, outlook: false }),
+    initiateOAuth: jest.fn().mockResolvedValue('https://example.com/auth'),
+    handleOAuthCallback: jest.fn().mockResolvedValue('https://example.com/callback'),
+    disconnect: jest.fn().mockResolvedValue(undefined),
+    generateIcalFeed: jest.fn().mockResolvedValue(null),
+    getIcalFeedUrl: jest.fn().mockResolvedValue(null),
+    regenerateIcalToken: jest.fn().mockResolvedValue('https://example.com/ical/new.ics'),
+  };
+}
+
 export function createMockConfigService() {
   const config: Record<string, string> = {
     JWT_SECRET: 'test-secret',

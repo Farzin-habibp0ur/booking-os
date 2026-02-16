@@ -373,6 +373,8 @@
     "billing_desc": "Gestiona tu plan de suscripción y detalles de pago",
     "notifications": "Notificaciones",
     "notifications_desc": "Configura cómo se envían las confirmaciones, recordatorios y seguimientos de reservas",
+    "calendar_sync": "Sincronización de calendario",
+    "calendar_sync_desc": "Conecta Google Calendar u Outlook, y obtén un enlace iCal para cualquier app de calendario",
     "booking_link": "Tu enlace de reservas",
     "booking_link_desc": "Comparte este enlace para que los clientes reserven citas directamente.",
     "copy_link": "Copiar",
@@ -674,6 +676,27 @@
     "waiting": "En espera",
     "snoozed": "Pospuesta",
     "resolved": "Resuelta"
+  },
+
+  "calendar_sync": {
+    "title": "Sincronización de calendario",
+    "connected_calendars": "Calendarios conectados",
+    "connected_calendars_desc": "Sincroniza tus reservas con un calendario externo para no perder ninguna cita.",
+    "connect": "Conectar",
+    "disconnect": "Desconectar",
+    "status_connected": "Conectado",
+    "status_not_configured": "No configurado",
+    "not_available": "No disponible — contacta a tu administrador",
+    "last_synced": "Última sincronización:",
+    "connected_success": "¡{{provider}} conectado exitosamente!",
+    "connect_failed": "Error al conectar el calendario. Inténtalo de nuevo.",
+    "disconnected": "Calendario desconectado",
+    "ical_feed": "Feed iCal",
+    "ical_feed_desc": "Suscríbete a esta URL desde cualquier app de calendario (Apple Calendar, Google Calendar, etc.) para ver tus reservas.",
+    "ical_no_connection": "Conecta un calendario arriba para obtener tu URL de feed iCal.",
+    "regenerate_url": "Regenerar URL",
+    "regenerate_confirm": "Regenerar invalidará la URL anterior. Las apps de calendario que usen la URL anterior dejarán de actualizarse. ¿Continuar?",
+    "regenerated": "URL del feed iCal regenerada"
   },
 
   "errors": {

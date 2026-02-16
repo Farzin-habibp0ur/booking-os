@@ -373,6 +373,8 @@
     "billing_desc": "Manage your subscription plan and payment details",
     "notifications": "Notifications",
     "notifications_desc": "Configure how booking confirmations, reminders, and follow-ups are sent",
+    "calendar_sync": "Calendar Sync",
+    "calendar_sync_desc": "Connect Google Calendar or Outlook, and get an iCal feed for any calendar app",
     "booking_link": "Your Booking Link",
     "booking_link_desc": "Share this link so customers can book appointments directly.",
     "copy_link": "Copy",
@@ -674,6 +676,27 @@
     "waiting": "Waiting",
     "snoozed": "Snoozed",
     "resolved": "Resolved"
+  },
+
+  "calendar_sync": {
+    "title": "Calendar Sync",
+    "connected_calendars": "Connected Calendars",
+    "connected_calendars_desc": "Sync your bookings to an external calendar so you never miss an appointment.",
+    "connect": "Connect",
+    "disconnect": "Disconnect",
+    "status_connected": "Connected",
+    "status_not_configured": "Not configured",
+    "not_available": "Not available — contact your admin",
+    "last_synced": "Last synced:",
+    "connected_success": "{{provider}} connected successfully!",
+    "connect_failed": "Failed to connect calendar. Please try again.",
+    "disconnected": "Calendar disconnected",
+    "ical_feed": "iCal Feed",
+    "ical_feed_desc": "Subscribe to this URL from any calendar app (Apple Calendar, Google Calendar, etc.) to see your bookings.",
+    "ical_no_connection": "Connect a calendar above to get your iCal feed URL.",
+    "regenerate_url": "Regenerate URL",
+    "regenerate_confirm": "Regenerating will invalidate the old URL. Any calendar apps using the old URL will stop updating. Continue?",
+    "regenerated": "iCal feed URL regenerated"
   },
 
   "errors": {
