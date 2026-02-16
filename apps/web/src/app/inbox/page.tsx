@@ -19,12 +19,14 @@ import {
   Archive,
   Inbox as InboxIcon,
   ChevronDown,
+  ChevronLeft,
   FileText,
   X,
   AlarmClock,
   StickyNote,
   Zap,
   Trash2,
+  Info,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import BookingFormModal from '@/components/booking-form-modal';
@@ -105,6 +107,7 @@ export default function InboxPage() {
   const [aiRescheduleState, setAiRescheduleState] = useState<any>(null);
   const [aiSummary, setAiSummary] = useState<string>('');
   const [transferredToHuman, setTransferredToHuman] = useState(false);
+  const [mobileView, setMobileView] = useState<'list' | 'thread' | 'info'>('list');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const pollRef = useRef<ReturnType<typeof setInterval>>(undefined);
   const msgPollRef = useRef<ReturnType<typeof setInterval>>(undefined);
@@ -501,9 +504,9 @@ export default function InboxPage() {
   };
 
   return (
-    <div className="flex h-full">
-      {/* Filter sidebar */}
-      <div className="w-48 border-r bg-slate-50 flex flex-col">
+    <div className="flex flex-col md:flex-row h-full">
+      {/* Filter sidebar — desktop */}
+      <div className="hidden md:flex w-48 border-r bg-slate-50 flex-col">
         <div className="p-3 border-b">
           <h2 className="font-semibold text-sm text-slate-700">{t('inbox.title')}</h2>
         </div>
@@ -517,6 +520,7 @@ export default function InboxPage() {
                 onClick={() => {
                   setActiveFilter(key);
                   setSelected(null);
+                  setMobileView('list');
                 }}
                 className={cn(
                   'w-full flex items-center justify-between px-3 py-2 text-sm transition-colors',
@@ -551,8 +555,46 @@ export default function InboxPage() {
         </div>
       </div>
 
+      {/* Filter bar — mobile (horizontal scrollable) */}
+      <div className={cn(
+        'md:hidden border-b bg-slate-50 overflow-x-auto',
+        mobileView !== 'list' && 'hidden',
+      )}>
+        <div className="flex items-center gap-1 px-3 py-2 min-w-max">
+          {FILTER_KEYS.map((key) => {
+            const count = filterCounts[key] || 0;
+            return (
+              <button
+                key={key}
+                onClick={() => {
+                  setActiveFilter(key);
+                  setSelected(null);
+                }}
+                className={cn(
+                  'flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors',
+                  activeFilter === key
+                    ? 'bg-sage-100 text-sage-700'
+                    : 'bg-white text-slate-600 border border-slate-200',
+                )}
+              >
+                {FILTER_LABELS[key]}
+                {count > 0 && (
+                  <span className="text-[10px] bg-slate-200 text-slate-600 px-1 py-0.5 rounded-full min-w-[16px] text-center">
+                    {count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Conversation list */}
-      <div className="w-80 border-r bg-white flex flex-col">
+      <div className={cn(
+        'border-r bg-white flex flex-col',
+        'w-full md:w-80',
+        mobileView !== 'list' && 'hidden md:flex',
+      )}>
         <div className="p-3 border-b space-y-2">
           <h2 className="font-semibold">{t('inbox.title')}</h2>
           <div className="relative">
@@ -577,7 +619,7 @@ export default function InboxPage() {
           {conversations.map((c) => (
             <div
               key={c.id}
-              onClick={() => setSelected(c)}
+              onClick={() => { setSelected(c); setMobileView('thread'); }}
               className={cn(
                 'p-3 border-b cursor-pointer hover:bg-slate-50 transition-colors',
                 selected?.id === c.id && 'bg-sage-50',
@@ -660,13 +702,25 @@ export default function InboxPage() {
       </div>
 
       {/* Message thread */}
-      <div className="flex-1 flex flex-col bg-slate-50">
+      <div className={cn(
+        'flex-1 flex flex-col bg-slate-50',
+        mobileView !== 'thread' && 'hidden md:flex',
+      )}>
         {selected ? (
           <>
             <div className="p-3 border-b bg-white flex items-center justify-between">
-              <div>
-                <p className="font-medium">{selected.customer?.name}</p>
-                <p className="text-xs text-slate-500">{selected.customer?.phone}</p>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => { setSelected(null); setMobileView('list'); }}
+                  className="md:hidden text-slate-400 hover:text-slate-600 transition-colors"
+                  aria-label="Back to conversations"
+                >
+                  <ChevronLeft size={20} />
+                </button>
+                <div>
+                  <p className="font-medium">{selected.customer?.name}</p>
+                  <p className="text-xs text-slate-500">{selected.customer?.phone}</p>
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <div className="relative">
@@ -708,8 +762,17 @@ export default function InboxPage() {
                   onClick={() => setShowBookingForm(!showBookingForm)}
                   className="flex items-center gap-1 bg-sage-600 text-white px-3 py-1.5 rounded-md text-sm hover:bg-sage-700"
                 >
-                  <Plus size={14} /> {t('inbox.new_booking')}
+                  <Plus size={14} /> <span className="hidden sm:inline">{t('inbox.new_booking')}</span>
                 </button>
+                {customer && (
+                  <button
+                    onClick={() => setMobileView(mobileView === 'info' ? 'thread' : 'info')}
+                    className="md:hidden text-slate-500 hover:text-slate-700 border px-2 py-1 rounded"
+                    aria-label="Toggle customer info"
+                  >
+                    <Info size={14} />
+                  </button>
+                )}
               </div>
             </div>
 
@@ -878,7 +941,11 @@ export default function InboxPage() {
 
       {/* Customer sidebar */}
       {selected && customer && (
-        <div className="w-72 border-l bg-white overflow-auto">
+        <div className={cn(
+          'border-l bg-white overflow-auto',
+          'w-full md:w-72',
+          mobileView !== 'info' && 'hidden md:block',
+        )}>
           <div className="flex border-b">
             <button
               onClick={() => setSidebarTab('info')}
