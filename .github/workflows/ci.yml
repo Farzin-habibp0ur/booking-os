@@ -76,7 +76,7 @@ jobs:
           STRIPE_WEBHOOK_SECRET: dummy
           STRIPE_PRICE_ID_BASIC: dummy
           STRIPE_PRICE_ID_PRO: dummy
-          SENTRY_DSN: ""
+          SENTRY_DSN: ''
           WHATSAPP_PHONE_NUMBER_ID: dummy
           WHATSAPP_ACCESS_TOKEN: dummy
           WHATSAPP_VERIFY_TOKEN: dummy

@@ -18,7 +18,12 @@ interface AuthContextType {
   token: string | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signup: (businessName: string, ownerName: string, email: string, password: string) => Promise<void>;
+  signup: (
+    businessName: string,
+    ownerName: string,
+    email: string,
+    password: string,
+  ) => Promise<void>;
   logout: () => void;
 }
 
@@ -38,22 +43,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const token = api.getToken();
     if (token) {
-      api.get<User>('/auth/me').then(setUser).catch(() => {
-        api.setToken(null);
-      }).finally(() => setLoading(false));
+      api
+        .get<User>('/auth/me')
+        .then(setUser)
+        .catch(() => {
+          api.setToken(null);
+        })
+        .finally(() => setLoading(false));
     } else {
       setLoading(false);
     }
   }, []);
 
   const login = async (email: string, password: string) => {
-    const res = await api.post<{ accessToken: string; staff: any }>('/auth/login', { email, password });
+    const res = await api.post<{ accessToken: string; staff: any }>('/auth/login', {
+      email,
+      password,
+    });
     api.setToken(res.accessToken);
     const me = await api.get<User>('/auth/me');
     setUser(me);
   };
 
-  const signup = async (businessName: string, ownerName: string, email: string, password: string) => {
+  const signup = async (
+    businessName: string,
+    ownerName: string,
+    email: string,
+    password: string,
+  ) => {
     const res = await api.post<{ accessToken: string; staff: any }>('/auth/signup', {
       businessName,
       ownerName,
