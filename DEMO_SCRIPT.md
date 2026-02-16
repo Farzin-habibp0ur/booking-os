@@ -42,7 +42,7 @@ npm run dev --workspace=apps/web   # Web on http://localhost:3000
 - Click **Skip for Now** or **Next**
 
 **Step 3 — Staff:**
-- Show existing staff: Dr. Sarah Chen (Owner), Maria Garcia (Agent)
+- Show existing staff: Dr. Sarah Chen (Admin), Maria Garcia (Agent), Dr. Emily Park (Service Provider)
 - "Businesses can add team members with different roles"
 - Click **Next**
 
@@ -248,7 +248,7 @@ curl -X POST http://localhost:3001/api/v1/webhook/inbound \
 
 1. Watch the inbox — AI detects **TRANSFER_TO_HUMAN** intent
 2. AI sends an automatic handoff message: "I'm connecting you with a team member..."
-3. Conversation is auto-assigned to the business owner
+3. Conversation is auto-assigned to the business admin
 4. Show the **"Resume Auto-Reply"** button that appears in the conversation header
 
 **Talk through:**
@@ -346,7 +346,7 @@ Roberto Silva,+14155551005,roberto@example.com,regular;returning
 5. Show Peak Hours analysis
 
 **Talk through:**
-- "Business owners get comprehensive analytics"
+- "Admins and agents get comprehensive analytics"
 - "Track bookings, revenue, staff performance, and peak hours"
 - "Use these insights to optimize scheduling and staffing"
 
