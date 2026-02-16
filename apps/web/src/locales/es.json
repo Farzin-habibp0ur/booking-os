@@ -719,6 +719,26 @@
     "conflict_error": "Conflicto detectado"
   },
 
+  "signup": {
+    "title": "Crea tu cuenta",
+    "subtitle": "Configura tu negocio en Booking OS",
+    "business_name": "Nombre del negocio",
+    "business_name_placeholder": "Clínica Glow",
+    "your_name": "Tu nombre",
+    "your_name_placeholder": "Sarah Johnson",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "password_placeholder": "Mínimo 8 caracteres",
+    "confirm_password": "Confirmar contraseña",
+    "confirm_password_placeholder": "Vuelve a ingresar tu contraseña",
+    "passwords_mismatch": "Las contraseñas no coinciden",
+    "creating": "Creando cuenta...",
+    "create_account": "Crear cuenta",
+    "already_have_account": "¿Ya tienes una cuenta?",
+    "sign_in": "Iniciar sesión",
+    "terms_text": "Al registrarte, aceptas nuestros Términos y Política de Privacidad"
+  },
+
   "errors": {
     "something_went_wrong": "Algo salió mal",
     "unexpected_error": "Ocurrió un error inesperado.",

@@ -719,6 +719,26 @@
     "conflict_error": "Conflict detected"
   },
 
+  "signup": {
+    "title": "Create your account",
+    "subtitle": "Set up your business on Booking OS",
+    "business_name": "Business name",
+    "business_name_placeholder": "Glow Clinic",
+    "your_name": "Your name",
+    "your_name_placeholder": "Sarah Johnson",
+    "email": "Email",
+    "password": "Password",
+    "password_placeholder": "Minimum 8 characters",
+    "confirm_password": "Confirm password",
+    "confirm_password_placeholder": "Re-enter your password",
+    "passwords_mismatch": "Passwords do not match",
+    "creating": "Creating account...",
+    "create_account": "Create account",
+    "already_have_account": "Already have an account?",
+    "sign_in": "Sign in",
+    "terms_text": "By signing up, you agree to our Terms and Privacy Policy"
+  },
+
   "errors": {
     "something_went_wrong": "Something went wrong",
     "unexpected_error": "An unexpected error occurred.",
