@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { X, Calendar, Clock, User, MessageSquare, AlertTriangle, Repeat, Send, ShieldCheck, Link2 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/lib/toast';
+import { useFocusTrap } from '@/lib/use-focus-trap';
 
 interface BookingDetailModalProps {
   booking: any;
@@ -50,6 +51,8 @@ export default function BookingDetailModal({
   const [overrideReason, setOverrideReason] = useState('');
   const { t } = useI18n();
   const { toast } = useToast();
+  const modalRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(modalRef, isOpen);
   const { user } = useAuth();
   const isAdmin = user?.role === 'ADMIN';
 
@@ -226,7 +229,7 @@ export default function BookingDetailModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="booking-detail-title" ref={modalRef}>
       <div className="absolute inset-0 bg-black/30" onClick={onClose} />
       <div className="relative w-[520px] max-h-[80vh] bg-white rounded-2xl shadow-soft-lg flex flex-col">
         {/* Override reason overlay */}
@@ -359,7 +362,7 @@ export default function BookingDetailModal({
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-slate-100">
           <div className="flex items-center gap-3">
-            <h2 className="text-lg font-serif font-semibold text-slate-900">
+            <h2 id="booking-detail-title" className="text-lg font-serif font-semibold text-slate-900">
               {booking.customer?.name}
             </h2>
             <span
@@ -378,7 +381,7 @@ export default function BookingDetailModal({
               </span>
             )}
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-gray-600">
+          <button onClick={onClose} className="text-slate-400 hover:text-gray-600" aria-label="Close">
             <X size={20} />
           </button>
         </div>

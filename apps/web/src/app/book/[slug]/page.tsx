@@ -432,10 +432,11 @@ export default function BookingPortalPage() {
       {step === 'details' && (
         <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
           <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-1">
+            <label htmlFor="booking-name" className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-1">
               <User size={14} /> Name *
             </label>
             <input
+              id="booking-name"
               value={customerName}
               onChange={(e) => {
                 setCustomerName(e.target.value);
@@ -443,19 +444,23 @@ export default function BookingPortalPage() {
               }}
               onBlur={() => handleBlur('name')}
               placeholder="Your full name"
+              aria-required="true"
+              aria-invalid={touched.name && !!fieldErrors.name}
+              aria-describedby={touched.name && fieldErrors.name ? 'name-error' : undefined}
               className={`w-full border rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-sage-500 focus:border-transparent outline-none ${
                 touched.name && fieldErrors.name ? 'border-red-300' : 'border-slate-200'
               }`}
             />
             {touched.name && fieldErrors.name && (
-              <p className="mt-1 text-xs bg-red-50 text-red-700 px-2 py-1 rounded-lg">{fieldErrors.name}</p>
+              <p id="name-error" className="mt-1 text-xs bg-red-50 text-red-700 px-2 py-1 rounded-lg">{fieldErrors.name}</p>
             )}
           </div>
           <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-1">
+            <label htmlFor="booking-phone" className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-1">
               <Phone size={14} /> Phone *
             </label>
             <input
+              id="booking-phone"
               value={customerPhone}
               onChange={(e) => {
                 setCustomerPhone(e.target.value);
@@ -464,19 +469,23 @@ export default function BookingPortalPage() {
               onBlur={() => handleBlur('phone')}
               placeholder="+1 (555) 123-4567"
               type="tel"
+              aria-required="true"
+              aria-invalid={touched.phone && !!fieldErrors.phone}
+              aria-describedby={touched.phone && fieldErrors.phone ? 'phone-error' : undefined}
               className={`w-full border rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-sage-500 focus:border-transparent outline-none ${
                 touched.phone && fieldErrors.phone ? 'border-red-300' : 'border-slate-200'
               }`}
             />
             {touched.phone && fieldErrors.phone && (
-              <p className="mt-1 text-xs bg-red-50 text-red-700 px-2 py-1 rounded-lg">{fieldErrors.phone}</p>
+              <p id="phone-error" className="mt-1 text-xs bg-red-50 text-red-700 px-2 py-1 rounded-lg">{fieldErrors.phone}</p>
             )}
           </div>
           <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-1">
+            <label htmlFor="booking-email" className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-1">
               <Mail size={14} /> Email (optional)
             </label>
             <input
+              id="booking-email"
               value={customerEmail}
               onChange={(e) => {
                 setCustomerEmail(e.target.value);
@@ -485,19 +494,22 @@ export default function BookingPortalPage() {
               onBlur={() => handleBlur('email')}
               placeholder="you@example.com"
               type="email"
+              aria-invalid={touched.email && !!fieldErrors.email}
+              aria-describedby={touched.email && fieldErrors.email ? 'email-error' : undefined}
               className={`w-full border rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-sage-500 focus:border-transparent outline-none ${
                 touched.email && fieldErrors.email ? 'border-red-300' : 'border-slate-200'
               }`}
             />
             {touched.email && fieldErrors.email && (
-              <p className="mt-1 text-xs bg-red-50 text-red-700 px-2 py-1 rounded-lg">{fieldErrors.email}</p>
+              <p id="email-error" className="mt-1 text-xs bg-red-50 text-red-700 px-2 py-1 rounded-lg">{fieldErrors.email}</p>
             )}
           </div>
           <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-1">
+            <label htmlFor="booking-notes" className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-1">
               <FileText size={14} /> Notes (optional)
             </label>
             <textarea
+              id="booking-notes"
               value={customerNotes}
               onChange={(e) => setCustomerNotes(e.target.value)}
               placeholder="Any special requests or information..."

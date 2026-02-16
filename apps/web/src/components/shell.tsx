@@ -102,11 +102,12 @@ function ShellInner({ children }: { children: ReactNode }) {
           <X size={20} />
         </button>
       </div>
-      <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
+      <nav role="navigation" aria-label="Main navigation" className="flex-1 p-2 space-y-0.5 overflow-y-auto">
         {nav.map(({ href, label, icon: Icon }) => (
           <Link
             key={href}
             href={href}
+            aria-current={pathname.startsWith(href) ? 'page' : undefined}
             className={cn(
               'flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition-colors',
               pathname.startsWith(href)
@@ -136,6 +137,14 @@ function ShellInner({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex h-screen">
+      {/* Skip link */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:bg-sage-600 focus:text-white focus:px-4 focus:py-2 focus:rounded-xl"
+      >
+        Skip to main content
+      </a>
+
       {/* Mobile top bar */}
       <div className="fixed top-0 left-0 right-0 z-30 md:hidden bg-white border-b border-slate-100 px-4 py-3 flex items-center gap-3">
         <button
@@ -169,7 +178,7 @@ function ShellInner({ children }: { children: ReactNode }) {
         {sidebarContent}
       </aside>
 
-      <main className="flex-1 overflow-auto pt-14 md:pt-0">
+      <main id="main-content" className="flex-1 overflow-auto pt-14 md:pt-0">
         <ErrorBoundary>{children}</ErrorBoundary>
       </main>
     </div>

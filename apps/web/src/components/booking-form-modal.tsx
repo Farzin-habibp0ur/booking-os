@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { api } from '@/lib/api';
 import { X, Clock, User, AlertCircle, Repeat } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useI18n } from '@/lib/i18n';
+import { useFocusTrap } from '@/lib/use-focus-trap';
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -59,6 +60,8 @@ export default function BookingFormModal({
   const [notes, setNotes] = useState(rescheduleData?.notes || '');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const modalRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(modalRef, isOpen);
 
   // Recurring state
   const [isRecurring, setIsRecurring] = useState(false);
@@ -193,17 +196,18 @@ export default function BookingFormModal({
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-end">
+    <div className="fixed inset-0 z-50 flex items-center justify-end" role="dialog" aria-modal="true" aria-labelledby="booking-form-title" ref={modalRef}>
       <div className="absolute inset-0 bg-black/30" onClick={onClose} />
       <div className="relative w-[480px] h-full bg-white shadow-soft-lg flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-slate-100">
-          <h2 className="text-lg font-serif font-semibold text-slate-900">
+          <h2 id="booking-form-title" className="text-lg font-serif font-semibold text-slate-900">
             {isReschedule ? 'Reschedule Booking' : 'Create Booking'}
           </h2>
           <button
             onClick={onClose}
             className="text-slate-400 hover:text-slate-600 transition-colors"
+            aria-label="Close"
           >
             <X size={20} />
           </button>
