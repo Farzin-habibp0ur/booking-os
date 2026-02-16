@@ -357,16 +357,18 @@ model AiUsage {
 model Token {
   id         String    @id @default(cuid())
   token      String    @unique
-  type       String    // PASSWORD_RESET, STAFF_INVITE
+  type       String    // PASSWORD_RESET, STAFF_INVITE, RESCHEDULE_LINK, CANCEL_LINK
   email      String
   businessId String?
   staffId    String?
+  bookingId  String?
   expiresAt  DateTime
   usedAt     DateTime?
   createdAt  DateTime  @default(now())
 
   @@index([token])
   @@index([email, type])
+  @@index([bookingId, type])
   @@map("tokens")
 }
 

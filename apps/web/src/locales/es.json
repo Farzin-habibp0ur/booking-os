@@ -190,7 +190,11 @@
     "send_deposit_request": "Enviar Solicitud de Depósito",
     "deposit_request_sent": "Solicitud de depósito enviada",
     "sending_deposit": "Enviando...",
-    "deposit_sent_success": "¡Enviado!"
+    "deposit_sent_success": "¡Enviado!",
+    "send_reschedule_link": "Enviar enlace de reprogramación",
+    "send_cancel_link": "Enviar enlace de cancelación",
+    "link_sent": "¡Enviado!",
+    "link_already_sent": "Enlace enviado"
   },
 
   "bookings": {
@@ -826,7 +830,40 @@
   "timeline": {
     "deposit_override": "Requisito de deposito anulado",
     "policy_override": "Politica anulada",
-    "override_reason": "Motivo: {{reason}}"
+    "override_reason": "Motivo: {{reason}}",
+    "reschedule_link_sent": "Enlace de reprogramación enviado",
+    "cancel_link_sent": "Enlace de cancelación enviado",
+    "rescheduled_by_customer": "Reprogramado por el cliente",
+    "cancelled_by_customer": "Cancelado por el cliente"
+  },
+
+  "self_serve": {
+    "reschedule_title": "Reprogramar cita",
+    "cancel_title": "Cancelar cita",
+    "current_appointment": "Cita actual",
+    "appointment_details": "Detalles de la cita",
+    "select_new_date": "Selecciona una nueva fecha",
+    "available_times": "Horarios disponibles",
+    "loading_times": "Cargando horarios disponibles...",
+    "no_times": "No hay horarios disponibles este día. Prueba otra fecha.",
+    "confirm_new_time": "Confirmar nuevo horario",
+    "rescheduling": "Reprogramando...",
+    "rescheduled_success": "Cita reprogramada",
+    "rescheduled_desc": "Tu cita ha sido movida al nuevo horario.",
+    "cancel_button": "Cancelar cita",
+    "cancel_confirm_title": "¿Estás seguro de que quieres cancelar?",
+    "cancel_confirm_desc": "Esta acción no se puede deshacer. Necesitarás reservar una nueva cita.",
+    "cancelling": "Cancelando...",
+    "cancelled_success": "Cita cancelada",
+    "cancelled_desc": "Tu cita ha sido cancelada.",
+    "cancel_reason_label": "Motivo de la cancelación (opcional)",
+    "cancel_reason_placeholder": "Cuéntanos por qué necesitas cancelar...",
+    "go_back": "Volver",
+    "yes_cancel": "Sí, cancelar",
+    "unable_to_reschedule": "No se puede reprogramar",
+    "unable_to_cancel": "No se puede cancelar",
+    "contact_clinic": "Por favor contacta a la clínica directamente para asistencia.",
+    "close_page": "Puedes cerrar esta página."
   },
 
   "errors": {

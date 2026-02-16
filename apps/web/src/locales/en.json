@@ -190,7 +190,11 @@
     "send_deposit_request": "Send Deposit Request",
     "deposit_request_sent": "Deposit request sent",
     "sending_deposit": "Sending...",
-    "deposit_sent_success": "Sent!"
+    "deposit_sent_success": "Sent!",
+    "send_reschedule_link": "Send Reschedule Link",
+    "send_cancel_link": "Send Cancel Link",
+    "link_sent": "Sent!",
+    "link_already_sent": "Link sent"
   },
 
   "bookings": {
@@ -826,7 +830,40 @@
   "timeline": {
     "deposit_override": "Deposit requirement overridden",
     "policy_override": "Policy overridden",
-    "override_reason": "Reason: {{reason}}"
+    "override_reason": "Reason: {{reason}}",
+    "reschedule_link_sent": "Reschedule link sent",
+    "cancel_link_sent": "Cancel link sent",
+    "rescheduled_by_customer": "Rescheduled by customer",
+    "cancelled_by_customer": "Cancelled by customer"
+  },
+
+  "self_serve": {
+    "reschedule_title": "Reschedule Appointment",
+    "cancel_title": "Cancel Appointment",
+    "current_appointment": "Current Appointment",
+    "appointment_details": "Appointment Details",
+    "select_new_date": "Select a new date",
+    "available_times": "Available times",
+    "loading_times": "Loading available times...",
+    "no_times": "No times available on this day. Try another date.",
+    "confirm_new_time": "Confirm New Time",
+    "rescheduling": "Rescheduling...",
+    "rescheduled_success": "Appointment Rescheduled",
+    "rescheduled_desc": "Your appointment has been moved to the new time.",
+    "cancel_button": "Cancel Appointment",
+    "cancel_confirm_title": "Are you sure you want to cancel?",
+    "cancel_confirm_desc": "This action cannot be undone. You will need to book a new appointment.",
+    "cancelling": "Cancelling...",
+    "cancelled_success": "Appointment Cancelled",
+    "cancelled_desc": "Your appointment has been cancelled.",
+    "cancel_reason_label": "Reason for cancellation (optional)",
+    "cancel_reason_placeholder": "Let us know why you need to cancel...",
+    "go_back": "Go Back",
+    "yes_cancel": "Yes, Cancel",
+    "unable_to_reschedule": "Unable to Reschedule",
+    "unable_to_cancel": "Unable to Cancel",
+    "contact_clinic": "Please contact the clinic directly for assistance.",
+    "close_page": "You can close this page."
   },
 
   "errors": {

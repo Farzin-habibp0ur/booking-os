@@ -1,0 +1,172 @@
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../../common/prisma.service';
+import { TokenService } from '../../common/token.service';
+import { AvailabilityService } from '../availability/availability.service';
+import { BookingService } from '../booking/booking.service';
+import { BusinessService } from '../business/business.service';
+
+@Injectable()
+export class SelfServeService {
+  constructor(
+    private prisma: PrismaService,
+    private tokenService: TokenService,
+    private availabilityService: AvailabilityService,
+    private bookingService: BookingService,
+    private businessService: BusinessService,
+  ) {}
+
+  async validateToken(token: string, type: 'RESCHEDULE_LINK' | 'CANCEL_LINK') {
+    const record = await this.tokenService.validateToken(token, type);
+
+    if (!record.bookingId) {
+      throw new BadRequestException('Invalid token');
+    }
+
+    const booking = await this.prisma.booking.findFirst({
+      where: { id: record.bookingId },
+      include: {
+        customer: { select: { id: true, name: true, phone: true, email: true } },
+        service: { select: { id: true, name: true, durationMins: true, price: true } },
+        staff: { select: { id: true, name: true } },
+        business: { select: { id: true, name: true, slug: true, policySettings: true } },
+      },
+    });
+
+    if (!booking) {
+      throw new NotFoundException('Booking not found');
+    }
+
+    return { tokenRecord: record, booking };
+  }
+
+  async getBookingSummary(token: string, type: 'RESCHEDULE_LINK' | 'CANCEL_LINK') {
+    const { booking } = await this.validateToken(token, type);
+
+    const policySettings = await this.businessService.getPolicySettings(booking.businessId);
+    const policyText = type === 'RESCHEDULE_LINK'
+      ? policySettings?.reschedulePolicyText
+      : policySettings?.cancellationPolicyText;
+
+    return {
+      booking: {
+        id: booking.id,
+        status: booking.status,
+        startTime: booking.startTime,
+        endTime: booking.endTime,
+        service: booking.service,
+        staff: booking.staff,
+        customer: { name: booking.customer.name },
+      },
+      business: booking.business,
+      policyText: policyText || undefined,
+    };
+  }
+
+  async getAvailability(token: string, date: string) {
+    const { booking } = await this.validateToken(token, 'RESCHEDULE_LINK');
+
+    const slots = await this.availabilityService.getAvailableSlots(
+      booking.businessId,
+      date,
+      booking.serviceId,
+      booking.staffId || undefined,
+    );
+
+    return slots.filter((s) => s.available);
+  }
+
+  async executeReschedule(token: string, startTime: string, staffId?: string) {
+    const { tokenRecord, booking } = await this.validateToken(token, 'RESCHEDULE_LINK');
+
+    if (!['CONFIRMED', 'PENDING_DEPOSIT'].includes(booking.status)) {
+      throw new BadRequestException('This booking cannot be rescheduled');
+    }
+
+    // Check policy
+    const policy = await this.bookingService.checkPolicyAllowed(
+      booking.businessId,
+      booking.id,
+      'reschedule',
+    );
+    if (!policy.allowed) {
+      throw new BadRequestException(
+        policy.policyText || policy.reason || 'Reschedule not allowed within the policy window',
+      );
+    }
+
+    // Update booking times
+    const updated = await this.bookingService.update(booking.businessId, booking.id, {
+      startTime,
+      ...(staffId ? { staffId } : {}),
+    });
+
+    // Mark token used
+    await this.tokenService.markUsed(tokenRecord.id);
+
+    // Append to selfServeLog
+    const existingFields = (booking.customFields as any) || {};
+    const selfServeLog = Array.isArray(existingFields.selfServeLog)
+      ? existingFields.selfServeLog
+      : [];
+    selfServeLog.push({
+      type: 'RESCHEDULED_BY_CUSTOMER',
+      at: new Date().toISOString(),
+      newStartTime: startTime,
+    });
+
+    await this.prisma.booking.update({
+      where: { id: booking.id },
+      data: { customFields: { ...existingFields, selfServeLog } },
+    });
+
+    return updated;
+  }
+
+  async executeCancel(token: string, reason?: string) {
+    const { tokenRecord, booking } = await this.validateToken(token, 'CANCEL_LINK');
+
+    if (!['CONFIRMED', 'PENDING_DEPOSIT'].includes(booking.status)) {
+      throw new BadRequestException('This booking cannot be cancelled');
+    }
+
+    // Check policy
+    const policy = await this.bookingService.checkPolicyAllowed(
+      booking.businessId,
+      booking.id,
+      'cancel',
+    );
+    if (!policy.allowed) {
+      throw new BadRequestException(
+        policy.policyText || policy.reason || 'Cancellation not allowed within the policy window',
+      );
+    }
+
+    // Cancel booking (no actor = customer action)
+    const updated = await this.bookingService.updateStatus(
+      booking.businessId,
+      booking.id,
+      'CANCELLED',
+    );
+
+    // Mark token used
+    await this.tokenService.markUsed(tokenRecord.id);
+
+    // Append to selfServeLog
+    const existingFields = (booking.customFields as any) || {};
+    const selfServeLog = Array.isArray(existingFields.selfServeLog)
+      ? existingFields.selfServeLog
+      : [];
+    selfServeLog.push({
+      type: 'CANCELLED_BY_CUSTOMER',
+      at: new Date().toISOString(),
+      reason: reason || undefined,
+    });
+
+    await this.prisma.booking.update({
+      where: { id: booking.id },
+      data: { customFields: { ...existingFields, selfServeLog } },
+    });
+
+    return updated;
+  }
+}

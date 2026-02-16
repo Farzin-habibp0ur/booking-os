@@ -24,11 +24,13 @@ export function createMockTokenService() {
       email: 'test@test.com',
       businessId: 'biz1',
       staffId: 'staff1',
+      bookingId: null,
       expiresAt: new Date(Date.now() + 3600000),
       usedAt: null,
     }),
     markUsed: jest.fn().mockResolvedValue(undefined),
     revokeTokens: jest.fn().mockResolvedValue(undefined),
+    revokeBookingTokens: jest.fn().mockResolvedValue(undefined),
   };
 }
 
@@ -50,6 +52,8 @@ export function createMockNotificationService() {
     sendAftercare: jest.fn().mockResolvedValue(undefined),
     sendTreatmentCheckIn: jest.fn().mockResolvedValue(undefined),
     sendDepositRequest: jest.fn().mockResolvedValue(undefined),
+    sendRescheduleLink: jest.fn().mockResolvedValue(undefined),
+    sendCancelLink: jest.fn().mockResolvedValue(undefined),
   };
 }
 
@@ -94,9 +98,24 @@ export function createMockConfigService() {
     JWT_EXPIRATION: '15m',
     JWT_REFRESH_EXPIRATION: '7d',
     ANTHROPIC_API_KEY: 'test-key',
+    WEB_URL: 'http://localhost:3000',
   };
 
   return {
     get: jest.fn((key: string, defaultValue?: string) => config[key] ?? defaultValue),
+  };
+}
+
+export function createMockAvailabilityService() {
+  return {
+    getAvailableSlots: jest.fn().mockResolvedValue([
+      { time: '2026-03-01T10:00:00Z', display: '10:00', staffId: 'staff1', staffName: 'Dr. Chen', available: true },
+      { time: '2026-03-01T10:30:00Z', display: '10:30', staffId: 'staff1', staffName: 'Dr. Chen', available: true },
+    ]),
+    getStaffWorkingHours: jest.fn().mockResolvedValue([]),
+    setStaffWorkingHours: jest.fn().mockResolvedValue([]),
+    getStaffTimeOff: jest.fn().mockResolvedValue([]),
+    addTimeOff: jest.fn().mockResolvedValue({}),
+    removeTimeOff: jest.fn().mockResolvedValue({}),
   };
 }

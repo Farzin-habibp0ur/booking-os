@@ -11,10 +11,12 @@ import { ProfileExtractor } from '../modules/ai/profile-extractor';
 import { NotificationService } from '../modules/notification/notification.service';
 import { BusinessService } from '../modules/business/business.service';
 import { CalendarSyncService } from '../modules/calendar-sync/calendar-sync.service';
+import { TokenService } from '../common/token.service';
 import {
   createMockNotificationService,
   createMockBusinessService,
   createMockCalendarSyncService,
+  createMockTokenService,
 } from './mocks';
 
 describe('Tenant Isolation', () => {
@@ -39,6 +41,7 @@ describe('Tenant Isolation', () => {
         { provide: NotificationService, useValue: createMockNotificationService() },
         { provide: BusinessService, useValue: createMockBusinessService() },
         { provide: CalendarSyncService, useValue: createMockCalendarSyncService() },
+        { provide: TokenService, useValue: createMockTokenService() },
       ],
     );
 

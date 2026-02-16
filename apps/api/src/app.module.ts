@@ -29,6 +29,7 @@ import { QueueModule } from './common/queue/queue.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { PublicBookingModule } from './modules/public-booking/public-booking.module';
 import { CalendarSyncModule } from './modules/calendar-sync/calendar-sync.module';
+import { SelfServeModule } from './modules/self-serve/self-serve.module';
 
 @Module({
   imports: [
@@ -74,6 +75,7 @@ import { CalendarSyncModule } from './modules/calendar-sync/calendar-sync.module
     NotificationModule,
     PublicBookingModule,
     CalendarSyncModule,
+    SelfServeModule,
     process.env.REDIS_URL ? QueueModule.forRootWithRedis() : QueueModule.forRoot(),
   ],
 })

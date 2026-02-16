@@ -75,4 +75,28 @@ export class BookingController {
   sendDepositRequest(@BusinessId() businessId: string, @Param('id') id: string) {
     return this.bookingService.sendDepositRequest(businessId, id);
   }
+
+  @Post(':id/send-reschedule-link')
+  sendRescheduleLink(
+    @BusinessId() businessId: string,
+    @Param('id') id: string,
+    @CurrentUser() user: any,
+  ) {
+    return this.bookingService.sendRescheduleLink(businessId, id, {
+      staffId: user?.id,
+      staffName: user?.name,
+    });
+  }
+
+  @Post(':id/send-cancel-link')
+  sendCancelLink(
+    @BusinessId() businessId: string,
+    @Param('id') id: string,
+    @CurrentUser() user: any,
+  ) {
+    return this.bookingService.sendCancelLink(businessId, id, {
+      staffId: user?.id,
+      staffName: user?.name,
+    });
+  }
 }

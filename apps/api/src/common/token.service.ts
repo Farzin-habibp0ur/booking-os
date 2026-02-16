@@ -12,12 +12,13 @@ export class TokenService {
     businessId?: string,
     staffId?: string,
     expiryHours = 24,
+    bookingId?: string,
   ): Promise<string> {
     const token = crypto.randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + expiryHours * 60 * 60 * 1000);
 
     await this.prisma.token.create({
-      data: { token, type, email, businessId, staffId, expiresAt },
+      data: { token, type, email, businessId, staffId, bookingId, expiresAt },
     });
 
     return token;
@@ -49,6 +50,12 @@ export class TokenService {
   async revokeTokens(email: string, type: string) {
     await this.prisma.token.deleteMany({
       where: { email, type },
+    });
+  }
+
+  async revokeBookingTokens(bookingId: string, type: string) {
+    await this.prisma.token.deleteMany({
+      where: { bookingId, type },
     });
   }
 }

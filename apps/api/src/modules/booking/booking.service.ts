@@ -1,8 +1,10 @@
 import { Injectable, BadRequestException, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../common/prisma.service';
 import { NotificationService } from '../notification/notification.service';
 import { BusinessService } from '../business/business.service';
 import { CalendarSyncService } from '../calendar-sync/calendar-sync.service';
+import { TokenService } from '../../common/token.service';
 
 @Injectable()
 export class BookingService {
@@ -11,6 +13,8 @@ export class BookingService {
     private notificationService: NotificationService,
     private businessService: BusinessService,
     private calendarSyncService: CalendarSyncService,
+    private tokenService: TokenService,
+    private config: ConfigService,
   ) {}
 
   async findAll(
@@ -396,6 +400,102 @@ export class BookingService {
     return this.prisma.booking.update({
       where: { id, businessId },
       data: { customFields: { ...existingFields, depositRequestLog: log } },
+      include: { customer: true, service: true, staff: true },
+    });
+  }
+
+  async sendRescheduleLink(businessId: string, id: string, actor: { staffId: string; staffName: string }) {
+    const booking = await this.prisma.booking.findFirst({
+      where: { id, businessId },
+      include: { customer: true, service: true, staff: true },
+    });
+    if (!booking) throw new NotFoundException('Booking not found');
+    if (!['CONFIRMED', 'PENDING_DEPOSIT'].includes(booking.status)) {
+      throw new BadRequestException('Booking is not in a status that can be rescheduled');
+    }
+
+    // Revoke existing reschedule tokens for this booking
+    await this.tokenService.revokeBookingTokens(booking.id, 'RESCHEDULE_LINK');
+
+    // Create new token (48h expiry)
+    const token = await this.tokenService.createToken(
+      'RESCHEDULE_LINK',
+      booking.customer.email || booking.customer.phone,
+      businessId,
+      undefined,
+      48,
+      booking.id,
+    );
+
+    const webUrl = this.config.get<string>('WEB_URL') || 'http://localhost:3000';
+    const rescheduleLink = `${webUrl}/manage/reschedule/${token}`;
+
+    // Send notification
+    this.notificationService.sendRescheduleLink(booking, rescheduleLink).catch(() => {});
+
+    // Append to selfServeLog
+    const existingFields = (booking.customFields as any) || {};
+    const selfServeLog = Array.isArray(existingFields.selfServeLog)
+      ? existingFields.selfServeLog
+      : [];
+    selfServeLog.push({
+      type: 'RESCHEDULE_LINK_SENT',
+      sentAt: new Date().toISOString(),
+      sentBy: actor.staffName,
+      staffId: actor.staffId,
+    });
+
+    return this.prisma.booking.update({
+      where: { id, businessId },
+      data: { customFields: { ...existingFields, selfServeLog } },
+      include: { customer: true, service: true, staff: true },
+    });
+  }
+
+  async sendCancelLink(businessId: string, id: string, actor: { staffId: string; staffName: string }) {
+    const booking = await this.prisma.booking.findFirst({
+      where: { id, businessId },
+      include: { customer: true, service: true, staff: true },
+    });
+    if (!booking) throw new NotFoundException('Booking not found');
+    if (!['CONFIRMED', 'PENDING_DEPOSIT'].includes(booking.status)) {
+      throw new BadRequestException('Booking is not in a status that can be cancelled');
+    }
+
+    // Revoke existing cancel tokens for this booking
+    await this.tokenService.revokeBookingTokens(booking.id, 'CANCEL_LINK');
+
+    // Create new token (48h expiry)
+    const token = await this.tokenService.createToken(
+      'CANCEL_LINK',
+      booking.customer.email || booking.customer.phone,
+      businessId,
+      undefined,
+      48,
+      booking.id,
+    );
+
+    const webUrl = this.config.get<string>('WEB_URL') || 'http://localhost:3000';
+    const cancelLink = `${webUrl}/manage/cancel/${token}`;
+
+    // Send notification
+    this.notificationService.sendCancelLink(booking, cancelLink).catch(() => {});
+
+    // Append to selfServeLog
+    const existingFields = (booking.customFields as any) || {};
+    const selfServeLog = Array.isArray(existingFields.selfServeLog)
+      ? existingFields.selfServeLog
+      : [];
+    selfServeLog.push({
+      type: 'CANCEL_LINK_SENT',
+      sentAt: new Date().toISOString(),
+      sentBy: actor.staffName,
+      staffId: actor.staffId,
+    });
+
+    return this.prisma.booking.update({
+      where: { id, businessId },
+      data: { customFields: { ...existingFields, selfServeLog } },
       include: { customer: true, service: true, staff: true },
     });
   }

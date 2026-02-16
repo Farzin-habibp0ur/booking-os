@@ -325,6 +325,90 @@ export class NotificationService {
     }
   }
 
+  async sendRescheduleLink(booking: BookingWithRelations, rescheduleLink: string): Promise<void> {
+    try {
+      const channels = await this.getChannelPreference(booking.businessId);
+      const business =
+        booking.business || (await this.businessService.findById(booking.businessId));
+      const businessName = business?.name || 'Our Business';
+
+      const context = {
+        customerName: booking.customer.name,
+        serviceName: booking.service.name,
+        date: booking.startTime.toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        }),
+        time: booking.startTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+        staffName: booking.staff?.name || '',
+        businessName,
+        rescheduleLink,
+      };
+
+      const body = await this.resolveTemplate(booking.businessId, 'RESCHEDULE_LINK', context);
+
+      if (channels === 'whatsapp' || channels === 'both') {
+        await this.dispatchWhatsApp(booking.customer.phone, body, booking.businessId);
+      }
+
+      if (channels === 'email' || channels === 'both') {
+        if (booking.customer.email) {
+          const subject = `Reschedule your appointment - ${businessName}`;
+          const html = this.wrapInEmailHtml(body, businessName);
+          await this.dispatchEmail(booking.customer.email, subject, html);
+        }
+      }
+
+      this.logger.log(`Sent reschedule link for ${booking.id} via ${channels}`);
+    } catch (error) {
+      this.logger.error(`Failed to send reschedule link for ${booking.id}:`, error);
+    }
+  }
+
+  async sendCancelLink(booking: BookingWithRelations, cancelLink: string): Promise<void> {
+    try {
+      const channels = await this.getChannelPreference(booking.businessId);
+      const business =
+        booking.business || (await this.businessService.findById(booking.businessId));
+      const businessName = business?.name || 'Our Business';
+
+      const context = {
+        customerName: booking.customer.name,
+        serviceName: booking.service.name,
+        date: booking.startTime.toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        }),
+        time: booking.startTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+        staffName: booking.staff?.name || '',
+        businessName,
+        cancelLink,
+      };
+
+      const body = await this.resolveTemplate(booking.businessId, 'CANCEL_LINK', context);
+
+      if (channels === 'whatsapp' || channels === 'both') {
+        await this.dispatchWhatsApp(booking.customer.phone, body, booking.businessId);
+      }
+
+      if (channels === 'email' || channels === 'both') {
+        if (booking.customer.email) {
+          const subject = `Cancel your appointment - ${businessName}`;
+          const html = this.wrapInEmailHtml(body, businessName);
+          await this.dispatchEmail(booking.customer.email, subject, html);
+        }
+      }
+
+      this.logger.log(`Sent cancel link for ${booking.id} via ${channels}`);
+    } catch (error) {
+      this.logger.error(`Failed to send cancel link for ${booking.id}:`, error);
+    }
+  }
+
   private async getChannelPreference(businessId: string): Promise<'email' | 'whatsapp' | 'both'> {
     const settings = await this.businessService.getNotificationSettings(businessId);
     const channels = settings?.channels || 'both';
@@ -356,6 +440,8 @@ export class NotificationService {
       AFTERCARE: `Hi ${context.customerName}, thank you for your ${context.serviceName} at ${context.businessName}! Here are your aftercare reminders: avoid direct sun exposure, keep the area clean, and contact us if you have any concerns.`,
       TREATMENT_CHECK_IN: `Hi ${context.customerName}, it's been 24 hours since your ${context.serviceName} at ${context.businessName}. How are you feeling? Let us know if you have any questions or concerns.`,
       DEPOSIT_REQUIRED: `Hi ${context.customerName}, your ${context.serviceName} at ${context.businessName} on ${context.date} at ${context.time} requires a deposit of $${context.depositAmount || '0'} to confirm. Please complete your payment to secure your appointment.`,
+      RESCHEDULE_LINK: `Hi ${context.customerName}, need to reschedule your ${context.serviceName} on ${context.date} at ${context.time}? Use this link: ${context.rescheduleLink || ''}`,
+      CANCEL_LINK: `Hi ${context.customerName}, need to cancel your ${context.serviceName} on ${context.date} at ${context.time}? Use this link: ${context.cancelLink || ''}`,
     };
 
     return (

@@ -24,4 +24,17 @@ export const publicApi = {
     }
     return res.json();
   },
+
+  async patch<T>(path: string, body: unknown): Promise<T> {
+    const res = await fetch(`${API_URL}${path}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      const error = await res.json().catch(() => ({ message: 'Request failed' }));
+      throw new Error(error.message || `HTTP ${res.status}`);
+    }
+    return res.json();
+  },
 };

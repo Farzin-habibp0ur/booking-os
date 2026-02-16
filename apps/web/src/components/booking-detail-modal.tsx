@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import { X, Calendar, Clock, User, MessageSquare, AlertTriangle, Repeat, Send, ShieldCheck } from 'lucide-react';
+import { X, Calendar, Clock, User, MessageSquare, AlertTriangle, Repeat, Send, ShieldCheck, Link2 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useI18n } from '@/lib/i18n';
 
@@ -39,6 +39,10 @@ export default function BookingDetailModal({
   const [cancelScope, setCancelScope] = useState<'single' | 'future' | 'all' | null>(null);
   const [sendingDeposit, setSendingDeposit] = useState(false);
   const [depositSent, setDepositSent] = useState(false);
+  const [sendingRescheduleLink, setSendingRescheduleLink] = useState(false);
+  const [rescheduleLinkSent, setRescheduleLinkSent] = useState(false);
+  const [sendingCancelLink, setSendingCancelLink] = useState(false);
+  const [cancelLinkSent, setCancelLinkSent] = useState(false);
   const [cancelPolicy, setCancelPolicy] = useState<{ allowed: boolean; reason?: string; policyText?: string; adminCanOverride?: boolean } | null>(null);
   const [reschedulePolicy, setReschedulePolicy] = useState<{ allowed: boolean; reason?: string; policyText?: string; adminCanOverride?: boolean } | null>(null);
   const [overrideOverlay, setOverrideOverlay] = useState<{ action: string; label: string } | null>(null);
@@ -147,6 +151,42 @@ export default function BookingDetailModal({
       console.error(e);
     }
     setSendingDeposit(false);
+  };
+
+  const handleSendRescheduleLink = async () => {
+    setSendingRescheduleLink(true);
+    try {
+      const updated = await api.post<any>(`/bookings/${booking.id}/send-reschedule-link`);
+      onUpdated(updated);
+      setRescheduleLinkSent(true);
+      setTimeout(() => setRescheduleLinkSent(false), 2000);
+    } catch (e) {
+      console.error(e);
+    }
+    setSendingRescheduleLink(false);
+  };
+
+  const handleSendCancelLink = async () => {
+    setSendingCancelLink(true);
+    try {
+      const updated = await api.post<any>(`/bookings/${booking.id}/send-cancel-link`);
+      onUpdated(updated);
+      setCancelLinkSent(true);
+      setTimeout(() => setCancelLinkSent(false), 2000);
+    } catch (e) {
+      console.error(e);
+    }
+    setSendingCancelLink(false);
+  };
+
+  const isLinkRecentlySent = (type: string) => {
+    const log = (booking.customFields?.selfServeLog || []) as any[];
+    const recent = log
+      .filter((e: any) => e.type === type)
+      .sort((a: any, b: any) => new Date(b.sentAt || b.at).getTime() - new Date(a.sentAt || a.at).getTime());
+    if (recent.length === 0) return false;
+    const last = new Date(recent[0].sentAt || recent[0].at).getTime();
+    return Date.now() - last < 24 * 60 * 60 * 1000;
   };
 
   const getAvailableActions = () => {
@@ -456,6 +496,19 @@ export default function BookingDetailModal({
                   </div>
                 </div>
               ))}
+              {(booking.customFields?.selfServeLog || []).map((entry: any, i: number) => (
+                <div key={`selfserve-${i}`} className="flex items-center gap-2 text-xs text-sage-700">
+                  <Link2 size={12} className="flex-shrink-0" />
+                  <span>
+                    {entry.type === 'RESCHEDULE_LINK_SENT' && `${t('timeline.reschedule_link_sent')} · ${entry.sentBy || 'Staff'}`}
+                    {entry.type === 'CANCEL_LINK_SENT' && `${t('timeline.cancel_link_sent')} · ${entry.sentBy || 'Staff'}`}
+                    {entry.type === 'RESCHEDULED_BY_CUSTOMER' && t('timeline.rescheduled_by_customer')}
+                    {entry.type === 'CANCELLED_BY_CUSTOMER' && t('timeline.cancelled_by_customer')}
+                    {' · '}
+                    {new Date(entry.sentAt || entry.at).toLocaleString()}
+                  </span>
+                </div>
+              ))}
               {booking.status !== 'PENDING' && booking.status !== 'CONFIRMED' && booking.status !== 'PENDING_DEPOSIT' && (
                 <div className="flex items-center gap-2 text-xs text-slate-500">
                   <div
@@ -577,6 +630,40 @@ export default function BookingDetailModal({
             >
               Reschedule
             </button>
+          )}
+
+          {/* Self-serve link buttons */}
+          {['CONFIRMED', 'PENDING_DEPOSIT'].includes(booking.status) && (isAdmin || user?.role === 'AGENT') && (
+            <div className="flex gap-2">
+              <button
+                onClick={handleSendRescheduleLink}
+                disabled={sendingRescheduleLink || isLinkRecentlySent('RESCHEDULE_LINK_SENT')}
+                className="flex-1 py-2 border border-slate-200 rounded-xl text-sm transition-colors hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
+              >
+                <Link2 size={14} />
+                {rescheduleLinkSent
+                  ? t('booking.link_sent')
+                  : sendingRescheduleLink
+                    ? t('common.loading')
+                    : isLinkRecentlySent('RESCHEDULE_LINK_SENT')
+                      ? t('booking.link_already_sent')
+                      : t('booking.send_reschedule_link')}
+              </button>
+              <button
+                onClick={handleSendCancelLink}
+                disabled={sendingCancelLink || isLinkRecentlySent('CANCEL_LINK_SENT')}
+                className="flex-1 py-2 border border-slate-200 rounded-xl text-sm transition-colors hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
+              >
+                <Link2 size={14} />
+                {cancelLinkSent
+                  ? t('booking.link_sent')
+                  : sendingCancelLink
+                    ? t('common.loading')
+                    : isLinkRecentlySent('CANCEL_LINK_SENT')
+                      ? t('booking.link_already_sent')
+                      : t('booking.send_cancel_link')}
+              </button>
+            </div>
           )}
         </div>
       </div>

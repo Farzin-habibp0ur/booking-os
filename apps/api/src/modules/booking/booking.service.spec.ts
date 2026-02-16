@@ -1,15 +1,19 @@
 import { Test } from '@nestjs/testing';
 import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { BookingService } from './booking.service';
 import { PrismaService } from '../../common/prisma.service';
 import { NotificationService } from '../notification/notification.service';
 import { BusinessService } from '../business/business.service';
 import { CalendarSyncService } from '../calendar-sync/calendar-sync.service';
+import { TokenService } from '../../common/token.service';
 import {
   createMockPrisma,
   createMockNotificationService,
   createMockBusinessService,
   createMockCalendarSyncService,
+  createMockTokenService,
+  createMockConfigService,
 } from '../../test/mocks';
 
 describe('BookingService', () => {
@@ -18,12 +22,16 @@ describe('BookingService', () => {
   let mockNotificationService: ReturnType<typeof createMockNotificationService>;
   let mockBusinessService: ReturnType<typeof createMockBusinessService>;
   let mockCalendarSyncService: ReturnType<typeof createMockCalendarSyncService>;
+  let mockTokenService: ReturnType<typeof createMockTokenService>;
+  let mockConfigService: ReturnType<typeof createMockConfigService>;
 
   beforeEach(async () => {
     prisma = createMockPrisma();
     mockNotificationService = createMockNotificationService();
     mockBusinessService = createMockBusinessService();
     mockCalendarSyncService = createMockCalendarSyncService();
+    mockTokenService = createMockTokenService();
+    mockConfigService = createMockConfigService();
 
     const module = await Test.createTestingModule({
       providers: [
@@ -32,6 +40,8 @@ describe('BookingService', () => {
         { provide: NotificationService, useValue: mockNotificationService },
         { provide: BusinessService, useValue: mockBusinessService },
         { provide: CalendarSyncService, useValue: mockCalendarSyncService },
+        { provide: TokenService, useValue: mockTokenService },
+        { provide: ConfigService, useValue: mockConfigService },
       ],
     }).compile();
 
@@ -1080,6 +1090,121 @@ describe('BookingService', () => {
         expect.objectContaining({
           where: expect.objectContaining({
             staffId: 'staff1',
+          }),
+        }),
+      );
+    });
+  });
+
+  describe('sendRescheduleLink', () => {
+    const actor = { staffId: 'staff1', staffName: 'Sarah' };
+
+    it('creates token, sends notification, appends selfServeLog', async () => {
+      const booking = {
+        id: 'b1',
+        businessId: 'biz1',
+        status: 'CONFIRMED',
+        customFields: {},
+        customer: { name: 'Jane', phone: '+1234567890', email: 'jane@test.com' },
+        service: { name: 'Botox' },
+        staff: null,
+      };
+      prisma.booking.findFirst.mockResolvedValue(booking as any);
+      prisma.booking.update.mockResolvedValue({ ...booking } as any);
+
+      await bookingService.sendRescheduleLink('biz1', 'b1', actor);
+
+      expect(mockTokenService.revokeBookingTokens).toHaveBeenCalledWith('b1', 'RESCHEDULE_LINK');
+      expect(mockTokenService.createToken).toHaveBeenCalledWith(
+        'RESCHEDULE_LINK',
+        'jane@test.com',
+        'biz1',
+        undefined,
+        48,
+        'b1',
+      );
+      expect(mockNotificationService.sendRescheduleLink).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'b1' }),
+        expect.stringContaining('/manage/reschedule/'),
+      );
+      expect(prisma.booking.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            customFields: expect.objectContaining({
+              selfServeLog: [
+                expect.objectContaining({
+                  type: 'RESCHEDULE_LINK_SENT',
+                  sentBy: 'Sarah',
+                }),
+              ],
+            }),
+          }),
+        }),
+      );
+    });
+
+    it('throws NotFoundException if booking not found', async () => {
+      prisma.booking.findFirst.mockResolvedValue(null);
+
+      await expect(bookingService.sendRescheduleLink('biz1', 'b1', actor)).rejects.toThrow(NotFoundException);
+    });
+
+    it('throws BadRequestException if booking has wrong status', async () => {
+      prisma.booking.findFirst.mockResolvedValue({
+        id: 'b1',
+        status: 'COMPLETED',
+        customFields: {},
+        customer: {},
+        service: {},
+        staff: null,
+      } as any);
+
+      await expect(bookingService.sendRescheduleLink('biz1', 'b1', actor)).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('sendCancelLink', () => {
+    const actor = { staffId: 'staff1', staffName: 'Sarah' };
+
+    it('creates token, sends notification, appends selfServeLog', async () => {
+      const booking = {
+        id: 'b1',
+        businessId: 'biz1',
+        status: 'CONFIRMED',
+        customFields: {},
+        customer: { name: 'Jane', phone: '+1234567890', email: 'jane@test.com' },
+        service: { name: 'Botox' },
+        staff: null,
+      };
+      prisma.booking.findFirst.mockResolvedValue(booking as any);
+      prisma.booking.update.mockResolvedValue({ ...booking } as any);
+
+      await bookingService.sendCancelLink('biz1', 'b1', actor);
+
+      expect(mockTokenService.revokeBookingTokens).toHaveBeenCalledWith('b1', 'CANCEL_LINK');
+      expect(mockTokenService.createToken).toHaveBeenCalledWith(
+        'CANCEL_LINK',
+        'jane@test.com',
+        'biz1',
+        undefined,
+        48,
+        'b1',
+      );
+      expect(mockNotificationService.sendCancelLink).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'b1' }),
+        expect.stringContaining('/manage/cancel/'),
+      );
+      expect(prisma.booking.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            customFields: expect.objectContaining({
+              selfServeLog: [
+                expect.objectContaining({
+                  type: 'CANCEL_LINK_SENT',
+                  sentBy: 'Sarah',
+                }),
+              ],
+            }),
           }),
         }),
       );
