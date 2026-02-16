@@ -41,6 +41,25 @@ export function createMockEmailService() {
   };
 }
 
+export function createMockNotificationService() {
+  return {
+    sendBookingConfirmation: jest.fn().mockResolvedValue(undefined),
+    sendReminder: jest.fn().mockResolvedValue(undefined),
+    sendFollowUp: jest.fn().mockResolvedValue(undefined),
+  };
+}
+
+export function createMockBusinessService() {
+  return {
+    findById: jest.fn().mockResolvedValue({ id: 'biz1', name: 'Test Clinic' }),
+    getNotificationSettings: jest.fn().mockResolvedValue({ channels: 'both', followUpDelayHours: 2 }),
+    updateNotificationSettings: jest.fn().mockResolvedValue({}),
+    getAiSettings: jest.fn().mockResolvedValue({}),
+    updateAiSettings: jest.fn().mockResolvedValue({}),
+    update: jest.fn().mockResolvedValue({}),
+  };
+}
+
 export function createMockConfigService() {
   const config: Record<string, string> = {
     JWT_SECRET: 'test-secret',

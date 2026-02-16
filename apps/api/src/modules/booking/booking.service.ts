@@ -1,9 +1,15 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma.service';
+import { NotificationService } from '../notification/notification.service';
+import { BusinessService } from '../business/business.service';
 
 @Injectable()
 export class BookingService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificationService: NotificationService,
+    private businessService: BusinessService,
+  ) {}
 
   async findAll(businessId: string, query: {
     status?: string; staffId?: string; customerId?: string;
@@ -94,6 +100,9 @@ export class BookingService {
       });
     }
 
+    // Fire-and-forget booking confirmation notification
+    this.notificationService.sendBookingConfirmation(booking).catch(() => {});
+
     return booking;
   }
 
@@ -124,6 +133,21 @@ export class BookingService {
       await this.prisma.reminder.updateMany({
         where: { bookingId: id, status: 'PENDING' },
         data: { status: 'CANCELLED' },
+      });
+    }
+
+    // Create follow-up reminder when booking is completed
+    if (status === 'COMPLETED') {
+      const settings = await this.businessService.getNotificationSettings(businessId);
+      const delayHours = settings?.followUpDelayHours || 2;
+      await this.prisma.reminder.create({
+        data: {
+          businessId,
+          bookingId: id,
+          scheduledAt: new Date(Date.now() + delayHours * 3600000),
+          status: 'PENDING',
+          type: 'FOLLOW_UP',
+        },
       });
     }
 

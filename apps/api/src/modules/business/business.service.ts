@@ -42,4 +42,26 @@ export class BusinessService {
       data: { aiSettings: merged },
     });
   }
+
+  async getNotificationSettings(id: string) {
+    const business = await this.prisma.business.findUnique({ where: { id } });
+    if (!business) return null;
+    const defaults = {
+      channels: 'both',
+      followUpDelayHours: 2,
+    };
+    const raw = business.notificationSettings || {};
+    return { ...defaults, ...(typeof raw === 'object' ? raw : {}) };
+  }
+
+  async updateNotificationSettings(id: string, settings: { channels?: string; followUpDelayHours?: number }) {
+    const business = await this.prisma.business.findUnique({ where: { id } });
+    if (!business) return null;
+    const current = (typeof business.notificationSettings === 'object' && business.notificationSettings) ? business.notificationSettings as any : {};
+    const merged = { ...current, ...settings };
+    return this.prisma.business.update({
+      where: { id },
+      data: { notificationSettings: merged },
+    });
+  }
 }

@@ -370,7 +370,21 @@
     "passwords_no_match": "Passwords do not match",
     "password_change_failed": "Failed to change password",
     "billing": "Billing",
-    "billing_desc": "Manage your subscription plan and payment details"
+    "billing_desc": "Manage your subscription plan and payment details",
+    "notifications": "Notifications",
+    "notifications_desc": "Configure how booking confirmations, reminders, and follow-ups are sent"
+  },
+
+  "notification_settings": {
+    "title": "Notification Settings",
+    "description": "Choose how your customers receive booking confirmations, reminders, and follow-up messages.",
+    "channel_preference": "Communication Channels",
+    "channel_preference_desc": "Select how notifications are sent to your customers",
+    "channel_both": "WhatsApp & Email",
+    "channel_email": "Email only",
+    "channel_whatsapp": "WhatsApp only",
+    "followup_delay": "Follow-up Delay",
+    "followup_delay_desc": "How long after a booking is completed to send the follow-up message"
   },
 
   "billing": {

@@ -21,4 +21,15 @@ export class BusinessController {
   update(@BusinessId() businessId: string, @Body() body: UpdateBusinessDto) {
     return this.businessService.update(businessId, body);
   }
+
+  @Get('notification-settings')
+  async getNotificationSettings(@BusinessId() businessId: string) {
+    return this.businessService.getNotificationSettings(businessId);
+  }
+
+  @Patch('notification-settings')
+  @Roles('OWNER')
+  async updateNotificationSettings(@BusinessId() businessId: string, @Body() body: { channels?: string; followUpDelayHours?: number }) {
+    return this.businessService.updateNotificationSettings(businessId, body);
+  }
 }

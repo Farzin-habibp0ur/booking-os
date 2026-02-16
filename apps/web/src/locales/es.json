@@ -370,7 +370,21 @@
     "passwords_no_match": "Las contraseñas no coinciden",
     "password_change_failed": "Error al cambiar la contraseña",
     "billing": "Facturación",
-    "billing_desc": "Gestiona tu plan de suscripción y detalles de pago"
+    "billing_desc": "Gestiona tu plan de suscripción y detalles de pago",
+    "notifications": "Notificaciones",
+    "notifications_desc": "Configura cómo se envían las confirmaciones, recordatorios y seguimientos de reservas"
+  },
+
+  "notification_settings": {
+    "title": "Configuración de notificaciones",
+    "description": "Elige cómo reciben tus clientes las confirmaciones de reserva, recordatorios y mensajes de seguimiento.",
+    "channel_preference": "Canales de comunicación",
+    "channel_preference_desc": "Selecciona cómo se envían las notificaciones a tus clientes",
+    "channel_both": "WhatsApp y correo electrónico",
+    "channel_email": "Solo correo electrónico",
+    "channel_whatsapp": "Solo WhatsApp",
+    "followup_delay": "Retraso del seguimiento",
+    "followup_delay_desc": "Cuánto tiempo después de completar una reserva se envía el mensaje de seguimiento"
   },
 
   "billing": {

@@ -8,6 +8,9 @@ import { ServiceController } from '../modules/service/service.controller';
 import { ServiceService } from '../modules/service/service.service';
 import { JwtStrategy } from '../modules/auth/jwt.strategy';
 import { ProfileExtractor } from '../modules/ai/profile-extractor';
+import { NotificationService } from '../modules/notification/notification.service';
+import { BusinessService } from '../modules/business/business.service';
+import { createMockNotificationService, createMockBusinessService } from './mocks';
 
 describe('Tenant Isolation', () => {
   let ctx: IntegrationTestContext;
@@ -28,6 +31,8 @@ describe('Tenant Isolation', () => {
         ServiceService,
         JwtStrategy,
         { provide: ProfileExtractor, useValue: mockProfileExtractor },
+        { provide: NotificationService, useValue: createMockNotificationService() },
+        { provide: BusinessService, useValue: createMockBusinessService() },
       ],
     );
 

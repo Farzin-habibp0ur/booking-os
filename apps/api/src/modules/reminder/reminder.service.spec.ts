@@ -1,35 +1,23 @@
 import { Test } from '@nestjs/testing';
 import { ReminderService } from './reminder.service';
 import { PrismaService } from '../../common/prisma.service';
-import { MessagingService } from '../messaging/messaging.service';
-import { createMockPrisma } from '../../test/mocks';
-import { WhatsAppCloudProvider } from '@booking-os/messaging-provider';
+import { NotificationService } from '../notification/notification.service';
+import { createMockPrisma, createMockNotificationService } from '../../test/mocks';
 
 describe('ReminderService', () => {
   let reminderService: ReminderService;
   let prisma: ReturnType<typeof createMockPrisma>;
-  let messagingService: jest.Mocked<MessagingService>;
-  let mockProvider: any;
+  let mockNotificationService: ReturnType<typeof createMockNotificationService>;
 
   beforeEach(async () => {
     prisma = createMockPrisma();
-
-    mockProvider = {
-      sendMessage: jest.fn().mockResolvedValue(undefined),
-      sendTemplateMessage: jest.fn().mockResolvedValue(undefined),
-      name: 'mock',
-    };
-
-    messagingService = {
-      getProvider: jest.fn().mockReturnValue(mockProvider),
-      isWhatsAppCloud: jest.fn().mockReturnValue(false),
-    } as any;
+    mockNotificationService = createMockNotificationService();
 
     const module = await Test.createTestingModule({
       providers: [
         ReminderService,
         { provide: PrismaService, useValue: prisma },
-        { provide: MessagingService, useValue: messagingService },
+        { provide: NotificationService, useValue: mockNotificationService },
       ],
     }).compile();
 
@@ -78,40 +66,50 @@ describe('ReminderService', () => {
       booking: mockBooking,
     };
 
-    it('processes due reminders and marks them as SENT', async () => {
+    it('processes due reminders via NotificationService and marks them as SENT', async () => {
       prisma.reminder.findMany.mockResolvedValue([mockReminder] as any);
       prisma.reminder.update.mockResolvedValue({} as any);
 
       await reminderService.processPendingReminders();
 
-      expect(prisma.reminder.findMany).toHaveBeenCalledWith({
-        where: {
-          status: 'PENDING',
-          scheduledAt: { lte: expect.any(Date) }
-        },
-        include: {
-          booking: {
-            include: {
-              customer: true,
-              service: true,
-              staff: true,
-              business: true
-            },
-          },
-        },
-        take: 50,
-      });
-
-      expect(mockProvider.sendMessage).toHaveBeenCalledWith({
-        to: '+1234567890',
-        body: expect.stringContaining('Hi Jane Doe! Reminder: your Haircut is scheduled for'),
-        businessId: 'biz1',
-      });
+      expect(mockNotificationService.sendReminder).toHaveBeenCalledWith(mockBooking);
 
       expect(prisma.reminder.update).toHaveBeenCalledWith({
         where: { id: 'reminder1' },
         data: { status: 'SENT', sentAt: expect.any(Date) },
       });
+    });
+
+    it('routes FOLLOW_UP type through sendFollowUp', async () => {
+      const followUpReminder = { ...mockReminder, type: 'FOLLOW_UP' };
+      prisma.reminder.findMany.mockResolvedValue([followUpReminder] as any);
+      prisma.reminder.update.mockResolvedValue({} as any);
+
+      await reminderService.processPendingReminders();
+
+      expect(mockNotificationService.sendFollowUp).toHaveBeenCalledWith(mockBooking);
+      expect(mockNotificationService.sendReminder).not.toHaveBeenCalled();
+    });
+
+    it('routes REMINDER type through sendReminder', async () => {
+      const reminderType = { ...mockReminder, type: 'REMINDER' };
+      prisma.reminder.findMany.mockResolvedValue([reminderType] as any);
+      prisma.reminder.update.mockResolvedValue({} as any);
+
+      await reminderService.processPendingReminders();
+
+      expect(mockNotificationService.sendReminder).toHaveBeenCalledWith(mockBooking);
+      expect(mockNotificationService.sendFollowUp).not.toHaveBeenCalled();
+    });
+
+    it('defaults to sendReminder when type is not set', async () => {
+      // No type field on the reminder
+      prisma.reminder.findMany.mockResolvedValue([mockReminder] as any);
+      prisma.reminder.update.mockResolvedValue({} as any);
+
+      await reminderService.processPendingReminders();
+
+      expect(mockNotificationService.sendReminder).toHaveBeenCalledWith(mockBooking);
     });
 
     it('cancels reminders for CANCELLED bookings', async () => {
@@ -128,7 +126,8 @@ describe('ReminderService', () => {
         data: { status: 'CANCELLED' },
       });
 
-      expect(mockProvider.sendMessage).not.toHaveBeenCalled();
+      expect(mockNotificationService.sendReminder).not.toHaveBeenCalled();
+      expect(mockNotificationService.sendFollowUp).not.toHaveBeenCalled();
     });
 
     it('cancels reminders for NO_SHOW bookings', async () => {
@@ -145,13 +144,13 @@ describe('ReminderService', () => {
         data: { status: 'CANCELLED' },
       });
 
-      expect(mockProvider.sendMessage).not.toHaveBeenCalled();
+      expect(mockNotificationService.sendReminder).not.toHaveBeenCalled();
     });
 
     it('handles send failure by marking FAILED', async () => {
       prisma.reminder.findMany.mockResolvedValue([mockReminder] as any);
       prisma.reminder.update.mockResolvedValue({} as any);
-      mockProvider.sendMessage.mockRejectedValueOnce(new Error('Send failed'));
+      mockNotificationService.sendReminder.mockRejectedValueOnce(new Error('Send failed'));
 
       await reminderService.processPendingReminders();
 
@@ -176,174 +175,13 @@ describe('ReminderService', () => {
       );
     });
 
-    it('uses WhatsApp template when isWhatsAppCloud() returns true', async () => {
-      const whatsappProvider = new WhatsAppCloudProvider({
-        phoneNumberId: 'test-phone',
-        accessToken: 'test-token',
-      });
-      whatsappProvider.sendTemplateMessage = jest.fn().mockResolvedValue(undefined);
-
-      messagingService.isWhatsAppCloud.mockReturnValue(true);
-      messagingService.getProvider.mockReturnValue(whatsappProvider as any);
-
-      prisma.reminder.findMany.mockResolvedValue([mockReminder] as any);
-      prisma.reminder.update.mockResolvedValue({} as any);
-
-      await reminderService.processPendingReminders();
-
-      expect(whatsappProvider.sendTemplateMessage).toHaveBeenCalledWith({
-        to: '+1234567890',
-        templateName: 'appointment_reminder',
-        languageCode: 'en',
-        components: [{
-          type: 'body',
-          parameters: [
-            { type: 'text', text: 'Jane Doe' },
-            { type: 'text', text: 'Haircut' },
-            { type: 'text', text: expect.stringMatching(/\d{1,2}:\d{2}\s?(AM|PM)/i) },
-            { type: 'text', text: 'Sarah Smith' },
-          ],
-        }],
-        businessId: 'biz1',
-      });
-
-      expect(prisma.reminder.update).toHaveBeenCalledWith({
-        where: { id: 'reminder1' },
-        data: { status: 'SENT', sentAt: expect.any(Date) },
-      });
-    });
-
-    it('uses plain text when not WhatsApp Cloud', async () => {
-      messagingService.isWhatsAppCloud.mockReturnValue(false);
-
-      prisma.reminder.findMany.mockResolvedValue([mockReminder] as any);
-      prisma.reminder.update.mockResolvedValue({} as any);
-
-      await reminderService.processPendingReminders();
-
-      expect(mockProvider.sendMessage).toHaveBeenCalledWith({
-        to: '+1234567890',
-        body: expect.stringMatching(/Hi Jane Doe! Reminder: your Haircut is scheduled for \d{1,2}:\d{2}\s?(AM|PM) with Sarah Smith at Glow Clinic\. Reply YES to confirm\./),
-        businessId: 'biz1',
-      });
-
-      expect(prisma.reminder.update).toHaveBeenCalledWith({
-        where: { id: 'reminder1' },
-        data: { status: 'SENT', sentAt: expect.any(Date) },
-      });
-    });
-
-    it('handles bookings without staff', async () => {
-      const bookingWithoutStaff = { ...mockBooking, staff: null, staffId: null };
-      const reminderWithoutStaff = { ...mockReminder, booking: bookingWithoutStaff };
-
-      messagingService.isWhatsAppCloud.mockReturnValue(false);
-      prisma.reminder.findMany.mockResolvedValue([reminderWithoutStaff] as any);
-      prisma.reminder.update.mockResolvedValue({} as any);
-
-      await reminderService.processPendingReminders();
-
-      expect(mockProvider.sendMessage).toHaveBeenCalledWith({
-        to: '+1234567890',
-        body: expect.stringMatching(/Hi Jane Doe! Reminder: your Haircut is scheduled for \d{1,2}:\d{2}\s?(AM|PM) at Glow Clinic\. Reply YES to confirm\./),
-        businessId: 'biz1',
-      });
-    });
-
-    it('handles bookings without staff in WhatsApp template', async () => {
-      const bookingWithoutStaff = { ...mockBooking, staff: null, staffId: null };
-      const reminderWithoutStaff = { ...mockReminder, booking: bookingWithoutStaff };
-
-      const whatsappProvider = new WhatsAppCloudProvider({
-        phoneNumberId: 'test-phone',
-        accessToken: 'test-token',
-      });
-      whatsappProvider.sendTemplateMessage = jest.fn().mockResolvedValue(undefined);
-
-      messagingService.isWhatsAppCloud.mockReturnValue(true);
-      messagingService.getProvider.mockReturnValue(whatsappProvider as any);
-
-      prisma.reminder.findMany.mockResolvedValue([reminderWithoutStaff] as any);
-      prisma.reminder.update.mockResolvedValue({} as any);
-
-      await reminderService.processPendingReminders();
-
-      expect(whatsappProvider.sendTemplateMessage).toHaveBeenCalledWith({
-        to: '+1234567890',
-        templateName: 'appointment_reminder',
-        languageCode: 'en',
-        components: [{
-          type: 'body',
-          parameters: [
-            { type: 'text', text: 'Jane Doe' },
-            { type: 'text', text: 'Haircut' },
-            { type: 'text', text: expect.stringMatching(/\d{1,2}:\d{2}\s?(AM|PM)/i) },
-            { type: 'text', text: 'Glow Clinic' },
-          ],
-        }],
-        businessId: 'biz1',
-      });
-    });
-
-    it('uses defaultLocale from business for WhatsApp template', async () => {
-      const businessWithEsLocale = { ...mockBooking.business, defaultLocale: 'es' };
-      const bookingWithEsLocale = { ...mockBooking, business: businessWithEsLocale };
-      const reminderWithEsLocale = { ...mockReminder, booking: bookingWithEsLocale };
-
-      const whatsappProvider = new WhatsAppCloudProvider({
-        phoneNumberId: 'test-phone',
-        accessToken: 'test-token',
-      });
-      whatsappProvider.sendTemplateMessage = jest.fn().mockResolvedValue(undefined);
-
-      messagingService.isWhatsAppCloud.mockReturnValue(true);
-      messagingService.getProvider.mockReturnValue(whatsappProvider as any);
-
-      prisma.reminder.findMany.mockResolvedValue([reminderWithEsLocale] as any);
-      prisma.reminder.update.mockResolvedValue({} as any);
-
-      await reminderService.processPendingReminders();
-
-      expect(whatsappProvider.sendTemplateMessage).toHaveBeenCalledWith(
-        expect.objectContaining({
-          languageCode: 'es',
-        }),
-      );
-    });
-
-    it('defaults to "en" locale when business has no defaultLocale', async () => {
-      const businessWithoutLocale = { ...mockBooking.business, defaultLocale: null };
-      const bookingWithoutLocale = { ...mockBooking, business: businessWithoutLocale };
-      const reminderWithoutLocale = { ...mockReminder, booking: bookingWithoutLocale };
-
-      const whatsappProvider = new WhatsAppCloudProvider({
-        phoneNumberId: 'test-phone',
-        accessToken: 'test-token',
-      });
-      whatsappProvider.sendTemplateMessage = jest.fn().mockResolvedValue(undefined);
-
-      messagingService.isWhatsAppCloud.mockReturnValue(true);
-      messagingService.getProvider.mockReturnValue(whatsappProvider as any);
-
-      prisma.reminder.findMany.mockResolvedValue([reminderWithoutLocale] as any);
-      prisma.reminder.update.mockResolvedValue({} as any);
-
-      await reminderService.processPendingReminders();
-
-      expect(whatsappProvider.sendTemplateMessage).toHaveBeenCalledWith(
-        expect.objectContaining({
-          languageCode: 'en',
-        }),
-      );
-    });
-
     it('handles empty results gracefully', async () => {
       prisma.reminder.findMany.mockResolvedValue([]);
 
       await reminderService.processPendingReminders();
 
       expect(prisma.reminder.findMany).toHaveBeenCalled();
-      expect(mockProvider.sendMessage).not.toHaveBeenCalled();
+      expect(mockNotificationService.sendReminder).not.toHaveBeenCalled();
       expect(prisma.reminder.update).not.toHaveBeenCalled();
     });
 
@@ -364,20 +202,8 @@ describe('ReminderService', () => {
 
       await reminderService.processPendingReminders();
 
-      expect(mockProvider.sendMessage).toHaveBeenCalledTimes(2);
+      expect(mockNotificationService.sendReminder).toHaveBeenCalledTimes(2);
       expect(prisma.reminder.update).toHaveBeenCalledTimes(2);
-
-      expect(mockProvider.sendMessage).toHaveBeenNthCalledWith(1, {
-        to: '+1234567890',
-        body: expect.stringContaining('Jane Doe'),
-        businessId: 'biz1',
-      });
-
-      expect(mockProvider.sendMessage).toHaveBeenNthCalledWith(2, {
-        to: '+0987654321',
-        body: expect.stringContaining('John Smith'),
-        businessId: 'biz1',
-      });
     });
 
     it('continues processing remaining reminders if one fails', async () => {
@@ -395,13 +221,13 @@ describe('ReminderService', () => {
       prisma.reminder.findMany.mockResolvedValue([mockReminder, reminder2] as any);
       prisma.reminder.update.mockResolvedValue({} as any);
 
-      mockProvider.sendMessage
+      mockNotificationService.sendReminder
         .mockRejectedValueOnce(new Error('Network error'))
         .mockResolvedValueOnce(undefined);
 
       await reminderService.processPendingReminders();
 
-      expect(mockProvider.sendMessage).toHaveBeenCalledTimes(2);
+      expect(mockNotificationService.sendReminder).toHaveBeenCalledTimes(2);
       expect(prisma.reminder.update).toHaveBeenCalledTimes(2);
 
       expect(prisma.reminder.update).toHaveBeenNthCalledWith(1, {
@@ -425,37 +251,6 @@ describe('ReminderService', () => {
           take: 50,
         }),
       );
-    });
-
-    it('formats time correctly for different times of day', async () => {
-      const morningBooking = {
-        ...mockBooking,
-        startTime: new Date('2026-03-01T09:30:00Z')
-      };
-      const afternoonBooking = {
-        ...mockBooking,
-        startTime: new Date('2026-03-01T14:45:00Z')
-      };
-
-      const morningReminder = { ...mockReminder, booking: morningBooking };
-      const afternoonReminder = {
-        ...mockReminder,
-        id: 'reminder2',
-        booking: afternoonBooking
-      };
-
-      prisma.reminder.findMany.mockResolvedValue([morningReminder, afternoonReminder] as any);
-      prisma.reminder.update.mockResolvedValue({} as any);
-
-      await reminderService.processPendingReminders();
-
-      expect(mockProvider.sendMessage).toHaveBeenCalledWith(
-        expect.objectContaining({
-          body: expect.stringMatching(/scheduled for \d{1,2}:\d{2}\s?(AM|PM)/i),
-        }),
-      );
-
-      expect(mockProvider.sendMessage).toHaveBeenCalledTimes(2);
     });
   });
 });

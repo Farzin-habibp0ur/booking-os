@@ -26,6 +26,7 @@ import { HealthModule } from './modules/health/health.module';
 import { BillingModule } from './modules/billing/billing.module';
 import { EmailModule } from './modules/email/email.module';
 import { QueueModule } from './common/queue/queue.module';
+import { NotificationModule } from './modules/notification/notification.module';
 
 @Module({
   imports: [
@@ -69,6 +70,7 @@ import { QueueModule } from './common/queue/queue.module';
     HealthModule,
     BillingModule,
     EmailModule,
+    NotificationModule,
     process.env.REDIS_URL
       ? QueueModule.forRootWithRedis()
       : QueueModule.forRoot(),

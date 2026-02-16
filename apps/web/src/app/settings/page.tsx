@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import { FileText, Languages, Sparkles, Upload, Settings2, ClipboardCheck, CreditCard } from 'lucide-react';
+import { FileText, Languages, Sparkles, Upload, Settings2, ClipboardCheck, CreditCard, Bell } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 
 export default function SettingsPage() {
@@ -155,6 +155,18 @@ export default function SettingsPage() {
             <div>
               <p className="text-sm font-medium">{t('settings.message_templates')}</p>
               <p className="text-xs text-slate-500">{t('settings.message_templates_desc')}</p>
+            </div>
+          </button>
+          <button
+            onClick={() => router.push('/settings/notifications')}
+            className="flex items-center gap-3 w-full text-left p-3 rounded-xl hover:bg-slate-50 border border-slate-100 transition-colors"
+          >
+            <div className="w-9 h-9 bg-sage-50 rounded-lg flex items-center justify-center">
+              <Bell size={18} className="text-sage-600" />
+            </div>
+            <div>
+              <p className="text-sm font-medium">{t('settings.notifications')}</p>
+              <p className="text-xs text-slate-500">{t('settings.notifications_desc')}</p>
             </div>
           </button>
           <button

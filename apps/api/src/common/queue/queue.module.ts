@@ -6,6 +6,7 @@ export const QUEUE_NAMES = {
   AI_PROCESSING: 'ai-processing',
   MESSAGING: 'messaging',
   REMINDERS: 'reminders',
+  NOTIFICATIONS: 'notifications',
 } as const;
 
 @Global()
@@ -55,6 +56,7 @@ export class QueueModule {
           { name: QUEUE_NAMES.AI_PROCESSING },
           { name: QUEUE_NAMES.MESSAGING },
           { name: QUEUE_NAMES.REMINDERS },
+          { name: QUEUE_NAMES.NOTIFICATIONS },
         ),
       ],
       providers: [

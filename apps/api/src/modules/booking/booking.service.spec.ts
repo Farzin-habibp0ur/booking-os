@@ -2,19 +2,27 @@ import { Test } from '@nestjs/testing';
 import { BadRequestException } from '@nestjs/common';
 import { BookingService } from './booking.service';
 import { PrismaService } from '../../common/prisma.service';
-import { createMockPrisma } from '../../test/mocks';
+import { NotificationService } from '../notification/notification.service';
+import { BusinessService } from '../business/business.service';
+import { createMockPrisma, createMockNotificationService, createMockBusinessService } from '../../test/mocks';
 
 describe('BookingService', () => {
   let bookingService: BookingService;
   let prisma: ReturnType<typeof createMockPrisma>;
+  let mockNotificationService: ReturnType<typeof createMockNotificationService>;
+  let mockBusinessService: ReturnType<typeof createMockBusinessService>;
 
   beforeEach(async () => {
     prisma = createMockPrisma();
+    mockNotificationService = createMockNotificationService();
+    mockBusinessService = createMockBusinessService();
 
     const module = await Test.createTestingModule({
       providers: [
         BookingService,
         { provide: PrismaService, useValue: prisma },
+        { provide: NotificationService, useValue: mockNotificationService },
+        { provide: BusinessService, useValue: mockBusinessService },
       ],
     }).compile();
 
@@ -189,6 +197,19 @@ describe('BookingService', () => {
       );
     });
 
+    it('sends booking confirmation notification after create', async () => {
+      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', durationMins: 60 } as any);
+      prisma.booking.findFirst.mockResolvedValue(null);
+      prisma.booking.create.mockResolvedValue({ id: 'b1', customer: {}, service: {}, staff: {} } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+
+      await bookingService.create('biz1', createData);
+
+      expect(mockNotificationService.sendBookingConfirmation).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'b1' }),
+      );
+    });
+
     it('skips reminder if booking is <24h away', async () => {
       const soonDate = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
       prisma.service.findFirst.mockResolvedValue({ id: 'svc1', durationMins: 30 } as any);
@@ -256,6 +277,22 @@ describe('BookingService', () => {
       await bookingService.updateStatus('biz1', 'b1', 'CONFIRMED');
 
       expect(prisma.reminder.updateMany).not.toHaveBeenCalled();
+    });
+
+    it('creates follow-up reminder when status becomes COMPLETED', async () => {
+      prisma.booking.update.mockResolvedValue({ id: 'b1', status: 'COMPLETED' } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+
+      await bookingService.updateStatus('biz1', 'b1', 'COMPLETED');
+
+      expect(prisma.reminder.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          businessId: 'biz1',
+          bookingId: 'b1',
+          status: 'PENDING',
+          type: 'FOLLOW_UP',
+        }),
+      });
     });
   });
 

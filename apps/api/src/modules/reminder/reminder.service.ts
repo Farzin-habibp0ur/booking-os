@@ -1,8 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../../common/prisma.service';
-import { MessagingService } from '../messaging/messaging.service';
-import { WhatsAppCloudProvider } from '@booking-os/messaging-provider';
+import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export class ReminderService {
@@ -10,7 +9,7 @@ export class ReminderService {
 
   constructor(
     private prisma: PrismaService,
-    private messagingService: MessagingService,
+    private notificationService: NotificationService,
   ) {}
 
   @Cron(CronExpression.EVERY_MINUTE)
@@ -40,42 +39,11 @@ export class ReminderService {
           continue;
         }
 
-        const time = booking.startTime.toLocaleTimeString('en-US', {
-          hour: 'numeric',
-          minute: '2-digit',
-        });
-
-        const provider = this.messagingService.getProvider();
-
-        // When using WhatsApp Cloud API, reminders are business-initiated messages
-        // that require pre-approved templates (outside 24h customer service window)
-        if (this.messagingService.isWhatsAppCloud() && provider instanceof WhatsAppCloudProvider) {
-          await provider.sendTemplateMessage({
-            to: booking.customer.phone,
-            templateName: 'appointment_reminder',
-            languageCode: booking.business.defaultLocale || 'en',
-            components: [
-              {
-                type: 'body',
-                parameters: [
-                  { type: 'text', text: booking.customer.name },
-                  { type: 'text', text: booking.service.name },
-                  { type: 'text', text: time },
-                  { type: 'text', text: booking.staff?.name || booking.business.name },
-                ],
-              },
-            ],
-            businessId: booking.businessId,
-          });
+        const type = (reminder as any).type || 'REMINDER';
+        if (type === 'FOLLOW_UP') {
+          await this.notificationService.sendFollowUp(booking);
         } else {
-          // Mock provider or fallback — send plain text
-          const body = `Hi ${booking.customer.name}! Reminder: your ${booking.service.name} is scheduled for ${time}${booking.staff ? ` with ${booking.staff.name}` : ''} at ${booking.business.name}. Reply YES to confirm.`;
-
-          await provider.sendMessage({
-            to: booking.customer.phone,
-            body,
-            businessId: booking.businessId,
-          });
+          await this.notificationService.sendReminder(booking);
         }
 
         await this.prisma.reminder.update({
