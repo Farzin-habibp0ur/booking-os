@@ -603,6 +603,7 @@ export default function InboxPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t('inbox.search_placeholder')}
+              aria-label="Search conversations"
               className="w-full pl-8 pr-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-sage-500"
             />
             {searchQuery && (
@@ -726,6 +727,7 @@ export default function InboxPage() {
                 <div className="relative">
                   <button
                     onClick={() => setShowSnoozeMenu(!showSnoozeMenu)}
+                    aria-expanded={showSnoozeMenu}
                     className="text-xs text-slate-500 hover:text-lavender-600 border px-2 py-1 rounded flex items-center gap-1"
                   >
                     <AlarmClock size={12} /> {t('inbox.snooze')}
@@ -777,7 +779,7 @@ export default function InboxPage() {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-auto p-4 space-y-3">
+            <div className="flex-1 overflow-auto p-4 space-y-3" aria-live="polite">
               {messages.map((m) => (
                 <div
                   key={m.id}
@@ -1090,14 +1092,17 @@ export default function InboxPage() {
                 <div className="relative mt-1">
                   <button
                     onClick={() => setShowAssignDropdown(!showAssignDropdown)}
+                    aria-expanded={showAssignDropdown}
                     className="w-full flex items-center justify-between border rounded-md px-2.5 py-1.5 text-sm hover:bg-slate-50"
                   >
                     <span>{selected.assignedTo?.name || t('common.unassigned')}</span>
                     <ChevronDown size={14} className="text-slate-400" />
                   </button>
                   {showAssignDropdown && (
-                    <div className="absolute z-10 mt-1 w-full bg-white border rounded-md shadow-lg">
+                    <div className="absolute z-10 mt-1 w-full bg-white border rounded-md shadow-lg" role="listbox">
                       <button
+                        role="option"
+                        aria-selected={!selected.assignedTo}
                         onClick={() => assignConversation(null)}
                         className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50 border-b"
                       >
@@ -1106,6 +1111,8 @@ export default function InboxPage() {
                       {staffList.map((s) => (
                         <button
                           key={s.id}
+                          role="option"
+                          aria-selected={selected.assignedTo?.id === s.id}
                           onClick={() => assignConversation(s.id)}
                           className={cn(
                             'w-full text-left px-3 py-2 text-sm hover:bg-slate-50',

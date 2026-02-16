@@ -351,8 +351,8 @@ export default function BookingPortalPage() {
               <Calendar size={16} className="text-sage-600" />
               <p className="text-sm font-medium text-slate-700">Select a date</p>
             </div>
-            <div className="flex gap-2 overflow-x-auto pb-2">
-              {generateDates().map((d) => {
+            <div className="flex gap-2 overflow-x-auto pb-2" role="radiogroup" aria-label="Select a date">
+              {generateDates().map((d, i) => {
                 const date = new Date(d + 'T12:00:00');
                 const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
                 const dayNum = date.getDate();
@@ -360,7 +360,24 @@ export default function BookingPortalPage() {
                 return (
                   <button
                     key={d}
+                    role="radio"
+                    aria-checked={selectedDate === d}
+                    aria-label={`${dayName} ${month} ${dayNum}`}
+                    tabIndex={selectedDate === d || (!selectedDate && i === 0) ? 0 : -1}
                     onClick={() => setSelectedDate(d)}
+                    onKeyDown={(e) => {
+                      const dates = generateDates();
+                      const idx = dates.indexOf(d);
+                      if (e.key === 'ArrowRight' && idx < dates.length - 1) {
+                        e.preventDefault();
+                        setSelectedDate(dates[idx + 1]);
+                        (e.currentTarget.nextElementSibling as HTMLElement)?.focus();
+                      } else if (e.key === 'ArrowLeft' && idx > 0) {
+                        e.preventDefault();
+                        setSelectedDate(dates[idx - 1]);
+                        (e.currentTarget.previousElementSibling as HTMLElement)?.focus();
+                      }
+                    }}
                     className={`flex-shrink-0 w-16 py-2 rounded-xl text-center transition-colors ${
                       selectedDate === d
                         ? 'bg-sage-600 text-white'
@@ -400,10 +417,12 @@ export default function BookingPortalPage() {
                       <p className="text-xs text-slate-400 mb-2 flex items-center gap-1">
                         <User size={12} /> {staffName}
                       </p>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={`Time slots for ${staffName}`}>
                         {staffSlots.map((slot) => (
                           <button
                             key={`${slot.staffId}-${slot.time}`}
+                            role="radio"
+                            aria-checked={selectedSlot?.time === slot.time && selectedSlot?.staffId === slot.staffId}
                             onClick={() => {
                               setSelectedSlot(slot);
                               setStep('details');
