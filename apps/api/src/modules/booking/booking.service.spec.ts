@@ -1,5 +1,5 @@
 import { Test } from '@nestjs/testing';
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { BookingService } from './booking.service';
 import { PrismaService } from '../../common/prisma.service';
 import { NotificationService } from '../notification/notification.service';
@@ -298,6 +298,30 @@ describe('BookingService', () => {
       );
     });
 
+    it('logs initial deposit request in customFields for deposit-required services', async () => {
+      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', durationMins: 60, depositRequired: true, depositAmount: 100 } as any);
+      prisma.booking.findFirst.mockResolvedValue(null);
+      prisma.booking.create.mockResolvedValue({
+        id: 'b1',
+        customer: {},
+        service: { depositRequired: true, depositAmount: 100 },
+        staff: {},
+      } as any);
+      prisma.booking.update.mockResolvedValue({ id: 'b1' } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+
+      await bookingService.create('biz1', createData);
+
+      expect(prisma.booking.update).toHaveBeenCalledWith({
+        where: { id: 'b1' },
+        data: {
+          customFields: {
+            depositRequestLog: [{ sentAt: expect.any(String) }],
+          },
+        },
+      });
+    });
+
     it('skips reminder if booking is <24h away', async () => {
       const soonDate = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
       prisma.service.findFirst.mockResolvedValue({ id: 'svc1', durationMins: 30 } as any);
@@ -311,6 +335,57 @@ describe('BookingService', () => {
       });
 
       expect(prisma.reminder.create).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('sendDepositRequest', () => {
+    it('sends notification and logs event in customFields', async () => {
+      const booking = {
+        id: 'b1',
+        businessId: 'biz1',
+        status: 'PENDING_DEPOSIT',
+        customFields: {},
+        customer: { name: 'Test' },
+        service: { name: 'Botox', depositRequired: true, depositAmount: 100 },
+        staff: null,
+      };
+      prisma.booking.findFirst.mockResolvedValue(booking as any);
+      prisma.booking.update.mockResolvedValue({ ...booking, customFields: { depositRequestLog: [{ sentAt: expect.any(String) }] } } as any);
+
+      await bookingService.sendDepositRequest('biz1', 'b1');
+
+      expect(mockNotificationService.sendDepositRequest).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'b1' }),
+      );
+      expect(prisma.booking.update).toHaveBeenCalledWith({
+        where: { id: 'b1', businessId: 'biz1' },
+        data: {
+          customFields: {
+            depositRequestLog: [{ sentAt: expect.any(String) }],
+          },
+        },
+        include: { customer: true, service: true, staff: true },
+      });
+    });
+
+    it('throws NotFoundException if booking not found', async () => {
+      prisma.booking.findFirst.mockResolvedValue(null);
+
+      await expect(bookingService.sendDepositRequest('biz1', 'b1')).rejects.toThrow(NotFoundException);
+    });
+
+    it('throws BadRequestException if booking not PENDING_DEPOSIT', async () => {
+      prisma.booking.findFirst.mockResolvedValue({
+        id: 'b1',
+        businessId: 'biz1',
+        status: 'CONFIRMED',
+        customFields: {},
+        customer: {},
+        service: {},
+        staff: null,
+      } as any);
+
+      await expect(bookingService.sendDepositRequest('biz1', 'b1')).rejects.toThrow(BadRequestException);
     });
   });
 

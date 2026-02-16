@@ -186,6 +186,13 @@
     "with_staff": "con {{name}}"
   },
 
+  "booking": {
+    "send_deposit_request": "Enviar Solicitud de Depósito",
+    "deposit_request_sent": "Solicitud de depósito enviada",
+    "sending_deposit": "Enviando...",
+    "deposit_sent_success": "¡Enviado!"
+  },
+
   "bookings": {
     "title": "{{entity}}s",
     "all_statuses": "Todos los estados",

@@ -186,6 +186,13 @@
     "with_staff": "with {{name}}"
   },
 
+  "booking": {
+    "send_deposit_request": "Send Deposit Request",
+    "deposit_request_sent": "Deposit request sent",
+    "sending_deposit": "Sending...",
+    "deposit_sent_success": "Sent!"
+  },
+
   "bookings": {
     "title": "{{entity}}s",
     "all_statuses": "All statuses",

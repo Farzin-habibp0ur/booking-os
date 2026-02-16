@@ -1095,7 +1095,7 @@ export default function InboxPage() {
                   </button>
                 </div>
                 {customerBookings
-                  .filter((b: any) => ['PENDING', 'CONFIRMED'].includes(b.status))
+                  .filter((b: any) => ['PENDING', 'PENDING_DEPOSIT', 'CONFIRMED'].includes(b.status))
                   .slice(0, 3)
                   .map((b: any) => (
                     <div key={b.id} className="border rounded p-2 mb-1.5">
@@ -1114,7 +1114,9 @@ export default function InboxPage() {
                             'text-[9px] px-1.5 py-0.5 rounded-full',
                             b.status === 'CONFIRMED'
                               ? 'bg-sage-50 text-sage-700'
-                              : 'bg-amber-50 text-amber-700',
+                              : b.status === 'PENDING_DEPOSIT'
+                                ? 'bg-amber-50 text-amber-700'
+                                : 'bg-lavender-50 text-lavender-700',
                           )}
                         >
                           {t(`status.${b.status.toLowerCase()}`)}
@@ -1127,9 +1129,26 @@ export default function InboxPage() {
                           minute: '2-digit',
                         })}
                       </p>
+                      {b.status === 'PENDING_DEPOSIT' && (
+                        <button
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            try {
+                              await api.post(`/bookings/${b.id}/send-deposit-request`);
+                              toast(t('booking.deposit_request_sent'));
+                              if (customer) loadCustomerBookings(customer.id);
+                            } catch (err) {
+                              console.error(err);
+                            }
+                          }}
+                          className="mt-1 text-[10px] text-amber-700 hover:text-amber-800 font-medium flex items-center gap-1"
+                        >
+                          <Send size={10} /> {t('booking.send_deposit_request')}
+                        </button>
+                      )}
                     </div>
                   ))}
-                {customerBookings.filter((b: any) => ['PENDING', 'CONFIRMED'].includes(b.status))
+                {customerBookings.filter((b: any) => ['PENDING', 'PENDING_DEPOSIT', 'CONFIRMED'].includes(b.status))
                   .length === 0 && (
                   <p className="text-xs text-slate-400">{t('inbox.no_upcoming_bookings')}</p>
                 )}

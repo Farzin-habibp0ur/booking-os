@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { api } from '@/lib/api';
-import { X, Calendar, Clock, User, MessageSquare, AlertTriangle, Repeat } from 'lucide-react';
+import { X, Calendar, Clock, User, MessageSquare, AlertTriangle, Repeat, Send } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useI18n } from '@/lib/i18n';
 
@@ -36,6 +36,8 @@ export default function BookingDetailModal({
     null,
   );
   const [cancelScope, setCancelScope] = useState<'single' | 'future' | 'all' | null>(null);
+  const [sendingDeposit, setSendingDeposit] = useState(false);
+  const [depositSent, setDepositSent] = useState(false);
   const { t } = useI18n();
 
   if (!isOpen || !booking) return null;
@@ -83,6 +85,19 @@ export default function BookingDetailModal({
       console.error(e);
     }
     setUpdating('');
+  };
+
+  const handleSendDeposit = async () => {
+    setSendingDeposit(true);
+    try {
+      const updated = await api.post<any>(`/bookings/${booking.id}/send-deposit-request`);
+      onUpdated(updated);
+      setDepositSent(true);
+      setTimeout(() => setDepositSent(false), 2000);
+    } catch (e) {
+      console.error(e);
+    }
+    setSendingDeposit(false);
   };
 
   const getAvailableActions = () => {
@@ -318,7 +333,13 @@ export default function BookingDetailModal({
                 <div className="w-1.5 h-1.5 rounded-full bg-slate-400" />
                 Created {new Date(booking.createdAt).toLocaleString()}
               </div>
-              {booking.status !== 'PENDING' && booking.status !== 'CONFIRMED' && (
+              {(booking.customFields?.depositRequestLog || []).map((entry: any, i: number) => (
+                <div key={i} className="flex items-center gap-2 text-xs text-amber-700">
+                  <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                  {t('booking.deposit_request_sent')} · {new Date(entry.sentAt).toLocaleString()}
+                </div>
+              ))}
+              {booking.status !== 'PENDING' && booking.status !== 'CONFIRMED' && booking.status !== 'PENDING_DEPOSIT' && (
                 <div className="flex items-center gap-2 text-xs text-slate-500">
                   <div
                     className={cn(
@@ -358,6 +379,22 @@ export default function BookingDetailModal({
                 </button>
               ))}
             </div>
+          )}
+
+          {/* Send Deposit Request button */}
+          {booking.status === 'PENDING_DEPOSIT' && (
+            <button
+              onClick={handleSendDeposit}
+              disabled={sendingDeposit}
+              className="w-full py-2 border border-amber-300 text-amber-700 rounded-xl text-sm font-medium hover:bg-amber-50 transition-colors flex items-center justify-center gap-2"
+            >
+              <Send size={14} />
+              {depositSent
+                ? t('booking.deposit_sent_success')
+                : sendingDeposit
+                  ? t('booking.sending_deposit')
+                  : t('booking.send_deposit_request')}
+            </button>
           )}
 
           {/* Reschedule button (available for PENDING, CONFIRMED) */}

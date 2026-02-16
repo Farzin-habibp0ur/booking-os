@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma.service';
 import { NotificationService } from '../notification/notification.service';
 import { BusinessService } from '../business/business.service';
@@ -137,6 +137,10 @@ export class BookingService {
     // Fire-and-forget notification
     if (isDepositRequired) {
       this.notificationService.sendDepositRequest(booking).catch(() => {});
+      await this.prisma.booking.update({
+        where: { id: booking.id },
+        data: { customFields: { depositRequestLog: [{ sentAt: new Date().toISOString() }] } },
+      });
     } else {
       this.notificationService.sendBookingConfirmation(booking).catch(() => {});
     }
@@ -253,6 +257,31 @@ export class BookingService {
     }
 
     return booking;
+  }
+
+  async sendDepositRequest(businessId: string, id: string) {
+    const booking = await this.prisma.booking.findFirst({
+      where: { id, businessId },
+      include: { customer: true, service: true, staff: true },
+    });
+    if (!booking) throw new NotFoundException('Booking not found');
+    if (booking.status !== 'PENDING_DEPOSIT') {
+      throw new BadRequestException('Booking is not in PENDING_DEPOSIT status');
+    }
+
+    await this.notificationService.sendDepositRequest(booking);
+
+    const existingFields = (booking.customFields as any) || {};
+    const log = Array.isArray(existingFields.depositRequestLog)
+      ? existingFields.depositRequestLog
+      : [];
+    log.push({ sentAt: new Date().toISOString() });
+
+    return this.prisma.booking.update({
+      where: { id, businessId },
+      data: { customFields: { ...existingFields, depositRequestLog: log } },
+      include: { customer: true, service: true, staff: true },
+    });
   }
 
   async getCalendar(businessId: string, dateFrom: string, dateTo: string, staffId?: string) {

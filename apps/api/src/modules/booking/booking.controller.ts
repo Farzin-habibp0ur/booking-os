@@ -54,4 +54,9 @@ export class BookingController {
   ) {
     return this.bookingService.updateStatus(businessId, id, body.status);
   }
+
+  @Post(':id/send-deposit-request')
+  sendDepositRequest(@BusinessId() businessId: string, @Param('id') id: string) {
+    return this.bookingService.sendDepositRequest(businessId, id);
+  }
 }
