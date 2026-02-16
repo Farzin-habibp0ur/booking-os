@@ -35,6 +35,7 @@ describe('Auth Integration', () => {
       slug: 'glow-clinic',
       verticalPack: 'AESTHETIC',
       defaultLocale: 'en',
+      packConfig: { requireConsultation: true },
     },
   };
 
@@ -115,6 +116,7 @@ describe('Auth Integration', () => {
       expect(res.status).toBe(200);
       expect(res.body.id).toBe('staff1');
       expect(res.body.business.name).toBe('Glow Clinic');
+      expect(res.body.business.packConfig).toEqual({ requireConsultation: true });
     });
 
     it('returns 401 without auth token', async () => {

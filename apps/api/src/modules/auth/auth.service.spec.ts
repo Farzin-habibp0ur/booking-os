@@ -38,6 +38,7 @@ describe('AuthService', () => {
       slug: 'glow-clinic',
       verticalPack: 'AESTHETIC',
       defaultLocale: 'en',
+      packConfig: { requireConsultation: true },
     },
   };
 
@@ -214,6 +215,7 @@ describe('AuthService', () => {
       expect(result.name).toBe('Sarah Johnson');
       expect(result.business.name).toBe('Glow Clinic');
       expect(result.business.verticalPack).toBe('AESTHETIC');
+      expect(result.business.packConfig).toEqual({ requireConsultation: true });
     });
 
     it('throws UnauthorizedException when staff not found', async () => {
