@@ -1,10 +1,12 @@
-import { Controller, Get, UseGuards, Inject, forwardRef } from '@nestjs/common';
+import { Controller, Get, Patch, Body, UseGuards, Inject, forwardRef } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { DashboardService } from './dashboard.service';
 import { AiService } from '../ai/ai.service';
 import { BusinessId } from '../../common/decorators';
 import { TenantGuard } from '../../common/tenant.guard';
+import { RolesGuard, Roles } from '../../common/roles.guard';
+import { DismissNudgeDto } from '../../common/dto';
 
 @ApiTags('Dashboard')
 @Controller('dashboard')
@@ -18,6 +20,13 @@ export class DashboardController {
   @Get()
   getDashboard(@BusinessId() businessId: string) {
     return this.dashboardService.getDashboard(businessId);
+  }
+
+  @Patch('dismiss-nudge')
+  @UseGuards(RolesGuard)
+  @Roles('ADMIN')
+  dismissNudge(@BusinessId() businessId: string, @Body() dto: DismissNudgeDto) {
+    return this.dashboardService.dismissNudge(businessId, dto.nudgeId);
   }
 
   @Get('ai-usage')

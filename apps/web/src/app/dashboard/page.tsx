@@ -6,6 +6,7 @@ import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { PageSkeleton } from '@/components/skeleton';
 import { useI18n } from '@/lib/i18n';
+import { useAuth } from '@/lib/auth';
 import {
   Calendar,
   MessageSquare,
@@ -19,6 +20,11 @@ import {
   CheckCircle2,
   XCircle,
   CircleDot,
+  AlertTriangle,
+  Check,
+  Circle,
+  X,
+  Target,
 } from 'lucide-react';
 
 const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
@@ -31,11 +37,32 @@ const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
   CANCELLED: { bg: 'bg-slate-100', text: 'text-slate-600' },
 };
 
+const NUDGE_MESSAGES: Record<string, string> = {
+  nudge_0: 'nudge_get_started',
+  nudge_1: 'nudge_first_done',
+  nudge_3: 'nudge_gaining_momentum',
+  nudge_5: 'nudge_halfway_there',
+  nudge_10: 'nudge_ten_complete',
+};
+
+const CHECKLIST_LABELS: Record<string, string> = {
+  business_name: 'checklist_business_name',
+  staff_added: 'checklist_staff_added',
+  services_created: 'checklist_services_created',
+  whatsapp_connected: 'checklist_whatsapp_connected',
+  templates_ready: 'checklist_templates_ready',
+  first_booking: 'checklist_first_booking',
+  first_deposit: 'checklist_first_deposit',
+  roi_baseline: 'checklist_roi_baseline',
+};
+
 export default function DashboardPage() {
   const router = useRouter();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const { t } = useI18n();
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'ADMIN';
 
   useEffect(() => {
     // Check if onboarding is complete; redirect to setup if not
@@ -52,6 +79,22 @@ export default function DashboardPage() {
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
+
+  const handleDismissNudge = async (nudgeId: string) => {
+    try {
+      await api.patch('/dashboard/dismiss-nudge', { nudgeId });
+      setData((prev: any) => ({
+        ...prev,
+        milestoneProgress: {
+          ...prev.milestoneProgress,
+          currentNudge: null,
+          dismissedNudges: [...(prev.milestoneProgress.dismissedNudges || []), nudgeId],
+        },
+      }));
+    } catch {
+      // Silently handle
+    }
+  };
 
   if (loading) return <PageSkeleton />;
   if (!data)
@@ -70,6 +113,15 @@ export default function DashboardPage() {
       : m.totalBookingsThisWeek > 0
         ? 100
         : 0;
+
+  const checklist = data.goLiveChecklist;
+  const milestone = data.milestoneProgress;
+  const attention = data.attentionNeeded;
+
+  const hasAttentionItems =
+    (attention?.depositPendingBookings?.length || 0) > 0 ||
+    (attention?.overdueConversations?.length || 0) > 0 ||
+    (attention?.tomorrowBookings?.length || 0) > 0;
 
   return (
     <div className="p-6 space-y-6">
@@ -185,7 +237,7 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        {/* Consult → Treatment Conversion */}
+        {/* Consult -> Treatment Conversion */}
         <div className="bg-white rounded-2xl shadow-soft p-6">
           <div className="flex items-center justify-between">
             <p className="text-sm text-slate-500">Consult → Treatment</p>
@@ -224,6 +276,218 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* P1-20: Go-Live Checklist (ADMIN only, hidden when all complete) */}
+      {isAdmin && checklist && !checklist.allComplete && (
+        <div className="bg-white rounded-2xl shadow-soft p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-semibold text-slate-900">{t('dashboard.go_live_title')}</h2>
+            <span className="text-xs text-slate-500">
+              {t('dashboard.go_live_progress', {
+                done: checklist.items.filter((i: any) => i.done).length,
+                total: checklist.items.length,
+              })}
+            </span>
+          </div>
+          <div className="w-full bg-slate-100 rounded-full h-2 mb-4">
+            <div
+              className="h-2 rounded-full bg-sage-500 transition-all"
+              style={{
+                width: `${(checklist.items.filter((i: any) => i.done).length / checklist.items.length) * 100}%`,
+              }}
+            />
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {checklist.items.map((item: any) => (
+              <div
+                key={item.key}
+                className={cn(
+                  'flex items-center gap-2.5 p-3 rounded-xl',
+                  item.done ? 'bg-sage-50/50' : 'bg-slate-50/60',
+                )}
+              >
+                {item.done ? (
+                  <Check size={16} className="text-sage-600 shrink-0" />
+                ) : (
+                  <Circle size={16} className="text-slate-300 shrink-0" />
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className={cn('text-xs', item.done ? 'text-sage-700' : 'text-slate-600')}>
+                    {t(`dashboard.${CHECKLIST_LABELS[item.key]}`)}
+                  </p>
+                  {!item.done && (
+                    <button
+                      onClick={() => router.push(item.fixUrl)}
+                      className="text-[10px] text-sage-600 hover:text-sage-700 flex items-center gap-0.5 mt-0.5 transition-colors"
+                    >
+                      {t('dashboard.fix')} <ArrowRight size={10} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* P1-21: First 10 Bookings Milestone */}
+      {milestone && (milestone.completedBookings < 10 || milestone.currentNudge) && (
+        <div className="bg-white rounded-2xl shadow-soft p-6">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Target size={18} className="text-lavender-600" />
+              <h2 className="font-semibold text-slate-900">{t('dashboard.milestone_title')}</h2>
+            </div>
+            <span className="text-xs text-slate-500">
+              {t('dashboard.milestone_progress', {
+                count: Math.min(milestone.completedBookings, 10),
+              })}
+            </span>
+          </div>
+          <div className="w-full bg-slate-100 rounded-full h-2 mb-4">
+            <div
+              className="h-2 rounded-full bg-lavender-500 transition-all"
+              style={{
+                width: `${Math.min((milestone.completedBookings / 10) * 100, 100)}%`,
+              }}
+            />
+          </div>
+          {milestone.currentNudge && (
+            <div className="bg-lavender-50 border border-lavender-100 rounded-xl p-4 flex items-start justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-lavender-900">
+                  {t(`dashboard.${NUDGE_MESSAGES[milestone.currentNudge.id]}`)}
+                </p>
+                <button
+                  onClick={() => router.push(milestone.currentNudge.link)}
+                  className="text-xs text-lavender-600 hover:text-lavender-700 flex items-center gap-1 mt-2 transition-colors font-medium"
+                >
+                  {t('dashboard.nudge_action')} <ArrowRight size={12} />
+                </button>
+              </div>
+              <button
+                onClick={() => handleDismissNudge(milestone.currentNudge.id)}
+                className="text-lavender-400 hover:text-lavender-600 transition-colors shrink-0 mt-0.5"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* P1-18: Attention Needed */}
+      {hasAttentionItems && (
+        <div>
+          <div className="flex items-center gap-2 mb-4">
+            <AlertTriangle size={18} className="text-amber-500" />
+            <h2 className="font-semibold text-slate-900">{t('dashboard.attention_needed')}</h2>
+          </div>
+          <div className="grid grid-cols-3 gap-4">
+            {/* Deposit Pending */}
+            {attention.depositPendingBookings.length > 0 && (
+              <div className="bg-white rounded-2xl shadow-soft p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <DollarSign size={16} className="text-amber-500" />
+                    <p className="text-sm font-medium text-slate-800">
+                      {t('dashboard.deposit_pending')}
+                    </p>
+                  </div>
+                  <span className="text-[10px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full font-medium">
+                    {attention.depositPendingBookings.length}
+                  </span>
+                </div>
+                <div className="space-y-2 mb-3">
+                  {attention.depositPendingBookings.slice(0, 3).map((b: any) => (
+                    <div key={b.id} className="flex items-center justify-between text-xs">
+                      <span className="text-slate-700 truncate">{b.customer?.name}</span>
+                      <span className="text-slate-400">{b.service?.name}</span>
+                    </div>
+                  ))}
+                </div>
+                <button
+                  onClick={() => router.push('/bookings?status=PENDING_DEPOSIT')}
+                  className="text-xs text-sage-600 hover:text-sage-700 flex items-center gap-1 transition-colors"
+                >
+                  {t('dashboard.view_deposit_pending')} <ArrowRight size={12} />
+                </button>
+              </div>
+            )}
+
+            {/* Overdue Replies */}
+            {attention.overdueConversations.length > 0 && (
+              <div className="bg-white rounded-2xl shadow-soft p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <MessageSquare size={16} className="text-amber-500" />
+                    <p className="text-sm font-medium text-slate-800">
+                      {t('dashboard.overdue_replies')}
+                    </p>
+                  </div>
+                  <span className="text-[10px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full font-medium">
+                    {attention.overdueConversations.length}
+                  </span>
+                </div>
+                <div className="space-y-2 mb-3">
+                  {attention.overdueConversations.slice(0, 3).map((c: any) => (
+                    <div key={c.id} className="flex items-center justify-between text-xs">
+                      <span className="text-slate-700 truncate">{c.customer?.name}</span>
+                      <span className="text-slate-400">
+                        {c.lastMessageAt && t('dashboard.waiting_since', {
+                          time: timeAgo(new Date(c.lastMessageAt), t),
+                        })}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <button
+                  onClick={() => router.push('/inbox?filter=overdue')}
+                  className="text-xs text-sage-600 hover:text-sage-700 flex items-center gap-1 transition-colors"
+                >
+                  {t('dashboard.view_overdue')} <ArrowRight size={12} />
+                </button>
+              </div>
+            )}
+
+            {/* Tomorrow's Schedule */}
+            {attention.tomorrowBookings.length > 0 && (
+              <div className="bg-white rounded-2xl shadow-soft p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Calendar size={16} className="text-amber-500" />
+                    <p className="text-sm font-medium text-slate-800">
+                      {t('dashboard.tomorrow_schedule')}
+                    </p>
+                  </div>
+                  <span className="text-[10px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full font-medium">
+                    {attention.tomorrowBookings.length}
+                  </span>
+                </div>
+                <div className="space-y-2 mb-3">
+                  {attention.tomorrowBookings.slice(0, 3).map((b: any) => (
+                    <div key={b.id} className="flex items-center justify-between text-xs">
+                      <span className="text-slate-700 truncate">{b.customer?.name}</span>
+                      <span className="text-slate-400">
+                        {new Date(b.startTime).toLocaleTimeString('en-US', {
+                          hour: 'numeric',
+                          minute: '2-digit',
+                        })}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <button
+                  onClick={() => router.push('/calendar')}
+                  className="text-xs text-sage-600 hover:text-sage-700 flex items-center gap-1 transition-colors"
+                >
+                  {t('dashboard.view_tomorrow')} <ArrowRight size={12} />
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Today's Appointments + Unassigned */}
       <div className="grid grid-cols-2 gap-6">

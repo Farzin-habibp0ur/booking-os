@@ -566,6 +566,14 @@ export class CreateRecurringSeriesDto {
   notes?: string;
 }
 
+// ---- Dashboard DTOs ----
+
+export class DismissNudgeDto {
+  @IsString()
+  @IsNotEmpty()
+  nudgeId!: string;
+}
+
 export class CancelRecurringSeriesDto {
   @IsEnum(['single', 'future', 'all'], {
     message: 'scope must be one of: single, future, all',
