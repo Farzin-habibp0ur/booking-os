@@ -23,7 +23,7 @@ export class TranslationController {
   }
 
   @Post()
-  @Roles('OWNER', 'ADMIN')
+  @Roles('ADMIN')
   upsert(
     @BusinessId() businessId: string,
     @Body() body: { locale: string; key: string; value: string },
@@ -32,7 +32,7 @@ export class TranslationController {
   }
 
   @Delete(':locale/:key')
-  @Roles('OWNER', 'ADMIN')
+  @Roles('ADMIN')
   remove(
     @BusinessId() businessId: string,
     @Param('locale') locale: string,

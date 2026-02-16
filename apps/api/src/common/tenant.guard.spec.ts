@@ -18,7 +18,7 @@ describe('TenantGuard', () => {
   }
 
   it('allows access when user has businessId', () => {
-    const context = createMockContext({ businessId: 'biz1', role: 'OWNER' });
+    const context = createMockContext({ businessId: 'biz1', role: 'ADMIN' });
     expect(guard.canActivate(context)).toBe(true);
   });
 
@@ -35,7 +35,7 @@ describe('TenantGuard', () => {
   });
 
   it('denies access when user has no businessId', () => {
-    const context = createMockContext({ role: 'OWNER' });
+    const context = createMockContext({ role: 'ADMIN' });
     expect(guard.canActivate(context)).toBe(false);
   });
 

@@ -565,8 +565,8 @@ function SetupPage() {
                   className="border border-slate-200 rounded-xl px-3 py-2 text-sm"
                 >
                   <option value="AGENT">{t('setup.role_agent')}</option>
+                  <option value="SERVICE_PROVIDER">{t('setup.role_service_provider')}</option>
                   <option value="ADMIN">{t('setup.role_admin')}</option>
-                  <option value="OWNER">{t('setup.role_owner')}</option>
                 </select>
                 <button
                   onClick={addStaff}

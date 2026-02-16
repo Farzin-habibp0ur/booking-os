@@ -60,7 +60,7 @@ async function main() {
       name: 'Dr. Sarah Chen',
       email: 'sarah@glowclinic.com',
       passwordHash: await hashPassword('password123'),
-      role: 'OWNER',
+      role: 'ADMIN',
     },
   });
 
@@ -74,7 +74,17 @@ async function main() {
     },
   });
 
-  console.log(`✅ Staff: ${owner.name}, ${agent.name}`);
+  const provider = await prisma.staff.create({
+    data: {
+      businessId: business.id,
+      name: 'Dr. Emily Park',
+      email: 'emily@glowclinic.com',
+      passwordHash: await hashPassword('password123'),
+      role: 'SERVICE_PROVIDER',
+    },
+  });
+
+  console.log(`✅ Staff: ${owner.name}, ${agent.name}, ${provider.name}`);
 
   // Create working hours (Mon-Fri 9am-5pm for owner, Mon-Sat 8am-6pm for agent)
   const workDays = [1, 2, 3, 4, 5]; // Mon-Fri
@@ -99,7 +109,20 @@ async function main() {
     });
   }
 
-  console.log(`✅ Working hours created for both staff`);
+  // Working hours for provider (Mon-Fri 10am-6pm)
+  for (const day of [0, 1, 2, 3, 4, 5, 6]) {
+    await prisma.workingHours.create({
+      data: {
+        staffId: provider.id,
+        dayOfWeek: day,
+        startTime: '10:00',
+        endTime: '18:00',
+        isOff: !workDays.includes(day),
+      },
+    });
+  }
+
+  console.log(`✅ Working hours created for all staff`);
 
   // Create services
   const services = await Promise.all([

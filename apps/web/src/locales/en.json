@@ -289,7 +289,7 @@
     "password_placeholder": "Password",
     "role_agent": "Agent",
     "role_admin": "Admin",
-    "role_owner": "Owner"
+    "role_service_provider": "Service Provider"
   },
 
   "days": {
@@ -523,7 +523,7 @@
     "add_another_staff": "Add another staff member",
     "role_agent": "Agent (Front Desk)",
     "role_admin": "Admin",
-    "role_owner": "Owner",
+    "role_service_provider": "Service Provider",
     "services_title": "Define Services",
     "services_subtitle": "What services does your business offer?",
     "add_service": "Add a service",

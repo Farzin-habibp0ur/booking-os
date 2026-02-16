@@ -14,7 +14,7 @@ jest.mock('next/link', () => ({ children, href, ...rest }: any) => (
 ));
 jest.mock('@/lib/auth', () => ({
   useAuth: () => ({
-    user: { id: '1', name: 'Sarah', role: 'OWNER', businessId: 'b1' },
+    user: { id: '1', name: 'Sarah', role: 'ADMIN', businessId: 'b1' },
     loading: false,
   }),
 }));
@@ -60,7 +60,7 @@ describe('StaffPage', () => {
         id: '1',
         name: 'Sarah',
         email: 'sarah@test.com',
-        role: 'OWNER',
+        role: 'ADMIN',
         isActive: true,
       },
     ]);
@@ -69,7 +69,7 @@ describe('StaffPage', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Sarah')).toBeInTheDocument();
-      expect(screen.getByText('OWNER')).toBeInTheDocument();
+      expect(screen.getByText('ADMIN')).toBeInTheDocument();
     });
   });
 
@@ -89,7 +89,7 @@ describe('StaffPage', () => {
         id: '1',
         name: 'Sarah',
         email: 'sarah@test.com',
-        role: 'OWNER',
+        role: 'ADMIN',
         isActive: true,
       },
     ]);

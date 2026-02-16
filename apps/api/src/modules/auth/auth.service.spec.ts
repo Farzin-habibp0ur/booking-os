@@ -28,7 +28,7 @@ describe('AuthService', () => {
     name: 'Sarah Johnson',
     email: 'sarah@glowclinic.com',
     passwordHash: '$2b$10$hashedpassword',
-    role: 'OWNER',
+    role: 'ADMIN',
     isActive: true,
     businessId: 'biz1',
     locale: 'en',
@@ -77,7 +77,7 @@ describe('AuthService', () => {
         id: 'staff-new',
         name: 'Owner',
         email: 'owner@new.com',
-        role: 'OWNER',
+        role: 'ADMIN',
         businessId: 'biz-new',
       } as any);
 
@@ -91,13 +91,13 @@ describe('AuthService', () => {
       expect(result.accessToken).toBe('mock-token');
       expect(result.refreshToken).toBe('mock-token');
       expect(result.staff.email).toBe('owner@new.com');
-      expect(result.staff.role).toBe('OWNER');
+      expect(result.staff.role).toBe('ADMIN');
       expect(prisma.business.create).toHaveBeenCalled();
       expect(prisma.staff.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           businessId: 'biz-new',
           email: 'owner@new.com',
-          role: 'OWNER',
+          role: 'ADMIN',
         }),
       });
     });
@@ -165,7 +165,7 @@ describe('AuthService', () => {
         sub: 'staff1',
         email: 'sarah@glowclinic.com',
         businessId: 'biz1',
-        role: 'OWNER',
+        role: 'ADMIN',
       });
     });
   });

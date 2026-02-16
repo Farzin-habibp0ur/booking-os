@@ -71,6 +71,6 @@ export function getAuthToken(
     sub: overrides.sub ?? 'staff1',
     email: overrides.email ?? 'test@test.com',
     businessId: overrides.businessId ?? 'biz1',
-    role: overrides.role ?? 'OWNER',
+    role: overrides.role ?? 'ADMIN',
   });
 }

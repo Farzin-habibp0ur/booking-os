@@ -4,7 +4,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { BusinessService } from './business.service';
 import { BusinessId } from '../../common/decorators';
 import { TenantGuard } from '../../common/tenant.guard';
-import { RolesGuard, Roles } from '../../common/guards/roles.guard';
+import { RolesGuard, Roles } from '../../common/roles.guard';
 import { UpdateBusinessDto } from '../../common/dto';
 
 @ApiTags('Business')
@@ -19,7 +19,7 @@ export class BusinessController {
   }
 
   @Patch()
-  @Roles('OWNER')
+  @Roles('ADMIN')
   update(@BusinessId() businessId: string, @Body() body: UpdateBusinessDto) {
     return this.businessService.update(businessId, body);
   }
@@ -30,7 +30,7 @@ export class BusinessController {
   }
 
   @Patch('notification-settings')
-  @Roles('OWNER')
+  @Roles('ADMIN')
   async updateNotificationSettings(
     @BusinessId() businessId: string,
     @Body() body: { channels?: string; followUpDelayHours?: number },

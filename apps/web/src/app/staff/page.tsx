@@ -141,9 +141,9 @@ export default function StaffPage() {
                     <span
                       className={cn(
                         'text-xs px-2 py-0.5 rounded-full',
-                        s.role === 'OWNER'
+                        s.role === 'ADMIN'
                           ? 'bg-lavender-100 text-lavender-700'
-                          : s.role === 'ADMIN'
+                          : s.role === 'SERVICE_PROVIDER'
                             ? 'bg-sage-100 text-sage-700'
                             : 'bg-slate-100 text-slate-700',
                       )}
@@ -409,8 +409,8 @@ function StaffForm({ onClose, onCreated }: { onClose: () => void; onCreated: () 
             className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
           >
             <option value="AGENT">{t('staff.role_agent')}</option>
+            <option value="SERVICE_PROVIDER">{t('staff.role_service_provider')}</option>
             <option value="ADMIN">{t('staff.role_admin')}</option>
-            <option value="OWNER">{t('staff.role_owner')}</option>
           </select>
           <div className="flex gap-2 justify-end">
             <button

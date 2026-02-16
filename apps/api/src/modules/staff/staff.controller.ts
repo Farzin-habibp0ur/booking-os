@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Body, UseGuards, Req, ForbiddenException } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { StaffService } from './staff.service';
@@ -29,37 +29,37 @@ export class StaffController {
   }
 
   @Post()
-  @Roles('OWNER', 'ADMIN')
+  @Roles('ADMIN')
   create(@BusinessId() businessId: string, @Body() body: CreateStaffDto) {
     return this.staffService.create(businessId, body);
   }
 
   @Post('invite')
-  @Roles('OWNER', 'ADMIN')
+  @Roles('ADMIN')
   invite(@BusinessId() businessId: string, @Body() body: InviteStaffDto) {
     return this.staffService.inviteStaff(businessId, body);
   }
 
   @Post(':id/resend-invite')
-  @Roles('OWNER', 'ADMIN')
+  @Roles('ADMIN')
   resendInvite(@BusinessId() businessId: string, @Param('id') id: string) {
     return this.staffService.resendInvite(businessId, id);
   }
 
   @Delete(':id/invite')
-  @Roles('OWNER', 'ADMIN')
+  @Roles('ADMIN')
   revokeInvite(@BusinessId() businessId: string, @Param('id') id: string) {
     return this.staffService.revokeInvite(businessId, id);
   }
 
   @Patch(':id')
-  @Roles('OWNER', 'ADMIN')
+  @Roles('ADMIN')
   update(@BusinessId() businessId: string, @Param('id') id: string, @Body() body: UpdateStaffDto) {
     return this.staffService.update(businessId, id, body);
   }
 
   @Delete(':id')
-  @Roles('OWNER')
+  @Roles('ADMIN')
   deactivate(@BusinessId() businessId: string, @Param('id') id: string) {
     return this.staffService.deactivate(businessId, id);
   }
@@ -70,12 +70,16 @@ export class StaffController {
   }
 
   @Patch(':id/working-hours')
-  @Roles('OWNER', 'ADMIN')
+  @Roles('ADMIN', 'SERVICE_PROVIDER')
   setWorkingHours(
     @BusinessId() businessId: string,
     @Param('id') id: string,
     @Body() body: SetWorkingHoursDto,
+    @Req() req: any,
   ) {
+    if (req.user.role === 'SERVICE_PROVIDER' && req.user.sub !== id) {
+      throw new ForbiddenException('Service providers can only modify their own working hours');
+    }
     return this.availabilityService.setStaffWorkingHours(businessId, id, body.hours);
   }
 
@@ -85,18 +89,30 @@ export class StaffController {
   }
 
   @Post(':id/time-off')
-  @Roles('OWNER', 'ADMIN')
+  @Roles('ADMIN', 'SERVICE_PROVIDER')
   addTimeOff(
     @BusinessId() businessId: string,
     @Param('id') id: string,
     @Body() body: AddTimeOffDto,
+    @Req() req: any,
   ) {
+    if (req.user.role === 'SERVICE_PROVIDER' && req.user.sub !== id) {
+      throw new ForbiddenException('Service providers can only modify their own time off');
+    }
     return this.availabilityService.addTimeOff(businessId, id, body);
   }
 
   @Delete(':id/time-off/:timeOffId')
-  @Roles('OWNER', 'ADMIN')
-  removeTimeOff(@BusinessId() businessId: string, @Param('timeOffId') timeOffId: string) {
+  @Roles('ADMIN', 'SERVICE_PROVIDER')
+  removeTimeOff(
+    @BusinessId() businessId: string,
+    @Param('id') id: string,
+    @Param('timeOffId') timeOffId: string,
+    @Req() req: any,
+  ) {
+    if (req.user.role === 'SERVICE_PROVIDER' && req.user.sub !== id) {
+      throw new ForbiddenException('Service providers can only modify their own time off');
+    }
     return this.availabilityService.removeTimeOff(businessId, timeOffId);
   }
 }

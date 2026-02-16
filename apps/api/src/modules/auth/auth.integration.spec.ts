@@ -25,7 +25,7 @@ describe('Auth Integration', () => {
     name: 'Sarah Johnson',
     email: 'sarah@glowclinic.com',
     passwordHash: '$2b$10$hashed',
-    role: 'OWNER',
+    role: 'ADMIN',
     isActive: true,
     businessId: 'biz1',
     locale: 'en',
@@ -136,7 +136,7 @@ describe('Auth Integration', () => {
     it('returns new tokens on valid refresh token', async () => {
       ctx.prisma.staff.findUnique.mockResolvedValue(mockStaff as any);
       const refreshToken = ctx.jwtService.sign(
-        { sub: 'staff1', email: 'sarah@glowclinic.com', businessId: 'biz1', role: 'OWNER' },
+        { sub: 'staff1', email: 'sarah@glowclinic.com', businessId: 'biz1', role: 'ADMIN' },
         { expiresIn: '7d' },
       );
 
@@ -191,7 +191,7 @@ describe('Auth Integration', () => {
         id: 'staff-new',
         name: 'Jane',
         email: 'jane@new.com',
-        role: 'OWNER',
+        role: 'ADMIN',
         businessId: 'biz-new',
       } as any);
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashed');
@@ -346,7 +346,7 @@ describe('Auth Integration', () => {
         id: 'staff1',
         name: 'Sarah Johnson',
         email: 'sarah@glowclinic.com',
-        role: 'OWNER',
+        role: 'ADMIN',
         businessId: 'biz1',
         isActive: true,
       } as any);

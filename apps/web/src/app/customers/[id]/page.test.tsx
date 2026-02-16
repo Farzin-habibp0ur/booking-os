@@ -11,7 +11,7 @@ jest.mock('next/link', () => ({ children, href, ...rest }: any) => (
 ));
 jest.mock('@/lib/auth', () => ({
   useAuth: () => ({
-    user: { id: '1', name: 'Sarah', role: 'OWNER', businessId: 'b1' },
+    user: { id: '1', name: 'Sarah', role: 'ADMIN', businessId: 'b1' },
     loading: false,
   }),
 }));

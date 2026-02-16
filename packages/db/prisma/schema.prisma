@@ -42,7 +42,7 @@ model Staff {
   name         String
   email        String   @unique
   passwordHash String?
-  role         String   @default("AGENT")
+  role         String   @default("AGENT") // ADMIN, SERVICE_PROVIDER, AGENT
   locale       String?
   isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())

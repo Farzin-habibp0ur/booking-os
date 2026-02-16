@@ -289,7 +289,7 @@
     "password_placeholder": "Contraseña",
     "role_agent": "Agente",
     "role_admin": "Administrador",
-    "role_owner": "Propietario"
+    "role_service_provider": "Proveedor de Servicios"
   },
 
   "days": {
@@ -523,7 +523,7 @@
     "add_another_staff": "Agregar otro miembro del personal",
     "role_agent": "Agente (Recepción)",
     "role_admin": "Administrador",
-    "role_owner": "Propietario",
+    "role_service_provider": "Proveedor de Servicios",
     "services_title": "Definir servicios",
     "services_subtitle": "¿Qué servicios ofrece tu negocio?",
     "add_service": "Agregar un servicio",

@@ -46,7 +46,7 @@ describe('StaffService', () => {
           id: 's1',
           name: 'Alice',
           email: 'a@b.com',
-          role: 'OWNER',
+          role: 'ADMIN',
           isActive: true,
           passwordHash: 'hashed',
           createdAt: new Date(),

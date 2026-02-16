@@ -99,7 +99,7 @@ export class AuthService {
         name: data.ownerName,
         email: data.email,
         passwordHash,
-        role: 'OWNER',
+        role: 'ADMIN',
       },
     });
 

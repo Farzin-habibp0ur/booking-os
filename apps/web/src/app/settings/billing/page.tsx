@@ -1,7 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import { useAuth } from '@/lib/auth';
 import { useI18n } from '@/lib/i18n';
 import { CreditCard, Loader2, Check, ExternalLink } from 'lucide-react';
 
@@ -44,12 +46,18 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function BillingPage() {
   const { t } = useI18n();
+  const router = useRouter();
+  const { user } = useAuth();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (user && user.role !== 'ADMIN') {
+      router.replace('/settings');
+      return;
+    }
     api
       .get<Subscription | null>('/billing/subscription')
       .then((sub) => {

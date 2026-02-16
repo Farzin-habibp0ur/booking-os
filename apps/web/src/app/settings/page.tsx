@@ -22,6 +22,7 @@ export default function SettingsPage() {
   const { t } = useI18n();
   const router = useRouter();
   const { user } = useAuth();
+  const role = user?.role;
   const [business, setBusiness] = useState<any>(null);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -215,18 +216,20 @@ export default function SettingsPage() {
       <div className="bg-white rounded-2xl shadow-soft p-6 mt-6">
         <h2 className="font-semibold mb-3">{t('settings.more_settings')}</h2>
         <div className="space-y-2">
-          <button
-            onClick={() => router.push('/settings/templates')}
-            className="flex items-center gap-3 w-full text-left p-3 rounded-xl hover:bg-slate-50 border border-slate-100 transition-colors"
-          >
-            <div className="w-9 h-9 bg-sage-50 rounded-lg flex items-center justify-center">
-              <FileText size={18} className="text-sage-600" />
-            </div>
-            <div>
-              <p className="text-sm font-medium">{t('settings.message_templates')}</p>
-              <p className="text-xs text-slate-500">{t('settings.message_templates_desc')}</p>
-            </div>
-          </button>
+          {(role === 'ADMIN' || role === 'AGENT') && (
+            <button
+              onClick={() => router.push('/settings/templates')}
+              className="flex items-center gap-3 w-full text-left p-3 rounded-xl hover:bg-slate-50 border border-slate-100 transition-colors"
+            >
+              <div className="w-9 h-9 bg-sage-50 rounded-lg flex items-center justify-center">
+                <FileText size={18} className="text-sage-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium">{t('settings.message_templates')}</p>
+                <p className="text-xs text-slate-500">{t('settings.message_templates_desc')}</p>
+              </div>
+            </button>
+          )}
           <button
             onClick={() => router.push('/settings/notifications')}
             className="flex items-center gap-3 w-full text-left p-3 rounded-xl hover:bg-slate-50 border border-slate-100 transition-colors"
@@ -239,30 +242,34 @@ export default function SettingsPage() {
               <p className="text-xs text-slate-500">{t('settings.notifications_desc')}</p>
             </div>
           </button>
-          <button
-            onClick={() => router.push('/settings/calendar')}
-            className="flex items-center gap-3 w-full text-left p-3 rounded-xl hover:bg-slate-50 border border-slate-100 transition-colors"
-          >
-            <div className="w-9 h-9 bg-sage-50 rounded-lg flex items-center justify-center">
-              <CalendarDays size={18} className="text-sage-600" />
-            </div>
-            <div>
-              <p className="text-sm font-medium">{t('settings.calendar_sync')}</p>
-              <p className="text-xs text-slate-500">{t('settings.calendar_sync_desc')}</p>
-            </div>
-          </button>
-          <button
-            onClick={() => router.push('/settings/translations')}
-            className="flex items-center gap-3 w-full text-left p-3 rounded-xl hover:bg-slate-50 border border-slate-100 transition-colors"
-          >
-            <div className="w-9 h-9 bg-lavender-50 rounded-lg flex items-center justify-center">
-              <Languages size={18} className="text-lavender-600" />
-            </div>
-            <div>
-              <p className="text-sm font-medium">{t('settings.translations')}</p>
-              <p className="text-xs text-slate-500">{t('settings.translations_desc')}</p>
-            </div>
-          </button>
+          {(role === 'ADMIN' || role === 'SERVICE_PROVIDER') && (
+            <button
+              onClick={() => router.push('/settings/calendar')}
+              className="flex items-center gap-3 w-full text-left p-3 rounded-xl hover:bg-slate-50 border border-slate-100 transition-colors"
+            >
+              <div className="w-9 h-9 bg-sage-50 rounded-lg flex items-center justify-center">
+                <CalendarDays size={18} className="text-sage-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium">{t('settings.calendar_sync')}</p>
+                <p className="text-xs text-slate-500">{t('settings.calendar_sync_desc')}</p>
+              </div>
+            </button>
+          )}
+          {role === 'ADMIN' && (
+            <button
+              onClick={() => router.push('/settings/translations')}
+              className="flex items-center gap-3 w-full text-left p-3 rounded-xl hover:bg-slate-50 border border-slate-100 transition-colors"
+            >
+              <div className="w-9 h-9 bg-lavender-50 rounded-lg flex items-center justify-center">
+                <Languages size={18} className="text-lavender-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium">{t('settings.translations')}</p>
+                <p className="text-xs text-slate-500">{t('settings.translations_desc')}</p>
+              </div>
+            </button>
+          )}
           <button
             onClick={() => router.push('/settings/profile-fields')}
             className="flex items-center gap-3 w-full text-left p-3 rounded-xl hover:bg-slate-50 border border-slate-100 transition-colors"
@@ -275,18 +282,20 @@ export default function SettingsPage() {
               <p className="text-xs text-slate-500">{t('settings.profile_fields_desc')}</p>
             </div>
           </button>
-          <button
-            onClick={() => router.push('/settings/ai')}
-            className="flex items-center gap-3 w-full text-left p-3 rounded-xl hover:bg-slate-50 border border-slate-100 transition-colors"
-          >
-            <div className="w-9 h-9 bg-lavender-50 rounded-lg flex items-center justify-center">
-              <Sparkles size={18} className="text-lavender-600" />
-            </div>
-            <div>
-              <p className="text-sm font-medium">{t('settings.ai_settings')}</p>
-              <p className="text-xs text-slate-500">{t('settings.ai_settings_desc')}</p>
-            </div>
-          </button>
+          {role === 'ADMIN' && (
+            <button
+              onClick={() => router.push('/settings/ai')}
+              className="flex items-center gap-3 w-full text-left p-3 rounded-xl hover:bg-slate-50 border border-slate-100 transition-colors"
+            >
+              <div className="w-9 h-9 bg-lavender-50 rounded-lg flex items-center justify-center">
+                <Sparkles size={18} className="text-lavender-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium">{t('settings.ai_settings')}</p>
+                <p className="text-xs text-slate-500">{t('settings.ai_settings_desc')}</p>
+              </div>
+            </button>
+          )}
           <button
             onClick={() => router.push('/settings/account')}
             className="flex items-center gap-3 w-full text-left p-3 rounded-xl hover:bg-slate-50 border border-slate-100 transition-colors"
@@ -299,30 +308,34 @@ export default function SettingsPage() {
               <p className="text-xs text-slate-500">{t('settings.account_import_desc')}</p>
             </div>
           </button>
-          <button
-            onClick={() => router.push('/settings/billing')}
-            className="flex items-center gap-3 w-full text-left p-3 rounded-xl hover:bg-slate-50 border border-slate-100 transition-colors"
-          >
-            <div className="w-9 h-9 bg-amber-50 rounded-lg flex items-center justify-center">
-              <CreditCard size={18} className="text-amber-600" />
-            </div>
-            <div>
-              <p className="text-sm font-medium">{t('settings.billing')}</p>
-              <p className="text-xs text-slate-500">{t('settings.billing_desc')}</p>
-            </div>
-          </button>
-          <button
-            onClick={() => router.push('/setup')}
-            className="flex items-center gap-3 w-full text-left p-3 rounded-xl hover:bg-slate-50 border border-slate-100 transition-colors"
-          >
-            <div className="w-9 h-9 bg-orange-50 rounded-lg flex items-center justify-center">
-              <Settings2 size={18} className="text-orange-600" />
-            </div>
-            <div>
-              <p className="text-sm font-medium">{t('settings.setup_wizard')}</p>
-              <p className="text-xs text-slate-500">{t('settings.setup_wizard_desc')}</p>
-            </div>
-          </button>
+          {role === 'ADMIN' && (
+            <button
+              onClick={() => router.push('/settings/billing')}
+              className="flex items-center gap-3 w-full text-left p-3 rounded-xl hover:bg-slate-50 border border-slate-100 transition-colors"
+            >
+              <div className="w-9 h-9 bg-amber-50 rounded-lg flex items-center justify-center">
+                <CreditCard size={18} className="text-amber-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium">{t('settings.billing')}</p>
+                <p className="text-xs text-slate-500">{t('settings.billing_desc')}</p>
+              </div>
+            </button>
+          )}
+          {role === 'ADMIN' && (
+            <button
+              onClick={() => router.push('/setup')}
+              className="flex items-center gap-3 w-full text-left p-3 rounded-xl hover:bg-slate-50 border border-slate-100 transition-colors"
+            >
+              <div className="w-9 h-9 bg-orange-50 rounded-lg flex items-center justify-center">
+                <Settings2 size={18} className="text-orange-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium">{t('settings.setup_wizard')}</p>
+                <p className="text-xs text-slate-500">{t('settings.setup_wizard_desc')}</p>
+              </div>
+            </button>
+          )}
         </div>
       </div>
     </div>

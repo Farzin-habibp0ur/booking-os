@@ -41,29 +41,36 @@ function ShellInner({ children }: { children: ReactNode }) {
   const pack = usePack();
   const { t } = useI18n();
 
-  const nav = [
-    { href: '/dashboard', label: t('nav.dashboard'), icon: LayoutDashboard },
-    { href: '/inbox', label: t('nav.inbox'), icon: MessageSquare },
-    { href: '/calendar', label: t('nav.calendar'), icon: Calendar },
+  const role = user?.role;
+
+  const allNav = [
+    { href: '/dashboard', label: t('nav.dashboard'), icon: LayoutDashboard, roles: ['ADMIN', 'AGENT', 'SERVICE_PROVIDER'] },
+    { href: '/inbox', label: t('nav.inbox'), icon: MessageSquare, roles: ['ADMIN', 'AGENT'] },
+    { href: '/calendar', label: t('nav.calendar'), icon: Calendar, roles: ['ADMIN', 'AGENT', 'SERVICE_PROVIDER'] },
     {
       href: '/customers',
       label: t('nav.customers', { entity: pack.labels.customer }),
       icon: Users,
+      roles: ['ADMIN', 'AGENT'],
     },
     {
       href: '/bookings',
       label: t('nav.bookings', { entity: pack.labels.booking }),
       icon: BookOpen,
+      roles: ['ADMIN', 'AGENT', 'SERVICE_PROVIDER'],
     },
     {
       href: '/services',
       label: t('nav.services', { entity: pack.labels.service }),
       icon: Scissors,
+      roles: ['ADMIN', 'AGENT', 'SERVICE_PROVIDER'],
     },
-    { href: '/staff', label: t('nav.staff'), icon: UserCog },
-    { href: '/reports', label: t('nav.reports'), icon: BarChart3 },
-    { href: '/settings', label: t('nav.settings'), icon: Settings },
+    { href: '/staff', label: t('nav.staff'), icon: UserCog, roles: ['ADMIN'] },
+    { href: '/reports', label: t('nav.reports'), icon: BarChart3, roles: ['ADMIN', 'AGENT'] },
+    { href: '/settings', label: t('nav.settings'), icon: Settings, roles: ['ADMIN', 'AGENT', 'SERVICE_PROVIDER'] },
   ];
+
+  const nav = allNav.filter((item) => !role || item.roles.includes(role));
 
   return (
     <div className="flex h-screen">

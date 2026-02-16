@@ -34,32 +34,38 @@ describe('RolesGuard', () => {
   });
 
   it('allows access when user role matches', () => {
-    reflector.getAllAndOverride.mockReturnValue(['OWNER', 'ADMIN']);
-    const context = createMockContext({ role: 'OWNER' });
+    reflector.getAllAndOverride.mockReturnValue(['ADMIN']);
+    const context = createMockContext({ role: 'ADMIN' });
     expect(guard.canActivate(context)).toBe(true);
   });
 
   it('denies access when user role does not match', () => {
-    reflector.getAllAndOverride.mockReturnValue(['OWNER', 'ADMIN']);
+    reflector.getAllAndOverride.mockReturnValue(['ADMIN']);
     const context = createMockContext({ role: 'AGENT' });
     expect(guard.canActivate(context)).toBe(false);
   });
 
   it('denies access when user is undefined', () => {
-    reflector.getAllAndOverride.mockReturnValue(['OWNER']);
+    reflector.getAllAndOverride.mockReturnValue(['ADMIN']);
     const context = createMockContext(undefined);
     expect(guard.canActivate(context)).toBe(false);
   });
 
   it('denies access when user has no role', () => {
-    reflector.getAllAndOverride.mockReturnValue(['OWNER']);
+    reflector.getAllAndOverride.mockReturnValue(['ADMIN']);
     const context = createMockContext({ email: 'test@test.com' });
     expect(guard.canActivate(context)).toBe(false);
   });
 
+  it('allows access when user is SERVICE_PROVIDER', () => {
+    reflector.getAllAndOverride.mockReturnValue(['ADMIN', 'SERVICE_PROVIDER']);
+    const context = createMockContext({ role: 'SERVICE_PROVIDER' });
+    expect(guard.canActivate(context)).toBe(true);
+  });
+
   it('checks correct metadata key', () => {
     reflector.getAllAndOverride.mockReturnValue(null);
-    const context = createMockContext({ role: 'OWNER' });
+    const context = createMockContext({ role: 'ADMIN' });
 
     guard.canActivate(context);
 

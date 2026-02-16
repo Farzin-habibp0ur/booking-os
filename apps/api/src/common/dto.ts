@@ -199,7 +199,7 @@ export class CreateStaffDto {
   @IsNotEmpty()
   password!: string;
 
-  @IsEnum(['OWNER', 'AGENT'], { message: 'role must be one of: OWNER, AGENT' })
+  @IsEnum(['ADMIN', 'SERVICE_PROVIDER', 'AGENT'], { message: 'role must be one of: ADMIN, SERVICE_PROVIDER, AGENT' })
   role!: string;
 }
 
@@ -212,7 +212,7 @@ export class UpdateStaffDto {
   @IsOptional()
   email?: string;
 
-  @IsEnum(['OWNER', 'AGENT'], { message: 'role must be one of: OWNER, AGENT' })
+  @IsEnum(['ADMIN', 'SERVICE_PROVIDER', 'AGENT'], { message: 'role must be one of: ADMIN, SERVICE_PROVIDER, AGENT' })
   @IsOptional()
   role?: string;
 }
@@ -471,7 +471,7 @@ export class InviteStaffDto {
   @IsNotEmpty()
   name!: string;
 
-  @IsEnum(['OWNER', 'AGENT'], { message: 'role must be one of: OWNER, AGENT' })
+  @IsEnum(['ADMIN', 'SERVICE_PROVIDER', 'AGENT'], { message: 'role must be one of: ADMIN, SERVICE_PROVIDER, AGENT' })
   @IsOptional()
   role?: string;
 }

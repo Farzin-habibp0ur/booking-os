@@ -15,6 +15,7 @@ import { Request } from 'express';
 import { BillingService } from './billing.service';
 import { BusinessId } from '../../common/decorators';
 import { TenantGuard } from '../../common/tenant.guard';
+import { RolesGuard, Roles } from '../../common/roles.guard';
 
 @ApiTags('Billing')
 @Controller('billing')
@@ -22,19 +23,22 @@ export class BillingController {
   constructor(private billingService: BillingService) {}
 
   @Post('checkout')
-  @UseGuards(AuthGuard('jwt'), TenantGuard)
+  @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+  @Roles('ADMIN')
   createCheckout(@BusinessId() businessId: string, @Body() body: { plan: 'basic' | 'pro' }) {
     return this.billingService.createCheckoutSession(businessId, body.plan);
   }
 
   @Post('portal')
-  @UseGuards(AuthGuard('jwt'), TenantGuard)
+  @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+  @Roles('ADMIN')
   createPortal(@BusinessId() businessId: string) {
     return this.billingService.createPortalSession(businessId);
   }
 
   @Get('subscription')
-  @UseGuards(AuthGuard('jwt'), TenantGuard)
+  @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+  @Roles('ADMIN')
   getSubscription(@BusinessId() businessId: string) {
     return this.billingService.getSubscription(businessId);
   }
@@ -49,7 +53,8 @@ export class BillingController {
   }
 
   @Post('deposit')
-  @UseGuards(AuthGuard('jwt'), TenantGuard)
+  @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+  @Roles('ADMIN')
   createDeposit(@BusinessId() businessId: string, @Body() body: { bookingId: string }) {
     return this.billingService.createDepositPaymentIntent(businessId, body.bookingId);
   }

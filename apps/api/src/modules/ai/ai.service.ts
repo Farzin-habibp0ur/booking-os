@@ -397,7 +397,7 @@ export class AiService {
             const customerName = customerContext?.name || 'there';
             const confirmMsg = `Great news, ${customerName}! Your ${bookingState.serviceName} appointment has been confirmed for ${bookingState.date} at ${bookingState.time}${bookingState.staffName ? ` with ${bookingState.staffName}` : ''}. We look forward to seeing you! ✨`;
             const defaultStaff = await this.prisma.staff.findFirst({
-              where: { businessId, role: 'OWNER' },
+              where: { businessId, role: 'ADMIN' },
             });
             if (defaultStaff) {
               const provider = this.messagingService.getProvider();
@@ -439,7 +439,7 @@ export class AiService {
           const customerName = customerContext?.name || 'there';
           const confirmMsg = `${customerName}, your ${cancelState.serviceName || ''} appointment has been cancelled. If you'd like to rebook in the future, just let us know!`;
           const defaultStaff = await this.prisma.staff.findFirst({
-            where: { businessId, role: 'OWNER' },
+            where: { businessId, role: 'ADMIN' },
           });
           if (defaultStaff) {
             const provider = this.messagingService.getProvider();
@@ -484,7 +484,7 @@ export class AiService {
           const customerName = customerContext?.name || 'there';
           const confirmMsg = `${customerName}, your appointment has been rescheduled to ${rescheduleState.newDate} at ${rescheduleState.newTime}. See you then! ✨`;
           const defaultStaff = await this.prisma.staff.findFirst({
-            where: { businessId, role: 'OWNER' },
+            where: { businessId, role: 'ADMIN' },
           });
           if (defaultStaff) {
             const provider = this.messagingService.getProvider();
@@ -574,7 +574,7 @@ export class AiService {
       if (shouldAutoReply) {
         try {
           const defaultStaff = await this.prisma.staff.findFirst({
-            where: { businessId, role: 'OWNER' },
+            where: { businessId, role: 'ADMIN' },
           });
           if (defaultStaff) {
             const provider = this.messagingService.getProvider();
@@ -849,7 +849,7 @@ export class AiService {
     try {
       // Find default staff (owner)
       const defaultStaff = await this.prisma.staff.findFirst({
-        where: { businessId, role: 'OWNER' },
+        where: { businessId, role: 'ADMIN' },
       });
       if (!defaultStaff) {
         this.logger.warn('No owner staff found for transfer');
