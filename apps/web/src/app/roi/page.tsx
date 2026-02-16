@@ -15,7 +15,8 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from 'recharts';
-import { TrendingUp, ChevronDown, ChevronUp, Rocket } from 'lucide-react';
+import { TrendingUp, ChevronDown, ChevronUp, Rocket, Mail, Loader2 } from 'lucide-react';
+import { useToast } from '@/lib/toast';
 
 const PERIOD_OPTIONS = [
   { label: '7d', value: 7, key: 'period_7d' },
@@ -62,13 +63,48 @@ interface DashboardData {
   };
 }
 
+interface WeeklyReviewData {
+  thisWeek: {
+    noShowRate: number;
+    consultConversionRate: number;
+    avgResponseMinutes: number;
+    totalRevenue: number;
+    completedBookings: number;
+    depositCompliance: number;
+  };
+  lastWeek: {
+    noShowRate: number;
+    consultConversionRate: number;
+    avgResponseMinutes: number;
+    totalRevenue: number;
+    completedBookings: number;
+    depositCompliance: number;
+  };
+  weekDelta: {
+    noShowRate: number;
+    consultConversionRate: number;
+    avgResponseMinutes: number;
+    totalRevenue: number;
+    completedBookings: number;
+    depositCompliance: number;
+  };
+  weekNumber: number;
+  dateRange: { start: string; end: string };
+  generatedAt: string;
+}
+
 export default function RoiPage() {
   const { t } = useI18n();
+  const { toast } = useToast();
   const [days, setDays] = useState(30);
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [goingLive, setGoingLive] = useState(false);
   const [showFormula, setShowFormula] = useState(false);
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'weekly'>('dashboard');
+  const [weeklyData, setWeeklyData] = useState<WeeklyReviewData | null>(null);
+  const [weeklyLoading, setWeeklyLoading] = useState(false);
+  const [emailSending, setEmailSending] = useState(false);
 
   const loadDashboard = (period: number) => {
     setLoading(true);
@@ -79,9 +115,36 @@ export default function RoiPage() {
       .finally(() => setLoading(false));
   };
 
+  const loadWeeklyReview = () => {
+    setWeeklyLoading(true);
+    api
+      .get<WeeklyReviewData>('/roi/weekly-review')
+      .then(setWeeklyData)
+      .catch(() => setWeeklyData(null))
+      .finally(() => setWeeklyLoading(false));
+  };
+
   useEffect(() => {
     loadDashboard(days);
   }, [days]);
+
+  useEffect(() => {
+    if (activeTab === 'weekly' && !weeklyData && !weeklyLoading) {
+      loadWeeklyReview();
+    }
+  }, [activeTab]);
+
+  const handleEmailReview = async () => {
+    setEmailSending(true);
+    try {
+      await api.post('/roi/email-review');
+      toast(t('roi.email_sent'));
+    } catch {
+      toast(t('roi.email_error'), 'error');
+    } finally {
+      setEmailSending(false);
+    }
+  };
 
   const handleGoLive = async () => {
     if (!confirm(t('roi.go_live_confirm'))) return;
@@ -132,24 +195,135 @@ export default function RoiPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-serif font-semibold text-slate-900">{t('roi.title')}</h1>
-        <div className="flex gap-1 bg-slate-100 rounded-xl p-0.5">
-          {PERIOD_OPTIONS.map((p) => (
+        <div className="flex items-center gap-3">
+          {/* Tab bar */}
+          <div className="flex gap-1 bg-slate-100 rounded-xl p-0.5">
             <button
-              key={p.value}
-              onClick={() => setDays(p.value)}
+              onClick={() => setActiveTab('dashboard')}
               className={cn(
                 'px-3 py-1.5 rounded-xl text-sm transition-colors',
-                days === p.value
+                activeTab === 'dashboard'
                   ? 'bg-white shadow-sm font-medium'
                   : 'text-slate-500 hover:text-slate-700',
               )}
             >
-              {t(`roi.${p.key}`)}
+              {t('roi.tab_dashboard')}
             </button>
-          ))}
+            <button
+              onClick={() => setActiveTab('weekly')}
+              className={cn(
+                'px-3 py-1.5 rounded-xl text-sm transition-colors',
+                activeTab === 'weekly'
+                  ? 'bg-white shadow-sm font-medium'
+                  : 'text-slate-500 hover:text-slate-700',
+              )}
+            >
+              {t('roi.tab_weekly')}
+            </button>
+          </div>
+          {/* Period selector (only for dashboard tab) */}
+          {activeTab === 'dashboard' && (
+            <div className="flex gap-1 bg-slate-100 rounded-xl p-0.5">
+              {PERIOD_OPTIONS.map((p) => (
+                <button
+                  key={p.value}
+                  onClick={() => setDays(p.value)}
+                  className={cn(
+                    'px-3 py-1.5 rounded-xl text-sm transition-colors',
+                    days === p.value
+                      ? 'bg-white shadow-sm font-medium'
+                      : 'text-slate-500 hover:text-slate-700',
+                  )}
+                >
+                  {t(`roi.${p.key}`)}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
+      {/* Weekly Review Tab */}
+      {activeTab === 'weekly' && (
+        <>
+          {weeklyLoading ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 size={24} className="animate-spin text-slate-400" />
+            </div>
+          ) : !weeklyData ? (
+            <div className="bg-white rounded-2xl shadow-soft p-8 text-center">
+              <p className="text-sm text-slate-500">{t('roi.no_weekly_data')}</p>
+            </div>
+          ) : (
+            <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
+              <div>
+                <h2 className="text-lg font-serif font-semibold text-slate-900">
+                  {t('roi.weekly_title', { number: String(weeklyData.weekNumber) })}
+                </h2>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  {new Date(weeklyData.dateRange.start).toLocaleDateString()} — {new Date(weeklyData.dateRange.end).toLocaleDateString()}
+                </p>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b-2 border-slate-100">
+                      <th className="text-left py-2 px-3 text-slate-500 font-medium">{t('roi.metric')}</th>
+                      <th className="text-right py-2 px-3 text-slate-500 font-medium">{t('roi.this_week')}</th>
+                      <th className="text-right py-2 px-3 text-slate-500 font-medium">{t('roi.last_week')}</th>
+                      <th className="text-right py-2 px-3 text-slate-500 font-medium">{t('roi.change')}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {([
+                      { label: t('roi.no_show_rate'), thisVal: `${weeklyData.thisWeek.noShowRate}%`, lastVal: `${weeklyData.lastWeek.noShowRate}%`, delta: weeklyData.weekDelta.noShowRate },
+                      { label: t('roi.consult_conversion'), thisVal: `${weeklyData.thisWeek.consultConversionRate}%`, lastVal: `${weeklyData.lastWeek.consultConversionRate}%`, delta: weeklyData.weekDelta.consultConversionRate },
+                      { label: t('roi.avg_response'), thisVal: `${weeklyData.thisWeek.avgResponseMinutes}m`, lastVal: `${weeklyData.lastWeek.avgResponseMinutes}m`, delta: weeklyData.weekDelta.avgResponseMinutes },
+                      { label: t('roi.revenue'), thisVal: `$${weeklyData.thisWeek.totalRevenue}`, lastVal: `$${weeklyData.lastWeek.totalRevenue}`, delta: weeklyData.weekDelta.totalRevenue },
+                      { label: t('roi.completed_bookings'), thisVal: String(weeklyData.thisWeek.completedBookings), lastVal: String(weeklyData.lastWeek.completedBookings), delta: weeklyData.weekDelta.completedBookings },
+                      { label: t('roi.deposit_compliance'), thisVal: `${weeklyData.thisWeek.depositCompliance}%`, lastVal: `${weeklyData.lastWeek.depositCompliance}%`, delta: weeklyData.weekDelta.depositCompliance },
+                    ] as const).map((row) => (
+                      <tr key={row.label} className="border-b border-slate-50">
+                        <td className="py-2.5 px-3 text-slate-700">{row.label}</td>
+                        <td className="py-2.5 px-3 text-right font-medium">{row.thisVal}</td>
+                        <td className="py-2.5 px-3 text-right text-slate-400">{row.lastVal}</td>
+                        <td className="py-2.5 px-3 text-right">
+                          <span className={cn(
+                            'inline-flex items-center text-xs px-1.5 py-0.5 rounded-full',
+                            row.delta > 0 ? 'bg-sage-50 text-sage-700'
+                              : row.delta < 0 ? 'bg-red-50 text-red-600'
+                              : 'bg-slate-50 text-slate-500',
+                          )}>
+                            {row.delta > 0 ? '+' : ''}{Math.round(row.delta * 100) / 100}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                <p className="text-xs text-slate-400">
+                  {t('roi.generated_at', { date: new Date(weeklyData.generatedAt).toLocaleString() })}
+                </p>
+                <button
+                  onClick={handleEmailReview}
+                  disabled={emailSending}
+                  className="bg-sage-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-sage-700 disabled:opacity-50 flex items-center gap-2"
+                >
+                  {emailSending ? <Loader2 size={14} className="animate-spin" /> : <Mail size={14} />}
+                  {t('roi.email_review')}
+                </button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Dashboard Tab */}
+      {activeTab === 'dashboard' && <>
       {/* Baseline Banner */}
       {baseline && (
         <div className="bg-sage-50 rounded-xl px-4 py-2.5 text-sm text-sage-700">
@@ -328,6 +502,7 @@ export default function RoiPage() {
           </div>
         </div>
       )}
+      </>}
     </div>
   );
 }

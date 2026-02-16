@@ -419,7 +419,19 @@
     "formula_explanation": "(Tasa base {{baseline}}% − Tasa actual {{current}}%) × {{bookings}} reservas completadas × ${{avgValue}} valor promedio",
     "no_show_trend": "Tendencia de ausencias",
     "revenue_trend": "Tendencia de ingresos",
-    "baseline_label": "Línea base"
+    "baseline_label": "Línea base",
+    "tab_dashboard": "Panel",
+    "tab_weekly": "Revision Semanal",
+    "weekly_title": "Revision de la Semana {{number}}",
+    "this_week": "Esta Semana",
+    "last_week": "Semana Pasada",
+    "change": "Cambio",
+    "metric": "Metrica",
+    "email_review": "Enviar Revision",
+    "email_sent": "Revision semanal enviada exitosamente",
+    "email_error": "No se pudo enviar el correo",
+    "no_weekly_data": "Aun no hay datos suficientes para la comparacion semanal",
+    "generated_at": "Generado el {{date}}"
   },
 
   "settings": {
@@ -682,7 +694,17 @@
     "profile_subtitle": "Elige que campos son obligatorios antes de confirmar una reserva automaticamente. La IA recopilara la informacion faltante de forma conversacional.",
     "profile_category_basic": "Informacion basica",
     "profile_category_medical": "Informacion medica",
-    "profile_note": "Los campos seleccionados seran recopilados por la IA antes de confirmar reservas. Puedes cambiar esto en cualquier momento en Configuracion."
+    "profile_note": "Los campos seleccionados seran recopilados por la IA antes de confirmar reservas. Puedes cambiar esto en cualquier momento en Configuracion.",
+    "readiness_title": "Estado de Funciones",
+    "readiness_staff": "Miembros del equipo",
+    "readiness_services": "Servicios",
+    "readiness_templates": "Plantillas de mensajes",
+    "readiness_notifications": "Canales de notificacion",
+    "readiness_hours": "Horario laboral",
+    "readiness_pack": "Paquete de clinica instalado",
+    "create_test_booking": "Crear Reserva de Prueba",
+    "test_booking_created": "Reserva de prueba creada para {{service}} el {{date}}",
+    "test_booking_error": "No se pudo crear la reserva de prueba. Asegurese de tener al menos un servicio y un miembro del equipo."
   },
 
   "ai": {

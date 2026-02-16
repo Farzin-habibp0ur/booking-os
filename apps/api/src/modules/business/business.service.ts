@@ -237,4 +237,66 @@ export class BusinessService {
       },
     };
   }
+
+  async createTestBooking(businessId: string) {
+    const service = await this.prisma.service.findFirst({
+      where: { businessId, isActive: true },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    if (!service) {
+      throw new BadRequestException('No active services found. Create at least one service first.');
+    }
+
+    const staff = await this.prisma.staff.findFirst({
+      where: { businessId },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    if (!staff) {
+      throw new BadRequestException('No staff members found. Add at least one staff member first.');
+    }
+
+    // Find or create test customer
+    let customer = await this.prisma.customer.findFirst({
+      where: { businessId, email: 'test@example.com' },
+    });
+
+    if (!customer) {
+      customer = await this.prisma.customer.create({
+        data: {
+          businessId,
+          name: 'Test Patient',
+          email: 'test@example.com',
+          phone: '+10000000000',
+        },
+      });
+    }
+
+    const startTime = new Date();
+    startTime.setDate(startTime.getDate() + 2);
+    startTime.setHours(10, 0, 0, 0);
+
+    const endTime = new Date(startTime);
+    endTime.setMinutes(endTime.getMinutes() + (service.durationMins || 30));
+
+    const booking = await this.prisma.booking.create({
+      data: {
+        businessId,
+        serviceId: service.id,
+        staffId: staff.id,
+        customerId: customer.id,
+        startTime,
+        endTime,
+        status: 'CONFIRMED',
+      },
+      include: {
+        service: true,
+        customer: true,
+        staff: true,
+      },
+    });
+
+    return booking;
+  }
 }

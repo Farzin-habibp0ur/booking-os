@@ -79,6 +79,7 @@ function SetupPage() {
   const [bizName, setBizName] = useState('');
   const [timezone, setTimezone] = useState('America/Los_Angeles');
   const [currency, setCurrency] = useState('USD');
+  const [business, setBusiness] = useState<any>(null);
 
   // Staff
   const [staffList, setStaffList] = useState<any[]>([]);
@@ -114,6 +115,10 @@ function SetupPage() {
   const [packInstalling, setPackInstalling] = useState(false);
   const [packInstalled, setPackInstalled] = useState<{ services: number; templates: number } | null>(null);
 
+  // Test booking
+  const [testBookingLoading, setTestBookingLoading] = useState(false);
+  const [testBookingResult, setTestBookingResult] = useState<any>(null);
+
   // Customer Import
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [csvFile, setCsvFile] = useState<File | null>(null);
@@ -142,6 +147,7 @@ function SetupPage() {
         api.get<any>('/services'),
         api.get<any[]>('/templates'),
       ]);
+      setBusiness(biz);
       setBizName(biz.name || '');
       setTimezone(biz.timezone || 'America/Los_Angeles');
       if (biz.packConfig?.requiredProfileFields) {
@@ -354,6 +360,7 @@ function SetupPage() {
       setServices(svcRes?.data || svcRes || []);
       setTemplates(tplRes || []);
       const biz = await api.get<any>('/business');
+      setBusiness(biz);
       if (biz.packConfig?.requiredProfileFields) {
         setRequiredProfileFields(biz.packConfig.requiredProfileFields);
       }
@@ -1170,35 +1177,89 @@ function SetupPage() {
         )}
 
         {/* Step 9: Test & Finish */}
-        {step === 9 && (
-          <div className="bg-white rounded-2xl shadow-soft p-6 space-y-6">
-            <h2 className="text-lg font-serif font-semibold text-slate-900">
-              {t('setup.finish_title')}
-            </h2>
-            <p className="text-sm text-slate-500">{t('setup.finish_subtitle')}</p>
+        {step === 9 && (() => {
+          const activeServices = services.filter((s: any) => s.isActive !== false);
+          const hasWorkingHours = Object.values(staffHours).some(
+            (hours: any) => Array.isArray(hours) && hours.length > 0,
+          );
+          const readinessItems = [
+            { label: t('setup.readiness_staff'), ok: staffList.length > 0, count: staffList.length },
+            { label: t('setup.readiness_services'), ok: activeServices.length > 0, count: activeServices.length },
+            { label: t('setup.readiness_templates'), ok: templates.length > 0, count: templates.length },
+            { label: t('setup.readiness_notifications'), ok: !!business?.notificationSettings },
+            { label: t('setup.readiness_hours'), ok: hasWorkingHours },
+            { label: t('setup.readiness_pack'), ok: !!business?.verticalPack },
+          ];
+          return (
+          <div className="space-y-4">
+            <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
+              <h2 className="text-lg font-serif font-semibold text-slate-900">
+                {t('setup.finish_title')}
+              </h2>
+              <p className="text-sm text-slate-500">{t('setup.finish_subtitle')}</p>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="border border-slate-100 rounded-xl p-4">
-                <p className="text-2xl font-serif font-bold text-sage-600">{staffList.length}</p>
-                <p className="text-sm text-slate-500">{t('setup.staff_members')}</p>
-              </div>
-              <div className="border border-slate-100 rounded-xl p-4">
-                <p className="text-2xl font-serif font-bold text-sage-600">
-                  {services.filter((s: any) => s.isActive !== false).length}
-                </p>
-                <p className="text-sm text-slate-500">{t('setup.services_count')}</p>
-              </div>
-              <div className="border border-slate-100 rounded-xl p-4">
-                <p className="text-2xl font-serif font-bold text-sage-600">{templates.length}</p>
-                <p className="text-sm text-slate-500">{t('setup.templates_count')}</p>
-              </div>
-              <div className="border border-slate-100 rounded-xl p-4">
-                <p className="text-2xl font-serif font-bold text-sage-600">{t('setup.ready')}</p>
-                <p className="text-sm text-slate-500">{t('setup.simulator_label')}</p>
+              {/* Feature Readiness Checklist */}
+              <div>
+                <h3 className="text-sm font-medium text-slate-700 mb-2">{t('setup.readiness_title')}</h3>
+                <div className="border border-slate-100 rounded-xl divide-y">
+                  {readinessItems.map((item, i) => (
+                    <div key={i} className="flex items-center justify-between px-4 py-2.5">
+                      <div className="flex items-center gap-2">
+                        <div className={cn(
+                          'w-5 h-5 rounded-full flex items-center justify-center',
+                          item.ok ? 'bg-sage-50' : 'bg-amber-50',
+                        )}>
+                          {item.ok ? (
+                            <Check size={12} className="text-sage-600" />
+                          ) : (
+                            <span className="text-amber-500 text-xs font-bold">!</span>
+                          )}
+                        </div>
+                        <span className="text-sm text-slate-700">{item.label}</span>
+                      </div>
+                      {item.count !== undefined && (
+                        <span className="text-xs text-slate-400">{item.count}</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 
-            <div className="space-y-2">
+            {/* Test Booking Card */}
+            <div className="bg-white rounded-2xl shadow-soft p-6 space-y-3">
+              <h3 className="text-sm font-medium text-slate-700">{t('setup.create_test_booking')}</h3>
+              <button
+                onClick={async () => {
+                  setTestBookingLoading(true);
+                  try {
+                    const result = await api.post<any>('/business/create-test-booking');
+                    setTestBookingResult(result);
+                    const dateStr = new Date(result.startTime).toLocaleDateString();
+                    toast(t('setup.test_booking_created', { service: result.service?.name, date: dateStr }));
+                  } catch (err: any) {
+                    toast(t('setup.test_booking_error'), 'error');
+                  }
+                  setTestBookingLoading(false);
+                }}
+                disabled={testBookingLoading}
+                className="bg-slate-900 text-white px-4 py-2 rounded-xl text-sm hover:bg-slate-800 disabled:opacity-50 flex items-center gap-2"
+              >
+                {testBookingLoading && <Loader2 size={14} className="animate-spin" />}
+                {t('setup.create_test_booking')}
+              </button>
+              {testBookingResult && (
+                <p className="text-xs text-sage-700 bg-sage-50 rounded-lg p-2">
+                  {t('setup.test_booking_created', {
+                    service: testBookingResult.service?.name,
+                    date: new Date(testBookingResult.startTime).toLocaleDateString(),
+                  })}
+                </p>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="bg-white rounded-2xl shadow-soft p-6 space-y-2">
               <button
                 onClick={() => window.open('http://localhost:3002', '_blank')}
                 className="w-full border rounded-xl py-2.5 text-sm hover:bg-slate-50"
@@ -1220,7 +1281,8 @@ function SetupPage() {
               </button>
             </div>
           </div>
-        )}
+          );
+        })()}
       </div>
 
       {/* Footer navigation */}

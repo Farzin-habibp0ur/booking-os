@@ -3,22 +3,26 @@ import { BadRequestException } from '@nestjs/common';
 import { RoiService } from './roi.service';
 import { PrismaService } from '../../common/prisma.service';
 import { ReportsService } from '../reports/reports.service';
-import { createMockPrisma, createMockReportsService } from '../../test/mocks';
+import { EmailService } from '../email/email.service';
+import { createMockPrisma, createMockReportsService, createMockEmailService } from '../../test/mocks';
 
 describe('RoiService', () => {
   let roiService: RoiService;
   let prisma: ReturnType<typeof createMockPrisma>;
   let reportsService: ReturnType<typeof createMockReportsService>;
+  let emailService: ReturnType<typeof createMockEmailService>;
 
   beforeEach(async () => {
     prisma = createMockPrisma();
     reportsService = createMockReportsService();
+    emailService = createMockEmailService();
 
     const module = await Test.createTestingModule({
       providers: [
         RoiService,
         { provide: PrismaService, useValue: prisma },
         { provide: ReportsService, useValue: reportsService },
+        { provide: EmailService, useValue: emailService },
       ],
     }).compile();
 
@@ -257,6 +261,74 @@ describe('RoiService', () => {
       expect(result.recoveredRevenue.sufficient).toBe(true);
       expect(result.recoveredRevenue.reason).toBe('no_improvement');
       expect(result.recoveredRevenue.amount).toBeNull();
+    });
+  });
+
+  describe('getWeeklyReview', () => {
+    it('returns thisWeek, lastWeek, and weekDelta objects', async () => {
+      const result = await roiService.getWeeklyReview('biz1');
+
+      expect(result).toHaveProperty('thisWeek');
+      expect(result).toHaveProperty('lastWeek');
+      expect(result).toHaveProperty('weekDelta');
+      expect(result).toHaveProperty('weekNumber');
+      expect(result).toHaveProperty('dateRange');
+      expect(result).toHaveProperty('generatedAt');
+      expect(result.thisWeek).toHaveProperty('noShowRate');
+      expect(result.thisWeek).toHaveProperty('consultConversionRate');
+      expect(result.thisWeek).toHaveProperty('totalRevenue');
+      expect(result.thisWeek).toHaveProperty('completedBookings');
+      expect(result.thisWeek).toHaveProperty('depositCompliance');
+    });
+
+    it('computes correct week-over-week deltas', async () => {
+      // thisWeek: noShowRate=10 (from mock default)
+      // lastWeek: noShowRate=10 (same mock)
+      // For a meaningful test, differentiate the two calls
+      reportsService.noShowRate
+        .mockResolvedValueOnce({ total: 50, noShows: 3, rate: 6 })   // thisWeek
+        .mockResolvedValueOnce({ total: 50, noShows: 5, rate: 10 });  // lastWeek
+
+      const result = await roiService.getWeeklyReview('biz1');
+
+      // noShowRate delta: lastWeek(10) - thisWeek(6) = 4 (positive = improved)
+      expect(result.weekDelta.noShowRate).toBe(4);
+      expect(result.thisWeek.noShowRate).toBe(6);
+      expect(result.lastWeek.noShowRate).toBe(10);
+    });
+
+    it('handles zero bookings gracefully', async () => {
+      reportsService.noShowRate.mockResolvedValue({ total: 0, noShows: 0, rate: 0 });
+      reportsService.consultToTreatmentConversion.mockResolvedValue({ consultCustomers: 0, converted: 0, rate: 0 });
+      reportsService.revenueOverTime.mockResolvedValue([]);
+      reportsService.statusBreakdown.mockResolvedValue([]);
+
+      const result = await roiService.getWeeklyReview('biz1');
+
+      expect(result.thisWeek.totalRevenue).toBe(0);
+      expect(result.thisWeek.completedBookings).toBe(0);
+      expect(result.weekDelta.totalRevenue).toBe(0);
+    });
+  });
+
+  describe('emailWeeklyReview', () => {
+    it('calls EmailService.send with HTML containing metrics', async () => {
+      const result = await roiService.emailWeeklyReview('biz1', 'sarah@test.com', 'Sarah');
+
+      expect(result).toEqual({ sent: true });
+      expect(emailService.send).toHaveBeenCalledTimes(1);
+      const call = emailService.send.mock.calls[0][0];
+      expect(call.html).toContain('No-show rate');
+      expect(call.html).toContain('Revenue');
+      expect(call.html).toContain('Consult conversion');
+      expect(call.subject).toContain('Review');
+    });
+
+    it('includes correct recipient email', async () => {
+      await roiService.emailWeeklyReview('biz1', 'manager@clinic.com', 'Manager');
+
+      const call = emailService.send.mock.calls[0][0];
+      expect(call.to).toBe('manager@clinic.com');
     });
   });
 });

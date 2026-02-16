@@ -2,7 +2,7 @@ import { Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { RoiService } from './roi.service';
-import { BusinessId } from '../../common/decorators';
+import { BusinessId, CurrentUser } from '../../common/decorators';
 import { TenantGuard } from '../../common/tenant.guard';
 import { RolesGuard, Roles } from '../../common/roles.guard';
 
@@ -26,5 +26,15 @@ export class RoiController {
   @Get('dashboard')
   getDashboard(@BusinessId() businessId: string, @Query('days') days?: string) {
     return this.roiService.getRoiDashboard(businessId, days ? parseInt(days, 10) : 30);
+  }
+
+  @Get('weekly-review')
+  getWeeklyReview(@BusinessId() businessId: string) {
+    return this.roiService.getWeeklyReview(businessId);
+  }
+
+  @Post('email-review')
+  emailReview(@BusinessId() businessId: string, @CurrentUser() user: any) {
+    return this.roiService.emailWeeklyReview(businessId, user.email, user.name);
   }
 }

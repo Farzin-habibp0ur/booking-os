@@ -419,7 +419,19 @@
     "formula_explanation": "(Baseline no-show rate {{baseline}}% − Current no-show rate {{current}}%) × {{bookings}} completed bookings × ${{avgValue}} avg booking value",
     "no_show_trend": "No-Show Rate Trend",
     "revenue_trend": "Revenue Trend",
-    "baseline_label": "Baseline"
+    "baseline_label": "Baseline",
+    "tab_dashboard": "Dashboard",
+    "tab_weekly": "Weekly Review",
+    "weekly_title": "Week {{number}} Review",
+    "this_week": "This Week",
+    "last_week": "Last Week",
+    "change": "Change",
+    "metric": "Metric",
+    "email_review": "Email Review",
+    "email_sent": "Weekly review emailed successfully",
+    "email_error": "Could not send email",
+    "no_weekly_data": "Not enough data for weekly comparison yet",
+    "generated_at": "Generated {{date}}"
   },
 
   "settings": {
@@ -682,7 +694,17 @@
     "profile_subtitle": "Choose which fields are required before a booking can be auto-confirmed. The AI will collect missing info conversationally.",
     "profile_category_basic": "Basic Information",
     "profile_category_medical": "Medical Information",
-    "profile_note": "Selected fields will be collected by AI before confirming bookings. You can change this anytime in Settings."
+    "profile_note": "Selected fields will be collected by AI before confirming bookings. You can change this anytime in Settings.",
+    "readiness_title": "Feature Readiness",
+    "readiness_staff": "Staff members",
+    "readiness_services": "Services",
+    "readiness_templates": "Message templates",
+    "readiness_notifications": "Notification channels",
+    "readiness_hours": "Working hours",
+    "readiness_pack": "Clinic pack installed",
+    "create_test_booking": "Create Test Booking",
+    "test_booking_created": "Test booking created for {{service}} on {{date}}",
+    "test_booking_error": "Could not create test booking. Ensure you have at least one service and staff member."
   },
 
   "ai": {

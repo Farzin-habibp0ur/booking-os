@@ -57,4 +57,10 @@ export class BusinessController {
   installPack(@BusinessId() businessId: string, @Body() body: { packName: string }) {
     return this.businessService.installPack(businessId, body.packName);
   }
+
+  @Post('create-test-booking')
+  @Roles('ADMIN')
+  createTestBooking(@BusinessId() businessId: string) {
+    return this.businessService.createTestBooking(businessId);
+  }
 }

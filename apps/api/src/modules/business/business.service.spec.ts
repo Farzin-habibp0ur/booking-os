@@ -289,4 +289,62 @@ describe('BusinessService', () => {
       );
     });
   });
+
+  describe('createTestBooking', () => {
+    it('creates a test booking with first service and staff member', async () => {
+      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', name: 'Botox', durationMins: 60 } as any);
+      prisma.staff.findFirst.mockResolvedValue({ id: 'staff1', name: 'Dr. Chen' } as any);
+      prisma.customer.findFirst.mockResolvedValue(null);
+      prisma.customer.create.mockResolvedValue({ id: 'cust1', name: 'Test Patient', email: 'test@example.com' } as any);
+      prisma.booking.create.mockResolvedValue({
+        id: 'bk1',
+        serviceId: 'svc1',
+        staffId: 'staff1',
+        customerId: 'cust1',
+        status: 'CONFIRMED',
+        service: { name: 'Botox' },
+        customer: { name: 'Test Patient' },
+        staff: { name: 'Dr. Chen' },
+      } as any);
+
+      const result = await service.createTestBooking('biz1');
+
+      expect(result.id).toBe('bk1');
+      expect(result.status).toBe('CONFIRMED');
+      expect(prisma.booking.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            businessId: 'biz1',
+            serviceId: 'svc1',
+            staffId: 'staff1',
+            customerId: 'cust1',
+            status: 'CONFIRMED',
+          }),
+          include: { service: true, customer: true, staff: true },
+        }),
+      );
+    });
+
+    it('reuses existing test customer', async () => {
+      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', durationMins: 30 } as any);
+      prisma.staff.findFirst.mockResolvedValue({ id: 'staff1' } as any);
+      prisma.customer.findFirst.mockResolvedValue({ id: 'existing-cust', name: 'Test Patient', email: 'test@example.com' } as any);
+      prisma.booking.create.mockResolvedValue({ id: 'bk1' } as any);
+
+      await service.createTestBooking('biz1');
+
+      expect(prisma.customer.create).not.toHaveBeenCalled();
+      expect(prisma.booking.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ customerId: 'existing-cust' }),
+        }),
+      );
+    });
+
+    it('throws BadRequestException when no services exist', async () => {
+      prisma.service.findFirst.mockResolvedValue(null);
+
+      await expect(service.createTestBooking('biz1')).rejects.toThrow(BadRequestException);
+    });
+  });
 });
