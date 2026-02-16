@@ -511,6 +511,41 @@ export class BookingService {
     });
   }
 
+  async bulkUpdate(
+    businessId: string,
+    ids: string[],
+    action: 'status' | 'assign',
+    payload: any,
+    userRole?: string,
+  ) {
+    if (!ids?.length) throw new BadRequestException('No booking IDs provided');
+    if (ids.length > 50) throw new BadRequestException('Cannot update more than 50 bookings at once');
+
+    if (action === 'status') {
+      if (!payload?.status) throw new BadRequestException('Status is required');
+      // Only ADMIN can bulk-cancel
+      if (payload.status === 'CANCELLED' && userRole !== 'ADMIN') {
+        throw new ForbiddenException('Only admins can bulk-cancel bookings');
+      }
+      const result = await this.prisma.booking.updateMany({
+        where: { id: { in: ids }, businessId },
+        data: { status: payload.status },
+      });
+      return { updated: result.count };
+    }
+
+    if (action === 'assign') {
+      if (!payload?.staffId) throw new BadRequestException('Staff ID is required');
+      const result = await this.prisma.booking.updateMany({
+        where: { id: { in: ids }, businessId },
+        data: { staffId: payload.staffId },
+      });
+      return { updated: result.count };
+    }
+
+    throw new BadRequestException(`Unknown bulk action: ${action}`);
+  }
+
   async getCalendar(businessId: string, dateFrom: string, dateTo: string, staffId?: string) {
     const where: any = {
       businessId,

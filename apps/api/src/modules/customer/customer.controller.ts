@@ -61,6 +61,14 @@ export class CustomerController {
     return this.customerService.getBookings(businessId, id);
   }
 
+  @Patch('bulk')
+  bulkAction(
+    @BusinessId() businessId: string,
+    @Body() body: { ids: string[]; action: 'tag' | 'untag'; payload: any },
+  ) {
+    return this.customerService.bulkUpdate(businessId, body.ids, body.action, body.payload);
+  }
+
   @Post('import-csv')
   @UseInterceptors(FileInterceptor('file'))
   async importCsv(@BusinessId() businessId: string, @UploadedFile() file: Express.Multer.File) {

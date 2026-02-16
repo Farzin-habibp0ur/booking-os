@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma.service';
 import { ProfileExtractor } from '../ai/profile-extractor';
 
@@ -69,6 +69,58 @@ export class CustomerService {
       include: { service: true, staff: true },
       orderBy: { startTime: 'desc' },
     });
+  }
+
+  async bulkUpdate(
+    businessId: string,
+    ids: string[],
+    action: 'tag' | 'untag',
+    payload: any,
+  ) {
+    if (!ids?.length) throw new BadRequestException('No customer IDs provided');
+    if (ids.length > 100) throw new BadRequestException('Cannot update more than 100 customers at once');
+
+    if (action === 'tag') {
+      if (!payload?.tag) throw new BadRequestException('Tag is required');
+      const customers = await this.prisma.customer.findMany({
+        where: { id: { in: ids }, businessId },
+        select: { id: true, tags: true },
+      });
+      let updated = 0;
+      for (const c of customers) {
+        const tags = (c.tags || []) as string[];
+        if (!tags.includes(payload.tag)) {
+          await this.prisma.customer.update({
+            where: { id: c.id },
+            data: { tags: [...tags, payload.tag] },
+          });
+          updated++;
+        }
+      }
+      return { updated };
+    }
+
+    if (action === 'untag') {
+      if (!payload?.tag) throw new BadRequestException('Tag is required');
+      const customers = await this.prisma.customer.findMany({
+        where: { id: { in: ids }, businessId },
+        select: { id: true, tags: true },
+      });
+      let updated = 0;
+      for (const c of customers) {
+        const tags = (c.tags || []) as string[];
+        if (tags.includes(payload.tag)) {
+          await this.prisma.customer.update({
+            where: { id: c.id },
+            data: { tags: tags.filter((t) => t !== payload.tag) },
+          });
+          updated++;
+        }
+      }
+      return { updated };
+    }
+
+    throw new BadRequestException(`Unknown bulk action: ${action}`);
   }
 
   async bulkCreate(

@@ -1210,4 +1210,56 @@ describe('BookingService', () => {
       );
     });
   });
+
+  describe('bulkUpdate', () => {
+    it('updates status for multiple bookings', async () => {
+      prisma.booking.updateMany.mockResolvedValue({ count: 3 } as any);
+
+      const result = await bookingService.bulkUpdate(
+        'biz1', ['b1', 'b2', 'b3'], 'status', { status: 'CONFIRMED' }, 'ADMIN',
+      );
+
+      expect(result.updated).toBe(3);
+      expect(prisma.booking.updateMany).toHaveBeenCalledWith({
+        where: { id: { in: ['b1', 'b2', 'b3'] }, businessId: 'biz1' },
+        data: { status: 'CONFIRMED' },
+      });
+    });
+
+    it('assigns staff to multiple bookings', async () => {
+      prisma.booking.updateMany.mockResolvedValue({ count: 2 } as any);
+
+      const result = await bookingService.bulkUpdate(
+        'biz1', ['b1', 'b2'], 'assign', { staffId: 'staff1' }, 'ADMIN',
+      );
+
+      expect(result.updated).toBe(2);
+      expect(prisma.booking.updateMany).toHaveBeenCalledWith({
+        where: { id: { in: ['b1', 'b2'] }, businessId: 'biz1' },
+        data: { staffId: 'staff1' },
+      });
+    });
+
+    it('throws if no IDs provided', async () => {
+      await expect(
+        bookingService.bulkUpdate('biz1', [], 'status', { status: 'CONFIRMED' }, 'ADMIN'),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('throws if non-admin tries to bulk-cancel', async () => {
+      await expect(
+        bookingService.bulkUpdate('biz1', ['b1'], 'status', { status: 'CANCELLED' }, 'AGENT'),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('allows admin to bulk-cancel', async () => {
+      prisma.booking.updateMany.mockResolvedValue({ count: 1 } as any);
+
+      const result = await bookingService.bulkUpdate(
+        'biz1', ['b1'], 'status', { status: 'CANCELLED' }, 'ADMIN',
+      );
+
+      expect(result.updated).toBe(1);
+    });
+  });
 });

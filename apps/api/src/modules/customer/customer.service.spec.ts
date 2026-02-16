@@ -1,4 +1,5 @@
 import { Test } from '@nestjs/testing';
+import { BadRequestException } from '@nestjs/common';
 import { CustomerService } from './customer.service';
 import { PrismaService } from '../../common/prisma.service';
 import { ProfileExtractor } from '../ai/profile-extractor';
@@ -137,6 +138,50 @@ describe('CustomerService', () => {
         where: { id: 'c1', businessId: 'biz1' },
         data: { name: 'Updated' },
       });
+    });
+  });
+
+  describe('bulkUpdate', () => {
+    it('adds tag to customers that do not have it', async () => {
+      prisma.customer.findMany.mockResolvedValue([
+        { id: 'c1', tags: ['existing'] },
+        { id: 'c2', tags: [] },
+        { id: 'c3', tags: ['existing', 'vip'] },
+      ] as any);
+      prisma.customer.update.mockResolvedValue({} as any);
+
+      const result = await customerService.bulkUpdate('biz1', ['c1', 'c2', 'c3'], 'tag', { tag: 'vip' });
+
+      expect(result.updated).toBe(2);
+      expect(prisma.customer.update).toHaveBeenCalledTimes(2);
+    });
+
+    it('removes tag from customers that have it', async () => {
+      prisma.customer.findMany.mockResolvedValue([
+        { id: 'c1', tags: ['vip', 'premium'] },
+        { id: 'c2', tags: [] },
+      ] as any);
+      prisma.customer.update.mockResolvedValue({} as any);
+
+      const result = await customerService.bulkUpdate('biz1', ['c1', 'c2'], 'untag', { tag: 'vip' });
+
+      expect(result.updated).toBe(1);
+      expect(prisma.customer.update).toHaveBeenCalledWith({
+        where: { id: 'c1' },
+        data: { tags: ['premium'] },
+      });
+    });
+
+    it('throws if no IDs provided', async () => {
+      await expect(
+        customerService.bulkUpdate('biz1', [], 'tag', { tag: 'vip' }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('throws if tag is missing', async () => {
+      await expect(
+        customerService.bulkUpdate('biz1', ['c1'], 'tag', {}),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 

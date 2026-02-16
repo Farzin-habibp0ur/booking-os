@@ -4,7 +4,8 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useToast } from '@/lib/toast';
-import { Search, Plus, ChevronRight, Users, Upload, X, Loader2 } from 'lucide-react';
+import { Search, Plus, ChevronRight, Users, Upload, X, Loader2, Tag } from 'lucide-react';
+import BulkActionBar from '@/components/bulk-action-bar';
 import { cn } from '@/lib/cn';
 import { usePack } from '@/lib/vertical-pack';
 import { useI18n } from '@/lib/i18n';
@@ -20,6 +21,9 @@ export default function CustomersPage() {
   const [search, setSearch] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [showImport, setShowImport] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkTagModal, setBulkTagModal] = useState<'tag' | 'untag' | null>(null);
+  const [tagInput, setTagInput] = useState('');
 
   const load = (s?: string) => {
     api
@@ -32,6 +36,37 @@ export default function CustomersPage() {
   useEffect(() => {
     load();
   }, []);
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    const data = customers.data || [];
+    if (selectedIds.size === data.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(data.map((c: any) => c.id)));
+    }
+  };
+
+  const handleBulkTag = async () => {
+    if (!tagInput.trim() || !bulkTagModal) return;
+    await api.patch('/customers/bulk', {
+      ids: Array.from(selectedIds),
+      action: bulkTagModal,
+      payload: { tag: tagInput.trim() },
+    });
+    setSelectedIds(new Set());
+    setBulkTagModal(null);
+    setTagInput('');
+    load();
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,6 +129,14 @@ export default function CustomersPage() {
         <table className="w-full min-w-[640px]">
           <thead className="bg-slate-50 border-b">
             <tr>
+              <th className="w-10 p-3">
+                <input
+                  type="checkbox"
+                  checked={(customers.data || []).length > 0 && selectedIds.size === (customers.data || []).length}
+                  onChange={toggleSelectAll}
+                  className="rounded text-sage-600"
+                />
+              </th>
               <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
                 {t('common.name')}
               </th>
@@ -114,17 +157,24 @@ export default function CustomersPage() {
           </thead>
           <tbody className="divide-y">
             {loading
-              ? Array.from({ length: 5 }).map((_, i) => <TableRowSkeleton key={i} cols={6} />)
+              ? Array.from({ length: 5 }).map((_, i) => <TableRowSkeleton key={i} cols={7} />)
               : (customers.data || []).map((c: any) => (
                   <tr
                     key={c.id}
-                    className="hover:bg-slate-50 cursor-pointer"
-                    onClick={() => router.push(`/customers/${c.id}`)}
+                    className={cn('hover:bg-slate-50 cursor-pointer', selectedIds.has(c.id) && 'bg-sage-50/50')}
                   >
-                    <td className="p-3 text-sm font-medium">{c.name}</td>
-                    <td className="p-3 text-sm text-slate-600">{c.phone}</td>
-                    <td className="p-3 text-sm text-slate-600">{c.email || '—'}</td>
-                    <td className="p-3">
+                    <td className="w-10 p-3" onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(c.id)}
+                        onChange={() => toggleSelect(c.id)}
+                        className="rounded text-sage-600"
+                      />
+                    </td>
+                    <td className="p-3 text-sm font-medium" onClick={() => router.push(`/customers/${c.id}`)}>{c.name}</td>
+                    <td className="p-3 text-sm text-slate-600" onClick={() => router.push(`/customers/${c.id}`)}>{c.phone}</td>
+                    <td className="p-3 text-sm text-slate-600" onClick={() => router.push(`/customers/${c.id}`)}>{c.email || '—'}</td>
+                    <td className="p-3" onClick={() => router.push(`/customers/${c.id}`)}>
                       <div className="flex gap-1">
                         {c.tags?.map((tg: string) => (
                           <span key={tg} className="text-xs bg-slate-100 px-2 py-0.5 rounded-full">
@@ -133,10 +183,10 @@ export default function CustomersPage() {
                         ))}
                       </div>
                     </td>
-                    <td className="p-3 text-sm text-slate-500">
+                    <td className="p-3 text-sm text-slate-500" onClick={() => router.push(`/customers/${c.id}`)}>
                       {new Date(c.createdAt).toLocaleDateString()}
                     </td>
-                    <td className="p-3">
+                    <td className="p-3" onClick={() => router.push(`/customers/${c.id}`)}>
                       <ChevronRight size={14} className="text-slate-400" />
                     </td>
                   </tr>
@@ -164,6 +214,48 @@ export default function CustomersPage() {
           />
         )}
       </div>
+
+      <BulkActionBar
+        count={selectedIds.size}
+        onClear={() => setSelectedIds(new Set())}
+        actions={[
+          { label: 'Add Tag', onClick: () => { setTagInput(''); setBulkTagModal('tag'); } },
+          { label: 'Remove Tag', onClick: () => { setTagInput(''); setBulkTagModal('untag'); } },
+        ]}
+      />
+
+      {bulkTagModal && (
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-soft p-6 w-full max-w-sm">
+            <h3 className="text-lg font-serif font-semibold mb-4">
+              {bulkTagModal === 'tag' ? 'Add Tag' : 'Remove Tag'}
+            </h3>
+            <input
+              value={tagInput}
+              onChange={(e) => setTagInput(e.target.value)}
+              placeholder="Enter tag name"
+              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm mb-4"
+              autoFocus
+              onKeyDown={(e) => e.key === 'Enter' && handleBulkTag()}
+            />
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => setBulkTagModal(null)}
+                className="px-4 py-2 border rounded-xl text-sm transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleBulkTag}
+                disabled={!tagInput.trim()}
+                className="px-4 py-2 bg-sage-600 text-white rounded-xl text-sm hover:bg-sage-700 disabled:opacity-50 transition-colors"
+              >
+                {bulkTagModal === 'tag' ? 'Add' : 'Remove'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showForm && (
         <CustomerForm

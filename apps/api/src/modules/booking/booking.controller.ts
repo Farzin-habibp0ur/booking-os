@@ -71,6 +71,15 @@ export class BookingController {
     });
   }
 
+  @Patch('bulk')
+  bulkAction(
+    @BusinessId() businessId: string,
+    @Body() body: { ids: string[]; action: 'status' | 'assign'; payload: any },
+    @CurrentUser() user: any,
+  ) {
+    return this.bookingService.bulkUpdate(businessId, body.ids, body.action, body.payload, user?.role);
+  }
+
   @Post(':id/send-deposit-request')
   sendDepositRequest(@BusinessId() businessId: string, @Param('id') id: string) {
     return this.bookingService.sendDepositRequest(businessId, id);
