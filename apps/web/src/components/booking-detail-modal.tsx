@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth';
 import { X, Calendar, Clock, User, MessageSquare, AlertTriangle, Repeat, Send, ShieldCheck, Link2 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useI18n } from '@/lib/i18n';
+import { useToast } from '@/lib/toast';
 
 interface BookingDetailModalProps {
   booking: any;
@@ -48,6 +49,7 @@ export default function BookingDetailModal({
   const [overrideOverlay, setOverrideOverlay] = useState<{ action: string; label: string } | null>(null);
   const [overrideReason, setOverrideReason] = useState('');
   const { t } = useI18n();
+  const { toast } = useToast();
   const { user } = useAuth();
   const isAdmin = user?.role === 'ADMIN';
 
@@ -146,9 +148,11 @@ export default function BookingDetailModal({
       const updated = await api.post<any>(`/bookings/${booking.id}/send-deposit-request`);
       onUpdated(updated);
       setDepositSent(true);
+      toast(t('booking.deposit_sent_success'));
       setTimeout(() => setDepositSent(false), 2000);
     } catch (e) {
       console.error(e);
+      toast(t('booking.deposit_send_error'), 'error');
     }
     setSendingDeposit(false);
   };

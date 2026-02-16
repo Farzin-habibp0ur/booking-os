@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { useI18n, I18nProvider } from '@/lib/i18n';
-import { useToast } from '@/lib/toast';
+import { useToast, ToastProvider } from '@/lib/toast';
 import {
   Check,
   ChevronLeft,
@@ -63,7 +63,9 @@ const DAYS_KEYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'frid
 export default function SetupPageWrapper() {
   return (
     <I18nProvider>
-      <SetupPage />
+      <ToastProvider>
+        <SetupPage />
+      </ToastProvider>
     </I18nProvider>
   );
 }
@@ -114,6 +116,7 @@ function SetupPage() {
   // Clinic type / pack install
   const [packInstalling, setPackInstalling] = useState(false);
   const [packInstalled, setPackInstalled] = useState<{ services: number; templates: number } | null>(null);
+  const [selectedPack, setSelectedPack] = useState<string | null>(null);
 
   // Test booking
   const [testBookingLoading, setTestBookingLoading] = useState(false);
@@ -464,9 +467,14 @@ function SetupPage() {
             ) : (
               <>
                 <button
-                  onClick={() => installPack('aesthetic')}
+                  onClick={() => { setSelectedPack('aesthetic'); installPack('aesthetic'); }}
                   disabled={packInstalling}
-                  className="w-full bg-white rounded-2xl shadow-soft p-6 text-left hover:ring-2 hover:ring-sage-500 transition-all"
+                  className={cn(
+                    'w-full bg-white rounded-2xl shadow-soft p-6 text-left transition-all',
+                    selectedPack === 'aesthetic'
+                      ? 'ring-2 ring-sage-500 bg-sage-50'
+                      : 'hover:ring-2 hover:ring-sage-500',
+                  )}
                 >
                   <div className="flex items-start gap-4">
                     <div className="w-10 h-10 rounded-xl bg-sage-50 flex items-center justify-center flex-shrink-0">
@@ -489,9 +497,14 @@ function SetupPage() {
                 </button>
 
                 <button
-                  onClick={() => installPack('general')}
+                  onClick={() => { setSelectedPack('general'); installPack('general'); }}
                   disabled={packInstalling}
-                  className="w-full bg-white rounded-2xl shadow-soft p-6 text-left hover:ring-2 hover:ring-slate-300 transition-all"
+                  className={cn(
+                    'w-full bg-white rounded-2xl shadow-soft p-6 text-left transition-all',
+                    selectedPack === 'general'
+                      ? 'ring-2 ring-slate-400 bg-slate-50'
+                      : 'hover:ring-2 hover:ring-slate-300',
+                  )}
                 >
                   <div className="flex items-start gap-4">
                     <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center flex-shrink-0">
