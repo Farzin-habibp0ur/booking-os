@@ -39,6 +39,10 @@ export async function createBookingViaApi(
     headers,
     data,
   });
+  if (!response.ok()) {
+    const body = await response.text();
+    throw new Error(`Create booking failed (${response.status()}): ${body}`);
+  }
   return response.json();
 }
 

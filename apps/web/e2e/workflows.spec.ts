@@ -11,9 +11,23 @@ import {
 } from './helpers/api-data';
 
 test.describe('Workflow Tests', () => {
+  // Run serially to avoid parallel worker conflicts (shared DB state)
+  test.describe.configure({ mode: 'serial' });
+
   test.beforeEach(async ({ page }) => {
     await loginViaApi(page);
   });
+
+  // Helper: generate a unique future date far enough to avoid time slot conflicts
+  // Uses a large random day offset (30-90 days) + random minutes for uniqueness
+  let dateCounter = 0;
+  function uniqueFutureDate(hour: number): string {
+    dateCounter++;
+    const d = new Date();
+    d.setDate(d.getDate() + 30 + dateCounter * 10 + Math.floor(Math.random() * 5));
+    d.setHours(hour, Math.floor(Math.random() * 50) + 1, 0, 0);
+    return d.toISOString();
+  }
 
   test('Booking lifecycle: create and view', async ({ page }) => {
     const services = await getServicesViaApi(page);
@@ -24,16 +38,11 @@ test.describe('Workflow Tests', () => {
     expect(staff.length).toBeGreaterThan(0);
     expect(customers.length).toBeGreaterThan(0);
 
-    // Use a unique future time to avoid conflicts with parallel tests
-    const futureDate = new Date();
-    futureDate.setDate(futureDate.getDate() + 3);
-    futureDate.setHours(9, 0, 0, 0);
-
     const booking = await createBookingViaApi(page, {
       serviceId: services[0].id,
       staffId: staff[0].id,
       customerId: customers[0].id,
-      startTime: futureDate.toISOString(),
+      startTime: uniqueFutureDate(9),
     });
 
     expect(booking).toBeTruthy();
@@ -59,15 +68,11 @@ test.describe('Workflow Tests', () => {
       (s: any) => s.customFields?.depositRequired || s.name === 'Botox',
     ) || services[0];
 
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(11, 0, 0, 0);
-
     await createBookingViaApi(page, {
       serviceId: depositService.id,
       staffId: staff[0].id,
       customerId: customers[0].id,
-      startTime: tomorrow.toISOString(),
+      startTime: uniqueFutureDate(11),
     });
 
     await page.goto('/bookings');
@@ -88,15 +93,11 @@ test.describe('Workflow Tests', () => {
     // Find consult service or use first
     const consultService = services.find((s: any) => s.kind === 'CONSULT') || services[0];
 
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(14, 0, 0, 0);
-
     const booking = await createBookingViaApi(page, {
       serviceId: consultService.id,
       staffId: staff[0].id,
       customerId: customers[0].id,
-      startTime: tomorrow.toISOString(),
+      startTime: uniqueFutureDate(14),
     });
 
     // Mark as completed
@@ -114,15 +115,11 @@ test.describe('Workflow Tests', () => {
     const staff = await getStaffViaApi(page);
     const customers = await getCustomersViaApi(page);
 
-    const dayAfterTomorrow = new Date();
-    dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 2);
-    dayAfterTomorrow.setHours(10, 0, 0, 0);
-
     const booking = await createBookingViaApi(page, {
       serviceId: services[0].id,
       staffId: staff[0].id,
       customerId: customers[0].id,
-      startTime: dayAfterTomorrow.toISOString(),
+      startTime: uniqueFutureDate(10),
     });
 
     const linkResult = await sendRescheduleLinkViaApi(page, booking.id);
@@ -148,15 +145,11 @@ test.describe('Workflow Tests', () => {
     const staff = await getStaffViaApi(page);
     const customers = await getCustomersViaApi(page);
 
-    const dayAfterTomorrow = new Date();
-    dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 2);
-    dayAfterTomorrow.setHours(15, 0, 0, 0);
-
     const booking = await createBookingViaApi(page, {
       serviceId: services[0].id,
       staffId: staff[0].id,
       customerId: customers[0].id,
-      startTime: dayAfterTomorrow.toISOString(),
+      startTime: uniqueFutureDate(15),
     });
 
     const linkResult = await sendCancelLinkViaApi(page, booking.id);
