@@ -576,6 +576,36 @@ export default function BookingPortalPage() {
             </div>
           </div>
 
+          {/* Deposit warning */}
+          {selectedService.depositRequired && selectedService.depositAmount && (
+            <div className="bg-amber-50 rounded-2xl p-4 flex items-start gap-3">
+              <DollarSign size={20} className="text-amber-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-amber-800">Deposit Required</p>
+                <p className="text-xs text-amber-700 mt-0.5">
+                  A deposit of ${selectedService.depositAmount} is required to confirm this booking.
+                  You&apos;ll receive a payment link after booking.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Booking policies */}
+          {(business?.cancellationPolicyText || business?.reschedulePolicyText) && (
+            <div className="bg-slate-50 rounded-2xl p-4">
+              <div className="flex items-center gap-1.5 mb-2">
+                <ShieldCheck size={14} className="text-slate-500" />
+                <p className="text-xs font-medium text-slate-600">Booking Policies</p>
+              </div>
+              {business.cancellationPolicyText && (
+                <p className="text-xs text-slate-500">{business.cancellationPolicyText}</p>
+              )}
+              {business.reschedulePolicyText && (
+                <p className="text-xs text-slate-500 mt-1">{business.reschedulePolicyText}</p>
+              )}
+            </div>
+          )}
+
           {submitError && (
             <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm">{submitError}</div>
           )}
@@ -587,6 +617,12 @@ export default function BookingPortalPage() {
           >
             {submitting ? 'Booking...' : 'Confirm Booking'}
           </button>
+
+          {/* Trust badge */}
+          <div className="flex items-center justify-center gap-1.5 text-xs text-slate-400">
+            <ShieldCheck size={14} />
+            <span>Secure booking powered by Booking OS</span>
+          </div>
         </div>
       )}
 
