@@ -48,3 +48,21 @@ export function checkProfileCompleteness(
 
   return { complete: missingFields.length === 0, missingFields };
 }
+
+export function checkIntakeCompleteness(
+  customer: { customFields?: Record<string, any> },
+  fields: Array<{ key: string; label: string }>,
+): { filled: number; total: number; missing: string[] } {
+  const total = fields.length;
+  const missing: string[] = [];
+
+  for (const field of fields) {
+    const value = customer.customFields?.[field.key];
+    // boolean false counts as filled; only undefined/null/'' are missing
+    if (value === undefined || value === null || value === '') {
+      missing.push(field.key);
+    }
+  }
+
+  return { filled: total - missing.length, total, missing };
+}

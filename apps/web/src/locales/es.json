@@ -164,7 +164,15 @@
     "now": "ahora",
     "minutes_relative": "{{count}}m",
     "hours_relative": "{{count}}h",
-    "days_relative": "{{count}}d"
+    "days_relative": "{{count}}d",
+    "clinic_intake": "Ficha Clínica",
+    "intake_complete": "{{filled}}/{{total}} completo",
+    "intake_not_set": "Sin datos",
+    "intake_edit": "Editar",
+    "intake_save": "Guardar",
+    "intake_cancel": "Cancelar",
+    "intake_saved": "Ficha actualizada",
+    "intake_save_failed": "Error al actualizar ficha"
   },
 
   "calendar": {

@@ -10,6 +10,11 @@ export const aestheticPack: VerticalPackDefinition = {
   customerFields: [
     { key: 'isMedicalFlagged', type: 'boolean', label: 'Medical Flag' },
     { key: 'allergies', type: 'text', label: 'Known Allergies' },
+    { key: 'concernArea', type: 'text', label: 'Concern Area' },
+    { key: 'desiredTreatment', type: 'text', label: 'Desired Treatment' },
+    { key: 'budget', type: 'select', label: 'Budget Range', options: ['Under $250', '$250-$500', '$500-$1000', 'Over $1000'] },
+    { key: 'preferredProvider', type: 'text', label: 'Preferred Provider' },
+    { key: 'contraindications', type: 'text', label: 'Contraindications' },
   ],
   bookingFields: [
     { key: 'isConsultation', type: 'boolean', label: 'Consultation Visit' },

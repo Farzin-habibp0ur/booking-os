@@ -208,6 +208,11 @@ async function main() {
         customFields: {
           allergies: 'None known',
           isMedicalFlagged: false,
+          concernArea: 'Fine lines around eyes',
+          desiredTreatment: 'Botox',
+          budget: '$250-$500',
+          preferredProvider: 'Dr. Sarah Chen',
+          contraindications: 'None',
         },
       },
     }),
@@ -220,6 +225,10 @@ async function main() {
         customFields: {
           allergies: 'Latex',
           isMedicalFlagged: true,
+          concernArea: 'Lip volume',
+          desiredTreatment: 'Dermal Filler',
+          budget: '$500-$1000',
+          contraindications: 'Blood thinners',
         },
       },
     }),

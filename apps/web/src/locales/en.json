@@ -164,7 +164,15 @@
     "now": "now",
     "minutes_relative": "{{count}}m",
     "hours_relative": "{{count}}h",
-    "days_relative": "{{count}}d"
+    "days_relative": "{{count}}d",
+    "clinic_intake": "Clinic Intake",
+    "intake_complete": "{{filled}}/{{total}} complete",
+    "intake_not_set": "Not set",
+    "intake_edit": "Edit",
+    "intake_save": "Save",
+    "intake_cancel": "Cancel",
+    "intake_saved": "Intake updated",
+    "intake_save_failed": "Failed to update intake"
   },
 
   "calendar": {

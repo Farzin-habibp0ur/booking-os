@@ -31,6 +31,8 @@ import BookingFormModal from '@/components/booking-form-modal';
 import AiSuggestions from '@/components/ai-suggestions';
 import AiBookingPanel from '@/components/ai-booking-panel';
 import AiSummary from '@/components/ai-summary';
+import ClinicIntakeCard from '@/components/clinic-intake-card';
+import { usePack } from '@/lib/vertical-pack';
 
 type Filter = 'all' | 'unassigned' | 'mine' | 'overdue' | 'waiting' | 'snoozed' | 'closed';
 
@@ -64,6 +66,7 @@ const SNOOZE_HOURS = [
 
 export default function InboxPage() {
   const { t } = useI18n();
+  const pack = usePack();
   const [conversations, setConversations] = useState<any[]>([]);
   const [selected, setSelected] = useState<any>(null);
   const [messages, setMessages] = useState<any[]>([]);
@@ -1069,6 +1072,14 @@ export default function InboxPage() {
                     </span>
                   </div>
                 </div>
+              )}
+
+              {customer && pack.customerFields.length > 0 && (
+                <ClinicIntakeCard
+                  customer={customer}
+                  fields={pack.customerFields}
+                  onUpdated={(updated) => setCustomer(updated)}
+                />
               )}
 
               <div className="p-4 border-b">

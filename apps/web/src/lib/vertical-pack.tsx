@@ -3,11 +3,13 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { api } from './api';
 
-interface PackField {
+export interface PackField {
   key: string;
   type: string;
   label: string;
   options?: string[];
+  required?: boolean;
+  placeholder?: string;
 }
 
 interface VerticalPack {

@@ -134,6 +134,7 @@ export interface VerticalFieldDefinition {
   label: string;
   options?: string[];
   required?: boolean;
+  placeholder?: string;
 }
 
 export interface VerticalPackDefinition {
