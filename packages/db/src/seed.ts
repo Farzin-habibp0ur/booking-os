@@ -11,6 +11,7 @@ async function main() {
   console.log('🌱 Seeding database...');
 
   // Clean existing data
+  await prisma.roiBaseline.deleteMany();
   await prisma.payment.deleteMany();
   await prisma.message.deleteMany();
   await prisma.reminder.deleteMany();
@@ -541,6 +542,42 @@ async function main() {
   });
 
   console.log(`✅ Business notification settings updated`);
+
+  // Create sample ROI baseline
+  const baselineEnd = new Date();
+  baselineEnd.setDate(baselineEnd.getDate() - 7);
+  const baselineStart = new Date(baselineEnd);
+  baselineStart.setDate(baselineStart.getDate() - 7);
+
+  await prisma.roiBaseline.create({
+    data: {
+      businessId: business.id,
+      goLiveDate: baselineEnd,
+      baselineStart,
+      baselineEnd,
+      metrics: {
+        noShowRate: 18,
+        noShowTotal: 50,
+        noShowCount: 9,
+        consultConversionRate: 45,
+        consultCustomers: 11,
+        consultConverted: 5,
+        avgResponseMinutes: 12,
+        responseSampleSize: 40,
+        totalRevenue: 4200,
+        completedBookings: 32,
+        avgBookingValue: 131.25,
+        statusBreakdown: [
+          { status: 'COMPLETED', count: 32 },
+          { status: 'NO_SHOW', count: 9 },
+          { status: 'CANCELLED', count: 5 },
+          { status: 'PENDING', count: 4 },
+        ],
+      },
+    },
+  });
+
+  console.log(`✅ ROI baseline created`);
 
   console.log(`✅ Sample booking and reminder created`);
   console.log('\n🎉 Seed complete!');

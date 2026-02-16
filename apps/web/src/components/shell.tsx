@@ -19,6 +19,7 @@ import {
   Scissors,
   UserCog,
   BarChart3,
+  TrendingUp,
   Settings,
   LogOut,
 } from 'lucide-react';
@@ -67,6 +68,9 @@ function ShellInner({ children }: { children: ReactNode }) {
     },
     { href: '/staff', label: t('nav.staff'), icon: UserCog, roles: ['ADMIN'] },
     { href: '/reports', label: t('nav.reports'), icon: BarChart3, roles: ['ADMIN', 'AGENT'] },
+    ...(pack.name !== 'general'
+      ? [{ href: '/roi', label: t('nav.roi'), icon: TrendingUp, roles: ['ADMIN'] }]
+      : []),
     { href: '/settings', label: t('nav.settings'), icon: Settings, roles: ['ADMIN', 'AGENT', 'SERVICE_PROVIDER'] },
   ];
 

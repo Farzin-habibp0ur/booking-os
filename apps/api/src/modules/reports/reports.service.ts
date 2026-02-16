@@ -24,22 +24,29 @@ export class ReportsService {
     return Object.entries(grouped).map(([date, count]) => ({ date, count }));
   }
 
-  async noShowRate(businessId: string, days: number = 30) {
-    const since = new Date();
-    since.setDate(since.getDate() - days);
+  async noShowRate(businessId: string, days: number = 30, startDate?: Date, endDate?: Date) {
+    const dateFilter: any = {};
+    if (startDate) {
+      dateFilter.gte = startDate;
+      if (endDate) dateFilter.lte = endDate;
+    } else {
+      const since = new Date();
+      since.setDate(since.getDate() - days);
+      dateFilter.gte = since;
+    }
 
     const [total, noShows] = await Promise.all([
       this.prisma.booking.count({
         where: {
           businessId,
-          startTime: { gte: since },
+          startTime: dateFilter,
           status: { in: ['COMPLETED', 'NO_SHOW'] },
         },
       }),
       this.prisma.booking.count({
         where: {
           businessId,
-          startTime: { gte: since },
+          startTime: dateFilter,
           status: 'NO_SHOW',
         },
       }),
@@ -145,12 +152,19 @@ export class ReportsService {
       .sort((a, b) => b.total - a.total);
   }
 
-  async revenueOverTime(businessId: string, days: number = 30) {
-    const since = new Date();
-    since.setDate(since.getDate() - days);
+  async revenueOverTime(businessId: string, days: number = 30, startDate?: Date, endDate?: Date) {
+    const dateFilter: any = {};
+    if (startDate) {
+      dateFilter.gte = startDate;
+      if (endDate) dateFilter.lte = endDate;
+    } else {
+      const since = new Date();
+      since.setDate(since.getDate() - days);
+      dateFilter.gte = since;
+    }
 
     const bookings = await this.prisma.booking.findMany({
-      where: { businessId, createdAt: { gte: since }, status: 'COMPLETED' },
+      where: { businessId, createdAt: dateFilter, status: 'COMPLETED' },
       include: { service: { select: { price: true } } },
       orderBy: { createdAt: 'asc' },
     });
@@ -167,12 +181,19 @@ export class ReportsService {
     }));
   }
 
-  async statusBreakdown(businessId: string, days: number = 30) {
-    const since = new Date();
-    since.setDate(since.getDate() - days);
+  async statusBreakdown(businessId: string, days: number = 30, startDate?: Date, endDate?: Date) {
+    const dateFilter: any = {};
+    if (startDate) {
+      dateFilter.gte = startDate;
+      if (endDate) dateFilter.lte = endDate;
+    } else {
+      const since = new Date();
+      since.setDate(since.getDate() - days);
+      dateFilter.gte = since;
+    }
 
     const bookings = await this.prisma.booking.findMany({
-      where: { businessId, createdAt: { gte: since } },
+      where: { businessId, createdAt: dateFilter },
       select: { status: true },
     });
 
@@ -184,15 +205,22 @@ export class ReportsService {
     return Object.entries(map).map(([status, count]) => ({ status, count }));
   }
 
-  async consultToTreatmentConversion(businessId: string, days: number = 30) {
-    const since = new Date();
-    since.setDate(since.getDate() - days);
+  async consultToTreatmentConversion(businessId: string, days: number = 30, startDate?: Date, endDate?: Date) {
+    const dateFilter: any = {};
+    if (startDate) {
+      dateFilter.gte = startDate;
+      if (endDate) dateFilter.lte = endDate;
+    } else {
+      const since = new Date();
+      since.setDate(since.getDate() - days);
+      dateFilter.gte = since;
+    }
 
     // Find customers with completed consult bookings in the period
     const consultBookings = await this.prisma.booking.findMany({
       where: {
         businessId,
-        startTime: { gte: since },
+        startTime: dateFilter,
         status: 'COMPLETED',
         service: { kind: 'CONSULT' },
       },
@@ -222,6 +250,30 @@ export class ReportsService {
       consultCustomers: total,
       converted,
       rate: total > 0 ? Math.round((converted / total) * 100) : 0,
+    };
+  }
+
+  async depositComplianceRate(businessId: string, startDate?: Date, endDate?: Date) {
+    const dateFilter: any = startDate ? { gte: startDate } : {};
+    if (endDate) dateFilter.lte = endDate;
+
+    const whereBase: any = {
+      businessId,
+      service: { depositRequired: true },
+      ...(Object.keys(dateFilter).length > 0 ? { startTime: dateFilter } : {}),
+    };
+
+    const [totalRequired, paid] = await Promise.all([
+      this.prisma.booking.count({ where: whereBase }),
+      this.prisma.booking.count({
+        where: { ...whereBase, status: { in: ['CONFIRMED', 'COMPLETED'] } },
+      }),
+    ]);
+
+    return {
+      totalRequired,
+      paid,
+      rate: totalRequired > 0 ? Math.round((paid / totalRequired) * 100) : 0,
     };
   }
 

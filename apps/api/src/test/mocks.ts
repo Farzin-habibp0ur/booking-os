@@ -106,6 +106,32 @@ export function createMockConfigService() {
   };
 }
 
+export function createMockReportsService() {
+  return {
+    bookingsOverTime: jest.fn().mockResolvedValue([]),
+    noShowRate: jest.fn().mockResolvedValue({ total: 50, noShows: 5, rate: 10 }),
+    responseTimes: jest.fn().mockResolvedValue({ avgMinutes: 8, sampleSize: 30 }),
+    serviceBreakdown: jest.fn().mockResolvedValue([]),
+    staffPerformance: jest.fn().mockResolvedValue([]),
+    revenueOverTime: jest.fn().mockResolvedValue([{ date: '2026-02-01', revenue: 500 }]),
+    statusBreakdown: jest.fn().mockResolvedValue([
+      { status: 'COMPLETED', count: 30 },
+      { status: 'NO_SHOW', count: 5 },
+    ]),
+    consultToTreatmentConversion: jest.fn().mockResolvedValue({
+      consultCustomers: 10,
+      converted: 6,
+      rate: 60,
+    }),
+    depositComplianceRate: jest.fn().mockResolvedValue({
+      totalRequired: 15,
+      paid: 12,
+      rate: 80,
+    }),
+    peakHours: jest.fn().mockResolvedValue({ byHour: [], byDay: [] }),
+  };
+}
+
 export function createMockAvailabilityService() {
   return {
     getAvailableSlots: jest.fn().mockResolvedValue([

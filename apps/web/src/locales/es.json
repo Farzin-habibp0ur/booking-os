@@ -53,6 +53,7 @@
     "services": "{{entity}}s",
     "staff": "Personal",
     "reports": "Reportes",
+    "roi": "ROI",
     "settings": "Configuración",
     "logout": "Cerrar sesión"
   },
@@ -354,6 +355,40 @@
     "revenue_col": "Ingresos",
     "bookings_by_hour": "Reservas por hora",
     "bookings_by_day": "Reservas por día de la semana"
+  },
+
+  "roi": {
+    "title": "Panel de ROI",
+    "go_live_title": "Marca tu clínica como activa",
+    "go_live_description": "Captura una línea base de rendimiento de los últimos 7 días. Esta instantánea se usará para medir cómo Booking OS mejora tu negocio.",
+    "go_live_button": "Marcar como activa",
+    "go_live_confirm": "Esto tomará una instantánea de los últimos 7 días como línea base. ¿Continuar?",
+    "go_live_success": "¡Línea base capturada!",
+    "go_live_error": "Error al capturar la línea base",
+    "already_live": "La línea base ya existe",
+    "baseline_banner": "Inicio: {{date}} — Ventana base: {{start}} a {{end}}",
+    "period_7d": "7 días",
+    "period_30d": "30 días",
+    "period_90d": "90 días",
+    "no_show_rate": "Tasa de ausencias",
+    "consult_conversion": "Consulta → Tratamiento",
+    "avg_response": "Respuesta promedio",
+    "deposit_compliance": "Cumplimiento de depósitos",
+    "revenue": "Ingresos",
+    "completed_bookings": "Completadas",
+    "delta_improved": "mejoró",
+    "delta_worsened": "empeoró",
+    "delta_no_change": "sin cambio",
+    "recovered_revenue_title": "Ingresos recuperados",
+    "recovered_revenue_desc": "Estimación conservadora de ingresos ahorrados al reducir ausencias desde el inicio.",
+    "insufficient_data": "Datos insuficientes",
+    "insufficient_data_desc": "Se necesitan al menos 20 reservas completadas + ausencias en el período base y actual para calcular los ingresos recuperados.",
+    "no_improvement": "La tasa de ausencias no ha mejorado respecto a la línea base.",
+    "how_we_calculate": "Cómo calculamos esto",
+    "formula_explanation": "(Tasa base {{baseline}}% − Tasa actual {{current}}%) × {{bookings}} reservas completadas × ${{avgValue}} valor promedio",
+    "no_show_trend": "Tendencia de ausencias",
+    "revenue_trend": "Tendencia de ingresos",
+    "baseline_label": "Línea base"
   },
 
   "settings": {

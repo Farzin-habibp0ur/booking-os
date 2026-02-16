@@ -33,6 +33,7 @@ model Business {
   translations      Translation[]
   subscription      Subscription?
   aiUsage           AiUsage[]
+  roiBaselines      RoiBaseline[]
 
   @@map("businesses")
 }
@@ -370,6 +371,21 @@ model Token {
   @@index([email, type])
   @@index([bookingId, type])
   @@map("tokens")
+}
+
+model RoiBaseline {
+  id            String   @id @default(cuid())
+  businessId    String
+  goLiveDate    DateTime
+  baselineStart DateTime
+  baselineEnd   DateTime
+  metrics       Json
+  createdAt     DateTime @default(now())
+
+  business Business @relation(fields: [businessId], references: [id])
+
+  @@index([businessId])
+  @@map("roi_baselines")
 }
 
 model CalendarConnection {

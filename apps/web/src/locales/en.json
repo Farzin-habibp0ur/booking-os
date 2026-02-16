@@ -53,6 +53,7 @@
     "services": "{{entity}}s",
     "staff": "Staff",
     "reports": "Reports",
+    "roi": "ROI",
     "settings": "Settings",
     "logout": "Logout"
   },
@@ -354,6 +355,40 @@
     "revenue_col": "Revenue",
     "bookings_by_hour": "Bookings by Hour",
     "bookings_by_day": "Bookings by Day of Week"
+  },
+
+  "roi": {
+    "title": "ROI Dashboard",
+    "go_live_title": "Mark Your Clinic as Live",
+    "go_live_description": "Capture a performance baseline from the last 7 days. This snapshot will be used to measure how Booking OS improves your business.",
+    "go_live_button": "Mark as Live",
+    "go_live_confirm": "This will snapshot your last 7 days as the baseline. Continue?",
+    "go_live_success": "Baseline captured!",
+    "go_live_error": "Failed to capture baseline",
+    "already_live": "Baseline already exists",
+    "baseline_banner": "Go-live: {{date}} — Baseline window: {{start}} to {{end}}",
+    "period_7d": "7 days",
+    "period_30d": "30 days",
+    "period_90d": "90 days",
+    "no_show_rate": "No-Show Rate",
+    "consult_conversion": "Consult → Treatment",
+    "avg_response": "Avg Response",
+    "deposit_compliance": "Deposit Compliance",
+    "revenue": "Revenue",
+    "completed_bookings": "Completed",
+    "delta_improved": "improved",
+    "delta_worsened": "worsened",
+    "delta_no_change": "no change",
+    "recovered_revenue_title": "Recovered Revenue",
+    "recovered_revenue_desc": "Conservative estimate of revenue saved by reducing no-shows since go-live.",
+    "insufficient_data": "Not enough data yet",
+    "insufficient_data_desc": "At least 20 completed + no-show bookings are needed in both the baseline and current period to calculate recovered revenue.",
+    "no_improvement": "No-show rate has not improved compared to baseline.",
+    "how_we_calculate": "How we calculate this",
+    "formula_explanation": "(Baseline no-show rate {{baseline}}% − Current no-show rate {{current}}%) × {{bookings}} completed bookings × ${{avgValue}} avg booking value",
+    "no_show_trend": "No-Show Rate Trend",
+    "revenue_trend": "Revenue Trend",
+    "baseline_label": "Baseline"
   },
 
   "settings": {

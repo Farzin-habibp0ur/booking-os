@@ -17,6 +17,46 @@ describe('ReportsService', () => {
     reportsService = module.get(ReportsService);
   });
 
+  describe('noShowRate', () => {
+    it('uses startDate/endDate when provided', async () => {
+      prisma.booking.count.mockResolvedValue(0);
+      const start = new Date('2026-01-01');
+      const end = new Date('2026-01-07');
+
+      await reportsService.noShowRate('biz1', 30, start, end);
+
+      expect(prisma.booking.count).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            startTime: { gte: start, lte: end },
+          }),
+        }),
+      );
+    });
+
+    it('falls back to days param when no startDate', async () => {
+      prisma.booking.count.mockResolvedValue(0);
+
+      await reportsService.noShowRate('biz1', 7);
+
+      const call = prisma.booking.count.mock.calls[0][0] as any;
+      expect(call.where.startTime.gte).toBeInstanceOf(Date);
+      expect(call.where.startTime.lte).toBeUndefined();
+    });
+  });
+
+  describe('depositComplianceRate', () => {
+    it('returns correct counts for deposit-required bookings', async () => {
+      prisma.booking.count
+        .mockResolvedValueOnce(10) // totalRequired
+        .mockResolvedValueOnce(7); // paid
+
+      const result = await reportsService.depositComplianceRate('biz1');
+
+      expect(result).toEqual({ totalRequired: 10, paid: 7, rate: 70 });
+    });
+  });
+
   describe('consultToTreatmentConversion', () => {
     it('returns zero when no consult bookings exist', async () => {
       prisma.booking.findMany.mockResolvedValue([]);
