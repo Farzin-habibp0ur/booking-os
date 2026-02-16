@@ -129,7 +129,7 @@ describe('BookingService', () => {
       expect(result).toEqual(booking);
       expect(prisma.booking.findFirst).toHaveBeenCalledWith({
         where: { id: 'b1', businessId: 'biz1' },
-        include: { customer: true, service: true, staff: true, conversation: true, reminders: true },
+        include: { customer: true, service: true, staff: true, conversation: true, reminders: true, recurringSeries: { select: { id: true } } },
       });
     });
   });

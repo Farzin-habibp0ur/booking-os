@@ -25,6 +25,7 @@ model Business {
   customers         Customer[]
   services          Service[]
   bookings          Booking[]
+  recurringSeries   RecurringSeries[]
   conversations     Conversation[]
   reminders         Reminder[]
   messageTemplates  MessageTemplate[]
@@ -49,6 +50,7 @@ model Staff {
 
   business              Business              @relation(fields: [businessId], references: [id])
   bookings              Booking[]
+  recurringSeries       RecurringSeries[]
   conversations         Conversation[]        @relation("AssignedConversations")
   messages              Message[]             @relation("SentMessages")
   notes                 ConversationNote[]    @relation("StaffNotes")
@@ -71,9 +73,10 @@ model Customer {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  business      Business       @relation(fields: [businessId], references: [id])
-  bookings      Booking[]
-  conversations Conversation[]
+  business        Business          @relation(fields: [businessId], references: [id])
+  bookings        Booking[]
+  recurringSeries RecurringSeries[]
+  conversations   Conversation[]
 
   @@unique([businessId, phone])
   @@index([businessId])
@@ -97,8 +100,9 @@ model Service {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  business Business  @relation(fields: [businessId], references: [id])
-  bookings Booking[]
+  business        Business          @relation(fields: [businessId], references: [id])
+  bookings        Booking[]
+  recurringSeries RecurringSeries[]
 
   @@index([businessId])
   @@map("services")
@@ -111,6 +115,7 @@ model Booking {
   serviceId      String
   staffId        String?
   conversationId String?
+  recurringSeriesId String?
   status         String   @default("PENDING")
   startTime      DateTime
   endTime        DateTime
@@ -120,18 +125,44 @@ model Booking {
   createdAt                 DateTime @default(now())
   updatedAt                 DateTime @updatedAt
 
-  business     Business      @relation(fields: [businessId], references: [id])
-  customer     Customer      @relation(fields: [customerId], references: [id])
-  service      Service       @relation(fields: [serviceId], references: [id])
-  staff        Staff?        @relation(fields: [staffId], references: [id])
-  conversation Conversation? @relation(fields: [conversationId], references: [id])
-  reminders    Reminder[]
-  payments     Payment[]
+  business        Business         @relation(fields: [businessId], references: [id])
+  customer        Customer         @relation(fields: [customerId], references: [id])
+  service         Service          @relation(fields: [serviceId], references: [id])
+  staff           Staff?           @relation(fields: [staffId], references: [id])
+  conversation    Conversation?    @relation(fields: [conversationId], references: [id])
+  recurringSeries RecurringSeries? @relation(fields: [recurringSeriesId], references: [id])
+  reminders       Reminder[]
+  payments        Payment[]
 
   @@index([businessId])
   @@index([businessId, startTime])
   @@index([businessId, status])
   @@map("bookings")
+}
+
+model RecurringSeries {
+  id            String    @id @default(cuid())
+  businessId    String
+  customerId    String
+  serviceId     String
+  staffId       String?
+  timeOfDay     String
+  daysOfWeek    Int[]
+  intervalWeeks Int       @default(1)
+  totalCount    Int
+  endsAt        DateTime?
+  notes         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  business Business  @relation(fields: [businessId], references: [id])
+  customer Customer  @relation(fields: [customerId], references: [id])
+  service  Service   @relation(fields: [serviceId], references: [id])
+  staff    Staff?    @relation(fields: [staffId], references: [id])
+  bookings Booking[]
+
+  @@index([businessId])
+  @@map("recurring_series")
 }
 
 model Conversation {

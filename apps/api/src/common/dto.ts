@@ -9,10 +9,14 @@ import {
   IsBoolean,
   IsEmail,
   IsNotEmpty,
+  IsInt,
   Min,
+  Max,
   MinLength,
-  ValidateNested,
   ArrayMinSize,
+  ArrayNotEmpty,
+  ValidateNested,
+  Matches,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -469,4 +473,63 @@ export class InviteStaffDto {
   @IsEnum(['OWNER', 'AGENT'], { message: 'role must be one of: OWNER, AGENT' })
   @IsOptional()
   role?: string;
+}
+
+// ---- Recurring Series DTOs ----
+
+export class CreateRecurringSeriesDto {
+  @IsString()
+  @IsNotEmpty()
+  customerId!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  serviceId!: string;
+
+  @IsString()
+  @IsOptional()
+  staffId?: string;
+
+  @IsDateString()
+  startDate!: string;
+
+  @Matches(/^\d{2}:\d{2}$/, { message: 'timeOfDay must be in HH:mm format' })
+  timeOfDay!: string;
+
+  @IsArray()
+  @ArrayNotEmpty()
+  @IsInt({ each: true })
+  @Min(0, { each: true })
+  @Max(6, { each: true })
+  daysOfWeek!: number[];
+
+  @IsInt()
+  @Min(1)
+  @Max(4)
+  intervalWeeks!: number;
+
+  @IsInt()
+  @Min(1)
+  @Max(52)
+  @IsOptional()
+  totalCount?: number;
+
+  @IsDateString()
+  @IsOptional()
+  endsAt?: string;
+
+  @IsString()
+  @IsOptional()
+  notes?: string;
+}
+
+export class CancelRecurringSeriesDto {
+  @IsEnum(['single', 'future', 'all'], {
+    message: 'scope must be one of: single, future, all',
+  })
+  scope!: 'single' | 'future' | 'all';
+
+  @IsString()
+  @IsOptional()
+  bookingId?: string;
 }
