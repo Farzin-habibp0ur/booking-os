@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { LoggerModule } from 'nestjs-pino';
 import { PrismaModule } from './common/prisma.module';
 import { InboxGatewayModule } from './common/inbox.gateway.module';
 import { AuthModule } from './modules/auth/auth.module';
@@ -29,6 +30,21 @@ import { QueueModule } from './common/queue/queue.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    LoggerModule.forRoot({
+      pinoHttp: {
+        level: process.env.LOG_LEVEL || 'info',
+        transport:
+          process.env.NODE_ENV !== 'production'
+            ? { target: 'pino-pretty', options: { colorize: true } }
+            : undefined,
+        genReqId: (req) =>
+          req.headers['x-request-id'] || crypto.randomUUID(),
+        redact: ['req.headers.authorization', 'req.headers.cookie'],
+        autoLogging: {
+          ignore: (req) => req.url === '/api/v1/health',
+        },
+      },
+    }),
     ScheduleModule.forRoot(),
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
     PrismaModule,

@@ -1,5 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
+import { Logger as PinoLogger } from 'nestjs-pino';
 import * as Sentry from '@sentry/nestjs';
 import helmet from 'helmet';
 import { json } from 'express';
@@ -20,7 +21,9 @@ if (process.env.SENTRY_DSN) {
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     rawBody: true, // Required for Stripe webhook signature verification
+    bufferLogs: true,
   });
+  app.useLogger(app.get(PinoLogger));
   const logger = new Logger('Bootstrap');
 
   // Security headers

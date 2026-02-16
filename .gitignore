@@ -11,3 +11,9 @@ dist/
 
 # SSL certificates
 nginx/ssl/
+
+# Database backups
+backups/
+
+# Certbot data
+certbot/
