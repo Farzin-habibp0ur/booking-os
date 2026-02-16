@@ -94,6 +94,21 @@ describe('SettingsPage', () => {
     });
   });
 
+  test('shows billing quick link', async () => {
+    mockApi.get.mockResolvedValue({
+      name: 'Test Clinic',
+      phone: '+1234',
+      timezone: 'America/New_York',
+      verticalPack: 'general',
+    });
+
+    render(<SettingsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('settings.billing')).toBeInTheDocument();
+    });
+  });
+
   test('has change password section with translation keys', async () => {
     mockApi.get.mockResolvedValue({
       name: 'Test Clinic',

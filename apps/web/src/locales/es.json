@@ -368,7 +368,38 @@
     "password_updated": "Contraseña actualizada",
     "password_min_length": "La contraseña debe tener al menos 8 caracteres",
     "passwords_no_match": "Las contraseñas no coinciden",
-    "password_change_failed": "Error al cambiar la contraseña"
+    "password_change_failed": "Error al cambiar la contraseña",
+    "billing": "Facturación",
+    "billing_desc": "Gestiona tu plan de suscripción y detalles de pago"
+  },
+
+  "billing": {
+    "title": "Facturación",
+    "basic_plan": "Básico",
+    "pro_plan": "Pro",
+    "basic_price": "$29/mes",
+    "pro_price": "$79/mes",
+    "recommended": "Recomendado",
+    "subscribe": "Suscribirse",
+    "change_plan": "Cambiar plan",
+    "manage_billing": "Gestionar facturación",
+    "renews_on": "Se renueva el {{date}}",
+    "status_active": "Activo",
+    "status_trialing": "Prueba",
+    "status_past_due": "Pago vencido",
+    "status_canceled": "Cancelado",
+    "past_due_warning": "Tu pago está vencido. Actualiza tu método de pago para evitar la interrupción del servicio.",
+    "canceled_warning": "Tu suscripción ha sido cancelada. Suscríbete de nuevo para restaurar el acceso a todas las funciones.",
+    "feature_bookings": "Reservas ilimitadas",
+    "feature_customers": "Gestión de clientes",
+    "feature_inbox": "Bandeja de WhatsApp",
+    "feature_reports": "Reportes básicos",
+    "feature_everything_basic": "Todo lo del plan Básico",
+    "feature_ai": "Respuestas y asistente con IA",
+    "feature_api": "Acceso a API e integraciones",
+    "feature_priority_support": "Soporte prioritario",
+    "checkout_error": "Error al iniciar el pago. Inténtalo de nuevo.",
+    "portal_error": "Error al abrir el portal de facturación. Inténtalo de nuevo."
   },
 
   "translations": {

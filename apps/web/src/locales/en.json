@@ -368,7 +368,38 @@
     "password_updated": "Password updated",
     "password_min_length": "Password must be at least 8 characters",
     "passwords_no_match": "Passwords do not match",
-    "password_change_failed": "Failed to change password"
+    "password_change_failed": "Failed to change password",
+    "billing": "Billing",
+    "billing_desc": "Manage your subscription plan and payment details"
+  },
+
+  "billing": {
+    "title": "Billing",
+    "basic_plan": "Basic",
+    "pro_plan": "Pro",
+    "basic_price": "$29/mo",
+    "pro_price": "$79/mo",
+    "recommended": "Recommended",
+    "subscribe": "Subscribe",
+    "change_plan": "Change Plan",
+    "manage_billing": "Manage Billing",
+    "renews_on": "Renews on {{date}}",
+    "status_active": "Active",
+    "status_trialing": "Trialing",
+    "status_past_due": "Past Due",
+    "status_canceled": "Canceled",
+    "past_due_warning": "Your payment is past due. Please update your payment method to avoid service interruption.",
+    "canceled_warning": "Your subscription has been canceled. Subscribe again to restore access to all features.",
+    "feature_bookings": "Unlimited bookings",
+    "feature_customers": "Customer management",
+    "feature_inbox": "WhatsApp inbox",
+    "feature_reports": "Basic reports",
+    "feature_everything_basic": "Everything in Basic",
+    "feature_ai": "AI-powered replies & assistant",
+    "feature_api": "API access & integrations",
+    "feature_priority_support": "Priority support",
+    "checkout_error": "Failed to start checkout. Please try again.",
+    "portal_error": "Failed to open billing portal. Please try again."
   },
 
   "translations": {
