@@ -88,18 +88,15 @@ jobs:
 
     env:
       RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-      RAILWAY_PROJECT_ID: 37eeca20-7dfe-45d9-8d29-e902a545f475
 
     steps:
       - uses: actions/checkout@v4
 
       - name: Install Railway CLI
         run: npm install -g @railway/cli
-      - name: Link Railway project
-        run: railway link --project $RAILWAY_PROJECT_ID --environment production
       - name: Run database migrations
-        run: railway run --service api npx prisma migrate deploy --schema=packages/db/prisma/schema.prisma
+        run: railway run --service api -p 37eeca20-7dfe-45d9-8d29-e902a545f475 -e production npx prisma migrate deploy --schema=packages/db/prisma/schema.prisma
       - name: Deploy API
-        run: railway up --service api --detach
+        run: railway up --service api -p 37eeca20-7dfe-45d9-8d29-e902a545f475 -e production --detach
       - name: Deploy Web
-        run: railway up --service web --detach
+        run: railway up --service web -p 37eeca20-7dfe-45d9-8d29-e902a545f475 -e production --detach
