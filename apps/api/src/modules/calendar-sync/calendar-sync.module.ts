@@ -1,5 +1,6 @@
 import { Module, Global } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { JwtModule } from '@nestjs/jwt';
 import { CalendarSyncService } from './calendar-sync.service';
 import { CalendarSyncController } from './calendar-sync.controller';
 import { IcalFeedController } from './ical-feed.controller';
@@ -8,7 +9,7 @@ import { OutlookCalendarProvider } from './providers/outlook-calendar.provider';
 
 @Global()
 @Module({
-  imports: [ConfigModule],
+  imports: [ConfigModule, JwtModule.register({})],
   controllers: [CalendarSyncController, IcalFeedController],
   providers: [CalendarSyncService, GoogleCalendarProvider, OutlookCalendarProvider],
   exports: [CalendarSyncService],
