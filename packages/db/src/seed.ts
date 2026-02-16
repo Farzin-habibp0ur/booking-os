@@ -40,6 +40,7 @@ async function main() {
       timezone: 'America/Los_Angeles',
       verticalPack: 'aesthetic',
       packConfig: {
+        setupComplete: true,
         requireConsultation: true,
         medicalFormRequired: true,
         requiredProfileFields: ['firstName', 'email'],
