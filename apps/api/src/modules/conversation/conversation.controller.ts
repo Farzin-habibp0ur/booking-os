@@ -9,6 +9,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { ConversationService } from './conversation.service';
 import { BookingService } from '../booking/booking.service';
@@ -23,6 +24,7 @@ import {
   AddNoteDto,
 } from '../../common/dto';
 
+@ApiTags('Conversations')
 @Controller('conversations')
 @UseGuards(AuthGuard('jwt'), TenantGuard)
 export class ConversationController {

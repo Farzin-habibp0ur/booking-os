@@ -9,12 +9,14 @@ import {
   RawBodyRequest,
   BadRequestException,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { Request } from 'express';
 import { BillingService } from './billing.service';
 import { BusinessId } from '../../common/decorators';
 import { TenantGuard } from '../../common/tenant.guard';
 
+@ApiTags('Billing')
 @Controller('billing')
 export class BillingController {
   constructor(private billingService: BillingService) {}

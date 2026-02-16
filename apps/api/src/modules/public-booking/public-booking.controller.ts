@@ -8,12 +8,14 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { PrismaService } from '../../common/prisma.service';
 import { AvailabilityService } from '../availability/availability.service';
 import { CustomerService } from '../customer/customer.service';
 import { BookingService } from '../booking/booking.service';
 
+@ApiTags('Public Booking')
 @Controller('public')
 export class PublicBookingController {
   constructor(

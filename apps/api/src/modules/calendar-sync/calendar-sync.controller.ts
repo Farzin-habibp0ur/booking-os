@@ -9,12 +9,14 @@ import {
   UseGuards,
   BadRequestException,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { Response } from 'express';
 import { CalendarSyncService } from './calendar-sync.service';
 import { CurrentUser } from '../../common/decorators';
 import { TenantGuard } from '../../common/tenant.guard';
 
+@ApiTags('Calendar Sync')
 @Controller('calendar-sync')
 export class CalendarSyncController {
   constructor(private calendarSyncService: CalendarSyncService) {}

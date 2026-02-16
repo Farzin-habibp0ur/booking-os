@@ -1,10 +1,12 @@
 import { Controller, Get, Post, Patch, Delete, Param, Body, UseGuards } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { ServiceService } from './service.service';
 import { BusinessId } from '../../common/decorators';
 import { TenantGuard } from '../../common/tenant.guard';
 import { CreateServiceDto, UpdateServiceDto } from '../../common/dto';
 
+@ApiTags('Services')
 @Controller('services')
 @UseGuards(AuthGuard('jwt'), TenantGuard)
 export class ServiceController {

@@ -1,10 +1,12 @@
 import { Controller, Get, Post, Delete, Query, Body, Param, UseGuards } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { TenantGuard } from '../../common/tenant.guard';
 import { RolesGuard, Roles } from '../../common/roles.guard';
 import { BusinessId } from '../../common/decorators';
 import { TranslationService } from './translation.service';
 
+@ApiTags('Translations')
 @Controller('translations')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
 export class TranslationController {

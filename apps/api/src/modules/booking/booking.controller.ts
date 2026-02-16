@@ -1,10 +1,12 @@
 import { Controller, Get, Post, Patch, Param, Body, Query, UseGuards } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { BookingService } from './booking.service';
 import { BusinessId } from '../../common/decorators';
 import { TenantGuard } from '../../common/tenant.guard';
 import { CreateBookingDto, UpdateBookingDto, UpdateBookingStatusDto } from '../../common/dto';
 
+@ApiTags('Bookings')
 @Controller('bookings')
 @UseGuards(AuthGuard('jwt'), TenantGuard)
 export class BookingController {

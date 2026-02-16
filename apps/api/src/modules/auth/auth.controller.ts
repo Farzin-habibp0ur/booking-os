@@ -1,4 +1,5 @@
 import { Controller, Post, Get, Body, Res, Req, UseGuards } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { Throttle } from '@nestjs/throttler';
 import { ConfigService } from '@nestjs/config';
@@ -13,6 +14,7 @@ import {
   AcceptInviteDto,
 } from '../../common/dto';
 
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(

@@ -11,6 +11,7 @@ import {
   UploadedFile,
   BadRequestException,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CustomerService } from './customer.service';
@@ -18,6 +19,7 @@ import { BusinessId } from '../../common/decorators';
 import { TenantGuard } from '../../common/tenant.guard';
 import { CreateCustomerDto, UpdateCustomerDto } from '../../common/dto';
 
+@ApiTags('Customers')
 @Controller('customers')
 @UseGuards(AuthGuard('jwt'), TenantGuard)
 export class CustomerController {

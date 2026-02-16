@@ -1,4 +1,5 @@
 import { Controller, Get, Patch, Body, UseGuards } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { BusinessService } from './business.service';
 import { BusinessId } from '../../common/decorators';
@@ -6,6 +7,7 @@ import { TenantGuard } from '../../common/tenant.guard';
 import { RolesGuard, Roles } from '../../common/guards/roles.guard';
 import { UpdateBusinessDto } from '../../common/dto';
 
+@ApiTags('Business')
 @Controller('business')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
 export class BusinessController {

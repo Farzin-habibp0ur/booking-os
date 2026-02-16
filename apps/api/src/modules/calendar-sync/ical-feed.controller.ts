@@ -1,7 +1,9 @@
 import { Controller, Get, Param, Res, NotFoundException } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import { CalendarSyncService } from './calendar-sync.service';
 
+@ApiTags('iCal Feed')
 @Controller('ical')
 export class IcalFeedController {
   constructor(private calendarSyncService: CalendarSyncService) {}

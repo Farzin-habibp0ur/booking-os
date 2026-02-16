@@ -8,12 +8,14 @@ import {
   UseGuards,
   BadRequestException,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { TenantGuard } from '../../common/tenant.guard';
 import { BusinessId, CurrentUser } from '../../common/decorators';
 import { BusinessService } from '../business/business.service';
 import { AiService } from './ai.service';
 
+@ApiTags('AI')
 @Controller('ai')
 @UseGuards(AuthGuard('jwt'), TenantGuard)
 export class AiController {

@@ -1,10 +1,12 @@
 import { Controller, Get, Post, Param, Body, UseGuards } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { RecurringService } from './recurring.service';
 import { BusinessId } from '../../common/decorators';
 import { TenantGuard } from '../../common/tenant.guard';
 import { CreateRecurringSeriesDto, CancelRecurringSeriesDto } from '../../common/dto';
 
+@ApiTags('Recurring Bookings')
 @Controller('bookings/recurring')
 @UseGuards(AuthGuard('jwt'), TenantGuard)
 export class RecurringController {

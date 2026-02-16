@@ -12,6 +12,7 @@ import {
   forwardRef,
   Logger,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
 import { PrismaService } from '../../common/prisma.service';
@@ -23,6 +24,7 @@ import { AiService } from '../ai/ai.service';
 import { WebhookInboundDto } from '../../common/dto';
 import { WhatsAppCloudProvider } from '@booking-os/messaging-provider';
 
+@ApiTags('Messaging Webhooks')
 @Controller('webhook')
 export class WebhookController {
   private readonly logger = new Logger(WebhookController.name);

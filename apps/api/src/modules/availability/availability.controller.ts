@@ -1,9 +1,11 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { AvailabilityService } from './availability.service';
 import { BusinessId } from '../../common/decorators';
 import { TenantGuard } from '../../common/tenant.guard';
 
+@ApiTags('Availability')
 @Controller('availability')
 @UseGuards(AuthGuard('jwt'), TenantGuard)
 export class AvailabilityController {

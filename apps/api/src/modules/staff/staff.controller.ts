@@ -1,4 +1,5 @@
 import { Controller, Get, Post, Patch, Delete, Param, Body, UseGuards } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { StaffService } from './staff.service';
 import { AvailabilityService } from '../availability/availability.service';
@@ -13,6 +14,7 @@ import {
   InviteStaffDto,
 } from '../../common/dto';
 
+@ApiTags('Staff')
 @Controller('staff')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
 export class StaffController {

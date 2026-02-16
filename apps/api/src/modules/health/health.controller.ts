@@ -1,7 +1,9 @@
 import { Controller, Get } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../common/prisma.service';
 
+@ApiTags('Health')
 @Controller('health')
 export class HealthController {
   private readonly startTime = Date.now();

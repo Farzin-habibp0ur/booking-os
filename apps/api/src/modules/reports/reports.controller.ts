@@ -1,9 +1,11 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { ReportsService } from './reports.service';
 import { BusinessId } from '../../common/decorators';
 import { TenantGuard } from '../../common/tenant.guard';
 
+@ApiTags('Reports')
 @Controller('reports')
 @UseGuards(AuthGuard('jwt'), TenantGuard)
 export class ReportsController {
