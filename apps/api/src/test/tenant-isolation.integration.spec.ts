@@ -10,7 +10,12 @@ import { JwtStrategy } from '../modules/auth/jwt.strategy';
 import { ProfileExtractor } from '../modules/ai/profile-extractor';
 import { NotificationService } from '../modules/notification/notification.service';
 import { BusinessService } from '../modules/business/business.service';
-import { createMockNotificationService, createMockBusinessService } from './mocks';
+import { CalendarSyncService } from '../modules/calendar-sync/calendar-sync.service';
+import {
+  createMockNotificationService,
+  createMockBusinessService,
+  createMockCalendarSyncService,
+} from './mocks';
 
 describe('Tenant Isolation', () => {
   let ctx: IntegrationTestContext;
@@ -33,6 +38,7 @@ describe('Tenant Isolation', () => {
         { provide: ProfileExtractor, useValue: mockProfileExtractor },
         { provide: NotificationService, useValue: createMockNotificationService() },
         { provide: BusinessService, useValue: createMockBusinessService() },
+        { provide: CalendarSyncService, useValue: createMockCalendarSyncService() },
       ],
     );
 
@@ -41,7 +47,7 @@ describe('Tenant Isolation', () => {
   });
 
   afterAll(async () => {
-    await ctx.app.close();
+    await ctx?.app?.close();
   });
 
   describe('Booking isolation', () => {
