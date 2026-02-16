@@ -509,6 +509,16 @@ export default function BookingDetailModal({
                   </span>
                 </div>
               ))}
+              {(booking.customFields?.notificationLog || []).map((entry: any, i: number) => (
+                <div key={`notif-${i}`} className="flex items-center gap-2 text-xs text-sage-700">
+                  <Send size={12} className="flex-shrink-0" />
+                  <span>
+                    {t(`timeline.notification_${entry.category.toLowerCase()}`)}
+                    {' · '}
+                    {new Date(entry.sentAt).toLocaleString()}
+                  </span>
+                </div>
+              ))}
               {booking.status !== 'PENDING' && booking.status !== 'CONFIRMED' && booking.status !== 'PENDING_DEPOSIT' && (
                 <div className="flex items-center gap-2 text-xs text-slate-500">
                   <div

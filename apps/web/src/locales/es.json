@@ -584,6 +584,8 @@
     "category_aftercare": "Cuidados posteriores",
     "category_treatment_check_in": "Seguimiento de tratamiento",
     "category_deposit_required": "Depósito Requerido",
+    "category_reschedule_link": "Enlace de Reprogramar",
+    "category_cancel_link": "Enlace de Cancelar",
     "category_custom": "Personalizado",
     "no_templates": "No se encontraron plantillas. Crea tu primera plantilla.",
     "preview": "Vista previa",
@@ -600,7 +602,9 @@
     "unknown_var": "(desconocida)",
     "show_preview": "Mostrar vista previa",
     "hide_preview": "Ocultar vista previa",
-    "delete_confirm": "¿Eliminar esta plantilla?"
+    "delete_confirm": "¿Eliminar esta plantilla?",
+    "unresolved_warning": "{{count}} variable(s) sin resolver",
+    "unresolved_in_preview": "Sin resolver"
   },
 
   "setup": {
@@ -900,7 +904,17 @@
     "reschedule_link_sent": "Enlace de reprogramación enviado",
     "cancel_link_sent": "Enlace de cancelación enviado",
     "rescheduled_by_customer": "Reprogramado por el cliente",
-    "cancelled_by_customer": "Cancelado por el cliente"
+    "cancelled_by_customer": "Cancelado por el cliente",
+    "notification_confirmation": "Confirmación enviada",
+    "notification_reminder": "Recordatorio enviado",
+    "notification_follow_up": "Seguimiento enviado",
+    "notification_consult_follow_up": "Seguimiento de consulta enviado",
+    "notification_aftercare": "Instrucciones de cuidado enviadas",
+    "notification_treatment_check_in": "Seguimiento de tratamiento enviado",
+    "notification_deposit_required": "Solicitud de depósito enviada",
+    "notification_reschedule_link": "Enlace de reprogramación enviado",
+    "notification_cancel_link": "Enlace de cancelación enviado",
+    "notification_cancellation": "Confirmación de cancelación enviada"
   },
 
   "self_serve": {

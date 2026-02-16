@@ -66,6 +66,24 @@ export const aestheticPack: VerticalPackDefinition = {
       body: 'Hi {{customerName}}, your {{serviceName}} at {{businessName}} on {{date}} at {{time}} requires a deposit of ${{depositAmount}} to confirm your booking. Please complete your payment to secure your appointment.',
       variables: ['customerName', 'serviceName', 'businessName', 'date', 'time', 'depositAmount'],
     },
+    {
+      name: 'Cancellation Confirmation',
+      category: TemplateCategory.CANCELLATION,
+      body: 'Hi {{customerName}}, your {{serviceName}} on {{date}} at {{time}} at {{businessName}} has been cancelled. If this was a mistake, please contact us to rebook.',
+      variables: ['customerName', 'serviceName', 'date', 'time', 'businessName'],
+    },
+    {
+      name: 'Reschedule Link',
+      category: TemplateCategory.RESCHEDULE_LINK,
+      body: 'Hi {{customerName}}, need to reschedule your {{serviceName}} on {{date}} at {{time}}? Use this link: {{rescheduleLink}}',
+      variables: ['customerName', 'serviceName', 'date', 'time', 'rescheduleLink'],
+    },
+    {
+      name: 'Cancel Link',
+      category: TemplateCategory.CANCEL_LINK,
+      body: 'Hi {{customerName}}, need to cancel your {{serviceName}} on {{date}} at {{time}}? Use this link: {{cancelLink}}',
+      variables: ['customerName', 'serviceName', 'date', 'time', 'cancelLink'],
+    },
   ],
   defaultServices: [
     { name: 'Consultation', durationMins: 30, price: 0, category: 'Consultation', kind: 'CONSULT' },

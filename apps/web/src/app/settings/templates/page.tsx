@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
-import { Plus, Pencil, Trash2, Eye, X, FileText } from 'lucide-react';
+import { Plus, Pencil, Trash2, Eye, X, FileText, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useI18n } from '@/lib/i18n';
 
-const CATEGORIES = ['CONFIRMATION', 'REMINDER', 'FOLLOW_UP', 'CONSULT_FOLLOW_UP', 'AFTERCARE', 'TREATMENT_CHECK_IN', 'DEPOSIT_REQUIRED', 'CANCELLATION', 'CUSTOM'];
+const CATEGORIES = ['CONFIRMATION', 'REMINDER', 'FOLLOW_UP', 'CONSULT_FOLLOW_UP', 'AFTERCARE', 'TREATMENT_CHECK_IN', 'DEPOSIT_REQUIRED', 'CANCELLATION', 'RESCHEDULE_LINK', 'CANCEL_LINK', 'CUSTOM'];
 
 const CATEGORY_KEYS: Record<string, string> = {
   CONFIRMATION: 'templates.category_confirmation',
@@ -17,6 +17,8 @@ const CATEGORY_KEYS: Record<string, string> = {
   TREATMENT_CHECK_IN: 'templates.category_treatment_check_in',
   DEPOSIT_REQUIRED: 'templates.category_deposit_required',
   CANCELLATION: 'templates.category_cancellation',
+  RESCHEDULE_LINK: 'templates.category_reschedule_link',
+  CANCEL_LINK: 'templates.category_cancel_link',
   CUSTOM: 'templates.category_custom',
 };
 
@@ -28,6 +30,9 @@ const SAMPLE_VARS: Record<string, string> = {
   staffName: 'Dr. Sarah Chen',
   businessName: 'Glow Aesthetic Clinic',
   bookingLink: 'glow-aesthetic/book',
+  rescheduleLink: 'https://clinic.example.com/reschedule/abc123',
+  cancelLink: 'https://clinic.example.com/cancel/abc123',
+  depositAmount: '50',
 };
 
 export default function TemplatesPage() {
@@ -54,11 +59,23 @@ export default function TemplatesPage() {
   };
 
   const resolvePreview = (body: string) => {
-    let resolved = body;
-    for (const [key, value] of Object.entries(SAMPLE_VARS)) {
-      resolved = resolved.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), value);
-    }
-    return resolved;
+    const parts = body.split(/(\{\{\w+\}\})/g);
+    return parts.map((part, i) => {
+      const match = part.match(/^\{\{(\w+)\}\}$/);
+      if (match) {
+        const varName = match[1];
+        if (SAMPLE_VARS[varName]) return <span key={i}>{SAMPLE_VARS[varName]}</span>;
+        return <span key={i} className="bg-red-100 text-red-700 px-1 rounded">{part}</span>;
+      }
+      return <span key={i}>{part}</span>;
+    });
+  };
+
+  const getUnresolvedVars = (body: string) => {
+    const matches = body.match(/\{\{(\w+)\}\}/g) || [];
+    return matches
+      .map((m: string) => m.replace(/\{\{|\}\}/g, ''))
+      .filter((v: string) => !SAMPLE_VARS[v]);
   };
 
   return (
@@ -132,7 +149,11 @@ export default function TemplatesPage() {
                                   ? 'bg-amber-100 text-amber-700'
                                   : tpl.category === 'CANCELLATION'
                                     ? 'bg-red-100 text-red-700'
-                                    : 'bg-slate-100 text-slate-700',
+                                    : tpl.category === 'RESCHEDULE_LINK'
+                                      ? 'bg-sage-100 text-sage-700'
+                                      : tpl.category === 'CANCEL_LINK'
+                                        ? 'bg-red-50 text-red-600'
+                                        : 'bg-slate-100 text-slate-700',
                     )}
                   >
                     {t(CATEGORY_KEYS[tpl.category] || 'templates.category_custom')}
@@ -155,6 +176,17 @@ export default function TemplatesPage() {
                     ))}
                   </div>
                 )}
+
+                {/* Unresolved variable warning */}
+                {(() => {
+                  const unresolvedVars = getUnresolvedVars(tpl.body || '');
+                  return unresolvedVars.length > 0 ? (
+                    <div className="flex items-center gap-1 mt-2 text-xs text-amber-700">
+                      <AlertTriangle size={12} />
+                      {t('templates.unresolved_warning', { count: unresolvedVars.length })}
+                    </div>
+                  ) : null;
+                })()}
 
                 {/* Preview */}
                 {previewId === tpl.id && (
@@ -247,11 +279,16 @@ function TemplateForm({
   );
 
   const resolvePreview = (text: string) => {
-    let resolved = text;
-    for (const [key, value] of Object.entries(SAMPLE_VARS)) {
-      resolved = resolved.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), value);
-    }
-    return resolved;
+    const parts = text.split(/(\{\{\w+\}\})/g);
+    return parts.map((part, i) => {
+      const match = part.match(/^\{\{(\w+)\}\}$/);
+      if (match) {
+        const varName = match[1];
+        if (SAMPLE_VARS[varName]) return <span key={i}>{SAMPLE_VARS[varName]}</span>;
+        return <span key={i} className="bg-red-100 text-red-700 px-1 rounded">{part}</span>;
+      }
+      return <span key={i}>{part}</span>;
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

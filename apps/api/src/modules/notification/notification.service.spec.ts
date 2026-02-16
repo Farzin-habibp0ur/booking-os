@@ -540,4 +540,183 @@ describe('NotificationService', () => {
       expect(emailService.send).toHaveBeenCalled();
     });
   });
+
+  describe('sendCancellationNotification', () => {
+    beforeEach(async () => {
+      const module = await createModule(false);
+      notificationService = module.get(NotificationService);
+    });
+
+    it('sends via WhatsApp and email when channels = both', async () => {
+      prisma.messageTemplate.findMany.mockResolvedValue([]);
+      prisma.booking.findUnique.mockResolvedValue({ customFields: {} } as any);
+      prisma.booking.update.mockResolvedValue({} as any);
+
+      await notificationService.sendCancellationNotification(mockBooking);
+
+      expect(mockProvider.sendMessage).toHaveBeenCalledWith({
+        to: '+1234567890',
+        body: expect.stringContaining('cancelled'),
+        businessId: 'biz1',
+      });
+
+      expect(emailService.send).toHaveBeenCalledWith({
+        to: 'jane@example.com',
+        subject: expect.stringContaining('Appointment Cancelled'),
+        html: expect.stringContaining('Glow Clinic'),
+      });
+    });
+
+    it('resolves CANCELLATION template when one exists', async () => {
+      const template = {
+        id: 'tpl-cancel',
+        body: 'Hi {{customerName}}, your {{serviceName}} has been cancelled.',
+        variables: ['customerName', 'serviceName'],
+        category: 'CANCELLATION',
+      };
+      prisma.messageTemplate.findMany.mockResolvedValue([template] as any);
+      templateService.resolveVariables.mockResolvedValue(
+        'Hi Jane Doe, your Haircut has been cancelled.',
+      );
+      prisma.booking.findUnique.mockResolvedValue({ customFields: {} } as any);
+      prisma.booking.update.mockResolvedValue({} as any);
+
+      await notificationService.sendCancellationNotification(mockBooking);
+
+      expect(templateService.resolveVariables).toHaveBeenCalledWith(
+        template,
+        expect.objectContaining({
+          customerName: 'Jane Doe',
+          serviceName: 'Haircut',
+        }),
+      );
+    });
+
+    it('logs notification event to booking timeline', async () => {
+      prisma.messageTemplate.findMany.mockResolvedValue([]);
+      prisma.booking.findUnique.mockResolvedValue({ customFields: {} } as any);
+      prisma.booking.update.mockResolvedValue({} as any);
+
+      await notificationService.sendCancellationNotification(mockBooking);
+
+      expect(prisma.booking.update).toHaveBeenCalledWith({
+        where: { id: 'booking1' },
+        data: {
+          customFields: {
+            notificationLog: [
+              expect.objectContaining({
+                type: 'sent',
+                category: 'CANCELLATION',
+                sentAt: expect.any(String),
+              }),
+            ],
+          },
+        },
+      });
+    });
+  });
+
+  describe('logNotificationEvent', () => {
+    beforeEach(async () => {
+      const module = await createModule(false);
+      notificationService = module.get(NotificationService);
+    });
+
+    it('appends to existing notificationLog array', async () => {
+      prisma.booking.findUnique.mockResolvedValue({
+        customFields: {
+          notificationLog: [{ type: 'sent', category: 'CONFIRMATION', sentAt: '2026-01-01T00:00:00Z' }],
+        },
+      } as any);
+      prisma.booking.update.mockResolvedValue({} as any);
+
+      await notificationService.logNotificationEvent('booking1', 'sent', 'REMINDER');
+
+      expect(prisma.booking.update).toHaveBeenCalledWith({
+        where: { id: 'booking1' },
+        data: {
+          customFields: {
+            notificationLog: [
+              { type: 'sent', category: 'CONFIRMATION', sentAt: '2026-01-01T00:00:00Z' },
+              expect.objectContaining({ type: 'sent', category: 'REMINDER' }),
+            ],
+          },
+        },
+      });
+    });
+
+    it('creates notificationLog when customFields is empty', async () => {
+      prisma.booking.findUnique.mockResolvedValue({ customFields: null } as any);
+      prisma.booking.update.mockResolvedValue({} as any);
+
+      await notificationService.logNotificationEvent('booking1', 'sent', 'FOLLOW_UP');
+
+      expect(prisma.booking.update).toHaveBeenCalledWith({
+        where: { id: 'booking1' },
+        data: {
+          customFields: {
+            notificationLog: [
+              expect.objectContaining({ type: 'sent', category: 'FOLLOW_UP' }),
+            ],
+          },
+        },
+      });
+    });
+
+    it('preserves other customFields data', async () => {
+      prisma.booking.findUnique.mockResolvedValue({
+        customFields: {
+          depositRequestLog: [{ sentAt: '2026-01-01T00:00:00Z' }],
+          notificationLog: [],
+        },
+      } as any);
+      prisma.booking.update.mockResolvedValue({} as any);
+
+      await notificationService.logNotificationEvent('booking1', 'sent', 'AFTERCARE');
+
+      expect(prisma.booking.update).toHaveBeenCalledWith({
+        where: { id: 'booking1' },
+        data: {
+          customFields: expect.objectContaining({
+            depositRequestLog: [{ sentAt: '2026-01-01T00:00:00Z' }],
+          }),
+        },
+      });
+    });
+  });
+
+  describe('template fallbacks', () => {
+    beforeEach(async () => {
+      const module = await createModule(false);
+      notificationService = module.get(NotificationService);
+    });
+
+    it('falls back to CANCELLATION default message', async () => {
+      prisma.messageTemplate.findMany.mockResolvedValue([]);
+      prisma.booking.findUnique.mockResolvedValue({ customFields: {} } as any);
+      prisma.booking.update.mockResolvedValue({} as any);
+
+      await notificationService.sendCancellationNotification(mockBooking);
+
+      expect(mockProvider.sendMessage).toHaveBeenCalledWith({
+        to: '+1234567890',
+        body: expect.stringContaining('cancelled'),
+        businessId: 'biz1',
+      });
+    });
+
+    it('falls back to RESCHEDULE_LINK default message', async () => {
+      prisma.messageTemplate.findMany.mockResolvedValue([]);
+      prisma.booking.findUnique.mockResolvedValue({ customFields: {} } as any);
+      prisma.booking.update.mockResolvedValue({} as any);
+
+      await notificationService.sendRescheduleLink(mockBooking, 'https://example.com/reschedule/abc');
+
+      expect(mockProvider.sendMessage).toHaveBeenCalledWith({
+        to: '+1234567890',
+        body: expect.stringContaining('https://example.com/reschedule/abc'),
+        businessId: 'biz1',
+      });
+    });
+  });
 });

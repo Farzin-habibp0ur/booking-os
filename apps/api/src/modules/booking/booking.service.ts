@@ -321,6 +321,11 @@ export class BookingService {
 
       // Fire-and-forget calendar sync — remove event
       this.calendarSyncService.syncBookingToCalendar(booking, 'cancel').catch(() => {});
+
+      // Send cancellation notification
+      if (status === 'CANCELLED') {
+        this.notificationService.sendCancellationNotification(booking).catch(() => {});
+      }
     }
 
     // Create follow-up reminder when booking is completed

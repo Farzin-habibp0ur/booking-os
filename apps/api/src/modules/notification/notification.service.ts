@@ -68,6 +68,8 @@ export class NotificationService {
         }
       }
 
+      await this.logNotificationEvent(booking.id, 'sent', 'CONFIRMATION');
+
       this.logger.log(`Sent booking confirmation for ${booking.id} via ${channels}`);
     } catch (error) {
       this.logger.error(`Failed to send booking confirmation for ${booking.id}:`, error);
@@ -109,6 +111,8 @@ export class NotificationService {
         }
       }
 
+      await this.logNotificationEvent(booking.id, 'sent', 'REMINDER');
+
       this.logger.log(`Sent reminder for ${booking.id} via ${channels}`);
     } catch (error) {
       this.logger.error(`Failed to send reminder for ${booking.id}:`, error);
@@ -149,6 +153,8 @@ export class NotificationService {
           await this.dispatchEmail(booking.customer.email, subject, html);
         }
       }
+
+      await this.logNotificationEvent(booking.id, 'sent', 'FOLLOW_UP');
 
       this.logger.log(`Sent follow-up for ${booking.id} via ${channels}`);
     } catch (error) {
@@ -194,6 +200,8 @@ export class NotificationService {
         }
       }
 
+      await this.logNotificationEvent(booking.id, 'sent', 'CONSULT_FOLLOW_UP');
+
       this.logger.log(`Sent consult follow-up for ${booking.id} via ${channels}`);
     } catch (error) {
       this.logger.error(`Failed to send consult follow-up for ${booking.id}:`, error);
@@ -235,6 +243,8 @@ export class NotificationService {
         }
       }
 
+      await this.logNotificationEvent(booking.id, 'sent', 'AFTERCARE');
+
       this.logger.log(`Sent aftercare for ${booking.id} via ${channels}`);
     } catch (error) {
       this.logger.error(`Failed to send aftercare for ${booking.id}:`, error);
@@ -275,6 +285,8 @@ export class NotificationService {
           await this.dispatchEmail(booking.customer.email, subject, html);
         }
       }
+
+      await this.logNotificationEvent(booking.id, 'sent', 'TREATMENT_CHECK_IN');
 
       this.logger.log(`Sent treatment check-in for ${booking.id} via ${channels}`);
     } catch (error) {
@@ -319,6 +331,8 @@ export class NotificationService {
         }
       }
 
+      await this.logNotificationEvent(booking.id, 'sent', 'DEPOSIT_REQUIRED');
+
       this.logger.log(`Sent deposit request for ${booking.id} via ${channels}`);
     } catch (error) {
       this.logger.error(`Failed to send deposit request for ${booking.id}:`, error);
@@ -360,6 +374,8 @@ export class NotificationService {
           await this.dispatchEmail(booking.customer.email, subject, html);
         }
       }
+
+      await this.logNotificationEvent(booking.id, 'sent', 'RESCHEDULE_LINK');
 
       this.logger.log(`Sent reschedule link for ${booking.id} via ${channels}`);
     } catch (error) {
@@ -403,9 +419,82 @@ export class NotificationService {
         }
       }
 
+      await this.logNotificationEvent(booking.id, 'sent', 'CANCEL_LINK');
+
       this.logger.log(`Sent cancel link for ${booking.id} via ${channels}`);
     } catch (error) {
       this.logger.error(`Failed to send cancel link for ${booking.id}:`, error);
+    }
+  }
+
+  async sendCancellationNotification(booking: BookingWithRelations): Promise<void> {
+    try {
+      const channels = await this.getChannelPreference(booking.businessId);
+      const business =
+        booking.business || (await this.businessService.findById(booking.businessId));
+      const businessName = business?.name || 'Our Business';
+
+      const context = {
+        customerName: booking.customer.name,
+        serviceName: booking.service.name,
+        date: booking.startTime.toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        }),
+        time: booking.startTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+        staffName: booking.staff?.name || '',
+        businessName,
+      };
+
+      const body = await this.resolveTemplate(booking.businessId, 'CANCELLATION', context);
+
+      if (channels === 'whatsapp' || channels === 'both') {
+        await this.dispatchWhatsApp(booking.customer.phone, body, booking.businessId);
+      }
+
+      if (channels === 'email' || channels === 'both') {
+        if (booking.customer.email) {
+          const subject = `Appointment Cancelled - ${booking.service.name} at ${businessName}`;
+          const html = this.wrapInEmailHtml(body, businessName);
+          await this.dispatchEmail(booking.customer.email, subject, html);
+        }
+      }
+
+      await this.logNotificationEvent(booking.id, 'sent', 'CANCELLATION');
+
+      this.logger.log(`Sent cancellation notification for ${booking.id} via ${channels}`);
+    } catch (error) {
+      this.logger.error(`Failed to send cancellation notification for ${booking.id}:`, error);
+    }
+  }
+
+  async logNotificationEvent(bookingId: string, type: string, category: string): Promise<void> {
+    try {
+      const booking = await this.prisma.booking.findUnique({
+        where: { id: bookingId },
+        select: { customFields: true },
+      });
+
+      const existingFields = (booking?.customFields as any) || {};
+      const notificationLog = Array.isArray(existingFields.notificationLog)
+        ? existingFields.notificationLog
+        : [];
+
+      notificationLog.push({ type, category, sentAt: new Date().toISOString() });
+
+      await this.prisma.booking.update({
+        where: { id: bookingId },
+        data: {
+          customFields: {
+            ...existingFields,
+            notificationLog,
+          },
+        },
+      });
+    } catch (error) {
+      this.logger.error(`Failed to log notification event for ${bookingId}:`, error);
     }
   }
 
@@ -442,6 +531,7 @@ export class NotificationService {
       DEPOSIT_REQUIRED: `Hi ${context.customerName}, your ${context.serviceName} at ${context.businessName} on ${context.date} at ${context.time} requires a deposit of $${context.depositAmount || '0'} to confirm. Please complete your payment to secure your appointment.`,
       RESCHEDULE_LINK: `Hi ${context.customerName}, need to reschedule your ${context.serviceName} on ${context.date} at ${context.time}? Use this link: ${context.rescheduleLink || ''}`,
       CANCEL_LINK: `Hi ${context.customerName}, need to cancel your ${context.serviceName} on ${context.date} at ${context.time}? Use this link: ${context.cancelLink || ''}`,
+      CANCELLATION: `Hi ${context.customerName}, your ${context.serviceName} on ${context.date} at ${context.time} at ${context.businessName} has been cancelled. Contact us if you need to rebook.`,
     };
 
     return (

@@ -584,6 +584,8 @@
     "category_aftercare": "Aftercare",
     "category_treatment_check_in": "Treatment Check-in",
     "category_deposit_required": "Deposit Required",
+    "category_reschedule_link": "Reschedule Link",
+    "category_cancel_link": "Cancel Link",
     "category_custom": "Custom",
     "no_templates": "No templates found. Create your first template.",
     "preview": "Preview",
@@ -600,7 +602,9 @@
     "unknown_var": "(unknown)",
     "show_preview": "Show preview",
     "hide_preview": "Hide preview",
-    "delete_confirm": "Delete this template?"
+    "delete_confirm": "Delete this template?",
+    "unresolved_warning": "{{count}} unresolved variable(s)",
+    "unresolved_in_preview": "Unresolved"
   },
 
   "setup": {
@@ -900,7 +904,17 @@
     "reschedule_link_sent": "Reschedule link sent",
     "cancel_link_sent": "Cancel link sent",
     "rescheduled_by_customer": "Rescheduled by customer",
-    "cancelled_by_customer": "Cancelled by customer"
+    "cancelled_by_customer": "Cancelled by customer",
+    "notification_confirmation": "Confirmation sent",
+    "notification_reminder": "Reminder sent",
+    "notification_follow_up": "Follow-up sent",
+    "notification_consult_follow_up": "Consult follow-up sent",
+    "notification_aftercare": "Aftercare instructions sent",
+    "notification_treatment_check_in": "Treatment check-in sent",
+    "notification_deposit_required": "Deposit request sent",
+    "notification_reschedule_link": "Reschedule link sent",
+    "notification_cancel_link": "Cancel link sent",
+    "notification_cancellation": "Cancellation confirmation sent"
   },
 
   "self_serve": {
