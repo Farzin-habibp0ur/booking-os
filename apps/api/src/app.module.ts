@@ -33,6 +33,7 @@ import { SelfServeModule } from './modules/self-serve/self-serve.module';
 import { RoiModule } from './modules/roi/roi.module';
 import { WaitlistModule } from './modules/waitlist/waitlist.module';
 import { SearchModule } from './modules/search/search.module';
+import { CampaignModule } from './modules/campaign/campaign.module';
 
 @Module({
   imports: [
@@ -82,6 +83,7 @@ import { SearchModule } from './modules/search/search.module';
     RoiModule,
     WaitlistModule,
     SearchModule,
+    CampaignModule,
     process.env.REDIS_URL ? QueueModule.forRootWithRedis() : QueueModule.forRoot(),
   ],
 })
