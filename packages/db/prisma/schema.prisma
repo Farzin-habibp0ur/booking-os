@@ -34,6 +34,10 @@ model Business {
   subscription      Subscription?
   aiUsage           AiUsage[]
   roiBaselines      RoiBaseline[]
+  waitlistEntries   WaitlistEntry[]
+  automationRules   AutomationRule[]
+  campaigns         Campaign[]
+  offers            Offer[]
 
   @@map("businesses")
 }
@@ -59,6 +63,7 @@ model Staff {
   workingHours          WorkingHours[]
   timeOff               TimeOff[]
   calendarConnections   CalendarConnection[]
+  waitlistEntries       WaitlistEntry[]       @relation("PreferredStaffWaitlist")
 
   @@index([businessId])
   @@map("staff")
@@ -79,6 +84,7 @@ model Customer {
   bookings        Booking[]
   recurringSeries RecurringSeries[]
   conversations   Conversation[]
+  waitlistEntries WaitlistEntry[]
 
   @@unique([businessId, phone])
   @@index([businessId])
@@ -106,6 +112,7 @@ model Service {
   business        Business          @relation(fields: [businessId], references: [id])
   bookings        Booking[]
   recurringSeries RecurringSeries[]
+  waitlistEntries WaitlistEntry[]
 
   @@index([businessId])
   @@map("services")
@@ -408,4 +415,131 @@ model CalendarConnection {
   @@unique([staffId, provider])
   @@index([staffId])
   @@map("calendar_connections")
+}
+
+model WaitlistEntry {
+  id              String    @id @default(cuid())
+  businessId      String
+  customerId      String
+  serviceId       String
+  staffId         String?
+  timeWindowStart String?
+  timeWindowEnd   String?
+  dateFrom        DateTime?
+  dateTo          DateTime?
+  notes           String?
+  status          String    @default("ACTIVE") // ACTIVE, OFFERED, BOOKED, EXPIRED, CANCELLED
+  offeredAt       DateTime?
+  offerExpiresAt  DateTime?
+  offeredSlot     Json?
+  claimedAt       DateTime?
+  bookingId       String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id])
+  customer Customer @relation(fields: [customerId], references: [id])
+  service  Service  @relation(fields: [serviceId], references: [id])
+  staff    Staff?   @relation("PreferredStaffWaitlist", fields: [staffId], references: [id])
+
+  @@index([businessId, status])
+  @@index([businessId, serviceId, status])
+  @@map("waitlist_entries")
+}
+
+model AutomationRule {
+  id                   String   @id @default(cuid())
+  businessId           String
+  name                 String
+  trigger              String   // BOOKING_CREATED, BOOKING_UPCOMING, STATUS_CHANGED, NO_RESPONSE, TAG_APPLIED, BOOKING_CANCELLED
+  filters              Json     @default("{}")
+  actions              Json     @default("[]")
+  isActive             Boolean  @default(true)
+  playbook             String?
+  quietStart           String?
+  quietEnd             String?
+  maxPerCustomerPerDay Int      @default(3)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  business Business        @relation(fields: [businessId], references: [id])
+  logs     AutomationLog[]
+
+  @@index([businessId, isActive])
+  @@map("automation_rules")
+}
+
+model AutomationLog {
+  id               String   @id @default(cuid())
+  automationRuleId String
+  businessId       String
+  bookingId        String?
+  customerId       String?
+  conversationId   String?
+  action           String
+  outcome          String   // SENT, SKIPPED, FAILED
+  reason           String?
+  metadata         Json     @default("{}")
+  createdAt        DateTime @default(now())
+
+  rule AutomationRule @relation(fields: [automationRuleId], references: [id])
+
+  @@index([businessId, createdAt])
+  @@index([automationRuleId])
+  @@map("automation_logs")
+}
+
+model Campaign {
+  id                String    @id @default(cuid())
+  businessId        String
+  name              String
+  status            String    @default("DRAFT") // DRAFT, SCHEDULED, SENDING, SENT, CANCELLED
+  templateId        String?
+  filters           Json      @default("{}")
+  scheduledAt       DateTime?
+  sentAt            DateTime?
+  throttlePerMinute Int       @default(10)
+  stats             Json      @default("{}")
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  business Business       @relation(fields: [businessId], references: [id])
+  sends    CampaignSend[]
+
+  @@index([businessId])
+  @@map("campaigns")
+}
+
+model CampaignSend {
+  id         String    @id @default(cuid())
+  campaignId String
+  customerId String
+  status     String    @default("PENDING") // PENDING, SENT, DELIVERED, READ, FAILED
+  sentAt     DateTime?
+  bookingId  String?
+  createdAt  DateTime  @default(now())
+
+  campaign Campaign @relation(fields: [campaignId], references: [id])
+
+  @@index([campaignId, status])
+  @@map("campaign_sends")
+}
+
+model Offer {
+  id         String    @id @default(cuid())
+  businessId String
+  name       String
+  description String?
+  terms      String?
+  serviceIds String[]  @default([])
+  validFrom  DateTime?
+  validUntil DateTime?
+  isActive   Boolean   @default(true)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id])
+
+  @@index([businessId])
+  @@map("offers")
 }

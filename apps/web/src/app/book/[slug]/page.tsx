@@ -15,6 +15,7 @@ import {
   Mail,
   ShieldCheck,
   FileText,
+  ClipboardList,
 } from 'lucide-react';
 
 interface Business {
@@ -124,6 +125,18 @@ export default function BookingPortalPage() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string | null>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
+  // Waitlist state
+  const [showWaitlistForm, setShowWaitlistForm] = useState(false);
+  const [waitlistName, setWaitlistName] = useState('');
+  const [waitlistPhone, setWaitlistPhone] = useState('');
+  const [waitlistEmail, setWaitlistEmail] = useState('');
+  const [waitlistNotes, setWaitlistNotes] = useState('');
+  const [waitlistStaffId, setWaitlistStaffId] = useState('');
+  const [waitlistSubmitting, setWaitlistSubmitting] = useState(false);
+  const [waitlistSuccess, setWaitlistSuccess] = useState(false);
+  const [waitlistError, setWaitlistError] = useState('');
+  const [staffList, setStaffList] = useState<{ id: string; name: string }[]>([]);
+
   // Load business + services
   useEffect(() => {
     async function load() {
@@ -212,6 +225,47 @@ export default function BookingPortalPage() {
       dates.push(d.toISOString().split('T')[0]);
     }
     return dates;
+  };
+
+  // Load staff for waitlist form when it opens
+  useEffect(() => {
+    if (showWaitlistForm && staffList.length === 0 && selectedService) {
+      publicApi
+        .get<any[]>(`/public/${slug}/availability?date=${new Date().toISOString().split('T')[0]}&serviceId=${selectedService.id}`)
+        .then((slots) => {
+          const staffMap = new Map<string, string>();
+          slots.forEach((s) => staffMap.set(s.staffId, s.staffName));
+          setStaffList(Array.from(staffMap.entries()).map(([id, name]) => ({ id, name })));
+        })
+        .catch(() => {});
+    }
+  }, [showWaitlistForm, slug, selectedService]);
+
+  const handleWaitlistSubmit = async () => {
+    if (!selectedService) return;
+    const nameErr = validateName(waitlistName);
+    const phoneErr = validatePhone(waitlistPhone);
+    if (nameErr || phoneErr) {
+      setWaitlistError(nameErr || phoneErr || 'Please fill in required fields');
+      return;
+    }
+    setWaitlistSubmitting(true);
+    setWaitlistError('');
+    try {
+      await publicApi.post(`/public/${slug}/waitlist`, {
+        serviceId: selectedService.id,
+        customerName: waitlistName,
+        customerPhone: waitlistPhone,
+        customerEmail: waitlistEmail || undefined,
+        staffId: waitlistStaffId || undefined,
+        notes: waitlistNotes || undefined,
+      });
+      setWaitlistSuccess(true);
+    } catch (err: any) {
+      setWaitlistError(err.message || 'Failed to join waitlist');
+    } finally {
+      setWaitlistSubmitting(false);
+    }
   };
 
   // Group slots by staff
@@ -407,9 +461,93 @@ export default function BookingPortalPage() {
                   Loading available times...
                 </p>
               ) : slots.length === 0 ? (
-                <p className="text-sm text-slate-500 py-4 text-center">
-                  No times available on this day. Try another date.
-                </p>
+                <div className="py-4 text-center space-y-3">
+                  <p className="text-sm text-slate-500">
+                    No times available on this day. Try another date.
+                  </p>
+                  {!showWaitlistForm && !waitlistSuccess && (
+                    <button
+                      onClick={() => setShowWaitlistForm(true)}
+                      className="inline-flex items-center gap-2 bg-lavender-50 text-lavender-700 px-4 py-2 rounded-xl text-sm font-medium hover:bg-lavender-100 transition-colors"
+                    >
+                      <ClipboardList size={16} />
+                      Join Waitlist
+                    </button>
+                  )}
+                  {waitlistSuccess && (
+                    <div className="bg-sage-50 rounded-xl p-4">
+                      <div className="flex items-center gap-2 justify-center text-sage-700">
+                        <CheckCircle2 size={18} />
+                        <p className="text-sm font-medium">You&apos;re on the waitlist!</p>
+                      </div>
+                      <p className="text-xs text-sage-600 mt-1">
+                        We&apos;ll notify you when a slot opens up.
+                      </p>
+                    </div>
+                  )}
+                  {showWaitlistForm && !waitlistSuccess && (
+                    <div className="bg-lavender-50 rounded-xl p-4 space-y-3 text-left">
+                      <p className="text-sm font-medium text-lavender-800">Join the Waitlist</p>
+                      <input
+                        value={waitlistName}
+                        onChange={(e) => setWaitlistName(e.target.value)}
+                        placeholder="Your name *"
+                        className="w-full border border-lavender-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-lavender-500 focus:border-transparent outline-none"
+                      />
+                      <input
+                        value={waitlistPhone}
+                        onChange={(e) => setWaitlistPhone(e.target.value)}
+                        placeholder="Phone number *"
+                        type="tel"
+                        className="w-full border border-lavender-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-lavender-500 focus:border-transparent outline-none"
+                      />
+                      <input
+                        value={waitlistEmail}
+                        onChange={(e) => setWaitlistEmail(e.target.value)}
+                        placeholder="Email (optional)"
+                        type="email"
+                        className="w-full border border-lavender-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-lavender-500 focus:border-transparent outline-none"
+                      />
+                      {staffList.length > 0 && (
+                        <select
+                          value={waitlistStaffId}
+                          onChange={(e) => setWaitlistStaffId(e.target.value)}
+                          className="w-full border border-lavender-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-lavender-500 focus:border-transparent outline-none"
+                        >
+                          <option value="">Any provider</option>
+                          {staffList.map((s) => (
+                            <option key={s.id} value={s.id}>{s.name}</option>
+                          ))}
+                        </select>
+                      )}
+                      <textarea
+                        value={waitlistNotes}
+                        onChange={(e) => setWaitlistNotes(e.target.value)}
+                        placeholder="Preferred times or notes (optional)"
+                        rows={2}
+                        className="w-full border border-lavender-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-lavender-500 focus:border-transparent outline-none resize-none"
+                      />
+                      {waitlistError && (
+                        <p className="text-xs text-red-600">{waitlistError}</p>
+                      )}
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setShowWaitlistForm(false)}
+                          className="flex-1 border border-slate-200 text-slate-600 py-2 rounded-xl text-sm hover:bg-slate-50 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={handleWaitlistSubmit}
+                          disabled={waitlistSubmitting}
+                          className="flex-1 bg-lavender-600 text-white py-2 rounded-xl text-sm font-medium hover:bg-lavender-700 transition-colors disabled:opacity-50"
+                        >
+                          {waitlistSubmitting ? 'Joining...' : 'Join Waitlist'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               ) : (
                 <div className="space-y-3">
                   {Object.entries(groupedSlots).map(([staffName, staffSlots]) => (

@@ -13,6 +13,7 @@ import { cn } from '@/lib/cn';
 import {
   LayoutDashboard,
   MessageSquare,
+  ClipboardList,
   Calendar,
   Users,
   BookOpen,
@@ -55,6 +56,7 @@ function ShellInner({ children }: { children: ReactNode }) {
   const allNav = [
     { href: '/dashboard', label: t('nav.dashboard'), icon: LayoutDashboard, roles: ['ADMIN', 'AGENT', 'SERVICE_PROVIDER'] },
     { href: '/inbox', label: t('nav.inbox'), icon: MessageSquare, roles: ['ADMIN', 'AGENT'] },
+    { href: '/waitlist', label: 'Waitlist', icon: ClipboardList, roles: ['ADMIN', 'AGENT'] },
     { href: '/calendar', label: t('nav.calendar'), icon: Calendar, roles: ['ADMIN', 'AGENT', 'SERVICE_PROVIDER'] },
     {
       href: '/customers',

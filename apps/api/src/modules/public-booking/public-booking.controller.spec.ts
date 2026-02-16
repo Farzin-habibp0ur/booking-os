@@ -37,17 +37,21 @@ describe('PublicBookingController', () => {
     staff: { name: 'Dr. Sarah' },
   };
 
+  let waitlistService: any;
+
   beforeEach(() => {
     prisma = createMockPrisma();
     availabilityService = { getAvailableSlots: jest.fn() };
     customerService = { findOrCreateByPhone: jest.fn() };
     bookingService = { create: jest.fn() };
+    waitlistService = { joinWaitlist: jest.fn() };
 
     controller = new PublicBookingController(
       prisma as any,
       availabilityService,
       customerService,
       bookingService,
+      waitlistService,
     );
   });
 

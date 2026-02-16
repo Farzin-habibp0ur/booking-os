@@ -135,6 +135,27 @@ export function createMockReportsService() {
   };
 }
 
+export function createMockWaitlistService() {
+  return {
+    joinWaitlist: jest.fn().mockResolvedValue({
+      id: 'wl1',
+      businessId: 'biz1',
+      customerId: 'cust1',
+      serviceId: 'svc1',
+      status: 'ACTIVE',
+      service: { name: 'Botox Treatment' },
+      customer: { name: 'Emma Wilson' },
+    }),
+    getEntries: jest.fn().mockResolvedValue([]),
+    updateEntry: jest.fn().mockResolvedValue({ id: 'wl1', status: 'ACTIVE' }),
+    cancelEntry: jest.fn().mockResolvedValue({ id: 'wl1', status: 'CANCELLED' }),
+    resolveEntry: jest.fn().mockResolvedValue({ id: 'wl1', status: 'BOOKED', bookingId: 'book1' }),
+    offerOpenSlot: jest.fn().mockResolvedValue(undefined),
+    getMetrics: jest.fn().mockResolvedValue({ cancellations: 5, offers: 3, claimed: 2, avgTimeToFill: 45 }),
+    expireStaleOffers: jest.fn().mockResolvedValue(undefined),
+  };
+}
+
 export function createMockAvailabilityService() {
   return {
     getAvailableSlots: jest.fn().mockResolvedValue([

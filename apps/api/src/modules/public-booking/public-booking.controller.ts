@@ -14,6 +14,7 @@ import { PrismaService } from '../../common/prisma.service';
 import { AvailabilityService } from '../availability/availability.service';
 import { CustomerService } from '../customer/customer.service';
 import { BookingService } from '../booking/booking.service';
+import { WaitlistService } from '../waitlist/waitlist.service';
 
 @ApiTags('Public Booking')
 @Controller('public')
@@ -23,6 +24,7 @@ export class PublicBookingController {
     private availabilityService: AvailabilityService,
     private customerService: CustomerService,
     private bookingService: BookingService,
+    private waitlistService: WaitlistService,
   ) {}
 
   private async resolveBusiness(slug: string) {
@@ -144,6 +146,63 @@ export class PublicBookingController {
       businessName: business.name,
       depositRequired: booking.service.depositRequired || false,
       depositAmount: booking.service.depositAmount || null,
+    };
+  }
+
+  @Post(':slug/waitlist')
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
+  async joinWaitlist(
+    @Param('slug') slug: string,
+    @Body()
+    body: {
+      serviceId: string;
+      customerName: string;
+      customerPhone: string;
+      customerEmail?: string;
+      staffId?: string;
+      timeWindowStart?: string;
+      timeWindowEnd?: string;
+      dateFrom?: string;
+      dateTo?: string;
+      notes?: string;
+    },
+  ) {
+    if (!body.serviceId || !body.customerName || !body.customerPhone) {
+      throw new BadRequestException('serviceId, customerName, and customerPhone are required');
+    }
+
+    const business = await this.resolveBusiness(slug);
+
+    const customer = await this.customerService.findOrCreateByPhone(
+      business.id,
+      body.customerPhone,
+      body.customerName,
+    );
+
+    if (body.customerEmail && !customer.email) {
+      await this.prisma.customer.update({
+        where: { id: customer.id },
+        data: { email: body.customerEmail },
+      });
+    }
+
+    const entry = await this.waitlistService.joinWaitlist({
+      businessId: business.id,
+      customerId: customer.id,
+      serviceId: body.serviceId,
+      staffId: body.staffId,
+      timeWindowStart: body.timeWindowStart,
+      timeWindowEnd: body.timeWindowEnd,
+      dateFrom: body.dateFrom,
+      dateTo: body.dateTo,
+      notes: body.notes,
+    });
+
+    return {
+      id: entry.id,
+      status: entry.status,
+      serviceName: entry.service.name,
+      businessName: business.name,
     };
   }
 }

@@ -31,6 +31,7 @@ import { PublicBookingModule } from './modules/public-booking/public-booking.mod
 import { CalendarSyncModule } from './modules/calendar-sync/calendar-sync.module';
 import { SelfServeModule } from './modules/self-serve/self-serve.module';
 import { RoiModule } from './modules/roi/roi.module';
+import { WaitlistModule } from './modules/waitlist/waitlist.module';
 
 @Module({
   imports: [
@@ -78,6 +79,7 @@ import { RoiModule } from './modules/roi/roi.module';
     CalendarSyncModule,
     SelfServeModule,
     RoiModule,
+    WaitlistModule,
     process.env.REDIS_URL ? QueueModule.forRootWithRedis() : QueueModule.forRoot(),
   ],
 })
