@@ -115,7 +115,7 @@ export class CustomerService {
     businessId: string,
     includeMessages: boolean,
   ): Promise<{ created: number; updated: number }> {
-    let created = 0;
+    const created = 0;
     let updated = 0;
 
     const conversations = await this.prisma.conversation.findMany({

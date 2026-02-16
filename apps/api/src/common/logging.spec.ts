@@ -91,6 +91,7 @@ describe('Logging setup', () => {
   });
 
   it('uses x-request-id header or generates a UUID for request IDs', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const genReqId = (req: any) => req.headers['x-request-id'] || require('crypto').randomUUID();
 
     // Uses provided header

@@ -11,6 +11,7 @@ import { Request, Response } from 'express';
 // Sentry is optional — only capture if initialized
 let Sentry: any;
 try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   Sentry = require('@sentry/nestjs');
 } catch {
   // Sentry not installed — skip
