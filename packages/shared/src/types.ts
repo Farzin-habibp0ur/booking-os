@@ -7,6 +7,7 @@ import {
   MessageContentType,
   ReminderStatus,
   TemplateCategory,
+  ServiceKind,
   VerticalPack,
 } from './enums';
 
@@ -54,6 +55,7 @@ export interface Service {
   durationMins: number;
   price: number;
   category: string;
+  kind: ServiceKind;
   isActive: boolean;
   customFields: Record<string, unknown>;
   createdAt: Date;

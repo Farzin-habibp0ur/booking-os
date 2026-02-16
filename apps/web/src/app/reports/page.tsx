@@ -49,6 +49,7 @@ export default function ReportsPage() {
   const [staffData, setStaffData] = useState<any[]>([]);
   const [statusData, setStatusData] = useState<any[]>([]);
   const [peakData, setPeakData] = useState<any>(null);
+  const [conversionData, setConversionData] = useState<any>(null);
 
   const loadAll = (period: number) => {
     api.get<any[]>(`/reports/bookings-over-time?days=${period}`).then(setBookingsData);
@@ -59,6 +60,7 @@ export default function ReportsPage() {
     api.get<any[]>(`/reports/staff-performance?days=${period}`).then(setStaffData);
     api.get<any[]>(`/reports/status-breakdown?days=${period}`).then(setStatusData);
     api.get<any>(`/reports/peak-hours?days=${period}`).then(setPeakData);
+    api.get<any>(`/reports/consult-conversion?days=${period}`).then(setConversionData);
   };
 
   useEffect(() => {
@@ -91,7 +93,7 @@ export default function ReportsPage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-5 gap-4">
         <SummaryCard label={t('reports.total_bookings')} value={totalBookings} />
         <SummaryCard
           label={t('reports.revenue')}
@@ -106,6 +108,12 @@ export default function ReportsPage() {
           label={t('reports.avg_response')}
           value={responseData ? `${responseData.avgMinutes}m` : '—'}
           accent={responseData?.avgMinutes > 15 ? 'red' : 'green'}
+        />
+        <SummaryCard
+          label="Consult → Treatment"
+          value={conversionData ? `${conversionData.rate}%` : '—'}
+          accent={conversionData?.rate >= 50 ? 'green' : conversionData?.rate > 0 ? 'red' : undefined}
+          subtitle={conversionData ? `${conversionData.converted}/${conversionData.consultCustomers}` : undefined}
         />
       </div>
 
@@ -339,10 +347,12 @@ function SummaryCard({
   label,
   value,
   accent,
+  subtitle,
 }: {
   label: string;
   value: string | number;
   accent?: 'red' | 'green';
+  subtitle?: string;
 }) {
   return (
     <div className="bg-white rounded-2xl shadow-soft p-4">
@@ -355,6 +365,7 @@ function SummaryCard({
       >
         {value}
       </p>
+      {subtitle && <p className="text-[11px] text-slate-400 mt-0.5">{subtitle}</p>}
     </div>
   );
 }

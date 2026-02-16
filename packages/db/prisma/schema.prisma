@@ -91,6 +91,7 @@ model Service {
   durationMins   Int
   price          Float    @default(0)
   category       String   @default("General")
+  kind           String   @default("OTHER") // CONSULT, TREATMENT, OTHER
   isActive       Boolean  @default(true)
   depositRequired Boolean @default(false)
   depositAmount  Float?

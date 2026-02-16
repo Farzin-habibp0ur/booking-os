@@ -50,4 +50,12 @@ export class ReportsController {
   peakHours(@BusinessId() businessId: string, @Query('days') days?: string) {
     return this.reportsService.peakHours(businessId, days ? parseInt(days) : undefined);
   }
+
+  @Get('consult-conversion')
+  consultConversion(@BusinessId() businessId: string, @Query('days') days?: string) {
+    return this.reportsService.consultToTreatmentConversion(
+      businessId,
+      days ? parseInt(days) : undefined,
+    );
+  }
 }

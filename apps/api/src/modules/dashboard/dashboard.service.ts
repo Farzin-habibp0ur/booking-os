@@ -35,6 +35,7 @@ export class DashboardService {
       newCustomersThisWeek,
       openConversationCount,
       revenueThisMonth,
+      consultConversion,
     ] = await Promise.all([
       this.prisma.booking.findMany({
         where: {
@@ -76,6 +77,7 @@ export class DashboardService {
           include: { service: { select: { price: true } } },
         })
         .then((bookings) => bookings.reduce((sum, b) => sum + b.service.price, 0)),
+      this.reportsService.consultToTreatmentConversion(businessId, 30),
     ]);
 
     return {
@@ -92,6 +94,7 @@ export class DashboardService {
         revenueThisMonth: Math.round(revenueThisMonth * 100) / 100,
       },
       statusBreakdown,
+      consultConversion,
     };
   }
 }

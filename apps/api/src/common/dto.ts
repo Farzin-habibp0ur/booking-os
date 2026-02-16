@@ -17,6 +17,7 @@ import {
   ArrayNotEmpty,
   ValidateNested,
   Matches,
+  IsIn,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -152,6 +153,10 @@ export class CreateServiceDto {
   @IsOptional()
   description?: string;
 
+  @IsOptional()
+  @IsIn(['CONSULT', 'TREATMENT', 'OTHER'])
+  kind?: string;
+
   @IsObject()
   @IsOptional()
   customFields?: Record<string, unknown>;
@@ -179,6 +184,10 @@ export class UpdateServiceDto {
   @IsString()
   @IsOptional()
   description?: string;
+
+  @IsOptional()
+  @IsIn(['CONSULT', 'TREATMENT', 'OTHER'])
+  kind?: string;
 
   @IsObject()
   @IsOptional()

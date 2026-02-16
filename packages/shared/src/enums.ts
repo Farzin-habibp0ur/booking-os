@@ -51,6 +51,12 @@ export enum TemplateCategory {
   CUSTOM = 'CUSTOM',
 }
 
+export enum ServiceKind {
+  CONSULT = 'CONSULT',
+  TREATMENT = 'TREATMENT',
+  OTHER = 'OTHER',
+}
+
 export enum VerticalPack {
   AESTHETIC = 'aesthetic',
   SALON = 'salon',

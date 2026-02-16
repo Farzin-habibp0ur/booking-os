@@ -1089,7 +1089,15 @@ export default function InboxPage() {
                   .map((b: any) => (
                     <div key={b.id} className="border rounded p-2 mb-1.5">
                       <div className="flex items-center justify-between">
-                        <p className="text-sm font-medium">{b.service?.name}</p>
+                        <p className="text-sm font-medium">
+                          {b.service?.name}
+                          {b.service?.kind === 'CONSULT' && (
+                            <span className="ml-1 text-[9px] bg-lavender-50 text-lavender-900 px-1 py-0 rounded-full">C</span>
+                          )}
+                          {b.service?.kind === 'TREATMENT' && (
+                            <span className="ml-1 text-[9px] bg-sage-50 text-sage-900 px-1 py-0 rounded-full">T</span>
+                          )}
+                        </p>
                         <span
                           className={cn(
                             'text-[9px] px-1.5 py-0.5 rounded-full',

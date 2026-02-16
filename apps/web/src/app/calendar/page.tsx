@@ -325,7 +325,15 @@ export default function CalendarPage() {
                         </p>
                         <p className="text-xs font-medium truncate">{b.customer?.name}</p>
                         {height > 35 && (
-                          <p className="text-[10px] text-slate-500 truncate">{b.service?.name}</p>
+                          <p className="text-[10px] text-slate-500 truncate">
+                            {b.service?.name}
+                            {b.service?.kind === 'CONSULT' && (
+                              <span className="ml-1 text-[9px] bg-lavender-50 text-lavender-900 px-1 py-0 rounded-full">C</span>
+                            )}
+                            {b.service?.kind === 'TREATMENT' && (
+                              <span className="ml-1 text-[9px] bg-sage-50 text-sage-900 px-1 py-0 rounded-full">T</span>
+                            )}
+                          </p>
                         )}
 
                         {/* Hover tooltip */}
@@ -334,6 +342,12 @@ export default function CalendarPage() {
                             <p className="text-sm font-medium">{b.customer?.name}</p>
                             <p className="text-xs text-slate-500">
                               {b.service?.name} · {b.service?.durationMins}min
+                              {b.service?.kind === 'CONSULT' && (
+                                <span className="ml-1 text-[9px] bg-lavender-50 text-lavender-900 px-1 py-0 rounded-full">Consult</span>
+                              )}
+                              {b.service?.kind === 'TREATMENT' && (
+                                <span className="ml-1 text-[9px] bg-sage-50 text-sage-900 px-1 py-0 rounded-full">Treatment</span>
+                              )}
                             </p>
                             <p className="text-xs text-slate-500 mt-1">
                               {new Date(b.startTime).toLocaleTimeString([], {

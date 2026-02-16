@@ -11,6 +11,7 @@ describe('DashboardService', () => {
     noShowRate: jest.Mock;
     responseTimes: jest.Mock;
     statusBreakdown: jest.Mock;
+    consultToTreatmentConversion: jest.Mock;
   };
 
   beforeEach(async () => {
@@ -22,6 +23,11 @@ describe('DashboardService', () => {
         { status: 'CONFIRMED', count: 10 },
         { status: 'CANCELLED', count: 2 },
       ]),
+      consultToTreatmentConversion: jest.fn().mockResolvedValue({
+        consultCustomers: 10,
+        converted: 6,
+        rate: 60,
+      }),
     };
 
     const module = await Test.createTestingModule({
@@ -76,6 +82,11 @@ describe('DashboardService', () => {
         { status: 'CONFIRMED', count: 10 },
         { status: 'CANCELLED', count: 2 },
       ]);
+      expect(result.consultConversion).toEqual({
+        consultCustomers: 10,
+        converted: 6,
+        rate: 60,
+      });
     });
 
     it('correctly rounds revenue', async () => {

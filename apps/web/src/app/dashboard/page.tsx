@@ -132,7 +132,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Secondary metrics row */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-4 gap-4">
         <div className="bg-white rounded-2xl shadow-soft p-6">
           <div className="flex items-center justify-between">
             <p className="text-sm text-slate-500">{t('dashboard.no_show_rate')}</p>
@@ -181,6 +181,19 @@ export default function DashboardPage() {
               : m.avgResponseTimeMins <= 15
                 ? t('dashboard.good')
                 : t('dashboard.needs_improvement')}
+          </p>
+        </div>
+
+        {/* Consult → Treatment Conversion */}
+        <div className="bg-white rounded-2xl shadow-soft p-6">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-slate-500">Consult → Treatment</p>
+          </div>
+          <p className="text-2xl font-serif font-bold mt-1">
+            {data.consultConversion?.rate ?? 0}%
+          </p>
+          <p className="text-xs text-slate-400 mt-1">
+            {data.consultConversion?.converted ?? 0} of {data.consultConversion?.consultCustomers ?? 0} consults converted
           </p>
         </div>
 
@@ -250,6 +263,12 @@ export default function DashboardPage() {
                         <p className="text-sm font-medium text-slate-800">{b.customer?.name}</p>
                         <p className="text-xs text-slate-500">
                           {b.service?.name}
+                          {b.service?.kind === 'CONSULT' && (
+                            <span className="ml-1 text-[9px] bg-lavender-50 text-lavender-900 px-1 py-0 rounded-full">C</span>
+                          )}
+                          {b.service?.kind === 'TREATMENT' && (
+                            <span className="ml-1 text-[9px] bg-sage-50 text-sage-900 px-1 py-0 rounded-full">T</span>
+                          )}
                           {b.staff ? ` · ${b.staff.name}` : ''}
                         </p>
                       </div>

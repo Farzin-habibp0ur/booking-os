@@ -11,16 +11,22 @@ async function main() {
   console.log('🌱 Seeding database...');
 
   // Clean existing data
+  await prisma.payment.deleteMany();
   await prisma.message.deleteMany();
   await prisma.reminder.deleteMany();
   await prisma.booking.deleteMany();
+  await prisma.recurringSeries.deleteMany();
   await prisma.conversationNote.deleteMany();
   await prisma.conversation.deleteMany();
   await prisma.messageTemplate.deleteMany();
   await prisma.timeOff.deleteMany();
   await prisma.workingHours.deleteMany();
+  await prisma.calendarConnection.deleteMany();
   await prisma.service.deleteMany();
   await prisma.customer.deleteMany();
+  await prisma.translation.deleteMany();
+  await prisma.aiUsage.deleteMany();
+  await prisma.subscription.deleteMany();
   await prisma.staff.deleteMany();
   await prisma.business.deleteMany();
 
@@ -140,6 +146,7 @@ async function main() {
         durationMins: 30,
         price: 350,
         category: 'Injectables',
+        kind: 'TREATMENT',
         customFields: { requiresConsultation: true },
       },
     }),
@@ -150,6 +157,7 @@ async function main() {
         durationMins: 45,
         price: 500,
         category: 'Injectables',
+        kind: 'TREATMENT',
         customFields: { requiresConsultation: true },
       },
     }),
@@ -160,6 +168,7 @@ async function main() {
         durationMins: 60,
         price: 200,
         category: 'Skin Treatments',
+        kind: 'TREATMENT',
       },
     }),
     prisma.service.create({
@@ -169,6 +178,7 @@ async function main() {
         durationMins: 45,
         price: 275,
         category: 'Skin Treatments',
+        kind: 'TREATMENT',
       },
     }),
     prisma.service.create({
@@ -178,6 +188,7 @@ async function main() {
         durationMins: 20,
         price: 0,
         category: 'General',
+        kind: 'CONSULT',
         customFields: { isConsultation: true },
       },
     }),

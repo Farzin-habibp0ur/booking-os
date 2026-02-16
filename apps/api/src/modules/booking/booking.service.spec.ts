@@ -144,6 +144,20 @@ describe('BookingService', () => {
         },
       });
     });
+
+    it('includes service.kind in response when service has kind', async () => {
+      const booking = {
+        id: 'b1',
+        customer: { name: 'Test' },
+        service: { id: 'svc1', name: 'Consultation', kind: 'CONSULT' },
+        staff: { name: 'Dr. Chen' },
+      };
+      prisma.booking.findFirst.mockResolvedValue(booking as any);
+
+      const result = await bookingService.findById('biz1', 'b1');
+
+      expect(result?.service.kind).toBe('CONSULT');
+    });
   });
 
   describe('create', () => {

@@ -184,6 +184,47 @@ export class ReportsService {
     return Object.entries(map).map(([status, count]) => ({ status, count }));
   }
 
+  async consultToTreatmentConversion(businessId: string, days: number = 30) {
+    const since = new Date();
+    since.setDate(since.getDate() - days);
+
+    // Find customers with completed consult bookings in the period
+    const consultBookings = await this.prisma.booking.findMany({
+      where: {
+        businessId,
+        startTime: { gte: since },
+        status: 'COMPLETED',
+        service: { kind: 'CONSULT' },
+      },
+      select: { customerId: true },
+    });
+
+    const consultCustomerIds = [...new Set(consultBookings.map((b) => b.customerId))];
+    if (consultCustomerIds.length === 0) {
+      return { consultCustomers: 0, converted: 0, rate: 0 };
+    }
+
+    // Check which of those customers later booked a treatment
+    const convertedCount = await this.prisma.booking.groupBy({
+      by: ['customerId'],
+      where: {
+        businessId,
+        customerId: { in: consultCustomerIds },
+        status: { in: ['CONFIRMED', 'COMPLETED', 'IN_PROGRESS'] },
+        service: { kind: 'TREATMENT' },
+      },
+    });
+
+    const converted = convertedCount.length;
+    const total = consultCustomerIds.length;
+
+    return {
+      consultCustomers: total,
+      converted,
+      rate: total > 0 ? Math.round((converted / total) * 100) : 0,
+    };
+  }
+
   async peakHours(businessId: string, days: number = 30) {
     const since = new Date();
     since.setDate(since.getDate() - days);

@@ -75,6 +75,7 @@ export interface CreateServiceDto {
   durationMins: number;
   price: number;
   category: string;
+  kind?: string;
   customFields?: Record<string, unknown>;
 }
 
@@ -83,6 +84,7 @@ export interface UpdateServiceDto {
   durationMins?: number;
   price?: number;
   category?: string;
+  kind?: string;
   customFields?: Record<string, unknown>;
 }
 

@@ -229,7 +229,15 @@ export default function BookingDetailModal({
               <MessageSquare size={16} className="text-slate-400 mt-0.5" />
               <div>
                 <p className="text-xs text-slate-500">Service</p>
-                <p className="text-sm font-medium">{booking.service?.name}</p>
+                <p className="text-sm font-medium">
+                  {booking.service?.name}
+                  {booking.service?.kind === 'CONSULT' && (
+                    <span className="ml-1.5 text-[10px] bg-lavender-50 text-lavender-900 px-1.5 py-0.5 rounded-full font-medium">Consult</span>
+                  )}
+                  {booking.service?.kind === 'TREATMENT' && (
+                    <span className="ml-1.5 text-[10px] bg-sage-50 text-sage-900 px-1.5 py-0.5 rounded-full font-medium">Treatment</span>
+                  )}
+                </p>
                 <p className="text-xs text-slate-400">
                   {booking.service?.durationMins} min
                   {booking.service?.price > 0 ? ` · $${booking.service.price}` : ''}

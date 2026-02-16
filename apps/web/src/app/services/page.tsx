@@ -91,6 +91,16 @@ export default function ServicesPage() {
                             {t('services.inactive_badge')}
                           </span>
                         )}
+                        {s.kind === 'CONSULT' && (
+                          <span className="text-[10px] bg-lavender-50 text-lavender-900 px-1.5 py-0.5 rounded-full">
+                            Consult
+                          </span>
+                        )}
+                        {s.kind === 'TREATMENT' && (
+                          <span className="text-[10px] bg-sage-50 text-sage-900 px-1.5 py-0.5 rounded-full">
+                            Treatment
+                          </span>
+                        )}
                         {s.depositRequired && (
                           <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full">
                             {t('services.deposit_badge')}
@@ -185,6 +195,7 @@ function ServiceForm({
   const [price, setPrice] = useState(initial?.price || 0);
   const [category, setCategory] = useState(initial?.category || 'General');
   const [depositRequired, setDepositRequired] = useState(initial?.depositRequired || false);
+  const [kind, setKind] = useState(initial?.kind || 'OTHER');
   const [bufferBefore, setBufferBefore] = useState(initial?.bufferBefore || 0);
   const [bufferAfter, setBufferAfter] = useState(initial?.bufferAfter || 0);
 
@@ -196,6 +207,7 @@ function ServiceForm({
       durationMins: Number(durationMins),
       price: Number(price),
       category,
+      kind,
       depositRequired,
       bufferBefore: Number(bufferBefore),
       bufferAfter: Number(bufferAfter),
@@ -237,6 +249,31 @@ function ServiceForm({
               rows={2}
               className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">Service Type</label>
+            <div className="flex gap-2">
+              {(['CONSULT', 'TREATMENT', 'OTHER'] as const).map((k) => (
+                <button
+                  key={k}
+                  type="button"
+                  onClick={() => setKind(k)}
+                  className={cn(
+                    'flex-1 py-1.5 rounded-xl text-sm font-medium transition-colors border',
+                    kind === k
+                      ? k === 'CONSULT'
+                        ? 'bg-lavender-50 border-lavender-300 text-lavender-900'
+                        : k === 'TREATMENT'
+                          ? 'bg-sage-50 border-sage-300 text-sage-900'
+                          : 'bg-slate-100 border-slate-300 text-slate-700'
+                      : 'border-slate-200 text-slate-500 hover:bg-slate-50',
+                  )}
+                >
+                  {k === 'CONSULT' ? 'Consult' : k === 'TREATMENT' ? 'Treatment' : 'Other'}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="grid grid-cols-3 gap-3">

@@ -1,4 +1,21 @@
 import { isPhase1Enabled, getPhase1Config, PHASE1_DEFAULTS } from './types';
+import { ServiceKind } from './enums';
+
+describe('ServiceKind', () => {
+  it('has exactly three values', () => {
+    const values = Object.values(ServiceKind);
+    expect(values).toHaveLength(3);
+    expect(values).toContain('CONSULT');
+    expect(values).toContain('TREATMENT');
+    expect(values).toContain('OTHER');
+  });
+
+  it('has string values matching the keys', () => {
+    expect(ServiceKind.CONSULT).toBe('CONSULT');
+    expect(ServiceKind.TREATMENT).toBe('TREATMENT');
+    expect(ServiceKind.OTHER).toBe('OTHER');
+  });
+});
 
 describe('isPhase1Enabled', () => {
   it('returns false for null packConfig', () => {
