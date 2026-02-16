@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { publicApi } from '@/lib/public-api';
+import { Skeleton } from '@/components/skeleton';
 import {
   ChevronLeft,
   Clock,
@@ -13,6 +14,7 @@ import {
   Phone,
   Mail,
   ShieldCheck,
+  FileText,
 } from 'lucide-react';
 
 interface Business {
@@ -62,6 +64,9 @@ const STEP_LABELS: Record<Step, string> = {
   success: 'Done',
 };
 
+const PHONE_REGEX = /^\+?[\d\s\-()]{7,}$/;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('en-US', {
     weekday: 'long',
@@ -73,6 +78,24 @@ function formatDate(dateStr: string) {
 
 function formatTime(dateStr: string) {
   return new Date(dateStr).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+}
+
+export function validateName(name: string): string | null {
+  if (!name.trim()) return 'Name is required';
+  if (name.trim().length < 2) return 'Name must be at least 2 characters';
+  return null;
+}
+
+export function validatePhone(phone: string): string | null {
+  if (!phone.trim()) return 'Phone number is required';
+  if (!PHONE_REGEX.test(phone.trim())) return 'Please enter a valid phone number';
+  return null;
+}
+
+export function validateEmail(email: string): string | null {
+  if (!email.trim()) return null; // optional
+  if (!EMAIL_REGEX.test(email.trim())) return 'Please enter a valid email address';
+  return null;
 }
 
 export default function BookingPortalPage() {
@@ -94,9 +117,12 @@ export default function BookingPortalPage() {
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
+  const [customerNotes, setCustomerNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [bookingResult, setBookingResult] = useState<BookingResult | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string | null>>({});
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
 
   // Load business + services
   useEffect(() => {
@@ -136,6 +162,24 @@ export default function BookingPortalPage() {
     if (idx > 0) setStep(STEPS[idx - 1]);
   };
 
+  const validateAndContinue = () => {
+    const nameErr = validateName(customerName);
+    const phoneErr = validatePhone(customerPhone);
+    const emailErr = validateEmail(customerEmail);
+    setFieldErrors({ name: nameErr, phone: phoneErr, email: emailErr });
+    setTouched({ name: true, phone: true, email: true });
+    if (!nameErr && !phoneErr && !emailErr) {
+      setStep('confirm');
+    }
+  };
+
+  const handleBlur = (field: string) => {
+    setTouched((prev) => ({ ...prev, [field]: true }));
+    if (field === 'name') setFieldErrors((prev) => ({ ...prev, name: validateName(customerName) }));
+    if (field === 'phone') setFieldErrors((prev) => ({ ...prev, phone: validatePhone(customerPhone) }));
+    if (field === 'email') setFieldErrors((prev) => ({ ...prev, email: validateEmail(customerEmail) }));
+  };
+
   const handleSubmit = async () => {
     setSubmitting(true);
     setSubmitError('');
@@ -147,6 +191,7 @@ export default function BookingPortalPage() {
         customerName,
         customerPhone,
         customerEmail: customerEmail || undefined,
+        notes: customerNotes || undefined,
       });
       setBookingResult(result);
       setStep('success');
@@ -182,8 +227,20 @@ export default function BookingPortalPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-slate-400 text-sm">Loading...</div>
+      <div className="space-y-4" data-testid="booking-skeleton">
+        <div className="text-center mb-6">
+          <Skeleton className="h-8 w-48 mx-auto" />
+          <Skeleton className="h-4 w-32 mx-auto mt-2" />
+        </div>
+        <div className="space-y-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="bg-white rounded-2xl shadow-soft p-4 space-y-2">
+              <Skeleton className="h-5 w-2/3" />
+              <Skeleton className="h-4 w-1/2" />
+              <Skeleton className="h-3 w-1/4" />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -322,7 +379,12 @@ export default function BookingPortalPage() {
           {/* Time slots */}
           {selectedDate && (
             <div className="bg-white rounded-2xl shadow-soft p-4">
-              <p className="text-sm font-medium text-slate-700 mb-3">Available times</p>
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-sm font-medium text-slate-700">Available times</p>
+                {business && (
+                  <p className="text-xs text-slate-400">Times shown in {business.timezone}</p>
+                )}
+              </div>
               {slotsLoading ? (
                 <p className="text-sm text-slate-400 py-4 text-center">
                   Loading available times...
@@ -375,10 +437,19 @@ export default function BookingPortalPage() {
             </label>
             <input
               value={customerName}
-              onChange={(e) => setCustomerName(e.target.value)}
+              onChange={(e) => {
+                setCustomerName(e.target.value);
+                if (touched.name) setFieldErrors((prev) => ({ ...prev, name: validateName(e.target.value) }));
+              }}
+              onBlur={() => handleBlur('name')}
               placeholder="Your full name"
-              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-sage-500 focus:border-transparent outline-none"
+              className={`w-full border rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-sage-500 focus:border-transparent outline-none ${
+                touched.name && fieldErrors.name ? 'border-red-300' : 'border-slate-200'
+              }`}
             />
+            {touched.name && fieldErrors.name && (
+              <p className="mt-1 text-xs bg-red-50 text-red-700 px-2 py-1 rounded-lg">{fieldErrors.name}</p>
+            )}
           </div>
           <div>
             <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-1">
@@ -386,11 +457,20 @@ export default function BookingPortalPage() {
             </label>
             <input
               value={customerPhone}
-              onChange={(e) => setCustomerPhone(e.target.value)}
+              onChange={(e) => {
+                setCustomerPhone(e.target.value);
+                if (touched.phone) setFieldErrors((prev) => ({ ...prev, phone: validatePhone(e.target.value) }));
+              }}
+              onBlur={() => handleBlur('phone')}
               placeholder="+1 (555) 123-4567"
               type="tel"
-              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-sage-500 focus:border-transparent outline-none"
+              className={`w-full border rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-sage-500 focus:border-transparent outline-none ${
+                touched.phone && fieldErrors.phone ? 'border-red-300' : 'border-slate-200'
+              }`}
             />
+            {touched.phone && fieldErrors.phone && (
+              <p className="mt-1 text-xs bg-red-50 text-red-700 px-2 py-1 rounded-lg">{fieldErrors.phone}</p>
+            )}
           </div>
           <div>
             <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-1">
@@ -398,14 +478,35 @@ export default function BookingPortalPage() {
             </label>
             <input
               value={customerEmail}
-              onChange={(e) => setCustomerEmail(e.target.value)}
+              onChange={(e) => {
+                setCustomerEmail(e.target.value);
+                if (touched.email) setFieldErrors((prev) => ({ ...prev, email: validateEmail(e.target.value) }));
+              }}
+              onBlur={() => handleBlur('email')}
               placeholder="you@example.com"
               type="email"
-              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-sage-500 focus:border-transparent outline-none"
+              className={`w-full border rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-sage-500 focus:border-transparent outline-none ${
+                touched.email && fieldErrors.email ? 'border-red-300' : 'border-slate-200'
+              }`}
+            />
+            {touched.email && fieldErrors.email && (
+              <p className="mt-1 text-xs bg-red-50 text-red-700 px-2 py-1 rounded-lg">{fieldErrors.email}</p>
+            )}
+          </div>
+          <div>
+            <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-1">
+              <FileText size={14} /> Notes (optional)
+            </label>
+            <textarea
+              value={customerNotes}
+              onChange={(e) => setCustomerNotes(e.target.value)}
+              placeholder="Any special requests or information..."
+              rows={3}
+              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-sage-500 focus:border-transparent outline-none resize-none"
             />
           </div>
           <button
-            onClick={() => setStep('confirm')}
+            onClick={validateAndContinue}
             disabled={!customerName.trim() || !customerPhone.trim()}
             className="w-full bg-sage-600 hover:bg-sage-700 text-white py-3 rounded-xl text-sm font-medium transition-colors disabled:opacity-50"
           >
@@ -457,6 +558,9 @@ export default function BookingPortalPage() {
               <p className="text-slate-600">{customerName}</p>
               <p className="text-slate-600">{customerPhone}</p>
               {customerEmail && <p className="text-slate-600">{customerEmail}</p>}
+              {customerNotes && (
+                <p className="text-slate-500 italic mt-1">&ldquo;{customerNotes}&rdquo;</p>
+              )}
             </div>
           </div>
 
