@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import { FileText, Languages, Sparkles, Upload, Settings2, ClipboardCheck, CreditCard, Bell } from 'lucide-react';
+import { FileText, Languages, Sparkles, Upload, Settings2, ClipboardCheck, CreditCard, Bell, Link2 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 
 export default function SettingsPage() {
@@ -23,6 +23,7 @@ export default function SettingsPage() {
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [passwordSaved, setPasswordSaved] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     api.get<any>('/business').then((b) => {
@@ -140,6 +141,35 @@ export default function SettingsPage() {
           {passwordSaved && <span className="text-sage-600 text-sm">{t('settings.password_updated')}</span>}
         </div>
       </div>
+
+      {/* Booking Link */}
+      {business?.slug && (
+        <div className="bg-sage-50 border border-sage-100 rounded-2xl p-6 mt-6">
+          <div className="flex items-center gap-2 mb-1">
+            <Link2 size={18} className="text-sage-600" />
+            <h3 className="font-semibold text-slate-800">{t('settings.booking_link')}</h3>
+          </div>
+          <p className="text-sm text-slate-500 mt-1">{t('settings.booking_link_desc')}</p>
+          <div className="flex items-center gap-2 mt-3">
+            <input
+              readOnly
+              value={typeof window !== 'undefined' ? `${window.location.origin}/book/${business.slug}` : `/book/${business.slug}`}
+              className="flex-1 bg-white rounded-xl px-3 py-2 text-sm border border-slate-200"
+            />
+            <button
+              onClick={() => {
+                const url = `${window.location.origin}/book/${business.slug}`;
+                navigator.clipboard.writeText(url);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+              }}
+              className="bg-sage-600 hover:bg-sage-700 text-white rounded-xl px-4 py-2 text-sm transition-colors"
+            >
+              {copied ? t('settings.copied') : t('settings.copy_link')}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Quick links */}
       <div className="bg-white rounded-2xl shadow-soft p-6 mt-6">

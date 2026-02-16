@@ -124,6 +124,23 @@ describe('SettingsPage', () => {
     });
   });
 
+  test('shows booking link card when slug is present', async () => {
+    mockApi.get.mockResolvedValue({
+      name: 'Test Clinic',
+      phone: '+1234',
+      timezone: 'America/New_York',
+      verticalPack: 'general',
+      slug: 'test-clinic',
+    });
+
+    render(<SettingsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('settings.booking_link')).toBeInTheDocument();
+      expect(screen.getByText('settings.copy_link')).toBeInTheDocument();
+    });
+  });
+
   test('has change password section with translation keys', async () => {
     mockApi.get.mockResolvedValue({
       name: 'Test Clinic',
