@@ -157,7 +157,7 @@ export default function CalendarPage() {
   const isStaffColumns = view === 'day';
 
   return (
-    <div className="p-6 h-full flex flex-col">
+    <div className="p-6 h-full flex flex-col" data-tour-target="calendar-grid">
       {/* Top bar */}
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3 mb-4">
         <div className="flex flex-wrap items-center gap-3">

@@ -71,7 +71,7 @@ export default function AutomationsPage() {
   ];
 
   return (
-    <div className="p-6">
+    <div className="p-6" data-tour-target="automations-list">
       <TooltipNudge
         id="automations-intro"
         title="Automate your workflow"

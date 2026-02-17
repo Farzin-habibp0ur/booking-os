@@ -70,7 +70,7 @@ export default function WaitlistPage() {
   };
 
   return (
-    <div className="p-6">
+    <div className="p-6" data-tour-target="waitlist-table">
       <TooltipNudge
         id="waitlist-intro"
         title="How the waitlist works"

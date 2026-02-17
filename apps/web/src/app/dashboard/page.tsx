@@ -177,7 +177,7 @@ export default function DashboardPage() {
       )}
 
       {/* Metric Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div data-tour-target="dashboard-metrics" className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <MetricCard
           icon={Calendar}
           color="blue"

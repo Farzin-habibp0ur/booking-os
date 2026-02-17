@@ -112,7 +112,7 @@ export default function BookingsPage() {
   };
 
   return (
-    <div className="p-6">
+    <div className="p-6" data-tour-target="bookings-table">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
         <h1 className="text-2xl font-serif font-semibold text-slate-900">
           {t('bookings.title', { entity: pack.labels.booking })}

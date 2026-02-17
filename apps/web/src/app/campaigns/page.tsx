@@ -30,7 +30,7 @@ export default function CampaignsPage() {
   }, []);
 
   return (
-    <div className="p-6">
+    <div className="p-6" data-tour-target="campaigns-list">
       <TooltipNudge
         id="campaigns-intro"
         title="Reach customers at scale"

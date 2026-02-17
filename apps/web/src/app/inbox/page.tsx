@@ -517,7 +517,7 @@ export default function InboxPage() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row h-full">
+    <div className="flex flex-col md:flex-row h-full" data-tour-target="inbox-panel">
       {/* Filter sidebar — desktop */}
       <div className="hidden md:flex w-48 border-r bg-slate-50 flex-col">
         <div className="p-3 border-b">

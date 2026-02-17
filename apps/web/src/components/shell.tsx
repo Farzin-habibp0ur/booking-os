@@ -32,16 +32,20 @@ import {
   X,
   Package,
   Kanban,
+  Compass,
 } from 'lucide-react';
 import CommandPalette from '@/components/command-palette';
 import { useTheme } from '@/lib/use-theme';
+import { DemoTourProvider, useDemoTour, TourSpotlight, TourTooltip } from '@/components/demo-tour';
 
 export function Shell({ children }: { children: ReactNode }) {
   return (
     <VerticalPackProvider>
       <I18nProvider>
         <ToastProvider>
-          <ShellInner>{children}</ShellInner>
+          <DemoTourProvider>
+            <ShellInner>{children}</ShellInner>
+          </DemoTourProvider>
         </ToastProvider>
       </I18nProvider>
     </VerticalPackProvider>
@@ -56,6 +60,7 @@ function ShellInner({ children }: { children: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [cmdkOpen, setCmdkOpen] = useState(false);
   const { theme, toggle: toggleTheme } = useTheme();
+  const { state: tourState, startTour } = useDemoTour();
 
   // Close sidebar on route change (mobile)
   useEffect(() => {
@@ -187,6 +192,13 @@ function ShellInner({ children }: { children: ReactNode }) {
       </nav>
       <div className="p-2 border-t border-slate-100 dark:border-slate-800 space-y-1">
         <button
+          onClick={startTour}
+          className="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-lavender-600 dark:text-lavender-400 hover:bg-lavender-50 dark:hover:bg-lavender-900/20 w-full transition-colors"
+        >
+          <Compass size={18} />
+          Start Tour
+        </button>
+        <button
           onClick={toggleTheme}
           className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 w-full transition-colors"
         >
@@ -255,6 +267,12 @@ function ShellInner({ children }: { children: ReactNode }) {
       </main>
 
       <CommandPalette isOpen={cmdkOpen} onClose={() => setCmdkOpen(false)} />
+      {tourState === 'running' && (
+        <>
+          <TourSpotlight />
+          <TourTooltip />
+        </>
+      )}
     </div>
   );
 }

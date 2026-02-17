@@ -82,7 +82,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="p-6 max-w-2xl">
+    <div className="p-6 max-w-2xl" data-tour-target="settings-nav">
       <h1 className="text-2xl font-serif font-semibold text-slate-900 mb-6">
         {t('settings.title')}
       </h1>

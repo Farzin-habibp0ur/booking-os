@@ -74,7 +74,7 @@ export default function CustomersPage() {
   };
 
   return (
-    <div className="p-6">
+    <div className="p-6" data-tour-target="customers-table">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
         <div>
           <h1 className="text-2xl font-serif font-semibold text-slate-900">
