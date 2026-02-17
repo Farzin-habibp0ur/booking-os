@@ -10,12 +10,14 @@ async function hashPassword(password: string): Promise<string> {
 async function main() {
   console.log('🌱 Seeding database...');
 
-  // Check if already seeded — if so, skip
+  // Check if aesthetic business already seeded
   const existing = await prisma.business.findUnique({
     where: { slug: 'glow-aesthetic' },
   });
   if (existing) {
-    console.log('Database already seeded (business "glow-aesthetic" exists). Skipping.');
+    console.log('Aesthetic business already seeded. Skipping aesthetic seed.');
+    await seedDealership();
+    console.log('\n🎉 Seed complete!');
     return;
   }
 
@@ -569,7 +571,415 @@ async function main() {
   console.log(`✅ ROI baseline created`);
 
   console.log(`✅ Sample booking and reminder created`);
+
+  await seedDealership();
+
   console.log('\n🎉 Seed complete!');
+}
+
+
+async function seedDealership() {
+  const dealershipExists = await prisma.business.findUnique({
+    where: { slug: 'metro-auto-group' },
+  });
+
+  if (dealershipExists) {
+    console.log('Dealership business already seeded. Skipping.');
+    return;
+  }
+
+  {
+    const dealership = await prisma.business.create({
+      data: {
+        name: 'Metro Auto Group',
+        slug: 'metro-auto-group',
+        phone: '+14155551000',
+        timezone: 'America/New_York',
+        verticalPack: 'dealership',
+        packConfig: {
+          setupComplete: true,
+          kanbanEnabled: true,
+          kanbanStatuses: ['CHECKED_IN', 'DIAGNOSING', 'AWAITING_APPROVAL', 'IN_PROGRESS', 'READY_FOR_PICKUP'],
+        },
+        aiSettings: {
+          enabled: true,
+          autoReplySuggestions: true,
+          bookingAssistant: true,
+          personality: 'professional and helpful automotive advisor',
+          autoReply: {
+            enabled: false,
+            mode: 'all',
+            selectedIntents: ['GENERAL', 'BOOK_APPOINTMENT', 'SALES_INQUIRY', 'SERVICE_APPOINTMENT'],
+          },
+        },
+        notificationSettings: {
+          channels: 'both',
+          followUpDelayHours: 2,
+          consultFollowUpDays: 7,
+          treatmentCheckInHours: 48,
+        },
+      },
+    });
+
+    console.log(`✅ Dealership Business: ${dealership.name}`);
+
+    // Create locations
+    const showroom = await prisma.location.create({
+      data: {
+        businessId: dealership.id,
+        name: 'Showroom / Sales',
+        address: '100 Auto Mall Blvd, Suite A',
+        isBookable: true,
+        whatsappConfig: {
+          phoneNumberId: 'showroom_phone_001',
+          displayPhone: '+14155551001',
+          webhookVerifyToken: 'showroom_verify_token',
+        },
+      },
+    });
+
+    const spareParts = await prisma.location.create({
+      data: {
+        businessId: dealership.id,
+        name: 'Spare Parts',
+        address: '100 Auto Mall Blvd, Suite B',
+        isBookable: false,
+        whatsappConfig: {
+          phoneNumberId: 'parts_phone_002',
+          displayPhone: '+14155551002',
+          webhookVerifyToken: 'parts_verify_token',
+        },
+      },
+    });
+
+    const serviceCenter = await prisma.location.create({
+      data: {
+        businessId: dealership.id,
+        name: 'Service Center',
+        address: '100 Auto Mall Blvd, Suite C',
+        isBookable: true,
+        whatsappConfig: {
+          phoneNumberId: 'service_phone_003',
+          displayPhone: '+14155551003',
+          webhookVerifyToken: 'service_verify_token',
+        },
+      },
+    });
+
+    const afterSales = await prisma.location.create({
+      data: {
+        businessId: dealership.id,
+        name: 'After-Sales',
+        address: '100 Auto Mall Blvd, Suite D',
+        isBookable: true,
+        whatsappConfig: {
+          phoneNumberId: 'aftersales_phone_004',
+          displayPhone: '+14155551004',
+          webhookVerifyToken: 'aftersales_verify_token',
+        },
+      },
+    });
+
+    console.log(`✅ Locations: ${showroom.name}, ${spareParts.name}, ${serviceCenter.name}, ${afterSales.name}`);
+
+    // Create resources — 8 service bays at Service Center
+    for (let i = 1; i <= 8; i++) {
+      await prisma.resource.create({
+        data: {
+          locationId: serviceCenter.id,
+          name: `Service Bay ${i}`,
+          type: 'service_bay',
+          metadata: { capacity: 1, hasLift: i <= 6 },
+        },
+      });
+    }
+
+    // 2 demo vehicles at Showroom
+    await prisma.resource.create({
+      data: {
+        locationId: showroom.id,
+        name: 'Demo Vehicle - Sedan',
+        type: 'vehicle',
+        metadata: { make: 'Toyota', model: 'Camry', year: 2025 },
+      },
+    });
+    await prisma.resource.create({
+      data: {
+        locationId: showroom.id,
+        name: 'Demo Vehicle - SUV',
+        type: 'vehicle',
+        metadata: { make: 'Toyota', model: 'RAV4', year: 2025 },
+      },
+    });
+
+    console.log(`✅ Resources: 8 service bays + 2 demo vehicles`);
+
+    // Create dealership staff
+    const dealerAdmin = await prisma.staff.create({
+      data: {
+        businessId: dealership.id,
+        name: 'Mike Johnson',
+        email: 'mike@metroauto.com',
+        passwordHash: await hashPassword('password123'),
+        role: 'ADMIN',
+      },
+    });
+
+    const salesRep1 = await prisma.staff.create({
+      data: {
+        businessId: dealership.id,
+        name: 'Alex Rivera',
+        email: 'alex@metroauto.com',
+        passwordHash: await hashPassword('password123'),
+        role: 'AGENT',
+      },
+    });
+
+    const salesRep2 = await prisma.staff.create({
+      data: {
+        businessId: dealership.id,
+        name: 'Dana Kim',
+        email: 'dana@metroauto.com',
+        passwordHash: await hashPassword('password123'),
+        role: 'AGENT',
+      },
+    });
+
+    const mechanic1 = await prisma.staff.create({
+      data: {
+        businessId: dealership.id,
+        name: 'Carlos Mendez',
+        email: 'carlos@metroauto.com',
+        passwordHash: await hashPassword('password123'),
+        role: 'SERVICE_PROVIDER',
+      },
+    });
+
+    const mechanic2 = await prisma.staff.create({
+      data: {
+        businessId: dealership.id,
+        name: 'James Wright',
+        email: 'james@metroauto.com',
+        passwordHash: await hashPassword('password123'),
+        role: 'SERVICE_PROVIDER',
+      },
+    });
+
+    const mechanic3 = await prisma.staff.create({
+      data: {
+        businessId: dealership.id,
+        name: 'Priya Patel',
+        email: 'priya@metroauto.com',
+        passwordHash: await hashPassword('password123'),
+        role: 'SERVICE_PROVIDER',
+      },
+    });
+
+    const mechanic4 = await prisma.staff.create({
+      data: {
+        businessId: dealership.id,
+        name: 'Tom Baker',
+        email: 'tom@metroauto.com',
+        passwordHash: await hashPassword('password123'),
+        role: 'SERVICE_PROVIDER',
+      },
+    });
+
+    console.log(`✅ Dealership Staff: 1 admin, 2 sales reps, 4 mechanics`);
+
+    // Working hours for dealership staff (Mon-Sat 8am-6pm)
+    const allDealershipStaff = [dealerAdmin, salesRep1, salesRep2, mechanic1, mechanic2, mechanic3, mechanic4];
+    for (const s of allDealershipStaff) {
+      for (const day of [0, 1, 2, 3, 4, 5, 6]) {
+        await prisma.workingHours.create({
+          data: {
+            staffId: s.id,
+            dayOfWeek: day,
+            startTime: '08:00',
+            endTime: '18:00',
+            isOff: day === 0, // Sunday off
+          },
+        });
+      }
+    }
+
+    console.log(`✅ Working hours created for all dealership staff`);
+
+    // Assign staff to locations via StaffLocation
+    // Sales reps → Showroom
+    await prisma.staffLocation.createMany({
+      data: [
+        { staffId: salesRep1.id, locationId: showroom.id },
+        { staffId: salesRep2.id, locationId: showroom.id },
+        { staffId: salesRep1.id, locationId: afterSales.id },
+        { staffId: salesRep2.id, locationId: afterSales.id },
+      ],
+    });
+
+    // Mechanics → Service Center
+    await prisma.staffLocation.createMany({
+      data: [
+        { staffId: mechanic1.id, locationId: serviceCenter.id },
+        { staffId: mechanic2.id, locationId: serviceCenter.id },
+        { staffId: mechanic3.id, locationId: serviceCenter.id },
+        { staffId: mechanic4.id, locationId: serviceCenter.id },
+      ],
+    });
+
+    // Admin → all locations
+    await prisma.staffLocation.createMany({
+      data: [
+        { staffId: dealerAdmin.id, locationId: showroom.id },
+        { staffId: dealerAdmin.id, locationId: spareParts.id },
+        { staffId: dealerAdmin.id, locationId: serviceCenter.id },
+        { staffId: dealerAdmin.id, locationId: afterSales.id },
+      ],
+    });
+
+    console.log(`✅ Staff-location assignments created`);
+
+    // Create dealership services
+    await Promise.all([
+      prisma.service.create({
+        data: {
+          businessId: dealership.id,
+          name: 'Test Drive',
+          durationMins: 30,
+          price: 0,
+          category: 'Sales',
+          kind: 'CONSULT',
+        },
+      }),
+      prisma.service.create({
+        data: {
+          businessId: dealership.id,
+          name: 'Routine Maintenance',
+          durationMins: 60,
+          price: 150,
+          category: 'Service',
+          kind: 'TREATMENT',
+        },
+      }),
+      prisma.service.create({
+        data: {
+          businessId: dealership.id,
+          name: 'Brake Service',
+          durationMins: 90,
+          price: 350,
+          category: 'Service',
+          kind: 'TREATMENT',
+        },
+      }),
+      prisma.service.create({
+        data: {
+          businessId: dealership.id,
+          name: 'Oil Change',
+          durationMins: 30,
+          price: 75,
+          category: 'Service',
+          kind: 'TREATMENT',
+        },
+      }),
+      prisma.service.create({
+        data: {
+          businessId: dealership.id,
+          name: 'Diagnostic Check',
+          durationMins: 45,
+          price: 100,
+          category: 'Service',
+          kind: 'CONSULT',
+        },
+      }),
+    ]);
+
+    console.log(`✅ Dealership services created`);
+
+    // Create dealership message templates
+    await Promise.all([
+      prisma.messageTemplate.create({
+        data: {
+          businessId: dealership.id,
+          name: 'Car Ready for Pickup',
+          category: 'CUSTOM',
+          body: 'Hi {{customerName}}, your {{vehicleInfo}} is ready for pickup at Metro Auto Group! Total: ${{totalAmount}}. Please visit our Service Center to collect your vehicle.',
+          variables: ['customerName', 'vehicleInfo', 'totalAmount'],
+        },
+      }),
+      prisma.messageTemplate.create({
+        data: {
+          businessId: dealership.id,
+          name: 'Service Status Update',
+          category: 'CUSTOM',
+          body: 'Hi {{customerName}}, here\'s an update on your {{vehicleInfo}}: {{statusUpdate}}. If you have questions, reply to this message.',
+          variables: ['customerName', 'vehicleInfo', 'statusUpdate'],
+        },
+      }),
+      prisma.messageTemplate.create({
+        data: {
+          businessId: dealership.id,
+          name: 'Quote Approval Request',
+          category: 'CUSTOM',
+          body: 'Hi {{customerName}}, we have a quote ready for your {{vehicleInfo}}. Total: ${{totalAmount}}. Please review and approve here: {{approvalLink}}',
+          variables: ['customerName', 'vehicleInfo', 'totalAmount', 'approvalLink'],
+        },
+      }),
+      prisma.messageTemplate.create({
+        data: {
+          businessId: dealership.id,
+          name: '6-Month Maintenance Nudge',
+          category: 'FOLLOW_UP',
+          body: 'Hi {{customerName}}, it\'s been 6 months since your last service at Metro Auto Group. Time for a check-up! Book your next appointment: {{bookingLink}}',
+          variables: ['customerName', 'bookingLink'],
+        },
+      }),
+      prisma.messageTemplate.create({
+        data: {
+          businessId: dealership.id,
+          name: 'Test Drive Confirmation',
+          category: 'CONFIRMATION',
+          body: 'Your test drive for the {{vehicleInfo}} is confirmed for {{date}} at {{time}} at our Showroom. See you there!',
+          variables: ['vehicleInfo', 'date', 'time'],
+        },
+      }),
+    ]);
+
+    console.log(`✅ Dealership message templates created`);
+
+    // Create sample dealership customers
+    await Promise.all([
+      prisma.customer.create({
+        data: {
+          businessId: dealership.id,
+          name: 'Robert Chen',
+          phone: '+14155552001',
+          email: 'robert@example.com',
+          tags: ['VIP'],
+          customFields: {
+            make: 'Toyota',
+            model: 'Camry',
+            year: 2022,
+            vin: '1HGBH41JXMN109186',
+            mileage: 35000,
+            interestType: 'Service',
+          },
+        },
+      }),
+      prisma.customer.create({
+        data: {
+          businessId: dealership.id,
+          name: 'Lisa Park',
+          phone: '+14155552002',
+          email: 'lisa@example.com',
+          tags: ['New'],
+          customFields: {
+            interestType: 'New',
+          },
+        },
+      }),
+    ]);
+
+    console.log(`✅ Dealership customers created`);
+  }
 }
 
 main()

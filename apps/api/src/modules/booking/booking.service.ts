@@ -38,6 +38,7 @@ export class BookingService {
       status?: string;
       staffId?: string;
       customerId?: string;
+      locationId?: string;
       dateFrom?: string;
       dateTo?: string;
       page?: number;
@@ -50,6 +51,7 @@ export class BookingService {
     if (query.status) where.status = query.status;
     if (query.staffId) where.staffId = query.staffId;
     if (query.customerId) where.customerId = query.customerId;
+    if (query.locationId) where.locationId = query.locationId;
     if (query.dateFrom || query.dateTo) {
       where.startTime = {};
       if (query.dateFrom) where.startTime.gte = new Date(query.dateFrom);
@@ -98,7 +100,12 @@ export class BookingService {
       startTime: string;
       notes?: string;
       customFields?: any;
+      locationId?: string;
+      resourceId?: string;
+      forceBook?: boolean;
+      forceBookReason?: string;
     },
+    currentUser?: { staffId: string; staffName: string; role: string },
   ) {
     const service = await this.prisma.service.findFirst({
       where: { id: data.serviceId, businessId },
@@ -110,21 +117,76 @@ export class BookingService {
 
     const isDepositRequired = service.depositRequired === true;
 
+    // Validate resource belongs to the specified location
+    if (data.resourceId) {
+      const resource = await this.prisma.resource.findFirst({
+        where: { id: data.resourceId, isActive: true },
+      });
+      if (!resource) throw new BadRequestException('Resource not found');
+      if (data.locationId && resource.locationId !== data.locationId) {
+        throw new BadRequestException('Resource does not belong to the specified location');
+      }
+    }
+
+    // Validate staff is assigned to the specified location
+    if (data.locationId && data.staffId) {
+      const assignment = await this.prisma.staffLocation.findUnique({
+        where: { staffId_locationId: { staffId: data.staffId, locationId: data.locationId } },
+      });
+      if (!assignment) {
+        throw new BadRequestException('Staff is not assigned to the specified location');
+      }
+    }
+
+    // Build override log if forceBook is used
+    const overrideLog = data.forceBook && currentUser
+      ? {
+          forceBooked: true,
+          reason: data.forceBookReason || 'VIP override',
+          adminId: currentUser.staffId,
+          adminName: currentUser.staffName,
+          timestamp: new Date().toISOString(),
+        }
+      : undefined;
+
+    const mergedCustomFields = {
+      ...(data.customFields || {}),
+      ...(overrideLog ? { overrideLog } : {}),
+    };
+
     // C1 fix: Wrap conflict check + create in transaction with row lock to prevent double-booking
     const booking = await this.prisma.$transaction(async (tx) => {
-      if (data.staffId) {
-        // Lock staff row to serialize concurrent booking creation for same staff
-        await tx.$queryRaw`SELECT id FROM "Staff" WHERE id = ${data.staffId} FOR UPDATE`;
-        const conflict = await tx.booking.findFirst({
-          where: {
-            businessId,
-            staffId: data.staffId,
-            status: { in: ['PENDING', 'PENDING_DEPOSIT', 'CONFIRMED', 'IN_PROGRESS'] },
-            startTime: { lt: endTime },
-            endTime: { gt: startTime },
-          },
-        });
-        if (conflict) throw new BadRequestException('Staff has a conflicting booking at this time');
+      if (!data.forceBook) {
+        if (data.staffId) {
+          // Lock staff row to serialize concurrent booking creation for same staff
+          await tx.$queryRaw`SELECT id FROM "Staff" WHERE id = ${data.staffId} FOR UPDATE`;
+          const conflict = await tx.booking.findFirst({
+            where: {
+              businessId,
+              staffId: data.staffId,
+              status: { in: ['PENDING', 'PENDING_DEPOSIT', 'CONFIRMED', 'IN_PROGRESS'] },
+              startTime: { lt: endTime },
+              endTime: { gt: startTime },
+            },
+          });
+          if (conflict) throw new BadRequestException('Staff has a conflicting booking at this time');
+        }
+
+        // Check resource conflict
+        if (data.resourceId) {
+          const resourceConflict = await tx.booking.findFirst({
+            where: {
+              businessId,
+              resourceId: data.resourceId,
+              status: { in: ['PENDING', 'PENDING_DEPOSIT', 'CONFIRMED', 'IN_PROGRESS'] },
+              startTime: { lt: endTime },
+              endTime: { gt: startTime },
+            },
+          });
+          if (resourceConflict) {
+            throw new BadRequestException('Resource has a conflicting booking at this time');
+          }
+        }
       }
 
       return tx.booking.create({
@@ -134,10 +196,12 @@ export class BookingService {
           serviceId: data.serviceId,
           staffId: data.staffId,
           conversationId: data.conversationId,
+          locationId: data.locationId,
+          resourceId: data.resourceId,
           startTime,
           endTime,
           notes: data.notes,
-          customFields: data.customFields || {},
+          customFields: mergedCustomFields,
           status: isDepositRequired ? 'PENDING_DEPOSIT' : 'CONFIRMED',
         },
         include: { customer: true, service: true, staff: true },
@@ -432,6 +496,62 @@ export class BookingService {
     return booking;
   }
 
+  async updateKanbanStatus(businessId: string, id: string, kanbanStatus: string) {
+    const booking = await this.prisma.booking.findFirst({
+      where: { id, businessId },
+      include: { customer: true, service: true, staff: true },
+    });
+    if (!booking) throw new NotFoundException('Booking not found');
+
+    const updated = await this.prisma.booking.update({
+      where: { id, businessId },
+      data: { kanbanStatus },
+      include: { customer: true, service: true, staff: true },
+    });
+
+    // Fire-and-forget kanban status notification
+    this.notificationService.sendKanbanStatusUpdate(updated, kanbanStatus).catch(() => {});
+
+    this.logger.log(
+      `Kanban status updated: booking=${id} status=${kanbanStatus}`,
+    );
+
+    return updated;
+  }
+
+  async getKanbanBoard(
+    businessId: string,
+    query: {
+      locationId?: string;
+      staffId?: string;
+      dateFrom?: string;
+      dateTo?: string;
+    },
+  ) {
+    const where: any = {
+      businessId,
+      kanbanStatus: { not: null },
+      status: { in: ['CONFIRMED', 'IN_PROGRESS'] },
+    };
+    if (query.locationId) where.locationId = query.locationId;
+    if (query.staffId) where.staffId = query.staffId;
+    if (query.dateFrom || query.dateTo) {
+      where.startTime = {};
+      if (query.dateFrom) where.startTime.gte = new Date(query.dateFrom);
+      if (query.dateTo) where.startTime.lte = new Date(query.dateTo);
+    }
+
+    return this.prisma.booking.findMany({
+      where,
+      include: {
+        customer: true,
+        service: true,
+        staff: true,
+      },
+      orderBy: { startTime: 'asc' },
+    });
+  }
+
   async sendDepositRequest(businessId: string, id: string) {
     const booking = await this.prisma.booking.findFirst({
       where: { id, businessId },
@@ -601,7 +721,13 @@ export class BookingService {
     throw new BadRequestException(`Unknown bulk action: ${action}`);
   }
 
-  async getCalendar(businessId: string, dateFrom: string, dateTo: string, staffId?: string) {
+  async getCalendar(
+    businessId: string,
+    dateFrom: string,
+    dateTo: string,
+    staffId?: string,
+    locationId?: string,
+  ) {
     const where: any = {
       businessId,
       status: { in: ['PENDING', 'PENDING_DEPOSIT', 'CONFIRMED', 'IN_PROGRESS'] },
@@ -609,6 +735,7 @@ export class BookingService {
       endTime: { lte: new Date(dateTo) },
     };
     if (staffId) where.staffId = staffId;
+    if (locationId) where.locationId = locationId;
 
     return this.prisma.booking.findMany({
       where,

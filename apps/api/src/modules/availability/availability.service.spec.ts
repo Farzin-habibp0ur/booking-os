@@ -683,6 +683,224 @@ describe('AvailabilityService', () => {
 
       expect(result).toEqual([]);
     });
+
+    // ─── Location-aware slot filtering ──────────────────────────────────
+
+    it('filters staff by location assignment when locationId is provided', async () => {
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        businessId: 'biz1',
+        durationMins: 30,
+      } as any);
+      prisma.staff.findMany.mockResolvedValue([
+        { id: 'staff1', name: 'Dr. Chen' },
+        { id: 'staff2', name: 'Ava Smith' },
+      ] as any);
+
+      // Only staff1 is assigned to loc1
+      prisma.staffLocation.findMany.mockResolvedValue([{ staffId: 'staff1' }] as any);
+
+      prisma.workingHours.findUnique.mockResolvedValue({
+        dayOfWeek: FUTURE_DATE_DOW,
+        startTime: '09:00',
+        endTime: '10:00',
+        isOff: false,
+      } as any);
+      prisma.timeOff.findFirst.mockResolvedValue(null);
+      prisma.booking.findMany.mockResolvedValue([]);
+      mockCalendarSyncService.pullExternalEvents.mockResolvedValue([]);
+
+      const result = await service.getAvailableSlots(
+        'biz1',
+        FUTURE_DATE,
+        'svc1',
+        undefined,
+        'loc1',
+      );
+
+      // Only staff1 slots should be returned (staff2 is not assigned to loc1)
+      expect(result.every((s: TimeSlot) => s.staffId === 'staff1')).toBe(true);
+      expect(result.every((s: TimeSlot) => s.staffName === 'Dr. Chen')).toBe(true);
+      expect(result.length).toBeGreaterThan(0);
+    });
+
+    it('returns empty when no staff assigned to location', async () => {
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        businessId: 'biz1',
+        durationMins: 30,
+      } as any);
+      prisma.staff.findMany.mockResolvedValue([
+        { id: 'staff1', name: 'Dr. Chen' },
+      ] as any);
+
+      // No staff assigned to loc1
+      prisma.staffLocation.findMany.mockResolvedValue([]);
+
+      const result = await service.getAvailableSlots(
+        'biz1',
+        FUTURE_DATE,
+        'svc1',
+        undefined,
+        'loc1',
+      );
+
+      expect(result).toEqual([]);
+    });
+
+    it('does not filter staff when no locationId is provided', async () => {
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        businessId: 'biz1',
+        durationMins: 30,
+      } as any);
+      prisma.staff.findMany.mockResolvedValue([
+        { id: 'staff1', name: 'Dr. Chen' },
+        { id: 'staff2', name: 'Ava Smith' },
+      ] as any);
+      prisma.workingHours.findUnique.mockResolvedValue({
+        dayOfWeek: FUTURE_DATE_DOW,
+        startTime: '09:00',
+        endTime: '10:00',
+        isOff: false,
+      } as any);
+      prisma.timeOff.findFirst.mockResolvedValue(null);
+      prisma.booking.findMany.mockResolvedValue([]);
+      mockCalendarSyncService.pullExternalEvents.mockResolvedValue([]);
+
+      const result = await service.getAvailableSlots('biz1', FUTURE_DATE, 'svc1');
+
+      // Both staff should have slots
+      const staffIds = [...new Set(result.map((s: TimeSlot) => s.staffId))];
+      expect(staffIds).toHaveLength(2);
+      expect(prisma.staffLocation.findMany).not.toHaveBeenCalled();
+    });
+
+    // ─── Resource conflict detection ────────────────────────────────────
+
+    it('marks slots unavailable when resource has conflicting bookings', async () => {
+      const resourceBookingStart = new Date(FUTURE_DATE + 'T10:00:00');
+      const resourceBookingEnd = new Date(FUTURE_DATE + 'T11:00:00');
+
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        businessId: 'biz1',
+        durationMins: 30,
+      } as any);
+      prisma.staff.findMany.mockResolvedValue([{ id: 'staff1', name: 'Dr. Chen' }] as any);
+      prisma.workingHours.findUnique.mockResolvedValue({
+        staffId: 'staff1',
+        dayOfWeek: FUTURE_DATE_DOW,
+        startTime: '09:00',
+        endTime: '12:00',
+        isOff: false,
+      } as any);
+      prisma.timeOff.findFirst.mockResolvedValue(null);
+
+      // Staff has no booking conflicts
+      prisma.booking.findMany
+        .mockResolvedValueOnce([
+          { startTime: resourceBookingStart, endTime: resourceBookingEnd },
+        ] as any) // resource bookings query (first call)
+        .mockResolvedValueOnce([] as any); // staff bookings query (second call)
+
+      mockCalendarSyncService.pullExternalEvents.mockResolvedValue([]);
+
+      const result = await service.getAvailableSlots(
+        'biz1',
+        FUTURE_DATE,
+        'svc1',
+        undefined,
+        undefined,
+        'res1',
+      );
+
+      // 10:00 and 10:30 should be unavailable due to resource conflict
+      const slot1000 = result.find((s: TimeSlot) => s.display === '10:00');
+      const slot1030 = result.find((s: TimeSlot) => s.display === '10:30');
+      const slot0900 = result.find((s: TimeSlot) => s.display === '09:00');
+      const slot1100 = result.find((s: TimeSlot) => s.display === '11:00');
+
+      expect(slot1000?.available).toBe(false);
+      expect(slot1030?.available).toBe(false);
+      expect(slot0900?.available).toBe(true);
+      expect(slot1100?.available).toBe(true);
+    });
+
+    it('does not check resource conflicts when no resourceId is provided', async () => {
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        businessId: 'biz1',
+        durationMins: 30,
+      } as any);
+      prisma.staff.findMany.mockResolvedValue([{ id: 'staff1', name: 'Dr. Chen' }] as any);
+      prisma.workingHours.findUnique.mockResolvedValue({
+        staffId: 'staff1',
+        dayOfWeek: FUTURE_DATE_DOW,
+        startTime: '09:00',
+        endTime: '10:00',
+        isOff: false,
+      } as any);
+      prisma.timeOff.findFirst.mockResolvedValue(null);
+      prisma.booking.findMany.mockResolvedValue([]);
+      mockCalendarSyncService.pullExternalEvents.mockResolvedValue([]);
+
+      const result = await service.getAvailableSlots('biz1', FUTURE_DATE, 'svc1');
+
+      // All slots should be available, booking.findMany only called once per staff (for staff conflicts, not resource)
+      expect(result.every((s: TimeSlot) => s.available)).toBe(true);
+    });
+
+    it('combines location filtering with resource conflict detection', async () => {
+      const resourceBookingStart = new Date(FUTURE_DATE + 'T09:00:00');
+      const resourceBookingEnd = new Date(FUTURE_DATE + 'T09:30:00');
+
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        businessId: 'biz1',
+        durationMins: 30,
+      } as any);
+      prisma.staff.findMany.mockResolvedValue([
+        { id: 'staff1', name: 'Dr. Chen' },
+        { id: 'staff2', name: 'Ava Smith' },
+      ] as any);
+
+      // Only staff1 assigned to loc1
+      prisma.staffLocation.findMany.mockResolvedValue([{ staffId: 'staff1' }] as any);
+
+      prisma.workingHours.findUnique.mockResolvedValue({
+        dayOfWeek: FUTURE_DATE_DOW,
+        startTime: '09:00',
+        endTime: '10:00',
+        isOff: false,
+      } as any);
+      prisma.timeOff.findFirst.mockResolvedValue(null);
+
+      // Resource has booking 09:00-09:30
+      prisma.booking.findMany
+        .mockResolvedValueOnce([
+          { startTime: resourceBookingStart, endTime: resourceBookingEnd },
+        ] as any) // resource bookings
+        .mockResolvedValueOnce([] as any); // staff bookings
+
+      mockCalendarSyncService.pullExternalEvents.mockResolvedValue([]);
+
+      const result = await service.getAvailableSlots(
+        'biz1',
+        FUTURE_DATE,
+        'svc1',
+        undefined,
+        'loc1',
+        'res1',
+      );
+
+      // Only staff1 slots (location filter), 09:00 unavailable (resource conflict), 09:30 available
+      expect(result.every((s: TimeSlot) => s.staffId === 'staff1')).toBe(true);
+      const slot0900 = result.find((s: TimeSlot) => s.display === '09:00');
+      const slot0930 = result.find((s: TimeSlot) => s.display === '09:30');
+      expect(slot0900?.available).toBe(false);
+      expect(slot0930?.available).toBe(true);
+    });
   });
 
   // ─── getStaffWorkingHours ─────────────────────────────────────────────

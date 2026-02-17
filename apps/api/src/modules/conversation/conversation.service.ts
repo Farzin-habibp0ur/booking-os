@@ -25,6 +25,7 @@ export class ConversationService {
       unassigned?: boolean;
       search?: string;
       filter?: string;
+      locationId?: string;
       page?: number;
       pageSize?: number;
     },
@@ -32,6 +33,11 @@ export class ConversationService {
     const page = Number(query.page) || 1;
     const pageSize = Number(query.pageSize) || 20;
     const where: any = { businessId };
+
+    // Location filter
+    if (query.locationId) {
+      where.locationId = query.locationId;
+    }
 
     // Named filters
     if (query.filter) {
@@ -86,6 +92,7 @@ export class ConversationService {
         include: {
           customer: true,
           assignedTo: { select: { id: true, name: true } },
+          location: { select: { id: true, name: true } },
           messages: { take: 1, orderBy: { createdAt: 'desc' } },
           bookings: {
             where: { status: { in: ['PENDING', 'CONFIRMED'] } },
@@ -171,16 +178,31 @@ export class ConversationService {
       include: {
         customer: true,
         assignedTo: { select: { id: true, name: true } },
+        location: { select: { id: true, name: true } },
       },
     });
   }
 
-  async findOrCreate(businessId: string, customerId: string, channel: string = 'WHATSAPP') {
+  async findOrCreate(
+    businessId: string,
+    customerId: string,
+    channel: string = 'WHATSAPP',
+    locationId?: string,
+  ) {
     // First try to find an active (non-resolved) conversation
     let conversation = await this.prisma.conversation.findFirst({
       where: { businessId, customerId, channel, status: { not: 'RESOLVED' } },
     });
-    if (conversation) return conversation;
+    if (conversation) {
+      // Update locationId if provided and not already set
+      if (locationId && !conversation.locationId) {
+        conversation = await this.prisma.conversation.update({
+          where: { id: conversation.id },
+          data: { locationId },
+        });
+      }
+      return conversation;
+    }
 
     // If no active conversation, try to reopen the most recent resolved one
     const resolved = await this.prisma.conversation.findFirst({
@@ -190,14 +212,14 @@ export class ConversationService {
     if (resolved) {
       conversation = await this.prisma.conversation.update({
         where: { id: resolved.id },
-        data: { status: 'OPEN' },
+        data: { status: 'OPEN', ...(locationId && { locationId }) },
       });
       return conversation;
     }
 
     // No conversation at all — create new
     conversation = await this.prisma.conversation.create({
-      data: { businessId, customerId, channel, status: 'OPEN' },
+      data: { businessId, customerId, channel, status: 'OPEN', ...(locationId && { locationId }) },
     });
     return conversation;
   }

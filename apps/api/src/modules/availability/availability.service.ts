@@ -24,6 +24,8 @@ export class AvailabilityService {
     date: string, // YYYY-MM-DD
     serviceId: string,
     staffId?: string,
+    locationId?: string,
+    resourceId?: string,
   ): Promise<TimeSlot[]> {
     // Get service duration
     const service = await this.prisma.service.findFirst({
@@ -35,13 +37,40 @@ export class AvailabilityService {
     // Get staff to check
     const staffWhere: any = { businessId, isActive: true };
     if (staffId) staffWhere.id = staffId;
-    const staffList = await this.prisma.staff.findMany({
+    let staffList = await this.prisma.staff.findMany({
       where: staffWhere,
       select: { id: true, name: true },
     });
 
+    // Filter staff by location assignment when locationId is provided
+    if (locationId && staffList.length > 0) {
+      const assignments = await this.prisma.staffLocation.findMany({
+        where: { locationId },
+        select: { staffId: true },
+      });
+      const assignedStaffIds = new Set(assignments.map((a) => a.staffId));
+      staffList = staffList.filter((s) => assignedStaffIds.has(s.id));
+    }
+
     const targetDate = new Date(date + 'T00:00:00');
     const dayOfWeek = targetDate.getDay();
+
+    // Pre-fetch resource bookings for conflict detection
+    let resourceBookings: { startTime: Date; endTime: Date }[] = [];
+    if (resourceId) {
+      const dayStart = new Date(date + 'T00:00:00');
+      const dayEnd = new Date(date + 'T23:59:59');
+      resourceBookings = await this.prisma.booking.findMany({
+        where: {
+          businessId,
+          resourceId,
+          status: { in: ['PENDING', 'PENDING_DEPOSIT', 'CONFIRMED', 'IN_PROGRESS'] },
+          startTime: { gte: dayStart },
+          endTime: { lte: dayEnd },
+        },
+        select: { startTime: true, endTime: true },
+      });
+    }
 
     const allSlots: TimeSlot[] = [];
 
@@ -115,7 +144,16 @@ export class AvailabilityService {
           );
         });
 
-        const hasConflict = internalConflict || externalConflict;
+        // Check for resource booking conflicts
+        const resourceConflict = resourceId
+          ? resourceBookings.some((rb) => {
+              const rbStart = new Date(rb.startTime).getTime();
+              const rbEnd = new Date(rb.endTime).getTime();
+              return slotStart.getTime() < rbEnd && slotEnd.getTime() > rbStart;
+            })
+          : false;
+
+        const hasConflict = internalConflict || externalConflict || resourceConflict;
 
         // Skip past slots
         if (slotStart.getTime() < Date.now()) continue;

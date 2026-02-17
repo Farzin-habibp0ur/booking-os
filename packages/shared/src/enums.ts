@@ -2,6 +2,8 @@ export enum StaffRole {
   OWNER = 'OWNER',
   ADMIN = 'ADMIN',
   AGENT = 'AGENT',
+  SERVICE_PROVIDER = 'SERVICE_PROVIDER',
+  SUPER_ADMIN = 'SUPER_ADMIN',
 }
 
 export enum BookingStatus {
@@ -70,4 +72,13 @@ export enum VerticalPack {
   SALON = 'salon',
   TUTORING = 'tutoring',
   GENERAL = 'general',
+  DEALERSHIP = 'dealership',
+}
+
+export enum KanbanStatus {
+  CHECKED_IN = 'CHECKED_IN',
+  DIAGNOSING = 'DIAGNOSING',
+  AWAITING_APPROVAL = 'AWAITING_APPROVAL',
+  IN_PROGRESS = 'IN_PROGRESS',
+  READY_FOR_PICKUP = 'READY_FOR_PICKUP',
 }

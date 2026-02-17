@@ -11,6 +11,7 @@ export class MessagingService {
   private readonly logger = new Logger(MessagingService.name);
   private provider: MessagingProvider;
   private mockProvider?: MockProvider;
+  private providerRegistry = new Map<string, WhatsAppCloudProvider>();
 
   constructor(private configService: ConfigService) {
     const providerName = this.configService.get<string>('MESSAGING_PROVIDER', 'mock');
@@ -26,7 +27,9 @@ export class MessagingService {
         this.mockProvider = new MockProvider();
         this.provider = this.mockProvider;
       } else {
-        this.provider = new WhatsAppCloudProvider({ phoneNumberId, accessToken });
+        const provider = new WhatsAppCloudProvider({ phoneNumberId, accessToken });
+        this.provider = provider;
+        this.providerRegistry.set(phoneNumberId, provider);
         this.logger.log('Using WhatsApp Cloud API provider');
       }
     } else {
@@ -38,6 +41,35 @@ export class MessagingService {
 
   getProvider(): MessagingProvider {
     return this.provider;
+  }
+
+  /** Get provider for a specific phone number ID (falls back to default) */
+  getProviderForPhoneNumberId(phoneNumberId: string): MessagingProvider {
+    return this.providerRegistry.get(phoneNumberId) || this.provider;
+  }
+
+  /** Register a WhatsApp Cloud provider for a specific phone number */
+  registerProvider(phoneNumberId: string, accessToken: string): WhatsAppCloudProvider {
+    const existing = this.providerRegistry.get(phoneNumberId);
+    if (existing) return existing;
+
+    const provider = new WhatsAppCloudProvider({ phoneNumberId, accessToken });
+    this.providerRegistry.set(phoneNumberId, provider);
+    this.logger.log(`Registered WhatsApp provider for phoneNumberId: ${phoneNumberId}`);
+    return provider;
+  }
+
+  /** Get provider for a location's WhatsApp config (lazy-registers if needed) */
+  getProviderForLocationConfig(whatsappConfig: Record<string, any> | null): MessagingProvider {
+    if (!whatsappConfig?.phoneNumberId || !whatsappConfig?.accessToken) {
+      return this.provider;
+    }
+    return this.registerProvider(whatsappConfig.phoneNumberId, whatsappConfig.accessToken);
+  }
+
+  /** Get the number of registered providers */
+  getRegisteredProviderCount(): number {
+    return this.providerRegistry.size;
   }
 
   getMockProvider(): MockProvider {

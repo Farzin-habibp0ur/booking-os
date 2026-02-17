@@ -1,10 +1,11 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, Optional } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma.service';
 import { TokenService } from '../../common/token.service';
 import { AvailabilityService } from '../availability/availability.service';
 import { BookingService } from '../booking/booking.service';
 import { BusinessService } from '../business/business.service';
 import { WaitlistService } from '../waitlist/waitlist.service';
+import { QuoteService } from '../quote/quote.service';
 
 @Injectable()
 export class SelfServeService {
@@ -15,6 +16,7 @@ export class SelfServeService {
     private bookingService: BookingService,
     private businessService: BusinessService,
     private waitlistService: WaitlistService,
+    @Optional() private quoteService?: QuoteService,
   ) {}
 
   async validateToken(token: string, type: 'RESCHEDULE_LINK' | 'CANCEL_LINK') {
@@ -272,5 +274,19 @@ export class SelfServeService {
     await this.waitlistService.resolveEntry(entry.businessId, entry.id, booking.id);
 
     return booking;
+  }
+
+  async getQuoteForApproval(token: string) {
+    if (!this.quoteService) {
+      throw new BadRequestException('Quote system not available');
+    }
+    return this.quoteService.getQuoteForApproval(token);
+  }
+
+  async approveQuote(token: string, approverIp?: string) {
+    if (!this.quoteService) {
+      throw new BadRequestException('Quote system not available');
+    }
+    return this.quoteService.approveQuote(token, approverIp);
   }
 }

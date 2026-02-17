@@ -36,6 +36,9 @@ import { SearchModule } from './modules/search/search.module';
 import { CampaignModule } from './modules/campaign/campaign.module';
 import { OfferModule } from './modules/offer/offer.module';
 import { AutomationModule } from './modules/automation/automation.module';
+import { LocationModule } from './modules/location/location.module';
+import { PackBuilderModule } from './modules/pack-builder/pack-builder.module';
+import { QuoteModule } from './modules/quote/quote.module';
 
 @Module({
   imports: [
@@ -88,6 +91,9 @@ import { AutomationModule } from './modules/automation/automation.module';
     CampaignModule,
     OfferModule,
     AutomationModule,
+    LocationModule,
+    PackBuilderModule,
+    QuoteModule,
     process.env.REDIS_URL ? QueueModule.forRootWithRedis() : QueueModule.forRoot(),
   ],
 })

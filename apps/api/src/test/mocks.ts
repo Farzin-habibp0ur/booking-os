@@ -66,6 +66,8 @@ export function createMockNotificationService() {
     sendRescheduleLink: jest.fn().mockResolvedValue(undefined),
     sendCancelLink: jest.fn().mockResolvedValue(undefined),
     sendCancellationNotification: jest.fn().mockResolvedValue(undefined),
+    sendKanbanStatusUpdate: jest.fn().mockResolvedValue(undefined),
+    sendQuoteApprovalRequest: jest.fn().mockResolvedValue(undefined),
     logNotificationEvent: jest.fn().mockResolvedValue(undefined),
   };
 }

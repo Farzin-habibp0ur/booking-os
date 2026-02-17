@@ -6,7 +6,12 @@ import { BookingService } from './booking.service';
 import { BusinessId, CurrentUser } from '../../common/decorators';
 import { TenantGuard } from '../../common/tenant.guard';
 import { RolesGuard } from '../../common/roles.guard';
-import { CreateBookingDto, UpdateBookingDto, UpdateBookingStatusDto } from '../../common/dto';
+import {
+  CreateBookingDto,
+  UpdateBookingDto,
+  UpdateBookingStatusDto,
+  UpdateKanbanStatusDto,
+} from '../../common/dto';
 
 @ApiTags('Bookings')
 @Controller('bookings')
@@ -25,8 +30,9 @@ export class BookingController {
     @Query('dateFrom') dateFrom: string,
     @Query('dateTo') dateTo: string,
     @Query('staffId') staffId?: string,
+    @Query('locationId') locationId?: string,
   ) {
-    return this.bookingService.getCalendar(businessId, dateFrom, dateTo, staffId);
+    return this.bookingService.getCalendar(businessId, dateFrom, dateTo, staffId, locationId);
   }
 
   @Get(':id/policy-check')
@@ -45,8 +51,15 @@ export class BookingController {
 
   @Post()
   @Throttle({ default: { ttl: 60000, limit: 10 } })
-  create(@BusinessId() businessId: string, @Body() body: CreateBookingDto) {
-    return this.bookingService.create(businessId, body);
+  create(
+    @BusinessId() businessId: string,
+    @Body() body: CreateBookingDto,
+    @CurrentUser() user: any,
+  ) {
+    const currentUser = body.forceBook
+      ? { staffId: user.id, staffName: user.name, role: user.role }
+      : undefined;
+    return this.bookingService.create(businessId, body, currentUser);
   }
 
   @Patch(':id')
@@ -71,6 +84,31 @@ export class BookingController {
       staffName: user?.name,
       role: user?.role,
     });
+  }
+
+  @Get('kanban')
+  kanbanBoard(
+    @BusinessId() businessId: string,
+    @Query('locationId') locationId?: string,
+    @Query('staffId') staffId?: string,
+    @Query('dateFrom') dateFrom?: string,
+    @Query('dateTo') dateTo?: string,
+  ) {
+    return this.bookingService.getKanbanBoard(businessId, {
+      locationId,
+      staffId,
+      dateFrom,
+      dateTo,
+    });
+  }
+
+  @Patch(':id/kanban-status')
+  updateKanbanStatus(
+    @BusinessId() businessId: string,
+    @Param('id') id: string,
+    @Body() body: UpdateKanbanStatusDto,
+  ) {
+    return this.bookingService.updateKanbanStatus(businessId, id, body.kanbanStatus);
   }
 
   @Patch('bulk')

@@ -17,7 +17,16 @@ export class AvailabilityController {
     @Query('date') date: string,
     @Query('serviceId') serviceId: string,
     @Query('staffId') staffId?: string,
+    @Query('locationId') locationId?: string,
+    @Query('resourceId') resourceId?: string,
   ) {
-    return this.availabilityService.getAvailableSlots(businessId, date, serviceId, staffId);
+    return this.availabilityService.getAvailableSlots(
+      businessId,
+      date,
+      serviceId,
+      staffId,
+      locationId,
+      resourceId,
+    );
   }
 }

@@ -308,7 +308,7 @@ describe('AiService', () => {
     it('processes message when all conditions met', async () => {
       await aiService.processInboundMessage('biz1', 'conv1', 'msg1', 'Hello');
 
-      expect(intentDetector.detect).toHaveBeenCalledWith('Hello', undefined);
+      expect(intentDetector.detect).toHaveBeenCalledWith('Hello', undefined, undefined);
       expect(prisma.message.update).toHaveBeenCalled();
     });
 
@@ -948,6 +948,257 @@ describe('AiService', () => {
       await expect(aiService.customerChat('biz1', 'cust1', 'Question')).rejects.toThrow(
         'Customer not found',
       );
+    });
+  });
+
+  // ─── Dealership AI intents ──────────────────────────────────────────
+
+  describe('dealership intents — processInboundMessage', () => {
+    const mockDealershipBusiness = {
+      id: 'biz1',
+      name: 'Metro Auto Group',
+      verticalPack: 'dealership',
+      aiSettings: { enabled: true, autoReplySuggestions: true, bookingAssistant: true },
+      packConfig: { requiredProfileFields: ['firstName', 'phone'] },
+    };
+
+    const mockConversation = {
+      id: 'conv1',
+      businessId: 'biz1',
+      customerId: 'cust1',
+      metadata: {},
+    };
+
+    const mockCustomer = {
+      id: 'cust1',
+      name: 'John Smith',
+      phone: '+1234567890',
+      email: 'john@test.com',
+      tags: [],
+      customFields: {},
+    };
+
+    const mockMessages = [
+      {
+        id: 'msg1',
+        conversationId: 'conv1',
+        content: 'My brakes are squeaking',
+        direction: 'INBOUND',
+        createdAt: new Date(),
+      },
+    ];
+
+    beforeEach(() => {
+      prisma.business.findUnique.mockResolvedValue(mockDealershipBusiness as any);
+      prisma.conversation.findUnique.mockResolvedValue(mockConversation as any);
+      prisma.message.findMany.mockResolvedValue(mockMessages as any);
+      prisma.message.update.mockResolvedValue({} as any);
+      prisma.message.count.mockResolvedValue(1);
+      prisma.customer.findUnique.mockResolvedValue(mockCustomer as any);
+      prisma.booking.findMany.mockResolvedValue([]);
+      prisma.aiUsage.findUnique.mockResolvedValue(null);
+      prisma.aiUsage.upsert.mockResolvedValue({} as any);
+      prisma.conversation.update.mockResolvedValue({} as any);
+    });
+
+    it('passes verticalPack to intent detector for dealership business', async () => {
+      await aiService.processInboundMessage('biz1', 'conv1', 'msg1', 'My brakes are squeaking');
+
+      expect(intentDetector.detect).toHaveBeenCalledWith(
+        'My brakes are squeaking',
+        undefined,
+        'dealership',
+      );
+    });
+
+    it('routes SERVICE_APPOINTMENT to booking assistant', async () => {
+      intentDetector.detect.mockResolvedValue({
+        intent: 'SERVICE_APPOINTMENT',
+        confidence: 0.95,
+        extractedEntities: { service: 'Brake Service' },
+      });
+
+      await aiService.processInboundMessage('biz1', 'conv1', 'msg1', 'My brakes are squeaking');
+
+      expect(bookingAssistant.process).toHaveBeenCalled();
+    });
+
+    it('handles SALES_INQUIRY by transferring to human with sales tag', async () => {
+      intentDetector.detect.mockResolvedValue({
+        intent: 'SALES_INQUIRY',
+        confidence: 0.9,
+        extractedEntities: {},
+      });
+      prisma.staff.findFirst.mockResolvedValue({ id: 'staff1', name: 'Admin', role: 'ADMIN' } as any);
+      prisma.conversation.update.mockResolvedValue({} as any);
+
+      await aiService.processInboundMessage(
+        'biz1',
+        'conv1',
+        'msg1',
+        'Do you have the 2024 Tacoma?',
+      );
+
+      expect(prisma.conversation.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'conv1' },
+          data: expect.objectContaining({
+            assignedToId: 'staff1',
+            metadata: expect.objectContaining({
+              transferredToHuman: true,
+              salesInquiry: true,
+            }),
+          }),
+        }),
+      );
+      expect(messageService.sendMessage).toHaveBeenCalledWith(
+        'biz1',
+        'conv1',
+        'staff1',
+        expect.stringContaining('sales team'),
+        'whatsapp',
+      );
+      expect(inboxGateway.emitToBusinessRoom).toHaveBeenCalledWith(
+        'biz1',
+        'ai:transferred',
+        expect.objectContaining({ reason: 'sales_inquiry' }),
+      );
+    });
+
+    it('handles TRADE_IN_INQUIRY by starting vehicle collection', async () => {
+      intentDetector.detect.mockResolvedValue({
+        intent: 'TRADE_IN_INQUIRY',
+        confidence: 0.85,
+        extractedEntities: {},
+      });
+      profileCollector.collect.mockResolvedValue({
+        collectedFields: { make: 'Honda' },
+        missingFields: ['model', 'year', 'mileage'],
+        suggestedResponse: 'What model is your Honda?',
+        allCollected: false,
+      });
+      prisma.conversation.update.mockResolvedValue({} as any);
+      prisma.customer.update.mockResolvedValue({} as any);
+
+      await aiService.processInboundMessage(
+        'biz1',
+        'conv1',
+        'msg1',
+        'I want to trade in my Honda',
+      );
+
+      // Should save collected fields to customer
+      expect(prisma.customer.update).toHaveBeenCalledWith({
+        where: { id: 'cust1' },
+        data: { customFields: { make: 'Honda' } },
+      });
+
+      // Should save trade-in state
+      expect(prisma.conversation.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            metadata: expect.objectContaining({
+              aiTradeInState: expect.objectContaining({
+                state: 'COLLECTING',
+                collectedFields: { make: 'Honda' },
+              }),
+            }),
+          }),
+        }),
+      );
+    });
+
+    it('continues trade-in collection when active state exists', async () => {
+      const convWithTradeIn = {
+        ...mockConversation,
+        metadata: {
+          aiTradeInState: {
+            state: 'COLLECTING',
+            collectedFields: { make: 'Honda', model: 'Civic' },
+          },
+        },
+      };
+      prisma.conversation.findUnique.mockResolvedValue(convWithTradeIn as any);
+
+      intentDetector.detect.mockResolvedValue({
+        intent: 'GENERAL',
+        confidence: 0.5,
+        extractedEntities: {},
+      });
+      profileCollector.collect.mockResolvedValue({
+        collectedFields: { year: '2020', mileage: '45000' },
+        missingFields: [],
+        suggestedResponse: 'Thanks for the info!',
+        allCollected: true,
+      });
+      prisma.staff.findFirst.mockResolvedValue({ id: 'staff1', name: 'Admin', role: 'ADMIN' } as any);
+      prisma.conversation.update.mockResolvedValue({} as any);
+      prisma.customer.update.mockResolvedValue({} as any);
+
+      await aiService.processInboundMessage('biz1', 'conv1', 'msg1', '2020, 45000 miles');
+
+      // Should transfer to human when all collected
+      expect(prisma.conversation.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            assignedToId: 'staff1',
+            metadata: expect.objectContaining({
+              aiTradeInState: null,
+              transferredToHuman: true,
+              tradeInInquiry: true,
+            }),
+          }),
+        }),
+      );
+    });
+
+    it('does not pass verticalPack when business has no verticalPack', async () => {
+      prisma.business.findUnique.mockResolvedValue({
+        id: 'biz1',
+        name: 'Test Business',
+        aiSettings: { enabled: true },
+      } as any);
+      prisma.customer.findUnique.mockResolvedValue(null);
+
+      await aiService.processInboundMessage('biz1', 'conv1', 'msg1', 'Hello');
+
+      expect(intentDetector.detect).toHaveBeenCalledWith('Hello', undefined, undefined);
+    });
+  });
+
+  describe('clearTradeInState', () => {
+    it('clears trade-in state from conversation metadata', async () => {
+      const mockConversation = {
+        id: 'conv1',
+        businessId: 'biz1',
+        metadata: {
+          aiTradeInState: { state: 'COLLECTING', collectedFields: { make: 'Honda' } },
+          otherData: 'preserved',
+        },
+      };
+
+      prisma.conversation.findFirst.mockResolvedValue(mockConversation as any);
+      prisma.conversation.update.mockResolvedValue({} as any);
+
+      await aiService.clearTradeInState('biz1', 'conv1');
+
+      expect(prisma.conversation.update).toHaveBeenCalledWith({
+        where: { id: 'conv1' },
+        data: {
+          metadata: {
+            aiTradeInState: null,
+            otherData: 'preserved',
+          },
+        },
+      });
+    });
+
+    it('does nothing when conversation not found', async () => {
+      prisma.conversation.findFirst.mockResolvedValue(null);
+
+      await aiService.clearTradeInState('biz1', 'conv1');
+
+      expect(prisma.conversation.update).not.toHaveBeenCalled();
     });
   });
 });

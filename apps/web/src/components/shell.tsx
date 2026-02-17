@@ -30,6 +30,8 @@ import {
   Sun,
   Moon,
   X,
+  Package,
+  Kanban,
 } from 'lucide-react';
 import CommandPalette from '@/components/command-palette';
 import { useTheme } from '@/lib/use-theme';
@@ -110,10 +112,19 @@ function ShellInner({ children }: { children: ReactNode }) {
     { href: '/staff', label: t('nav.staff'), icon: UserCog, roles: ['ADMIN'] },
     { href: '/campaigns', label: 'Campaigns', icon: Megaphone, roles: ['ADMIN'] },
     { href: '/automations', label: 'Automations', icon: Zap, roles: ['ADMIN'] },
+    ...((user?.business?.packConfig as any)?.kanbanEnabled
+      ? [{ href: '/service-board', label: 'Service Board', icon: Kanban, roles: ['ADMIN', 'AGENT', 'SERVICE_PROVIDER'] }]
+      : []),
     { href: '/reports', label: t('nav.reports'), icon: BarChart3, roles: ['ADMIN', 'AGENT'] },
     ...(pack.name !== 'general'
       ? [{ href: '/roi', label: t('nav.roi'), icon: TrendingUp, roles: ['ADMIN'] }]
       : []),
+    {
+      href: '/admin/pack-builder',
+      label: 'Pack Builder',
+      icon: Package,
+      roles: ['SUPER_ADMIN'],
+    },
     {
       href: '/settings',
       label: t('nav.settings'),

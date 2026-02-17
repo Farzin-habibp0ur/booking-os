@@ -9,6 +9,7 @@ import {
   TemplateCategory,
   ServiceKind,
   VerticalPack,
+  KanbanStatus,
 } from './enums';
 
 // ---- Entity types ----
@@ -69,6 +70,9 @@ export interface Booking {
   serviceId: string;
   staffId: string | null;
   conversationId: string | null;
+  locationId: string | null;
+  resourceId: string | null;
+  kanbanStatus: KanbanStatus | null;
   status: BookingStatus;
   startTime: Date;
   endTime: Date;
@@ -78,11 +82,50 @@ export interface Booking {
   updatedAt: Date;
 }
 
+export interface Location {
+  id: string;
+  businessId: string;
+  name: string;
+  address: string | null;
+  isBookable: boolean;
+  whatsappConfig: Record<string, unknown> | null;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Resource {
+  id: string;
+  locationId: string;
+  name: string;
+  type: string;
+  isActive: boolean;
+  metadata: Record<string, unknown> | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Quote {
+  id: string;
+  bookingId: string;
+  businessId: string;
+  description: string;
+  totalAmount: number;
+  pdfUrl: string | null;
+  status: string;
+  approvedAt: Date | null;
+  approverIp: string | null;
+  tokenId: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface Conversation {
   id: string;
   businessId: string;
   customerId: string;
   assignedToId: string | null;
+  locationId: string | null;
   channel: ConversationChannel;
   status: ConversationStatus;
   lastMessageAt: Date | null;

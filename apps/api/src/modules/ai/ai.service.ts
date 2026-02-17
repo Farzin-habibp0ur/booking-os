@@ -9,7 +9,7 @@ import { CancelAssistant, CancelStateData } from './cancel-assistant';
 import { RescheduleAssistant, RescheduleStateData } from './reschedule-assistant';
 import { SummaryGenerator } from './summary-generator';
 import { ProfileCollector } from './profile-collector';
-import { checkProfileCompleteness, PROFILE_FIELDS } from '@booking-os/shared';
+import { checkProfileCompleteness, PROFILE_FIELDS, ProfileFieldDef } from '@booking-os/shared';
 import { ServiceService } from '../service/service.service';
 import { AvailabilityService } from '../availability/availability.service';
 import { BookingService } from '../booking/booking.service';
@@ -39,6 +39,19 @@ const DEFAULT_AI_SETTINGS: AiSettings = {
     selectedIntents: ['GENERAL', 'BOOK_APPOINTMENT', 'CANCEL', 'RESCHEDULE', 'INQUIRY'],
   },
 };
+
+const VEHICLE_DOSSIER_FIELDS: ProfileFieldDef[] = [
+  { key: 'make', label: 'Vehicle Make', type: 'text', category: 'custom' },
+  { key: 'model', label: 'Vehicle Model', type: 'text', category: 'custom' },
+  { key: 'year', label: 'Vehicle Year', type: 'text', category: 'custom' },
+  { key: 'mileage', label: 'Vehicle Mileage', type: 'text', category: 'custom' },
+];
+
+interface TradeInStateData {
+  state: 'COLLECTING' | 'DONE';
+  collectedFields: Record<string, string>;
+  suggestedResponse?: string;
+}
 
 const MAX_AI_CALLS_PER_DAY = 500;
 
@@ -224,9 +237,11 @@ export class AiService {
         : undefined;
 
       // 1. Detect intent
+      const verticalPack = (business as any).verticalPack as string | undefined;
       const intentResult = await this.intentDetector.detect(
         messageContent,
         recentContext || undefined,
+        verticalPack,
       );
 
       // Store intent in message metadata
@@ -250,6 +265,7 @@ export class AiService {
       const hasActiveBooking = !!metadata.aiBookingState;
       const hasActiveCancel = !!metadata.aiCancelState;
       const hasActiveReschedule = !!metadata.aiRescheduleState;
+      const hasActiveTradeIn = !!metadata.aiTradeInState;
 
       let bookingState: BookingStateData | null = null;
       let cancelState: CancelStateData | null = null;
@@ -300,7 +316,21 @@ export class AiService {
             settings.personality,
             customerContext,
           );
-        } else if (intentResult.intent === 'BOOK_APPOINTMENT') {
+        } else if (hasActiveTradeIn) {
+          const tradeInDraft = await this.handleTradeInCollection(
+            businessId,
+            conversationId,
+            messageContent,
+            business,
+            settings,
+            customerData,
+            metadata,
+          );
+          if (tradeInDraft) draftText = tradeInDraft;
+        } else if (
+          intentResult.intent === 'BOOK_APPOINTMENT' ||
+          intentResult.intent === 'SERVICE_APPOINTMENT'
+        ) {
           bookingState = await this.runBookingAssistant(
             businessId,
             conversationId,
@@ -310,6 +340,17 @@ export class AiService {
             settings.personality,
             customerContext,
           );
+        } else if (intentResult.intent === 'TRADE_IN_INQUIRY') {
+          const tradeInDraft = await this.handleTradeInInquiry(
+            businessId,
+            conversationId,
+            messageContent,
+            business,
+            settings,
+            customerData,
+            metadata,
+          );
+          if (tradeInDraft) draftText = tradeInDraft;
         } else if (intentResult.intent === 'CANCEL') {
           // Clear any other flow states before starting cancel
           await this.clearAllFlowStates(conversationId);
@@ -341,6 +382,17 @@ export class AiService {
         return;
       }
 
+      // Handle dealership sales inquiry (transfer to sales team)
+      if (intentResult.intent === 'SALES_INQUIRY' && !metadata.transferredToHuman) {
+        await this.handleDealershipSalesInquiry(
+          businessId,
+          conversationId,
+          metadata,
+          customerContext,
+        );
+        return;
+      }
+
       // Auto-reply + auto-confirm logic
       const isTransferred = !!metadata.transferredToHuman;
       const isAutoReplyEnabled = settings.autoReply?.enabled && !isTransferred;
@@ -354,16 +406,30 @@ export class AiService {
       ) {
         // Check profile completeness before auto-confirming (skip if profile was just collected)
         const requiredFields: string[] = (business.packConfig as any)?.requiredProfileFields || [];
-        if (!profileJustCollected && requiredFields.length > 0 && customerData) {
-          const { complete, missingFields } = checkProfileCompleteness(
-            {
-              name: customerData.name,
-              email: (customerData as any).email,
-              customFields: (customerData as any).customFields || {},
-            },
-            requiredFields,
-          );
-          if (!complete) {
+        const isDealership = verticalPack === 'dealership';
+        if (!profileJustCollected && (requiredFields.length > 0 || isDealership) && customerData) {
+          const { missingFields } = requiredFields.length > 0
+            ? checkProfileCompleteness(
+                {
+                  name: customerData.name,
+                  email: (customerData as any).email,
+                  customFields: (customerData as any).customFields || {},
+                },
+                requiredFields,
+              )
+            : { missingFields: [] as any[] };
+
+          // For dealership businesses, also check vehicle dossier fields
+          if (isDealership) {
+            const cf = (customerData as any).customFields || {};
+            for (const vf of VEHICLE_DOSSIER_FIELDS) {
+              if (!cf[vf.key] && !missingFields.some((f: any) => f.key === vf.key)) {
+                missingFields.push(vf);
+              }
+            }
+          }
+
+          if (missingFields.length > 0) {
             // Transition to COLLECT_PROFILE instead of auto-confirming
             const result = await this.profileCollector.collect(messageContent, {
               customerName: customerData.name,
@@ -915,6 +981,7 @@ export class AiService {
           aiBookingState: null,
           aiCancelState: null,
           aiRescheduleState: null,
+          aiTradeInState: null,
         },
       },
     });
@@ -1080,6 +1147,19 @@ export class AiService {
     });
   }
 
+  async clearTradeInState(businessId: string, conversationId: string): Promise<void> {
+    const conversation = await this.prisma.conversation.findFirst({
+      where: { id: conversationId, businessId },
+    });
+    if (!conversation) return;
+
+    const metadata = (conversation.metadata as any) || {};
+    await this.prisma.conversation.update({
+      where: { id: conversationId },
+      data: { metadata: { ...metadata, aiTradeInState: null } },
+    });
+  }
+
   private async handleProfileCollection(
     businessId: string,
     conversationId: string,
@@ -1108,6 +1188,16 @@ export class AiService {
         customFields: { ...(customerData?.customFields || {}), ...previouslyCollected },
       };
       const { missingFields } = checkProfileCompleteness(mergedCustomer, requiredFields);
+
+      // For dealership businesses, also check vehicle dossier fields
+      if ((business as any).verticalPack === 'dealership') {
+        const cf = { ...(customerData?.customFields || {}), ...previouslyCollected };
+        for (const vf of VEHICLE_DOSSIER_FIELDS) {
+          if (!cf[vf.key] && !missingFields.some((f) => f.key === vf.key)) {
+            missingFields.push(vf);
+          }
+        }
+      }
 
       const result = await this.profileCollector.collect(messageContent, {
         customerName: customerData?.name || 'there',
@@ -1177,6 +1267,228 @@ export class AiService {
       this.logger.error(`Profile collection failed: ${error.message}`);
       return null;
     }
+  }
+
+  private async handleDealershipSalesInquiry(
+    businessId: string,
+    conversationId: string,
+    metadata: any,
+    customerContext?: any,
+  ): Promise<void> {
+    try {
+      const defaultStaff = await this.prisma.staff.findFirst({
+        where: { businessId, role: 'ADMIN' },
+      });
+      if (!defaultStaff) {
+        this.logger.warn('No admin staff found for sales inquiry transfer');
+        return;
+      }
+
+      // Tag conversation and transfer to human
+      await this.prisma.conversation.update({
+        where: { id: conversationId },
+        data: {
+          assignedToId: defaultStaff.id,
+          metadata: {
+            ...metadata,
+            transferredToHuman: true,
+            salesInquiry: true,
+          },
+        },
+      });
+
+      // Send handoff message
+      const customerName = customerContext?.name || 'there';
+      const handoffMessage = `Thanks for your interest, ${customerName}! I'm connecting you with our sales team who can help you with your inquiry.`;
+      const provider = this.messagingService.getProvider();
+      await this.messageService.sendMessage(
+        businessId,
+        conversationId,
+        defaultStaff.id,
+        handoffMessage,
+        provider,
+      );
+
+      this.inboxGateway.emitToBusinessRoom(businessId, 'ai:transferred', {
+        conversationId,
+        assignedTo: { id: defaultStaff.id, name: defaultStaff.name },
+        reason: 'sales_inquiry',
+      });
+    } catch (error: any) {
+      this.logger.error(`Sales inquiry handler failed: ${error.message}`);
+    }
+  }
+
+  private async handleTradeInInquiry(
+    businessId: string,
+    conversationId: string,
+    messageContent: string,
+    business: any,
+    settings: AiSettings,
+    customerData: any,
+    metadata: any,
+  ): Promise<string> {
+    try {
+      // Determine which vehicle fields are already known
+      const cf = customerData?.customFields || {};
+      const missingFields = VEHICLE_DOSSIER_FIELDS.filter((f) => !cf[f.key]);
+
+      if (missingFields.length === 0) {
+        // All vehicle info already known — transfer to human appraiser
+        await this.transferTradeInToHuman(businessId, conversationId, metadata, customerData);
+        return '';
+      }
+
+      // Collect vehicle info via profile collector
+      const result = await this.profileCollector.collect(messageContent, {
+        customerName: customerData?.name || 'there',
+        businessName: business.name,
+        personality: settings.personality,
+        missingFields,
+        alreadyCollected: {},
+      });
+
+      // Initialize trade-in state
+      const tradeInState: TradeInStateData = {
+        state: 'COLLECTING',
+        collectedFields: result.collectedFields,
+        suggestedResponse: result.suggestedResponse,
+      };
+
+      // Save any collected fields to customer immediately
+      if (Object.keys(result.collectedFields).length > 0 && customerData) {
+        const customFieldUpdates = { ...(customerData.customFields || {}), ...result.collectedFields };
+        await this.prisma.customer.update({
+          where: { id: customerData.id },
+          data: { customFields: customFieldUpdates },
+        });
+      }
+
+      if (result.allCollected || result.missingFields.length === 0) {
+        // All collected in first round — transfer to human
+        await this.transferTradeInToHuman(businessId, conversationId, metadata, customerData);
+        return result.suggestedResponse || '';
+      }
+
+      // Save state for ongoing collection
+      await this.prisma.conversation.update({
+        where: { id: conversationId },
+        data: { metadata: { ...metadata, aiTradeInState: tradeInState } },
+      });
+
+      return result.suggestedResponse || '';
+    } catch (error: any) {
+      this.logger.error(`Trade-in inquiry handler failed: ${error.message}`);
+      return '';
+    }
+  }
+
+  private async handleTradeInCollection(
+    businessId: string,
+    conversationId: string,
+    messageContent: string,
+    business: any,
+    settings: AiSettings,
+    customerData: any,
+    metadata: any,
+  ): Promise<string> {
+    try {
+      const currentState: TradeInStateData = metadata.aiTradeInState;
+      if (!currentState) return '';
+
+      const previouslyCollected = currentState.collectedFields || {};
+      const cf = { ...(customerData?.customFields || {}), ...previouslyCollected };
+      const missingFields = VEHICLE_DOSSIER_FIELDS.filter((f) => !cf[f.key]);
+
+      if (missingFields.length === 0) {
+        // All collected — transfer to human
+        await this.transferTradeInToHuman(businessId, conversationId, metadata, customerData);
+        return '';
+      }
+
+      const result = await this.profileCollector.collect(messageContent, {
+        customerName: customerData?.name || 'there',
+        businessName: business.name,
+        personality: settings.personality,
+        missingFields,
+        alreadyCollected: previouslyCollected,
+      });
+
+      const allCollected = { ...previouslyCollected, ...result.collectedFields };
+
+      // Save collected fields to customer record
+      if (Object.keys(result.collectedFields).length > 0 && customerData) {
+        const customFieldUpdates = { ...(customerData.customFields || {}), ...allCollected };
+        await this.prisma.customer.update({
+          where: { id: customerData.id },
+          data: { customFields: customFieldUpdates },
+        });
+      }
+
+      if (result.allCollected || result.missingFields.length === 0) {
+        // All collected — transfer to human appraiser
+        await this.transferTradeInToHuman(businessId, conversationId, metadata, customerData);
+        return result.suggestedResponse || '';
+      }
+
+      // Still collecting — update state
+      const updatedState: TradeInStateData = {
+        state: 'COLLECTING',
+        collectedFields: allCollected,
+        suggestedResponse: result.suggestedResponse,
+      };
+      await this.prisma.conversation.update({
+        where: { id: conversationId },
+        data: { metadata: { ...metadata, aiTradeInState: updatedState } },
+      });
+
+      return result.suggestedResponse || '';
+    } catch (error: any) {
+      this.logger.error(`Trade-in collection failed: ${error.message}`);
+      return '';
+    }
+  }
+
+  private async transferTradeInToHuman(
+    businessId: string,
+    conversationId: string,
+    metadata: any,
+    customerData: any,
+  ): Promise<void> {
+    const defaultStaff = await this.prisma.staff.findFirst({
+      where: { businessId, role: 'ADMIN' },
+    });
+    if (!defaultStaff) return;
+
+    await this.prisma.conversation.update({
+      where: { id: conversationId },
+      data: {
+        assignedToId: defaultStaff.id,
+        metadata: {
+          ...metadata,
+          aiTradeInState: null,
+          transferredToHuman: true,
+          tradeInInquiry: true,
+        },
+      },
+    });
+
+    const customerName = customerData?.name || 'there';
+    const handoffMessage = `Thank you for the vehicle details, ${customerName}! I'm connecting you with our team for your trade-in valuation.`;
+    const provider = this.messagingService.getProvider();
+    await this.messageService.sendMessage(
+      businessId,
+      conversationId,
+      defaultStaff.id,
+      handoffMessage,
+      provider,
+    );
+
+    this.inboxGateway.emitToBusinessRoom(businessId, 'ai:transferred', {
+      conversationId,
+      assignedTo: { id: defaultStaff.id, name: defaultStaff.name },
+      reason: 'trade_in_inquiry',
+    });
   }
 
   async customerChat(

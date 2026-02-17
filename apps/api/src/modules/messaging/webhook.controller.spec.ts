@@ -5,6 +5,7 @@ import { WebhookController } from './webhook.controller';
 import { PrismaService } from '../../common/prisma.service';
 import { CustomerService } from '../customer/customer.service';
 import { ConversationService } from '../conversation/conversation.service';
+import { LocationService } from '../location/location.service';
 import { InboxGateway } from '../../common/inbox.gateway';
 import { MessagingService } from './messaging.service';
 import { AiService } from '../ai/ai.service';
@@ -41,6 +42,7 @@ describe('WebhookController', () => {
   let prisma: MockPrisma;
   let customerService: { findOrCreateByPhone: jest.Mock };
   let conversationService: { findOrCreate: jest.Mock };
+  let locationService: { findLocationByWhatsappPhoneNumberId: jest.Mock };
   let inboxGateway: { notifyNewMessage: jest.Mock; notifyConversationUpdate: jest.Mock };
   let aiService: { processInboundMessage: jest.Mock };
 
@@ -65,6 +67,9 @@ describe('WebhookController', () => {
     prisma = createMockPrisma();
     customerService = { findOrCreateByPhone: jest.fn() };
     conversationService = { findOrCreate: jest.fn() };
+    locationService = {
+      findLocationByWhatsappPhoneNumberId: jest.fn().mockResolvedValue(null),
+    };
     inboxGateway = { notifyNewMessage: jest.fn(), notifyConversationUpdate: jest.fn() };
     aiService = { processInboundMessage: jest.fn().mockResolvedValue(undefined) };
 
@@ -74,6 +79,7 @@ describe('WebhookController', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: CustomerService, useValue: customerService },
         { provide: ConversationService, useValue: conversationService },
+        { provide: LocationService, useValue: locationService },
         { provide: InboxGateway, useValue: inboxGateway },
         {
           provide: MessagingService,
@@ -274,6 +280,70 @@ describe('WebhookController', () => {
       expect(result.results).toHaveLength(2);
       expect(result.results[0].status).toBe('error');
       expect(result.results[1].status).toBe('error');
+    });
+
+    it('should route message via location when phone number matches', async () => {
+      const mockLocation = { id: 'loc1', name: 'Service Center', businessId: 'biz-dealer' };
+      const mockBusiness = { id: 'biz-dealer', name: 'Metro Auto' };
+      locationService.findLocationByWhatsappPhoneNumberId.mockResolvedValue(mockLocation);
+      (prisma.business.findUnique as jest.Mock).mockResolvedValue(mockBusiness);
+      (prisma.message.findUnique as jest.Mock).mockResolvedValue(null);
+      customerService.findOrCreateByPhone.mockResolvedValue({ id: 'cust1' });
+      conversationService.findOrCreate.mockResolvedValue({ id: 'conv1' });
+      (prisma.message.create as jest.Mock).mockResolvedValue({
+        id: 'msg1',
+        externalId: 'wamid.route',
+      });
+      (prisma.conversation.update as jest.Mock).mockResolvedValue({
+        id: 'conv1',
+        customer: { id: 'cust1' },
+        assignedTo: null,
+        messages: [],
+      });
+
+      const payload = buildWhatsAppPayload('wamid.route', '+1234567890', 'Hello');
+      const result = await controller.whatsappInbound(payload);
+
+      expect(result.processed).toBe(1);
+      expect(locationService.findLocationByWhatsappPhoneNumberId).toHaveBeenCalledWith('phone1');
+      expect(prisma.business.findUnique).toHaveBeenCalledWith({
+        where: { id: 'biz-dealer' },
+      });
+      expect(conversationService.findOrCreate).toHaveBeenCalledWith(
+        'biz-dealer',
+        'cust1',
+        'WHATSAPP',
+        'loc1',
+      );
+    });
+
+    it('should fall back to first business when location not found', async () => {
+      locationService.findLocationByWhatsappPhoneNumberId.mockResolvedValue(null);
+      (prisma.message.findUnique as jest.Mock).mockResolvedValue(null);
+      (prisma.business.findFirst as jest.Mock).mockResolvedValue({ id: 'biz1', name: 'Test' });
+      customerService.findOrCreateByPhone.mockResolvedValue({ id: 'cust1' });
+      conversationService.findOrCreate.mockResolvedValue({ id: 'conv1' });
+      (prisma.message.create as jest.Mock).mockResolvedValue({
+        id: 'msg1',
+        externalId: 'wamid.fallback',
+      });
+      (prisma.conversation.update as jest.Mock).mockResolvedValue({
+        id: 'conv1',
+        customer: { id: 'cust1' },
+        assignedTo: null,
+        messages: [],
+      });
+
+      const payload = buildWhatsAppPayload('wamid.fallback', '+1234567890', 'Hello');
+      const result = await controller.whatsappInbound(payload);
+
+      expect(result.processed).toBe(1);
+      expect(conversationService.findOrCreate).toHaveBeenCalledWith(
+        'biz1',
+        'cust1',
+        'WHATSAPP',
+        undefined,
+      );
     });
 
     it('should return structured JSON response with per-message status', async () => {

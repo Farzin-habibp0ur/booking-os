@@ -82,6 +82,22 @@ export class CreateBookingDto {
   @IsOptional()
   @IsShallowJson()
   customFields?: Record<string, unknown>;
+
+  @IsString()
+  @IsOptional()
+  locationId?: string;
+
+  @IsString()
+  @IsOptional()
+  resourceId?: string;
+
+  @IsBoolean()
+  @IsOptional()
+  forceBook?: boolean;
+
+  @IsString()
+  @IsOptional()
+  forceBookReason?: string;
 }
 
 export class UpdateBookingDto {
@@ -121,6 +137,17 @@ export class UpdateBookingStatusDto {
   @IsOptional()
   @MinLength(1)
   reason?: string;
+}
+
+export class UpdateKanbanStatusDto {
+  @IsEnum(
+    ['CHECKED_IN', 'DIAGNOSING', 'AWAITING_APPROVAL', 'IN_PROGRESS', 'READY_FOR_PICKUP'],
+    {
+      message:
+        'kanbanStatus must be one of: CHECKED_IN, DIAGNOSING, AWAITING_APPROVAL, IN_PROGRESS, READY_FOR_PICKUP',
+    },
+  )
+  kanbanStatus!: string;
 }
 
 // ---- Customer DTOs ----
@@ -253,8 +280,8 @@ export class CreateStaffDto {
   @IsNotEmpty()
   password!: string;
 
-  @IsEnum(['ADMIN', 'SERVICE_PROVIDER', 'AGENT'], {
-    message: 'role must be one of: ADMIN, SERVICE_PROVIDER, AGENT',
+  @IsEnum(['ADMIN', 'SERVICE_PROVIDER', 'AGENT', 'SUPER_ADMIN'], {
+    message: 'role must be one of: ADMIN, SERVICE_PROVIDER, AGENT, SUPER_ADMIN',
   })
   role!: string;
 }
@@ -268,8 +295,8 @@ export class UpdateStaffDto {
   @IsOptional()
   email?: string;
 
-  @IsEnum(['ADMIN', 'SERVICE_PROVIDER', 'AGENT'], {
-    message: 'role must be one of: ADMIN, SERVICE_PROVIDER, AGENT',
+  @IsEnum(['ADMIN', 'SERVICE_PROVIDER', 'AGENT', 'SUPER_ADMIN'], {
+    message: 'role must be one of: ADMIN, SERVICE_PROVIDER, AGENT, SUPER_ADMIN',
   })
   @IsOptional()
   role?: string;
@@ -631,6 +658,78 @@ export class UpdateOfferDto {
   maxRedemptions?: number;
 }
 
+// ---- Location DTOs (Phase 3) ----
+
+export class CreateLocationDto {
+  @IsString()
+  @IsNotEmpty()
+  name!: string;
+
+  @IsString()
+  @IsOptional()
+  address?: string;
+
+  @IsBoolean()
+  @IsOptional()
+  isBookable?: boolean;
+
+  @IsObject()
+  @IsOptional()
+  whatsappConfig?: Record<string, unknown>;
+}
+
+export class UpdateLocationDto {
+  @IsString()
+  @IsOptional()
+  name?: string;
+
+  @IsString()
+  @IsOptional()
+  address?: string;
+
+  @IsBoolean()
+  @IsOptional()
+  isBookable?: boolean;
+
+  @IsObject()
+  @IsOptional()
+  whatsappConfig?: Record<string, unknown>;
+}
+
+export class CreateResourceDto {
+  @IsString()
+  @IsNotEmpty()
+  name!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  type!: string;
+
+  @IsObject()
+  @IsOptional()
+  metadata?: Record<string, unknown>;
+}
+
+export class UpdateResourceDto {
+  @IsString()
+  @IsOptional()
+  name?: string;
+
+  @IsString()
+  @IsOptional()
+  type?: string;
+
+  @IsObject()
+  @IsOptional()
+  metadata?: Record<string, unknown>;
+}
+
+export class AssignStaffToLocationDto {
+  @IsString()
+  @IsNotEmpty()
+  staffId!: string;
+}
+
 // ---- Email Verification DTO (M16) ----
 
 export class VerifyEmailDto {
@@ -649,8 +748,8 @@ export class InviteStaffDto {
   @IsNotEmpty()
   name!: string;
 
-  @IsEnum(['ADMIN', 'SERVICE_PROVIDER', 'AGENT'], {
-    message: 'role must be one of: ADMIN, SERVICE_PROVIDER, AGENT',
+  @IsEnum(['ADMIN', 'SERVICE_PROVIDER', 'AGENT', 'SUPER_ADMIN'], {
+    message: 'role must be one of: ADMIN, SERVICE_PROVIDER, AGENT, SUPER_ADMIN',
   })
   @IsOptional()
   role?: string;
@@ -838,4 +937,58 @@ export class UpdateAutomationRuleDto {
   @Min(0)
   @Max(100)
   maxPerCustomerPerDay?: number;
+}
+
+// ---- Quote DTOs (Phase 3) ----
+
+export class CreateQuoteDto {
+  @IsString()
+  @IsNotEmpty()
+  bookingId!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  description!: string;
+
+  @IsNumber()
+  @Min(0)
+  totalAmount!: number;
+
+  @IsString()
+  @IsOptional()
+  pdfUrl?: string;
+}
+
+// ---- Pack Builder DTOs (Phase 3) ----
+
+export class CreatePackDto {
+  @IsString()
+  @IsNotEmpty()
+  slug!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  name!: string;
+
+  @IsString()
+  @IsOptional()
+  description?: string;
+
+  @IsObject()
+  @IsOptional()
+  config?: Record<string, unknown>;
+}
+
+export class UpdatePackDto {
+  @IsString()
+  @IsOptional()
+  name?: string;
+
+  @IsString()
+  @IsOptional()
+  description?: string;
+
+  @IsObject()
+  @IsOptional()
+  config?: Record<string, unknown>;
 }

@@ -27,13 +27,14 @@ import {
   Zap,
   Trash2,
   Info,
+  MapPin,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import BookingFormModal from '@/components/booking-form-modal';
 import AiSuggestions from '@/components/ai-suggestions';
 import AiBookingPanel from '@/components/ai-booking-panel';
 import AiSummary from '@/components/ai-summary';
-import ClinicIntakeCard from '@/components/clinic-intake-card';
+import IntakeCard from '@/components/intake-card';
 import { usePack } from '@/lib/vertical-pack';
 
 type Filter = 'all' | 'unassigned' | 'mine' | 'overdue' | 'waiting' | 'snoozed' | 'closed';
@@ -108,6 +109,8 @@ export default function InboxPage() {
   const [aiSummary, setAiSummary] = useState<string>('');
   const [transferredToHuman, setTransferredToHuman] = useState(false);
   const [mobileView, setMobileView] = useState<'list' | 'thread' | 'info'>('list');
+  const [locations, setLocations] = useState<any[]>([]);
+  const [selectedLocationId, setSelectedLocationId] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const pollRef = useRef<ReturnType<typeof setInterval>>(undefined);
   const msgPollRef = useRef<ReturnType<typeof setInterval>>(undefined);
@@ -204,6 +207,7 @@ export default function InboxPage() {
     loadFilterCounts();
     loadStaff();
     loadTemplates();
+    loadLocations();
   }, []);
 
   useEffect(() => {
@@ -213,7 +217,7 @@ export default function InboxPage() {
       loadFilterCounts();
     }, 15000);
     return () => clearInterval(pollRef.current);
-  }, [activeFilter, searchQuery]);
+  }, [activeFilter, searchQuery, selectedLocationId]);
 
   useEffect(() => {
     if (selected) {
@@ -284,6 +288,7 @@ export default function InboxPage() {
     try {
       const params = new URLSearchParams({ filter: activeFilter, pageSize: '50' });
       if (searchQuery) params.set('search', searchQuery);
+      if (selectedLocationId) params.set('locationId', selectedLocationId);
       const res = await api.get<any>(`/conversations?${params}`);
       setConversations(res.data || []);
     } catch (e) {
@@ -334,6 +339,14 @@ export default function InboxPage() {
   const loadTemplates = async () => {
     try {
       setTemplates((await api.get<any[]>('/templates')) || []);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const loadLocations = async () => {
+    try {
+      setLocations((await api.get<any[]>('/locations')) || []);
     } catch (e) {
       console.error(e);
     }
@@ -553,6 +566,31 @@ export default function InboxPage() {
             );
           })}
         </div>
+        {locations.length > 0 && (
+          <div className="p-3 border-t">
+            <div className="flex items-center gap-1.5 mb-1.5">
+              <MapPin size={12} className="text-slate-400" />
+              <span className="text-[10px] font-semibold text-slate-500 uppercase">
+                {t('inbox.location_filter')}
+              </span>
+            </div>
+            <select
+              value={selectedLocationId}
+              onChange={(e) => {
+                setSelectedLocationId(e.target.value);
+                setSelected(null);
+              }}
+              className="w-full text-xs border rounded-md px-2 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-sage-500"
+            >
+              <option value="">{t('inbox.all_locations')}</option>
+              {locations.map((loc: any) => (
+                <option key={loc.id} value={loc.id}>
+                  {loc.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       {/* Filter bar — mobile (horizontal scrollable) */}
@@ -675,6 +713,11 @@ export default function InboxPage() {
                   {c.assignedTo && (
                     <span className="text-[9px] text-slate-400">{c.assignedTo.name}</span>
                   )}
+                  {c.location && (
+                    <span className="text-[9px] text-slate-400 flex items-center gap-0.5">
+                      <MapPin size={8} /> {c.location.name}
+                    </span>
+                  )}
                 </div>
                 {c.lastMessageAt && (
                   <span className="text-[9px] text-slate-400">
@@ -732,7 +775,14 @@ export default function InboxPage() {
                 </button>
                 <div>
                   <p className="font-medium">{selected.customer?.name}</p>
-                  <p className="text-xs text-slate-500">{selected.customer?.phone}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-xs text-slate-500">{selected.customer?.phone}</p>
+                    {selected.location && (
+                      <span className="text-[10px] text-slate-400 flex items-center gap-0.5">
+                        <MapPin size={10} /> {selected.location.name}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -1167,7 +1217,7 @@ export default function InboxPage() {
               )}
 
               {customer && pack.customerFields.length > 0 && (
-                <ClinicIntakeCard
+                <IntakeCard
                   customer={customer}
                   fields={pack.customerFields}
                   onUpdated={(updated) => setCustomer(updated)}

@@ -18,6 +18,7 @@ import * as crypto from 'crypto';
 import { PrismaService } from '../../common/prisma.service';
 import { CustomerService } from '../customer/customer.service';
 import { ConversationService } from '../conversation/conversation.service';
+import { LocationService } from '../location/location.service';
 import { InboxGateway } from '../../common/inbox.gateway';
 import { MessagingService } from './messaging.service';
 import { AiService } from '../ai/ai.service';
@@ -33,6 +34,7 @@ export class WebhookController {
     private prisma: PrismaService,
     private customerService: CustomerService,
     private conversationService: ConversationService,
+    private locationService: LocationService,
     private inboxGateway: InboxGateway,
     private messagingService: MessagingService,
     private configService: ConfigService,
@@ -97,6 +99,7 @@ export class WebhookController {
           msg.body,
           msg.externalId,
           undefined,
+          msg.businessPhoneNumberId,
         );
         results.push({
           externalId: msg.externalId,
@@ -121,6 +124,7 @@ export class WebhookController {
     body: string,
     externalId: string,
     businessPhone: string | undefined,
+    businessPhoneNumberId?: string,
   ): Promise<{ conversationId?: string; messageId?: string; duplicate?: boolean }> {
     // Dedup: check if message with this externalId already exists
     if (externalId) {
@@ -133,13 +137,33 @@ export class WebhookController {
       }
     }
 
-    // Find business
+    // Route by WhatsApp phone number ID → Location → Business
     let business;
-    if (businessPhone) {
+    let locationId: string | undefined;
+
+    if (businessPhoneNumberId) {
+      const location = await this.locationService.findLocationByWhatsappPhoneNumberId(
+        businessPhoneNumberId,
+      );
+      if (location) {
+        locationId = location.id;
+        business = await this.prisma.business.findUnique({
+          where: { id: location.businessId },
+        });
+        this.logger.log(
+          `Routed inbound message to location "${location.name}" (${location.id})`,
+        );
+      }
+    }
+
+    // Fallback: route by business phone
+    if (!business && businessPhone) {
       business = await this.prisma.business.findFirst({
         where: { phone: businessPhone },
       });
     }
+
+    // Dev fallback: use first business
     if (!business) {
       const isDev = this.configService.get('NODE_ENV') !== 'production';
       if (!isDev) throw new BadRequestException('Business not found');
@@ -152,6 +176,7 @@ export class WebhookController {
       business.id,
       customer.id,
       'WHATSAPP',
+      locationId,
     );
 
     let message;

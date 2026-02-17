@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { api } from '@/lib/api';
-import { ChevronLeft, ChevronRight, Plus, Repeat } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Repeat, MapPin } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useI18n } from '@/lib/i18n';
 import BookingFormModal from '@/components/booking-form-modal';
@@ -25,6 +25,8 @@ export default function CalendarPage() {
   const { t } = useI18n();
   const [bookings, setBookings] = useState<any[]>([]);
   const [staff, setStaff] = useState<any[]>([]);
+  const [locations, setLocations] = useState<any[]>([]);
+  const [selectedLocationId, setSelectedLocationId] = useState<string>('');
   const [selectedStaff, setSelectedStaff] = useState<string[]>([]);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<'day' | 'week'>('day');
@@ -44,11 +46,12 @@ export default function CalendarPage() {
       setStaff(s);
       setSelectedStaff(s.map((st: any) => st.id));
     });
+    api.get<any[]>('/locations').then(setLocations).catch(() => setLocations([]));
   }, []);
 
   useEffect(() => {
     loadBookings();
-  }, [currentDate, view]);
+  }, [currentDate, view, selectedLocationId]);
 
   const loadBookings = () => {
     const dateFrom = new Date(currentDate);
@@ -59,10 +62,14 @@ export default function CalendarPage() {
     const dateTo = new Date(dateFrom);
     dateTo.setDate(dateTo.getDate() + (view === 'week' ? 7 : 1));
 
+    const params = new URLSearchParams({
+      dateFrom: dateFrom.toISOString(),
+      dateTo: dateTo.toISOString(),
+    });
+    if (selectedLocationId) params.set('locationId', selectedLocationId);
+
     api
-      .get<
-        any[]
-      >(`/bookings/calendar?dateFrom=${dateFrom.toISOString()}&dateTo=${dateTo.toISOString()}`)
+      .get<any[]>(`/bookings/calendar?${params}`)
       .then(setBookings)
       .catch(console.error);
   };
@@ -190,6 +197,25 @@ export default function CalendarPage() {
         </div>
 
         <div className="flex items-center gap-3">
+          {/* Location filter */}
+          {locations.length > 0 && (
+            <div className="flex items-center gap-1.5">
+              <MapPin size={14} className="text-slate-400" />
+              <select
+                value={selectedLocationId}
+                onChange={(e) => setSelectedLocationId(e.target.value)}
+                className="border border-slate-200 rounded-xl px-2.5 py-1 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-sage-500"
+              >
+                <option value="">All locations</option>
+                {locations.map((loc: any) => (
+                  <option key={loc.id} value={loc.id}>
+                    {loc.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           {/* Staff filter chips */}
           <div className="flex flex-wrap items-center gap-1">
             {staff.map((s) => (

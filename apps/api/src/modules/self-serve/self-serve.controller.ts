@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Query, Body } from '@nestjs/common';
+import { Controller, Get, Post, Param, Query, Body, Req } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { SelfServeService } from './self-serve.service';
@@ -48,5 +48,18 @@ export class SelfServeController {
   @Throttle({ default: { ttl: 60000, limit: 10 } })
   claimWaitlist(@Param('token') token: string) {
     return this.selfServeService.claimWaitlistSlot(token);
+  }
+
+  @Get('validate/quote/:token')
+  @Throttle({ default: { ttl: 60000, limit: 30 } })
+  validateQuoteToken(@Param('token') token: string) {
+    return this.selfServeService.getQuoteForApproval(token);
+  }
+
+  @Post('approve-quote/:token')
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
+  approveQuote(@Param('token') token: string, @Req() req: any) {
+    const ip = req.headers['x-forwarded-for'] || req.ip || undefined;
+    return this.selfServeService.approveQuote(token, ip);
   }
 }

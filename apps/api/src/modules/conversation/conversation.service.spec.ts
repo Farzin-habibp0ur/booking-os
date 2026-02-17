@@ -235,6 +235,7 @@ describe('ConversationService', () => {
         include: {
           customer: true,
           assignedTo: { select: { id: true, name: true } },
+          location: { select: { id: true, name: true } },
         },
       });
     });
@@ -290,6 +291,107 @@ describe('ConversationService', () => {
           where: expect.objectContaining({ channel: 'SMS' }),
         }),
       );
+    });
+
+    it('sets locationId when creating new conversation', async () => {
+      prisma.conversation.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce(null);
+      prisma.conversation.create.mockResolvedValue({
+        id: 'conv-new',
+        status: 'OPEN',
+        locationId: 'loc1',
+      } as any);
+
+      const result = await service.findOrCreate('biz1', 'cust1', 'WHATSAPP', 'loc1');
+
+      expect(result.locationId).toBe('loc1');
+      expect(prisma.conversation.create).toHaveBeenCalledWith({
+        data: {
+          businessId: 'biz1',
+          customerId: 'cust1',
+          channel: 'WHATSAPP',
+          status: 'OPEN',
+          locationId: 'loc1',
+        },
+      });
+    });
+
+    it('updates locationId on existing conversation if not already set', async () => {
+      prisma.conversation.findFirst.mockResolvedValue({
+        id: 'conv1',
+        status: 'OPEN',
+        locationId: null,
+      } as any);
+      prisma.conversation.update.mockResolvedValue({
+        id: 'conv1',
+        status: 'OPEN',
+        locationId: 'loc1',
+      } as any);
+
+      const result = await service.findOrCreate('biz1', 'cust1', 'WHATSAPP', 'loc1');
+
+      expect(result.locationId).toBe('loc1');
+      expect(prisma.conversation.update).toHaveBeenCalledWith({
+        where: { id: 'conv1' },
+        data: { locationId: 'loc1' },
+      });
+    });
+
+    it('does not update locationId if already set on existing conversation', async () => {
+      prisma.conversation.findFirst.mockResolvedValue({
+        id: 'conv1',
+        status: 'OPEN',
+        locationId: 'loc-existing',
+      } as any);
+
+      const result = await service.findOrCreate('biz1', 'cust1', 'WHATSAPP', 'loc-new');
+
+      expect(result.locationId).toBe('loc-existing');
+      expect(prisma.conversation.update).not.toHaveBeenCalled();
+    });
+
+    it('sets locationId when reopening resolved conversation', async () => {
+      prisma.conversation.findFirst
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({ id: 'conv1', status: 'RESOLVED' } as any);
+      prisma.conversation.update.mockResolvedValue({
+        id: 'conv1',
+        status: 'OPEN',
+        locationId: 'loc1',
+      } as any);
+
+      const result = await service.findOrCreate('biz1', 'cust1', 'WHATSAPP', 'loc1');
+
+      expect(result.status).toBe('OPEN');
+      expect(prisma.conversation.update).toHaveBeenCalledWith({
+        where: { id: 'conv1' },
+        data: { status: 'OPEN', locationId: 'loc1' },
+      });
+    });
+  });
+
+  // ─── findAll (location filter) ────────────────────────────────────────
+
+  describe('findAll (location filter)', () => {
+    beforeEach(() => {
+      prisma.conversation.findMany.mockResolvedValue([]);
+      prisma.conversation.count.mockResolvedValue(0);
+    });
+
+    it('includes locationId in where clause when provided', async () => {
+      await service.findAll('biz1', { locationId: 'loc1' });
+
+      expect(prisma.conversation.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ locationId: 'loc1' }),
+        }),
+      );
+    });
+
+    it('does not filter by locationId when not provided', async () => {
+      await service.findAll('biz1', {});
+
+      const callArg = (prisma.conversation.findMany.mock.calls[0] as any)?.[0];
+      expect(callArg?.where).not.toHaveProperty('locationId');
     });
   });
 

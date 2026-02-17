@@ -627,6 +627,333 @@ describe('BookingService', () => {
     });
   });
 
+  // ─── Location-aware booking ───────────────────────────────────────────
+
+  describe('create (location-aware)', () => {
+    const createData = {
+      customerId: 'cust1',
+      serviceId: 'svc1',
+      staffId: 'staff1',
+      startTime: '2026-03-01T10:00:00Z',
+    };
+
+    it('creates booking with locationId and resourceId', async () => {
+      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', durationMins: 60 } as any);
+      prisma.resource.findFirst.mockResolvedValue({
+        id: 'res1',
+        locationId: 'loc1',
+        isActive: true,
+      } as any);
+      prisma.staffLocation.findUnique.mockResolvedValue({
+        staffId: 'staff1',
+        locationId: 'loc1',
+      } as any);
+      prisma.booking.findFirst.mockResolvedValue(null); // no staff conflict
+      prisma.booking.create.mockResolvedValue({ id: 'b1' } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+
+      await bookingService.create('biz1', {
+        ...createData,
+        locationId: 'loc1',
+        resourceId: 'res1',
+      });
+
+      expect(prisma.booking.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            locationId: 'loc1',
+            resourceId: 'res1',
+          }),
+        }),
+      );
+    });
+
+    it('throws when resource does not exist', async () => {
+      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', durationMins: 60 } as any);
+      prisma.resource.findFirst.mockResolvedValue(null);
+
+      await expect(
+        bookingService.create('biz1', { ...createData, resourceId: 'bad-res' }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('throws when resource does not belong to location', async () => {
+      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', durationMins: 60 } as any);
+      prisma.resource.findFirst.mockResolvedValue({
+        id: 'res1',
+        locationId: 'loc-other',
+        isActive: true,
+      } as any);
+
+      await expect(
+        bookingService.create('biz1', {
+          ...createData,
+          locationId: 'loc1',
+          resourceId: 'res1',
+        }),
+      ).rejects.toThrow('Resource does not belong to the specified location');
+    });
+
+    it('throws when staff is not assigned to location', async () => {
+      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', durationMins: 60 } as any);
+      prisma.staffLocation.findUnique.mockResolvedValue(null);
+
+      await expect(
+        bookingService.create('biz1', { ...createData, locationId: 'loc1' }),
+      ).rejects.toThrow('Staff is not assigned to the specified location');
+    });
+
+    it('throws on resource conflict', async () => {
+      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', durationMins: 60 } as any);
+      prisma.resource.findFirst.mockResolvedValue({
+        id: 'res1',
+        locationId: 'loc1',
+        isActive: true,
+      } as any);
+      prisma.staffLocation.findUnique.mockResolvedValue({
+        staffId: 'staff1',
+        locationId: 'loc1',
+      } as any);
+      // Staff has no conflict
+      prisma.booking.findFirst
+        .mockResolvedValueOnce(null) // staff conflict check
+        .mockResolvedValueOnce({ id: 'conflict' } as any); // resource conflict check
+
+      await expect(
+        bookingService.create('biz1', {
+          ...createData,
+          locationId: 'loc1',
+          resourceId: 'res1',
+        }),
+      ).rejects.toThrow('Resource has a conflicting booking at this time');
+    });
+
+    it('allows create without locationId (legacy mode)', async () => {
+      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', durationMins: 60 } as any);
+      prisma.booking.findFirst.mockResolvedValue(null);
+      prisma.booking.create.mockResolvedValue({ id: 'b1' } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+
+      await bookingService.create('biz1', createData);
+
+      expect(prisma.staffLocation.findUnique).not.toHaveBeenCalled();
+      expect(prisma.resource.findFirst).not.toHaveBeenCalled();
+    });
+  });
+
+  // ─── VIP Override (forceBook) ─────────────────────────────────────────
+
+  describe('create (forceBook)', () => {
+    const createData = {
+      customerId: 'cust1',
+      serviceId: 'svc1',
+      staffId: 'staff1',
+      startTime: '2026-03-01T10:00:00Z',
+    };
+
+    const adminUser = { staffId: 'admin1', staffName: 'Sarah', role: 'ADMIN' };
+
+    it('skips staff conflict detection when forceBook is true', async () => {
+      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', durationMins: 60 } as any);
+      prisma.booking.findFirst.mockResolvedValue({ id: 'conflict' } as any); // would conflict
+      prisma.booking.create.mockResolvedValue({ id: 'b1' } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+
+      // Should NOT throw even though there's a conflict
+      await bookingService.create('biz1', { ...createData, forceBook: true }, adminUser);
+
+      expect(prisma.booking.create).toHaveBeenCalled();
+    });
+
+    it('skips resource conflict detection when forceBook is true', async () => {
+      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', durationMins: 60 } as any);
+      prisma.resource.findFirst.mockResolvedValue({
+        id: 'res1',
+        locationId: 'loc1',
+        isActive: true,
+      } as any);
+      prisma.staffLocation.findUnique.mockResolvedValue({
+        staffId: 'staff1',
+        locationId: 'loc1',
+      } as any);
+      prisma.booking.findFirst.mockResolvedValue({ id: 'conflict' } as any); // would conflict
+      prisma.booking.create.mockResolvedValue({ id: 'b1' } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+
+      await bookingService.create(
+        'biz1',
+        { ...createData, locationId: 'loc1', resourceId: 'res1', forceBook: true },
+        adminUser,
+      );
+
+      expect(prisma.booking.create).toHaveBeenCalled();
+    });
+
+    it('logs override in customFields when forceBook is true', async () => {
+      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', durationMins: 60 } as any);
+      prisma.booking.create.mockResolvedValue({ id: 'b1' } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+
+      await bookingService.create(
+        'biz1',
+        { ...createData, forceBook: true, forceBookReason: 'VIP client' },
+        adminUser,
+      );
+
+      expect(prisma.booking.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            customFields: expect.objectContaining({
+              overrideLog: expect.objectContaining({
+                forceBooked: true,
+                reason: 'VIP client',
+                adminId: 'admin1',
+                adminName: 'Sarah',
+                timestamp: expect.any(String),
+              }),
+            }),
+          }),
+        }),
+      );
+    });
+
+    it('uses default reason when forceBookReason is not provided', async () => {
+      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', durationMins: 60 } as any);
+      prisma.booking.create.mockResolvedValue({ id: 'b1' } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+
+      await bookingService.create(
+        'biz1',
+        { ...createData, forceBook: true },
+        adminUser,
+      );
+
+      expect(prisma.booking.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            customFields: expect.objectContaining({
+              overrideLog: expect.objectContaining({
+                reason: 'VIP override',
+              }),
+            }),
+          }),
+        }),
+      );
+    });
+
+    it('merges overrideLog with existing customFields', async () => {
+      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', durationMins: 60 } as any);
+      prisma.booking.create.mockResolvedValue({ id: 'b1' } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+
+      await bookingService.create(
+        'biz1',
+        {
+          ...createData,
+          forceBook: true,
+          customFields: { skinType: 'oily' },
+        },
+        adminUser,
+      );
+
+      expect(prisma.booking.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            customFields: expect.objectContaining({
+              skinType: 'oily',
+              overrideLog: expect.objectContaining({
+                forceBooked: true,
+              }),
+            }),
+          }),
+        }),
+      );
+    });
+
+    it('does not log override when forceBook is false', async () => {
+      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', durationMins: 60 } as any);
+      prisma.booking.findFirst.mockResolvedValue(null);
+      prisma.booking.create.mockResolvedValue({ id: 'b1' } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+
+      await bookingService.create('biz1', createData);
+
+      expect(prisma.booking.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            customFields: {},
+          }),
+        }),
+      );
+    });
+
+    it('still validates resource exists even with forceBook', async () => {
+      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', durationMins: 60 } as any);
+      prisma.resource.findFirst.mockResolvedValue(null);
+
+      await expect(
+        bookingService.create(
+          'biz1',
+          { ...createData, resourceId: 'bad-res', forceBook: true },
+          adminUser,
+        ),
+      ).rejects.toThrow('Resource not found');
+    });
+
+    it('still validates staff-location assignment even with forceBook', async () => {
+      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', durationMins: 60 } as any);
+      prisma.staffLocation.findUnique.mockResolvedValue(null);
+
+      await expect(
+        bookingService.create(
+          'biz1',
+          { ...createData, locationId: 'loc1', forceBook: true },
+          adminUser,
+        ),
+      ).rejects.toThrow('Staff is not assigned to the specified location');
+    });
+  });
+
+  describe('findAll (location filter)', () => {
+    it('applies locationId filter', async () => {
+      prisma.booking.findMany.mockResolvedValue([]);
+      prisma.booking.count.mockResolvedValue(0);
+
+      await bookingService.findAll('biz1', { locationId: 'loc1' });
+
+      expect(prisma.booking.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { businessId: 'biz1', locationId: 'loc1' },
+        }),
+      );
+    });
+  });
+
+  describe('getCalendar (location filter)', () => {
+    it('applies locationId filter to calendar query', async () => {
+      prisma.booking.findMany.mockResolvedValue([]);
+
+      await bookingService.getCalendar('biz1', '2026-03-01', '2026-03-02', undefined, 'loc1');
+
+      expect(prisma.booking.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            locationId: 'loc1',
+          }),
+        }),
+      );
+    });
+
+    it('does not include locationId when not provided', async () => {
+      prisma.booking.findMany.mockResolvedValue([]);
+
+      await bookingService.getCalendar('biz1', '2026-03-01', '2026-03-02');
+
+      const callArg = prisma.booking.findMany.mock.calls[0]?.[0] as any;
+      expect(callArg?.where).not.toHaveProperty('locationId');
+    });
+  });
+
   describe('sendDepositRequest', () => {
     it('sends notification and logs event in customFields', async () => {
       const booking = {
@@ -2735,6 +3062,147 @@ describe('BookingService', () => {
       await expect(
         bookingService.bulkUpdate('biz1', null as any, 'status', { status: 'CONFIRMED' }, 'ADMIN'),
       ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('updateKanbanStatus', () => {
+    it('updates kanban status on a booking', async () => {
+      const booking = {
+        id: 'b1',
+        businessId: 'biz1',
+        kanbanStatus: null,
+        customer: { id: 'c1' },
+        service: { id: 's1' },
+        staff: { id: 'st1' },
+      };
+      const updatedBooking = { ...booking, kanbanStatus: 'CHECKED_IN' };
+
+      prisma.booking.findFirst.mockResolvedValue(booking as any);
+      prisma.booking.update.mockResolvedValue(updatedBooking as any);
+
+      const result = await bookingService.updateKanbanStatus('biz1', 'b1', 'CHECKED_IN');
+
+      expect(result).toEqual(updatedBooking);
+      expect(prisma.booking.findFirst).toHaveBeenCalledWith({
+        where: { id: 'b1', businessId: 'biz1' },
+        include: { customer: true, service: true, staff: true },
+      });
+      expect(prisma.booking.update).toHaveBeenCalledWith({
+        where: { id: 'b1', businessId: 'biz1' },
+        data: { kanbanStatus: 'CHECKED_IN' },
+        include: { customer: true, service: true, staff: true },
+      });
+    });
+
+    it('throws NotFoundException when booking not found', async () => {
+      prisma.booking.findFirst.mockResolvedValue(null);
+
+      await expect(
+        bookingService.updateKanbanStatus('biz1', 'nonexistent', 'CHECKED_IN'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('calls notificationService.sendKanbanStatusUpdate', async () => {
+      const booking = {
+        id: 'b1',
+        businessId: 'biz1',
+        customer: { id: 'c1' },
+        service: { id: 's1' },
+        staff: { id: 'st1' },
+      };
+      const updatedBooking = { ...booking, kanbanStatus: 'IN_CHAIR' };
+
+      prisma.booking.findFirst.mockResolvedValue(booking as any);
+      prisma.booking.update.mockResolvedValue(updatedBooking as any);
+
+      await bookingService.updateKanbanStatus('biz1', 'b1', 'IN_CHAIR');
+
+      expect(mockNotificationService.sendKanbanStatusUpdate).toHaveBeenCalledWith(
+        updatedBooking,
+        'IN_CHAIR',
+      );
+    });
+  });
+
+  describe('getKanbanBoard', () => {
+    it('returns bookings with non-null kanbanStatus', async () => {
+      const bookings = [
+        { id: 'b1', kanbanStatus: 'CHECKED_IN' },
+        { id: 'b2', kanbanStatus: 'IN_CHAIR' },
+      ];
+      prisma.booking.findMany.mockResolvedValue(bookings as any);
+
+      const result = await bookingService.getKanbanBoard('biz1', {});
+
+      expect(result).toEqual(bookings);
+      expect(prisma.booking.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            businessId: 'biz1',
+            kanbanStatus: { not: null },
+            status: { in: ['CONFIRMED', 'IN_PROGRESS'] },
+          },
+          include: { customer: true, service: true, staff: true },
+          orderBy: { startTime: 'asc' },
+        }),
+      );
+    });
+
+    it('filters by locationId', async () => {
+      prisma.booking.findMany.mockResolvedValue([]);
+
+      await bookingService.getKanbanBoard('biz1', { locationId: 'loc1' });
+
+      expect(prisma.booking.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            businessId: 'biz1',
+            kanbanStatus: { not: null },
+            status: { in: ['CONFIRMED', 'IN_PROGRESS'] },
+            locationId: 'loc1',
+          },
+        }),
+      );
+    });
+
+    it('filters by staffId', async () => {
+      prisma.booking.findMany.mockResolvedValue([]);
+
+      await bookingService.getKanbanBoard('biz1', { staffId: 'staff1' });
+
+      expect(prisma.booking.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            businessId: 'biz1',
+            kanbanStatus: { not: null },
+            status: { in: ['CONFIRMED', 'IN_PROGRESS'] },
+            staffId: 'staff1',
+          },
+        }),
+      );
+    });
+
+    it('filters by date range', async () => {
+      prisma.booking.findMany.mockResolvedValue([]);
+
+      await bookingService.getKanbanBoard('biz1', {
+        dateFrom: '2026-02-01',
+        dateTo: '2026-02-28',
+      });
+
+      expect(prisma.booking.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            businessId: 'biz1',
+            kanbanStatus: { not: null },
+            status: { in: ['CONFIRMED', 'IN_PROGRESS'] },
+            startTime: {
+              gte: new Date('2026-02-01'),
+              lte: new Date('2026-02-28'),
+            },
+          },
+        }),
+      );
     });
   });
 });

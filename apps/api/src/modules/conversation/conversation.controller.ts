@@ -34,10 +34,16 @@ export class ConversationController {
   ) {}
 
   @Get()
-  list(@BusinessId() businessId: string, @CurrentUser('sub') staffId: string, @Query() query: any) {
+  list(
+    @BusinessId() businessId: string,
+    @CurrentUser('sub') staffId: string,
+    @Query() query: any,
+    @Query('locationId') locationId?: string,
+  ) {
     if (query.filter === 'mine') {
       query.assignedToId = staffId;
     }
+    if (locationId) query.locationId = locationId;
     return this.conversationService.findAll(businessId, query);
   }
 

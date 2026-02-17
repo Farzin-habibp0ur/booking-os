@@ -161,4 +161,92 @@ describe('IntentDetector', () => {
       256,
     );
   });
+
+  // ─── Dealership intents ─────────────────────────────────────────────
+
+  it('parses SALES_INQUIRY intent', async () => {
+    claude.complete.mockResolvedValue(
+      JSON.stringify({
+        intent: 'SALES_INQUIRY',
+        confidence: 0.9,
+      }),
+    );
+
+    const result = await detector.detect(
+      'Do you have the 2024 Tacoma in black?',
+      undefined,
+      'dealership',
+    );
+    expect(result.intent).toBe('SALES_INQUIRY');
+    expect(result.confidence).toBe(0.9);
+  });
+
+  it('parses SERVICE_APPOINTMENT intent', async () => {
+    claude.complete.mockResolvedValue(
+      JSON.stringify({
+        intent: 'SERVICE_APPOINTMENT',
+        confidence: 0.95,
+        extractedEntities: { service: 'Brake Service' },
+      }),
+    );
+
+    const result = await detector.detect(
+      'My brakes are squeaking',
+      undefined,
+      'dealership',
+    );
+    expect(result.intent).toBe('SERVICE_APPOINTMENT');
+    expect(result.confidence).toBe(0.95);
+    expect(result.extractedEntities?.service).toBe('Brake Service');
+  });
+
+  it('parses TRADE_IN_INQUIRY intent', async () => {
+    claude.complete.mockResolvedValue(
+      JSON.stringify({
+        intent: 'TRADE_IN_INQUIRY',
+        confidence: 0.85,
+      }),
+    );
+
+    const result = await detector.detect(
+      'I want to trade in my car',
+      undefined,
+      'dealership',
+    );
+    expect(result.intent).toBe('TRADE_IN_INQUIRY');
+  });
+
+  it('includes dealership intents in system prompt when verticalPack is dealership', async () => {
+    claude.complete.mockResolvedValue(JSON.stringify({ intent: 'GENERAL', confidence: 0.5 }));
+
+    await detector.detect('Hello', undefined, 'dealership');
+
+    const systemPrompt = claude.complete.mock.calls[0][1];
+    expect(systemPrompt).toContain('SALES_INQUIRY');
+    expect(systemPrompt).toContain('SERVICE_APPOINTMENT');
+    expect(systemPrompt).toContain('TRADE_IN_INQUIRY');
+    expect(systemPrompt).toContain('car dealership');
+  });
+
+  it('does not include dealership intents when verticalPack is not dealership', async () => {
+    claude.complete.mockResolvedValue(JSON.stringify({ intent: 'GENERAL', confidence: 0.5 }));
+
+    await detector.detect('Hello', undefined, 'aesthetic');
+
+    const systemPrompt = claude.complete.mock.calls[0][1];
+    expect(systemPrompt).not.toContain('SALES_INQUIRY');
+    expect(systemPrompt).not.toContain('SERVICE_APPOINTMENT');
+    expect(systemPrompt).not.toContain('TRADE_IN_INQUIRY');
+  });
+
+  it('does not include dealership intents when verticalPack is undefined', async () => {
+    claude.complete.mockResolvedValue(JSON.stringify({ intent: 'GENERAL', confidence: 0.5 }));
+
+    await detector.detect('Hello');
+
+    const systemPrompt = claude.complete.mock.calls[0][1];
+    expect(systemPrompt).not.toContain('SALES_INQUIRY');
+    expect(systemPrompt).not.toContain('SERVICE_APPOINTMENT');
+    expect(systemPrompt).not.toContain('TRADE_IN_INQUIRY');
+  });
 });

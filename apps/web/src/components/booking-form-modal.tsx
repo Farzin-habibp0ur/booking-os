@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { api } from '@/lib/api';
-import { X, Clock, User, AlertCircle, Repeat } from 'lucide-react';
+import { useAuth } from '@/lib/auth';
+import { X, Clock, User, AlertCircle, Repeat, MapPin, ShieldAlert } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useI18n } from '@/lib/i18n';
 import { useFocusTrap } from '@/lib/use-focus-trap';
@@ -49,19 +50,27 @@ export default function BookingFormModal({
   const [services, setServices] = useState<any[]>([]);
   const [customers, setCustomers] = useState<any[]>([]);
   const [staff, setStaff] = useState<any[]>([]);
+  const [locations, setLocations] = useState<any[]>([]);
+  const [resources, setResources] = useState<any[]>([]);
   const [slots, setSlots] = useState<Slot[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
 
   const [selectedCustomerId, setSelectedCustomerId] = useState(customerId || '');
   const [serviceId, setServiceId] = useState(rescheduleData?.serviceId || '');
   const [selectedStaffId, setSelectedStaffId] = useState(prefillStaffId || '');
+  const [selectedLocationId, setSelectedLocationId] = useState('');
+  const [selectedResourceId, setSelectedResourceId] = useState('');
   const [selectedDate, setSelectedDate] = useState(prefillDate || '');
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
   const [notes, setNotes] = useState(rescheduleData?.notes || '');
+  const [forceBook, setForceBook] = useState(false);
+  const [forceBookReason, setForceBookReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const modalRef = useRef<HTMLDivElement>(null);
   useFocusTrap(modalRef, isOpen);
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
 
   // Recurring state
   const [isRecurring, setIsRecurring] = useState(false);
@@ -76,6 +85,7 @@ export default function BookingFormModal({
     if (!isOpen) return;
     api.get<any>('/services').then((res) => setServices(res.data || res || []));
     api.get<any[]>('/staff').then(setStaff);
+    api.get<any[]>('/locations').then(setLocations).catch(() => setLocations([]));
     if (!customerId) {
       api.get<any>('/customers?pageSize=100').then((res) => setCustomers(res.data || []));
     }
@@ -87,11 +97,16 @@ export default function BookingFormModal({
       setSelectedCustomerId(customerId || rescheduleData?.customerId || '');
       setServiceId(rescheduleData?.serviceId || '');
       setSelectedStaffId(prefillStaffId || rescheduleData?.staffId || '');
+      setSelectedLocationId('');
+      setSelectedResourceId('');
+      setResources([]);
       setSelectedDate(prefillDate || '');
       setSelectedSlot(null);
       setNotes(rescheduleData?.notes || '');
       setError('');
       setSlots([]);
+      setForceBook(false);
+      setForceBookReason('');
       setIsRecurring(false);
       setRecurringDays([]);
       setIntervalWeeks(1);
@@ -111,7 +126,21 @@ export default function BookingFormModal({
     }
   }, [slots, prefillDate, prefillTime]);
 
-  // Fetch slots when date + service change
+  // Load resources when location changes
+  useEffect(() => {
+    if (!selectedLocationId) {
+      setResources([]);
+      setSelectedResourceId('');
+      return;
+    }
+    api
+      .get<any[]>(`/locations/${selectedLocationId}/resources`)
+      .then(setResources)
+      .catch(() => setResources([]));
+    setSelectedResourceId('');
+  }, [selectedLocationId]);
+
+  // Fetch slots when date + service + location/resource change
   useEffect(() => {
     if (!selectedDate || !serviceId) {
       setSlots([]);
@@ -120,12 +149,14 @@ export default function BookingFormModal({
     setLoadingSlots(true);
     const params = new URLSearchParams({ date: selectedDate, serviceId });
     if (selectedStaffId) params.set('staffId', selectedStaffId);
+    if (selectedLocationId) params.set('locationId', selectedLocationId);
+    if (selectedResourceId) params.set('resourceId', selectedResourceId);
     api
       .get<Slot[]>(`/availability?${params}`)
       .then(setSlots)
       .catch(() => setSlots([]))
       .finally(() => setLoadingSlots(false));
-  }, [selectedDate, serviceId, selectedStaffId]);
+  }, [selectedDate, serviceId, selectedStaffId, selectedLocationId, selectedResourceId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -172,6 +203,9 @@ export default function BookingFormModal({
           startTime: selectedSlot.time,
           notes: notes || undefined,
           conversationId: conversationId || undefined,
+          locationId: selectedLocationId || undefined,
+          resourceId: selectedResourceId || undefined,
+          ...(forceBook ? { forceBook: true, forceBookReason: forceBookReason || undefined } : {}),
         });
         onCreated(booking);
       }
@@ -293,6 +327,55 @@ export default function BookingFormModal({
               })()}
           </div>
 
+          {/* Location (optional) */}
+          {locations.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                <MapPin size={12} className="inline mr-1" />
+                Location
+              </label>
+              <select
+                value={selectedLocationId}
+                onChange={(e) => {
+                  setSelectedLocationId(e.target.value);
+                  setSelectedSlot(null);
+                }}
+                className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sage-500"
+              >
+                <option value="">Any location</option>
+                {locations.map((loc: any) => (
+                  <option key={loc.id} value={loc.id}>
+                    {loc.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Resource (optional, shown when location has resources) */}
+          {resources.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Resource
+              </label>
+              <select
+                value={selectedResourceId}
+                onChange={(e) => {
+                  setSelectedResourceId(e.target.value);
+                  setSelectedSlot(null);
+                }}
+                className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sage-500"
+              >
+                <option value="">Any resource</option>
+                {resources.map((r: any) => (
+                  <option key={r.id} value={r.id}>
+                    {r.name} ({r.type})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           {/* Staff filter (optional) */}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -402,6 +485,37 @@ export default function BookingFormModal({
               className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sage-500 resize-none"
             />
           </div>
+
+          {/* VIP Override — only for admins in create mode */}
+          {isAdmin && !isReschedule && (
+            <div className="border-t border-slate-100 pt-3">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={forceBook}
+                  onChange={(e) => setForceBook(e.target.checked)}
+                  className="rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                />
+                <ShieldAlert size={14} className="text-amber-600" />
+                <span className="text-sm font-medium text-slate-700">VIP Override</span>
+              </label>
+              {forceBook && (
+                <div className="mt-2 pl-6 space-y-2">
+                  <div className="flex items-center gap-2 bg-amber-50 text-amber-700 px-3 py-2 rounded-xl text-xs">
+                    <AlertCircle size={14} />
+                    This will skip conflict detection and allow double-booking of staff or resources.
+                  </div>
+                  <input
+                    type="text"
+                    value={forceBookReason}
+                    onChange={(e) => setForceBookReason(e.target.value)}
+                    placeholder="Reason for override (optional)..."
+                    className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  />
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Recurring section — only in create mode */}
           {!isReschedule && (

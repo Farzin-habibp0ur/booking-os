@@ -38,6 +38,9 @@ model Business {
   automationRules   AutomationRule[]
   campaigns         Campaign[]
   offers            Offer[]
+  locations         Location[]
+  quotes            Quote[]
+  verticalPackVersions VerticalPackVersion[]
 
   @@map("businesses")
 }
@@ -65,6 +68,7 @@ model Staff {
   timeOff               TimeOff[]
   calendarConnections   CalendarConnection[]
   waitlistEntries       WaitlistEntry[]       @relation("PreferredStaffWaitlist")
+  staffLocations        StaffLocation[]
 
   @@index([businessId])
   @@map("staff")
@@ -127,6 +131,9 @@ model Booking {
   staffId        String?
   conversationId String?
   recurringSeriesId String?
+  locationId     String?
+  resourceId     String?
+  kanbanStatus   String?
   status         String   @default("PENDING")
   startTime      DateTime
   endTime        DateTime
@@ -142,12 +149,17 @@ model Booking {
   staff           Staff?           @relation(fields: [staffId], references: [id])
   conversation    Conversation?    @relation(fields: [conversationId], references: [id])
   recurringSeries RecurringSeries? @relation(fields: [recurringSeriesId], references: [id])
+  location        Location?        @relation(fields: [locationId], references: [id])
+  resource        Resource?        @relation(fields: [resourceId], references: [id])
   reminders       Reminder[]
   payments        Payment[]
+  quotes          Quote[]
 
   @@index([businessId])
   @@index([businessId, startTime])
   @@index([businessId, status])
+  @@index([locationId])
+  @@index([resourceId])
   @@map("bookings")
 }
 
@@ -181,6 +193,7 @@ model Conversation {
   businessId    String
   customerId    String
   assignedToId  String?
+  locationId    String?
   channel       String    @default("WHATSAPP")
   status        String    @default("OPEN")
   lastMessageAt DateTime?
@@ -193,12 +206,14 @@ model Conversation {
   business   Business           @relation(fields: [businessId], references: [id])
   customer   Customer           @relation(fields: [customerId], references: [id])
   assignedTo Staff?             @relation("AssignedConversations", fields: [assignedToId], references: [id])
+  location   Location?          @relation(fields: [locationId], references: [id])
   messages   Message[]
   bookings   Booking[]
   notes      ConversationNote[]
 
   @@index([businessId])
   @@index([businessId, status])
+  @@index([locationId])
   @@map("conversations")
 }
 
@@ -546,4 +561,96 @@ model Offer {
 
   @@index([businessId])
   @@map("offers")
+}
+
+model Location {
+  id             String    @id @default(cuid())
+  businessId     String
+  name           String
+  address        String?
+  isBookable     Boolean   @default(true)
+  whatsappConfig Json?
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  business       Business         @relation(fields: [businessId], references: [id])
+  bookings       Booking[]
+  resources      Resource[]
+  staffLocations StaffLocation[]
+  conversations  Conversation[]
+
+  @@index([businessId])
+  @@map("locations")
+}
+
+model Resource {
+  id         String   @id @default(cuid())
+  locationId String
+  name       String
+  type       String
+  isActive   Boolean  @default(true)
+  metadata   Json?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  location Location  @relation(fields: [locationId], references: [id])
+  bookings Booking[]
+
+  @@index([locationId])
+  @@index([type])
+  @@map("resources")
+}
+
+model StaffLocation {
+  id         String @id @default(cuid())
+  staffId    String
+  locationId String
+
+  staff    Staff    @relation(fields: [staffId], references: [id])
+  location Location @relation(fields: [locationId], references: [id])
+
+  @@unique([staffId, locationId])
+  @@map("staff_locations")
+}
+
+model VerticalPackVersion {
+  id          String   @id @default(cuid())
+  businessId  String?
+  slug        String
+  version     Int      @default(1)
+  name        String
+  description String?
+  config      Json
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  business Business? @relation(fields: [businessId], references: [id])
+
+  @@unique([slug, version])
+  @@index([slug])
+  @@map("vertical_pack_versions")
+}
+
+model Quote {
+  id          String    @id @default(cuid())
+  bookingId   String
+  businessId  String
+  description String
+  totalAmount Float
+  pdfUrl      String?
+  status      String    @default("PENDING")
+  approvedAt  DateTime?
+  approverIp  String?
+  tokenId     String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  booking  Booking  @relation(fields: [bookingId], references: [id])
+  business Business @relation(fields: [businessId], references: [id])
+
+  @@index([bookingId])
+  @@index([businessId])
+  @@map("quotes")
 }
