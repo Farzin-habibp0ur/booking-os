@@ -148,7 +148,7 @@ describe('AuthProvider', () => {
     });
   });
 
-  it('login() calls api.post and api.get without storing token (C2 fix)', async () => {
+  it('login() calls api.post, sets Bearer token, and fetches /auth/me', async () => {
     (api.getToken as jest.Mock).mockReturnValue(null);
     (api.post as jest.Mock).mockResolvedValue({ accessToken: 'new-token', staff: mockUser });
     // First call to /auth/me on mount fails, second after login succeeds
@@ -177,8 +177,8 @@ describe('AuthProvider', () => {
         email: 'test@example.com',
         password: 'password',
       });
-      // C2 fix: Should NOT store token in localStorage
-      expect(api.setToken).not.toHaveBeenCalledWith('new-token');
+      // Sets Bearer token from login response for immediate /auth/me call
+      expect(api.setToken).toHaveBeenCalledWith('new-token');
       expect(api.get).toHaveBeenCalledWith('/auth/me');
       expect(screen.getByTestId('user-status')).toHaveTextContent('Logged in as test@example.com');
     });

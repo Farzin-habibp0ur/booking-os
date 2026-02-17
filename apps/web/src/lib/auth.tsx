@@ -58,11 +58,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
-    // C2 fix: Don't store token — httpOnly cookies handle auth
-    await api.post<{ accessToken: string; staff: any }>('/auth/login', {
+    // Use Bearer token from login response for the immediate /auth/me call
+    // to avoid stale cookie/cache issues when switching accounts
+    const { accessToken } = await api.post<{ accessToken: string; staff: any }>('/auth/login', {
       email,
       password,
     });
+    api.setToken(accessToken);
     const me = await api.get<User>('/auth/me');
     setUser(me);
   };
