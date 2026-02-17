@@ -154,6 +154,15 @@ describe('WaitlistService', () => {
     };
 
     it('should offer slot to matching waitlist entries', async () => {
+      // Mock Date to 14:00 UTC so we never hit quiet hours in any timezone
+      const realDate = Date;
+      const mockDate = new Date('2026-03-15T14:00:00Z');
+      jest.spyOn(global, 'Date').mockImplementation((...args: any[]) => {
+        if (args.length === 0) return mockDate;
+        return new (realDate as any)(...args);
+      });
+      (Date as any).now = () => mockDate.getTime();
+
       prisma.business.findUnique.mockResolvedValue({
         id: 'biz1',
         packConfig: {
@@ -185,6 +194,8 @@ describe('WaitlistService', () => {
           data: expect.objectContaining({ status: 'OFFERED' }),
         }),
       );
+
+      jest.restoreAllMocks();
     });
 
     it('should skip offers during quiet hours', async () => {
