@@ -1201,4 +1201,465 @@ describe('AiService', () => {
       expect(prisma.conversation.update).not.toHaveBeenCalled();
     });
   });
+
+  describe('processInboundMessage — routing to assistants', () => {
+    const mockBusiness = {
+      id: 'biz1',
+      name: 'Test Business',
+      aiSettings: { enabled: true, autoReplySuggestions: true, bookingAssistant: true },
+    };
+
+    const mockConversation = {
+      id: 'conv1',
+      businessId: 'biz1',
+      customerId: 'cust1',
+      metadata: {},
+    };
+
+    const mockMessages = [
+      {
+        id: 'msg1',
+        conversationId: 'conv1',
+        content: 'Hello',
+        direction: 'INBOUND',
+        createdAt: new Date(),
+      },
+    ];
+
+    beforeEach(() => {
+      prisma.business.findUnique.mockResolvedValue(mockBusiness as any);
+      prisma.conversation.findUnique.mockResolvedValue(mockConversation as any);
+      prisma.message.findMany.mockResolvedValue(mockMessages as any);
+      prisma.message.update.mockResolvedValue({} as any);
+      prisma.message.count.mockResolvedValue(3);
+      prisma.customer.findUnique.mockResolvedValue(null);
+      prisma.booking.findMany.mockResolvedValue([]);
+      prisma.aiUsage.findUnique.mockResolvedValue(null);
+      prisma.aiUsage.upsert.mockResolvedValue({} as any);
+      prisma.conversation.update.mockResolvedValue({} as any);
+    });
+
+    it('routes BOOK_APPOINTMENT to booking assistant', async () => {
+      intentDetector.detect.mockResolvedValue({
+        intent: 'BOOK_APPOINTMENT',
+        confidence: 0.95,
+        extractedEntities: {},
+      });
+
+      await aiService.processInboundMessage('biz1', 'conv1', 'msg1', 'I want to book');
+
+      expect(bookingAssistant.process).toHaveBeenCalled();
+    });
+
+    it('routes CANCEL to cancel assistant', async () => {
+      intentDetector.detect.mockResolvedValue({
+        intent: 'CANCEL',
+        confidence: 0.9,
+        extractedEntities: {},
+      });
+
+      await aiService.processInboundMessage('biz1', 'conv1', 'msg1', 'Cancel my appointment');
+
+      expect(cancelAssistant.process).toHaveBeenCalled();
+    });
+
+    it('routes RESCHEDULE to reschedule assistant', async () => {
+      intentDetector.detect.mockResolvedValue({
+        intent: 'RESCHEDULE',
+        confidence: 0.9,
+        extractedEntities: {},
+      });
+
+      await aiService.processInboundMessage('biz1', 'conv1', 'msg1', 'Reschedule please');
+
+      expect(rescheduleAssistant.process).toHaveBeenCalled();
+    });
+
+    it('continues active booking flow even if intent changes', async () => {
+      prisma.conversation.findUnique.mockResolvedValue({
+        ...mockConversation,
+        metadata: { aiBookingState: { state: 'IDENTIFY_SERVICE' } },
+      } as any);
+      intentDetector.detect.mockResolvedValue({
+        intent: 'GENERAL',
+        confidence: 0.5,
+        extractedEntities: {},
+      });
+
+      await aiService.processInboundMessage('biz1', 'conv1', 'msg1', 'The haircut one please');
+
+      expect(bookingAssistant.process).toHaveBeenCalled();
+    });
+
+    it('continues active cancel flow even if intent changes', async () => {
+      prisma.conversation.findUnique.mockResolvedValue({
+        ...mockConversation,
+        metadata: { aiCancelState: { state: 'IDENTIFY_BOOKING' } },
+      } as any);
+      intentDetector.detect.mockResolvedValue({
+        intent: 'GENERAL',
+        confidence: 0.5,
+        extractedEntities: {},
+      });
+
+      await aiService.processInboundMessage('biz1', 'conv1', 'msg1', 'The 2pm one');
+
+      expect(cancelAssistant.process).toHaveBeenCalled();
+    });
+
+    it('continues active reschedule flow even if intent changes', async () => {
+      prisma.conversation.findUnique.mockResolvedValue({
+        ...mockConversation,
+        metadata: { aiRescheduleState: { state: 'IDENTIFY_BOOKING' } },
+      } as any);
+      intentDetector.detect.mockResolvedValue({
+        intent: 'GENERAL',
+        confidence: 0.5,
+        extractedEntities: {},
+      });
+
+      await aiService.processInboundMessage('biz1', 'conv1', 'msg1', 'The afternoon one');
+
+      expect(rescheduleAssistant.process).toHaveBeenCalled();
+    });
+
+    it('generates reply draft for GENERAL intent with autoReplySuggestions', async () => {
+      await aiService.processInboundMessage('biz1', 'conv1', 'msg1', 'Hello');
+
+      expect(replyGenerator.generate).toHaveBeenCalled();
+    });
+
+    it('triggers summary every 5th message', async () => {
+      prisma.message.count.mockResolvedValue(10);
+      prisma.conversation.findUnique.mockResolvedValue({
+        ...mockConversation,
+        metadata: {},
+      } as any);
+
+      await aiService.processInboundMessage('biz1', 'conv1', 'msg1', 'Hello');
+
+      expect(summaryGenerator.generate).toHaveBeenCalled();
+    });
+
+    it('does not trigger summary when not on 5th message', async () => {
+      prisma.message.count.mockResolvedValue(7);
+
+      await aiService.processInboundMessage('biz1', 'conv1', 'msg1', 'Hello');
+
+      // Summary generator should not be called for regular messages
+      // (Only called via generateAndStoreSummary when messageCount % 5 === 0)
+      expect(summaryGenerator.generate).not.toHaveBeenCalled();
+    });
+
+    it('handles TRANSFER_TO_HUMAN intent', async () => {
+      intentDetector.detect.mockResolvedValue({
+        intent: 'TRANSFER_TO_HUMAN',
+        confidence: 0.95,
+        extractedEntities: {},
+      });
+      prisma.staff.findFirst.mockResolvedValue({ id: 'staff1', name: 'Admin' } as any);
+
+      await aiService.processInboundMessage('biz1', 'conv1', 'msg1', 'Talk to a human');
+
+      expect(prisma.conversation.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            assignedToId: 'staff1',
+            metadata: expect.objectContaining({ transferredToHuman: true }),
+          }),
+        }),
+      );
+      expect(messageService.sendMessage).toHaveBeenCalledWith(
+        'biz1',
+        'conv1',
+        'staff1',
+        expect.stringContaining('connecting you'),
+        'whatsapp',
+      );
+    });
+
+    it('skips TRANSFER_TO_HUMAN if already transferred', async () => {
+      prisma.conversation.findUnique.mockResolvedValue({
+        ...mockConversation,
+        metadata: { transferredToHuman: true },
+      } as any);
+      intentDetector.detect.mockResolvedValue({
+        intent: 'TRANSFER_TO_HUMAN',
+        confidence: 0.9,
+        extractedEntities: {},
+      });
+
+      await aiService.processInboundMessage('biz1', 'conv1', 'msg1', 'Talk to a human');
+
+      // Should still generate a reply draft, not re-transfer
+      expect(replyGenerator.generate).toHaveBeenCalled();
+    });
+
+    it('auto-replies when auto-reply is enabled and intent matches', async () => {
+      prisma.business.findUnique.mockResolvedValue({
+        ...mockBusiness,
+        aiSettings: {
+          enabled: true,
+          autoReplySuggestions: true,
+          bookingAssistant: true,
+          autoReply: { enabled: true, mode: 'all', selectedIntents: [] },
+        },
+      } as any);
+      prisma.staff.findFirst.mockResolvedValue({ id: 'staff1', name: 'Admin', role: 'ADMIN' } as any);
+      replyGenerator.generate.mockResolvedValue({ draftText: 'Auto reply text' });
+
+      await aiService.processInboundMessage('biz1', 'conv1', 'msg1', 'What are your hours?');
+
+      expect(messageService.sendMessage).toHaveBeenCalledWith(
+        'biz1',
+        'conv1',
+        'staff1',
+        'Auto reply text',
+        'whatsapp',
+      );
+      expect(inboxGateway.emitToBusinessRoom).toHaveBeenCalledWith(
+        'biz1',
+        'ai:auto-replied',
+        expect.objectContaining({ draftText: 'Auto reply text' }),
+      );
+    });
+
+    it('does not auto-reply when transferredToHuman is true', async () => {
+      prisma.business.findUnique.mockResolvedValue({
+        ...mockBusiness,
+        aiSettings: {
+          enabled: true,
+          autoReplySuggestions: true,
+          bookingAssistant: true,
+          autoReply: { enabled: true, mode: 'all', selectedIntents: [] },
+        },
+      } as any);
+      prisma.conversation.findUnique.mockResolvedValue({
+        ...mockConversation,
+        metadata: { transferredToHuman: true },
+      } as any);
+
+      await aiService.processInboundMessage('biz1', 'conv1', 'msg1', 'Hello');
+
+      // Should broadcast suggestions, not auto-reply
+      expect(inboxGateway.emitToBusinessRoom).toHaveBeenCalledWith(
+        'biz1',
+        'ai:suggestions',
+        expect.anything(),
+      );
+    });
+
+    it('auto-replies only for selected intents when mode is "selected"', async () => {
+      prisma.business.findUnique.mockResolvedValue({
+        ...mockBusiness,
+        aiSettings: {
+          enabled: true,
+          autoReplySuggestions: true,
+          bookingAssistant: true,
+          autoReply: { enabled: true, mode: 'selected', selectedIntents: ['INQUIRY'] },
+        },
+      } as any);
+      intentDetector.detect.mockResolvedValue({
+        intent: 'GENERAL',
+        confidence: 0.8,
+        extractedEntities: {},
+      });
+
+      await aiService.processInboundMessage('biz1', 'conv1', 'msg1', 'Hello');
+
+      // GENERAL is not in selectedIntents, so should not auto-reply
+      expect(messageService.sendMessage).not.toHaveBeenCalled();
+      expect(inboxGateway.emitToBusinessRoom).toHaveBeenCalledWith(
+        'biz1',
+        'ai:suggestions',
+        expect.anything(),
+      );
+    });
+
+    it('handles errors gracefully in processInboundMessage', async () => {
+      intentDetector.detect.mockRejectedValue(new Error('AI service down'));
+
+      // Should not throw
+      await expect(
+        aiService.processInboundMessage('biz1', 'conv1', 'msg1', 'Hello'),
+      ).resolves.toBeUndefined();
+    });
+
+    it('does not call booking assistant when bookingAssistant is disabled', async () => {
+      prisma.business.findUnique.mockResolvedValue({
+        ...mockBusiness,
+        aiSettings: {
+          enabled: true,
+          autoReplySuggestions: true,
+          bookingAssistant: false,
+        },
+      } as any);
+      intentDetector.detect.mockResolvedValue({
+        intent: 'BOOK_APPOINTMENT',
+        confidence: 0.95,
+        extractedEntities: {},
+      });
+
+      await aiService.processInboundMessage('biz1', 'conv1', 'msg1', 'I want to book');
+
+      expect(bookingAssistant.process).not.toHaveBeenCalled();
+    });
+
+    it('auto-confirms booking when auto-reply enabled and state is CONFIRM', async () => {
+      prisma.business.findUnique.mockResolvedValue({
+        ...mockBusiness,
+        aiSettings: {
+          enabled: true,
+          autoReplySuggestions: true,
+          bookingAssistant: true,
+          autoReply: { enabled: true, mode: 'all', selectedIntents: [] },
+        },
+      } as any);
+      intentDetector.detect.mockResolvedValue({
+        intent: 'BOOK_APPOINTMENT',
+        confidence: 0.95,
+        extractedEntities: {},
+      });
+      bookingAssistant.process.mockResolvedValue({
+        state: 'CONFIRM',
+        serviceId: 'svc1',
+        serviceName: 'Haircut',
+        slotIso: '2026-03-01T14:00:00Z',
+        date: '2026-03-01',
+        time: '14:00',
+        staffId: 'staff1',
+        staffName: 'John',
+        suggestedResponse: 'Confirm?',
+      });
+      // For confirmBooking
+      prisma.conversation.findFirst.mockResolvedValue({
+        id: 'conv1',
+        businessId: 'biz1',
+        customerId: 'cust1',
+        metadata: {
+          aiBookingState: {
+            state: 'CONFIRM',
+            serviceId: 'svc1',
+            slotIso: '2026-03-01T14:00:00Z',
+          },
+        },
+      } as any);
+      bookingService.create.mockResolvedValue({ id: 'booking1' } as any);
+      prisma.staff.findFirst.mockResolvedValue({ id: 'staff1', name: 'Admin', role: 'ADMIN' } as any);
+
+      await aiService.processInboundMessage('biz1', 'conv1', 'msg1', 'Book me for 2pm');
+
+      expect(bookingService.create).toHaveBeenCalled();
+      expect(messageService.sendMessage).toHaveBeenCalledWith(
+        'biz1',
+        'conv1',
+        'staff1',
+        expect.stringContaining('confirmed'),
+        'whatsapp',
+      );
+    });
+
+    it('auto-confirms cancel when auto-reply enabled and state is CONFIRM_CANCEL', async () => {
+      prisma.business.findUnique.mockResolvedValue({
+        ...mockBusiness,
+        aiSettings: {
+          enabled: true,
+          autoReplySuggestions: true,
+          bookingAssistant: true,
+          autoReply: { enabled: true, mode: 'all', selectedIntents: [] },
+        },
+      } as any);
+      intentDetector.detect.mockResolvedValue({
+        intent: 'CANCEL',
+        confidence: 0.95,
+        extractedEntities: {},
+      });
+      cancelAssistant.process.mockResolvedValue({
+        state: 'CONFIRM_CANCEL',
+        bookingId: 'booking1',
+        serviceName: 'Haircut',
+        suggestedResponse: 'Confirm cancel?',
+      });
+      // For confirmCancel
+      prisma.conversation.findFirst.mockResolvedValue({
+        id: 'conv1',
+        businessId: 'biz1',
+        customerId: 'cust1',
+        metadata: {
+          aiCancelState: {
+            state: 'CONFIRM_CANCEL',
+            bookingId: 'booking1',
+          },
+        },
+      } as any);
+      bookingService.updateStatus.mockResolvedValue({ id: 'booking1', status: 'CANCELLED' } as any);
+      prisma.staff.findFirst.mockResolvedValue({ id: 'staff1', name: 'Admin', role: 'ADMIN' } as any);
+
+      await aiService.processInboundMessage('biz1', 'conv1', 'msg1', 'Yes cancel it');
+
+      expect(bookingService.updateStatus).toHaveBeenCalledWith('biz1', 'booking1', 'CANCELLED');
+    });
+
+    it('auto-confirms reschedule when auto-reply enabled', async () => {
+      prisma.business.findUnique.mockResolvedValue({
+        ...mockBusiness,
+        aiSettings: {
+          enabled: true,
+          autoReplySuggestions: true,
+          bookingAssistant: true,
+          autoReply: { enabled: true, mode: 'all', selectedIntents: [] },
+        },
+      } as any);
+      intentDetector.detect.mockResolvedValue({
+        intent: 'RESCHEDULE',
+        confidence: 0.95,
+        extractedEntities: {},
+      });
+      rescheduleAssistant.process.mockResolvedValue({
+        state: 'CONFIRM_RESCHEDULE',
+        bookingId: 'booking1',
+        newSlotIso: '2026-03-05T10:00:00Z',
+        newDate: '2026-03-05',
+        newTime: '10:00',
+        suggestedResponse: 'Confirm reschedule?',
+      });
+      prisma.conversation.findFirst.mockResolvedValue({
+        id: 'conv1',
+        businessId: 'biz1',
+        customerId: 'cust1',
+        metadata: {
+          aiRescheduleState: {
+            state: 'CONFIRM_RESCHEDULE',
+            bookingId: 'booking1',
+            newSlotIso: '2026-03-05T10:00:00Z',
+          },
+        },
+      } as any);
+      bookingService.update.mockResolvedValue({
+        id: 'booking1',
+        startTime: new Date('2026-03-05T10:00:00Z'),
+      } as any);
+      prisma.staff.findFirst.mockResolvedValue({ id: 'staff1', name: 'Admin', role: 'ADMIN' } as any);
+
+      await aiService.processInboundMessage('biz1', 'conv1', 'msg1', 'Yes reschedule');
+
+      expect(bookingService.update).toHaveBeenCalledWith('biz1', 'booking1', {
+        startTime: '2026-03-05T10:00:00Z',
+      });
+    });
+
+    it('stores draft in message metadata when generated', async () => {
+      replyGenerator.generate.mockResolvedValue({ draftText: 'Hello! How can I help?' });
+
+      await aiService.processInboundMessage('biz1', 'conv1', 'msg1', 'Hello');
+
+      // Second call to message.update stores the draft
+      const updateCalls = prisma.message.update.mock.calls;
+      const draftCall = updateCalls.find(
+        (call: any) => call[0]?.data?.metadata?.ai?.draftText,
+      );
+      expect(draftCall).toBeDefined();
+      expect((draftCall![0].data.metadata as any).ai.draftText).toBe('Hello! How can I help?');
+    });
+  });
 });

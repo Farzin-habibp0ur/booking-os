@@ -319,4 +319,121 @@ describe('IntakeCard', () => {
     expect(screen.getByText('15000')).toBeInTheDocument();
     expect(screen.getByText('Service')).toBeInTheDocument();
   });
+
+  // ─── Additional tests ─────────────────────────────────────────────────
+
+  it('reverts draft changes on cancel', () => {
+    render(
+      <IntakeCard
+        customer={{ id: 'c1', customFields: { concernArea: 'Original Value' } }}
+        fields={aestheticFields}
+        onUpdated={jest.fn()}
+      />,
+    );
+
+    // Enter edit mode
+    fireEvent.click(screen.getByLabelText('Edit'));
+
+    // Change a text input value
+    const input = screen.getByDisplayValue('Original Value');
+    fireEvent.change(input, { target: { value: 'Changed Value' } });
+
+    // Click Cancel
+    fireEvent.click(screen.getByText('Cancel'));
+
+    // Re-enter edit mode
+    fireEvent.click(screen.getByLabelText('Edit'));
+
+    // Verify the original value is shown (not the changed value)
+    expect(screen.getByDisplayValue('Original Value')).toBeInTheDocument();
+    expect(screen.queryByDisplayValue('Changed Value')).not.toBeInTheDocument();
+  });
+
+  it('renders "No" for false boolean fields in view mode', () => {
+    render(
+      <IntakeCard
+        customer={{ id: 'c1', customFields: { isMedicalFlagged: false } }}
+        fields={aestheticFields}
+        onUpdated={jest.fn()}
+      />,
+    );
+    expect(screen.getByText('No')).toBeInTheDocument();
+  });
+
+  it('renders checkbox for boolean fields in edit mode', () => {
+    render(
+      <IntakeCard
+        customer={{ id: 'c1', customFields: {} }}
+        fields={aestheticFields}
+        onUpdated={jest.fn()}
+      />,
+    );
+    fireEvent.click(screen.getByLabelText('Edit'));
+
+    const checkbox = screen.getByRole('checkbox');
+    expect(checkbox).toBeInTheDocument();
+  });
+
+  it('handles empty fields array gracefully', () => {
+    render(
+      <IntakeCard
+        customer={{ id: 'c1', customFields: {} }}
+        fields={[]}
+        onUpdated={jest.fn()}
+      />,
+    );
+    expect(screen.getByText('0/0 complete')).toBeInTheDocument();
+  });
+
+  it('renders required indicator for required fields in edit mode', () => {
+    render(
+      <IntakeCard
+        customer={{ id: 'c1', customFields: {} }}
+        fields={dealershipFields}
+        onUpdated={jest.fn()}
+      />,
+    );
+    fireEvent.click(screen.getByLabelText('Edit'));
+
+    // Make and Model have required: true - they should have text inputs
+    // Verify the required fields are present with their labels
+    expect(screen.getByText('Make')).toBeInTheDocument();
+    expect(screen.getByText('Model')).toBeInTheDocument();
+  });
+
+  it('preserves existing custom field values when saving new ones', async () => {
+    const updatedCustomer = {
+      id: 'c1',
+      customFields: { make: 'Toyota', model: 'Corolla' },
+    };
+    mockPatch.mockResolvedValue(updatedCustomer);
+    const onUpdated = jest.fn();
+
+    render(
+      <IntakeCard
+        customer={{ id: 'c1', customFields: { make: 'Toyota' } }}
+        fields={dealershipFields}
+        onUpdated={onUpdated}
+      />,
+    );
+
+    // Enter edit mode
+    fireEvent.click(screen.getByLabelText('Edit'));
+
+    // Change model field
+    const modelInput = screen.getByPlaceholderText('Model');
+    fireEvent.change(modelInput, { target: { value: 'Corolla' } });
+
+    // Save
+    fireEvent.click(screen.getByText('Save'));
+
+    await waitFor(() => {
+      expect(mockPatch).toHaveBeenCalledWith('/customers/c1', {
+        customFields: expect.objectContaining({
+          make: 'Toyota',
+          model: 'Corolla',
+        }),
+      });
+    });
+  });
 });

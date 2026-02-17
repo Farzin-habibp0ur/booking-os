@@ -161,6 +161,121 @@ describe('OfferService', () => {
     });
   });
 
+  describe('create with validFrom and serviceIds', () => {
+    it('creates offer with validFrom date', async () => {
+      prisma.offer.create.mockResolvedValue({
+        ...mockOffer,
+        validFrom: new Date('2026-03-01'),
+      } as any);
+
+      await offerService.create('biz1', {
+        name: 'Spring Sale',
+        validFrom: '2026-03-01',
+      });
+
+      expect(prisma.offer.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          validFrom: new Date('2026-03-01'),
+        }),
+      });
+    });
+
+    it('creates offer with specific serviceIds', async () => {
+      prisma.offer.create.mockResolvedValue({
+        ...mockOffer,
+        serviceIds: ['svc1', 'svc2'],
+      } as any);
+
+      await offerService.create('biz1', {
+        name: 'Service Bundle',
+        serviceIds: ['svc1', 'svc2'],
+      });
+
+      expect(prisma.offer.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          serviceIds: ['svc1', 'svc2'],
+        }),
+      });
+    });
+
+    it('defaults serviceIds to empty array when omitted', async () => {
+      prisma.offer.create.mockResolvedValue({ ...mockOffer } as any);
+
+      await offerService.create('biz1', { name: 'Basic Offer' });
+
+      expect(prisma.offer.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          serviceIds: [],
+        }),
+      });
+    });
+
+    it('sets validFrom to null when not provided', async () => {
+      prisma.offer.create.mockResolvedValue({ ...mockOffer } as any);
+
+      await offerService.create('biz1', { name: 'No Date Offer' });
+
+      expect(prisma.offer.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          validFrom: null,
+        }),
+      });
+    });
+  });
+
+  describe('update', () => {
+    it('updates offer with validFrom', async () => {
+      prisma.offer.findFirst.mockResolvedValue({ id: 'off1' } as any);
+      prisma.offer.update.mockResolvedValue({
+        ...mockOffer,
+        validFrom: new Date('2026-04-01'),
+      } as any);
+
+      await offerService.update('biz1', 'off1', { validFrom: '2026-04-01' });
+
+      expect(prisma.offer.update).toHaveBeenCalledWith({
+        where: { id: 'off1' },
+        data: expect.objectContaining({
+          validFrom: new Date('2026-04-01'),
+        }),
+      });
+    });
+
+    it('clears validFrom when set to null', async () => {
+      prisma.offer.findFirst.mockResolvedValue({ id: 'off1' } as any);
+      prisma.offer.update.mockResolvedValue({
+        ...mockOffer,
+        validFrom: null,
+      } as any);
+
+      await offerService.update('biz1', 'off1', { validFrom: null });
+
+      expect(prisma.offer.update).toHaveBeenCalledWith({
+        where: { id: 'off1' },
+        data: expect.objectContaining({
+          validFrom: null,
+        }),
+      });
+    });
+
+    it('updates serviceIds', async () => {
+      prisma.offer.findFirst.mockResolvedValue({ id: 'off1' } as any);
+      prisma.offer.update.mockResolvedValue({
+        ...mockOffer,
+        serviceIds: ['svc3'],
+      } as any);
+
+      await offerService.update('biz1', 'off1', { serviceIds: ['svc3'] });
+
+      expect(prisma.offer.update).toHaveBeenCalledWith({
+        where: { id: 'off1' },
+        data: expect.objectContaining({
+          serviceIds: ['svc3'],
+        }),
+      });
+    });
+  });
+
   describe('delete', () => {
     it('deletes an existing offer', async () => {
       prisma.offer.findFirst.mockResolvedValue({ id: 'off1' } as any);
@@ -169,6 +284,12 @@ describe('OfferService', () => {
       const result = await offerService.delete('biz1', 'off1');
 
       expect(result).toEqual({ deleted: true });
+    });
+
+    it('throws when offer not found', async () => {
+      prisma.offer.findFirst.mockResolvedValue(null);
+
+      await expect(offerService.delete('biz1', 'nope')).rejects.toThrow(NotFoundException);
     });
   });
 });

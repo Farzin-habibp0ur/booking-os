@@ -17,3 +17,11 @@ backups/
 
 # Certbot data
 certbot/
+
+# Test coverage & results
+coverage/
+coverage-api/
+coverage-web/
+test-results/
+playwright-report/
+.DS_Store

@@ -131,5 +131,84 @@ describe('TokenService', () => {
         where: { email: 'test@test.com', type: 'PASSWORD_RESET' },
       });
     });
+
+    it('works with different token types', async () => {
+      prisma.token.deleteMany.mockResolvedValue({ count: 1 } as any);
+
+      await tokenService.revokeTokens('test@test.com', 'STAFF_INVITE');
+
+      expect(prisma.token.deleteMany).toHaveBeenCalledWith({
+        where: { email: 'test@test.com', type: 'STAFF_INVITE' },
+      });
+    });
+  });
+
+  describe('revokeBookingTokens', () => {
+    it('calls deleteMany with bookingId and type filter', async () => {
+      prisma.token.deleteMany.mockResolvedValue({ count: 1 } as any);
+
+      await tokenService.revokeBookingTokens('booking1', 'RESCHEDULE');
+
+      expect(prisma.token.deleteMany).toHaveBeenCalledWith({
+        where: { bookingId: 'booking1', type: 'RESCHEDULE' },
+      });
+    });
+
+    it('works with CANCEL type', async () => {
+      prisma.token.deleteMany.mockResolvedValue({ count: 0 } as any);
+
+      await tokenService.revokeBookingTokens('booking2', 'CANCEL');
+
+      expect(prisma.token.deleteMany).toHaveBeenCalledWith({
+        where: { bookingId: 'booking2', type: 'CANCEL' },
+      });
+    });
+  });
+
+  describe('revokeAllTokensForEmail', () => {
+    it('calls deleteMany with only email filter (all types)', async () => {
+      prisma.token.deleteMany.mockResolvedValue({ count: 5 } as any);
+
+      await tokenService.revokeAllTokensForEmail('test@test.com');
+
+      expect(prisma.token.deleteMany).toHaveBeenCalledWith({
+        where: { email: 'test@test.com' },
+      });
+    });
+  });
+
+  describe('createToken with bookingId', () => {
+    it('stores bookingId when provided', async () => {
+      prisma.token.create.mockResolvedValue({} as any);
+
+      await tokenService.createToken(
+        'RESCHEDULE',
+        'test@test.com',
+        'biz1',
+        'staff1',
+        24,
+        'booking1',
+      );
+
+      expect(prisma.token.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          type: 'RESCHEDULE',
+          email: 'test@test.com',
+          bookingId: 'booking1',
+        }),
+      });
+    });
+
+    it('uses default 24-hour expiry when not specified', async () => {
+      prisma.token.create.mockResolvedValue({} as any);
+
+      await tokenService.createToken('PASSWORD_RESET', 'test@test.com');
+
+      const callData = prisma.token.create.mock.calls[0][0].data;
+      const expiryDiff = (callData.expiresAt as Date).getTime() - Date.now();
+      // Should be approximately 24 hours (86400000ms)
+      expect(expiryDiff).toBeGreaterThan(86000000);
+      expect(expiryDiff).toBeLessThan(86800000);
+    });
   });
 });

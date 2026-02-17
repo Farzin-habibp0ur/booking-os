@@ -251,4 +251,79 @@ describe('ApiClient', () => {
       expect(window.location.href).toBe('/login');
     });
   });
+
+  describe('edge cases', () => {
+    it('does not redirect to /login on 401 when already on login page', async () => {
+      window.location.pathname = '/login';
+      window.location.href = '/login';
+
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 401,
+        json: async () => ({ message: 'Invalid credentials' }),
+      });
+
+      await expect(api.get('/test')).rejects.toThrow();
+
+      // Should NOT redirect since we're already on /login
+      expect(window.location.href).toBe('/login');
+    });
+
+    it('truncates long error messages to 200 chars', async () => {
+      const longMessage = 'A'.repeat(300);
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 500,
+        json: async () => ({ message: longMessage }),
+      });
+
+      try {
+        await api.get('/test');
+      } catch (e: any) {
+        expect(e.message.length).toBeLessThanOrEqual(200);
+      }
+    });
+
+    it('strips stack traces from error messages', async () => {
+      const messageWithStack = 'Something failed at Module.foo (file.js:1:2)';
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 500,
+        json: async () => ({ message: messageWithStack }),
+      });
+
+      try {
+        await api.get('/test');
+      } catch (e: any) {
+        expect(e.message).not.toContain('at Module.foo (file.js:1:2)');
+        expect(e.message).toContain('Something failed');
+      }
+    });
+
+    it('post() sends request without body when body is undefined', async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({ success: true }),
+      });
+
+      await api.post('/test');
+
+      const callArgs = mockFetch.mock.calls[0][1];
+      expect(callArgs.method).toBe('POST');
+      expect(callArgs.body).toBeUndefined();
+    });
+
+    it('patch() sends request without body when body is undefined', async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({ success: true }),
+      });
+
+      await api.patch('/test');
+
+      const callArgs = mockFetch.mock.calls[0][1];
+      expect(callArgs.method).toBe('PATCH');
+      expect(callArgs.body).toBeUndefined();
+    });
+  });
 });

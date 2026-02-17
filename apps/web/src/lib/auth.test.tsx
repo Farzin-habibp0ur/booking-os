@@ -18,7 +18,7 @@ window.location = { href: '' } as any;
 
 // Test component that uses useAuth
 function TestComponent() {
-  const { user, loading, login, logout } = useAuth();
+  const { user, loading, login, signup, logout } = useAuth();
 
   if (loading) return <div>Loading...</div>;
 
@@ -30,10 +30,20 @@ function TestComponent() {
     }
   };
 
+  const handleSignup = async () => {
+    try {
+      await signup('My Business', 'Owner Name', 'test@example.com', 'password');
+    } catch (error) {
+      // Error handled
+    }
+  };
+
   return (
     <div>
       <div data-testid="user-status">{user ? `Logged in as ${user.email}` : 'Not logged in'}</div>
+      <div data-testid="has-signup">{signup ? 'yes' : 'no'}</div>
       <button onClick={handleLogin}>Login</button>
+      <button onClick={handleSignup}>Signup</button>
       <button onClick={logout}>Logout</button>
     </div>
   );
@@ -286,5 +296,145 @@ describe('AuthProvider', () => {
     });
 
     expect(screen.getByTestId('user')).toHaveTextContent('not logged in');
+  });
+
+  it('signup() calls api.post /auth/signup and fetches /auth/me', async () => {
+    (api.getToken as jest.Mock).mockReturnValue(null);
+    (api.post as jest.Mock).mockResolvedValue({ accessToken: 'signup-token', staff: mockUser });
+    // First call to /auth/me on mount fails, second after signup succeeds
+    (api.get as jest.Mock)
+      .mockRejectedValueOnce(new Error('Unauthorized'))
+      .mockResolvedValue(mockUser);
+
+    render(
+      <AuthProvider>
+        <TestComponent />
+      </AuthProvider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('user-status')).toHaveTextContent('Not logged in');
+    });
+
+    const signupButton = screen.getByText('Signup');
+
+    await act(async () => {
+      signupButton.click();
+    });
+
+    await waitFor(() => {
+      expect(api.post).toHaveBeenCalledWith('/auth/signup', {
+        businessName: 'My Business',
+        ownerName: 'Owner Name',
+        email: 'test@example.com',
+        password: 'password',
+      });
+      expect(api.get).toHaveBeenCalledWith('/auth/me');
+      expect(screen.getByTestId('user-status')).toHaveTextContent('Logged in as test@example.com');
+    });
+  });
+
+  it('signup() handles errors gracefully', async () => {
+    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+    (api.getToken as jest.Mock).mockReturnValue(null);
+    (api.get as jest.Mock).mockRejectedValue(new Error('Unauthorized'));
+    (api.post as jest.Mock).mockRejectedValue(new Error('Email already exists'));
+
+    render(
+      <AuthProvider>
+        <TestComponent />
+      </AuthProvider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('user-status')).toHaveTextContent('Not logged in');
+    });
+
+    const signupButton = screen.getByText('Signup');
+
+    await act(async () => {
+      signupButton.click();
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+
+    await waitFor(() => {
+      expect(api.post).toHaveBeenCalled();
+    });
+
+    // User should still be not logged in after failed signup
+    expect(screen.getByTestId('user-status')).toHaveTextContent('Not logged in');
+
+    consoleError.mockRestore();
+  });
+
+  it('logout() calls api.post /auth/logout before clearing', async () => {
+    (api.getToken as jest.Mock).mockReturnValue('existing-token');
+    (api.get as jest.Mock).mockResolvedValue(mockUser);
+    (api.post as jest.Mock).mockResolvedValue({});
+
+    render(
+      <AuthProvider>
+        <TestComponent />
+      </AuthProvider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('user-status')).toHaveTextContent('Logged in as test@example.com');
+    });
+
+    const logoutButton = screen.getByText('Logout');
+
+    await act(async () => {
+      logoutButton.click();
+    });
+
+    await waitFor(() => {
+      expect(api.post).toHaveBeenCalledWith('/auth/logout');
+      expect(api.setToken).toHaveBeenCalledWith(null);
+      expect(window.location.href).toBe('/login');
+    });
+  });
+
+  it('logout() redirects even if /auth/logout API fails', async () => {
+    (api.getToken as jest.Mock).mockReturnValue('existing-token');
+    (api.get as jest.Mock).mockResolvedValue(mockUser);
+    (api.post as jest.Mock).mockRejectedValue(new Error('Network error'));
+
+    render(
+      <AuthProvider>
+        <TestComponent />
+      </AuthProvider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('user-status')).toHaveTextContent('Logged in as test@example.com');
+    });
+
+    const logoutButton = screen.getByText('Logout');
+
+    await act(async () => {
+      logoutButton.click();
+    });
+
+    await waitFor(() => {
+      expect(api.setToken).toHaveBeenCalledWith(null);
+      expect(window.location.href).toBe('/login');
+    });
+  });
+
+  it('provides signup in context', async () => {
+    (api.getToken as jest.Mock).mockReturnValue(null);
+    (api.get as jest.Mock).mockRejectedValue(new Error('Unauthorized'));
+
+    render(
+      <AuthProvider>
+        <TestComponent />
+      </AuthProvider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('has-signup')).toHaveTextContent('yes');
+    });
   });
 });

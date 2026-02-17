@@ -79,6 +79,31 @@ describe('LocationService', () => {
       );
     });
 
+    it('creates a location with whatsappConfig', async () => {
+      const created = {
+        id: 'loc1',
+        businessId: 'biz1',
+        name: 'Branch A',
+        isBookable: true,
+        whatsappConfig: { phoneNumberId: 'phone_001' },
+      };
+      prisma.location.create.mockResolvedValue(created as any);
+
+      const result = await service.create('biz1', {
+        name: 'Branch A',
+        whatsappConfig: { phoneNumberId: 'phone_001' },
+      });
+
+      expect(result.whatsappConfig).toEqual({ phoneNumberId: 'phone_001' });
+      expect(prisma.location.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            whatsappConfig: { phoneNumberId: 'phone_001' },
+          }),
+        }),
+      );
+    });
+
     it('creates a non-bookable location', async () => {
       const created = { id: 'loc1', businessId: 'biz1', name: 'Warehouse', isBookable: false };
       prisma.location.create.mockResolvedValue(created as any);
@@ -107,6 +132,26 @@ describe('LocationService', () => {
       prisma.location.findFirst.mockResolvedValue(null);
 
       await expect(service.update('biz1', 'nope', { name: 'X' })).rejects.toThrow(NotFoundException);
+    });
+
+    it('updates whatsappConfig', async () => {
+      prisma.location.findFirst.mockResolvedValue({ id: 'loc1', businessId: 'biz1' } as any);
+      prisma.location.update.mockResolvedValue({
+        id: 'loc1',
+        whatsappConfig: { phoneNumberId: 'phone_001', accessToken: 'tok' },
+      } as any);
+
+      const result = await service.update('biz1', 'loc1', {
+        whatsappConfig: { phoneNumberId: 'phone_001', accessToken: 'tok' },
+      });
+
+      expect(prisma.location.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            whatsappConfig: { phoneNumberId: 'phone_001', accessToken: 'tok' },
+          }),
+        }),
+      );
     });
   });
 
@@ -196,6 +241,15 @@ describe('LocationService', () => {
         data: { isActive: false },
       });
     });
+
+    it('throws NotFoundException when resource not found', async () => {
+      prisma.location.findFirst.mockResolvedValue({ id: 'loc1', businessId: 'biz1' } as any);
+      prisma.resource.findFirst.mockResolvedValue(null);
+
+      await expect(
+        service.softDeleteResource('biz1', 'loc1', 'r-nonexistent'),
+      ).rejects.toThrow(NotFoundException);
+    });
   });
 
   // ---- Staff Assignments ----
@@ -225,6 +279,14 @@ describe('LocationService', () => {
       prisma.staffLocation.create.mockRejectedValue({ code: 'P2002' });
 
       await expect(service.assignStaff('biz1', 'loc1', 's1')).rejects.toThrow(BadRequestException);
+    });
+
+    it('re-throws non-P2002 errors from staffLocation.create', async () => {
+      prisma.location.findFirst.mockResolvedValue({ id: 'loc1', businessId: 'biz1' } as any);
+      prisma.staff.findFirst.mockResolvedValue({ id: 's1', businessId: 'biz1' } as any);
+      prisma.staffLocation.create.mockRejectedValue(new Error('Connection lost'));
+
+      await expect(service.assignStaff('biz1', 'loc1', 's1')).rejects.toThrow('Connection lost');
     });
   });
 

@@ -10,12 +10,16 @@ const config: Config = {
     '^@booking-os/messaging-provider$': '<rootDir>/../../packages/messaging-provider/src/index',
     '^@booking-os/db$': '<rootDir>/../../packages/db/src/index',
   },
+  coveragePathIgnorePatterns: [
+    'prisma.service.ts',
+    'queue.module.ts',
+  ],
   coverageThreshold: {
     global: {
-      lines: 70,
-      statements: 70,
-      functions: 50,
-      branches: 50,
+      lines: 90,
+      statements: 90,
+      functions: 85,
+      branches: 78,
     },
   },
   // Limit workers to avoid SIGSEGV during coverage runs

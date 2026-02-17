@@ -346,5 +346,60 @@ describe('RecurringService', () => {
         service.cancelSeries('biz1', 'series1', 'future', 'nonexistent'),
       ).rejects.toThrow('Booking not found in series');
     });
+
+    it('does not cancel already completed or cancelled bookings (scope all)', async () => {
+      const allCompletedSeries = {
+        id: 'series2',
+        bookings: [
+          {
+            id: 'b1',
+            status: 'COMPLETED',
+            startTime: new Date('2026-03-03'),
+            customer: {},
+            service: {},
+            staff: {},
+          },
+          {
+            id: 'b2',
+            status: 'CANCELLED',
+            startTime: new Date('2026-03-10'),
+            customer: {},
+            service: {},
+            staff: {},
+          },
+        ],
+      };
+      prisma.recurringSeries.findFirst.mockResolvedValue(allCompletedSeries as any);
+
+      const result = await service.cancelSeries('biz1', 'series2', 'all');
+
+      expect(result.cancelled).toBe(0);
+      expect(prisma.booking.update).not.toHaveBeenCalled();
+    });
+
+    it('cancels single booking only when it has cancellable status', async () => {
+      prisma.recurringSeries.findFirst.mockResolvedValue(series as any);
+      prisma.booking.update.mockResolvedValue({} as any);
+      prisma.reminder.updateMany.mockResolvedValue({ count: 0 } as any);
+
+      // b4 is COMPLETED — should not be cancelled even with single scope
+      const result = await service.cancelSeries('biz1', 'series1', 'single', 'b4');
+
+      expect(result.cancelled).toBe(0);
+      expect(prisma.booking.update).not.toHaveBeenCalled();
+    });
+
+    it('cancels reminders associated with cancelled bookings', async () => {
+      prisma.recurringSeries.findFirst.mockResolvedValue(series as any);
+      prisma.booking.update.mockResolvedValue({} as any);
+      prisma.reminder.updateMany.mockResolvedValue({ count: 1 } as any);
+
+      await service.cancelSeries('biz1', 'series1', 'single', 'b1');
+
+      expect(prisma.reminder.updateMany).toHaveBeenCalledWith({
+        where: { bookingId: 'b1', status: 'PENDING' },
+        data: { status: 'CANCELLED' },
+      });
+    });
   });
 });
