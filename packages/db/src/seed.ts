@@ -10,26 +10,14 @@ async function hashPassword(password: string): Promise<string> {
 async function main() {
   console.log('🌱 Seeding database...');
 
-  // Clean existing data
-  await prisma.roiBaseline.deleteMany();
-  await prisma.payment.deleteMany();
-  await prisma.message.deleteMany();
-  await prisma.reminder.deleteMany();
-  await prisma.booking.deleteMany();
-  await prisma.recurringSeries.deleteMany();
-  await prisma.conversationNote.deleteMany();
-  await prisma.conversation.deleteMany();
-  await prisma.messageTemplate.deleteMany();
-  await prisma.timeOff.deleteMany();
-  await prisma.workingHours.deleteMany();
-  await prisma.calendarConnection.deleteMany();
-  await prisma.service.deleteMany();
-  await prisma.customer.deleteMany();
-  await prisma.translation.deleteMany();
-  await prisma.aiUsage.deleteMany();
-  await prisma.subscription.deleteMany();
-  await prisma.staff.deleteMany();
-  await prisma.business.deleteMany();
+  // Check if already seeded — if so, skip
+  const existing = await prisma.business.findUnique({
+    where: { slug: 'glow-aesthetic' },
+  });
+  if (existing) {
+    console.log('Database already seeded (business "glow-aesthetic" exists). Skipping.');
+    return;
+  }
 
   // Create business
   const business = await prisma.business.create({
