@@ -86,8 +86,10 @@ describe('NotificationSettingsPage', () => {
     mockApi.get.mockResolvedValue({ ...mockSettings, channels: 'email' });
     render(<NotificationSettingsPage />);
     await waitFor(() => {
-      const emailRadio = screen.getByText('notification_settings.channel_email')
-        .closest('label')?.querySelector('input');
+      const emailRadio = screen
+        .getByText('notification_settings.channel_email')
+        .closest('label')
+        ?.querySelector('input');
       expect(emailRadio).toBeChecked();
     });
   });
@@ -185,10 +187,7 @@ describe('NotificationSettingsPage', () => {
     fireEvent.click(screen.getByText('settings.save_changes'));
 
     await waitFor(() => {
-      expect(mockApi.patch).toHaveBeenCalledWith(
-        '/business/notification-settings',
-        mockSettings,
-      );
+      expect(mockApi.patch).toHaveBeenCalledWith('/business/notification-settings', mockSettings);
     });
 
     await waitFor(() => {

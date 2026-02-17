@@ -110,9 +110,9 @@ describe('CampaignService', () => {
     it('rejects edit of non-draft campaign', async () => {
       prisma.campaign.findFirst.mockResolvedValue({ id: 'camp1', status: 'SENT' } as any);
 
-      await expect(
-        campaignService.update('biz1', 'camp1', { name: 'Nope' }),
-      ).rejects.toThrow(BadRequestException);
+      await expect(campaignService.update('biz1', 'camp1', { name: 'Nope' })).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 
@@ -180,7 +180,11 @@ describe('CampaignService', () => {
 
   describe('sendCampaign', () => {
     it('prepares sends and sets status to SENDING', async () => {
-      prisma.campaign.findFirst.mockResolvedValue({ id: 'camp1', status: 'DRAFT', filters: { tags: ['vip'] } } as any);
+      prisma.campaign.findFirst.mockResolvedValue({
+        id: 'camp1',
+        status: 'DRAFT',
+        filters: { tags: ['vip'] },
+      } as any);
       prisma.campaign.update.mockResolvedValue({} as any);
 
       const result = await campaignService.sendCampaign('biz1', 'camp1');
@@ -193,7 +197,9 @@ describe('CampaignService', () => {
     it('rejects sending non-draft campaign', async () => {
       prisma.campaign.findFirst.mockResolvedValue({ id: 'camp1', status: 'SENT' } as any);
 
-      await expect(campaignService.sendCampaign('biz1', 'camp1')).rejects.toThrow(BadRequestException);
+      await expect(campaignService.sendCampaign('biz1', 'camp1')).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 });

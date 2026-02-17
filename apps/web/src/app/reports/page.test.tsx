@@ -78,7 +78,15 @@ function setupApiMocks(overrides: Record<string, any> = {}) {
     if (url.includes('staff-performance')) {
       return Promise.resolve(
         overrides.staffData ?? [
-          { staffId: 's1', name: 'Dr. Chen', total: 30, completed: 25, noShows: 3, noShowRate: 10, revenue: 6000 },
+          {
+            staffId: 's1',
+            name: 'Dr. Chen',
+            total: 30,
+            completed: 25,
+            noShows: 3,
+            noShowRate: 10,
+            revenue: 6000,
+          },
         ],
       );
     }
@@ -244,7 +252,7 @@ describe('ReportsPage', () => {
     await waitFor(() => {
       // Status counts appear in both breakdown and staff table
       expect(screen.getAllByText('30').length).toBeGreaterThan(0); // COMPLETED count
-      expect(screen.getAllByText('5').length).toBeGreaterThan(0);  // NO_SHOW count
+      expect(screen.getAllByText('5').length).toBeGreaterThan(0); // NO_SHOW count
     });
   });
 

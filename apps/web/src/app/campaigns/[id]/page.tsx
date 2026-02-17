@@ -70,7 +70,12 @@ export default function CampaignDetailPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-serif font-semibold text-slate-900">{campaign.name}</h1>
-          <span className={cn('text-xs px-2 py-0.5 rounded-full mt-1 inline-block', statusColors[campaign.status])}>
+          <span
+            className={cn(
+              'text-xs px-2 py-0.5 rounded-full mt-1 inline-block',
+              statusColors[campaign.status],
+            )}
+          >
             {campaign.status}
           </span>
         </div>
@@ -118,18 +123,33 @@ export default function CampaignDetailPage() {
         <dl className="space-y-2 text-sm">
           <div className="flex justify-between">
             <dt className="text-slate-500">Created</dt>
-            <dd>{new Date(campaign.createdAt).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}</dd>
+            <dd>
+              {new Date(campaign.createdAt).toLocaleString('en-US', {
+                dateStyle: 'medium',
+                timeStyle: 'short',
+              })}
+            </dd>
           </div>
           {campaign.scheduledAt && (
             <div className="flex justify-between">
               <dt className="text-slate-500">Scheduled</dt>
-              <dd>{new Date(campaign.scheduledAt).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}</dd>
+              <dd>
+                {new Date(campaign.scheduledAt).toLocaleString('en-US', {
+                  dateStyle: 'medium',
+                  timeStyle: 'short',
+                })}
+              </dd>
             </div>
           )}
           {campaign.sentAt && (
             <div className="flex justify-between">
               <dt className="text-slate-500">Sent</dt>
-              <dd>{new Date(campaign.sentAt).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}</dd>
+              <dd>
+                {new Date(campaign.sentAt).toLocaleString('en-US', {
+                  dateStyle: 'medium',
+                  timeStyle: 'short',
+                })}
+              </dd>
             </div>
           )}
           <div className="flex justify-between">

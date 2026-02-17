@@ -1,4 +1,12 @@
-import { Injectable, BadRequestException, NotFoundException, ForbiddenException, Optional, Inject, forwardRef } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+  ForbiddenException,
+  Optional,
+  Inject,
+  forwardRef,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../common/prisma.service';
 import { NotificationService } from '../notification/notification.service';
@@ -16,7 +24,9 @@ export class BookingService {
     private calendarSyncService: CalendarSyncService,
     private tokenService: TokenService,
     private config: ConfigService,
-    @Optional() @Inject(forwardRef(() => WaitlistService)) private waitlistService?: WaitlistService,
+    @Optional()
+    @Inject(forwardRef(() => WaitlistService))
+    private waitlistService?: WaitlistService,
   ) {}
 
   async findAll(
@@ -187,7 +197,13 @@ export class BookingService {
     businessId: string,
     bookingId: string,
     action: 'cancel' | 'reschedule',
-  ): Promise<{ allowed: boolean; reason?: string; policyText?: string; hoursRemaining?: number; adminCanOverride?: boolean }> {
+  ): Promise<{
+    allowed: boolean;
+    reason?: string;
+    policyText?: string;
+    hoursRemaining?: number;
+    adminCanOverride?: boolean;
+  }> {
     const policySettings = await this.businessService.getPolicySettings(businessId);
     if (!policySettings || !policySettings.policyEnabled) {
       return { allowed: true };
@@ -208,8 +224,7 @@ export class BookingService {
         ? policySettings.cancellationPolicyText
         : policySettings.reschedulePolicyText;
 
-    const hoursUntilStart =
-      (new Date(booking.startTime).getTime() - Date.now()) / 3600000;
+    const hoursUntilStart = (new Date(booking.startTime).getTime() - Date.now()) / 3600000;
 
     if (hoursUntilStart < windowHours) {
       return {
@@ -273,7 +288,9 @@ export class BookingService {
           // ADMIN can override with a reason
           if (actor?.role === 'ADMIN') {
             if (!actor?.reason) {
-              throw new BadRequestException('A reason is required to override the cancellation policy');
+              throw new BadRequestException(
+                'A reason is required to override the cancellation policy',
+              );
             }
             overrideEntries.push({
               type: 'POLICY_OVERRIDE',
@@ -418,7 +435,11 @@ export class BookingService {
     });
   }
 
-  async sendRescheduleLink(businessId: string, id: string, actor: { staffId: string; staffName: string }) {
+  async sendRescheduleLink(
+    businessId: string,
+    id: string,
+    actor: { staffId: string; staffName: string },
+  ) {
     const booking = await this.prisma.booking.findFirst({
       where: { id, businessId },
       include: { customer: true, service: true, staff: true },
@@ -466,7 +487,11 @@ export class BookingService {
     });
   }
 
-  async sendCancelLink(businessId: string, id: string, actor: { staffId: string; staffName: string }) {
+  async sendCancelLink(
+    businessId: string,
+    id: string,
+    actor: { staffId: string; staffName: string },
+  ) {
     const booking = await this.prisma.booking.findFirst({
       where: { id, businessId },
       include: { customer: true, service: true, staff: true },
@@ -522,7 +547,8 @@ export class BookingService {
     userRole?: string,
   ) {
     if (!ids?.length) throw new BadRequestException('No booking IDs provided');
-    if (ids.length > 50) throw new BadRequestException('Cannot update more than 50 bookings at once');
+    if (ids.length > 50)
+      throw new BadRequestException('Cannot update more than 50 bookings at once');
 
     if (action === 'status') {
       if (!payload?.status) throw new BadRequestException('Status is required');

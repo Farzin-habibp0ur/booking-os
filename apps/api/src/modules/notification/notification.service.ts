@@ -12,7 +12,14 @@ interface BookingWithRelations {
   id: string;
   businessId: string;
   customer: { id: string; name: string; phone: string; email?: string | null };
-  service: { id: string; name: string; durationMins: number; depositRequired?: boolean; depositAmount?: number | null; price?: number };
+  service: {
+    id: string;
+    name: string;
+    durationMins: number;
+    depositRequired?: boolean;
+    depositAmount?: number | null;
+    price?: number;
+  };
   staff?: { id: string; name: string } | null;
   business?: { id: string; name: string } | null;
   startTime: Date;
@@ -471,7 +478,11 @@ export class NotificationService {
   }
 
   async sendWaitlistOffer(
-    entry: { customer: { name: string; phone: string; email?: string | null }; service: { name: string }; business?: { name: string } | null },
+    entry: {
+      customer: { name: string; phone: string; email?: string | null };
+      service: { name: string };
+      business?: { name: string } | null;
+    },
     slot: { date: string; time: string; staffName?: string },
     claimLink: string,
     businessId: string,

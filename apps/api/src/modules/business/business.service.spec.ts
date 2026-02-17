@@ -296,7 +296,10 @@ describe('BusinessService', () => {
     });
 
     it('returns defaults when notificationSettings is null', async () => {
-      prisma.business.findUnique.mockResolvedValue({ id: 'biz1', notificationSettings: null } as any);
+      prisma.business.findUnique.mockResolvedValue({
+        id: 'biz1',
+        notificationSettings: null,
+      } as any);
 
       const result = await service.getNotificationSettings('biz1');
 
@@ -374,12 +377,19 @@ describe('BusinessService', () => {
       } as any);
       prisma.business.update.mockResolvedValue({ id: 'biz1' } as any);
 
-      await service.updateNotificationSettings('biz1', { channels: 'sms', treatmentCheckInHours: 48 });
+      await service.updateNotificationSettings('biz1', {
+        channels: 'sms',
+        treatmentCheckInHours: 48,
+      });
 
       expect(prisma.business.update).toHaveBeenCalledWith({
         where: { id: 'biz1' },
         data: {
-          notificationSettings: { channels: 'sms', followUpDelayHours: 2, treatmentCheckInHours: 48 },
+          notificationSettings: {
+            channels: 'sms',
+            followUpDelayHours: 2,
+            treatmentCheckInHours: 48,
+          },
         },
       });
     });
@@ -524,7 +534,10 @@ describe('BusinessService', () => {
       } as any);
       prisma.business.update.mockResolvedValue({ id: 'biz1' } as any);
 
-      await service.updatePolicySettings('biz1', { policyEnabled: true, rescheduleWindowHours: 48 });
+      await service.updatePolicySettings('biz1', {
+        policyEnabled: true,
+        rescheduleWindowHours: 48,
+      });
 
       expect(prisma.business.update).toHaveBeenCalledWith({
         where: { id: 'biz1' },
@@ -741,7 +754,10 @@ describe('BusinessService', () => {
 
     beforeEach(() => {
       // Default mocks for a clean business with no existing data
-      prisma.business.update.mockResolvedValue({ id: businessId, verticalPack: 'aesthetic' } as any);
+      prisma.business.update.mockResolvedValue({
+        id: businessId,
+        verticalPack: 'aesthetic',
+      } as any);
       prisma.messageTemplate.findMany.mockResolvedValue([]);
       prisma.messageTemplate.createMany.mockResolvedValue({ count: 7 });
       prisma.service.findMany.mockResolvedValue([]);
@@ -767,12 +783,32 @@ describe('BusinessService', () => {
         expect.objectContaining({
           data: expect.arrayContaining([
             expect.objectContaining({ businessId, name: '24h Reminder', category: 'REMINDER' }),
-            expect.objectContaining({ businessId, name: 'Booking Confirmation', category: 'CONFIRMATION' }),
+            expect.objectContaining({
+              businessId,
+              name: 'Booking Confirmation',
+              category: 'CONFIRMATION',
+            }),
             expect.objectContaining({ businessId, name: 'Follow-up', category: 'FOLLOW_UP' }),
-            expect.objectContaining({ businessId, name: 'Consult Follow-up', category: 'CONSULT_FOLLOW_UP' }),
-            expect.objectContaining({ businessId, name: 'Aftercare Instructions', category: 'AFTERCARE' }),
-            expect.objectContaining({ businessId, name: 'Treatment Check-in', category: 'TREATMENT_CHECK_IN' }),
-            expect.objectContaining({ businessId, name: 'Deposit Request', category: 'DEPOSIT_REQUIRED' }),
+            expect.objectContaining({
+              businessId,
+              name: 'Consult Follow-up',
+              category: 'CONSULT_FOLLOW_UP',
+            }),
+            expect.objectContaining({
+              businessId,
+              name: 'Aftercare Instructions',
+              category: 'AFTERCARE',
+            }),
+            expect.objectContaining({
+              businessId,
+              name: 'Treatment Check-in',
+              category: 'TREATMENT_CHECK_IN',
+            }),
+            expect.objectContaining({
+              businessId,
+              name: 'Deposit Request',
+              category: 'DEPOSIT_REQUIRED',
+            }),
           ]),
         }),
       );
@@ -875,7 +911,11 @@ describe('BusinessService', () => {
         expect.objectContaining({
           data: expect.arrayContaining([
             expect.objectContaining({ businessId, name: '24h Reminder', category: 'REMINDER' }),
-            expect.objectContaining({ businessId, name: 'Booking Confirmation', category: 'CONFIRMATION' }),
+            expect.objectContaining({
+              businessId,
+              name: 'Booking Confirmation',
+              category: 'CONFIRMATION',
+            }),
           ]),
         }),
       );
@@ -1009,7 +1049,11 @@ describe('BusinessService', () => {
     });
 
     it('returns the updated business in the result', async () => {
-      const updatedBiz = { id: businessId, verticalPack: 'aesthetic', packConfig: { requireConsultation: true } };
+      const updatedBiz = {
+        id: businessId,
+        verticalPack: 'aesthetic',
+        packConfig: { requireConsultation: true },
+      };
       // The last business.update call returns the updatedBusiness
       prisma.business.update.mockResolvedValue(updatedBiz as any);
 
@@ -1033,10 +1077,18 @@ describe('BusinessService', () => {
   // ────────────────────────────────────────────────────────────
   describe('createTestBooking', () => {
     it('creates a test booking with first service and staff member', async () => {
-      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', name: 'Botox', durationMins: 60 } as any);
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        name: 'Botox',
+        durationMins: 60,
+      } as any);
       prisma.staff.findFirst.mockResolvedValue({ id: 'staff1', name: 'Dr. Chen' } as any);
       prisma.customer.findFirst.mockResolvedValue(null);
-      prisma.customer.create.mockResolvedValue({ id: 'cust1', name: 'Test Patient', email: 'test@example.com' } as any);
+      prisma.customer.create.mockResolvedValue({
+        id: 'cust1',
+        name: 'Test Patient',
+        email: 'test@example.com',
+      } as any);
       prisma.booking.create.mockResolvedValue({
         id: 'bk1',
         serviceId: 'svc1',
@@ -1069,7 +1121,11 @@ describe('BusinessService', () => {
     it('reuses existing test customer', async () => {
       prisma.service.findFirst.mockResolvedValue({ id: 'svc1', durationMins: 30 } as any);
       prisma.staff.findFirst.mockResolvedValue({ id: 'staff1' } as any);
-      prisma.customer.findFirst.mockResolvedValue({ id: 'existing-cust', name: 'Test Patient', email: 'test@example.com' } as any);
+      prisma.customer.findFirst.mockResolvedValue({
+        id: 'existing-cust',
+        name: 'Test Patient',
+        email: 'test@example.com',
+      } as any);
       prisma.booking.create.mockResolvedValue({ id: 'bk1' } as any);
 
       await service.createTestBooking('biz1');

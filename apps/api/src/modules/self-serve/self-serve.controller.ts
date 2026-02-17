@@ -28,10 +28,7 @@ export class SelfServeController {
 
   @Post('reschedule/:token')
   @Throttle({ default: { ttl: 60000, limit: 10 } })
-  reschedule(
-    @Param('token') token: string,
-    @Body() body: { startTime: string; staffId?: string },
-  ) {
+  reschedule(@Param('token') token: string, @Body() body: { startTime: string; staffId?: string }) {
     return this.selfServeService.executeReschedule(token, body.startTime, body.staffId);
   }
 

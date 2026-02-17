@@ -47,9 +47,13 @@ describe('SelfServeService', () => {
     mockWaitlistService = createMockWaitlistService();
     mockBookingService = {
       checkPolicyAllowed: jest.fn().mockResolvedValue({ allowed: true }),
-      update: jest.fn().mockResolvedValue({ ...mockBooking, startTime: new Date('2026-03-02T14:00:00Z') }),
+      update: jest
+        .fn()
+        .mockResolvedValue({ ...mockBooking, startTime: new Date('2026-03-02T14:00:00Z') }),
       updateStatus: jest.fn().mockResolvedValue({ ...mockBooking, status: 'CANCELLED' }),
-      create: jest.fn().mockResolvedValue({ id: 'newbook1', businessId: 'biz1', status: 'CONFIRMED' }),
+      create: jest
+        .fn()
+        .mockResolvedValue({ id: 'newbook1', businessId: 'biz1', status: 'CONFIRMED' }),
     };
 
     const module = await Test.createTestingModule({
@@ -107,9 +111,7 @@ describe('SelfServeService', () => {
     });
 
     it('throws for wrong token type', async () => {
-      mockTokenService.validateToken.mockRejectedValue(
-        new BadRequestException('Invalid token'),
-      );
+      mockTokenService.validateToken.mockRejectedValue(new BadRequestException('Invalid token'));
 
       await expect(service.validateToken('wrongtype', 'CANCEL_LINK')).rejects.toThrow(
         'Invalid token',
@@ -163,9 +165,27 @@ describe('SelfServeService', () => {
       });
       prisma.booking.findFirst.mockResolvedValue(mockBooking as any);
       mockAvailabilityService.getAvailableSlots.mockResolvedValue([
-        { time: '2026-03-02T10:00:00Z', display: '10:00', staffId: 'staff1', staffName: 'Dr. Chen', available: true },
-        { time: '2026-03-02T10:30:00Z', display: '10:30', staffId: 'staff1', staffName: 'Dr. Chen', available: false },
-        { time: '2026-03-02T11:00:00Z', display: '11:00', staffId: 'staff1', staffName: 'Dr. Chen', available: true },
+        {
+          time: '2026-03-02T10:00:00Z',
+          display: '10:00',
+          staffId: 'staff1',
+          staffName: 'Dr. Chen',
+          available: true,
+        },
+        {
+          time: '2026-03-02T10:30:00Z',
+          display: '10:30',
+          staffId: 'staff1',
+          staffName: 'Dr. Chen',
+          available: false,
+        },
+        {
+          time: '2026-03-02T11:00:00Z',
+          display: '11:00',
+          staffId: 'staff1',
+          staffName: 'Dr. Chen',
+          available: true,
+        },
       ]);
 
       const result = await service.getAvailability('abc123', '2026-03-02');
@@ -221,17 +241,17 @@ describe('SelfServeService', () => {
         policyText: 'No reschedules within 24h',
       });
 
-      await expect(
-        service.executeReschedule('abc123', '2026-03-02T14:00:00Z'),
-      ).rejects.toThrow('No reschedules within 24h');
+      await expect(service.executeReschedule('abc123', '2026-03-02T14:00:00Z')).rejects.toThrow(
+        'No reschedules within 24h',
+      );
     });
 
     it('throws when booking status is not rescheduable', async () => {
       prisma.booking.findFirst.mockResolvedValue({ ...mockBooking, status: 'COMPLETED' } as any);
 
-      await expect(
-        service.executeReschedule('abc123', '2026-03-02T14:00:00Z'),
-      ).rejects.toThrow('This booking cannot be rescheduled');
+      await expect(service.executeReschedule('abc123', '2026-03-02T14:00:00Z')).rejects.toThrow(
+        'This booking cannot be rescheduled',
+      );
     });
   });
 
@@ -296,7 +316,11 @@ describe('SelfServeService', () => {
       id: 'wl1',
       businessId: 'biz1',
       status: 'OFFERED',
-      offeredSlot: { startTime: '2026-03-15T10:00:00Z', serviceName: 'Botox', staffName: 'Dr. Chen' },
+      offeredSlot: {
+        startTime: '2026-03-15T10:00:00Z',
+        serviceName: 'Botox',
+        staffName: 'Dr. Chen',
+      },
       offerExpiresAt: new Date(Date.now() + 600000),
       customer: { id: 'c1', name: 'Alice' },
       service: { id: 'svc1', name: 'Botox', durationMins: 30, price: 100 },
@@ -306,8 +330,12 @@ describe('SelfServeService', () => {
 
     it('should return claim summary for valid token', async () => {
       mockTokenService.validateToken.mockResolvedValue({
-        id: 'token1', token: 'wl-token', type: 'WAITLIST_CLAIM',
-        bookingId: 'wl1', expiresAt: new Date(Date.now() + 3600000), usedAt: null,
+        id: 'token1',
+        token: 'wl-token',
+        type: 'WAITLIST_CLAIM',
+        bookingId: 'wl1',
+        expiresAt: new Date(Date.now() + 3600000),
+        usedAt: null,
       } as any);
       prisma.waitlistEntry.findFirst.mockResolvedValue(mockEntry as any);
 
@@ -320,8 +348,12 @@ describe('SelfServeService', () => {
 
     it('should throw for expired offer', async () => {
       mockTokenService.validateToken.mockResolvedValue({
-        id: 'token1', token: 'wl-token', type: 'WAITLIST_CLAIM',
-        bookingId: 'wl1', expiresAt: new Date(Date.now() + 3600000), usedAt: null,
+        id: 'token1',
+        token: 'wl-token',
+        type: 'WAITLIST_CLAIM',
+        bookingId: 'wl1',
+        expiresAt: new Date(Date.now() + 3600000),
+        usedAt: null,
       } as any);
       prisma.waitlistEntry.findFirst.mockResolvedValue({
         ...mockEntry,
@@ -335,8 +367,12 @@ describe('SelfServeService', () => {
 
     it('should throw if entry is not in OFFERED status', async () => {
       mockTokenService.validateToken.mockResolvedValue({
-        id: 'token1', token: 'wl-token', type: 'WAITLIST_CLAIM',
-        bookingId: 'wl1', expiresAt: new Date(Date.now() + 3600000), usedAt: null,
+        id: 'token1',
+        token: 'wl-token',
+        type: 'WAITLIST_CLAIM',
+        bookingId: 'wl1',
+        expiresAt: new Date(Date.now() + 3600000),
+        usedAt: null,
       } as any);
       prisma.waitlistEntry.findFirst.mockResolvedValue({
         ...mockEntry,
@@ -357,7 +393,11 @@ describe('SelfServeService', () => {
       serviceId: 'svc1',
       staffId: 'staff1',
       status: 'OFFERED',
-      offeredSlot: { startTime: '2026-03-15T10:00:00Z', serviceName: 'Botox', staffName: 'Dr. Chen' },
+      offeredSlot: {
+        startTime: '2026-03-15T10:00:00Z',
+        serviceName: 'Botox',
+        staffName: 'Dr. Chen',
+      },
       offerExpiresAt: new Date(Date.now() + 600000),
       customer: { id: 'c1', name: 'Alice' },
       service: { id: 'svc1', name: 'Botox', durationMins: 30, price: 100 },
@@ -366,8 +406,12 @@ describe('SelfServeService', () => {
 
     it('should create booking and resolve waitlist entry', async () => {
       mockTokenService.validateToken.mockResolvedValue({
-        id: 'token1', token: 'wl-token', type: 'WAITLIST_CLAIM',
-        bookingId: 'wl1', expiresAt: new Date(Date.now() + 3600000), usedAt: null,
+        id: 'token1',
+        token: 'wl-token',
+        type: 'WAITLIST_CLAIM',
+        bookingId: 'wl1',
+        expiresAt: new Date(Date.now() + 3600000),
+        usedAt: null,
       } as any);
       prisma.waitlistEntry.findFirst.mockResolvedValue(mockEntry as any);
 
@@ -386,17 +430,19 @@ describe('SelfServeService', () => {
 
     it('should throw for expired offer', async () => {
       mockTokenService.validateToken.mockResolvedValue({
-        id: 'token1', token: 'wl-token', type: 'WAITLIST_CLAIM',
-        bookingId: 'wl1', expiresAt: new Date(Date.now() + 3600000), usedAt: null,
+        id: 'token1',
+        token: 'wl-token',
+        type: 'WAITLIST_CLAIM',
+        bookingId: 'wl1',
+        expiresAt: new Date(Date.now() + 3600000),
+        usedAt: null,
       } as any);
       prisma.waitlistEntry.findFirst.mockResolvedValue({
         ...mockEntry,
         offerExpiresAt: new Date(Date.now() - 60000),
       } as any);
 
-      await expect(service.claimWaitlistSlot('wl-token')).rejects.toThrow(
-        'This offer has expired',
-      );
+      await expect(service.claimWaitlistSlot('wl-token')).rejects.toThrow('This offer has expired');
     });
   });
 });

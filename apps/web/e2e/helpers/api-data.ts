@@ -62,9 +62,12 @@ export async function updateBookingStatusViaApi(
 
 export async function sendRescheduleLinkViaApi(page: Page, bookingId: string) {
   const headers = await getAuthHeaders(page);
-  const response = await page.request.post(`${API_URL}/bookings/${bookingId}/send-reschedule-link`, {
-    headers,
-  });
+  const response = await page.request.post(
+    `${API_URL}/bookings/${bookingId}/send-reschedule-link`,
+    {
+      headers,
+    },
+  );
   return response.json();
 }
 

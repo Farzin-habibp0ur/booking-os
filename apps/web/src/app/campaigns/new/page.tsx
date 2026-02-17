@@ -12,7 +12,11 @@ const stepIcons = [Users, MessageSquare, Clock, CheckCircle];
 export default function NewCampaignPage() {
   const [step, setStep] = useState(0);
   const [name, setName] = useState('');
-  const [filters, setFilters] = useState<any>({ tags: [], noUpcomingBooking: false, excludeDoNotMessage: true });
+  const [filters, setFilters] = useState<any>({
+    tags: [],
+    noUpcomingBooking: false,
+    excludeDoNotMessage: true,
+  });
   const [templateId, setTemplateId] = useState('');
   const [scheduleType, setScheduleType] = useState<'now' | 'later'>('now');
   const [scheduledAt, setScheduledAt] = useState('');
@@ -24,11 +28,17 @@ export default function NewCampaignPage() {
   const router = useRouter();
 
   useEffect(() => {
-    api.get<any>('/templates').then((t) => setTemplates(Array.isArray(t) ? t : t.data || [])).catch(() => {});
+    api
+      .get<any>('/templates')
+      .then((t) => setTemplates(Array.isArray(t) ? t : t.data || []))
+      .catch(() => {});
   }, []);
 
   const loadPreview = () => {
-    api.post<any>('/campaigns/0/preview', { filters }).then(setPreview).catch(() => {});
+    api
+      .post<any>('/campaigns/0/preview', { filters })
+      .then(setPreview)
+      .catch(() => {});
   };
 
   useEffect(() => {
@@ -73,7 +83,10 @@ export default function NewCampaignPage() {
 
   return (
     <div className="p-6 max-w-2xl mx-auto">
-      <button onClick={() => router.push('/campaigns')} className="flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 mb-4">
+      <button
+        onClick={() => router.push('/campaigns')}
+        className="flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 mb-4"
+      >
         <ArrowLeft size={16} /> Back to Campaigns
       </button>
 
@@ -85,11 +98,17 @@ export default function NewCampaignPage() {
           const Icon = stepIcons[i];
           return (
             <div key={s} className="flex items-center gap-2">
-              {i > 0 && <div className={cn('w-8 h-px', i <= step ? 'bg-sage-400' : 'bg-slate-200')} />}
+              {i > 0 && (
+                <div className={cn('w-8 h-px', i <= step ? 'bg-sage-400' : 'bg-slate-200')} />
+              )}
               <div
                 className={cn(
                   'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors',
-                  i === step ? 'bg-sage-100 text-sage-700' : i < step ? 'bg-sage-50 text-sage-600' : 'bg-slate-100 text-slate-400',
+                  i === step
+                    ? 'bg-sage-100 text-sage-700'
+                    : i < step
+                      ? 'bg-sage-50 text-sage-600'
+                      : 'bg-slate-100 text-slate-400',
                 )}
               >
                 <Icon size={14} />
@@ -117,14 +136,27 @@ export default function NewCampaignPage() {
                     placeholder="e.g. vip, returning"
                     className="flex-1 text-sm bg-slate-50 border-transparent rounded-xl px-3 py-2 focus:bg-white focus:ring-2 focus:ring-sage-500"
                   />
-                  <button onClick={addTag} className="px-3 py-2 text-sm bg-slate-100 rounded-xl hover:bg-slate-200 transition-colors">Add</button>
+                  <button
+                    onClick={addTag}
+                    className="px-3 py-2 text-sm bg-slate-100 rounded-xl hover:bg-slate-200 transition-colors"
+                  >
+                    Add
+                  </button>
                 </div>
                 {filters.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 mt-2">
                     {filters.tags.map((t: string) => (
-                      <span key={t} className="inline-flex items-center gap-1 px-2 py-0.5 bg-sage-50 text-sage-700 text-xs rounded-full">
+                      <span
+                        key={t}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 bg-sage-50 text-sage-700 text-xs rounded-full"
+                      >
                         {t}
-                        <button onClick={() => removeTag(t)} className="text-sage-400 hover:text-sage-600">&times;</button>
+                        <button
+                          onClick={() => removeTag(t)}
+                          className="text-sage-400 hover:text-sage-600"
+                        >
+                          &times;
+                        </button>
                       </span>
                     ))}
                   </div>
@@ -145,7 +177,9 @@ export default function NewCampaignPage() {
                 <input
                   type="checkbox"
                   checked={filters.excludeDoNotMessage}
-                  onChange={(e) => setFilters({ ...filters, excludeDoNotMessage: e.target.checked })}
+                  onChange={(e) =>
+                    setFilters({ ...filters, excludeDoNotMessage: e.target.checked })
+                  }
                   className="rounded text-sage-600"
                 />
                 Exclude "do-not-message" tagged customers
@@ -161,9 +195,13 @@ export default function NewCampaignPage() {
               {preview.samples?.length > 0 && (
                 <div className="space-y-1">
                   {preview.samples.map((s: any) => (
-                    <p key={s.id} className="text-sm text-slate-600">{s.name} · {s.phone}</p>
+                    <p key={s.id} className="text-sm text-slate-600">
+                      {s.name} · {s.phone}
+                    </p>
                   ))}
-                  {preview.count > 5 && <p className="text-xs text-slate-400">and {preview.count - 5} more...</p>}
+                  {preview.count > 5 && (
+                    <p className="text-xs text-slate-400">and {preview.count - 5} more...</p>
+                  )}
                 </div>
               )}
             </div>
@@ -176,7 +214,9 @@ export default function NewCampaignPage() {
         <div className="bg-white rounded-2xl shadow-soft p-5">
           <h2 className="text-sm font-semibold text-slate-900 mb-3">Select Template</h2>
           {templates.length === 0 ? (
-            <p className="text-sm text-slate-400">No templates found. Create one in Settings → Templates first.</p>
+            <p className="text-sm text-slate-400">
+              No templates found. Create one in Settings → Templates first.
+            </p>
           ) : (
             <div className="space-y-2">
               {templates.map((t: any) => (
@@ -191,7 +231,9 @@ export default function NewCampaignPage() {
                   )}
                 >
                   <p className="font-medium">{t.name}</p>
-                  <p className="text-xs text-slate-500 mt-0.5 truncate">{t.body?.substring(0, 80)}</p>
+                  <p className="text-xs text-slate-500 mt-0.5 truncate">
+                    {t.body?.substring(0, 80)}
+                  </p>
                 </button>
               ))}
             </div>
@@ -236,7 +278,9 @@ export default function NewCampaignPage() {
           )}
 
           <div>
-            <label className="text-xs text-slate-500 mb-1 block">Throttle (messages per minute)</label>
+            <label className="text-xs text-slate-500 mb-1 block">
+              Throttle (messages per minute)
+            </label>
             <input
               type="number"
               min={1}
@@ -271,7 +315,9 @@ export default function NewCampaignPage() {
               </div>
               <div className="flex justify-between">
                 <dt className="text-slate-500">Template</dt>
-                <dd className="font-medium">{templates.find((t: any) => t.id === templateId)?.name || '—'}</dd>
+                <dd className="font-medium">
+                  {templates.find((t: any) => t.id === templateId)?.name || '—'}
+                </dd>
               </div>
               <div className="flex justify-between">
                 <dt className="text-slate-500">Schedule</dt>
@@ -297,7 +343,7 @@ export default function NewCampaignPage() {
       {/* Navigation buttons */}
       <div className="flex justify-between mt-6">
         <button
-          onClick={() => step > 0 ? setStep(step - 1) : router.push('/campaigns')}
+          onClick={() => (step > 0 ? setStep(step - 1) : router.push('/campaigns'))}
           className="flex items-center gap-1 px-4 py-2 text-sm text-slate-600 hover:text-slate-800 transition-colors"
         >
           <ArrowLeft size={16} />

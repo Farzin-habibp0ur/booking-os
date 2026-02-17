@@ -52,7 +52,7 @@ jest.mock('@/components/skeleton', () => ({
 }));
 jest.mock('@/components/booking-form-modal', () => ({
   __esModule: true,
-  default: ({ isOpen }: any) => isOpen ? <div data-testid="booking-form-modal" /> : null,
+  default: ({ isOpen }: any) => (isOpen ? <div data-testid="booking-form-modal" /> : null),
 }));
 
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
@@ -244,9 +244,7 @@ describe('CustomerDetailPage', () => {
 
     // Click the pencil icon (in the contact section)
     const editButtons = screen.getAllByRole('button');
-    const pencilButton = editButtons.find(
-      (b) => b.querySelector('svg') && b.closest('.bg-white'),
-    );
+    const pencilButton = editButtons.find((b) => b.querySelector('svg') && b.closest('.bg-white'));
     // Find and click the button that triggers editing
     const contactHeader = screen.getByText('customer_detail.contact');
     const editBtn = contactHeader.parentElement?.querySelector('button');

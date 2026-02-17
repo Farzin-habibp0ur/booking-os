@@ -35,10 +35,7 @@ export default function BulkActionBar({ count, onClear, actions }: BulkActionBar
           </button>
         ))}
       </div>
-      <button
-        onClick={onClear}
-        className="text-slate-400 hover:text-white transition-colors ml-1"
-      >
+      <button onClick={onClear} className="text-slate-400 hover:text-white transition-colors ml-1">
         <X size={16} />
       </button>
     </div>

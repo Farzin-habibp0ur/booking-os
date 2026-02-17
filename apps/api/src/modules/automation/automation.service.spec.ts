@@ -12,10 +12,7 @@ describe('AutomationService', () => {
     prisma = createMockPrisma();
 
     const module = await Test.createTestingModule({
-      providers: [
-        AutomationService,
-        { provide: PrismaService, useValue: prisma },
-      ],
+      providers: [AutomationService, { provide: PrismaService, useValue: prisma }],
     }).compile();
 
     automationService = module.get(AutomationService);
@@ -70,7 +67,9 @@ describe('AutomationService', () => {
     });
 
     it('throws for unknown playbook', async () => {
-      await expect(automationService.togglePlaybook('biz1', 'unknown')).rejects.toThrow(NotFoundException);
+      await expect(automationService.togglePlaybook('biz1', 'unknown')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 

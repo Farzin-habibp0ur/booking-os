@@ -70,13 +70,9 @@ export default function CancelPage() {
     return (
       <div className="text-center py-16">
         <AlertTriangle size={48} className="mx-auto text-orange-400 mb-4" />
-        <h1 className="text-xl font-serif font-semibold text-slate-900 mb-2">
-          Unable to Cancel
-        </h1>
+        <h1 className="text-xl font-serif font-semibold text-slate-900 mb-2">Unable to Cancel</h1>
         <p className="text-slate-500 mb-6 max-w-md mx-auto">{error}</p>
-        <p className="text-sm text-slate-400">
-          Please contact the clinic directly for assistance.
-        </p>
+        <p className="text-sm text-slate-400">Please contact the clinic directly for assistance.</p>
       </div>
     );
   }
@@ -100,12 +96,8 @@ export default function CancelPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-serif font-semibold text-slate-900">
-          Cancel Appointment
-        </h1>
-        {data?.business && (
-          <p className="text-sm text-slate-500 mt-1">{data.business.name}</p>
-        )}
+        <h1 className="text-2xl font-serif font-semibold text-slate-900">Cancel Appointment</h1>
+        {data?.business && <p className="text-sm text-slate-500 mt-1">{data.business.name}</p>}
       </div>
 
       {/* Booking summary */}
@@ -178,9 +170,7 @@ export default function CancelPage() {
         <div className="bg-red-50 border border-red-100 rounded-2xl p-4 space-y-3">
           <div className="flex items-center gap-2">
             <AlertTriangle size={16} className="text-red-500" />
-            <p className="text-sm font-medium text-red-800">
-              Are you sure you want to cancel?
-            </p>
+            <p className="text-sm font-medium text-red-800">Are you sure you want to cancel?</p>
           </div>
           <p className="text-sm text-red-600">
             This action cannot be undone. You will need to book a new appointment.

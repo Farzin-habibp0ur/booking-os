@@ -62,9 +62,12 @@ export function createMockNotificationService() {
 export function createMockBusinessService() {
   return {
     findById: jest.fn().mockResolvedValue({ id: 'biz1', name: 'Test Clinic', slug: 'test-clinic' }),
-    getNotificationSettings: jest
-      .fn()
-      .mockResolvedValue({ channels: 'both', followUpDelayHours: 2, consultFollowUpDays: 3, treatmentCheckInHours: 24 }),
+    getNotificationSettings: jest.fn().mockResolvedValue({
+      channels: 'both',
+      followUpDelayHours: 2,
+      consultFollowUpDays: 3,
+      treatmentCheckInHours: 24,
+    }),
     updateNotificationSettings: jest.fn().mockResolvedValue({}),
     getAiSettings: jest.fn().mockResolvedValue({}),
     updateAiSettings: jest.fn().mockResolvedValue({}),
@@ -151,7 +154,9 @@ export function createMockWaitlistService() {
     cancelEntry: jest.fn().mockResolvedValue({ id: 'wl1', status: 'CANCELLED' }),
     resolveEntry: jest.fn().mockResolvedValue({ id: 'wl1', status: 'BOOKED', bookingId: 'book1' }),
     offerOpenSlot: jest.fn().mockResolvedValue(undefined),
-    getMetrics: jest.fn().mockResolvedValue({ cancellations: 5, offers: 3, claimed: 2, avgTimeToFill: 45 }),
+    getMetrics: jest
+      .fn()
+      .mockResolvedValue({ cancellations: 5, offers: 3, claimed: 2, avgTimeToFill: 45 }),
     expireStaleOffers: jest.fn().mockResolvedValue(undefined),
   };
 }
@@ -159,8 +164,20 @@ export function createMockWaitlistService() {
 export function createMockAvailabilityService() {
   return {
     getAvailableSlots: jest.fn().mockResolvedValue([
-      { time: '2026-03-01T10:00:00Z', display: '10:00', staffId: 'staff1', staffName: 'Dr. Chen', available: true },
-      { time: '2026-03-01T10:30:00Z', display: '10:30', staffId: 'staff1', staffName: 'Dr. Chen', available: true },
+      {
+        time: '2026-03-01T10:00:00Z',
+        display: '10:00',
+        staffId: 'staff1',
+        staffName: 'Dr. Chen',
+        available: true,
+      },
+      {
+        time: '2026-03-01T10:30:00Z',
+        display: '10:30',
+        staffId: 'staff1',
+        staffName: 'Dr. Chen',
+        available: true,
+      },
     ]),
     getStaffWorkingHours: jest.fn().mockResolvedValue([]),
     setStaffWorkingHours: jest.fn().mockResolvedValue([]),

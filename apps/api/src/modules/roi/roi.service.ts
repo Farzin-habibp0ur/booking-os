@@ -116,10 +116,7 @@ export class RoiService {
     };
 
     // Recovered revenue calculation (P1-17)
-    const recoveredRevenue = this.computeRecoveredRevenue(
-      baselineMetrics,
-      current,
-    );
+    const recoveredRevenue = this.computeRecoveredRevenue(baselineMetrics, current);
 
     return {
       hasBaseline: true,
@@ -166,9 +163,9 @@ export class RoiService {
     }
 
     const avgBookingValue = baselineMetrics.avgBookingValue || 0;
-    const amount = Math.round(
-      (noShowImprovement / 100) * current.completedBookings * avgBookingValue * 100,
-    ) / 100;
+    const amount =
+      Math.round((noShowImprovement / 100) * current.completedBookings * avgBookingValue * 100) /
+      100;
 
     return {
       amount,
@@ -203,7 +200,8 @@ export class RoiService {
     // For noShowRate and avgResponseMinutes: lower = better, so delta is inverted
     const weekDelta = {
       noShowRate: lastWeekData.noShowRate - thisWeekData.noShowRate,
-      consultConversionRate: thisWeekData.consultConversionRate - lastWeekData.consultConversionRate,
+      consultConversionRate:
+        thisWeekData.consultConversionRate - lastWeekData.consultConversionRate,
       avgResponseMinutes: lastWeekData.avgResponseMinutes - thisWeekData.avgResponseMinutes,
       totalRevenue: thisWeekData.totalRevenue - lastWeekData.totalRevenue,
       completedBookings: thisWeekData.completedBookings - lastWeekData.completedBookings,

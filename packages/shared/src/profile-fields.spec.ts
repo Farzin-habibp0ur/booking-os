@@ -1,4 +1,8 @@
-import { checkProfileCompleteness, checkIntakeCompleteness, PROFILE_FIELDS } from './profile-fields';
+import {
+  checkProfileCompleteness,
+  checkIntakeCompleteness,
+  PROFILE_FIELDS,
+} from './profile-fields';
 
 describe('checkProfileCompleteness', () => {
   describe('firstName', () => {
@@ -153,7 +157,12 @@ describe('checkIntakeCompleteness', () => {
     const result = checkIntakeCompleteness({}, fields);
     expect(result.filled).toBe(0);
     expect(result.total).toBe(4);
-    expect(result.missing).toEqual(['concernArea', 'desiredTreatment', 'budget', 'isMedicalFlagged']);
+    expect(result.missing).toEqual([
+      'concernArea',
+      'desiredTreatment',
+      'budget',
+      'isMedicalFlagged',
+    ]);
   });
 
   it('returns correct filled count with partial data', () => {
@@ -184,28 +193,23 @@ describe('checkIntakeCompleteness', () => {
   });
 
   it('handles boolean false as filled (not missing)', () => {
-    const result = checkIntakeCompleteness(
-      { customFields: { isMedicalFlagged: false } },
-      [{ key: 'isMedicalFlagged', label: 'Medical Flag' }],
-    );
+    const result = checkIntakeCompleteness({ customFields: { isMedicalFlagged: false } }, [
+      { key: 'isMedicalFlagged', label: 'Medical Flag' },
+    ]);
     expect(result.filled).toBe(1);
     expect(result.missing).toEqual([]);
   });
 
   it('treats empty string as missing', () => {
-    const result = checkIntakeCompleteness(
-      { customFields: { concernArea: '' } },
-      [{ key: 'concernArea', label: 'Concern Area' }],
-    );
+    const result = checkIntakeCompleteness({ customFields: { concernArea: '' } }, [
+      { key: 'concernArea', label: 'Concern Area' },
+    ]);
     expect(result.filled).toBe(0);
     expect(result.missing).toEqual(['concernArea']);
   });
 
   it('returns missing field keys correctly', () => {
-    const result = checkIntakeCompleteness(
-      { customFields: { concernArea: 'Fine lines' } },
-      fields,
-    );
+    const result = checkIntakeCompleteness({ customFields: { concernArea: 'Fine lines' } }, fields);
     expect(result.missing).toEqual(['desiredTreatment', 'budget', 'isMedicalFlagged']);
   });
 });

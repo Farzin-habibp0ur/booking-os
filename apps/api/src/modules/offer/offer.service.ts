@@ -5,7 +5,17 @@ import { PrismaService } from '../../common/prisma.service';
 export class OfferService {
   constructor(private prisma: PrismaService) {}
 
-  async create(businessId: string, data: { name: string; description?: string; terms?: string; serviceIds?: string[]; validFrom?: string; validUntil?: string }) {
+  async create(
+    businessId: string,
+    data: {
+      name: string;
+      description?: string;
+      terms?: string;
+      serviceIds?: string[];
+      validFrom?: string;
+      validUntil?: string;
+    },
+  ) {
     return this.prisma.offer.create({
       data: {
         businessId,
@@ -41,8 +51,12 @@ export class OfferService {
         ...(data.description !== undefined && { description: data.description }),
         ...(data.terms !== undefined && { terms: data.terms }),
         ...(data.serviceIds !== undefined && { serviceIds: data.serviceIds }),
-        ...(data.validFrom !== undefined && { validFrom: data.validFrom ? new Date(data.validFrom) : null }),
-        ...(data.validUntil !== undefined && { validUntil: data.validUntil ? new Date(data.validUntil) : null }),
+        ...(data.validFrom !== undefined && {
+          validFrom: data.validFrom ? new Date(data.validFrom) : null,
+        }),
+        ...(data.validUntil !== undefined && {
+          validUntil: data.validUntil ? new Date(data.validUntil) : null,
+        }),
         ...(data.isActive !== undefined && { isActive: data.isActive }),
       },
     });

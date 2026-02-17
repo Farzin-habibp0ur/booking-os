@@ -113,8 +113,14 @@ export default function ReportsPage() {
         <SummaryCard
           label="Consult → Treatment"
           value={conversionData ? `${conversionData.rate}%` : '—'}
-          accent={conversionData?.rate >= 50 ? 'green' : conversionData?.rate > 0 ? 'red' : undefined}
-          subtitle={conversionData ? `${conversionData.converted}/${conversionData.consultCustomers}` : undefined}
+          accent={
+            conversionData?.rate >= 50 ? 'green' : conversionData?.rate > 0 ? 'red' : undefined
+          }
+          subtitle={
+            conversionData
+              ? `${conversionData.converted}/${conversionData.consultCustomers}`
+              : undefined
+          }
         />
       </div>
 

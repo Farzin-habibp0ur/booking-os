@@ -61,9 +61,7 @@ export default function ClaimWaitlistPage() {
       <div className="min-h-screen bg-[#FCFCFD] flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-soft p-8 max-w-md w-full text-center">
           <AlertTriangle size={48} className="mx-auto text-amber-500 mb-4" />
-          <h1 className="text-xl font-serif font-semibold text-slate-900 mb-2">
-            Unable to Claim
-          </h1>
+          <h1 className="text-xl font-serif font-semibold text-slate-900 mb-2">Unable to Claim</h1>
           <p className="text-sm text-slate-500">{error}</p>
         </div>
       </div>

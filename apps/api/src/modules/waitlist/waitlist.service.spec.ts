@@ -12,10 +12,7 @@ describe('WaitlistService', () => {
     prisma = createMockPrisma();
 
     const module = await Test.createTestingModule({
-      providers: [
-        WaitlistService,
-        { provide: PrismaService, useValue: prisma },
-      ],
+      providers: [WaitlistService, { provide: PrismaService, useValue: prisma }],
     }).compile();
 
     service = module.get(WaitlistService);
@@ -24,12 +21,17 @@ describe('WaitlistService', () => {
   describe('joinWaitlist', () => {
     it('should create a waitlist entry', async () => {
       prisma.service.findFirst.mockResolvedValue({
-        id: 'svc1', businessId: 'biz1', isActive: true,
+        id: 'svc1',
+        businessId: 'biz1',
+        isActive: true,
       } as any);
       prisma.waitlistEntry.findFirst.mockResolvedValue(null);
       prisma.waitlistEntry.create.mockResolvedValue({
-        id: 'wl1', businessId: 'biz1', customerId: 'cust1',
-        serviceId: 'svc1', status: 'ACTIVE',
+        id: 'wl1',
+        businessId: 'biz1',
+        customerId: 'cust1',
+        serviceId: 'svc1',
+        status: 'ACTIVE',
       } as any);
 
       const result = await service.joinWaitlist({
@@ -53,10 +55,13 @@ describe('WaitlistService', () => {
 
     it('should reject duplicate active entries', async () => {
       prisma.service.findFirst.mockResolvedValue({
-        id: 'svc1', businessId: 'biz1', isActive: true,
+        id: 'svc1',
+        businessId: 'biz1',
+        isActive: true,
       } as any);
       prisma.waitlistEntry.findFirst.mockResolvedValue({
-        id: 'existing', status: 'ACTIVE',
+        id: 'existing',
+        status: 'ACTIVE',
       } as any);
 
       await expect(
@@ -75,9 +80,7 @@ describe('WaitlistService', () => {
 
   describe('getEntries', () => {
     it('should return entries with filters', async () => {
-      prisma.waitlistEntry.findMany.mockResolvedValue([
-        { id: 'wl1', status: 'ACTIVE' },
-      ] as any);
+      prisma.waitlistEntry.findMany.mockResolvedValue([{ id: 'wl1', status: 'ACTIVE' }] as any);
 
       const result = await service.getEntries('biz1', { status: 'ACTIVE' });
 
@@ -93,10 +96,12 @@ describe('WaitlistService', () => {
   describe('cancelEntry', () => {
     it('should cancel an active entry', async () => {
       prisma.waitlistEntry.findFirst.mockResolvedValue({
-        id: 'wl1', status: 'ACTIVE',
+        id: 'wl1',
+        status: 'ACTIVE',
       } as any);
       prisma.waitlistEntry.update.mockResolvedValue({
-        id: 'wl1', status: 'CANCELLED',
+        id: 'wl1',
+        status: 'CANCELLED',
       } as any);
 
       const result = await service.cancelEntry('biz1', 'wl1');
@@ -105,7 +110,8 @@ describe('WaitlistService', () => {
 
     it('should reject cancelling a booked entry', async () => {
       prisma.waitlistEntry.findFirst.mockResolvedValue({
-        id: 'wl1', status: 'BOOKED',
+        id: 'wl1',
+        status: 'BOOKED',
       } as any);
 
       await expect(service.cancelEntry('biz1', 'wl1')).rejects.toThrow(BadRequestException);
@@ -115,10 +121,13 @@ describe('WaitlistService', () => {
   describe('resolveEntry', () => {
     it('should resolve an entry with booking', async () => {
       prisma.waitlistEntry.findFirst.mockResolvedValue({
-        id: 'wl1', status: 'OFFERED',
+        id: 'wl1',
+        status: 'OFFERED',
       } as any);
       prisma.waitlistEntry.update.mockResolvedValue({
-        id: 'wl1', status: 'BOOKED', bookingId: 'book1',
+        id: 'wl1',
+        status: 'BOOKED',
+        bookingId: 'book1',
       } as any);
 
       const result = await service.resolveEntry('biz1', 'wl1', 'book1');
@@ -146,11 +155,24 @@ describe('WaitlistService', () => {
 
     it('should offer slot to matching waitlist entries', async () => {
       prisma.business.findUnique.mockResolvedValue({
-        id: 'biz1', packConfig: { waitlist: { offerCount: 2, expiryMinutes: 15, quietStart: '23:00', quietEnd: '06:00' } },
+        id: 'biz1',
+        packConfig: {
+          waitlist: { offerCount: 2, expiryMinutes: 15, quietStart: '23:00', quietEnd: '06:00' },
+        },
       } as any);
       prisma.waitlistEntry.findMany.mockResolvedValue([
-        { id: 'wl1', customerId: 'c1', customer: { id: 'c1', name: 'Alice', phone: '+1', email: 'a@b.com' }, service: { name: 'Botox' } },
-        { id: 'wl2', customerId: 'c2', customer: { id: 'c2', name: 'Bob', phone: '+2', email: 'b@b.com' }, service: { name: 'Botox' } },
+        {
+          id: 'wl1',
+          customerId: 'c1',
+          customer: { id: 'c1', name: 'Alice', phone: '+1', email: 'a@b.com' },
+          service: { name: 'Botox' },
+        },
+        {
+          id: 'wl2',
+          customerId: 'c2',
+          customer: { id: 'c2', name: 'Bob', phone: '+2', email: 'b@b.com' },
+          service: { name: 'Botox' },
+        },
       ] as any);
       prisma.waitlistEntry.update.mockResolvedValue({} as any);
 
@@ -176,7 +198,8 @@ describe('WaitlistService', () => {
       (Date as any).now = () => mockDate.getTime();
 
       prisma.business.findUnique.mockResolvedValue({
-        id: 'biz1', packConfig: { waitlist: { quietStart: '21:00', quietEnd: '09:00' } },
+        id: 'biz1',
+        packConfig: { waitlist: { quietStart: '21:00', quietEnd: '09:00' } },
       } as any);
 
       await service.offerOpenSlot(booking);
@@ -188,7 +211,8 @@ describe('WaitlistService', () => {
 
     it('should not offer if no matching entries', async () => {
       prisma.business.findUnique.mockResolvedValue({
-        id: 'biz1', packConfig: { waitlist: { quietStart: '23:00', quietEnd: '06:00' } },
+        id: 'biz1',
+        packConfig: { waitlist: { quietStart: '23:00', quietEnd: '06:00' } },
       } as any);
       prisma.waitlistEntry.findMany.mockResolvedValue([]);
 
@@ -201,13 +225,19 @@ describe('WaitlistService', () => {
   describe('getMetrics', () => {
     it('should return waitlist metrics', async () => {
       prisma.waitlistEntry.count
-        .mockResolvedValueOnce(10 as any)  // totalEntries
-        .mockResolvedValueOnce(6 as any)   // offeredCount
-        .mockResolvedValueOnce(4 as any);  // claimedCount
+        .mockResolvedValueOnce(10 as any) // totalEntries
+        .mockResolvedValueOnce(6 as any) // offeredCount
+        .mockResolvedValueOnce(4 as any); // claimedCount
       prisma.booking.count.mockResolvedValue(8 as any);
       prisma.waitlistEntry.findMany.mockResolvedValue([
-        { offeredAt: new Date('2026-03-01T10:00:00Z'), claimedAt: new Date('2026-03-01T10:05:00Z') },
-        { offeredAt: new Date('2026-03-02T14:00:00Z'), claimedAt: new Date('2026-03-02T14:10:00Z') },
+        {
+          offeredAt: new Date('2026-03-01T10:00:00Z'),
+          claimedAt: new Date('2026-03-01T10:05:00Z'),
+        },
+        {
+          offeredAt: new Date('2026-03-02T14:00:00Z'),
+          claimedAt: new Date('2026-03-02T14:10:00Z'),
+        },
       ] as any);
 
       const metrics = await service.getMetrics('biz1', 30);

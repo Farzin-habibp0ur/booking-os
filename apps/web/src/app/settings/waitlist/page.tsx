@@ -48,9 +48,7 @@ export default function WaitlistSettingsPage() {
     <div className="p-6 max-w-2xl">
       <div className="flex items-center gap-2 mb-6">
         <ClipboardList size={24} className="text-sage-600" />
-        <h1 className="text-2xl font-serif font-semibold text-slate-900">
-          Waitlist Settings
-        </h1>
+        <h1 className="text-2xl font-serif font-semibold text-slate-900">Waitlist Settings</h1>
       </div>
 
       <div className="bg-white rounded-2xl shadow-soft p-6 space-y-6">
@@ -122,9 +120,7 @@ export default function WaitlistSettingsPage() {
               <input
                 type="time"
                 value={settings.quietStart}
-                onChange={(e) =>
-                  setSettings({ ...settings, quietStart: e.target.value })
-                }
+                onChange={(e) => setSettings({ ...settings, quietStart: e.target.value })}
                 className="border border-slate-200 rounded-xl px-3 py-2 text-sm"
               />
             </div>
@@ -133,9 +129,7 @@ export default function WaitlistSettingsPage() {
               <input
                 type="time"
                 value={settings.quietEnd}
-                onChange={(e) =>
-                  setSettings({ ...settings, quietEnd: e.target.value })
-                }
+                onChange={(e) => setSettings({ ...settings, quietEnd: e.target.value })}
                 className="border border-slate-200 rounded-xl px-3 py-2 text-sm"
               />
             </div>

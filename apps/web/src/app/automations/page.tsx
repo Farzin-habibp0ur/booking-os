@@ -18,9 +18,21 @@ export default function AutomationsPage() {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  const loadPlaybooks = () => api.get<any>('/automations/playbooks').then(setPlaybooks).catch(() => {});
-  const loadRules = () => api.get<any>('/automations/rules').then((r) => setRules(Array.isArray(r) ? r : [])).catch(() => {});
-  const loadLogs = () => api.get<any>('/automations/logs?pageSize=50').then(setLogs).catch(() => {});
+  const loadPlaybooks = () =>
+    api
+      .get<any>('/automations/playbooks')
+      .then(setPlaybooks)
+      .catch(() => {});
+  const loadRules = () =>
+    api
+      .get<any>('/automations/rules')
+      .then((r) => setRules(Array.isArray(r) ? r : []))
+      .catch(() => {});
+  const loadLogs = () =>
+    api
+      .get<any>('/automations/logs?pageSize=50')
+      .then(setLogs)
+      .catch(() => {});
 
   useEffect(() => {
     setLoading(true);
@@ -86,7 +98,9 @@ export default function AutomationsPage() {
             onClick={() => setTab(t.key)}
             className={cn(
               'px-4 py-1.5 text-sm rounded-lg transition-colors',
-              tab === t.key ? 'bg-white text-slate-900 shadow-sm font-medium' : 'text-slate-500 hover:text-slate-700',
+              tab === t.key
+                ? 'bg-white text-slate-900 shadow-sm font-medium'
+                : 'text-slate-500 hover:text-slate-700',
             )}
           >
             {t.label}
@@ -109,7 +123,12 @@ export default function AutomationsPage() {
                 <div key={pb.playbook || pb.id} className="bg-white rounded-2xl shadow-soft p-5">
                   <div className="flex items-start justify-between mb-2">
                     <h3 className="text-sm font-semibold text-slate-900">{pb.name}</h3>
-                    <span className={cn('text-xs px-2 py-0.5 rounded-full', pb.isActive ? 'bg-sage-50 text-sage-700' : 'bg-slate-100 text-slate-500')}>
+                    <span
+                      className={cn(
+                        'text-xs px-2 py-0.5 rounded-full',
+                        pb.isActive ? 'bg-sage-50 text-sage-700' : 'bg-slate-100 text-slate-500',
+                      )}
+                    >
                       {pb.isActive ? 'Active' : 'Off'}
                     </span>
                   </div>
@@ -138,39 +157,69 @@ export default function AutomationsPage() {
             <table className="w-full min-w-[640px]">
               <thead className="bg-slate-50 border-b">
                 <tr>
-                  <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">Name</th>
-                  <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">Trigger</th>
-                  <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">Status</th>
-                  <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">Actions</th>
+                  <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
+                    Name
+                  </th>
+                  <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
+                    Trigger
+                  </th>
+                  <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
+                    Status
+                  </th>
+                  <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {loading
                   ? Array.from({ length: 3 }).map((_, i) => <TableRowSkeleton key={i} cols={4} />)
-                  : rules.filter((r) => !r.playbook).map((rule) => (
-                      <tr key={rule.id} className="hover:bg-slate-50">
-                        <td className="p-3 text-sm font-medium">{rule.name}</td>
-                        <td className="p-3 text-sm text-slate-600">{rule.trigger}</td>
-                        <td className="p-3">
-                          <span className={cn('text-xs px-2 py-0.5 rounded-full', rule.isActive ? 'bg-sage-50 text-sage-700' : 'bg-slate-100 text-slate-500')}>
-                            {rule.isActive ? 'Active' : 'Off'}
-                          </span>
-                        </td>
-                        <td className="p-3">
-                          <div className="flex items-center gap-1">
-                            <button onClick={() => handleToggleRule(rule)} className="text-slate-400 hover:text-slate-600 p-1">
-                              {rule.isActive ? <ToggleRight size={16} /> : <ToggleLeft size={16} />}
-                            </button>
-                            <button onClick={() => handleTestRule(rule.id)} className="text-slate-400 hover:text-sage-600 p-1">
-                              <Play size={16} />
-                            </button>
-                            <button onClick={() => handleDeleteRule(rule.id)} className="text-slate-400 hover:text-red-500 p-1">
-                              <Trash2 size={16} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+                  : rules
+                      .filter((r) => !r.playbook)
+                      .map((rule) => (
+                        <tr key={rule.id} className="hover:bg-slate-50">
+                          <td className="p-3 text-sm font-medium">{rule.name}</td>
+                          <td className="p-3 text-sm text-slate-600">{rule.trigger}</td>
+                          <td className="p-3">
+                            <span
+                              className={cn(
+                                'text-xs px-2 py-0.5 rounded-full',
+                                rule.isActive
+                                  ? 'bg-sage-50 text-sage-700'
+                                  : 'bg-slate-100 text-slate-500',
+                              )}
+                            >
+                              {rule.isActive ? 'Active' : 'Off'}
+                            </span>
+                          </td>
+                          <td className="p-3">
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => handleToggleRule(rule)}
+                                className="text-slate-400 hover:text-slate-600 p-1"
+                              >
+                                {rule.isActive ? (
+                                  <ToggleRight size={16} />
+                                ) : (
+                                  <ToggleLeft size={16} />
+                                )}
+                              </button>
+                              <button
+                                onClick={() => handleTestRule(rule.id)}
+                                className="text-slate-400 hover:text-sage-600 p-1"
+                              >
+                                <Play size={16} />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteRule(rule.id)}
+                                className="text-slate-400 hover:text-red-500 p-1"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
               </tbody>
             </table>
           </div>
@@ -191,10 +240,18 @@ export default function AutomationsPage() {
             <table className="w-full min-w-[640px]">
               <thead className="bg-slate-50 border-b">
                 <tr>
-                  <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">Rule</th>
-                  <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">Action</th>
-                  <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">Outcome</th>
-                  <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">Time</th>
+                  <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
+                    Rule
+                  </th>
+                  <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
+                    Action
+                  </th>
+                  <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
+                    Outcome
+                  </th>
+                  <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
+                    Time
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -205,18 +262,27 @@ export default function AutomationsPage() {
                         <td className="p-3 text-sm font-medium">{log.rule?.name || '—'}</td>
                         <td className="p-3 text-sm text-slate-600">{log.action}</td>
                         <td className="p-3">
-                          <span className={cn(
-                            'text-xs px-2 py-0.5 rounded-full',
-                            log.outcome === 'SENT' ? 'bg-sage-50 text-sage-700' :
-                            log.outcome === 'SKIPPED' ? 'bg-amber-50 text-amber-700' :
-                            'bg-red-50 text-red-700',
-                          )}>
+                          <span
+                            className={cn(
+                              'text-xs px-2 py-0.5 rounded-full',
+                              log.outcome === 'SENT'
+                                ? 'bg-sage-50 text-sage-700'
+                                : log.outcome === 'SKIPPED'
+                                  ? 'bg-amber-50 text-amber-700'
+                                  : 'bg-red-50 text-red-700',
+                            )}
+                          >
                             {log.outcome}
                           </span>
-                          {log.reason && <span className="text-xs text-slate-400 ml-1">{log.reason}</span>}
+                          {log.reason && (
+                            <span className="text-xs text-slate-400 ml-1">{log.reason}</span>
+                          )}
                         </td>
                         <td className="p-3 text-sm text-slate-500">
-                          {new Date(log.createdAt).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}
+                          {new Date(log.createdAt).toLocaleString('en-US', {
+                            dateStyle: 'medium',
+                            timeStyle: 'short',
+                          })}
                         </td>
                       </tr>
                     ))}

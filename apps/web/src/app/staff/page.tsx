@@ -103,249 +103,256 @@ export default function StaffPage() {
 
       <div className="bg-white rounded-2xl shadow-soft overflow-hidden">
         <div className="overflow-x-auto">
-        <table className="w-full min-w-[640px]">
-          <thead className="bg-slate-50 border-b">
-            <tr>
-              <th className="w-8"></th>
-              <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
-                {t('common.name')}
-              </th>
-              <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
-                {t('common.email')}
-              </th>
-              <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
-                {t('staff.role')}
-              </th>
-              <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
-                {t('common.status')}
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {staffList.map((s) => (
-              <>
-                <tr
-                  key={s.id}
-                  className="hover:bg-slate-50 cursor-pointer"
-                  onClick={() => toggleExpand(s.id)}
-                >
-                  <td className="pl-3">
-                    {expandedId === s.id ? (
-                      <ChevronDown size={14} className="text-slate-400" />
-                    ) : (
-                      <ChevronRight size={14} className="text-slate-400" />
-                    )}
-                  </td>
-                  <td className="p-3 text-sm font-medium">{s.name}</td>
-                  <td className="p-3 text-sm text-slate-600">{s.email}</td>
-                  <td className="p-3">
-                    <span
-                      className={cn(
-                        'text-xs px-2 py-0.5 rounded-full',
-                        s.role === 'ADMIN'
-                          ? 'bg-lavender-100 text-lavender-700'
-                          : s.role === 'SERVICE_PROVIDER'
-                            ? 'bg-sage-100 text-sage-700'
-                            : 'bg-slate-100 text-slate-700',
+          <table className="w-full min-w-[640px]">
+            <thead className="bg-slate-50 border-b">
+              <tr>
+                <th className="w-8"></th>
+                <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
+                  {t('common.name')}
+                </th>
+                <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
+                  {t('common.email')}
+                </th>
+                <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
+                  {t('staff.role')}
+                </th>
+                <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
+                  {t('common.status')}
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {staffList.map((s) => (
+                <>
+                  <tr
+                    key={s.id}
+                    className="hover:bg-slate-50 cursor-pointer"
+                    onClick={() => toggleExpand(s.id)}
+                  >
+                    <td className="pl-3">
+                      {expandedId === s.id ? (
+                        <ChevronDown size={14} className="text-slate-400" />
+                      ) : (
+                        <ChevronRight size={14} className="text-slate-400" />
                       )}
-                    >
-                      {s.role}
-                    </span>
-                  </td>
-                  <td className="p-3">
-                    <span className={cn('text-xs', s.isActive ? 'text-sage-600' : 'text-red-600')}>
-                      {s.isActive ? t('common.active') : t('common.inactive')}
-                    </span>
-                  </td>
-                </tr>
-                {expandedId === s.id && (
-                  <tr key={`${s.id}-expanded`}>
-                    <td colSpan={5} className="p-0">
-                      <div className="bg-slate-50 border-t p-4">
-                        {/* Tabs */}
-                        <div className="flex gap-1 mb-4">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setTab('hours');
-                            }}
-                            className={cn(
-                              'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm transition-colors',
-                              tab === 'hours'
-                                ? 'bg-white border shadow-sm font-medium'
-                                : 'text-slate-500 hover:bg-white/50',
-                            )}
-                          >
-                            <Clock size={14} /> {t('staff.working_hours')}
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setTab('timeoff');
-                            }}
-                            className={cn(
-                              'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm transition-colors',
-                              tab === 'timeoff'
-                                ? 'bg-white border shadow-sm font-medium'
-                                : 'text-slate-500 hover:bg-white/50',
-                            )}
-                          >
-                            <CalendarOff size={14} /> {t('staff.time_off')}
-                            {(timeOff[s.id]?.length || 0) > 0 && (
-                              <span className="bg-orange-100 text-orange-700 text-[10px] px-1.5 py-0.5 rounded-full">
-                                {timeOff[s.id].length}
-                              </span>
-                            )}
-                          </button>
-                        </div>
-
-                        {/* Working Hours Tab */}
-                        {tab === 'hours' && (
-                          <div>
-                            <div className="bg-white border border-slate-100 rounded-xl divide-y">
-                              {(workingHours[s.id] || []).map((h: any) => (
-                                <div
-                                  key={h.dayOfWeek}
-                                  className="flex items-center gap-3 px-4 py-2.5"
-                                >
-                                  <div className="w-24 text-sm font-medium">
-                                    {t(`days.${DAYS[h.dayOfWeek].toLowerCase()}`)}
-                                  </div>
-                                  <label className="flex items-center gap-2 cursor-pointer min-w-[80px]">
-                                    <input
-                                      type="checkbox"
-                                      checked={!h.isOff}
-                                      onChange={() =>
-                                        updateHour(s.id, h.dayOfWeek, 'isOff', !h.isOff)
-                                      }
-                                      className="rounded"
-                                    />
-                                    <span
-                                      className={cn(
-                                        'text-xs',
-                                        h.isOff ? 'text-red-500' : 'text-sage-600',
-                                      )}
-                                    >
-                                      {h.isOff ? t('common.off') : t('common.working')}
-                                    </span>
-                                  </label>
-                                  {!h.isOff && (
-                                    <>
-                                      <input
-                                        type="time"
-                                        value={h.startTime}
-                                        onChange={(e) =>
-                                          updateHour(s.id, h.dayOfWeek, 'startTime', e.target.value)
-                                        }
-                                        className="border border-slate-200 rounded-lg px-2 py-1 text-sm"
-                                      />
-                                      <span className="text-slate-400 text-sm">
-                                        {t('common.to')}
-                                      </span>
-                                      <input
-                                        type="time"
-                                        value={h.endTime}
-                                        onChange={(e) =>
-                                          updateHour(s.id, h.dayOfWeek, 'endTime', e.target.value)
-                                        }
-                                        className="border border-slate-200 rounded-lg px-2 py-1 text-sm"
-                                      />
-                                    </>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                            <div className="mt-3 flex justify-end">
-                              <button
-                                onClick={() => saveHours(s.id)}
-                                disabled={saving}
-                                className="bg-sage-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-sage-700 disabled:opacity-50 transition-colors"
-                              >
-                                {saving ? t('common.saving') : t('staff.save_hours')}
-                              </button>
-                            </div>
-                          </div>
+                    </td>
+                    <td className="p-3 text-sm font-medium">{s.name}</td>
+                    <td className="p-3 text-sm text-slate-600">{s.email}</td>
+                    <td className="p-3">
+                      <span
+                        className={cn(
+                          'text-xs px-2 py-0.5 rounded-full',
+                          s.role === 'ADMIN'
+                            ? 'bg-lavender-100 text-lavender-700'
+                            : s.role === 'SERVICE_PROVIDER'
+                              ? 'bg-sage-100 text-sage-700'
+                              : 'bg-slate-100 text-slate-700',
                         )}
+                      >
+                        {s.role}
+                      </span>
+                    </td>
+                    <td className="p-3">
+                      <span
+                        className={cn('text-xs', s.isActive ? 'text-sage-600' : 'text-red-600')}
+                      >
+                        {s.isActive ? t('common.active') : t('common.inactive')}
+                      </span>
+                    </td>
+                  </tr>
+                  {expandedId === s.id && (
+                    <tr key={`${s.id}-expanded`}>
+                      <td colSpan={5} className="p-0">
+                        <div className="bg-slate-50 border-t p-4">
+                          {/* Tabs */}
+                          <div className="flex gap-1 mb-4">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setTab('hours');
+                              }}
+                              className={cn(
+                                'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm transition-colors',
+                                tab === 'hours'
+                                  ? 'bg-white border shadow-sm font-medium'
+                                  : 'text-slate-500 hover:bg-white/50',
+                              )}
+                            >
+                              <Clock size={14} /> {t('staff.working_hours')}
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setTab('timeoff');
+                              }}
+                              className={cn(
+                                'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm transition-colors',
+                                tab === 'timeoff'
+                                  ? 'bg-white border shadow-sm font-medium'
+                                  : 'text-slate-500 hover:bg-white/50',
+                              )}
+                            >
+                              <CalendarOff size={14} /> {t('staff.time_off')}
+                              {(timeOff[s.id]?.length || 0) > 0 && (
+                                <span className="bg-orange-100 text-orange-700 text-[10px] px-1.5 py-0.5 rounded-full">
+                                  {timeOff[s.id].length}
+                                </span>
+                              )}
+                            </button>
+                          </div>
 
-                        {/* Time Off Tab */}
-                        {tab === 'timeoff' && (
-                          <div>
-                            {(timeOff[s.id] || []).length > 0 && (
-                              <div className="bg-white border border-slate-100 rounded-xl divide-y mb-3">
-                                {(timeOff[s.id] || []).map((t: any) => (
+                          {/* Working Hours Tab */}
+                          {tab === 'hours' && (
+                            <div>
+                              <div className="bg-white border border-slate-100 rounded-xl divide-y">
+                                {(workingHours[s.id] || []).map((h: any) => (
                                   <div
-                                    key={t.id}
-                                    className="flex items-center justify-between px-4 py-2.5"
+                                    key={h.dayOfWeek}
+                                    className="flex items-center gap-3 px-4 py-2.5"
                                   >
-                                    <div>
-                                      <p className="text-sm font-medium">
-                                        {new Date(t.startDate).toLocaleDateString()} —{' '}
-                                        {new Date(t.endDate).toLocaleDateString()}
-                                      </p>
-                                      {t.reason && (
-                                        <p className="text-xs text-slate-500">{t.reason}</p>
-                                      )}
+                                    <div className="w-24 text-sm font-medium">
+                                      {t(`days.${DAYS[h.dayOfWeek].toLowerCase()}`)}
                                     </div>
-                                    <button
-                                      onClick={() => removeTimeOff(s.id, t.id)}
-                                      className="text-red-500 hover:text-red-700 p-1 transition-colors"
-                                    >
-                                      <Trash2 size={14} />
-                                    </button>
+                                    <label className="flex items-center gap-2 cursor-pointer min-w-[80px]">
+                                      <input
+                                        type="checkbox"
+                                        checked={!h.isOff}
+                                        onChange={() =>
+                                          updateHour(s.id, h.dayOfWeek, 'isOff', !h.isOff)
+                                        }
+                                        className="rounded"
+                                      />
+                                      <span
+                                        className={cn(
+                                          'text-xs',
+                                          h.isOff ? 'text-red-500' : 'text-sage-600',
+                                        )}
+                                      >
+                                        {h.isOff ? t('common.off') : t('common.working')}
+                                      </span>
+                                    </label>
+                                    {!h.isOff && (
+                                      <>
+                                        <input
+                                          type="time"
+                                          value={h.startTime}
+                                          onChange={(e) =>
+                                            updateHour(
+                                              s.id,
+                                              h.dayOfWeek,
+                                              'startTime',
+                                              e.target.value,
+                                            )
+                                          }
+                                          className="border border-slate-200 rounded-lg px-2 py-1 text-sm"
+                                        />
+                                        <span className="text-slate-400 text-sm">
+                                          {t('common.to')}
+                                        </span>
+                                        <input
+                                          type="time"
+                                          value={h.endTime}
+                                          onChange={(e) =>
+                                            updateHour(s.id, h.dayOfWeek, 'endTime', e.target.value)
+                                          }
+                                          className="border border-slate-200 rounded-lg px-2 py-1 text-sm"
+                                        />
+                                      </>
+                                    )}
                                   </div>
                                 ))}
                               </div>
-                            )}
-                            <div className="bg-white border border-slate-100 rounded-xl p-4 space-y-3">
-                              <p className="text-sm font-medium">{t('staff.add_time_off')}</p>
-                              <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                  <label className="text-xs text-slate-500">
-                                    {t('staff.start_date')}
-                                  </label>
-                                  <input
-                                    type="date"
-                                    value={toStart}
-                                    onChange={(e) => setToStart(e.target.value)}
-                                    className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="text-xs text-slate-500">
-                                    {t('staff.end_date')}
-                                  </label>
-                                  <input
-                                    type="date"
-                                    value={toEnd}
-                                    onChange={(e) => setToEnd(e.target.value)}
-                                    className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
-                                  />
-                                </div>
+                              <div className="mt-3 flex justify-end">
+                                <button
+                                  onClick={() => saveHours(s.id)}
+                                  disabled={saving}
+                                  className="bg-sage-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-sage-700 disabled:opacity-50 transition-colors"
+                                >
+                                  {saving ? t('common.saving') : t('staff.save_hours')}
+                                </button>
                               </div>
-                              <input
-                                value={toReason}
-                                onChange={(e) => setToReason(e.target.value)}
-                                placeholder={t('staff.reason_placeholder')}
-                                className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
-                              />
-                              <button
-                                onClick={() => addTimeOff(s.id)}
-                                disabled={!toStart || !toEnd}
-                                className="bg-sage-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-sage-700 disabled:opacity-50 transition-colors"
-                              >
-                                {t('staff.add_time_off')}
-                              </button>
                             </div>
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </>
-            ))}
-          </tbody>
-        </table>
+                          )}
+
+                          {/* Time Off Tab */}
+                          {tab === 'timeoff' && (
+                            <div>
+                              {(timeOff[s.id] || []).length > 0 && (
+                                <div className="bg-white border border-slate-100 rounded-xl divide-y mb-3">
+                                  {(timeOff[s.id] || []).map((t: any) => (
+                                    <div
+                                      key={t.id}
+                                      className="flex items-center justify-between px-4 py-2.5"
+                                    >
+                                      <div>
+                                        <p className="text-sm font-medium">
+                                          {new Date(t.startDate).toLocaleDateString()} —{' '}
+                                          {new Date(t.endDate).toLocaleDateString()}
+                                        </p>
+                                        {t.reason && (
+                                          <p className="text-xs text-slate-500">{t.reason}</p>
+                                        )}
+                                      </div>
+                                      <button
+                                        onClick={() => removeTimeOff(s.id, t.id)}
+                                        className="text-red-500 hover:text-red-700 p-1 transition-colors"
+                                      >
+                                        <Trash2 size={14} />
+                                      </button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                              <div className="bg-white border border-slate-100 rounded-xl p-4 space-y-3">
+                                <p className="text-sm font-medium">{t('staff.add_time_off')}</p>
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div>
+                                    <label className="text-xs text-slate-500">
+                                      {t('staff.start_date')}
+                                    </label>
+                                    <input
+                                      type="date"
+                                      value={toStart}
+                                      onChange={(e) => setToStart(e.target.value)}
+                                      className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="text-xs text-slate-500">
+                                      {t('staff.end_date')}
+                                    </label>
+                                    <input
+                                      type="date"
+                                      value={toEnd}
+                                      onChange={(e) => setToEnd(e.target.value)}
+                                      className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
+                                    />
+                                  </div>
+                                </div>
+                                <input
+                                  value={toReason}
+                                  onChange={(e) => setToReason(e.target.value)}
+                                  placeholder={t('staff.reason_placeholder')}
+                                  className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
+                                />
+                                <button
+                                  onClick={() => addTimeOff(s.id)}
+                                  disabled={!toStart || !toEnd}
+                                  className="bg-sage-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-sage-700 disabled:opacity-50 transition-colors"
+                                >
+                                  {t('staff.add_time_off')}
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
 

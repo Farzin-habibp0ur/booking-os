@@ -75,10 +75,13 @@ export class UpdateBookingDto {
 }
 
 export class UpdateBookingStatusDto {
-  @IsEnum(['PENDING', 'PENDING_DEPOSIT', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'NO_SHOW'], {
-    message:
-      'status must be one of: PENDING, PENDING_DEPOSIT, CONFIRMED, IN_PROGRESS, COMPLETED, CANCELLED, NO_SHOW',
-  })
+  @IsEnum(
+    ['PENDING', 'PENDING_DEPOSIT', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'NO_SHOW'],
+    {
+      message:
+        'status must be one of: PENDING, PENDING_DEPOSIT, CONFIRMED, IN_PROGRESS, COMPLETED, CANCELLED, NO_SHOW',
+    },
+  )
   status!: string;
 
   @IsString()
@@ -213,7 +216,9 @@ export class CreateStaffDto {
   @IsNotEmpty()
   password!: string;
 
-  @IsEnum(['ADMIN', 'SERVICE_PROVIDER', 'AGENT'], { message: 'role must be one of: ADMIN, SERVICE_PROVIDER, AGENT' })
+  @IsEnum(['ADMIN', 'SERVICE_PROVIDER', 'AGENT'], {
+    message: 'role must be one of: ADMIN, SERVICE_PROVIDER, AGENT',
+  })
   role!: string;
 }
 
@@ -226,7 +231,9 @@ export class UpdateStaffDto {
   @IsOptional()
   email?: string;
 
-  @IsEnum(['ADMIN', 'SERVICE_PROVIDER', 'AGENT'], { message: 'role must be one of: ADMIN, SERVICE_PROVIDER, AGENT' })
+  @IsEnum(['ADMIN', 'SERVICE_PROVIDER', 'AGENT'], {
+    message: 'role must be one of: ADMIN, SERVICE_PROVIDER, AGENT',
+  })
   @IsOptional()
   role?: string;
 }
@@ -513,7 +520,9 @@ export class InviteStaffDto {
   @IsNotEmpty()
   name!: string;
 
-  @IsEnum(['ADMIN', 'SERVICE_PROVIDER', 'AGENT'], { message: 'role must be one of: ADMIN, SERVICE_PROVIDER, AGENT' })
+  @IsEnum(['ADMIN', 'SERVICE_PROVIDER', 'AGENT'], {
+    message: 'role must be one of: ADMIN, SERVICE_PROVIDER, AGENT',
+  })
   @IsOptional()
   role?: string;
 }

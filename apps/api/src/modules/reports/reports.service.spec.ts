@@ -805,10 +805,7 @@ describe('ReportsService', () => {
       ] as any);
 
       // 2 of 3 unique consult customers later booked a treatment
-      prisma.booking.groupBy.mockResolvedValue([
-        { customerId: 'c1' },
-        { customerId: 'c3' },
-      ] as any);
+      prisma.booking.groupBy.mockResolvedValue([{ customerId: 'c1' }, { customerId: 'c3' }] as any);
 
       const result = await reportsService.consultToTreatmentConversion('biz1', 30);
 
@@ -823,10 +820,7 @@ describe('ReportsService', () => {
         { customerId: 'c2' },
       ] as any);
 
-      prisma.booking.groupBy.mockResolvedValue([
-        { customerId: 'c1' },
-        { customerId: 'c2' },
-      ] as any);
+      prisma.booking.groupBy.mockResolvedValue([{ customerId: 'c1' }, { customerId: 'c2' }] as any);
 
       const result = await reportsService.consultToTreatmentConversion('biz1', 30);
 

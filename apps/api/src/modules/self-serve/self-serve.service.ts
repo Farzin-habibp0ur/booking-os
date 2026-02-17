@@ -45,9 +45,10 @@ export class SelfServeService {
     const { booking } = await this.validateToken(token, type);
 
     const policySettings = await this.businessService.getPolicySettings(booking.businessId);
-    const policyText = type === 'RESCHEDULE_LINK'
-      ? policySettings?.reschedulePolicyText
-      : policySettings?.cancellationPolicyText;
+    const policyText =
+      type === 'RESCHEDULE_LINK'
+        ? policySettings?.reschedulePolicyText
+        : policySettings?.cancellationPolicyText;
 
     return {
       booking: {

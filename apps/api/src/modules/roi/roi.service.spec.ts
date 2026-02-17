@@ -4,7 +4,11 @@ import { RoiService } from './roi.service';
 import { PrismaService } from '../../common/prisma.service';
 import { ReportsService } from '../reports/reports.service';
 import { EmailService } from '../email/email.service';
-import { createMockPrisma, createMockReportsService, createMockEmailService } from '../../test/mocks';
+import {
+  createMockPrisma,
+  createMockReportsService,
+  createMockEmailService,
+} from '../../test/mocks';
 
 describe('RoiService', () => {
   let roiService: RoiService;
@@ -286,8 +290,8 @@ describe('RoiService', () => {
       // lastWeek: noShowRate=10 (same mock)
       // For a meaningful test, differentiate the two calls
       reportsService.noShowRate
-        .mockResolvedValueOnce({ total: 50, noShows: 3, rate: 6 })   // thisWeek
-        .mockResolvedValueOnce({ total: 50, noShows: 5, rate: 10 });  // lastWeek
+        .mockResolvedValueOnce({ total: 50, noShows: 3, rate: 6 }) // thisWeek
+        .mockResolvedValueOnce({ total: 50, noShows: 5, rate: 10 }); // lastWeek
 
       const result = await roiService.getWeeklyReview('biz1');
 
@@ -299,7 +303,11 @@ describe('RoiService', () => {
 
     it('handles zero bookings gracefully', async () => {
       reportsService.noShowRate.mockResolvedValue({ total: 0, noShows: 0, rate: 0 });
-      reportsService.consultToTreatmentConversion.mockResolvedValue({ consultCustomers: 0, converted: 0, rate: 0 });
+      reportsService.consultToTreatmentConversion.mockResolvedValue({
+        consultCustomers: 0,
+        converted: 0,
+        rate: 0,
+      });
       reportsService.revenueOverTime.mockResolvedValue([]);
       reportsService.statusBreakdown.mockResolvedValue([]);
 

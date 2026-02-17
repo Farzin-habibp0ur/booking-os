@@ -85,7 +85,12 @@ export class BusinessService {
 
   async updateNotificationSettings(
     id: string,
-    settings: { channels?: string; followUpDelayHours?: number; consultFollowUpDays?: number; treatmentCheckInHours?: number },
+    settings: {
+      channels?: string;
+      followUpDelayHours?: number;
+      consultFollowUpDays?: number;
+      treatmentCheckInHours?: number;
+    },
   ) {
     const business = await this.prisma.business.findUnique({ where: { id } });
     if (!business) return null;
@@ -153,7 +158,12 @@ export class BusinessService {
 
   async updateWaitlistSettings(
     id: string,
-    settings: { offerCount?: number; expiryMinutes?: number; quietStart?: string; quietEnd?: string },
+    settings: {
+      offerCount?: number;
+      expiryMinutes?: number;
+      quietStart?: string;
+      quietEnd?: string;
+    },
   ) {
     const business = await this.prisma.business.findUnique({ where: { id } });
     if (!business) return null;

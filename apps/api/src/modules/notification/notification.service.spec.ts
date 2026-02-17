@@ -370,9 +370,7 @@ describe('NotificationService', () => {
     it('handles error gracefully', async () => {
       prisma.messageTemplate.findMany.mockRejectedValue(new Error('DB error'));
 
-      await expect(
-        notificationService.sendConsultFollowUp(mockBooking),
-      ).resolves.toBeUndefined();
+      await expect(notificationService.sendConsultFollowUp(mockBooking)).resolves.toBeUndefined();
     });
 
     it('skips email when customer has no email', async () => {
@@ -579,9 +577,7 @@ describe('NotificationService', () => {
     it('handles error gracefully', async () => {
       prisma.messageTemplate.findMany.mockRejectedValue(new Error('DB error'));
 
-      await expect(
-        notificationService.sendTreatmentCheckIn(mockBooking),
-      ).resolves.toBeUndefined();
+      await expect(notificationService.sendTreatmentCheckIn(mockBooking)).resolves.toBeUndefined();
     });
 
     it('skips email when customer has no email', async () => {
@@ -745,9 +741,7 @@ describe('NotificationService', () => {
     it('handles error gracefully', async () => {
       prisma.messageTemplate.findMany.mockRejectedValue(new Error('DB error'));
 
-      await expect(
-        notificationService.sendDepositRequest(depositBooking),
-      ).resolves.toBeUndefined();
+      await expect(notificationService.sendDepositRequest(depositBooking)).resolves.toBeUndefined();
     });
 
     it('skips email when customer has no email', async () => {
@@ -958,7 +952,9 @@ describe('NotificationService', () => {
     it('appends to existing notificationLog array', async () => {
       prisma.booking.findUnique.mockResolvedValue({
         customFields: {
-          notificationLog: [{ type: 'sent', category: 'CONFIRMATION', sentAt: '2026-01-01T00:00:00Z' }],
+          notificationLog: [
+            { type: 'sent', category: 'CONFIRMATION', sentAt: '2026-01-01T00:00:00Z' },
+          ],
         },
       } as any);
       prisma.booking.update.mockResolvedValue({} as any);
@@ -988,9 +984,7 @@ describe('NotificationService', () => {
         where: { id: 'booking1' },
         data: {
           customFields: {
-            notificationLog: [
-              expect.objectContaining({ type: 'sent', category: 'FOLLOW_UP' }),
-            ],
+            notificationLog: [expect.objectContaining({ type: 'sent', category: 'FOLLOW_UP' })],
           },
         },
       });
@@ -1029,9 +1023,7 @@ describe('NotificationService', () => {
         where: { id: 'booking1' },
         data: {
           customFields: {
-            notificationLog: [
-              expect.objectContaining({ type: 'sent', category: 'REMINDER' }),
-            ],
+            notificationLog: [expect.objectContaining({ type: 'sent', category: 'REMINDER' })],
           },
         },
       });
@@ -1048,9 +1040,7 @@ describe('NotificationService', () => {
         where: { id: 'nonexistent' },
         data: {
           customFields: {
-            notificationLog: [
-              expect.objectContaining({ type: 'sent', category: 'REMINDER' }),
-            ],
+            notificationLog: [expect.objectContaining({ type: 'sent', category: 'REMINDER' })],
           },
         },
       });
@@ -1110,7 +1100,10 @@ describe('NotificationService', () => {
       prisma.booking.findUnique.mockResolvedValue({ customFields: {} } as any);
       prisma.booking.update.mockResolvedValue({} as any);
 
-      await notificationService.sendRescheduleLink(mockBooking, 'https://example.com/reschedule/abc');
+      await notificationService.sendRescheduleLink(
+        mockBooking,
+        'https://example.com/reschedule/abc',
+      );
 
       expect(mockProvider.sendMessage).toHaveBeenCalledWith({
         to: '+1234567890',
@@ -1156,9 +1149,7 @@ describe('NotificationService', () => {
         category: 'REMINDER',
       };
       prisma.messageTemplate.findMany.mockResolvedValue([template] as any);
-      templateService.resolveVariables.mockResolvedValue(
-        'Hi Jane Doe, your Haircut is tomorrow!',
-      );
+      templateService.resolveVariables.mockResolvedValue('Hi Jane Doe, your Haircut is tomorrow!');
       setupLogMocks();
 
       await notificationService.sendReminder(mockBooking);
@@ -1299,9 +1290,7 @@ describe('NotificationService', () => {
         where: { id: 'booking1' },
         data: {
           customFields: {
-            notificationLog: [
-              expect.objectContaining({ type: 'sent', category: 'REMINDER' }),
-            ],
+            notificationLog: [expect.objectContaining({ type: 'sent', category: 'REMINDER' })],
           },
         },
       });
@@ -1350,9 +1339,7 @@ describe('NotificationService', () => {
         category: 'FOLLOW_UP',
       };
       prisma.messageTemplate.findMany.mockResolvedValue([template] as any);
-      templateService.resolveVariables.mockResolvedValue(
-        'Hi Jane Doe, thanks for your Haircut!',
-      );
+      templateService.resolveVariables.mockResolvedValue('Hi Jane Doe, thanks for your Haircut!');
       setupLogMocks();
 
       await notificationService.sendFollowUp(mockBooking);
@@ -1456,9 +1443,7 @@ describe('NotificationService', () => {
         where: { id: 'booking1' },
         data: {
           customFields: {
-            notificationLog: [
-              expect.objectContaining({ type: 'sent', category: 'FOLLOW_UP' }),
-            ],
+            notificationLog: [expect.objectContaining({ type: 'sent', category: 'FOLLOW_UP' })],
           },
         },
       });
@@ -1495,7 +1480,10 @@ describe('NotificationService', () => {
       prisma.messageTemplate.findMany.mockResolvedValue([]);
       setupLogMocks();
 
-      await notificationService.sendRescheduleLink(mockBooking, 'https://example.com/reschedule/abc');
+      await notificationService.sendRescheduleLink(
+        mockBooking,
+        'https://example.com/reschedule/abc',
+      );
 
       expect(mockProvider.sendMessage).toHaveBeenCalledWith({
         to: '+1234567890',
@@ -1523,7 +1511,10 @@ describe('NotificationService', () => {
       );
       setupLogMocks();
 
-      await notificationService.sendRescheduleLink(mockBooking, 'https://example.com/reschedule/abc');
+      await notificationService.sendRescheduleLink(
+        mockBooking,
+        'https://example.com/reschedule/abc',
+      );
 
       expect(templateService.resolveVariables).toHaveBeenCalledWith(
         template,
@@ -1757,9 +1748,7 @@ describe('NotificationService', () => {
         where: { id: 'booking1' },
         data: {
           customFields: {
-            notificationLog: [
-              expect.objectContaining({ type: 'sent', category: 'CANCEL_LINK' }),
-            ],
+            notificationLog: [expect.objectContaining({ type: 'sent', category: 'CANCEL_LINK' })],
           },
         },
       });
@@ -2130,9 +2119,7 @@ describe('NotificationService', () => {
         where: { id: 'booking1' },
         data: {
           customFields: {
-            notificationLog: [
-              expect.objectContaining({ type: 'sent', category: 'CONFIRMATION' }),
-            ],
+            notificationLog: [expect.objectContaining({ type: 'sent', category: 'CONFIRMATION' })],
           },
         },
       });
@@ -2322,10 +2309,7 @@ describe('NotificationService', () => {
 
       await notificationService.sendBookingConfirmation(mockBooking);
 
-      expect(templateService.resolveVariables).toHaveBeenCalledWith(
-        template1,
-        expect.any(Object),
-      );
+      expect(templateService.resolveVariables).toHaveBeenCalledWith(template1, expect.any(Object));
     });
 
     it('falls back to generic message for unknown template category', async () => {

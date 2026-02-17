@@ -10,7 +10,13 @@ export default function OffersSettingsPage() {
   const [offers, setOffers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ name: '', description: '', terms: '', validFrom: '', validUntil: '' });
+  const [form, setForm] = useState({
+    name: '',
+    description: '',
+    terms: '',
+    validFrom: '',
+    validUntil: '',
+  });
   const router = useRouter();
 
   const load = () => {
@@ -21,7 +27,9 @@ export default function OffersSettingsPage() {
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   const handleCreate = async () => {
     await api.post('/offers', {
@@ -49,7 +57,10 @@ export default function OffersSettingsPage() {
 
   return (
     <div className="p-6 max-w-2xl mx-auto">
-      <button onClick={() => router.push('/settings')} className="flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 mb-4">
+      <button
+        onClick={() => router.push('/settings')}
+        className="flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 mb-4"
+      >
         <ArrowLeft size={16} /> Back to Settings
       </button>
 
@@ -113,7 +124,10 @@ export default function OffersSettingsPage() {
             >
               Create
             </button>
-            <button onClick={() => setShowForm(false)} className="px-4 py-2 text-sm text-slate-600 hover:text-slate-800">
+            <button
+              onClick={() => setShowForm(false)}
+              className="px-4 py-2 text-sm text-slate-600 hover:text-slate-800"
+            >
               Cancel
             </button>
           </div>
@@ -125,16 +139,28 @@ export default function OffersSettingsPage() {
         {!loading && offers.length === 0 && !showForm && (
           <div className="text-center py-8">
             <Tag size={32} className="mx-auto text-slate-300 mb-2" />
-            <p className="text-sm text-slate-500">No offers yet. Create one to include in campaigns.</p>
+            <p className="text-sm text-slate-500">
+              No offers yet. Create one to include in campaigns.
+            </p>
           </div>
         )}
         {offers.map((offer) => (
-          <div key={offer.id} className="bg-white rounded-2xl shadow-soft p-4 flex items-center justify-between">
+          <div
+            key={offer.id}
+            className="bg-white rounded-2xl shadow-soft p-4 flex items-center justify-between"
+          >
             <div>
               <p className="text-sm font-medium text-slate-900">{offer.name}</p>
-              {offer.description && <p className="text-xs text-slate-500 mt-0.5">{offer.description}</p>}
+              {offer.description && (
+                <p className="text-xs text-slate-500 mt-0.5">{offer.description}</p>
+              )}
               <div className="flex items-center gap-2 mt-1">
-                <span className={cn('text-xs px-2 py-0.5 rounded-full', offer.isActive ? 'bg-sage-50 text-sage-700' : 'bg-slate-100 text-slate-500')}>
+                <span
+                  className={cn(
+                    'text-xs px-2 py-0.5 rounded-full',
+                    offer.isActive ? 'bg-sage-50 text-sage-700' : 'bg-slate-100 text-slate-500',
+                  )}
+                >
                   {offer.isActive ? 'Active' : 'Inactive'}
                 </span>
                 {offer.validUntil && (
@@ -151,7 +177,10 @@ export default function OffersSettingsPage() {
               >
                 {offer.isActive ? 'Deactivate' : 'Activate'}
               </button>
-              <button onClick={() => handleDelete(offer.id)} className="text-slate-400 hover:text-red-500 transition-colors">
+              <button
+                onClick={() => handleDelete(offer.id)}
+                className="text-slate-400 hover:text-red-500 transition-colors"
+              >
                 <Trash2 size={16} />
               </button>
             </div>

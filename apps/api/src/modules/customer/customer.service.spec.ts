@@ -205,9 +205,7 @@ describe('CustomerService', () => {
     });
 
     it('skips customers already having the tag', async () => {
-      prisma.customer.findMany.mockResolvedValue([
-        { id: 'c1', tags: ['vip'] },
-      ] as any);
+      prisma.customer.findMany.mockResolvedValue([{ id: 'c1', tags: ['vip'] }] as any);
 
       const result = await service.bulkUpdate('biz1', ['c1'], 'tag', { tag: 'vip' });
 
@@ -216,9 +214,7 @@ describe('CustomerService', () => {
     });
 
     it('removes tag from customers with untag action', async () => {
-      prisma.customer.findMany.mockResolvedValue([
-        { id: 'c1', tags: ['vip', 'new'] },
-      ] as any);
+      prisma.customer.findMany.mockResolvedValue([{ id: 'c1', tags: ['vip', 'new'] }] as any);
       prisma.customer.update.mockResolvedValue({} as any);
 
       const result = await service.bulkUpdate('biz1', ['c1'], 'untag', { tag: 'vip' });
@@ -231,9 +227,7 @@ describe('CustomerService', () => {
     });
 
     it('skips untag when customer does not have the tag', async () => {
-      prisma.customer.findMany.mockResolvedValue([
-        { id: 'c1', tags: ['other'] },
-      ] as any);
+      prisma.customer.findMany.mockResolvedValue([{ id: 'c1', tags: ['other'] }] as any);
 
       const result = await service.bulkUpdate('biz1', ['c1'], 'untag', { tag: 'vip' });
 
@@ -253,9 +247,9 @@ describe('CustomerService', () => {
     });
 
     it('throws for unknown action', async () => {
-      await expect(
-        service.bulkUpdate('biz1', ['c1'], 'delete' as any, {}),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.bulkUpdate('biz1', ['c1'], 'delete' as any, {})).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 
@@ -277,9 +271,7 @@ describe('CustomerService', () => {
     });
 
     it('counts errors for empty phone', async () => {
-      const result = await service.bulkCreate('biz1', [
-        { name: 'Emma', phone: '' },
-      ]);
+      const result = await service.bulkCreate('biz1', [{ name: 'Emma', phone: '' }]);
 
       expect(result.errors).toBe(1);
     });
@@ -288,9 +280,7 @@ describe('CustomerService', () => {
       prisma.customer.findFirst.mockResolvedValue(null);
       prisma.customer.create.mockRejectedValue(new Error('DB error'));
 
-      const result = await service.bulkCreate('biz1', [
-        { name: 'Emma', phone: '+123' },
-      ]);
+      const result = await service.bulkCreate('biz1', [{ name: 'Emma', phone: '+123' }]);
 
       expect(result.errors).toBe(1);
     });
@@ -315,9 +305,7 @@ describe('CustomerService', () => {
         {
           id: 'conv1',
           customer: { id: 'c1', name: '+123', phone: '+123', tags: [], customFields: {} },
-          messages: [
-            { direction: 'INBOUND', content: 'Hi, I am Emma', createdAt: new Date() },
-          ],
+          messages: [{ direction: 'INBOUND', content: 'Hi, I am Emma', createdAt: new Date() }],
         },
       ] as any);
       mockExtractor.extract.mockResolvedValue({
@@ -356,7 +344,14 @@ describe('CustomerService', () => {
       prisma.conversation.findMany.mockResolvedValue([
         {
           id: 'conv1',
-          customer: { id: 'c1', name: 'Emma', phone: '+123', email: 'e@test.com', tags: [], customFields: {} },
+          customer: {
+            id: 'c1',
+            name: 'Emma',
+            phone: '+123',
+            email: 'e@test.com',
+            tags: [],
+            customFields: {},
+          },
           messages: [{ direction: 'INBOUND', content: 'Hi', createdAt: new Date() }],
         },
       ] as any);

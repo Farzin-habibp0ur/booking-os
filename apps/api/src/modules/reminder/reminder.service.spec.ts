@@ -293,10 +293,16 @@ describe('ReminderService', () => {
       });
 
       it('marks TREATMENT_CHECK_IN as FAILED when send throws', async () => {
-        const checkInReminder = { ...mockReminder, id: 'reminder-checkin', type: 'TREATMENT_CHECK_IN' };
+        const checkInReminder = {
+          ...mockReminder,
+          id: 'reminder-checkin',
+          type: 'TREATMENT_CHECK_IN',
+        };
         prisma.reminder.findMany.mockResolvedValue([checkInReminder] as any);
         prisma.reminder.update.mockResolvedValue({} as any);
-        mockNotificationService.sendTreatmentCheckIn.mockRejectedValueOnce(new Error('Send failed'));
+        mockNotificationService.sendTreatmentCheckIn.mockRejectedValueOnce(
+          new Error('Send failed'),
+        );
 
         await reminderService.processPendingReminders();
 
@@ -389,9 +395,7 @@ describe('ReminderService', () => {
           customFields: {},
         } as any);
         prisma.reminder.update.mockResolvedValue({} as any);
-        mockNotificationService.sendConsultFollowUp.mockRejectedValueOnce(
-          new Error('Send failed'),
-        );
+        mockNotificationService.sendConsultFollowUp.mockRejectedValueOnce(new Error('Send failed'));
 
         await reminderService.processPendingReminders();
 

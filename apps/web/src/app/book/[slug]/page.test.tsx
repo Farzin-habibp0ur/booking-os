@@ -115,7 +115,7 @@ const mockBookingResult = {
   staffName: 'Dr. Smith',
   businessName: 'Glow Clinic',
   depositRequired: false,
-  depositAmount: null,
+  depositAmount: null as number | null,
 };
 
 const mockBookingResultWithDeposit = {
@@ -131,15 +131,11 @@ const mockBookingResultWithDeposit = {
 
 // ─── Helper to set up resolved API mocks ─────────────────────────────────────
 
-function setupSuccessfulLoad(
-  services = mockServices,
-  business = mockBusiness,
-) {
+function setupSuccessfulLoad(services = mockServices, business = mockBusiness) {
   mockPublicApi.get.mockImplementation((path: string) => {
     if (path === '/public/glow-clinic') return Promise.resolve(business);
     if (path === '/public/glow-clinic/services') return Promise.resolve(services);
-    if (path.includes('/public/glow-clinic/availability'))
-      return Promise.resolve(mockSlots);
+    if (path.includes('/public/glow-clinic/availability')) return Promise.resolve(mockSlots);
     return Promise.resolve([]);
   });
 }
@@ -424,8 +420,12 @@ describe('BookingPortalPage', () => {
       });
 
       // Each staff should have a radiogroup for their slots
-      expect(screen.getByRole('radiogroup', { name: 'Time slots for Dr. Smith' })).toBeInTheDocument();
-      expect(screen.getByRole('radiogroup', { name: 'Time slots for Dr. Jones' })).toBeInTheDocument();
+      expect(
+        screen.getByRole('radiogroup', { name: 'Time slots for Dr. Smith' }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('radiogroup', { name: 'Time slots for Dr. Jones' }),
+      ).toBeInTheDocument();
     });
 
     it('shows loading text while fetching slots', async () => {
@@ -434,8 +434,7 @@ describe('BookingPortalPage', () => {
       mockPublicApi.get.mockImplementation((path: string) => {
         if (path === '/public/glow-clinic') return Promise.resolve(mockBusiness);
         if (path === '/public/glow-clinic/services') return Promise.resolve(mockServices);
-        if (path.includes('/availability'))
-          return new Promise(() => {}); // never resolves
+        if (path.includes('/availability')) return new Promise(() => {}); // never resolves
         return Promise.resolve([]);
       });
 
@@ -501,8 +500,7 @@ describe('BookingPortalPage', () => {
       mockPublicApi.get.mockImplementation((path: string) => {
         if (path === '/public/glow-clinic') return Promise.resolve(mockBusiness);
         if (path === '/public/glow-clinic/services') return Promise.resolve(mockServices);
-        if (path.includes('/availability'))
-          return Promise.reject(new Error('Server error'));
+        if (path.includes('/availability')) return Promise.reject(new Error('Server error'));
         return Promise.resolve([]);
       });
 
@@ -1272,7 +1270,9 @@ describe('BookingPortalPage', () => {
         expect(screen.getByPlaceholderText('Your name *')).toBeInTheDocument();
         expect(screen.getByPlaceholderText('Phone number *')).toBeInTheDocument();
         expect(screen.getByPlaceholderText('Email (optional)')).toBeInTheDocument();
-        expect(screen.getByPlaceholderText('Preferred times or notes (optional)')).toBeInTheDocument();
+        expect(
+          screen.getByPlaceholderText('Preferred times or notes (optional)'),
+        ).toBeInTheDocument();
       });
     });
 
@@ -1497,8 +1497,7 @@ describe('BookingPortalPage', () => {
       mockPublicApi.get.mockImplementation((path: string) => {
         if (path === '/public/glow-clinic') return Promise.resolve(mockBusiness);
         if (path === '/public/glow-clinic/services') return Promise.resolve(mockServices);
-        if (path.includes('/availability'))
-          return Promise.resolve(mockSlots); // return slots with staff info for the staff list fetch
+        if (path.includes('/availability')) return Promise.resolve(mockSlots); // return slots with staff info for the staff list fetch
         return Promise.resolve([]);
       });
 

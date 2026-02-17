@@ -160,9 +160,7 @@ export default function NotificationSettingsPage() {
 
         {/* Aftercare & Check-in */}
         <div>
-          <p className="text-sm font-medium mb-1">
-            {t('notification_settings.aftercare_section')}
-          </p>
+          <p className="text-sm font-medium mb-1">{t('notification_settings.aftercare_section')}</p>
           <p className="text-xs text-slate-500 mb-3">
             {t('notification_settings.aftercare_section_desc')}
           </p>

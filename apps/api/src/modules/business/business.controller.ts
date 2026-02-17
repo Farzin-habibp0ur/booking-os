@@ -67,7 +67,8 @@ export class BusinessController {
   @Roles('ADMIN')
   async updateWaitlistSettings(
     @BusinessId() businessId: string,
-    @Body() body: { offerCount?: number; expiryMinutes?: number; quietStart?: string; quietEnd?: string },
+    @Body()
+    body: { offerCount?: number; expiryMinutes?: number; quietStart?: string; quietEnd?: string },
   ) {
     return this.businessService.updateWaitlistSettings(businessId, body);
   }

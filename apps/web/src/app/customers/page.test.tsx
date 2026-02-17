@@ -129,9 +129,7 @@ const MOCK_CUSTOMERS = [
 ];
 
 function setupApiWithCustomers(data = MOCK_CUSTOMERS) {
-  mockApi.get.mockImplementation(() =>
-    Promise.resolve({ data, total: data.length }),
-  );
+  mockApi.get.mockImplementation(() => Promise.resolve({ data, total: data.length }));
 }
 
 function setupApiEmpty() {
@@ -271,7 +269,9 @@ describe('CustomersPage', () => {
         expect(screen.getByTestId('empty-state')).toBeInTheDocument();
       });
       // The description should be the "add first" message (no search query)
-      expect(screen.getByTestId('empty-state-description')).toHaveTextContent('customers.add_first');
+      expect(screen.getByTestId('empty-state-description')).toHaveTextContent(
+        'customers.add_first',
+      );
     });
 
     it('shows add button in empty state when not searching', async () => {
@@ -1253,7 +1253,8 @@ describe('CustomersPage', () => {
       });
 
       // Create a mock CSV file
-      const csvContent = 'name,phone,email,tags\nJane Doe,+555,jane@test.com,VIP\nBob,+444,bob@test.com,New';
+      const csvContent =
+        'name,phone,email,tags\nJane Doe,+555,jane@test.com,VIP\nBob,+444,bob@test.com,New';
       const file = new File([csvContent], 'customers.csv', { type: 'text/csv' });
 
       // Find the hidden file input
@@ -1334,10 +1335,7 @@ describe('CustomersPage', () => {
       await user.click(allImportButtons[allImportButtons.length - 1]);
 
       await waitFor(() => {
-        expect(mockApi.upload).toHaveBeenCalledWith(
-          '/customers/import-csv',
-          expect.any(FormData),
-        );
+        expect(mockApi.upload).toHaveBeenCalledWith('/customers/import-csv', expect.any(FormData));
       });
 
       await waitFor(() => {

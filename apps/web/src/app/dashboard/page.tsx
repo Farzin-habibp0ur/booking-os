@@ -287,11 +287,10 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between">
             <p className="text-sm text-slate-500">Consult → Treatment</p>
           </div>
-          <p className="text-2xl font-serif font-bold mt-1">
-            {data.consultConversion?.rate ?? 0}%
-          </p>
+          <p className="text-2xl font-serif font-bold mt-1">{data.consultConversion?.rate ?? 0}%</p>
           <p className="text-xs text-slate-400 mt-1">
-            {data.consultConversion?.converted ?? 0} of {data.consultConversion?.consultCustomers ?? 0} consults converted
+            {data.consultConversion?.converted ?? 0} of{' '}
+            {data.consultConversion?.consultCustomers ?? 0} consults converted
           </p>
         </div>
 
@@ -479,9 +478,10 @@ export default function DashboardPage() {
                     <div key={c.id} className="flex items-center justify-between text-xs">
                       <span className="text-slate-700 truncate">{c.customer?.name}</span>
                       <span className="text-slate-400">
-                        {c.lastMessageAt && t('dashboard.waiting_since', {
-                          time: timeAgo(new Date(c.lastMessageAt), t),
-                        })}
+                        {c.lastMessageAt &&
+                          t('dashboard.waiting_since', {
+                            time: timeAgo(new Date(c.lastMessageAt), t),
+                          })}
                       </span>
                     </div>
                   ))}
@@ -574,10 +574,14 @@ export default function DashboardPage() {
                         <p className="text-xs text-slate-500">
                           {b.service?.name}
                           {b.service?.kind === 'CONSULT' && (
-                            <span className="ml-1 text-[9px] bg-lavender-50 text-lavender-900 px-1 py-0 rounded-full">C</span>
+                            <span className="ml-1 text-[9px] bg-lavender-50 text-lavender-900 px-1 py-0 rounded-full">
+                              C
+                            </span>
                           )}
                           {b.service?.kind === 'TREATMENT' && (
-                            <span className="ml-1 text-[9px] bg-sage-50 text-sage-900 px-1 py-0 rounded-full">T</span>
+                            <span className="ml-1 text-[9px] bg-sage-50 text-sage-900 px-1 py-0 rounded-full">
+                              T
+                            </span>
                           )}
                           {b.staff ? ` · ${b.staff.name}` : ''}
                         </p>

@@ -196,7 +196,13 @@ export default function BookingFormModal({
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-end" role="dialog" aria-modal="true" aria-labelledby="booking-form-title" ref={modalRef}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-end"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="booking-form-title"
+      ref={modalRef}
+    >
       <div className="absolute inset-0 bg-black/30" onClick={onClose} />
       <div className="relative w-[480px] h-full bg-white shadow-soft-lg flex flex-col">
         {/* Header */}
@@ -268,18 +274,23 @@ export default function BookingFormModal({
                 </option>
               ))}
             </select>
-            {serviceId && (() => {
-              const svc = services.find((s: any) => s.id === serviceId);
-              if (!svc || svc.kind === 'OTHER') return null;
-              return (
-                <span className={cn(
-                  'inline-block mt-1 text-[10px] px-1.5 py-0.5 rounded-full font-medium',
-                  svc.kind === 'CONSULT' ? 'bg-lavender-50 text-lavender-900' : 'bg-sage-50 text-sage-900',
-                )}>
-                  {svc.kind === 'CONSULT' ? 'Consult' : 'Treatment'}
-                </span>
-              );
-            })()}
+            {serviceId &&
+              (() => {
+                const svc = services.find((s: any) => s.id === serviceId);
+                if (!svc || svc.kind === 'OTHER') return null;
+                return (
+                  <span
+                    className={cn(
+                      'inline-block mt-1 text-[10px] px-1.5 py-0.5 rounded-full font-medium',
+                      svc.kind === 'CONSULT'
+                        ? 'bg-lavender-50 text-lavender-900'
+                        : 'bg-sage-50 text-sage-900',
+                    )}
+                  >
+                    {svc.kind === 'CONSULT' ? 'Consult' : 'Treatment'}
+                  </span>
+                );
+              })()}
           </div>
 
           {/* Staff filter (optional) */}

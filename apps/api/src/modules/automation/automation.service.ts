@@ -79,15 +79,18 @@ export class AutomationService {
     });
   }
 
-  async createRule(businessId: string, data: {
-    name: string;
-    trigger: string;
-    filters?: any;
-    actions?: any;
-    quietStart?: string;
-    quietEnd?: string;
-    maxPerCustomerPerDay?: number;
-  }) {
+  async createRule(
+    businessId: string,
+    data: {
+      name: string;
+      trigger: string;
+      filters?: any;
+      actions?: any;
+      quietStart?: string;
+      quietEnd?: string;
+      maxPerCustomerPerDay?: number;
+    },
+  ) {
     return this.prisma.automationRule.create({
       data: {
         businessId,
@@ -122,7 +125,9 @@ export class AutomationService {
         ...(data.isActive !== undefined && { isActive: data.isActive }),
         ...(data.quietStart !== undefined && { quietStart: data.quietStart }),
         ...(data.quietEnd !== undefined && { quietEnd: data.quietEnd }),
-        ...(data.maxPerCustomerPerDay !== undefined && { maxPerCustomerPerDay: data.maxPerCustomerPerDay }),
+        ...(data.maxPerCustomerPerDay !== undefined && {
+          maxPerCustomerPerDay: data.maxPerCustomerPerDay,
+        }),
       },
     });
   }

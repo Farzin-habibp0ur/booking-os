@@ -3,7 +3,18 @@
 import { useState, useEffect, useRef } from 'react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import { X, Calendar, Clock, User, MessageSquare, AlertTriangle, Repeat, Send, ShieldCheck, Link2 } from 'lucide-react';
+import {
+  X,
+  Calendar,
+  Clock,
+  User,
+  MessageSquare,
+  AlertTriangle,
+  Repeat,
+  Send,
+  ShieldCheck,
+  Link2,
+} from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/lib/toast';
@@ -45,9 +56,21 @@ export default function BookingDetailModal({
   const [rescheduleLinkSent, setRescheduleLinkSent] = useState(false);
   const [sendingCancelLink, setSendingCancelLink] = useState(false);
   const [cancelLinkSent, setCancelLinkSent] = useState(false);
-  const [cancelPolicy, setCancelPolicy] = useState<{ allowed: boolean; reason?: string; policyText?: string; adminCanOverride?: boolean } | null>(null);
-  const [reschedulePolicy, setReschedulePolicy] = useState<{ allowed: boolean; reason?: string; policyText?: string; adminCanOverride?: boolean } | null>(null);
-  const [overrideOverlay, setOverrideOverlay] = useState<{ action: string; label: string } | null>(null);
+  const [cancelPolicy, setCancelPolicy] = useState<{
+    allowed: boolean;
+    reason?: string;
+    policyText?: string;
+    adminCanOverride?: boolean;
+  } | null>(null);
+  const [reschedulePolicy, setReschedulePolicy] = useState<{
+    allowed: boolean;
+    reason?: string;
+    policyText?: string;
+    adminCanOverride?: boolean;
+  } | null>(null);
+  const [overrideOverlay, setOverrideOverlay] = useState<{ action: string; label: string } | null>(
+    null,
+  );
   const [overrideReason, setOverrideReason] = useState('');
   const { t } = useI18n();
   const { toast } = useToast();
@@ -190,7 +213,10 @@ export default function BookingDetailModal({
     const log = (booking.customFields?.selfServeLog || []) as any[];
     const recent = log
       .filter((e: any) => e.type === type)
-      .sort((a: any, b: any) => new Date(b.sentAt || b.at).getTime() - new Date(a.sentAt || a.at).getTime());
+      .sort(
+        (a: any, b: any) =>
+          new Date(b.sentAt || b.at).getTime() - new Date(a.sentAt || a.at).getTime(),
+      );
     if (recent.length === 0) return false;
     const last = new Date(recent[0].sentAt || recent[0].at).getTime();
     return Date.now() - last < 24 * 60 * 60 * 1000;
@@ -205,7 +231,11 @@ export default function BookingDetailModal({
         break;
       case 'PENDING_DEPOSIT':
         if (isAdmin) {
-          actions.push({ status: 'CONFIRMED', label: t('override.confirm_without_deposit'), variant: 'green' });
+          actions.push({
+            status: 'CONFIRMED',
+            label: t('override.confirm_without_deposit'),
+            variant: 'green',
+          });
         }
         actions.push({ status: 'CANCELLED', label: 'Cancel', variant: 'red' });
         break;
@@ -229,7 +259,13 @@ export default function BookingDetailModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="booking-detail-title" ref={modalRef}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="booking-detail-title"
+      ref={modalRef}
+    >
       <div className="absolute inset-0 bg-black/30 animate-fade-in" onClick={onClose} />
       <div className="relative w-[520px] max-h-[80vh] bg-white rounded-2xl shadow-soft-lg flex flex-col animate-slide-in-right">
         {/* Override reason overlay */}
@@ -238,11 +274,11 @@ export default function BookingDetailModal({
             <div className="p-6 w-full max-w-sm">
               <ShieldCheck size={32} className="mx-auto text-orange-500 mb-3" />
               <p className="font-semibold mb-1 text-center">{t('override.title')}</p>
-              <p className="text-sm text-slate-500 mb-4 text-center">
-                {t('override.warning')}
-              </p>
+              <p className="text-sm text-slate-500 mb-4 text-center">{t('override.warning')}</p>
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-1">{t('override.reason_label')}</label>
+                <label className="block text-sm font-medium mb-1">
+                  {t('override.reason_label')}
+                </label>
                 <textarea
                   value={overrideReason}
                   onChange={(e) => setOverrideReason(e.target.value)}
@@ -256,7 +292,10 @@ export default function BookingDetailModal({
               </div>
               <div className="flex gap-2 justify-center">
                 <button
-                  onClick={() => { setOverrideOverlay(null); setOverrideReason(''); }}
+                  onClick={() => {
+                    setOverrideOverlay(null);
+                    setOverrideReason('');
+                  }}
                   className="px-4 py-2 border rounded-xl text-sm hover:bg-slate-50"
                 >
                   {t('common.back')}
@@ -362,7 +401,10 @@ export default function BookingDetailModal({
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-slate-100">
           <div className="flex items-center gap-3">
-            <h2 id="booking-detail-title" className="text-lg font-serif font-semibold text-slate-900">
+            <h2
+              id="booking-detail-title"
+              className="text-lg font-serif font-semibold text-slate-900"
+            >
               {booking.customer?.name}
             </h2>
             <span
@@ -381,7 +423,11 @@ export default function BookingDetailModal({
               </span>
             )}
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-gray-600" aria-label="Close">
+          <button
+            onClick={onClose}
+            className="text-slate-400 hover:text-gray-600"
+            aria-label="Close"
+          >
             <X size={20} />
           </button>
         </div>
@@ -397,10 +443,14 @@ export default function BookingDetailModal({
                 <p className="text-sm font-medium">
                   {booking.service?.name}
                   {booking.service?.kind === 'CONSULT' && (
-                    <span className="ml-1.5 text-[10px] bg-lavender-50 text-lavender-900 px-1.5 py-0.5 rounded-full font-medium">Consult</span>
+                    <span className="ml-1.5 text-[10px] bg-lavender-50 text-lavender-900 px-1.5 py-0.5 rounded-full font-medium">
+                      Consult
+                    </span>
                   )}
                   {booking.service?.kind === 'TREATMENT' && (
-                    <span className="ml-1.5 text-[10px] bg-sage-50 text-sage-900 px-1.5 py-0.5 rounded-full font-medium">Treatment</span>
+                    <span className="ml-1.5 text-[10px] bg-sage-50 text-sage-900 px-1.5 py-0.5 rounded-full font-medium">
+                      Treatment
+                    </span>
                   )}
                 </p>
                 <p className="text-xs text-slate-400">
@@ -479,13 +529,19 @@ export default function BookingDetailModal({
                 Created {new Date(booking.createdAt).toLocaleString()}
               </div>
               {(booking.customFields?.depositRequestLog || []).map((entry: any, i: number) => (
-                <div key={`deposit-${i}`} className="flex items-center gap-2 text-xs text-amber-700">
+                <div
+                  key={`deposit-${i}`}
+                  className="flex items-center gap-2 text-xs text-amber-700"
+                >
                   <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                   {t('booking.deposit_request_sent')} · {new Date(entry.sentAt).toLocaleString()}
                 </div>
               ))}
               {(booking.customFields?.overrideLog || []).map((entry: any, i: number) => (
-                <div key={`override-${i}`} className="flex items-start gap-2 text-xs text-orange-700">
+                <div
+                  key={`override-${i}`}
+                  className="flex items-start gap-2 text-xs text-orange-700"
+                >
                   <ShieldCheck size={12} className="mt-0.5 flex-shrink-0" />
                   <div>
                     <span className="font-medium">
@@ -504,12 +560,18 @@ export default function BookingDetailModal({
                 </div>
               ))}
               {(booking.customFields?.selfServeLog || []).map((entry: any, i: number) => (
-                <div key={`selfserve-${i}`} className="flex items-center gap-2 text-xs text-sage-700">
+                <div
+                  key={`selfserve-${i}`}
+                  className="flex items-center gap-2 text-xs text-sage-700"
+                >
                   <Link2 size={12} className="flex-shrink-0" />
                   <span>
-                    {entry.type === 'RESCHEDULE_LINK_SENT' && `${t('timeline.reschedule_link_sent')} · ${entry.sentBy || 'Staff'}`}
-                    {entry.type === 'CANCEL_LINK_SENT' && `${t('timeline.cancel_link_sent')} · ${entry.sentBy || 'Staff'}`}
-                    {entry.type === 'RESCHEDULED_BY_CUSTOMER' && t('timeline.rescheduled_by_customer')}
+                    {entry.type === 'RESCHEDULE_LINK_SENT' &&
+                      `${t('timeline.reschedule_link_sent')} · ${entry.sentBy || 'Staff'}`}
+                    {entry.type === 'CANCEL_LINK_SENT' &&
+                      `${t('timeline.cancel_link_sent')} · ${entry.sentBy || 'Staff'}`}
+                    {entry.type === 'RESCHEDULED_BY_CUSTOMER' &&
+                      t('timeline.rescheduled_by_customer')}
                     {entry.type === 'CANCELLED_BY_CUSTOMER' && t('timeline.cancelled_by_customer')}
                     {' · '}
                     {new Date(entry.sentAt || entry.at).toLocaleString()}
@@ -526,23 +588,25 @@ export default function BookingDetailModal({
                   </span>
                 </div>
               ))}
-              {booking.status !== 'PENDING' && booking.status !== 'CONFIRMED' && booking.status !== 'PENDING_DEPOSIT' && (
-                <div className="flex items-center gap-2 text-xs text-slate-500">
-                  <div
-                    className={cn(
-                      'w-1.5 h-1.5 rounded-full',
-                      booking.status === 'COMPLETED'
-                        ? 'bg-sage-500'
-                        : booking.status === 'CANCELLED'
-                          ? 'bg-red-500'
-                          : booking.status === 'NO_SHOW'
-                            ? 'bg-red-400'
-                            : 'bg-amber-500',
-                    )}
-                  />
-                  {statusConfig.label} · {new Date(booking.updatedAt).toLocaleString()}
-                </div>
-              )}
+              {booking.status !== 'PENDING' &&
+                booking.status !== 'CONFIRMED' &&
+                booking.status !== 'PENDING_DEPOSIT' && (
+                  <div className="flex items-center gap-2 text-xs text-slate-500">
+                    <div
+                      className={cn(
+                        'w-1.5 h-1.5 rounded-full',
+                        booking.status === 'COMPLETED'
+                          ? 'bg-sage-500'
+                          : booking.status === 'CANCELLED'
+                            ? 'bg-red-500'
+                            : booking.status === 'NO_SHOW'
+                              ? 'bg-red-400'
+                              : 'bg-amber-500',
+                      )}
+                    />
+                    {statusConfig.label} · {new Date(booking.updatedAt).toLocaleString()}
+                  </div>
+                )}
             </div>
           </div>
         </div>
@@ -554,7 +618,9 @@ export default function BookingDetailModal({
             <div className="flex items-start gap-2 p-3 bg-orange-50 border border-orange-100 rounded-xl">
               <ShieldCheck size={16} className="text-orange-600 mt-0.5 flex-shrink-0" />
               <div>
-                <p className="text-sm font-medium text-orange-800">{t('policy.cancellation_blocked')}</p>
+                <p className="text-sm font-medium text-orange-800">
+                  {t('policy.cancellation_blocked')}
+                </p>
                 <p className="text-xs text-orange-600 mt-0.5">{cancelPolicy.reason}</p>
                 {cancelPolicy.policyText && (
                   <p className="text-xs text-orange-600 mt-1">{cancelPolicy.policyText}</p>
@@ -569,7 +635,9 @@ export default function BookingDetailModal({
             <div className="flex items-start gap-2 p-3 bg-orange-50 border border-orange-100 rounded-xl">
               <ShieldCheck size={16} className="text-orange-600 mt-0.5 flex-shrink-0" />
               <div>
-                <p className="text-sm font-medium text-orange-800">{t('policy.reschedule_blocked')}</p>
+                <p className="text-sm font-medium text-orange-800">
+                  {t('policy.reschedule_blocked')}
+                </p>
                 <p className="text-xs text-orange-600 mt-0.5">{reschedulePolicy.reason}</p>
                 {reschedulePolicy.policyText && (
                   <p className="text-xs text-orange-600 mt-1">{reschedulePolicy.policyText}</p>
@@ -608,7 +676,12 @@ export default function BookingDetailModal({
           {/* Admin override for cancel within policy */}
           {isAdmin && cancelPolicy?.allowed === false && (
             <button
-              onClick={() => setOverrideOverlay({ action: 'CANCELLED', label: t('override.cancel_within_policy') })}
+              onClick={() =>
+                setOverrideOverlay({
+                  action: 'CANCELLED',
+                  label: t('override.cancel_within_policy'),
+                })
+              }
               disabled={!!updating}
               className="w-full py-2 border border-orange-300 text-orange-700 rounded-xl text-sm font-medium hover:bg-orange-50 transition-colors flex items-center justify-center gap-2"
             >
@@ -650,38 +723,39 @@ export default function BookingDetailModal({
           )}
 
           {/* Self-serve link buttons */}
-          {['CONFIRMED', 'PENDING_DEPOSIT'].includes(booking.status) && (isAdmin || user?.role === 'AGENT') && (
-            <div className="flex gap-2">
-              <button
-                onClick={handleSendRescheduleLink}
-                disabled={sendingRescheduleLink || isLinkRecentlySent('RESCHEDULE_LINK_SENT')}
-                className="flex-1 py-2 border border-slate-200 rounded-xl text-sm transition-colors hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
-              >
-                <Link2 size={14} />
-                {rescheduleLinkSent
-                  ? t('booking.link_sent')
-                  : sendingRescheduleLink
-                    ? t('common.loading')
-                    : isLinkRecentlySent('RESCHEDULE_LINK_SENT')
-                      ? t('booking.link_already_sent')
-                      : t('booking.send_reschedule_link')}
-              </button>
-              <button
-                onClick={handleSendCancelLink}
-                disabled={sendingCancelLink || isLinkRecentlySent('CANCEL_LINK_SENT')}
-                className="flex-1 py-2 border border-slate-200 rounded-xl text-sm transition-colors hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
-              >
-                <Link2 size={14} />
-                {cancelLinkSent
-                  ? t('booking.link_sent')
-                  : sendingCancelLink
-                    ? t('common.loading')
-                    : isLinkRecentlySent('CANCEL_LINK_SENT')
-                      ? t('booking.link_already_sent')
-                      : t('booking.send_cancel_link')}
-              </button>
-            </div>
-          )}
+          {['CONFIRMED', 'PENDING_DEPOSIT'].includes(booking.status) &&
+            (isAdmin || user?.role === 'AGENT') && (
+              <div className="flex gap-2">
+                <button
+                  onClick={handleSendRescheduleLink}
+                  disabled={sendingRescheduleLink || isLinkRecentlySent('RESCHEDULE_LINK_SENT')}
+                  className="flex-1 py-2 border border-slate-200 rounded-xl text-sm transition-colors hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
+                >
+                  <Link2 size={14} />
+                  {rescheduleLinkSent
+                    ? t('booking.link_sent')
+                    : sendingRescheduleLink
+                      ? t('common.loading')
+                      : isLinkRecentlySent('RESCHEDULE_LINK_SENT')
+                        ? t('booking.link_already_sent')
+                        : t('booking.send_reschedule_link')}
+                </button>
+                <button
+                  onClick={handleSendCancelLink}
+                  disabled={sendingCancelLink || isLinkRecentlySent('CANCEL_LINK_SENT')}
+                  className="flex-1 py-2 border border-slate-200 rounded-xl text-sm transition-colors hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
+                >
+                  <Link2 size={14} />
+                  {cancelLinkSent
+                    ? t('booking.link_sent')
+                    : sendingCancelLink
+                      ? t('common.loading')
+                      : isLinkRecentlySent('CANCEL_LINK_SENT')
+                        ? t('booking.link_already_sent')
+                        : t('booking.send_cancel_link')}
+                </button>
+              </div>
+            )}
         </div>
       </div>
     </div>

@@ -126,73 +126,100 @@ export default function CustomersPage() {
 
       <div className="bg-white rounded-2xl shadow-soft overflow-hidden">
         <div className="overflow-x-auto">
-        <table className="w-full min-w-[640px]">
-          <thead className="bg-slate-50 border-b">
-            <tr>
-              <th className="w-10 p-3">
-                <input
-                  type="checkbox"
-                  checked={(customers.data || []).length > 0 && selectedIds.size === (customers.data || []).length}
-                  onChange={toggleSelectAll}
-                  className="rounded text-sage-600"
-                />
-              </th>
-              <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
-                {t('common.name')}
-              </th>
-              <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
-                {t('common.phone')}
-              </th>
-              <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
-                {t('common.email')}
-              </th>
-              <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
-                {t('common.tags')}
-              </th>
-              <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
-                {t('common.date')}
-              </th>
-              <th className="w-8"></th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {loading
-              ? Array.from({ length: 5 }).map((_, i) => <TableRowSkeleton key={i} cols={7} />)
-              : (customers.data || []).map((c: any) => (
-                  <tr
-                    key={c.id}
-                    className={cn('hover:bg-slate-50 cursor-pointer', selectedIds.has(c.id) && 'bg-sage-50/50')}
-                  >
-                    <td className="w-10 p-3" onClick={(e) => e.stopPropagation()}>
-                      <input
-                        type="checkbox"
-                        checked={selectedIds.has(c.id)}
-                        onChange={() => toggleSelect(c.id)}
-                        className="rounded text-sage-600"
-                      />
-                    </td>
-                    <td className="p-3 text-sm font-medium" onClick={() => router.push(`/customers/${c.id}`)}>{c.name}</td>
-                    <td className="p-3 text-sm text-slate-600" onClick={() => router.push(`/customers/${c.id}`)}>{c.phone}</td>
-                    <td className="p-3 text-sm text-slate-600" onClick={() => router.push(`/customers/${c.id}`)}>{c.email || '—'}</td>
-                    <td className="p-3" onClick={() => router.push(`/customers/${c.id}`)}>
-                      <div className="flex gap-1">
-                        {c.tags?.map((tg: string) => (
-                          <span key={tg} className="text-xs bg-slate-100 px-2 py-0.5 rounded-full">
-                            {tg}
-                          </span>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="p-3 text-sm text-slate-500" onClick={() => router.push(`/customers/${c.id}`)}>
-                      {new Date(c.createdAt).toLocaleDateString()}
-                    </td>
-                    <td className="p-3" onClick={() => router.push(`/customers/${c.id}`)}>
-                      <ChevronRight size={14} className="text-slate-400" />
-                    </td>
-                  </tr>
-                ))}
-          </tbody>
-        </table>
+          <table className="w-full min-w-[640px]">
+            <thead className="bg-slate-50 border-b">
+              <tr>
+                <th className="w-10 p-3">
+                  <input
+                    type="checkbox"
+                    checked={
+                      (customers.data || []).length > 0 &&
+                      selectedIds.size === (customers.data || []).length
+                    }
+                    onChange={toggleSelectAll}
+                    className="rounded text-sage-600"
+                  />
+                </th>
+                <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
+                  {t('common.name')}
+                </th>
+                <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
+                  {t('common.phone')}
+                </th>
+                <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
+                  {t('common.email')}
+                </th>
+                <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
+                  {t('common.tags')}
+                </th>
+                <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
+                  {t('common.date')}
+                </th>
+                <th className="w-8"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {loading
+                ? Array.from({ length: 5 }).map((_, i) => <TableRowSkeleton key={i} cols={7} />)
+                : (customers.data || []).map((c: any) => (
+                    <tr
+                      key={c.id}
+                      className={cn(
+                        'hover:bg-slate-50 cursor-pointer',
+                        selectedIds.has(c.id) && 'bg-sage-50/50',
+                      )}
+                    >
+                      <td className="w-10 p-3" onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(c.id)}
+                          onChange={() => toggleSelect(c.id)}
+                          className="rounded text-sage-600"
+                        />
+                      </td>
+                      <td
+                        className="p-3 text-sm font-medium"
+                        onClick={() => router.push(`/customers/${c.id}`)}
+                      >
+                        {c.name}
+                      </td>
+                      <td
+                        className="p-3 text-sm text-slate-600"
+                        onClick={() => router.push(`/customers/${c.id}`)}
+                      >
+                        {c.phone}
+                      </td>
+                      <td
+                        className="p-3 text-sm text-slate-600"
+                        onClick={() => router.push(`/customers/${c.id}`)}
+                      >
+                        {c.email || '—'}
+                      </td>
+                      <td className="p-3" onClick={() => router.push(`/customers/${c.id}`)}>
+                        <div className="flex gap-1">
+                          {c.tags?.map((tg: string) => (
+                            <span
+                              key={tg}
+                              className="text-xs bg-slate-100 px-2 py-0.5 rounded-full"
+                            >
+                              {tg}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+                      <td
+                        className="p-3 text-sm text-slate-500"
+                        onClick={() => router.push(`/customers/${c.id}`)}
+                      >
+                        {new Date(c.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="p-3" onClick={() => router.push(`/customers/${c.id}`)}>
+                        <ChevronRight size={14} className="text-slate-400" />
+                      </td>
+                    </tr>
+                  ))}
+            </tbody>
+          </table>
         </div>
         {!loading && (!customers.data || customers.data.length === 0) && (
           <EmptyState
@@ -219,8 +246,20 @@ export default function CustomersPage() {
         count={selectedIds.size}
         onClear={() => setSelectedIds(new Set())}
         actions={[
-          { label: 'Add Tag', onClick: () => { setTagInput(''); setBulkTagModal('tag'); } },
-          { label: 'Remove Tag', onClick: () => { setTagInput(''); setBulkTagModal('untag'); } },
+          {
+            label: 'Add Tag',
+            onClick: () => {
+              setTagInput('');
+              setBulkTagModal('tag');
+            },
+          },
+          {
+            label: 'Remove Tag',
+            onClick: () => {
+              setTagInput('');
+              setBulkTagModal('untag');
+            },
+          },
         ]}
       />
 

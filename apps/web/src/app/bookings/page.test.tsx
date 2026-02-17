@@ -99,9 +99,18 @@ jest.mock('@/components/booking-detail-modal', () => ({
     return props.isOpen ? (
       <div data-testid="booking-detail-modal">
         <span data-testid="detail-booking-id">{props.booking?.id}</span>
-        <button data-testid="detail-close-btn" onClick={props.onClose}>Close</button>
-        <button data-testid="detail-updated-btn" onClick={props.onUpdated}>Updated</button>
-        <button data-testid="detail-reschedule-btn" onClick={() => props.onReschedule(props.booking)}>Reschedule</button>
+        <button data-testid="detail-close-btn" onClick={props.onClose}>
+          Close
+        </button>
+        <button data-testid="detail-updated-btn" onClick={props.onUpdated}>
+          Updated
+        </button>
+        <button
+          data-testid="detail-reschedule-btn"
+          onClick={() => props.onReschedule(props.booking)}
+        >
+          Reschedule
+        </button>
       </div>
     ) : null;
   },
@@ -116,8 +125,12 @@ jest.mock('@/components/booking-form-modal', () => ({
     return props.isOpen ? (
       <div data-testid="booking-form-modal">
         <span data-testid="form-reschedule-id">{props.rescheduleBookingId}</span>
-        <button data-testid="form-close-btn" onClick={props.onClose}>Close</button>
-        <button data-testid="form-created-btn" onClick={props.onCreated}>Created</button>
+        <button data-testid="form-close-btn" onClick={props.onClose}>
+          Close
+        </button>
+        <button data-testid="form-created-btn" onClick={props.onCreated}>
+          Created
+        </button>
       </div>
     ) : null;
   },
@@ -131,9 +144,15 @@ jest.mock('@/components/bulk-action-bar', () => ({
     return (
       <div data-testid="bulk-action-bar">
         <span data-testid="bulk-count">{props.count} selected</span>
-        <button data-testid="bulk-clear-btn" onClick={props.onClear}>Clear</button>
+        <button data-testid="bulk-clear-btn" onClick={props.onClear}>
+          Clear
+        </button>
         {props.actions.map((action: any) => (
-          <button key={action.label} data-testid={`bulk-action-${action.label.toLowerCase().replace(/\s+/g, '-')}`} onClick={action.onClick}>
+          <button
+            key={action.label}
+            data-testid={`bulk-action-${action.label.toLowerCase().replace(/\s+/g, '-')}`}
+            onClick={action.onClick}
+          >
             {action.label}
           </button>
         ))}
@@ -209,8 +228,21 @@ describe('BookingsPage', () => {
   it('displays bookings in table with all columns', async () => {
     mockApi.get.mockResolvedValue({
       data: [
-        createBooking({ id: '1', customer: { name: 'John' }, service: { name: 'Haircut' }, staff: { name: 'Sarah' }, status: 'CONFIRMED' }),
-        createBooking({ id: '2', customer: { name: 'Jane' }, service: { name: 'Massage' }, staff: { name: 'Mike' }, status: 'PENDING', startTime: '2026-01-16T14:00:00Z' }),
+        createBooking({
+          id: '1',
+          customer: { name: 'John' },
+          service: { name: 'Haircut' },
+          staff: { name: 'Sarah' },
+          status: 'CONFIRMED',
+        }),
+        createBooking({
+          id: '2',
+          customer: { name: 'Jane' },
+          service: { name: 'Massage' },
+          staff: { name: 'Mike' },
+          status: 'PENDING',
+          startTime: '2026-01-16T14:00:00Z',
+        }),
       ],
       total: 2,
     });

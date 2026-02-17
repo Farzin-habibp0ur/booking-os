@@ -6,7 +6,19 @@ import { Plus, Pencil, Trash2, Eye, X, FileText, AlertTriangle } from 'lucide-re
 import { cn } from '@/lib/cn';
 import { useI18n } from '@/lib/i18n';
 
-const CATEGORIES = ['CONFIRMATION', 'REMINDER', 'FOLLOW_UP', 'CONSULT_FOLLOW_UP', 'AFTERCARE', 'TREATMENT_CHECK_IN', 'DEPOSIT_REQUIRED', 'CANCELLATION', 'RESCHEDULE_LINK', 'CANCEL_LINK', 'CUSTOM'];
+const CATEGORIES = [
+  'CONFIRMATION',
+  'REMINDER',
+  'FOLLOW_UP',
+  'CONSULT_FOLLOW_UP',
+  'AFTERCARE',
+  'TREATMENT_CHECK_IN',
+  'DEPOSIT_REQUIRED',
+  'CANCELLATION',
+  'RESCHEDULE_LINK',
+  'CANCEL_LINK',
+  'CUSTOM',
+];
 
 const CATEGORY_KEYS: Record<string, string> = {
   CONFIRMATION: 'templates.category_confirmation',
@@ -65,7 +77,11 @@ export default function TemplatesPage() {
       if (match) {
         const varName = match[1];
         if (SAMPLE_VARS[varName]) return <span key={i}>{SAMPLE_VARS[varName]}</span>;
-        return <span key={i} className="bg-red-100 text-red-700 px-1 rounded">{part}</span>;
+        return (
+          <span key={i} className="bg-red-100 text-red-700 px-1 rounded">
+            {part}
+          </span>
+        );
       }
       return <span key={i}>{part}</span>;
     });
@@ -146,14 +162,14 @@ export default function TemplatesPage() {
                                 : tpl.category === 'TREATMENT_CHECK_IN'
                                   ? 'bg-amber-50 text-amber-700'
                                   : tpl.category === 'DEPOSIT_REQUIRED'
-                                  ? 'bg-amber-100 text-amber-700'
-                                  : tpl.category === 'CANCELLATION'
-                                    ? 'bg-red-100 text-red-700'
-                                    : tpl.category === 'RESCHEDULE_LINK'
-                                      ? 'bg-sage-100 text-sage-700'
-                                      : tpl.category === 'CANCEL_LINK'
-                                        ? 'bg-red-50 text-red-600'
-                                        : 'bg-slate-100 text-slate-700',
+                                    ? 'bg-amber-100 text-amber-700'
+                                    : tpl.category === 'CANCELLATION'
+                                      ? 'bg-red-100 text-red-700'
+                                      : tpl.category === 'RESCHEDULE_LINK'
+                                        ? 'bg-sage-100 text-sage-700'
+                                        : tpl.category === 'CANCEL_LINK'
+                                          ? 'bg-red-50 text-red-600'
+                                          : 'bg-slate-100 text-slate-700',
                     )}
                   >
                     {t(CATEGORY_KEYS[tpl.category] || 'templates.category_custom')}
@@ -285,7 +301,11 @@ function TemplateForm({
       if (match) {
         const varName = match[1];
         if (SAMPLE_VARS[varName]) return <span key={i}>{SAMPLE_VARS[varName]}</span>;
-        return <span key={i} className="bg-red-100 text-red-700 px-1 rounded">{part}</span>;
+        return (
+          <span key={i} className="bg-red-100 text-red-700 px-1 rounded">
+            {part}
+          </span>
+        );
       }
       return <span key={i}>{part}</span>;
     });

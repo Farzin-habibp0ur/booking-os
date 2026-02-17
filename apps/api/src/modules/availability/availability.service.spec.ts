@@ -41,7 +41,11 @@ describe('AvailabilityService', () => {
     });
 
     it('returns empty array when no active staff exist', async () => {
-      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', businessId: 'biz1', durationMins: 30 } as any);
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        businessId: 'biz1',
+        durationMins: 30,
+      } as any);
       prisma.staff.findMany.mockResolvedValue([]);
 
       const result = await service.getAvailableSlots('biz1', FUTURE_DATE, 'svc1');
@@ -50,7 +54,11 @@ describe('AvailabilityService', () => {
     });
 
     it('filters staff by specific staffId when provided', async () => {
-      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', businessId: 'biz1', durationMins: 30 } as any);
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        businessId: 'biz1',
+        durationMins: 30,
+      } as any);
       prisma.staff.findMany.mockResolvedValue([]);
 
       await service.getAvailableSlots('biz1', FUTURE_DATE, 'svc1', 'staff1');
@@ -62,7 +70,11 @@ describe('AvailabilityService', () => {
     });
 
     it('fetches all active staff when no staffId is given', async () => {
-      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', businessId: 'biz1', durationMins: 30 } as any);
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        businessId: 'biz1',
+        durationMins: 30,
+      } as any);
       prisma.staff.findMany.mockResolvedValue([]);
 
       await service.getAvailableSlots('biz1', FUTURE_DATE, 'svc1');
@@ -74,7 +86,11 @@ describe('AvailabilityService', () => {
     });
 
     it('skips staff with no working hours for the target day', async () => {
-      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', businessId: 'biz1', durationMins: 30 } as any);
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        businessId: 'biz1',
+        durationMins: 30,
+      } as any);
       prisma.staff.findMany.mockResolvedValue([{ id: 'staff1', name: 'Dr. Chen' }] as any);
       prisma.workingHours.findUnique.mockResolvedValue(null);
 
@@ -84,7 +100,11 @@ describe('AvailabilityService', () => {
     });
 
     it('skips staff whose working hours have isOff = true', async () => {
-      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', businessId: 'biz1', durationMins: 30 } as any);
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        businessId: 'biz1',
+        durationMins: 30,
+      } as any);
       prisma.staff.findMany.mockResolvedValue([{ id: 'staff1', name: 'Dr. Chen' }] as any);
       prisma.workingHours.findUnique.mockResolvedValue({
         staffId: 'staff1',
@@ -100,7 +120,11 @@ describe('AvailabilityService', () => {
     });
 
     it('skips staff who are on time off for the target date', async () => {
-      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', businessId: 'biz1', durationMins: 30 } as any);
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        businessId: 'biz1',
+        durationMins: 30,
+      } as any);
       prisma.staff.findMany.mockResolvedValue([{ id: 'staff1', name: 'Dr. Chen' }] as any);
       prisma.workingHours.findUnique.mockResolvedValue({
         staffId: 'staff1',
@@ -122,7 +146,11 @@ describe('AvailabilityService', () => {
     });
 
     it('generates 30-minute increment slots within working hours', async () => {
-      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', businessId: 'biz1', durationMins: 30 } as any);
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        businessId: 'biz1',
+        durationMins: 30,
+      } as any);
       prisma.staff.findMany.mockResolvedValue([{ id: 'staff1', name: 'Dr. Chen' }] as any);
       prisma.workingHours.findUnique.mockResolvedValue({
         staffId: 'staff1',
@@ -146,7 +174,11 @@ describe('AvailabilityService', () => {
     });
 
     it('respects service duration when computing slots (60-min service)', async () => {
-      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', businessId: 'biz1', durationMins: 60 } as any);
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        businessId: 'biz1',
+        durationMins: 60,
+      } as any);
       prisma.staff.findMany.mockResolvedValue([{ id: 'staff1', name: 'Dr. Chen' }] as any);
       prisma.workingHours.findUnique.mockResolvedValue({
         staffId: 'staff1',
@@ -170,7 +202,11 @@ describe('AvailabilityService', () => {
       const bookingStart = new Date(FUTURE_DATE + 'T10:00:00');
       const bookingEnd = new Date(FUTURE_DATE + 'T11:00:00');
 
-      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', businessId: 'biz1', durationMins: 30 } as any);
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        businessId: 'biz1',
+        durationMins: 30,
+      } as any);
       prisma.staff.findMany.mockResolvedValue([{ id: 'staff1', name: 'Dr. Chen' }] as any);
       prisma.workingHours.findUnique.mockResolvedValue({
         staffId: 'staff1',
@@ -204,7 +240,11 @@ describe('AvailabilityService', () => {
       const eventStart = new Date(FUTURE_DATE + 'T14:00:00');
       const eventEnd = new Date(FUTURE_DATE + 'T15:00:00');
 
-      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', businessId: 'biz1', durationMins: 30 } as any);
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        businessId: 'biz1',
+        durationMins: 30,
+      } as any);
       prisma.staff.findMany.mockResolvedValue([{ id: 'staff1', name: 'Dr. Chen' }] as any);
       prisma.workingHours.findUnique.mockResolvedValue({
         staffId: 'staff1',
@@ -236,7 +276,11 @@ describe('AvailabilityService', () => {
       const start = new Date(FUTURE_DATE + 'T10:00:00');
       const end = new Date(FUTURE_DATE + 'T10:30:00');
 
-      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', businessId: 'biz1', durationMins: 30 } as any);
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        businessId: 'biz1',
+        durationMins: 30,
+      } as any);
       prisma.staff.findMany.mockResolvedValue([{ id: 'staff1', name: 'Dr. Chen' }] as any);
       prisma.workingHours.findUnique.mockResolvedValue({
         staffId: 'staff1',
@@ -246,9 +290,7 @@ describe('AvailabilityService', () => {
         isOff: false,
       } as any);
       prisma.timeOff.findFirst.mockResolvedValue(null);
-      prisma.booking.findMany.mockResolvedValue([
-        { startTime: start, endTime: end },
-      ] as any);
+      prisma.booking.findMany.mockResolvedValue([{ startTime: start, endTime: end }] as any);
       mockCalendarSyncService.pullExternalEvents.mockResolvedValue([
         { startTime: start, endTime: end },
       ]);
@@ -260,7 +302,11 @@ describe('AvailabilityService', () => {
     });
 
     it('gracefully handles external calendar fetch failures', async () => {
-      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', businessId: 'biz1', durationMins: 30 } as any);
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        businessId: 'biz1',
+        durationMins: 30,
+      } as any);
       prisma.staff.findMany.mockResolvedValue([{ id: 'staff1', name: 'Dr. Chen' }] as any);
       prisma.workingHours.findUnique.mockResolvedValue({
         staffId: 'staff1',
@@ -281,7 +327,11 @@ describe('AvailabilityService', () => {
     });
 
     it('queries bookings with correct status filter', async () => {
-      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', businessId: 'biz1', durationMins: 30 } as any);
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        businessId: 'biz1',
+        durationMins: 30,
+      } as any);
       prisma.staff.findMany.mockResolvedValue([{ id: 'staff1', name: 'Dr. Chen' }] as any);
       prisma.workingHours.findUnique.mockResolvedValue({
         staffId: 'staff1',
@@ -308,7 +358,11 @@ describe('AvailabilityService', () => {
     });
 
     it('returns slots for multiple staff members sorted by time then staff name', async () => {
-      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', businessId: 'biz1', durationMins: 30 } as any);
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        businessId: 'biz1',
+        durationMins: 30,
+      } as any);
       prisma.staff.findMany.mockResolvedValue([
         { id: 'staff1', name: 'Dr. Chen' },
         { id: 'staff2', name: 'Ava Smith' },
@@ -352,7 +406,11 @@ describe('AvailabilityService', () => {
     });
 
     it('generates correct ISO time strings for each slot', async () => {
-      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', businessId: 'biz1', durationMins: 30 } as any);
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        businessId: 'biz1',
+        durationMins: 30,
+      } as any);
       prisma.staff.findMany.mockResolvedValue([{ id: 'staff1', name: 'Dr. Chen' }] as any);
       prisma.workingHours.findUnique.mockResolvedValue({
         staffId: 'staff1',
@@ -375,7 +433,11 @@ describe('AvailabilityService', () => {
 
     it('handles boundary: service duration equals working hours window', async () => {
       // Working from 09:00-10:00 with 60-min service => exactly one slot at 09:00
-      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', businessId: 'biz1', durationMins: 60 } as any);
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        businessId: 'biz1',
+        durationMins: 60,
+      } as any);
       prisma.staff.findMany.mockResolvedValue([{ id: 'staff1', name: 'Dr. Chen' }] as any);
       prisma.workingHours.findUnique.mockResolvedValue({
         staffId: 'staff1',
@@ -396,7 +458,11 @@ describe('AvailabilityService', () => {
 
     it('handles boundary: service duration exceeds working hours window', async () => {
       // Working 09:00-09:30 but service is 60 min => no slots
-      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', businessId: 'biz1', durationMins: 60 } as any);
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        businessId: 'biz1',
+        durationMins: 60,
+      } as any);
       prisma.staff.findMany.mockResolvedValue([{ id: 'staff1', name: 'Dr. Chen' }] as any);
       prisma.workingHours.findUnique.mockResolvedValue({
         staffId: 'staff1',
@@ -415,7 +481,11 @@ describe('AvailabilityService', () => {
     });
 
     it('handles non-aligned working hours (e.g. 09:15 start)', async () => {
-      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', businessId: 'biz1', durationMins: 30 } as any);
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        businessId: 'biz1',
+        durationMins: 30,
+      } as any);
       prisma.staff.findMany.mockResolvedValue([{ id: 'staff1', name: 'Dr. Chen' }] as any);
       prisma.workingHours.findUnique.mockResolvedValue({
         staffId: 'staff1',
@@ -442,7 +512,11 @@ describe('AvailabilityService', () => {
       const bookingStart = new Date(FUTURE_DATE + 'T09:45:00');
       const bookingEnd = new Date(FUTURE_DATE + 'T10:15:00');
 
-      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', businessId: 'biz1', durationMins: 30 } as any);
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        businessId: 'biz1',
+        durationMins: 30,
+      } as any);
       prisma.staff.findMany.mockResolvedValue([{ id: 'staff1', name: 'Dr. Chen' }] as any);
       prisma.workingHours.findUnique.mockResolvedValue({
         staffId: 'staff1',
@@ -477,7 +551,11 @@ describe('AvailabilityService', () => {
       const bookingStart = new Date(FUTURE_DATE + 'T09:00:00');
       const bookingEnd = new Date(FUTURE_DATE + 'T09:30:00');
 
-      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', businessId: 'biz1', durationMins: 30 } as any);
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        businessId: 'biz1',
+        durationMins: 30,
+      } as any);
       prisma.staff.findMany.mockResolvedValue([{ id: 'staff1', name: 'Dr. Chen' }] as any);
       prisma.workingHours.findUnique.mockResolvedValue({
         staffId: 'staff1',
@@ -503,7 +581,11 @@ describe('AvailabilityService', () => {
     });
 
     it('calls pullExternalEvents for each staff member', async () => {
-      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', businessId: 'biz1', durationMins: 30 } as any);
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        businessId: 'biz1',
+        durationMins: 30,
+      } as any);
       prisma.staff.findMany.mockResolvedValue([
         { id: 'staff1', name: 'Dr. Chen' },
         { id: 'staff2', name: 'Ava Smith' },
@@ -521,15 +603,25 @@ describe('AvailabilityService', () => {
       await service.getAvailableSlots('biz1', FUTURE_DATE, 'svc1');
 
       expect(mockCalendarSyncService.pullExternalEvents).toHaveBeenCalledTimes(2);
-      expect(mockCalendarSyncService.pullExternalEvents).toHaveBeenCalledWith('staff1', FUTURE_DATE);
-      expect(mockCalendarSyncService.pullExternalEvents).toHaveBeenCalledWith('staff2', FUTURE_DATE);
+      expect(mockCalendarSyncService.pullExternalEvents).toHaveBeenCalledWith(
+        'staff1',
+        FUTURE_DATE,
+      );
+      expect(mockCalendarSyncService.pullExternalEvents).toHaveBeenCalledWith(
+        'staff2',
+        FUTURE_DATE,
+      );
     });
 
     it('correctly determines dayOfWeek from date string', async () => {
       // 2028-06-12 is a Monday (dayOfWeek = 1)
       const monday = '2028-06-12';
 
-      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', businessId: 'biz1', durationMins: 30 } as any);
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        businessId: 'biz1',
+        durationMins: 30,
+      } as any);
       prisma.staff.findMany.mockResolvedValue([{ id: 'staff1', name: 'Dr. Chen' }] as any);
       prisma.workingHours.findUnique.mockResolvedValue(null);
 
@@ -541,7 +633,11 @@ describe('AvailabilityService', () => {
     });
 
     it('handles full-day working hours (00:00-23:30)', async () => {
-      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', businessId: 'biz1', durationMins: 30 } as any);
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        businessId: 'biz1',
+        durationMins: 30,
+      } as any);
       prisma.staff.findMany.mockResolvedValue([{ id: 'staff1', name: 'Dr. Chen' }] as any);
       prisma.workingHours.findUnique.mockResolvedValue({
         staffId: 'staff1',
@@ -566,7 +662,11 @@ describe('AvailabilityService', () => {
       // Use a date in the past — all slots should be filtered out
       const pastDate = '2020-01-15'; // Wednesday (dayOfWeek = 3)
 
-      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', businessId: 'biz1', durationMins: 30 } as any);
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        businessId: 'biz1',
+        durationMins: 30,
+      } as any);
       prisma.staff.findMany.mockResolvedValue([{ id: 'staff1', name: 'Dr. Chen' }] as any);
       prisma.workingHours.findUnique.mockResolvedValue({
         staffId: 'staff1',
@@ -590,8 +690,22 @@ describe('AvailabilityService', () => {
   describe('getStaffWorkingHours', () => {
     it('returns working hours for a valid staff member', async () => {
       const workingHours = [
-        { id: 'wh1', staffId: 'staff1', dayOfWeek: 1, startTime: '09:00', endTime: '17:00', isOff: false },
-        { id: 'wh2', staffId: 'staff1', dayOfWeek: 2, startTime: '09:00', endTime: '17:00', isOff: false },
+        {
+          id: 'wh1',
+          staffId: 'staff1',
+          dayOfWeek: 1,
+          startTime: '09:00',
+          endTime: '17:00',
+          isOff: false,
+        },
+        {
+          id: 'wh2',
+          staffId: 'staff1',
+          dayOfWeek: 2,
+          startTime: '09:00',
+          endTime: '17:00',
+          isOff: false,
+        },
       ];
       prisma.staff.findFirst.mockResolvedValue({ id: 'staff1', businessId: 'biz1' } as any);
       prisma.workingHours.findMany.mockResolvedValue(workingHours as any);
@@ -669,16 +783,23 @@ describe('AvailabilityService', () => {
     it('throws error when staff is not found', async () => {
       prisma.staff.findFirst.mockResolvedValue(null);
 
-      await expect(
-        service.setStaffWorkingHours('biz1', 'bad-staff', hoursInput),
-      ).rejects.toThrow('Staff not found');
+      await expect(service.setStaffWorkingHours('biz1', 'bad-staff', hoursInput)).rejects.toThrow(
+        'Staff not found',
+      );
     });
 
     it('returns result of getStaffWorkingHours after setting', async () => {
       prisma.staff.findFirst.mockResolvedValue({ id: 'staff1', businessId: 'biz1' } as any);
       prisma.workingHours.upsert.mockResolvedValue({} as any);
       const updatedHours = [
-        { id: 'wh1', staffId: 'staff1', dayOfWeek: 1, startTime: '09:00', endTime: '17:00', isOff: false },
+        {
+          id: 'wh1',
+          staffId: 'staff1',
+          dayOfWeek: 1,
+          startTime: '09:00',
+          endTime: '17:00',
+          isOff: false,
+        },
       ];
       prisma.workingHours.findMany.mockResolvedValue(updatedHours as any);
 
@@ -693,7 +814,13 @@ describe('AvailabilityService', () => {
   describe('getStaffTimeOff', () => {
     it('returns future time-off entries for valid staff', async () => {
       const timeOffs = [
-        { id: 'to1', staffId: 'staff1', startDate: new Date('2028-07-01'), endDate: new Date('2028-07-05'), reason: 'Vacation' },
+        {
+          id: 'to1',
+          staffId: 'staff1',
+          startDate: new Date('2028-07-01'),
+          endDate: new Date('2028-07-05'),
+          reason: 'Vacation',
+        },
       ];
       prisma.staff.findFirst.mockResolvedValue({ id: 'staff1', businessId: 'biz1' } as any);
       prisma.timeOff.findMany.mockResolvedValue(timeOffs as any);
@@ -801,7 +928,9 @@ describe('AvailabilityService', () => {
     it('throws error when time-off entry is not found', async () => {
       prisma.timeOff.findUnique.mockResolvedValue(null);
 
-      await expect(service.removeTimeOff('biz1', 'bad-id')).rejects.toThrow('Time off entry not found');
+      await expect(service.removeTimeOff('biz1', 'bad-id')).rejects.toThrow(
+        'Time off entry not found',
+      );
     });
 
     it('throws error when time-off belongs to staff from a different business', async () => {
@@ -810,7 +939,9 @@ describe('AvailabilityService', () => {
         staff: { businessId: 'biz-other' },
       } as any);
 
-      await expect(service.removeTimeOff('biz1', 'to1')).rejects.toThrow('Time off entry not found');
+      await expect(service.removeTimeOff('biz1', 'to1')).rejects.toThrow(
+        'Time off entry not found',
+      );
     });
 
     it('includes staff relation when looking up time-off', async () => {

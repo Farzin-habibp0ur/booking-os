@@ -60,7 +60,10 @@ export default function BookingsPage() {
   };
 
   useEffect(() => {
-    api.get<any>('/staff').then((s) => setStaff(Array.isArray(s) ? s : s.data || [])).catch(() => {});
+    api
+      .get<any>('/staff')
+      .then((s) => setStaff(Array.isArray(s) ? s : s.data || []))
+      .catch(() => {});
   }, []);
 
   const toggleSelect = (id: string) => {
@@ -81,14 +84,22 @@ export default function BookingsPage() {
   };
 
   const handleBulkStatus = async (status: string) => {
-    await api.patch('/bookings/bulk', { ids: Array.from(selectedIds), action: 'status', payload: { status } });
+    await api.patch('/bookings/bulk', {
+      ids: Array.from(selectedIds),
+      action: 'status',
+      payload: { status },
+    });
     setSelectedIds(new Set());
     setBulkStatusModal(false);
     load();
   };
 
   const handleBulkAssign = async (staffId: string) => {
-    await api.patch('/bookings/bulk', { ids: Array.from(selectedIds), action: 'assign', payload: { staffId } });
+    await api.patch('/bookings/bulk', {
+      ids: Array.from(selectedIds),
+      action: 'assign',
+      payload: { staffId },
+    });
     setSelectedIds(new Set());
     setBulkAssignModal(false);
     load();
@@ -122,72 +133,79 @@ export default function BookingsPage() {
 
       <div className="bg-white rounded-2xl shadow-soft overflow-hidden">
         <div className="overflow-x-auto">
-        <table className="w-full min-w-[640px]">
-          <thead className="bg-slate-50 border-b">
-            <tr>
-              <th className="w-10 p-3">
-                <input
-                  type="checkbox"
-                  checked={bookings.data.length > 0 && selectedIds.size === bookings.data.length}
-                  onChange={toggleSelectAll}
-                  className="rounded text-sage-600"
-                />
-              </th>
-              <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
-                {pack.labels.customer}
-              </th>
-              <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
-                {pack.labels.service}
-              </th>
-              <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
-                {t('common.name')}
-              </th>
-              <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
-                {t('bookings.date_time')}
-              </th>
-              <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
-                {t('common.status')}
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {loading
-              ? Array.from({ length: 5 }).map((_, i) => <TableRowSkeleton key={i} cols={6} />)
-              : bookings.data.map((b: any) => (
-                  <tr
-                    key={b.id}
-                    className={cn('hover:bg-slate-50 cursor-pointer', selectedIds.has(b.id) && 'bg-sage-50/50')}
-                  >
-                    <td className="w-10 p-3" onClick={(e) => e.stopPropagation()}>
-                      <input
-                        type="checkbox"
-                        checked={selectedIds.has(b.id)}
-                        onChange={() => toggleSelect(b.id)}
-                        className="rounded text-sage-600"
-                      />
-                    </td>
-                    <td className="p-3 text-sm font-medium" onClick={() => handleRowClick(b)}>{b.customer?.name}</td>
-                    <td className="p-3 text-sm" onClick={() => handleRowClick(b)}>{b.service?.name}</td>
-                    <td className="p-3 text-sm text-slate-600" onClick={() => handleRowClick(b)}>
-                      {b.staff?.name || t('common.unassigned')}
-                    </td>
-                    <td className="p-3 text-sm text-slate-600" onClick={() => handleRowClick(b)}>
-                      {new Date(b.startTime).toLocaleString('en-US', {
-                        dateStyle: 'medium',
-                        timeStyle: 'short',
-                      })}
-                    </td>
-                    <td className="p-3" onClick={() => handleRowClick(b)}>
-                      <span
-                        className={cn('text-xs px-2 py-0.5 rounded-full', statusColors[b.status])}
-                      >
-                        {t(`status.${b.status.toLowerCase()}`)}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-          </tbody>
-        </table>
+          <table className="w-full min-w-[640px]">
+            <thead className="bg-slate-50 border-b">
+              <tr>
+                <th className="w-10 p-3">
+                  <input
+                    type="checkbox"
+                    checked={bookings.data.length > 0 && selectedIds.size === bookings.data.length}
+                    onChange={toggleSelectAll}
+                    className="rounded text-sage-600"
+                  />
+                </th>
+                <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
+                  {pack.labels.customer}
+                </th>
+                <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
+                  {pack.labels.service}
+                </th>
+                <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
+                  {t('common.name')}
+                </th>
+                <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
+                  {t('bookings.date_time')}
+                </th>
+                <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
+                  {t('common.status')}
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {loading
+                ? Array.from({ length: 5 }).map((_, i) => <TableRowSkeleton key={i} cols={6} />)
+                : bookings.data.map((b: any) => (
+                    <tr
+                      key={b.id}
+                      className={cn(
+                        'hover:bg-slate-50 cursor-pointer',
+                        selectedIds.has(b.id) && 'bg-sage-50/50',
+                      )}
+                    >
+                      <td className="w-10 p-3" onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(b.id)}
+                          onChange={() => toggleSelect(b.id)}
+                          className="rounded text-sage-600"
+                        />
+                      </td>
+                      <td className="p-3 text-sm font-medium" onClick={() => handleRowClick(b)}>
+                        {b.customer?.name}
+                      </td>
+                      <td className="p-3 text-sm" onClick={() => handleRowClick(b)}>
+                        {b.service?.name}
+                      </td>
+                      <td className="p-3 text-sm text-slate-600" onClick={() => handleRowClick(b)}>
+                        {b.staff?.name || t('common.unassigned')}
+                      </td>
+                      <td className="p-3 text-sm text-slate-600" onClick={() => handleRowClick(b)}>
+                        {new Date(b.startTime).toLocaleString('en-US', {
+                          dateStyle: 'medium',
+                          timeStyle: 'short',
+                        })}
+                      </td>
+                      <td className="p-3" onClick={() => handleRowClick(b)}>
+                        <span
+                          className={cn('text-xs px-2 py-0.5 rounded-full', statusColors[b.status])}
+                        >
+                          {t(`status.${b.status.toLowerCase()}`)}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+            </tbody>
+          </table>
         </div>
         {!loading && bookings.data.length === 0 && (
           <EmptyState

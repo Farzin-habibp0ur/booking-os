@@ -53,10 +53,16 @@ export default function CampaignsPage() {
             <thead className="bg-slate-50 border-b">
               <tr>
                 <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">Name</th>
-                <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">Status</th>
-                <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">Scheduled</th>
+                <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
+                  Status
+                </th>
+                <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
+                  Scheduled
+                </th>
                 <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">Sent</th>
-                <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">Created</th>
+                <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
+                  Created
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -70,18 +76,29 @@ export default function CampaignsPage() {
                     >
                       <td className="p-3 text-sm font-medium">{c.name}</td>
                       <td className="p-3">
-                        <span className={cn('text-xs px-2 py-0.5 rounded-full', statusColors[c.status] || 'bg-slate-100')}>
+                        <span
+                          className={cn(
+                            'text-xs px-2 py-0.5 rounded-full',
+                            statusColors[c.status] || 'bg-slate-100',
+                          )}
+                        >
                           {c.status}
                         </span>
                       </td>
                       <td className="p-3 text-sm text-slate-600">
                         {c.scheduledAt
-                          ? new Date(c.scheduledAt).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })
+                          ? new Date(c.scheduledAt).toLocaleString('en-US', {
+                              dateStyle: 'medium',
+                              timeStyle: 'short',
+                            })
                           : '—'}
                       </td>
                       <td className="p-3 text-sm text-slate-600">
                         {c.sentAt
-                          ? new Date(c.sentAt).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })
+                          ? new Date(c.sentAt).toLocaleString('en-US', {
+                              dateStyle: 'medium',
+                              timeStyle: 'short',
+                            })
                           : '—'}
                       </td>
                       <td className="p-3 text-sm text-slate-600">

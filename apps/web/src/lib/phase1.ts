@@ -1,6 +1,11 @@
 'use client';
 
-import { isPhase1Enabled, getPhase1Config, type Phase1Flag, type Phase1Config } from '@booking-os/shared';
+import {
+  isPhase1Enabled,
+  getPhase1Config,
+  type Phase1Flag,
+  type Phase1Config,
+} from '@booking-os/shared';
 import { useAuth } from './auth';
 
 export function usePhase1(flag: Phase1Flag): boolean {

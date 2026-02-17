@@ -28,7 +28,13 @@ function dismiss(id: string) {
   }
 }
 
-export default function TooltipNudge({ id, title, description, position = 'bottom', className }: TooltipNudgeProps) {
+export default function TooltipNudge({
+  id,
+  title,
+  description,
+  position = 'bottom',
+  className,
+}: TooltipNudgeProps) {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -59,7 +65,10 @@ export default function TooltipNudge({ id, title, description, position = 'botto
           <p className="font-medium text-lavender-900">{title}</p>
           <p className="text-xs text-lavender-700 mt-0.5">{description}</p>
         </div>
-        <button onClick={handleDismiss} className="text-lavender-400 hover:text-lavender-600 flex-shrink-0">
+        <button
+          onClick={handleDismiss}
+          className="text-lavender-400 hover:text-lavender-600 flex-shrink-0"
+        >
           <X size={14} />
         </button>
       </div>

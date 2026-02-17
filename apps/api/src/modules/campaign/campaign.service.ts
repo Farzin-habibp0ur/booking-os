@@ -9,7 +9,10 @@ export class CampaignService {
     private dispatchService: CampaignDispatchService,
   ) {}
 
-  async create(businessId: string, data: { name: string; templateId?: string; filters?: any; scheduledAt?: string }) {
+  async create(
+    businessId: string,
+    data: { name: string; templateId?: string; filters?: any; scheduledAt?: string },
+  ) {
     return this.prisma.campaign.create({
       data: {
         businessId,
@@ -47,7 +50,17 @@ export class CampaignService {
     return campaign;
   }
 
-  async update(businessId: string, id: string, data: { name?: string; templateId?: string; filters?: any; scheduledAt?: string; throttlePerMinute?: number }) {
+  async update(
+    businessId: string,
+    id: string,
+    data: {
+      name?: string;
+      templateId?: string;
+      filters?: any;
+      scheduledAt?: string;
+      throttlePerMinute?: number;
+    },
+  ) {
     const campaign = await this.findById(businessId, id);
     if (campaign.status !== 'DRAFT') {
       throw new BadRequestException('Only draft campaigns can be edited');
@@ -136,7 +149,11 @@ export class CampaignService {
     }
 
     // Prepare send rows from audience
-    const { total } = await this.dispatchService.prepareSends(id, businessId, campaign.filters as any);
+    const { total } = await this.dispatchService.prepareSends(
+      id,
+      businessId,
+      campaign.filters as any,
+    );
 
     // Update campaign to SENDING
     await this.prisma.campaign.update({

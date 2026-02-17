@@ -110,7 +110,9 @@ export class AvailabilityService {
 
         // Check for external calendar conflicts
         const externalConflict = externalEvents.some((e) => {
-          return slotStart.getTime() < e.endTime.getTime() && slotEnd.getTime() > e.startTime.getTime();
+          return (
+            slotStart.getTime() < e.endTime.getTime() && slotEnd.getTime() > e.startTime.getTime()
+          );
         });
 
         const hasConflict = internalConflict || externalConflict;

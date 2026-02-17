@@ -75,10 +75,20 @@ function ShellInner({ children }: { children: ReactNode }) {
   const role = user?.role;
 
   const allNav = [
-    { href: '/dashboard', label: t('nav.dashboard'), icon: LayoutDashboard, roles: ['ADMIN', 'AGENT', 'SERVICE_PROVIDER'] },
+    {
+      href: '/dashboard',
+      label: t('nav.dashboard'),
+      icon: LayoutDashboard,
+      roles: ['ADMIN', 'AGENT', 'SERVICE_PROVIDER'],
+    },
     { href: '/inbox', label: t('nav.inbox'), icon: MessageSquare, roles: ['ADMIN', 'AGENT'] },
     { href: '/waitlist', label: 'Waitlist', icon: ClipboardList, roles: ['ADMIN', 'AGENT'] },
-    { href: '/calendar', label: t('nav.calendar'), icon: Calendar, roles: ['ADMIN', 'AGENT', 'SERVICE_PROVIDER'] },
+    {
+      href: '/calendar',
+      label: t('nav.calendar'),
+      icon: Calendar,
+      roles: ['ADMIN', 'AGENT', 'SERVICE_PROVIDER'],
+    },
     {
       href: '/customers',
       label: t('nav.customers', { entity: pack.labels.customer }),
@@ -104,7 +114,12 @@ function ShellInner({ children }: { children: ReactNode }) {
     ...(pack.name !== 'general'
       ? [{ href: '/roi', label: t('nav.roi'), icon: TrendingUp, roles: ['ADMIN'] }]
       : []),
-    { href: '/settings', label: t('nav.settings'), icon: Settings, roles: ['ADMIN', 'AGENT', 'SERVICE_PROVIDER'] },
+    {
+      href: '/settings',
+      label: t('nav.settings'),
+      icon: Settings,
+      roles: ['ADMIN', 'AGENT', 'SERVICE_PROVIDER'],
+    },
   ];
 
   const nav = allNav.filter((item) => !role || item.roles.includes(role));
@@ -133,9 +148,15 @@ function ShellInner({ children }: { children: ReactNode }) {
       >
         <Search size={16} />
         <span className="flex-1 text-left">Search...</span>
-        <kbd className="hidden sm:inline text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">⌘K</kbd>
+        <kbd className="hidden sm:inline text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+          ⌘K
+        </kbd>
       </button>
-      <nav role="navigation" aria-label="Main navigation" className="flex-1 p-2 space-y-0.5 overflow-y-auto">
+      <nav
+        role="navigation"
+        aria-label="Main navigation"
+        className="flex-1 p-2 space-y-0.5 overflow-y-auto"
+      >
         {nav.map(({ href, label, icon: Icon }) => (
           <Link
             key={href}

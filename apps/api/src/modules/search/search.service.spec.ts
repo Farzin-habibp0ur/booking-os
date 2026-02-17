@@ -11,10 +11,7 @@ describe('SearchService', () => {
     prisma = createMockPrisma();
 
     const module = await Test.createTestingModule({
-      providers: [
-        SearchService,
-        { provide: PrismaService, useValue: prisma },
-      ],
+      providers: [SearchService, { provide: PrismaService, useValue: prisma }],
     }).compile();
 
     searchService = module.get(SearchService);
@@ -45,9 +42,19 @@ describe('SearchService', () => {
 
   it('searches across all entity types', async () => {
     const customers = [{ id: 'c1', name: 'Alice', phone: '+1234', email: null }];
-    const bookings = [{ id: 'b1', startTime: new Date(), status: 'CONFIRMED', customer: { name: 'Alice' }, service: { name: 'Botox' } }];
+    const bookings = [
+      {
+        id: 'b1',
+        startTime: new Date(),
+        status: 'CONFIRMED',
+        customer: { name: 'Alice' },
+        service: { name: 'Botox' },
+      },
+    ];
     const services = [{ id: 's1', name: 'Botox', durationMins: 30, price: 200 }];
-    const conversations = [{ id: 'conv1', customer: { name: 'Alice' }, lastMessageAt: new Date(), status: 'OPEN' }];
+    const conversations = [
+      { id: 'conv1', customer: { name: 'Alice' }, lastMessageAt: new Date(), status: 'OPEN' },
+    ];
 
     prisma.customer.findMany.mockResolvedValue(customers as any);
     prisma.booking.findMany.mockResolvedValue(bookings as any);
@@ -90,8 +97,6 @@ describe('SearchService', () => {
 
     await searchService.globalSearch('biz1', 'test', 3);
 
-    expect(prisma.customer.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ take: 3 }),
-    );
+    expect(prisma.customer.findMany).toHaveBeenCalledWith(expect.objectContaining({ take: 3 }));
   });
 });

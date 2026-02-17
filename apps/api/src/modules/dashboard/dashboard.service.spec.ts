@@ -144,7 +144,10 @@ describe('DashboardService', () => {
       prisma.messageTemplate.findMany.mockResolvedValueOnce([]);
       prisma.payment.count.mockResolvedValueOnce(0);
       prisma.roiBaseline.count.mockResolvedValueOnce(0);
-      prisma.business.findUnique.mockResolvedValueOnce({ name: 'Test Clinic', packConfig: {} } as any);
+      prisma.business.findUnique.mockResolvedValueOnce({
+        name: 'Test Clinic',
+        packConfig: {},
+      } as any);
 
       const result = await dashboardService.getDashboard('biz1');
 
@@ -201,7 +204,12 @@ describe('DashboardService', () => {
   // P1-18: Attention Needed tests
   describe('attention needed', () => {
     it('returns deposit-pending bookings', async () => {
-      const pendingBooking = { id: 'b1', customer: { name: 'Alice' }, service: { name: 'Botox' }, staff: null };
+      const pendingBooking = {
+        id: 'b1',
+        customer: { name: 'Alice' },
+        service: { name: 'Botox' },
+        staff: null,
+      };
       setupDefaultMocks({ depositPendingBookings: [pendingBooking] });
 
       const result = await dashboardService.getDashboard('biz1');
@@ -210,7 +218,13 @@ describe('DashboardService', () => {
     });
 
     it('returns tomorrow bookings', async () => {
-      const booking = { id: 'b2', customer: { name: 'Bob' }, service: { name: 'Consult' }, staff: null, startTime: new Date() };
+      const booking = {
+        id: 'b2',
+        customer: { name: 'Bob' },
+        service: { name: 'Consult' },
+        staff: null,
+        startTime: new Date(),
+      };
       setupDefaultMocks({ tomorrowBookings: [booking] });
 
       const result = await dashboardService.getDashboard('biz1');
@@ -286,7 +300,9 @@ describe('DashboardService', () => {
 
       expect(result.goLiveChecklist.allComplete).toBe(false);
       // "My Business" is the default name, should be considered not done
-      const businessNameItem = result.goLiveChecklist.items.find((i: any) => i.key === 'business_name');
+      const businessNameItem = result.goLiveChecklist.items.find(
+        (i: any) => i.key === 'business_name',
+      );
       expect(businessNameItem!.done).toBe(false);
     });
 
@@ -297,7 +313,9 @@ describe('DashboardService', () => {
 
       const result = await dashboardService.getDashboard('biz1');
 
-      const templatesItem = result.goLiveChecklist.items.find((i: any) => i.key === 'templates_ready');
+      const templatesItem = result.goLiveChecklist.items.find(
+        (i: any) => i.key === 'templates_ready',
+      );
       expect(templatesItem!.done).toBe(false);
     });
 

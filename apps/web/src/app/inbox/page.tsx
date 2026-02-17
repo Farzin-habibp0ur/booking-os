@@ -556,10 +556,12 @@ export default function InboxPage() {
       </div>
 
       {/* Filter bar — mobile (horizontal scrollable) */}
-      <div className={cn(
-        'md:hidden border-b bg-slate-50 overflow-x-auto',
-        mobileView !== 'list' && 'hidden',
-      )}>
+      <div
+        className={cn(
+          'md:hidden border-b bg-slate-50 overflow-x-auto',
+          mobileView !== 'list' && 'hidden',
+        )}
+      >
         <div className="flex items-center gap-1 px-3 py-2 min-w-max">
           {FILTER_KEYS.map((key) => {
             const count = filterCounts[key] || 0;
@@ -590,11 +592,13 @@ export default function InboxPage() {
       </div>
 
       {/* Conversation list */}
-      <div className={cn(
-        'border-r bg-white flex flex-col',
-        'w-full md:w-80',
-        mobileView !== 'list' && 'hidden md:flex',
-      )}>
+      <div
+        className={cn(
+          'border-r bg-white flex flex-col',
+          'w-full md:w-80',
+          mobileView !== 'list' && 'hidden md:flex',
+        )}
+      >
         <div className="p-3 border-b space-y-2">
           <h2 className="font-semibold">{t('inbox.title')}</h2>
           <div className="relative">
@@ -620,7 +624,10 @@ export default function InboxPage() {
           {conversations.map((c) => (
             <div
               key={c.id}
-              onClick={() => { setSelected(c); setMobileView('thread'); }}
+              onClick={() => {
+                setSelected(c);
+                setMobileView('thread');
+              }}
               className={cn(
                 'p-3 border-b cursor-pointer hover:bg-slate-50 transition-colors',
                 selected?.id === c.id && 'bg-sage-50',
@@ -703,16 +710,21 @@ export default function InboxPage() {
       </div>
 
       {/* Message thread */}
-      <div className={cn(
-        'flex-1 flex flex-col bg-slate-50',
-        mobileView !== 'thread' && 'hidden md:flex',
-      )}>
+      <div
+        className={cn(
+          'flex-1 flex flex-col bg-slate-50',
+          mobileView !== 'thread' && 'hidden md:flex',
+        )}
+      >
         {selected ? (
           <>
             <div className="p-3 border-b bg-white flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => { setSelected(null); setMobileView('list'); }}
+                  onClick={() => {
+                    setSelected(null);
+                    setMobileView('list');
+                  }}
                   className="md:hidden text-slate-400 hover:text-slate-600 transition-colors"
                   aria-label="Back to conversations"
                 >
@@ -764,7 +776,8 @@ export default function InboxPage() {
                   onClick={() => setShowBookingForm(!showBookingForm)}
                   className="flex items-center gap-1 bg-sage-600 text-white px-3 py-1.5 rounded-md text-sm hover:bg-sage-700"
                 >
-                  <Plus size={14} /> <span className="hidden sm:inline">{t('inbox.new_booking')}</span>
+                  <Plus size={14} />{' '}
+                  <span className="hidden sm:inline">{t('inbox.new_booking')}</span>
                 </button>
                 {customer && (
                   <button
@@ -943,11 +956,13 @@ export default function InboxPage() {
 
       {/* Customer sidebar */}
       {selected && customer && (
-        <div className={cn(
-          'border-l bg-white overflow-auto',
-          'w-full md:w-72',
-          mobileView !== 'info' && 'hidden md:block',
-        )}>
+        <div
+          className={cn(
+            'border-l bg-white overflow-auto',
+            'w-full md:w-72',
+            mobileView !== 'info' && 'hidden md:block',
+          )}
+        >
           <div className="flex border-b">
             <button
               onClick={() => setSidebarTab('info')}
@@ -1099,7 +1114,10 @@ export default function InboxPage() {
                     <ChevronDown size={14} className="text-slate-400" />
                   </button>
                   {showAssignDropdown && (
-                    <div className="absolute z-10 mt-1 w-full bg-white border rounded-md shadow-lg" role="listbox">
+                    <div
+                      className="absolute z-10 mt-1 w-full bg-white border rounded-md shadow-lg"
+                      role="listbox"
+                    >
                       <button
                         role="option"
                         aria-selected={!selected.assignedTo}
@@ -1169,7 +1187,9 @@ export default function InboxPage() {
                   </button>
                 </div>
                 {customerBookings
-                  .filter((b: any) => ['PENDING', 'PENDING_DEPOSIT', 'CONFIRMED'].includes(b.status))
+                  .filter((b: any) =>
+                    ['PENDING', 'PENDING_DEPOSIT', 'CONFIRMED'].includes(b.status),
+                  )
                   .slice(0, 3)
                   .map((b: any) => (
                     <div key={b.id} className="border rounded p-2 mb-1.5">
@@ -1177,10 +1197,14 @@ export default function InboxPage() {
                         <p className="text-sm font-medium">
                           {b.service?.name}
                           {b.service?.kind === 'CONSULT' && (
-                            <span className="ml-1 text-[9px] bg-lavender-50 text-lavender-900 px-1 py-0 rounded-full">C</span>
+                            <span className="ml-1 text-[9px] bg-lavender-50 text-lavender-900 px-1 py-0 rounded-full">
+                              C
+                            </span>
                           )}
                           {b.service?.kind === 'TREATMENT' && (
-                            <span className="ml-1 text-[9px] bg-sage-50 text-sage-900 px-1 py-0 rounded-full">T</span>
+                            <span className="ml-1 text-[9px] bg-sage-50 text-sage-900 px-1 py-0 rounded-full">
+                              T
+                            </span>
                           )}
                         </p>
                         <span
@@ -1222,8 +1246,9 @@ export default function InboxPage() {
                       )}
                     </div>
                   ))}
-                {customerBookings.filter((b: any) => ['PENDING', 'PENDING_DEPOSIT', 'CONFIRMED'].includes(b.status))
-                  .length === 0 && (
+                {customerBookings.filter((b: any) =>
+                  ['PENDING', 'PENDING_DEPOSIT', 'CONFIRMED'].includes(b.status),
+                ).length === 0 && (
                   <p className="text-xs text-slate-400">{t('inbox.no_upcoming_bookings')}</p>
                 )}
               </div>

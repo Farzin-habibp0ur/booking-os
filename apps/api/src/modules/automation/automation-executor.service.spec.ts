@@ -11,10 +11,7 @@ describe('AutomationExecutorService', () => {
     prisma = createMockPrisma();
 
     const module = await Test.createTestingModule({
-      providers: [
-        AutomationExecutorService,
-        { provide: PrismaService, useValue: prisma },
-      ],
+      providers: [AutomationExecutorService, { provide: PrismaService, useValue: prisma }],
     }).compile();
 
     executorService = module.get(AutomationExecutorService);

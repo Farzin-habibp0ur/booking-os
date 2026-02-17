@@ -8,9 +8,20 @@ import { Search, Users, BookOpen, Scissors, MessageSquare, X } from 'lucide-reac
 
 interface SearchResults {
   customers: Array<{ id: string; name: string; phone: string; email: string | null }>;
-  bookings: Array<{ id: string; startTime: string; status: string; customer: { name: string }; service: { name: string } }>;
+  bookings: Array<{
+    id: string;
+    startTime: string;
+    status: string;
+    customer: { name: string };
+    service: { name: string };
+  }>;
   services: Array<{ id: string; name: string; durationMins: number; price: number }>;
-  conversations: Array<{ id: string; customer: { name: string }; lastMessageAt: string; status: string }>;
+  conversations: Array<{
+    id: string;
+    customer: { name: string };
+    lastMessageAt: string;
+    status: string;
+  }>;
 }
 
 interface ResultItem {
@@ -39,7 +50,10 @@ function flattenResults(results: SearchResults): ResultItem[] {
       type: 'booking',
       id: `booking-${b.id}`,
       label: `${b.customer?.name} — ${b.service?.name}`,
-      sublabel: new Date(b.startTime).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }),
+      sublabel: new Date(b.startTime).toLocaleString('en-US', {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      }),
       href: `/bookings`,
     });
   }
@@ -60,7 +74,10 @@ function flattenResults(results: SearchResults): ResultItem[] {
       id: `conversation-${conv.id}`,
       label: conv.customer?.name || 'Unknown',
       sublabel: conv.lastMessageAt
-        ? new Date(conv.lastMessageAt).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })
+        ? new Date(conv.lastMessageAt).toLocaleString('en-US', {
+            dateStyle: 'medium',
+            timeStyle: 'short',
+          })
         : '',
       href: `/inbox`,
     });
@@ -83,7 +100,13 @@ const typeLabels: Record<string, string> = {
   conversation: 'Conversations',
 };
 
-export default function CommandPalette({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+export default function CommandPalette({
+  isOpen,
+  onClose,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+}) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<ResultItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -129,7 +152,9 @@ export default function CommandPalette({ isOpen, onClose }: { isOpen: boolean; o
         const recent = JSON.parse(localStorage.getItem('cmd-k-recent') || '[]');
         const updated = [item, ...recent.filter((r: ResultItem) => r.id !== item.id)].slice(0, 5);
         localStorage.setItem('cmd-k-recent', JSON.stringify(updated));
-      } catch {}
+      } catch {
+        // localStorage may be unavailable
+      }
 
       onClose();
       router.push(item.href);
@@ -218,7 +243,9 @@ export default function CommandPalette({ isOpen, onClose }: { isOpen: boolean; o
 
           {showRecent && (
             <div className="px-4 pt-3 pb-1">
-              <p className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">Recent</p>
+              <p className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">
+                Recent
+              </p>
             </div>
           )}
 

@@ -32,7 +32,8 @@ export class WaitlistService {
         status: 'ACTIVE',
       },
     });
-    if (existing) throw new BadRequestException('Customer is already on the waitlist for this service');
+    if (existing)
+      throw new BadRequestException('Customer is already on the waitlist for this service');
 
     return this.prisma.waitlistEntry.create({
       data: {
@@ -70,7 +71,11 @@ export class WaitlistService {
     });
   }
 
-  async updateEntry(businessId: string, id: string, data: { status?: string; notes?: string; staffId?: string }) {
+  async updateEntry(
+    businessId: string,
+    id: string,
+    data: { status?: string; notes?: string; staffId?: string },
+  ) {
     const entry = await this.prisma.waitlistEntry.findFirst({
       where: { id, businessId },
     });
@@ -176,7 +181,9 @@ export class WaitlistService {
       });
     }
 
-    this.logger.log(`Offered open slot to ${entries.length} waitlist entries for service ${booking.serviceId}`);
+    this.logger.log(
+      `Offered open slot to ${entries.length} waitlist entries for service ${booking.serviceId}`,
+    );
   }
 
   async getMetrics(businessId: string, days: number = 30) {

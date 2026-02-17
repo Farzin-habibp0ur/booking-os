@@ -191,11 +191,23 @@ export class DashboardService {
     const businessName = business?.name || '';
 
     const goLiveItems = [
-      { key: 'business_name', done: businessName.length > 0 && businessName !== 'My Business', fixUrl: '/settings' },
+      {
+        key: 'business_name',
+        done: businessName.length > 0 && businessName !== 'My Business',
+        fixUrl: '/settings',
+      },
       { key: 'staff_added', done: nonAdminStaffCount > 0, fixUrl: '/staff' },
       { key: 'services_created', done: activeServiceCount > 0, fixUrl: '/services' },
-      { key: 'whatsapp_connected', done: calendarConnectionCount > 0, fixUrl: '/settings/calendar-sync' },
-      { key: 'templates_ready', done: hasConfirmation && hasReminder, fixUrl: '/settings/templates' },
+      {
+        key: 'whatsapp_connected',
+        done: calendarConnectionCount > 0,
+        fixUrl: '/settings/calendar-sync',
+      },
+      {
+        key: 'templates_ready',
+        done: hasConfirmation && hasReminder,
+        fixUrl: '/settings/templates',
+      },
       { key: 'first_booking', done: anyBookingCount > 0, fixUrl: '/calendar' },
       { key: 'first_deposit', done: depositPaymentCount > 0, fixUrl: '/bookings' },
       { key: 'roi_baseline', done: roiBaselineCount > 0, fixUrl: '/roi' },
@@ -227,7 +239,12 @@ export class DashboardService {
 
     // Waitlist backfill stats
     const waitlistMetrics = await this.waitlistService.getMetrics(businessId, 30).catch(() => ({
-      totalEntries: 0, cancellations: 0, offers: 0, claimed: 0, avgTimeToFill: 0, fillRate: 0,
+      totalEntries: 0,
+      cancellations: 0,
+      offers: 0,
+      claimed: 0,
+      avgTimeToFill: 0,
+      fillRate: 0,
     }));
 
     return {

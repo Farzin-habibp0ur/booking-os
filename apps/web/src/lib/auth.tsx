@@ -10,7 +10,14 @@ interface User {
   role: string;
   locale: string | null;
   businessId: string;
-  business: { id: string; name: string; slug: string; verticalPack: string; defaultLocale: string; packConfig: Record<string, unknown> | null };
+  business: {
+    id: string;
+    name: string;
+    slug: string;
+    verticalPack: string;
+    defaultLocale: string;
+    packConfig: Record<string, unknown> | null;
+  };
 }
 
 interface AuthContextType {

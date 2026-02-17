@@ -189,8 +189,10 @@ export default function BookingPortalPage() {
   const handleBlur = (field: string) => {
     setTouched((prev) => ({ ...prev, [field]: true }));
     if (field === 'name') setFieldErrors((prev) => ({ ...prev, name: validateName(customerName) }));
-    if (field === 'phone') setFieldErrors((prev) => ({ ...prev, phone: validatePhone(customerPhone) }));
-    if (field === 'email') setFieldErrors((prev) => ({ ...prev, email: validateEmail(customerEmail) }));
+    if (field === 'phone')
+      setFieldErrors((prev) => ({ ...prev, phone: validatePhone(customerPhone) }));
+    if (field === 'email')
+      setFieldErrors((prev) => ({ ...prev, email: validateEmail(customerEmail) }));
   };
 
   const handleSubmit = async () => {
@@ -231,7 +233,9 @@ export default function BookingPortalPage() {
   useEffect(() => {
     if (showWaitlistForm && staffList.length === 0 && selectedService) {
       publicApi
-        .get<any[]>(`/public/${slug}/availability?date=${new Date().toISOString().split('T')[0]}&serviceId=${selectedService.id}`)
+        .get<any[]>(
+          `/public/${slug}/availability?date=${new Date().toISOString().split('T')[0]}&serviceId=${selectedService.id}`,
+        )
         .then((slots) => {
           const staffMap = new Map<string, string>();
           slots.forEach((s) => staffMap.set(s.staffId, s.staffName));
@@ -405,7 +409,11 @@ export default function BookingPortalPage() {
               <Calendar size={16} className="text-sage-600" />
               <p className="text-sm font-medium text-slate-700">Select a date</p>
             </div>
-            <div className="flex gap-2 overflow-x-auto pb-2" role="radiogroup" aria-label="Select a date">
+            <div
+              className="flex gap-2 overflow-x-auto pb-2"
+              role="radiogroup"
+              aria-label="Select a date"
+            >
               {generateDates().map((d, i) => {
                 const date = new Date(d + 'T12:00:00');
                 const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
@@ -516,7 +524,9 @@ export default function BookingPortalPage() {
                         >
                           <option value="">Any provider</option>
                           {staffList.map((s) => (
-                            <option key={s.id} value={s.id}>{s.name}</option>
+                            <option key={s.id} value={s.id}>
+                              {s.name}
+                            </option>
                           ))}
                         </select>
                       )}
@@ -527,9 +537,7 @@ export default function BookingPortalPage() {
                         rows={2}
                         className="w-full border border-lavender-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-lavender-500 focus:border-transparent outline-none resize-none"
                       />
-                      {waitlistError && (
-                        <p className="text-xs text-red-600">{waitlistError}</p>
-                      )}
+                      {waitlistError && <p className="text-xs text-red-600">{waitlistError}</p>}
                       <div className="flex gap-2">
                         <button
                           onClick={() => setShowWaitlistForm(false)}
@@ -555,12 +563,19 @@ export default function BookingPortalPage() {
                       <p className="text-xs text-slate-400 mb-2 flex items-center gap-1">
                         <User size={12} /> {staffName}
                       </p>
-                      <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={`Time slots for ${staffName}`}>
+                      <div
+                        className="flex flex-wrap gap-2"
+                        role="radiogroup"
+                        aria-label={`Time slots for ${staffName}`}
+                      >
                         {staffSlots.map((slot) => (
                           <button
                             key={`${slot.staffId}-${slot.time}`}
                             role="radio"
-                            aria-checked={selectedSlot?.time === slot.time && selectedSlot?.staffId === slot.staffId}
+                            aria-checked={
+                              selectedSlot?.time === slot.time &&
+                              selectedSlot?.staffId === slot.staffId
+                            }
                             onClick={() => {
                               setSelectedSlot(slot);
                               setStep('details');
@@ -589,7 +604,10 @@ export default function BookingPortalPage() {
       {step === 'details' && (
         <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
           <div>
-            <label htmlFor="booking-name" className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-1">
+            <label
+              htmlFor="booking-name"
+              className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-1"
+            >
               <User size={14} /> Name *
             </label>
             <input
@@ -597,7 +615,8 @@ export default function BookingPortalPage() {
               value={customerName}
               onChange={(e) => {
                 setCustomerName(e.target.value);
-                if (touched.name) setFieldErrors((prev) => ({ ...prev, name: validateName(e.target.value) }));
+                if (touched.name)
+                  setFieldErrors((prev) => ({ ...prev, name: validateName(e.target.value) }));
               }}
               onBlur={() => handleBlur('name')}
               placeholder="Your full name"
@@ -609,11 +628,19 @@ export default function BookingPortalPage() {
               }`}
             />
             {touched.name && fieldErrors.name && (
-              <p id="name-error" className="mt-1 text-xs bg-red-50 text-red-700 px-2 py-1 rounded-lg">{fieldErrors.name}</p>
+              <p
+                id="name-error"
+                className="mt-1 text-xs bg-red-50 text-red-700 px-2 py-1 rounded-lg"
+              >
+                {fieldErrors.name}
+              </p>
             )}
           </div>
           <div>
-            <label htmlFor="booking-phone" className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-1">
+            <label
+              htmlFor="booking-phone"
+              className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-1"
+            >
               <Phone size={14} /> Phone *
             </label>
             <input
@@ -621,7 +648,8 @@ export default function BookingPortalPage() {
               value={customerPhone}
               onChange={(e) => {
                 setCustomerPhone(e.target.value);
-                if (touched.phone) setFieldErrors((prev) => ({ ...prev, phone: validatePhone(e.target.value) }));
+                if (touched.phone)
+                  setFieldErrors((prev) => ({ ...prev, phone: validatePhone(e.target.value) }));
               }}
               onBlur={() => handleBlur('phone')}
               placeholder="+1 (555) 123-4567"
@@ -634,11 +662,19 @@ export default function BookingPortalPage() {
               }`}
             />
             {touched.phone && fieldErrors.phone && (
-              <p id="phone-error" className="mt-1 text-xs bg-red-50 text-red-700 px-2 py-1 rounded-lg">{fieldErrors.phone}</p>
+              <p
+                id="phone-error"
+                className="mt-1 text-xs bg-red-50 text-red-700 px-2 py-1 rounded-lg"
+              >
+                {fieldErrors.phone}
+              </p>
             )}
           </div>
           <div>
-            <label htmlFor="booking-email" className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-1">
+            <label
+              htmlFor="booking-email"
+              className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-1"
+            >
               <Mail size={14} /> Email (optional)
             </label>
             <input
@@ -646,7 +682,8 @@ export default function BookingPortalPage() {
               value={customerEmail}
               onChange={(e) => {
                 setCustomerEmail(e.target.value);
-                if (touched.email) setFieldErrors((prev) => ({ ...prev, email: validateEmail(e.target.value) }));
+                if (touched.email)
+                  setFieldErrors((prev) => ({ ...prev, email: validateEmail(e.target.value) }));
               }}
               onBlur={() => handleBlur('email')}
               placeholder="you@example.com"
@@ -658,11 +695,19 @@ export default function BookingPortalPage() {
               }`}
             />
             {touched.email && fieldErrors.email && (
-              <p id="email-error" className="mt-1 text-xs bg-red-50 text-red-700 px-2 py-1 rounded-lg">{fieldErrors.email}</p>
+              <p
+                id="email-error"
+                className="mt-1 text-xs bg-red-50 text-red-700 px-2 py-1 rounded-lg"
+              >
+                {fieldErrors.email}
+              </p>
             )}
           </div>
           <div>
-            <label htmlFor="booking-notes" className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-1">
+            <label
+              htmlFor="booking-notes"
+              className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-1"
+            >
               <FileText size={14} /> Notes (optional)
             </label>
             <textarea
@@ -787,8 +832,13 @@ export default function BookingPortalPage() {
       {step === 'success' && bookingResult && (
         <div className="bg-white rounded-2xl shadow-soft p-8 text-center">
           <div className="flex justify-center mb-4">
-            <div className={`w-16 h-16 rounded-full flex items-center justify-center ${bookingResult.depositRequired ? 'bg-amber-50' : 'bg-sage-50'}`}>
-              <CheckCircle2 size={32} className={bookingResult.depositRequired ? 'text-amber-600' : 'text-sage-600'} />
+            <div
+              className={`w-16 h-16 rounded-full flex items-center justify-center ${bookingResult.depositRequired ? 'bg-amber-50' : 'bg-sage-50'}`}
+            >
+              <CheckCircle2
+                size={32}
+                className={bookingResult.depositRequired ? 'text-amber-600' : 'text-sage-600'}
+              />
             </div>
           </div>
           <h2 className="text-xl font-serif font-semibold text-slate-900 mb-2">

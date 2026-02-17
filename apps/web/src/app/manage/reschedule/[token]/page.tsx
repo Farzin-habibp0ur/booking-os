@@ -108,9 +108,7 @@ export default function ReschedulePage() {
           Unable to Reschedule
         </h1>
         <p className="text-slate-500 mb-6 max-w-md mx-auto">{error}</p>
-        <p className="text-sm text-slate-400">
-          Please contact the clinic directly for assistance.
-        </p>
+        <p className="text-sm text-slate-400">Please contact the clinic directly for assistance.</p>
       </div>
     );
   }
@@ -144,12 +142,8 @@ export default function ReschedulePage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-serif font-semibold text-slate-900">
-          Reschedule Appointment
-        </h1>
-        {data?.business && (
-          <p className="text-sm text-slate-500 mt-1">{data.business.name}</p>
-        )}
+        <h1 className="text-2xl font-serif font-semibold text-slate-900">Reschedule Appointment</h1>
+        {data?.business && <p className="text-sm text-slate-500 mt-1">{data.business.name}</p>}
       </div>
 
       {/* Current booking summary */}
@@ -234,11 +228,14 @@ export default function ReschedulePage() {
           {loadingSlots ? (
             <p className="text-sm text-slate-400 animate-pulse">Loading available times...</p>
           ) : slots.length === 0 ? (
-            <p className="text-sm text-slate-400">No times available on this day. Try another date.</p>
+            <p className="text-sm text-slate-400">
+              No times available on this day. Try another date.
+            </p>
           ) : (
             <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
               {slots.map((slot, i) => {
-                const isSelected = selectedSlot?.time === slot.time && selectedSlot?.staffId === slot.staffId;
+                const isSelected =
+                  selectedSlot?.time === slot.time && selectedSlot?.staffId === slot.staffId;
                 return (
                   <button
                     key={i}

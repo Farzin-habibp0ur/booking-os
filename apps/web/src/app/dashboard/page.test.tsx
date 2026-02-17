@@ -27,7 +27,9 @@ jest.mock('@/lib/auth', () => {
       loading: false,
     }),
     AuthProvider: ({ children }: any) => children,
-    __setMockUser: (u: any) => { mockUser = u; },
+    __setMockUser: (u: any) => {
+      mockUser = u;
+    },
   };
 });
 
@@ -143,6 +145,7 @@ describe('DashboardPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     // Reset auth back to ADMIN
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const authMod = require('@/lib/auth');
     if (authMod.__setMockUser) {
       authMod.__setMockUser({ id: '1', name: 'Sarah', role: 'ADMIN', businessId: 'b1' });
@@ -774,7 +777,11 @@ describe('DashboardPage', () => {
       attentionNeeded: {
         depositPendingBookings: [],
         overdueConversations: [
-          { id: 'c1', customer: { name: 'Overdue Mary' }, lastMessageAt: new Date(Date.now() - 3600000).toISOString() },
+          {
+            id: 'c1',
+            customer: { name: 'Overdue Mary' },
+            lastMessageAt: new Date(Date.now() - 3600000).toISOString(),
+          },
         ],
         tomorrowBookings: [],
       },
@@ -902,7 +909,11 @@ describe('DashboardPage', () => {
       attentionNeeded: {
         depositPendingBookings: [],
         overdueConversations: [
-          { id: 'c1', customer: { name: 'Late1' }, lastMessageAt: new Date(Date.now() - 7200000).toISOString() },
+          {
+            id: 'c1',
+            customer: { name: 'Late1' },
+            lastMessageAt: new Date(Date.now() - 7200000).toISOString(),
+          },
         ],
         tomorrowBookings: [],
       },
@@ -1036,6 +1047,7 @@ describe('DashboardPage', () => {
   });
 
   it('hides go-live checklist for non-admin users', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const authMod = require('@/lib/auth');
     authMod.__setMockUser({ id: '2', name: 'Mike', role: 'STAFF', businessId: 'b1' });
 
@@ -1043,9 +1055,7 @@ describe('DashboardPage', () => {
       ...baseDashboardData,
       goLiveChecklist: {
         allComplete: false,
-        items: [
-          { key: 'business_name', done: false, fixUrl: '/settings' },
-        ],
+        items: [{ key: 'business_name', done: false, fixUrl: '/settings' }],
       },
     });
 
@@ -1161,7 +1171,9 @@ describe('DashboardPage', () => {
     });
 
     await waitFor(() => {
-      expect(mockApi.patch).toHaveBeenCalledWith('/dashboard/dismiss-nudge', { nudgeId: 'nudge_5' });
+      expect(mockApi.patch).toHaveBeenCalledWith('/dashboard/dismiss-nudge', {
+        nudgeId: 'nudge_5',
+      });
     });
   });
 
@@ -1329,7 +1341,11 @@ describe('DashboardPage', () => {
           { id: 'b2', customer: { name: 'X2' }, service: { name: 'S2' } },
         ],
         overdueConversations: [
-          { id: 'c1', customer: { name: 'Y1' }, lastMessageAt: new Date(Date.now() - 3600000).toISOString() },
+          {
+            id: 'c1',
+            customer: { name: 'Y1' },
+            lastMessageAt: new Date(Date.now() - 3600000).toISOString(),
+          },
         ],
         tomorrowBookings: [
           { id: 'tb1', customer: { name: 'Z1' }, startTime: '2026-02-17T09:00:00Z' },

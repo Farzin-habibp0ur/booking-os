@@ -67,13 +67,13 @@ export default function ClinicIntakeCard({ customer, fields, onUpdated }: Clinic
     const isEmpty = value === undefined || value === null || value === '';
 
     if (isEmpty) {
-      return (
-        <span className="text-slate-400 italic text-xs">{t('inbox.intake_not_set')}</span>
-      );
+      return <span className="text-slate-400 italic text-xs">{t('inbox.intake_not_set')}</span>;
     }
 
     if (field.type === 'boolean') {
-      return <span className="text-sm text-slate-800">{value ? t('common.yes') : t('common.no')}</span>;
+      return (
+        <span className="text-sm text-slate-800">{value ? t('common.yes') : t('common.no')}</span>
+      );
     }
 
     return <span className="text-sm text-slate-800">{String(value)}</span>;
@@ -102,7 +102,9 @@ export default function ClinicIntakeCard({ customer, fields, onUpdated }: Clinic
         >
           <option value="">--</option>
           {field.options.map((opt) => (
-            <option key={opt} value={opt}>{opt}</option>
+            <option key={opt} value={opt}>
+              {opt}
+            </option>
           ))}
         </select>
       );
@@ -129,9 +131,7 @@ export default function ClinicIntakeCard({ customer, fields, onUpdated }: Clinic
           <span
             className={cn(
               'text-[10px] px-1.5 py-0.5 rounded-full font-medium',
-              allComplete
-                ? 'bg-sage-50 text-sage-700'
-                : 'bg-amber-50 text-amber-700',
+              allComplete ? 'bg-sage-50 text-sage-700' : 'bg-amber-50 text-amber-700',
             )}
           >
             {t('inbox.intake_complete', { filled: String(filled), total: String(total) })}

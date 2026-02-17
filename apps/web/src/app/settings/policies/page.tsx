@@ -114,9 +114,7 @@ export default function PolicySettingsPage() {
           </p>
           <textarea
             value={settings.cancellationPolicyText}
-            onChange={(e) =>
-              setSettings({ ...settings, cancellationPolicyText: e.target.value })
-            }
+            onChange={(e) => setSettings({ ...settings, cancellationPolicyText: e.target.value })}
             placeholder={t('policy_settings.cancellation_text_placeholder')}
             rows={3}
             className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm resize-none"
@@ -156,14 +154,10 @@ export default function PolicySettingsPage() {
         {/* Reschedule policy text */}
         <div>
           <p className="text-sm font-medium mb-1">{t('policy_settings.reschedule_text')}</p>
-          <p className="text-xs text-slate-500 mb-3">
-            {t('policy_settings.reschedule_text_desc')}
-          </p>
+          <p className="text-xs text-slate-500 mb-3">{t('policy_settings.reschedule_text_desc')}</p>
           <textarea
             value={settings.reschedulePolicyText}
-            onChange={(e) =>
-              setSettings({ ...settings, reschedulePolicyText: e.target.value })
-            }
+            onChange={(e) => setSettings({ ...settings, reschedulePolicyText: e.target.value })}
             placeholder={t('policy_settings.reschedule_text_placeholder')}
             rows={3}
             className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm resize-none"

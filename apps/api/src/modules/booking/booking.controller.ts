@@ -77,7 +77,13 @@ export class BookingController {
     @Body() body: { ids: string[]; action: 'status' | 'assign'; payload: any },
     @CurrentUser() user: any,
   ) {
-    return this.bookingService.bulkUpdate(businessId, body.ids, body.action, body.payload, user?.role);
+    return this.bookingService.bulkUpdate(
+      businessId,
+      body.ids,
+      body.action,
+      body.payload,
+      user?.role,
+    );
   }
 
   @Post(':id/send-deposit-request')

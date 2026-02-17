@@ -64,9 +64,9 @@ test.describe('Workflow Tests', () => {
     const customers = await getCustomersViaApi(page);
 
     // Find a deposit-required service (Botox) or use first service
-    const depositService = services.find(
-      (s: any) => s.customFields?.depositRequired || s.name === 'Botox',
-    ) || services[0];
+    const depositService =
+      services.find((s: any) => s.customFields?.depositRequired || s.name === 'Botox') ||
+      services[0];
 
     await createBookingViaApi(page, {
       serviceId: depositService.id,
@@ -79,10 +79,9 @@ test.describe('Workflow Tests', () => {
     await page.waitForLoadState('networkidle');
 
     // Verify bookings page loads with data
-    await expect(page.locator('body')).toContainText(
-      new RegExp(depositService.name, 'i'),
-      { timeout: 10000 },
-    );
+    await expect(page.locator('body')).toContainText(new RegExp(depositService.name, 'i'), {
+      timeout: 10000,
+    });
   });
 
   test('Consult completion flow', async ({ page }) => {
@@ -160,10 +159,9 @@ test.describe('Workflow Tests', () => {
       await page.waitForLoadState('networkidle');
 
       // Verify branded page loads
-      await expect(page.locator('body')).toContainText(
-        new RegExp('cancel|appointment', 'i'),
-        { timeout: 10000 },
-      );
+      await expect(page.locator('body')).toContainText(new RegExp('cancel|appointment', 'i'), {
+        timeout: 10000,
+      });
     } else {
       expect(linkResult).toBeTruthy();
     }

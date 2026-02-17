@@ -205,7 +205,12 @@ export class ReportsService {
     return Object.entries(map).map(([status, count]) => ({ status, count }));
   }
 
-  async consultToTreatmentConversion(businessId: string, days: number = 30, startDate?: Date, endDate?: Date) {
+  async consultToTreatmentConversion(
+    businessId: string,
+    days: number = 30,
+    startDate?: Date,
+    endDate?: Date,
+  ) {
     const dateFilter: any = {};
     if (startDate) {
       dateFilter.gte = startDate;

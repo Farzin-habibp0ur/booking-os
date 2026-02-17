@@ -17,7 +17,10 @@ describe('TemplateService', () => {
 
   describe('findAll', () => {
     it('returns templates ordered by name', async () => {
-      const templates = [{ id: 't1', name: 'Aftercare' }, { id: 't2', name: 'Booking' }];
+      const templates = [
+        { id: 't1', name: 'Aftercare' },
+        { id: 't2', name: 'Booking' },
+      ];
       prisma.messageTemplate.findMany.mockResolvedValue(templates as any);
 
       const result = await service.findAll('biz1');
@@ -46,7 +49,12 @@ describe('TemplateService', () => {
 
   describe('create', () => {
     it('creates template with explicit variables', async () => {
-      const created = { id: 't1', name: 'Test', body: 'Hello {{customerName}}', variables: ['customerName'] };
+      const created = {
+        id: 't1',
+        name: 'Test',
+        body: 'Hello {{customerName}}',
+        variables: ['customerName'],
+      };
       prisma.messageTemplate.create.mockResolvedValue(created as any);
 
       const result = await service.create('biz1', {
@@ -173,7 +181,9 @@ describe('TemplateService', () => {
         },
       );
 
-      expect(result).toBe('Hi Emma, your Botox is on 2026-03-01 at 10:00 with Dr. Chen at Glow Clinic');
+      expect(result).toBe(
+        'Hi Emma, your Botox is on 2026-03-01 at 10:00 with Dr. Chen at Glow Clinic',
+      );
     });
 
     it('leaves unresolved variables when context is missing', async () => {

@@ -275,7 +275,11 @@ describe('BookingService', () => {
     };
 
     it('creates booking with calculated endTime and CONFIRMED status for non-deposit service', async () => {
-      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', durationMins: 60, depositRequired: false } as any);
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        durationMins: 60,
+        depositRequired: false,
+      } as any);
       prisma.booking.findFirst.mockResolvedValue(null); // no conflict
       prisma.booking.create.mockResolvedValue({ id: 'b1' } as any);
       prisma.reminder.create.mockResolvedValue({} as any);
@@ -298,9 +302,17 @@ describe('BookingService', () => {
     });
 
     it('creates booking with PENDING_DEPOSIT status when service has depositRequired: true', async () => {
-      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', durationMins: 60, depositRequired: true, depositAmount: 100 } as any);
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        durationMins: 60,
+        depositRequired: true,
+        depositAmount: 100,
+      } as any);
       prisma.booking.findFirst.mockResolvedValue(null);
-      prisma.booking.create.mockResolvedValue({ id: 'b1', service: { depositRequired: true, depositAmount: 100 } } as any);
+      prisma.booking.create.mockResolvedValue({
+        id: 'b1',
+        service: { depositRequired: true, depositAmount: 100 },
+      } as any);
       prisma.reminder.create.mockResolvedValue({} as any);
 
       await bookingService.create('biz1', createData);
@@ -315,7 +327,12 @@ describe('BookingService', () => {
     });
 
     it('sends sendDepositRequest instead of sendBookingConfirmation for deposit-required services', async () => {
-      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', durationMins: 60, depositRequired: true, depositAmount: 100 } as any);
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        durationMins: 60,
+        depositRequired: true,
+        depositAmount: 100,
+      } as any);
       prisma.booking.findFirst.mockResolvedValue(null);
       prisma.booking.create.mockResolvedValue({
         id: 'b1',
@@ -405,7 +422,12 @@ describe('BookingService', () => {
     });
 
     it('logs initial deposit request in customFields for deposit-required services', async () => {
-      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', durationMins: 60, depositRequired: true, depositAmount: 100 } as any);
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        durationMins: 60,
+        depositRequired: true,
+        depositAmount: 100,
+      } as any);
       prisma.booking.findFirst.mockResolvedValue(null);
       prisma.booking.create.mockResolvedValue({
         id: 'b1',
@@ -461,7 +483,12 @@ describe('BookingService', () => {
     it('triggers calendar sync after creating booking', async () => {
       prisma.service.findFirst.mockResolvedValue({ id: 'svc1', durationMins: 60 } as any);
       prisma.booking.findFirst.mockResolvedValue(null);
-      prisma.booking.create.mockResolvedValue({ id: 'b1', customer: {}, service: {}, staff: {} } as any);
+      prisma.booking.create.mockResolvedValue({
+        id: 'b1',
+        customer: {},
+        service: {},
+        staff: {},
+      } as any);
       prisma.reminder.create.mockResolvedValue({} as any);
 
       await bookingService.create('biz1', createData);
@@ -538,10 +565,22 @@ describe('BookingService', () => {
     });
 
     it('calls attributeCampaignSend after creating booking', async () => {
-      const recentSend = { id: 'cs1', customerId: 'cust1', status: 'SENT', sentAt: new Date(), bookingId: null };
+      const recentSend = {
+        id: 'cs1',
+        customerId: 'cust1',
+        status: 'SENT',
+        sentAt: new Date(),
+        bookingId: null,
+      };
       prisma.service.findFirst.mockResolvedValue({ id: 'svc1', durationMins: 60 } as any);
       prisma.booking.findFirst.mockResolvedValue(null);
-      prisma.booking.create.mockResolvedValue({ id: 'b1', customerId: 'cust1', customer: {}, service: {}, staff: {} } as any);
+      prisma.booking.create.mockResolvedValue({
+        id: 'b1',
+        customerId: 'cust1',
+        customer: {},
+        service: {},
+        staff: {},
+      } as any);
       prisma.reminder.create.mockResolvedValue({} as any);
       prisma.campaignSend.findFirst.mockResolvedValue(recentSend as any);
       prisma.campaignSend.update.mockResolvedValue({ ...recentSend, bookingId: 'b1' } as any);
@@ -569,7 +608,13 @@ describe('BookingService', () => {
     it('does not update campaignSend when no recent send found', async () => {
       prisma.service.findFirst.mockResolvedValue({ id: 'svc1', durationMins: 60 } as any);
       prisma.booking.findFirst.mockResolvedValue(null);
-      prisma.booking.create.mockResolvedValue({ id: 'b1', customerId: 'cust1', customer: {}, service: {}, staff: {} } as any);
+      prisma.booking.create.mockResolvedValue({
+        id: 'b1',
+        customerId: 'cust1',
+        customer: {},
+        service: {},
+        staff: {},
+      } as any);
       prisma.reminder.create.mockResolvedValue({} as any);
       prisma.campaignSend.findFirst.mockResolvedValue(null);
 
@@ -594,7 +639,10 @@ describe('BookingService', () => {
         staff: null,
       };
       prisma.booking.findFirst.mockResolvedValue(booking as any);
-      prisma.booking.update.mockResolvedValue({ ...booking, customFields: { depositRequestLog: [{ sentAt: expect.any(String) }] } } as any);
+      prisma.booking.update.mockResolvedValue({
+        ...booking,
+        customFields: { depositRequestLog: [{ sentAt: expect.any(String) }] },
+      } as any);
 
       await bookingService.sendDepositRequest('biz1', 'b1');
 
@@ -615,7 +663,9 @@ describe('BookingService', () => {
     it('throws NotFoundException if booking not found', async () => {
       prisma.booking.findFirst.mockResolvedValue(null);
 
-      await expect(bookingService.sendDepositRequest('biz1', 'b1')).rejects.toThrow(NotFoundException);
+      await expect(bookingService.sendDepositRequest('biz1', 'b1')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('throws BadRequestException if booking not PENDING_DEPOSIT', async () => {
@@ -629,7 +679,9 @@ describe('BookingService', () => {
         staff: null,
       } as any);
 
-      await expect(bookingService.sendDepositRequest('biz1', 'b1')).rejects.toThrow(BadRequestException);
+      await expect(bookingService.sendDepositRequest('biz1', 'b1')).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('appends to existing depositRequestLog', async () => {
@@ -726,7 +778,12 @@ describe('BookingService', () => {
     });
 
     it('triggers calendar sync after update', async () => {
-      prisma.booking.update.mockResolvedValue({ id: 'b1', customer: {}, service: {}, staff: {} } as any);
+      prisma.booking.update.mockResolvedValue({
+        id: 'b1',
+        customer: {},
+        service: {},
+        staff: {},
+      } as any);
 
       await bookingService.update('biz1', 'b1', { notes: 'New notes' });
 
@@ -737,7 +794,13 @@ describe('BookingService', () => {
     });
 
     it('returns the updated booking with included relations', async () => {
-      const updatedBooking = { id: 'b1', notes: 'Updated', customer: { name: 'Test' }, service: { name: 'Botox' }, staff: null };
+      const updatedBooking = {
+        id: 'b1',
+        notes: 'Updated',
+        customer: { name: 'Test' },
+        service: { name: 'Botox' },
+        staff: null,
+      };
       prisma.booking.update.mockResolvedValue(updatedBooking as any);
 
       const result = await bookingService.update('biz1', 'b1', { notes: 'Updated' });
@@ -764,7 +827,10 @@ describe('BookingService', () => {
 
   describe('updateStatus', () => {
     it('sends booking confirmation when transitioning from PENDING_DEPOSIT to CONFIRMED (admin override)', async () => {
-      prisma.booking.findFirst.mockResolvedValue({ status: 'PENDING_DEPOSIT', customFields: {} } as any);
+      prisma.booking.findFirst.mockResolvedValue({
+        status: 'PENDING_DEPOSIT',
+        customFields: {},
+      } as any);
       prisma.booking.update.mockResolvedValue({
         id: 'b1',
         status: 'CONFIRMED',
@@ -962,7 +1028,9 @@ describe('BookingService', () => {
 
       const calls = prisma.reminder.create.mock.calls;
       const aftercareCalls = calls.filter((call: any) => call[0]?.data?.type === 'AFTERCARE');
-      const checkInCalls = calls.filter((call: any) => call[0]?.data?.type === 'TREATMENT_CHECK_IN');
+      const checkInCalls = calls.filter(
+        (call: any) => call[0]?.data?.type === 'TREATMENT_CHECK_IN',
+      );
       expect(aftercareCalls).toHaveLength(0);
       expect(checkInCalls).toHaveLength(0);
     });
@@ -980,7 +1048,9 @@ describe('BookingService', () => {
 
       const calls = prisma.reminder.create.mock.calls;
       const aftercareCalls = calls.filter((call: any) => call[0]?.data?.type === 'AFTERCARE');
-      const checkInCalls = calls.filter((call: any) => call[0]?.data?.type === 'TREATMENT_CHECK_IN');
+      const checkInCalls = calls.filter(
+        (call: any) => call[0]?.data?.type === 'TREATMENT_CHECK_IN',
+      );
       expect(aftercareCalls).toHaveLength(0);
       expect(checkInCalls).toHaveLength(0);
     });
@@ -1502,10 +1572,19 @@ describe('BookingService', () => {
         reschedulePolicyText: '',
       });
       const soon = new Date(Date.now() + 12 * 3600000);
-      prisma.booking.findFirst.mockResolvedValue({ status: 'CONFIRMED', startTime: soon, customFields: {} } as any);
+      prisma.booking.findFirst.mockResolvedValue({
+        status: 'CONFIRMED',
+        startTime: soon,
+        customFields: {},
+      } as any);
 
       await expect(
-        bookingService.updateStatus('biz1', 'b1', 'CANCELLED', { role: 'AGENT', staffId: 's1', staffName: 'Agent', reason: '' }),
+        bookingService.updateStatus('biz1', 'b1', 'CANCELLED', {
+          role: 'AGENT',
+          staffId: 's1',
+          staffName: 'Agent',
+          reason: '',
+        }),
       ).rejects.toThrow('Cancellations must be made 24h in advance');
     });
 
@@ -1518,7 +1597,11 @@ describe('BookingService', () => {
         reschedulePolicyText: '',
       });
       const farAway = new Date(Date.now() + 48 * 3600000);
-      prisma.booking.findFirst.mockResolvedValue({ status: 'CONFIRMED', startTime: farAway, customFields: {} } as any);
+      prisma.booking.findFirst.mockResolvedValue({
+        status: 'CONFIRMED',
+        startTime: farAway,
+        customFields: {},
+      } as any);
       prisma.booking.update.mockResolvedValue({ id: 'b1', status: 'CANCELLED' } as any);
       prisma.reminder.updateMany.mockResolvedValue({ count: 0 } as any);
 
@@ -1536,7 +1619,11 @@ describe('BookingService', () => {
         reschedulePolicyText: '',
       });
       const soon = new Date(Date.now() + 2 * 3600000);
-      prisma.booking.findFirst.mockResolvedValue({ status: 'CONFIRMED', startTime: soon, customFields: {} } as any);
+      prisma.booking.findFirst.mockResolvedValue({
+        status: 'CONFIRMED',
+        startTime: soon,
+        customFields: {},
+      } as any);
       prisma.booking.update.mockResolvedValue({ id: 'b1', status: 'CANCELLED' } as any);
       prisma.reminder.updateMany.mockResolvedValue({ count: 0 } as any);
 
@@ -1554,7 +1641,11 @@ describe('BookingService', () => {
         reschedulePolicyText: '',
       });
       const soon = new Date(Date.now() + 12 * 3600000);
-      prisma.booking.findFirst.mockResolvedValue({ status: 'CONFIRMED', startTime: soon, customFields: {} } as any);
+      prisma.booking.findFirst.mockResolvedValue({
+        status: 'CONFIRMED',
+        startTime: soon,
+        customFields: {},
+      } as any);
 
       await expect(bookingService.updateStatus('biz1', 'b1', 'CANCELLED')).rejects.toThrow(
         'Cannot cancel within 24 hours of the appointment',
@@ -1562,7 +1653,11 @@ describe('BookingService', () => {
     });
 
     it('skips policy check when currentBooking has no startTime', async () => {
-      prisma.booking.findFirst.mockResolvedValue({ status: 'CONFIRMED', startTime: null, customFields: {} } as any);
+      prisma.booking.findFirst.mockResolvedValue({
+        status: 'CONFIRMED',
+        startTime: null,
+        customFields: {},
+      } as any);
       prisma.booking.update.mockResolvedValue({ id: 'b1', status: 'CANCELLED' } as any);
       prisma.reminder.updateMany.mockResolvedValue({ count: 0 } as any);
 
@@ -1586,10 +1681,18 @@ describe('BookingService', () => {
   });
 
   describe('updateStatus - admin override', () => {
-    const adminActor = { reason: 'Client paid cash', staffId: 'staff1', staffName: 'Sarah', role: 'ADMIN' };
+    const adminActor = {
+      reason: 'Client paid cash',
+      staffId: 'staff1',
+      staffName: 'Sarah',
+      role: 'ADMIN',
+    };
 
     it('allows ADMIN to confirm PENDING_DEPOSIT booking with reason', async () => {
-      prisma.booking.findFirst.mockResolvedValue({ status: 'PENDING_DEPOSIT', customFields: {} } as any);
+      prisma.booking.findFirst.mockResolvedValue({
+        status: 'PENDING_DEPOSIT',
+        customFields: {},
+      } as any);
       prisma.booking.update.mockResolvedValue({
         id: 'b1',
         status: 'CONFIRMED',
@@ -1621,7 +1724,10 @@ describe('BookingService', () => {
     });
 
     it('throws ForbiddenException when non-ADMIN tries to confirm PENDING_DEPOSIT', async () => {
-      prisma.booking.findFirst.mockResolvedValue({ status: 'PENDING_DEPOSIT', customFields: {} } as any);
+      prisma.booking.findFirst.mockResolvedValue({
+        status: 'PENDING_DEPOSIT',
+        customFields: {},
+      } as any);
 
       await expect(
         bookingService.updateStatus('biz1', 'b1', 'CONFIRMED', {
@@ -1633,7 +1739,10 @@ describe('BookingService', () => {
     });
 
     it('throws BadRequestException when ADMIN tries to confirm PENDING_DEPOSIT without reason', async () => {
-      prisma.booking.findFirst.mockResolvedValue({ status: 'PENDING_DEPOSIT', customFields: {} } as any);
+      prisma.booking.findFirst.mockResolvedValue({
+        status: 'PENDING_DEPOSIT',
+        customFields: {},
+      } as any);
 
       await expect(
         bookingService.updateStatus('biz1', 'b1', 'CONFIRMED', {
@@ -1653,7 +1762,11 @@ describe('BookingService', () => {
         reschedulePolicyText: '',
       });
       const soon = new Date(Date.now() + 12 * 3600000);
-      prisma.booking.findFirst.mockResolvedValue({ status: 'CONFIRMED', startTime: soon, customFields: {} } as any);
+      prisma.booking.findFirst.mockResolvedValue({
+        status: 'CONFIRMED',
+        startTime: soon,
+        customFields: {},
+      } as any);
       prisma.booking.update.mockResolvedValue({ id: 'b1', status: 'CANCELLED' } as any);
       prisma.reminder.updateMany.mockResolvedValue({ count: 0 } as any);
 
@@ -1691,7 +1804,11 @@ describe('BookingService', () => {
         reschedulePolicyText: '',
       });
       const soon = new Date(Date.now() + 12 * 3600000);
-      prisma.booking.findFirst.mockResolvedValue({ status: 'CONFIRMED', startTime: soon, customFields: {} } as any);
+      prisma.booking.findFirst.mockResolvedValue({
+        status: 'CONFIRMED',
+        startTime: soon,
+        customFields: {},
+      } as any);
 
       await expect(
         bookingService.updateStatus('biz1', 'b1', 'CANCELLED', {
@@ -1703,7 +1820,10 @@ describe('BookingService', () => {
     });
 
     it('override log includes timestamp', async () => {
-      prisma.booking.findFirst.mockResolvedValue({ status: 'PENDING_DEPOSIT', customFields: {} } as any);
+      prisma.booking.findFirst.mockResolvedValue({
+        status: 'PENDING_DEPOSIT',
+        customFields: {},
+      } as any);
       prisma.booking.update.mockResolvedValue({
         id: 'b1',
         status: 'CONFIRMED',
@@ -1724,7 +1844,16 @@ describe('BookingService', () => {
       prisma.booking.findFirst.mockResolvedValue({
         status: 'PENDING_DEPOSIT',
         customFields: {
-          overrideLog: [{ type: 'EXISTING', action: 'TEST', reason: 'old', staffId: '', staffName: '', timestamp: '2025-01-01' }],
+          overrideLog: [
+            {
+              type: 'EXISTING',
+              action: 'TEST',
+              reason: 'old',
+              staffId: '',
+              staffName: '',
+              timestamp: '2025-01-01',
+            },
+          ],
         },
       } as any);
       prisma.booking.update.mockResolvedValue({
@@ -1756,7 +1885,10 @@ describe('BookingService', () => {
     });
 
     it('handles actor with empty staffId and staffName gracefully for deposit override', async () => {
-      prisma.booking.findFirst.mockResolvedValue({ status: 'PENDING_DEPOSIT', customFields: {} } as any);
+      prisma.booking.findFirst.mockResolvedValue({
+        status: 'PENDING_DEPOSIT',
+        customFields: {},
+      } as any);
       prisma.booking.update.mockResolvedValue({
         id: 'b1',
         status: 'CONFIRMED',
@@ -1785,7 +1917,11 @@ describe('BookingService', () => {
         reschedulePolicyText: '',
       });
       const soon = new Date(Date.now() + 12 * 3600000);
-      prisma.booking.findFirst.mockResolvedValue({ status: 'CONFIRMED', startTime: soon, customFields: null } as any);
+      prisma.booking.findFirst.mockResolvedValue({
+        status: 'CONFIRMED',
+        startTime: soon,
+        customFields: null,
+      } as any);
       prisma.booking.update.mockResolvedValue({ id: 'b1', status: 'CANCELLED' } as any);
       prisma.reminder.updateMany.mockResolvedValue({ count: 0 } as any);
 
@@ -1802,7 +1938,10 @@ describe('BookingService', () => {
     });
 
     it('handles null customFields when building override log', async () => {
-      prisma.booking.findFirst.mockResolvedValue({ status: 'PENDING_DEPOSIT', customFields: null } as any);
+      prisma.booking.findFirst.mockResolvedValue({
+        status: 'PENDING_DEPOSIT',
+        customFields: null,
+      } as any);
       prisma.booking.update.mockResolvedValue({
         id: 'b1',
         status: 'CONFIRMED',
@@ -1987,7 +2126,9 @@ describe('BookingService', () => {
     it('throws NotFoundException if booking not found', async () => {
       prisma.booking.findFirst.mockResolvedValue(null);
 
-      await expect(bookingService.sendRescheduleLink('biz1', 'b1', actor)).rejects.toThrow(NotFoundException);
+      await expect(bookingService.sendRescheduleLink('biz1', 'b1', actor)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('throws BadRequestException if booking has wrong status', async () => {
@@ -2000,7 +2141,9 @@ describe('BookingService', () => {
         staff: null,
       } as any);
 
-      await expect(bookingService.sendRescheduleLink('biz1', 'b1', actor)).rejects.toThrow(BadRequestException);
+      await expect(bookingService.sendRescheduleLink('biz1', 'b1', actor)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('uses phone when email is not available', async () => {
@@ -2048,7 +2191,14 @@ describe('BookingService', () => {
     });
 
     it('appends to existing selfServeLog', async () => {
-      const existingLog = [{ type: 'CANCEL_LINK_SENT', sentAt: '2026-01-01T00:00:00Z', sentBy: 'Admin', staffId: 'staff2' }];
+      const existingLog = [
+        {
+          type: 'CANCEL_LINK_SENT',
+          sentAt: '2026-01-01T00:00:00Z',
+          sentBy: 'Admin',
+          staffId: 'staff2',
+        },
+      ];
       const booking = {
         id: 'b1',
         businessId: 'biz1',
@@ -2069,7 +2219,11 @@ describe('BookingService', () => {
             customFields: expect.objectContaining({
               selfServeLog: [
                 expect.objectContaining({ type: 'CANCEL_LINK_SENT' }),
-                expect.objectContaining({ type: 'RESCHEDULE_LINK_SENT', sentBy: 'Sarah', staffId: 'staff1' }),
+                expect.objectContaining({
+                  type: 'RESCHEDULE_LINK_SENT',
+                  sentBy: 'Sarah',
+                  staffId: 'staff1',
+                }),
               ],
             }),
           }),
@@ -2117,9 +2271,7 @@ describe('BookingService', () => {
         expect.objectContaining({
           data: expect.objectContaining({
             customFields: expect.objectContaining({
-              selfServeLog: [
-                expect.objectContaining({ type: 'RESCHEDULE_LINK_SENT' }),
-              ],
+              selfServeLog: [expect.objectContaining({ type: 'RESCHEDULE_LINK_SENT' })],
             }),
           }),
         }),
@@ -2177,7 +2329,9 @@ describe('BookingService', () => {
     it('throws NotFoundException if booking not found', async () => {
       prisma.booking.findFirst.mockResolvedValue(null);
 
-      await expect(bookingService.sendCancelLink('biz1', 'b1', actor)).rejects.toThrow(NotFoundException);
+      await expect(bookingService.sendCancelLink('biz1', 'b1', actor)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('throws BadRequestException if booking has wrong status', async () => {
@@ -2190,7 +2344,9 @@ describe('BookingService', () => {
         staff: null,
       } as any);
 
-      await expect(bookingService.sendCancelLink('biz1', 'b1', actor)).rejects.toThrow(BadRequestException);
+      await expect(bookingService.sendCancelLink('biz1', 'b1', actor)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('throws BadRequestException if booking is CANCELLED', async () => {
@@ -2203,7 +2359,9 @@ describe('BookingService', () => {
         staff: null,
       } as any);
 
-      await expect(bookingService.sendCancelLink('biz1', 'b1', actor)).rejects.toThrow(BadRequestException);
+      await expect(bookingService.sendCancelLink('biz1', 'b1', actor)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('uses phone when email is not available', async () => {
@@ -2251,7 +2409,14 @@ describe('BookingService', () => {
     });
 
     it('appends to existing selfServeLog', async () => {
-      const existingLog = [{ type: 'RESCHEDULE_LINK_SENT', sentAt: '2026-01-01T00:00:00Z', sentBy: 'Admin', staffId: 'staff2' }];
+      const existingLog = [
+        {
+          type: 'RESCHEDULE_LINK_SENT',
+          sentAt: '2026-01-01T00:00:00Z',
+          sentBy: 'Admin',
+          staffId: 'staff2',
+        },
+      ];
       const booking = {
         id: 'b1',
         businessId: 'biz1',
@@ -2272,7 +2437,11 @@ describe('BookingService', () => {
             customFields: expect.objectContaining({
               selfServeLog: [
                 expect.objectContaining({ type: 'RESCHEDULE_LINK_SENT' }),
-                expect.objectContaining({ type: 'CANCEL_LINK_SENT', sentBy: 'Sarah', staffId: 'staff1' }),
+                expect.objectContaining({
+                  type: 'CANCEL_LINK_SENT',
+                  sentBy: 'Sarah',
+                  staffId: 'staff1',
+                }),
               ],
             }),
           }),
@@ -2320,9 +2489,7 @@ describe('BookingService', () => {
         expect.objectContaining({
           data: expect.objectContaining({
             customFields: expect.objectContaining({
-              selfServeLog: [
-                expect.objectContaining({ type: 'CANCEL_LINK_SENT' }),
-              ],
+              selfServeLog: [expect.objectContaining({ type: 'CANCEL_LINK_SENT' })],
             }),
           }),
         }),
@@ -2369,7 +2536,10 @@ describe('BookingService', () => {
       prisma.booking.findFirst.mockResolvedValue(booking as any);
       prisma.booking.update.mockResolvedValue({ ...booking } as any);
 
-      await serviceWithNoWebUrl.sendRescheduleLink('biz1', 'b1', { staffId: 'staff1', staffName: 'Sarah' });
+      await serviceWithNoWebUrl.sendRescheduleLink('biz1', 'b1', {
+        staffId: 'staff1',
+        staffName: 'Sarah',
+      });
 
       expect(mockNotificationService.sendRescheduleLink).toHaveBeenCalledWith(
         expect.anything(),
@@ -2417,7 +2587,10 @@ describe('BookingService', () => {
       prisma.booking.findFirst.mockResolvedValue(booking as any);
       prisma.booking.update.mockResolvedValue({ ...booking } as any);
 
-      await serviceWithNoWebUrl.sendCancelLink('biz1', 'b1', { staffId: 'staff1', staffName: 'Sarah' });
+      await serviceWithNoWebUrl.sendCancelLink('biz1', 'b1', {
+        staffId: 'staff1',
+        staffName: 'Sarah',
+      });
 
       expect(mockNotificationService.sendCancelLink).toHaveBeenCalledWith(
         expect.anything(),
@@ -2431,7 +2604,11 @@ describe('BookingService', () => {
       prisma.booking.updateMany.mockResolvedValue({ count: 3 } as any);
 
       const result = await bookingService.bulkUpdate(
-        'biz1', ['b1', 'b2', 'b3'], 'status', { status: 'CONFIRMED' }, 'ADMIN',
+        'biz1',
+        ['b1', 'b2', 'b3'],
+        'status',
+        { status: 'CONFIRMED' },
+        'ADMIN',
       );
 
       expect(result.updated).toBe(3);
@@ -2445,7 +2622,11 @@ describe('BookingService', () => {
       prisma.booking.updateMany.mockResolvedValue({ count: 2 } as any);
 
       const result = await bookingService.bulkUpdate(
-        'biz1', ['b1', 'b2'], 'assign', { staffId: 'staff1' }, 'ADMIN',
+        'biz1',
+        ['b1', 'b2'],
+        'assign',
+        { staffId: 'staff1' },
+        'ADMIN',
       );
 
       expect(result.updated).toBe(2);
@@ -2471,7 +2652,11 @@ describe('BookingService', () => {
       prisma.booking.updateMany.mockResolvedValue({ count: 1 } as any);
 
       const result = await bookingService.bulkUpdate(
-        'biz1', ['b1'], 'status', { status: 'CANCELLED' }, 'ADMIN',
+        'biz1',
+        ['b1'],
+        'status',
+        { status: 'CANCELLED' },
+        'ADMIN',
       );
 
       expect(result.updated).toBe(1);
@@ -2508,7 +2693,11 @@ describe('BookingService', () => {
       prisma.booking.updateMany.mockResolvedValue({ count: 50 } as any);
 
       const result = await bookingService.bulkUpdate(
-        'biz1', ids, 'status', { status: 'CONFIRMED' }, 'ADMIN',
+        'biz1',
+        ids,
+        'status',
+        { status: 'CONFIRMED' },
+        'ADMIN',
       );
 
       expect(result.updated).toBe(50);
@@ -2518,7 +2707,11 @@ describe('BookingService', () => {
       prisma.booking.updateMany.mockResolvedValue({ count: 2 } as any);
 
       const result = await bookingService.bulkUpdate(
-        'biz1', ['b1', 'b2'], 'status', { status: 'CONFIRMED' }, 'AGENT',
+        'biz1',
+        ['b1', 'b2'],
+        'status',
+        { status: 'CONFIRMED' },
+        'AGENT',
       );
 
       expect(result.updated).toBe(2);
@@ -2528,7 +2721,11 @@ describe('BookingService', () => {
       prisma.booking.updateMany.mockResolvedValue({ count: 1 } as any);
 
       const result = await bookingService.bulkUpdate(
-        'biz1', ['b1'], 'assign', { staffId: 'staff1' }, 'AGENT',
+        'biz1',
+        ['b1'],
+        'assign',
+        { staffId: 'staff1' },
+        'AGENT',
       );
 
       expect(result.updated).toBe(1);

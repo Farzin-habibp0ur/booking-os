@@ -71,14 +71,10 @@ export class CustomerService {
     });
   }
 
-  async bulkUpdate(
-    businessId: string,
-    ids: string[],
-    action: 'tag' | 'untag',
-    payload: any,
-  ) {
+  async bulkUpdate(businessId: string, ids: string[], action: 'tag' | 'untag', payload: any) {
     if (!ids?.length) throw new BadRequestException('No customer IDs provided');
-    if (ids.length > 100) throw new BadRequestException('Cannot update more than 100 customers at once');
+    if (ids.length > 100)
+      throw new BadRequestException('Cannot update more than 100 customers at once');
 
     if (action === 'tag') {
       if (!payload?.tag) throw new BadRequestException('Tag is required');

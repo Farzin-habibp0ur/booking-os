@@ -37,7 +37,12 @@ jest.mock('@/lib/api', () => ({
 const fields = [
   { key: 'concernArea', type: 'text', label: 'Concern Area' },
   { key: 'desiredTreatment', type: 'text', label: 'Desired Treatment' },
-  { key: 'budget', type: 'select', label: 'Budget Range', options: ['Under $250', '$250-$500', '$500-$1000', 'Over $1000'] },
+  {
+    key: 'budget',
+    type: 'select',
+    label: 'Budget Range',
+    options: ['Under $250', '$250-$500', '$500-$1000', 'Over $1000'],
+  },
   { key: 'isMedicalFlagged', type: 'boolean', label: 'Medical Flag' },
 ];
 
@@ -89,7 +94,10 @@ describe('ClinicIntakeCard', () => {
   it('shows completion count badge', () => {
     render(
       <ClinicIntakeCard
-        customer={{ id: 'c1', customFields: { concernArea: 'Fine lines', isMedicalFlagged: false } }}
+        customer={{
+          id: 'c1',
+          customFields: { concernArea: 'Fine lines', isMedicalFlagged: false },
+        }}
         fields={fields}
         onUpdated={jest.fn()}
       />,
@@ -197,7 +205,10 @@ describe('ClinicIntakeCard', () => {
   it('renders filled values in view mode', () => {
     render(
       <ClinicIntakeCard
-        customer={{ id: 'c1', customFields: { concernArea: 'Fine lines around eyes', isMedicalFlagged: true } }}
+        customer={{
+          id: 'c1',
+          customFields: { concernArea: 'Fine lines around eyes', isMedicalFlagged: true },
+        }}
         fields={fields}
         onUpdated={jest.fn()}
       />,

@@ -99,8 +99,7 @@ function setupExpandMocks(staffList: any[], workingHours?: any[], timeOffEntries
     if (path === '/staff') return Promise.resolve(staffList);
     if (path.match(/\/staff\/[^/]+\/working-hours/))
       return Promise.resolve(workingHours || mockWorkingHours);
-    if (path.match(/\/staff\/[^/]+\/time-off/))
-      return Promise.resolve(timeOffEntries || []);
+    if (path.match(/\/staff\/[^/]+\/time-off/)) return Promise.resolve(timeOffEntries || []);
     return Promise.resolve([]);
   });
 }
@@ -489,7 +488,10 @@ describe('StaffPage', () => {
     // Make patch take some time
     let resolvePatch: () => void;
     mockApi.patch.mockImplementation(
-      () => new Promise<void>((resolve) => { resolvePatch = resolve; }),
+      () =>
+        new Promise<void>((resolve) => {
+          resolvePatch = resolve;
+        }),
     );
 
     render(<StaffPage />);
@@ -614,9 +616,11 @@ describe('StaffPage', () => {
     });
 
     // Find the delete buttons (Trash2 icons rendered as buttons)
-    const deleteButtons = screen.getAllByRole('button').filter(
-      (btn) => btn.classList.contains('text-red-500') || btn.className.includes('text-red-500'),
-    );
+    const deleteButtons = screen
+      .getAllByRole('button')
+      .filter(
+        (btn) => btn.classList.contains('text-red-500') || btn.className.includes('text-red-500'),
+      );
     expect(deleteButtons.length).toBeGreaterThan(0);
 
     await user.click(deleteButtons[0]);
@@ -647,7 +651,9 @@ describe('StaffPage', () => {
     await waitFor(() => {
       // The "add time off" button in the form should be disabled
       const addButtons = screen.getAllByText('staff.add_time_off');
-      const formAddButton = addButtons.find((btn) => btn.tagName === 'BUTTON' && btn.closest('.space-y-3'));
+      const formAddButton = addButtons.find(
+        (btn) => btn.tagName === 'BUTTON' && btn.closest('.space-y-3'),
+      );
       expect(formAddButton).toBeDisabled();
     });
   });
@@ -657,8 +663,7 @@ describe('StaffPage', () => {
     let timeOffCallCount = 0;
     mockApi.get.mockImplementation((path: string) => {
       if (path === '/staff') return Promise.resolve([mockStaffAdmin]);
-      if (path.match(/\/staff\/[^/]+\/working-hours/))
-        return Promise.resolve(mockWorkingHours);
+      if (path.match(/\/staff\/[^/]+\/working-hours/)) return Promise.resolve(mockWorkingHours);
       if (path.match(/\/staff\/[^/]+\/time-off/)) {
         timeOffCallCount++;
         // First call returns empty, second call (after adding) returns one entry
@@ -700,18 +705,22 @@ describe('StaffPage', () => {
     await user.type(reasonField, 'Conference');
 
     // Find the submit button inside the form
-    const formAddButton = within(formContainer as HTMLElement).getAllByText('staff.add_time_off')
+    const formAddButton = within(formContainer as HTMLElement)
+      .getAllByText('staff.add_time_off')
       .find((btn) => btn.tagName === 'BUTTON');
 
     expect(formAddButton).toBeTruthy();
     await user.click(formAddButton!);
 
     await waitFor(() => {
-      expect(mockApi.post).toHaveBeenCalledWith('/staff/staff-1/time-off', expect.objectContaining({
-        startDate: expect.any(String),
-        endDate: expect.any(String),
-        reason: 'Conference',
-      }));
+      expect(mockApi.post).toHaveBeenCalledWith(
+        '/staff/staff-1/time-off',
+        expect.objectContaining({
+          startDate: expect.any(String),
+          endDate: expect.any(String),
+          reason: 'Conference',
+        }),
+      );
     });
   });
 
@@ -719,10 +728,8 @@ describe('StaffPage', () => {
     const user = userEvent.setup();
     mockApi.get.mockImplementation((path: string) => {
       if (path === '/staff') return Promise.resolve([mockStaffAdmin]);
-      if (path.match(/\/staff\/[^/]+\/working-hours/))
-        return Promise.resolve(mockWorkingHours);
-      if (path.match(/\/staff\/[^/]+\/time-off/))
-        return Promise.resolve([]);
+      if (path.match(/\/staff\/[^/]+\/working-hours/)) return Promise.resolve(mockWorkingHours);
+      if (path.match(/\/staff\/[^/]+\/time-off/)) return Promise.resolve([]);
       return Promise.resolve([]);
     });
     mockApi.post.mockResolvedValue({});
@@ -752,16 +759,20 @@ describe('StaffPage', () => {
       await user.type(dateFields[0] as HTMLElement, '2026-05-01');
       await user.type(dateFields[1] as HTMLElement, '2026-05-03');
 
-      const formAddButton = within(formContainer as HTMLElement).getAllByText('staff.add_time_off')
+      const formAddButton = within(formContainer as HTMLElement)
+        .getAllByText('staff.add_time_off')
         .find((btn) => btn.tagName === 'BUTTON');
 
       if (formAddButton) {
         await user.click(formAddButton);
 
         await waitFor(() => {
-          expect(mockApi.post).toHaveBeenCalledWith('/staff/staff-1/time-off', expect.objectContaining({
-            reason: undefined,
-          }));
+          expect(mockApi.post).toHaveBeenCalledWith(
+            '/staff/staff-1/time-off',
+            expect.objectContaining({
+              reason: undefined,
+            }),
+          );
         });
       }
     }
@@ -963,9 +974,12 @@ describe('StaffPage', () => {
     await user.click(screen.getByText('common.create'));
 
     await waitFor(() => {
-      expect(mockApi.post).toHaveBeenCalledWith('/staff', expect.objectContaining({
-        role: 'ADMIN',
-      }));
+      expect(mockApi.post).toHaveBeenCalledWith(
+        '/staff',
+        expect.objectContaining({
+          role: 'ADMIN',
+        }),
+      );
     });
   });
 
@@ -996,9 +1010,12 @@ describe('StaffPage', () => {
     await user.click(screen.getByText('common.create'));
 
     await waitFor(() => {
-      expect(mockApi.post).toHaveBeenCalledWith('/staff', expect.objectContaining({
-        role: 'SERVICE_PROVIDER',
-      }));
+      expect(mockApi.post).toHaveBeenCalledWith(
+        '/staff',
+        expect.objectContaining({
+          role: 'SERVICE_PROVIDER',
+        }),
+      );
     });
   });
 
@@ -1010,7 +1027,9 @@ describe('StaffPage', () => {
         callCount++;
         if (callCount === 1) return Promise.resolve([]);
         // After creation, return the new staff
-        return Promise.resolve([{ id: 'new-1', name: 'New Person', email: 'new@test.com', role: 'AGENT', isActive: true }]);
+        return Promise.resolve([
+          { id: 'new-1', name: 'New Person', email: 'new@test.com', role: 'AGENT', isActive: true },
+        ]);
       }
       return Promise.resolve([]);
     });
@@ -1205,9 +1224,9 @@ describe('StaffPage', () => {
     });
 
     // Find delete buttons
-    const deleteButtons = screen.getAllByRole('button').filter(
-      (btn) => btn.className.includes('text-red-500'),
-    );
+    const deleteButtons = screen
+      .getAllByRole('button')
+      .filter((btn) => btn.className.includes('text-red-500'));
 
     // Remove first entry (Holiday)
     await user.click(deleteButtons[0]);

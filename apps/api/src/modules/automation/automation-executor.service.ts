@@ -49,7 +49,13 @@ export class AutomationExecutorService {
           include: { customer: true, service: true },
         });
         for (const booking of bookings) {
-          await this.executeActions(rule, actions, booking.businessId, booking.id, booking.customerId);
+          await this.executeActions(
+            rule,
+            actions,
+            booking.businessId,
+            booking.id,
+            booking.customerId,
+          );
         }
         break;
       }
@@ -65,7 +71,13 @@ export class AutomationExecutorService {
           },
         });
         for (const booking of bookings) {
-          await this.executeActions(rule, actions, booking.businessId, booking.id, booking.customerId);
+          await this.executeActions(
+            rule,
+            actions,
+            booking.businessId,
+            booking.id,
+            booking.customerId,
+          );
         }
         break;
       }
@@ -80,7 +92,13 @@ export class AutomationExecutorService {
         });
         for (const booking of bookings) {
           if (filters.serviceKind && booking.service?.kind !== filters.serviceKind) continue;
-          await this.executeActions(rule, actions, booking.businessId, booking.id, booking.customerId);
+          await this.executeActions(
+            rule,
+            actions,
+            booking.businessId,
+            booking.id,
+            booking.customerId,
+          );
         }
         break;
       }
@@ -93,7 +111,13 @@ export class AutomationExecutorService {
           },
         });
         for (const booking of bookings) {
-          await this.executeActions(rule, actions, booking.businessId, booking.id, booking.customerId);
+          await this.executeActions(
+            rule,
+            actions,
+            booking.businessId,
+            booking.id,
+            booking.customerId,
+          );
         }
         break;
       }
@@ -102,7 +126,13 @@ export class AutomationExecutorService {
     }
   }
 
-  private async executeActions(rule: any, actions: any[], businessId: string, bookingId?: string, customerId?: string) {
+  private async executeActions(
+    rule: any,
+    actions: any[],
+    businessId: string,
+    bookingId?: string,
+    customerId?: string,
+  ) {
     // Check frequency cap
     if (customerId && rule.maxPerCustomerPerDay > 0) {
       const today = new Date();
@@ -115,7 +145,15 @@ export class AutomationExecutorService {
         },
       });
       if (todayCount >= rule.maxPerCustomerPerDay) {
-        await this.logAction(rule, businessId, bookingId, customerId, 'FREQUENCY_CAP', 'SKIPPED', 'Daily limit reached');
+        await this.logAction(
+          rule,
+          businessId,
+          bookingId,
+          customerId,
+          'FREQUENCY_CAP',
+          'SKIPPED',
+          'Daily limit reached',
+        );
         return;
       }
     }
@@ -125,7 +163,15 @@ export class AutomationExecutorService {
         // For now, log the action; real implementation would call notification service
         await this.logAction(rule, businessId, bookingId, customerId, action.type, 'SENT');
       } catch (err: any) {
-        await this.logAction(rule, businessId, bookingId, customerId, action.type, 'FAILED', err.message);
+        await this.logAction(
+          rule,
+          businessId,
+          bookingId,
+          customerId,
+          action.type,
+          'FAILED',
+          err.message,
+        );
       }
     }
   }

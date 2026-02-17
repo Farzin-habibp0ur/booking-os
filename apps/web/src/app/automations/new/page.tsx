@@ -7,11 +7,31 @@ import { cn } from '@/lib/cn';
 import { ArrowLeft, ArrowRight, Zap, Filter, Play, CheckCircle } from 'lucide-react';
 
 const TRIGGERS = [
-  { value: 'BOOKING_CREATED', label: 'Booking Created', description: 'Fires when a new booking is created' },
-  { value: 'BOOKING_UPCOMING', label: 'Booking Upcoming', description: 'Fires before an upcoming appointment' },
-  { value: 'STATUS_CHANGED', label: 'Status Changed', description: 'Fires when a booking status changes' },
-  { value: 'BOOKING_CANCELLED', label: 'Booking Cancelled', description: 'Fires when a booking is cancelled' },
-  { value: 'NO_RESPONSE', label: 'No Response', description: 'Fires when a customer has not responded' },
+  {
+    value: 'BOOKING_CREATED',
+    label: 'Booking Created',
+    description: 'Fires when a new booking is created',
+  },
+  {
+    value: 'BOOKING_UPCOMING',
+    label: 'Booking Upcoming',
+    description: 'Fires before an upcoming appointment',
+  },
+  {
+    value: 'STATUS_CHANGED',
+    label: 'Status Changed',
+    description: 'Fires when a booking status changes',
+  },
+  {
+    value: 'BOOKING_CANCELLED',
+    label: 'Booking Cancelled',
+    description: 'Fires when a booking is cancelled',
+  },
+  {
+    value: 'NO_RESPONSE',
+    label: 'No Response',
+    description: 'Fires when a customer has not responded',
+  },
 ];
 
 const ACTION_TYPES = [
@@ -64,11 +84,16 @@ export default function NewAutomationPage() {
 
   return (
     <div className="p-6 max-w-2xl mx-auto">
-      <button onClick={() => router.push('/automations')} className="flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 mb-4">
+      <button
+        onClick={() => router.push('/automations')}
+        className="flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 mb-4"
+      >
         <ArrowLeft size={16} /> Back to Automations
       </button>
 
-      <h1 className="text-2xl font-serif font-semibold text-slate-900 mb-6">Create Automation Rule</h1>
+      <h1 className="text-2xl font-serif font-semibold text-slate-900 mb-6">
+        Create Automation Rule
+      </h1>
 
       {/* Step indicator */}
       <div className="flex items-center gap-2 mb-8">
@@ -76,11 +101,19 @@ export default function NewAutomationPage() {
           const Icon = stepIcons[i];
           return (
             <div key={s} className="flex items-center gap-2">
-              {i > 0 && <div className={cn('w-8 h-px', i <= step ? 'bg-sage-400' : 'bg-slate-200')} />}
-              <div className={cn(
-                'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors',
-                i === step ? 'bg-sage-100 text-sage-700' : i < step ? 'bg-sage-50 text-sage-600' : 'bg-slate-100 text-slate-400',
-              )}>
+              {i > 0 && (
+                <div className={cn('w-8 h-px', i <= step ? 'bg-sage-400' : 'bg-slate-200')} />
+              )}
+              <div
+                className={cn(
+                  'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors',
+                  i === step
+                    ? 'bg-sage-100 text-sage-700'
+                    : i < step
+                      ? 'bg-sage-50 text-sage-600'
+                      : 'bg-slate-100 text-slate-400',
+                )}
+              >
                 <Icon size={14} />
                 {s}
               </div>
@@ -98,7 +131,9 @@ export default function NewAutomationPage() {
               onClick={() => setTrigger(t.value)}
               className={cn(
                 'w-full text-left px-4 py-3 rounded-xl border transition-colors',
-                trigger === t.value ? 'border-sage-400 bg-sage-50' : 'border-slate-100 hover:bg-slate-50',
+                trigger === t.value
+                  ? 'border-sage-400 bg-sage-50'
+                  : 'border-slate-100 hover:bg-slate-50',
               )}
             >
               <p className="text-sm font-medium">{t.label}</p>
@@ -113,7 +148,7 @@ export default function NewAutomationPage() {
         <div className="bg-white rounded-2xl shadow-soft p-5 space-y-3">
           <h2 className="text-sm font-semibold text-slate-900 mb-2">Optional Filters</h2>
 
-          {(trigger === 'BOOKING_UPCOMING') && (
+          {trigger === 'BOOKING_UPCOMING' && (
             <div>
               <label className="text-xs text-slate-500 mb-1 block">Hours before appointment</label>
               <input
@@ -127,7 +162,7 @@ export default function NewAutomationPage() {
             </div>
           )}
 
-          {(trigger === 'STATUS_CHANGED') && (
+          {trigger === 'STATUS_CHANGED' && (
             <div>
               <label className="text-xs text-slate-500 mb-1 block">New status</label>
               <select
@@ -144,7 +179,9 @@ export default function NewAutomationPage() {
             </div>
           )}
 
-          <p className="text-xs text-slate-400">Leave empty to match all events of this trigger type.</p>
+          <p className="text-xs text-slate-400">
+            Leave empty to match all events of this trigger type.
+          </p>
         </div>
       )}
 
@@ -160,7 +197,9 @@ export default function NewAutomationPage() {
             >
               <option value="">Select action...</option>
               {ACTION_TYPES.map((a) => (
-                <option key={a.value} value={a.value}>{a.label}</option>
+                <option key={a.value} value={a.value}>
+                  {a.label}
+                </option>
               ))}
             </select>
 
@@ -188,15 +227,27 @@ export default function NewAutomationPage() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-xs text-slate-500 mb-1 block">Quiet hours start</label>
-                <input type="time" value={quietStart} onChange={(e) => setQuietStart(e.target.value)} className="w-full text-sm bg-slate-50 border-transparent rounded-xl px-3 py-2" />
+                <input
+                  type="time"
+                  value={quietStart}
+                  onChange={(e) => setQuietStart(e.target.value)}
+                  className="w-full text-sm bg-slate-50 border-transparent rounded-xl px-3 py-2"
+                />
               </div>
               <div>
                 <label className="text-xs text-slate-500 mb-1 block">Quiet hours end</label>
-                <input type="time" value={quietEnd} onChange={(e) => setQuietEnd(e.target.value)} className="w-full text-sm bg-slate-50 border-transparent rounded-xl px-3 py-2" />
+                <input
+                  type="time"
+                  value={quietEnd}
+                  onChange={(e) => setQuietEnd(e.target.value)}
+                  className="w-full text-sm bg-slate-50 border-transparent rounded-xl px-3 py-2"
+                />
               </div>
             </div>
             <div>
-              <label className="text-xs text-slate-500 mb-1 block">Max messages per customer per day</label>
+              <label className="text-xs text-slate-500 mb-1 block">
+                Max messages per customer per day
+              </label>
               <input
                 type="number"
                 min={1}
@@ -228,15 +279,21 @@ export default function NewAutomationPage() {
             <dl className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <dt className="text-slate-500">Trigger</dt>
-                <dd className="font-medium">{TRIGGERS.find((t) => t.value === trigger)?.label || trigger}</dd>
+                <dd className="font-medium">
+                  {TRIGGERS.find((t) => t.value === trigger)?.label || trigger}
+                </dd>
               </div>
               <div className="flex justify-between">
                 <dt className="text-slate-500">Action</dt>
-                <dd className="font-medium">{ACTION_TYPES.find((a) => a.value === actions[0]?.type)?.label || '—'}</dd>
+                <dd className="font-medium">
+                  {ACTION_TYPES.find((a) => a.value === actions[0]?.type)?.label || '—'}
+                </dd>
               </div>
               <div className="flex justify-between">
                 <dt className="text-slate-500">Quiet hours</dt>
-                <dd className="font-medium">{quietStart} — {quietEnd}</dd>
+                <dd className="font-medium">
+                  {quietStart} — {quietEnd}
+                </dd>
               </div>
               <div className="flex justify-between">
                 <dt className="text-slate-500">Max per customer/day</dt>
@@ -250,7 +307,7 @@ export default function NewAutomationPage() {
       {/* Navigation */}
       <div className="flex justify-between mt-6">
         <button
-          onClick={() => step > 0 ? setStep(step - 1) : router.push('/automations')}
+          onClick={() => (step > 0 ? setStep(step - 1) : router.push('/automations'))}
           className="flex items-center gap-1 px-4 py-2 text-sm text-slate-600 hover:text-slate-800"
         >
           <ArrowLeft size={16} />
@@ -263,7 +320,9 @@ export default function NewAutomationPage() {
             disabled={!canProceed()}
             className={cn(
               'flex items-center gap-1 px-4 py-2 text-sm rounded-xl transition-colors',
-              canProceed() ? 'bg-sage-600 text-white hover:bg-sage-700' : 'bg-slate-100 text-slate-400 cursor-not-allowed',
+              canProceed()
+                ? 'bg-sage-600 text-white hover:bg-sage-700'
+                : 'bg-slate-100 text-slate-400 cursor-not-allowed',
             )}
           >
             Next <ArrowRight size={16} />
@@ -274,7 +333,9 @@ export default function NewAutomationPage() {
             disabled={!canProceed() || saving}
             className={cn(
               'px-4 py-2 text-sm rounded-xl transition-colors',
-              canProceed() && !saving ? 'bg-sage-600 text-white hover:bg-sage-700' : 'bg-slate-100 text-slate-400 cursor-not-allowed',
+              canProceed() && !saving
+                ? 'bg-sage-600 text-white hover:bg-sage-700'
+                : 'bg-slate-100 text-slate-400 cursor-not-allowed',
             )}
           >
             {saving ? 'Creating...' : 'Create Rule'}

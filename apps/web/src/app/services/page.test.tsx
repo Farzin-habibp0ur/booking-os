@@ -205,9 +205,7 @@ describe('ServicesPage', () => {
     await waitFor(() => screen.getByText('Botox'));
 
     // Click the edit pencil on the first service card
-    const editButtons = screen.getAllByRole('button').filter(
-      (b) => b.querySelector('svg'),
-    );
+    const editButtons = screen.getAllByRole('button').filter((b) => b.querySelector('svg'));
     // The pencil buttons are within service cards
     const pencilBtn = screen.getByText('Botox').closest('.bg-white')?.querySelector('button');
     if (pencilBtn) fireEvent.click(pencilBtn);
@@ -236,9 +234,12 @@ describe('ServicesPage', () => {
     fireEvent.click(screen.getByText('common.create'));
 
     await waitFor(() => {
-      expect(mockApi.post).toHaveBeenCalledWith('/services', expect.objectContaining({
-        name: 'New Service',
-      }));
+      expect(mockApi.post).toHaveBeenCalledWith(
+        '/services',
+        expect.objectContaining({
+          name: 'New Service',
+        }),
+      );
     });
   });
 

@@ -97,9 +97,12 @@ describe('SettingsPage', () => {
     fireEvent.click(saveButtons[0]); // First save button is for business info
 
     await waitFor(() => {
-      expect(mockApi.patch).toHaveBeenCalledWith('/business', expect.objectContaining({
-        name: 'New Clinic',
-      }));
+      expect(mockApi.patch).toHaveBeenCalledWith(
+        '/business',
+        expect.objectContaining({
+          name: 'New Clinic',
+        }),
+      );
     });
   });
 

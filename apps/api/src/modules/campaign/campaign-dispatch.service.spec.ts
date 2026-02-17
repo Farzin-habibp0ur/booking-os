@@ -11,10 +11,7 @@ describe('CampaignDispatchService', () => {
     prisma = createMockPrisma();
 
     const module = await Test.createTestingModule({
-      providers: [
-        CampaignDispatchService,
-        { provide: PrismaService, useValue: prisma },
-      ],
+      providers: [CampaignDispatchService, { provide: PrismaService, useValue: prisma }],
     }).compile();
 
     dispatchService = module.get(CampaignDispatchService);
@@ -22,11 +19,7 @@ describe('CampaignDispatchService', () => {
 
   describe('prepareSends', () => {
     it('creates send rows for matching customers', async () => {
-      prisma.customer.findMany.mockResolvedValue([
-        { id: 'c1' },
-        { id: 'c2' },
-        { id: 'c3' },
-      ] as any);
+      prisma.customer.findMany.mockResolvedValue([{ id: 'c1' }, { id: 'c2' }, { id: 'c3' }] as any);
       prisma.campaignSend.createMany.mockResolvedValue({ count: 3 } as any);
 
       const result = await dispatchService.prepareSends('camp1', 'biz1', { tags: ['vip'] });
@@ -53,14 +46,10 @@ describe('CampaignDispatchService', () => {
 
   describe('processSendingCampaigns', () => {
     it('marks campaign as SENT when all sends complete', async () => {
-      prisma.campaign.findMany.mockResolvedValue([
-        { id: 'camp1', throttlePerMinute: 10 },
-      ] as any);
+      prisma.campaign.findMany.mockResolvedValue([{ id: 'camp1', throttlePerMinute: 10 }] as any);
       // No pending sends left
       prisma.campaignSend.findMany.mockResolvedValue([]);
-      prisma.campaignSend.groupBy.mockResolvedValue([
-        { status: 'SENT', _count: 5 },
-      ] as any);
+      prisma.campaignSend.groupBy.mockResolvedValue([{ status: 'SENT', _count: 5 }] as any);
       prisma.campaignSend.count.mockResolvedValue(2);
       prisma.campaign.update.mockResolvedValue({} as any);
 
@@ -75,9 +64,7 @@ describe('CampaignDispatchService', () => {
     });
 
     it('processes pending sends with throttle', async () => {
-      prisma.campaign.findMany.mockResolvedValue([
-        { id: 'camp1', throttlePerMinute: 2 },
-      ] as any);
+      prisma.campaign.findMany.mockResolvedValue([{ id: 'camp1', throttlePerMinute: 2 }] as any);
       const pendingSends = [
         { id: 's1', campaign: {} },
         { id: 's2', campaign: {} },

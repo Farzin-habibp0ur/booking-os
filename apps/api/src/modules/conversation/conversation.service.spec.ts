@@ -269,9 +269,7 @@ describe('ConversationService', () => {
     });
 
     it('creates new conversation if none exist', async () => {
-      prisma.conversation.findFirst
-        .mockResolvedValueOnce(null)
-        .mockResolvedValueOnce(null);
+      prisma.conversation.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce(null);
       prisma.conversation.create.mockResolvedValue({ id: 'conv-new', status: 'OPEN' } as any);
 
       const result = await service.findOrCreate('biz1', 'cust1');

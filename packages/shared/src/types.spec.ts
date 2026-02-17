@@ -35,15 +35,11 @@ describe('isPhase1Enabled', () => {
   });
 
   it('returns false when flag is explicitly false', () => {
-    expect(
-      isPhase1Enabled({ phase1: { outcomeTracking: false } }, 'outcomeTracking'),
-    ).toBe(false);
+    expect(isPhase1Enabled({ phase1: { outcomeTracking: false } }, 'outcomeTracking')).toBe(false);
   });
 
   it('returns true when flag is true', () => {
-    expect(
-      isPhase1Enabled({ phase1: { outcomeTracking: true } }, 'outcomeTracking'),
-    ).toBe(true);
+    expect(isPhase1Enabled({ phase1: { outcomeTracking: true } }, 'outcomeTracking')).toBe(true);
   });
 
   it('reads each flag independently', () => {

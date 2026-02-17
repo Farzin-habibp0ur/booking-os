@@ -136,9 +136,7 @@ export default function WaitlistPage() {
             </thead>
             <tbody className="divide-y">
               {loading
-                ? Array.from({ length: 5 }).map((_, i) => (
-                    <TableRowSkeleton key={i} cols={7} />
-                  ))
+                ? Array.from({ length: 5 }).map((_, i) => <TableRowSkeleton key={i} cols={7} />)
                 : entries.map((entry) => {
                     const StatusIcon = statusIcons[entry.status];
                     return (
@@ -148,9 +146,7 @@ export default function WaitlistPage() {
                           <p className="text-xs text-slate-500">{entry.customer?.phone}</p>
                         </td>
                         <td className="p-3 text-sm">{entry.service?.name}</td>
-                        <td className="p-3 text-sm text-slate-600">
-                          {entry.staff?.name || 'Any'}
-                        </td>
+                        <td className="p-3 text-sm text-slate-600">{entry.staff?.name || 'Any'}</td>
                         <td className="p-3 text-sm text-slate-600">
                           {entry.timeWindowStart && entry.timeWindowEnd
                             ? `${entry.timeWindowStart} - ${entry.timeWindowEnd}`
