@@ -38,6 +38,12 @@ export class CampaignController {
     return this.campaignService.delete(businessId, id);
   }
 
+  @Post(':id/send')
+  @Roles('ADMIN')
+  send(@BusinessId() businessId: string, @Param('id') id: string) {
+    return this.campaignService.sendCampaign(businessId, id);
+  }
+
   @Post(':id/preview')
   previewAudience(@BusinessId() businessId: string, @Body() body: { filters: any }) {
     return this.campaignService.previewAudience(businessId, body.filters);

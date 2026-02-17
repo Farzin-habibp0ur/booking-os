@@ -1,20 +1,31 @@
 import { Test } from '@nestjs/testing';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { CampaignService } from './campaign.service';
+import { CampaignDispatchService } from './campaign-dispatch.service';
 import { PrismaService } from '../../common/prisma.service';
 import { createMockPrisma } from '../../test/mocks';
+
+function createMockDispatchService() {
+  return {
+    prepareSends: jest.fn().mockResolvedValue({ total: 10 }),
+    processSendingCampaigns: jest.fn().mockResolvedValue(undefined),
+  };
+}
 
 describe('CampaignService', () => {
   let campaignService: CampaignService;
   let prisma: ReturnType<typeof createMockPrisma>;
+  let dispatchService: ReturnType<typeof createMockDispatchService>;
 
   beforeEach(async () => {
     prisma = createMockPrisma();
+    dispatchService = createMockDispatchService();
 
     const module = await Test.createTestingModule({
       providers: [
         CampaignService,
         { provide: PrismaService, useValue: prisma },
+        { provide: CampaignDispatchService, useValue: dispatchService },
       ],
     }).compile();
 
@@ -164,6 +175,25 @@ describe('CampaignService', () => {
           }),
         }),
       });
+    });
+  });
+
+  describe('sendCampaign', () => {
+    it('prepares sends and sets status to SENDING', async () => {
+      prisma.campaign.findFirst.mockResolvedValue({ id: 'camp1', status: 'DRAFT', filters: { tags: ['vip'] } } as any);
+      prisma.campaign.update.mockResolvedValue({} as any);
+
+      const result = await campaignService.sendCampaign('biz1', 'camp1');
+
+      expect(result.status).toBe('SENDING');
+      expect(result.audienceSize).toBe(10);
+      expect(dispatchService.prepareSends).toHaveBeenCalledWith('camp1', 'biz1', { tags: ['vip'] });
+    });
+
+    it('rejects sending non-draft campaign', async () => {
+      prisma.campaign.findFirst.mockResolvedValue({ id: 'camp1', status: 'SENT' } as any);
+
+      await expect(campaignService.sendCampaign('biz1', 'camp1')).rejects.toThrow(BadRequestException);
     });
   });
 });

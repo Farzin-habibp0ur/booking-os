@@ -154,6 +154,9 @@ export class BookingService {
     // Fire-and-forget calendar sync
     this.calendarSyncService.syncBookingToCalendar(booking, 'create').catch(() => {});
 
+    // Campaign attribution — link booking to recent campaign send
+    this.attributeCampaignSend(booking.customerId, booking.id).catch(() => {});
+
     return booking;
   }
 
@@ -565,5 +568,25 @@ export class BookingService {
       },
       orderBy: { startTime: 'asc' },
     });
+  }
+
+  private async attributeCampaignSend(customerId: string, bookingId: string) {
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const recentSend = await this.prisma.campaignSend.findFirst({
+      where: {
+        customerId,
+        status: 'SENT',
+        sentAt: { gte: sevenDaysAgo },
+        bookingId: null,
+      },
+      orderBy: { sentAt: 'desc' },
+    });
+
+    if (recentSend) {
+      await this.prisma.campaignSend.update({
+        where: { id: recentSend.id },
+        data: { bookingId },
+      });
+    }
   }
 }

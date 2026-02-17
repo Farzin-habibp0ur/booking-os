@@ -1,9 +1,13 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma.service';
+import { CampaignDispatchService } from './campaign-dispatch.service';
 
 @Injectable()
 export class CampaignService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private dispatchService: CampaignDispatchService,
+  ) {}
 
   async create(businessId: string, data: { name: string; templateId?: string; filters?: any; scheduledAt?: string }) {
     return this.prisma.campaign.create({
@@ -123,5 +127,23 @@ export class CampaignService {
     }
 
     return where;
+  }
+
+  async sendCampaign(businessId: string, id: string) {
+    const campaign = await this.findById(businessId, id);
+    if (campaign.status !== 'DRAFT') {
+      throw new BadRequestException('Only draft campaigns can be sent');
+    }
+
+    // Prepare send rows from audience
+    const { total } = await this.dispatchService.prepareSends(id, businessId, campaign.filters as any);
+
+    // Update campaign to SENDING
+    await this.prisma.campaign.update({
+      where: { id },
+      data: { status: 'SENDING', stats: { total, sent: 0, failed: 0, pending: total } },
+    });
+
+    return { status: 'SENDING', audienceSize: total };
   }
 }

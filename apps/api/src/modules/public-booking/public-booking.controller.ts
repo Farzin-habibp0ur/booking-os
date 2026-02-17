@@ -104,6 +104,7 @@ export class PublicBookingController {
       customerName: string;
       customerPhone: string;
       customerEmail?: string;
+      ref?: string;
     },
   ) {
     if (!body.serviceId || !body.startTime || !body.customerName || !body.customerPhone) {
@@ -129,12 +130,16 @@ export class PublicBookingController {
       });
     }
 
-    // Create booking
+    // Create booking with optional referral source
+    const customFields: any = {};
+    if (body.ref) customFields.referralSource = body.ref;
+
     const booking = await this.bookingService.create(business.id, {
       customerId: customer.id,
       serviceId: body.serviceId,
       staffId: body.staffId,
       startTime: body.startTime,
+      customFields: Object.keys(customFields).length > 0 ? customFields : undefined,
     });
 
     return {
