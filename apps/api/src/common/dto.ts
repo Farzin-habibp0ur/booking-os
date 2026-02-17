@@ -561,6 +561,84 @@ export class AcceptInviteDto {
   password!: string;
 }
 
+// ---- Offer DTOs (H9) ----
+
+export class CreateOfferDto {
+  @IsString()
+  @IsNotEmpty()
+  name!: string;
+
+  @IsString()
+  @IsOptional()
+  description?: string;
+
+  @IsString()
+  @IsOptional()
+  terms?: string;
+
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  serviceIds?: string[];
+
+  @IsDateString()
+  @IsOptional()
+  validFrom?: string;
+
+  @IsDateString()
+  @IsOptional()
+  validUntil?: string;
+
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  maxRedemptions?: number;
+}
+
+export class UpdateOfferDto {
+  @IsString()
+  @IsOptional()
+  name?: string;
+
+  @IsString()
+  @IsOptional()
+  description?: string;
+
+  @IsString()
+  @IsOptional()
+  terms?: string;
+
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  serviceIds?: string[];
+
+  @IsDateString()
+  @IsOptional()
+  validFrom?: string;
+
+  @IsDateString()
+  @IsOptional()
+  validUntil?: string;
+
+  @IsBoolean()
+  @IsOptional()
+  isActive?: boolean;
+
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  maxRedemptions?: number;
+}
+
+// ---- Email Verification DTO (M16) ----
+
+export class VerifyEmailDto {
+  @IsString()
+  @IsNotEmpty()
+  token!: string;
+}
+
 // ---- Staff Invitation DTOs ----
 
 export class InviteStaffDto {

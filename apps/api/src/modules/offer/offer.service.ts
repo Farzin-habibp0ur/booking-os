@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma.service';
 
 @Injectable()
@@ -14,6 +14,7 @@ export class OfferService {
       serviceIds?: string[];
       validFrom?: string;
       validUntil?: string;
+      maxRedemptions?: number;
     },
   ) {
     return this.prisma.offer.create({
@@ -25,6 +26,7 @@ export class OfferService {
         serviceIds: data.serviceIds || [],
         validFrom: data.validFrom ? new Date(data.validFrom) : null,
         validUntil: data.validUntil ? new Date(data.validUntil) : null,
+        ...(data.maxRedemptions !== undefined && { maxRedemptions: data.maxRedemptions }),
       },
     });
   }
@@ -58,7 +60,29 @@ export class OfferService {
           validUntil: data.validUntil ? new Date(data.validUntil) : null,
         }),
         ...(data.isActive !== undefined && { isActive: data.isActive }),
+        ...(data.maxRedemptions !== undefined && { maxRedemptions: data.maxRedemptions }),
       },
+    });
+  }
+
+  // H9 fix: Atomically redeem an offer with limit enforcement
+  async redeem(businessId: string, id: string) {
+    const offer = await this.findById(businessId, id);
+
+    if (!offer.isActive) {
+      throw new BadRequestException('Offer is not active');
+    }
+    if (offer.validUntil && offer.validUntil < new Date()) {
+      throw new BadRequestException('Offer has expired');
+    }
+    // H9: Enforce redemption limit (null maxRedemptions = unlimited)
+    if (offer.maxRedemptions !== null && offer.currentRedemptions >= offer.maxRedemptions) {
+      throw new BadRequestException('Offer redemption limit reached');
+    }
+
+    return this.prisma.offer.update({
+      where: { id },
+      data: { currentRedemptions: { increment: 1 } },
     });
   }
 

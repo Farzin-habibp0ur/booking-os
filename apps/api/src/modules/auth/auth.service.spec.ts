@@ -99,8 +99,41 @@ describe('AuthService', () => {
           businessId: 'biz-new',
           email: 'owner@new.com',
           role: 'ADMIN',
+          emailVerified: false,
         }),
       });
+    });
+
+    it('sends verification email on signup', async () => {
+      prisma.staff.findUnique.mockResolvedValue(null);
+      (bcrypt.hash as jest.Mock).mockResolvedValue('$hashed');
+      prisma.business.create.mockResolvedValue({ id: 'biz-new', name: 'New Biz', slug: 'new-biz' } as any);
+      prisma.staff.create.mockResolvedValue({
+        id: 'staff-new',
+        name: 'Owner',
+        email: 'owner@new.com',
+        role: 'ADMIN',
+        businessId: 'biz-new',
+      } as any);
+
+      await authService.signup({
+        businessName: 'New Biz',
+        ownerName: 'Owner',
+        email: 'owner@new.com',
+        password: 'password123',
+      });
+
+      expect(tokenService.createToken).toHaveBeenCalledWith(
+        'EMAIL_VERIFY',
+        'owner@new.com',
+        'biz-new',
+        'staff-new',
+        24,
+      );
+      expect(emailService.sendEmailVerification).toHaveBeenCalledWith(
+        'owner@new.com',
+        expect.objectContaining({ name: 'Owner' }),
+      );
     });
 
     it('throws ConflictException for duplicate email', async () => {
@@ -406,6 +439,78 @@ describe('AuthService', () => {
       tokenService.validateToken.mockRejectedValue(new BadRequestException('Invalid token'));
 
       await expect(authService.acceptInvite('bad-token', 'password123')).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+  });
+
+  // M16: Email verification tests
+  describe('verifyEmail', () => {
+    it('validates token, marks staff as verified, marks token used', async () => {
+      const tokenRecord = { id: 'token1', staffId: 'staff1' };
+      tokenService.validateToken.mockResolvedValue(tokenRecord as any);
+      prisma.staff.update.mockResolvedValue({} as any);
+
+      const result = await authService.verifyEmail('verify-token');
+
+      expect(result).toEqual({ ok: true });
+      expect(tokenService.validateToken).toHaveBeenCalledWith('verify-token', 'EMAIL_VERIFY');
+      expect(prisma.staff.update).toHaveBeenCalledWith({
+        where: { id: 'staff1' },
+        data: { emailVerified: true },
+      });
+      expect(tokenService.markUsed).toHaveBeenCalledWith('token1');
+    });
+
+    it('throws on invalid token', async () => {
+      tokenService.validateToken.mockRejectedValue(new BadRequestException('Invalid token'));
+
+      await expect(authService.verifyEmail('bad-token')).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('resendVerification', () => {
+    it('revokes old tokens and sends new verification email', async () => {
+      prisma.staff.findUnique.mockResolvedValue({
+        ...mockStaff,
+        emailVerified: false,
+      } as any);
+
+      const result = await authService.resendVerification('staff1');
+
+      expect(result).toEqual({ ok: true });
+      expect(tokenService.revokeTokens).toHaveBeenCalledWith(
+        'sarah@glowclinic.com',
+        'EMAIL_VERIFY',
+      );
+      expect(tokenService.createToken).toHaveBeenCalledWith(
+        'EMAIL_VERIFY',
+        'sarah@glowclinic.com',
+        'biz1',
+        'staff1',
+        24,
+      );
+      expect(emailService.sendEmailVerification).toHaveBeenCalledWith(
+        'sarah@glowclinic.com',
+        expect.objectContaining({ name: 'Sarah Johnson' }),
+      );
+    });
+
+    it('throws if email already verified', async () => {
+      prisma.staff.findUnique.mockResolvedValue({
+        ...mockStaff,
+        emailVerified: true,
+      } as any);
+
+      await expect(authService.resendVerification('staff1')).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
+    it('throws if staff not found', async () => {
+      prisma.staff.findUnique.mockResolvedValue(null);
+
+      await expect(authService.resendVerification('nonexistent')).rejects.toThrow(
         BadRequestException,
       );
     });

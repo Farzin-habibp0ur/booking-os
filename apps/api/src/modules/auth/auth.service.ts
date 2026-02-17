@@ -118,8 +118,12 @@ export class AuthService {
         email: data.email,
         passwordHash,
         role: 'ADMIN',
+        emailVerified: false,
       },
     });
+
+    // M16 fix: Send email verification on signup
+    await this.sendVerificationEmail(staff.id, staff.email, staff.name, staff.businessId);
 
     const tokens = this.issueTokens(staff);
 
@@ -199,6 +203,7 @@ export class AuthService {
       email: staff.email,
       role: staff.role,
       locale: staff.locale,
+      emailVerified: staff.emailVerified,
       businessId: staff.businessId,
       business: {
         id: staff.business.id,
@@ -299,5 +304,45 @@ export class AuthService {
         businessId: updatedStaff.businessId,
       },
     };
+  }
+
+  // M16 fix: Email verification flow
+  async verifyEmail(token: string) {
+    const tokenRecord = await this.tokenService.validateToken(token, 'EMAIL_VERIFY');
+
+    await this.prisma.staff.update({
+      where: { id: tokenRecord.staffId! },
+      data: { emailVerified: true },
+    });
+
+    await this.tokenService.markUsed(tokenRecord.id);
+
+    return { ok: true };
+  }
+
+  async resendVerification(staffId: string) {
+    const staff = await this.prisma.staff.findUnique({ where: { id: staffId } });
+    if (!staff) throw new BadRequestException('Staff not found');
+    if (staff.emailVerified) throw new BadRequestException('Email already verified');
+
+    // Revoke any existing verification tokens
+    await this.tokenService.revokeTokens(staff.email, 'EMAIL_VERIFY');
+
+    await this.sendVerificationEmail(staff.id, staff.email, staff.name, staff.businessId);
+
+    return { ok: true };
+  }
+
+  private async sendVerificationEmail(staffId: string, email: string, name: string, businessId: string) {
+    const token = await this.tokenService.createToken(
+      'EMAIL_VERIFY',
+      email,
+      businessId,
+      staffId,
+      24, // 24 hour expiry
+    );
+
+    const verifyUrl = `${this.getWebUrl()}/verify-email?token=${token}`;
+    await this.emailService.sendEmailVerification(email, { name, verifyUrl });
   }
 }

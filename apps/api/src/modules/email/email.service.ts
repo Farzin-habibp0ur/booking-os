@@ -149,4 +149,19 @@ export class EmailService {
       `,
     });
   }
+
+  // M16: Email verification
+  async sendEmailVerification(to: string, data: { name: string; verifyUrl: string }) {
+    return this.send({
+      to,
+      subject: 'Verify Your Email - Booking OS',
+      html: `
+        <h2>Verify Your Email</h2>
+        <p>Hi ${data.name},</p>
+        <p>Please verify your email address by clicking the link below:</p>
+        <p><a href="${data.verifyUrl}">Verify Email</a></p>
+        <p>This link expires in 24 hours.</p>
+      `,
+    });
+  }
 }

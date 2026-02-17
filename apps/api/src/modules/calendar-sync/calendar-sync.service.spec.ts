@@ -149,14 +149,20 @@ describe('CalendarSyncService', () => {
   });
 
   describe('handleOAuthCallback', () => {
-    it('exchanges code, encrypts tokens, stores connection', async () => {
+    it('exchanges code, encrypts tokens, stores connection with feed expiry', async () => {
       prisma.calendarConnection.upsert.mockResolvedValue({} as any);
 
       const result = await service.handleOAuthCallback('google', 'auth-code', 'signed-state');
 
       expect(jwtService.verify).toHaveBeenCalledWith('signed-state');
       expect(googleProvider.exchangeCode).toHaveBeenCalled();
-      expect(prisma.calendarConnection.upsert).toHaveBeenCalled();
+      expect(prisma.calendarConnection.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          create: expect.objectContaining({
+            icalFeedTokenExpiresAt: expect.any(Date),
+          }),
+        }),
+      );
       expect(result).toContain('/settings/calendar?connected=google');
     });
   });
@@ -255,6 +261,7 @@ describe('CalendarSyncService', () => {
     it('generates valid VCALENDAR string', async () => {
       prisma.calendarConnection.findUnique.mockResolvedValue({
         staffId: 'staff1',
+        icalFeedTokenExpiresAt: new Date(Date.now() + 86400000),
         staff: { name: 'Dr. Sarah' },
       } as any);
       prisma.booking.findMany.mockResolvedValue([
@@ -275,6 +282,33 @@ describe('CalendarSyncService', () => {
       expect(feed).toContain('BEGIN:VEVENT');
       expect(feed).toContain('Botox - Jane');
       expect(feed).toContain('END:VCALENDAR');
+    });
+
+    // H7: iCal feed token expiry test
+    it('returns EXPIRED for expired feed token', async () => {
+      prisma.calendarConnection.findUnique.mockResolvedValue({
+        staffId: 'staff1',
+        icalFeedTokenExpiresAt: new Date(Date.now() - 86400000), // expired yesterday
+        staff: { name: 'Dr. Sarah' },
+      } as any);
+
+      const result = await service.generateIcalFeed('expired-token');
+
+      expect(result).toBe('EXPIRED');
+      expect(prisma.booking.findMany).not.toHaveBeenCalled();
+    });
+
+    it('allows tokens with no expiry (pre-migration data)', async () => {
+      prisma.calendarConnection.findUnique.mockResolvedValue({
+        staffId: 'staff1',
+        icalFeedTokenExpiresAt: null, // no expiry set
+        staff: { name: 'Dr. Sarah' },
+      } as any);
+      prisma.booking.findMany.mockResolvedValue([] as any);
+
+      const feed = await service.generateIcalFeed('legacy-token');
+
+      expect(feed).toContain('BEGIN:VCALENDAR');
     });
   });
 

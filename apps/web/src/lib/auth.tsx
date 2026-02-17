@@ -9,6 +9,7 @@ interface User {
   email: string;
   role: string;
   locale: string | null;
+  emailVerified: boolean;
   businessId: string;
   business: {
     id: string;

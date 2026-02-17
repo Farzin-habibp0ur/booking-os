@@ -376,4 +376,75 @@ describe('Auth Integration', () => {
       expect(res.status).toBe(400);
     });
   });
+
+  // M16: Email verification integration tests
+  describe('POST /api/v1/auth/verify-email', () => {
+    it('returns 201 on valid token', async () => {
+      tokenService.validateToken.mockResolvedValue({ id: 'token1', staffId: 'staff1' } as any);
+      ctx.prisma.staff.update.mockResolvedValue({} as any);
+
+      const res = await request(ctx.app.getHttpServer())
+        .post('/api/v1/auth/verify-email')
+        .send({ token: 'valid-verify-token' });
+
+      expect(res.status).toBe(201);
+      expect(res.body).toEqual({ ok: true });
+    });
+
+    it('returns 400 on invalid token', async () => {
+      tokenService.validateToken.mockRejectedValue(new BadRequestException('Invalid token'));
+
+      const res = await request(ctx.app.getHttpServer())
+        .post('/api/v1/auth/verify-email')
+        .send({ token: 'bad-token' });
+
+      expect(res.status).toBe(400);
+    });
+
+    it('returns 400 when token field is missing', async () => {
+      const res = await request(ctx.app.getHttpServer())
+        .post('/api/v1/auth/verify-email')
+        .send({});
+
+      expect(res.status).toBe(400);
+    });
+  });
+
+  describe('POST /api/v1/auth/resend-verification', () => {
+    it('returns 201 when authenticated and email not verified', async () => {
+      ctx.prisma.staff.findUnique.mockResolvedValue({
+        ...mockStaff,
+        emailVerified: false,
+      } as any);
+      const token = getAuthToken(ctx.jwtService);
+
+      const res = await request(ctx.app.getHttpServer())
+        .post('/api/v1/auth/resend-verification')
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(res.status).toBe(201);
+      expect(res.body).toEqual({ ok: true });
+    });
+
+    it('returns 401 without auth token', async () => {
+      const res = await request(ctx.app.getHttpServer())
+        .post('/api/v1/auth/resend-verification');
+
+      expect(res.status).toBe(401);
+    });
+
+    it('returns 400 if already verified', async () => {
+      ctx.prisma.staff.findUnique.mockResolvedValue({
+        ...mockStaff,
+        emailVerified: true,
+      } as any);
+      const token = getAuthToken(ctx.jwtService);
+
+      const res = await request(ctx.app.getHttpServer())
+        .post('/api/v1/auth/resend-verification')
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(res.status).toBe(400);
+    });
+  });
 });

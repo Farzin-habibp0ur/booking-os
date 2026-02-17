@@ -43,16 +43,17 @@ model Business {
 }
 
 model Staff {
-  id           String   @id @default(cuid())
-  businessId   String
-  name         String
-  email        String   @unique
-  passwordHash String?
-  role         String   @default("AGENT") // ADMIN, SERVICE_PROVIDER, AGENT
-  locale       String?
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id            String   @id @default(cuid())
+  businessId    String
+  name          String
+  email         String   @unique
+  passwordHash  String?
+  role          String   @default("AGENT") // ADMIN, SERVICE_PROVIDER, AGENT
+  locale        String?
+  isActive      Boolean  @default(true)
+  emailVerified Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   business              Business              @relation(fields: [businessId], references: [id])
   bookings              Booking[]
@@ -365,7 +366,7 @@ model AiUsage {
 model Token {
   id         String    @id @default(cuid())
   token      String    @unique
-  type       String    // PASSWORD_RESET, STAFF_INVITE, RESCHEDULE_LINK, CANCEL_LINK
+  type       String    // PASSWORD_RESET, STAFF_INVITE, RESCHEDULE_LINK, CANCEL_LINK, EMAIL_VERIFY
   email      String
   businessId String?
   staffId    String?
@@ -403,8 +404,9 @@ model CalendarConnection {
   refreshToken    String    // encrypted AES-256-GCM
   tokenExpiresAt  DateTime?
   calendarId      String?   // e.g. "primary" for Google
-  icalFeedToken   String?   @unique  // random token for iCal feed URL
-  syncEnabled     Boolean   @default(true)
+  icalFeedToken          String?   @unique  // random token for iCal feed URL
+  icalFeedTokenExpiresAt DateTime?
+  syncEnabled            Boolean   @default(true)
   lastSyncedAt    DateTime?
   lastSyncError   String?
   createdAt       DateTime  @default(now())
@@ -526,17 +528,19 @@ model CampaignSend {
 }
 
 model Offer {
-  id         String    @id @default(cuid())
-  businessId String
-  name       String
-  description String?
-  terms      String?
-  serviceIds String[]  @default([])
-  validFrom  DateTime?
-  validUntil DateTime?
-  isActive   Boolean   @default(true)
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  id                 String    @id @default(cuid())
+  businessId         String
+  name               String
+  description        String?
+  terms              String?
+  serviceIds         String[]  @default([])
+  validFrom          DateTime?
+  validUntil         DateTime?
+  isActive           Boolean   @default(true)
+  maxRedemptions     Int?
+  currentRedemptions Int       @default(0)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   business Business @relation(fields: [businessId], references: [id])
 

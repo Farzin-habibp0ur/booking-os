@@ -3,6 +3,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { TenantGuard } from '../../common/tenant.guard';
 import { RolesGuard, Roles } from '../../common/roles.guard';
 import { BusinessId } from '../../common/decorators';
+import { CreateOfferDto, UpdateOfferDto } from '../../common/dto';
 import { OfferService } from './offer.service';
 
 @Controller('offers')
@@ -12,7 +13,7 @@ export class OfferController {
 
   @Post()
   @Roles('ADMIN')
-  create(@BusinessId() businessId: string, @Body() body: any) {
+  create(@BusinessId() businessId: string, @Body() body: CreateOfferDto) {
     return this.offerService.create(businessId, body);
   }
 
@@ -28,8 +29,13 @@ export class OfferController {
 
   @Patch(':id')
   @Roles('ADMIN')
-  update(@BusinessId() businessId: string, @Param('id') id: string, @Body() body: any) {
+  update(@BusinessId() businessId: string, @Param('id') id: string, @Body() body: UpdateOfferDto) {
     return this.offerService.update(businessId, id, body);
+  }
+
+  @Post(':id/redeem')
+  redeem(@BusinessId() businessId: string, @Param('id') id: string) {
+    return this.offerService.redeem(businessId, id);
   }
 
   @Delete(':id')

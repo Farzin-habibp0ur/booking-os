@@ -13,6 +13,7 @@ import {
   ResetPasswordDto,
   ChangePasswordDto,
   AcceptInviteDto,
+  VerifyEmailDto,
 } from '../../common/dto';
 
 @ApiTags('Auth')
@@ -150,5 +151,20 @@ export class AuthController {
     const result = await this.authService.acceptInvite(body.token, body.password);
     this.setTokenCookies(res, result);
     return result;
+  }
+
+  // M16: Public endpoint — verify email with token
+  @Post('verify-email')
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
+  verifyEmail(@Body() body: VerifyEmailDto) {
+    return this.authService.verifyEmail(body.token);
+  }
+
+  // M16: Authenticated endpoint — resend verification email
+  @Post('resend-verification')
+  @UseGuards(AuthGuard('jwt'))
+  @Throttle({ default: { ttl: 60000, limit: 3 } })
+  resendVerification(@CurrentUser('sub') staffId: string) {
+    return this.authService.resendVerification(staffId);
   }
 }

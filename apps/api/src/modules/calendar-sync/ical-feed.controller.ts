@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Res, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Param, Res, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import { CalendarSyncService } from './calendar-sync.service';
@@ -13,6 +13,10 @@ export class IcalFeedController {
     const feed = await this.calendarSyncService.generateIcalFeed(token);
     if (!feed) {
       throw new NotFoundException('Feed not found');
+    }
+    // H7 fix: Return 401 for expired iCal feed tokens
+    if (feed === 'EXPIRED') {
+      throw new UnauthorizedException('iCal feed token has expired. Please regenerate your feed URL.');
     }
 
     res.set({

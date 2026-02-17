@@ -85,6 +85,8 @@ export class CalendarSyncService {
     const tokens = await providerImpl.exchangeCode(code, redirectUri);
 
     const icalFeedToken = randomBytes(32).toString('hex');
+    // H7 fix: Set iCal feed token expiry to 90 days
+    const icalFeedTokenExpiresAt = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
 
     await this.prisma.calendarConnection.upsert({
       where: { staffId_provider: { staffId, provider } },
@@ -96,6 +98,7 @@ export class CalendarSyncService {
         tokenExpiresAt: tokens.expiresAt,
         calendarId: provider === 'google' ? 'primary' : null,
         icalFeedToken,
+        icalFeedTokenExpiresAt,
         syncEnabled: true,
       },
       update: {
@@ -241,13 +244,18 @@ export class CalendarSyncService {
     }
   }
 
-  async generateIcalFeed(icalFeedToken: string): Promise<string | null> {
+  async generateIcalFeed(icalFeedToken: string): Promise<string | null | 'EXPIRED'> {
     const connection = await this.prisma.calendarConnection.findUnique({
       where: { icalFeedToken },
       include: { staff: true },
     });
 
     if (!connection) return null;
+
+    // H7 fix: Reject expired iCal feed tokens
+    if (connection.icalFeedTokenExpiresAt && connection.icalFeedTokenExpiresAt < new Date()) {
+      return 'EXPIRED';
+    }
 
     const now = new Date();
     const past30d = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
@@ -310,11 +318,13 @@ export class CalendarSyncService {
 
   async regenerateIcalToken(staffId: string): Promise<string> {
     const newToken = randomBytes(32).toString('hex');
+    // H7 fix: Set iCal feed token expiry to 90 days
+    const icalFeedTokenExpiresAt = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
 
     // Update all connections for this staff member
     await this.prisma.calendarConnection.updateMany({
       where: { staffId },
-      data: { icalFeedToken: null },
+      data: { icalFeedToken: null, icalFeedTokenExpiresAt: null },
     });
 
     // Set new token on the first connection
@@ -325,7 +335,7 @@ export class CalendarSyncService {
     if (connection) {
       await this.prisma.calendarConnection.update({
         where: { id: connection.id },
-        data: { icalFeedToken: newToken },
+        data: { icalFeedToken: newToken, icalFeedTokenExpiresAt },
       });
     }
 

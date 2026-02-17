@@ -50,6 +50,7 @@ export function createMockEmailService() {
     sendPasswordReset: jest.fn().mockResolvedValue(true),
     sendStaffInvitation: jest.fn().mockResolvedValue(true),
     sendBookingConfirmation: jest.fn().mockResolvedValue(true),
+    sendEmailVerification: jest.fn().mockResolvedValue(true),
   };
 }
 

@@ -61,6 +61,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [resending, setResending] = useState(false);
   const { t } = useI18n();
   const { user } = useAuth();
   const isAdmin = user?.role === 'ADMIN';
@@ -124,6 +125,17 @@ export default function DashboardPage() {
     (attention?.overdueConversations?.length || 0) > 0 ||
     (attention?.tomorrowBookings?.length || 0) > 0;
 
+  const handleResendVerification = async () => {
+    setResending(true);
+    try {
+      await api.post('/auth/resend-verification');
+    } catch {
+      // Silently handle
+    } finally {
+      setResending(false);
+    }
+  };
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -141,6 +153,28 @@ export default function DashboardPage() {
           </p>
         </div>
       </div>
+
+      {/* M16: Email verification banner */}
+      {user && !user.emailVerified && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <AlertTriangle size={18} className="text-amber-600 shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-amber-900">Please verify your email address</p>
+              <p className="text-xs text-amber-700 mt-0.5">
+                Check your inbox for a verification link or request a new one.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={handleResendVerification}
+            disabled={resending}
+            className="text-xs font-medium text-amber-700 hover:text-amber-900 bg-amber-100 hover:bg-amber-200 px-3 py-1.5 rounded-xl transition-colors disabled:opacity-50 shrink-0"
+          >
+            {resending ? 'Sending...' : 'Resend'}
+          </button>
+        </div>
+      )}
 
       {/* Metric Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
