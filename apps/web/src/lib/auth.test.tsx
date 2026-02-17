@@ -41,7 +41,7 @@ function TestComponent() {
   return (
     <div>
       <div data-testid="user-status">{user ? `Logged in as ${user.email}` : 'Not logged in'}</div>
-      <div data-testid="has-signup">{signup ? 'yes' : 'no'}</div>
+      <div data-testid="has-signup">{typeof signup === 'function' ? 'yes' : 'no'}</div>
       <button onClick={handleLogin}>Login</button>
       <button onClick={handleSignup}>Signup</button>
       <button onClick={logout}>Logout</button>
