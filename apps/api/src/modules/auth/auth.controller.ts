@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, Res, Req, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get, Body, Res, Req, UseGuards, Header } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { Throttle } from '@nestjs/throttler';
@@ -98,6 +98,7 @@ export class AuthController {
 
   @Get('me')
   @UseGuards(AuthGuard('jwt'))
+  @Header('Cache-Control', 'no-store')
   getMe(@CurrentUser('sub') staffId: string) {
     return this.authService.getMe(staffId);
   }
