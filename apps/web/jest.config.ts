@@ -11,6 +11,14 @@ const config: Config = {
     '^@/(.*)$': '<rootDir>/src/$1',
     '^@booking-os/shared$': '<rootDir>/../../packages/shared/src/index',
   },
+  coverageThreshold: {
+    global: {
+      lines: 75,
+      statements: 75,
+      functions: 60,
+      branches: 60,
+    },
+  },
 };
 
 export default createJestConfig(config);

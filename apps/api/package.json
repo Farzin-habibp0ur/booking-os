@@ -8,6 +8,7 @@
     "start": "ts-node -r tsconfig-paths/register --transpileOnly src/main.ts",
     "start:prod": "node dist/main",
     "test": "jest",
+    "test:coverage": "jest --coverage --maxWorkers=50%",
     "lint": "eslint . && tsc --noEmit"
   },
   "dependencies": {

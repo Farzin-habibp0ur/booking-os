@@ -7,6 +7,7 @@ import { NotificationService } from '../notification/notification.service';
 import { BusinessService } from '../business/business.service';
 import { CalendarSyncService } from '../calendar-sync/calendar-sync.service';
 import { TokenService } from '../../common/token.service';
+import { WaitlistService } from '../waitlist/waitlist.service';
 import {
   createMockPrisma,
   createMockNotificationService,
@@ -14,6 +15,7 @@ import {
   createMockCalendarSyncService,
   createMockTokenService,
   createMockConfigService,
+  createMockWaitlistService,
 } from '../../test/mocks';
 
 describe('BookingService', () => {
@@ -132,6 +134,92 @@ describe('BookingService', () => {
         }),
       );
     });
+
+    it('applies dateFrom only without dateTo', async () => {
+      prisma.booking.findMany.mockResolvedValue([]);
+      prisma.booking.count.mockResolvedValue(0);
+
+      await bookingService.findAll('biz1', { dateFrom: '2026-01-01' });
+
+      expect(prisma.booking.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            businessId: 'biz1',
+            startTime: { gte: new Date('2026-01-01') },
+          },
+        }),
+      );
+    });
+
+    it('applies dateTo only without dateFrom', async () => {
+      prisma.booking.findMany.mockResolvedValue([]);
+      prisma.booking.count.mockResolvedValue(0);
+
+      await bookingService.findAll('biz1', { dateTo: '2026-01-31' });
+
+      expect(prisma.booking.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            businessId: 'biz1',
+            startTime: { lte: new Date('2026-01-31') },
+          },
+        }),
+      );
+    });
+
+    it('uses custom page and pageSize', async () => {
+      prisma.booking.findMany.mockResolvedValue([]);
+      prisma.booking.count.mockResolvedValue(100);
+
+      const result = await bookingService.findAll('biz1', { page: 3, pageSize: 10 });
+
+      expect(result).toEqual({
+        data: [],
+        total: 100,
+        page: 3,
+        pageSize: 10,
+        totalPages: 10,
+      });
+      expect(prisma.booking.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          skip: 20,
+          take: 10,
+        }),
+      );
+    });
+
+    it('calculates totalPages correctly with remainder', async () => {
+      prisma.booking.findMany.mockResolvedValue([]);
+      prisma.booking.count.mockResolvedValue(25);
+
+      const result = await bookingService.findAll('biz1', { pageSize: 10 });
+
+      expect(result.totalPages).toBe(3);
+    });
+
+    it('combines multiple filters', async () => {
+      prisma.booking.findMany.mockResolvedValue([]);
+      prisma.booking.count.mockResolvedValue(0);
+
+      await bookingService.findAll('biz1', {
+        status: 'CONFIRMED',
+        staffId: 'staff1',
+        customerId: 'cust1',
+        dateFrom: '2026-01-01',
+      });
+
+      expect(prisma.booking.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            businessId: 'biz1',
+            status: 'CONFIRMED',
+            staffId: 'staff1',
+            customerId: 'cust1',
+            startTime: { gte: new Date('2026-01-01') },
+          },
+        }),
+      );
+    });
   });
 
   describe('findById', () => {
@@ -167,6 +255,14 @@ describe('BookingService', () => {
       const result = await bookingService.findById('biz1', 'b1');
 
       expect(result?.service.kind).toBe('CONSULT');
+    });
+
+    it('returns null when booking not found', async () => {
+      prisma.booking.findFirst.mockResolvedValue(null);
+
+      const result = await bookingService.findById('biz1', 'nonexistent');
+
+      expect(result).toBeNull();
     });
   });
 
@@ -346,6 +442,144 @@ describe('BookingService', () => {
 
       expect(prisma.reminder.create).not.toHaveBeenCalled();
     });
+
+    it('skips conflict detection when no staffId is provided', async () => {
+      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', durationMins: 60 } as any);
+      prisma.booking.create.mockResolvedValue({ id: 'b1' } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+
+      await bookingService.create('biz1', {
+        customerId: 'cust1',
+        serviceId: 'svc1',
+        startTime: '2026-03-01T10:00:00Z',
+      });
+
+      // findFirst should NOT be called for conflict detection when no staffId
+      expect(prisma.booking.findFirst).not.toHaveBeenCalled();
+    });
+
+    it('triggers calendar sync after creating booking', async () => {
+      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', durationMins: 60 } as any);
+      prisma.booking.findFirst.mockResolvedValue(null);
+      prisma.booking.create.mockResolvedValue({ id: 'b1', customer: {}, service: {}, staff: {} } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+
+      await bookingService.create('biz1', createData);
+
+      expect(mockCalendarSyncService.syncBookingToCalendar).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'b1' }),
+        'create',
+      );
+    });
+
+    it('passes notes and customFields to booking creation', async () => {
+      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', durationMins: 30 } as any);
+      prisma.booking.findFirst.mockResolvedValue(null);
+      prisma.booking.create.mockResolvedValue({ id: 'b1' } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+
+      await bookingService.create('biz1', {
+        ...createData,
+        notes: 'Patient allergic to latex',
+        customFields: { skinType: 'sensitive' },
+        staffId: undefined,
+      });
+
+      expect(prisma.booking.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            notes: 'Patient allergic to latex',
+            customFields: { skinType: 'sensitive' },
+          }),
+        }),
+      );
+    });
+
+    it('defaults customFields to empty object when not provided', async () => {
+      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', durationMins: 30 } as any);
+      prisma.booking.findFirst.mockResolvedValue(null);
+      prisma.booking.create.mockResolvedValue({ id: 'b1' } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+
+      await bookingService.create('biz1', {
+        customerId: 'cust1',
+        serviceId: 'svc1',
+        startTime: '2026-03-01T10:00:00Z',
+      });
+
+      expect(prisma.booking.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            customFields: {},
+          }),
+        }),
+      );
+    });
+
+    it('passes conversationId to booking when provided', async () => {
+      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', durationMins: 30 } as any);
+      prisma.booking.findFirst.mockResolvedValue(null);
+      prisma.booking.create.mockResolvedValue({ id: 'b1' } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+
+      await bookingService.create('biz1', {
+        ...createData,
+        conversationId: 'conv1',
+        staffId: undefined,
+      });
+
+      expect(prisma.booking.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            conversationId: 'conv1',
+          }),
+        }),
+      );
+    });
+
+    it('calls attributeCampaignSend after creating booking', async () => {
+      const recentSend = { id: 'cs1', customerId: 'cust1', status: 'SENT', sentAt: new Date(), bookingId: null };
+      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', durationMins: 60 } as any);
+      prisma.booking.findFirst.mockResolvedValue(null);
+      prisma.booking.create.mockResolvedValue({ id: 'b1', customerId: 'cust1', customer: {}, service: {}, staff: {} } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+      prisma.campaignSend.findFirst.mockResolvedValue(recentSend as any);
+      prisma.campaignSend.update.mockResolvedValue({ ...recentSend, bookingId: 'b1' } as any);
+
+      await bookingService.create('biz1', createData);
+
+      // Allow async fire-and-forget to settle
+      await new Promise((r) => setTimeout(r, 50));
+
+      expect(prisma.campaignSend.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            customerId: 'cust1',
+            status: 'SENT',
+            bookingId: null,
+          }),
+        }),
+      );
+      expect(prisma.campaignSend.update).toHaveBeenCalledWith({
+        where: { id: 'cs1' },
+        data: { bookingId: 'b1' },
+      });
+    });
+
+    it('does not update campaignSend when no recent send found', async () => {
+      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', durationMins: 60 } as any);
+      prisma.booking.findFirst.mockResolvedValue(null);
+      prisma.booking.create.mockResolvedValue({ id: 'b1', customerId: 'cust1', customer: {}, service: {}, staff: {} } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+      prisma.campaignSend.findFirst.mockResolvedValue(null);
+
+      await bookingService.create('biz1', createData);
+
+      // Allow async fire-and-forget to settle
+      await new Promise((r) => setTimeout(r, 50));
+
+      expect(prisma.campaignSend.update).not.toHaveBeenCalled();
+    });
   });
 
   describe('sendDepositRequest', () => {
@@ -397,6 +631,62 @@ describe('BookingService', () => {
 
       await expect(bookingService.sendDepositRequest('biz1', 'b1')).rejects.toThrow(BadRequestException);
     });
+
+    it('appends to existing depositRequestLog', async () => {
+      const existingLog = [{ sentAt: '2026-01-01T00:00:00Z' }];
+      const booking = {
+        id: 'b1',
+        businessId: 'biz1',
+        status: 'PENDING_DEPOSIT',
+        customFields: { depositRequestLog: existingLog },
+        customer: { name: 'Test' },
+        service: { name: 'Botox' },
+        staff: null,
+      };
+      prisma.booking.findFirst.mockResolvedValue(booking as any);
+      prisma.booking.update.mockResolvedValue({ ...booking } as any);
+
+      await bookingService.sendDepositRequest('biz1', 'b1');
+
+      expect(prisma.booking.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            customFields: expect.objectContaining({
+              depositRequestLog: [
+                { sentAt: '2026-01-01T00:00:00Z' },
+                { sentAt: expect.any(String) },
+              ],
+            }),
+          }),
+        }),
+      );
+    });
+
+    it('handles null customFields gracefully', async () => {
+      const booking = {
+        id: 'b1',
+        businessId: 'biz1',
+        status: 'PENDING_DEPOSIT',
+        customFields: null,
+        customer: { name: 'Test' },
+        service: { name: 'Botox' },
+        staff: null,
+      };
+      prisma.booking.findFirst.mockResolvedValue(booking as any);
+      prisma.booking.update.mockResolvedValue({ ...booking } as any);
+
+      await bookingService.sendDepositRequest('biz1', 'b1');
+
+      expect(prisma.booking.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            customFields: expect.objectContaining({
+              depositRequestLog: [{ sentAt: expect.any(String) }],
+            }),
+          }),
+        }),
+      );
+    });
   });
 
   describe('update', () => {
@@ -417,6 +707,55 @@ describe('BookingService', () => {
           data: expect.objectContaining({
             startTime: expectedStart,
             endTime: expectedEnd,
+          }),
+        }),
+      );
+    });
+
+    it('does not recalculate endTime when startTime is not provided', async () => {
+      prisma.booking.update.mockResolvedValue({ id: 'b1', notes: 'Updated notes' } as any);
+
+      await bookingService.update('biz1', 'b1', { notes: 'Updated notes' });
+
+      expect(prisma.booking.findFirst).not.toHaveBeenCalled();
+      expect(prisma.booking.update).toHaveBeenCalledWith({
+        where: { id: 'b1', businessId: 'biz1' },
+        data: { notes: 'Updated notes' },
+        include: { customer: true, service: true, staff: true },
+      });
+    });
+
+    it('triggers calendar sync after update', async () => {
+      prisma.booking.update.mockResolvedValue({ id: 'b1', customer: {}, service: {}, staff: {} } as any);
+
+      await bookingService.update('biz1', 'b1', { notes: 'New notes' });
+
+      expect(mockCalendarSyncService.syncBookingToCalendar).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'b1' }),
+        'update',
+      );
+    });
+
+    it('returns the updated booking with included relations', async () => {
+      const updatedBooking = { id: 'b1', notes: 'Updated', customer: { name: 'Test' }, service: { name: 'Botox' }, staff: null };
+      prisma.booking.update.mockResolvedValue(updatedBooking as any);
+
+      const result = await bookingService.update('biz1', 'b1', { notes: 'Updated' });
+
+      expect(result).toEqual(updatedBooking);
+    });
+
+    it('does not recalculate endTime when booking not found for startTime update', async () => {
+      prisma.booking.findFirst.mockResolvedValue(null);
+      prisma.booking.update.mockResolvedValue({ id: 'b1' } as any);
+
+      await bookingService.update('biz1', 'b1', { startTime: '2026-03-01T14:00:00Z' });
+
+      // Should still call update, but without endTime since booking was not found
+      expect(prisma.booking.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.not.objectContaining({
+            endTime: expect.anything(),
           }),
         }),
       );
@@ -729,6 +1068,266 @@ describe('BookingService', () => {
       expect(scheduledAt.getTime()).toBeGreaterThanOrEqual(expectedMin);
       expect(scheduledAt.getTime()).toBeLessThanOrEqual(expectedMax);
     });
+
+    it('triggers calendar sync with cancel action on CANCELLED status', async () => {
+      prisma.booking.findFirst.mockResolvedValue({ status: 'CONFIRMED' } as any);
+      prisma.booking.update.mockResolvedValue({ id: 'b1', status: 'CANCELLED' } as any);
+      prisma.reminder.updateMany.mockResolvedValue({ count: 0 } as any);
+
+      await bookingService.updateStatus('biz1', 'b1', 'CANCELLED');
+
+      expect(mockCalendarSyncService.syncBookingToCalendar).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'b1' }),
+        'cancel',
+      );
+    });
+
+    it('triggers calendar sync with cancel action on NO_SHOW status', async () => {
+      prisma.booking.findFirst.mockResolvedValue({ status: 'CONFIRMED' } as any);
+      prisma.booking.update.mockResolvedValue({ id: 'b1', status: 'NO_SHOW' } as any);
+      prisma.reminder.updateMany.mockResolvedValue({ count: 0 } as any);
+
+      await bookingService.updateStatus('biz1', 'b1', 'NO_SHOW');
+
+      expect(mockCalendarSyncService.syncBookingToCalendar).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'b1' }),
+        'cancel',
+      );
+    });
+
+    it('sends cancellation notification on CANCELLED status', async () => {
+      prisma.booking.findFirst.mockResolvedValue({ status: 'CONFIRMED' } as any);
+      prisma.booking.update.mockResolvedValue({ id: 'b1', status: 'CANCELLED' } as any);
+      prisma.reminder.updateMany.mockResolvedValue({ count: 0 } as any);
+
+      await bookingService.updateStatus('biz1', 'b1', 'CANCELLED');
+
+      expect(mockNotificationService.sendCancellationNotification).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'b1' }),
+      );
+    });
+
+    it('does NOT send cancellation notification on NO_SHOW status', async () => {
+      prisma.booking.findFirst.mockResolvedValue({ status: 'CONFIRMED' } as any);
+      prisma.booking.update.mockResolvedValue({ id: 'b1', status: 'NO_SHOW' } as any);
+      prisma.reminder.updateMany.mockResolvedValue({ count: 0 } as any);
+
+      await bookingService.updateStatus('biz1', 'b1', 'NO_SHOW');
+
+      expect(mockNotificationService.sendCancellationNotification).not.toHaveBeenCalled();
+    });
+
+    it('does not trigger calendar sync for non-cancel/no-show statuses', async () => {
+      prisma.booking.findFirst.mockResolvedValue({ status: 'PENDING' } as any);
+      prisma.booking.update.mockResolvedValue({ id: 'b1', status: 'CONFIRMED' } as any);
+
+      await bookingService.updateStatus('biz1', 'b1', 'CONFIRMED');
+
+      expect(mockCalendarSyncService.syncBookingToCalendar).not.toHaveBeenCalled();
+    });
+
+    it('does not create follow-up reminders for non-COMPLETED statuses', async () => {
+      prisma.booking.findFirst.mockResolvedValue({ status: 'PENDING' } as any);
+      prisma.booking.update.mockResolvedValue({ id: 'b1', status: 'IN_PROGRESS' } as any);
+
+      await bookingService.updateStatus('biz1', 'b1', 'IN_PROGRESS');
+
+      expect(prisma.reminder.create).not.toHaveBeenCalled();
+    });
+
+    it('only creates FOLLOW_UP reminder for COMPLETED booking with no service kind', async () => {
+      prisma.booking.findFirst.mockResolvedValue({ status: 'IN_PROGRESS' } as any);
+      prisma.booking.update.mockResolvedValue({
+        id: 'b1',
+        status: 'COMPLETED',
+        service: null,
+      } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+
+      await bookingService.updateStatus('biz1', 'b1', 'COMPLETED');
+
+      const calls = prisma.reminder.create.mock.calls;
+      expect(calls).toHaveLength(1);
+      expect(calls[0][0].data.type).toBe('FOLLOW_UP');
+    });
+
+    it('uses default followUpDelayHours of 2 when settings return null', async () => {
+      mockBusinessService.getNotificationSettings.mockResolvedValue(null);
+      prisma.booking.findFirst.mockResolvedValue({ status: 'IN_PROGRESS' } as any);
+      prisma.booking.update.mockResolvedValue({
+        id: 'b1',
+        status: 'COMPLETED',
+        service: { id: 'svc1', kind: 'OTHER' },
+      } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+
+      const before = Date.now();
+      await bookingService.updateStatus('biz1', 'b1', 'COMPLETED');
+      const after = Date.now();
+
+      const followUpCall = prisma.reminder.create.mock.calls.find(
+        (call: any) => call[0]?.data?.type === 'FOLLOW_UP',
+      );
+      expect(followUpCall).toBeDefined();
+      const scheduledAt = followUpCall![0].data.scheduledAt as Date;
+      const expectedMin = before + 2 * 3600000;
+      const expectedMax = after + 2 * 3600000;
+      expect(scheduledAt.getTime()).toBeGreaterThanOrEqual(expectedMin);
+      expect(scheduledAt.getTime()).toBeLessThanOrEqual(expectedMax);
+    });
+
+    it('uses custom followUpDelayHours from business settings', async () => {
+      mockBusinessService.getNotificationSettings.mockResolvedValue({
+        channels: 'both',
+        followUpDelayHours: 6,
+        consultFollowUpDays: 3,
+        treatmentCheckInHours: 24,
+      });
+      prisma.booking.findFirst.mockResolvedValue({ status: 'IN_PROGRESS' } as any);
+      prisma.booking.update.mockResolvedValue({
+        id: 'b1',
+        status: 'COMPLETED',
+        service: { id: 'svc1', kind: 'OTHER' },
+      } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+
+      const before = Date.now();
+      await bookingService.updateStatus('biz1', 'b1', 'COMPLETED');
+      const after = Date.now();
+
+      const followUpCall = prisma.reminder.create.mock.calls.find(
+        (call: any) => call[0]?.data?.type === 'FOLLOW_UP',
+      );
+      expect(followUpCall).toBeDefined();
+      const scheduledAt = followUpCall![0].data.scheduledAt as Date;
+      const expectedMin = before + 6 * 3600000;
+      const expectedMax = after + 6 * 3600000;
+      expect(scheduledAt.getTime()).toBeGreaterThanOrEqual(expectedMin);
+      expect(scheduledAt.getTime()).toBeLessThanOrEqual(expectedMax);
+    });
+
+    it('uses default consultFollowUpDays of 3 when settings return null', async () => {
+      mockBusinessService.getNotificationSettings.mockResolvedValue(null);
+      prisma.booking.findFirst.mockResolvedValue({ status: 'IN_PROGRESS' } as any);
+      prisma.booking.update.mockResolvedValue({
+        id: 'b1',
+        status: 'COMPLETED',
+        service: { id: 'svc1', name: 'Consultation', kind: 'CONSULT' },
+      } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+
+      const before = Date.now();
+      await bookingService.updateStatus('biz1', 'b1', 'COMPLETED');
+      const after = Date.now();
+
+      const consultCall = prisma.reminder.create.mock.calls.find(
+        (call: any) => call[0]?.data?.type === 'CONSULT_FOLLOW_UP',
+      );
+      expect(consultCall).toBeDefined();
+      const scheduledAt = consultCall![0].data.scheduledAt as Date;
+      const expectedMin = before + 3 * 24 * 3600000;
+      const expectedMax = after + 3 * 24 * 3600000;
+      expect(scheduledAt.getTime()).toBeGreaterThanOrEqual(expectedMin);
+      expect(scheduledAt.getTime()).toBeLessThanOrEqual(expectedMax);
+    });
+
+    it('uses default treatmentCheckInHours of 24 when settings return null', async () => {
+      mockBusinessService.getNotificationSettings.mockResolvedValue(null);
+      prisma.booking.findFirst.mockResolvedValue({ status: 'IN_PROGRESS' } as any);
+      prisma.booking.update.mockResolvedValue({
+        id: 'b1',
+        status: 'COMPLETED',
+        service: { id: 'svc1', name: 'Botox', kind: 'TREATMENT' },
+      } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+
+      const before = Date.now();
+      await bookingService.updateStatus('biz1', 'b1', 'COMPLETED');
+      const after = Date.now();
+
+      const checkInCall = prisma.reminder.create.mock.calls.find(
+        (call: any) => call[0]?.data?.type === 'TREATMENT_CHECK_IN',
+      );
+      expect(checkInCall).toBeDefined();
+      const scheduledAt = checkInCall![0].data.scheduledAt as Date;
+      const expectedMin = before + 24 * 3600000;
+      const expectedMax = after + 24 * 3600000;
+      expect(scheduledAt.getTime()).toBeGreaterThanOrEqual(expectedMin);
+      expect(scheduledAt.getTime()).toBeLessThanOrEqual(expectedMax);
+    });
+  });
+
+  describe('updateStatus - waitlist integration', () => {
+    let mockWaitlistService: ReturnType<typeof createMockWaitlistService>;
+
+    beforeEach(async () => {
+      mockWaitlistService = createMockWaitlistService();
+
+      const module = await Test.createTestingModule({
+        providers: [
+          BookingService,
+          { provide: PrismaService, useValue: prisma },
+          { provide: NotificationService, useValue: mockNotificationService },
+          { provide: BusinessService, useValue: mockBusinessService },
+          { provide: CalendarSyncService, useValue: mockCalendarSyncService },
+          { provide: TokenService, useValue: mockTokenService },
+          { provide: ConfigService, useValue: mockConfigService },
+          { provide: WaitlistService, useValue: mockWaitlistService },
+        ],
+      }).compile();
+
+      bookingService = module.get(BookingService);
+    });
+
+    it('offers open slot to waitlist on cancellation when WaitlistService is injected', async () => {
+      prisma.booking.findFirst.mockResolvedValue({ status: 'CONFIRMED' } as any);
+      prisma.booking.update.mockResolvedValue({ id: 'b1', status: 'CANCELLED' } as any);
+      prisma.reminder.updateMany.mockResolvedValue({ count: 0 } as any);
+
+      await bookingService.updateStatus('biz1', 'b1', 'CANCELLED');
+
+      expect(mockWaitlistService.offerOpenSlot).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'b1' }),
+      );
+    });
+
+    it('does NOT offer open slot to waitlist on NO_SHOW', async () => {
+      prisma.booking.findFirst.mockResolvedValue({ status: 'CONFIRMED' } as any);
+      prisma.booking.update.mockResolvedValue({ id: 'b1', status: 'NO_SHOW' } as any);
+      prisma.reminder.updateMany.mockResolvedValue({ count: 0 } as any);
+
+      await bookingService.updateStatus('biz1', 'b1', 'NO_SHOW');
+
+      expect(mockWaitlistService.offerOpenSlot).not.toHaveBeenCalled();
+    });
+
+    it('does NOT offer open slot to waitlist on COMPLETED', async () => {
+      prisma.booking.findFirst.mockResolvedValue({ status: 'IN_PROGRESS' } as any);
+      prisma.booking.update.mockResolvedValue({
+        id: 'b1',
+        status: 'COMPLETED',
+        service: { kind: 'OTHER' },
+      } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+
+      await bookingService.updateStatus('biz1', 'b1', 'COMPLETED');
+
+      expect(mockWaitlistService.offerOpenSlot).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('updateStatus - without WaitlistService', () => {
+    it('does not throw when WaitlistService is not injected and booking is cancelled', async () => {
+      // bookingService from the main beforeEach does not have WaitlistService
+      prisma.booking.findFirst.mockResolvedValue({ status: 'CONFIRMED' } as any);
+      prisma.booking.update.mockResolvedValue({ id: 'b1', status: 'CANCELLED' } as any);
+      prisma.reminder.updateMany.mockResolvedValue({ count: 0 } as any);
+
+      // Should not throw even though waitlistService is undefined
+      const result = await bookingService.updateStatus('biz1', 'b1', 'CANCELLED');
+
+      expect(result.status).toBe('CANCELLED');
+    });
   });
 
   describe('checkPolicyAllowed', () => {
@@ -812,6 +1411,85 @@ describe('BookingService', () => {
 
       expect(result.allowed).toBe(true);
     });
+
+    it('returns allowed:true when policySettings is null', async () => {
+      mockBusinessService.getPolicySettings.mockResolvedValue(null);
+
+      const result = await bookingService.checkPolicyAllowed('biz1', 'b1', 'cancel');
+
+      expect(result.allowed).toBe(true);
+    });
+
+    it('returns hoursRemaining when booking is within window', async () => {
+      mockBusinessService.getPolicySettings.mockResolvedValue({
+        policyEnabled: true,
+        cancellationWindowHours: 24,
+        rescheduleWindowHours: 24,
+        cancellationPolicyText: '',
+        reschedulePolicyText: '',
+      });
+      const hoursFromNow = 6;
+      const soon = new Date(Date.now() + hoursFromNow * 3600000);
+      prisma.booking.findFirst.mockResolvedValue({ startTime: soon } as any);
+
+      const result = await bookingService.checkPolicyAllowed('biz1', 'b1', 'cancel');
+
+      expect(result.allowed).toBe(false);
+      expect(result.hoursRemaining).toBeDefined();
+      expect(typeof result.hoursRemaining).toBe('number');
+      expect(result.hoursRemaining).toBeGreaterThanOrEqual(0);
+      expect(result.hoursRemaining).toBeLessThanOrEqual(hoursFromNow + 1);
+    });
+
+    it('returns policyText as undefined when text is empty and booking is within window', async () => {
+      mockBusinessService.getPolicySettings.mockResolvedValue({
+        policyEnabled: true,
+        cancellationWindowHours: 24,
+        rescheduleWindowHours: 24,
+        cancellationPolicyText: '',
+        reschedulePolicyText: '',
+      });
+      const soon = new Date(Date.now() + 12 * 3600000);
+      prisma.booking.findFirst.mockResolvedValue({ startTime: soon } as any);
+
+      const result = await bookingService.checkPolicyAllowed('biz1', 'b1', 'cancel');
+
+      expect(result.policyText).toBeUndefined();
+    });
+
+    it('returns policyText when booking is outside window and text is provided', async () => {
+      mockBusinessService.getPolicySettings.mockResolvedValue({
+        policyEnabled: true,
+        cancellationWindowHours: 24,
+        rescheduleWindowHours: 24,
+        cancellationPolicyText: 'Our cancellation policy...',
+        reschedulePolicyText: '',
+      });
+      const farAway = new Date(Date.now() + 48 * 3600000);
+      prisma.booking.findFirst.mockResolvedValue({ startTime: farAway } as any);
+
+      const result = await bookingService.checkPolicyAllowed('biz1', 'b1', 'cancel');
+
+      expect(result.allowed).toBe(true);
+      expect(result.policyText).toBe('Our cancellation policy...');
+    });
+
+    it('returns policyText as undefined when allowed and text is empty', async () => {
+      mockBusinessService.getPolicySettings.mockResolvedValue({
+        policyEnabled: true,
+        cancellationWindowHours: 24,
+        rescheduleWindowHours: 24,
+        cancellationPolicyText: '',
+        reschedulePolicyText: '',
+      });
+      const farAway = new Date(Date.now() + 48 * 3600000);
+      prisma.booking.findFirst.mockResolvedValue({ startTime: farAway } as any);
+
+      const result = await bookingService.checkPolicyAllowed('biz1', 'b1', 'cancel');
+
+      expect(result.allowed).toBe(true);
+      expect(result.policyText).toBeUndefined();
+    });
   });
 
   describe('updateStatus - policy enforcement', () => {
@@ -881,6 +1559,29 @@ describe('BookingService', () => {
       await expect(bookingService.updateStatus('biz1', 'b1', 'CANCELLED')).rejects.toThrow(
         'Cannot cancel within 24 hours of the appointment',
       );
+    });
+
+    it('skips policy check when currentBooking has no startTime', async () => {
+      prisma.booking.findFirst.mockResolvedValue({ status: 'CONFIRMED', startTime: null, customFields: {} } as any);
+      prisma.booking.update.mockResolvedValue({ id: 'b1', status: 'CANCELLED' } as any);
+      prisma.reminder.updateMany.mockResolvedValue({ count: 0 } as any);
+
+      const result = await bookingService.updateStatus('biz1', 'b1', 'CANCELLED');
+
+      expect(result.status).toBe('CANCELLED');
+      // getPolicySettings should not have been called since startTime is falsy
+      expect(mockBusinessService.getPolicySettings).not.toHaveBeenCalled();
+    });
+
+    it('does not enforce cancellation policy for non-CANCELLED statuses', async () => {
+      // Even though the booking is within the window, the policy only applies to CANCELLED
+      prisma.booking.findFirst.mockResolvedValue({ status: 'CONFIRMED' } as any);
+      prisma.booking.update.mockResolvedValue({ id: 'b1', status: 'IN_PROGRESS' } as any);
+
+      const result = await bookingService.updateStatus('biz1', 'b1', 'IN_PROGRESS');
+
+      expect(result.status).toBe('IN_PROGRESS');
+      expect(mockBusinessService.getPolicySettings).not.toHaveBeenCalled();
     });
   });
 
@@ -1042,6 +1743,86 @@ describe('BookingService', () => {
       expect(log[0].type).toBe('EXISTING');
       expect(log[1].type).toBe('DEPOSIT_OVERRIDE');
     });
+
+    it('does not include overrideLog when there are no override entries', async () => {
+      prisma.booking.findFirst.mockResolvedValue({ status: 'PENDING' } as any);
+      prisma.booking.update.mockResolvedValue({ id: 'b1', status: 'CONFIRMED' } as any);
+
+      await bookingService.updateStatus('biz1', 'b1', 'CONFIRMED');
+
+      const updateCall = prisma.booking.update.mock.calls[0][0];
+      expect((updateCall.data as any).customFields).toBeUndefined();
+      expect((updateCall.data as any).status).toBe('CONFIRMED');
+    });
+
+    it('handles actor with empty staffId and staffName gracefully for deposit override', async () => {
+      prisma.booking.findFirst.mockResolvedValue({ status: 'PENDING_DEPOSIT', customFields: {} } as any);
+      prisma.booking.update.mockResolvedValue({
+        id: 'b1',
+        status: 'CONFIRMED',
+        customer: {},
+        service: {},
+        staff: null,
+      } as any);
+
+      await bookingService.updateStatus('biz1', 'b1', 'CONFIRMED', {
+        reason: 'Override reason',
+        role: 'ADMIN',
+      });
+
+      const updateCall = prisma.booking.update.mock.calls[0][0];
+      const log = (updateCall.data as any).customFields.overrideLog[0];
+      expect(log.staffId).toBe('');
+      expect(log.staffName).toBe('');
+    });
+
+    it('handles actor with empty staffId and staffName gracefully for policy override cancellation', async () => {
+      mockBusinessService.getPolicySettings.mockResolvedValue({
+        policyEnabled: true,
+        cancellationWindowHours: 24,
+        cancellationPolicyText: 'No cancellations within 24h',
+        rescheduleWindowHours: 24,
+        reschedulePolicyText: '',
+      });
+      const soon = new Date(Date.now() + 12 * 3600000);
+      prisma.booking.findFirst.mockResolvedValue({ status: 'CONFIRMED', startTime: soon, customFields: null } as any);
+      prisma.booking.update.mockResolvedValue({ id: 'b1', status: 'CANCELLED' } as any);
+      prisma.reminder.updateMany.mockResolvedValue({ count: 0 } as any);
+
+      await bookingService.updateStatus('biz1', 'b1', 'CANCELLED', {
+        reason: 'Emergency override',
+        role: 'ADMIN',
+      });
+
+      const updateCall = prisma.booking.update.mock.calls[0][0];
+      const log = (updateCall.data as any).customFields.overrideLog[0];
+      expect(log.type).toBe('POLICY_OVERRIDE');
+      expect(log.staffId).toBe('');
+      expect(log.staffName).toBe('');
+    });
+
+    it('handles null customFields when building override log', async () => {
+      prisma.booking.findFirst.mockResolvedValue({ status: 'PENDING_DEPOSIT', customFields: null } as any);
+      prisma.booking.update.mockResolvedValue({
+        id: 'b1',
+        status: 'CONFIRMED',
+        customer: {},
+        service: {},
+        staff: null,
+      } as any);
+
+      await bookingService.updateStatus('biz1', 'b1', 'CONFIRMED', {
+        reason: 'Override reason',
+        role: 'ADMIN',
+        staffId: 'staff1',
+        staffName: 'Sarah',
+      });
+
+      const updateCall = prisma.booking.update.mock.calls[0][0];
+      const customFields = (updateCall.data as any).customFields;
+      expect(customFields.overrideLog).toHaveLength(1);
+      expect(customFields.overrideLog[0].type).toBe('DEPOSIT_OVERRIDE');
+    });
   });
 
   describe('checkPolicyAllowed - adminCanOverride', () => {
@@ -1057,6 +1838,23 @@ describe('BookingService', () => {
       prisma.booking.findFirst.mockResolvedValue({ startTime: soon } as any);
 
       const result = await bookingService.checkPolicyAllowed('biz1', 'b1', 'cancel');
+
+      expect(result.allowed).toBe(false);
+      expect(result.adminCanOverride).toBe(true);
+    });
+
+    it('returns adminCanOverride:true when booking is within reschedule window', async () => {
+      mockBusinessService.getPolicySettings.mockResolvedValue({
+        policyEnabled: true,
+        cancellationWindowHours: 24,
+        rescheduleWindowHours: 48,
+        cancellationPolicyText: '',
+        reschedulePolicyText: 'No reschedules within 48h',
+      });
+      const soon = new Date(Date.now() + 36 * 3600000);
+      prisma.booking.findFirst.mockResolvedValue({ startTime: soon } as any);
+
+      const result = await bookingService.checkPolicyAllowed('biz1', 'b1', 'reschedule');
 
       expect(result.allowed).toBe(false);
       expect(result.adminCanOverride).toBe(true);
@@ -1091,6 +1889,49 @@ describe('BookingService', () => {
           where: expect.objectContaining({
             staffId: 'staff1',
           }),
+        }),
+      );
+    });
+
+    it('does not include staffId in where when not provided', async () => {
+      prisma.booking.findMany.mockResolvedValue([]);
+
+      await bookingService.getCalendar('biz1', '2026-03-01', '2026-03-07');
+
+      const calledWith = prisma.booking.findMany.mock.calls[0]?.[0] as any;
+      expect(calledWith?.where).not.toHaveProperty('staffId');
+    });
+
+    it('returns bookings ordered by startTime ascending', async () => {
+      const bookings = [
+        { id: 'b1', startTime: new Date('2026-03-01T10:00:00Z') },
+        { id: 'b2', startTime: new Date('2026-03-01T14:00:00Z') },
+      ];
+      prisma.booking.findMany.mockResolvedValue(bookings as any);
+
+      const result = await bookingService.getCalendar('biz1', '2026-03-01', '2026-03-07');
+
+      expect(result).toEqual(bookings);
+      expect(prisma.booking.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: { startTime: 'asc' },
+        }),
+      );
+    });
+
+    it('includes customer, service, staff and recurringSeries relations', async () => {
+      prisma.booking.findMany.mockResolvedValue([]);
+
+      await bookingService.getCalendar('biz1', '2026-03-01', '2026-03-07');
+
+      expect(prisma.booking.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          include: {
+            customer: true,
+            service: true,
+            staff: true,
+            recurringSeries: { select: { id: true } },
+          },
         }),
       );
     });
@@ -1161,6 +2002,129 @@ describe('BookingService', () => {
 
       await expect(bookingService.sendRescheduleLink('biz1', 'b1', actor)).rejects.toThrow(BadRequestException);
     });
+
+    it('uses phone when email is not available', async () => {
+      const booking = {
+        id: 'b1',
+        businessId: 'biz1',
+        status: 'CONFIRMED',
+        customFields: {},
+        customer: { name: 'Jane', phone: '+1234567890', email: null },
+        service: { name: 'Botox' },
+        staff: null,
+      };
+      prisma.booking.findFirst.mockResolvedValue(booking as any);
+      prisma.booking.update.mockResolvedValue({ ...booking } as any);
+
+      await bookingService.sendRescheduleLink('biz1', 'b1', actor);
+
+      expect(mockTokenService.createToken).toHaveBeenCalledWith(
+        'RESCHEDULE_LINK',
+        '+1234567890',
+        'biz1',
+        undefined,
+        48,
+        'b1',
+      );
+    });
+
+    it('works for PENDING_DEPOSIT status', async () => {
+      const booking = {
+        id: 'b1',
+        businessId: 'biz1',
+        status: 'PENDING_DEPOSIT',
+        customFields: {},
+        customer: { name: 'Jane', phone: '+1234567890', email: 'jane@test.com' },
+        service: { name: 'Botox' },
+        staff: null,
+      };
+      prisma.booking.findFirst.mockResolvedValue(booking as any);
+      prisma.booking.update.mockResolvedValue({ ...booking } as any);
+
+      await bookingService.sendRescheduleLink('biz1', 'b1', actor);
+
+      expect(mockTokenService.createToken).toHaveBeenCalled();
+      expect(mockNotificationService.sendRescheduleLink).toHaveBeenCalled();
+    });
+
+    it('appends to existing selfServeLog', async () => {
+      const existingLog = [{ type: 'CANCEL_LINK_SENT', sentAt: '2026-01-01T00:00:00Z', sentBy: 'Admin', staffId: 'staff2' }];
+      const booking = {
+        id: 'b1',
+        businessId: 'biz1',
+        status: 'CONFIRMED',
+        customFields: { selfServeLog: existingLog },
+        customer: { name: 'Jane', phone: '+1234567890', email: 'jane@test.com' },
+        service: { name: 'Botox' },
+        staff: null,
+      };
+      prisma.booking.findFirst.mockResolvedValue(booking as any);
+      prisma.booking.update.mockResolvedValue({ ...booking } as any);
+
+      await bookingService.sendRescheduleLink('biz1', 'b1', actor);
+
+      expect(prisma.booking.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            customFields: expect.objectContaining({
+              selfServeLog: [
+                expect.objectContaining({ type: 'CANCEL_LINK_SENT' }),
+                expect.objectContaining({ type: 'RESCHEDULE_LINK_SENT', sentBy: 'Sarah', staffId: 'staff1' }),
+              ],
+            }),
+          }),
+        }),
+      );
+    });
+
+    it('uses WEB_URL from config to build reschedule link', async () => {
+      const booking = {
+        id: 'b1',
+        businessId: 'biz1',
+        status: 'CONFIRMED',
+        customFields: {},
+        customer: { name: 'Jane', phone: '+1234567890', email: 'jane@test.com' },
+        service: { name: 'Botox' },
+        staff: null,
+      };
+      prisma.booking.findFirst.mockResolvedValue(booking as any);
+      prisma.booking.update.mockResolvedValue({ ...booking } as any);
+
+      await bookingService.sendRescheduleLink('biz1', 'b1', actor);
+
+      expect(mockNotificationService.sendRescheduleLink).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.stringContaining('http://localhost:3000/manage/reschedule/'),
+      );
+    });
+
+    it('handles null customFields when appending to selfServeLog', async () => {
+      const booking = {
+        id: 'b1',
+        businessId: 'biz1',
+        status: 'CONFIRMED',
+        customFields: null,
+        customer: { name: 'Jane', phone: '+1234567890', email: 'jane@test.com' },
+        service: { name: 'Botox' },
+        staff: null,
+      };
+      prisma.booking.findFirst.mockResolvedValue(booking as any);
+      prisma.booking.update.mockResolvedValue({ ...booking } as any);
+
+      await bookingService.sendRescheduleLink('biz1', 'b1', actor);
+
+      expect(prisma.booking.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            customFields: expect.objectContaining({
+              selfServeLog: [
+                expect.objectContaining({ type: 'RESCHEDULE_LINK_SENT' }),
+              ],
+            }),
+          }),
+        }),
+      );
+    });
   });
 
   describe('sendCancelLink', () => {
@@ -1207,6 +2171,257 @@ describe('BookingService', () => {
             }),
           }),
         }),
+      );
+    });
+
+    it('throws NotFoundException if booking not found', async () => {
+      prisma.booking.findFirst.mockResolvedValue(null);
+
+      await expect(bookingService.sendCancelLink('biz1', 'b1', actor)).rejects.toThrow(NotFoundException);
+    });
+
+    it('throws BadRequestException if booking has wrong status', async () => {
+      prisma.booking.findFirst.mockResolvedValue({
+        id: 'b1',
+        status: 'COMPLETED',
+        customFields: {},
+        customer: {},
+        service: {},
+        staff: null,
+      } as any);
+
+      await expect(bookingService.sendCancelLink('biz1', 'b1', actor)).rejects.toThrow(BadRequestException);
+    });
+
+    it('throws BadRequestException if booking is CANCELLED', async () => {
+      prisma.booking.findFirst.mockResolvedValue({
+        id: 'b1',
+        status: 'CANCELLED',
+        customFields: {},
+        customer: {},
+        service: {},
+        staff: null,
+      } as any);
+
+      await expect(bookingService.sendCancelLink('biz1', 'b1', actor)).rejects.toThrow(BadRequestException);
+    });
+
+    it('uses phone when email is not available', async () => {
+      const booking = {
+        id: 'b1',
+        businessId: 'biz1',
+        status: 'CONFIRMED',
+        customFields: {},
+        customer: { name: 'Jane', phone: '+1234567890', email: null },
+        service: { name: 'Botox' },
+        staff: null,
+      };
+      prisma.booking.findFirst.mockResolvedValue(booking as any);
+      prisma.booking.update.mockResolvedValue({ ...booking } as any);
+
+      await bookingService.sendCancelLink('biz1', 'b1', actor);
+
+      expect(mockTokenService.createToken).toHaveBeenCalledWith(
+        'CANCEL_LINK',
+        '+1234567890',
+        'biz1',
+        undefined,
+        48,
+        'b1',
+      );
+    });
+
+    it('works for PENDING_DEPOSIT status', async () => {
+      const booking = {
+        id: 'b1',
+        businessId: 'biz1',
+        status: 'PENDING_DEPOSIT',
+        customFields: {},
+        customer: { name: 'Jane', phone: '+1234567890', email: 'jane@test.com' },
+        service: { name: 'Botox' },
+        staff: null,
+      };
+      prisma.booking.findFirst.mockResolvedValue(booking as any);
+      prisma.booking.update.mockResolvedValue({ ...booking } as any);
+
+      await bookingService.sendCancelLink('biz1', 'b1', actor);
+
+      expect(mockTokenService.createToken).toHaveBeenCalled();
+      expect(mockNotificationService.sendCancelLink).toHaveBeenCalled();
+    });
+
+    it('appends to existing selfServeLog', async () => {
+      const existingLog = [{ type: 'RESCHEDULE_LINK_SENT', sentAt: '2026-01-01T00:00:00Z', sentBy: 'Admin', staffId: 'staff2' }];
+      const booking = {
+        id: 'b1',
+        businessId: 'biz1',
+        status: 'CONFIRMED',
+        customFields: { selfServeLog: existingLog },
+        customer: { name: 'Jane', phone: '+1234567890', email: 'jane@test.com' },
+        service: { name: 'Botox' },
+        staff: null,
+      };
+      prisma.booking.findFirst.mockResolvedValue(booking as any);
+      prisma.booking.update.mockResolvedValue({ ...booking } as any);
+
+      await bookingService.sendCancelLink('biz1', 'b1', actor);
+
+      expect(prisma.booking.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            customFields: expect.objectContaining({
+              selfServeLog: [
+                expect.objectContaining({ type: 'RESCHEDULE_LINK_SENT' }),
+                expect.objectContaining({ type: 'CANCEL_LINK_SENT', sentBy: 'Sarah', staffId: 'staff1' }),
+              ],
+            }),
+          }),
+        }),
+      );
+    });
+
+    it('uses WEB_URL from config to build cancel link', async () => {
+      const booking = {
+        id: 'b1',
+        businessId: 'biz1',
+        status: 'CONFIRMED',
+        customFields: {},
+        customer: { name: 'Jane', phone: '+1234567890', email: 'jane@test.com' },
+        service: { name: 'Botox' },
+        staff: null,
+      };
+      prisma.booking.findFirst.mockResolvedValue(booking as any);
+      prisma.booking.update.mockResolvedValue({ ...booking } as any);
+
+      await bookingService.sendCancelLink('biz1', 'b1', actor);
+
+      expect(mockNotificationService.sendCancelLink).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.stringContaining('http://localhost:3000/manage/cancel/'),
+      );
+    });
+
+    it('handles null customFields when appending to selfServeLog', async () => {
+      const booking = {
+        id: 'b1',
+        businessId: 'biz1',
+        status: 'CONFIRMED',
+        customFields: null,
+        customer: { name: 'Jane', phone: '+1234567890', email: 'jane@test.com' },
+        service: { name: 'Botox' },
+        staff: null,
+      };
+      prisma.booking.findFirst.mockResolvedValue(booking as any);
+      prisma.booking.update.mockResolvedValue({ ...booking } as any);
+
+      await bookingService.sendCancelLink('biz1', 'b1', actor);
+
+      expect(prisma.booking.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            customFields: expect.objectContaining({
+              selfServeLog: [
+                expect.objectContaining({ type: 'CANCEL_LINK_SENT' }),
+              ],
+            }),
+          }),
+        }),
+      );
+    });
+  });
+
+  describe('sendRescheduleLink - WEB_URL fallback', () => {
+    let serviceWithNoWebUrl: BookingService;
+
+    beforeEach(async () => {
+      const noWebUrlConfig = {
+        get: jest.fn((key: string) => {
+          if (key === 'WEB_URL') return undefined;
+          return mockConfigService.get(key);
+        }),
+      };
+
+      const module = await Test.createTestingModule({
+        providers: [
+          BookingService,
+          { provide: PrismaService, useValue: prisma },
+          { provide: NotificationService, useValue: mockNotificationService },
+          { provide: BusinessService, useValue: mockBusinessService },
+          { provide: CalendarSyncService, useValue: mockCalendarSyncService },
+          { provide: TokenService, useValue: mockTokenService },
+          { provide: ConfigService, useValue: noWebUrlConfig },
+        ],
+      }).compile();
+
+      serviceWithNoWebUrl = module.get(BookingService);
+    });
+
+    it('falls back to http://localhost:3000 when WEB_URL is not configured', async () => {
+      const booking = {
+        id: 'b1',
+        businessId: 'biz1',
+        status: 'CONFIRMED',
+        customFields: {},
+        customer: { name: 'Jane', phone: '+1234567890', email: 'jane@test.com' },
+        service: { name: 'Botox' },
+        staff: null,
+      };
+      prisma.booking.findFirst.mockResolvedValue(booking as any);
+      prisma.booking.update.mockResolvedValue({ ...booking } as any);
+
+      await serviceWithNoWebUrl.sendRescheduleLink('biz1', 'b1', { staffId: 'staff1', staffName: 'Sarah' });
+
+      expect(mockNotificationService.sendRescheduleLink).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.stringContaining('http://localhost:3000/manage/reschedule/'),
+      );
+    });
+  });
+
+  describe('sendCancelLink - WEB_URL fallback', () => {
+    let serviceWithNoWebUrl: BookingService;
+
+    beforeEach(async () => {
+      const noWebUrlConfig = {
+        get: jest.fn((key: string) => {
+          if (key === 'WEB_URL') return undefined;
+          return mockConfigService.get(key);
+        }),
+      };
+
+      const module = await Test.createTestingModule({
+        providers: [
+          BookingService,
+          { provide: PrismaService, useValue: prisma },
+          { provide: NotificationService, useValue: mockNotificationService },
+          { provide: BusinessService, useValue: mockBusinessService },
+          { provide: CalendarSyncService, useValue: mockCalendarSyncService },
+          { provide: TokenService, useValue: mockTokenService },
+          { provide: ConfigService, useValue: noWebUrlConfig },
+        ],
+      }).compile();
+
+      serviceWithNoWebUrl = module.get(BookingService);
+    });
+
+    it('falls back to http://localhost:3000 when WEB_URL is not configured', async () => {
+      const booking = {
+        id: 'b1',
+        businessId: 'biz1',
+        status: 'CONFIRMED',
+        customFields: {},
+        customer: { name: 'Jane', phone: '+1234567890', email: 'jane@test.com' },
+        service: { name: 'Botox' },
+        staff: null,
+      };
+      prisma.booking.findFirst.mockResolvedValue(booking as any);
+      prisma.booking.update.mockResolvedValue({ ...booking } as any);
+
+      await serviceWithNoWebUrl.sendCancelLink('biz1', 'b1', { staffId: 'staff1', staffName: 'Sarah' });
+
+      expect(mockNotificationService.sendCancelLink).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.stringContaining('http://localhost:3000/manage/cancel/'),
       );
     });
   });
@@ -1260,6 +2475,69 @@ describe('BookingService', () => {
       );
 
       expect(result.updated).toBe(1);
+    });
+
+    it('throws if more than 50 IDs provided', async () => {
+      const ids = Array.from({ length: 51 }, (_, i) => `b${i}`);
+
+      await expect(
+        bookingService.bulkUpdate('biz1', ids, 'status', { status: 'CONFIRMED' }, 'ADMIN'),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('throws if status action has no status in payload', async () => {
+      await expect(
+        bookingService.bulkUpdate('biz1', ['b1'], 'status', {}, 'ADMIN'),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('throws if assign action has no staffId in payload', async () => {
+      await expect(
+        bookingService.bulkUpdate('biz1', ['b1'], 'assign', {}, 'ADMIN'),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('throws on unknown bulk action', async () => {
+      await expect(
+        bookingService.bulkUpdate('biz1', ['b1'], 'delete' as any, {}, 'ADMIN'),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('allows exactly 50 IDs', async () => {
+      const ids = Array.from({ length: 50 }, (_, i) => `b${i}`);
+      prisma.booking.updateMany.mockResolvedValue({ count: 50 } as any);
+
+      const result = await bookingService.bulkUpdate(
+        'biz1', ids, 'status', { status: 'CONFIRMED' }, 'ADMIN',
+      );
+
+      expect(result.updated).toBe(50);
+    });
+
+    it('allows non-admin to bulk-update non-cancel status', async () => {
+      prisma.booking.updateMany.mockResolvedValue({ count: 2 } as any);
+
+      const result = await bookingService.bulkUpdate(
+        'biz1', ['b1', 'b2'], 'status', { status: 'CONFIRMED' }, 'AGENT',
+      );
+
+      expect(result.updated).toBe(2);
+    });
+
+    it('allows non-admin to bulk-assign staff', async () => {
+      prisma.booking.updateMany.mockResolvedValue({ count: 1 } as any);
+
+      const result = await bookingService.bulkUpdate(
+        'biz1', ['b1'], 'assign', { staffId: 'staff1' }, 'AGENT',
+      );
+
+      expect(result.updated).toBe(1);
+    });
+
+    it('throws for null ids', async () => {
+      await expect(
+        bookingService.bulkUpdate('biz1', null as any, 'status', { status: 'CONFIRMED' }, 'ADMIN'),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 });
