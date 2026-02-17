@@ -1,6 +1,7 @@
 import { render, screen, waitFor, act, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import BookingPortalPage, { validateName, validatePhone, validateEmail } from './page';
+import BookingPortalPage from './page';
+import { validateName, validatePhone, validateEmail } from './validators';
 
 // Mock next/navigation
 jest.mock('next/navigation', () => ({
