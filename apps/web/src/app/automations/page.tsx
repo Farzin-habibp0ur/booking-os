@@ -6,6 +6,7 @@ import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { Zap, Plus, ToggleLeft, ToggleRight, Trash2, Play } from 'lucide-react';
 import { TableRowSkeleton, EmptyState } from '@/components/skeleton';
+import TooltipNudge from '@/components/tooltip-nudge';
 
 type Tab = 'playbooks' | 'rules' | 'logs';
 
@@ -59,6 +60,11 @@ export default function AutomationsPage() {
 
   return (
     <div className="p-6">
+      <TooltipNudge
+        id="automations-intro"
+        title="Automate your workflow"
+        description="Enable pre-built playbooks or create custom rules to automatically send messages, tag customers, or assign staff based on booking events."
+      />
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
         <h1 className="text-2xl font-serif font-semibold text-slate-900">Automations</h1>
         {tab === 'rules' && (

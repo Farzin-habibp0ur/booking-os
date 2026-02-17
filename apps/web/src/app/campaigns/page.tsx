@@ -6,6 +6,7 @@ import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { Megaphone, Plus } from 'lucide-react';
 import { TableRowSkeleton, EmptyState } from '@/components/skeleton';
+import TooltipNudge from '@/components/tooltip-nudge';
 
 const statusColors: Record<string, string> = {
   DRAFT: 'bg-slate-100 text-slate-600',
@@ -30,6 +31,11 @@ export default function CampaignsPage() {
 
   return (
     <div className="p-6">
+      <TooltipNudge
+        id="campaigns-intro"
+        title="Reach customers at scale"
+        description="Create targeted campaigns to re-engage inactive customers, promote offers, or send seasonal messages. Filter by tags, booking history, and more."
+      />
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
         <h1 className="text-2xl font-serif font-semibold text-slate-900">Campaigns</h1>
         <button

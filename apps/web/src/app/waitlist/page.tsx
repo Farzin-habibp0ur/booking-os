@@ -5,6 +5,7 @@ import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { TableRowSkeleton, EmptyState } from '@/components/skeleton';
 import { ClipboardList, X, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
+import TooltipNudge from '@/components/tooltip-nudge';
 
 const statusColors: Record<string, string> = {
   ACTIVE: 'bg-sage-100 text-sage-700',
@@ -70,6 +71,11 @@ export default function WaitlistPage() {
 
   return (
     <div className="p-6">
+      <TooltipNudge
+        id="waitlist-intro"
+        title="How the waitlist works"
+        description="When a customer can't find availability, they can join the waitlist. When a slot opens up (e.g. cancellation), matching customers are automatically notified."
+      />
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
         <h1 className="text-2xl font-serif font-semibold text-slate-900">Waitlist</h1>
         <div className="flex gap-2 w-full sm:w-auto">
