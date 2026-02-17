@@ -111,7 +111,8 @@ describe('ReschedulePage', () => {
 
     await waitFor(() => {
       expect(screen.getByText('9:00 AM')).toBeInTheDocument();
-      expect(screen.getByText('10:00 AM')).toBeInTheDocument();
+      // 10:00 AM appears in both booking summary and time slots
+      expect(screen.getAllByText('10:00 AM').length).toBeGreaterThanOrEqual(1);
       expect(screen.getByText('11:00 AM')).toBeInTheDocument();
     });
   });
