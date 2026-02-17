@@ -169,7 +169,7 @@ async function main() {
   // ── 6. Upsert customers (handles partial previous runs) ───────────────────
   async function ensureCustomer(data: {
     name: string; phone: string; email?: string; tags: string[];
-    customFields: Record<string, unknown>;
+    customFields: Record<string, string | number | boolean>;
   }) {
     return prisma.customer.upsert({
       where: { businessId_phone: { businessId: bizId, phone: data.phone } },
