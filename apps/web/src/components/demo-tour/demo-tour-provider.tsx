@@ -102,7 +102,7 @@ export function DemoTourProvider({ children }: { children: ReactNode }) {
       setTourState('running');
       saveState({ stepIndex: 0, state: 'running' });
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []); // Run once on mount only
 
   // Handle cross-page navigation: when pathname changes to match navigatingTo
   useEffect(() => {
