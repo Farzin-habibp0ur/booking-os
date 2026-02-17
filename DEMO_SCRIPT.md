@@ -471,14 +471,124 @@ Roberto Silva,+14155551005,roberto@example.com,regular;returning
 
 ---
 
-## PART 16: Wrap Up (30 sec)
+## PART 16: Global Search — Cmd+K (1 min)
+
+### Scene: Command Palette
+1. Press **Cmd+K** (or click the search icon in the sidebar)
+2. The command palette opens with a search input and recent searches
+3. Type **"Emma"** — results appear grouped by type: Customers, Bookings, Conversations
+4. Use **arrow keys** to navigate results, **Enter** to select
+5. Click on Emma Wilson's customer result → navigates to her detail page
 
 **Talk through:**
-- "That's Booking OS — a complete WhatsApp-first operating system for aesthetic clinics"
-- "Phase 1 adds the full clinic workflow: intake, deposits, consults, aftercare, self-serve, and ROI tracking"
+- "Staff can search across the entire system instantly with Cmd+K"
+- "Results are grouped by type — customers, bookings, services, conversations"
+- "Recent searches are remembered for quick access"
+
+---
+
+## PART 17: Waitlist & Slot Fill (2 min)
+
+### Scene: Waitlist Management
+1. Click **Waitlist** in sidebar (Clock icon)
+2. Show the waitlist page with any existing entries
+3. Show the backfill metrics card: entries, offers sent, claimed, fill rate
+
+**Talk through:**
+- "When all slots are full, customers can join the waitlist from the public booking page"
+- "When a booking is cancelled, the system automatically offers the slot to waitlisted customers"
+- "Customers claim with a single tap via a secure link — no back-and-forth messaging needed"
+
+### Scene: Waitlist Settings
+1. Go to **Settings > Waitlist Settings**
+2. Show configurable options: max offers per cancellation, offer expiry time, quiet hours
+3. "Quiet hours ensure customers aren't notified at 2am about a slot opening"
+
+---
+
+## PART 18: Campaigns (2 min)
+
+### Scene: Create a Campaign
+1. Click **Campaigns** in sidebar (Megaphone icon)
+2. Click **"+ New Campaign"**
+3. **Step 1 — Audience:** Select segment filters (e.g., tag: "Regular", last booking > 30 days ago)
+4. Show the audience preview: count + sample customer names
+5. **Step 2 — Template:** Select a message template
+6. **Step 3 — Schedule:** Choose "Send now" with throttle rate
+7. **Step 4 — Review:** Show summary of all selections
+
+**Talk through:**
+- "Campaigns let businesses re-engage customers with targeted outreach"
+- "Segment by tags, last visit date, service type, or customers with no upcoming booking"
+- "Safe sending: throttled delivery, opt-out compliance, and campaign attribution tracks bookings driven by each campaign"
+
+---
+
+## PART 19: Automations (2 min)
+
+### Scene: Built-in Playbooks
+1. Click **Automations** in sidebar (Zap icon)
+2. Show the 3 built-in playbooks with toggle switches:
+   - **No-Show Prevention** — deposit reminder + confirmation before appointment
+   - **Consult Conversion** — follow-up after consult if no treatment booked
+   - **Re-engagement** — message dormant customers after 30+ days
+3. Toggle one on — show "what will happen" summary
+
+**Talk through:**
+- "These are one-click playbooks that automate the most impactful workflows"
+- "Each one explains exactly what will happen before you turn it on"
+
+### Scene: Custom Rules
+1. Click **"+ New Rule"** to open the rule builder wizard
+2. Walk through: Trigger (e.g., BOOKING_CANCELLED) → Filters → Actions (SEND_TEMPLATE) → Review
+3. Show safety settings: quiet hours, frequency caps
+
+### Scene: Activity Log
+1. Scroll to the **Activity Log** section
+2. Show execution history: rule name, customer, outcome (SENT/SKIPPED/FAILED)
+3. "Full audit trail — you can see exactly what ran, when, and why"
+
+---
+
+## PART 20: Bulk Actions (1 min)
+
+### Scene: Bulk Booking Actions
+1. Click **Bookings** in sidebar
+2. Check multiple booking checkboxes
+3. Show the **Bulk Action Bar** at the bottom: "X selected" with action buttons
+4. Demonstrate: Change status for multiple bookings at once
+
+### Scene: Bulk Customer Actions
+1. Click **Customers** in sidebar
+2. Check multiple customer checkboxes
+3. Show bulk tag/untag actions
+4. "Multi-select saves hours of repetitive work"
+
+---
+
+## PART 21: Dark Mode (30 sec)
+
+### Scene: Toggle Dark Mode
+1. Click the **Sun/Moon icon** in the sidebar
+2. Watch the entire UI switch to dark mode
+3. Show that all pages, charts, and components adapt
+
+**Talk through:**
+- "Full dark mode support — system preference detection or manual toggle"
+- "Every page, every chart, every component is covered"
+
+---
+
+## PART 22: Wrap Up (30 sec)
+
+**Talk through:**
+- "That's Booking OS — a complete WhatsApp-first operating system for service businesses"
+- "Phase 1 delivers the full aesthetic clinic workflow: intake, deposits, consults, aftercare, self-serve, and ROI tracking"
+- "Phase 2 adds the growth engine: waitlists, campaigns, automations, bulk actions, Cmd+K search, dark mode"
 - "AI handles the heavy lifting: responding to customers, booking appointments, handling cancellations"
 - "Staff stay in control with draft review, selective auto-reply, and seamless human handoff"
-- "From setup wizard to ROI dashboard — everything a pilot clinic needs to prove value in 90 days"
+- "1,534 tests, 83%+ API coverage, 93%+ web coverage — production-grade quality"
+- "From setup wizard to ROI dashboard — everything a clinic needs to prove value and scale"
 
 ---
 

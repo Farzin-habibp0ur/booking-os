@@ -102,28 +102,34 @@ All endpoints are prefixed with `/api/v1`. Interactive API docs are available at
 
 | Module | Route | Description |
 |--------|-------|-------------|
-| Auth | `/auth` | Login, registration, token management |
-| Bookings | `/bookings` | CRUD for appointments, status updates |
+| Auth | `/auth` | Login, registration, token management, email verification |
+| Bookings | `/bookings` | CRUD for appointments, status updates, bulk actions, deposit/reschedule/cancel links |
 | Recurring | `/bookings/recurring` | Recurring appointment series |
-| Customers | `/customers` | Customer profiles, import/export |
-| Services | `/services` | Service catalog with categories |
-| Staff | `/staff` | Staff profiles, schedules, roles |
-| Conversations | `/conversations` | Customer messaging threads |
+| Customers | `/customers` | Customer profiles, import/export, bulk tag/untag |
+| Services | `/services` | Service catalog with categories and service kinds |
+| Staff | `/staff` | Staff profiles, schedules, roles, invitations |
+| Conversations | `/conversations` | Customer messaging threads, notes |
 | Messages | `/conversations/:id/messages` | Individual messages within threads |
-| Dashboard | `/dashboard` | Aggregated stats and metrics |
-| Reports | `/reports` | Revenue, bookings, and staff reports |
-| AI | `/ai` | Smart scheduling, AI insights |
-| Billing | `/billing` | Stripe subscriptions and webhooks |
+| Dashboard | `/dashboard` | Aggregated stats, AI usage, milestone nudges |
+| Reports | `/reports` | Revenue, bookings, staff, peak hours, consult conversion |
+| AI | `/ai` | Smart scheduling, AI insights, auto-reply, customer chat |
+| Billing | `/billing` | Stripe subscriptions, webhooks, deposit collection |
 | Templates | `/templates` | Message and notification templates |
 | Translations | `/translations` | Multi-language support |
 | Availability | `/availability` | Staff availability and time slots |
-| Business | `/business` | Business settings, profile, pack install, test booking |
-| ROI | `/roi` | ROI dashboard, weekly review, email review |
+| Business | `/business` | Business settings, notification/policy/waitlist settings, pack install |
+| ROI | `/roi` | ROI dashboard, baseline, weekly review, email review |
 | Vertical Packs | `/vertical-packs` | Industry-specific configurations |
+| Automation | `/automations` | Playbooks, custom rules, activity log |
+| Campaign | `/campaigns` | Campaign CRUD, audience preview, send engine |
+| Offer | `/offers` | Promotions and offers management |
+| Waitlist | `/waitlist` | Waitlist entries, offers, claims |
+| Search | `/search` | Global search across entities |
 | Self-Serve | `/manage` | Customer reschedule/cancel via token links |
-| Webhook | `/webhook` | Incoming messaging webhooks |
+| Webhook | `/webhook` | Incoming messaging webhooks (WhatsApp, generic HMAC) |
+| Email | `/email` | Email notification endpoints |
 | Health | `/health` | API health check |
-| Public Booking | `/public` | Customer-facing booking portal |
+| Public Booking | `/public` | Customer-facing booking portal with waitlist join |
 | Calendar Sync | `/calendar-sync` | Google Calendar integration |
 | iCal Feed | `/ical` | iCal feed for external calendars |
 

@@ -1,26 +1,33 @@
 # Booking OS — Complete Product & UI Documentation
 
 > **Purpose:** This document provides a comprehensive reference of the entire Booking OS application — its features, pages, components, data models, design system, and user flows. Use it as context for generating high-fidelity UI designs and exploring UX improvements.
+>
+> **Last updated:** February 2026
 
 ---
 
 ## 1. Product Overview
 
-**Booking OS** is a multi-tenant SaaS platform for service-based businesses (aesthetic clinics, salons, tutoring centers) to manage bookings, customer conversations, and operations — with AI-powered automation.
+**Booking OS** is a multi-tenant SaaS platform for service-based businesses (aesthetic clinics, salons, spas, tutoring centers) to manage bookings, customer conversations, and operations — with AI-powered automation.
 
 ### Core Capabilities
-- **Appointment scheduling** with calendar views, conflict detection, and reminders
-- **WhatsApp messaging inbox** with real-time updates and AI auto-replies
-- **AI booking assistant** that guides customers through booking via chat
-- **Customer management** with profiles, tags, import/export, and AI chat
-- **Staff management** with roles, working hours, time off, and invitations
-- **Service catalog** with categories, pricing, durations, and deposit requirements
-- **Analytics & reports** with charts for bookings, revenue, staff performance
-- **Multi-language support** (English, Spanish) with customizable translations
-- **Billing integration** via Stripe (basic/pro plans)
+- **Appointment scheduling** with calendar views, conflict detection, recurring bookings, and automated reminders
+- **WhatsApp messaging inbox** with real-time updates, AI auto-replies, and conversation management
+- **AI booking assistant** that guides customers through booking/cancellation/rescheduling via chat
+- **Customer management** with profiles, tags, import/export, AI chat, and bulk actions
+- **Staff management** with roles, working hours, time off, and email invitations
+- **Service catalog** with categories, pricing, durations, buffer times, deposit requirements, and service kinds
+- **Analytics & reports** with charts for bookings, revenue, staff performance, peak hours, consult conversion
+- **Multi-language support** (English, Spanish) with customizable per-business translation overrides
+- **Billing integration** via Stripe (basic/pro plans), deposit collection
+- **Calendar sync** — Google Calendar OAuth integration, iCal feed generation
 - **Vertical packs** — industry-specific configurations (aesthetic, salon, tutoring, general)
+- **Public booking portal** — Customer-facing booking page at `/book/{slug}` with waitlist join
+- **Setup wizard** — 10-step onboarding flow with feature readiness checklist and test booking
+- **Dark mode** — System preference detection, manual toggle, full UI coverage
+- **Global search** — Cmd+K command palette across customers, bookings, services, conversations
 
-### Phase 1: Outcome Machine for Aesthetics (Complete)
+### Phase 1: Outcome Machine for Aesthetics (Complete — 27/27 tasks)
 - **Consult vs Treatment types** with service kind badges (CONSULT/TREATMENT/OTHER)
 - **Aesthetics intake fields** — 7-field Clinic Intake card in inbox sidebar with amber dot indicators
 - **Automated follow-ups** — Consult → treatment follow-up, aftercare instructions, 24h check-in
@@ -33,89 +40,105 @@
 - **Notification timeline** — All actions logged and visible in booking detail
 - **Role-based permissions** — Money/policy actions restricted with explanations
 
+### Phase 2: Automation & Growth Engine (Complete — 13/13 batches)
+- **Waitlist system** — Join waitlist, auto-offers on cancellation, 1-tap claim via token, backfill metrics
+- **Bulk actions** — Multi-select on bookings (status change, staff assign) and customers (tag/untag)
+- **Global search (Cmd+K)** — Command palette with keyboard navigation, grouped results, recent searches
+- **Campaign system** — Audience segmentation, 4-step builder wizard, throttled dispatch, send tracking, attribution
+- **Offers & referrals** — Offers CRUD, referral source tracking on public bookings
+- **Automation suite** — 3 built-in playbooks, custom rule builder, 6 triggers, activity log with quiet hours and frequency caps
+- **Contextual tooltips + empty states** — Onboarding tips, enhanced empty states with CTAs
+- **Dark mode** — System/Light/Dark picker, full UI coverage with dark: variants
+- **Visual polish** — CSS keyframe animations, chart theme with brand palette, prefers-reduced-motion
+
 ### Tech Stack
 | Layer | Technology |
 |-------|-----------|
 | Frontend | Next.js 15, React 19, TypeScript |
-| Styling | Tailwind CSS (utility-first, minimal custom config) |
+| Styling | Tailwind CSS 4 (utility-first) |
 | Icons | lucide-react v0.468 |
 | Charts | Recharts v2.15 |
 | Real-time | Socket.io |
-| Backend | NestJS, TypeScript |
-| Database | PostgreSQL + Prisma ORM |
+| Backend | NestJS 11, TypeScript |
+| Database | PostgreSQL 16 + Prisma 6 ORM |
 | AI | Claude API (Anthropic) |
 | Payments | Stripe |
+| Email | Resend |
+| Messaging | WhatsApp Business Cloud API |
 | Monitoring | Sentry |
 
 ### Default Seed Data (Demo Account)
-- **Business:** Glow Aesthetic Clinic
+- **Business:** Glow Aesthetic Clinic (slug: glow-aesthetic)
 - **Login:** sarah@glowclinic.com / password123
 - **Staff:** Dr. Sarah Chen (Admin), Maria Garcia (Agent), Dr. Emily Park (Service Provider)
-- **Services:** Botox ($350/30min), Dermal Filler ($500/45min), Chemical Peel ($200/60min), Microneedling ($275/45min), Consultation (Free/20min)
-- **Customers:** Emma Wilson (VIP), James Thompson (New, latex allergy), Sofia Rodriguez (Regular)
+- **Services:** Botox ($350/30min, deposit $100), Dermal Filler ($500/45min), Chemical Peel ($200/60min), Microneedling ($275/45min), Consultation (Free/20min)
+- **Customers:** Emma Wilson (VIP), James Thompson (New, latex allergy), Sofia Rodriguez (Regular), Liam Parker (deposit demo)
 
 ---
 
-## 2. Design System
+## 2. Design System — "Minimalist Premium"
+
+> The active design system is defined in `CLAUDE.md`. Think Apple Health meets Stripe — lots of whitespace, subtle shadows, highly legible typography, and deliberate use of color.
 
 ### 2.1 Color Palette
 
-**Brand Colors (Blue)**
+**Sage (primary actions, confirmations, success)**
 | Token | Hex | Usage |
 |-------|-----|-------|
-| brand-50 | #f0f7ff | Active nav background, light highlights |
-| brand-100 | #e0effe | Hover states, selected items |
-| brand-500 | #3b82f6 | Secondary buttons, links |
-| brand-600 | #2563eb | Primary buttons, CTAs |
-| brand-700 | #1d4ed8 | Active nav text, button hover |
+| sage-50 | #F4F7F5 | Confirmed/completed status bg, light highlights |
+| sage-100 | #E4EBE6 | Hover states, selected items |
+| sage-500 | #8AA694 | Secondary elements |
+| sage-600 | #71907C | Primary buttons, CTAs |
+| sage-900 | #3A4D41 | Dark text on sage bg |
 
-**Status Colors**
+**Lavender (AI features, highlights, pending states)**
+| Token | Hex | Usage |
+|-------|-----|-------|
+| lavender-50 | #F5F3FA | AI element bg, pending status bg |
+| lavender-100 | #EBE7F5 | AI borders, hover states |
+| lavender-500 | #9F8ECB | AI accents |
+| lavender-600 | #8A75BD | AI buttons |
+| lavender-900 | #4A3B69 | AI text, pending status text |
+
+**Status Badge Colors (muted, pastel tones)**
 | Status | Background | Text | Usage |
 |--------|-----------|------|-------|
-| PENDING | yellow-100 | yellow-800 | Awaiting confirmation |
-| CONFIRMED | green-100 | green-800 | Confirmed bookings |
-| IN_PROGRESS | blue-100 | blue-800 | Currently in session |
-| COMPLETED | gray-100 | gray-800 | Finished |
-| CANCELLED | red-100 | red-800 | Cancelled bookings |
-| NO_SHOW | orange-100 | orange-800 | Customer didn't show |
+| CONFIRMED / COMPLETED | sage-50 | sage-900 | Confirmed bookings, completed |
+| PENDING / PENDING_DEPOSIT | lavender-50 | lavender-900 | Awaiting action |
+| IN_PROGRESS | amber-50 | amber-700 | Currently in session |
+| CANCELLED / NO_SHOW | red-50 | red-700 | Cancelled or no-show |
 
 **Conversation Status Colors**
 | Status | Color |
 |--------|-------|
-| OPEN | green |
-| WAITING | yellow |
-| SNOOZED | purple |
-| RESOLVED | gray |
-
-**Semantic Colors**
-| Purpose | Color |
-|---------|-------|
-| Success | green-600 |
-| Error/Danger | red-600 |
-| Warning | amber/orange |
-| Info | blue-600 |
-| AI/Sparkle | purple-500/600 |
+| OPEN | sage/green |
+| WAITING | amber |
+| SNOOZED | lavender/purple |
+| RESOLVED | slate/gray |
 
 **Surfaces**
 | Surface | Color |
 |---------|-------|
-| Page background | gray-50 |
+| Page background | #FCFCFD (warm off-white) |
 | Cards/Modals | white |
 | Modal overlay | black/30 |
-| Borders | gray-200 |
-| Sidebar | white + border-r |
+| Sidebar | white + shadow |
+| Dark mode bg | slate-900 |
 
 **Text**
 | Level | Color |
 |-------|-------|
-| Primary | gray-900 |
-| Secondary | gray-600 |
-| Tertiary/Muted | gray-400–500 |
-| Placeholder | gray-400 |
+| Primary | slate-800 |
+| Secondary | slate-500 |
+| Muted | slate-400 |
+| Dark mode primary | slate-100 |
+| Dark mode secondary | slate-400 |
 
 ### 2.2 Typography
-- **System default fonts** — no custom typefaces configured
-- Relies on Tailwind's default font stack (Inter-like system fonts)
+- **UI / Data font:** `Inter` (Google Fonts) — set as Tailwind's default `font-sans`
+- **Display / Header font:** `Playfair Display` (Google Fonts) — set as Tailwind's `font-serif`
+- Use `font-serif` for large metrics, page titles, and high-impact headers
+- Use `font-sans` (Inter) for body text, labels, buttons, and data
 - Text sizes: text-xs, text-sm, text-base, text-lg, text-xl, text-2xl used throughout
 
 ### 2.3 Component Library
@@ -124,51 +147,68 @@
 - Class merging via `clsx` + `tailwind-merge` (cn() utility)
 
 ### 2.4 Layout Patterns
-- **Sidebar navigation:** Fixed 224px (w-56) left sidebar, flex-1 main content
+- **Sidebar navigation:** Fixed left sidebar, flex-1 main content, Sun/Moon dark mode toggle
 - **Grid layouts:** Responsive grid-cols-1 → md:grid-cols-2 → lg:grid-cols-4
-- **Card pattern:** White background, rounded-lg, border border-gray-200, p-4/p-6
-- **Page headers:** Title (text-2xl font-bold) + optional subtitle + action buttons
+- **Card pattern:** White background, `rounded-2xl`, `shadow-soft` (0 12px 40px -12px rgba(0,0,0,0.05)), no borders
+- **Page headers:** Title (text-2xl font-bold font-serif) + optional subtitle + action buttons
 
 ### 2.5 Interactive Patterns
 
 **Buttons**
-- Primary: bg-blue-600 text-white hover:bg-blue-700 rounded-lg px-4 py-2
-- Secondary: border border-gray-300 text-gray-700 hover:bg-gray-50
-- Danger: bg-red-600 text-white hover:bg-red-700
-- AI/Purple: bg-purple-600 text-white hover:bg-purple-700
+- Primary: `bg-sage-600 hover:bg-sage-700 text-white rounded-xl` with subtle hover transitions
+- Dark: `bg-slate-900 hover:bg-slate-800 text-white rounded-xl`
+- Danger: `bg-red-600 text-white hover:bg-red-700 rounded-xl`
+- AI/Lavender: `bg-lavender-600 text-white hover:bg-lavender-700 rounded-xl`
 - Disabled: opacity-50 cursor-not-allowed
 
 **Form Inputs**
-- border rounded-md px-3 py-2 text-sm, focus:ring-2 focus:ring-blue-500
+- `bg-slate-50 border-transparent focus:bg-white focus:ring-2 focus:ring-sage-500 rounded-xl`
 - Controlled components with useState
 - Required fields marked with `*`
 - Error display: AlertCircle icon + red-50 bg + red-700 text
 
 **Badges/Pills**
-- Status: px-2 py-0.5 rounded-full text-xs font-medium
-- Tags: px-2 py-0.5 rounded bg-blue-100 text-blue-700 text-xs
+- Status: px-2 py-0.5 rounded-full text-xs font-medium (colors per status table above)
+- Tags: px-2 py-0.5 rounded text-xs
 - Role: ADMIN=lavender, SERVICE_PROVIDER=sage, AGENT=slate
 
 **Modals**
-- Right drawer: fixed right-0 top-0 h-full w-[480px] z-50, slide from right
-- Center modal: fixed inset centered, max-w-lg/xl, max-h-[80vh], z-50
+- Right drawer: fixed right-0 top-0 h-full w-[480px] z-50, slideInRight animation
+- Center modal: fixed inset centered, max-w-lg/xl, max-h-[80vh], z-50, scaleIn animation
 - Overlay: bg-black/30, click to dismiss
 - Confirmation dialog: nested absolute overlay within modal
+- Auth cards: `rounded-3xl`
 
 **Toast Notifications**
 - Fixed bottom-right, z-[100]
 - 3-second auto-dismiss
-- Types: success (green), error (red), info (blue)
+- Types: success (sage), error (red), info (lavender)
 - Icons: CheckCircle2, AlertCircle, Info
 - Slide-in animation from right
 
+**Animations (CSS keyframes)**
+- `slideUp` — modals entering from below
+- `fadeIn` — general fade entrance
+- `scaleIn` — center modals scaling in
+- `slideInRight` — drawer modals sliding from right
+- All respect `prefers-reduced-motion`
+
 ### 2.6 Icons
 - **Library:** lucide-react
-- **Navigation icons:** LayoutDashboard, MessageSquare, Calendar, Users, BookOpen, Scissors, UserCog, BarChart3, Settings, LogOut
+- **Navigation icons:** LayoutDashboard, MessageSquare, Calendar, Users, BookOpen, Scissors, UserCog, BarChart3, Settings, LogOut, Zap (automations), Megaphone (campaigns), Clock (waitlist), Search
 - **Action icons:** X, Plus, Pencil, Trash2, Send, RefreshCw, Search, Filter
 - **Status icons:** AlertCircle, CheckCircle2, AlertTriangle, Clock, Info
 - **AI icons:** Sparkles, Loader2 (spinning)
+- **Theme icons:** Sun, Moon (dark mode toggle)
 - **Standard size:** 16-18px in navigation, 14-16px inline, 48px for empty states
+
+### 2.7 Dark Mode
+- **Strategy:** Tailwind `darkMode: 'class'`
+- **Toggle:** Sun/Moon icon in sidebar
+- **Settings:** System / Light / Dark picker in settings page
+- **Storage:** localStorage + system preference detection via `use-theme` hook
+- **Coverage:** Full — all pages, cards, tables, inputs, charts, navigation
+- **Charts:** Brand palette theme (sage/lavender) adapts to dark backgrounds
 
 ---
 
@@ -209,21 +249,22 @@
 
 ---
 
-### 3.2 Setup Wizard (`/setup`) — 9 Steps
+### 3.2 Setup Wizard (`/setup`) — 10 Steps
 
 A linear onboarding wizard with progress bar. Each step has a title, subtitle, and navigation (Back/Next/Finish).
 
 | Step | Name | What It Contains |
 |------|------|-----------------|
-| 0 | Business Info | Business name input, timezone dropdown (11 options), currency dropdown (7 options) |
-| 1 | Connect WhatsApp | Green info box, Connect WhatsApp button, Skip for now option |
-| 2 | Add Staff | Staff list with status/role badges, invite form (name, email, role dropdown), resend invite button |
-| 3 | Define Services | Service list (editable/deletable), add service form (name, duration, price), edit mode with inline inputs |
-| 4 | Working Hours | Staff member tabs, per-day schedule (Sunday–Saturday), Working/Off toggle + time pickers |
-| 5 | Templates | Template list showing name, category badge, body in code box, variable badges |
-| 6 | Profile Requirements | Two categories (Basic/Medical), checkbox per field to mark as required, fields: firstName, lastName, email, dateOfBirth, address, allergies, medicalNotes, emergencyContact |
-| 7 | Import Customers | Three cards: CSV import (drag-drop + preview table), Conversation import (with AI profile generation), Manual import (link to customers page) |
-| 8 | Test & Finish | 4 stat cards (staff/services/templates/ready), Open Simulator button, Go to Dashboard button |
+| 0 | Clinic Type | Vertical pack selector: Aesthetic Clinic (recommended) or General Practice. Auto-installs services, templates, settings for chosen pack. |
+| 1 | Business Info | Business name input, timezone dropdown, currency dropdown |
+| 2 | Connect WhatsApp | Green info box, Connect WhatsApp button, Skip for now option |
+| 3 | Add Staff | Staff list with status/role badges, invite form (name, email, role dropdown), resend invite button |
+| 4 | Define Services | Service list (editable/deletable), add service form (name, duration, price, kind), edit mode with inline inputs |
+| 5 | Working Hours | Staff member tabs, per-day schedule (Sunday–Saturday), Working/Off toggle + time pickers |
+| 6 | Templates | Template list showing name, category badge, body in code box, variable badges |
+| 7 | Profile Requirements | Two categories (Basic/Medical), checkbox per field to mark as required |
+| 8 | Import Customers | Three cards: CSV import (drag-drop + preview table), Conversation import (with AI profile generation), Manual import (link to customers page) |
+| 9 | Test & Finish | Feature readiness checklist (6 items with green/amber indicators), Create Test Booking button, Open WhatsApp Simulator button, Go to Dashboard button |
 
 ---
 
@@ -422,13 +463,8 @@ Two tabs: **Info** | **Notes**
 **Settings Home:**
 - Business Info card: name, phone, timezone (read-only), vertical pack (read-only), Save button
 - Change Password card: current password, new password, confirm password
-- Quick Links grid (6 cards with icons):
-  1. Message Templates (blue FileText icon) → /settings/templates
-  2. Translations (purple Languages icon) → /settings/translations
-  3. Profile Fields (teal ClipboardCheck icon) → /settings/profile-fields
-  4. AI Settings (purple Sparkles icon) → /settings/ai
-  5. Account & Import (green Upload icon) → /settings/account
-  6. Setup Wizard (orange Settings2 icon) → /setup
+- Quick Links grid (cards with icons linking to sub-pages):
+  Message Templates, Translations, Profile Fields, AI Settings, Account & Import, Notifications, Billing, Calendar, Offers, Policies, Waitlist Settings, Setup Wizard
 
 #### AI Settings (`/settings/ai`)
 - Master toggle: Enable AI Assistance
@@ -438,9 +474,9 @@ Two tabs: **Info** | **Notes**
 - AI Personality textarea
 
 #### Templates (`/settings/templates`)
-- Category filter buttons with counts: ALL | CONFIRMATION | REMINDER | FOLLOW_UP | CANCELLATION | CUSTOM
+- Category filter buttons with counts: ALL | CONFIRMATION | REMINDER | FOLLOW_UP | CANCELLATION | CONSULT_FOLLOW_UP | AFTERCARE | TREATMENT_CHECK_IN | DEPOSIT_REQUIRED | RESCHEDULE_LINK | CANCEL_LINK | CUSTOM
 - Template cards: name, category badge, body in code box, variable badges
-- Preview toggle: shows resolved template with sample data
+- Preview toggle: shows resolved template with sample data; unresolved {{vars}} show amber warning badge + red highlight
 - TemplateForm modal: name, category dropdown, body textarea (monospace), variable insertion buttons, detected variables display (green=recognized, orange=unknown), live preview
 
 #### Translations (`/settings/translations`)
@@ -460,25 +496,133 @@ Two tabs: **Info** | **Notes**
 - Conversation Import: "Include messages" checkbox, Generate Profiles button, result counts
 - Export: "Export as CSV" button
 
+#### Calendar Sync (`/settings/calendar`)
+- Google Calendar connection management
+- Connect/disconnect buttons per provider
+- iCal feed URL generation and regeneration
+
+#### Billing (`/settings/billing`)
+- Stripe subscription management (Basic/Pro plans)
+- Checkout, customer portal links
+
+#### Notifications (`/settings/notifications`)
+- Channel preferences (WhatsApp, email, or both)
+- Follow-up delay hours, consult follow-up days, treatment check-in hours
+
+#### Offers (`/settings/offers`)
+- Offers CRUD: name, description, terms, applicable services, validity dates, max redemptions
+- Active/inactive toggle
+
+#### Policies (`/settings/policies`)
+- Cancellation window (hours before appointment)
+- Reschedule window (hours before appointment)
+- Policy copy text shown to customers
+
+#### Waitlist Settings (`/settings/waitlist`)
+- Max offers per cancellation
+- Offer expiry time
+- Quiet hours (start/end)
+
+---
+
+### 3.13 Waitlist (`/waitlist`)
+
+**Header:** Title + entry count
+
+**Table columns:** Customer | Service | Preferred Staff | Date Range | Time Window | Status badge | Actions
+
+**Features:**
+- Filter by status (ACTIVE, OFFERED, BOOKED, EXPIRED, CANCELLED)
+- Resolve entries manually
+- Dashboard metrics card: total entries, offers sent, claimed, fill rate, avg time to claim
+- Onboarding tooltip for first-time users
+
+---
+
+### 3.14 Automations (`/automations`)
+
+**Built-in Playbooks section:**
+- 3 playbook cards (No-Show Prevention, Consult Conversion, Re-engagement)
+- Each shows: name, description, "what will happen" summary, toggle on/off
+
+**Custom Rules section:**
+- Rules table: name, trigger badge, active toggle, actions
+- "+ New Rule" button → `/automations/new`
+
+**Activity Log section:**
+- Searchable, filterable log of automation executions
+- Per entry: rule name, customer, action, outcome badge (SENT/SKIPPED/FAILED), timestamp
+
+**New Automation page (`/automations/new`):**
+- 4-step wizard: Trigger → Filters → Actions → Review
+- 6 trigger types with descriptions
+- Filter options vary by trigger
+- Action: SEND_TEMPLATE with template picker
+- Safety settings: quiet hours, frequency cap
+
+---
+
+### 3.15 Campaigns (`/campaigns`)
+
+**Campaign List:**
+- Table: name, status badge (DRAFT/SCHEDULED/SENDING/SENT/CANCELLED), audience size, send stats, created date
+- "+ New Campaign" button
+
+**Campaign Detail (`/campaigns/[id]`):**
+- Stats grid: total sends, delivered, read, failed, booking conversions
+- Campaign config summary
+- Send log table
+
+**New Campaign (`/campaigns/new`):**
+- 4-step wizard: Audience → Template → Schedule → Review
+- Audience step: segment filters (tags, last booking, service kind, no upcoming, exclude do-not-message), live preview count + sample names
+- Template step: template picker with variable preview
+- Schedule step: send now or schedule, throttle rate (messages/minute)
+- Review step: summary of all selections
+
+---
+
+### 3.16 ROI Dashboard (`/roi`)
+
+**Tab bar:** Dashboard | Weekly Review
+
+**Dashboard tab:**
+- 6 metric cards: No-Show Rate, Consult → Treatment Conversion, Avg Response Time, Revenue, Staff Utilization, Deposit Compliance
+- Each shows: current value, baseline value, delta badge (green=improved, red=worsened)
+- Recovered Revenue estimate card with "How we calculate this" methodology link
+
+**Weekly Review tab:**
+- Week-over-week comparison table (6 metrics × 2 periods)
+- Delta badges per metric
+- "Email Review" button to send summary to team
+
 ---
 
 ## 4. Data Models
 
-### 4.1 Entity Relationship Overview
+### 4.1 Entity Relationship Overview (26 Models)
 
 ```
 Business (1) ──┬── (*) Staff ──── (*) WorkingHours
-               │                  └── (*) TimeOff
+               │                  ├── (*) TimeOff
+               │                  └── (*) CalendarConnection
                ├── (*) Customer
                ├── (*) Service
                ├── (*) Booking ──── (*) Reminder
                │                    └── (*) Payment
+               ├── (*) RecurringSeries
                ├── (*) Conversation ──── (*) Message
                │                        └── (*) ConversationNote
                ├── (*) MessageTemplate
                ├── (*) Translation
                ├── (1) Subscription
-               └── (*) AiUsage
+               ├── (*) AiUsage
+               ├── (*) Token
+               ├── (*) RoiBaseline
+               ├── (*) WaitlistEntry
+               ├── (*) AutomationRule ──── (*) AutomationLog
+               ├── (*) Campaign ──── (*) CampaignSend
+               └── (*) Offer
 ```
 
 ### 4.2 Key Models
@@ -562,14 +706,24 @@ Business (1) ──┬── (*) Staff ──── (*) WorkingHours
 | externalId | String? | WhatsApp message ID |
 
 #### Other Models
-- **Reminder:** bookingId, scheduledAt, status (PENDING/SENT/FAILED/CANCELLED)
-- **MessageTemplate:** name, category, body (with {{variables}}), variables[]
+- **Reminder:** bookingId, templateId, scheduledAt, sentAt, status (PENDING/SENT/FAILED/CANCELLED), type (REMINDER/CONSULT_FOLLOW_UP/AFTERCARE/TREATMENT_CHECK_IN)
+- **MessageTemplate:** name, category (11 types), body (with {{variables}}), variables[]
 - **WorkingHours:** staffId, dayOfWeek (0-6), startTime/endTime ("HH:mm"), isOff
 - **TimeOff:** staffId, startDate, endDate, reason
 - **Translation:** locale, key, value (per business overrides)
-- **Subscription:** stripeCustomerId, plan (basic/pro), status
-- **Payment:** bookingId, stripePaymentIntentId, amount, status
+- **Subscription:** stripeCustomerId, stripeSubscriptionId, plan (basic/pro), status (active/past_due/canceled/trialing)
+- **Payment:** bookingId, stripePaymentIntentId, amount, currency, status (pending/succeeded/failed/refunded)
 - **AiUsage:** date, count (daily tracking)
+- **Token:** token (unique), type (PASSWORD_RESET/STAFF_INVITE/RESCHEDULE_LINK/CANCEL_LINK/EMAIL_VERIFY), email, expiresAt, usedAt
+- **RoiBaseline:** goLiveDate, baselineStart/End, metrics (JSON)
+- **CalendarConnection:** staffId, provider (google/outlook), accessToken/refreshToken (encrypted AES-256-GCM), icalFeedToken, syncEnabled
+- **RecurringSeries:** customerId, serviceId, staffId, timeOfDay, daysOfWeek[], intervalWeeks, totalCount, endsAt
+- **WaitlistEntry:** customerId, serviceId, staffId, timeWindow, dateRange, status (ACTIVE/OFFERED/BOOKED/EXPIRED/CANCELLED), offeredSlot (JSON), claimedAt
+- **AutomationRule:** name, trigger (6 types), filters (JSON), actions (JSON), isActive, playbook, quietStart/End, maxPerCustomerPerDay
+- **AutomationLog:** automationRuleId, bookingId, customerId, action, outcome (SENT/SKIPPED/FAILED), reason
+- **Campaign:** name, status (DRAFT/SCHEDULED/SENDING/SENT/CANCELLED), templateId, filters (JSON), throttlePerMinute, stats (JSON)
+- **CampaignSend:** campaignId, customerId, status (PENDING/SENT/DELIVERED/READ/FAILED), sentAt, bookingId (attribution)
+- **Offer:** name, description, terms, serviceIds[], validFrom/Until, isActive, maxRedemptions, currentRedemptions
 
 ---
 
@@ -683,26 +837,27 @@ Events handled in the inbox:
 ## 9. Current UI Characteristics (As-Is)
 
 ### Strengths
-- Clean, minimal layout with clear information hierarchy
-- Consistent use of Tailwind utilities
-- Good use of color-coding for statuses
-- Real-time updates in inbox
+- **Minimalist Premium** aesthetic with custom brand palette (sage/lavender)
+- **Custom typography** — Inter for UI, Playfair Display for headers
+- Clean, minimal layout with clear information hierarchy and generous whitespace
+- Consistent use of Tailwind utilities with `cn()` class merging
+- Muted pastel status badges instead of generic traffic-light colors
+- Soft diffused shadows (`shadow-soft`) instead of borders
+- **Full dark mode** with system preference detection and manual override
+- **CSS animations** on modals, command palette, and transitions (prefers-reduced-motion respected)
+- **Onboarding tooltips** and contextual coaching nudges
+- **Enhanced empty states** with icons, explanations, and action CTAs
+- **Brand-themed charts** using sage/lavender Recharts theme
+- Real-time updates in inbox via Socket.io
 - Responsive grid layouts
-- Comprehensive feature set
+- Comprehensive feature set across 40 pages
 
-### Areas for Potential Improvement
-- **No custom typeface** — uses system fonts only
-- **Minimal brand identity** — only blue brand colors defined, limited visual personality
-- **No component library** — all components hand-built, inconsistent styling possible
-- **Basic form inputs** — standard HTML inputs with minimal styling
-- **No animations/transitions** — except toast slide-in and skeleton pulse
-- **No dark mode**
-- **Basic empty states** — simple icon + text, no illustrations
-- **Modals are functional but plain** — no transitions, basic layout
-- **Calendar is custom-built** — functional but not visually polished
-- **Charts use defaults** — Recharts with minimal customization
-- **No onboarding tooltips** or feature discovery hints
+### Remaining Opportunities
+- **No third-party component library** — all components hand-built, some inconsistency possible
+- **Calendar is custom-built** — functional but could benefit from polish
 - **Mobile responsiveness** — grid-based but not optimized for mobile-first
+- **No illustrations** — empty states use icons only, no custom illustrations
+- **Accessibility** — focus traps on modals, but full ARIA audit not yet done
 
 ---
 
@@ -713,36 +868,59 @@ apps/web/src/
 ├── app/
 │   ├── globals.css
 │   ├── layout.tsx
+│   ├── page.tsx                          # Root/home
 │   ├── login/page.tsx
 │   ├── signup/page.tsx
 │   ├── forgot-password/page.tsx
 │   ├── reset-password/page.tsx
+│   ├── verify-email/page.tsx
 │   ├── accept-invite/page.tsx
-│   ├── setup/page.tsx
+│   ├── setup/page.tsx                    # 10-step onboarding wizard
 │   ├── dashboard/page.tsx
 │   ├── calendar/page.tsx
 │   ├── bookings/page.tsx
+│   ├── inbox/page.tsx
 │   ├── customers/page.tsx
 │   ├── customers/[id]/page.tsx
-│   ├── inbox/page.tsx
 │   ├── services/page.tsx
 │   ├── staff/page.tsx
 │   ├── reports/page.tsx
+│   ├── roi/page.tsx                      # ROI dashboard + weekly review
+│   ├── waitlist/page.tsx                 # Waitlist management
+│   ├── automations/page.tsx              # Playbooks + custom rules + log
+│   ├── automations/new/page.tsx          # Rule builder wizard
+│   ├── campaigns/page.tsx                # Campaign list
+│   ├── campaigns/new/page.tsx            # Campaign builder wizard
+│   ├── campaigns/[id]/page.tsx           # Campaign detail/stats
+│   ├── book/[slug]/page.tsx              # Public booking portal
+│   ├── manage/reschedule/[token]/page.tsx
+│   ├── manage/cancel/[token]/page.tsx
+│   ├── manage/claim/[token]/page.tsx     # Waitlist claim
 │   ├── settings/page.tsx
-│   ├── settings/account/page.tsx
 │   ├── settings/ai/page.tsx
+│   ├── settings/account/page.tsx
 │   ├── settings/templates/page.tsx
 │   ├── settings/translations/page.tsx
-│   └── settings/profile-fields/page.tsx
+│   ├── settings/profile-fields/page.tsx
+│   ├── settings/calendar/page.tsx        # Google Calendar sync
+│   ├── settings/billing/page.tsx         # Stripe subscriptions
+│   ├── settings/notifications/page.tsx
+│   ├── settings/offers/page.tsx          # Promotions
+│   ├── settings/policies/page.tsx        # Cancel/reschedule policies
+│   └── settings/waitlist/page.tsx        # Waitlist config
 ├── components/
-│   ├── shell.tsx              # App layout + sidebar nav
-│   ├── skeleton.tsx           # Loading skeletons + empty states
+│   ├── shell.tsx              # App layout + sidebar nav + dark mode toggle + Cmd+K
+│   ├── skeleton.tsx           # Loading skeletons + empty states with CTAs
 │   ├── error-boundary.tsx     # Error catching
 │   ├── ai-summary.tsx         # AI conversation summary
 │   ├── ai-suggestions.tsx     # AI draft response
 │   ├── ai-booking-panel.tsx   # AI booking assistant UI
 │   ├── booking-form-modal.tsx # Create/reschedule booking
-│   ├── booking-detail-modal.tsx # View/manage booking
+│   ├── booking-detail-modal.tsx # View/manage booking + notification timeline
+│   ├── clinic-intake-card.tsx # Aesthetics intake fields (Phase 1)
+│   ├── command-palette.tsx    # Cmd+K global search (Phase 2)
+│   ├── bulk-action-bar.tsx    # Multi-select action bar (Phase 2)
+│   ├── tooltip-nudge.tsx      # Contextual coaching tooltips (Phase 2)
 │   └── language-picker.tsx    # Locale selector
 ├── lib/
 │   ├── api.ts                 # API client singleton
@@ -751,8 +929,13 @@ apps/web/src/
 │   ├── i18n.tsx               # I18n context + hooks
 │   ├── toast.tsx              # Toast notifications
 │   ├── vertical-pack.tsx      # Pack configuration
-│   └── use-socket.ts          # WebSocket hook
+│   ├── use-socket.ts          # WebSocket hook
+│   ├── use-theme.ts           # Dark mode hook (Phase 2)
+│   ├── use-focus-trap.ts      # Accessibility focus management
+│   ├── chart-theme.ts         # Recharts brand theme (Phase 2)
+│   ├── phase1.ts              # Phase 1 feature flags
+│   └── public-api.ts          # Public booking portal API client
 └── locales/
-    ├── en.json                # English (589 keys)
-    └── es.json                # Spanish (589 keys)
+    ├── en.json                # English (600+ keys)
+    └── es.json                # Spanish (600+ keys)
 ```
