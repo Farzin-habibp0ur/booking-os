@@ -414,9 +414,19 @@ describe('SelfServeService', () => {
         usedAt: null,
       } as any);
       prisma.waitlistEntry.findFirst.mockResolvedValue(mockEntry as any);
+      prisma.waitlistEntry.update.mockResolvedValue({ ...mockEntry, status: 'BOOKED' } as any);
 
       const result = await service.claimWaitlistSlot('wl-token');
 
+      // C5 fix: token marked used BEFORE action
+      expect(mockTokenService.markUsed).toHaveBeenCalledWith('token1');
+      // C6 fix: entry marked BOOKED in transaction before booking creation
+      expect(prisma.waitlistEntry.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'wl1' },
+          data: { status: 'BOOKED' },
+        }),
+      );
       expect(mockBookingService.create).toHaveBeenCalledWith('biz1', {
         customerId: 'c1',
         serviceId: 'svc1',
@@ -424,7 +434,6 @@ describe('SelfServeService', () => {
         startTime: '2026-03-15T10:00:00Z',
       });
       expect(mockWaitlistService.resolveEntry).toHaveBeenCalledWith('biz1', 'wl1', 'newbook1');
-      expect(mockTokenService.markUsed).toHaveBeenCalledWith('token1');
       expect(result.id).toBe('newbook1');
     });
 

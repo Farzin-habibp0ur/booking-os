@@ -47,27 +47,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // C2 fix: Always try /auth/me — httpOnly cookies are sent automatically
   useEffect(() => {
-    const token = api.getToken();
-    if (token) {
-      api
-        .get<User>('/auth/me')
-        .then(setUser)
-        .catch(() => {
-          api.setToken(null);
-        })
-        .finally(() => setLoading(false));
-    } else {
-      setLoading(false);
-    }
+    api
+      .get<User>('/auth/me')
+      .then(setUser)
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
   const login = async (email: string, password: string) => {
-    const res = await api.post<{ accessToken: string; staff: any }>('/auth/login', {
+    // C2 fix: Don't store token — httpOnly cookies handle auth
+    await api.post<{ accessToken: string; staff: any }>('/auth/login', {
       email,
       password,
     });
-    api.setToken(res.accessToken);
     const me = await api.get<User>('/auth/me');
     setUser(me);
   };
@@ -78,18 +72,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     email: string,
     password: string,
   ) => {
-    const res = await api.post<{ accessToken: string; staff: any }>('/auth/signup', {
+    // C2 fix: Don't store token — httpOnly cookies handle auth
+    await api.post<{ accessToken: string; staff: any }>('/auth/signup', {
       businessName,
       ownerName,
       email,
       password,
     });
-    api.setToken(res.accessToken);
     const me = await api.get<User>('/auth/me');
     setUser(me);
   };
 
-  const logout = () => {
+  const logout = async () => {
+    // C2 fix: Call API to clear httpOnly cookies server-side
+    try {
+      await api.post('/auth/logout');
+    } catch {
+      // Ignore — redirect to login regardless
+    }
     api.setToken(null);
     setUser(null);
     window.location.href = '/login';

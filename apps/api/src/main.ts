@@ -26,8 +26,23 @@ async function bootstrap() {
   app.useLogger(app.get(PinoLogger));
   const logger = new Logger('Bootstrap');
 
-  // Security headers
-  app.use(helmet());
+  // M8 fix: Security headers with CSP
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'"],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          imgSrc: ["'self'", 'data:', 'https:'],
+          connectSrc: ["'self'"],
+          fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+          objectSrc: ["'none'"],
+          frameAncestors: ["'none'"],
+        },
+      },
+    }),
+  );
 
   // Cookie parsing for httpOnly token auth
   app.use(cookieParser());

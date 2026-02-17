@@ -314,7 +314,6 @@ describe('SettingsPage', () => {
     render(<SettingsPage />);
     await waitFor(() => {
       expect(screen.getByText('Appearance')).toBeInTheDocument();
-      expect(screen.getByText('system')).toBeInTheDocument();
       expect(screen.getByText('light')).toBeInTheDocument();
       expect(screen.getByText('dark')).toBeInTheDocument();
     });

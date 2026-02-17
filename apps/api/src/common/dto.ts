@@ -18,8 +18,39 @@ import {
   ValidateNested,
   Matches,
   IsIn,
+  registerDecorator,
+  ValidationOptions,
+  ValidationArguments,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+
+// M4 fix: Custom validator to limit JSON custom field depth and size
+function IsShallowJson(maxDepth = 3, maxKeys = 50, validationOptions?: ValidationOptions) {
+  return function (object: object, propertyName: string) {
+    registerDecorator({
+      name: 'isShallowJson',
+      target: object.constructor,
+      propertyName,
+      options: { message: `${propertyName} must not exceed ${maxDepth} levels of nesting or ${maxKeys} keys`, ...validationOptions },
+      validator: {
+        validate(value: any, _args: ValidationArguments) {
+          if (value === undefined || value === null) return true;
+          if (typeof value !== 'object') return false;
+          let totalKeys = 0;
+          const checkDepth = (obj: any, depth: number): boolean => {
+            if (depth > maxDepth) return false;
+            if (typeof obj !== 'object' || obj === null) return true;
+            const keys = Object.keys(obj);
+            totalKeys += keys.length;
+            if (totalKeys > maxKeys) return false;
+            return keys.every((k) => checkDepth(obj[k], depth + 1));
+          };
+          return checkDepth(value, 1);
+        },
+      },
+    });
+  };
+}
 
 // ---- Booking DTOs ----
 
@@ -49,6 +80,7 @@ export class CreateBookingDto {
 
   @IsObject()
   @IsOptional()
+  @IsShallowJson()
   customFields?: Record<string, unknown>;
 }
 
@@ -71,6 +103,7 @@ export class UpdateBookingDto {
 
   @IsObject()
   @IsOptional()
+  @IsShallowJson()
   customFields?: Record<string, unknown>;
 }
 
@@ -112,6 +145,7 @@ export class CreateCustomerDto {
 
   @IsObject()
   @IsOptional()
+  @IsShallowJson()
   customFields?: Record<string, unknown>;
 }
 
@@ -135,6 +169,7 @@ export class UpdateCustomerDto {
 
   @IsObject()
   @IsOptional()
+  @IsShallowJson()
   customFields?: Record<string, unknown>;
 }
 
@@ -167,6 +202,7 @@ export class CreateServiceDto {
 
   @IsObject()
   @IsOptional()
+  @IsShallowJson()
   customFields?: Record<string, unknown>;
 }
 
@@ -199,6 +235,7 @@ export class UpdateServiceDto {
 
   @IsObject()
   @IsOptional()
+  @IsShallowJson()
   customFields?: Record<string, unknown>;
 }
 
@@ -362,6 +399,7 @@ export class CreateBookingFromConversationDto {
 
   @IsObject()
   @IsOptional()
+  @IsShallowJson()
   customFields?: Record<string, unknown>;
 }
 
@@ -470,8 +508,12 @@ export class SignupDto {
   @IsEmail()
   email!: string;
 
+  // M1 fix: Require 12+ chars with at least one uppercase, one lowercase, one digit
   @IsString()
-  @MinLength(8)
+  @MinLength(12, { message: 'Password must be at least 12 characters' })
+  @Matches(/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, {
+    message: 'Password must contain at least one uppercase letter, one lowercase letter, and one digit',
+  })
   password!: string;
 }
 
@@ -486,7 +528,10 @@ export class ResetPasswordDto {
   token!: string;
 
   @IsString()
-  @MinLength(8)
+  @MinLength(12, { message: 'Password must be at least 12 characters' })
+  @Matches(/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, {
+    message: 'Password must contain at least one uppercase letter, one lowercase letter, and one digit',
+  })
   newPassword!: string;
 }
 
@@ -496,7 +541,10 @@ export class ChangePasswordDto {
   currentPassword!: string;
 
   @IsString()
-  @MinLength(8)
+  @MinLength(12, { message: 'Password must be at least 12 characters' })
+  @Matches(/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, {
+    message: 'Password must contain at least one uppercase letter, one lowercase letter, and one digit',
+  })
   newPassword!: string;
 }
 
@@ -506,7 +554,10 @@ export class AcceptInviteDto {
   token!: string;
 
   @IsString()
-  @MinLength(8)
+  @MinLength(12, { message: 'Password must be at least 12 characters' })
+  @Matches(/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, {
+    message: 'Password must contain at least one uppercase letter, one lowercase letter, and one digit',
+  })
   password!: string;
 }
 
@@ -592,4 +643,121 @@ export class CancelRecurringSeriesDto {
   @IsString()
   @IsOptional()
   bookingId?: string;
+}
+
+// ---- Campaign DTOs (H12) ----
+
+export class CreateCampaignDto {
+  @IsString()
+  @IsNotEmpty()
+  name!: string;
+
+  @IsString()
+  @IsOptional()
+  templateId?: string;
+
+  @IsObject()
+  @IsOptional()
+  filters?: Record<string, unknown>;
+
+  @IsDateString()
+  @IsOptional()
+  scheduledAt?: string;
+}
+
+export class UpdateCampaignDto {
+  @IsString()
+  @IsOptional()
+  name?: string;
+
+  @IsString()
+  @IsOptional()
+  templateId?: string;
+
+  @IsObject()
+  @IsOptional()
+  filters?: Record<string, unknown>;
+
+  @IsDateString()
+  @IsOptional()
+  scheduledAt?: string;
+}
+
+export class PreviewAudienceDto {
+  @IsObject()
+  filters!: Record<string, unknown>;
+}
+
+// ---- Automation Rule DTOs (H12) ----
+
+export class CreateAutomationRuleDto {
+  @IsString()
+  @IsNotEmpty()
+  name!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  trigger!: string;
+
+  @IsObject()
+  @IsOptional()
+  filters?: Record<string, unknown>;
+
+  @IsArray()
+  @IsOptional()
+  actions?: any[];
+
+  @IsString()
+  @IsOptional()
+  @Matches(/^\d{2}:\d{2}$/, { message: 'quietStart must be in HH:mm format' })
+  quietStart?: string;
+
+  @IsString()
+  @IsOptional()
+  @Matches(/^\d{2}:\d{2}$/, { message: 'quietEnd must be in HH:mm format' })
+  quietEnd?: string;
+
+  @IsNumber()
+  @IsOptional()
+  @Min(0)
+  @Max(100)
+  maxPerCustomerPerDay?: number;
+}
+
+export class UpdateAutomationRuleDto {
+  @IsString()
+  @IsOptional()
+  name?: string;
+
+  @IsString()
+  @IsOptional()
+  trigger?: string;
+
+  @IsObject()
+  @IsOptional()
+  filters?: Record<string, unknown>;
+
+  @IsArray()
+  @IsOptional()
+  actions?: any[];
+
+  @IsBoolean()
+  @IsOptional()
+  isActive?: boolean;
+
+  @IsString()
+  @IsOptional()
+  @Matches(/^\d{2}:\d{2}$/, { message: 'quietStart must be in HH:mm format' })
+  quietStart?: string;
+
+  @IsString()
+  @IsOptional()
+  @Matches(/^\d{2}:\d{2}$/, { message: 'quietEnd must be in HH:mm format' })
+  quietEnd?: string;
+
+  @IsNumber()
+  @IsOptional()
+  @Min(0)
+  @Max(100)
+  maxPerCustomerPerDay?: number;
 }

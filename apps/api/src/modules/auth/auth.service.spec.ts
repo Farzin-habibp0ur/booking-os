@@ -275,7 +275,7 @@ describe('AuthService', () => {
 
       expect(result).toEqual({ ok: true });
       expect(tokenService.validateToken).toHaveBeenCalledWith('valid-token', 'PASSWORD_RESET');
-      expect(bcrypt.hash).toHaveBeenCalledWith('newpassword123', 10);
+      expect(bcrypt.hash).toHaveBeenCalledWith('newpassword123', 12);
       expect(prisma.staff.update).toHaveBeenCalledWith({
         where: { id: 'staff1' },
         data: { passwordHash: '$new-hash' },
@@ -309,9 +309,9 @@ describe('AuthService', () => {
         where: { id: 'staff1' },
         data: { passwordHash: '$new-hash' },
       });
-      expect(tokenService.revokeTokens).toHaveBeenCalledWith(
+      // C4 fix: Revokes ALL token types, not just PASSWORD_RESET
+      expect(tokenService.revokeAllTokensForEmail).toHaveBeenCalledWith(
         'sarah@glowclinic.com',
-        'PASSWORD_RESET',
       );
     });
 

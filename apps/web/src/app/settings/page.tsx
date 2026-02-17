@@ -358,7 +358,7 @@ export default function SettingsPage() {
               </div>
             </div>
             <div className="flex gap-2">
-              {(['system', 'light', 'dark'] as const).map((opt) => (
+              {(['light', 'dark'] as const).map((opt) => (
                 <button
                   key={opt}
                   onClick={() => setTheme(opt)}

@@ -3,6 +3,7 @@ import {
   BadRequestException,
   NotFoundException,
   ForbiddenException,
+  Logger,
   Optional,
   Inject,
   forwardRef,
@@ -17,6 +18,8 @@ import { WaitlistService } from '../waitlist/waitlist.service';
 
 @Injectable()
 export class BookingService {
+  private readonly logger = new Logger(BookingService.name);
+
   constructor(
     private prisma: PrismaService,
     private notificationService: NotificationService,
@@ -105,36 +108,40 @@ export class BookingService {
     const startTime = new Date(data.startTime);
     const endTime = new Date(startTime.getTime() + service.durationMins * 60000);
 
-    // Conflict detection
-    if (data.staffId) {
-      const conflict = await this.prisma.booking.findFirst({
-        where: {
-          businessId,
-          staffId: data.staffId,
-          status: { in: ['PENDING', 'PENDING_DEPOSIT', 'CONFIRMED', 'IN_PROGRESS'] },
-          startTime: { lt: endTime },
-          endTime: { gt: startTime },
-        },
-      });
-      if (conflict) throw new BadRequestException('Staff has a conflicting booking at this time');
-    }
-
     const isDepositRequired = service.depositRequired === true;
 
-    const booking = await this.prisma.booking.create({
-      data: {
-        businessId,
-        customerId: data.customerId,
-        serviceId: data.serviceId,
-        staffId: data.staffId,
-        conversationId: data.conversationId,
-        startTime,
-        endTime,
-        notes: data.notes,
-        customFields: data.customFields || {},
-        status: isDepositRequired ? 'PENDING_DEPOSIT' : 'CONFIRMED',
-      },
-      include: { customer: true, service: true, staff: true },
+    // C1 fix: Wrap conflict check + create in transaction with row lock to prevent double-booking
+    const booking = await this.prisma.$transaction(async (tx) => {
+      if (data.staffId) {
+        // Lock staff row to serialize concurrent booking creation for same staff
+        await tx.$queryRaw`SELECT id FROM "Staff" WHERE id = ${data.staffId} FOR UPDATE`;
+        const conflict = await tx.booking.findFirst({
+          where: {
+            businessId,
+            staffId: data.staffId,
+            status: { in: ['PENDING', 'PENDING_DEPOSIT', 'CONFIRMED', 'IN_PROGRESS'] },
+            startTime: { lt: endTime },
+            endTime: { gt: startTime },
+          },
+        });
+        if (conflict) throw new BadRequestException('Staff has a conflicting booking at this time');
+      }
+
+      return tx.booking.create({
+        data: {
+          businessId,
+          customerId: data.customerId,
+          serviceId: data.serviceId,
+          staffId: data.staffId,
+          conversationId: data.conversationId,
+          startTime,
+          endTime,
+          notes: data.notes,
+          customFields: data.customFields || {},
+          status: isDepositRequired ? 'PENDING_DEPOSIT' : 'CONFIRMED',
+        },
+        include: { customer: true, service: true, staff: true },
+      });
     });
 
     // Auto-create 24h reminder
@@ -179,6 +186,22 @@ export class BookingService {
       if (booking) {
         data.startTime = new Date(data.startTime);
         data.endTime = new Date(data.startTime.getTime() + booking.service.durationMins * 60000);
+
+        // M12 fix: Check for conflicts when rescheduling
+        const staffId = data.staffId || booking.staffId;
+        if (staffId) {
+          const conflict = await this.prisma.booking.findFirst({
+            where: {
+              businessId,
+              staffId,
+              id: { not: id },
+              status: { in: ['PENDING', 'PENDING_DEPOSIT', 'CONFIRMED', 'IN_PROGRESS'] },
+              startTime: { lt: data.endTime },
+              endTime: { gt: data.startTime },
+            },
+          });
+          if (conflict) throw new BadRequestException('Staff has a conflicting booking at this time');
+        }
       }
     }
     const result = await this.prisma.booking.update({
@@ -245,116 +268,117 @@ export class BookingService {
     status: string,
     actor?: { reason?: string; staffId?: string; staffName?: string; role?: string },
   ) {
-    // Read current booking to detect PENDING_DEPOSIT → CONFIRMED transition
-    const currentBooking = await this.prisma.booking.findFirst({
-      where: { id, businessId },
-      select: { status: true, startTime: true, customFields: true },
-    });
+    // C7 fix: Wrap status read + validation + update in transaction with row lock
+    const { booking, previousStatus } = await this.prisma.$transaction(async (tx) => {
+      // Lock booking row to prevent concurrent status transitions
+      await tx.$queryRaw`SELECT id FROM "Booking" WHERE id = ${id} AND "businessId" = ${businessId} FOR UPDATE`;
 
-    const overrideEntries: Array<{
-      type: string;
-      action: string;
-      reason: string;
-      staffId: string;
-      staffName: string;
-      timestamp: string;
-    }> = [];
-
-    // Deposit override: PENDING_DEPOSIT → CONFIRMED
-    if (status === 'CONFIRMED' && currentBooking?.status === 'PENDING_DEPOSIT') {
-      if (actor?.role !== 'ADMIN') {
-        throw new ForbiddenException('Only admins can confirm a booking without deposit');
-      }
-      if (!actor?.reason) {
-        throw new BadRequestException('A reason is required to override the deposit requirement');
-      }
-      overrideEntries.push({
-        type: 'DEPOSIT_OVERRIDE',
-        action: 'CONFIRMED',
-        reason: actor.reason,
-        staffId: actor.staffId || '',
-        staffName: actor.staffName || '',
-        timestamp: new Date().toISOString(),
+      const currentBooking = await tx.booking.findFirst({
+        where: { id, businessId },
+        select: { status: true, startTime: true, customFields: true },
       });
-    }
 
-    // Policy enforcement for cancellations
-    if (status === 'CANCELLED' && currentBooking?.startTime) {
-      const policySettings = await this.businessService.getPolicySettings(businessId);
-      if (policySettings?.policyEnabled) {
-        const hoursUntilStart =
-          (new Date(currentBooking.startTime).getTime() - Date.now()) / 3600000;
-        if (hoursUntilStart < policySettings.cancellationWindowHours) {
-          // ADMIN can override with a reason
-          if (actor?.role === 'ADMIN') {
-            if (!actor?.reason) {
+      const overrideEntries: Array<{
+        type: string;
+        action: string;
+        reason: string;
+        staffId: string;
+        staffName: string;
+        timestamp: string;
+      }> = [];
+
+      // Deposit override: PENDING_DEPOSIT → CONFIRMED
+      if (status === 'CONFIRMED' && currentBooking?.status === 'PENDING_DEPOSIT') {
+        if (actor?.role !== 'ADMIN') {
+          throw new ForbiddenException('Only admins can confirm a booking without deposit');
+        }
+        if (!actor?.reason) {
+          throw new BadRequestException('A reason is required to override the deposit requirement');
+        }
+        overrideEntries.push({
+          type: 'DEPOSIT_OVERRIDE',
+          action: 'CONFIRMED',
+          reason: actor.reason,
+          staffId: actor.staffId || '',
+          staffName: actor.staffName || '',
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      // Policy enforcement for cancellations
+      if (status === 'CANCELLED' && currentBooking?.startTime) {
+        const policySettings = await this.businessService.getPolicySettings(businessId);
+        if (policySettings?.policyEnabled) {
+          const hoursUntilStart =
+            (new Date(currentBooking.startTime).getTime() - Date.now()) / 3600000;
+          if (hoursUntilStart < policySettings.cancellationWindowHours) {
+            if (actor?.role === 'ADMIN') {
+              if (!actor?.reason) {
+                throw new BadRequestException(
+                  'A reason is required to override the cancellation policy',
+                );
+              }
+              overrideEntries.push({
+                type: 'POLICY_OVERRIDE',
+                action: 'CANCELLED',
+                reason: actor.reason,
+                staffId: actor.staffId || '',
+                staffName: actor.staffName || '',
+                timestamp: new Date().toISOString(),
+              });
+            } else {
               throw new BadRequestException(
-                'A reason is required to override the cancellation policy',
+                policySettings.cancellationPolicyText ||
+                  `Cannot cancel within ${policySettings.cancellationWindowHours} hours of the appointment`,
               );
             }
-            overrideEntries.push({
-              type: 'POLICY_OVERRIDE',
-              action: 'CANCELLED',
-              reason: actor.reason,
-              staffId: actor.staffId || '',
-              staffName: actor.staffName || '',
-              timestamp: new Date().toISOString(),
-            });
-          } else {
-            throw new BadRequestException(
-              policySettings.cancellationPolicyText ||
-                `Cannot cancel within ${policySettings.cancellationWindowHours} hours of the appointment`,
-            );
           }
         }
       }
-    }
 
-    // Build update data, including overrideLog if any overrides occurred
-    const updateData: any = { status };
-    if (overrideEntries.length > 0) {
-      const existingFields = (currentBooking?.customFields as any) || {};
-      const existingLog = Array.isArray(existingFields.overrideLog)
-        ? existingFields.overrideLog
-        : [];
-      updateData.customFields = {
-        ...existingFields,
-        overrideLog: [...existingLog, ...overrideEntries],
-      };
-    }
+      // Build update data, including overrideLog if any overrides occurred
+      const updateData: any = { status };
+      if (overrideEntries.length > 0) {
+        const existingFields = (currentBooking?.customFields as any) || {};
+        const existingLog = Array.isArray(existingFields.overrideLog)
+          ? existingFields.overrideLog
+          : [];
+        updateData.customFields = {
+          ...existingFields,
+          overrideLog: [...existingLog, ...overrideEntries],
+        };
+      }
 
-    const booking = await this.prisma.booking.update({
-      where: { id, businessId },
-      data: updateData,
-      include: { customer: true, service: true, staff: true },
+      const updatedBooking = await tx.booking.update({
+        where: { id, businessId },
+        data: updateData,
+        include: { customer: true, service: true, staff: true },
+      });
+
+      return { booking: updatedBooking, previousStatus: currentBooking?.status };
     });
 
-    // Send booking confirmation when deposit is confirmed
-    if (status === 'CONFIRMED' && currentBooking?.status === 'PENDING_DEPOSIT') {
+    // Side effects outside transaction
+    if (status === 'CONFIRMED' && previousStatus === 'PENDING_DEPOSIT') {
       this.notificationService.sendBookingConfirmation(booking).catch(() => {});
     }
 
-    // Cancel pending reminders if booking is cancelled/no-show
     if (['CANCELLED', 'NO_SHOW'].includes(status)) {
       await this.prisma.reminder.updateMany({
         where: { bookingId: id, status: 'PENDING' },
         data: { status: 'CANCELLED' },
       });
 
-      // Fire-and-forget calendar sync — remove event
       this.calendarSyncService.syncBookingToCalendar(booking, 'cancel').catch(() => {});
 
-      // Send cancellation notification
       if (status === 'CANCELLED') {
         this.notificationService.sendCancellationNotification(booking).catch(() => {});
-        // Offer open slot to waitlisted customers
         if (this.waitlistService) {
           this.waitlistService.offerOpenSlot(booking).catch(() => {});
         }
       }
     }
 
-    // Create follow-up reminder when booking is completed
     if (status === 'COMPLETED') {
       const settings = await this.businessService.getNotificationSettings(businessId);
       const delayHours = settings?.followUpDelayHours || 2;
@@ -368,7 +392,6 @@ export class BookingService {
         },
       });
 
-      // Schedule consult follow-up for CONSULT bookings
       if (booking.service?.kind === 'CONSULT') {
         const delayDays = settings?.consultFollowUpDays || 3;
         await this.prisma.reminder.create({
@@ -382,7 +405,6 @@ export class BookingService {
         });
       }
 
-      // Schedule aftercare + treatment check-in for TREATMENT bookings
       if (booking.service?.kind === 'TREATMENT') {
         await this.prisma.reminder.create({
           data: {
@@ -560,6 +582,10 @@ export class BookingService {
         where: { id: { in: ids }, businessId },
         data: { status: payload.status },
       });
+      // H8 fix: Audit log for bulk status changes
+      this.logger.log(
+        `BULK_STATUS_UPDATE business=${businessId} ids=[${ids.join(',')}] newStatus=${payload.status} updated=${result.count}`,
+      );
       return { updated: result.count };
     }
 

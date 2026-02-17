@@ -10,10 +10,16 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { Throttle } from '@nestjs/throttler';
 import { TenantGuard } from '../../common/tenant.guard';
 import { RolesGuard, Roles } from '../../common/roles.guard';
 import { BusinessId } from '../../common/decorators';
 import { CampaignService } from './campaign.service';
+import {
+  CreateCampaignDto,
+  UpdateCampaignDto,
+  PreviewAudienceDto,
+} from '../../common/dto';
 
 @Controller('campaigns')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
@@ -22,7 +28,7 @@ export class CampaignController {
 
   @Post()
   @Roles('ADMIN')
-  create(@BusinessId() businessId: string, @Body() body: any) {
+  create(@BusinessId() businessId: string, @Body() body: CreateCampaignDto) {
     return this.campaignService.create(businessId, body);
   }
 
@@ -38,7 +44,7 @@ export class CampaignController {
 
   @Patch(':id')
   @Roles('ADMIN')
-  update(@BusinessId() businessId: string, @Param('id') id: string, @Body() body: any) {
+  update(@BusinessId() businessId: string, @Param('id') id: string, @Body() body: UpdateCampaignDto) {
     return this.campaignService.update(businessId, id, body);
   }
 
@@ -50,12 +56,13 @@ export class CampaignController {
 
   @Post(':id/send')
   @Roles('ADMIN')
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
   send(@BusinessId() businessId: string, @Param('id') id: string) {
     return this.campaignService.sendCampaign(businessId, id);
   }
 
   @Post(':id/preview')
-  previewAudience(@BusinessId() businessId: string, @Body() body: { filters: any }) {
+  previewAudience(@BusinessId() businessId: string, @Body() body: PreviewAudienceDto) {
     return this.campaignService.previewAudience(businessId, body.filters);
   }
 }

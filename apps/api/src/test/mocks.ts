@@ -4,7 +4,16 @@ import { PrismaClient } from '@booking-os/db';
 export type MockPrisma = DeepMockProxy<PrismaClient>;
 
 export function createMockPrisma(): MockPrisma {
-  return mockDeep<PrismaClient>();
+  const prisma = mockDeep<PrismaClient>();
+  // Make $transaction execute callbacks with the mock itself as tx
+  // This supports interactive transactions used in security-critical operations
+  (prisma.$transaction as jest.Mock).mockImplementation(async (fnOrArray: any) => {
+    if (typeof fnOrArray === 'function') {
+      return fnOrArray(prisma);
+    }
+    return fnOrArray;
+  });
+  return prisma;
 }
 
 export function createMockClaudeClient() {
@@ -31,6 +40,7 @@ export function createMockTokenService() {
     markUsed: jest.fn().mockResolvedValue(undefined),
     revokeTokens: jest.fn().mockResolvedValue(undefined),
     revokeBookingTokens: jest.fn().mockResolvedValue(undefined),
+    revokeAllTokensForEmail: jest.fn().mockResolvedValue(undefined),
   };
 }
 

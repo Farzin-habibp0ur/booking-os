@@ -10,12 +10,13 @@ import {
   UseInterceptors,
   UploadedFile,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CustomerService } from './customer.service';
-import { BusinessId } from '../../common/decorators';
+import { BusinessId, CurrentUser } from '../../common/decorators';
 import { TenantGuard } from '../../common/tenant.guard';
 import { CreateCustomerDto, UpdateCustomerDto } from '../../common/dto';
 
@@ -23,6 +24,8 @@ import { CreateCustomerDto, UpdateCustomerDto } from '../../common/dto';
 @Controller('customers')
 @UseGuards(AuthGuard('jwt'), TenantGuard)
 export class CustomerController {
+  private readonly logger = new Logger(CustomerController.name);
+
   constructor(private customerService: CustomerService) {}
 
   @Get()
@@ -71,13 +74,25 @@ export class CustomerController {
 
   @Post('import-csv')
   @UseInterceptors(FileInterceptor('file'))
-  async importCsv(@BusinessId() businessId: string, @UploadedFile() file: Express.Multer.File) {
+  async importCsv(
+    @BusinessId() businessId: string,
+    @UploadedFile() file: Express.Multer.File,
+    @CurrentUser() user: any,
+  ) {
     if (!file) throw new BadRequestException('No file uploaded');
+
+    // M6 fix: File size limit (2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      throw new BadRequestException('CSV file must be under 2MB');
+    }
 
     const content = file.buffer.toString('utf-8');
     const lines = content.split('\n').filter((l) => l.trim());
     if (lines.length < 2)
       throw new BadRequestException('CSV must have a header and at least one data row');
+    // M6 fix: Row limit to prevent DoS
+    if (lines.length > 5001)
+      throw new BadRequestException('CSV must have at most 5000 data rows');
 
     const header = lines[0].split(',').map((h) => h.trim().toLowerCase());
     const nameIdx = header.findIndex((h) => h === 'name');
@@ -87,10 +102,41 @@ export class CustomerController {
 
     if (phoneIdx === -1) throw new BadRequestException('CSV must have a "phone" column');
 
+    // M6 fix: RFC 4180-aware field parsing (handle quoted fields with commas)
+    const parseRow = (line: string): string[] => {
+      const fields: string[] = [];
+      let current = '';
+      let inQuotes = false;
+      for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (inQuotes) {
+          if (ch === '"' && line[i + 1] === '"') {
+            current += '"';
+            i++; // skip escaped quote
+          } else if (ch === '"') {
+            inQuotes = false;
+          } else {
+            current += ch;
+          }
+        } else {
+          if (ch === '"') {
+            inQuotes = true;
+          } else if (ch === ',') {
+            fields.push(current.trim());
+            current = '';
+          } else {
+            current += ch;
+          }
+        }
+      }
+      fields.push(current.trim());
+      return fields;
+    };
+
     const customers = lines
       .slice(1)
       .map((line) => {
-        const cols = line.split(',').map((c) => c.trim());
+        const cols = parseRow(line);
         return {
           name: nameIdx >= 0 ? cols[nameIdx] || '' : '',
           phone: cols[phoneIdx] || '',
@@ -106,7 +152,14 @@ export class CustomerController {
       })
       .filter((c) => c.phone);
 
-    return this.customerService.bulkCreate(businessId, customers);
+    const result = await this.customerService.bulkCreate(businessId, customers);
+
+    // M13 fix: Audit log for CSV import
+    this.logger.log(
+      `CSV_IMPORT business=${businessId} staff=${user?.id || 'unknown'} rows=${customers.length} file=${file.originalname || 'unknown'}`,
+    );
+
+    return result;
   }
 
   @Post('import-from-conversations')

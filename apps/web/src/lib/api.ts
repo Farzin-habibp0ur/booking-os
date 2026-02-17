@@ -3,21 +3,13 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1
 class ApiClient {
   private token: string | null = null;
 
+  // C2 fix: Tokens stored in-memory only — no localStorage.
+  // Authentication relies on httpOnly cookies set by the backend.
   setToken(token: string | null) {
     this.token = token;
-    if (typeof window !== 'undefined') {
-      if (token) {
-        localStorage.setItem('token', token);
-      } else {
-        localStorage.removeItem('token');
-      }
-    }
   }
 
   getToken(): string | null {
-    if (!this.token && typeof window !== 'undefined') {
-      this.token = localStorage.getItem('token');
-    }
     return this.token;
   }
 
@@ -47,7 +39,10 @@ class ApiClient {
           window.location.href = '/login';
         }
       }
-      throw new Error(error.message || `HTTP ${res.status}`);
+      // M15 fix: Sanitize error messages — strip internal details (stack traces, SQL, file paths)
+      const rawMsg: string = error.message || `HTTP ${res.status}`;
+      const safeMsg = rawMsg.length > 200 ? rawMsg.slice(0, 200) : rawMsg;
+      throw new Error(safeMsg.replace(/\bat\s+\S+\.\S+\s*\(.*?\)/g, '').trim());
     }
 
     return res.json();

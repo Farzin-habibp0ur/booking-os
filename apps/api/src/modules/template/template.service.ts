@@ -48,6 +48,23 @@ export class TemplateService {
     return [...new Set(matches.map((m) => m.replace(/\{\{|\}\}/g, '')))];
   }
 
+  // M5 fix: HTML-escape user-provided values to prevent XSS in email templates
+  private escapeHtml(str: string): string {
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  // URL values should not be escaped (links need to work in emails)
+  private static readonly URL_KEYS = new Set([
+    'bookingLink',
+    'rescheduleLink',
+    'cancelLink',
+  ]);
+
   async resolveVariables(
     template: { body: string; variables: string[] },
     context: {
@@ -78,7 +95,8 @@ export class TemplateService {
     };
     for (const [key, value] of Object.entries(map)) {
       if (value) {
-        resolved = resolved.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), value);
+        const safe = TemplateService.URL_KEYS.has(key) ? value : this.escapeHtml(value);
+        resolved = resolved.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), safe);
       }
     }
     return resolved;

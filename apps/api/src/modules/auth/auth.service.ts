@@ -1,5 +1,6 @@
 import {
   Injectable,
+  Logger,
   UnauthorizedException,
   ConflictException,
   BadRequestException,
@@ -16,15 +17,28 @@ const LOCKOUT_MINUTES = 15;
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
   private failedAttempts = new Map<string, { count: number; lockedUntil?: Date }>();
 
+  // M2 fix: Periodic cleanup of stale brute force entries to prevent memory leak
   constructor(
     private prisma: PrismaService,
     private jwt: JwtService,
     private config: ConfigService,
     private tokenService: TokenService,
     private emailService: EmailService,
-  ) {}
+  ) {
+    // M2 fix: Clean up expired brute force entries every 5 minutes
+    const timer = setInterval(() => {
+      const now = new Date();
+      for (const [email, entry] of this.failedAttempts) {
+        if (entry.lockedUntil && entry.lockedUntil < now) {
+          this.failedAttempts.delete(email);
+        }
+      }
+    }, 5 * 60 * 1000);
+    timer.unref();
+  }
 
   private checkBruteForce(email: string): void {
     const entry = this.failedAttempts.get(email);
@@ -46,12 +60,16 @@ export class AuthService {
     this.failedAttempts.delete(email);
   }
 
+  // C3 fix: No insecure fallback — fail hard if secrets are not configured
   private getRefreshSecret(): string {
-    return (
-      this.config.get<string>('JWT_REFRESH_SECRET') ||
-      this.config.get<string>('JWT_SECRET') ||
-      'dev-secret-change-in-production'
-    );
+    const refreshSecret = this.config.get<string>('JWT_REFRESH_SECRET');
+    const jwtSecret = this.config.get<string>('JWT_SECRET');
+    if (!refreshSecret && !jwtSecret) throw new Error('JWT_REFRESH_SECRET or JWT_SECRET must be configured');
+    // M3 fix: Warn if refresh and access tokens share the same signing key
+    if (!refreshSecret && jwtSecret) {
+      this.logger.warn('JWT_REFRESH_SECRET not set — falling back to JWT_SECRET. Set a separate secret for production.');
+    }
+    return refreshSecret || jwtSecret!;
   }
 
   private issueTokens(staff: { id: string; email: string; businessId: string; role: string }) {
@@ -87,7 +105,7 @@ export class AuthService {
       '-' +
       Date.now().toString(36);
 
-    const passwordHash = await bcrypt.hash(data.password, 10);
+    const passwordHash = await bcrypt.hash(data.password, 12);
 
     const business = await this.prisma.business.create({
       data: { name: data.businessName, slug },
@@ -219,7 +237,7 @@ export class AuthService {
   async resetPassword(token: string, newPassword: string) {
     const tokenRecord = await this.tokenService.validateToken(token, 'PASSWORD_RESET');
 
-    const passwordHash = await bcrypt.hash(newPassword, 10);
+    const passwordHash = await bcrypt.hash(newPassword, 12);
     await this.prisma.staff.update({
       where: { id: tokenRecord.staffId! },
       data: { passwordHash },
@@ -237,14 +255,15 @@ export class AuthService {
     const valid = await bcrypt.compare(currentPassword, staff.passwordHash);
     if (!valid) throw new BadRequestException('Current password is incorrect');
 
-    const passwordHash = await bcrypt.hash(newPassword, 10);
+    const passwordHash = await bcrypt.hash(newPassword, 12);
     await this.prisma.staff.update({
       where: { id: staffId },
       data: { passwordHash },
     });
 
-    // Invalidate all existing tokens by revoking refresh tokens
-    await this.tokenService.revokeTokens(staff.email, 'PASSWORD_RESET');
+    // C4 fix: Revoke ALL stored tokens (password reset, invite, self-serve links)
+    // Note: Full JWT revocation requires a blacklist system (tracked as H1)
+    await this.tokenService.revokeAllTokensForEmail(staff.email);
 
     // Issue new tokens for the current session
     const tokens = this.issueTokens(staff);
@@ -260,7 +279,7 @@ export class AuthService {
 
     if (!staff) throw new BadRequestException('Staff member not found');
 
-    const passwordHash = await bcrypt.hash(password, 10);
+    const passwordHash = await bcrypt.hash(password, 12);
     const updatedStaff = await this.prisma.staff.update({
       where: { id: staff.id },
       data: { passwordHash, isActive: true },

@@ -9,21 +9,42 @@ export class AutomationExecutorService {
 
   constructor(private prisma: PrismaService) {}
 
+  // H5 fix: Paginated execution with time limit to prevent resource exhaustion
+  private static readonly PAGE_SIZE = 50;
+  private static readonly MAX_EXECUTION_MS = 50_000; // 50s limit (10s buffer before next cron)
+
   @Cron(CronExpression.EVERY_MINUTE)
   async executeRules() {
     if (this.processing) return;
     this.processing = true;
+    const startTime = Date.now();
     try {
-      const rules = await this.prisma.automationRule.findMany({
-        where: { isActive: true },
-      });
-
-      for (const rule of rules) {
-        try {
-          await this.processRule(rule);
-        } catch (err: any) {
-          this.logger.error(`Automation rule ${rule.id} failed: ${err.message}`);
+      let skip = 0;
+      while (true) {
+        if (Date.now() - startTime > AutomationExecutorService.MAX_EXECUTION_MS) {
+          this.logger.warn('Automation execution time limit reached, deferring remaining rules');
+          break;
         }
+
+        const rules = await this.prisma.automationRule.findMany({
+          where: { isActive: true },
+          take: AutomationExecutorService.PAGE_SIZE,
+          skip,
+          orderBy: { id: 'asc' },
+        });
+        if (rules.length === 0) break;
+
+        for (const rule of rules) {
+          if (Date.now() - startTime > AutomationExecutorService.MAX_EXECUTION_MS) break;
+          try {
+            await this.processRule(rule);
+          } catch (err: any) {
+            this.logger.error(`Automation rule ${rule.id} failed: ${err.message}`);
+          }
+        }
+
+        skip += AutomationExecutorService.PAGE_SIZE;
+        if (rules.length < AutomationExecutorService.PAGE_SIZE) break;
       }
     } finally {
       this.processing = false;
@@ -126,6 +147,9 @@ export class AutomationExecutorService {
     }
   }
 
+  // M14 fix: Global per-customer daily cap across ALL rules (prevents multi-rule spam)
+  private static readonly GLOBAL_MAX_PER_CUSTOMER_PER_DAY = 10;
+
   private async executeActions(
     rule: any,
     actions: any[],
@@ -133,7 +157,7 @@ export class AutomationExecutorService {
     bookingId?: string,
     customerId?: string,
   ) {
-    // Check frequency cap
+    // Check per-rule frequency cap
     if (customerId && rule.maxPerCustomerPerDay > 0) {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -153,6 +177,32 @@ export class AutomationExecutorService {
           'FREQUENCY_CAP',
           'SKIPPED',
           'Daily limit reached',
+        );
+        return;
+      }
+    }
+
+    // M14 fix: Global per-customer cap across all rules
+    if (customerId) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const globalTodayCount = await this.prisma.automationLog.count({
+        where: {
+          customerId,
+          businessId,
+          outcome: 'SENT',
+          createdAt: { gte: today },
+        },
+      });
+      if (globalTodayCount >= AutomationExecutorService.GLOBAL_MAX_PER_CUSTOMER_PER_DAY) {
+        await this.logAction(
+          rule,
+          businessId,
+          bookingId,
+          customerId,
+          'GLOBAL_FREQUENCY_CAP',
+          'SKIPPED',
+          'Global daily limit reached',
         );
         return;
       }

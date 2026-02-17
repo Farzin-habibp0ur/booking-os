@@ -14,6 +14,7 @@ import { TenantGuard } from '../../common/tenant.guard';
 import { RolesGuard, Roles } from '../../common/roles.guard';
 import { BusinessId } from '../../common/decorators';
 import { AutomationService } from './automation.service';
+import { CreateAutomationRuleDto, UpdateAutomationRuleDto } from '../../common/dto';
 
 @Controller('automations')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
@@ -38,13 +39,13 @@ export class AutomationController {
 
   @Post('rules')
   @Roles('ADMIN')
-  createRule(@BusinessId() businessId: string, @Body() body: any) {
+  createRule(@BusinessId() businessId: string, @Body() body: CreateAutomationRuleDto) {
     return this.automationService.createRule(businessId, body);
   }
 
   @Patch('rules/:id')
   @Roles('ADMIN')
-  updateRule(@BusinessId() businessId: string, @Param('id') id: string, @Body() body: any) {
+  updateRule(@BusinessId() businessId: string, @Param('id') id: string, @Body() body: UpdateAutomationRuleDto) {
     return this.automationService.updateRule(businessId, id, body);
   }
 

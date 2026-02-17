@@ -7,6 +7,7 @@ import { CustomerService } from '../modules/customer/customer.service';
 import { ServiceController } from '../modules/service/service.controller';
 import { ServiceService } from '../modules/service/service.service';
 import { JwtStrategy } from '../modules/auth/jwt.strategy';
+import { JwtBlacklistService } from '../common/jwt-blacklist.service';
 import { ProfileExtractor } from '../modules/ai/profile-extractor';
 import { NotificationService } from '../modules/notification/notification.service';
 import { BusinessService } from '../modules/business/business.service';
@@ -37,6 +38,7 @@ describe('Tenant Isolation', () => {
         CustomerService,
         ServiceService,
         JwtStrategy,
+        JwtBlacklistService,
         { provide: ProfileExtractor, useValue: mockProfileExtractor },
         { provide: NotificationService, useValue: createMockNotificationService() },
         { provide: BusinessService, useValue: createMockBusinessService() },
@@ -44,6 +46,9 @@ describe('Tenant Isolation', () => {
         { provide: TokenService, useValue: createMockTokenService() },
       ],
     );
+
+    // H2: JwtStrategy.validate() now verifies staff exists and is active
+    ctx.prisma.staff.findUnique.mockResolvedValue({ id: 'staff-a', isActive: true } as any);
 
     bizAToken = getAuthToken(ctx.jwtService, { businessId: 'biz-a', sub: 'staff-a' });
     bizBToken = getAuthToken(ctx.jwtService, { businessId: 'biz-b', sub: 'staff-b' });

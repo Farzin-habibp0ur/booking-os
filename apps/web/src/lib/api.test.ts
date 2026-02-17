@@ -32,31 +32,33 @@ describe('ApiClient', () => {
   });
 
   describe('setToken', () => {
-    it('stores token in localStorage', () => {
+    it('stores token in memory only (C2 fix: no localStorage)', () => {
       api.setToken('test-token');
 
-      expect(window.localStorage.setItem).toHaveBeenCalledWith('token', 'test-token');
-      expect(mockLocalStorage['token']).toBe('test-token');
+      expect(api.getToken()).toBe('test-token');
+      // Should NOT touch localStorage
+      expect(window.localStorage.setItem).not.toHaveBeenCalled();
     });
 
-    it('removes token from localStorage when set to null', () => {
-      mockLocalStorage['token'] = 'existing-token';
-
+    it('clears in-memory token when set to null', () => {
+      api.setToken('existing-token');
       api.setToken(null);
 
-      expect(window.localStorage.removeItem).toHaveBeenCalledWith('token');
-      expect(mockLocalStorage['token']).toBeUndefined();
+      expect(api.getToken()).toBeNull();
+      // Should NOT touch localStorage
+      expect(window.localStorage.removeItem).not.toHaveBeenCalled();
     });
   });
 
   describe('getToken', () => {
-    it('retrieves token from localStorage', () => {
+    it('returns in-memory token without localStorage fallback', () => {
       mockLocalStorage['token'] = 'stored-token';
 
       const token = api.getToken();
 
-      expect(token).toBe('stored-token');
-      expect(window.localStorage.getItem).toHaveBeenCalledWith('token');
+      // Should NOT read from localStorage (C2 fix)
+      expect(token).toBeNull();
+      expect(window.localStorage.getItem).not.toHaveBeenCalled();
     });
 
     it('returns null when no token exists', () => {

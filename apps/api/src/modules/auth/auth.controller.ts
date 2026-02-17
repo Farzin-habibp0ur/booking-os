@@ -5,6 +5,7 @@ import { Throttle } from '@nestjs/throttler';
 import { ConfigService } from '@nestjs/config';
 import { Response, Request } from 'express';
 import { AuthService } from './auth.service';
+import { JwtBlacklistService } from '../../common/jwt-blacklist.service';
 import { CurrentUser } from '../../common/decorators';
 import {
   SignupDto,
@@ -20,6 +21,7 @@ export class AuthController {
   constructor(
     private authService: AuthService,
     private config: ConfigService,
+    private blacklist: JwtBlacklistService,
   ) {}
 
   private isProduction(): boolean {
@@ -58,7 +60,7 @@ export class AuthController {
   }
 
   @Post('login')
-  @Throttle({ default: { ttl: 60000, limit: 30 } })
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
   async login(
     @Body() body: { email: string; password: string },
     @Res({ passthrough: true }) res: Response,
@@ -72,11 +74,10 @@ export class AuthController {
   @Throttle({ default: { ttl: 60000, limit: 10 } })
   async refresh(
     @Req() req: Request,
-    @Body() body: { refreshToken?: string },
     @Res({ passthrough: true }) res: Response,
   ) {
-    // Support cookie-based refresh (preferred) or body-based (legacy)
-    const token = (req.cookies?.refresh_token as string) || body.refreshToken;
+    // H3 fix: Only accept refresh token from httpOnly cookie — not from request body
+    const token = req.cookies?.refresh_token as string;
     if (!token) {
       return { message: 'No refresh token provided' };
     }
@@ -87,7 +88,12 @@ export class AuthController {
 
   @Post('logout')
   @UseGuards(AuthGuard('jwt'))
-  logout(@Res({ passthrough: true }) res: Response) {
+  logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    // H1 fix: Blacklist current access token so it can't be reused
+    const token = req.cookies?.access_token as string;
+    if (token) {
+      this.blacklist.blacklistToken(token);
+    }
     this.clearTokenCookies(res);
     return { ok: true };
   }
@@ -112,8 +118,30 @@ export class AuthController {
 
   @Post('change-password')
   @UseGuards(AuthGuard('jwt'))
-  changePassword(@CurrentUser('sub') staffId: string, @Body() body: ChangePasswordDto) {
-    return this.authService.changePassword(staffId, body.currentPassword, body.newPassword);
+  async changePassword(
+    @Req() req: Request,
+    @CurrentUser('sub') staffId: string,
+    @Body() body: ChangePasswordDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const result = await this.authService.changePassword(
+      staffId,
+      body.currentPassword,
+      body.newPassword,
+    );
+    // H1 fix: Blacklist old access token after password change
+    const oldToken = req.cookies?.access_token as string;
+    if (oldToken) {
+      this.blacklist.blacklistToken(oldToken);
+    }
+    // Set new token cookies
+    if (result.accessToken && result.refreshToken) {
+      this.setTokenCookies(res, {
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
+      });
+    }
+    return result;
   }
 
   @Post('accept-invite')

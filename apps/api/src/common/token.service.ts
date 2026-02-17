@@ -58,4 +58,11 @@ export class TokenService {
       where: { bookingId, type },
     });
   }
+
+  // C4 support: Revoke all stored tokens for a user regardless of type
+  async revokeAllTokensForEmail(email: string) {
+    await this.prisma.token.deleteMany({
+      where: { email },
+    });
+  }
 }

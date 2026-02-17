@@ -108,8 +108,7 @@ describe('AuthProvider', () => {
     });
   });
 
-  it('clears token on failed /auth/me', async () => {
-    (api.getToken as jest.Mock).mockReturnValue('invalid-token');
+  it('shows not logged in on failed /auth/me (C2: cookie-based auth)', async () => {
     (api.get as jest.Mock).mockRejectedValue(new Error('Unauthorized'));
 
     render(
@@ -119,13 +118,13 @@ describe('AuthProvider', () => {
     );
 
     await waitFor(() => {
-      expect(api.setToken).toHaveBeenCalledWith(null);
       expect(screen.getByTestId('user-status')).toHaveTextContent('Not logged in');
     });
   });
 
-  it('does not fetch /auth/me when no token exists', async () => {
+  it('always fetches /auth/me on mount (C2: cookie-based auth)', async () => {
     (api.getToken as jest.Mock).mockReturnValue(null);
+    (api.get as jest.Mock).mockRejectedValue(new Error('Unauthorized'));
 
     render(
       <AuthProvider>
@@ -134,16 +133,18 @@ describe('AuthProvider', () => {
     );
 
     await waitFor(() => {
+      expect(api.get).toHaveBeenCalledWith('/auth/me');
       expect(screen.getByTestId('user-status')).toHaveTextContent('Not logged in');
     });
-
-    expect(api.get).not.toHaveBeenCalled();
   });
 
-  it('login() calls api.post and api.get', async () => {
+  it('login() calls api.post and api.get without storing token (C2 fix)', async () => {
     (api.getToken as jest.Mock).mockReturnValue(null);
     (api.post as jest.Mock).mockResolvedValue({ accessToken: 'new-token', staff: mockUser });
-    (api.get as jest.Mock).mockResolvedValue(mockUser);
+    // First call to /auth/me on mount fails, second after login succeeds
+    (api.get as jest.Mock)
+      .mockRejectedValueOnce(new Error('Unauthorized'))
+      .mockResolvedValue(mockUser);
 
     render(
       <AuthProvider>
@@ -166,7 +167,8 @@ describe('AuthProvider', () => {
         email: 'test@example.com',
         password: 'password',
       });
-      expect(api.setToken).toHaveBeenCalledWith('new-token');
+      // C2 fix: Should NOT store token in localStorage
+      expect(api.setToken).not.toHaveBeenCalledWith('new-token');
       expect(api.get).toHaveBeenCalledWith('/auth/me');
       expect(screen.getByTestId('user-status')).toHaveTextContent('Logged in as test@example.com');
     });
@@ -203,6 +205,8 @@ describe('AuthProvider', () => {
     const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
 
     (api.getToken as jest.Mock).mockReturnValue(null);
+    // Mount: /auth/me fails (no session), Login: post fails
+    (api.get as jest.Mock).mockRejectedValue(new Error('Unauthorized'));
     (api.post as jest.Mock).mockImplementation(() =>
       Promise.reject(new Error('Invalid credentials')),
     );
@@ -256,8 +260,9 @@ describe('AuthProvider', () => {
     });
   });
 
-  it('stops loading after initialization even without token', async () => {
+  it('stops loading after /auth/me completes (C2: always tries cookie auth)', async () => {
     (api.getToken as jest.Mock).mockReturnValue(null);
+    (api.get as jest.Mock).mockRejectedValue(new Error('Unauthorized'));
 
     function LoadingComponent() {
       const { loading, user } = useAuth();
@@ -275,7 +280,7 @@ describe('AuthProvider', () => {
       </AuthProvider>,
     );
 
-    // Should stop loading quickly when there's no token
+    // Should stop loading after /auth/me completes (even on failure)
     await waitFor(() => {
       expect(screen.getByTestId('loading')).toHaveTextContent('false');
     });

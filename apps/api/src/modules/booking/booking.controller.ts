@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Patch, Param, Body, Query, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
+import { Throttle } from '@nestjs/throttler';
 import { BookingService } from './booking.service';
 import { BusinessId, CurrentUser } from '../../common/decorators';
 import { TenantGuard } from '../../common/tenant.guard';
@@ -43,6 +44,7 @@ export class BookingController {
   }
 
   @Post()
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
   create(@BusinessId() businessId: string, @Body() body: CreateBookingDto) {
     return this.bookingService.create(businessId, body);
   }

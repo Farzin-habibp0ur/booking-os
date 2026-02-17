@@ -4,6 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigModule } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
+import cookieParser from 'cookie-parser';
 import { PrismaService } from '../common/prisma.service';
 import { createMockPrisma, MockPrisma } from './mocks';
 
@@ -46,6 +47,7 @@ export async function createIntegrationApp(
   const moduleRef: TestingModule = await moduleBuilder.compile();
   const app = moduleRef.createNestApplication();
 
+  app.use(cookieParser());
   app.setGlobalPrefix('api/v1');
   app.useGlobalPipes(
     new ValidationPipe({

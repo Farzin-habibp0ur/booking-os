@@ -70,8 +70,23 @@ export class WebhookController {
   }
 
   // Meta WhatsApp inbound messages (POST from Meta webhook)
+  // M10 fix: Enforce HMAC signature on WhatsApp webhook
   @Post('whatsapp')
-  async whatsappInbound(@Body() payload: any) {
+  async whatsappInbound(
+    @Body() payload: any,
+    @Headers('x-hub-signature-256') signature?: string,
+  ) {
+    const secret = this.configService.get<string>('WHATSAPP_APP_SECRET');
+    if (secret) {
+      const raw = JSON.stringify(payload);
+      const expected = crypto.createHmac('sha256', secret).update(raw).digest('hex');
+      const sig = (signature || '').replace('sha256=', '');
+      const sigBuf = Buffer.from(sig);
+      const expBuf = Buffer.from(expected);
+      if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
+        throw new ForbiddenException('Invalid WhatsApp webhook signature');
+      }
+    }
     const messages = WhatsAppCloudProvider.parseInboundWebhook(payload);
     const results: Array<{ externalId: string; status: 'processed' | 'duplicate' | 'error' }> = [];
 

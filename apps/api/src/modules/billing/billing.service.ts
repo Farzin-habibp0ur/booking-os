@@ -199,31 +199,42 @@ export class BillingService {
   async createDepositPaymentIntent(businessId: string, bookingId: string) {
     const stripe = this.requireStripe();
 
-    const booking = await this.prisma.booking.findFirst({
-      where: { id: bookingId, businessId },
-      include: { service: true },
-    });
+    // C8 fix: Wrap in transaction with row lock to prevent deposit race condition
+    const { paymentIntent, amount } = await this.prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM "Booking" WHERE id = ${bookingId} AND "businessId" = ${businessId} FOR UPDATE`;
 
-    if (!booking) throw new BadRequestException('Booking not found');
-    if (!booking.service.depositRequired)
-      throw new BadRequestException('Deposit not required for this service');
+      const booking = await tx.booking.findFirst({
+        where: { id: bookingId, businessId },
+        include: { service: true },
+      });
 
-    const amount = booking.service.depositAmount || booking.service.price;
-    if (!amount || amount <= 0) throw new BadRequestException('Invalid deposit amount');
+      if (!booking) throw new BadRequestException('Booking not found');
+      if (!booking.service.depositRequired)
+        throw new BadRequestException('Deposit not required for this service');
 
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(amount * 100), // Stripe uses cents
-      currency: 'usd',
-      metadata: { bookingId, businessId },
-    });
+      const amount = booking.service.depositAmount || booking.service.price;
+      if (!amount || amount <= 0) throw new BadRequestException('Invalid deposit amount');
 
-    await this.prisma.payment.create({
-      data: {
-        bookingId,
-        stripePaymentIntentId: paymentIntent.id,
-        amount,
-        status: 'pending',
-      },
+      // C9 fix: Add idempotency key to prevent duplicate payment intents on retry
+      const paymentIntent = await stripe.paymentIntents.create(
+        {
+          amount: Math.round(amount * 100), // Stripe uses cents
+          currency: 'usd',
+          metadata: { bookingId, businessId },
+        },
+        { idempotencyKey: `deposit-${bookingId}` },
+      );
+
+      await tx.payment.create({
+        data: {
+          bookingId,
+          stripePaymentIntentId: paymentIntent.id,
+          amount,
+          status: 'pending',
+        },
+      });
+
+      return { paymentIntent, amount };
     });
 
     return {

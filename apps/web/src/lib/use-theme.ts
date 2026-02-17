@@ -2,38 +2,21 @@
 
 import { useState, useEffect, useCallback } from 'react';
 
-type Theme = 'light' | 'dark' | 'system';
-
-function getSystemPreference(): 'light' | 'dark' {
-  if (typeof window === 'undefined') return 'light';
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-}
+type Theme = 'light' | 'dark';
 
 function applyTheme(theme: Theme) {
   if (typeof document === 'undefined') return;
-  const resolved = theme === 'system' ? getSystemPreference() : theme;
-  document.documentElement.classList.toggle('dark', resolved === 'dark');
+  document.documentElement.classList.toggle('dark', theme === 'dark');
 }
 
 export function useTheme() {
-  const [theme, setThemeState] = useState<Theme>('system');
+  const [theme, setThemeState] = useState<Theme>('light');
 
   useEffect(() => {
-    const stored = localStorage.getItem('theme') as Theme | null;
-    const initial = stored || 'system';
+    const stored = localStorage.getItem('theme');
+    const initial: Theme = stored === 'dark' ? 'dark' : 'light';
     setThemeState(initial);
     applyTheme(initial);
-
-    // Listen for system preference changes
-    const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    const handler = () => {
-      const current = localStorage.getItem('theme') as Theme | null;
-      if (!current || current === 'system') {
-        applyTheme('system');
-      }
-    };
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
   }, []);
 
   const setTheme = useCallback((newTheme: Theme) => {
@@ -43,8 +26,7 @@ export function useTheme() {
   }, []);
 
   const toggle = useCallback(() => {
-    const current = theme === 'system' ? getSystemPreference() : theme;
-    const next = current === 'dark' ? 'light' : 'dark';
+    const next: Theme = theme === 'dark' ? 'light' : 'dark';
     setTheme(next);
   }, [theme, setTheme]);
 

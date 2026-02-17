@@ -4,6 +4,7 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './jwt.strategy';
 import { TokenService } from '../../common/token.service';
+import { JwtBlacklistService } from '../../common/jwt-blacklist.service';
 import { EmailService } from '../email/email.service';
 import {
   createIntegrationApp,
@@ -49,6 +50,7 @@ describe('Auth Integration', () => {
       [
         AuthService,
         JwtStrategy,
+        JwtBlacklistService,
         { provide: TokenService, useValue: tokenService },
         { provide: EmailService, useValue: emailService },
       ],
@@ -142,21 +144,22 @@ describe('Auth Integration', () => {
         { expiresIn: '7d' },
       );
 
+      // H3: refresh token now comes from httpOnly cookie only
       const res = await request(ctx.app.getHttpServer())
         .post('/api/v1/auth/refresh')
-        .send({ refreshToken });
+        .set('Cookie', `refresh_token=${refreshToken}`);
 
       expect(res.status).toBe(201);
       expect(res.body).toHaveProperty('accessToken');
       expect(res.body).toHaveProperty('refreshToken');
     });
 
-    it('returns 401 on invalid refresh token', async () => {
+    it('returns 201 with message when no refresh token cookie', async () => {
       const res = await request(ctx.app.getHttpServer())
-        .post('/api/v1/auth/refresh')
-        .send({ refreshToken: 'invalid-token' });
+        .post('/api/v1/auth/refresh');
 
-      expect(res.status).toBe(401);
+      expect(res.status).toBe(201);
+      expect(res.body.message).toBe('No refresh token provided');
     });
   });
 
@@ -202,7 +205,7 @@ describe('Auth Integration', () => {
         businessName: 'New Biz',
         ownerName: 'Jane',
         email: 'jane@new.com',
-        password: 'password123',
+        password: 'Password123abc',
       });
 
       expect(res.status).toBe(201);
@@ -218,7 +221,7 @@ describe('Auth Integration', () => {
         businessName: 'New',
         ownerName: 'Jane',
         email: 'sarah@glowclinic.com',
-        password: 'password123',
+        password: 'Password123abc',
       });
 
       expect(res.status).toBe(409);
@@ -235,7 +238,7 @@ describe('Auth Integration', () => {
     it('returns 400 for password too short', async () => {
       const res = await request(ctx.app.getHttpServer())
         .post('/api/v1/auth/signup')
-        .send({ businessName: 'Biz', ownerName: 'Jane', email: 'jane@new.com', password: 'short' });
+        .send({ businessName: 'Biz', ownerName: 'Jane', email: 'jane@new.com', password: 'Short1' });
 
       expect(res.status).toBe(400);
     });
@@ -277,7 +280,7 @@ describe('Auth Integration', () => {
 
       const res = await request(ctx.app.getHttpServer())
         .post('/api/v1/auth/reset-password')
-        .send({ token: 'valid-token-hex', newPassword: 'newpassword123' });
+        .send({ token: 'valid-token-hex', newPassword: 'NewPassword123' });
 
       expect(res.status).toBe(201);
       expect(res.body).toEqual({ ok: true });
@@ -288,7 +291,7 @@ describe('Auth Integration', () => {
 
       const res = await request(ctx.app.getHttpServer())
         .post('/api/v1/auth/reset-password')
-        .send({ token: 'bad-token', newPassword: 'newpassword123' });
+        .send({ token: 'bad-token', newPassword: 'NewPassword123' });
 
       expect(res.status).toBe(400);
     });
@@ -307,7 +310,7 @@ describe('Auth Integration', () => {
       const res = await request(ctx.app.getHttpServer())
         .post('/api/v1/auth/change-password')
         .set('Authorization', `Bearer ${token}`)
-        .send({ currentPassword: 'password123', newPassword: 'newpassword123' });
+        .send({ currentPassword: 'password123', newPassword: 'NewPassword123' });
 
       expect(res.status).toBe(201);
       expect(res.body.ok).toBe(true);
@@ -318,7 +321,7 @@ describe('Auth Integration', () => {
     it('returns 401 without auth token', async () => {
       const res = await request(ctx.app.getHttpServer())
         .post('/api/v1/auth/change-password')
-        .send({ currentPassword: 'password123', newPassword: 'newpassword123' });
+        .send({ currentPassword: 'password123', newPassword: 'NewPassword123' });
 
       expect(res.status).toBe(401);
     });
@@ -331,7 +334,7 @@ describe('Auth Integration', () => {
       const res = await request(ctx.app.getHttpServer())
         .post('/api/v1/auth/change-password')
         .set('Authorization', `Bearer ${token}`)
-        .send({ currentPassword: 'wrongpassword', newPassword: 'newpassword123' });
+        .send({ currentPassword: 'wrongpassword', newPassword: 'NewPassword123' });
 
       expect(res.status).toBe(400);
     });
@@ -355,7 +358,7 @@ describe('Auth Integration', () => {
 
       const res = await request(ctx.app.getHttpServer())
         .post('/api/v1/auth/accept-invite')
-        .send({ token: 'invite-token-hex', password: 'mypassword123' });
+        .send({ token: 'invite-token-hex', password: 'MyPassword123x' });
 
       expect(res.status).toBe(201);
       expect(res.body).toHaveProperty('accessToken');
@@ -368,7 +371,7 @@ describe('Auth Integration', () => {
 
       const res = await request(ctx.app.getHttpServer())
         .post('/api/v1/auth/accept-invite')
-        .send({ token: 'bad-token', password: 'mypassword123' });
+        .send({ token: 'bad-token', password: 'MyPassword123x' });
 
       expect(res.status).toBe(400);
     });

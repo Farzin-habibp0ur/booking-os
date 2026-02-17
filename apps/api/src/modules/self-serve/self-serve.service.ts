@@ -97,14 +97,14 @@ export class SelfServeService {
       );
     }
 
+    // C5 fix: Mark token used BEFORE executing action to prevent concurrent reuse
+    await this.tokenService.markUsed(tokenRecord.id);
+
     // Update booking times
     const updated = await this.bookingService.update(booking.businessId, booking.id, {
       startTime,
       ...(staffId ? { staffId } : {}),
     });
-
-    // Mark token used
-    await this.tokenService.markUsed(tokenRecord.id);
 
     // Append to selfServeLog
     const existingFields = (booking.customFields as any) || {};
@@ -144,15 +144,15 @@ export class SelfServeService {
       );
     }
 
+    // C5 fix: Mark token used BEFORE executing action to prevent concurrent reuse
+    await this.tokenService.markUsed(tokenRecord.id);
+
     // Cancel booking (no actor = customer action)
     const updated = await this.bookingService.updateStatus(
       booking.businessId,
       booking.id,
       'CANCELLED',
     );
-
-    // Mark token used
-    await this.tokenService.markUsed(tokenRecord.id);
 
     // Append to selfServeLog
     const existingFields = (booking.customFields as any) || {};
@@ -220,29 +220,47 @@ export class SelfServeService {
       throw new BadRequestException('Invalid token');
     }
 
-    const entry = await this.prisma.waitlistEntry.findFirst({
-      where: { id: record.bookingId },
-      include: {
-        customer: true,
-        service: true,
-        staff: true,
-      },
+    const entryId = record.bookingId;
+
+    // C5 fix: Mark token used BEFORE executing action to prevent concurrent reuse
+    await this.tokenService.markUsed(record.id);
+
+    // C6 fix: Wrap waitlist entry check in transaction with row lock
+    const { entry, slot } = await this.prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM "WaitlistEntry" WHERE id = ${entryId} FOR UPDATE`;
+
+      const entry = await tx.waitlistEntry.findFirst({
+        where: { id: entryId },
+        include: {
+          customer: true,
+          service: true,
+          staff: true,
+        },
+      });
+
+      if (!entry) throw new NotFoundException('Waitlist entry not found');
+      if (entry.status !== 'OFFERED') {
+        throw new BadRequestException('This offer is no longer available');
+      }
+      if (entry.offerExpiresAt && new Date() > entry.offerExpiresAt) {
+        throw new BadRequestException('This offer has expired');
+      }
+
+      const slot = entry.offeredSlot as any;
+      if (!slot?.startTime) {
+        throw new BadRequestException('Invalid offered slot data');
+      }
+
+      // Mark entry as claimed within transaction to prevent concurrent claims
+      await tx.waitlistEntry.update({
+        where: { id: entry.id },
+        data: { status: 'BOOKED' },
+      });
+
+      return { entry, slot };
     });
 
-    if (!entry) throw new NotFoundException('Waitlist entry not found');
-    if (entry.status !== 'OFFERED') {
-      throw new BadRequestException('This offer is no longer available');
-    }
-    if (entry.offerExpiresAt && new Date() > entry.offerExpiresAt) {
-      throw new BadRequestException('This offer has expired');
-    }
-
-    const slot = entry.offeredSlot as any;
-    if (!slot?.startTime) {
-      throw new BadRequestException('Invalid offered slot data');
-    }
-
-    // Create the booking
+    // Create the booking (has its own transaction for conflict checking)
     const booking = await this.bookingService.create(entry.businessId, {
       customerId: entry.customerId,
       serviceId: entry.serviceId,
@@ -250,11 +268,8 @@ export class SelfServeService {
       startTime: slot.startTime,
     });
 
-    // Resolve the waitlist entry
+    // Resolve the waitlist entry with booking ID
     await this.waitlistService.resolveEntry(entry.businessId, entry.id, booking.id);
-
-    // Mark token used
-    await this.tokenService.markUsed(record.id);
 
     return booking;
   }

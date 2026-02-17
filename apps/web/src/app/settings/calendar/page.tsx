@@ -80,6 +80,20 @@ function CalendarSyncPage() {
   const handleConnect = async (provider: string) => {
     try {
       const { url } = await api.post<{ url: string }>(`/calendar-sync/connect/${provider}`);
+      // H10 fix: Validate OAuth redirect URL against known providers
+      const allowedHosts = ['accounts.google.com', 'login.microsoftonline.com', 'login.live.com'];
+      try {
+        const parsed = new URL(url);
+        if (!allowedHosts.includes(parsed.hostname)) {
+          setToast('Invalid OAuth redirect URL');
+          setTimeout(() => setToast(null), 3000);
+          return;
+        }
+      } catch {
+        setToast('Invalid redirect URL');
+        setTimeout(() => setToast(null), 3000);
+        return;
+      }
       window.location.href = url;
     } catch {
       setToast(t('calendar_sync.connect_failed'));
