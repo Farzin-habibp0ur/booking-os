@@ -34,6 +34,7 @@ import {
 import CommandPalette from '@/components/command-palette';
 import { useTheme } from '@/lib/use-theme';
 
+// Shell component with full navigation
 export function Shell({ children }: { children: ReactNode }) {
   return (
     <VerticalPackProvider>

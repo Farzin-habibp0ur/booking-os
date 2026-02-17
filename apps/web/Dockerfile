@@ -11,6 +11,7 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+RUN rm -rf apps/web/.next apps/api/dist packages/shared/dist packages/db/dist && echo "clean build $(date)"
 ENV NEXT_TELEMETRY_DISABLED=1
 ARG NEXT_PUBLIC_API_URL=https://api.businesscommandcentre.com/api/v1
 ARG NEXT_PUBLIC_WS_URL=https://api.businesscommandcentre.com
