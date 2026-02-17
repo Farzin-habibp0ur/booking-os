@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
+import { cn } from '@/lib/cn';
 import {
   FileText,
   Languages,
@@ -18,14 +19,17 @@ import {
   ShieldCheck,
   ClipboardList,
   Tag,
+  Palette,
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
+import { useTheme } from '@/lib/use-theme';
 
 export default function SettingsPage() {
   const { t } = useI18n();
   const router = useRouter();
   const { user } = useAuth();
   const role = user?.role;
+  const { theme, setTheme } = useTheme();
   const [business, setBusiness] = useState<any>(null);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -343,6 +347,33 @@ export default function SettingsPage() {
               </div>
             </button>
           )}
+          <div className="p-3 rounded-xl border border-slate-100">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-9 h-9 bg-lavender-50 rounded-lg flex items-center justify-center">
+                <Palette size={18} className="text-lavender-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium">Appearance</p>
+                <p className="text-xs text-slate-500">Choose your preferred theme</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              {(['system', 'light', 'dark'] as const).map((opt) => (
+                <button
+                  key={opt}
+                  onClick={() => setTheme(opt)}
+                  className={cn(
+                    'px-3 py-1.5 text-xs rounded-lg border transition-colors capitalize',
+                    theme === opt
+                      ? 'border-sage-400 bg-sage-50 text-sage-700'
+                      : 'border-slate-200 hover:bg-slate-50 text-slate-600',
+                  )}
+                >
+                  {opt}
+                </button>
+              ))}
+            </div>
+          </div>
           <button
             onClick={() => router.push('/settings/account')}
             className="flex items-center gap-3 w-full text-left p-3 rounded-xl hover:bg-slate-50 border border-slate-100 transition-colors"

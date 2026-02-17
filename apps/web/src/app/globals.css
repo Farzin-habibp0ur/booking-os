@@ -8,3 +8,24 @@ body {
   background-color: #FCFCFD;
   @apply text-slate-800;
 }
+
+/* Dark mode overrides */
+.dark body,
+html.dark body {
+  background-color: #0f172a;
+  color: #e2e8f0;
+}
+
+/* Dark mode card shadows */
+.dark .shadow-soft {
+  box-shadow: 0 12px 40px -12px rgba(0, 0, 0, 0.3);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
