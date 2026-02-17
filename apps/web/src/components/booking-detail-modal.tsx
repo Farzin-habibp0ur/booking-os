@@ -230,8 +230,8 @@ export default function BookingDetailModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="booking-detail-title" ref={modalRef}>
-      <div className="absolute inset-0 bg-black/30" onClick={onClose} />
-      <div className="relative w-[520px] max-h-[80vh] bg-white rounded-2xl shadow-soft-lg flex flex-col">
+      <div className="absolute inset-0 bg-black/30 animate-fade-in" onClick={onClose} />
+      <div className="relative w-[520px] max-h-[80vh] bg-white rounded-2xl shadow-soft-lg flex flex-col animate-slide-in-right">
         {/* Override reason overlay */}
         {overrideOverlay && (
           <div className="absolute inset-0 z-10 bg-white/95 rounded-2xl flex items-center justify-center">

@@ -177,9 +177,9 @@ export default function CommandPalette({ isOpen, onClose }: { isOpen: boolean; o
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-[20vh]" onClick={onClose}>
-      <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" />
+      <div className="fixed inset-0 bg-black/30 backdrop-blur-sm animate-fade-in" />
       <div
-        className="relative bg-white rounded-2xl shadow-soft w-full max-w-lg mx-4 overflow-hidden"
+        className="relative bg-white rounded-2xl shadow-soft w-full max-w-lg mx-4 overflow-hidden animate-scale-in"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Search input */}

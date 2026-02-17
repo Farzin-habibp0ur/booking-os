@@ -17,7 +17,7 @@ export default function BulkActionBar({ count, onClear, actions }: BulkActionBar
   if (count === 0) return null;
 
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-slate-900 text-white rounded-2xl shadow-lg px-5 py-3 flex items-center gap-4 animate-in slide-in-from-bottom-4">
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-slate-900 text-white rounded-2xl shadow-lg px-5 py-3 flex items-center gap-4 animate-slide-in-from-bottom">
       <span className="text-sm font-medium">{count} selected</span>
       <div className="w-px h-5 bg-slate-700" />
       <div className="flex items-center gap-2">
