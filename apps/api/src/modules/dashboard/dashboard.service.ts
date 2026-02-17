@@ -37,33 +37,15 @@ export class DashboardService {
 
     const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
 
+    // Batch 1: Core data queries
     const [
       todayBookings,
       unassignedConversations,
       thisWeekBookings,
       lastWeekBookings,
-      noShowData,
-      responseData,
-      statusBreakdown,
       totalCustomers,
       newCustomersThisWeek,
       openConversationCount,
-      revenueThisMonth,
-      consultConversion,
-      // P1-18: Attention needed queries
-      depositPendingBookings,
-      tomorrowBookings,
-      overdueConversationsRaw,
-      // P1-20: Go-live checklist queries
-      nonAdminStaffCount,
-      activeServiceCount,
-      calendarConnectionCount,
-      templates,
-      anyBookingCount,
-      depositPaymentCount,
-      roiBaselineCount,
-      // P1-21: Milestone queries
-      completedBookingsCount,
       business,
     ] = await Promise.all([
       this.prisma.booking.findMany({
@@ -90,9 +72,6 @@ export class DashboardService {
       this.prisma.booking.count({
         where: { businessId, createdAt: { gte: twoWeeksAgo, lt: weekAgo } },
       }),
-      this.reportsService.noShowRate(businessId, 30),
-      this.reportsService.responseTimes(businessId),
-      this.reportsService.statusBreakdown(businessId, 7),
       this.prisma.customer.count({ where: { businessId } }),
       this.prisma.customer.count({
         where: { businessId, createdAt: { gte: weekAgo } },
@@ -100,6 +79,26 @@ export class DashboardService {
       this.prisma.conversation.count({
         where: { businessId, status: { in: ['OPEN', 'WAITING'] } },
       }),
+      this.prisma.business.findUnique({
+        where: { id: businessId },
+        select: { name: true, packConfig: true },
+      }),
+    ]);
+
+    // Batch 2: Reports + attention needed
+    const [
+      noShowData,
+      responseData,
+      statusBreakdown,
+      revenueThisMonth,
+      consultConversion,
+      depositPendingBookings,
+      tomorrowBookings,
+      overdueConversationsRaw,
+    ] = await Promise.all([
+      this.reportsService.noShowRate(businessId, 30),
+      this.reportsService.responseTimes(businessId),
+      this.reportsService.statusBreakdown(businessId, 7),
       this.prisma.booking
         .findMany({
           where: { businessId, createdAt: { gte: monthAgo }, status: 'COMPLETED' },
@@ -107,14 +106,12 @@ export class DashboardService {
         })
         .then((bookings) => bookings.reduce((sum, b) => sum + b.service.price, 0)),
       this.reportsService.consultToTreatmentConversion(businessId, 30),
-      // P1-18: Deposit-pending bookings
       this.prisma.booking.findMany({
         where: { businessId, status: 'PENDING_DEPOSIT' },
         include: { customer: true, service: true, staff: true },
         orderBy: { createdAt: 'desc' },
         take: 10,
       }),
-      // P1-18: Tomorrow's bookings
       this.prisma.booking.findMany({
         where: {
           businessId,
@@ -124,7 +121,6 @@ export class DashboardService {
         include: { customer: true, service: true, staff: true },
         orderBy: { startTime: 'asc' },
       }),
-      // P1-18: Overdue conversations (open, last message > 30 min ago)
       this.prisma.conversation.findMany({
         where: {
           businessId,
@@ -138,19 +134,28 @@ export class DashboardService {
         orderBy: { lastMessageAt: 'asc' },
         take: 10,
       }),
-      // P1-20: Non-admin staff count
+    ]);
+
+    // Batch 3: Go-live checklist + milestones
+    const [
+      nonAdminStaffCount,
+      activeServiceCount,
+      calendarConnectionCount,
+      templates,
+      anyBookingCount,
+      depositPaymentCount,
+      roiBaselineCount,
+      completedBookingsCount,
+    ] = await Promise.all([
       this.prisma.staff.count({
         where: { businessId, role: { not: 'ADMIN' }, isActive: true },
       }),
-      // P1-20: Active services count
       this.prisma.service.count({
         where: { businessId, isActive: true },
       }),
-      // P1-20: Calendar connections count
       this.prisma.calendarConnection.count({
         where: { staff: { businessId } },
       }),
-      // P1-20: Message templates (CONFIRMATION + REMINDER)
       this.prisma.messageTemplate.findMany({
         where: {
           businessId,
@@ -158,22 +163,13 @@ export class DashboardService {
         },
         select: { category: true },
       }),
-      // P1-20: Any booking exists
       this.prisma.booking.count({ where: { businessId } }),
-      // P1-20: Any deposit payment collected
       this.prisma.payment.count({
         where: { booking: { businessId }, status: 'succeeded' },
       }),
-      // P1-20: ROI baseline captured
       this.prisma.roiBaseline.count({ where: { businessId } }),
-      // P1-21: Completed bookings count
       this.prisma.booking.count({
         where: { businessId, status: 'COMPLETED' },
-      }),
-      // P1-21: Business info for name check + dismissed nudges
-      this.prisma.business.findUnique({
-        where: { id: businessId },
-        select: { name: true, packConfig: true },
       }),
     ]);
 
