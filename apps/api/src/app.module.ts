@@ -35,6 +35,7 @@ import { WaitlistModule } from './modules/waitlist/waitlist.module';
 import { SearchModule } from './modules/search/search.module';
 import { CampaignModule } from './modules/campaign/campaign.module';
 import { OfferModule } from './modules/offer/offer.module';
+import { AutomationModule } from './modules/automation/automation.module';
 
 @Module({
   imports: [
@@ -86,6 +87,7 @@ import { OfferModule } from './modules/offer/offer.module';
     SearchModule,
     CampaignModule,
     OfferModule,
+    AutomationModule,
     process.env.REDIS_URL ? QueueModule.forRootWithRedis() : QueueModule.forRoot(),
   ],
 })

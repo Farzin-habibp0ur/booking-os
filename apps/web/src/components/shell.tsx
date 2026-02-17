@@ -26,6 +26,7 @@ import {
   Menu,
   Search,
   Megaphone,
+  Zap,
   X,
 } from 'lucide-react';
 import CommandPalette from '@/components/command-palette';
@@ -94,6 +95,7 @@ function ShellInner({ children }: { children: ReactNode }) {
     },
     { href: '/staff', label: t('nav.staff'), icon: UserCog, roles: ['ADMIN'] },
     { href: '/campaigns', label: 'Campaigns', icon: Megaphone, roles: ['ADMIN'] },
+    { href: '/automations', label: 'Automations', icon: Zap, roles: ['ADMIN'] },
     { href: '/reports', label: t('nav.reports'), icon: BarChart3, roles: ['ADMIN', 'AGENT'] },
     ...(pack.name !== 'general'
       ? [{ href: '/roi', label: t('nav.roi'), icon: TrendingUp, roles: ['ADMIN'] }]
