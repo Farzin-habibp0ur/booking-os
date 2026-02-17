@@ -188,7 +188,12 @@ describe('CampaignsPage', () => {
     mockApi.get.mockResolvedValue({
       data: [
         createCampaign({ id: 'c1', name: 'February Promo', status: 'DRAFT' }),
-        createCampaign({ id: 'c2', name: 'Spring Sale', status: 'SENT', sentAt: '2026-02-01T12:00:00Z' }),
+        createCampaign({
+          id: 'c2',
+          name: 'Spring Sale',
+          status: 'SENT',
+          sentAt: '2026-02-01T12:00:00Z',
+        }),
       ],
       total: 2,
     });

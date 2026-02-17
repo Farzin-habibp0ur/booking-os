@@ -32,9 +32,27 @@ const mockBookingData = {
 };
 
 const mockSlots = [
-  { time: '2026-03-20T09:00:00Z', display: '9:00 AM', staffId: 'st1', staffName: 'Jane D.', available: true },
-  { time: '2026-03-20T10:00:00Z', display: '10:00 AM', staffId: 'st1', staffName: 'Jane D.', available: true },
-  { time: '2026-03-20T11:00:00Z', display: '11:00 AM', staffId: 'st2', staffName: 'Bob R.', available: true },
+  {
+    time: '2026-03-20T09:00:00Z',
+    display: '9:00 AM',
+    staffId: 'st1',
+    staffName: 'Jane D.',
+    available: true,
+  },
+  {
+    time: '2026-03-20T10:00:00Z',
+    display: '10:00 AM',
+    staffId: 'st1',
+    staffName: 'Jane D.',
+    available: true,
+  },
+  {
+    time: '2026-03-20T11:00:00Z',
+    display: '11:00 AM',
+    staffId: 'st2',
+    staffName: 'Bob R.',
+    available: true,
+  },
 ];
 
 describe('ReschedulePage', () => {
@@ -99,9 +117,7 @@ describe('ReschedulePage', () => {
   });
 
   test('shows time slots with staff names', async () => {
-    mockPublicApi.get
-      .mockResolvedValueOnce(mockBookingData)
-      .mockResolvedValueOnce(mockSlots);
+    mockPublicApi.get.mockResolvedValueOnce(mockBookingData).mockResolvedValueOnce(mockSlots);
     render(<ReschedulePage />);
     await waitFor(() => screen.getByText('Select a new date'));
 
@@ -115,9 +131,7 @@ describe('ReschedulePage', () => {
   });
 
   test('selecting a slot shows confirm button', async () => {
-    mockPublicApi.get
-      .mockResolvedValueOnce(mockBookingData)
-      .mockResolvedValueOnce(mockSlots);
+    mockPublicApi.get.mockResolvedValueOnce(mockBookingData).mockResolvedValueOnce(mockSlots);
     render(<ReschedulePage />);
     await waitFor(() => screen.getByText('Select a new date'));
 
@@ -130,9 +144,7 @@ describe('ReschedulePage', () => {
   });
 
   test('confirm calls the reschedule API', async () => {
-    mockPublicApi.get
-      .mockResolvedValueOnce(mockBookingData)
-      .mockResolvedValueOnce(mockSlots);
+    mockPublicApi.get.mockResolvedValueOnce(mockBookingData).mockResolvedValueOnce(mockSlots);
     mockPublicApi.post.mockResolvedValue({});
     render(<ReschedulePage />);
     await waitFor(() => screen.getByText('Select a new date'));
@@ -144,17 +156,15 @@ describe('ReschedulePage', () => {
     fireEvent.click(screen.getByText('Confirm New Time'));
 
     await waitFor(() => {
-      expect(mockPublicApi.post).toHaveBeenCalledWith(
-        '/self-serve/reschedule/test-token-123',
-        { startTime: '2026-03-20T09:00:00Z', staffId: 'st1' },
-      );
+      expect(mockPublicApi.post).toHaveBeenCalledWith('/self-serve/reschedule/test-token-123', {
+        startTime: '2026-03-20T09:00:00Z',
+        staffId: 'st1',
+      });
     });
   });
 
   test('shows submitting state while rescheduling', async () => {
-    mockPublicApi.get
-      .mockResolvedValueOnce(mockBookingData)
-      .mockResolvedValueOnce(mockSlots);
+    mockPublicApi.get.mockResolvedValueOnce(mockBookingData).mockResolvedValueOnce(mockSlots);
     mockPublicApi.post.mockReturnValue(new Promise(() => {})); // never resolves
     render(<ReschedulePage />);
     await waitFor(() => screen.getByText('Select a new date'));
@@ -173,9 +183,7 @@ describe('ReschedulePage', () => {
   // ─── Success state ─────────────────────────────────────────────────
 
   test('shows success state after rescheduling', async () => {
-    mockPublicApi.get
-      .mockResolvedValueOnce(mockBookingData)
-      .mockResolvedValueOnce(mockSlots);
+    mockPublicApi.get.mockResolvedValueOnce(mockBookingData).mockResolvedValueOnce(mockSlots);
     mockPublicApi.post.mockResolvedValue({});
     render(<ReschedulePage />);
     await waitFor(() => screen.getByText('Select a new date'));
@@ -204,9 +212,7 @@ describe('ReschedulePage', () => {
   });
 
   test('shows error when reschedule fails', async () => {
-    mockPublicApi.get
-      .mockResolvedValueOnce(mockBookingData)
-      .mockResolvedValueOnce(mockSlots);
+    mockPublicApi.get.mockResolvedValueOnce(mockBookingData).mockResolvedValueOnce(mockSlots);
     mockPublicApi.post.mockRejectedValue(new Error('Slot no longer available'));
     render(<ReschedulePage />);
     await waitFor(() => screen.getByText('Select a new date'));
@@ -226,9 +232,7 @@ describe('ReschedulePage', () => {
   // ─── No slots ──────────────────────────────────────────────────────
 
   test('shows "no times" message when no slots available', async () => {
-    mockPublicApi.get
-      .mockResolvedValueOnce(mockBookingData)
-      .mockResolvedValueOnce([]); // empty slots
+    mockPublicApi.get.mockResolvedValueOnce(mockBookingData).mockResolvedValueOnce([]); // empty slots
     render(<ReschedulePage />);
     await waitFor(() => screen.getByText('Select a new date'));
 

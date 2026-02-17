@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { Prisma } from '@booking-os/db';
 import { PrismaService } from '../../common/prisma.service';
 
@@ -114,7 +109,9 @@ export class PackBuilderService {
   ) {
     const pack = await this.getPackById(id);
     if (pack.isPublished) {
-      throw new BadRequestException('Cannot update a published pack version. Create a new version instead.');
+      throw new BadRequestException(
+        'Cannot update a published pack version. Create a new version instead.',
+      );
     }
 
     const updateData: Prisma.VerticalPackVersionUpdateInput = {

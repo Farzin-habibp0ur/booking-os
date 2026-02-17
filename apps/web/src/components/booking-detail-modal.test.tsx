@@ -117,22 +117,12 @@ describe('BookingDetailModal', () => {
   // ─── Render / visibility ──────────────────────────────────────────
 
   test('renders nothing when no booking', () => {
-    const { container } = render(
-      <BookingDetailModal
-        {...defaultProps}
-        booking={null}
-      />,
-    );
+    const { container } = render(<BookingDetailModal {...defaultProps} booking={null} />);
     expect(container.querySelector('[role="dialog"]')).not.toBeInTheDocument();
   });
 
   test('renders nothing when not open', () => {
-    const { container } = render(
-      <BookingDetailModal
-        {...defaultProps}
-        isOpen={false}
-      />,
-    );
+    const { container } = render(<BookingDetailModal {...defaultProps} isOpen={false} />);
     expect(container.querySelector('[role="dialog"]')).not.toBeInTheDocument();
   });
 
@@ -168,10 +158,7 @@ describe('BookingDetailModal', () => {
 
   test('shows correct status for cancelled booking', () => {
     render(
-      <BookingDetailModal
-        {...defaultProps}
-        booking={{ ...mockBooking, status: 'CANCELLED' }}
-      />,
+      <BookingDetailModal {...defaultProps} booking={{ ...mockBooking, status: 'CANCELLED' }} />,
     );
     expect(screen.getByText('Cancelled')).toBeInTheDocument();
   });
@@ -184,12 +171,7 @@ describe('BookingDetailModal', () => {
   });
 
   test('shows "Any" when staff is null', () => {
-    render(
-      <BookingDetailModal
-        {...defaultProps}
-        booking={{ ...mockBooking, staff: null }}
-      />,
-    );
+    render(<BookingDetailModal {...defaultProps} booking={{ ...mockBooking, staff: null }} />);
     expect(screen.getByText('Any')).toBeInTheDocument();
   });
 
@@ -237,12 +219,7 @@ describe('BookingDetailModal', () => {
   });
 
   test('hides notes section when notes are absent', () => {
-    render(
-      <BookingDetailModal
-        {...defaultProps}
-        booking={{ ...mockBooking, notes: null }}
-      />,
-    );
+    render(<BookingDetailModal {...defaultProps} booking={{ ...mockBooking, notes: null }} />);
     expect(screen.queryByText('Notes')).not.toBeInTheDocument();
   });
 

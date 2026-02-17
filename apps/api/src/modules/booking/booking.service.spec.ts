@@ -822,11 +822,7 @@ describe('BookingService', () => {
       prisma.booking.create.mockResolvedValue({ id: 'b1' } as any);
       prisma.reminder.create.mockResolvedValue({} as any);
 
-      await bookingService.create(
-        'biz1',
-        { ...createData, forceBook: true },
-        adminUser,
-      );
+      await bookingService.create('biz1', { ...createData, forceBook: true }, adminUser);
 
       expect(prisma.booking.create).toHaveBeenCalledWith(
         expect.objectContaining({

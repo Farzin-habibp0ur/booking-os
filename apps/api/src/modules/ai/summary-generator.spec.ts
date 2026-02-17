@@ -7,8 +7,16 @@ describe('SummaryGenerator', () => {
 
   const sampleMessages = [
     { direction: 'INBOUND', content: 'I want to book a facial', createdAt: '2026-03-01T10:00:00Z' },
-    { direction: 'OUTBOUND', content: 'Sure! We have availability tomorrow at 2pm', createdAt: '2026-03-01T10:01:00Z' },
-    { direction: 'INBOUND', content: 'Perfect, please book that', createdAt: '2026-03-01T10:02:00Z' },
+    {
+      direction: 'OUTBOUND',
+      content: 'Sure! We have availability tomorrow at 2pm',
+      createdAt: '2026-03-01T10:01:00Z',
+    },
+    {
+      direction: 'INBOUND',
+      content: 'Perfect, please book that',
+      createdAt: '2026-03-01T10:02:00Z',
+    },
   ];
 
   beforeEach(() => {

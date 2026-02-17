@@ -46,7 +46,10 @@ export default function CalendarPage() {
       setStaff(s);
       setSelectedStaff(s.map((st: any) => st.id));
     });
-    api.get<any[]>('/locations').then(setLocations).catch(() => setLocations([]));
+    api
+      .get<any[]>('/locations')
+      .then(setLocations)
+      .catch(() => setLocations([]));
   }, []);
 
   useEffect(() => {
@@ -68,10 +71,7 @@ export default function CalendarPage() {
     });
     if (selectedLocationId) params.set('locationId', selectedLocationId);
 
-    api
-      .get<any[]>(`/bookings/calendar?${params}`)
-      .then(setBookings)
-      .catch(console.error);
+    api.get<any[]>(`/bookings/calendar?${params}`).then(setBookings).catch(console.error);
   };
 
   const navigate = (dir: number) => {

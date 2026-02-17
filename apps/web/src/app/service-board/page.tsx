@@ -5,15 +5,7 @@ import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { useAuth } from '@/lib/auth';
 import { usePack } from '@/lib/vertical-pack';
-import {
-  Kanban,
-  RefreshCw,
-  User,
-  Clock,
-  Wrench,
-  Car,
-  Filter,
-} from 'lucide-react';
+import { Kanban, RefreshCw, User, Clock, Wrench, Car, Filter } from 'lucide-react';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -36,10 +28,26 @@ interface KanbanBooking {
 
 const KANBAN_COLUMNS = [
   { status: 'CHECKED_IN', label: 'Checked In', color: 'bg-blue-50 border-blue-200 text-blue-800' },
-  { status: 'DIAGNOSING', label: 'Diagnosing', color: 'bg-amber-50 border-amber-200 text-amber-800' },
-  { status: 'AWAITING_APPROVAL', label: 'Awaiting Approval', color: 'bg-lavender-50 border-lavender-200 text-lavender-800' },
-  { status: 'IN_PROGRESS', label: 'In Progress', color: 'bg-sage-50 border-sage-200 text-sage-800' },
-  { status: 'READY_FOR_PICKUP', label: 'Ready for Pickup', color: 'bg-green-50 border-green-200 text-green-800' },
+  {
+    status: 'DIAGNOSING',
+    label: 'Diagnosing',
+    color: 'bg-amber-50 border-amber-200 text-amber-800',
+  },
+  {
+    status: 'AWAITING_APPROVAL',
+    label: 'Awaiting Approval',
+    color: 'bg-lavender-50 border-lavender-200 text-lavender-800',
+  },
+  {
+    status: 'IN_PROGRESS',
+    label: 'In Progress',
+    color: 'bg-sage-50 border-sage-200 text-sage-800',
+  },
+  {
+    status: 'READY_FOR_PICKUP',
+    label: 'Ready for Pickup',
+    color: 'bg-green-50 border-green-200 text-green-800',
+  },
 ];
 
 // ─── Main Page ──────────────────────────────────────────────────────────────
@@ -141,8 +149,7 @@ export default function ServiceBoardPage() {
     }
   };
 
-  const getColumnBookings = (status: string) =>
-    bookings.filter((b) => b.kanbanStatus === status);
+  const getColumnBookings = (status: string) => bookings.filter((b) => b.kanbanStatus === status);
 
   // Bookings that are confirmed but not yet on the board
   const pendingCheckIn = bookings.filter((b) => !b.kanbanStatus && b.status === 'CONFIRMED');
@@ -210,16 +217,11 @@ export default function ServiceBoardPage() {
                 <div className="p-3 shrink-0">
                   <div className="flex items-center justify-between">
                     <span
-                      className={cn(
-                        'text-xs font-semibold px-2 py-1 rounded-lg border',
-                        col.color,
-                      )}
+                      className={cn('text-xs font-semibold px-2 py-1 rounded-lg border', col.color)}
                     >
                       {col.label}
                     </span>
-                    <span className="text-xs text-slate-400 font-medium">
-                      {colBookings.length}
-                    </span>
+                    <span className="text-xs text-slate-400 font-medium">{colBookings.length}</span>
                   </div>
                 </div>
 
@@ -227,15 +229,16 @@ export default function ServiceBoardPage() {
                 <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-2">
                   {loading ? (
                     Array.from({ length: 2 }).map((_, i) => (
-                      <div key={i} className="bg-white dark:bg-slate-900 rounded-xl p-3 animate-pulse">
+                      <div
+                        key={i}
+                        className="bg-white dark:bg-slate-900 rounded-xl p-3 animate-pulse"
+                      >
                         <div className="h-3 bg-slate-200 rounded w-3/4 mb-2" />
                         <div className="h-2 bg-slate-100 rounded w-1/2" />
                       </div>
                     ))
                   ) : colBookings.length === 0 ? (
-                    <div className="text-center py-8 text-slate-300 text-xs">
-                      No jobs
-                    </div>
+                    <div className="text-center py-8 text-slate-300 text-xs">No jobs</div>
                   ) : (
                     colBookings.map((booking) => (
                       <KanbanCard
@@ -294,9 +297,7 @@ function KanbanCard({
       {vehicleInfo && (
         <div className="flex items-center gap-1 mb-1.5">
           <Car size={12} className="text-slate-400 shrink-0" />
-          <span className="text-xs text-slate-600 dark:text-slate-400 truncate">
-            {vehicleInfo}
-          </span>
+          <span className="text-xs text-slate-600 dark:text-slate-400 truncate">{vehicleInfo}</span>
         </div>
       )}
 

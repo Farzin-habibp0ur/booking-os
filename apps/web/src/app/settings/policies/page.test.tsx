@@ -103,10 +103,7 @@ describe('PolicySettingsPage', () => {
     fireEvent.click(screen.getByText('settings.save_changes'));
 
     await waitFor(() => {
-      expect(mockApi.patch).toHaveBeenCalledWith(
-        '/business/policy-settings',
-        mockPolicySettings,
-      );
+      expect(mockApi.patch).toHaveBeenCalledWith('/business/policy-settings', mockPolicySettings);
     });
   });
 });

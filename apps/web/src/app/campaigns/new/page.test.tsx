@@ -407,10 +407,13 @@ describe('NewCampaignPage', () => {
     });
 
     await waitFor(() => {
-      expect(mockApi.post).toHaveBeenCalledWith('/campaigns', expect.objectContaining({
-        name: 'My Campaign',
-        templateId: 't1',
-      }));
+      expect(mockApi.post).toHaveBeenCalledWith(
+        '/campaigns',
+        expect.objectContaining({
+          name: 'My Campaign',
+          templateId: 't1',
+        }),
+      );
     });
 
     expect(mockPush).toHaveBeenCalledWith('/campaigns/new-campaign-id');

@@ -155,8 +155,7 @@ describe('Auth Integration', () => {
     });
 
     it('returns 201 with message when no refresh token cookie', async () => {
-      const res = await request(ctx.app.getHttpServer())
-        .post('/api/v1/auth/refresh');
+      const res = await request(ctx.app.getHttpServer()).post('/api/v1/auth/refresh');
 
       expect(res.status).toBe(201);
       expect(res.body.message).toBe('No refresh token provided');
@@ -236,9 +235,12 @@ describe('Auth Integration', () => {
     });
 
     it('returns 400 for password too short', async () => {
-      const res = await request(ctx.app.getHttpServer())
-        .post('/api/v1/auth/signup')
-        .send({ businessName: 'Biz', ownerName: 'Jane', email: 'jane@new.com', password: 'Short1' });
+      const res = await request(ctx.app.getHttpServer()).post('/api/v1/auth/signup').send({
+        businessName: 'Biz',
+        ownerName: 'Jane',
+        email: 'jane@new.com',
+        password: 'Short1',
+      });
 
       expect(res.status).toBe(400);
     });
@@ -402,9 +404,7 @@ describe('Auth Integration', () => {
     });
 
     it('returns 400 when token field is missing', async () => {
-      const res = await request(ctx.app.getHttpServer())
-        .post('/api/v1/auth/verify-email')
-        .send({});
+      const res = await request(ctx.app.getHttpServer()).post('/api/v1/auth/verify-email').send({});
 
       expect(res.status).toBe(400);
     });
@@ -427,8 +427,7 @@ describe('Auth Integration', () => {
     });
 
     it('returns 401 without auth token', async () => {
-      const res = await request(ctx.app.getHttpServer())
-        .post('/api/v1/auth/resend-verification');
+      const res = await request(ctx.app.getHttpServer()).post('/api/v1/auth/resend-verification');
 
       expect(res.status).toBe(401);
     });

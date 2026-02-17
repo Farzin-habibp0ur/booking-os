@@ -20,9 +20,7 @@ export const dealershipPack: VerticalPackDefinition = {
       options: ['New', 'Used', 'Trade-in', 'Service'],
     },
   ],
-  bookingFields: [
-    { key: 'vehicleNotes', type: 'text', label: 'Vehicle Notes' },
-  ],
+  bookingFields: [{ key: 'vehicleNotes', type: 'text', label: 'Vehicle Notes' }],
   serviceFields: [],
   defaultTemplates: [
     {
@@ -52,7 +50,7 @@ export const dealershipPack: VerticalPackDefinition = {
     {
       name: 'Test Drive Confirmation',
       category: TemplateCategory.CONFIRMATION,
-      body: 'Your test drive has been booked for {{date}} at {{time}} at {{businessName}}. Please bring a valid driver\'s license. See you soon!',
+      body: "Your test drive has been booked for {{date}} at {{time}} at {{businessName}}. Please bring a valid driver's license. See you soon!",
       variables: ['date', 'time', 'businessName'],
     },
     {
@@ -88,7 +86,13 @@ export const dealershipPack: VerticalPackDefinition = {
   ],
   defaultServices: [
     { name: 'Test Drive', durationMins: 30, price: 0, category: 'Sales', kind: 'CONSULT' },
-    { name: 'Routine Maintenance', durationMins: 60, price: 150, category: 'Service', kind: 'TREATMENT' },
+    {
+      name: 'Routine Maintenance',
+      durationMins: 60,
+      price: 150,
+      category: 'Service',
+      kind: 'TREATMENT',
+    },
     { name: 'Brake Service', durationMins: 90, price: 250, category: 'Service', kind: 'TREATMENT' },
     { name: 'Oil Change', durationMins: 30, price: 60, category: 'Service', kind: 'TREATMENT' },
     { name: 'Diagnostic Check', durationMins: 45, price: 80, category: 'Service', kind: 'CONSULT' },
@@ -102,6 +106,12 @@ export const dealershipPack: VerticalPackDefinition = {
   defaultRequiredProfileFields: ['firstName', 'phone'],
   defaultPackConfig: {
     kanbanEnabled: true,
-    kanbanStatuses: ['CHECKED_IN', 'DIAGNOSING', 'AWAITING_APPROVAL', 'IN_PROGRESS', 'READY_FOR_PICKUP'],
+    kanbanStatuses: [
+      'CHECKED_IN',
+      'DIAGNOSING',
+      'AWAITING_APPROVAL',
+      'IN_PROGRESS',
+      'READY_FOR_PICKUP',
+    ],
   },
 };

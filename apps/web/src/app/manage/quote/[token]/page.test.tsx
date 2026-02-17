@@ -130,9 +130,7 @@ describe('QuoteApprovalPage', () => {
     mockPublicApi.get.mockResolvedValue(mockQuoteData);
     render(<QuoteApprovalPage />);
     await waitFor(() => {
-      expect(
-        screen.getByText(/By approving, you authorize/),
-      ).toBeInTheDocument();
+      expect(screen.getByText(/By approving, you authorize/)).toBeInTheDocument();
     });
   });
 
@@ -226,9 +224,7 @@ describe('QuoteApprovalPage', () => {
     mockPublicApi.get.mockResolvedValue(mockQuoteData);
     render(<QuoteApprovalPage />);
     await waitFor(() => {
-      expect(mockPublicApi.get).toHaveBeenCalledWith(
-        '/self-serve/validate/quote/test-token-123',
-      );
+      expect(mockPublicApi.get).toHaveBeenCalledWith('/self-serve/validate/quote/test-token-123');
     });
   });
 

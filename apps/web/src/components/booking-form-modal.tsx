@@ -85,7 +85,10 @@ export default function BookingFormModal({
     if (!isOpen) return;
     api.get<any>('/services').then((res) => setServices(res.data || res || []));
     api.get<any[]>('/staff').then(setStaff);
-    api.get<any[]>('/locations').then(setLocations).catch(() => setLocations([]));
+    api
+      .get<any[]>('/locations')
+      .then(setLocations)
+      .catch(() => setLocations([]));
     if (!customerId) {
       api.get<any>('/customers?pageSize=100').then((res) => setCustomers(res.data || []));
     }
@@ -355,9 +358,7 @@ export default function BookingFormModal({
           {/* Resource (optional, shown when location has resources) */}
           {resources.length > 0 && (
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Resource
-              </label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Resource</label>
               <select
                 value={selectedResourceId}
                 onChange={(e) => {
@@ -503,7 +504,8 @@ export default function BookingFormModal({
                 <div className="mt-2 pl-6 space-y-2">
                   <div className="flex items-center gap-2 bg-amber-50 text-amber-700 px-3 py-2 rounded-xl text-xs">
                     <AlertCircle size={14} />
-                    This will skip conflict detection and allow double-booking of staff or resources.
+                    This will skip conflict detection and allow double-booking of staff or
+                    resources.
                   </div>
                   <input
                     type="text"

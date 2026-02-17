@@ -17,12 +17,15 @@ export class QuoteService {
     private configService: ConfigService,
   ) {}
 
-  async create(businessId: string, data: {
-    bookingId: string;
-    description: string;
-    totalAmount: number;
-    pdfUrl?: string;
-  }) {
+  async create(
+    businessId: string,
+    data: {
+      bookingId: string;
+      description: string;
+      totalAmount: number;
+      pdfUrl?: string;
+    },
+  ) {
     const booking = await this.prisma.booking.findFirst({
       where: { id: data.bookingId, businessId },
       include: { customer: true, service: true, staff: true, business: true },
@@ -65,12 +68,9 @@ export class QuoteService {
     const webUrl = this.configService.get('WEB_URL', 'http://localhost:3000');
     const approvalLink = `${webUrl}/manage/quote/${token}`;
 
-    this.notificationService.sendQuoteApprovalRequest(
-      booking as any,
-      quote.totalAmount,
-      quote.description,
-      approvalLink,
-    ).catch(() => {});
+    this.notificationService
+      .sendQuoteApprovalRequest(booking as any, quote.totalAmount, quote.description, approvalLink)
+      .catch(() => {});
 
     this.logger.log(`Quote created: quote=${quote.id} booking=${data.bookingId}`);
 
@@ -187,11 +187,7 @@ export class QuoteService {
     });
 
     if (booking) {
-      await this.bookingService.updateKanbanStatus(
-        booking.businessId,
-        booking.id,
-        'IN_PROGRESS',
-      );
+      await this.bookingService.updateKanbanStatus(booking.businessId, booking.id, 'IN_PROGRESS');
     }
 
     this.logger.log(`Quote approved: quote=${quote.id} booking=${record.bookingId}`);

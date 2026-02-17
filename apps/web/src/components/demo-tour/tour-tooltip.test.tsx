@@ -22,10 +22,18 @@ function TourController({ children }: { children: React.ReactNode }) {
   const { startTour, nextStep, prevStep, skipTour, currentStepIndex } = useDemoTour();
   return (
     <>
-      <button data-testid="start" onClick={startTour}>Start</button>
-      <button data-testid="next" onClick={nextStep}>Next</button>
-      <button data-testid="prev" onClick={prevStep}>Prev</button>
-      <button data-testid="skip" onClick={skipTour}>Skip</button>
+      <button data-testid="start" onClick={startTour}>
+        Start
+      </button>
+      <button data-testid="next" onClick={nextStep}>
+        Next
+      </button>
+      <button data-testid="prev" onClick={prevStep}>
+        Prev
+      </button>
+      <button data-testid="skip" onClick={skipTour}>
+        Skip
+      </button>
       <span data-testid="idx">{currentStepIndex}</span>
       {children}
     </>
@@ -36,7 +44,12 @@ function setupTarget(stepIndex = 0) {
   const target = document.createElement('div');
   target.setAttribute('data-tour-target', TOUR_STEPS[stepIndex].target);
   target.getBoundingClientRect = jest.fn().mockReturnValue({
-    top: 200, left: 300, width: 400, height: 100, bottom: 300, right: 700,
+    top: 200,
+    left: 300,
+    width: 400,
+    height: 100,
+    bottom: 300,
+    right: 700,
   });
   document.body.appendChild(target);
   return target;
@@ -185,7 +198,12 @@ describe('TourTooltip', () => {
     const target = document.createElement('div');
     target.setAttribute('data-tour-target', TOUR_STEPS[0].target);
     target.getBoundingClientRect = jest.fn().mockReturnValue({
-      top: 10, left: 10, width: 100, height: 50, bottom: 60, right: 110,
+      top: 10,
+      left: 10,
+      width: 100,
+      height: 50,
+      bottom: 60,
+      right: 110,
     });
     document.body.appendChild(target);
 

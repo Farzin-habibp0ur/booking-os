@@ -289,9 +289,7 @@ describe('ServiceBoardPage', () => {
     fireEvent.click(screen.getByText('Refresh'));
 
     await waitFor(() => {
-      expect(mockApi.get).toHaveBeenCalledWith(
-        expect.stringContaining('/bookings/kanban'),
-      );
+      expect(mockApi.get).toHaveBeenCalledWith(expect.stringContaining('/bookings/kanban'));
     });
   });
 

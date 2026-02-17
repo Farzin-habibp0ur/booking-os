@@ -33,10 +33,18 @@ export function TourSpotlight() {
       height: r.height + padding * 2,
     });
 
-    // Scroll into view if needed
-    if (r.top < 0 || r.bottom > window.innerHeight) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // Scroll the main content area to top, then scroll target into view if needed
+    const mainEl = document.getElementById('main-content');
+    if (mainEl) {
+      mainEl.scrollTo({ top: 0, behavior: 'smooth' });
     }
+    // After scroll-to-top, reposition if target is still off-screen
+    requestAnimationFrame(() => {
+      const updated = el.getBoundingClientRect();
+      if (updated.top < 0 || updated.bottom > window.innerHeight) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
   }, [currentStep]);
 
   // Update rect when step changes
@@ -68,9 +76,11 @@ export function TourSpotlight() {
   return (
     <div
       className="fixed inset-0 z-[60] pointer-events-auto"
-      style={{
-        // Click-through prevention: overlay blocks clicks outside the spotlight
-      }}
+      style={
+        {
+          // Click-through prevention: overlay blocks clicks outside the spotlight
+        }
+      }
       onClick={(e) => {
         // Prevent clicks on the backdrop
         const target = e.target as HTMLElement;

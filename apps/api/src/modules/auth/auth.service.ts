@@ -29,14 +29,17 @@ export class AuthService {
     private emailService: EmailService,
   ) {
     // M2 fix: Clean up expired brute force entries every 5 minutes
-    const timer = setInterval(() => {
-      const now = new Date();
-      for (const [email, entry] of this.failedAttempts) {
-        if (entry.lockedUntil && entry.lockedUntil < now) {
-          this.failedAttempts.delete(email);
+    const timer = setInterval(
+      () => {
+        const now = new Date();
+        for (const [email, entry] of this.failedAttempts) {
+          if (entry.lockedUntil && entry.lockedUntil < now) {
+            this.failedAttempts.delete(email);
+          }
         }
-      }
-    }, 5 * 60 * 1000);
+      },
+      5 * 60 * 1000,
+    );
     timer.unref();
   }
 
@@ -64,10 +67,13 @@ export class AuthService {
   private getRefreshSecret(): string {
     const refreshSecret = this.config.get<string>('JWT_REFRESH_SECRET');
     const jwtSecret = this.config.get<string>('JWT_SECRET');
-    if (!refreshSecret && !jwtSecret) throw new Error('JWT_REFRESH_SECRET or JWT_SECRET must be configured');
+    if (!refreshSecret && !jwtSecret)
+      throw new Error('JWT_REFRESH_SECRET or JWT_SECRET must be configured');
     // M3 fix: Warn if refresh and access tokens share the same signing key
     if (!refreshSecret && jwtSecret) {
-      this.logger.warn('JWT_REFRESH_SECRET not set — falling back to JWT_SECRET. Set a separate secret for production.');
+      this.logger.warn(
+        'JWT_REFRESH_SECRET not set — falling back to JWT_SECRET. Set a separate secret for production.',
+      );
     }
     return refreshSecret || jwtSecret!;
   }
@@ -333,7 +339,12 @@ export class AuthService {
     return { ok: true };
   }
 
-  private async sendVerificationEmail(staffId: string, email: string, name: string, businessId: string) {
+  private async sendVerificationEmail(
+    staffId: string,
+    email: string,
+    name: string,
+    businessId: string,
+  ) {
     const token = await this.tokenService.createToken(
       'EMAIL_VERIFY',
       email,

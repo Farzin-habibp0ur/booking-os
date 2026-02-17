@@ -577,7 +577,6 @@ async function main() {
   console.log('\n🎉 Seed complete!');
 }
 
-
 async function seedDealership() {
   const dealershipExists = await prisma.business.findUnique({
     where: { slug: 'metro-auto-group' },
@@ -599,7 +598,13 @@ async function seedDealership() {
         packConfig: {
           setupComplete: true,
           kanbanEnabled: true,
-          kanbanStatuses: ['CHECKED_IN', 'DIAGNOSING', 'AWAITING_APPROVAL', 'IN_PROGRESS', 'READY_FOR_PICKUP'],
+          kanbanStatuses: [
+            'CHECKED_IN',
+            'DIAGNOSING',
+            'AWAITING_APPROVAL',
+            'IN_PROGRESS',
+            'READY_FOR_PICKUP',
+          ],
         },
         aiSettings: {
           enabled: true,
@@ -609,7 +614,12 @@ async function seedDealership() {
           autoReply: {
             enabled: false,
             mode: 'all',
-            selectedIntents: ['GENERAL', 'BOOK_APPOINTMENT', 'SALES_INQUIRY', 'SERVICE_APPOINTMENT'],
+            selectedIntents: [
+              'GENERAL',
+              'BOOK_APPOINTMENT',
+              'SALES_INQUIRY',
+              'SERVICE_APPOINTMENT',
+            ],
           },
         },
         notificationSettings: {
@@ -680,7 +690,9 @@ async function seedDealership() {
       },
     });
 
-    console.log(`✅ Locations: ${showroom.name}, ${spareParts.name}, ${serviceCenter.name}, ${afterSales.name}`);
+    console.log(
+      `✅ Locations: ${showroom.name}, ${spareParts.name}, ${serviceCenter.name}, ${afterSales.name}`,
+    );
 
     // Create resources — 8 service bays at Service Center
     for (let i = 1; i <= 8; i++) {
@@ -788,7 +800,15 @@ async function seedDealership() {
     console.log(`✅ Dealership Staff: 1 admin, 2 sales reps, 4 mechanics`);
 
     // Working hours for dealership staff (Mon-Sat 8am-6pm)
-    const allDealershipStaff = [dealerAdmin, salesRep1, salesRep2, mechanic1, mechanic2, mechanic3, mechanic4];
+    const allDealershipStaff = [
+      dealerAdmin,
+      salesRep1,
+      salesRep2,
+      mechanic1,
+      mechanic2,
+      mechanic3,
+      mechanic4,
+    ];
     for (const s of allDealershipStaff) {
       for (const day of [0, 1, 2, 3, 4, 5, 6]) {
         await prisma.workingHours.create({
@@ -910,7 +930,7 @@ async function seedDealership() {
           businessId: dealership.id,
           name: 'Service Status Update',
           category: 'CUSTOM',
-          body: 'Hi {{customerName}}, here\'s an update on your {{vehicleInfo}}: {{statusUpdate}}. If you have questions, reply to this message.',
+          body: "Hi {{customerName}}, here's an update on your {{vehicleInfo}}: {{statusUpdate}}. If you have questions, reply to this message.",
           variables: ['customerName', 'vehicleInfo', 'statusUpdate'],
         },
       }),
@@ -928,7 +948,7 @@ async function seedDealership() {
           businessId: dealership.id,
           name: '6-Month Maintenance Nudge',
           category: 'FOLLOW_UP',
-          body: 'Hi {{customerName}}, it\'s been 6 months since your last service at Metro Auto Group. Time for a check-up! Book your next appointment: {{bookingLink}}',
+          body: "Hi {{customerName}}, it's been 6 months since your last service at Metro Auto Group. Time for a check-up! Book your next appointment: {{bookingLink}}",
           variables: ['customerName', 'bookingLink'],
         },
       }),

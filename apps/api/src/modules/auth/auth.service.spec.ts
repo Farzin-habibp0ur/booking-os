@@ -107,7 +107,11 @@ describe('AuthService', () => {
     it('sends verification email on signup', async () => {
       prisma.staff.findUnique.mockResolvedValue(null);
       (bcrypt.hash as jest.Mock).mockResolvedValue('$hashed');
-      prisma.business.create.mockResolvedValue({ id: 'biz-new', name: 'New Biz', slug: 'new-biz' } as any);
+      prisma.business.create.mockResolvedValue({
+        id: 'biz-new',
+        name: 'New Biz',
+        slug: 'new-biz',
+      } as any);
       prisma.staff.create.mockResolvedValue({
         id: 'staff-new',
         name: 'Owner',
@@ -343,9 +347,7 @@ describe('AuthService', () => {
         data: { passwordHash: '$new-hash' },
       });
       // C4 fix: Revokes ALL token types, not just PASSWORD_RESET
-      expect(tokenService.revokeAllTokensForEmail).toHaveBeenCalledWith(
-        'sarah@glowclinic.com',
-      );
+      expect(tokenService.revokeAllTokensForEmail).toHaveBeenCalledWith('sarah@glowclinic.com');
     });
 
     it('throws on wrong current password', async () => {
@@ -502,9 +504,7 @@ describe('AuthService', () => {
         emailVerified: true,
       } as any);
 
-      await expect(authService.resendVerification('staff1')).rejects.toThrow(
-        BadRequestException,
-      );
+      await expect(authService.resendVerification('staff1')).rejects.toThrow(BadRequestException);
     });
 
     it('throws if staff not found', async () => {

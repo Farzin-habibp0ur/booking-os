@@ -128,10 +128,9 @@ describe('CancelPage', () => {
     fireEvent.click(screen.getByText('Yes, Cancel'));
 
     await waitFor(() => {
-      expect(mockPublicApi.post).toHaveBeenCalledWith(
-        '/self-serve/cancel/test-token-123',
-        { reason: undefined },
-      );
+      expect(mockPublicApi.post).toHaveBeenCalledWith('/self-serve/cancel/test-token-123', {
+        reason: undefined,
+      });
     });
   });
 

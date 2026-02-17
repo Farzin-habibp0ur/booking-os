@@ -476,9 +476,7 @@ describe('AutomationExecutorService', () => {
         maxPerCustomerPerDay: 0,
       }));
 
-      prisma.automationRule.findMany
-        .mockResolvedValueOnce(rules as any)
-        .mockResolvedValueOnce([]);
+      prisma.automationRule.findMany.mockResolvedValueOnce(rules as any).mockResolvedValueOnce([]);
 
       prisma.booking.findMany.mockResolvedValue([]);
 

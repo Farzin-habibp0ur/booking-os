@@ -408,16 +408,17 @@ export class AiService {
         const requiredFields: string[] = (business.packConfig as any)?.requiredProfileFields || [];
         const isDealership = verticalPack === 'dealership';
         if (!profileJustCollected && (requiredFields.length > 0 || isDealership) && customerData) {
-          const { missingFields } = requiredFields.length > 0
-            ? checkProfileCompleteness(
-                {
-                  name: customerData.name,
-                  email: (customerData as any).email,
-                  customFields: (customerData as any).customFields || {},
-                },
-                requiredFields,
-              )
-            : { missingFields: [] as any[] };
+          const { missingFields } =
+            requiredFields.length > 0
+              ? checkProfileCompleteness(
+                  {
+                    name: customerData.name,
+                    email: (customerData as any).email,
+                    customFields: (customerData as any).customFields || {},
+                  },
+                  requiredFields,
+                )
+              : { missingFields: [] as any[] };
 
           // For dealership businesses, also check vehicle dossier fields
           if (isDealership) {
@@ -1357,7 +1358,10 @@ export class AiService {
 
       // Save any collected fields to customer immediately
       if (Object.keys(result.collectedFields).length > 0 && customerData) {
-        const customFieldUpdates = { ...(customerData.customFields || {}), ...result.collectedFields };
+        const customFieldUpdates = {
+          ...(customerData.customFields || {}),
+          ...result.collectedFields,
+        };
         await this.prisma.customer.update({
           where: { id: customerData.id },
           data: { customFields: customFieldUpdates },

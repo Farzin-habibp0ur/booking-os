@@ -59,11 +59,7 @@ export class TemplateService {
   }
 
   // URL values should not be escaped (links need to work in emails)
-  private static readonly URL_KEYS = new Set([
-    'bookingLink',
-    'rescheduleLink',
-    'cancelLink',
-  ]);
+  private static readonly URL_KEYS = new Set(['bookingLink', 'rescheduleLink', 'cancelLink']);
 
   async resolveVariables(
     template: { body: string; variables: string[] },

@@ -185,8 +185,16 @@ describe('WaitlistPage', () => {
 
   it('displays waitlist entries in table', async () => {
     setupMocks([
-      createEntry({ id: 'w1', customer: { name: 'Alice', phone: '+1111' }, service: { name: 'Facial' } }),
-      createEntry({ id: 'w2', customer: { name: 'Bob', phone: '+2222' }, service: { name: 'Waxing' } }),
+      createEntry({
+        id: 'w1',
+        customer: { name: 'Alice', phone: '+1111' },
+        service: { name: 'Facial' },
+      }),
+      createEntry({
+        id: 'w2',
+        customer: { name: 'Bob', phone: '+2222' },
+        service: { name: 'Waxing' },
+      }),
     ]);
 
     render(<WaitlistPage />);
@@ -256,7 +264,9 @@ describe('WaitlistPage', () => {
   });
 
   it('shows notes when no time window set', async () => {
-    setupMocks([createEntry({ timeWindowStart: null, timeWindowEnd: null, notes: 'Mornings only' })]);
+    setupMocks([
+      createEntry({ timeWindowStart: null, timeWindowEnd: null, notes: 'Mornings only' }),
+    ]);
 
     render(<WaitlistPage />);
 

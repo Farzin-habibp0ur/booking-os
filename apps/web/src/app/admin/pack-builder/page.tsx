@@ -204,7 +204,9 @@ function PackCard({ pack, onEdit }: { pack: Pack; onEdit: () => void }) {
       )}
       <div className="flex items-center gap-4 text-xs text-slate-400">
         <span>v{pack.version}</span>
-        <span>{fieldCount} field{fieldCount !== 1 ? 's' : ''}</span>
+        <span>
+          {fieldCount} field{fieldCount !== 1 ? 's' : ''}
+        </span>
         {config?.kanbanEnabled && <span>Kanban</span>}
       </div>
     </button>
@@ -274,7 +276,9 @@ function CreatePackModal({
               required
               className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800"
             />
-            <p className="text-[10px] text-slate-400 mt-1">Lowercase, no spaces. Used as unique identifier.</p>
+            <p className="text-[10px] text-slate-400 mt-1">
+              Lowercase, no spaces. Used as unique identifier.
+            </p>
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Description</label>
@@ -395,9 +399,7 @@ function PackEditor({ pack, onBack }: { pack: Pack; onBack: () => void }) {
               <span
                 className={cn(
                   'text-[10px] px-1.5 py-0.5 rounded-full font-medium',
-                  packState.isPublished
-                    ? 'bg-sage-50 text-sage-700'
-                    : 'bg-amber-50 text-amber-700',
+                  packState.isPublished ? 'bg-sage-50 text-sage-700' : 'bg-amber-50 text-amber-700',
                 )}
               >
                 {packState.isPublished ? 'Published' : 'Draft'}
@@ -516,9 +518,21 @@ function LabelsEditor({
   onKanbanChange: (enabled: boolean, statuses: string[]) => void;
 }) {
   const labelEntries: { key: keyof PackConfig['labels']; label: string; hint: string }[] = [
-    { key: 'customer', label: 'Customer', hint: 'What you call your customers (e.g. Client, Patient, Guest)' },
-    { key: 'booking', label: 'Booking', hint: 'What you call bookings (e.g. Appointment, Visit, Session)' },
-    { key: 'service', label: 'Service', hint: 'What you call services (e.g. Treatment, Class, Appointment)' },
+    {
+      key: 'customer',
+      label: 'Customer',
+      hint: 'What you call your customers (e.g. Client, Patient, Guest)',
+    },
+    {
+      key: 'booking',
+      label: 'Booking',
+      hint: 'What you call bookings (e.g. Appointment, Visit, Session)',
+    },
+    {
+      key: 'service',
+      label: 'Service',
+      hint: 'What you call services (e.g. Treatment, Class, Appointment)',
+    },
   ];
 
   return (
@@ -671,10 +685,7 @@ function FieldsEditor({
         <div className="text-center py-8 text-slate-400">
           <p className="text-sm">No intake fields defined yet.</p>
           {!disabled && (
-            <button
-              onClick={addField}
-              className="mt-2 text-sage-600 text-sm hover:underline"
-            >
+            <button onClick={addField} className="mt-2 text-sage-600 text-sm hover:underline">
               Add your first field
             </button>
           )}
@@ -699,7 +710,10 @@ function FieldsEditor({
             >
               <div className="flex items-start gap-2">
                 {!disabled && (
-                  <div className="pt-2 cursor-grab text-slate-400 hover:text-slate-600" aria-label="Drag to reorder">
+                  <div
+                    className="pt-2 cursor-grab text-slate-400 hover:text-slate-600"
+                    aria-label="Drag to reorder"
+                  >
                     <GripVertical size={16} />
                   </div>
                 )}
@@ -709,7 +723,10 @@ function FieldsEditor({
                       value={field.label}
                       onChange={(e) => {
                         const label = e.target.value;
-                        const key = label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+                        const key = label
+                          .toLowerCase()
+                          .replace(/[^a-z0-9]+/g, '_')
+                          .replace(/^_|_$/g, '');
                         updateField(index, { label, key: key || field.key });
                       }}
                       placeholder="Label"

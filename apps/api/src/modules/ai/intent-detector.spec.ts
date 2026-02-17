@@ -190,11 +190,7 @@ describe('IntentDetector', () => {
       }),
     );
 
-    const result = await detector.detect(
-      'My brakes are squeaking',
-      undefined,
-      'dealership',
-    );
+    const result = await detector.detect('My brakes are squeaking', undefined, 'dealership');
     expect(result.intent).toBe('SERVICE_APPOINTMENT');
     expect(result.confidence).toBe(0.95);
     expect(result.extractedEntities?.service).toBe('Brake Service');
@@ -208,11 +204,7 @@ describe('IntentDetector', () => {
       }),
     );
 
-    const result = await detector.detect(
-      'I want to trade in my car',
-      undefined,
-      'dealership',
-    );
+    const result = await detector.detect('I want to trade in my car', undefined, 'dealership');
     expect(result.intent).toBe('TRADE_IN_INQUIRY');
   });
 

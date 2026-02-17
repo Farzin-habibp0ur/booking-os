@@ -49,7 +49,10 @@ describe('OfferService', () => {
     it('creates an offer with maxRedemptions', async () => {
       prisma.offer.create.mockResolvedValue({ ...mockOffer, maxRedemptions: 50 } as any);
 
-      const result = await offerService.create('biz1', { name: '20% Off Botox', maxRedemptions: 50 });
+      const result = await offerService.create('biz1', {
+        name: '20% Off Botox',
+        maxRedemptions: 50,
+      });
 
       expect(prisma.offer.create).toHaveBeenCalledWith({
         data: expect.objectContaining({ maxRedemptions: 50 }),
@@ -138,9 +141,7 @@ describe('OfferService', () => {
         isActive: false,
       } as any);
 
-      await expect(offerService.redeem('biz1', 'off1')).rejects.toThrow(
-        'Offer is not active',
-      );
+      await expect(offerService.redeem('biz1', 'off1')).rejects.toThrow('Offer is not active');
     });
 
     it('throws when offer has expired', async () => {
@@ -149,9 +150,7 @@ describe('OfferService', () => {
         validUntil: new Date(Date.now() - 86400000),
       } as any);
 
-      await expect(offerService.redeem('biz1', 'off1')).rejects.toThrow(
-        'Offer has expired',
-      );
+      await expect(offerService.redeem('biz1', 'off1')).rejects.toThrow('Offer has expired');
     });
 
     it('throws when offer not found', async () => {

@@ -118,7 +118,9 @@ describe('ClaimWaitlistPage', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Booking Confirmed!')).toBeInTheDocument();
-      expect(screen.getByText('Your slot has been claimed and your booking is confirmed.')).toBeInTheDocument();
+      expect(
+        screen.getByText('Your slot has been claimed and your booking is confirmed.'),
+      ).toBeInTheDocument();
     });
   });
 

@@ -20,11 +20,21 @@ function TourConsumer() {
       <span data-testid="step">{tour.currentStepIndex}</span>
       <span data-testid="total">{tour.totalSteps}</span>
       <span data-testid="step-id">{tour.currentStep?.id ?? 'none'}</span>
-      <button data-testid="start" onClick={tour.startTour}>Start</button>
-      <button data-testid="next" onClick={tour.nextStep}>Next</button>
-      <button data-testid="prev" onClick={tour.prevStep}>Prev</button>
-      <button data-testid="skip" onClick={tour.skipTour}>Skip</button>
-      <button data-testid="pause" onClick={tour.pauseTour}>Pause</button>
+      <button data-testid="start" onClick={tour.startTour}>
+        Start
+      </button>
+      <button data-testid="next" onClick={tour.nextStep}>
+        Next
+      </button>
+      <button data-testid="prev" onClick={tour.prevStep}>
+        Prev
+      </button>
+      <button data-testid="skip" onClick={tour.skipTour}>
+        Skip
+      </button>
+      <button data-testid="pause" onClick={tour.pauseTour}>
+        Pause
+      </button>
     </div>
   );
 }
@@ -154,10 +164,7 @@ describe('DemoTourProvider', () => {
   });
 
   it('restores state from localStorage on mount', () => {
-    localStorage.setItem(
-      'demo-tour-state',
-      JSON.stringify({ stepIndex: 3, state: 'running' }),
-    );
+    localStorage.setItem('demo-tour-state', JSON.stringify({ stepIndex: 3, state: 'running' }));
 
     renderWithProvider();
 

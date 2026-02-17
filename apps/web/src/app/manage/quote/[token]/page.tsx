@@ -3,14 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { publicApi } from '@/lib/public-api';
-import {
-  CheckCircle,
-  AlertTriangle,
-  FileText,
-  Wrench,
-  User,
-  DollarSign,
-} from 'lucide-react';
+import { CheckCircle, AlertTriangle, FileText, Wrench, User, DollarSign } from 'lucide-react';
 
 interface QuoteSummary {
   quote: {
@@ -91,9 +84,7 @@ export default function QuoteApprovalPage() {
     return (
       <div className="text-center py-16">
         <CheckCircle size={48} className="mx-auto text-sage-500 mb-4" />
-        <h1 className="text-xl font-serif font-semibold text-slate-900 mb-2">
-          Quote Approved
-        </h1>
+        <h1 className="text-xl font-serif font-semibold text-slate-900 mb-2">Quote Approved</h1>
         <p className="text-slate-500 mb-2">
           You have approved the quote for {data?.booking.service.name}.
         </p>
@@ -111,12 +102,8 @@ export default function QuoteApprovalPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-serif font-semibold text-slate-900">
-          Service Quote
-        </h1>
-        {data?.business && (
-          <p className="text-sm text-slate-500 mt-1">{data.business.name}</p>
-        )}
+        <h1 className="text-2xl font-serif font-semibold text-slate-900">Service Quote</h1>
+        {data?.business && <p className="text-sm text-slate-500 mt-1">{data.business.name}</p>}
       </div>
 
       {/* Greeting */}
@@ -149,9 +136,7 @@ export default function QuoteApprovalPage() {
         {/* Description */}
         <div>
           <p className="text-xs font-medium text-slate-500 mb-1">Description</p>
-          <p className="text-sm text-slate-700 whitespace-pre-wrap">
-            {data?.quote.description}
-          </p>
+          <p className="text-sm text-slate-700 whitespace-pre-wrap">{data?.quote.description}</p>
         </div>
 
         {/* Total */}

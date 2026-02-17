@@ -6,9 +6,21 @@ describe('ProfileExtractor', () => {
   let claude: ReturnType<typeof createMockClaudeClient>;
 
   const sampleMessages = [
-    { direction: 'INBOUND', content: 'Hi, my name is Emma Wilson', createdAt: '2026-03-01T10:00:00Z' },
-    { direction: 'OUTBOUND', content: 'Welcome Emma! How can we help?', createdAt: '2026-03-01T10:01:00Z' },
-    { direction: 'INBOUND', content: 'I need a Botox appointment. My email is emma@example.com', createdAt: '2026-03-01T10:02:00Z' },
+    {
+      direction: 'INBOUND',
+      content: 'Hi, my name is Emma Wilson',
+      createdAt: '2026-03-01T10:00:00Z',
+    },
+    {
+      direction: 'OUTBOUND',
+      content: 'Welcome Emma! How can we help?',
+      createdAt: '2026-03-01T10:01:00Z',
+    },
+    {
+      direction: 'INBOUND',
+      content: 'I need a Botox appointment. My email is emma@example.com',
+      createdAt: '2026-03-01T10:02:00Z',
+    },
   ];
 
   beforeEach(() => {

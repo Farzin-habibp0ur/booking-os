@@ -12,10 +12,7 @@ describe('LocationService', () => {
     prisma = createMockPrisma();
 
     const module = await Test.createTestingModule({
-      providers: [
-        LocationService,
-        { provide: PrismaService, useValue: prisma },
-      ],
+      providers: [LocationService, { provide: PrismaService, useValue: prisma }],
     }).compile();
 
     service = module.get(LocationService);
@@ -131,7 +128,9 @@ describe('LocationService', () => {
     it('throws if location not found', async () => {
       prisma.location.findFirst.mockResolvedValue(null);
 
-      await expect(service.update('biz1', 'nope', { name: 'X' })).rejects.toThrow(NotFoundException);
+      await expect(service.update('biz1', 'nope', { name: 'X' })).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('updates whatsappConfig', async () => {
@@ -174,7 +173,10 @@ describe('LocationService', () => {
   describe('findResources', () => {
     it('returns active resources for a location', async () => {
       prisma.location.findFirst.mockResolvedValue({ id: 'loc1', businessId: 'biz1' } as any);
-      const resources = [{ id: 'r1', name: 'Bay 1' }, { id: 'r2', name: 'Bay 2' }];
+      const resources = [
+        { id: 'r1', name: 'Bay 1' },
+        { id: 'r2', name: 'Bay 2' },
+      ];
       prisma.resource.findMany.mockResolvedValue(resources as any);
 
       const result = await service.findResources('biz1', 'loc1');
@@ -193,7 +195,10 @@ describe('LocationService', () => {
       const resource = { id: 'r1', name: 'Bay 1', type: 'service_bay', locationId: 'loc1' };
       prisma.resource.create.mockResolvedValue(resource as any);
 
-      const result = await service.createResource('biz1', 'loc1', { name: 'Bay 1', type: 'service_bay' });
+      const result = await service.createResource('biz1', 'loc1', {
+        name: 'Bay 1',
+        type: 'service_bay',
+      });
 
       expect(result).toEqual(resource);
     });
@@ -222,9 +227,9 @@ describe('LocationService', () => {
       prisma.location.findFirst.mockResolvedValue({ id: 'loc1', businessId: 'biz1' } as any);
       prisma.resource.findFirst.mockResolvedValue(null);
 
-      await expect(
-        service.updateResource('biz1', 'loc1', 'nope', { name: 'X' }),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.updateResource('biz1', 'loc1', 'nope', { name: 'X' })).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -246,9 +251,9 @@ describe('LocationService', () => {
       prisma.location.findFirst.mockResolvedValue({ id: 'loc1', businessId: 'biz1' } as any);
       prisma.resource.findFirst.mockResolvedValue(null);
 
-      await expect(
-        service.softDeleteResource('biz1', 'loc1', 'r-nonexistent'),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.softDeleteResource('biz1', 'loc1', 'r-nonexistent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -258,7 +263,12 @@ describe('LocationService', () => {
     it('creates staff-location assignment', async () => {
       prisma.location.findFirst.mockResolvedValue({ id: 'loc1', businessId: 'biz1' } as any);
       prisma.staff.findFirst.mockResolvedValue({ id: 's1', businessId: 'biz1' } as any);
-      const assignment = { id: 'sl1', staffId: 's1', locationId: 'loc1', staff: { id: 's1', name: 'Alex', role: 'AGENT' } };
+      const assignment = {
+        id: 'sl1',
+        staffId: 's1',
+        locationId: 'loc1',
+        staff: { id: 's1', name: 'Alex', role: 'AGENT' },
+      };
       prisma.staffLocation.create.mockResolvedValue(assignment as any);
 
       const result = await service.assignStaff('biz1', 'loc1', 's1');
@@ -270,7 +280,9 @@ describe('LocationService', () => {
       prisma.location.findFirst.mockResolvedValue({ id: 'loc1', businessId: 'biz1' } as any);
       prisma.staff.findFirst.mockResolvedValue(null);
 
-      await expect(service.assignStaff('biz1', 'loc1', 's999')).rejects.toThrow(BadRequestException);
+      await expect(service.assignStaff('biz1', 'loc1', 's999')).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('throws if already assigned (P2002)', async () => {
@@ -293,7 +305,11 @@ describe('LocationService', () => {
   describe('unassignStaff', () => {
     it('deletes staff-location assignment', async () => {
       prisma.location.findFirst.mockResolvedValue({ id: 'loc1', businessId: 'biz1' } as any);
-      prisma.staffLocation.findUnique.mockResolvedValue({ id: 'sl1', staffId: 's1', locationId: 'loc1' } as any);
+      prisma.staffLocation.findUnique.mockResolvedValue({
+        id: 'sl1',
+        staffId: 's1',
+        locationId: 'loc1',
+      } as any);
       prisma.staffLocation.delete.mockResolvedValue({} as any);
 
       await service.unassignStaff('biz1', 'loc1', 's1');

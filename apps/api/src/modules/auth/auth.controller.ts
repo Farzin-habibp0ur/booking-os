@@ -73,10 +73,7 @@ export class AuthController {
 
   @Post('refresh')
   @Throttle({ default: { ttl: 60000, limit: 10 } })
-  async refresh(
-    @Req() req: Request,
-    @Res({ passthrough: true }) res: Response,
-  ) {
+  async refresh(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     // H3 fix: Only accept refresh token from httpOnly cookie — not from request body
     const token = req.cookies?.refresh_token as string;
     if (!token) {

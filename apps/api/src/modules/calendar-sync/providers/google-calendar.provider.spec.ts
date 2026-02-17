@@ -150,9 +150,9 @@ describe('GoogleCalendarProvider', () => {
 
     it('throws when update fails', async () => {
       global.fetch = mockFetchResponse({ error: 'not found' }, false, 404);
-      await expect(
-        provider.updateEvent('token', 'cal1', 'evt-999', mockEvent),
-      ).rejects.toThrow('Failed to update Google Calendar event');
+      await expect(provider.updateEvent('token', 'cal1', 'evt-999', mockEvent)).rejects.toThrow(
+        'Failed to update Google Calendar event',
+      );
     });
   });
 

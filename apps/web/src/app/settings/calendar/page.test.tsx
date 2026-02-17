@@ -110,7 +110,13 @@ describe('CalendarSyncPageWrapper', () => {
   test('shows Connected status for connected providers', async () => {
     setupMockApi({
       connections: [
-        { id: 'c1', provider: 'google', syncEnabled: true, lastSyncedAt: null, lastSyncError: null },
+        {
+          id: 'c1',
+          provider: 'google',
+          syncEnabled: true,
+          lastSyncedAt: null,
+          lastSyncError: null,
+        },
       ],
       providers: { google: true, outlook: true },
     });

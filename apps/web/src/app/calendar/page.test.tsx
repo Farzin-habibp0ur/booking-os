@@ -65,11 +65,15 @@ jest.mock('@/lib/api', () => ({
 }));
 
 // Mock child components
-jest.mock('@/components/booking-form-modal', () => (props: any) =>
-  props.isOpen ? <div data-testid="booking-form-modal">BookingFormModal</div> : null,
+jest.mock(
+  '@/components/booking-form-modal',
+  () => (props: any) =>
+    props.isOpen ? <div data-testid="booking-form-modal">BookingFormModal</div> : null,
 );
-jest.mock('@/components/booking-detail-modal', () => (props: any) =>
-  props.isOpen ? <div data-testid="booking-detail-modal">BookingDetailModal</div> : null,
+jest.mock(
+  '@/components/booking-detail-modal',
+  () => (props: any) =>
+    props.isOpen ? <div data-testid="booking-detail-modal">BookingDetailModal</div> : null,
 );
 
 const mockStaff = [

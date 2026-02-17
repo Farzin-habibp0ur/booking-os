@@ -1029,7 +1029,11 @@ describe('AiService', () => {
         confidence: 0.9,
         extractedEntities: {},
       });
-      prisma.staff.findFirst.mockResolvedValue({ id: 'staff1', name: 'Admin', role: 'ADMIN' } as any);
+      prisma.staff.findFirst.mockResolvedValue({
+        id: 'staff1',
+        name: 'Admin',
+        role: 'ADMIN',
+      } as any);
       prisma.conversation.update.mockResolvedValue({} as any);
 
       await aiService.processInboundMessage(
@@ -1080,12 +1084,7 @@ describe('AiService', () => {
       prisma.conversation.update.mockResolvedValue({} as any);
       prisma.customer.update.mockResolvedValue({} as any);
 
-      await aiService.processInboundMessage(
-        'biz1',
-        'conv1',
-        'msg1',
-        'I want to trade in my Honda',
-      );
+      await aiService.processInboundMessage('biz1', 'conv1', 'msg1', 'I want to trade in my Honda');
 
       // Should save collected fields to customer
       expect(prisma.customer.update).toHaveBeenCalledWith({
@@ -1131,7 +1130,11 @@ describe('AiService', () => {
         suggestedResponse: 'Thanks for the info!',
         allCollected: true,
       });
-      prisma.staff.findFirst.mockResolvedValue({ id: 'staff1', name: 'Admin', role: 'ADMIN' } as any);
+      prisma.staff.findFirst.mockResolvedValue({
+        id: 'staff1',
+        name: 'Admin',
+        role: 'ADMIN',
+      } as any);
       prisma.conversation.update.mockResolvedValue({} as any);
       prisma.customer.update.mockResolvedValue({} as any);
 
@@ -1405,7 +1408,11 @@ describe('AiService', () => {
           autoReply: { enabled: true, mode: 'all', selectedIntents: [] },
         },
       } as any);
-      prisma.staff.findFirst.mockResolvedValue({ id: 'staff1', name: 'Admin', role: 'ADMIN' } as any);
+      prisma.staff.findFirst.mockResolvedValue({
+        id: 'staff1',
+        name: 'Admin',
+        role: 'ADMIN',
+      } as any);
       replyGenerator.generate.mockResolvedValue({ draftText: 'Auto reply text' });
 
       await aiService.processInboundMessage('biz1', 'conv1', 'msg1', 'What are your hours?');
@@ -1545,7 +1552,11 @@ describe('AiService', () => {
         },
       } as any);
       bookingService.create.mockResolvedValue({ id: 'booking1' } as any);
-      prisma.staff.findFirst.mockResolvedValue({ id: 'staff1', name: 'Admin', role: 'ADMIN' } as any);
+      prisma.staff.findFirst.mockResolvedValue({
+        id: 'staff1',
+        name: 'Admin',
+        role: 'ADMIN',
+      } as any);
 
       await aiService.processInboundMessage('biz1', 'conv1', 'msg1', 'Book me for 2pm');
 
@@ -1593,7 +1604,11 @@ describe('AiService', () => {
         },
       } as any);
       bookingService.updateStatus.mockResolvedValue({ id: 'booking1', status: 'CANCELLED' } as any);
-      prisma.staff.findFirst.mockResolvedValue({ id: 'staff1', name: 'Admin', role: 'ADMIN' } as any);
+      prisma.staff.findFirst.mockResolvedValue({
+        id: 'staff1',
+        name: 'Admin',
+        role: 'ADMIN',
+      } as any);
 
       await aiService.processInboundMessage('biz1', 'conv1', 'msg1', 'Yes cancel it');
 
@@ -1639,7 +1654,11 @@ describe('AiService', () => {
         id: 'booking1',
         startTime: new Date('2026-03-05T10:00:00Z'),
       } as any);
-      prisma.staff.findFirst.mockResolvedValue({ id: 'staff1', name: 'Admin', role: 'ADMIN' } as any);
+      prisma.staff.findFirst.mockResolvedValue({
+        id: 'staff1',
+        name: 'Admin',
+        role: 'ADMIN',
+      } as any);
 
       await aiService.processInboundMessage('biz1', 'conv1', 'msg1', 'Yes reschedule');
 
@@ -1655,9 +1674,7 @@ describe('AiService', () => {
 
       // Second call to message.update stores the draft
       const updateCalls = prisma.message.update.mock.calls;
-      const draftCall = updateCalls.find(
-        (call: any) => call[0]?.data?.metadata?.ai?.draftText,
-      );
+      const draftCall = updateCalls.find((call: any) => call[0]?.data?.metadata?.ai?.draftText);
       expect(draftCall).toBeDefined();
       expect((draftCall![0].data.metadata as any).ai.draftText).toBe('Hello! How can I help?');
     });

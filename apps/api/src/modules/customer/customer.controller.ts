@@ -91,8 +91,7 @@ export class CustomerController {
     if (lines.length < 2)
       throw new BadRequestException('CSV must have a header and at least one data row');
     // M6 fix: Row limit to prevent DoS
-    if (lines.length > 5001)
-      throw new BadRequestException('CSV must have at most 5000 data rows');
+    if (lines.length > 5001) throw new BadRequestException('CSV must have at most 5000 data rows');
 
     const header = lines[0].split(',').map((h) => h.trim().toLowerCase());
     const nameIdx = header.findIndex((h) => h === 'name');

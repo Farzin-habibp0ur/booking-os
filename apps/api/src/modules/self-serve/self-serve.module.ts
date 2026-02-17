@@ -9,7 +9,14 @@ import { WaitlistModule } from '../waitlist/waitlist.module';
 import { QuoteModule } from '../quote/quote.module';
 
 @Module({
-  imports: [AuthModule, AvailabilityModule, BookingModule, BusinessModule, WaitlistModule, QuoteModule],
+  imports: [
+    AuthModule,
+    AvailabilityModule,
+    BookingModule,
+    BusinessModule,
+    WaitlistModule,
+    QuoteModule,
+  ],
   controllers: [SelfServeController],
   providers: [SelfServeService],
 })

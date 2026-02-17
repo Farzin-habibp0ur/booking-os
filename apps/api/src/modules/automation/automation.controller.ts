@@ -45,7 +45,11 @@ export class AutomationController {
 
   @Patch('rules/:id')
   @Roles('ADMIN')
-  updateRule(@BusinessId() businessId: string, @Param('id') id: string, @Body() body: UpdateAutomationRuleDto) {
+  updateRule(
+    @BusinessId() businessId: string,
+    @Param('id') id: string,
+    @Body() body: UpdateAutomationRuleDto,
+  ) {
     return this.automationService.updateRule(businessId, id, body);
   }
 

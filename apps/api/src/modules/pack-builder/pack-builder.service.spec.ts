@@ -111,9 +111,7 @@ describe('PackBuilderService', () => {
     it('throws NotFoundException when not found', async () => {
       prisma.verticalPackVersion.findUnique.mockResolvedValue(null);
 
-      await expect(service.getPackById('nonexistent')).rejects.toThrow(
-        'Pack version not found',
-      );
+      await expect(service.getPackById('nonexistent')).rejects.toThrow('Pack version not found');
     });
   });
 
@@ -191,9 +189,9 @@ describe('PackBuilderService', () => {
     it('throws BadRequestException when slug already exists', async () => {
       prisma.verticalPackVersion.findFirst.mockResolvedValue(mockPack as any);
 
-      await expect(
-        service.createPack({ slug: 'dealership', name: 'Dealership' }),
-      ).rejects.toThrow('Pack with slug "dealership" already exists');
+      await expect(service.createPack({ slug: 'dealership', name: 'Dealership' })).rejects.toThrow(
+        'Pack with slug "dealership" already exists',
+      );
     });
 
     it('includes description when provided', async () => {
@@ -252,17 +250,17 @@ describe('PackBuilderService', () => {
       const published = { ...mockPack, isPublished: true };
       prisma.verticalPackVersion.findUnique.mockResolvedValue(published as any);
 
-      await expect(
-        service.updatePack('pack1', { name: 'New Name' }),
-      ).rejects.toThrow('Cannot update a published pack version');
+      await expect(service.updatePack('pack1', { name: 'New Name' })).rejects.toThrow(
+        'Cannot update a published pack version',
+      );
     });
 
     it('throws NotFoundException when pack not found', async () => {
       prisma.verticalPackVersion.findUnique.mockResolvedValue(null);
 
-      await expect(
-        service.updatePack('nonexistent', { name: 'New Name' }),
-      ).rejects.toThrow('Pack version not found');
+      await expect(service.updatePack('nonexistent', { name: 'New Name' })).rejects.toThrow(
+        'Pack version not found',
+      );
     });
   });
 
@@ -298,9 +296,7 @@ describe('PackBuilderService', () => {
     it('throws NotFoundException when pack not found', async () => {
       prisma.verticalPackVersion.findUnique.mockResolvedValue(null);
 
-      await expect(service.publishPack('nonexistent')).rejects.toThrow(
-        'Pack version not found',
-      );
+      await expect(service.publishPack('nonexistent')).rejects.toThrow('Pack version not found');
     });
   });
 
@@ -380,9 +376,7 @@ describe('PackBuilderService', () => {
     it('throws NotFoundException when pack not found', async () => {
       prisma.verticalPackVersion.findUnique.mockResolvedValue(null);
 
-      await expect(service.deletePack('nonexistent')).rejects.toThrow(
-        'Pack version not found',
-      );
+      await expect(service.deletePack('nonexistent')).rejects.toThrow('Pack version not found');
     });
   });
 });

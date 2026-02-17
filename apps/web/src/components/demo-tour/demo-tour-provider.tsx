@@ -1,13 +1,6 @@
 'use client';
 
-import {
-  createContext,
-  useContext,
-  useState,
-  useCallback,
-  useEffect,
-  ReactNode,
-} from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { TOUR_STEPS, TourStep } from './tour-steps';
 
@@ -111,7 +104,7 @@ export function DemoTourProvider({ children }: { children: ReactNode }) {
     }
   }, [pathname, navigatingTo]);
 
-  const currentStep = tourState === 'running' ? TOUR_STEPS[stepIndex] ?? null : null;
+  const currentStep = tourState === 'running' ? (TOUR_STEPS[stepIndex] ?? null) : null;
 
   // Navigate to the correct page for the current step
   useEffect(() => {

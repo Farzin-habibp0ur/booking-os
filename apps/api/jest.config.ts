@@ -10,10 +10,7 @@ const config: Config = {
     '^@booking-os/messaging-provider$': '<rootDir>/../../packages/messaging-provider/src/index',
     '^@booking-os/db$': '<rootDir>/../../packages/db/src/index',
   },
-  coveragePathIgnorePatterns: [
-    'prisma.service.ts',
-    'queue.module.ts',
-  ],
+  coveragePathIgnorePatterns: ['prisma.service.ts', 'queue.module.ts'],
   coverageThreshold: {
     global: {
       lines: 90,

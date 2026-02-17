@@ -139,15 +139,16 @@ export class BookingService {
     }
 
     // Build override log if forceBook is used
-    const overrideLog = data.forceBook && currentUser
-      ? {
-          forceBooked: true,
-          reason: data.forceBookReason || 'VIP override',
-          adminId: currentUser.staffId,
-          adminName: currentUser.staffName,
-          timestamp: new Date().toISOString(),
-        }
-      : undefined;
+    const overrideLog =
+      data.forceBook && currentUser
+        ? {
+            forceBooked: true,
+            reason: data.forceBookReason || 'VIP override',
+            adminId: currentUser.staffId,
+            adminName: currentUser.staffName,
+            timestamp: new Date().toISOString(),
+          }
+        : undefined;
 
     const mergedCustomFields = {
       ...(data.customFields || {}),
@@ -169,7 +170,8 @@ export class BookingService {
               endTime: { gt: startTime },
             },
           });
-          if (conflict) throw new BadRequestException('Staff has a conflicting booking at this time');
+          if (conflict)
+            throw new BadRequestException('Staff has a conflicting booking at this time');
         }
 
         // Check resource conflict
@@ -264,7 +266,8 @@ export class BookingService {
               endTime: { gt: data.startTime },
             },
           });
-          if (conflict) throw new BadRequestException('Staff has a conflicting booking at this time');
+          if (conflict)
+            throw new BadRequestException('Staff has a conflicting booking at this time');
         }
       }
     }
@@ -512,9 +515,7 @@ export class BookingService {
     // Fire-and-forget kanban status notification
     this.notificationService.sendKanbanStatusUpdate(updated, kanbanStatus).catch(() => {});
 
-    this.logger.log(
-      `Kanban status updated: booking=${id} status=${kanbanStatus}`,
-    );
+    this.logger.log(`Kanban status updated: booking=${id} status=${kanbanStatus}`);
 
     return updated;
   }

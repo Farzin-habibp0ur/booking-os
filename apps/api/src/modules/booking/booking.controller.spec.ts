@@ -44,7 +44,12 @@ describe('BookingController', () => {
   });
 
   it('create delegates to service.create without currentUser when forceBook is false', async () => {
-    const body = { customerId: 'c1', serviceId: 's1', startTime: '2026-03-01T10:00:00Z', forceBook: false } as any;
+    const body = {
+      customerId: 'c1',
+      serviceId: 's1',
+      startTime: '2026-03-01T10:00:00Z',
+      forceBook: false,
+    } as any;
     const user = { id: 'staff1', name: 'Sarah', role: 'ADMIN' };
     mockService.create.mockResolvedValue({ id: 'b1' });
 
@@ -55,7 +60,12 @@ describe('BookingController', () => {
   });
 
   it('create passes currentUser when forceBook is true', async () => {
-    const body = { customerId: 'c1', serviceId: 's1', startTime: '2026-03-01T10:00:00Z', forceBook: true } as any;
+    const body = {
+      customerId: 'c1',
+      serviceId: 's1',
+      startTime: '2026-03-01T10:00:00Z',
+      forceBook: true,
+    } as any;
     const user = { id: 'staff1', name: 'Sarah', role: 'ADMIN' };
     mockService.create.mockResolvedValue({ id: 'b1' });
 
@@ -100,7 +110,13 @@ describe('BookingController', () => {
 
     const result = await controller.calendar('biz1', '2026-03-01', '2026-03-07', 'staff1', 'loc1');
 
-    expect(mockService.getCalendar).toHaveBeenCalledWith('biz1', '2026-03-01', '2026-03-07', 'staff1', 'loc1');
+    expect(mockService.getCalendar).toHaveBeenCalledWith(
+      'biz1',
+      '2026-03-01',
+      '2026-03-07',
+      'staff1',
+      'loc1',
+    );
     expect(result).toEqual([{ id: 'b1' }]);
   });
 
@@ -125,7 +141,13 @@ describe('BookingController', () => {
   it('kanbanBoard delegates to service.getKanbanBoard', async () => {
     mockService.getKanbanBoard.mockResolvedValue({ columns: [] });
 
-    const result = await controller.kanbanBoard('biz1', 'loc1', 'staff1', '2026-03-01', '2026-03-07');
+    const result = await controller.kanbanBoard(
+      'biz1',
+      'loc1',
+      'staff1',
+      '2026-03-01',
+      '2026-03-07',
+    );
 
     expect(mockService.getKanbanBoard).toHaveBeenCalledWith('biz1', {
       locationId: 'loc1',
@@ -153,7 +175,13 @@ describe('BookingController', () => {
 
     const result = await controller.bulkAction('biz1', body, user);
 
-    expect(mockService.bulkUpdate).toHaveBeenCalledWith('biz1', ['b1', 'b2'], 'status', { status: 'CANCELLED' }, 'ADMIN');
+    expect(mockService.bulkUpdate).toHaveBeenCalledWith(
+      'biz1',
+      ['b1', 'b2'],
+      'status',
+      { status: 'CANCELLED' },
+      'ADMIN',
+    );
     expect(result).toEqual({ updated: 2 });
   });
 

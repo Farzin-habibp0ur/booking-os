@@ -259,9 +259,7 @@ describe('PackBuilderPage', () => {
   });
 
   test('shows New Version button for published packs', async () => {
-    mockApi.get
-      .mockResolvedValueOnce([mockPublishedPack])
-      .mockResolvedValueOnce(mockPublishedPack);
+    mockApi.get.mockResolvedValueOnce([mockPublishedPack]).mockResolvedValueOnce(mockPublishedPack);
     render(<PackBuilderPage />);
     await waitFor(() => screen.getByText('Aesthetic'));
 

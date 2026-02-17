@@ -376,11 +376,7 @@ describe('IntakeCard', () => {
 
   it('handles empty fields array gracefully', () => {
     render(
-      <IntakeCard
-        customer={{ id: 'c1', customFields: {} }}
-        fields={[]}
-        onUpdated={jest.fn()}
-      />,
+      <IntakeCard customer={{ id: 'c1', customFields: {} }} fields={[]} onUpdated={jest.fn()} />,
     );
     expect(screen.getByText('0/0 complete')).toBeInTheDocument();
   });

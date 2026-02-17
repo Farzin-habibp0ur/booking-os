@@ -730,9 +730,7 @@ describe('AvailabilityService', () => {
         businessId: 'biz1',
         durationMins: 30,
       } as any);
-      prisma.staff.findMany.mockResolvedValue([
-        { id: 'staff1', name: 'Dr. Chen' },
-      ] as any);
+      prisma.staff.findMany.mockResolvedValue([{ id: 'staff1', name: 'Dr. Chen' }] as any);
 
       // No staff assigned to loc1
       prisma.staffLocation.findMany.mockResolvedValue([]);

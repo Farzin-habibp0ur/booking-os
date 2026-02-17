@@ -31,7 +31,10 @@ function IsShallowJson(maxDepth = 3, maxKeys = 50, validationOptions?: Validatio
       name: 'isShallowJson',
       target: object.constructor,
       propertyName,
-      options: { message: `${propertyName} must not exceed ${maxDepth} levels of nesting or ${maxKeys} keys`, ...validationOptions },
+      options: {
+        message: `${propertyName} must not exceed ${maxDepth} levels of nesting or ${maxKeys} keys`,
+        ...validationOptions,
+      },
       validator: {
         validate(value: any, _args: ValidationArguments) {
           if (value === undefined || value === null) return true;
@@ -140,13 +143,10 @@ export class UpdateBookingStatusDto {
 }
 
 export class UpdateKanbanStatusDto {
-  @IsEnum(
-    ['CHECKED_IN', 'DIAGNOSING', 'AWAITING_APPROVAL', 'IN_PROGRESS', 'READY_FOR_PICKUP'],
-    {
-      message:
-        'kanbanStatus must be one of: CHECKED_IN, DIAGNOSING, AWAITING_APPROVAL, IN_PROGRESS, READY_FOR_PICKUP',
-    },
-  )
+  @IsEnum(['CHECKED_IN', 'DIAGNOSING', 'AWAITING_APPROVAL', 'IN_PROGRESS', 'READY_FOR_PICKUP'], {
+    message:
+      'kanbanStatus must be one of: CHECKED_IN, DIAGNOSING, AWAITING_APPROVAL, IN_PROGRESS, READY_FOR_PICKUP',
+  })
   kanbanStatus!: string;
 }
 
@@ -539,7 +539,8 @@ export class SignupDto {
   @IsString()
   @MinLength(12, { message: 'Password must be at least 12 characters' })
   @Matches(/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, {
-    message: 'Password must contain at least one uppercase letter, one lowercase letter, and one digit',
+    message:
+      'Password must contain at least one uppercase letter, one lowercase letter, and one digit',
   })
   password!: string;
 }
@@ -557,7 +558,8 @@ export class ResetPasswordDto {
   @IsString()
   @MinLength(12, { message: 'Password must be at least 12 characters' })
   @Matches(/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, {
-    message: 'Password must contain at least one uppercase letter, one lowercase letter, and one digit',
+    message:
+      'Password must contain at least one uppercase letter, one lowercase letter, and one digit',
   })
   newPassword!: string;
 }
@@ -570,7 +572,8 @@ export class ChangePasswordDto {
   @IsString()
   @MinLength(12, { message: 'Password must be at least 12 characters' })
   @Matches(/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, {
-    message: 'Password must contain at least one uppercase letter, one lowercase letter, and one digit',
+    message:
+      'Password must contain at least one uppercase letter, one lowercase letter, and one digit',
   })
   newPassword!: string;
 }
@@ -583,7 +586,8 @@ export class AcceptInviteDto {
   @IsString()
   @MinLength(12, { message: 'Password must be at least 12 characters' })
   @Matches(/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, {
-    message: 'Password must contain at least one uppercase letter, one lowercase letter, and one digit',
+    message:
+      'Password must contain at least one uppercase letter, one lowercase letter, and one digit',
   })
   password!: string;
 }

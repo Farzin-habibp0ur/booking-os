@@ -15,7 +15,9 @@ function TourStarter({ children }: { children: React.ReactNode }) {
   const { startTour } = useDemoTour();
   return (
     <>
-      <button data-testid="start" onClick={startTour}>Start</button>
+      <button data-testid="start" onClick={startTour}>
+        Start
+      </button>
       {children}
     </>
   );
@@ -57,7 +59,12 @@ describe('TourSpotlight', () => {
     target.style.width = '200px';
     target.style.height = '100px';
     target.getBoundingClientRect = jest.fn().mockReturnValue({
-      top: 50, left: 100, width: 200, height: 100, bottom: 150, right: 300,
+      top: 50,
+      left: 100,
+      width: 200,
+      height: 100,
+      bottom: 150,
+      right: 300,
     });
     document.body.appendChild(target);
 
@@ -80,7 +87,12 @@ describe('TourSpotlight', () => {
     const target = document.createElement('div');
     target.setAttribute('data-tour-target', TOUR_STEPS[0].target);
     target.getBoundingClientRect = jest.fn().mockReturnValue({
-      top: 50, left: 100, width: 200, height: 100, bottom: 150, right: 300,
+      top: 50,
+      left: 100,
+      width: 200,
+      height: 100,
+      bottom: 150,
+      right: 300,
     });
     document.body.appendChild(target);
 
@@ -110,7 +122,12 @@ describe('TourSpotlight', () => {
     const target = document.createElement('div');
     target.setAttribute('data-tour-target', TOUR_STEPS[0].target);
     target.getBoundingClientRect = jest.fn().mockReturnValue({
-      top: 100, left: 100, width: 200, height: 100, bottom: 200, right: 300,
+      top: 100,
+      left: 100,
+      width: 200,
+      height: 100,
+      bottom: 200,
+      right: 300,
     });
     document.body.appendChild(target);
 
@@ -148,14 +165,24 @@ describe('TourSpotlight', () => {
     expect(cutout).toBeNull();
   });
 
-  it('scrolls target into view when off-screen', async () => {
-    const scrollIntoView = jest.fn();
+  it('scrolls main content to top on step change', async () => {
+    const scrollTo = jest.fn();
+    const mainEl = document.createElement('div');
+    mainEl.id = 'main-content';
+    mainEl.scrollTo = scrollTo;
+    document.body.appendChild(mainEl);
+
     const target = document.createElement('div');
     target.setAttribute('data-tour-target', TOUR_STEPS[0].target);
     target.getBoundingClientRect = jest.fn().mockReturnValue({
-      top: -100, left: 100, width: 200, height: 100, bottom: 0, right: 300,
+      top: -100,
+      left: 100,
+      width: 200,
+      height: 100,
+      bottom: 0,
+      right: 300,
     });
-    target.scrollIntoView = scrollIntoView;
+    target.scrollIntoView = jest.fn();
     document.body.appendChild(target);
 
     renderSpotlight();
@@ -168,14 +195,21 @@ describe('TourSpotlight', () => {
       jest.advanceTimersByTime(200);
     });
 
-    expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'center' });
+    expect(scrollTo).toHaveBeenCalledWith({ top: 0, behavior: 'smooth' });
+
+    mainEl.remove();
   });
 
   it('blocks click events on the backdrop', async () => {
     const target = document.createElement('div');
     target.setAttribute('data-tour-target', TOUR_STEPS[0].target);
     target.getBoundingClientRect = jest.fn().mockReturnValue({
-      top: 50, left: 100, width: 200, height: 100, bottom: 150, right: 300,
+      top: 50,
+      left: 100,
+      width: 200,
+      height: 100,
+      bottom: 150,
+      right: 300,
     });
     document.body.appendChild(target);
 

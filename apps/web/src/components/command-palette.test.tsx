@@ -15,9 +15,7 @@ jest.mock('@/lib/api', () => ({
 }));
 
 const mockSearchResults = {
-  customers: [
-    { id: 'c1', name: 'Alice Smith', phone: '+1234567890', email: 'alice@test.com' },
-  ],
+  customers: [{ id: 'c1', name: 'Alice Smith', phone: '+1234567890', email: 'alice@test.com' }],
   bookings: [
     {
       id: 'b1',
@@ -27,9 +25,7 @@ const mockSearchResults = {
       service: { name: 'Hydra Facial' },
     },
   ],
-  services: [
-    { id: 's1', name: 'Hydra Facial', durationMins: 60, price: 150 },
-  ],
+  services: [{ id: 's1', name: 'Hydra Facial', durationMins: 60, price: 150 }],
   conversations: [],
 };
 
@@ -53,9 +49,7 @@ describe('CommandPalette', () => {
   // ─── Visibility ────────────────────────────────────────────────────
 
   test('renders nothing when not open', () => {
-    const { container } = render(
-      <CommandPalette isOpen={false} onClose={jest.fn()} />,
-    );
+    const { container } = render(<CommandPalette isOpen={false} onClose={jest.fn()} />);
     expect(container.innerHTML).toBe('');
   });
 
@@ -193,7 +187,13 @@ describe('CommandPalette', () => {
   test('shows recent items when query is empty', () => {
     // Seed localStorage with recent items
     const recent = [
-      { type: 'customer', id: 'customer-c1', label: 'Recent Customer', sublabel: '+1234567890', href: '/customers' },
+      {
+        type: 'customer',
+        id: 'customer-c1',
+        label: 'Recent Customer',
+        sublabel: '+1234567890',
+        href: '/customers',
+      },
     ];
     localStorage.setItem('cmd-k-recent', JSON.stringify(recent));
 

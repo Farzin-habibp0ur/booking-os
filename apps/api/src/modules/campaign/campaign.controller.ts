@@ -15,11 +15,7 @@ import { TenantGuard } from '../../common/tenant.guard';
 import { RolesGuard, Roles } from '../../common/roles.guard';
 import { BusinessId } from '../../common/decorators';
 import { CampaignService } from './campaign.service';
-import {
-  CreateCampaignDto,
-  UpdateCampaignDto,
-  PreviewAudienceDto,
-} from '../../common/dto';
+import { CreateCampaignDto, UpdateCampaignDto, PreviewAudienceDto } from '../../common/dto';
 
 @Controller('campaigns')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
@@ -44,7 +40,11 @@ export class CampaignController {
 
   @Patch(':id')
   @Roles('ADMIN')
-  update(@BusinessId() businessId: string, @Param('id') id: string, @Body() body: UpdateCampaignDto) {
+  update(
+    @BusinessId() businessId: string,
+    @Param('id') id: string,
+    @Body() body: UpdateCampaignDto,
+  ) {
     return this.campaignService.update(businessId, id, body);
   }
 

@@ -487,7 +487,8 @@ export class NotificationService {
       const statusMessages: Record<string, string> = {
         CHECKED_IN: 'Your vehicle has been checked in and is in our queue.',
         DIAGNOSING: 'Our technician is currently diagnosing your vehicle.',
-        AWAITING_APPROVAL: 'We have prepared a service quote for your vehicle. Please review and approve.',
+        AWAITING_APPROVAL:
+          'We have prepared a service quote for your vehicle. Please review and approve.',
         IN_PROGRESS: 'Work on your vehicle is now in progress.',
         READY_FOR_PICKUP: 'Your vehicle is ready for pickup!',
       };

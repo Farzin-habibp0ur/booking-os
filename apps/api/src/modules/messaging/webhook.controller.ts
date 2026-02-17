@@ -74,10 +74,7 @@ export class WebhookController {
   // Meta WhatsApp inbound messages (POST from Meta webhook)
   // M10 fix: Enforce HMAC signature on WhatsApp webhook
   @Post('whatsapp')
-  async whatsappInbound(
-    @Body() payload: any,
-    @Headers('x-hub-signature-256') signature?: string,
-  ) {
+  async whatsappInbound(@Body() payload: any, @Headers('x-hub-signature-256') signature?: string) {
     const secret = this.configService.get<string>('WHATSAPP_APP_SECRET');
     if (secret) {
       const raw = JSON.stringify(payload);
@@ -142,17 +139,14 @@ export class WebhookController {
     let locationId: string | undefined;
 
     if (businessPhoneNumberId) {
-      const location = await this.locationService.findLocationByWhatsappPhoneNumberId(
-        businessPhoneNumberId,
-      );
+      const location =
+        await this.locationService.findLocationByWhatsappPhoneNumberId(businessPhoneNumberId);
       if (location) {
         locationId = location.id;
         business = await this.prisma.business.findUnique({
           where: { id: location.businessId },
         });
-        this.logger.log(
-          `Routed inbound message to location "${location.name}" (${location.id})`,
-        );
+        this.logger.log(`Routed inbound message to location "${location.name}" (${location.id})`);
       }
     }
 

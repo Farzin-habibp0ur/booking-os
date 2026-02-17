@@ -118,7 +118,14 @@ function ShellInner({ children }: { children: ReactNode }) {
     { href: '/campaigns', label: 'Campaigns', icon: Megaphone, roles: ['ADMIN'] },
     { href: '/automations', label: 'Automations', icon: Zap, roles: ['ADMIN'] },
     ...((user?.business?.packConfig as any)?.kanbanEnabled
-      ? [{ href: '/service-board', label: 'Service Board', icon: Kanban, roles: ['ADMIN', 'AGENT', 'SERVICE_PROVIDER'] }]
+      ? [
+          {
+            href: '/service-board',
+            label: 'Service Board',
+            icon: Kanban,
+            roles: ['ADMIN', 'AGENT', 'SERVICE_PROVIDER'],
+          },
+        ]
       : []),
     { href: '/reports', label: t('nav.reports'), icon: BarChart3, roles: ['ADMIN', 'AGENT'] },
     ...(pack.name !== 'general'

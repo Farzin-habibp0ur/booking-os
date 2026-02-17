@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { Prisma } from '@booking-os/db';
 import { PrismaService } from '../../common/prisma.service';
 
@@ -78,7 +73,9 @@ export class LocationService {
       ...(data.name !== undefined && { name: data.name }),
       ...(data.address !== undefined && { address: data.address }),
       ...(data.isBookable !== undefined && { isBookable: data.isBookable }),
-      ...(data.whatsappConfig !== undefined && { whatsappConfig: data.whatsappConfig as Prisma.InputJsonValue }),
+      ...(data.whatsappConfig !== undefined && {
+        whatsappConfig: data.whatsappConfig as Prisma.InputJsonValue,
+      }),
     };
     return this.prisma.location.update({
       where: { id },
@@ -211,9 +208,7 @@ export class LocationService {
       where: { locationId },
       include: { staff: { select: { id: true, name: true, role: true, isActive: true } } },
     });
-    return assignments
-      .filter((a) => a.staff.isActive)
-      .map((a) => a.staff);
+    return assignments.filter((a) => a.staff.isActive).map((a) => a.staff);
   }
 
   async findLocationByWhatsappPhoneNumberId(phoneNumberId: string) {
