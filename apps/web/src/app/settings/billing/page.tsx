@@ -37,6 +37,16 @@ const PLANS = [
   },
 ];
 
+// M11 fix: Validate redirect URL to prevent open redirect via compromised API response
+function isValidStripeUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'https:' && parsed.hostname.endsWith('.stripe.com');
+  } catch {
+    return false;
+  }
+}
+
 const STATUS_COLORS: Record<string, string> = {
   active: 'bg-sage-50 text-sage-900',
   trialing: 'bg-lavender-50 text-lavender-900',
@@ -74,6 +84,11 @@ export default function BillingPage() {
     setError(null);
     try {
       const { url } = await api.post<{ url: string }>('/billing/checkout', { plan });
+      if (!isValidStripeUrl(url)) {
+        setError(t('billing.checkout_error'));
+        setActionLoading(null);
+        return;
+      }
       window.location.href = url;
     } catch {
       setError(t('billing.checkout_error'));
@@ -86,6 +101,11 @@ export default function BillingPage() {
     setError(null);
     try {
       const { url } = await api.post<{ url: string }>('/billing/portal');
+      if (!isValidStripeUrl(url)) {
+        setError(t('billing.portal_error'));
+        setActionLoading(null);
+        return;
+      }
       window.location.href = url;
     } catch {
       setError(t('billing.portal_error'));

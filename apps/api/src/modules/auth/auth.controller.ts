@@ -8,6 +8,7 @@ import { AuthService } from './auth.service';
 import { JwtBlacklistService } from '../../common/jwt-blacklist.service';
 import { CurrentUser } from '../../common/decorators';
 import {
+  LoginDto,
   SignupDto,
   ForgotPasswordDto,
   ResetPasswordDto,
@@ -83,10 +84,7 @@ export class AuthController {
 
   @Post('login')
   @Throttle({ default: { ttl: 60000, limit: 10 } })
-  async login(
-    @Body() body: { email: string; password: string },
-    @Res({ passthrough: true }) res: Response,
-  ) {
+  async login(@Body() body: LoginDto, @Res({ passthrough: true }) res: Response) {
     const result = await this.authService.login(body.email, body.password);
     this.setTokenCookies(res, result);
     return result;

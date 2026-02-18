@@ -382,6 +382,31 @@ describe('Auth Integration', () => {
     });
   });
 
+  // L3 fix: Empty body returns 400 not 500
+  describe('L3: Empty body returns 400 not 500', () => {
+    it('returns 400 when login body is empty', async () => {
+      const res = await request(ctx.app.getHttpServer()).post('/api/v1/auth/login').send({});
+
+      expect(res.status).toBe(400);
+    });
+
+    it('returns 400 when login body is missing password', async () => {
+      const res = await request(ctx.app.getHttpServer())
+        .post('/api/v1/auth/login')
+        .send({ email: 'test@test.com' });
+
+      expect(res.status).toBe(400);
+    });
+
+    it('returns 400 when email is invalid', async () => {
+      const res = await request(ctx.app.getHttpServer())
+        .post('/api/v1/auth/login')
+        .send({ email: 'not-an-email', password: 'password123' });
+
+      expect(res.status).toBe(400);
+    });
+  });
+
   // H5 fix: Refresh token blacklisting
   describe('H5: Refresh token blacklisting on logout', () => {
     it('blacklists refresh token on logout so it cannot be reused', async () => {

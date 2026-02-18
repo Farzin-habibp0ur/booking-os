@@ -168,6 +168,72 @@ describe('BillingPage', () => {
     });
   });
 
+  // M11 fix: Stripe redirect URL validation
+  test('rejects non-Stripe checkout URL and shows error', async () => {
+    mockApi.get.mockResolvedValue(null);
+    mockApi.post.mockResolvedValue({ url: 'https://evil.com/phish' });
+
+    const originalLocation = window.location;
+    Object.defineProperty(window, 'location', {
+      writable: true,
+      value: { ...originalLocation, href: '' },
+    });
+
+    render(<BillingPage />);
+
+    await waitFor(() => {
+      expect(screen.getAllByText('billing.subscribe')).toHaveLength(2);
+    });
+
+    await userEvent.click(screen.getAllByText('billing.subscribe')[0]);
+
+    await waitFor(() => {
+      expect(screen.getByText('billing.checkout_error')).toBeInTheDocument();
+    });
+
+    // Should NOT redirect
+    expect(window.location.href).toBe('');
+
+    Object.defineProperty(window, 'location', {
+      writable: true,
+      value: originalLocation,
+    });
+  });
+
+  test('rejects non-Stripe portal URL and shows error', async () => {
+    mockApi.get.mockResolvedValue({
+      plan: 'pro',
+      status: 'active',
+      currentPeriodEnd: '2026-03-15T00:00:00Z',
+    });
+    mockApi.post.mockResolvedValue({ url: 'http://not-stripe.com/portal' });
+
+    const originalLocation = window.location;
+    Object.defineProperty(window, 'location', {
+      writable: true,
+      value: { ...originalLocation, href: '' },
+    });
+
+    render(<BillingPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('billing.manage_billing')).toBeInTheDocument();
+    });
+
+    await userEvent.click(screen.getByText('billing.manage_billing'));
+
+    await waitFor(() => {
+      expect(screen.getByText('billing.portal_error')).toBeInTheDocument();
+    });
+
+    expect(window.location.href).toBe('');
+
+    Object.defineProperty(window, 'location', {
+      writable: true,
+      value: originalLocation,
+    });
+  });
+
   test('calls portal API on manage billing click', async () => {
     mockApi.get.mockResolvedValue({
       plan: 'pro',

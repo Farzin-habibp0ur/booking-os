@@ -550,6 +550,16 @@ export class WebhookInboundDto {
 
 // ---- Auth DTOs ----
 
+// L3 fix: LoginDto ensures empty body returns 400 not 500
+export class LoginDto {
+  @IsEmail()
+  email!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  password!: string;
+}
+
 export class SignupDto {
   @IsString()
   @IsNotEmpty()
