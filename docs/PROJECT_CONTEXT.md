@@ -117,7 +117,7 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 - **Enhanced Search** — Search API with offset, types filter, totals; Cmd+K fixed hrefs to detail pages, grouped results, vertical-aware labels, "View all results" link
 - **Search Page** — New `/search` page with URL param sync, type filter chips with counts, grouped results, load more per section
 - **Inbox Deep Linking** — `?conversationId=` URL param auto-selects conversation, customer name links to profile
-- **Final counts:** 2,448+ tests total (957 web + 1,502 API)
+- **Final counts:** 2,459 tests total (957 web + 1,502 API)
 
 ---
 
@@ -190,14 +190,14 @@ booking-os/
 
 ---
 
-## 5. Database Schema (31 Models)
+## 5. Database Schema (32 Models)
 
 ```
 Business (1) ──┬── (*) Staff ──── (*) WorkingHours
                │                  ├── (*) TimeOff
                │                  ├── (*) CalendarConnection
                │                  └── (*) StaffLocation ──── Location
-               ├── (*) Customer
+               ├── (*) Customer ──── (*) CustomerNote
                ├── (*) Service
                ├── (*) Booking ──── (*) Reminder
                │    │               ├── (*) Payment
@@ -240,7 +240,8 @@ VerticalPack:       AESTHETIC, SALON, TUTORING, GENERAL, DEALERSHIP
 |-------|-----------|-------|
 | **Business** | name, slug (unique), timezone, verticalPack, packConfig (JSON), aiSettings (JSON), policySettings (JSON), defaultLocale | Multi-tenant root |
 | **Staff** | email (unique), role, passwordHash, isActive, emailVerified, locale, preferences (JSON) | Auth + assignment + mode prefs |
-| **Customer** | phone (unique per biz), tags[], customFields (JSON) | Vertical-specific fields |
+| **Customer** | phone (unique per biz), tags[], customFields (JSON) | Vertical-specific fields, has CustomerNotes |
+| **CustomerNote** | customerId (FK), staffId (FK), businessId (FK), content | Staff ownership validation for edit/delete |
 | **Service** | kind (CONSULT/TREATMENT/OTHER), depositRequired, bufferBefore/After, isActive | Catalog item |
 | **Booking** | status (7 states), kanbanStatus, locationId, resourceId, recurringSeriesId, customFields (JSON) | Core scheduling |
 | **Location** | name, address, isBookable, whatsappConfig (JSON), isActive | Multi-location |
@@ -533,7 +534,7 @@ npm run dev                    # Starts all apps via Turborepo
 | `npm run dev` | Start all apps |
 | `npm run build` | Build all |
 | `npm run lint` | Lint all (ESLint + TypeScript) |
-| `npm test` | Run all tests (~2,360 tests) |
+| `npm test` | Run all tests (~2,459 tests) |
 | `npm run test:coverage` | Tests with coverage thresholds |
 | `npm run db:generate` | Generate Prisma client |
 | `npm run db:migrate` | Run migrations |

@@ -57,6 +57,13 @@
 - **Saved Views** — Named filter/sort presets on list pages (inbox, bookings, customers, waitlist), sidebar-pinnable, dashboard-pinnable, personal + shared (admin-governed)
 - **Staff preferences** — JSON column on Staff for cross-device mode persistence
 
+### UX Phase 2: Customer Hub + Unified Timeline + Global Search (Bundle B) (Complete — 7/7 batches)
+- **Customer Hub** — Redesigned `/customers/{id}` with sticky header, context row, notes tab, message deep link, vertical modules (IntakeCard for aesthetic, quotes for dealership)
+- **Customer Notes** — New `CustomerNote` model with full CRUD, staff ownership validation
+- **Unified Timeline** — Timeline API endpoint (6 data sources: bookings, conversations, notes, waitlist, quotes, campaigns), `CustomerTimeline` component with type filtering, pagination, deep linking
+- **Enhanced Search** — Search API with offset, types filter, totals; Cmd+K fixed hrefs to detail pages, grouped results, vertical-aware labels, "View all results" link; dedicated `/search` page
+- **Inbox Deep Linking** — `?conversationId=` URL param auto-selects conversation, customer name links to profile
+
 ### Tech Stack
 | Layer | Technology |
 |-------|-----------|
@@ -642,20 +649,19 @@ Two tabs: **Info** | **Notes**
 
 ## 4. Data Models
 
-### 4.1 Entity Relationship Overview (27 Models)
+### 4.1 Entity Relationship Overview (32 Models)
 
 ```
 Business (1) ──┬── (*) Staff ──── (*) WorkingHours
                │                  ├── (*) TimeOff
                │                  └── (*) CalendarConnection
-               ├── (*) Customer
+               ├── (*) Customer ──── (*) CustomerNote
                ├── (*) Service
                ├── (*) Booking ──── (*) Reminder
                │                    └── (*) Payment
                ├── (*) RecurringSeries
                ├── (*) Conversation ──── (*) Message
                │                        └── (*) ConversationNote
-               ├── (*) CustomerNote
                ├── (*) MessageTemplate
                ├── (*) Translation
                ├── (1) Subscription
@@ -767,6 +773,7 @@ Business (1) ──┬── (*) Staff ──── (*) WorkingHours
 | sortOrder | Int | Display ordering |
 
 #### Other Models
+- **CustomerNote:** customerId, staffId, businessId, content, createdAt, updatedAt (staff ownership validated for edit/delete)
 - **Reminder:** bookingId, templateId, scheduledAt, sentAt, status (PENDING/SENT/FAILED/CANCELLED), type (REMINDER/CONSULT_FOLLOW_UP/AFTERCARE/TREATMENT_CHECK_IN)
 - **MessageTemplate:** name, category (11 types), body (with {{variables}}), variables[]
 - **WorkingHours:** staffId, dayOfWeek (0-6), startTime/endTime ("HH:mm"), isOff
@@ -942,9 +949,10 @@ apps/web/src/
 │   │   └── components/        # KpiStrip, MyWork, AttentionCards (UX Phase 1)
 │   ├── calendar/page.tsx
 │   ├── bookings/page.tsx
-│   ├── inbox/page.tsx
+│   ├── inbox/page.tsx                  # 4-pane messaging with deep linking
 │   ├── customers/page.tsx
-│   ├── customers/[id]/page.tsx
+│   ├── customers/[id]/page.tsx         # Customer Hub (timeline, notes, vertical modules)
+│   ├── search/page.tsx                 # Full search results with type filters
 │   ├── services/page.tsx
 │   ├── staff/page.tsx
 │   ├── reports/page.tsx
@@ -981,7 +989,8 @@ apps/web/src/
 │   ├── booking-form-modal.tsx # Create/reschedule booking
 │   ├── booking-detail-modal.tsx # View/manage booking + notification timeline
 │   ├── clinic-intake-card.tsx # Aesthetics intake fields (Phase 1)
-│   ├── command-palette.tsx    # Cmd+K global search (Phase 2)
+│   ├── command-palette.tsx    # Cmd+K global search with grouped results (Phase 2 + Bundle B)
+│   ├── customer-timeline.tsx  # Unified timeline (6 event types, filters, pagination) (Bundle B)
 │   ├── bulk-action-bar.tsx    # Multi-select action bar (Phase 2)
 │   ├── tooltip-nudge.tsx      # Contextual coaching tooltips (Phase 2)
 │   ├── mode-switcher.tsx      # Role-based mode pill/tab selector (UX Phase 1)

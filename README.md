@@ -105,7 +105,7 @@ All endpoints are prefixed with `/api/v1`. Interactive API docs are available at
 | Auth | `/auth` | Login, registration, token management, email verification |
 | Bookings | `/bookings` | CRUD for appointments, status updates, bulk actions, deposit/reschedule/cancel links |
 | Recurring | `/bookings/recurring` | Recurring appointment series |
-| Customers | `/customers` | Customer profiles, import/export, bulk tag/untag |
+| Customers | `/customers` | Customer profiles, import/export, bulk tag/untag, notes CRUD, unified timeline |
 | Services | `/services` | Service catalog with categories and service kinds |
 | Staff | `/staff` | Staff profiles, schedules, roles, invitations |
 | Conversations | `/conversations` | Customer messaging threads, notes |
