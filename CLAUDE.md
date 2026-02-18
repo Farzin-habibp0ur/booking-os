@@ -63,6 +63,12 @@ All AI-related UI elements use the **lavender** palette:
 
 6. **Every deploy must include tests.** Never push code without associated tests for new/changed features.
 
+7. **CSP `connect-src` must use origin only — never include a URL path.** The CSP spec requires exact path matching (without trailing slash). Using `https://api.example.com/api/v1` blocks sub-paths like `/api/v1/auth/login`. Always use just the origin: `https://api.example.com`. The extraction is done in `apps/web/next.config.js` via `new URL(apiUrl).origin`.
+
+8. **The frontend API client has automatic token refresh — do not remove it.** When a request gets 401, `apps/web/src/lib/api.ts` calls `POST /auth/refresh` (using the httpOnly refresh_token cookie) before redirecting to /login. This keeps sessions alive for 7 days (refresh token TTL) instead of 15 minutes (access token TTL). Concurrent refresh calls are deduplicated. Auth endpoints (`/auth/*`) skip refresh to avoid loops.
+
+9. **Never use `document.referrer` or `performance.getEntriesByType('navigation')` to detect SPA navigation state.** These APIs reflect the initial page load, not client-side navigations. Use `sessionStorage` flags instead (set on action, check and clear on target page).
+
 ### After Any Auth or Cookie Change
 
 Verify with:

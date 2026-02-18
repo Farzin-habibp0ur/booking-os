@@ -56,7 +56,7 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 - **Global search** — Cmd+K command palette searching across customers, bookings, services, conversations
 - **Interactive demo tour** — 9-step guided walkthrough with spotlight overlays, tooltips, keyboard navigation, localStorage persistence
 - **Notifications** — Email via Resend, WhatsApp, automated booking reminders, notification timeline
-- **Security** — Helmet CSP, rate limiting, JWT blacklisting, brute force protection, httpOnly cookies, tenant isolation
+- **Security** — Helmet CSP, rate limiting, JWT blacklisting, brute force protection, httpOnly cookies, automatic token refresh, tenant isolation
 
 ---
 
@@ -107,7 +107,7 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 - **Mission Control Dashboard** — KPI strip for agent/provider modes, "My Work" section (personal bookings + assigned conversations), AttentionCards component, mode-adaptive layout
 - **Saved Views** — SavedView database model, full CRUD API (7 endpoints), ViewPicker + SaveViewModal on inbox/bookings/customers/waitlist, sidebar-pinned views, dashboard-pinned view cards
 - **Staff preferences** — JSON column on Staff model for mode/landing path persistence
-- **Final counts:** 2,360+ tests total (895 web + 1,465 API)
+- **Final counts:** 2,531+ tests total (970 web + 1,561 API)
 
 ### UX Phase 2: "Customer Hub + Unified Timeline + Global Search" (Bundle B) — COMPLETE (7/7 batches)
 - **Customer Hub** — Redesigned `/customers/{id}` with sticky header, context row, notes tab, message deep link, vertical modules
@@ -295,7 +295,7 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 | **Health** | `/health` | DB + Redis health check with latency |
 
 ### Auth & Multi-tenancy
-- JWT in httpOnly cookies (access: 15 min, refresh: 7 days)
+- JWT in httpOnly cookies (access: 15 min, refresh: 7 days), automatic client-side refresh on 401
 - Cookie domain auto-derived from `CORS_ORIGINS` for subdomain sharing (`.businesscommandcentre.com`)
 - `sameSite: lax`, `secure: true` in production — see DEPLOY.md section 6 for critical rules
 - Token blacklisting on logout and password change

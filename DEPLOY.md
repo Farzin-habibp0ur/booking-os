@@ -300,6 +300,10 @@ This is the most critical section for production. Getting cookie configuration w
 6. Next.js middleware checks for access_token cookie on protected routes
    - If missing → 307 redirect to /login
    - If present → allow through
+7. When access_token expires (401 from API):
+   - Frontend API client auto-calls POST /auth/refresh (uses refresh_token cookie)
+   - If refresh succeeds → new cookies set, original request retried transparently
+   - If refresh fails → redirect to /login
 ```
 
 ### Cookie Properties (Production)
@@ -666,6 +670,27 @@ Common causes:
 - Missing required env var (JWT_SECRET, DATABASE_URL)
 - Database unreachable (check DATABASE_URL, network)
 - Prisma migration failed (schema drift — run `npx prisma migrate deploy` manually)
+
+### "Failed to fetch" or API calls blocked by CSP
+
+**Root cause:** The `connect-src` CSP directive includes a URL path (e.g., `https://api.example.com/api/v1`). Per the CSP spec, a path without trailing slash requires an **exact** URL match — sub-paths like `/api/v1/auth/login` are blocked.
+
+**Fix:** CSP `connect-src` must use the **origin only** (no path): `https://api.example.com`. This is handled in `apps/web/next.config.js` using `new URL(apiUrl).origin`. If you modify the CSP configuration, never add a path to `connect-src`.
+
+### "Failed to load dashboard" (or other pages) after inactivity
+
+**Root cause:** The `access_token` has a 15-minute TTL. If the frontend doesn't refresh it, all API calls return 401 after 15 minutes.
+
+**Already fixed:** The frontend API client (`apps/web/src/lib/api.ts`) automatically calls `POST /auth/refresh` on 401 responses, using the httpOnly `refresh_token` cookie (7-day TTL). Sessions survive for up to 7 days. If this error recurs, check that the refresh logic hasn't been removed and that the refresh endpoint is working:
+
+```bash
+# Login to get cookies, then test refresh
+curl -s -c /tmp/test.txt -X POST https://api.yourdomain.com/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"pass"}' > /dev/null
+curl -s -b /tmp/test.txt -X POST https://api.yourdomain.com/api/v1/auth/refresh
+# Should return {"accessToken":"...","refreshToken":"..."}
+```
 
 ### CORS errors in browser console
 
