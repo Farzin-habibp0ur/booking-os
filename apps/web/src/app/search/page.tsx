@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
@@ -37,7 +37,15 @@ const typeIcons: Record<string, typeof Users> = {
 const ENTITY_TYPES = ['customer', 'booking', 'service', 'conversation'] as const;
 type EntityType = (typeof ENTITY_TYPES)[number];
 
-export default function SearchPage() {
+export default function SearchPageWrapper() {
+  return (
+    <Suspense fallback={null}>
+      <SearchPage />
+    </Suspense>
+  );
+}
+
+function SearchPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pack = usePack();

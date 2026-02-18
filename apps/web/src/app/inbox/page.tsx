@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useSocket } from '@/lib/use-socket';
@@ -69,7 +69,15 @@ const SNOOZE_HOURS = [
   { key: '3d', hours: 72 },
 ];
 
-export default function InboxPage() {
+export default function InboxPageWrapper() {
+  return (
+    <Suspense fallback={null}>
+      <InboxPage />
+    </Suspense>
+  );
+}
+
+function InboxPage() {
   const { t } = useI18n();
   const pack = usePack();
   const searchParams = useSearchParams();
