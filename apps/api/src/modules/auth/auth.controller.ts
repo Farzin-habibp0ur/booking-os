@@ -29,27 +29,48 @@ export class AuthController {
     return this.config.get('NODE_ENV') === 'production';
   }
 
+  private getCookieDomain(): string | undefined {
+    // Share cookies across subdomains (api.X.com ↔ X.com) in production
+    if (!this.isProduction()) return undefined;
+    const origins = this.config.get('CORS_ORIGINS') || '';
+    const firstOrigin = origins.split(',')[0];
+    try {
+      const hostname = new URL(firstOrigin).hostname;
+      const parts = hostname.split('.');
+      if (parts.length >= 2) {
+        return '.' + parts.slice(-2).join('.');
+      }
+    } catch {
+      // Ignore — no domain set
+    }
+    return undefined;
+  }
+
   private setTokenCookies(res: Response, tokens: { accessToken: string; refreshToken: string }) {
     const secure = this.isProduction();
+    const domain = this.getCookieDomain();
     res.cookie('access_token', tokens.accessToken, {
       httpOnly: true,
       secure,
-      sameSite: 'strict',
+      sameSite: 'lax',
       maxAge: 15 * 60 * 1000, // 15 minutes
       path: '/',
+      ...(domain && { domain }),
     });
     res.cookie('refresh_token', tokens.refreshToken, {
       httpOnly: true,
       secure,
-      sameSite: 'strict',
+      sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      path: '/api/v1/auth',
+      path: '/',
+      ...(domain && { domain }),
     });
   }
 
   private clearTokenCookies(res: Response) {
-    res.clearCookie('access_token', { path: '/' });
-    res.clearCookie('refresh_token', { path: '/api/v1/auth' });
+    const domain = this.getCookieDomain();
+    res.clearCookie('access_token', { path: '/', ...(domain && { domain }) });
+    res.clearCookie('refresh_token', { path: '/', ...(domain && { domain }) });
   }
 
   @Post('signup')
