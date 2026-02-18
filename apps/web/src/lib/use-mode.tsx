@@ -68,7 +68,7 @@ export function ModeProvider({ children }: { children: ReactNode }) {
   }, [user?.id, user?.role]);
 
   // Debounced API call ref
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const setMode = useCallback((newMode: AppMode) => {
     setModeState(newMode);

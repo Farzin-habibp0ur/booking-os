@@ -116,7 +116,6 @@ jest.mock('lucide-react', () => ({
   X: (props: any) => <button data-testid="x-dismiss-icon" onClick={props.onClick} {...props} />,
   Target: (props: any) => <div data-testid="target-icon" {...props} />,
   ClipboardList: (props: any) => <div data-testid="clipboard-list-icon" {...props} />,
-  Clock: (props: any) => <div data-testid="clock-icon" {...props} />,
   Search: (props: any) => <div data-testid="search-icon" {...props} />,
   Star: (props: any) => <div data-testid="star-icon" {...props} />,
   Flag: (props: any) => <div data-testid="flag-icon" {...props} />,
