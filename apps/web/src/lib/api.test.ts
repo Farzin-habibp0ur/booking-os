@@ -104,13 +104,28 @@ describe('ApiClient', () => {
       );
     });
 
-    it('redirects to /login on 401 response', async () => {
+    it('redirects to /login on 401 when refresh also fails', async () => {
+      window.location.pathname = '/dashboard';
       api.setToken('expired-token');
-      mockFetch.mockResolvedValue({
-        ok: false,
-        status: 401,
-        json: async () => ({ message: 'Unauthorized' }),
-      });
+      mockFetch
+        // First call: /test returns 401
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 401,
+          json: async () => ({ message: 'Unauthorized' }),
+        })
+        // Second call: /auth/refresh also fails
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 401,
+          json: async () => ({ message: 'Refresh failed' }),
+        })
+        // Third call: retry /test returns 401 (shouldn't happen, but safety)
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 401,
+          json: async () => ({ message: 'Unauthorized' }),
+        });
 
       await expect(api.get('/test')).rejects.toThrow('Unauthorized');
 
@@ -249,6 +264,130 @@ describe('ApiClient', () => {
       await expect(api.upload('/upload', formData)).rejects.toThrow('Unauthorized');
 
       expect(window.location.href).toBe('/login');
+    });
+  });
+
+  describe('token refresh', () => {
+    beforeEach(() => {
+      window.location.pathname = '/dashboard';
+    });
+
+    it('automatically refreshes token on 401 and retries request', async () => {
+      api.setToken('expired-token');
+      mockFetch
+        // First: /test returns 401
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 401,
+          json: async () => ({ message: 'Unauthorized' }),
+        })
+        // Second: /auth/refresh succeeds
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ accessToken: 'new-token' }),
+        })
+        // Third: retry /test succeeds
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ data: 'success' }),
+        });
+
+      const result = await api.get('/test');
+
+      expect(result).toEqual({ data: 'success' });
+      expect(api.getToken()).toBe('new-token');
+      expect(mockFetch).toHaveBeenCalledTimes(3);
+      // Verify refresh was called with POST and credentials
+      expect(mockFetch.mock.calls[1][0]).toContain('/auth/refresh');
+      expect(mockFetch.mock.calls[1][1]).toEqual(
+        expect.objectContaining({ method: 'POST', credentials: 'include' }),
+      );
+    });
+
+    it('does not attempt refresh for /auth/ endpoints', async () => {
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 401,
+        json: async () => ({ message: 'Invalid credentials' }),
+      });
+
+      await expect(api.get('/auth/me')).rejects.toThrow('Invalid credentials');
+
+      // Only 1 call — no refresh attempt
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not retry after refresh failure', async () => {
+      api.setToken('expired-token');
+      mockFetch
+        // /test returns 401
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 401,
+          json: async () => ({ message: 'Unauthorized' }),
+        })
+        // /auth/refresh fails
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 401,
+          json: async () => ({ message: 'Refresh expired' }),
+        });
+
+      await expect(api.get('/test')).rejects.toThrow('Unauthorized');
+
+      // 2 calls: original + refresh (no retry)
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+      expect(window.location.href).toBe('/login');
+    });
+
+    it('deduplicates concurrent refresh calls', async () => {
+      api.setToken('expired');
+      let refreshCallCount = 0;
+      mockFetch.mockImplementation(async (url: string) => {
+        if (url.includes('/auth/refresh')) {
+          refreshCallCount++;
+          return { ok: true, json: async () => ({ accessToken: 'new' }) };
+        }
+        // First 2 calls return 401, then success on retry
+        if (refreshCallCount === 0) {
+          return { ok: false, status: 401, json: async () => ({ message: 'Unauthorized' }) };
+        }
+        return { ok: true, json: async () => ({ data: 'ok' }) };
+      });
+
+      const [r1, r2] = await Promise.all([api.get('/test1'), api.get('/test2')]);
+
+      expect(r1).toEqual({ data: 'ok' });
+      expect(r2).toEqual({ data: 'ok' });
+      // Refresh should only be called once despite two concurrent 401s
+      expect(refreshCallCount).toBe(1);
+    });
+
+    it('retries upload after successful refresh', async () => {
+      api.setToken('expired');
+      mockFetch
+        // Upload returns 401
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 401,
+          json: async () => ({ message: 'Unauthorized' }),
+        })
+        // Refresh succeeds
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ accessToken: 'new-token' }),
+        })
+        // Retry upload succeeds
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ url: 'uploaded.jpg' }),
+        });
+
+      const formData = new FormData();
+      const result = await api.upload('/upload', formData);
+
+      expect(result).toEqual({ url: 'uploaded.jpg' });
+      expect(api.getToken()).toBe('new-token');
     });
   });
 

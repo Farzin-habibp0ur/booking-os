@@ -260,13 +260,14 @@ describe('DashboardPage', () => {
 
   // ─── Error State ────────────────────────────────────────────
 
-  it('shows error state when data fails to load', async () => {
+  it('shows error state with retry button when data fails to load', async () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     mockApi.get.mockImplementation((path: string) => {
       if (path === '/business') {
         return Promise.resolve({ packConfig: { setupComplete: true } });
       }
       if (path === '/dashboard') {
-        return Promise.reject(new Error('Failed to load'));
+        return Promise.reject(new Error('Server error'));
       }
       return Promise.resolve({});
     });
@@ -276,6 +277,11 @@ describe('DashboardPage', () => {
     await waitFor(() => {
       expect(screen.getByText('dashboard.failed_to_load')).toBeInTheDocument();
     });
+    // Shows error detail
+    expect(screen.getByText('Server error')).toBeInTheDocument();
+    // Shows retry button
+    expect(screen.getByText('common.retry')).toBeInTheDocument();
+    consoleSpy.mockRestore();
   });
 
   it('shows error state when business API fails', async () => {
@@ -287,7 +293,44 @@ describe('DashboardPage', () => {
     await waitFor(() => {
       expect(screen.getByText('dashboard.failed_to_load')).toBeInTheDocument();
     });
+    expect(screen.getByText('Network error')).toBeInTheDocument();
+    expect(screen.getByText('common.retry')).toBeInTheDocument();
 
+    consoleSpy.mockRestore();
+  });
+
+  it('retries loading when retry button is clicked', async () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const user = userEvent.setup();
+    let callCount = 0;
+    mockApi.get.mockImplementation((path: string) => {
+      if (path === '/business') {
+        return Promise.resolve({ packConfig: { setupComplete: true } });
+      }
+      if (path === '/dashboard') {
+        callCount++;
+        if (callCount === 1) return Promise.reject(new Error('Temporary error'));
+        return Promise.resolve(baseDashboardData);
+      }
+      return Promise.resolve([]);
+    });
+
+    render(<DashboardPage />);
+
+    // First load fails
+    await waitFor(() => {
+      expect(screen.getByText('common.retry')).toBeInTheDocument();
+    });
+
+    // Click retry — second load succeeds
+    await act(async () => {
+      await user.click(screen.getByText('common.retry'));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('dashboard.title')).toBeInTheDocument();
+    });
+    expect(screen.queryByText('common.retry')).not.toBeInTheDocument();
     consoleSpy.mockRestore();
   });
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
@@ -84,6 +84,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [resending, setResending] = useState(false);
   const [dashboardViews, setDashboardViews] = useState<any[]>([]);
   const { t } = useI18n();
@@ -104,19 +105,27 @@ export default function DashboardPage() {
     }
   }, [landingPath, router, user]);
 
-  useEffect(() => {
+  const routerRef = useRef(router);
+  routerRef.current = router;
+
+  const loadDashboard = () => {
+    setLoading(true);
+    setError(null);
     // Check if onboarding is complete; redirect to setup if not
     api
       .get<any>('/business')
       .then((biz) => {
         const config = biz.packConfig || {};
         if (!config.setupComplete) {
-          router.push('/setup');
+          routerRef.current.push('/setup');
           return;
         }
         return api.get('/dashboard').then(setData);
       })
-      .catch(console.error)
+      .catch((err) => {
+        console.error('Dashboard load error:', err);
+        setError(err.message || 'Failed to load');
+      })
       .finally(() => setLoading(false));
 
     // Load dashboard-pinned saved views
@@ -124,6 +133,11 @@ export default function DashboardPage() {
       .get<any[]>('/saved-views/dashboard')
       .then((views) => setDashboardViews(views || []))
       .catch(() => {});
+  };
+
+  useEffect(() => {
+    loadDashboard();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleDismissNudge = async (nudgeId: string) => {
@@ -145,8 +159,16 @@ export default function DashboardPage() {
   if (loading) return <PageSkeleton />;
   if (!data)
     return (
-      <div className="p-6">
-        <p className="text-red-500">{t('dashboard.failed_to_load')}</p>
+      <div className="p-6 flex flex-col items-center justify-center min-h-[60vh] text-center">
+        <AlertTriangle size={32} className="text-amber-500 mb-3" />
+        <p className="text-slate-700 font-medium mb-1">{t('dashboard.failed_to_load')}</p>
+        {error && <p className="text-sm text-slate-500 mb-4 max-w-md">{error}</p>}
+        <button
+          onClick={loadDashboard}
+          className="bg-sage-600 hover:bg-sage-700 text-white text-sm font-medium px-4 py-2 rounded-xl transition-colors"
+        >
+          {t('common.retry')}
+        </button>
       </div>
     );
 
