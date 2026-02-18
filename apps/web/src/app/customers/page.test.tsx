@@ -69,6 +69,11 @@ jest.mock('@/components/skeleton', () => ({
   ),
 }));
 
+jest.mock('@/components/saved-views', () => ({
+  ViewPicker: (props: any) => <div data-testid="view-picker" />,
+  SaveViewModal: () => null,
+}));
+
 jest.mock('@/components/bulk-action-bar', () => {
   return function MockBulkActionBar({
     count,

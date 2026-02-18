@@ -36,6 +36,7 @@ import AiBookingPanel from '@/components/ai-booking-panel';
 import AiSummary from '@/components/ai-summary';
 import IntakeCard from '@/components/intake-card';
 import { usePack } from '@/lib/vertical-pack';
+import { ViewPicker } from '@/components/saved-views';
 
 type Filter = 'all' | 'unassigned' | 'mine' | 'overdue' | 'waiting' | 'snoozed' | 'closed';
 
@@ -111,7 +112,26 @@ export default function InboxPage() {
   const [mobileView, setMobileView] = useState<'list' | 'thread' | 'info'>('list');
   const [locations, setLocations] = useState<any[]>([]);
   const [selectedLocationId, setSelectedLocationId] = useState<string>('');
+  const [activeViewId, setActiveViewId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const currentFilters = { predefined: activeFilter, search: searchQuery, locationId: selectedLocationId };
+
+  const handleApplyView = (filters: Record<string, unknown>, viewId: string) => {
+    setActiveFilter((filters.predefined as Filter) || 'all');
+    setSearchQuery((filters.search as string) || '');
+    setSelectedLocationId((filters.locationId as string) || '');
+    setActiveViewId(viewId);
+    setSelected(null);
+  };
+
+  const handleClearView = () => {
+    setActiveFilter('all');
+    setSearchQuery('');
+    setSelectedLocationId('');
+    setActiveViewId(null);
+    setSelected(null);
+  };
   const pollRef = useRef<ReturnType<typeof setInterval>>(undefined);
   const msgPollRef = useRef<ReturnType<typeof setInterval>>(undefined);
   const selectedRef = useRef<any>(null);
@@ -657,6 +677,15 @@ export default function InboxPage() {
               </button>
             )}
           </div>
+        </div>
+        <div className="px-3 pt-2">
+          <ViewPicker
+            page="inbox"
+            currentFilters={currentFilters}
+            activeViewId={activeViewId}
+            onApplyView={handleApplyView}
+            onClearView={handleClearView}
+          />
         </div>
         <div className="flex-1 overflow-auto">
           {conversations.map((c) => (

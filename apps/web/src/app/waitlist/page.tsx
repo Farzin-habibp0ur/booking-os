@@ -6,6 +6,7 @@ import { cn } from '@/lib/cn';
 import { TableRowSkeleton, EmptyState } from '@/components/skeleton';
 import { ClipboardList, X, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
 import TooltipNudge from '@/components/tooltip-nudge';
+import { ViewPicker } from '@/components/saved-views';
 
 const statusColors: Record<string, string> = {
   ACTIVE: 'bg-sage-100 text-sage-700',
@@ -27,6 +28,21 @@ export default function WaitlistPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [serviceFilter, setServiceFilter] = useState('');
   const [services, setServices] = useState<any[]>([]);
+  const [activeViewId, setActiveViewId] = useState<string | null>(null);
+
+  const currentFilters = { status: statusFilter, serviceId: serviceFilter };
+
+  const handleApplyView = (filters: Record<string, unknown>, viewId: string) => {
+    setStatusFilter((filters.status as string) || '');
+    setServiceFilter((filters.serviceId as string) || '');
+    setActiveViewId(viewId);
+  };
+
+  const handleClearView = () => {
+    setStatusFilter('');
+    setServiceFilter('');
+    setActiveViewId(null);
+  };
 
   const load = () => {
     const params = new URLSearchParams();
@@ -105,6 +121,14 @@ export default function WaitlistPage() {
           </select>
         </div>
       </div>
+
+      <ViewPicker
+        page="waitlist"
+        currentFilters={currentFilters}
+        activeViewId={activeViewId}
+        onApplyView={handleApplyView}
+        onClearView={handleClearView}
+      />
 
       <div className="bg-white rounded-2xl shadow-soft overflow-hidden">
         <div className="overflow-x-auto">

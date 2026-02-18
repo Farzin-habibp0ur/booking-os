@@ -136,6 +136,12 @@ jest.mock('@/components/booking-form-modal', () => ({
   },
 }));
 
+// Mock saved-views
+jest.mock('@/components/saved-views', () => ({
+  ViewPicker: (props: any) => <div data-testid="view-picker" />,
+  SaveViewModal: () => null,
+}));
+
 // Mock BulkActionBar with prop-forwarding
 jest.mock('@/components/bulk-action-bar', () => ({
   __esModule: true,

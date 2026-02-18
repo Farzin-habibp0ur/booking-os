@@ -10,6 +10,7 @@ import { cn } from '@/lib/cn';
 import { usePack } from '@/lib/vertical-pack';
 import { useI18n } from '@/lib/i18n';
 import { TableRowSkeleton, EmptyState } from '@/components/skeleton';
+import { ViewPicker } from '@/components/saved-views';
 
 export default function CustomersPage() {
   const router = useRouter();
@@ -24,6 +25,22 @@ export default function CustomersPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkTagModal, setBulkTagModal] = useState<'tag' | 'untag' | null>(null);
   const [tagInput, setTagInput] = useState('');
+  const [activeViewId, setActiveViewId] = useState<string | null>(null);
+
+  const currentFilters = { search };
+
+  const handleApplyView = (filters: Record<string, unknown>, viewId: string) => {
+    const newSearch = (filters.search as string) || '';
+    setSearch(newSearch);
+    setActiveViewId(viewId);
+    load(newSearch);
+  };
+
+  const handleClearView = () => {
+    setSearch('');
+    setActiveViewId(null);
+    load('');
+  };
 
   const load = (s?: string) => {
     api
@@ -102,6 +119,14 @@ export default function CustomersPage() {
           </button>
         </div>
       </div>
+
+      <ViewPicker
+        page="customers"
+        currentFilters={currentFilters}
+        activeViewId={activeViewId}
+        onApplyView={handleApplyView}
+        onClearView={handleClearView}
+      />
 
       <form onSubmit={handleSearch} className="mb-4 flex gap-2">
         <div className="relative flex-1">

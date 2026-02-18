@@ -832,6 +832,22 @@
     "export_failed": "Export failed"
   },
 
+  "saved_views": {
+    "save_title": "Save View",
+    "name_label": "View name",
+    "name_placeholder": "e.g., My pending bookings",
+    "icon_label": "Icon (optional)",
+    "color_label": "Color (optional)",
+    "save_current": "Save view",
+    "pin": "Pin to sidebar",
+    "unpin": "Unpin from sidebar",
+    "add_dashboard": "Add to dashboard",
+    "remove_dashboard": "Remove from dashboard",
+    "share": "Share with team",
+    "delete": "Delete view",
+    "saving": "Saving..."
+  },
+
   "status": {
     "pending": "Pending",
     "confirmed": "Confirmed",

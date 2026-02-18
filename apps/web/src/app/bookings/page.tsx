@@ -10,6 +10,7 @@ import { BookOpen } from 'lucide-react';
 import BookingDetailModal from '@/components/booking-detail-modal';
 import BookingFormModal from '@/components/booking-form-modal';
 import BulkActionBar from '@/components/bulk-action-bar';
+import { ViewPicker } from '@/components/saved-views';
 
 const statusColors: Record<string, string> = {
   PENDING: 'bg-lavender-100 text-lavender-700',
@@ -32,8 +33,21 @@ export default function BookingsPage() {
   const [bulkStatusModal, setBulkStatusModal] = useState(false);
   const [bulkAssignModal, setBulkAssignModal] = useState(false);
   const [staff, setStaff] = useState<any[]>([]);
+  const [activeViewId, setActiveViewId] = useState<string | null>(null);
   const pack = usePack();
   const { t } = useI18n();
+
+  const currentFilters = { status: statusFilter };
+
+  const handleApplyView = (filters: Record<string, unknown>, viewId: string) => {
+    setStatusFilter((filters.status as string) || '');
+    setActiveViewId(viewId);
+  };
+
+  const handleClearView = () => {
+    setStatusFilter('');
+    setActiveViewId(null);
+  };
 
   const load = () => {
     const params = statusFilter ? `?status=${statusFilter}&pageSize=50` : '?pageSize=50';
@@ -130,6 +144,14 @@ export default function BookingsPage() {
           ))}
         </select>
       </div>
+
+      <ViewPicker
+        page="bookings"
+        currentFilters={currentFilters}
+        activeViewId={activeViewId}
+        onApplyView={handleApplyView}
+        onClearView={handleClearView}
+      />
 
       <div className="bg-white rounded-2xl shadow-soft overflow-hidden">
         <div className="overflow-x-auto">

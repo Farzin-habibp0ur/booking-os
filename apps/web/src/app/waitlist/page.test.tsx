@@ -84,6 +84,12 @@ jest.mock('@/components/skeleton', () => ({
   ),
 }));
 
+// Mock saved-views
+jest.mock('@/components/saved-views', () => ({
+  ViewPicker: (props: any) => <div data-testid="view-picker" />,
+  SaveViewModal: () => null,
+}));
+
 // Mock tooltip-nudge
 jest.mock('@/components/tooltip-nudge', () => ({
   __esModule: true,
