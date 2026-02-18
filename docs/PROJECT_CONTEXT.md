@@ -107,7 +107,7 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 - **Mission Control Dashboard** — KPI strip for agent/provider modes, "My Work" section (personal bookings + assigned conversations), AttentionCards component, mode-adaptive layout
 - **Saved Views** — SavedView database model, full CRUD API (7 endpoints), ViewPicker + SaveViewModal on inbox/bookings/customers/waitlist, sidebar-pinned views, dashboard-pinned view cards
 - **Staff preferences** — JSON column on Staff model for mode/landing path persistence
-- **Final counts:** 2,531+ tests total (970 web + 1,561 API)
+- **Final counts:** 2,533 tests total (972 web + 1,561 API)
 
 ### UX Phase 2: "Customer Hub + Unified Timeline + Global Search" (Bundle B) — COMPLETE (7/7 batches)
 - **Customer Hub** — Redesigned `/customers/{id}` with sticky header, context row (last booking, last conversation, waitlist count), notes tab, message deep link, vertical modules
@@ -152,13 +152,13 @@ booking-os/
 ├── apps/
 │   ├── api/                    # NestJS REST API (port 3001)
 │   │   ├── src/
-│   │   │   ├── modules/        # 31 feature modules
+│   │   │   ├── modules/        # 34 feature modules
 │   │   │   ├── common/         # Guards, decorators, filters, DTOs, Prisma service
 │   │   │   └── main.ts         # Bootstrap, Swagger, CORS, cookies, validation
 │   │   └── Dockerfile          # Multi-stage production build
 │   ├── web/                    # Next.js admin dashboard (port 3000)
 │   │   ├── src/
-│   │   │   ├── app/            # 40+ pages
+│   │   │   ├── app/            # 44 pages
 │   │   │   ├── components/     # Shared components (shell, modals, tour, etc.)
 │   │   │   ├── lib/            # Utility modules (API client, auth, i18n, socket, theme)
 │   │   │   ├── locales/        # en.json, es.json (600+ keys each)
@@ -190,7 +190,7 @@ booking-os/
 
 ---
 
-## 5. Database Schema (32 Models)
+## 5. Database Schema (34 Models)
 
 ```
 Business (1) ──┬── (*) Staff ──── (*) WorkingHours

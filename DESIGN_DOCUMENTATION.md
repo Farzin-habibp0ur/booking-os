@@ -649,7 +649,7 @@ Two tabs: **Info** | **Notes**
 
 ## 4. Data Models
 
-### 4.1 Entity Relationship Overview (32 Models)
+### 4.1 Entity Relationship Overview (34 Models)
 
 ```
 Business (1) ──┬── (*) Staff ──── (*) WorkingHours
