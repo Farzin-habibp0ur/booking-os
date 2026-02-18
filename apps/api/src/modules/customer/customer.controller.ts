@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Patch,
+  Delete,
   Param,
   Body,
   Query,
@@ -18,7 +19,12 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { CustomerService } from './customer.service';
 import { BusinessId, CurrentUser } from '../../common/decorators';
 import { TenantGuard } from '../../common/tenant.guard';
-import { CreateCustomerDto, UpdateCustomerDto } from '../../common/dto';
+import {
+  CreateCustomerDto,
+  UpdateCustomerDto,
+  CreateCustomerNoteDto,
+  UpdateCustomerNoteDto,
+} from '../../common/dto';
 
 @ApiTags('Customers')
 @Controller('customers')
@@ -62,6 +68,42 @@ export class CustomerController {
   @Get(':id/bookings')
   bookings(@BusinessId() businessId: string, @Param('id') id: string) {
     return this.customerService.getBookings(businessId, id);
+  }
+
+  @Get(':id/notes')
+  getNotes(@BusinessId() businessId: string, @Param('id') id: string) {
+    return this.customerService.getNotes(businessId, id);
+  }
+
+  @Post(':id/notes')
+  createNote(
+    @BusinessId() businessId: string,
+    @Param('id') id: string,
+    @Body() body: CreateCustomerNoteDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.customerService.createNote(businessId, id, user.id, body.content);
+  }
+
+  @Patch(':id/notes/:noteId')
+  updateNote(
+    @BusinessId() businessId: string,
+    @Param('id') _id: string,
+    @Param('noteId') noteId: string,
+    @Body() body: UpdateCustomerNoteDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.customerService.updateNote(businessId, noteId, user.id, body.content);
+  }
+
+  @Delete(':id/notes/:noteId')
+  deleteNote(
+    @BusinessId() businessId: string,
+    @Param('id') _id: string,
+    @Param('noteId') noteId: string,
+    @CurrentUser() user: any,
+  ) {
+    return this.customerService.deleteNote(businessId, noteId, user.id);
   }
 
   @Patch('bulk')

@@ -42,6 +42,7 @@ model Business {
   quotes            Quote[]
   verticalPackVersions VerticalPackVersion[]
   savedViews        SavedView[]
+  customerNotes     CustomerNote[]
 
   @@map("businesses")
 }
@@ -67,6 +68,7 @@ model Staff {
   conversations         Conversation[]        @relation("AssignedConversations")
   messages              Message[]             @relation("SentMessages")
   notes                 ConversationNote[]    @relation("StaffNotes")
+  customerNotes         CustomerNote[]        @relation("StaffCustomerNotes")
   workingHours          WorkingHours[]
   timeOff               TimeOff[]
   calendarConnections   CalendarConnection[]
@@ -94,6 +96,7 @@ model Customer {
   recurringSeries RecurringSeries[]
   conversations   Conversation[]
   waitlistEntries WaitlistEntry[]
+  customerNotes   CustomerNote[]
 
   @@unique([businessId, phone])
   @@index([businessId])
@@ -682,4 +685,22 @@ model SavedView {
   @@index([businessId, isShared])
   @@index([businessId, page])
   @@map("saved_views")
+}
+
+model CustomerNote {
+  id         String   @id @default(cuid())
+  customerId String
+  staffId    String
+  businessId String
+  content    String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  customer Customer @relation(fields: [customerId], references: [id])
+  staff    Staff    @relation("StaffCustomerNotes", fields: [staffId], references: [id])
+  business Business @relation(fields: [businessId], references: [id])
+
+  @@index([customerId])
+  @@index([businessId])
+  @@map("customer_notes")
 }

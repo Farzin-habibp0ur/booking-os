@@ -1053,6 +1053,20 @@ export class CreatePackDto {
   config?: Record<string, unknown>;
 }
 
+// ---- Customer Note DTOs ----
+
+export class CreateCustomerNoteDto {
+  @IsString()
+  @IsNotEmpty()
+  content!: string;
+}
+
+export class UpdateCustomerNoteDto {
+  @IsString()
+  @IsNotEmpty()
+  content!: string;
+}
+
 export class UpdatePackDto {
   @IsString()
   @IsOptional()

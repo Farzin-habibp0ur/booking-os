@@ -1,4 +1,10 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  BadRequestException,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from '../../common/prisma.service';
 import { ProfileExtractor } from '../ai/profile-extractor';
 
@@ -61,6 +67,61 @@ export class CustomerService {
     data: { name?: string; phone?: string; email?: string; tags?: string[]; customFields?: any },
   ) {
     return this.prisma.customer.update({ where: { id, businessId }, data });
+  }
+
+  // ─── Customer Notes CRUD ────────────────────────────────────────────
+
+  async getNotes(businessId: string, customerId: string) {
+    return this.prisma.customerNote.findMany({
+      where: { businessId, customerId },
+      include: { staff: { select: { id: true, name: true } } },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async createNote(businessId: string, customerId: string, staffId: string, content: string) {
+    if (!content?.trim()) {
+      throw new BadRequestException('Note content cannot be empty');
+    }
+    const customer = await this.prisma.customer.findFirst({
+      where: { id: customerId, businessId },
+    });
+    if (!customer) {
+      throw new NotFoundException('Customer not found');
+    }
+    return this.prisma.customerNote.create({
+      data: { businessId, customerId, staffId, content: content.trim() },
+      include: { staff: { select: { id: true, name: true } } },
+    });
+  }
+
+  async updateNote(businessId: string, noteId: string, staffId: string, content: string) {
+    if (!content?.trim()) {
+      throw new BadRequestException('Note content cannot be empty');
+    }
+    const note = await this.prisma.customerNote.findFirst({ where: { id: noteId, businessId } });
+    if (!note) {
+      throw new NotFoundException('Note not found');
+    }
+    if (note.staffId !== staffId) {
+      throw new ForbiddenException('You can only edit your own notes');
+    }
+    return this.prisma.customerNote.update({
+      where: { id: noteId },
+      data: { content: content.trim() },
+      include: { staff: { select: { id: true, name: true } } },
+    });
+  }
+
+  async deleteNote(businessId: string, noteId: string, staffId: string) {
+    const note = await this.prisma.customerNote.findFirst({ where: { id: noteId, businessId } });
+    if (!note) {
+      throw new NotFoundException('Note not found');
+    }
+    if (note.staffId !== staffId) {
+      throw new ForbiddenException('You can only delete your own notes');
+    }
+    return this.prisma.customerNote.delete({ where: { id: noteId } });
   }
 
   async getBookings(businessId: string, customerId: string) {

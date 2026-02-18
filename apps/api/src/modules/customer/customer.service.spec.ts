@@ -1,5 +1,5 @@
 import { Test } from '@nestjs/testing';
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { CustomerService } from './customer.service';
 import { PrismaService } from '../../common/prisma.service';
 import { ProfileExtractor } from '../ai/profile-extractor';
@@ -172,6 +172,148 @@ describe('CustomerService', () => {
         include: { service: true, staff: true },
         orderBy: { startTime: 'desc' },
       });
+    });
+  });
+
+  // ─── getNotes ────────────────────────────────────────────────────────
+
+  describe('getNotes', () => {
+    it('returns notes for customer ordered by createdAt desc', async () => {
+      const notes = [
+        { id: 'n1', content: 'Note 1', staff: { id: 's1', name: 'Dr. Chen' } },
+        { id: 'n2', content: 'Note 2', staff: { id: 's1', name: 'Dr. Chen' } },
+      ];
+      prisma.customerNote.findMany.mockResolvedValue(notes as any);
+
+      const result = await service.getNotes('biz1', 'c1');
+
+      expect(result).toEqual(notes);
+      expect(prisma.customerNote.findMany).toHaveBeenCalledWith({
+        where: { businessId: 'biz1', customerId: 'c1' },
+        include: { staff: { select: { id: true, name: true } } },
+        orderBy: { createdAt: 'desc' },
+      });
+    });
+
+    it('returns empty array when no notes exist', async () => {
+      prisma.customerNote.findMany.mockResolvedValue([]);
+
+      const result = await service.getNotes('biz1', 'c1');
+
+      expect(result).toEqual([]);
+    });
+  });
+
+  // ─── createNote ─────────────────────────────────────────────────────
+
+  describe('createNote', () => {
+    it('creates a note for a customer', async () => {
+      prisma.customer.findFirst.mockResolvedValue({ id: 'c1' } as any);
+      prisma.customerNote.create.mockResolvedValue({
+        id: 'n1',
+        content: 'Test note',
+        staff: { id: 's1', name: 'Dr. Chen' },
+      } as any);
+
+      const result = await service.createNote('biz1', 'c1', 's1', 'Test note');
+
+      expect(result.id).toBe('n1');
+      expect(prisma.customerNote.create).toHaveBeenCalledWith({
+        data: { businessId: 'biz1', customerId: 'c1', staffId: 's1', content: 'Test note' },
+        include: { staff: { select: { id: true, name: true } } },
+      });
+    });
+
+    it('trims whitespace from content', async () => {
+      prisma.customer.findFirst.mockResolvedValue({ id: 'c1' } as any);
+      prisma.customerNote.create.mockResolvedValue({ id: 'n1' } as any);
+
+      await service.createNote('biz1', 'c1', 's1', '  trimmed  ');
+
+      expect(prisma.customerNote.create).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ content: 'trimmed' }) }),
+      );
+    });
+
+    it('throws when content is empty', async () => {
+      await expect(service.createNote('biz1', 'c1', 's1', '')).rejects.toThrow(BadRequestException);
+    });
+
+    it('throws when content is only whitespace', async () => {
+      await expect(service.createNote('biz1', 'c1', 's1', '   ')).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
+    it('throws when customer not found', async () => {
+      prisma.customer.findFirst.mockResolvedValue(null);
+
+      await expect(service.createNote('biz1', 'c1', 's1', 'Note')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+  });
+
+  // ─── updateNote ─────────────────────────────────────────────────────
+
+  describe('updateNote', () => {
+    it('updates note content when owned by staff', async () => {
+      prisma.customerNote.findFirst.mockResolvedValue({ id: 'n1', staffId: 's1' } as any);
+      prisma.customerNote.update.mockResolvedValue({ id: 'n1', content: 'Updated' } as any);
+
+      const result = await service.updateNote('biz1', 'n1', 's1', 'Updated');
+
+      expect(result.content).toBe('Updated');
+      expect(prisma.customerNote.update).toHaveBeenCalledWith({
+        where: { id: 'n1' },
+        data: { content: 'Updated' },
+        include: { staff: { select: { id: true, name: true } } },
+      });
+    });
+
+    it('throws when note not found', async () => {
+      prisma.customerNote.findFirst.mockResolvedValue(null);
+
+      await expect(service.updateNote('biz1', 'n1', 's1', 'Updated')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('throws when staff does not own the note', async () => {
+      prisma.customerNote.findFirst.mockResolvedValue({ id: 'n1', staffId: 's2' } as any);
+
+      await expect(service.updateNote('biz1', 'n1', 's1', 'Updated')).rejects.toThrow(
+        ForbiddenException,
+      );
+    });
+
+    it('throws when content is empty', async () => {
+      await expect(service.updateNote('biz1', 'n1', 's1', '')).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  // ─── deleteNote ─────────────────────────────────────────────────────
+
+  describe('deleteNote', () => {
+    it('deletes note when owned by staff', async () => {
+      prisma.customerNote.findFirst.mockResolvedValue({ id: 'n1', staffId: 's1' } as any);
+      prisma.customerNote.delete.mockResolvedValue({ id: 'n1' } as any);
+
+      await service.deleteNote('biz1', 'n1', 's1');
+
+      expect(prisma.customerNote.delete).toHaveBeenCalledWith({ where: { id: 'n1' } });
+    });
+
+    it('throws when note not found', async () => {
+      prisma.customerNote.findFirst.mockResolvedValue(null);
+
+      await expect(service.deleteNote('biz1', 'n1', 's1')).rejects.toThrow(NotFoundException);
+    });
+
+    it('throws when staff does not own the note', async () => {
+      prisma.customerNote.findFirst.mockResolvedValue({ id: 'n1', staffId: 's2' } as any);
+
+      await expect(service.deleteNote('biz1', 'n1', 's1')).rejects.toThrow(ForbiddenException);
     });
   });
 

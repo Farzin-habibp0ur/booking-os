@@ -13,6 +13,10 @@ describe('CustomerController', () => {
       create: jest.fn().mockResolvedValue({ id: 'cust1' }),
       update: jest.fn().mockResolvedValue({ id: 'cust1' }),
       getBookings: jest.fn().mockResolvedValue([]),
+      getNotes: jest.fn().mockResolvedValue([{ id: 'n1', content: 'Test note' }]),
+      createNote: jest.fn().mockResolvedValue({ id: 'n1', content: 'New note' }),
+      updateNote: jest.fn().mockResolvedValue({ id: 'n1', content: 'Updated' }),
+      deleteNote: jest.fn().mockResolvedValue({ id: 'n1' }),
       bulkUpdate: jest.fn().mockResolvedValue({ updated: 2 }),
       bulkCreate: jest.fn().mockResolvedValue({ created: 3, skipped: 0 }),
       createFromConversations: jest.fn().mockResolvedValue({ created: 5 }),
@@ -68,6 +72,39 @@ describe('CustomerController', () => {
     it('returns customer bookings', async () => {
       await controller.bookings('biz1', 'cust1');
       expect(mockService.getBookings).toHaveBeenCalledWith('biz1', 'cust1');
+    });
+  });
+
+  describe('getNotes', () => {
+    it('delegates to service with businessId and customerId', async () => {
+      const result = await controller.getNotes('biz1', 'cust1');
+      expect(mockService.getNotes).toHaveBeenCalledWith('biz1', 'cust1');
+      expect(result).toEqual([{ id: 'n1', content: 'Test note' }]);
+    });
+  });
+
+  describe('createNote', () => {
+    it('delegates to service with correct params', async () => {
+      await controller.createNote('biz1', 'cust1', { content: 'New note' } as any, {
+        id: 'staff1',
+      });
+      expect(mockService.createNote).toHaveBeenCalledWith('biz1', 'cust1', 'staff1', 'New note');
+    });
+  });
+
+  describe('updateNote', () => {
+    it('delegates to service with correct params', async () => {
+      await controller.updateNote('biz1', 'cust1', 'n1', { content: 'Updated' } as any, {
+        id: 'staff1',
+      });
+      expect(mockService.updateNote).toHaveBeenCalledWith('biz1', 'n1', 'staff1', 'Updated');
+    });
+  });
+
+  describe('deleteNote', () => {
+    it('delegates to service with correct params', async () => {
+      await controller.deleteNote('biz1', 'cust1', 'n1', { id: 'staff1' });
+      expect(mockService.deleteNote).toHaveBeenCalledWith('biz1', 'n1', 'staff1');
     });
   });
 
