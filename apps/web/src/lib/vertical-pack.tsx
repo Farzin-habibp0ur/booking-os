@@ -14,6 +14,7 @@ export interface PackField {
 
 interface VerticalPack {
   name: string;
+  slug: string;
   labels: {
     customer: string;
     booking: string;
@@ -26,6 +27,7 @@ interface VerticalPack {
 
 const DEFAULT_PACK: VerticalPack = {
   name: 'general',
+  slug: 'general',
   labels: { customer: 'Customer', booking: 'Booking', service: 'Service' },
   customerFields: [],
   bookingFields: [],
@@ -49,7 +51,7 @@ export function VerticalPackProvider({ children }: { children: ReactNode }) {
         )
           .then((r) => r.json())
           .then((p) => {
-            if (p?.name) setPack(p);
+            if (p?.name) setPack({ ...p, slug: p.slug || p.name });
           })
           .catch(() => {});
       })
