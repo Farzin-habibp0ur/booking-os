@@ -106,6 +106,23 @@ export class CustomerController {
     return this.customerService.deleteNote(businessId, noteId, user.id);
   }
 
+  @Get(':id/timeline')
+  getTimeline(
+    @BusinessId() businessId: string,
+    @Param('id') id: string,
+    @Query('types') types?: string,
+    @Query('showSystem') showSystem?: string,
+    @Query('limit') limit?: string,
+    @Query('offset') offset?: string,
+  ) {
+    return this.customerService.getTimeline(businessId, id, {
+      types: types ? types.split(',').map((t) => t.trim()) : undefined,
+      showSystem: showSystem !== 'false',
+      limit: limit ? parseInt(limit) : undefined,
+      offset: offset ? parseInt(offset) : undefined,
+    });
+  }
+
   @Patch('bulk')
   bulkAction(
     @BusinessId() businessId: string,

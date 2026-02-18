@@ -317,6 +317,209 @@ describe('CustomerService', () => {
     });
   });
 
+  // ─── getTimeline ─────────────────────────────────────────────────────
+
+  describe('getTimeline', () => {
+    const now = new Date();
+
+    function mockTimelineSources(overrides: any = {}) {
+      prisma.booking.findMany.mockResolvedValue(
+        overrides.bookings ?? [
+          {
+            id: 'b1',
+            createdAt: now,
+            status: 'COMPLETED',
+            serviceId: 'svc1',
+            service: { name: 'Botox' },
+            staff: { name: 'Dr. Chen' },
+          },
+        ],
+      );
+      prisma.conversation.findMany.mockResolvedValue(
+        overrides.conversations ?? [
+          {
+            id: 'conv1',
+            createdAt: now,
+            lastMessageAt: now,
+            status: 'OPEN',
+            channel: 'WHATSAPP',
+            messages: [{ content: 'Hello' }],
+          },
+        ],
+      );
+      prisma.customerNote.findMany.mockResolvedValue(
+        overrides.notes ?? [
+          { id: 'n1', createdAt: now, content: 'Important note', staff: { name: 'Dr. Chen' } },
+        ],
+      );
+      prisma.waitlistEntry.findMany.mockResolvedValue(
+        overrides.waitlist ?? [
+          { id: 'w1', createdAt: now, status: 'ACTIVE', service: { name: 'Filler' } },
+        ],
+      );
+      prisma.quote.findMany.mockResolvedValue(
+        overrides.quotes ?? [
+          {
+            id: 'q1',
+            createdAt: now,
+            totalAmount: 500,
+            status: 'PENDING',
+            description: 'Quote for repair',
+            bookingId: 'b1',
+            booking: { service: { name: 'Service' } },
+          },
+        ],
+      );
+      prisma.campaignSend.findMany.mockResolvedValue(
+        overrides.campaigns ?? [
+          {
+            id: 'cs1',
+            createdAt: now,
+            sentAt: now,
+            status: 'SENT',
+            campaignId: 'camp1',
+            campaign: { name: 'Summer Sale' },
+          },
+        ],
+      );
+    }
+
+    it('returns events from all 6 sources', async () => {
+      mockTimelineSources();
+
+      const result = await service.getTimeline('biz1', 'c1');
+
+      expect(result.events.length).toBe(6);
+      expect(result.total).toBe(6);
+      const types = result.events.map((e: any) => e.type);
+      expect(types).toContain('booking');
+      expect(types).toContain('conversation');
+      expect(types).toContain('note');
+      expect(types).toContain('waitlist');
+      expect(types).toContain('quote');
+      expect(types).toContain('campaign');
+    });
+
+    it('sorts events by timestamp desc', async () => {
+      const old = new Date('2025-01-01');
+      const recent = new Date('2026-02-01');
+      prisma.booking.findMany.mockResolvedValue([
+        { id: 'b1', createdAt: old, status: 'COMPLETED', service: { name: 'Old' }, staff: null },
+      ] as any);
+      prisma.conversation.findMany.mockResolvedValue([
+        {
+          id: 'conv1',
+          createdAt: recent,
+          lastMessageAt: recent,
+          status: 'OPEN',
+          channel: 'WHATSAPP',
+          messages: [],
+        },
+      ] as any);
+      prisma.customerNote.findMany.mockResolvedValue([]);
+      prisma.waitlistEntry.findMany.mockResolvedValue([]);
+      prisma.quote.findMany.mockResolvedValue([]);
+      prisma.campaignSend.findMany.mockResolvedValue([]);
+
+      const result = await service.getTimeline('biz1', 'c1');
+
+      expect(result.events[0].type).toBe('conversation');
+      expect(result.events[1].type).toBe('booking');
+    });
+
+    it('filters by types param', async () => {
+      mockTimelineSources();
+
+      const result = await service.getTimeline('biz1', 'c1', { types: ['booking', 'note'] });
+
+      // Only booking and note queries should have run with actual data
+      expect(result.events.every((e: any) => ['booking', 'note'].includes(e.type))).toBe(true);
+    });
+
+    it('filters out system events when showSystem is false', async () => {
+      mockTimelineSources();
+
+      const result = await service.getTimeline('biz1', 'c1', { showSystem: false });
+
+      // Waitlist and campaign are system events
+      expect(result.events.every((e: any) => !e.isSystemEvent)).toBe(true);
+    });
+
+    it('paginates with limit and offset', async () => {
+      mockTimelineSources();
+
+      const result = await service.getTimeline('biz1', 'c1', { limit: 2, offset: 0 });
+
+      expect(result.events.length).toBe(2);
+      expect(result.hasMore).toBe(true);
+      expect(result.total).toBe(6);
+    });
+
+    it('returns hasMore=false when all events fit in page', async () => {
+      mockTimelineSources();
+
+      const result = await service.getTimeline('biz1', 'c1', { limit: 20, offset: 0 });
+
+      expect(result.hasMore).toBe(false);
+    });
+
+    it('returns empty events array when no data', async () => {
+      mockTimelineSources({
+        bookings: [],
+        conversations: [],
+        notes: [],
+        waitlist: [],
+        quotes: [],
+        campaigns: [],
+      });
+
+      const result = await service.getTimeline('biz1', 'c1');
+
+      expect(result.events).toEqual([]);
+      expect(result.total).toBe(0);
+      expect(result.hasMore).toBe(false);
+    });
+
+    it('includes deep links for bookings and conversations', async () => {
+      mockTimelineSources({
+        conversations: [],
+        notes: [],
+        waitlist: [],
+        quotes: [],
+        campaigns: [],
+      });
+
+      const result = await service.getTimeline('biz1', 'c1');
+
+      const bookingEvent = result.events.find((e: any) => e.type === 'booking');
+      expect(bookingEvent?.deepLink).toBe('/bookings/b1');
+    });
+
+    it('includes conversation deep link with conversationId', async () => {
+      mockTimelineSources({
+        bookings: [],
+        notes: [],
+        waitlist: [],
+        quotes: [],
+        campaigns: [],
+      });
+
+      const result = await service.getTimeline('biz1', 'c1');
+
+      const convEvent = result.events.find((e: any) => e.type === 'conversation');
+      expect(convEvent?.deepLink).toBe('/inbox?conversationId=conv1');
+    });
+
+    it('handles offset beyond total events', async () => {
+      mockTimelineSources();
+
+      const result = await service.getTimeline('biz1', 'c1', { offset: 100 });
+
+      expect(result.events).toEqual([]);
+      expect(result.hasMore).toBe(false);
+    });
+  });
+
   // ─── bulkUpdate ───────────────────────────────────────────────────────
 
   describe('bulkUpdate', () => {

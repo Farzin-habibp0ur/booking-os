@@ -124,6 +124,167 @@ export class CustomerService {
     return this.prisma.customerNote.delete({ where: { id: noteId } });
   }
 
+  // ─── Unified Timeline ────────────────────────────────────────────────
+
+  async getTimeline(
+    businessId: string,
+    customerId: string,
+    opts: { types?: string[]; showSystem?: boolean; limit?: number; offset?: number } = {},
+  ) {
+    const { types, showSystem = true, limit = 20, offset = 0 } = opts;
+
+    const [bookings, conversations, notes, waitlistEntries, quotes, campaignSends] =
+      await Promise.all([
+        !types || types.includes('booking')
+          ? this.prisma.booking.findMany({
+              where: { customerId, businessId },
+              include: { service: true, staff: true },
+            })
+          : Promise.resolve([]),
+        !types || types.includes('conversation')
+          ? this.prisma.conversation.findMany({
+              where: { customerId, businessId },
+              include: { messages: { take: 1, orderBy: { createdAt: 'desc' } } },
+            })
+          : Promise.resolve([]),
+        !types || types.includes('note')
+          ? this.prisma.customerNote.findMany({
+              where: { customerId, businessId },
+              include: { staff: { select: { id: true, name: true } } },
+            })
+          : Promise.resolve([]),
+        !types || types.includes('waitlist')
+          ? this.prisma.waitlistEntry.findMany({
+              where: { customerId, businessId },
+              include: { service: true },
+            })
+          : Promise.resolve([]),
+        !types || types.includes('quote')
+          ? this.prisma.quote.findMany({
+              where: { businessId, booking: { customerId } },
+              include: { booking: { include: { service: true } } },
+            })
+          : Promise.resolve([]),
+        !types || types.includes('campaign')
+          ? this.prisma.campaignSend.findMany({
+              where: { customerId },
+              include: { campaign: true },
+            })
+          : Promise.resolve([]),
+      ]);
+
+    const events: Array<{
+      id: string;
+      type: string;
+      timestamp: string;
+      title: string;
+      description: string;
+      metadata: any;
+      isSystemEvent: boolean;
+      deepLink: string | null;
+    }> = [];
+
+    // Bookings
+    for (const b of bookings as any[]) {
+      events.push({
+        id: `booking-${b.id}`,
+        type: 'booking',
+        timestamp: b.createdAt.toISOString(),
+        title: `${b.service?.name || 'Booking'} — ${b.status}`,
+        description: b.staff?.name ? `with ${b.staff.name}` : 'Unassigned',
+        metadata: { bookingId: b.id, status: b.status, serviceId: b.serviceId },
+        isSystemEvent: false,
+        deepLink: `/bookings/${b.id}`,
+      });
+    }
+
+    // Conversations
+    for (const c of conversations as any[]) {
+      const lastMsg = c.messages?.[0];
+      events.push({
+        id: `conversation-${c.id}`,
+        type: 'conversation',
+        timestamp: (c.lastMessageAt || c.createdAt).toISOString(),
+        title: `Conversation — ${c.status}`,
+        description: lastMsg?.content?.substring(0, 100) || 'No messages',
+        metadata: { conversationId: c.id, channel: c.channel },
+        isSystemEvent: false,
+        deepLink: `/inbox?conversationId=${c.id}`,
+      });
+    }
+
+    // Notes
+    for (const n of notes as any[]) {
+      events.push({
+        id: `note-${n.id}`,
+        type: 'note',
+        timestamp: n.createdAt.toISOString(),
+        title: 'Note added',
+        description: n.content.substring(0, 100),
+        metadata: { noteId: n.id, staffName: n.staff?.name },
+        isSystemEvent: false,
+        deepLink: null,
+      });
+    }
+
+    // Waitlist Entries
+    for (const w of waitlistEntries as any[]) {
+      events.push({
+        id: `waitlist-${w.id}`,
+        type: 'waitlist',
+        timestamp: w.createdAt.toISOString(),
+        title: `Waitlist — ${w.status}`,
+        description: w.service?.name || 'Service',
+        metadata: { waitlistId: w.id, status: w.status },
+        isSystemEvent: true,
+        deepLink: null,
+      });
+    }
+
+    // Quotes
+    for (const q of quotes as any[]) {
+      events.push({
+        id: `quote-${q.id}`,
+        type: 'quote',
+        timestamp: q.createdAt.toISOString(),
+        title: `Quote — $${q.totalAmount} — ${q.status}`,
+        description: q.description.substring(0, 100),
+        metadata: { quoteId: q.id, bookingId: q.bookingId, status: q.status },
+        isSystemEvent: false,
+        deepLink: `/bookings/${q.bookingId}`,
+      });
+    }
+
+    // Campaign Sends
+    for (const cs of campaignSends as any[]) {
+      events.push({
+        id: `campaign-${cs.id}`,
+        type: 'campaign',
+        timestamp: (cs.sentAt || cs.createdAt).toISOString(),
+        title: `Campaign: ${cs.campaign?.name || 'Unknown'}`,
+        description: `Status: ${cs.status}`,
+        metadata: { campaignSendId: cs.id, campaignId: cs.campaignId, status: cs.status },
+        isSystemEvent: true,
+        deepLink: `/campaigns`,
+      });
+    }
+
+    // Filter system events
+    const filtered = showSystem ? events : events.filter((e) => !e.isSystemEvent);
+
+    // Sort by timestamp desc
+    filtered.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+    const total = filtered.length;
+    const paginated = filtered.slice(offset, offset + limit);
+
+    return {
+      events: paginated,
+      total,
+      hasMore: offset + limit < total,
+    };
+  }
+
   async getBookings(businessId: string, customerId: string) {
     return this.prisma.booking.findMany({
       where: { businessId, customerId },

@@ -17,6 +17,7 @@ describe('CustomerController', () => {
       createNote: jest.fn().mockResolvedValue({ id: 'n1', content: 'New note' }),
       updateNote: jest.fn().mockResolvedValue({ id: 'n1', content: 'Updated' }),
       deleteNote: jest.fn().mockResolvedValue({ id: 'n1' }),
+      getTimeline: jest.fn().mockResolvedValue({ events: [], total: 0, hasMore: false }),
       bulkUpdate: jest.fn().mockResolvedValue({ updated: 2 }),
       bulkCreate: jest.fn().mockResolvedValue({ created: 3, skipped: 0 }),
       createFromConversations: jest.fn().mockResolvedValue({ created: 5 }),
@@ -105,6 +106,28 @@ describe('CustomerController', () => {
     it('delegates to service with correct params', async () => {
       await controller.deleteNote('biz1', 'cust1', 'n1', { id: 'staff1' });
       expect(mockService.deleteNote).toHaveBeenCalledWith('biz1', 'n1', 'staff1');
+    });
+  });
+
+  describe('getTimeline', () => {
+    it('delegates to service with default params', async () => {
+      await controller.getTimeline('biz1', 'cust1');
+      expect(mockService.getTimeline).toHaveBeenCalledWith('biz1', 'cust1', {
+        types: undefined,
+        showSystem: true,
+        limit: undefined,
+        offset: undefined,
+      });
+    });
+
+    it('parses types and query params', async () => {
+      await controller.getTimeline('biz1', 'cust1', 'booking,note', 'false', '10', '5');
+      expect(mockService.getTimeline).toHaveBeenCalledWith('biz1', 'cust1', {
+        types: ['booking', 'note'],
+        showSystem: false,
+        limit: 10,
+        offset: 5,
+      });
     });
   });
 
