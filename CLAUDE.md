@@ -42,3 +42,33 @@ Use muted, pastel tones instead of generic traffic-light colors:
 ### AI Feature Styling
 All AI-related UI elements use the **lavender** palette:
 - `bg-lavender-50 border border-lavender-100 text-lavender-900 rounded-xl`
+
+---
+
+## Deployment & Infrastructure Rules
+
+**Read `DEPLOY.md` before making any infrastructure, auth, or deployment changes.** It documents hard-won lessons from production incidents.
+
+### Critical Rules (Do Not Break)
+
+1. **Cookie domain must cover both API and Web subdomains.** Cookies are set by the API (`api.X.com`) but read by Next.js middleware on the web app (`X.com`). The cookie `Domain` is auto-derived from `CORS_ORIGINS`. If you change domains, update `CORS_ORIGINS` first.
+
+2. **`CORS_ORIGINS` is the source of truth for cookie domain.** The API parses the first origin to extract the root domain (e.g., `https://example.com` → `.example.com`). Always include both `www` and non-`www` variants.
+
+3. **`NEXT_PUBLIC_API_URL` is baked at build time.** Changing it requires rebuilding the web Docker image — a runtime env var change won't work.
+
+4. **`railway up --detach` does NOT mean the deploy is live.** CI passing only means Railway received the code. The actual build takes 2-5 more minutes. Always verify with curl or Railway logs.
+
+5. **Never set `sameSite: 'strict'` on auth cookies.** It must be `lax` for cross-subdomain auth to work.
+
+6. **Every deploy must include tests.** Never push code without associated tests for new/changed features.
+
+### After Any Auth or Cookie Change
+
+Verify with:
+```bash
+curl -s -D - -o /dev/null -X POST https://api.businesscommandcentre.com/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"sarah@glowclinic.com","password":"password123"}' 2>&1 | grep -i set-cookie
+```
+Confirm: `Domain=.businesscommandcentre.com`, `SameSite=Lax`, `Secure`, `Path=/`.
