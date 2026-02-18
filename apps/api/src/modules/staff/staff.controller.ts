@@ -37,7 +37,7 @@ export class StaffController {
 
   @Patch('me/preferences')
   updatePreferences(@Req() req: any, @Body() body: UpdatePreferencesDto) {
-    return this.staffService.updatePreferences(req.user.sub, body);
+    return this.staffService.updatePreferences(req.user.sub, body as Record<string, unknown>);
   }
 
   @Get()
