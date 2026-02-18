@@ -151,13 +151,28 @@ railway logs --service web --lines 50
 
 Or check the Railway dashboard at https://railway.app for build status and logs.
 
-### Custom Domains on Railway
+### Custom Domains & DNS (Cloudflare)
 
-Each service has its own Railway-provided domain. To use custom domains:
-1. Railway → service → Settings → Custom Domain
-2. Add your domain (e.g., `api.businesscommandcentre.com` for API)
-3. Configure DNS: CNAME record pointing to Railway's provided target
-4. Railway handles SSL automatically via Let's Encrypt
+DNS is managed via **Cloudflare** (free plan) with CNAME flattening for the root domain. Railway handles SSL via Let's Encrypt — all Cloudflare DNS records use **DNS only** (grey cloud) mode except `www` which is Proxied for redirect handling.
+
+**Cloudflare Nameservers:** `cash.ns.cloudflare.com`, `lina.ns.cloudflare.com`
+
+**DNS Records:**
+
+| Type | Name | Target | Proxy Status |
+|------|------|--------|-------------|
+| CNAME | `@` (root) | `uqwnhuyx.up.railway.app` | DNS only |
+| CNAME | `api` | `cosm54wn.up.railway.app` | DNS only |
+| CNAME | `www` | `businesscommandcentre.com` | Proxied |
+| TXT | `_railway-verify` | `railway-verify=870b2ea...` | DNS only |
+| TXT | `_railway-verify.api` | `railway-verify=642c0135...` | DNS only |
+| TXT | `_dmarc` | `v=DMARC1; p=quarantine...` | DNS only |
+
+**Cloudflare Redirect Rule:** `www` → root (301). Configured via Rules → Redirect Rules using the "Redirect from WWW to root" template.
+
+**Why Cloudflare?** Root/apex domains can't have CNAME records per DNS spec. Cloudflare provides CNAME flattening, which resolves the CNAME to an A record at the edge. GoDaddy (the registrar) doesn't support this, so nameservers were moved to Cloudflare.
+
+**Critical:** Keep all Railway-pointing records as **DNS only** (grey cloud). If you enable Cloudflare's proxy (orange cloud) on `@` or `api`, it will conflict with Railway's SSL certificates.
 
 ### Railway GitHub Secret
 
