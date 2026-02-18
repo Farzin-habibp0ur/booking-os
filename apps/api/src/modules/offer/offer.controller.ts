@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Param,
+  Body,
+  UseGuards,
+  Query,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { TenantGuard } from '../../common/tenant.guard';
 import { RolesGuard, Roles } from '../../common/roles.guard';
@@ -34,8 +44,12 @@ export class OfferController {
   }
 
   @Post(':id/redeem')
-  redeem(@BusinessId() businessId: string, @Param('id') id: string) {
-    return this.offerService.redeem(businessId, id);
+  redeem(
+    @BusinessId() businessId: string,
+    @Param('id') id: string,
+    @Query('customerId') customerId?: string,
+  ) {
+    return this.offerService.redeem(businessId, id, customerId);
   }
 
   @Delete(':id')

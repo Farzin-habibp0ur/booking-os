@@ -390,6 +390,27 @@ export class BookingService {
         select: { status: true, startTime: true, customFields: true },
       });
 
+      if (!currentBooking) {
+        throw new NotFoundException('Booking not found');
+      }
+
+      // M-6 fix: Enforce valid status transitions
+      const validTransitions: Record<string, string[]> = {
+        PENDING: ['CONFIRMED', 'CANCELLED'],
+        PENDING_DEPOSIT: ['CONFIRMED', 'CANCELLED'],
+        CONFIRMED: ['IN_PROGRESS', 'CANCELLED', 'NO_SHOW'],
+        IN_PROGRESS: ['COMPLETED', 'CANCELLED'],
+        COMPLETED: [],
+        CANCELLED: [],
+        NO_SHOW: [],
+      };
+      const allowed = validTransitions[currentBooking.status] || [];
+      if (!allowed.includes(status)) {
+        throw new BadRequestException(
+          `Cannot transition from ${currentBooking.status} to ${status}`,
+        );
+      }
+
       const overrideEntries: Array<{
         type: string;
         action: string;
@@ -786,15 +807,25 @@ export class BookingService {
       if (payload.status === 'CANCELLED' && userRole !== 'ADMIN') {
         throw new ForbiddenException('Only admins can bulk-cancel bookings');
       }
-      const result = await this.prisma.booking.updateMany({
-        where: { id: { in: ids }, businessId },
-        data: { status: payload.status },
-      });
-      // H8 fix: Audit log for bulk status changes
+      // C-6 fix: Use updateStatus loop to enforce state machine for each booking
+      let updated = 0;
+      const failed: string[] = [];
+      for (const bookingId of ids) {
+        try {
+          await this.updateStatus(businessId, bookingId, payload.status, {
+            reason: payload.reason || 'Bulk update',
+            role: userRole || 'ADMIN',
+          });
+          updated++;
+        } catch (err: any) {
+          this.logger.warn(`Bulk status update failed for booking ${bookingId}: ${err.message}`);
+          failed.push(bookingId);
+        }
+      }
       this.logger.log(
-        `BULK_STATUS_UPDATE business=${businessId} ids=[${ids.join(',')}] newStatus=${payload.status} updated=${result.count}`,
+        `BULK_STATUS_UPDATE business=${businessId} updated=${updated} failed=${failed.length}`,
       );
-      return { updated: result.count };
+      return { updated, failed: failed.length > 0 ? failed : undefined };
     }
 
     if (action === 'assign') {

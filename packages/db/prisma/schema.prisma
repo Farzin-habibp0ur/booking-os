@@ -43,6 +43,7 @@ model Business {
   verticalPackVersions VerticalPackVersion[]
   savedViews        SavedView[]
   customerNotes     CustomerNote[]
+  offerRedemptions  OfferRedemption[]
 
   @@map("businesses")
 }
@@ -91,12 +92,13 @@ model Customer {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  business        Business          @relation(fields: [businessId], references: [id])
-  bookings        Booking[]
-  recurringSeries RecurringSeries[]
-  conversations   Conversation[]
-  waitlistEntries WaitlistEntry[]
-  customerNotes   CustomerNote[]
+  business         Business          @relation(fields: [businessId], references: [id])
+  bookings         Booking[]
+  recurringSeries  RecurringSeries[]
+  conversations    Conversation[]
+  waitlistEntries  WaitlistEntry[]
+  customerNotes    CustomerNote[]
+  offerRedemptions OfferRedemption[]
 
   @@unique([businessId, phone])
   @@index([businessId])
@@ -564,10 +566,28 @@ model Offer {
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
-  business Business @relation(fields: [businessId], references: [id])
+  business    Business          @relation(fields: [businessId], references: [id])
+  redemptions OfferRedemption[]
 
   @@index([businessId])
   @@map("offers")
+}
+
+model OfferRedemption {
+  id         String   @id @default(cuid())
+  offerId    String
+  customerId String
+  businessId String
+  createdAt  DateTime @default(now())
+
+  offer    Offer    @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  customer Customer @relation(fields: [customerId], references: [id])
+  business Business @relation(fields: [businessId], references: [id])
+
+  @@unique([offerId, customerId])
+  @@index([offerId])
+  @@index([customerId])
+  @@map("offer_redemptions")
 }
 
 model Location {

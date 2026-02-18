@@ -520,17 +520,31 @@ describe('ConversationService', () => {
   // ─── deleteNote ───────────────────────────────────────────────────────
 
   describe('deleteNote', () => {
-    it('deletes note by id scoped to business', async () => {
+    it('deletes note by id scoped to business and conversation', async () => {
       prisma.conversation.findFirst.mockResolvedValue({ id: 'conv1' } as any);
+      prisma.conversationNote.findFirst.mockResolvedValue({
+        id: 'n1',
+        conversationId: 'conv1',
+      } as any);
       prisma.conversationNote.delete.mockResolvedValue({ id: 'n1' } as any);
 
       await service.deleteNote('biz1', 'conv1', 'n1');
 
+      expect(prisma.conversationNote.findFirst).toHaveBeenCalledWith({
+        where: { id: 'n1', conversationId: 'conv1' },
+      });
       expect(prisma.conversationNote.delete).toHaveBeenCalledWith({ where: { id: 'n1' } });
     });
 
     it('throws NotFoundException when conversation not found', async () => {
       prisma.conversation.findFirst.mockResolvedValue(null);
+
+      await expect(service.deleteNote('biz1', 'conv1', 'n1')).rejects.toThrow(NotFoundException);
+    });
+
+    it('throws NotFoundException when note does not belong to conversation', async () => {
+      prisma.conversation.findFirst.mockResolvedValue({ id: 'conv1' } as any);
+      prisma.conversationNote.findFirst.mockResolvedValue(null);
 
       await expect(service.deleteNote('biz1', 'conv1', 'n1')).rejects.toThrow(NotFoundException);
     });

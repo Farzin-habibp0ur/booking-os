@@ -65,24 +65,43 @@ export class OfferService {
     });
   }
 
-  // H9 fix: Atomically redeem an offer with limit enforcement
-  async redeem(businessId: string, id: string) {
-    const offer = await this.findById(businessId, id);
+  // C-5 fix: Atomically redeem with per-customer tracking via transaction
+  async redeem(businessId: string, id: string, customerId?: string) {
+    return this.prisma.$transaction(async (tx) => {
+      // Lock the offer row to prevent race conditions
+      await tx.$queryRaw`SELECT id FROM "offers" WHERE id = ${id} FOR UPDATE`;
 
-    if (!offer.isActive) {
-      throw new BadRequestException('Offer is not active');
-    }
-    if (offer.validUntil && offer.validUntil < new Date()) {
-      throw new BadRequestException('Offer has expired');
-    }
-    // H9: Enforce redemption limit (null maxRedemptions = unlimited)
-    if (offer.maxRedemptions !== null && offer.currentRedemptions >= offer.maxRedemptions) {
-      throw new BadRequestException('Offer redemption limit reached');
-    }
+      const offer = await tx.offer.findFirst({ where: { id, businessId } });
+      if (!offer) throw new NotFoundException('Offer not found');
 
-    return this.prisma.offer.update({
-      where: { id },
-      data: { currentRedemptions: { increment: 1 } },
+      if (!offer.isActive) {
+        throw new BadRequestException('Offer is not active');
+      }
+      if (offer.validUntil && offer.validUntil < new Date()) {
+        throw new BadRequestException('Offer has expired');
+      }
+      // Enforce global redemption limit (null maxRedemptions = unlimited)
+      if (offer.maxRedemptions !== null && offer.currentRedemptions >= offer.maxRedemptions) {
+        throw new BadRequestException('Offer redemption limit reached');
+      }
+
+      // C-5: Per-customer duplicate check (each customer can redeem once)
+      if (customerId) {
+        const existingRedemption = await tx.offerRedemption.findFirst({
+          where: { offerId: id, customerId },
+        });
+        if (existingRedemption) {
+          throw new BadRequestException('Customer has already redeemed this offer');
+        }
+        await tx.offerRedemption.create({
+          data: { offerId: id, customerId, businessId },
+        });
+      }
+
+      return tx.offer.update({
+        where: { id },
+        data: { currentRedemptions: { increment: 1 } },
+      });
     });
   }
 

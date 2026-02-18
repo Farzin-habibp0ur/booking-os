@@ -1520,7 +1520,7 @@ describe('BookingService', () => {
     });
 
     it('does not create follow-up reminders for non-COMPLETED statuses', async () => {
-      prisma.booking.findFirst.mockResolvedValue({ status: 'PENDING' } as any);
+      prisma.booking.findFirst.mockResolvedValue({ status: 'CONFIRMED' } as any);
       prisma.booking.update.mockResolvedValue({ id: 'b1', status: 'IN_PROGRESS' } as any);
 
       await bookingService.updateStatus('biz1', 'b1', 'IN_PROGRESS');
@@ -2923,8 +2923,8 @@ describe('BookingService', () => {
   });
 
   describe('bulkUpdate', () => {
-    it('updates status for multiple bookings', async () => {
-      prisma.booking.updateMany.mockResolvedValue({ count: 3 } as any);
+    it('updates status for multiple bookings via updateStatus loop', async () => {
+      jest.spyOn(bookingService, 'updateStatus').mockResolvedValue({ id: 'b1' } as any);
 
       const result = await bookingService.bulkUpdate(
         'biz1',
@@ -2935,10 +2935,7 @@ describe('BookingService', () => {
       );
 
       expect(result.updated).toBe(3);
-      expect(prisma.booking.updateMany).toHaveBeenCalledWith({
-        where: { id: { in: ['b1', 'b2', 'b3'] }, businessId: 'biz1' },
-        data: { status: 'CONFIRMED' },
-      });
+      expect(bookingService.updateStatus).toHaveBeenCalledTimes(3);
     });
 
     it('assigns staff to multiple bookings', async () => {
@@ -2972,7 +2969,7 @@ describe('BookingService', () => {
     });
 
     it('allows admin to bulk-cancel', async () => {
-      prisma.booking.updateMany.mockResolvedValue({ count: 1 } as any);
+      jest.spyOn(bookingService, 'updateStatus').mockResolvedValue({ id: 'b1' } as any);
 
       const result = await bookingService.bulkUpdate(
         'biz1',
@@ -3013,7 +3010,7 @@ describe('BookingService', () => {
 
     it('allows exactly 50 IDs', async () => {
       const ids = Array.from({ length: 50 }, (_, i) => `b${i}`);
-      prisma.booking.updateMany.mockResolvedValue({ count: 50 } as any);
+      jest.spyOn(bookingService, 'updateStatus').mockResolvedValue({ id: 'b1' } as any);
 
       const result = await bookingService.bulkUpdate(
         'biz1',
@@ -3027,7 +3024,7 @@ describe('BookingService', () => {
     });
 
     it('allows non-admin to bulk-update non-cancel status', async () => {
-      prisma.booking.updateMany.mockResolvedValue({ count: 2 } as any);
+      jest.spyOn(bookingService, 'updateStatus').mockResolvedValue({ id: 'b1' } as any);
 
       const result = await bookingService.bulkUpdate(
         'biz1',
@@ -3486,6 +3483,106 @@ describe('BookingService', () => {
           where: { businessId: 'biz1', startTime: {} },
         }),
       );
+    });
+  });
+
+  // ─── Security: Status State Machine ─────────────────────────────────
+
+  describe('status state machine (M-6)', () => {
+    it('allows PENDING → CONFIRMED', async () => {
+      prisma.booking.findFirst.mockResolvedValue({ status: 'PENDING' } as any);
+      prisma.booking.update.mockResolvedValue({ id: 'b1', status: 'CONFIRMED' } as any);
+
+      await expect(bookingService.updateStatus('biz1', 'b1', 'CONFIRMED')).resolves.toBeDefined();
+    });
+
+    it('allows PENDING → CANCELLED', async () => {
+      prisma.booking.findFirst.mockResolvedValue({ status: 'PENDING' } as any);
+      prisma.booking.update.mockResolvedValue({ id: 'b1', status: 'CANCELLED' } as any);
+
+      await expect(bookingService.updateStatus('biz1', 'b1', 'CANCELLED')).resolves.toBeDefined();
+    });
+
+    it('rejects PENDING → COMPLETED', async () => {
+      prisma.booking.findFirst.mockResolvedValue({ status: 'PENDING' } as any);
+
+      await expect(bookingService.updateStatus('biz1', 'b1', 'COMPLETED')).rejects.toThrow(
+        'Cannot transition from PENDING to COMPLETED',
+      );
+    });
+
+    it('rejects COMPLETED → CONFIRMED (terminal state)', async () => {
+      prisma.booking.findFirst.mockResolvedValue({ status: 'COMPLETED' } as any);
+
+      await expect(bookingService.updateStatus('biz1', 'b1', 'CONFIRMED')).rejects.toThrow(
+        'Cannot transition from COMPLETED to CONFIRMED',
+      );
+    });
+
+    it('rejects CANCELLED → any (terminal state)', async () => {
+      prisma.booking.findFirst.mockResolvedValue({ status: 'CANCELLED' } as any);
+
+      await expect(bookingService.updateStatus('biz1', 'b1', 'CONFIRMED')).rejects.toThrow(
+        'Cannot transition from CANCELLED to CONFIRMED',
+      );
+    });
+
+    it('rejects NO_SHOW → any (terminal state)', async () => {
+      prisma.booking.findFirst.mockResolvedValue({ status: 'NO_SHOW' } as any);
+
+      await expect(bookingService.updateStatus('biz1', 'b1', 'CONFIRMED')).rejects.toThrow(
+        'Cannot transition from NO_SHOW to CONFIRMED',
+      );
+    });
+
+    it('allows CONFIRMED → IN_PROGRESS', async () => {
+      prisma.booking.findFirst.mockResolvedValue({ status: 'CONFIRMED' } as any);
+      prisma.booking.update.mockResolvedValue({ id: 'b1', status: 'IN_PROGRESS' } as any);
+
+      await expect(bookingService.updateStatus('biz1', 'b1', 'IN_PROGRESS')).resolves.toBeDefined();
+    });
+
+    it('allows IN_PROGRESS → COMPLETED', async () => {
+      prisma.booking.findFirst.mockResolvedValue({ status: 'IN_PROGRESS' } as any);
+      prisma.booking.update.mockResolvedValue({
+        id: 'b1',
+        status: 'COMPLETED',
+        service: null,
+      } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+
+      await expect(bookingService.updateStatus('biz1', 'b1', 'COMPLETED')).resolves.toBeDefined();
+    });
+
+    it('throws NotFoundException when booking not found', async () => {
+      prisma.booking.findFirst.mockResolvedValue(null);
+
+      await expect(bookingService.updateStatus('biz1', 'b1', 'CONFIRMED')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+  });
+
+  // ─── Security: Bulk Update Partial Failure ──────────────────────────
+
+  describe('bulkUpdate partial failure (C-6)', () => {
+    it('reports partial success when some bookings fail state machine', async () => {
+      jest
+        .spyOn(bookingService, 'updateStatus')
+        .mockResolvedValueOnce({ id: 'b1' } as any)
+        .mockRejectedValueOnce(new BadRequestException('Cannot transition'))
+        .mockResolvedValueOnce({ id: 'b3' } as any);
+
+      const result = await bookingService.bulkUpdate(
+        'biz1',
+        ['b1', 'b2', 'b3'],
+        'status',
+        { status: 'CONFIRMED' },
+        'ADMIN',
+      );
+
+      expect(result.updated).toBe(2);
+      expect(result.failed).toEqual(['b2']);
     });
   });
 });

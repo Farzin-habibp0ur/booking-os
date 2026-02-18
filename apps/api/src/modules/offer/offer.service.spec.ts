@@ -291,4 +291,76 @@ describe('OfferService', () => {
       await expect(offerService.delete('biz1', 'nope')).rejects.toThrow(NotFoundException);
     });
   });
+
+  // ─── Security: Per-Customer Redemption (C-5) ────────────────────────
+
+  describe('per-customer redemption', () => {
+    it('creates redemption record when customerId is provided', async () => {
+      prisma.offer.findFirst.mockResolvedValue({
+        ...mockOffer,
+        maxRedemptions: 10,
+        currentRedemptions: 0,
+      } as any);
+      prisma.offerRedemption.findFirst.mockResolvedValue(null);
+      prisma.offerRedemption.create.mockResolvedValue({} as any);
+      prisma.offer.update.mockResolvedValue({ ...mockOffer, currentRedemptions: 1 } as any);
+
+      await offerService.redeem('biz1', 'off1', 'cust1');
+
+      expect(prisma.offerRedemption.findFirst).toHaveBeenCalledWith({
+        where: { offerId: 'off1', customerId: 'cust1' },
+      });
+      expect(prisma.offerRedemption.create).toHaveBeenCalledWith({
+        data: { offerId: 'off1', customerId: 'cust1', businessId: 'biz1' },
+      });
+    });
+
+    it('rejects duplicate redemption by same customer', async () => {
+      prisma.offer.findFirst.mockResolvedValue({
+        ...mockOffer,
+        maxRedemptions: 10,
+        currentRedemptions: 1,
+      } as any);
+      prisma.offerRedemption.findFirst.mockResolvedValue({
+        id: 'r1',
+        offerId: 'off1',
+        customerId: 'cust1',
+      } as any);
+
+      await expect(offerService.redeem('biz1', 'off1', 'cust1')).rejects.toThrow(
+        'Customer has already redeemed this offer',
+      );
+    });
+
+    it('skips per-customer check when no customerId', async () => {
+      prisma.offer.findFirst.mockResolvedValue({
+        ...mockOffer,
+        maxRedemptions: null,
+        currentRedemptions: 0,
+      } as any);
+      prisma.offer.update.mockResolvedValue({ ...mockOffer, currentRedemptions: 1 } as any);
+
+      await offerService.redeem('biz1', 'off1');
+
+      expect(prisma.offerRedemption.findFirst).not.toHaveBeenCalled();
+      expect(prisma.offerRedemption.create).not.toHaveBeenCalled();
+    });
+
+    it('allows different customers to redeem the same offer', async () => {
+      prisma.offer.findFirst.mockResolvedValue({
+        ...mockOffer,
+        maxRedemptions: 10,
+        currentRedemptions: 1,
+      } as any);
+      prisma.offerRedemption.findFirst.mockResolvedValue(null);
+      prisma.offerRedemption.create.mockResolvedValue({} as any);
+      prisma.offer.update.mockResolvedValue({ ...mockOffer, currentRedemptions: 2 } as any);
+
+      await offerService.redeem('biz1', 'off1', 'cust2');
+
+      expect(prisma.offerRedemption.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({ customerId: 'cust2' }),
+      });
+    });
+  });
 });

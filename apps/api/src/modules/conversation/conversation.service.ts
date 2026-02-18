@@ -278,11 +278,16 @@ export class ConversationService {
   }
 
   async deleteNote(businessId: string, conversationId: string, noteId: string) {
-    // Verify the conversation belongs to this business
+    // H-3 fix: Verify note belongs to this conversation AND business
     const conversation = await this.prisma.conversation.findFirst({
       where: { id: conversationId, businessId },
     });
     if (!conversation) throw new NotFoundException('Conversation not found');
+
+    const note = await this.prisma.conversationNote.findFirst({
+      where: { id: noteId, conversationId },
+    });
+    if (!note) throw new NotFoundException('Note not found');
 
     return this.prisma.conversationNote.delete({ where: { id: noteId } });
   }
