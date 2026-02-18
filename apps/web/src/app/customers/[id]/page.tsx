@@ -29,6 +29,7 @@ import {
   Activity,
 } from 'lucide-react';
 import BookingFormModal from '@/components/booking-form-modal';
+import CustomerTimeline from '@/components/customer-timeline';
 
 const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
   PENDING: { bg: 'bg-lavender-50', text: 'text-lavender-900' },
@@ -649,14 +650,8 @@ export default function CustomerDetailPage() {
               </div>
             )}
 
-            {/* Timeline Tab (placeholder) */}
-            {tab === 'timeline' && (
-              <div className="flex-1 flex flex-col items-center justify-center p-8 text-slate-400">
-                <Activity size={48} className="mb-3 text-slate-300" />
-                <p className="font-medium">{t('customer_detail.timeline_coming_soon')}</p>
-                <p className="text-sm">{t('customer_detail.timeline_description')}</p>
-              </div>
-            )}
+            {/* Timeline Tab */}
+            {tab === 'timeline' && <CustomerTimeline customerId={id as string} />}
 
             {/* Notes Tab */}
             {tab === 'notes' && (

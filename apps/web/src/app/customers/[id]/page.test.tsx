@@ -55,6 +55,12 @@ jest.mock('@/components/booking-form-modal', () => ({
   __esModule: true,
   default: ({ isOpen }: any) => (isOpen ? <div data-testid="booking-form-modal" /> : null),
 }));
+jest.mock('@/components/customer-timeline', () => ({
+  __esModule: true,
+  default: ({ customerId }: any) => (
+    <div data-testid="customer-timeline">Timeline for {customerId}</div>
+  ),
+}));
 
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -611,7 +617,7 @@ describe('CustomerDetailPage', () => {
 
   // ─── Timeline Tab (Placeholder) ───────────────────────────────────
 
-  it('shows timeline placeholder when switching to timeline tab', async () => {
+  it('renders timeline component when switching to timeline tab', async () => {
     setupMocks();
     render(<CustomerDetailPage />);
     await waitFor(() => screen.getAllByText('Emma Wilson'));
@@ -619,7 +625,8 @@ describe('CustomerDetailPage', () => {
     fireEvent.click(screen.getByText('customer_detail.timeline_tab'));
 
     await waitFor(() => {
-      expect(screen.getByText('customer_detail.timeline_coming_soon')).toBeInTheDocument();
+      expect(screen.getByTestId('customer-timeline')).toBeInTheDocument();
+      expect(screen.getByText('Timeline for cust-1')).toBeInTheDocument();
     });
   });
 
