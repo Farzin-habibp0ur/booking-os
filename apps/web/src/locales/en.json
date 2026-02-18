@@ -318,7 +318,32 @@
     "chip_treatments": "What treatments have they had?",
     "chip_upcoming": "Any upcoming appointments?",
     "chip_allergies": "Are there any allergies or medical notes?",
-    "next_appointment": "Next Appointment"
+    "next_appointment": "Next Appointment",
+    "message": "Message",
+    "last_booking": "Last booking",
+    "last_conversation": "Last conversation",
+    "conversations_count": "conversation(s)",
+    "timeline_tab": "Timeline",
+    "notes_tab": "Notes",
+    "add_note_placeholder": "Write a note...",
+    "add_note": "Add Note",
+    "no_notes": "No notes yet. Add one above.",
+    "note_created": "Note added",
+    "note_updated": "Note updated",
+    "note_deleted": "Note deleted",
+    "note_create_error": "Failed to add note",
+    "note_update_error": "Failed to update note",
+    "note_delete_error": "Failed to delete note",
+    "timeline_all": "All",
+    "timeline_system_events": "System events",
+    "timeline_empty": "No activity yet",
+    "timeline_load_more": "Load more",
+    "clinic_intake": "Clinic Intake",
+    "quotes_summary": "Quotes Summary",
+    "pending_quotes": "Pending",
+    "approved_quotes": "Approved",
+    "total_quoted": "Total Quoted",
+    "no_quotes": "No quotes yet"
   },
 
   "services": {
@@ -1013,6 +1038,15 @@
     "unable_to_cancel": "Unable to Cancel",
     "contact_clinic": "Please contact the clinic directly for assistance.",
     "close_page": "You can close this page."
+  },
+
+  "search": {
+    "title": "Search",
+    "placeholder": "Search customers, bookings, services...",
+    "all": "All",
+    "no_results": "No results found for \"{{query}}\"",
+    "enter_query": "Type at least 2 characters to search",
+    "load_more": "Load more {{type}}"
   },
 
   "errors": {

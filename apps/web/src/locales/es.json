@@ -290,7 +290,32 @@
     "chip_treatments": "Que tratamientos ha tenido?",
     "chip_upcoming": "Tiene citas proximas?",
     "chip_allergies": "Tiene alergias o notas medicas?",
-    "next_appointment": "Proxima cita"
+    "next_appointment": "Proxima cita",
+    "message": "Mensaje",
+    "last_booking": "Última reserva",
+    "last_conversation": "Última conversación",
+    "conversations_count": "conversación(es)",
+    "timeline_tab": "Línea de tiempo",
+    "notes_tab": "Notas",
+    "add_note_placeholder": "Escribe una nota...",
+    "add_note": "Agregar nota",
+    "no_notes": "Sin notas aún. Agrega una arriba.",
+    "note_created": "Nota agregada",
+    "note_updated": "Nota actualizada",
+    "note_deleted": "Nota eliminada",
+    "note_create_error": "Error al agregar nota",
+    "note_update_error": "Error al actualizar nota",
+    "note_delete_error": "Error al eliminar nota",
+    "timeline_all": "Todos",
+    "timeline_system_events": "Eventos del sistema",
+    "timeline_empty": "Sin actividad aún",
+    "timeline_load_more": "Cargar más",
+    "clinic_intake": "Ficha clínica",
+    "quotes_summary": "Resumen de cotizaciones",
+    "pending_quotes": "Pendientes",
+    "approved_quotes": "Aprobadas",
+    "total_quoted": "Total cotizado",
+    "no_quotes": "Sin cotizaciones aún"
   },
 
   "services": {
@@ -967,6 +992,15 @@
     "unable_to_cancel": "No se puede cancelar",
     "contact_clinic": "Por favor contacta a la clínica directamente para asistencia.",
     "close_page": "Puedes cerrar esta página."
+  },
+
+  "search": {
+    "title": "Búsqueda",
+    "placeholder": "Buscar clientes, reservas, servicios...",
+    "all": "Todos",
+    "no_results": "No se encontraron resultados para \"{{query}}\"",
+    "enter_query": "Escribe al menos 2 caracteres para buscar",
+    "load_more": "Cargar más {{type}}"
   },
 
   "errors": {

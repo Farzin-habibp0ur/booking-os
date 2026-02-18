@@ -868,7 +868,7 @@ export default function CustomerDetailPage() {
                 />
               )}
               {pack.slug === 'dealership' && (
-                <div className="p-4" data-testid="quotes-summary">
+                <div className="p-5" data-testid="quotes-summary">
                   {(() => {
                     const allQuotes = bookings.flatMap((b: any) => b.quotes || []);
                     const pending = allQuotes.filter((q: any) => q.status === 'PENDING');
@@ -879,52 +879,63 @@ export default function CustomerDetailPage() {
                     );
                     return (
                       <div>
-                        <div className="grid grid-cols-3 gap-4 mb-3">
-                          <div>
-                            <p className="text-xl font-serif font-bold text-lavender-600">
+                        <div className="grid grid-cols-3 gap-4 mb-4">
+                          <div className="bg-lavender-50 rounded-xl p-3 text-center">
+                            <p className="text-2xl font-serif font-bold text-lavender-600">
                               {pending.length}
                             </p>
-                            <p className="text-xs text-slate-500">
+                            <p className="text-xs text-slate-500 mt-0.5">
                               {t('customer_detail.pending_quotes')}
                             </p>
                           </div>
-                          <div>
-                            <p className="text-xl font-serif font-bold text-sage-600">
+                          <div className="bg-sage-50 rounded-xl p-3 text-center">
+                            <p className="text-2xl font-serif font-bold text-sage-600">
                               {approved.length}
                             </p>
-                            <p className="text-xs text-slate-500">
+                            <p className="text-xs text-slate-500 mt-0.5">
                               {t('customer_detail.approved_quotes')}
                             </p>
                           </div>
-                          <div>
-                            <p className="text-xl font-serif font-bold">
-                              ${Math.round(totalAmount)}
+                          <div className="bg-slate-50 rounded-xl p-3 text-center">
+                            <p className="text-2xl font-serif font-bold text-slate-800">
+                              ${Math.round(totalAmount).toLocaleString()}
                             </p>
-                            <p className="text-xs text-slate-500">
+                            <p className="text-xs text-slate-500 mt-0.5">
                               {t('customer_detail.total_quoted')}
                             </p>
                           </div>
                         </div>
                         {allQuotes.length === 0 && (
-                          <p className="text-sm text-slate-400 text-center py-2">
-                            {t('customer_detail.no_quotes')}
-                          </p>
+                          <div className="text-center py-6">
+                            <DollarSign size={28} className="mx-auto mb-2 text-slate-300" />
+                            <p className="text-sm text-slate-400">
+                              {t('customer_detail.no_quotes')}
+                            </p>
+                          </div>
                         )}
                         {allQuotes.length > 0 && (
                           <div className="space-y-2">
                             {allQuotes.slice(0, 5).map((q: any) => (
                               <div
                                 key={q.id}
-                                className="flex items-center justify-between text-sm p-2 rounded-lg bg-slate-50/60"
+                                className="flex items-center justify-between text-sm p-3 rounded-xl bg-slate-50/80 hover:bg-slate-50 transition-colors"
                                 data-testid="quote-row"
                               >
                                 <div className="flex items-center gap-2">
-                                  <DollarSign size={14} className="text-slate-400" />
-                                  <span>${Number(q.totalAmount).toFixed(0)}</span>
+                                  <div className="w-7 h-7 rounded-full bg-lavender-50 flex items-center justify-center">
+                                    <DollarSign size={14} className="text-lavender-600" />
+                                  </div>
+                                  <span className="font-medium">
+                                    $
+                                    {Number(q.totalAmount).toLocaleString(undefined, {
+                                      minimumFractionDigits: 0,
+                                      maximumFractionDigits: 0,
+                                    })}
+                                  </span>
                                 </div>
                                 <span
                                   className={cn(
-                                    'text-[10px] px-2 py-0.5 rounded-full font-medium',
+                                    'text-[10px] px-2.5 py-1 rounded-full font-medium',
                                     q.status === 'APPROVED'
                                       ? 'bg-sage-50 text-sage-700'
                                       : q.status === 'PENDING'

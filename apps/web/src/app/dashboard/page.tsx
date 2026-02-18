@@ -660,7 +660,7 @@ export default function DashboardPage() {
                       <div
                         key={c.id}
                         className="flex items-center justify-between p-3 rounded-xl bg-slate-50/60 hover:bg-slate-50 transition-colors cursor-pointer"
-                        onClick={() => router.push('/inbox')}
+                        onClick={() => router.push(`/inbox?conversationId=${c.id}`)}
                       >
                         <div>
                           <p className="text-sm font-medium text-slate-800">{c.customer?.name}</p>

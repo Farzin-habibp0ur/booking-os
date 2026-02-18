@@ -790,7 +790,7 @@ describe('DashboardPage', () => {
       await user.click(screen.getByText('Frank'));
     });
 
-    expect(mockPush).toHaveBeenCalledWith('/inbox');
+    expect(mockPush).toHaveBeenCalledWith('/inbox?conversationId=c1');
   });
 
   it('navigates to /inbox?filter=unassigned when view inbox is clicked', async () => {
