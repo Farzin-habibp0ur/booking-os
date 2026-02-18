@@ -401,5 +401,89 @@ describe('RecurringService', () => {
         data: { status: 'CANCELLED' },
       });
     });
+
+    it('cancelSeries succeeds when calendar sync fails', async () => {
+      prisma.recurringSeries.findFirst.mockResolvedValue(series as any);
+      prisma.booking.update.mockResolvedValue({} as any);
+      prisma.reminder.updateMany.mockResolvedValue({ count: 1 } as any);
+      mockCalendarSyncService.syncBookingToCalendar.mockRejectedValue(new Error('Calendar down'));
+
+      const result = await service.cancelSeries('biz1', 'series1', 'all');
+
+      expect(result.cancelled).toBe(3); // b1, b2, b3 are CONFIRMED; b4 is COMPLETED (skipped)
+      expect(mockCalendarSyncService.syncBookingToCalendar).toHaveBeenCalled();
+    });
+  });
+
+  describe('side-effect resilience', () => {
+    const futureDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    const createData = {
+      customerId: 'cust1',
+      serviceId: 'svc1',
+      staffId: 'staff1',
+      startDate: futureDate.toISOString().split('T')[0],
+      timeOfDay: '14:00',
+      daysOfWeek: [futureDate.getDay()],
+      intervalWeeks: 1,
+      totalCount: 2,
+    };
+
+    it('createSeries succeeds when notification fails for occurrences', async () => {
+      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', durationMins: 60 } as any);
+      prisma.booking.findFirst.mockResolvedValue(null);
+
+      const mockBookings = [
+        { id: 'b1', customer: {}, service: {}, staff: {} },
+        { id: 'b2', customer: {}, service: {}, staff: {} },
+      ];
+      const mockTx = {
+        recurringSeries: { create: jest.fn().mockResolvedValue({ id: 'series1' }) },
+        booking: {
+          create: jest
+            .fn()
+            .mockResolvedValueOnce(mockBookings[0])
+            .mockResolvedValueOnce(mockBookings[1]),
+        },
+        reminder: { create: jest.fn().mockResolvedValue({}) },
+      };
+      prisma.$transaction.mockImplementation(async (fn: any) => fn(mockTx));
+
+      mockNotificationService.sendBookingConfirmation.mockRejectedValue(new Error('SMTP down'));
+
+      const result = await service.createSeries('biz1', createData);
+
+      expect(result.bookings).toHaveLength(2);
+      expect(mockNotificationService.sendBookingConfirmation).toHaveBeenCalledTimes(2);
+    });
+
+    it('createSeries succeeds when calendar sync fails for occurrences', async () => {
+      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', durationMins: 60 } as any);
+      prisma.booking.findFirst.mockResolvedValue(null);
+
+      const mockBookings = [
+        { id: 'b1', customer: {}, service: {}, staff: {} },
+        { id: 'b2', customer: {}, service: {}, staff: {} },
+      ];
+      const mockTx = {
+        recurringSeries: { create: jest.fn().mockResolvedValue({ id: 'series1' }) },
+        booking: {
+          create: jest
+            .fn()
+            .mockResolvedValueOnce(mockBookings[0])
+            .mockResolvedValueOnce(mockBookings[1]),
+        },
+        reminder: { create: jest.fn().mockResolvedValue({}) },
+      };
+      prisma.$transaction.mockImplementation(async (fn: any) => fn(mockTx));
+
+      mockCalendarSyncService.syncBookingToCalendar.mockRejectedValue(
+        new Error('Google API error'),
+      );
+
+      const result = await service.createSeries('biz1', createData);
+
+      expect(result.bookings).toHaveLength(2);
+      expect(mockCalendarSyncService.syncBookingToCalendar).toHaveBeenCalledTimes(2);
+    });
   });
 });

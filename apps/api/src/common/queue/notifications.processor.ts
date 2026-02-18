@@ -21,10 +21,17 @@ export class NotificationsProcessor extends WorkerHost {
     const emailService = (this as any).moduleRef?.get(EmailService);
 
     if (!emailService) {
-      this.logger.warn('EmailService not available — skipping job');
-      return;
+      throw new Error('EmailService not available — cannot process job');
     }
 
-    await emailService.send({ to, subject, html });
+    try {
+      await emailService.send({ to, subject, html });
+    } catch (err) {
+      this.logger.error(
+        `Notification job ${job.id} failed for ${to}: ${(err as Error).message}`,
+        (err as Error).stack,
+      );
+      throw err;
+    }
   }
 }

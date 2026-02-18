@@ -3201,4 +3201,197 @@ describe('BookingService', () => {
       );
     });
   });
+
+  // ─── Side-effect resilience tests ─────────────────────────────────────
+
+  describe('side-effect resilience', () => {
+    const createData = {
+      customerId: 'cust1',
+      serviceId: 'svc1',
+      staffId: 'staff1',
+      startTime: '2026-03-01T10:00:00Z',
+    };
+
+    const mockBooking = {
+      id: 'b1',
+      customerId: 'cust1',
+      customer: { email: 'test@test.com', phone: '+123' },
+      service: { depositRequired: false },
+      staff: { id: 'staff1' },
+    };
+
+    beforeEach(() => {
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        durationMins: 60,
+        depositRequired: false,
+      } as any);
+      prisma.booking.findFirst.mockResolvedValue(null);
+      prisma.booking.create.mockResolvedValue(mockBooking as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+    });
+
+    it('create succeeds when notification fails and logs warning', async () => {
+      mockNotificationService.sendBookingConfirmation.mockRejectedValue(new Error('SMTP down'));
+
+      const result = await bookingService.create('biz1', createData);
+
+      expect(result.id).toBe('b1');
+      expect(mockNotificationService.sendBookingConfirmation).toHaveBeenCalled();
+    });
+
+    it('create succeeds when calendar sync fails', async () => {
+      mockCalendarSyncService.syncBookingToCalendar.mockRejectedValue(
+        new Error('Google API error'),
+      );
+
+      const result = await bookingService.create('biz1', createData);
+
+      expect(result.id).toBe('b1');
+      expect(mockCalendarSyncService.syncBookingToCalendar).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'b1' }),
+        'create',
+      );
+    });
+
+    it('create succeeds when deposit notification fails', async () => {
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        durationMins: 60,
+        depositRequired: true,
+      } as any);
+      prisma.booking.create.mockResolvedValue({
+        ...mockBooking,
+        service: { depositRequired: true },
+      } as any);
+      mockNotificationService.sendDepositRequest.mockRejectedValue(new Error('SMS provider down'));
+
+      const result = await bookingService.create('biz1', createData);
+
+      expect(result.id).toBe('b1');
+    });
+
+    it('update succeeds when calendar sync fails', async () => {
+      prisma.booking.update.mockResolvedValue({ id: 'b1' } as any);
+      mockCalendarSyncService.syncBookingToCalendar.mockRejectedValue(
+        new Error('Calendar unreachable'),
+      );
+
+      const result = await bookingService.update('biz1', 'b1', { notes: 'test' });
+
+      expect(result.id).toBe('b1');
+    });
+
+    it('updateStatus succeeds when confirmation notification fails after deposit override', async () => {
+      prisma.booking.findFirst.mockResolvedValue({
+        status: 'PENDING_DEPOSIT',
+        customFields: {},
+      } as any);
+      prisma.booking.update.mockResolvedValue({
+        id: 'b1',
+        status: 'CONFIRMED',
+        customer: {},
+        service: {},
+        staff: {},
+      } as any);
+      mockNotificationService.sendBookingConfirmation.mockRejectedValue(
+        new Error('Notification failed'),
+      );
+
+      const result = await bookingService.updateStatus('biz1', 'b1', 'CONFIRMED', {
+        role: 'ADMIN',
+        reason: 'VIP client',
+      });
+
+      expect(result.id).toBe('b1');
+    });
+
+    it('updateStatus succeeds when cancellation notification fails', async () => {
+      prisma.booking.findFirst.mockResolvedValue({
+        status: 'CONFIRMED',
+        startTime: new Date(Date.now() + 48 * 3600000),
+        customFields: {},
+      } as any);
+      prisma.booking.update.mockResolvedValue({
+        id: 'b1',
+        status: 'CANCELLED',
+        customer: {},
+        service: {},
+        staff: {},
+      } as any);
+      prisma.reminder.updateMany.mockResolvedValue({ count: 1 });
+      mockNotificationService.sendCancellationNotification.mockRejectedValue(
+        new Error('Email down'),
+      );
+      mockCalendarSyncService.syncBookingToCalendar.mockRejectedValue(new Error('Calendar down'));
+      mockBusinessService.getPolicySettings.mockResolvedValue(null);
+
+      const result = await bookingService.updateStatus('biz1', 'b1', 'CANCELLED');
+
+      expect(result.id).toBe('b1');
+    });
+
+    it('updateKanbanStatus succeeds when notification fails', async () => {
+      prisma.booking.findFirst.mockResolvedValue({
+        id: 'b1',
+        customer: {},
+        service: {},
+        staff: {},
+      } as any);
+      prisma.booking.update.mockResolvedValue({
+        id: 'b1',
+        kanbanStatus: 'CHECKED_IN',
+        customer: {},
+        service: {},
+        staff: {},
+      } as any);
+      mockNotificationService.sendKanbanStatusUpdate.mockRejectedValue(
+        new Error('Notification failed'),
+      );
+
+      const result = await bookingService.updateKanbanStatus('biz1', 'b1', 'CHECKED_IN');
+
+      expect(result.id).toBe('b1');
+    });
+
+    it('sendRescheduleLink succeeds when notification fails', async () => {
+      prisma.booking.findFirst.mockResolvedValue({
+        id: 'b1',
+        status: 'CONFIRMED',
+        customer: { email: 'test@test.com', phone: '+123' },
+        service: {},
+        staff: {},
+        customFields: {},
+      } as any);
+      prisma.booking.update.mockResolvedValue({ id: 'b1' } as any);
+      mockNotificationService.sendRescheduleLink.mockRejectedValue(new Error('SMS failed'));
+
+      const result = await bookingService.sendRescheduleLink('biz1', 'b1', {
+        staffId: 'st1',
+        staffName: 'Admin',
+      });
+
+      expect(result.id).toBe('b1');
+    });
+
+    it('sendCancelLink succeeds when notification fails', async () => {
+      prisma.booking.findFirst.mockResolvedValue({
+        id: 'b1',
+        status: 'CONFIRMED',
+        customer: { email: 'test@test.com', phone: '+123' },
+        service: {},
+        staff: {},
+        customFields: {},
+      } as any);
+      prisma.booking.update.mockResolvedValue({ id: 'b1' } as any);
+      mockNotificationService.sendCancelLink.mockRejectedValue(new Error('SMS failed'));
+
+      const result = await bookingService.sendCancelLink('biz1', 'b1', {
+        staffId: 'st1',
+        staffName: 'Admin',
+      });
+
+      expect(result.id).toBe('b1');
+    });
+  });
 });

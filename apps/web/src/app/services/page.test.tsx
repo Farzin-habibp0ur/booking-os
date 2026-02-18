@@ -29,8 +29,9 @@ jest.mock('@/lib/vertical-pack', () => ({
     customerFields: [],
   }),
 }));
+const mockToast = jest.fn();
 jest.mock('@/lib/toast', () => ({
-  useToast: () => ({ toast: jest.fn() }),
+  useToast: () => ({ toast: mockToast }),
 }));
 jest.mock('@/lib/cn', () => ({ cn: (...args: any[]) => args.filter(Boolean).join(' ') }));
 jest.mock('@/lib/api', () => ({
@@ -276,6 +277,39 @@ describe('ServicesPage', () => {
     render(<ServicesPage />);
     await waitFor(() => {
       expect(screen.getByText('services.active_count')).toBeInTheDocument();
+    });
+  });
+
+  // ─── Error Toast Tests ─────────────────────────────────────────────────
+
+  test('shows error toast when services API fails on load', async () => {
+    mockApi.get.mockRejectedValueOnce(new Error('Network error'));
+    render(<ServicesPage />);
+
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith(expect.any(String), 'error');
+    });
+  });
+
+  test('shows error toast when toggling service active state fails', async () => {
+    mockApi.get.mockResolvedValue(mockServices);
+    mockApi.patch.mockRejectedValueOnce(new Error('Toggle failed'));
+    render(<ServicesPage />);
+    await waitFor(() => screen.getByText('Botox'));
+
+    // Open the edit form for the first service
+    const pencilBtn = screen.getByText('Botox').closest('.bg-white')?.querySelector('button');
+    if (pencilBtn) fireEvent.click(pencilBtn);
+
+    await waitFor(() => {
+      expect(screen.getByText('services.deactivate')).toBeInTheDocument();
+    });
+
+    // Click the deactivate button to trigger toggleActive
+    fireEvent.click(screen.getByText('services.deactivate'));
+
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith(expect.any(String), 'error');
     });
   });
 });

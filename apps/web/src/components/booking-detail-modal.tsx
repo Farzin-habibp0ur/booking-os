@@ -113,8 +113,8 @@ export default function BookingDetailModal({
       setConfirmAction(null);
       setOverrideOverlay(null);
       setOverrideReason('');
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      toast(e.message || 'Failed to update booking status', 'error');
     }
     setUpdating('');
   };
@@ -162,8 +162,8 @@ export default function BookingDetailModal({
       });
       onUpdated(booking);
       setCancelScope(null);
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      toast(e.message || 'Failed to cancel recurring series', 'error');
     }
     setUpdating('');
   };
@@ -190,8 +190,8 @@ export default function BookingDetailModal({
       onUpdated(updated);
       setRescheduleLinkSent(true);
       setTimeout(() => setRescheduleLinkSent(false), 2000);
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      toast(e.message || 'Failed to send reschedule link', 'error');
     }
     setSendingRescheduleLink(false);
   };
@@ -203,8 +203,8 @@ export default function BookingDetailModal({
       onUpdated(updated);
       setCancelLinkSent(true);
       setTimeout(() => setCancelLinkSent(false), 2000);
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      toast(e.message || 'Failed to send cancel link', 'error');
     }
     setSendingCancelLink(false);
   };

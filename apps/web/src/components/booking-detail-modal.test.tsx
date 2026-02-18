@@ -69,8 +69,9 @@ jest.mock('@/lib/api', () => ({
   },
 }));
 
+const mockToast = jest.fn();
 jest.mock('@/lib/toast', () => ({
-  useToast: () => ({ toast: jest.fn() }),
+  useToast: () => ({ toast: mockToast }),
 }));
 
 jest.mock('@/lib/use-focus-trap', () => ({
@@ -229,5 +230,65 @@ describe('BookingDetailModal', () => {
     render(<BookingDetailModal {...defaultProps} />);
     expect(screen.getByText('Timeline')).toBeInTheDocument();
     expect(screen.getByText(/Created/)).toBeInTheDocument();
+  });
+
+  // ─── Error Toast Tests ─────────────────────────────────────────────
+
+  test('shows error toast when status update fails', async () => {
+    mockPatch.mockRejectedValueOnce(new Error('Update failed'));
+
+    render(<BookingDetailModal {...defaultProps} />);
+
+    // Click "Start Visit" to trigger IN_PROGRESS status update
+    fireEvent.click(screen.getByText('Start Visit'));
+
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith(expect.any(String), 'error');
+    });
+  });
+
+  test('shows error toast when no-show confirmation fails', async () => {
+    mockPatch.mockRejectedValueOnce(new Error('Update failed'));
+
+    render(<BookingDetailModal {...defaultProps} />);
+
+    // Click "No Show" to open confirmation dialog
+    fireEvent.click(screen.getByText('No Show'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Mark as no-show?')).toBeInTheDocument();
+    });
+
+    // The confirm button in the dialog has the action label "No Show"
+    // It's in the confirm overlay alongside "Go back"
+    // Find the button that is a sibling of "Go back"
+    const goBackBtn = screen.getByText('Go back');
+    const confirmBtn = goBackBtn.parentElement!.querySelector('button:last-child')!;
+    fireEvent.click(confirmBtn);
+
+    await waitFor(() => {
+      expect(mockPatch).toHaveBeenCalledWith('/bookings/b1/status', { status: 'NO_SHOW' });
+    });
+
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith(expect.any(String), 'error');
+    });
+  });
+
+  test('shows error toast when send deposit request fails', async () => {
+    mockPost.mockRejectedValueOnce(new Error('Deposit send failed'));
+
+    render(
+      <BookingDetailModal
+        {...defaultProps}
+        booking={{ ...mockBooking, status: 'PENDING_DEPOSIT' }}
+      />,
+    );
+
+    fireEvent.click(screen.getByText('Send Deposit Request'));
+
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith(expect.any(String), 'error');
+    });
   });
 });

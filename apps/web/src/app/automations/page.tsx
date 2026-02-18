@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
+import { useToast } from '@/lib/toast';
 import { Zap, Plus, ToggleLeft, ToggleRight, Trash2, Play } from 'lucide-react';
 import { TableRowSkeleton, EmptyState } from '@/components/skeleton';
 import TooltipNudge from '@/components/tooltip-nudge';
@@ -17,22 +18,23 @@ export default function AutomationsPage() {
   const [logs, setLogs] = useState<any>({ data: [], total: 0 });
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const { toast } = useToast();
 
   const loadPlaybooks = () =>
     api
       .get<any>('/automations/playbooks')
       .then(setPlaybooks)
-      .catch(() => {});
+      .catch((err: any) => toast(err.message || 'Failed to load playbooks', 'error'));
   const loadRules = () =>
     api
       .get<any>('/automations/rules')
       .then((r) => setRules(Array.isArray(r) ? r : []))
-      .catch(() => {});
+      .catch((err: any) => toast(err.message || 'Failed to load rules', 'error'));
   const loadLogs = () =>
     api
       .get<any>('/automations/logs?pageSize=50')
       .then(setLogs)
-      .catch(() => {});
+      .catch((err: any) => toast(err.message || 'Failed to load activity logs', 'error'));
 
   useEffect(() => {
     setLoading(true);
@@ -40,19 +42,31 @@ export default function AutomationsPage() {
   }, []);
 
   const handleTogglePlaybook = async (playbookId: string) => {
-    await api.post(`/automations/playbooks/${playbookId}/toggle`);
-    loadPlaybooks();
+    try {
+      await api.post(`/automations/playbooks/${playbookId}/toggle`);
+      loadPlaybooks();
+    } catch (err: any) {
+      toast(err.message || 'Failed to toggle playbook', 'error');
+    }
   };
 
   const handleToggleRule = async (rule: any) => {
-    await api.patch(`/automations/rules/${rule.id}`, { isActive: !rule.isActive });
-    loadRules();
+    try {
+      await api.patch(`/automations/rules/${rule.id}`, { isActive: !rule.isActive });
+      loadRules();
+    } catch (err: any) {
+      toast(err.message || 'Failed to toggle rule', 'error');
+    }
   };
 
   const handleDeleteRule = async (id: string) => {
     if (!confirm('Delete this rule?')) return;
-    await api.del(`/automations/rules/${id}`);
-    loadRules();
+    try {
+      await api.del(`/automations/rules/${id}`);
+      loadRules();
+    } catch (err: any) {
+      toast(err.message || 'Failed to delete rule', 'error');
+    }
   };
 
   const handleTestRule = async (id: string) => {

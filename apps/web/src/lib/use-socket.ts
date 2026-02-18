@@ -41,8 +41,14 @@ export function useSocket(events: Record<string, EventHandler>) {
       },
     );
 
+    const connectErrorHandler = (err: Error) => {
+      console.warn('[WebSocket] connect_error:', err.message);
+    };
+    socket.on('connect_error', connectErrorHandler);
+
     return () => {
       boundHandlers.forEach(([event, handler]) => socket.off(event, handler));
+      socket.off('connect_error', connectErrorHandler);
       listenerCount--;
       if (listenerCount <= 0 && globalSocket) {
         globalSocket.disconnect();

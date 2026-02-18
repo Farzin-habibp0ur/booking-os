@@ -231,6 +231,42 @@ describe('WaitlistService', () => {
 
       expect(prisma.waitlistEntry.update).not.toHaveBeenCalled();
     });
+
+    it('should continue offering to remaining entries when one update fails', async () => {
+      const realDate = Date;
+      const mockDate = new Date('2026-03-15T14:00:00Z');
+      jest.spyOn(global, 'Date').mockImplementation((...args: any[]) => {
+        if (args.length === 0) return mockDate;
+        return new (realDate as any)(...args);
+      });
+      (Date as any).now = () => mockDate.getTime();
+
+      prisma.business.findUnique.mockResolvedValue({
+        id: 'biz1',
+        packConfig: {
+          waitlist: { offerCount: 3, expiryMinutes: 15, quietStart: '23:00', quietEnd: '06:00' },
+        },
+      } as any);
+      prisma.waitlistEntry.findMany.mockResolvedValue([
+        { id: 'wl1', customerId: 'c1', customer: { id: 'c1' }, service: { name: 'Botox' } },
+        { id: 'wl2', customerId: 'c2', customer: { id: 'c2' }, service: { name: 'Botox' } },
+        { id: 'wl3', customerId: 'c3', customer: { id: 'c3' }, service: { name: 'Botox' } },
+      ] as any);
+
+      prisma.waitlistEntry.update
+        .mockResolvedValueOnce({} as any) // wl1 succeeds
+        .mockRejectedValueOnce(new Error('DB error')) // wl2 fails
+        .mockResolvedValueOnce({} as any); // wl3 succeeds
+
+      await service.offerOpenSlot(booking);
+
+      expect(prisma.waitlistEntry.update).toHaveBeenCalledTimes(3);
+      expect(prisma.waitlistEntry.update).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: 'wl3' } }),
+      );
+
+      jest.restoreAllMocks();
+    });
   });
 
   describe('getMetrics', () => {
@@ -291,6 +327,12 @@ describe('WaitlistService', () => {
           data: { status: 'EXPIRED' },
         }),
       );
+    });
+
+    it('should not throw when database fails', async () => {
+      prisma.waitlistEntry.updateMany.mockRejectedValue(new Error('DB connection lost'));
+
+      await expect(service.expireStaleOffers()).resolves.not.toThrow();
     });
   });
 });

@@ -46,7 +46,7 @@ export default function CustomersPage() {
     api
       .get<any>(`/customers?search=${s || search}&pageSize=50`)
       .then(setCustomers)
-      .catch(console.error)
+      .catch((err: any) => toast(err.message || 'Failed to load customers', 'error'))
       .finally(() => setLoading(false));
   };
 

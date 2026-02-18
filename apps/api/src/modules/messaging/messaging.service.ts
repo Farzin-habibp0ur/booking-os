@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
   MockProvider,
@@ -74,7 +74,9 @@ export class MessagingService {
 
   getMockProvider(): MockProvider {
     if (!this.mockProvider) {
-      throw new Error('Mock provider not available — using WhatsApp Cloud in production');
+      throw new InternalServerErrorException(
+        'Mock provider not available — using WhatsApp Cloud in production',
+      );
     }
     return this.mockProvider;
   }

@@ -135,7 +135,31 @@ describe('InboxGateway', () => {
   describe('handleDisconnect', () => {
     it('does not throw', () => {
       const socket = createMockSocket();
+      socket.id = 'socket-123';
       expect(() => gateway.handleDisconnect(socket)).not.toThrow();
+    });
+
+    it('logs disconnect with business id when user is set', () => {
+      const socket = createMockSocket();
+      socket.id = 'socket-456';
+      (socket as any).user = { businessId: 'biz1', sub: 'staff1' };
+
+      const logSpy = jest.spyOn((gateway as any).logger, 'log');
+      gateway.handleDisconnect(socket);
+
+      expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('socket-456'));
+      expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('biz1'));
+    });
+
+    it('logs disconnect without business id when user is not set', () => {
+      const socket = createMockSocket();
+      socket.id = 'socket-789';
+
+      const logSpy = jest.spyOn((gateway as any).logger, 'log');
+      gateway.handleDisconnect(socket);
+
+      expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('socket-789'));
+      expect(logSpy).toHaveBeenCalledWith(expect.not.stringContaining('business:'));
     });
   });
 

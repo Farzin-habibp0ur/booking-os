@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../../common/prisma.service';
 
@@ -7,13 +7,15 @@ const DEFAULT_SLA_MINUTES = 10;
 
 @Injectable()
 export class ConversationService {
+  private readonly logger = new Logger(ConversationService.name);
+
   constructor(private prisma: PrismaService) {}
 
   @Cron(CronExpression.EVERY_MINUTE)
   async handleSnoozedConversations() {
     const count = await this.unsnoozeOverdue();
     if (count > 0) {
-      console.log(`[Snooze] Reopened ${count} snoozed conversation(s)`);
+      this.logger.log(`Reopened ${count} snoozed conversation(s)`);
     }
   }
 
@@ -267,7 +269,7 @@ export class ConversationService {
     const conversation = await this.prisma.conversation.findFirst({
       where: { id: conversationId, businessId },
     });
-    if (!conversation) throw new Error('Conversation not found');
+    if (!conversation) throw new NotFoundException('Conversation not found');
 
     return this.prisma.conversationNote.create({
       data: { conversationId, staffId, content },
@@ -280,7 +282,7 @@ export class ConversationService {
     const conversation = await this.prisma.conversation.findFirst({
       where: { id: conversationId, businessId },
     });
-    if (!conversation) throw new Error('Conversation not found');
+    if (!conversation) throw new NotFoundException('Conversation not found');
 
     return this.prisma.conversationNote.delete({ where: { id: noteId } });
   }

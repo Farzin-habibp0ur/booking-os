@@ -70,7 +70,13 @@ export class QuoteService {
 
     this.notificationService
       .sendQuoteApprovalRequest(booking as any, quote.totalAmount, quote.description, approvalLink)
-      .catch(() => {});
+      .catch((err) =>
+        this.logger.warn(`Failed to send quote approval notification for quote ${quote.id}`, {
+          quoteId: quote.id,
+          bookingId: data.bookingId,
+          error: err.message,
+        }),
+      );
 
     this.logger.log(`Quote created: quote=${quote.id} booking=${data.bookingId}`);
 

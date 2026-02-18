@@ -5,6 +5,7 @@ import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { usePack } from '@/lib/vertical-pack';
 import { useI18n } from '@/lib/i18n';
+import { useToast } from '@/lib/toast';
 import { TableRowSkeleton, EmptyState } from '@/components/skeleton';
 import { BookOpen } from 'lucide-react';
 import BookingDetailModal from '@/components/booking-detail-modal';
@@ -36,6 +37,7 @@ export default function BookingsPage() {
   const [activeViewId, setActiveViewId] = useState<string | null>(null);
   const pack = usePack();
   const { t } = useI18n();
+  const { toast } = useToast();
 
   const currentFilters = { status: statusFilter };
 
@@ -54,7 +56,7 @@ export default function BookingsPage() {
     api
       .get<any>(`/bookings${params}`)
       .then(setBookings)
-      .catch(console.error)
+      .catch((err) => toast(err.message || 'Failed to load bookings', 'error'))
       .finally(() => setLoading(false));
   };
 
@@ -98,25 +100,33 @@ export default function BookingsPage() {
   };
 
   const handleBulkStatus = async (status: string) => {
-    await api.patch('/bookings/bulk', {
-      ids: Array.from(selectedIds),
-      action: 'status',
-      payload: { status },
-    });
-    setSelectedIds(new Set());
-    setBulkStatusModal(false);
-    load();
+    try {
+      await api.patch('/bookings/bulk', {
+        ids: Array.from(selectedIds),
+        action: 'status',
+        payload: { status },
+      });
+      setSelectedIds(new Set());
+      setBulkStatusModal(false);
+      load();
+    } catch (err: any) {
+      toast(err.message || 'Failed to update booking status', 'error');
+    }
   };
 
   const handleBulkAssign = async (staffId: string) => {
-    await api.patch('/bookings/bulk', {
-      ids: Array.from(selectedIds),
-      action: 'assign',
-      payload: { staffId },
-    });
-    setSelectedIds(new Set());
-    setBulkAssignModal(false);
-    load();
+    try {
+      await api.patch('/bookings/bulk', {
+        ids: Array.from(selectedIds),
+        action: 'assign',
+        payload: { staffId },
+      });
+      setSelectedIds(new Set());
+      setBulkAssignModal(false);
+      load();
+    } catch (err: any) {
+      toast(err.message || 'Failed to assign staff', 'error');
+    }
   };
 
   const handleUpdated = () => {

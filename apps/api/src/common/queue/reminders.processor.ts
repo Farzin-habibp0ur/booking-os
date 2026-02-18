@@ -19,10 +19,17 @@ export class RemindersProcessor extends WorkerHost {
     const reminderService = (this as any).moduleRef?.get(ReminderService);
 
     if (!reminderService) {
-      this.logger.warn('ReminderService not available — skipping job');
-      return;
+      throw new Error('ReminderService not available — cannot process job');
     }
 
-    await reminderService.processPendingReminders();
+    try {
+      await reminderService.processPendingReminders();
+    } catch (err) {
+      this.logger.error(
+        `Reminder processing failed for job ${job.id}: ${(err as Error).message}`,
+        (err as Error).stack,
+      );
+      throw err;
+    }
   }
 }

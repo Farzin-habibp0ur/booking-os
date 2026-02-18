@@ -1,10 +1,12 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma.service';
 import { NotificationService } from '../notification/notification.service';
 import { CalendarSyncService } from '../calendar-sync/calendar-sync.service';
 
 @Injectable()
 export class RecurringService {
+  private readonly logger = new Logger(RecurringService.name);
+
   constructor(
     private prisma: PrismaService,
     private notificationService: NotificationService,
@@ -174,8 +176,24 @@ export class RecurringService {
 
     // Fire-and-forget notifications and calendar sync per occurrence
     for (const booking of result.bookings) {
-      this.notificationService.sendBookingConfirmation(booking).catch(() => {});
-      this.calendarSyncService.syncBookingToCalendar(booking, 'create').catch(() => {});
+      this.notificationService
+        .sendBookingConfirmation(booking)
+        .catch((err) =>
+          this.logger.warn(`Failed to send confirmation for recurring booking ${booking.id}`, {
+            bookingId: booking.id,
+            seriesId: result.series.id,
+            error: err.message,
+          }),
+        );
+      this.calendarSyncService
+        .syncBookingToCalendar(booking, 'create')
+        .catch((err) =>
+          this.logger.warn(`Failed to sync recurring booking ${booking.id} to calendar`, {
+            bookingId: booking.id,
+            seriesId: result.series.id,
+            error: err.message,
+          }),
+        );
     }
 
     return {
@@ -248,7 +266,15 @@ export class RecurringService {
         where: { bookingId: booking.id, status: 'PENDING' },
         data: { status: 'CANCELLED' },
       });
-      this.calendarSyncService.syncBookingToCalendar(booking, 'cancel').catch(() => {});
+      this.calendarSyncService
+        .syncBookingToCalendar(booking, 'cancel')
+        .catch((err) =>
+          this.logger.warn(`Failed to sync cancellation for recurring booking ${booking.id}`, {
+            bookingId: booking.id,
+            seriesId: seriesId,
+            error: err.message,
+          }),
+        );
     }
 
     return { cancelled: bookingsToCancel.length };

@@ -1,4 +1,5 @@
 import { Test } from '@nestjs/testing';
+import { NotFoundException } from '@nestjs/common';
 import { ConversationService } from './conversation.service';
 import { PrismaService } from '../../common/prisma.service';
 import { createMockPrisma } from '../../test/mocks';
@@ -454,21 +455,21 @@ describe('ConversationService', () => {
       prisma.conversation.findMany.mockResolvedValue([{ id: 'conv1' }] as any);
       prisma.conversation.update.mockResolvedValue({} as any);
 
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      const logSpy = jest.spyOn((service as any).logger, 'log').mockImplementation();
       await service.handleSnoozedConversations();
 
-      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Reopened 1'));
-      consoleSpy.mockRestore();
+      expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('Reopened 1'));
+      logSpy.mockRestore();
     });
 
     it('does not log when count is 0', async () => {
       prisma.conversation.findMany.mockResolvedValue([]);
 
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      const logSpy = jest.spyOn((service as any).logger, 'log').mockImplementation();
       await service.handleSnoozedConversations();
 
-      expect(consoleSpy).not.toHaveBeenCalled();
-      consoleSpy.mockRestore();
+      expect(logSpy).not.toHaveBeenCalled();
+      logSpy.mockRestore();
     });
   });
 
@@ -507,11 +508,11 @@ describe('ConversationService', () => {
       expect(result).toEqual(note);
     });
 
-    it('throws when conversation not found', async () => {
+    it('throws NotFoundException when conversation not found', async () => {
       prisma.conversation.findFirst.mockResolvedValue(null);
 
       await expect(service.addNote('biz1', 'conv1', 'staff1', 'text')).rejects.toThrow(
-        'Conversation not found',
+        NotFoundException,
       );
     });
   });
@@ -528,12 +529,10 @@ describe('ConversationService', () => {
       expect(prisma.conversationNote.delete).toHaveBeenCalledWith({ where: { id: 'n1' } });
     });
 
-    it('throws when conversation not found', async () => {
+    it('throws NotFoundException when conversation not found', async () => {
       prisma.conversation.findFirst.mockResolvedValue(null);
 
-      await expect(service.deleteNote('biz1', 'conv1', 'n1')).rejects.toThrow(
-        'Conversation not found',
-      );
+      await expect(service.deleteNote('biz1', 'conv1', 'n1')).rejects.toThrow(NotFoundException);
     });
   });
 

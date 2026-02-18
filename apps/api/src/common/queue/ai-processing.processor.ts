@@ -23,10 +23,17 @@ export class AiProcessingProcessor extends WorkerHost {
     const aiService = (this as any).moduleRef?.get(AiService);
 
     if (!aiService) {
-      this.logger.warn('AiService not available — skipping job');
-      return;
+      throw new Error('AiService not available — cannot process job');
     }
 
-    await aiService.processInboundMessage(businessId, conversationId, messageId, messageBody);
+    try {
+      await aiService.processInboundMessage(businessId, conversationId, messageId, messageBody);
+    } catch (err) {
+      this.logger.error(
+        `AI processing failed for job ${job.id}, conversation ${conversationId}: ${(err as Error).message}`,
+        (err as Error).stack,
+      );
+      throw err;
+    }
   }
 }

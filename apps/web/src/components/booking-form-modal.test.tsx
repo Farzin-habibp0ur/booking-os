@@ -44,6 +44,11 @@ jest.mock('@/lib/api', () => ({
   },
 }));
 
+const mockToast = jest.fn();
+jest.mock('@/lib/toast', () => ({
+  useToast: () => ({ toast: mockToast }),
+}));
+
 jest.mock('@/lib/use-focus-trap', () => ({
   useFocusTrap: jest.fn(),
 }));
@@ -142,5 +147,46 @@ describe('BookingFormModal — VIP Override', () => {
 
     const newCheckbox = screen.getByText('VIP Override').closest('label')!.querySelector('input')!;
     expect(newCheckbox).not.toBeChecked();
+  });
+});
+
+describe('BookingFormModal — Error Toasts', () => {
+  it('shows error toast when services API fails on load', async () => {
+    mockGet.mockImplementation((path: string) => {
+      if (path === '/services') return Promise.reject(new Error('Network error'));
+      return Promise.resolve([]);
+    });
+
+    render(<BookingFormModal {...defaultProps} />);
+
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith(expect.any(String), 'error');
+    });
+  });
+
+  it('shows error toast when staff API fails on load', async () => {
+    mockGet.mockImplementation((path: string) => {
+      if (path === '/staff') return Promise.reject(new Error('Network error'));
+      return Promise.resolve([]);
+    });
+
+    render(<BookingFormModal {...defaultProps} />);
+
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith(expect.any(String), 'error');
+    });
+  });
+
+  it('shows error toast when customers API fails on load', async () => {
+    mockGet.mockImplementation((path: string) => {
+      if (path === '/customers?pageSize=100') return Promise.reject(new Error('Network error'));
+      return Promise.resolve([]);
+    });
+
+    render(<BookingFormModal {...defaultProps} />);
+
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith(expect.any(String), 'error');
+    });
   });
 });

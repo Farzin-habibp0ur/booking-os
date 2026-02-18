@@ -44,8 +44,9 @@ jest.mock('@/lib/vertical-pack', () => ({
 }));
 
 // Mock toast
+const mockToast = jest.fn();
 jest.mock('@/lib/toast', () => ({
-  useToast: () => ({ toast: jest.fn() }),
+  useToast: () => ({ toast: mockToast }),
   ToastProvider: ({ children }: any) => children,
 }));
 
@@ -1381,6 +1382,87 @@ describe('BookingsPage', () => {
     });
 
     consoleSpy.mockRestore();
+  });
+
+  it('shows error toast when bookings API fails', async () => {
+    mockApi.get.mockImplementation((path: string) => {
+      if (path.startsWith('/bookings')) return Promise.reject(new Error('Network error'));
+      return Promise.resolve([]);
+    });
+
+    render(<BookingsPage />);
+
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith(expect.any(String), 'error');
+    });
+  });
+
+  it('shows error toast when bulk status change fails', async () => {
+    const user = userEvent.setup();
+    mockApi.get.mockResolvedValue({
+      data: [createBooking({ id: 'b1', status: 'PENDING' })],
+      total: 1,
+    });
+    mockApi.patch.mockRejectedValueOnce(new Error('Bulk update failed'));
+
+    render(<BookingsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('John Doe')).toBeInTheDocument();
+    });
+
+    const checkboxes = screen.getAllByRole('checkbox');
+    await act(async () => {
+      await user.click(checkboxes[1]);
+    });
+
+    await act(async () => {
+      await user.click(screen.getByTestId('bulk-action-change-status'));
+    });
+
+    await act(async () => {
+      await user.click(screen.getByRole('button', { name: 'status.confirmed' }));
+    });
+
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith(expect.any(String), 'error');
+    });
+  });
+
+  it('shows error toast when bulk assign fails', async () => {
+    const user = userEvent.setup();
+    mockApi.get.mockImplementation((path: string) => {
+      if (path === '/staff') return Promise.resolve(mockStaff);
+      return Promise.resolve({ data: [createBooking({ id: 'b1' })], total: 1 });
+    });
+    mockApi.patch.mockRejectedValueOnce(new Error('Assign failed'));
+
+    render(<BookingsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('John Doe')).toBeInTheDocument();
+    });
+
+    const checkboxes = screen.getAllByRole('checkbox');
+    await act(async () => {
+      await user.click(checkboxes[1]);
+    });
+
+    await act(async () => {
+      await user.click(screen.getByTestId('bulk-action-assign-staff'));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Mike')).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      await user.click(screen.getByText('Mike'));
+    });
+
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith(expect.any(String), 'error');
+    });
   });
 
   // ─── Multiple Status Rendering ──────────────────────────────

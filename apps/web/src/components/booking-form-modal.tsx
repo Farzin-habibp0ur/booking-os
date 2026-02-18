@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth';
 import { X, Clock, User, AlertCircle, Repeat, MapPin, ShieldAlert } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useI18n } from '@/lib/i18n';
+import { useToast } from '@/lib/toast';
 import { useFocusTrap } from '@/lib/use-focus-trap';
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -69,6 +70,7 @@ export default function BookingFormModal({
   const [error, setError] = useState('');
   const modalRef = useRef<HTMLDivElement>(null);
   useFocusTrap(modalRef, isOpen);
+  const { toast } = useToast();
   const { user } = useAuth();
   const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
 
@@ -83,14 +85,23 @@ export default function BookingFormModal({
 
   useEffect(() => {
     if (!isOpen) return;
-    api.get<any>('/services').then((res) => setServices(res.data || res || []));
-    api.get<any[]>('/staff').then(setStaff);
+    api
+      .get<any>('/services')
+      .then((res) => setServices(res.data || res || []))
+      .catch((err: any) => toast(err.message || 'Failed to load services', 'error'));
+    api
+      .get<any[]>('/staff')
+      .then(setStaff)
+      .catch((err: any) => toast(err.message || 'Failed to load staff', 'error'));
     api
       .get<any[]>('/locations')
       .then(setLocations)
       .catch(() => setLocations([]));
     if (!customerId) {
-      api.get<any>('/customers?pageSize=100').then((res) => setCustomers(res.data || []));
+      api
+        .get<any>('/customers?pageSize=100')
+        .then((res) => setCustomers(res.data || []))
+        .catch((err: any) => toast(err.message || 'Failed to load customers', 'error'));
     }
   }, [isOpen]);
 

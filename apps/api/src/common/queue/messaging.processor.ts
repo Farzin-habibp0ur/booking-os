@@ -21,11 +21,18 @@ export class MessagingProcessor extends WorkerHost {
     const messagingService = (this as any).moduleRef?.get(MessagingService);
 
     if (!messagingService) {
-      this.logger.warn('MessagingService not available — skipping job');
-      return;
+      throw new Error('MessagingService not available — cannot process job');
     }
 
-    const provider = messagingService.getProvider();
-    await provider.sendMessage({ to, body, businessId });
+    try {
+      const provider = messagingService.getProvider();
+      await provider.sendMessage({ to, body, businessId });
+    } catch (err) {
+      this.logger.error(
+        `Messaging job ${job.id} failed for ${to}: ${(err as Error).message}`,
+        (err as Error).stack,
+      );
+      throw err;
+    }
   }
 }

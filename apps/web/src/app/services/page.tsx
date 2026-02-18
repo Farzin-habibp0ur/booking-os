@@ -6,6 +6,7 @@ import { Plus, Pencil, Clock, DollarSign, Shield, Timer } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { usePack } from '@/lib/vertical-pack';
 import { useI18n } from '@/lib/i18n';
+import { useToast } from '@/lib/toast';
 
 export default function ServicesPage() {
   const [services, setServices] = useState<any[]>([]);
@@ -14,8 +15,13 @@ export default function ServicesPage() {
   const [showInactive, setShowInactive] = useState(false);
   const pack = usePack();
   const { t } = useI18n();
+  const { toast } = useToast();
 
-  const load = () => api.get<any[]>('/services').then(setServices);
+  const load = () =>
+    api
+      .get<any[]>('/services')
+      .then(setServices)
+      .catch((err: any) => toast(err.message || 'Failed to load services', 'error'));
 
   useEffect(() => {
     load();
@@ -25,8 +31,12 @@ export default function ServicesPage() {
   const categories = [...new Set(services.map((s) => s.category))];
 
   const toggleActive = async (svc: any) => {
-    await api.patch(`/services/${svc.id}`, { isActive: !svc.isActive });
-    load();
+    try {
+      await api.patch(`/services/${svc.id}`, { isActive: !svc.isActive });
+      load();
+    } catch (err: any) {
+      toast(err.message || 'Failed to update service', 'error');
+    }
   };
 
   return (

@@ -229,7 +229,12 @@ export class BookingService {
 
     // Fire-and-forget notification
     if (isDepositRequired) {
-      this.notificationService.sendDepositRequest(booking).catch(() => {});
+      this.notificationService.sendDepositRequest(booking).catch((err) =>
+        this.logger.warn(`Failed to send deposit request for booking ${booking.id}`, {
+          bookingId: booking.id,
+          error: err.message,
+        }),
+      );
       try {
         await this.prisma.booking.update({
           where: { id: booking.id },
@@ -239,14 +244,29 @@ export class BookingService {
         this.logger.error(`Failed to log deposit request for booking ${booking.id}`, err);
       }
     } else {
-      this.notificationService.sendBookingConfirmation(booking).catch(() => {});
+      this.notificationService.sendBookingConfirmation(booking).catch((err) =>
+        this.logger.warn(`Failed to send booking confirmation for booking ${booking.id}`, {
+          bookingId: booking.id,
+          error: err.message,
+        }),
+      );
     }
 
     // Fire-and-forget calendar sync
-    this.calendarSyncService.syncBookingToCalendar(booking, 'create').catch(() => {});
+    this.calendarSyncService.syncBookingToCalendar(booking, 'create').catch((err) =>
+      this.logger.warn(`Failed to sync booking ${booking.id} to calendar`, {
+        bookingId: booking.id,
+        error: err.message,
+      }),
+    );
 
     // Campaign attribution — link booking to recent campaign send
-    this.attributeCampaignSend(booking.customerId, booking.id).catch(() => {});
+    this.attributeCampaignSend(booking.customerId, booking.id).catch((err) =>
+      this.logger.warn(`Failed to attribute campaign send for booking ${booking.id}`, {
+        bookingId: booking.id,
+        error: err.message,
+      }),
+    );
 
     return booking;
   }
@@ -286,7 +306,12 @@ export class BookingService {
     });
 
     // Fire-and-forget calendar sync
-    this.calendarSyncService.syncBookingToCalendar(result, 'update').catch(() => {});
+    this.calendarSyncService.syncBookingToCalendar(result, 'update').catch((err) =>
+      this.logger.warn(`Failed to sync booking ${result.id} to calendar on update`, {
+        bookingId: result.id,
+        error: err.message,
+      }),
+    );
 
     return result;
   }
@@ -435,7 +460,12 @@ export class BookingService {
 
     // Side effects outside transaction
     if (status === 'CONFIRMED' && previousStatus === 'PENDING_DEPOSIT') {
-      this.notificationService.sendBookingConfirmation(booking).catch(() => {});
+      this.notificationService.sendBookingConfirmation(booking).catch((err) =>
+        this.logger.warn(`Failed to send confirmation after deposit override for booking ${id}`, {
+          bookingId: id,
+          error: err.message,
+        }),
+      );
     }
 
     if (['CANCELLED', 'NO_SHOW'].includes(status)) {
@@ -444,12 +474,27 @@ export class BookingService {
         data: { status: 'CANCELLED' },
       });
 
-      this.calendarSyncService.syncBookingToCalendar(booking, 'cancel').catch(() => {});
+      this.calendarSyncService.syncBookingToCalendar(booking, 'cancel').catch((err) =>
+        this.logger.warn(`Failed to sync cancellation to calendar for booking ${id}`, {
+          bookingId: id,
+          error: err.message,
+        }),
+      );
 
       if (status === 'CANCELLED') {
-        this.notificationService.sendCancellationNotification(booking).catch(() => {});
+        this.notificationService.sendCancellationNotification(booking).catch((err) =>
+          this.logger.warn(`Failed to send cancellation notification for booking ${id}`, {
+            bookingId: id,
+            error: err.message,
+          }),
+        );
         if (this.waitlistService) {
-          this.waitlistService.offerOpenSlot(booking).catch(() => {});
+          this.waitlistService.offerOpenSlot(booking).catch((err) =>
+            this.logger.warn(`Failed to offer waitlist slot after cancellation of booking ${id}`, {
+              bookingId: id,
+              error: err.message,
+            }),
+          );
         }
       }
     }
@@ -521,7 +566,13 @@ export class BookingService {
     });
 
     // Fire-and-forget kanban status notification
-    this.notificationService.sendKanbanStatusUpdate(updated, kanbanStatus).catch(() => {});
+    this.notificationService.sendKanbanStatusUpdate(updated, kanbanStatus).catch((err) =>
+      this.logger.warn(`Failed to send kanban status notification for booking ${id}`, {
+        bookingId: id,
+        kanbanStatus,
+        error: err.message,
+      }),
+    );
 
     this.logger.log(`Kanban status updated: booking=${id} status=${kanbanStatus}`);
 
@@ -617,7 +668,12 @@ export class BookingService {
     const rescheduleLink = `${webUrl}/manage/reschedule/${token}`;
 
     // Send notification
-    this.notificationService.sendRescheduleLink(booking, rescheduleLink).catch(() => {});
+    this.notificationService.sendRescheduleLink(booking, rescheduleLink).catch((err) =>
+      this.logger.warn(`Failed to send reschedule link for booking ${id}`, {
+        bookingId: id,
+        error: err.message,
+      }),
+    );
 
     // Append to selfServeLog
     const existingFields = (booking.customFields as any) || {};
@@ -669,7 +725,12 @@ export class BookingService {
     const cancelLink = `${webUrl}/manage/cancel/${token}`;
 
     // Send notification
-    this.notificationService.sendCancelLink(booking, cancelLink).catch(() => {});
+    this.notificationService.sendCancelLink(booking, cancelLink).catch((err) =>
+      this.logger.warn(`Failed to send cancel link for booking ${id}`, {
+        bookingId: id,
+        error: err.message,
+      }),
+    );
 
     // Append to selfServeLog
     const existingFields = (booking.customFields as any) || {};

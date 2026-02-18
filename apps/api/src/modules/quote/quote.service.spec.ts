@@ -372,4 +372,22 @@ describe('QuoteService', () => {
       await expect(service.approveQuote('abc123')).rejects.toThrow(NotFoundException);
     });
   });
+
+  describe('side-effect resilience', () => {
+    it('create succeeds when quote approval notification fails', async () => {
+      prisma.booking.findFirst.mockResolvedValue(mockBooking as any);
+      prisma.quote.create.mockResolvedValue(mockQuote as any);
+      prisma.quote.update.mockResolvedValue(mockQuote as any);
+      mockNotificationService.sendQuoteApprovalRequest.mockRejectedValue(new Error('SMTP down'));
+
+      const result = await service.create('biz1', {
+        bookingId: 'b1',
+        description: 'Test quote',
+        totalAmount: 100,
+      });
+
+      expect(result.id).toBe('q1');
+      expect(mockNotificationService.sendQuoteApprovalRequest).toHaveBeenCalled();
+    });
+  });
 });

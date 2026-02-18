@@ -44,8 +44,9 @@ jest.mock('@/lib/vertical-pack', () => ({
 }));
 
 // Mock toast
+const mockToast = jest.fn();
 jest.mock('@/lib/toast', () => ({
-  useToast: () => ({ toast: jest.fn() }),
+  useToast: () => ({ toast: mockToast }),
   ToastProvider: ({ children }: any) => children,
 }));
 
@@ -396,6 +397,36 @@ describe('WaitlistPage', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('tooltip-waitlist-intro')).toBeInTheDocument();
+    });
+  });
+
+  // ─── Error Toast Tests ─────────────────────────────────────
+
+  it('shows error toast when waitlist API fails', async () => {
+    mockApi.get.mockImplementation((path: string) => {
+      if (path.startsWith('/waitlist')) return Promise.reject(new Error('Network error'));
+      if (path === '/services') return Promise.resolve(mockServices);
+      return Promise.resolve({});
+    });
+
+    render(<WaitlistPage />);
+
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith(expect.any(String), 'error');
+    });
+  });
+
+  it('shows error toast when services API fails on waitlist page', async () => {
+    mockApi.get.mockImplementation((path: string) => {
+      if (path.startsWith('/waitlist')) return Promise.resolve([]);
+      if (path === '/services') return Promise.reject(new Error('Network error'));
+      return Promise.resolve({});
+    });
+
+    render(<WaitlistPage />);
+
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith(expect.any(String), 'error');
     });
   });
 });

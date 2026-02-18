@@ -1,5 +1,6 @@
 import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
+import { InternalServerErrorException } from '@nestjs/common';
 import { MessagingService } from './messaging.service';
 
 describe('MessagingService', () => {
@@ -71,7 +72,7 @@ describe('MessagingService', () => {
         WHATSAPP_ACCESS_TOKEN: 'token',
       });
 
-      expect(() => service.getMockProvider()).toThrow('Mock provider not available');
+      expect(() => service.getMockProvider()).toThrow(InternalServerErrorException);
     });
   });
 

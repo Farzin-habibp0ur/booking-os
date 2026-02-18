@@ -44,8 +44,9 @@ jest.mock('@/lib/vertical-pack', () => ({
 }));
 
 // Mock toast
+const mockToast = jest.fn();
 jest.mock('@/lib/toast', () => ({
-  useToast: () => ({ toast: jest.fn() }),
+  useToast: () => ({ toast: mockToast }),
   ToastProvider: ({ children }: any) => children,
 }));
 
@@ -570,6 +571,132 @@ describe('AutomationsPage', () => {
       expect(mockApi.get).toHaveBeenCalledWith('/automations/playbooks');
       expect(mockApi.get).toHaveBeenCalledWith('/automations/rules');
       expect(mockApi.get).toHaveBeenCalledWith('/automations/logs?pageSize=50');
+    });
+  });
+
+  // ─── Error Toast Tests ─────────────────────────────────────
+
+  it('shows error toast when playbooks API fails', async () => {
+    mockApi.get.mockImplementation((path: string) => {
+      if (path === '/automations/playbooks') return Promise.reject(new Error('Network error'));
+      if (path === '/automations/rules') return Promise.resolve(mockRules);
+      if (path === '/automations/logs?pageSize=50') return Promise.resolve(mockLogs);
+      return Promise.resolve({});
+    });
+
+    render(<AutomationsPage />);
+
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith(expect.any(String), 'error');
+    });
+  });
+
+  it('shows error toast when rules API fails', async () => {
+    mockApi.get.mockImplementation((path: string) => {
+      if (path === '/automations/playbooks') return Promise.resolve(mockPlaybooks);
+      if (path === '/automations/rules') return Promise.reject(new Error('Network error'));
+      if (path === '/automations/logs?pageSize=50') return Promise.resolve(mockLogs);
+      return Promise.resolve({});
+    });
+
+    render(<AutomationsPage />);
+
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith(expect.any(String), 'error');
+    });
+  });
+
+  it('shows error toast when logs API fails', async () => {
+    mockApi.get.mockImplementation((path: string) => {
+      if (path === '/automations/playbooks') return Promise.resolve(mockPlaybooks);
+      if (path === '/automations/rules') return Promise.resolve(mockRules);
+      if (path === '/automations/logs?pageSize=50')
+        return Promise.reject(new Error('Network error'));
+      return Promise.resolve({});
+    });
+
+    render(<AutomationsPage />);
+
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith(expect.any(String), 'error');
+    });
+  });
+
+  it('shows error toast when toggling playbook fails', async () => {
+    const user = userEvent.setup();
+    setupDefaultMocks();
+    mockApi.post.mockRejectedValueOnce(new Error('Toggle failed'));
+
+    render(<AutomationsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Enable')).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      await user.click(screen.getByText('Enable'));
+    });
+
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith(expect.any(String), 'error');
+    });
+  });
+
+  it('shows error toast when deleting rule fails', async () => {
+    const user = userEvent.setup();
+    setupDefaultMocks();
+    mockApi.del.mockRejectedValueOnce(new Error('Delete failed'));
+
+    render(<AutomationsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Playbooks')).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      await user.click(screen.getByText('Custom Rules'));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Tag VIP')).toBeInTheDocument();
+    });
+
+    const trashButtons = screen.getAllByTestId('trash2-icon');
+    await act(async () => {
+      await user.click(trashButtons[0]);
+    });
+
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith(expect.any(String), 'error');
+    });
+  });
+
+  it('shows error toast when toggling rule fails', async () => {
+    const user = userEvent.setup();
+    setupDefaultMocks();
+    mockApi.patch.mockRejectedValueOnce(new Error('Toggle failed'));
+
+    render(<AutomationsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Playbooks')).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      await user.click(screen.getByText('Custom Rules'));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Tag VIP')).toBeInTheDocument();
+    });
+
+    const toggleIcons = screen.getAllByTestId('toggle-right-icon');
+    await act(async () => {
+      await user.click(toggleIcons[0]);
+    });
+
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith(expect.any(String), 'error');
     });
   });
 });

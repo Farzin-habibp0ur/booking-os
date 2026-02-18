@@ -151,7 +151,7 @@ export class CustomerService {
         });
         created++;
       } catch (err: any) {
-        this.logger.error(`Bulk create error for ${c.phone}: ${err.message}`);
+        this.logger.error(`Bulk create error for ${c.phone}: ${err.message}`, err.stack);
         errors++;
       }
     }
@@ -213,7 +213,10 @@ export class CustomerService {
           }
         }
       } catch (err: any) {
-        this.logger.error(`Profile extraction failed for conversation ${conv.id}: ${err.message}`);
+        this.logger.error(
+          `Profile extraction failed for conversation ${conv.id}: ${err.message}`,
+          err.stack,
+        );
       }
     }
 

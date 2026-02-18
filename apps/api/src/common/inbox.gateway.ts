@@ -95,8 +95,11 @@ export class InboxGateway implements OnGatewayConnection, OnGatewayDisconnect, O
     }
   }
 
-  handleDisconnect(_client: Socket) {
-    // Socket.IO handles room cleanup automatically
+  handleDisconnect(client: Socket) {
+    const user = (client as any).user;
+    this.logger.log(
+      `Client disconnected: ${client.id}${user?.businessId ? ` (business: ${user.businessId})` : ''}`,
+    );
   }
 
   // Emit events to all clients in a business room

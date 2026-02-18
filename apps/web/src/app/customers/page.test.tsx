@@ -360,7 +360,6 @@ describe('CustomersPage', () => {
   // =============================
   describe('error state', () => {
     it('handles API error gracefully (no crash)', async () => {
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
       setupApiReject();
       render(<CustomersPage />);
 
@@ -368,9 +367,15 @@ describe('CustomersPage', () => {
         // After error, loading should be false and empty state should show
         expect(screen.getByTestId('empty-state')).toBeInTheDocument();
       });
+    });
 
-      expect(consoleSpy).toHaveBeenCalled();
-      consoleSpy.mockRestore();
+    it('shows error toast when customers API fails', async () => {
+      setupApiReject();
+      render(<CustomersPage />);
+
+      await waitFor(() => {
+        expect(mockToast).toHaveBeenCalledWith(expect.any(String), 'error');
+      });
     });
   });
 

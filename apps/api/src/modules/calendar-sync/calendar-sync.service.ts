@@ -235,11 +235,21 @@ export class CalendarSyncService {
           data: { lastSyncedAt: new Date(), lastSyncError: null },
         });
       } catch (error) {
-        this.logger.error(`Calendar sync failed for connection ${connection.id}: ${error}`);
-        await this.prisma.calendarConnection.update({
-          where: { id: connection.id },
-          data: { lastSyncError: error instanceof Error ? error.message : String(error) },
-        });
+        this.logger.error(
+          `Calendar sync failed for connection ${connection.id}: ${error}`,
+          (error as Error).stack,
+        );
+        try {
+          await this.prisma.calendarConnection.update({
+            where: { id: connection.id },
+            data: { lastSyncError: error instanceof Error ? error.message : String(error) },
+          });
+        } catch (updateErr) {
+          this.logger.error(
+            `Failed to persist lastSyncError for connection ${connection.id}: ${(updateErr as Error).message}`,
+            (updateErr as Error).stack,
+          );
+        }
       }
     }
   }

@@ -170,15 +170,22 @@ export class WaitlistService {
     };
 
     for (const entry of entries) {
-      await this.prisma.waitlistEntry.update({
-        where: { id: entry.id },
-        data: {
-          status: 'OFFERED',
-          offeredAt: now,
-          offerExpiresAt,
-          offeredSlot,
-        },
-      });
+      try {
+        await this.prisma.waitlistEntry.update({
+          where: { id: entry.id },
+          data: {
+            status: 'OFFERED',
+            offeredAt: now,
+            offerExpiresAt,
+            offeredSlot,
+          },
+        });
+      } catch (err: any) {
+        this.logger.warn(
+          `Failed to offer slot to waitlist entry ${entry.id} for service ${booking.serviceId}`,
+          { entryId: entry.id, error: err.message },
+        );
+      }
     }
 
     this.logger.log(
@@ -237,17 +244,24 @@ export class WaitlistService {
 
   @Cron('* * * * *')
   async expireStaleOffers() {
-    const now = new Date();
-    const expired = await this.prisma.waitlistEntry.updateMany({
-      where: {
-        status: 'OFFERED',
-        offerExpiresAt: { lt: now },
-      },
-      data: { status: 'EXPIRED' },
-    });
+    try {
+      const now = new Date();
+      const expired = await this.prisma.waitlistEntry.updateMany({
+        where: {
+          status: 'OFFERED',
+          offerExpiresAt: { lt: now },
+        },
+        data: { status: 'EXPIRED' },
+      });
 
-    if (expired.count > 0) {
-      this.logger.log(`Expired ${expired.count} stale waitlist offers`);
+      if (expired.count > 0) {
+        this.logger.log(`Expired ${expired.count} stale waitlist offers`);
+      }
+    } catch (err: any) {
+      this.logger.error('Failed to expire stale waitlist offers', {
+        error: err.message,
+        stack: err.stack,
+      });
     }
   }
 

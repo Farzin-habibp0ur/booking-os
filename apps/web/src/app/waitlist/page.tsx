@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
+import { useToast } from '@/lib/toast';
 import { TableRowSkeleton, EmptyState } from '@/components/skeleton';
 import { ClipboardList, X, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
 import TooltipNudge from '@/components/tooltip-nudge';
@@ -29,6 +30,7 @@ export default function WaitlistPage() {
   const [serviceFilter, setServiceFilter] = useState('');
   const [services, setServices] = useState<any[]>([]);
   const [activeViewId, setActiveViewId] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const currentFilters = { status: statusFilter, serviceId: serviceFilter };
 
@@ -52,7 +54,7 @@ export default function WaitlistPage() {
     api
       .get<any[]>(`/waitlist${qs}`)
       .then(setEntries)
-      .catch(console.error)
+      .catch((err: any) => toast(err.message || 'Failed to load waitlist entries', 'error'))
       .finally(() => setLoading(false));
   };
 
@@ -61,7 +63,10 @@ export default function WaitlistPage() {
   }, [statusFilter, serviceFilter]);
 
   useEffect(() => {
-    api.get<any[]>('/services').then(setServices).catch(console.error);
+    api
+      .get<any[]>('/services')
+      .then(setServices)
+      .catch((err: any) => toast(err.message || 'Failed to load services', 'error'));
   }, []);
 
   const handleCancel = async (id: string) => {
