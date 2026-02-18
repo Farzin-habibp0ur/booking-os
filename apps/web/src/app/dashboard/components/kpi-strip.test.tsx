@@ -43,11 +43,7 @@ describe('KpiStrip', () => {
 
   it('renders agent KPIs: response time, unassigned, today bookings', () => {
     render(
-      <KpiStrip
-        mode="agent"
-        metrics={baseMetrics}
-        myBookingsToday={[{ id: '1' }, { id: '2' }]}
-      />,
+      <KpiStrip mode="agent" metrics={baseMetrics} myBookingsToday={[{ id: '1' }, { id: '2' }]} />,
     );
 
     expect(screen.getByText('dashboard.kpi_response_time')).toBeInTheDocument();

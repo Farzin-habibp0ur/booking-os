@@ -36,8 +36,22 @@ import { api } from '@/lib/api';
 import { ViewPicker } from './view-picker';
 
 const mockViews = [
-  { id: 'v1', name: 'Active Only', filters: { status: 'ACTIVE' }, isPinned: false, isDashboard: false, isShared: false },
-  { id: 'v2', name: 'Shared View', filters: { status: 'PENDING' }, isPinned: true, isDashboard: false, isShared: true },
+  {
+    id: 'v1',
+    name: 'Active Only',
+    filters: { status: 'ACTIVE' },
+    isPinned: false,
+    isDashboard: false,
+    isShared: false,
+  },
+  {
+    id: 'v2',
+    name: 'Shared View',
+    filters: { status: 'PENDING' },
+    isPinned: true,
+    isDashboard: false,
+    isShared: true,
+  },
 ];
 
 const defaultProps = {
@@ -106,11 +120,7 @@ describe('ViewPicker', () => {
     (api.get as jest.Mock).mockResolvedValue(mockViews);
 
     render(
-      <ViewPicker
-        {...defaultProps}
-        activeViewId="v1"
-        currentFilters={{ status: 'DIFFERENT' }}
-      />,
+      <ViewPicker {...defaultProps} activeViewId="v1" currentFilters={{ status: 'DIFFERENT' }} />,
     );
 
     await screen.findByText('Active Only');

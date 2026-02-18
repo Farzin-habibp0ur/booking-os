@@ -1,4 +1,14 @@
-import { Controller, Get, Patch, Body, Query, UseGuards, Inject, forwardRef, Req } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Patch,
+  Body,
+  Query,
+  UseGuards,
+  Inject,
+  forwardRef,
+  Req,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { DashboardService } from './dashboard.service';
@@ -18,11 +28,7 @@ export class DashboardController {
   ) {}
 
   @Get()
-  getDashboard(
-    @BusinessId() businessId: string,
-    @Req() req: any,
-    @Query('mode') mode?: string,
-  ) {
+  getDashboard(@BusinessId() businessId: string, @Req() req: any, @Query('mode') mode?: string) {
     return this.dashboardService.getDashboard(businessId, req.user.sub, req.user.role, mode);
   }
 

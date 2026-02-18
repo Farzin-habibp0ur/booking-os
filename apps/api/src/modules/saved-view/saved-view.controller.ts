@@ -16,11 +16,7 @@ import { SavedViewService } from './saved-view.service';
 import { BusinessId } from '../../common/decorators';
 import { TenantGuard } from '../../common/tenant.guard';
 import { RolesGuard, Roles } from '../../common/roles.guard';
-import {
-  CreateSavedViewDto,
-  UpdateSavedViewDto,
-  ShareSavedViewDto,
-} from '../../common/dto';
+import { CreateSavedViewDto, UpdateSavedViewDto, ShareSavedViewDto } from '../../common/dto';
 
 @ApiTags('Saved Views')
 @Controller('saved-views')
@@ -29,11 +25,7 @@ export class SavedViewController {
   constructor(private savedViewService: SavedViewService) {}
 
   @Get()
-  list(
-    @BusinessId() businessId: string,
-    @Req() req: any,
-    @Query('page') page: string,
-  ) {
+  list(@BusinessId() businessId: string, @Req() req: any, @Query('page') page: string) {
     return this.savedViewService.findByPage(businessId, req.user.sub, page);
   }
 
@@ -48,11 +40,7 @@ export class SavedViewController {
   }
 
   @Post()
-  create(
-    @BusinessId() businessId: string,
-    @Req() req: any,
-    @Body() body: CreateSavedViewDto,
-  ) {
+  create(@BusinessId() businessId: string, @Req() req: any, @Body() body: CreateSavedViewDto) {
     return this.savedViewService.create(businessId, req.user.sub, body);
   }
 
@@ -63,21 +51,11 @@ export class SavedViewController {
     @Param('id') id: string,
     @Body() body: UpdateSavedViewDto,
   ) {
-    return this.savedViewService.update(
-      id,
-      businessId,
-      req.user.sub,
-      req.user.role,
-      body,
-    );
+    return this.savedViewService.update(id, businessId, req.user.sub, req.user.role, body);
   }
 
   @Delete(':id')
-  remove(
-    @BusinessId() businessId: string,
-    @Req() req: any,
-    @Param('id') id: string,
-  ) {
+  remove(@BusinessId() businessId: string, @Req() req: any, @Param('id') id: string) {
     return this.savedViewService.remove(id, businessId, req.user.sub, req.user.role);
   }
 

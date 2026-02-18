@@ -238,7 +238,9 @@ export default function DashboardPage() {
                 className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-4 text-left hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
               >
                 <ViewIcon size={16} className="text-sage-600 mb-2" />
-                <p className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">{view.name}</p>
+                <p className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">
+                  {view.name}
+                </p>
                 <p className="text-xs text-slate-400 capitalize">{view.page}</p>
               </button>
             );
@@ -248,18 +250,17 @@ export default function DashboardPage() {
 
       {/* Agent/Provider: Today's Schedule (if not already in My Work) */}
       {mode === 'agent' && (
-        <TodaySchedule
-          todayBookings={data.todayBookings}
-          router={router}
-          t={t}
-        />
+        <TodaySchedule todayBookings={data.todayBookings} router={router} t={t} />
       )}
 
       {/* Admin mode: full dashboard sections */}
       {mode === 'admin' && (
         <>
           {/* Metric Cards */}
-          <div data-tour-target="dashboard-metrics" className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div
+            data-tour-target="dashboard-metrics"
+            className="grid grid-cols-2 md:grid-cols-4 gap-4"
+          >
             <MetricCard
               icon={Calendar}
               color="blue"
@@ -307,7 +308,9 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <ClipboardList size={18} className="text-sage-600" />
-                  <h2 className="font-semibold text-slate-900 dark:text-slate-100">Waitlist Backfill</h2>
+                  <h2 className="font-semibold text-slate-900 dark:text-slate-100">
+                    Waitlist Backfill
+                  </h2>
                 </div>
                 <span className="text-xs text-slate-400">Last 30 days</span>
               </div>
@@ -403,7 +406,9 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between">
                 <p className="text-sm text-slate-500">Consult → Treatment</p>
               </div>
-              <p className="text-2xl font-serif font-bold mt-1">{data.consultConversion?.rate ?? 0}%</p>
+              <p className="text-2xl font-serif font-bold mt-1">
+                {data.consultConversion?.rate ?? 0}%
+              </p>
               <p className="text-xs text-slate-400 mt-1">
                 {data.consultConversion?.converted ?? 0} of{' '}
                 {data.consultConversion?.consultCustomers ?? 0} consults converted
@@ -441,7 +446,9 @@ export default function DashboardPage() {
           {isAdmin && checklist && !checklist.allComplete && (
             <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="font-semibold text-slate-900 dark:text-slate-100">{t('dashboard.go_live_title')}</h2>
+                <h2 className="font-semibold text-slate-900 dark:text-slate-100">
+                  {t('dashboard.go_live_title')}
+                </h2>
                 <span className="text-xs text-slate-500">
                   {t('dashboard.go_live_progress', {
                     done: checklist.items.filter((i: any) => i.done).length,
@@ -496,7 +503,9 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <Target size={18} className="text-lavender-600" />
-                  <h2 className="font-semibold text-slate-900 dark:text-slate-100">{t('dashboard.milestone_title')}</h2>
+                  <h2 className="font-semibold text-slate-900 dark:text-slate-100">
+                    {t('dashboard.milestone_title')}
+                  </h2>
                 </div>
                 <span className="text-xs text-slate-500">
                   {t('dashboard.milestone_progress', {
@@ -541,7 +550,9 @@ export default function DashboardPage() {
             {/* Today's Appointments */}
             <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft">
               <div className="flex items-center justify-between p-6 pb-4">
-                <h2 className="font-semibold text-slate-900 dark:text-slate-100">{t('dashboard.todays_appointments')}</h2>
+                <h2 className="font-semibold text-slate-900 dark:text-slate-100">
+                  {t('dashboard.todays_appointments')}
+                </h2>
                 <button
                   onClick={() => router.push('/calendar')}
                   className="text-xs text-sage-600 hover:text-sage-700 flex items-center gap-1 transition-colors"
@@ -671,9 +682,14 @@ function TodaySchedule({
   t: (key: string, params?: any) => string;
 }) {
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft" data-testid="today-schedule">
+    <div
+      className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft"
+      data-testid="today-schedule"
+    >
       <div className="flex items-center justify-between p-6 pb-4">
-        <h2 className="font-semibold text-slate-900 dark:text-slate-100">{t('dashboard.todays_appointments')}</h2>
+        <h2 className="font-semibold text-slate-900 dark:text-slate-100">
+          {t('dashboard.todays_appointments')}
+        </h2>
         <button
           onClick={() => router.push('/calendar')}
           className="text-xs text-sage-600 hover:text-sage-700 flex items-center gap-1 transition-colors"
@@ -704,7 +720,9 @@ function TodaySchedule({
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-slate-800 dark:text-slate-200">{b.customer?.name}</p>
+                    <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                      {b.customer?.name}
+                    </p>
                     <p className="text-xs text-slate-500">
                       {b.service?.name}
                       {b.staff ? ` · ${b.staff.name}` : ''}

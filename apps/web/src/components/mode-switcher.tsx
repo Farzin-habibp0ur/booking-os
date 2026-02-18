@@ -13,7 +13,11 @@ export default function ModeSwitcher() {
   if (availableModes.length <= 1) return null;
 
   return (
-    <div className="flex gap-1 px-2 py-1.5 bg-slate-50 dark:bg-slate-800/50 rounded-xl" role="tablist" aria-label="App mode">
+    <div
+      className="flex gap-1 px-2 py-1.5 bg-slate-50 dark:bg-slate-800/50 rounded-xl"
+      role="tablist"
+      aria-label="App mode"
+    >
       {availableModes.map((m) => (
         <button
           key={m.key}

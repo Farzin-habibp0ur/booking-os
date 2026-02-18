@@ -268,7 +268,10 @@ function ShellInner({ children }: { children: ReactNode }) {
       </nav>
       {/* Sidebar Pinned Views */}
       {pinnedViews.length > 0 && (
-        <div className="px-2 pb-2 border-t border-slate-100 dark:border-slate-800 pt-2" data-testid="pinned-views-section">
+        <div
+          className="px-2 pb-2 border-t border-slate-100 dark:border-slate-800 pt-2"
+          data-testid="pinned-views-section"
+        >
           <p className="px-3 py-1 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
             {t('saved_views.views_label')}
           </p>

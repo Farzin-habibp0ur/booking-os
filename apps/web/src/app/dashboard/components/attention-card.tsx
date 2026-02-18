@@ -2,13 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useI18n } from '@/lib/i18n';
-import {
-  DollarSign,
-  MessageSquare,
-  Calendar,
-  ArrowRight,
-  AlertTriangle,
-} from 'lucide-react';
+import { DollarSign, MessageSquare, Calendar, ArrowRight, AlertTriangle } from 'lucide-react';
 
 function timeAgo(date: Date, t: (key: string, params?: any) => string): string {
   const mins = Math.floor((Date.now() - date.getTime()) / 60000);
@@ -66,7 +60,9 @@ export function AttentionCards({ attentionNeeded }: AttentionCardsProps) {
             <div className="space-y-2 mb-3">
               {attentionNeeded.depositPendingBookings.slice(0, 3).map((b: any) => (
                 <div key={b.id} className="flex items-center justify-between text-xs">
-                  <span className="text-slate-700 dark:text-slate-300 truncate">{b.customer?.name}</span>
+                  <span className="text-slate-700 dark:text-slate-300 truncate">
+                    {b.customer?.name}
+                  </span>
                   <span className="text-slate-400">{b.service?.name}</span>
                 </div>
               ))}
@@ -97,7 +93,9 @@ export function AttentionCards({ attentionNeeded }: AttentionCardsProps) {
             <div className="space-y-2 mb-3">
               {attentionNeeded.overdueConversations.slice(0, 3).map((c: any) => (
                 <div key={c.id} className="flex items-center justify-between text-xs">
-                  <span className="text-slate-700 dark:text-slate-300 truncate">{c.customer?.name}</span>
+                  <span className="text-slate-700 dark:text-slate-300 truncate">
+                    {c.customer?.name}
+                  </span>
                   <span className="text-slate-400">
                     {c.lastMessageAt &&
                       t('dashboard.waiting_since', {
@@ -133,7 +131,9 @@ export function AttentionCards({ attentionNeeded }: AttentionCardsProps) {
             <div className="space-y-2 mb-3">
               {attentionNeeded.tomorrowBookings.slice(0, 3).map((b: any) => (
                 <div key={b.id} className="flex items-center justify-between text-xs">
-                  <span className="text-slate-700 dark:text-slate-300 truncate">{b.customer?.name}</span>
+                  <span className="text-slate-700 dark:text-slate-300 truncate">
+                    {b.customer?.name}
+                  </span>
                   <span className="text-slate-400">
                     {new Date(b.startTime).toLocaleTimeString('en-US', {
                       hour: 'numeric',

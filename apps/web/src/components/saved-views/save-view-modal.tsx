@@ -48,21 +48,29 @@ export function SaveViewModal({ page, filters, onClose, onSaved }: SaveViewModal
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center" data-testid="save-view-modal">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      data-testid="save-view-modal"
+    >
       <div className="fixed inset-0 bg-black/20" onClick={onClose} />
       <div className="relative bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6 w-full max-w-sm mx-4">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
             {t('saved_views.save_title')}
           </h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
+          <button
+            onClick={onClose}
+            className="text-slate-400 hover:text-slate-600 transition-colors"
+          >
             <X size={16} />
           </button>
         </div>
 
         <div className="space-y-4">
           <div>
-            <label className="text-xs text-slate-500 mb-1 block">{t('saved_views.name_label')}</label>
+            <label className="text-xs text-slate-500 mb-1 block">
+              {t('saved_views.name_label')}
+            </label>
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -73,7 +81,9 @@ export function SaveViewModal({ page, filters, onClose, onSaved }: SaveViewModal
           </div>
 
           <div>
-            <label className="text-xs text-slate-500 mb-1.5 block">{t('saved_views.icon_label')}</label>
+            <label className="text-xs text-slate-500 mb-1.5 block">
+              {t('saved_views.icon_label')}
+            </label>
             <div className="flex gap-1.5 flex-wrap">
               {ICON_OPTIONS.map((i) => (
                 <button
@@ -92,7 +102,9 @@ export function SaveViewModal({ page, filters, onClose, onSaved }: SaveViewModal
           </div>
 
           <div>
-            <label className="text-xs text-slate-500 mb-1.5 block">{t('saved_views.color_label')}</label>
+            <label className="text-xs text-slate-500 mb-1.5 block">
+              {t('saved_views.color_label')}
+            </label>
             <div className="flex gap-2">
               {COLOR_OPTIONS.map((c) => (
                 <button

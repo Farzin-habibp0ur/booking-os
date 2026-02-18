@@ -24,7 +24,14 @@ jest.mock('@/lib/auth', () => ({
       role: 'ADMIN',
       businessId: 'b1',
       preferences: { mode: 'admin' },
-      business: { id: 'b1', name: 'Glow Clinic', slug: 'glow', verticalPack: 'general', defaultLocale: 'en', packConfig: {} },
+      business: {
+        id: 'b1',
+        name: 'Glow Clinic',
+        slug: 'glow',
+        verticalPack: 'general',
+        defaultLocale: 'en',
+        packConfig: {},
+      },
     },
     logout: jest.fn(),
     loading: false,
@@ -33,10 +40,12 @@ jest.mock('@/lib/auth', () => ({
 }));
 
 jest.mock('@/lib/i18n', () => ({
-  useI18n: () => ({ t: (key: string, params?: any) => {
-    if (key === 'nav.more') return 'More';
-    return key;
-  }}),
+  useI18n: () => ({
+    t: (key: string, params?: any) => {
+      if (key === 'nav.more') return 'More';
+      return key;
+    },
+  }),
   I18nProvider: ({ children }: any) => children,
 }));
 
@@ -80,22 +89,49 @@ jest.mock('@/lib/use-mode', () => ({
     mode: 'admin',
     setMode: mockSetMode,
     availableModes: [
-      { key: 'admin', labels: { general: 'Admin' }, primaryNavPaths: ['/dashboard', '/reports', '/staff', '/campaigns', '/automations'], allowedRoles: ['ADMIN'] },
-      { key: 'agent', labels: { general: 'Agent' }, primaryNavPaths: ['/inbox', '/calendar', '/customers', '/bookings', '/waitlist'], allowedRoles: ['ADMIN', 'AGENT'] },
-      { key: 'provider', labels: { general: 'Provider' }, primaryNavPaths: ['/calendar', '/bookings', '/services', '/service-board'], allowedRoles: ['ADMIN', 'SERVICE_PROVIDER'] },
+      {
+        key: 'admin',
+        labels: { general: 'Admin' },
+        primaryNavPaths: ['/dashboard', '/reports', '/staff', '/campaigns', '/automations'],
+        allowedRoles: ['ADMIN'],
+      },
+      {
+        key: 'agent',
+        labels: { general: 'Agent' },
+        primaryNavPaths: ['/inbox', '/calendar', '/customers', '/bookings', '/waitlist'],
+        allowedRoles: ['ADMIN', 'AGENT'],
+      },
+      {
+        key: 'provider',
+        labels: { general: 'Provider' },
+        primaryNavPaths: ['/calendar', '/bookings', '/services', '/service-board'],
+        allowedRoles: ['ADMIN', 'SERVICE_PROVIDER'],
+      },
     ],
     modeLabel: 'Admin',
     landingPath: '/dashboard',
     modeDef: {
       key: 'admin',
       primaryNavPaths: ['/dashboard', '/reports', '/staff', '/campaigns', '/automations'],
-      secondaryNavPaths: ['/inbox', '/calendar', '/customers', '/bookings', '/services', '/waitlist', '/service-board', '/roi', '/settings'],
+      secondaryNavPaths: [
+        '/inbox',
+        '/calendar',
+        '/customers',
+        '/bookings',
+        '/services',
+        '/waitlist',
+        '/service-board',
+        '/roi',
+        '/settings',
+      ],
       defaultLandingPath: '/dashboard',
     },
   }),
 }));
 
-jest.mock('@/components/mode-switcher', () => () => <div data-testid="mode-switcher">ModeSwitcher</div>);
+jest.mock('@/components/mode-switcher', () => () => (
+  <div data-testid="mode-switcher">ModeSwitcher</div>
+));
 
 // Mock api for pinned views
 jest.mock('@/lib/api', () => ({
@@ -123,13 +159,21 @@ describe('Shell', () => {
   });
 
   it('renders the shell with mode switcher', () => {
-    render(<Shell><div>Content</div></Shell>);
+    render(
+      <Shell>
+        <div>Content</div>
+      </Shell>,
+    );
 
     expect(screen.getByTestId('mode-switcher')).toBeInTheDocument();
   });
 
   it('renders primary nav items for admin mode', () => {
-    render(<Shell><div>Content</div></Shell>);
+    render(
+      <Shell>
+        <div>Content</div>
+      </Shell>,
+    );
 
     const nav = screen.getByRole('navigation', { name: 'Main navigation' });
     // Dashboard, Reports, Staff should be visible as primary for admin mode
@@ -139,14 +183,22 @@ describe('Shell', () => {
   });
 
   it('shows "More" toggle button for secondary items', () => {
-    render(<Shell><div>Content</div></Shell>);
+    render(
+      <Shell>
+        <div>Content</div>
+      </Shell>,
+    );
 
     const moreBtn = screen.getByText('More');
     expect(moreBtn).toBeInTheDocument();
   });
 
   it('expands secondary nav when "More" is clicked', async () => {
-    render(<Shell><div>Content</div></Shell>);
+    render(
+      <Shell>
+        <div>Content</div>
+      </Shell>,
+    );
 
     const moreBtn = screen.getByText('More');
     await userEvent.click(moreBtn);
@@ -158,19 +210,31 @@ describe('Shell', () => {
   });
 
   it('renders main content', () => {
-    render(<Shell><div>Test Content</div></Shell>);
+    render(
+      <Shell>
+        <div>Test Content</div>
+      </Shell>,
+    );
 
     expect(screen.getByText('Test Content')).toBeInTheDocument();
   });
 
   it('renders sidebar with business name', () => {
-    render(<Shell><div>Content</div></Shell>);
+    render(
+      <Shell>
+        <div>Content</div>
+      </Shell>,
+    );
 
     expect(screen.getAllByText('Glow Clinic').length).toBeGreaterThan(0);
   });
 
   it('fetches pinned views on mount', () => {
-    render(<Shell><div>Content</div></Shell>);
+    render(
+      <Shell>
+        <div>Content</div>
+      </Shell>,
+    );
 
     expect(mockApi.get).toHaveBeenCalledWith('/saved-views/pinned');
   });
@@ -181,7 +245,11 @@ describe('Shell', () => {
       { id: 'v2', name: 'Overdue Replies', page: 'inbox', icon: 'bell', isPinned: true },
     ]);
 
-    render(<Shell><div>Content</div></Shell>);
+    render(
+      <Shell>
+        <div>Content</div>
+      </Shell>,
+    );
 
     expect(await screen.findByText('Pending Deposits')).toBeInTheDocument();
     expect(screen.getByText('Overdue Replies')).toBeInTheDocument();
@@ -191,7 +259,11 @@ describe('Shell', () => {
   it('does not render pinned views section when no views', async () => {
     mockApi.get.mockResolvedValue([]);
 
-    render(<Shell><div>Content</div></Shell>);
+    render(
+      <Shell>
+        <div>Content</div>
+      </Shell>,
+    );
 
     // Wait for mount to settle
     await screen.findByText('Content');
@@ -203,7 +275,11 @@ describe('Shell', () => {
       { id: 'v1', name: 'Pending Deposits', page: 'bookings', icon: 'flag', isPinned: true },
     ]);
 
-    render(<Shell><div>Content</div></Shell>);
+    render(
+      <Shell>
+        <div>Content</div>
+      </Shell>,
+    );
 
     const link = await screen.findByText('Pending Deposits');
     expect(link.closest('a')).toHaveAttribute('href', '/bookings?viewId=v1');

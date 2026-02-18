@@ -115,7 +115,11 @@ export default function InboxPage() {
   const [activeViewId, setActiveViewId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const currentFilters = { predefined: activeFilter, search: searchQuery, locationId: selectedLocationId };
+  const currentFilters = {
+    predefined: activeFilter,
+    search: searchQuery,
+    locationId: selectedLocationId,
+  };
 
   const handleApplyView = (filters: Record<string, unknown>, viewId: string) => {
     setActiveFilter((filters.predefined as Filter) || 'all');

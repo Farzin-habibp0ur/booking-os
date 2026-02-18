@@ -40,7 +40,13 @@ describe('MyWork', () => {
     render(
       <MyWork
         myBookingsToday={[
-          { id: 'b1', customer: { name: 'Alice' }, service: { name: 'Cut' }, startTime: '2026-02-17T10:00:00Z', status: 'CONFIRMED' },
+          {
+            id: 'b1',
+            customer: { name: 'Alice' },
+            service: { name: 'Cut' },
+            startTime: '2026-02-17T10:00:00Z',
+            status: 'CONFIRMED',
+          },
         ]}
         myAssignedConversations={[]}
         completedTodayByStaff={0}
@@ -73,7 +79,13 @@ describe('MyWork', () => {
     render(
       <MyWork
         myBookingsToday={[
-          { id: 'b1', customer: { name: 'Alice' }, service: { name: 'Cut' }, startTime: '2026-02-17T10:00:00Z', status: 'CONFIRMED' },
+          {
+            id: 'b1',
+            customer: { name: 'Alice' },
+            service: { name: 'Cut' },
+            startTime: '2026-02-17T10:00:00Z',
+            status: 'CONFIRMED',
+          },
         ]}
         myAssignedConversations={[]}
         completedTodayByStaff={5}
@@ -99,7 +111,13 @@ describe('MyWork', () => {
     render(
       <MyWork
         myBookingsToday={[
-          { id: 'b1', customer: { name: 'X' }, service: { name: 'Y' }, startTime: '2026-02-17T10:00:00Z', status: 'CONFIRMED' },
+          {
+            id: 'b1',
+            customer: { name: 'X' },
+            service: { name: 'Y' },
+            startTime: '2026-02-17T10:00:00Z',
+            status: 'CONFIRMED',
+          },
         ]}
         myAssignedConversations={[]}
         completedTodayByStaff={0}
@@ -114,7 +132,13 @@ describe('MyWork', () => {
     render(
       <MyWork
         myBookingsToday={[
-          { id: 'b1', customer: { name: 'Alice' }, service: { name: 'Cut' }, startTime: '2026-02-17T10:00:00Z', status: 'CONFIRMED' },
+          {
+            id: 'b1',
+            customer: { name: 'Alice' },
+            service: { name: 'Cut' },
+            startTime: '2026-02-17T10:00:00Z',
+            status: 'CONFIRMED',
+          },
         ]}
         myAssignedConversations={[]}
         completedTodayByStaff={0}

@@ -216,17 +216,17 @@ describe('SavedViewService', () => {
     it('throws ForbiddenException when non-owner non-admin tries to delete', async () => {
       prisma.savedView.findFirst.mockResolvedValue({ ...mockView, staffId: 'other-staff' });
 
-      await expect(
-        service.remove('sv1', 'biz1', 'staff1', 'AGENT'),
-      ).rejects.toThrow(ForbiddenException);
+      await expect(service.remove('sv1', 'biz1', 'staff1', 'AGENT')).rejects.toThrow(
+        ForbiddenException,
+      );
     });
 
     it('throws NotFoundException for non-existent view', async () => {
       prisma.savedView.findFirst.mockResolvedValue(null);
 
-      await expect(
-        service.remove('nonexistent', 'biz1', 'staff1', 'AGENT'),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.remove('nonexistent', 'biz1', 'staff1', 'AGENT')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -256,9 +256,7 @@ describe('SavedViewService', () => {
     it('throws NotFoundException for non-existent view', async () => {
       prisma.savedView.findFirst.mockResolvedValue(null);
 
-      await expect(service.share('nonexistent', 'biz1', true)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.share('nonexistent', 'biz1', true)).rejects.toThrow(NotFoundException);
     });
   });
 });

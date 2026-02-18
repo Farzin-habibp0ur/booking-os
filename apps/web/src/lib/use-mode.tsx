@@ -1,6 +1,14 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  ReactNode,
+} from 'react';
 import { useAuth } from './auth';
 import { usePack } from './vertical-pack';
 import { api } from './api';
@@ -62,21 +70,18 @@ export function ModeProvider({ children }: { children: ReactNode }) {
   // Debounced API call ref
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
-  const setMode = useCallback(
-    (newMode: AppMode) => {
-      setModeState(newMode);
-      // Instant localStorage update
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('app-mode', newMode);
-      }
-      // Debounced API persistence
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-      debounceRef.current = setTimeout(() => {
-        api.patch('/staff/me/preferences', { mode: newMode }).catch(() => {});
-      }, 300);
-    },
-    [],
-  );
+  const setMode = useCallback((newMode: AppMode) => {
+    setModeState(newMode);
+    // Instant localStorage update
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('app-mode', newMode);
+    }
+    // Debounced API persistence
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      api.patch('/staff/me/preferences', { mode: newMode }).catch(() => {});
+    }, 300);
+  }, []);
 
   const modeDef = getModeByKey(mode);
   const modeLabel = getModeLabel(mode, pack.name);

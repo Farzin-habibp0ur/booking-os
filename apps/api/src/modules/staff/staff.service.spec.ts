@@ -1,7 +1,12 @@
 import { Test } from '@nestjs/testing';
 import { StaffService } from './staff.service';
 import { PrismaService } from '../../common/prisma.service';
-import { createMockPrisma, createMockTokenService, createMockEmailService, createMockConfigService } from '../../test/mocks';
+import {
+  createMockPrisma,
+  createMockTokenService,
+  createMockEmailService,
+  createMockConfigService,
+} from '../../test/mocks';
 import { TokenService } from '../../common/token.service';
 import { EmailService } from '../email/email.service';
 import { ConfigService } from '@nestjs/config';

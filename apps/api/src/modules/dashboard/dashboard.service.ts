@@ -137,11 +137,7 @@ export class DashboardService {
     ]);
 
     // Batch 2b: Staff-scoped queries for Mission Control
-    const [
-      myBookingsToday,
-      myAssignedConversations,
-      completedTodayByStaff,
-    ] = staffId
+    const [myBookingsToday, myAssignedConversations, completedTodayByStaff] = staffId
       ? await Promise.all([
           this.prisma.booking.findMany({
             where: {

@@ -151,9 +151,7 @@ export function ViewPicker({
             {activeViewId === view.id && hasUnsavedChanges && (
               <span className="w-1.5 h-1.5 rounded-full bg-amber-400" title="Unsaved changes" />
             )}
-            {view.isShared && (
-              <Share2 size={10} className="text-slate-400" />
-            )}
+            {view.isShared && <Share2 size={10} className="text-slate-400" />}
           </button>
           <button
             onClick={(e) => {
@@ -181,7 +179,9 @@ export function ViewPicker({
                 className="flex items-center gap-2 px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 w-full"
               >
                 <LayoutDashboard size={12} />
-                {view.isDashboard ? t('saved_views.remove_dashboard') : t('saved_views.add_dashboard')}
+                {view.isDashboard
+                  ? t('saved_views.remove_dashboard')
+                  : t('saved_views.add_dashboard')}
               </button>
               {isAdmin && !view.isShared && (
                 <button

@@ -55,7 +55,13 @@ describe('SaveViewModal', () => {
   });
 
   it('calls api.post with correct data on save', async () => {
-    const savedView = { id: 'v-new', name: 'My Filter', filters: { status: 'ACTIVE' }, icon: null, color: null };
+    const savedView = {
+      id: 'v-new',
+      name: 'My Filter',
+      filters: { status: 'ACTIVE' },
+      icon: null,
+      color: null,
+    };
     (api.post as jest.Mock).mockResolvedValue(savedView);
     const user = userEvent.setup();
 
@@ -89,7 +95,13 @@ describe('SaveViewModal', () => {
   });
 
   it('calls onSaved and onClose after successful save', async () => {
-    const savedView = { id: 'v-new', name: 'Test View', filters: { status: 'ACTIVE' }, icon: null, color: null };
+    const savedView = {
+      id: 'v-new',
+      name: 'Test View',
+      filters: { status: 'ACTIVE' },
+      icon: null,
+      color: null,
+    };
     (api.post as jest.Mock).mockResolvedValue(savedView);
     const onSaved = jest.fn();
     const onClose = jest.fn();

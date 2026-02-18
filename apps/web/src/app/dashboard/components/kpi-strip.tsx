@@ -101,9 +101,7 @@ export function KpiStrip({
           label: t('dashboard.kpi_no_show_rate'),
           value: `${metrics.noShowRate}%`,
           icon: Users,
-          color: metrics.noShowRate > 15
-            ? 'text-red-600 bg-red-50'
-            : 'text-amber-600 bg-amber-50',
+          color: metrics.noShowRate > 15 ? 'text-red-600 bg-red-50' : 'text-amber-600 bg-amber-50',
         },
       ];
     }
@@ -121,7 +119,8 @@ export function KpiStrip({
         value: metrics.totalBookingsThisWeek,
         icon: Calendar,
         color: 'text-sage-600 bg-sage-50',
-        trend: weekChange > 0 ? ('up' as const) : weekChange < 0 ? ('down' as const) : ('flat' as const),
+        trend:
+          weekChange > 0 ? ('up' as const) : weekChange < 0 ? ('down' as const) : ('flat' as const),
         subtitle: weekChange !== 0 ? `${weekChange > 0 ? '+' : ''}${weekChange}%` : undefined,
       },
       {
@@ -156,9 +155,7 @@ export function KpiStrip({
                 )}
               </p>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">{kpi.label}</p>
-              {kpi.subtitle && (
-                <p className="text-[10px] text-sage-600">{kpi.subtitle}</p>
-              )}
+              {kpi.subtitle && <p className="text-[10px] text-sage-600">{kpi.subtitle}</p>}
             </div>
           </div>
         );

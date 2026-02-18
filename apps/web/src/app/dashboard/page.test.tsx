@@ -1422,7 +1422,15 @@ describe('DashboardPage', () => {
     mockMode = 'agent';
     mockDashboard({
       ...baseDashboardData,
-      myBookingsToday: [{ id: 'mb1', customer: { name: 'MyClient' }, service: { name: 'Cut' }, startTime: '2026-02-17T09:00:00Z', status: 'CONFIRMED' }],
+      myBookingsToday: [
+        {
+          id: 'mb1',
+          customer: { name: 'MyClient' },
+          service: { name: 'Cut' },
+          startTime: '2026-02-17T09:00:00Z',
+          status: 'CONFIRMED',
+        },
+      ],
       myAssignedConversations: [],
       completedTodayByStaff: 0,
     });
@@ -1467,8 +1475,18 @@ describe('DashboardPage', () => {
     mockMode = 'agent';
     mockDashboard({
       ...baseDashboardData,
-      myBookingsToday: [{ id: 'mb1', customer: { name: 'AgentClient' }, service: { name: 'Consult' }, startTime: '2026-02-17T09:00:00Z', status: 'CONFIRMED' }],
-      myAssignedConversations: [{ id: 'mc1', customer: { name: 'ChatClient' }, messages: [{ content: 'Hello' }] }],
+      myBookingsToday: [
+        {
+          id: 'mb1',
+          customer: { name: 'AgentClient' },
+          service: { name: 'Consult' },
+          startTime: '2026-02-17T09:00:00Z',
+          status: 'CONFIRMED',
+        },
+      ],
+      myAssignedConversations: [
+        { id: 'mc1', customer: { name: 'ChatClient' }, messages: [{ content: 'Hello' }] },
+      ],
       completedTodayByStaff: 1,
     });
 
@@ -1498,7 +1516,10 @@ describe('DashboardPage', () => {
     mockMode = 'agent';
     mockDashboard({
       ...baseDashboardData,
-      goLiveChecklist: { allComplete: false, items: [{ key: 'business_name', done: false, fixUrl: '/settings' }] },
+      goLiveChecklist: {
+        allComplete: false,
+        items: [{ key: 'business_name', done: false, fixUrl: '/settings' }],
+      },
       milestoneProgress: { completedBookings: 3, currentNudge: null, dismissedNudges: [] },
     });
 
@@ -1518,7 +1539,14 @@ describe('DashboardPage', () => {
     mockDashboard({
       ...baseDashboardData,
       todayBookings: [
-        { id: 'b1', customer: { name: 'Schedule Person' }, service: { name: 'Botox' }, staff: null, startTime: '2026-02-17T10:00:00Z', status: 'CONFIRMED' },
+        {
+          id: 'b1',
+          customer: { name: 'Schedule Person' },
+          service: { name: 'Botox' },
+          staff: null,
+          startTime: '2026-02-17T10:00:00Z',
+          status: 'CONFIRMED',
+        },
       ],
       myBookingsToday: [],
       myAssignedConversations: [],
@@ -1537,7 +1565,16 @@ describe('DashboardPage', () => {
     mockMode = 'provider';
     mockDashboard({
       ...baseDashboardData,
-      todayBookings: [{ id: 'b1', customer: { name: 'Test' }, service: { name: 'Test' }, staff: null, startTime: '2026-02-17T10:00:00Z', status: 'CONFIRMED' }],
+      todayBookings: [
+        {
+          id: 'b1',
+          customer: { name: 'Test' },
+          service: { name: 'Test' },
+          staff: null,
+          startTime: '2026-02-17T10:00:00Z',
+          status: 'CONFIRMED',
+        },
+      ],
       myBookingsToday: [],
       myAssignedConversations: [],
       completedTodayByStaff: 0,

@@ -11,7 +11,11 @@ jest.mock('@/lib/use-mode', () => ({
     availableModes: [
       { key: 'admin', labels: { general: 'Admin' }, allowedRoles: ['ADMIN'] },
       { key: 'agent', labels: { general: 'Agent' }, allowedRoles: ['ADMIN', 'AGENT'] },
-      { key: 'provider', labels: { general: 'Provider' }, allowedRoles: ['ADMIN', 'SERVICE_PROVIDER'] },
+      {
+        key: 'provider',
+        labels: { general: 'Provider' },
+        allowedRoles: ['ADMIN', 'SERVICE_PROVIDER'],
+      },
     ],
     modeLabel: 'Admin',
     landingPath: '/dashboard',

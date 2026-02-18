@@ -3,12 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/cn';
 import { useI18n } from '@/lib/i18n';
-import {
-  Calendar,
-  MessageSquare,
-  ArrowRight,
-  CheckCircle2,
-} from 'lucide-react';
+import { Calendar, MessageSquare, ArrowRight, CheckCircle2 } from 'lucide-react';
 
 const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
   PENDING: { bg: 'bg-lavender-50', text: 'text-lavender-900' },
@@ -24,7 +19,11 @@ interface MyWorkProps {
   completedTodayByStaff: number;
 }
 
-export function MyWork({ myBookingsToday, myAssignedConversations, completedTodayByStaff }: MyWorkProps) {
+export function MyWork({
+  myBookingsToday,
+  myAssignedConversations,
+  completedTodayByStaff,
+}: MyWorkProps) {
   const router = useRouter();
   const { t } = useI18n();
 
