@@ -236,6 +236,11 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 | 6.14 | Chat with AI about a customer (summarize, show treatments, etc.) | All staff | AI customer chat on detail page |
 | 6.15 | Create a booking directly from customer detail page | All staff | — |
 | 6.16 | View and edit customer custom fields (vertical-specific) | All staff | E.g., allergies, vehicle info |
+| 6.17a | Add, edit, and delete notes on a customer profile | All staff | Staff ownership validation for edit/delete |
+| 6.18a | See customer activity timeline (all interactions in one feed) | All staff | 6 sources: bookings, conversations, notes, waitlist, quotes, campaigns |
+| 6.19a | View customer's conversations from their profile ("Message" button) | All staff | Deep links to `/inbox?conversationId=X` |
+| 6.20a | See customer's active waitlist count in context row | All staff | On detail page |
+| 6.21a | View vertical-specific modules (IntakeCard for aesthetics, quotes for dealership) | All staff | Collapsible sections on detail page |
 
 ### What Users CANNOT Do
 
@@ -244,17 +249,17 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 | 6.17 | Delete a customer | No delete endpoint — only edit |
 | 6.18 | Merge duplicate customers | Not implemented |
 | 6.19 | Export customer list to CSV | Not implemented |
-| 6.20 | View customer communication history (messages) | Must go to Inbox to see conversation |
+| 6.20 | ~~View customer communication history (messages)~~ | **DONE** — Timeline tab + "Message" button deep link |
 | 6.21 | See customer lifetime value calculation | Only total bookings and raw spend |
-| 6.22 | Add notes directly to a customer profile | Notes are on conversations, not customers |
+| 6.22 | ~~Add notes directly to a customer profile~~ | **DONE** — CustomerNote model with full CRUD |
 | 6.23 | Upload customer photos (before/after) | Not implemented |
 | 6.24 | Link a customer to multiple phone numbers | One phone per customer per business |
-| 6.25 | View customer's waitlist entries | Not shown on detail page |
-| 6.26 | View customer's conversation from their profile | No link from customer detail to inbox |
+| 6.25 | ~~View customer's waitlist entries~~ | **DONE** — Waitlist count in context row + timeline events |
+| 6.26 | ~~View customer's conversation from their profile~~ | **DONE** — "Message" button navigates to `/inbox?conversationId=X` |
 | 6.27 | Filter customers by tag | No tag filter on customer list page |
 | 6.28 | Filter customers by last visit date | Not implemented |
 | 6.29 | Sort customers by column | Not implemented |
-| 6.30 | See customer activity timeline (all interactions in one feed) | Not implemented |
+| 6.30 | ~~See customer activity timeline (all interactions in one feed)~~ | **DONE** — CustomerTimeline component with 6 event types |
 
 ---
 
@@ -293,6 +298,8 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 | 7.27 | See conversation status badges | All staff | OPEN, WAITING, SNOOZED, RESOLVED |
 | 7.28 | Real-time message updates via WebSocket | All staff | — |
 | 7.29 | View conversation notes in a separate tab | All staff | Info / Notes tabs in sidebar |
+| 7.30 | Deep link to a specific conversation via URL param | All staff | `?conversationId=X` auto-selects |
+| 7.31 | Click customer name in inbox to navigate to their profile | All staff | Links to `/customers/{id}` |
 
 ### What Users CANNOT Do
 
@@ -770,13 +777,20 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 | 22.5 | Start interactive demo tour (9 steps) | All staff | Sidebar button or ?tour=true |
 | 22.6 | Navigate via sidebar (Dashboard, Bookings, Calendar, Customers, etc.) | All staff | — |
 | 22.7 | View Swagger API docs | Dev only | Disabled in production |
+| 22.7a | Switch between role-based modes (Admin, Agent, Provider) | All staff | Mode switcher pill in sidebar |
+| 22.7b | Save and reuse filter views on list pages (bookings, customers, inbox, waitlist) | All staff | ViewPicker + SaveViewModal |
+| 22.7c | Pin saved views to sidebar for quick access | All staff | — |
+| 22.7d | Pin saved views to dashboard as cards | All staff | — |
+| 22.7e | Set default landing page per mode | All staff | Persisted in staff preferences |
+| 22.7f | View dedicated search results page with type filters and load more | All staff | `/search?q=` |
+| 22.7g | Navigate to detail pages from Cmd+K results | All staff | Customers → profile, conversations → inbox |
 
 ### What Users CANNOT Do
 
 | # | Story | Notes |
 |---|-------|-------|
 | 22.8 | Customize sidebar navigation order | Fixed order |
-| 22.9 | Set a default landing page | Always /dashboard |
+| 22.9 | ~~Set a default landing page~~ | **DONE** — Staff preferences persist mode + landing path |
 | 22.10 | Receive browser push notifications | Not implemented |
 | 22.11 | Use keyboard shortcuts for common actions | Only Cmd+K and tour keys |
 | 22.12 | Customize date/time format | Follows locale |
@@ -795,8 +809,8 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 | Dashboard | 18 | 7 |
 | Bookings | 24 | 16 |
 | Calendar | 10 | 11 |
-| Customers | 16 | 14 |
-| Inbox | 29 | 17 |
+| Customers | 21 | 9 |
+| Inbox | 31 | 17 |
 | Services | 9 | 10 |
 | Staff | 11 | 11 |
 | Waitlist | 6 | 6 |
@@ -811,5 +825,5 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 | Self-Serve | 7 | 6 |
 | Quotes | 4 | 6 |
 | Billing | 4 | 7 |
-| Global | 7 | 8 |
-| **Total** | **280** | **215** |
+| Global | 14 | 7 |
+| **Total** | **296** | **199** |

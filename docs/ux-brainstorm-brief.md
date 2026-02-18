@@ -73,7 +73,7 @@ Minimalist premium aesthetic (Apple Health meets Stripe). Lots of whitespace, su
 
 ## Current Feature Inventory
 
-### What Users CAN Do Today (280 capabilities)
+### What Users CAN Do Today (296 capabilities)
 
 #### Authentication & Account (12)
 - Sign up with business name, owner name, email, password (creates business + admin)
@@ -119,16 +119,20 @@ Minimalist premium aesthetic (Apple Health meets Stripe). Lots of whitespace, su
 - Create recurring series (days of week, interval, total count)
 - Cancel recurring series (single occurrence, all future, or entire series)
 
-#### Customers (16)
+#### Customers (21)
 - List with search, paginated
 - CRUD with name, phone (required), email, tags, custom fields
 - Bulk add/remove tags
 - CSV import and conversation import
-- Customer detail page: profile, tags, quick stats (total bookings, spend, no-shows)
+- Customer Hub: profile, tags, quick stats, context row (last booking, last conversation, waitlist count)
+- Customer notes CRUD with staff ownership validation
+- Unified activity timeline (6 sources: bookings, conversations, notes, waitlist, quotes, campaigns) with type filtering, pagination, deep links
+- Deep link from customer detail to inbox conversations ("Message" button)
+- Vertical modules: IntakeCard for aesthetics, quotes summary for dealership (collapsible)
 - AI chat on customer detail page (summarize history, show treatments, upcoming bookings)
 - Create booking from customer detail
 
-#### Inbox / Conversations (29)
+#### Inbox / Conversations (31)
 - 3-pane layout: filter sidebar, conversation list, message thread + customer info
 - Filter: All, Unassigned, Mine, Overdue, Waiting, Snoozed, Closed (with badge counts)
 - Filter by location
@@ -143,6 +147,8 @@ Minimalist premium aesthetic (Apple Health meets Stripe). Lots of whitespace, su
 - Customer sidebar: info, upcoming bookings, intake card, AI summary
 - Real-time WebSocket updates for new messages and conversation changes
 - Send deposit request from conversation
+- Deep link to specific conversation via `?conversationId=` URL param
+- Clickable customer name in inbox navigates to customer profile
 
 #### Services (9)
 - CRUD services: name, duration, price, category, kind (Consult/Treatment/Other), description
@@ -234,8 +240,12 @@ Minimalist premium aesthetic (Apple Health meets Stripe). Lots of whitespace, su
 #### Billing (4)
 - View subscription status, Stripe checkout, customer portal, deposit payment intents
 
-#### Global (7)
-- Global search (Cmd+K): customers, bookings, conversations
+#### Global (14)
+- Global search (Cmd+K): customers, bookings, conversations — grouped results, deep links to detail pages, vertical-aware labels
+- Dedicated `/search` page with type filter chips, counts, and load more per section
+- Role-based mode switcher (Admin/Agent/Provider) with mode-grouped sidebar nav
+- Saved filter views on list pages (bookings, customers, inbox, waitlist) with sidebar pinning and dashboard cards
+- Staff preferences: persisted default mode and landing page
 - Dark mode toggle
 - Interactive demo tour (9 steps with spotlight + tooltip)
 - Language picker on auth pages
@@ -243,7 +253,7 @@ Minimalist premium aesthetic (Apple Health meets Stripe). Lots of whitespace, su
 
 ---
 
-### What Users CANNOT Do Today (215 gaps)
+### What Users CANNOT Do Today (199 gaps)
 
 Organized by theme for brainstorming.
 
@@ -268,13 +278,8 @@ Organized by theme for brainstorming.
 
 #### Missing Customer Features
 - Cannot delete or merge duplicate customers
-- No customer activity timeline (all interactions in one feed)
-- No link from customer detail to their conversations in inbox
-- No customer waitlist entries shown on their profile
 - No customer lifetime value calculation
-- No customer notes (notes are per-conversation, not per-customer)
 - No customer photos (before/after)
-- No customer communication history visible on their profile
 - Cannot link customer to multiple phone numbers
 
 #### Missing Communication Features
@@ -374,7 +379,6 @@ Organized by theme for brainstorming.
 #### Missing Global/Platform Features
 - No browser push notifications
 - No keyboard shortcuts beyond Cmd+K
-- No customizable sidebar or default landing page
 - No global activity feed/audit log
 - No undo/redo
 - No offline support
@@ -385,7 +389,7 @@ Organized by theme for brainstorming.
 ## Business Context
 
 ### Current Metrics
-- 2,206 automated tests (801 web + 1,405 API)
+- 2,533 automated tests (972 web + 1,561 API)
 - API test coverage: 93% statements, 81% branches
 - Web test coverage: 78% statements, 73% branches
 - Deployed on Railway with CI/CD via GitHub Actions
@@ -396,6 +400,10 @@ Organized by theme for brainstorming.
 - **Phase 3**: Multi-location, resources, dealership vertical, pack builder, kanban, quotes, i18n
 - **Test coverage push**: 425+ additional tests
 - **Demo strategy**: Rich demo data + interactive product tour
+- **UX Phase 1**: Role-based modes (Admin/Agent/Provider), Mission Control dashboard, saved views with sidebar pinning
+- **UX Phase 2 (Bundle B)**: Customer Hub redesign, unified timeline (6 data sources), customer notes CRUD, enhanced Cmd+K with deep links, dedicated `/search` page, vertical modules
+- **Error handling remediation**: Replaced silent catches with logged warnings, toast error surfaces
+- **Security remediation**: 22 fixes across 5 batches (CSP, tenant isolation, input validation, state machine, token blacklisting)
 
 ### Not Yet Started
 - **Phase 4**: Benchmarking, omnichannel inbox (IG/Messenger/web chat), vertical packs marketplace, customer mini-portal
