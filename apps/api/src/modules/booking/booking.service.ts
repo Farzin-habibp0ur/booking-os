@@ -210,26 +210,34 @@ export class BookingService {
       });
     });
 
-    // Auto-create 24h reminder
-    const reminderTime = new Date(startTime.getTime() - 24 * 60 * 60 * 1000);
-    if (reminderTime > new Date()) {
-      await this.prisma.reminder.create({
-        data: {
-          businessId,
-          bookingId: booking.id,
-          scheduledAt: reminderTime,
-          status: 'PENDING',
-        },
-      });
+    // Post-creation side effects — must not fail the booking response
+    try {
+      const reminderTime = new Date(startTime.getTime() - 24 * 60 * 60 * 1000);
+      if (reminderTime > new Date()) {
+        await this.prisma.reminder.create({
+          data: {
+            businessId,
+            bookingId: booking.id,
+            scheduledAt: reminderTime,
+            status: 'PENDING',
+          },
+        });
+      }
+    } catch (err) {
+      this.logger.error(`Failed to create reminder for booking ${booking.id}`, err);
     }
 
     // Fire-and-forget notification
     if (isDepositRequired) {
       this.notificationService.sendDepositRequest(booking).catch(() => {});
-      await this.prisma.booking.update({
-        where: { id: booking.id },
-        data: { customFields: { depositRequestLog: [{ sentAt: new Date().toISOString() }] } },
-      });
+      try {
+        await this.prisma.booking.update({
+          where: { id: booking.id },
+          data: { customFields: { depositRequestLog: [{ sentAt: new Date().toISOString() }] } },
+        });
+      } catch (err) {
+        this.logger.error(`Failed to log deposit request for booking ${booking.id}`, err);
+      }
     } else {
       this.notificationService.sendBookingConfirmation(booking).catch(() => {});
     }

@@ -52,9 +52,26 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
       // Check for Prisma errors to return appropriate status codes
       if (exception.constructor.name === 'PrismaClientKnownRequestError') {
+        const prismaError = exception as any;
+        const code = prismaError.code || 'UNKNOWN';
+        this.logger.error(`Prisma error ${code}: ${prismaError.message}`, prismaError.meta);
         status = HttpStatus.BAD_REQUEST;
-        message = 'Database operation failed';
         error = 'Bad Request';
+
+        // Provide user-friendly messages based on Prisma error code
+        switch (code) {
+          case 'P2002':
+            message = 'A record with this data already exists';
+            break;
+          case 'P2003':
+            message = 'Referenced record not found — a related item may have been deleted';
+            break;
+          case 'P2025':
+            message = 'Record not found';
+            break;
+          default:
+            message = `Database operation failed (${code})`;
+        }
       }
     }
 
