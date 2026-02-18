@@ -27,7 +27,8 @@ async function bootstrap() {
   const logger = new Logger('Bootstrap');
 
   // C2 fix: Trust first proxy (Railway/Nginx) so rate limiting uses real client IP
-  app.set('trust proxy', 1);
+  const expressApp = app.getHttpAdapter().getInstance();
+  expressApp.set('trust proxy', 1);
 
   // M8 fix: Security headers with CSP
   app.use(
