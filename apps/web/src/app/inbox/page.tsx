@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useSocket } from '@/lib/use-socket';
 import { useToast } from '@/lib/toast';
@@ -71,6 +72,9 @@ const SNOOZE_HOURS = [
 export default function InboxPage() {
   const { t } = useI18n();
   const pack = usePack();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const conversationIdParam = searchParams.get('conversationId');
   const [conversations, setConversations] = useState<any[]>([]);
   const [selected, setSelected] = useState<any>(null);
   const [messages, setMessages] = useState<any[]>([]);
@@ -226,6 +230,17 @@ export default function InboxPage() {
       loadFilterCounts();
     }, []),
   });
+
+  // Auto-select conversation from URL param
+  useEffect(() => {
+    if (conversationIdParam && conversations.length > 0 && !selected) {
+      const conv = conversations.find((c) => c.id === conversationIdParam);
+      if (conv) {
+        setSelected(conv);
+        setMobileView('thread');
+      }
+    }
+  }, [conversationIdParam, conversations]);
 
   useEffect(() => {
     loadFilterCounts();
@@ -1084,7 +1099,13 @@ export default function InboxPage() {
                     {(customer.name || '?')[0].toUpperCase()}
                   </div>
                   <div>
-                    <p className="font-semibold text-sm">{customer.name}</p>
+                    <button
+                      onClick={() => router.push(`/customers/${customer.id}`)}
+                      className="font-semibold text-sm hover:text-sage-600 transition-colors text-left"
+                      data-testid="customer-name-link"
+                    >
+                      {customer.name}
+                    </button>
                     <p className="text-xs text-slate-500">{customer.phone}</p>
                   </div>
                 </div>

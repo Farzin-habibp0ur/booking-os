@@ -6,6 +6,7 @@ import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { usePack } from '@/lib/vertical-pack';
 import { useI18n } from '@/lib/i18n';
+import { useToast } from '@/lib/toast';
 import {
   ArrowLeft,
   Phone,
@@ -23,6 +24,9 @@ import {
   Loader2,
   User,
   MapPin,
+  StickyNote,
+  Trash2,
+  Activity,
 } from 'lucide-react';
 import BookingFormModal from '@/components/booking-form-modal';
 
@@ -51,7 +55,18 @@ export default function CustomerDetailPage() {
   const [editCustomFields, setEditCustomFields] = useState<Record<string, any>>({});
   const [newTag, setNewTag] = useState('');
   const [showBookingForm, setShowBookingForm] = useState(false);
-  const [tab, setTab] = useState<'chat' | 'bookings' | 'info'>('chat');
+  const [tab, setTab] = useState<'chat' | 'timeline' | 'bookings' | 'notes' | 'info'>('chat');
+  const { toast } = useToast();
+
+  // Notes state
+  const [customerNotes, setCustomerNotes] = useState<any[]>([]);
+  const [newNoteContent, setNewNoteContent] = useState('');
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
+  const [editingNoteContent, setEditingNoteContent] = useState('');
+  const [noteSaving, setNoteSaving] = useState(false);
+
+  // Conversations state
+  const [conversations, setConversations] = useState<any[]>([]);
 
   // AI Chat state
   const [chatMessages, setChatMessages] = useState<Array<{ role: 'user' | 'ai'; text: string }>>(
@@ -63,12 +78,23 @@ export default function CustomerDetailPage() {
 
   const loadCustomer = async () => {
     try {
-      const [cust, bkgs] = await Promise.all([
+      const [cust, bkgs, convs, notes] = await Promise.all([
         api.get<any>(`/customers/${id}`),
         api.get<any[]>(`/customers/${id}/bookings`),
+        api
+          .get<any>(`/conversations?search=&pageSize=50`)
+          .then((res: any) => {
+            // Filter conversations for this customer client-side
+            const data = res?.data || res || [];
+            return Array.isArray(data) ? data.filter((c: any) => c.customerId === id) : [];
+          })
+          .catch(() => []),
+        api.get<any[]>(`/customers/${id}/notes`).catch(() => []),
       ]);
       setCustomer(cust);
       setBookings(bkgs || []);
+      setConversations(convs || []);
+      setCustomerNotes(notes || []);
       setEditName(cust.name);
       setEditEmail(cust.email || '');
       setEditTags((cust.tags || []).join(', '));
@@ -137,6 +163,56 @@ export default function CustomerDetailPage() {
     setChatInput(prompt);
   };
 
+  const createNote = async () => {
+    if (!newNoteContent.trim() || noteSaving) return;
+    setNoteSaving(true);
+    try {
+      await api.post(`/customers/${id}/notes`, { content: newNoteContent });
+      setNewNoteContent('');
+      toast(t('customer_detail.note_created'));
+      const notes = await api.get<any[]>(`/customers/${id}/notes`);
+      setCustomerNotes(notes || []);
+    } catch (e: any) {
+      toast(e?.message || t('customer_detail.note_create_error'), 'error');
+    }
+    setNoteSaving(false);
+  };
+
+  const updateNote = async (noteId: string) => {
+    if (!editingNoteContent.trim() || noteSaving) return;
+    setNoteSaving(true);
+    try {
+      await api.patch(`/customers/${id}/notes/${noteId}`, { content: editingNoteContent });
+      setEditingNoteId(null);
+      setEditingNoteContent('');
+      toast(t('customer_detail.note_updated'));
+      const notes = await api.get<any[]>(`/customers/${id}/notes`);
+      setCustomerNotes(notes || []);
+    } catch (e: any) {
+      toast(e?.message || t('customer_detail.note_update_error'), 'error');
+    }
+    setNoteSaving(false);
+  };
+
+  const deleteNote = async (noteId: string) => {
+    try {
+      await api.del(`/customers/${id}/notes/${noteId}`);
+      toast(t('customer_detail.note_deleted'));
+      setCustomerNotes((prev) => prev.filter((n) => n.id !== noteId));
+    } catch (e: any) {
+      toast(e?.message || t('customer_detail.note_delete_error'), 'error');
+    }
+  };
+
+  const handleMessageCustomer = () => {
+    const latestConv = conversations[0];
+    if (latestConv) {
+      router.push(`/inbox?conversationId=${latestConv.id}`);
+    } else {
+      router.push('/inbox');
+    }
+  };
+
   if (loading)
     return (
       <div className="p-6 flex items-center justify-center h-64">
@@ -165,6 +241,9 @@ export default function CustomerDetailPage() {
     .reduce((sum, b) => sum + (b.service?.price || 0), 0);
   const noShows = bookings.filter((b) => b.status === 'NO_SHOW').length;
   const nextBooking = upcomingBookings[0];
+
+  const lastBooking = pastBookings[0];
+  const lastConversation = conversations[0];
 
   const promptChips = [
     t('customer_detail.chip_summarize'),
@@ -195,13 +274,53 @@ export default function CustomerDetailPage() {
             })}
           </p>
         </div>
-        <button
-          onClick={() => setShowBookingForm(true)}
-          className="flex items-center gap-1 bg-sage-600 text-white px-3 py-2 rounded-xl text-sm hover:bg-sage-700 transition-colors"
-        >
-          <Plus size={14} />{' '}
-          {t('customer_detail.new_booking', { bookingEntity: pack.labels.booking })}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleMessageCustomer}
+            className="flex items-center gap-1 border border-slate-200 text-slate-700 px-3 py-2 rounded-xl text-sm hover:bg-slate-50 transition-colors"
+            data-testid="message-customer-btn"
+          >
+            <MessageSquare size={14} /> {t('customer_detail.message')}
+          </button>
+          <button
+            onClick={() => setShowBookingForm(true)}
+            className="flex items-center gap-1 bg-sage-600 text-white px-3 py-2 rounded-xl text-sm hover:bg-sage-700 transition-colors"
+          >
+            <Plus size={14} />{' '}
+            {t('customer_detail.new_booking', { bookingEntity: pack.labels.booking })}
+          </button>
+        </div>
+      </div>
+
+      {/* Context Row */}
+      <div className="flex items-center gap-4 mb-6 text-xs text-slate-500">
+        {lastBooking && (
+          <div className="flex items-center gap-1">
+            <Calendar size={12} />
+            <span data-testid="last-booking-date">
+              {t('customer_detail.last_booking')}:{' '}
+              {new Date(lastBooking.startTime).toLocaleDateString()}
+            </span>
+          </div>
+        )}
+        {lastConversation && (
+          <div className="flex items-center gap-1">
+            <MessageSquare size={12} />
+            <span data-testid="last-conversation-date">
+              {t('customer_detail.last_conversation')}:{' '}
+              {new Date(
+                lastConversation.lastMessageAt || lastConversation.createdAt,
+              ).toLocaleDateString()}
+            </span>
+          </div>
+        )}
+        {conversations.length > 0 && (
+          <div className="flex items-center gap-1">
+            <span data-testid="conversation-count">
+              {conversations.length} {t('customer_detail.conversations_count')}
+            </span>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-3 gap-6">
@@ -361,6 +480,17 @@ export default function CustomerDetailPage() {
                 <Sparkles size={14} /> {t('customer_detail.ai_chat_tab')}
               </button>
               <button
+                onClick={() => setTab('timeline')}
+                className={cn(
+                  'flex items-center gap-1.5 text-sm font-medium pb-1 transition-colors',
+                  tab === 'timeline'
+                    ? 'text-sage-600 border-b-2 border-sage-600'
+                    : 'text-slate-500',
+                )}
+              >
+                <Activity size={14} /> {t('customer_detail.timeline_tab')}
+              </button>
+              <button
                 onClick={() => setTab('bookings')}
                 className={cn(
                   'text-sm font-medium pb-1 transition-colors',
@@ -370,6 +500,20 @@ export default function CustomerDetailPage() {
                 )}
               >
                 {t('customer_detail.bookings_tab', { count: bookings.length })}
+              </button>
+              <button
+                onClick={() => setTab('notes')}
+                className={cn(
+                  'flex items-center gap-1.5 text-sm font-medium pb-1 transition-colors',
+                  tab === 'notes' ? 'text-amber-600 border-b-2 border-amber-600' : 'text-slate-500',
+                )}
+              >
+                <StickyNote size={14} /> {t('customer_detail.notes_tab')}{' '}
+                {customerNotes.length > 0 && (
+                  <span className="text-[10px] bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded-full">
+                    {customerNotes.length}
+                  </span>
+                )}
               </button>
               <button
                 onClick={() => setTab('info')}
@@ -499,6 +643,115 @@ export default function CustomerDetailPage() {
                       {pastBookings.map((b) => (
                         <BookingRow key={b.id} booking={b} />
                       ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Timeline Tab (placeholder) */}
+            {tab === 'timeline' && (
+              <div className="flex-1 flex flex-col items-center justify-center p-8 text-slate-400">
+                <Activity size={48} className="mb-3 text-slate-300" />
+                <p className="font-medium">{t('customer_detail.timeline_coming_soon')}</p>
+                <p className="text-sm">{t('customer_detail.timeline_description')}</p>
+              </div>
+            )}
+
+            {/* Notes Tab */}
+            {tab === 'notes' && (
+              <div className="p-4 flex-1 overflow-y-auto">
+                {/* Note Composer */}
+                <div className="mb-4">
+                  <textarea
+                    value={newNoteContent}
+                    onChange={(e) => setNewNoteContent(e.target.value)}
+                    placeholder={t('customer_detail.add_note_placeholder')}
+                    rows={3}
+                    className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    data-testid="note-composer"
+                  />
+                  <button
+                    onClick={createNote}
+                    disabled={!newNoteContent.trim() || noteSaving}
+                    className="mt-1 bg-amber-500 text-white px-4 py-2 rounded-xl text-sm hover:bg-amber-600 disabled:opacity-50 transition-colors flex items-center gap-1"
+                    data-testid="add-note-btn"
+                  >
+                    <StickyNote size={14} /> {t('customer_detail.add_note')}
+                  </button>
+                </div>
+
+                {/* Note Cards */}
+                <div className="space-y-3">
+                  {customerNotes.map((note) => (
+                    <div
+                      key={note.id}
+                      className="bg-amber-50 border border-amber-200 rounded-xl p-4"
+                      data-testid="note-card"
+                    >
+                      {editingNoteId === note.id ? (
+                        <div>
+                          <textarea
+                            value={editingNoteContent}
+                            onChange={(e) => setEditingNoteContent(e.target.value)}
+                            rows={3}
+                            className="w-full border border-amber-300 rounded-lg px-3 py-2 text-sm resize-none"
+                            data-testid="note-edit-textarea"
+                          />
+                          <div className="flex gap-2 mt-2">
+                            <button
+                              onClick={() => updateNote(note.id)}
+                              disabled={noteSaving}
+                              className="text-xs bg-amber-500 text-white px-3 py-1 rounded-lg hover:bg-amber-600 disabled:opacity-50"
+                            >
+                              {t('common.save')}
+                            </button>
+                            <button
+                              onClick={() => {
+                                setEditingNoteId(null);
+                                setEditingNoteContent('');
+                              }}
+                              className="text-xs text-slate-500 px-3 py-1 rounded-lg hover:bg-slate-100"
+                            >
+                              {t('common.cancel')}
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <p className="text-sm whitespace-pre-wrap">{note.content}</p>
+                          <div className="flex items-center justify-between mt-2">
+                            <p className="text-[10px] text-slate-400">
+                              {note.staff?.name} · {new Date(note.createdAt).toLocaleString()}
+                            </p>
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => {
+                                  setEditingNoteId(note.id);
+                                  setEditingNoteContent(note.content);
+                                }}
+                                className="text-slate-400 hover:text-amber-600 transition-colors"
+                                data-testid="edit-note-btn"
+                              >
+                                <Pencil size={12} />
+                              </button>
+                              <button
+                                onClick={() => deleteNote(note.id)}
+                                className="text-slate-400 hover:text-red-500 transition-colors"
+                                data-testid="delete-note-btn"
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  ))}
+                  {customerNotes.length === 0 && (
+                    <div className="text-center py-8 text-slate-400">
+                      <StickyNote size={32} className="mx-auto mb-2 text-slate-300" />
+                      <p className="text-sm">{t('customer_detail.no_notes')}</p>
                     </div>
                   )}
                 </div>

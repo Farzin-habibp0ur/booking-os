@@ -31,8 +31,9 @@ jest.mock('@/lib/vertical-pack', () => ({
   }),
   VerticalPackProvider: ({ children }: any) => children,
 }));
+const mockToast = jest.fn();
 jest.mock('@/lib/toast', () => ({
-  useToast: () => ({ toast: jest.fn() }),
+  useToast: () => ({ toast: mockToast }),
   ToastProvider: ({ children }: any) => children,
 }));
 jest.mock('@/lib/cn', () => ({ cn: (...args: any[]) => args.filter(Boolean).join(' ') }));
@@ -96,10 +97,31 @@ const mockBookings = [
   },
 ];
 
-function setupMocks(customer = mockCustomer, bookings = mockBookings) {
+const mockConversations = [
+  { id: 'conv-1', customerId: 'cust-1', lastMessageAt: '2026-01-15T10:00:00Z', status: 'OPEN' },
+];
+
+const mockNotes = [
+  {
+    id: 'n1',
+    content: 'Prefers morning appointments',
+    staff: { id: 's1', name: 'Dr. Chen' },
+    createdAt: '2026-01-10T08:00:00Z',
+  },
+  {
+    id: 'n2',
+    content: 'Allergic to latex',
+    staff: { id: 's2', name: 'Sarah' },
+    createdAt: '2026-01-12T09:00:00Z',
+  },
+];
+
+function setupMocks(customer = mockCustomer, bookings = mockBookings, notes = mockNotes) {
   mockApi.get.mockImplementation((path: string) => {
     if (path === '/customers/cust-1') return Promise.resolve(customer);
     if (path === '/customers/cust-1/bookings') return Promise.resolve(bookings);
+    if (path === '/customers/cust-1/notes') return Promise.resolve(notes);
+    if (path.startsWith('/conversations')) return Promise.resolve({ data: mockConversations });
     return Promise.reject(new Error('Not found'));
   });
 }
@@ -431,5 +453,192 @@ describe('CustomerDetailPage', () => {
     fireEvent.click(backBtn);
 
     expect(mockPush).toHaveBeenCalledWith('/customers');
+  });
+
+  // ─── Message Button ────────────────────────────────────────────────
+
+  it('navigates to inbox with conversationId when message button clicked', async () => {
+    setupMocks();
+    render(<CustomerDetailPage />);
+    await waitFor(() => screen.getAllByText('Emma Wilson'));
+
+    const messageBtn = screen.getByTestId('message-customer-btn');
+    fireEvent.click(messageBtn);
+
+    expect(mockPush).toHaveBeenCalledWith('/inbox?conversationId=conv-1');
+  });
+
+  it('navigates to inbox without conversationId when no conversations exist', async () => {
+    mockApi.get.mockImplementation((path: string) => {
+      if (path === '/customers/cust-1') return Promise.resolve(mockCustomer);
+      if (path === '/customers/cust-1/bookings') return Promise.resolve(mockBookings);
+      if (path === '/customers/cust-1/notes') return Promise.resolve([]);
+      if (path.startsWith('/conversations')) return Promise.resolve({ data: [] });
+      return Promise.reject(new Error('Not found'));
+    });
+    render(<CustomerDetailPage />);
+    await waitFor(() => screen.getAllByText('Emma Wilson'));
+
+    const messageBtn = screen.getByTestId('message-customer-btn');
+    fireEvent.click(messageBtn);
+
+    expect(mockPush).toHaveBeenCalledWith('/inbox');
+  });
+
+  // ─── Context Row ───────────────────────────────────────────────────
+
+  it('shows last booking date in context row', async () => {
+    setupMocks();
+    render(<CustomerDetailPage />);
+    await waitFor(() => {
+      expect(screen.getByTestId('last-booking-date')).toBeInTheDocument();
+    });
+  });
+
+  it('shows last conversation date in context row', async () => {
+    setupMocks();
+    render(<CustomerDetailPage />);
+    await waitFor(() => {
+      expect(screen.getByTestId('last-conversation-date')).toBeInTheDocument();
+    });
+  });
+
+  // ─── Notes Tab ─────────────────────────────────────────────────────
+
+  it('switches to notes tab and shows notes', async () => {
+    setupMocks();
+    render(<CustomerDetailPage />);
+    await waitFor(() => screen.getAllByText('Emma Wilson'));
+
+    fireEvent.click(screen.getByText('customer_detail.notes_tab'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Prefers morning appointments')).toBeInTheDocument();
+      expect(screen.getByText('Allergic to latex')).toBeInTheDocument();
+    });
+  });
+
+  it('shows note author and timestamp', async () => {
+    setupMocks();
+    render(<CustomerDetailPage />);
+    await waitFor(() => screen.getAllByText('Emma Wilson'));
+
+    fireEvent.click(screen.getByText('customer_detail.notes_tab'));
+
+    await waitFor(() => {
+      const noteCards = screen.getAllByTestId('note-card');
+      expect(noteCards.length).toBe(2);
+    });
+  });
+
+  it('creates a new note', async () => {
+    setupMocks();
+    mockApi.post.mockResolvedValue({ id: 'n3', content: 'New note' });
+    render(<CustomerDetailPage />);
+    await waitFor(() => screen.getAllByText('Emma Wilson'));
+
+    fireEvent.click(screen.getByText('customer_detail.notes_tab'));
+
+    await waitFor(() => screen.getByTestId('note-composer'));
+
+    const textarea = screen.getByTestId('note-composer');
+    await userEvent.type(textarea, 'New important note');
+
+    fireEvent.click(screen.getByTestId('add-note-btn'));
+
+    await waitFor(() => {
+      expect(mockApi.post).toHaveBeenCalledWith('/customers/cust-1/notes', {
+        content: 'New important note',
+      });
+    });
+  });
+
+  it('shows empty notes message when no notes exist', async () => {
+    setupMocks(mockCustomer, mockBookings, []);
+    render(<CustomerDetailPage />);
+    await waitFor(() => screen.getAllByText('Emma Wilson'));
+
+    fireEvent.click(screen.getByText('customer_detail.notes_tab'));
+
+    await waitFor(() => {
+      expect(screen.getByText('customer_detail.no_notes')).toBeInTheDocument();
+    });
+  });
+
+  it('deletes a note', async () => {
+    setupMocks();
+    mockApi.del.mockResolvedValue({});
+    render(<CustomerDetailPage />);
+    await waitFor(() => screen.getAllByText('Emma Wilson'));
+
+    fireEvent.click(screen.getByText('customer_detail.notes_tab'));
+
+    await waitFor(() => screen.getAllByTestId('delete-note-btn'));
+
+    fireEvent.click(screen.getAllByTestId('delete-note-btn')[0]);
+
+    await waitFor(() => {
+      expect(mockApi.del).toHaveBeenCalledWith('/customers/cust-1/notes/n1');
+    });
+  });
+
+  it('enters edit mode for a note', async () => {
+    setupMocks();
+    render(<CustomerDetailPage />);
+    await waitFor(() => screen.getAllByText('Emma Wilson'));
+
+    fireEvent.click(screen.getByText('customer_detail.notes_tab'));
+
+    await waitFor(() => screen.getAllByTestId('edit-note-btn'));
+
+    fireEvent.click(screen.getAllByTestId('edit-note-btn')[0]);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('note-edit-textarea')).toBeInTheDocument();
+    });
+  });
+
+  it('shows note count badge on notes tab', async () => {
+    setupMocks();
+    render(<CustomerDetailPage />);
+    await waitFor(() => screen.getAllByText('Emma Wilson'));
+
+    // The notes count badge shows "2" for 2 notes
+    await waitFor(() => {
+      expect(screen.getByText('2')).toBeInTheDocument();
+    });
+  });
+
+  // ─── Timeline Tab (Placeholder) ───────────────────────────────────
+
+  it('shows timeline placeholder when switching to timeline tab', async () => {
+    setupMocks();
+    render(<CustomerDetailPage />);
+    await waitFor(() => screen.getAllByText('Emma Wilson'));
+
+    fireEvent.click(screen.getByText('customer_detail.timeline_tab'));
+
+    await waitFor(() => {
+      expect(screen.getByText('customer_detail.timeline_coming_soon')).toBeInTheDocument();
+    });
+  });
+
+  // ─── Note CRUD Error Handling ──────────────────────────────────────
+
+  it('shows toast on note creation error', async () => {
+    setupMocks();
+    mockApi.post.mockRejectedValue(new Error('Server error'));
+    render(<CustomerDetailPage />);
+    await waitFor(() => screen.getAllByText('Emma Wilson'));
+
+    fireEvent.click(screen.getByText('customer_detail.notes_tab'));
+    await waitFor(() => screen.getByTestId('note-composer'));
+
+    await userEvent.type(screen.getByTestId('note-composer'), 'Failing note');
+    fireEvent.click(screen.getByTestId('add-note-btn'));
+
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith(expect.any(String), 'error');
+    });
   });
 });
