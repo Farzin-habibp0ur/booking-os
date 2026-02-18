@@ -99,9 +99,7 @@ describe('AllExceptionsFilter', () => {
     filter.catch(new PrismaClientKnownRequestError(), host);
 
     expect(status).toHaveBeenCalledWith(400);
-    expect(json).toHaveBeenCalledWith(
-      expect.objectContaining({ message: 'Record not found' }),
-    );
+    expect(json).toHaveBeenCalledWith(expect.objectContaining({ message: 'Record not found' }));
   });
 
   it('handles unknown Prisma error code with fallback message', () => {

@@ -95,9 +95,14 @@ export default function DashboardPage() {
   useEffect(() => {
     if (landingPath && landingPath !== '/dashboard') {
       // Only redirect if user arrived here from login/root (no explicit nav)
-      const navEntry = window.performance?.getEntriesByType?.('navigation')?.[0] as PerformanceNavigationTiming | undefined;
+      const navEntry = window.performance?.getEntriesByType?.('navigation')?.[0] as
+        | PerformanceNavigationTiming
+        | undefined;
       const isDirectLoad = !navEntry || navEntry.type === 'navigate' || navEntry.type === 'reload';
-      const fromLogin = document.referrer.includes('/login') || document.referrer === '' || document.referrer.endsWith('/');
+      const fromLogin =
+        document.referrer.includes('/login') ||
+        document.referrer === '' ||
+        document.referrer.endsWith('/');
       if (isDirectLoad && fromLogin) {
         router.replace(landingPath);
         return;
