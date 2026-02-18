@@ -30,7 +30,26 @@ import {
   X,
   Target,
   ClipboardList,
+  Search,
+  Star,
+  Flag,
+  Bookmark,
+  Heart,
+  Eye,
+  Bell,
+  Zap,
 } from 'lucide-react';
+
+const DASHBOARD_VIEW_ICONS: Record<string, any> = {
+  filter: Search,
+  star: Star,
+  flag: Flag,
+  bookmark: Bookmark,
+  heart: Heart,
+  eye: Eye,
+  bell: Bell,
+  zap: Zap,
+};
 
 const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
   PENDING: { bg: 'bg-lavender-50', text: 'text-lavender-900' },
@@ -66,6 +85,7 @@ export default function DashboardPage() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [resending, setResending] = useState(false);
+  const [dashboardViews, setDashboardViews] = useState<any[]>([]);
   const { t } = useI18n();
   const { user } = useAuth();
   const { mode } = useMode();
@@ -85,6 +105,12 @@ export default function DashboardPage() {
       })
       .catch(console.error)
       .finally(() => setLoading(false));
+
+    // Load dashboard-pinned saved views
+    api
+      .get<any[]>('/saved-views/dashboard')
+      .then((views) => setDashboardViews(views || []))
+      .catch(() => {});
   }, []);
 
   const handleDismissNudge = async (nudgeId: string) => {
@@ -199,6 +225,26 @@ export default function DashboardPage() {
 
       {/* Attention Cards — all modes */}
       <AttentionCards attentionNeeded={data.attentionNeeded} />
+
+      {/* Dashboard-pinned Saved Views */}
+      {dashboardViews.length > 0 && (
+        <div data-testid="dashboard-views" className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {dashboardViews.map((view) => {
+            const ViewIcon = DASHBOARD_VIEW_ICONS[view.icon] || Bookmark;
+            return (
+              <button
+                key={view.id}
+                onClick={() => router.push(`/${view.page}?viewId=${view.id}`)}
+                className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-4 text-left hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+              >
+                <ViewIcon size={16} className="text-sage-600 mb-2" />
+                <p className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">{view.name}</p>
+                <p className="text-xs text-slate-400 capitalize">{view.page}</p>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* Agent/Provider: Today's Schedule (if not already in My Work) */}
       {mode === 'agent' && (

@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, useState, useEffect } from 'react';
+import { ReactNode, useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
@@ -10,6 +10,7 @@ import { ToastProvider } from '@/lib/toast';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { LanguagePicker } from '@/components/language-picker';
 import { cn } from '@/lib/cn';
+import { api } from '@/lib/api';
 import {
   LayoutDashboard,
   MessageSquare,
@@ -35,12 +36,30 @@ import {
   Compass,
   ChevronDown,
   ChevronUp,
+  Pin,
+  Bookmark,
+  Star,
+  Flag,
+  Heart,
+  Eye,
+  Bell,
 } from 'lucide-react';
 import CommandPalette from '@/components/command-palette';
 import { useTheme } from '@/lib/use-theme';
 import { DemoTourProvider, useDemoTour, TourSpotlight, TourTooltip } from '@/components/demo-tour';
 import { ModeProvider, useMode } from '@/lib/use-mode';
 import ModeSwitcher from '@/components/mode-switcher';
+
+const SAVED_VIEW_ICONS: Record<string, any> = {
+  filter: Search,
+  star: Star,
+  flag: Flag,
+  bookmark: Bookmark,
+  heart: Heart,
+  eye: Eye,
+  bell: Bell,
+  zap: Zap,
+};
 
 export function Shell({ children }: { children: ReactNode }) {
   return (
@@ -69,11 +88,26 @@ function ShellInner({ children }: { children: ReactNode }) {
   const { theme, toggle: toggleTheme } = useTheme();
   const { state: tourState, startTour } = useDemoTour();
   const { modeDef } = useMode();
+  const [pinnedViews, setPinnedViews] = useState<any[]>([]);
 
   // Close sidebar on route change (mobile)
   useEffect(() => {
     setSidebarOpen(false);
   }, [pathname]);
+
+  // Load sidebar-pinned saved views
+  const loadPinnedViews = useCallback(async () => {
+    try {
+      const views = await api.get<any[]>('/saved-views/pinned');
+      setPinnedViews(views || []);
+    } catch {
+      // Silently handle
+    }
+  }, []);
+
+  useEffect(() => {
+    loadPinnedViews();
+  }, [loadPinnedViews]);
 
   // Cmd+K / Ctrl+K listener
   useEffect(() => {
@@ -232,6 +266,32 @@ function ShellInner({ children }: { children: ReactNode }) {
           </>
         )}
       </nav>
+      {/* Sidebar Pinned Views */}
+      {pinnedViews.length > 0 && (
+        <div className="px-2 pb-2 border-t border-slate-100 dark:border-slate-800 pt-2" data-testid="pinned-views-section">
+          <p className="px-3 py-1 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+            {t('saved_views.views_label')}
+          </p>
+          {pinnedViews.map((view) => {
+            const ViewIcon = SAVED_VIEW_ICONS[view.icon] || Bookmark;
+            return (
+              <Link
+                key={view.id}
+                href={`/${view.page}?viewId=${view.id}`}
+                className={cn(
+                  'flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm transition-colors',
+                  pathname === `/${view.page}`
+                    ? 'text-sage-700 dark:text-sage-400'
+                    : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800',
+                )}
+              >
+                <ViewIcon size={14} />
+                <span className="truncate text-xs">{view.name}</span>
+              </Link>
+            );
+          })}
+        </div>
+      )}
       <div className="p-2 border-t border-slate-100 dark:border-slate-800 space-y-1">
         <button
           onClick={startTour}

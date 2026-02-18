@@ -845,7 +845,9 @@
     "remove_dashboard": "Remove from dashboard",
     "share": "Share with team",
     "delete": "Delete view",
-    "saving": "Saving..."
+    "saving": "Saving...",
+    "views_label": "Views",
+    "dashboard_views": "Saved Views"
   },
 
   "status": {

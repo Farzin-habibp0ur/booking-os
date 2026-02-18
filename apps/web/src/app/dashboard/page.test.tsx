@@ -117,6 +117,14 @@ jest.mock('lucide-react', () => ({
   Target: (props: any) => <div data-testid="target-icon" {...props} />,
   ClipboardList: (props: any) => <div data-testid="clipboard-list-icon" {...props} />,
   Clock: (props: any) => <div data-testid="clock-icon" {...props} />,
+  Search: (props: any) => <div data-testid="search-icon" {...props} />,
+  Star: (props: any) => <div data-testid="star-icon" {...props} />,
+  Flag: (props: any) => <div data-testid="flag-icon" {...props} />,
+  Bookmark: (props: any) => <div data-testid="bookmark-icon" {...props} />,
+  Heart: (props: any) => <div data-testid="heart-icon" {...props} />,
+  Eye: (props: any) => <div data-testid="eye-icon" {...props} />,
+  Bell: (props: any) => <div data-testid="bell-icon" {...props} />,
+  Zap: (props: any) => <div data-testid="zap-icon" {...props} />,
 }));
 
 import { api } from '@/lib/api';
@@ -1628,5 +1636,80 @@ describe('DashboardPage', () => {
       expect(screen.getByText('Waitlist Backfill')).toBeInTheDocument();
       expect(screen.getByText('78%')).toBeInTheDocument();
     });
+  });
+
+  // ─── Dashboard Pinned Views ──────────────────────────────
+
+  it('fetches dashboard views on mount', async () => {
+    mockDashboard();
+
+    render(<DashboardPage />);
+
+    await waitFor(() => {
+      expect(mockApi.get).toHaveBeenCalledWith('/saved-views/dashboard');
+    });
+  });
+
+  it('renders dashboard view cards when views exist', async () => {
+    mockApi.get.mockImplementation((path: string) => {
+      if (path === '/business') {
+        return Promise.resolve({ packConfig: { setupComplete: true } });
+      }
+      if (path === '/dashboard') {
+        return Promise.resolve(baseDashboardData);
+      }
+      if (path === '/saved-views/dashboard') {
+        return Promise.resolve([
+          { id: 'v1', name: 'Pending Deposits', page: 'bookings', icon: 'flag', isDashboard: true },
+          { id: 'v2', name: 'Overdue Replies', page: 'inbox', icon: 'bell', isDashboard: true },
+        ]);
+      }
+      return Promise.resolve({});
+    });
+
+    render(<DashboardPage />);
+
+    expect(await screen.findByText('Pending Deposits')).toBeInTheDocument();
+    expect(screen.getByText('Overdue Replies')).toBeInTheDocument();
+    expect(screen.getByTestId('dashboard-views')).toBeInTheDocument();
+  });
+
+  it('navigates to page with viewId when dashboard view card clicked', async () => {
+    const user = userEvent.setup();
+    mockApi.get.mockImplementation((path: string) => {
+      if (path === '/business') {
+        return Promise.resolve({ packConfig: { setupComplete: true } });
+      }
+      if (path === '/dashboard') {
+        return Promise.resolve(baseDashboardData);
+      }
+      if (path === '/saved-views/dashboard') {
+        return Promise.resolve([
+          { id: 'v1', name: 'Pending Deposits', page: 'bookings', icon: 'flag', isDashboard: true },
+        ]);
+      }
+      return Promise.resolve({});
+    });
+
+    render(<DashboardPage />);
+
+    const card = await screen.findByText('Pending Deposits');
+    await act(async () => {
+      await user.click(card.closest('button')!);
+    });
+
+    expect(mockPush).toHaveBeenCalledWith('/bookings?viewId=v1');
+  });
+
+  it('hides dashboard views section when no views', async () => {
+    mockDashboard();
+
+    render(<DashboardPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('dashboard.title')).toBeInTheDocument();
+    });
+
+    expect(screen.queryByTestId('dashboard-views')).not.toBeInTheDocument();
   });
 });

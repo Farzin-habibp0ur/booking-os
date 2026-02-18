@@ -97,10 +97,31 @@ jest.mock('@/lib/use-mode', () => ({
 
 jest.mock('@/components/mode-switcher', () => () => <div data-testid="mode-switcher">ModeSwitcher</div>);
 
+// Mock api for pinned views
+jest.mock('@/lib/api', () => ({
+  api: {
+    get: jest.fn().mockResolvedValue([]),
+    post: jest.fn(),
+    patch: jest.fn(),
+    del: jest.fn(),
+  },
+}));
+
+jest.mock('@/lib/cn', () => ({
+  cn: (...args: any[]) => args.filter(Boolean).join(' '),
+}));
+
 // Import Shell after all mocks
 import { Shell } from './shell';
+import { api } from '@/lib/api';
+const mockApi = api as jest.Mocked<typeof api>;
 
 describe('Shell', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockApi.get.mockResolvedValue([]);
+  });
+
   it('renders the shell with mode switcher', () => {
     render(<Shell><div>Content</div></Shell>);
 
@@ -146,5 +167,45 @@ describe('Shell', () => {
     render(<Shell><div>Content</div></Shell>);
 
     expect(screen.getAllByText('Glow Clinic').length).toBeGreaterThan(0);
+  });
+
+  it('fetches pinned views on mount', () => {
+    render(<Shell><div>Content</div></Shell>);
+
+    expect(mockApi.get).toHaveBeenCalledWith('/saved-views/pinned');
+  });
+
+  it('renders pinned views section when views exist', async () => {
+    mockApi.get.mockResolvedValue([
+      { id: 'v1', name: 'Pending Deposits', page: 'bookings', icon: 'flag', isPinned: true },
+      { id: 'v2', name: 'Overdue Replies', page: 'inbox', icon: 'bell', isPinned: true },
+    ]);
+
+    render(<Shell><div>Content</div></Shell>);
+
+    expect(await screen.findByText('Pending Deposits')).toBeInTheDocument();
+    expect(screen.getByText('Overdue Replies')).toBeInTheDocument();
+    expect(screen.getByTestId('pinned-views-section')).toBeInTheDocument();
+  });
+
+  it('does not render pinned views section when no views', async () => {
+    mockApi.get.mockResolvedValue([]);
+
+    render(<Shell><div>Content</div></Shell>);
+
+    // Wait for mount to settle
+    await screen.findByText('Content');
+    expect(screen.queryByTestId('pinned-views-section')).not.toBeInTheDocument();
+  });
+
+  it('renders pinned view as link to page with viewId', async () => {
+    mockApi.get.mockResolvedValue([
+      { id: 'v1', name: 'Pending Deposits', page: 'bookings', icon: 'flag', isPinned: true },
+    ]);
+
+    render(<Shell><div>Content</div></Shell>);
+
+    const link = await screen.findByText('Pending Deposits');
+    expect(link.closest('a')).toHaveAttribute('href', '/bookings?viewId=v1');
   });
 });

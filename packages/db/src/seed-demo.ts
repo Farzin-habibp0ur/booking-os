@@ -1451,7 +1451,78 @@ async function main() {
       console.log('✅ ROI baseline created');
     }
 
-    // ── 16. Mark demo as seeded ───────────────────────────────────────────────
+    // ── 16. Staff preferences + Saved Views ───────────────────────────────────
+    await prisma.staff.update({
+      where: { id: sarah.id },
+      data: { preferences: { mode: 'admin', landingPath: '/dashboard' } },
+    });
+    await prisma.staff.update({
+      where: { id: maria.id },
+      data: { preferences: { mode: 'agent', landingPath: '/inbox' } },
+    });
+    await prisma.staff.update({
+      where: { id: emily.id },
+      data: { preferences: { mode: 'provider', landingPath: '/calendar' } },
+    });
+    console.log('✅ Staff preferences set (admin/agent/provider modes)');
+
+    // Sample saved views
+    await prisma.savedView.createMany({
+      data: [
+        {
+          businessId: bizId,
+          staffId: sarah.id,
+          page: 'bookings',
+          name: 'Pending Deposits',
+          filters: { status: 'PENDING_DEPOSIT' },
+          icon: 'flag',
+          color: 'amber',
+          isPinned: true,
+          isDashboard: true,
+          sortOrder: 0,
+        },
+        {
+          businessId: bizId,
+          staffId: sarah.id,
+          page: 'inbox',
+          name: 'Overdue Replies',
+          filters: { predefined: 'overdue', search: '', locationId: '' },
+          icon: 'bell',
+          color: 'lavender',
+          isPinned: true,
+          isDashboard: false,
+          sortOrder: 1,
+        },
+        {
+          businessId: bizId,
+          staffId: null,
+          page: 'bookings',
+          name: 'Confirmed Today',
+          filters: { status: 'CONFIRMED' },
+          icon: 'star',
+          color: 'sage',
+          isPinned: false,
+          isDashboard: true,
+          isShared: true,
+          sortOrder: 0,
+        },
+        {
+          businessId: bizId,
+          staffId: maria.id,
+          page: 'inbox',
+          name: 'My Queue',
+          filters: { predefined: 'mine', search: '', locationId: '' },
+          icon: 'bookmark',
+          color: 'sage',
+          isPinned: true,
+          isDashboard: false,
+          sortOrder: 0,
+        },
+      ],
+    });
+    console.log('✅ 4 sample saved views created (2 pinned, 2 on dashboard, 1 shared)');
+
+    // ── 17. Mark demo as seeded ───────────────────────────────────────────────
     const latestConfig = (await prisma.business.findUnique({ where: { id: bizId } }))!
       .packConfig as Record<string, unknown>;
     await prisma.business.update({
