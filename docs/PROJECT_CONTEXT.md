@@ -486,6 +486,7 @@ Key groups (full list in `.env.example`):
 
 ### Code Quality
 - **Error Handling Remediation** — COMPLETE (commit 1cf6f99). Replaced ~20 silent `.catch(() => {})` with logged warnings, queue processors throw on failure, NestJS proper exceptions, frontend toast wiring, waitlist loop resilience, WebSocket disconnect logging. +58 tests.
+- **Security Remediation** — COMPLETE (5 batches, 22 fixes applied across 39 audit findings). Key changes: CSP/HSTS/security headers, cross-tenant CampaignSend fix, DTO input validation with MaxLength, pagination caps, booking status state machine, per-customer offer redemption with OfferRedemption model, refresh token blacklisting on logout, JWT_REFRESH_SECRET production enforcement, Stripe redirect URL validation, LoginDto for empty body handling. ~80 tests added. **Final counts:** 2,520 tests total (1,561 API + 959 web).
 
 ### Do Not Build (Yet)
 - Don't chase 5 verticals before aesthetics ROI is repeatable
