@@ -72,6 +72,9 @@ export default function CustomerDetailPage() {
   // Conversations state
   const [conversations, setConversations] = useState<any[]>([]);
 
+  // Waitlist state
+  const [waitlistCount, setWaitlistCount] = useState(0);
+
   // Vertical modules state
   const [verticalOpen, setVerticalOpen] = useState(true);
 
@@ -85,7 +88,7 @@ export default function CustomerDetailPage() {
 
   const loadCustomer = async () => {
     try {
-      const [cust, bkgs, convs, notes] = await Promise.all([
+      const [cust, bkgs, convs, notes, wlEntries] = await Promise.all([
         api.get<any>(`/customers/${id}`),
         api.get<any[]>(`/customers/${id}/bookings`),
         api
@@ -97,11 +100,20 @@ export default function CustomerDetailPage() {
           })
           .catch(() => []),
         api.get<any[]>(`/customers/${id}/notes`).catch(() => []),
+        api
+          .get<any[]>('/waitlist')
+          .then((entries: any[]) =>
+            Array.isArray(entries)
+              ? entries.filter((e: any) => e.customer?.id === id && e.status === 'ACTIVE')
+              : [],
+          )
+          .catch(() => []),
       ]);
       setCustomer(cust);
       setBookings(bkgs || []);
       setConversations(convs || []);
       setCustomerNotes(notes || []);
+      setWaitlistCount((wlEntries || []).length);
       setEditName(cust.name);
       setEditEmail(cust.email || '');
       setEditTags((cust.tags || []).join(', '));
@@ -325,6 +337,14 @@ export default function CustomerDetailPage() {
           <div className="flex items-center gap-1">
             <span data-testid="conversation-count">
               {conversations.length} {t('customer_detail.conversations_count')}
+            </span>
+          </div>
+        )}
+        {waitlistCount > 0 && (
+          <div className="flex items-center gap-1">
+            <Clock size={12} />
+            <span data-testid="waitlist-count">
+              {waitlistCount} {t('customer_detail.on_waitlist')}
             </span>
           </div>
         )}

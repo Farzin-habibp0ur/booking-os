@@ -151,12 +151,22 @@ const mockNotes = [
   },
 ];
 
-function setupMocks(customer = mockCustomer, bookings = mockBookings, notes = mockNotes) {
+const mockWaitlistEntries = [
+  { id: 'wl1', customer: { id: 'cust-1' }, status: 'ACTIVE', service: { name: 'Botox' } },
+];
+
+function setupMocks(
+  customer = mockCustomer,
+  bookings = mockBookings,
+  notes = mockNotes,
+  waitlist = mockWaitlistEntries,
+) {
   mockApi.get.mockImplementation((path: string) => {
     if (path === '/customers/cust-1') return Promise.resolve(customer);
     if (path === '/customers/cust-1/bookings') return Promise.resolve(bookings);
     if (path === '/customers/cust-1/notes') return Promise.resolve(notes);
     if (path.startsWith('/conversations')) return Promise.resolve({ data: mockConversations });
+    if (path === '/waitlist') return Promise.resolve(waitlist);
     return Promise.reject(new Error('Not found'));
   });
 }
@@ -510,6 +520,7 @@ describe('CustomerDetailPage', () => {
       if (path === '/customers/cust-1/bookings') return Promise.resolve(mockBookings);
       if (path === '/customers/cust-1/notes') return Promise.resolve([]);
       if (path.startsWith('/conversations')) return Promise.resolve({ data: [] });
+      if (path === '/waitlist') return Promise.resolve([]);
       return Promise.reject(new Error('Not found'));
     });
     render(<CustomerDetailPage />);
@@ -537,6 +548,22 @@ describe('CustomerDetailPage', () => {
     await waitFor(() => {
       expect(screen.getByTestId('last-conversation-date')).toBeInTheDocument();
     });
+  });
+
+  it('shows waitlist count in context row when customer has active entries', async () => {
+    setupMocks();
+    render(<CustomerDetailPage />);
+    await waitFor(() => {
+      expect(screen.getByTestId('waitlist-count')).toBeInTheDocument();
+      expect(screen.getByTestId('waitlist-count')).toHaveTextContent('1');
+    });
+  });
+
+  it('hides waitlist count when no active entries', async () => {
+    setupMocks(mockCustomer, mockBookings, mockNotes, []);
+    render(<CustomerDetailPage />);
+    await waitFor(() => screen.getAllByText('Emma Wilson'));
+    expect(screen.queryByTestId('waitlist-count')).not.toBeInTheDocument();
   });
 
   // ─── Notes Tab ─────────────────────────────────────────────────────
@@ -758,6 +785,7 @@ describe('CustomerDetailPage — Dealership Pack', () => {
       if (path === '/customers/cust-1/bookings') return Promise.resolve(bookings);
       if (path === '/customers/cust-1/notes') return Promise.resolve([]);
       if (path.startsWith('/conversations')) return Promise.resolve({ data: [] });
+      if (path === '/waitlist') return Promise.resolve([]);
       return Promise.reject(new Error('Not found'));
     });
   }
