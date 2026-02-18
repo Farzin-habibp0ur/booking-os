@@ -4,7 +4,18 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useToast } from '@/lib/toast';
-import { Search, Plus, ChevronRight, Users, Upload, X, Loader2, Tag } from 'lucide-react';
+import {
+  Search,
+  Plus,
+  ChevronRight,
+  Users,
+  Upload,
+  X,
+  Loader2,
+  Tag,
+  AlertTriangle,
+  RefreshCw,
+} from 'lucide-react';
 import BulkActionBar from '@/components/bulk-action-bar';
 import { cn } from '@/lib/cn';
 import { usePack } from '@/lib/vertical-pack';
@@ -19,6 +30,7 @@ export default function CustomersPage() {
   const { toast } = useToast();
   const [customers, setCustomers] = useState<any>({ data: [], total: 0 });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [search, setSearch] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [showImport, setShowImport] = useState(false);
@@ -26,6 +38,7 @@ export default function CustomersPage() {
   const [bulkTagModal, setBulkTagModal] = useState<'tag' | 'untag' | null>(null);
   const [tagInput, setTagInput] = useState('');
   const [activeViewId, setActiveViewId] = useState<string | null>(null);
+  const retryCountRef = useRef(0);
 
   const currentFilters = { search };
 
@@ -43,11 +56,30 @@ export default function CustomersPage() {
   };
 
   const load = (s?: string) => {
+    setLoading(true);
+    setError(false);
     api
-      .get<any>(`/customers?search=${s || search}&pageSize=50`)
-      .then(setCustomers)
-      .catch((err: any) => toast(err.message || 'Failed to load customers', 'error'))
-      .finally(() => setLoading(false));
+      .get<any>(`/customers?search=${s ?? search}&pageSize=50`)
+      .then((data) => {
+        setCustomers(data);
+        retryCountRef.current = 0;
+        setLoading(false);
+      })
+      .catch((err: any) => {
+        if (retryCountRef.current < 1) {
+          retryCountRef.current += 1;
+          setTimeout(() => load(s), 1500);
+        } else {
+          toast(
+            err.message ||
+              t('customers.load_error', { entity: pack.labels.customer.toLowerCase() }),
+            'error',
+          );
+          setError(true);
+          setLoading(false);
+          retryCountRef.current = 0;
+        }
+      });
   };
 
   useEffect(() => {
@@ -246,7 +278,29 @@ export default function CustomersPage() {
             </tbody>
           </table>
         </div>
-        {!loading && (!customers.data || customers.data.length === 0) && (
+        {!loading && error && (!customers.data || customers.data.length === 0) && (
+          <div
+            className="flex flex-col items-center justify-center py-16 text-center"
+            data-testid="error-state"
+          >
+            <AlertTriangle size={48} className="text-amber-400 mb-3" />
+            <h3 className="text-lg font-medium text-slate-600 mb-1">
+              {t('customers.load_error_title')}
+            </h3>
+            <p className="text-sm text-slate-400 max-w-sm mb-4">
+              {t('customers.load_error_description')}
+            </p>
+            <button
+              onClick={() => load()}
+              data-testid="retry-button"
+              className="flex items-center gap-2 bg-sage-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-sage-700 transition-colors"
+            >
+              <RefreshCw size={14} />
+              {t('common.retry')}
+            </button>
+          </div>
+        )}
+        {!loading && !error && (!customers.data || customers.data.length === 0) && (
           <EmptyState
             icon={Users}
             title={t('customers.no_customers', { entity: pack.labels.customer.toLowerCase() })}

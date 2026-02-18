@@ -37,7 +37,8 @@
     "or": "or",
     "none": "None",
     "off": "Off",
-    "working": "Working"
+    "working": "Working",
+    "retry": "Retry"
   },
 
   "app": {
@@ -278,7 +279,10 @@
     "add_title": "Add {{entity}}",
     "name_placeholder": "Name",
     "phone_placeholder": "Phone (E.164)",
-    "email_placeholder": "Email (optional)"
+    "email_placeholder": "Email (optional)",
+    "load_error": "Failed to load {{entity}}s",
+    "load_error_title": "Unable to load data",
+    "load_error_description": "Check your connection and try again."
   },
 
   "customer_detail": {

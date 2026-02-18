@@ -37,7 +37,8 @@
     "or": "o",
     "none": "Ninguno",
     "off": "Libre",
-    "working": "Laboral"
+    "working": "Laboral",
+    "retry": "Reintentar"
   },
 
   "app": {
@@ -250,7 +251,10 @@
     "add_title": "Agregar {{entity}}",
     "name_placeholder": "Nombre",
     "phone_placeholder": "Teléfono (E.164)",
-    "email_placeholder": "Correo (opcional)"
+    "email_placeholder": "Correo (opcional)",
+    "load_error": "Error al cargar {{entity}}s",
+    "load_error_title": "No se pudieron cargar los datos",
+    "load_error_description": "Verifica tu conexión e intenta de nuevo."
   },
 
   "customer_detail": {

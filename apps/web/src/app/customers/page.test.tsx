@@ -356,26 +356,152 @@ describe('CustomersPage', () => {
   });
 
   // =============================
-  // ERROR STATE
+  // ERROR STATE + RETRY
   // =============================
   describe('error state', () => {
-    it('handles API error gracefully (no crash)', async () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('handles API error gracefully after retry (no crash)', async () => {
+      setupApiReject();
+      render(<CustomersPage />);
+
+      // First call fails, triggers retry after 1500ms
+      await waitFor(() => {
+        expect(mockApi.get).toHaveBeenCalledTimes(1);
+      });
+
+      // Advance timer to trigger retry
+      jest.advanceTimersByTime(1500);
+
+      // Second call also fails → shows error state
+      await waitFor(() => {
+        expect(screen.getByTestId('error-state')).toBeInTheDocument();
+      });
+    });
+
+    it('shows error toast after auto-retry exhausted', async () => {
       setupApiReject();
       render(<CustomersPage />);
 
       await waitFor(() => {
-        // After error, loading should be false and empty state should show
-        expect(screen.getByTestId('empty-state')).toBeInTheDocument();
+        expect(mockApi.get).toHaveBeenCalledTimes(1);
       });
-    });
 
-    it('shows error toast when customers API fails', async () => {
-      setupApiReject();
-      render(<CustomersPage />);
+      jest.advanceTimersByTime(1500);
 
       await waitFor(() => {
         expect(mockToast).toHaveBeenCalledWith(expect.any(String), 'error');
       });
+    });
+
+    it('auto-retries once before showing error state', async () => {
+      setupApiReject();
+      render(<CustomersPage />);
+
+      await waitFor(() => {
+        expect(mockApi.get).toHaveBeenCalledTimes(1);
+      });
+
+      // Should not show error yet (retry pending)
+      expect(screen.queryByTestId('error-state')).not.toBeInTheDocument();
+
+      jest.advanceTimersByTime(1500);
+
+      // After retry, should have called API twice total
+      await waitFor(() => {
+        expect(mockApi.get).toHaveBeenCalledTimes(2);
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('error-state')).toBeInTheDocument();
+      });
+    });
+
+    it('shows retry button in error state', async () => {
+      setupApiReject();
+      render(<CustomersPage />);
+
+      await waitFor(() => {
+        expect(mockApi.get).toHaveBeenCalledTimes(1);
+      });
+
+      jest.advanceTimersByTime(1500);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('retry-button')).toBeInTheDocument();
+      });
+    });
+
+    it('clicking retry button calls load again', async () => {
+      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+      setupApiReject();
+      render(<CustomersPage />);
+
+      await waitFor(() => {
+        expect(mockApi.get).toHaveBeenCalledTimes(1);
+      });
+
+      jest.advanceTimersByTime(1500);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('retry-button')).toBeInTheDocument();
+      });
+
+      // Now make API succeed on next call
+      mockApi.get.mockImplementation(() => Promise.resolve({ data: MOCK_CUSTOMERS, total: 3 }));
+
+      await user.click(screen.getByTestId('retry-button'));
+
+      await waitFor(() => {
+        expect(screen.getByText('Emma Stone')).toBeInTheDocument();
+      });
+      expect(screen.queryByTestId('error-state')).not.toBeInTheDocument();
+    });
+
+    it('recovers on auto-retry if second attempt succeeds', async () => {
+      let callCount = 0;
+      mockApi.get.mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) return Promise.reject(new Error('Transient error'));
+        return Promise.resolve({ data: MOCK_CUSTOMERS, total: 3 });
+      });
+
+      render(<CustomersPage />);
+
+      await waitFor(() => {
+        expect(mockApi.get).toHaveBeenCalledTimes(1);
+      });
+
+      jest.advanceTimersByTime(1500);
+
+      // Second call succeeds — should show data, NOT error state
+      await waitFor(() => {
+        expect(screen.getByText('Emma Stone')).toBeInTheDocument();
+      });
+      expect(screen.queryByTestId('error-state')).not.toBeInTheDocument();
+      expect(mockToast).not.toHaveBeenCalledWith(expect.any(String), 'error');
+    });
+
+    it('does NOT show empty state when in error state', async () => {
+      setupApiReject();
+      render(<CustomersPage />);
+
+      await waitFor(() => {
+        expect(mockApi.get).toHaveBeenCalledTimes(1);
+      });
+
+      jest.advanceTimersByTime(1500);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('error-state')).toBeInTheDocument();
+      });
+      expect(screen.queryByTestId('empty-state')).not.toBeInTheDocument();
     });
   });
 
