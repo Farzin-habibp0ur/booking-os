@@ -19,18 +19,39 @@ jest.mock('@/lib/i18n', () => ({
   useI18n: () => ({ t: (key: string, params?: any) => key }),
   I18nProvider: ({ children }: any) => children,
 }));
+const mockUsePack = jest.fn();
 jest.mock('@/lib/vertical-pack', () => ({
-  usePack: () => ({
-    name: 'general',
-    labels: { customer: 'Customer', booking: 'Booking', service: 'Service' },
-    customerFields: [
-      { key: 'skinType', label: 'Skin Type', type: 'select', options: ['Dry', 'Oily', 'Normal'] },
-      { key: 'allergies', label: 'Allergies', type: 'text' },
-      { key: 'vip', label: 'VIP', type: 'boolean' },
-    ],
-  }),
+  usePack: () => mockUsePack(),
   VerticalPackProvider: ({ children }: any) => children,
 }));
+
+const generalPack = {
+  name: 'general',
+  slug: 'general',
+  labels: { customer: 'Customer', booking: 'Booking', service: 'Service' },
+  customerFields: [
+    { key: 'skinType', label: 'Skin Type', type: 'select', options: ['Dry', 'Oily', 'Normal'] },
+    { key: 'allergies', label: 'Allergies', type: 'text' },
+    { key: 'vip', label: 'VIP', type: 'boolean' },
+  ],
+};
+
+const aestheticPack = {
+  name: 'aesthetic',
+  slug: 'aesthetic',
+  labels: { customer: 'Patient', booking: 'Appointment', service: 'Treatment' },
+  customerFields: [
+    { key: 'skinType', label: 'Skin Type', type: 'select', options: ['Dry', 'Oily', 'Normal'] },
+    { key: 'allergies', label: 'Allergies', type: 'text' },
+  ],
+};
+
+const dealershipPack = {
+  name: 'dealership',
+  slug: 'dealership',
+  labels: { customer: 'Client', booking: 'Appointment', service: 'Service' },
+  customerFields: [],
+};
 const mockToast = jest.fn();
 jest.mock('@/lib/toast', () => ({
   useToast: () => ({ toast: mockToast }),
@@ -59,6 +80,14 @@ jest.mock('@/components/customer-timeline', () => ({
   __esModule: true,
   default: ({ customerId }: any) => (
     <div data-testid="customer-timeline">Timeline for {customerId}</div>
+  ),
+}));
+jest.mock('@/components/intake-card', () => ({
+  __esModule: true,
+  default: ({ customer, fields, onUpdated }: any) => (
+    <div data-testid="intake-card">
+      IntakeCard for {customer?.id} with {fields?.length} fields
+    </div>
   ),
 }));
 
@@ -135,6 +164,7 @@ function setupMocks(customer = mockCustomer, bookings = mockBookings, notes = mo
 describe('CustomerDetailPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockUsePack.mockReturnValue(generalPack);
   });
 
   it('shows loading state initially', async () => {
@@ -632,6 +662,16 @@ describe('CustomerDetailPage', () => {
 
   // ─── Note CRUD Error Handling ──────────────────────────────────────
 
+  // ─── Vertical Modules ─────────────────────────────────────────────
+
+  it('does not show vertical modules for general pack', async () => {
+    setupMocks();
+    render(<CustomerDetailPage />);
+    await waitFor(() => screen.getAllByText('Emma Wilson'));
+
+    expect(screen.queryByTestId('vertical-modules')).not.toBeInTheDocument();
+  });
+
   it('shows toast on note creation error', async () => {
     setupMocks();
     mockApi.post.mockRejectedValue(new Error('Server error'));
@@ -647,5 +687,148 @@ describe('CustomerDetailPage', () => {
     await waitFor(() => {
       expect(mockToast).toHaveBeenCalledWith(expect.any(String), 'error');
     });
+  });
+});
+
+// ─── Vertical Modules (separate describes for pack overrides) ───────
+
+describe('CustomerDetailPage — Aesthetic Pack', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockUsePack.mockReturnValue(aestheticPack);
+  });
+
+  it('shows IntakeCard for aesthetic pack', async () => {
+    setupMocks();
+    render(<CustomerDetailPage />);
+    await waitFor(() => screen.getAllByText('Emma Wilson'));
+
+    expect(screen.getByTestId('vertical-modules')).toBeInTheDocument();
+    expect(screen.getByTestId('intake-card')).toBeInTheDocument();
+  });
+
+  it('collapses and expands vertical module', async () => {
+    setupMocks();
+    render(<CustomerDetailPage />);
+    await waitFor(() => screen.getAllByText('Emma Wilson'));
+
+    expect(screen.getByTestId('vertical-content')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('vertical-toggle'));
+
+    expect(screen.queryByTestId('vertical-content')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('vertical-toggle'));
+
+    expect(screen.getByTestId('vertical-content')).toBeInTheDocument();
+  });
+});
+
+describe('CustomerDetailPage — Dealership Pack', () => {
+  const mockBookingsWithQuotes = [
+    {
+      id: 'b1',
+      startTime: '2025-01-01T10:00:00Z',
+      status: 'COMPLETED',
+      service: { name: 'Oil Change', price: 60 },
+      staff: { name: 'Mike' },
+      quotes: [
+        { id: 'q1', totalAmount: 500, status: 'PENDING', description: 'Brake pads' },
+        { id: 'q2', totalAmount: 1200, status: 'APPROVED', description: 'Transmission' },
+      ],
+    },
+    {
+      id: 'b2',
+      startTime: '2025-02-01T10:00:00Z',
+      status: 'CONFIRMED',
+      service: { name: 'Inspection', price: 100 },
+      staff: { name: 'Mike' },
+      quotes: [{ id: 'q3', totalAmount: 300, status: 'PENDING', description: 'Tires' }],
+    },
+  ];
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockUsePack.mockReturnValue(dealershipPack);
+  });
+
+  function setupDealershipMocks(bookings = mockBookingsWithQuotes) {
+    mockApi.get.mockImplementation((path: string) => {
+      if (path === '/customers/cust-1') return Promise.resolve(mockCustomer);
+      if (path === '/customers/cust-1/bookings') return Promise.resolve(bookings);
+      if (path === '/customers/cust-1/notes') return Promise.resolve([]);
+      if (path.startsWith('/conversations')) return Promise.resolve({ data: [] });
+      return Promise.reject(new Error('Not found'));
+    });
+  }
+
+  it('shows quotes summary for dealership pack', async () => {
+    setupDealershipMocks();
+    render(<CustomerDetailPage />);
+    await waitFor(() => screen.getAllByText('Emma Wilson'));
+
+    expect(screen.getByTestId('vertical-modules')).toBeInTheDocument();
+    expect(screen.getByTestId('quotes-summary')).toBeInTheDocument();
+  });
+
+  it('shows pending and approved quote counts', async () => {
+    setupDealershipMocks();
+    render(<CustomerDetailPage />);
+    await waitFor(() => screen.getAllByText('Emma Wilson'));
+
+    await waitFor(() => {
+      expect(screen.getByText('customer_detail.pending_quotes')).toBeInTheDocument();
+      expect(screen.getByText('customer_detail.approved_quotes')).toBeInTheDocument();
+      expect(screen.getByText('customer_detail.total_quoted')).toBeInTheDocument();
+    });
+  });
+
+  it('shows quote rows', async () => {
+    setupDealershipMocks();
+    render(<CustomerDetailPage />);
+    await waitFor(() => screen.getAllByText('Emma Wilson'));
+
+    await waitFor(() => {
+      expect(screen.getAllByTestId('quote-row').length).toBe(3);
+    });
+  });
+
+  it('shows no quotes message when none exist', async () => {
+    setupDealershipMocks([
+      {
+        id: 'b1',
+        startTime: '2025-01-01T10:00:00Z',
+        status: 'COMPLETED',
+        service: { name: 'Oil Change', price: 60 },
+        staff: { name: 'Mike' },
+        quotes: [],
+      },
+    ]);
+    render(<CustomerDetailPage />);
+    await waitFor(() => screen.getAllByText('Emma Wilson'));
+
+    await waitFor(() => {
+      expect(screen.getByText('customer_detail.no_quotes')).toBeInTheDocument();
+    });
+  });
+
+  it('does not show IntakeCard for dealership pack', async () => {
+    setupDealershipMocks();
+    render(<CustomerDetailPage />);
+    await waitFor(() => screen.getAllByText('Emma Wilson'));
+
+    expect(screen.queryByTestId('intake-card')).not.toBeInTheDocument();
+  });
+
+  it('collapses dealership vertical module', async () => {
+    setupDealershipMocks();
+    render(<CustomerDetailPage />);
+    await waitFor(() => screen.getAllByText('Emma Wilson'));
+
+    expect(screen.getByTestId('quotes-summary')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('vertical-toggle'));
+
+    expect(screen.queryByTestId('quotes-summary')).not.toBeInTheDocument();
   });
 });

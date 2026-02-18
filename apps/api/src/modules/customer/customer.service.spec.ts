@@ -160,8 +160,8 @@ describe('CustomerService', () => {
   // ─── getBookings ──────────────────────────────────────────────────────
 
   describe('getBookings', () => {
-    it('returns bookings for customer with service and staff', async () => {
-      const bookings = [{ id: 'b1', service: {}, staff: {} }];
+    it('returns bookings for customer with service, staff, and quotes', async () => {
+      const bookings = [{ id: 'b1', service: {}, staff: {}, quotes: [] }];
       prisma.booking.findMany.mockResolvedValue(bookings as any);
 
       const result = await service.getBookings('biz1', 'c1');
@@ -169,7 +169,7 @@ describe('CustomerService', () => {
       expect(result).toEqual(bookings);
       expect(prisma.booking.findMany).toHaveBeenCalledWith({
         where: { businessId: 'biz1', customerId: 'c1' },
-        include: { service: true, staff: true },
+        include: { service: true, staff: true, quotes: true },
         orderBy: { startTime: 'desc' },
       });
     });

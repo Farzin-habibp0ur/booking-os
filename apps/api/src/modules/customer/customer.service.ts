@@ -288,7 +288,7 @@ export class CustomerService {
   async getBookings(businessId: string, customerId: string) {
     return this.prisma.booking.findMany({
       where: { businessId, customerId },
-      include: { service: true, staff: true },
+      include: { service: true, staff: true, quotes: true },
       orderBy: { startTime: 'desc' },
     });
   }

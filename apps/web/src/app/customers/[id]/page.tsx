@@ -27,9 +27,12 @@ import {
   StickyNote,
   Trash2,
   Activity,
+  ChevronDown,
+  DollarSign,
 } from 'lucide-react';
 import BookingFormModal from '@/components/booking-form-modal';
 import CustomerTimeline from '@/components/customer-timeline';
+import IntakeCard from '@/components/intake-card';
 
 const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
   PENDING: { bg: 'bg-lavender-50', text: 'text-lavender-900' },
@@ -68,6 +71,9 @@ export default function CustomerDetailPage() {
 
   // Conversations state
   const [conversations, setConversations] = useState<any[]>([]);
+
+  // Vertical modules state
+  const [verticalOpen, setVerticalOpen] = useState(true);
 
   // AI Chat state
   const [chatMessages, setChatMessages] = useState<Array<{ role: 'user' | 'ai'; text: string }>>(
@@ -833,6 +839,114 @@ export default function CustomerDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Vertical Modules */}
+      {(pack.slug === 'aesthetic' || pack.slug === 'dealership') && (
+        <div className="mt-6" data-testid="vertical-modules">
+          <button
+            onClick={() => setVerticalOpen(!verticalOpen)}
+            className="flex items-center gap-2 mb-3 text-sm font-semibold text-slate-500 uppercase hover:text-slate-700 transition-colors"
+            data-testid="vertical-toggle"
+          >
+            <ChevronDown
+              size={14}
+              className={cn('transition-transform', verticalOpen ? '' : '-rotate-90')}
+            />
+            {pack.slug === 'aesthetic'
+              ? t('customer_detail.clinic_intake')
+              : t('customer_detail.quotes_summary')}
+          </button>
+          {verticalOpen && (
+            <div className="bg-white rounded-2xl shadow-soft" data-testid="vertical-content">
+              {pack.slug === 'aesthetic' && pack.customerFields.length > 0 && (
+                <IntakeCard
+                  customer={customer}
+                  fields={pack.customerFields}
+                  onUpdated={(updated) => {
+                    setCustomer(updated);
+                  }}
+                />
+              )}
+              {pack.slug === 'dealership' && (
+                <div className="p-4" data-testid="quotes-summary">
+                  {(() => {
+                    const allQuotes = bookings.flatMap((b: any) => b.quotes || []);
+                    const pending = allQuotes.filter((q: any) => q.status === 'PENDING');
+                    const approved = allQuotes.filter((q: any) => q.status === 'APPROVED');
+                    const totalAmount = allQuotes.reduce(
+                      (sum: number, q: any) => sum + (Number(q.totalAmount) || 0),
+                      0,
+                    );
+                    return (
+                      <div>
+                        <div className="grid grid-cols-3 gap-4 mb-3">
+                          <div>
+                            <p className="text-xl font-serif font-bold text-lavender-600">
+                              {pending.length}
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              {t('customer_detail.pending_quotes')}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xl font-serif font-bold text-sage-600">
+                              {approved.length}
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              {t('customer_detail.approved_quotes')}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xl font-serif font-bold">
+                              ${Math.round(totalAmount)}
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              {t('customer_detail.total_quoted')}
+                            </p>
+                          </div>
+                        </div>
+                        {allQuotes.length === 0 && (
+                          <p className="text-sm text-slate-400 text-center py-2">
+                            {t('customer_detail.no_quotes')}
+                          </p>
+                        )}
+                        {allQuotes.length > 0 && (
+                          <div className="space-y-2">
+                            {allQuotes.slice(0, 5).map((q: any) => (
+                              <div
+                                key={q.id}
+                                className="flex items-center justify-between text-sm p-2 rounded-lg bg-slate-50/60"
+                                data-testid="quote-row"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <DollarSign size={14} className="text-slate-400" />
+                                  <span>${Number(q.totalAmount).toFixed(0)}</span>
+                                </div>
+                                <span
+                                  className={cn(
+                                    'text-[10px] px-2 py-0.5 rounded-full font-medium',
+                                    q.status === 'APPROVED'
+                                      ? 'bg-sage-50 text-sage-700'
+                                      : q.status === 'PENDING'
+                                        ? 'bg-lavender-50 text-lavender-700'
+                                        : 'bg-slate-100 text-slate-600',
+                                  )}
+                                >
+                                  {q.status}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Edit Modal */}
       {editing && (
