@@ -3394,4 +3394,98 @@ describe('BookingService', () => {
       expect(result.id).toBe('b1');
     });
   });
+
+  // ─── Security: Input Validation ─────────────────────────────────────
+
+  describe('input validation (security)', () => {
+    it('caps pageSize at 100', async () => {
+      prisma.booking.findMany.mockResolvedValue([]);
+      prisma.booking.count.mockResolvedValue(0);
+
+      const result = await bookingService.findAll('biz1', { pageSize: 999 });
+
+      expect(result.pageSize).toBe(100);
+      expect(prisma.booking.findMany).toHaveBeenCalledWith(expect.objectContaining({ take: 100 }));
+    });
+
+    it('enforces minimum pageSize of 1', async () => {
+      prisma.booking.findMany.mockResolvedValue([]);
+      prisma.booking.count.mockResolvedValue(0);
+
+      const result = await bookingService.findAll('biz1', { pageSize: -5 });
+
+      expect(result.pageSize).toBe(1);
+    });
+
+    it('enforces minimum page of 1', async () => {
+      prisma.booking.findMany.mockResolvedValue([]);
+      prisma.booking.count.mockResolvedValue(0);
+
+      const result = await bookingService.findAll('biz1', { page: 0 });
+
+      expect(result.page).toBe(1);
+    });
+
+    it('rejects past start time', async () => {
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        durationMins: 60,
+      } as any);
+
+      await expect(
+        bookingService.create('biz1', {
+          customerId: 'cust1',
+          serviceId: 'svc1',
+          startTime: '2020-01-01T10:00:00Z',
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('allows past start time with forceBook flag', async () => {
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        durationMins: 60,
+      } as any);
+      prisma.booking.findFirst.mockResolvedValue(null);
+      prisma.booking.create.mockResolvedValue({ id: 'b1' } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+
+      await expect(
+        bookingService.create('biz1', {
+          customerId: 'cust1',
+          serviceId: 'svc1',
+          startTime: '2020-01-01T10:00:00Z',
+          forceBook: true,
+        }),
+      ).resolves.toBeDefined();
+    });
+
+    it('rejects invalid date string', async () => {
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        durationMins: 60,
+      } as any);
+
+      await expect(
+        bookingService.create('biz1', {
+          customerId: 'cust1',
+          serviceId: 'svc1',
+          startTime: 'not-a-date',
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('ignores invalid dateFrom in findAll filter', async () => {
+      prisma.booking.findMany.mockResolvedValue([]);
+      prisma.booking.count.mockResolvedValue(0);
+
+      await bookingService.findAll('biz1', { dateFrom: 'invalid-date' });
+
+      expect(prisma.booking.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { businessId: 'biz1', startTime: {} },
+        }),
+      );
+    });
+  });
 });

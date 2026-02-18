@@ -26,8 +26,8 @@ export class CampaignService {
   }
 
   async findAll(businessId: string, query: { status?: string; page?: number; pageSize?: number }) {
-    const page = Number(query.page) || 1;
-    const pageSize = Number(query.pageSize) || 20;
+    const page = Math.max(1, Number(query.page) || 1);
+    const pageSize = Math.min(100, Math.max(1, Number(query.pageSize) || 20));
     const where: any = { businessId };
     if (query.status) where.status = query.status;
 

@@ -32,8 +32,8 @@ export class ConversationService {
       pageSize?: number;
     },
   ) {
-    const page = Number(query.page) || 1;
-    const pageSize = Number(query.pageSize) || 20;
+    const page = Math.max(1, Number(query.page) || 1);
+    const pageSize = Math.min(100, Math.max(1, Number(query.pageSize) || 20));
     const where: any = { businessId };
 
     // Location filter

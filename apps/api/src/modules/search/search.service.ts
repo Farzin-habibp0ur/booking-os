@@ -16,7 +16,8 @@ export class SearchService {
       };
     }
 
-    const q = query.trim();
+    const q = query.trim().substring(0, 200);
+    const safeLim = Math.min(50, Math.max(1, limit));
     const searchAll = !types || types.length === 0;
 
     const customerWhere = {
@@ -60,7 +61,7 @@ export class SearchService {
         ? this.prisma.customer.findMany({
             where: customerWhere,
             select: { id: true, name: true, phone: true, email: true },
-            take: limit,
+            take: safeLim,
             skip: offset,
             orderBy: { createdAt: 'desc' },
           })
@@ -75,7 +76,7 @@ export class SearchService {
               customer: { select: { name: true } },
               service: { select: { name: true } },
             },
-            take: limit,
+            take: safeLim,
             skip: offset,
             orderBy: { startTime: 'desc' },
           })
@@ -84,7 +85,7 @@ export class SearchService {
         ? this.prisma.service.findMany({
             where: serviceWhere,
             select: { id: true, name: true, durationMins: true, price: true },
-            take: limit,
+            take: safeLim,
             skip: offset,
             orderBy: { name: 'asc' },
           })
@@ -98,7 +99,7 @@ export class SearchService {
               lastMessageAt: true,
               status: true,
             },
-            take: limit,
+            take: safeLim,
             skip: offset,
             orderBy: { lastMessageAt: 'desc' },
           })

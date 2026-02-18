@@ -13,6 +13,7 @@ import {
   Min,
   Max,
   MinLength,
+  MaxLength,
   ArrayMinSize,
   ArrayNotEmpty,
   ValidateNested,
@@ -79,6 +80,7 @@ export class CreateBookingDto {
 
   @IsString()
   @IsOptional()
+  @MaxLength(2000)
   notes?: string;
 
   @IsObject()
@@ -100,6 +102,7 @@ export class CreateBookingDto {
 
   @IsString()
   @IsOptional()
+  @MaxLength(500)
   forceBookReason?: string;
 }
 
@@ -118,6 +121,7 @@ export class UpdateBookingDto {
 
   @IsString()
   @IsOptional()
+  @MaxLength(2000)
   notes?: string;
 
   @IsObject()
@@ -139,6 +143,7 @@ export class UpdateBookingStatusDto {
   @IsString()
   @IsOptional()
   @MinLength(1)
+  @MaxLength(500)
   reason?: string;
 }
 
@@ -155,14 +160,17 @@ export class UpdateKanbanStatusDto {
 export class CreateCustomerDto {
   @IsString()
   @IsNotEmpty()
+  @MaxLength(200)
   name!: string;
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(30)
   phone!: string;
 
   @IsEmail()
   @IsOptional()
+  @MaxLength(254)
   email?: string;
 
   @IsArray()
@@ -179,14 +187,17 @@ export class CreateCustomerDto {
 export class UpdateCustomerDto {
   @IsString()
   @IsOptional()
+  @MaxLength(200)
   name?: string;
 
   @IsString()
   @IsOptional()
+  @MaxLength(30)
   phone?: string;
 
   @IsEmail()
   @IsOptional()
+  @MaxLength(254)
   email?: string;
 
   @IsArray()
@@ -205,6 +216,7 @@ export class UpdateCustomerDto {
 export class CreateServiceDto {
   @IsString()
   @IsNotEmpty()
+  @MaxLength(200)
   name!: string;
 
   @IsNumber()
@@ -217,10 +229,12 @@ export class CreateServiceDto {
 
   @IsString()
   @IsOptional()
+  @MaxLength(100)
   category?: string;
 
   @IsString()
   @IsOptional()
+  @MaxLength(2000)
   description?: string;
 
   @IsOptional()
@@ -236,6 +250,7 @@ export class CreateServiceDto {
 export class UpdateServiceDto {
   @IsString()
   @IsOptional()
+  @MaxLength(200)
   name?: string;
 
   @IsNumber()
@@ -271,13 +286,17 @@ export class UpdateServiceDto {
 export class CreateStaffDto {
   @IsString()
   @IsNotEmpty()
+  @MaxLength(200)
   name!: string;
 
   @IsEmail()
+  @MaxLength(254)
   email!: string;
 
   @IsString()
   @IsNotEmpty()
+  @MinLength(8)
+  @MaxLength(128)
   password!: string;
 
   @IsEnum(['ADMIN', 'SERVICE_PROVIDER', 'AGENT', 'SUPER_ADMIN'], {
@@ -351,10 +370,12 @@ export class UpdatePolicySettingsDto {
 
   @IsString()
   @IsOptional()
+  @MaxLength(5000)
   cancellationPolicyText?: string;
 
   @IsString()
   @IsOptional()
+  @MaxLength(5000)
   reschedulePolicyText?: string;
 
   @IsBoolean()
@@ -367,14 +388,17 @@ export class UpdatePolicySettingsDto {
 export class CreateTemplateDto {
   @IsString()
   @IsNotEmpty()
+  @MaxLength(200)
   name!: string;
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(100)
   category!: string;
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(10000)
   body!: string;
 
   @IsArray()
@@ -457,13 +481,16 @@ export class UpdateTagsDto {
 export class AddNoteDto {
   @IsString()
   @IsNotEmpty()
+  @MaxLength(5000)
   content!: string;
 }
 
 // ---- Working Hours DTO ----
 
 export class WorkingHoursEntryDto {
-  @IsNumber()
+  @IsInt()
+  @Min(0)
+  @Max(6)
   dayOfWeek!: number;
 
   @IsString()
@@ -1023,7 +1050,8 @@ export class UpdateSavedViewDto {
   @IsOptional()
   isDashboard?: boolean;
 
-  @IsNumber()
+  @IsInt()
+  @Min(0)
   @IsOptional()
   sortOrder?: number;
 }

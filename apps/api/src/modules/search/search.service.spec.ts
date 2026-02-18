@@ -209,4 +209,39 @@ describe('SearchService', () => {
     expect(result.totals.services).toBe(0);
     expect(result.totals.conversations).toBe(0);
   });
+
+  // ─── Security: Input Validation ─────────────────────────────────────
+
+  it('caps limit at 50', async () => {
+    setupEmptyMocks();
+
+    await searchService.globalSearch('biz1', 'test', 999);
+
+    expect(prisma.customer.findMany).toHaveBeenCalledWith(expect.objectContaining({ take: 50 }));
+  });
+
+  it('enforces minimum limit of 1', async () => {
+    setupEmptyMocks();
+
+    await searchService.globalSearch('biz1', 'test', -5);
+
+    expect(prisma.customer.findMany).toHaveBeenCalledWith(expect.objectContaining({ take: 1 }));
+  });
+
+  it('truncates long query strings to 200 chars', async () => {
+    setupEmptyMocks();
+    const longQuery = 'a'.repeat(300);
+
+    await searchService.globalSearch('biz1', longQuery);
+
+    expect(prisma.customer.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          OR: expect.arrayContaining([
+            expect.objectContaining({ name: { contains: 'a'.repeat(200), mode: 'insensitive' } }),
+          ]),
+        }),
+      }),
+    );
+  });
 });

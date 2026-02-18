@@ -751,4 +751,36 @@ describe('CustomerService', () => {
       expect(mockExtractor.extract).not.toHaveBeenCalled();
     });
   });
+
+  // ─── Security: Pagination Cap ──────────────────────────────────────
+
+  describe('input validation (security)', () => {
+    it('caps pageSize at 100', async () => {
+      prisma.customer.findMany.mockResolvedValue([]);
+      prisma.customer.count.mockResolvedValue(0);
+
+      const result = await service.findAll('biz1', { pageSize: 999 });
+
+      expect(result.pageSize).toBe(100);
+      expect(prisma.customer.findMany).toHaveBeenCalledWith(expect.objectContaining({ take: 100 }));
+    });
+
+    it('enforces minimum pageSize of 1', async () => {
+      prisma.customer.findMany.mockResolvedValue([]);
+      prisma.customer.count.mockResolvedValue(0);
+
+      const result = await service.findAll('biz1', { pageSize: -5 });
+
+      expect(result.pageSize).toBe(1);
+    });
+
+    it('enforces minimum page of 1', async () => {
+      prisma.customer.findMany.mockResolvedValue([]);
+      prisma.customer.count.mockResolvedValue(0);
+
+      const result = await service.findAll('biz1', { page: 0 });
+
+      expect(result.page).toBe(1);
+    });
+  });
 });

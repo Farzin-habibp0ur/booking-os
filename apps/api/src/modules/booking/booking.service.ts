@@ -45,8 +45,8 @@ export class BookingService {
       pageSize?: number;
     },
   ) {
-    const page = Number(query.page) || 1;
-    const pageSize = Number(query.pageSize) || 20;
+    const page = Math.max(1, Number(query.page) || 1);
+    const pageSize = Math.min(100, Math.max(1, Number(query.pageSize) || 20));
     const where: any = { businessId };
     if (query.status) where.status = query.status;
     if (query.staffId) where.staffId = query.staffId;
@@ -54,8 +54,14 @@ export class BookingService {
     if (query.locationId) where.locationId = query.locationId;
     if (query.dateFrom || query.dateTo) {
       where.startTime = {};
-      if (query.dateFrom) where.startTime.gte = new Date(query.dateFrom);
-      if (query.dateTo) where.startTime.lte = new Date(query.dateTo);
+      if (query.dateFrom) {
+        const from = new Date(query.dateFrom);
+        if (!isNaN(from.getTime())) where.startTime.gte = from;
+      }
+      if (query.dateTo) {
+        const to = new Date(query.dateTo);
+        if (!isNaN(to.getTime())) where.startTime.lte = to;
+      }
     }
 
     const [data, total] = await Promise.all([
@@ -113,6 +119,12 @@ export class BookingService {
     if (!service) throw new BadRequestException('Service not found');
 
     const startTime = new Date(data.startTime);
+    if (isNaN(startTime.getTime())) {
+      throw new BadRequestException('Invalid start time');
+    }
+    if (!data.forceBook && startTime < new Date()) {
+      throw new BadRequestException('Cannot book in the past');
+    }
     const endTime = new Date(startTime.getTime() + service.durationMins * 60000);
 
     const isDepositRequired = service.depositRequired === true;
@@ -597,8 +609,14 @@ export class BookingService {
     if (query.staffId) where.staffId = query.staffId;
     if (query.dateFrom || query.dateTo) {
       where.startTime = {};
-      if (query.dateFrom) where.startTime.gte = new Date(query.dateFrom);
-      if (query.dateTo) where.startTime.lte = new Date(query.dateTo);
+      if (query.dateFrom) {
+        const from = new Date(query.dateFrom);
+        if (!isNaN(from.getTime())) where.startTime.gte = from;
+      }
+      if (query.dateTo) {
+        const to = new Date(query.dateTo);
+        if (!isNaN(to.getTime())) where.startTime.lte = to;
+      }
     }
 
     return this.prisma.booking.findMany({
