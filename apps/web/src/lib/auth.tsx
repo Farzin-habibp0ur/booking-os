@@ -10,6 +10,7 @@ interface User {
   role: string;
   locale: string | null;
   emailVerified: boolean;
+  preferences: { mode?: string; landingPath?: string };
   businessId: string;
   business: {
     id: string;

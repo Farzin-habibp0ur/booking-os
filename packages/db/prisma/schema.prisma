@@ -41,6 +41,7 @@ model Business {
   locations         Location[]
   quotes            Quote[]
   verticalPackVersions VerticalPackVersion[]
+  savedViews        SavedView[]
 
   @@map("businesses")
 }
@@ -58,6 +59,8 @@ model Staff {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
+  preferences           Json     @default("{}")
+
   business              Business              @relation(fields: [businessId], references: [id])
   bookings              Booking[]
   recurringSeries       RecurringSeries[]
@@ -69,6 +72,7 @@ model Staff {
   calendarConnections   CalendarConnection[]
   waitlistEntries       WaitlistEntry[]       @relation("PreferredStaffWaitlist")
   staffLocations        StaffLocation[]
+  savedViews            SavedView[]
 
   @@index([businessId])
   @@map("staff")
@@ -653,4 +657,29 @@ model Quote {
   @@index([bookingId])
   @@index([businessId])
   @@map("quotes")
+}
+
+model SavedView {
+  id          String   @id @default(cuid())
+  businessId  String
+  staffId     String?
+  page        String
+  name        String
+  filters     Json
+  icon        String?
+  color       String?
+  isPinned    Boolean  @default(false)
+  isDashboard Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  isShared    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id])
+  staff    Staff?   @relation(fields: [staffId], references: [id])
+
+  @@index([businessId, staffId])
+  @@index([businessId, isShared])
+  @@index([businessId, page])
+  @@map("saved_views")
 }

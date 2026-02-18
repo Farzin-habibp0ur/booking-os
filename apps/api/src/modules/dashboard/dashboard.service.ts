@@ -19,7 +19,7 @@ export class DashboardService {
     private waitlistService: WaitlistService,
   ) {}
 
-  async getDashboard(businessId: string) {
+  async getDashboard(businessId: string, staffId?: string, role?: string, mode?: string) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
@@ -135,6 +135,43 @@ export class DashboardService {
         take: 10,
       }),
     ]);
+
+    // Batch 2b: Staff-scoped queries for Mission Control
+    const [
+      myBookingsToday,
+      myAssignedConversations,
+      completedTodayByStaff,
+    ] = staffId
+      ? await Promise.all([
+          this.prisma.booking.findMany({
+            where: {
+              businessId,
+              staffId,
+              startTime: { gte: today, lt: tomorrow },
+              status: { in: ['PENDING', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED', 'NO_SHOW'] },
+            },
+            include: { customer: true, service: true },
+            orderBy: { startTime: 'asc' },
+          }),
+          this.prisma.conversation.findMany({
+            where: { businessId, assignedToId: staffId, status: 'OPEN' },
+            include: {
+              customer: true,
+              messages: { take: 1, orderBy: { createdAt: 'desc' } },
+            },
+            orderBy: { lastMessageAt: 'desc' },
+            take: 10,
+          }),
+          this.prisma.booking.count({
+            where: {
+              businessId,
+              staffId,
+              status: 'COMPLETED',
+              updatedAt: { gte: today, lt: tomorrow },
+            },
+          }),
+        ])
+      : [[], [], 0];
 
     // Batch 3: Go-live checklist + milestones
     const [
@@ -266,6 +303,10 @@ export class DashboardService {
       },
       goLiveChecklist,
       milestoneProgress,
+      // Mission Control: staff-scoped data
+      myBookingsToday,
+      myAssignedConversations,
+      completedTodayByStaff,
     };
   }
 

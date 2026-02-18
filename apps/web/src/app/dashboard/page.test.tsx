@@ -71,6 +71,20 @@ jest.mock('@/lib/api', () => ({
   },
 }));
 
+// Mock mode system
+let mockMode = 'admin';
+jest.mock('@/lib/use-mode', () => ({
+  useMode: () => ({
+    mode: mockMode,
+    setMode: jest.fn(),
+    availableModes: [],
+    modeLabel: 'Admin',
+    landingPath: '/dashboard',
+    modeDef: { key: 'admin', primaryNavPaths: ['/dashboard'] },
+  }),
+  ModeProvider: ({ children }: any) => children,
+}));
+
 // Mock skeleton components
 jest.mock('@/components/skeleton', () => ({
   PageSkeleton: () => <div data-testid="page-skeleton">Loading...</div>,
@@ -102,6 +116,7 @@ jest.mock('lucide-react', () => ({
   X: (props: any) => <button data-testid="x-dismiss-icon" onClick={props.onClick} {...props} />,
   Target: (props: any) => <div data-testid="target-icon" {...props} />,
   ClipboardList: (props: any) => <div data-testid="clipboard-list-icon" {...props} />,
+  Clock: (props: any) => <div data-testid="clock-icon" {...props} />,
 }));
 
 import { api } from '@/lib/api';
@@ -144,6 +159,7 @@ const mockDashboard = (dashboardData: any = baseDashboardData) => {
 describe('DashboardPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockMode = 'admin';
     // Reset auth back to ADMIN
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const authMod = require('@/lib/auth');
@@ -1390,6 +1406,142 @@ describe('DashboardPage', () => {
     await waitFor(() => {
       expect(screen.getByText('$0')).toBeInTheDocument();
     });
+  });
+
+  // ─── Mode-Aware Layout ─────────────────────────────────────
+
+  it('shows KPI strip for agent mode', async () => {
+    mockMode = 'agent';
+    mockDashboard({
+      ...baseDashboardData,
+      myBookingsToday: [{ id: 'mb1', customer: { name: 'MyClient' }, service: { name: 'Cut' }, startTime: '2026-02-17T09:00:00Z', status: 'CONFIRMED' }],
+      myAssignedConversations: [],
+      completedTodayByStaff: 0,
+    });
+
+    render(<DashboardPage />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('kpi-strip')).toBeInTheDocument();
+    });
+  });
+
+  it('shows KPI strip for provider mode', async () => {
+    mockMode = 'provider';
+    mockDashboard({
+      ...baseDashboardData,
+      myBookingsToday: [],
+      myAssignedConversations: [],
+      completedTodayByStaff: 2,
+    });
+
+    render(<DashboardPage />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('kpi-strip')).toBeInTheDocument();
+    });
+  });
+
+  it('does not show KPI strip for admin mode', async () => {
+    mockMode = 'admin';
+    mockDashboard();
+
+    render(<DashboardPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('dashboard.title')).toBeInTheDocument();
+    });
+
+    expect(screen.queryByTestId('kpi-strip')).not.toBeInTheDocument();
+  });
+
+  it('shows My Work section for agent mode', async () => {
+    mockMode = 'agent';
+    mockDashboard({
+      ...baseDashboardData,
+      myBookingsToday: [{ id: 'mb1', customer: { name: 'AgentClient' }, service: { name: 'Consult' }, startTime: '2026-02-17T09:00:00Z', status: 'CONFIRMED' }],
+      myAssignedConversations: [{ id: 'mc1', customer: { name: 'ChatClient' }, messages: [{ content: 'Hello' }] }],
+      completedTodayByStaff: 1,
+    });
+
+    render(<DashboardPage />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('my-work')).toBeInTheDocument();
+      expect(screen.getByText('AgentClient')).toBeInTheDocument();
+      expect(screen.getByText('ChatClient')).toBeInTheDocument();
+    });
+  });
+
+  it('does not show My Work for admin mode', async () => {
+    mockMode = 'admin';
+    mockDashboard();
+
+    render(<DashboardPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('dashboard.title')).toBeInTheDocument();
+    });
+
+    expect(screen.queryByTestId('my-work')).not.toBeInTheDocument();
+  });
+
+  it('hides admin-only sections for agent mode', async () => {
+    mockMode = 'agent';
+    mockDashboard({
+      ...baseDashboardData,
+      goLiveChecklist: { allComplete: false, items: [{ key: 'business_name', done: false, fixUrl: '/settings' }] },
+      milestoneProgress: { completedBookings: 3, currentNudge: null, dismissedNudges: [] },
+    });
+
+    render(<DashboardPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('dashboard.title')).toBeInTheDocument();
+    });
+
+    // Go-live and milestone only shown in admin mode
+    expect(screen.queryByText('dashboard.go_live_title')).not.toBeInTheDocument();
+    expect(screen.queryByText('dashboard.milestone_title')).not.toBeInTheDocument();
+  });
+
+  it('shows today schedule for agent mode', async () => {
+    mockMode = 'agent';
+    mockDashboard({
+      ...baseDashboardData,
+      todayBookings: [
+        { id: 'b1', customer: { name: 'Schedule Person' }, service: { name: 'Botox' }, staff: null, startTime: '2026-02-17T10:00:00Z', status: 'CONFIRMED' },
+      ],
+      myBookingsToday: [],
+      myAssignedConversations: [],
+      completedTodayByStaff: 0,
+    });
+
+    render(<DashboardPage />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('today-schedule')).toBeInTheDocument();
+      expect(screen.getByText('Schedule Person')).toBeInTheDocument();
+    });
+  });
+
+  it('does not show today schedule for provider mode', async () => {
+    mockMode = 'provider';
+    mockDashboard({
+      ...baseDashboardData,
+      todayBookings: [{ id: 'b1', customer: { name: 'Test' }, service: { name: 'Test' }, staff: null, startTime: '2026-02-17T10:00:00Z', status: 'CONFIRMED' }],
+      myBookingsToday: [],
+      myAssignedConversations: [],
+      completedTodayByStaff: 0,
+    });
+
+    render(<DashboardPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('dashboard.title')).toBeInTheDocument();
+    });
+
+    expect(screen.queryByTestId('today-schedule')).not.toBeInTheDocument();
   });
 
   // ─── All sections combined ──────────────────────────────────

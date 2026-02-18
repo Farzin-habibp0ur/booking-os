@@ -7,6 +7,10 @@ import { cn } from '@/lib/cn';
 import { PageSkeleton } from '@/components/skeleton';
 import { useI18n } from '@/lib/i18n';
 import { useAuth } from '@/lib/auth';
+import { useMode } from '@/lib/use-mode';
+import { KpiStrip } from './components/kpi-strip';
+import { MyWork } from './components/my-work';
+import { AttentionCards } from './components/attention-card';
 import {
   Calendar,
   MessageSquare,
@@ -64,6 +68,7 @@ export default function DashboardPage() {
   const [resending, setResending] = useState(false);
   const { t } = useI18n();
   const { user } = useAuth();
+  const { mode } = useMode();
   const isAdmin = user?.role === 'ADMIN';
 
   useEffect(() => {
@@ -118,12 +123,6 @@ export default function DashboardPage() {
 
   const checklist = data.goLiveChecklist;
   const milestone = data.milestoneProgress;
-  const attention = data.attentionNeeded;
-
-  const hasAttentionItems =
-    (attention?.depositPendingBookings?.length || 0) > 0 ||
-    (attention?.overdueConversations?.length || 0) > 0 ||
-    (attention?.tomorrowBookings?.length || 0) > 0;
 
   const handleResendVerification = async () => {
     setResending(true);
@@ -136,11 +135,13 @@ export default function DashboardPage() {
     }
   };
 
+  const isAgentOrProvider = mode === 'agent' || mode === 'provider';
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-serif font-semibold text-slate-900">
+          <h1 className="text-3xl font-serif font-semibold text-slate-900 dark:text-slate-100">
             {t('dashboard.title')}
           </h1>
           <p className="text-sm text-slate-400 mt-1">
@@ -176,516 +177,507 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Metric Cards */}
-      <div data-tour-target="dashboard-metrics" className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <MetricCard
-          icon={Calendar}
-          color="blue"
-          label={t('dashboard.bookings_this_week')}
-          value={m.totalBookingsThisWeek}
-          subtitle={
-            weekChange !== 0
-              ? t('dashboard.vs_last_week', {
-                  change: weekChange > 0 ? '+' + weekChange : weekChange,
-                })
-              : t('dashboard.same_as_last_week')
-          }
-          trend={weekChange > 0 ? 'up' : weekChange < 0 ? 'down' : 'flat'}
+      {/* KPI Strip — compact 3-item strip for agent/provider modes */}
+      {isAgentOrProvider && (
+        <KpiStrip
+          mode={mode}
+          metrics={m}
+          myBookingsToday={data.myBookingsToday}
+          completedTodayByStaff={data.completedTodayByStaff}
+          myAssignedConversations={data.myAssignedConversations}
         />
-        <MetricCard
-          icon={DollarSign}
-          color="green"
-          label={t('dashboard.revenue_30d')}
-          value={`$${m.revenueThisMonth.toLocaleString()}`}
-        />
-        <MetricCard
-          icon={Users}
-          color="purple"
-          label={t('dashboard.total_customers', { entity: 'Customer' })}
-          value={m.totalCustomers}
-          subtitle={
-            m.newCustomersThisWeek > 0
-              ? t('dashboard.this_week_count', { count: m.newCustomersThisWeek })
-              : undefined
-          }
-          trend={m.newCustomersThisWeek > 0 ? 'up' : 'flat'}
-        />
-        <MetricCard
-          icon={MessageSquare}
-          color="orange"
-          label={t('dashboard.open_conversations')}
-          value={m.openConversationCount}
-          subtitle={t('dashboard.avg_response_detail', { minutes: m.avgResponseTimeMins })}
-        />
-      </div>
-
-      {/* Waitlist Backfill */}
-      {data.waitlistMetrics && data.waitlistMetrics.totalEntries > 0 && (
-        <div className="bg-white rounded-2xl shadow-soft p-6">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <ClipboardList size={18} className="text-sage-600" />
-              <h2 className="font-semibold text-slate-900">Waitlist Backfill</h2>
-            </div>
-            <span className="text-xs text-slate-400">Last 30 days</span>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div>
-              <p className="text-2xl font-serif font-bold text-slate-900">
-                {data.waitlistMetrics.totalEntries}
-              </p>
-              <p className="text-xs text-slate-500">Waitlisted</p>
-            </div>
-            <div>
-              <p className="text-2xl font-serif font-bold text-slate-900">
-                {data.waitlistMetrics.offers}
-              </p>
-              <p className="text-xs text-slate-500">Offered</p>
-            </div>
-            <div>
-              <p className="text-2xl font-serif font-bold text-sage-600">
-                {data.waitlistMetrics.claimed}
-              </p>
-              <p className="text-xs text-slate-500">Claimed</p>
-            </div>
-            <div>
-              <p className="text-2xl font-serif font-bold text-slate-900">
-                {data.waitlistMetrics.fillRate}%
-              </p>
-              <p className="text-xs text-slate-500">Fill Rate</p>
-            </div>
-          </div>
-          {data.waitlistMetrics.avgTimeToFill > 0 && (
-            <p className="text-xs text-slate-400 mt-3">
-              Avg. time to fill: {data.waitlistMetrics.avgTimeToFill} min
-            </p>
-          )}
-        </div>
       )}
 
-      {/* Secondary metrics row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-2xl shadow-soft p-6">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-slate-500">{t('dashboard.no_show_rate')}</p>
-            <AlertCircle
-              size={16}
-              className={m.noShowRate > 15 ? 'text-red-500' : 'text-sage-600'}
+      {/* Agent/Provider: My Work section (personal schedule + conversations) */}
+      {isAgentOrProvider && (
+        <MyWork
+          myBookingsToday={data.myBookingsToday || []}
+          myAssignedConversations={data.myAssignedConversations || []}
+          completedTodayByStaff={data.completedTodayByStaff || 0}
+        />
+      )}
+
+      {/* Attention Cards — all modes */}
+      <AttentionCards attentionNeeded={data.attentionNeeded} />
+
+      {/* Agent/Provider: Today's Schedule (if not already in My Work) */}
+      {mode === 'agent' && (
+        <TodaySchedule
+          todayBookings={data.todayBookings}
+          router={router}
+          t={t}
+        />
+      )}
+
+      {/* Admin mode: full dashboard sections */}
+      {mode === 'admin' && (
+        <>
+          {/* Metric Cards */}
+          <div data-tour-target="dashboard-metrics" className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <MetricCard
+              icon={Calendar}
+              color="blue"
+              label={t('dashboard.bookings_this_week')}
+              value={m.totalBookingsThisWeek}
+              subtitle={
+                weekChange !== 0
+                  ? t('dashboard.vs_last_week', {
+                      change: weekChange > 0 ? '+' + weekChange : weekChange,
+                    })
+                  : t('dashboard.same_as_last_week')
+              }
+              trend={weekChange > 0 ? 'up' : weekChange < 0 ? 'down' : 'flat'}
+            />
+            <MetricCard
+              icon={DollarSign}
+              color="green"
+              label={t('dashboard.revenue_30d')}
+              value={`$${m.revenueThisMonth.toLocaleString()}`}
+            />
+            <MetricCard
+              icon={Users}
+              color="purple"
+              label={t('dashboard.total_customers', { entity: 'Customer' })}
+              value={m.totalCustomers}
+              subtitle={
+                m.newCustomersThisWeek > 0
+                  ? t('dashboard.this_week_count', { count: m.newCustomersThisWeek })
+                  : undefined
+              }
+              trend={m.newCustomersThisWeek > 0 ? 'up' : 'flat'}
+            />
+            <MetricCard
+              icon={MessageSquare}
+              color="orange"
+              label={t('dashboard.open_conversations')}
+              value={m.openConversationCount}
+              subtitle={t('dashboard.avg_response_detail', { minutes: m.avgResponseTimeMins })}
             />
           </div>
-          <p className="text-2xl font-serif font-bold mt-1">{m.noShowRate}%</p>
-          <div className="w-full bg-slate-100 rounded-full h-1.5 mt-2">
-            <div
-              className={cn(
-                'h-1.5 rounded-full',
-                m.noShowRate > 15
-                  ? 'bg-red-400'
-                  : m.noShowRate > 5
-                    ? 'bg-amber-400'
-                    : 'bg-sage-500',
-              )}
-              style={{ width: `${Math.min(m.noShowRate, 100)}%` }}
-            />
-          </div>
-        </div>
 
-        <div className="bg-white rounded-2xl shadow-soft p-6">
-          <p className="text-sm text-slate-500">{t('dashboard.avg_response_time')}</p>
-          <p className="text-2xl font-serif font-bold mt-1">
-            {m.avgResponseTimeMins}
-            <span className="text-sm font-sans font-normal text-slate-400">
-              {' '}
-              {t('dashboard.min_short')}
-            </span>
-          </p>
-          <p
-            className={cn(
-              'text-xs mt-1',
-              m.avgResponseTimeMins <= 5
-                ? 'text-sage-600'
-                : m.avgResponseTimeMins <= 15
-                  ? 'text-amber-600'
-                  : 'text-red-600',
-            )}
-          >
-            {m.avgResponseTimeMins <= 5
-              ? t('dashboard.excellent')
-              : m.avgResponseTimeMins <= 15
-                ? t('dashboard.good')
-                : t('dashboard.needs_improvement')}
-          </p>
-        </div>
-
-        {/* Consult -> Treatment Conversion */}
-        <div className="bg-white rounded-2xl shadow-soft p-6">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-slate-500">Consult → Treatment</p>
-          </div>
-          <p className="text-2xl font-serif font-bold mt-1">{data.consultConversion?.rate ?? 0}%</p>
-          <p className="text-xs text-slate-400 mt-1">
-            {data.consultConversion?.converted ?? 0} of{' '}
-            {data.consultConversion?.consultCustomers ?? 0} consults converted
-          </p>
-        </div>
-
-        {/* Status Breakdown */}
-        <div className="bg-white rounded-2xl shadow-soft p-6">
-          <p className="text-sm text-slate-500 mb-2">{t('dashboard.this_week_by_status')}</p>
-          <div className="space-y-1.5">
-            {(data.statusBreakdown || []).map((s: any) => (
-              <div key={s.status} className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <div
-                    className={cn(
-                      'w-2 h-2 rounded-full',
-                      STATUS_COLORS[s.status]?.bg || 'bg-gray-300',
-                    )}
-                  />
-                  <span className="text-xs text-slate-600">
-                    {t(`status.${s.status.toLowerCase()}`)}
-                  </span>
+          {/* Waitlist Backfill */}
+          {data.waitlistMetrics && data.waitlistMetrics.totalEntries > 0 && (
+            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <ClipboardList size={18} className="text-sage-600" />
+                  <h2 className="font-semibold text-slate-900 dark:text-slate-100">Waitlist Backfill</h2>
                 </div>
-                <span className="text-xs font-medium">{s.count}</span>
+                <span className="text-xs text-slate-400">Last 30 days</span>
               </div>
-            ))}
-            {(!data.statusBreakdown || data.statusBreakdown.length === 0) && (
-              <p className="text-xs text-slate-400">{t('dashboard.no_bookings_this_week')}</p>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* P1-20: Go-Live Checklist (ADMIN only, hidden when all complete) */}
-      {isAdmin && checklist && !checklist.allComplete && (
-        <div className="bg-white rounded-2xl shadow-soft p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-slate-900">{t('dashboard.go_live_title')}</h2>
-            <span className="text-xs text-slate-500">
-              {t('dashboard.go_live_progress', {
-                done: checklist.items.filter((i: any) => i.done).length,
-                total: checklist.items.length,
-              })}
-            </span>
-          </div>
-          <div className="w-full bg-slate-100 rounded-full h-2 mb-4">
-            <div
-              className="h-2 rounded-full bg-sage-500 transition-all"
-              style={{
-                width: `${(checklist.items.filter((i: any) => i.done).length / checklist.items.length) * 100}%`,
-              }}
-            />
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {checklist.items.map((item: any) => (
-              <div
-                key={item.key}
-                className={cn(
-                  'flex items-center gap-2.5 p-3 rounded-xl',
-                  item.done ? 'bg-sage-50/50' : 'bg-slate-50/60',
-                )}
-              >
-                {item.done ? (
-                  <Check size={16} className="text-sage-600 shrink-0" />
-                ) : (
-                  <Circle size={16} className="text-slate-300 shrink-0" />
-                )}
-                <div className="min-w-0 flex-1">
-                  <p className={cn('text-xs', item.done ? 'text-sage-700' : 'text-slate-600')}>
-                    {t(`dashboard.${CHECKLIST_LABELS[item.key]}`)}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div>
+                  <p className="text-2xl font-serif font-bold text-slate-900 dark:text-slate-100">
+                    {data.waitlistMetrics.totalEntries}
                   </p>
-                  {!item.done && (
-                    <button
-                      onClick={() => router.push(item.fixUrl)}
-                      className="text-[10px] text-sage-600 hover:text-sage-700 flex items-center gap-0.5 mt-0.5 transition-colors"
-                    >
-                      {t('dashboard.fix')} <ArrowRight size={10} />
-                    </button>
-                  )}
+                  <p className="text-xs text-slate-500">Waitlisted</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-serif font-bold text-slate-900 dark:text-slate-100">
+                    {data.waitlistMetrics.offers}
+                  </p>
+                  <p className="text-xs text-slate-500">Offered</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-serif font-bold text-sage-600">
+                    {data.waitlistMetrics.claimed}
+                  </p>
+                  <p className="text-xs text-slate-500">Claimed</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-serif font-bold text-slate-900 dark:text-slate-100">
+                    {data.waitlistMetrics.fillRate}%
+                  </p>
+                  <p className="text-xs text-slate-500">Fill Rate</p>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* P1-21: First 10 Bookings Milestone */}
-      {milestone && (milestone.completedBookings < 10 || milestone.currentNudge) && (
-        <div className="bg-white rounded-2xl shadow-soft p-6">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <Target size={18} className="text-lavender-600" />
-              <h2 className="font-semibold text-slate-900">{t('dashboard.milestone_title')}</h2>
-            </div>
-            <span className="text-xs text-slate-500">
-              {t('dashboard.milestone_progress', {
-                count: Math.min(milestone.completedBookings, 10),
-              })}
-            </span>
-          </div>
-          <div className="w-full bg-slate-100 rounded-full h-2 mb-4">
-            <div
-              className="h-2 rounded-full bg-lavender-500 transition-all"
-              style={{
-                width: `${Math.min((milestone.completedBookings / 10) * 100, 100)}%`,
-              }}
-            />
-          </div>
-          {milestone.currentNudge && (
-            <div className="bg-lavender-50 border border-lavender-100 rounded-xl p-4 flex items-start justify-between gap-3">
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-lavender-900">
-                  {t(`dashboard.${NUDGE_MESSAGES[milestone.currentNudge.id]}`)}
+              {data.waitlistMetrics.avgTimeToFill > 0 && (
+                <p className="text-xs text-slate-400 mt-3">
+                  Avg. time to fill: {data.waitlistMetrics.avgTimeToFill} min
                 </p>
-                <button
-                  onClick={() => router.push(milestone.currentNudge.link)}
-                  className="text-xs text-lavender-600 hover:text-lavender-700 flex items-center gap-1 mt-2 transition-colors font-medium"
-                >
-                  {t('dashboard.nudge_action')} <ArrowRight size={12} />
-                </button>
-              </div>
-              <button
-                onClick={() => handleDismissNudge(milestone.currentNudge.id)}
-                className="text-lavender-400 hover:text-lavender-600 transition-colors shrink-0 mt-0.5"
-              >
-                <X size={16} />
-              </button>
+              )}
             </div>
           )}
-        </div>
-      )}
 
-      {/* P1-18: Attention Needed */}
-      {hasAttentionItems && (
-        <div>
-          <div className="flex items-center gap-2 mb-4">
-            <AlertTriangle size={18} className="text-amber-500" />
-            <h2 className="font-semibold text-slate-900">{t('dashboard.attention_needed')}</h2>
+          {/* Secondary metrics row */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6">
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-slate-500">{t('dashboard.no_show_rate')}</p>
+                <AlertCircle
+                  size={16}
+                  className={m.noShowRate > 15 ? 'text-red-500' : 'text-sage-600'}
+                />
+              </div>
+              <p className="text-2xl font-serif font-bold mt-1">{m.noShowRate}%</p>
+              <div className="w-full bg-slate-100 rounded-full h-1.5 mt-2">
+                <div
+                  className={cn(
+                    'h-1.5 rounded-full',
+                    m.noShowRate > 15
+                      ? 'bg-red-400'
+                      : m.noShowRate > 5
+                        ? 'bg-amber-400'
+                        : 'bg-sage-500',
+                  )}
+                  style={{ width: `${Math.min(m.noShowRate, 100)}%` }}
+                />
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6">
+              <p className="text-sm text-slate-500">{t('dashboard.avg_response_time')}</p>
+              <p className="text-2xl font-serif font-bold mt-1">
+                {m.avgResponseTimeMins}
+                <span className="text-sm font-sans font-normal text-slate-400">
+                  {' '}
+                  {t('dashboard.min_short')}
+                </span>
+              </p>
+              <p
+                className={cn(
+                  'text-xs mt-1',
+                  m.avgResponseTimeMins <= 5
+                    ? 'text-sage-600'
+                    : m.avgResponseTimeMins <= 15
+                      ? 'text-amber-600'
+                      : 'text-red-600',
+                )}
+              >
+                {m.avgResponseTimeMins <= 5
+                  ? t('dashboard.excellent')
+                  : m.avgResponseTimeMins <= 15
+                    ? t('dashboard.good')
+                    : t('dashboard.needs_improvement')}
+              </p>
+            </div>
+
+            {/* Consult -> Treatment Conversion */}
+            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6">
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-slate-500">Consult → Treatment</p>
+              </div>
+              <p className="text-2xl font-serif font-bold mt-1">{data.consultConversion?.rate ?? 0}%</p>
+              <p className="text-xs text-slate-400 mt-1">
+                {data.consultConversion?.converted ?? 0} of{' '}
+                {data.consultConversion?.consultCustomers ?? 0} consults converted
+              </p>
+            </div>
+
+            {/* Status Breakdown */}
+            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6">
+              <p className="text-sm text-slate-500 mb-2">{t('dashboard.this_week_by_status')}</p>
+              <div className="space-y-1.5">
+                {(data.statusBreakdown || []).map((s: any) => (
+                  <div key={s.status} className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <div
+                        className={cn(
+                          'w-2 h-2 rounded-full',
+                          STATUS_COLORS[s.status]?.bg || 'bg-gray-300',
+                        )}
+                      />
+                      <span className="text-xs text-slate-600">
+                        {t(`status.${s.status.toLowerCase()}`)}
+                      </span>
+                    </div>
+                    <span className="text-xs font-medium">{s.count}</span>
+                  </div>
+                ))}
+                {(!data.statusBreakdown || data.statusBreakdown.length === 0) && (
+                  <p className="text-xs text-slate-400">{t('dashboard.no_bookings_this_week')}</p>
+                )}
+              </div>
+            </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Deposit Pending */}
-            {attention.depositPendingBookings.length > 0 && (
-              <div className="bg-white rounded-2xl shadow-soft p-5">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <DollarSign size={16} className="text-amber-500" />
-                    <p className="text-sm font-medium text-slate-800">
-                      {t('dashboard.deposit_pending')}
-                    </p>
-                  </div>
-                  <span className="text-[10px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full font-medium">
-                    {attention.depositPendingBookings.length}
-                  </span>
-                </div>
-                <div className="space-y-2 mb-3">
-                  {attention.depositPendingBookings.slice(0, 3).map((b: any) => (
-                    <div key={b.id} className="flex items-center justify-between text-xs">
-                      <span className="text-slate-700 truncate">{b.customer?.name}</span>
-                      <span className="text-slate-400">{b.service?.name}</span>
-                    </div>
-                  ))}
-                </div>
-                <button
-                  onClick={() => router.push('/bookings?status=PENDING_DEPOSIT')}
-                  className="text-xs text-sage-600 hover:text-sage-700 flex items-center gap-1 transition-colors"
-                >
-                  {t('dashboard.view_deposit_pending')} <ArrowRight size={12} />
-                </button>
-              </div>
-            )}
 
-            {/* Overdue Replies */}
-            {attention.overdueConversations.length > 0 && (
-              <div className="bg-white rounded-2xl shadow-soft p-5">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <MessageSquare size={16} className="text-amber-500" />
-                    <p className="text-sm font-medium text-slate-800">
-                      {t('dashboard.overdue_replies')}
-                    </p>
-                  </div>
-                  <span className="text-[10px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full font-medium">
-                    {attention.overdueConversations.length}
-                  </span>
-                </div>
-                <div className="space-y-2 mb-3">
-                  {attention.overdueConversations.slice(0, 3).map((c: any) => (
-                    <div key={c.id} className="flex items-center justify-between text-xs">
-                      <span className="text-slate-700 truncate">{c.customer?.name}</span>
-                      <span className="text-slate-400">
-                        {c.lastMessageAt &&
-                          t('dashboard.waiting_since', {
-                            time: timeAgo(new Date(c.lastMessageAt), t),
-                          })}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-                <button
-                  onClick={() => router.push('/inbox?filter=overdue')}
-                  className="text-xs text-sage-600 hover:text-sage-700 flex items-center gap-1 transition-colors"
-                >
-                  {t('dashboard.view_overdue')} <ArrowRight size={12} />
-                </button>
+          {/* P1-20: Go-Live Checklist (ADMIN only, hidden when all complete) */}
+          {isAdmin && checklist && !checklist.allComplete && (
+            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-semibold text-slate-900 dark:text-slate-100">{t('dashboard.go_live_title')}</h2>
+                <span className="text-xs text-slate-500">
+                  {t('dashboard.go_live_progress', {
+                    done: checklist.items.filter((i: any) => i.done).length,
+                    total: checklist.items.length,
+                  })}
+                </span>
               </div>
-            )}
-
-            {/* Tomorrow's Schedule */}
-            {attention.tomorrowBookings.length > 0 && (
-              <div className="bg-white rounded-2xl shadow-soft p-5">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <Calendar size={16} className="text-amber-500" />
-                    <p className="text-sm font-medium text-slate-800">
-                      {t('dashboard.tomorrow_schedule')}
-                    </p>
-                  </div>
-                  <span className="text-[10px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full font-medium">
-                    {attention.tomorrowBookings.length}
-                  </span>
-                </div>
-                <div className="space-y-2 mb-3">
-                  {attention.tomorrowBookings.slice(0, 3).map((b: any) => (
-                    <div key={b.id} className="flex items-center justify-between text-xs">
-                      <span className="text-slate-700 truncate">{b.customer?.name}</span>
-                      <span className="text-slate-400">
-                        {new Date(b.startTime).toLocaleTimeString('en-US', {
-                          hour: 'numeric',
-                          minute: '2-digit',
-                        })}
-                      </span>
+              <div className="w-full bg-slate-100 rounded-full h-2 mb-4">
+                <div
+                  className="h-2 rounded-full bg-sage-500 transition-all"
+                  style={{
+                    width: `${(checklist.items.filter((i: any) => i.done).length / checklist.items.length) * 100}%`,
+                  }}
+                />
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {checklist.items.map((item: any) => (
+                  <div
+                    key={item.key}
+                    className={cn(
+                      'flex items-center gap-2.5 p-3 rounded-xl',
+                      item.done ? 'bg-sage-50/50' : 'bg-slate-50/60',
+                    )}
+                  >
+                    {item.done ? (
+                      <Check size={16} className="text-sage-600 shrink-0" />
+                    ) : (
+                      <Circle size={16} className="text-slate-300 shrink-0" />
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className={cn('text-xs', item.done ? 'text-sage-700' : 'text-slate-600')}>
+                        {t(`dashboard.${CHECKLIST_LABELS[item.key]}`)}
+                      </p>
+                      {!item.done && (
+                        <button
+                          onClick={() => router.push(item.fixUrl)}
+                          className="text-[10px] text-sage-600 hover:text-sage-700 flex items-center gap-0.5 mt-0.5 transition-colors"
+                        >
+                          {t('dashboard.fix')} <ArrowRight size={10} />
+                        </button>
+                      )}
                     </div>
-                  ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* P1-21: First 10 Bookings Milestone */}
+          {milestone && (milestone.completedBookings < 10 || milestone.currentNudge) && (
+            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Target size={18} className="text-lavender-600" />
+                  <h2 className="font-semibold text-slate-900 dark:text-slate-100">{t('dashboard.milestone_title')}</h2>
                 </div>
+                <span className="text-xs text-slate-500">
+                  {t('dashboard.milestone_progress', {
+                    count: Math.min(milestone.completedBookings, 10),
+                  })}
+                </span>
+              </div>
+              <div className="w-full bg-slate-100 rounded-full h-2 mb-4">
+                <div
+                  className="h-2 rounded-full bg-lavender-500 transition-all"
+                  style={{
+                    width: `${Math.min((milestone.completedBookings / 10) * 100, 100)}%`,
+                  }}
+                />
+              </div>
+              {milestone.currentNudge && (
+                <div className="bg-lavender-50 border border-lavender-100 rounded-xl p-4 flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-lavender-900">
+                      {t(`dashboard.${NUDGE_MESSAGES[milestone.currentNudge.id]}`)}
+                    </p>
+                    <button
+                      onClick={() => router.push(milestone.currentNudge.link)}
+                      className="text-xs text-lavender-600 hover:text-lavender-700 flex items-center gap-1 mt-2 transition-colors font-medium"
+                    >
+                      {t('dashboard.nudge_action')} <ArrowRight size={12} />
+                    </button>
+                  </div>
+                  <button
+                    onClick={() => handleDismissNudge(milestone.currentNudge.id)}
+                    className="text-lavender-400 hover:text-lavender-600 transition-colors shrink-0 mt-0.5"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Today's Appointments + Unassigned */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Today's Appointments */}
+            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft">
+              <div className="flex items-center justify-between p-6 pb-4">
+                <h2 className="font-semibold text-slate-900 dark:text-slate-100">{t('dashboard.todays_appointments')}</h2>
                 <button
                   onClick={() => router.push('/calendar')}
                   className="text-xs text-sage-600 hover:text-sage-700 flex items-center gap-1 transition-colors"
                 >
-                  {t('dashboard.view_tomorrow')} <ArrowRight size={12} />
+                  {t('dashboard.view_calendar')} <ArrowRight size={12} />
                 </button>
               </div>
-            )}
+              <div className="px-6 pb-6">
+                {data.todayBookings.length === 0 ? (
+                  <div className="text-center py-6">
+                    <Calendar size={24} className="mx-auto text-slate-300 mb-2" />
+                    <p className="text-slate-400 text-sm">{t('dashboard.no_appointments_today')}</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {data.todayBookings.map((b: any) => (
+                      <div
+                        key={b.id}
+                        className="flex items-center justify-between p-3 rounded-xl bg-slate-50/60 hover:bg-slate-50 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="text-center min-w-[48px]">
+                            <p className="text-sm font-semibold text-slate-900">
+                              {new Date(b.startTime).toLocaleTimeString('en-US', {
+                                hour: 'numeric',
+                                minute: '2-digit',
+                              })}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-slate-800">{b.customer?.name}</p>
+                            <p className="text-xs text-slate-500">
+                              {b.service?.name}
+                              {b.service?.kind === 'CONSULT' && (
+                                <span className="ml-1 text-[9px] bg-lavender-50 text-lavender-900 px-1 py-0 rounded-full">
+                                  C
+                                </span>
+                              )}
+                              {b.service?.kind === 'TREATMENT' && (
+                                <span className="ml-1 text-[9px] bg-sage-50 text-sage-900 px-1 py-0 rounded-full">
+                                  T
+                                </span>
+                              )}
+                              {b.staff ? ` · ${b.staff.name}` : ''}
+                            </p>
+                          </div>
+                        </div>
+                        <span
+                          className={cn(
+                            'text-[10px] px-2 py-0.5 rounded-full font-medium',
+                            STATUS_COLORS[b.status]?.bg,
+                            STATUS_COLORS[b.status]?.text,
+                          )}
+                        >
+                          {t(`status.${b.status.toLowerCase()}`)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Unassigned Conversations */}
+            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft">
+              <div className="flex items-center justify-between p-6 pb-4">
+                <h2 className="font-semibold text-slate-900 dark:text-slate-100">
+                  {t('dashboard.unassigned_conversations')}
+                </h2>
+                <button
+                  onClick={() => router.push('/inbox?filter=unassigned')}
+                  className="text-xs text-sage-600 hover:text-sage-700 flex items-center gap-1 transition-colors"
+                >
+                  {t('dashboard.view_inbox')} <ArrowRight size={12} />
+                </button>
+              </div>
+              <div className="px-6 pb-6">
+                {data.unassignedConversations.length === 0 ? (
+                  <div className="text-center py-6">
+                    <CheckCircle2 size={24} className="mx-auto text-sage-300 mb-2" />
+                    <p className="text-slate-400 text-sm">{t('dashboard.all_caught_up')}</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {data.unassignedConversations.map((c: any) => (
+                      <div
+                        key={c.id}
+                        className="flex items-center justify-between p-3 rounded-xl bg-slate-50/60 hover:bg-slate-50 transition-colors cursor-pointer"
+                        onClick={() => router.push('/inbox')}
+                      >
+                        <div>
+                          <p className="text-sm font-medium text-slate-800">{c.customer?.name}</p>
+                          <p className="text-xs text-slate-500 truncate max-w-[220px]">
+                            {c.messages?.[0]?.content || t('dashboard.no_messages')}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-[10px] bg-lavender-50 text-lavender-900 px-2.5 py-0.5 rounded-full font-medium">
+                            {t('dashboard.unassigned_badge')}
+                          </span>
+                          {c.lastMessageAt && (
+                            <p className="text-[10px] text-slate-400 mt-1">
+                              {timeAgo(new Date(c.lastMessageAt), t)}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-        </div>
+        </>
       )}
+    </div>
+  );
+}
 
-      {/* Today's Appointments + Unassigned */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Today's Appointments */}
-        <div className="bg-white rounded-2xl shadow-soft">
-          <div className="flex items-center justify-between p-6 pb-4">
-            <h2 className="font-semibold text-slate-900">{t('dashboard.todays_appointments')}</h2>
-            <button
-              onClick={() => router.push('/calendar')}
-              className="text-xs text-sage-600 hover:text-sage-700 flex items-center gap-1 transition-colors"
-            >
-              {t('dashboard.view_calendar')} <ArrowRight size={12} />
-            </button>
+function TodaySchedule({
+  todayBookings,
+  router,
+  t,
+}: {
+  todayBookings: any[];
+  router: ReturnType<typeof useRouter>;
+  t: (key: string, params?: any) => string;
+}) {
+  return (
+    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft" data-testid="today-schedule">
+      <div className="flex items-center justify-between p-6 pb-4">
+        <h2 className="font-semibold text-slate-900 dark:text-slate-100">{t('dashboard.todays_appointments')}</h2>
+        <button
+          onClick={() => router.push('/calendar')}
+          className="text-xs text-sage-600 hover:text-sage-700 flex items-center gap-1 transition-colors"
+        >
+          {t('dashboard.view_calendar')} <ArrowRight size={12} />
+        </button>
+      </div>
+      <div className="px-6 pb-6">
+        {todayBookings.length === 0 ? (
+          <div className="text-center py-6">
+            <Calendar size={24} className="mx-auto text-slate-300 mb-2" />
+            <p className="text-slate-400 text-sm">{t('dashboard.no_appointments_today')}</p>
           </div>
-          <div className="px-6 pb-6">
-            {data.todayBookings.length === 0 ? (
-              <div className="text-center py-6">
-                <Calendar size={24} className="mx-auto text-slate-300 mb-2" />
-                <p className="text-slate-400 text-sm">{t('dashboard.no_appointments_today')}</p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {data.todayBookings.map((b: any) => (
-                  <div
-                    key={b.id}
-                    className="flex items-center justify-between p-3 rounded-xl bg-slate-50/60 hover:bg-slate-50 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="text-center min-w-[48px]">
-                        <p className="text-sm font-semibold text-slate-900">
-                          {new Date(b.startTime).toLocaleTimeString('en-US', {
-                            hour: 'numeric',
-                            minute: '2-digit',
-                          })}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-slate-800">{b.customer?.name}</p>
-                        <p className="text-xs text-slate-500">
-                          {b.service?.name}
-                          {b.service?.kind === 'CONSULT' && (
-                            <span className="ml-1 text-[9px] bg-lavender-50 text-lavender-900 px-1 py-0 rounded-full">
-                              C
-                            </span>
-                          )}
-                          {b.service?.kind === 'TREATMENT' && (
-                            <span className="ml-1 text-[9px] bg-sage-50 text-sage-900 px-1 py-0 rounded-full">
-                              T
-                            </span>
-                          )}
-                          {b.staff ? ` · ${b.staff.name}` : ''}
-                        </p>
-                      </div>
-                    </div>
-                    <span
-                      className={cn(
-                        'text-[10px] px-2 py-0.5 rounded-full font-medium',
-                        STATUS_COLORS[b.status]?.bg,
-                        STATUS_COLORS[b.status]?.text,
-                      )}
-                    >
-                      {t(`status.${b.status.toLowerCase()}`)}
-                    </span>
+        ) : (
+          <div className="space-y-2">
+            {todayBookings.map((b: any) => (
+              <div
+                key={b.id}
+                className="flex items-center justify-between p-3 rounded-xl bg-slate-50/60 hover:bg-slate-50 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="text-center min-w-[48px]">
+                    <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                      {new Date(b.startTime).toLocaleTimeString('en-US', {
+                        hour: 'numeric',
+                        minute: '2-digit',
+                      })}
+                    </p>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Unassigned Conversations */}
-        <div className="bg-white rounded-2xl shadow-soft">
-          <div className="flex items-center justify-between p-6 pb-4">
-            <h2 className="font-semibold text-slate-900">
-              {t('dashboard.unassigned_conversations')}
-            </h2>
-            <button
-              onClick={() => router.push('/inbox?filter=unassigned')}
-              className="text-xs text-sage-600 hover:text-sage-700 flex items-center gap-1 transition-colors"
-            >
-              {t('dashboard.view_inbox')} <ArrowRight size={12} />
-            </button>
-          </div>
-          <div className="px-6 pb-6">
-            {data.unassignedConversations.length === 0 ? (
-              <div className="text-center py-6">
-                <CheckCircle2 size={24} className="mx-auto text-sage-300 mb-2" />
-                <p className="text-slate-400 text-sm">{t('dashboard.all_caught_up')}</p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {data.unassignedConversations.map((c: any) => (
-                  <div
-                    key={c.id}
-                    className="flex items-center justify-between p-3 rounded-xl bg-slate-50/60 hover:bg-slate-50 transition-colors cursor-pointer"
-                    onClick={() => router.push('/inbox')}
-                  >
-                    <div>
-                      <p className="text-sm font-medium text-slate-800">{c.customer?.name}</p>
-                      <p className="text-xs text-slate-500 truncate max-w-[220px]">
-                        {c.messages?.[0]?.content || t('dashboard.no_messages')}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-[10px] bg-lavender-50 text-lavender-900 px-2.5 py-0.5 rounded-full font-medium">
-                        {t('dashboard.unassigned_badge')}
-                      </span>
-                      {c.lastMessageAt && (
-                        <p className="text-[10px] text-slate-400 mt-1">
-                          {timeAgo(new Date(c.lastMessageAt), t)}
-                        </p>
-                      )}
-                    </div>
+                  <div>
+                    <p className="text-sm font-medium text-slate-800 dark:text-slate-200">{b.customer?.name}</p>
+                    <p className="text-xs text-slate-500">
+                      {b.service?.name}
+                      {b.staff ? ` · ${b.staff.name}` : ''}
+                    </p>
                   </div>
-                ))}
+                </div>
+                <span
+                  className={cn(
+                    'text-[10px] px-2 py-0.5 rounded-full font-medium',
+                    STATUS_COLORS[b.status]?.bg,
+                    STATUS_COLORS[b.status]?.text,
+                  )}
+                >
+                  {t(`status.${b.status.toLowerCase()}`)}
+                </span>
               </div>
-            )}
+            ))}
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

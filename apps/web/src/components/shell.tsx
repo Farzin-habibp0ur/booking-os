@@ -33,10 +33,14 @@ import {
   Package,
   Kanban,
   Compass,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import CommandPalette from '@/components/command-palette';
 import { useTheme } from '@/lib/use-theme';
 import { DemoTourProvider, useDemoTour, TourSpotlight, TourTooltip } from '@/components/demo-tour';
+import { ModeProvider, useMode } from '@/lib/use-mode';
+import ModeSwitcher from '@/components/mode-switcher';
 
 export function Shell({ children }: { children: ReactNode }) {
   return (
@@ -44,7 +48,9 @@ export function Shell({ children }: { children: ReactNode }) {
       <I18nProvider>
         <ToastProvider>
           <DemoTourProvider>
-            <ShellInner>{children}</ShellInner>
+            <ModeProvider>
+              <ShellInner>{children}</ShellInner>
+            </ModeProvider>
           </DemoTourProvider>
         </ToastProvider>
       </I18nProvider>
@@ -59,8 +65,10 @@ function ShellInner({ children }: { children: ReactNode }) {
   const { t } = useI18n();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [cmdkOpen, setCmdkOpen] = useState(false);
+  const [showMore, setShowMore] = useState(false);
   const { theme, toggle: toggleTheme } = useTheme();
   const { state: tourState, startTour } = useDemoTour();
+  const { modeDef } = useMode();
 
   // Close sidebar on route change (mobile)
   useEffect(() => {
@@ -147,6 +155,28 @@ function ShellInner({ children }: { children: ReactNode }) {
 
   const nav = allNav.filter((item) => !role || item.roles.includes(role));
 
+  // Split nav into primary and secondary based on current mode
+  const primaryPaths = modeDef?.primaryNavPaths || [];
+  const primaryNav = nav.filter((item) => primaryPaths.includes(item.href));
+  const secondaryNav = nav.filter((item) => !primaryPaths.includes(item.href));
+
+  const renderNavLink = ({ href, label, icon: Icon }: (typeof nav)[0]) => (
+    <Link
+      key={href}
+      href={href}
+      aria-current={pathname.startsWith(href) ? 'page' : undefined}
+      className={cn(
+        'flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition-colors',
+        pathname.startsWith(href)
+          ? 'bg-sage-50 dark:bg-sage-900/20 text-sage-700 dark:text-sage-400 font-medium'
+          : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800',
+      )}
+    >
+      <Icon size={18} />
+      {label}
+    </Link>
+  );
+
   const sidebarContent = (
     <>
       <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
@@ -165,6 +195,9 @@ function ShellInner({ children }: { children: ReactNode }) {
           <X size={20} />
         </button>
       </div>
+      <div className="px-2 pt-2">
+        <ModeSwitcher />
+      </div>
       <button
         onClick={() => setCmdkOpen(true)}
         className="mx-2 mt-2 flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-slate-500 hover:bg-slate-50 transition-colors w-[calc(100%-1rem)]"
@@ -180,22 +213,24 @@ function ShellInner({ children }: { children: ReactNode }) {
         aria-label="Main navigation"
         className="flex-1 p-2 space-y-0.5 overflow-y-auto"
       >
-        {nav.map(({ href, label, icon: Icon }) => (
-          <Link
-            key={href}
-            href={href}
-            aria-current={pathname.startsWith(href) ? 'page' : undefined}
-            className={cn(
-              'flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition-colors',
-              pathname.startsWith(href)
-                ? 'bg-sage-50 dark:bg-sage-900/20 text-sage-700 dark:text-sage-400 font-medium'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800',
-            )}
-          >
-            <Icon size={18} />
-            {label}
-          </Link>
-        ))}
+        {/* Primary nav items */}
+        {primaryNav.map(renderNavLink)}
+
+        {/* Separator + More toggle if secondary items exist */}
+        {secondaryNav.length > 0 && (
+          <>
+            <div className="my-1.5 border-t border-slate-100 dark:border-slate-800" />
+            <button
+              onClick={() => setShowMore((v) => !v)}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors w-full"
+              aria-expanded={showMore}
+            >
+              {showMore ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+              {t('nav.more', undefined) || 'More'}
+            </button>
+            {showMore && secondaryNav.map(renderNavLink)}
+          </>
+        )}
       </nav>
       <div className="p-2 border-t border-slate-100 dark:border-slate-800 space-y-1">
         <button

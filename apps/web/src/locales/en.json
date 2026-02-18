@@ -55,7 +55,21 @@
     "reports": "Reports",
     "roi": "ROI",
     "settings": "Settings",
-    "logout": "Logout"
+    "logout": "Logout",
+    "more": "More",
+    "views": "Views"
+  },
+
+  "mode": {
+    "admin": "Admin",
+    "agent": "Agent",
+    "provider": "Provider",
+    "admin_aesthetic": "Clinic Manager",
+    "agent_aesthetic": "Reception",
+    "provider_aesthetic": "Provider",
+    "admin_dealership": "Service Manager",
+    "agent_dealership": "Service Advisor",
+    "provider_dealership": "Technician"
   },
 
   "login": {
@@ -133,7 +147,21 @@
     "nudge_gaining_momentum": "Gaining momentum! Customize your message templates.",
     "nudge_halfway_there": "Halfway there! Check your reports to see how you're doing.",
     "nudge_ten_complete": "10 bookings complete! Review your ROI dashboard.",
-    "nudge_dismissed": "Nudge dismissed"
+    "nudge_dismissed": "Nudge dismissed",
+    "kpi_revenue": "Revenue (30d)",
+    "kpi_bookings_week": "Bookings This Week",
+    "kpi_customers": "Total Customers",
+    "kpi_response_time": "Avg Response",
+    "kpi_unassigned": "Unassigned",
+    "kpi_today_bookings": "Today's Bookings",
+    "kpi_my_schedule": "My Schedule",
+    "kpi_completed_today": "Completed Today",
+    "kpi_no_show_rate": "No-Show Rate",
+    "my_schedule": "My Schedule",
+    "my_conversations": "My Conversations",
+    "completed_label": "done",
+    "no_bookings_scheduled": "No bookings scheduled",
+    "no_assigned_conversations": "No assigned conversations"
   },
 
   "inbox": {

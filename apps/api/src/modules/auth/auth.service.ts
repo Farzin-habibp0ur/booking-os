@@ -210,6 +210,7 @@ export class AuthService {
       role: staff.role,
       locale: staff.locale,
       emailVerified: staff.emailVerified,
+      preferences: (staff as any).preferences || {},
       businessId: staff.businessId,
       business: {
         id: staff.business.id,

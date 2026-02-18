@@ -39,6 +39,7 @@ import { AutomationModule } from './modules/automation/automation.module';
 import { LocationModule } from './modules/location/location.module';
 import { PackBuilderModule } from './modules/pack-builder/pack-builder.module';
 import { QuoteModule } from './modules/quote/quote.module';
+import { SavedViewModule } from './modules/saved-view/saved-view.module';
 
 @Module({
   imports: [
@@ -94,6 +95,7 @@ import { QuoteModule } from './modules/quote/quote.module';
     LocationModule,
     PackBuilderModule,
     QuoteModule,
+    SavedViewModule,
     process.env.REDIS_URL ? QueueModule.forRootWithRedis() : QueueModule.forRoot(),
   ],
 })

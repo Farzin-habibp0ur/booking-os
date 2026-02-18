@@ -742,6 +742,18 @@ export class VerifyEmailDto {
   token!: string;
 }
 
+// ---- Staff Preferences DTOs ----
+
+export class UpdatePreferencesDto {
+  @IsString()
+  @IsOptional()
+  mode?: string;
+
+  @IsString()
+  @IsOptional()
+  landingPath?: string;
+}
+
 // ---- Staff Invitation DTOs ----
 
 export class InviteStaffDto {
@@ -961,6 +973,64 @@ export class CreateQuoteDto {
   @IsString()
   @IsOptional()
   pdfUrl?: string;
+}
+
+// ---- Saved View DTOs ----
+
+export class CreateSavedViewDto {
+  @IsString()
+  @IsNotEmpty()
+  page!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  name!: string;
+
+  @IsObject()
+  filters!: Record<string, unknown>;
+
+  @IsString()
+  @IsOptional()
+  icon?: string;
+
+  @IsString()
+  @IsOptional()
+  color?: string;
+}
+
+export class UpdateSavedViewDto {
+  @IsString()
+  @IsOptional()
+  name?: string;
+
+  @IsObject()
+  @IsOptional()
+  filters?: Record<string, unknown>;
+
+  @IsString()
+  @IsOptional()
+  icon?: string;
+
+  @IsString()
+  @IsOptional()
+  color?: string;
+
+  @IsBoolean()
+  @IsOptional()
+  isPinned?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  isDashboard?: boolean;
+
+  @IsNumber()
+  @IsOptional()
+  sortOrder?: number;
+}
+
+export class ShareSavedViewDto {
+  @IsBoolean()
+  isShared!: boolean;
 }
 
 // ---- Pack Builder DTOs (Phase 3) ----

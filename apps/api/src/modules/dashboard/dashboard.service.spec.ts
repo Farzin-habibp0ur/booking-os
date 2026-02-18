@@ -396,6 +396,91 @@ describe('DashboardService', () => {
     });
   });
 
+  // Mission Control: staff-scoped queries
+  describe('staff-scoped queries', () => {
+    it('returns staff bookings and conversations when staffId provided', async () => {
+      const myBooking = { id: 'mb1', customer: { name: 'Alice' }, service: { name: 'Botox' } };
+      const myConv = { id: 'mc1', customer: { name: 'Bob' }, messages: [{ content: 'Hi' }] };
+
+      // Batch 1: booking.findMany (todayBookings), conv.findMany (unassigned)
+      prisma.booking.findMany
+        .mockResolvedValueOnce([]) // todayBookings
+        .mockResolvedValueOnce([]) // revenueThisMonth
+        .mockResolvedValueOnce([]) // depositPendingBookings
+        .mockResolvedValueOnce([]) // tomorrowBookings
+        .mockResolvedValueOnce([myBooking] as any); // myBookingsToday (staff-scoped)
+      prisma.conversation.findMany
+        .mockResolvedValueOnce([]) // unassigned
+        .mockResolvedValueOnce([]) // overdue
+        .mockResolvedValueOnce([myConv] as any); // myAssignedConversations (staff-scoped)
+      // booking.count: thisWeek, lastWeek, then completedTodayByStaff (staff-scoped), then anyBooking, completed
+      prisma.booking.count
+        .mockResolvedValueOnce(0) // thisWeekBookings
+        .mockResolvedValueOnce(0) // lastWeekBookings
+        .mockResolvedValueOnce(3) // completedTodayByStaff (staff-scoped)
+        .mockResolvedValueOnce(0) // anyBookingCount
+        .mockResolvedValueOnce(0); // completedBookingsCount
+      prisma.customer.count.mockResolvedValue(0);
+      prisma.conversation.count.mockResolvedValue(0);
+      prisma.staff.count.mockResolvedValueOnce(0);
+      prisma.service.count.mockResolvedValueOnce(0);
+      prisma.calendarConnection.count.mockResolvedValueOnce(0);
+      prisma.messageTemplate.findMany.mockResolvedValueOnce([]);
+      prisma.payment.count.mockResolvedValueOnce(0);
+      prisma.roiBaseline.count.mockResolvedValueOnce(0);
+      prisma.business.findUnique.mockResolvedValueOnce({ name: 'Test', packConfig: {} } as any);
+
+      const result = await dashboardService.getDashboard('biz1', 'staff1', 'ADMIN', 'admin');
+
+      expect(result.myBookingsToday).toEqual([myBooking]);
+      expect(result.myAssignedConversations).toEqual([myConv]);
+      expect(result.completedTodayByStaff).toBe(3);
+    });
+
+    it('returns empty arrays when no staffId', async () => {
+      setupDefaultMocks();
+
+      const result = await dashboardService.getDashboard('biz1');
+
+      expect(result.myBookingsToday).toEqual([]);
+      expect(result.myAssignedConversations).toEqual([]);
+      expect(result.completedTodayByStaff).toBe(0);
+    });
+
+    it('queries with correct staffId filter', async () => {
+      // Set up mocks accounting for staff-scoped calls between batch 2 and 3
+      prisma.booking.findMany.mockResolvedValue([]);
+      prisma.conversation.findMany.mockResolvedValue([]);
+      prisma.booking.count
+        .mockResolvedValueOnce(0) // thisWeekBookings
+        .mockResolvedValueOnce(0) // lastWeekBookings
+        .mockResolvedValueOnce(0) // completedTodayByStaff
+        .mockResolvedValueOnce(0) // anyBookingCount
+        .mockResolvedValueOnce(0); // completedBookingsCount
+      prisma.customer.count.mockResolvedValue(0);
+      prisma.conversation.count.mockResolvedValue(0);
+      prisma.staff.count.mockResolvedValueOnce(0);
+      prisma.service.count.mockResolvedValueOnce(0);
+      prisma.calendarConnection.count.mockResolvedValueOnce(0);
+      prisma.messageTemplate.findMany.mockResolvedValueOnce([]);
+      prisma.payment.count.mockResolvedValueOnce(0);
+      prisma.roiBaseline.count.mockResolvedValueOnce(0);
+      prisma.business.findUnique.mockResolvedValueOnce({ name: 'Test', packConfig: {} } as any);
+
+      await dashboardService.getDashboard('biz1', 'staff42', 'AGENT', 'agent');
+
+      // 5th booking.findMany call should be staff-scoped
+      const bookingCalls = prisma.booking.findMany.mock.calls;
+      const staffBookingCall = bookingCalls[bookingCalls.length - 1][0] as any;
+      expect(staffBookingCall.where.staffId).toBe('staff42');
+
+      // 3rd conversation.findMany call should be staff-scoped
+      const convCalls = prisma.conversation.findMany.mock.calls;
+      const staffConvCall = convCalls[convCalls.length - 1][0] as any;
+      expect(staffConvCall.where.assignedToId).toBe('staff42');
+    });
+  });
+
   // dismissNudge tests
   describe('dismissNudge', () => {
     it('adds nudgeId to packConfig.dismissedNudges', async () => {

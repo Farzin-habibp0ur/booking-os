@@ -14,7 +14,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { StaffService } from './staff.service';
 import { AvailabilityService } from '../availability/availability.service';
-import { BusinessId } from '../../common/decorators';
+import { BusinessId, CurrentUser } from '../../common/decorators';
 import { TenantGuard } from '../../common/tenant.guard';
 import { RolesGuard, Roles } from '../../common/roles.guard';
 import {
@@ -23,6 +23,7 @@ import {
   SetWorkingHoursDto,
   AddTimeOffDto,
   InviteStaffDto,
+  UpdatePreferencesDto,
 } from '../../common/dto';
 
 @ApiTags('Staff')
@@ -33,6 +34,11 @@ export class StaffController {
     private staffService: StaffService,
     private availabilityService: AvailabilityService,
   ) {}
+
+  @Patch('me/preferences')
+  updatePreferences(@Req() req: any, @Body() body: UpdatePreferencesDto) {
+    return this.staffService.updatePreferences(req.user.sub, body);
+  }
 
   @Get()
   list(@BusinessId() businessId: string) {

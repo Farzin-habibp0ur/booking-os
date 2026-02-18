@@ -1,5 +1,6 @@
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Prisma } from '@booking-os/db';
 import { PrismaService } from '../../common/prisma.service';
 import { TokenService } from '../../common/token.service';
 import { EmailService } from '../email/email.service';
@@ -137,6 +138,20 @@ export class StaffService {
     });
 
     return { ok: true };
+  }
+
+  async updatePreferences(staffId: string, data: Record<string, unknown>) {
+    const staff = await this.prisma.staff.findUnique({
+      where: { id: staffId },
+      select: { preferences: true },
+    });
+    const existing = (staff?.preferences as Record<string, unknown>) || {};
+    const merged = { ...existing, ...data };
+    return this.prisma.staff.update({
+      where: { id: staffId },
+      data: { preferences: merged as Prisma.InputJsonValue },
+      select: { id: true, preferences: true },
+    });
   }
 
   async revokeInvite(businessId: string, staffId: string) {
