@@ -20,18 +20,29 @@ const nextConfig = {
           },
           {
             key: 'Content-Security-Policy',
-            value: [
-              "default-src 'self'",
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
-              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-              "font-src 'self' https://fonts.gstatic.com",
-              "img-src 'self' data: https:",
-              "connect-src 'self' " + (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'),
-              "frame-ancestors 'none'",
-              "object-src 'none'",
-              "base-uri 'self'",
-              "form-action 'self'",
-            ].join('; '),
+            value: (() => {
+              // Extract origin (scheme+host) from API URL — CSP paths without trailing slash
+              // require exact match per spec, so use origin only to allow all API paths
+              const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+              let apiOrigin;
+              try {
+                apiOrigin = new URL(apiUrl).origin;
+              } catch {
+                apiOrigin = apiUrl;
+              }
+              return [
+                "default-src 'self'",
+                "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
+                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+                "font-src 'self' https://fonts.gstatic.com",
+                "img-src 'self' data: https:",
+                "connect-src 'self' " + apiOrigin,
+                "frame-ancestors 'none'",
+                "object-src 'none'",
+                "base-uri 'self'",
+                "form-action 'self'",
+              ].join('; ');
+            })(),
           },
         ],
       },
