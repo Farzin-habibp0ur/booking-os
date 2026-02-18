@@ -107,7 +107,7 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 - **Mission Control Dashboard** — KPI strip for agent/provider modes, "My Work" section (personal bookings + assigned conversations), AttentionCards component, mode-adaptive layout
 - **Saved Views** — SavedView database model, full CRUD API (7 endpoints), ViewPicker + SaveViewModal on inbox/bookings/customers/waitlist, sidebar-pinned views, dashboard-pinned view cards
 - **Staff preferences** — JSON column on Staff model for mode/landing path persistence
-- **Final counts:** 2,302+ tests total (873 web + 1,429 API)
+- **Final counts:** 2,360+ tests total (895 web + 1,465 API)
 
 ---
 
@@ -470,6 +470,9 @@ Key groups (full list in `.env.example`):
 - **UX Phase 1** (Role-based Modes + Mission Control + Saved Views) — COMPLETE
 - See `docs/user-stories.md` for complete inventory (280 current capabilities, 215 identified gaps) and `docs/ux-brainstorm-brief.md` for brainstorm prompts.
 
+### Code Quality
+- **Error Handling Remediation** — COMPLETE (commit 1cf6f99). Replaced ~20 silent `.catch(() => {})` with logged warnings, queue processors throw on failure, NestJS proper exceptions, frontend toast wiring, waitlist loop resilience, WebSocket disconnect logging. +58 tests.
+
 ### Do Not Build (Yet)
 - Don't chase 5 verticals before aesthetics ROI is repeatable
 - Don't overinvest in generic AI chatbot; keep AI tied to structured flows
@@ -517,7 +520,7 @@ npm run dev                    # Starts all apps via Turborepo
 | `npm run dev` | Start all apps |
 | `npm run build` | Build all |
 | `npm run lint` | Lint all (ESLint + TypeScript) |
-| `npm test` | Run all tests (~2,302 tests) |
+| `npm test` | Run all tests (~2,360 tests) |
 | `npm run test:coverage` | Tests with coverage thresholds |
 | `npm run db:generate` | Generate Prisma client |
 | `npm run db:migrate` | Run migrations |
