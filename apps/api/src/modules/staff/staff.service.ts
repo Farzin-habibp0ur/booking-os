@@ -47,7 +47,7 @@ export class StaffService {
   ) {
     const existing = await this.prisma.staff.findUnique({ where: { email: data.email } });
     if (existing) throw new ConflictException('Email already in use');
-    const passwordHash = await bcrypt.hash(data.password, 10);
+    const passwordHash = await bcrypt.hash(data.password, 12);
     return this.prisma.staff.create({
       data: { businessId, name: data.name, email: data.email, passwordHash, role: data.role },
       select: { id: true, name: true, email: true, role: true, isActive: true, createdAt: true },

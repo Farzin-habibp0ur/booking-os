@@ -167,7 +167,7 @@ export class CustomerService {
           : Promise.resolve([]),
         !types || types.includes('campaign')
           ? this.prisma.campaignSend.findMany({
-              where: { customerId },
+              where: { customerId, campaign: { businessId } },
               include: { campaign: true },
             })
           : Promise.resolve([]),

@@ -41,6 +41,7 @@ export class StaffController {
   }
 
   @Get()
+  @Roles('ADMIN')
   list(@BusinessId() businessId: string) {
     return this.staffService.findAll(businessId);
   }
