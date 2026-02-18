@@ -14,7 +14,21 @@ export class SearchController {
     @BusinessId() businessId: string,
     @Query('q') query: string,
     @Query('limit') limit?: string,
+    @Query('offset') offset?: string,
+    @Query('types') types?: string,
   ) {
-    return this.searchService.globalSearch(businessId, query, limit ? Number(limit) : undefined);
+    const parsedTypes = types
+      ? types
+          .split(',')
+          .map((t) => t.trim())
+          .filter(Boolean)
+      : undefined;
+    return this.searchService.globalSearch(
+      businessId,
+      query,
+      limit ? Number(limit) : undefined,
+      offset ? Number(offset) : undefined,
+      parsedTypes,
+    );
   }
 }

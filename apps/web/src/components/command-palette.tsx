@@ -4,7 +4,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
-import { Search, Users, BookOpen, Scissors, MessageSquare, X } from 'lucide-react';
+import { usePack } from '@/lib/vertical-pack';
+import { Search, Users, BookOpen, Scissors, MessageSquare, X, ArrowRight } from 'lucide-react';
 
 interface SearchResults {
   customers: Array<{ id: string; name: string; phone: string; email: string | null }>;
@@ -22,6 +23,7 @@ interface SearchResults {
     lastMessageAt: string;
     status: string;
   }>;
+  totals?: { customers: number; bookings: number; services: number; conversations: number };
 }
 
 interface ResultItem {
@@ -41,7 +43,7 @@ function flattenResults(results: SearchResults): ResultItem[] {
       id: `customer-${c.id}`,
       label: c.name,
       sublabel: c.phone || c.email || '',
-      href: `/customers`,
+      href: `/customers/${c.id}`,
     });
   }
 
@@ -79,7 +81,7 @@ function flattenResults(results: SearchResults): ResultItem[] {
             timeStyle: 'short',
           })
         : '',
-      href: `/inbox`,
+      href: `/inbox?conversationId=${conv.id}`,
     });
   }
 
@@ -93,7 +95,7 @@ const typeIcons: Record<string, typeof Users> = {
   conversation: MessageSquare,
 };
 
-const typeLabels: Record<string, string> = {
+const defaultTypeLabels: Record<string, string> = {
   customer: 'Customers',
   booking: 'Bookings',
   service: 'Services',
@@ -114,6 +116,14 @@ export default function CommandPalette({
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const pack = usePack();
+
+  const typeLabels: Record<string, string> = {
+    customer: pack.labels?.customer ? `${pack.labels.customer}s` : defaultTypeLabels.customer,
+    booking: pack.labels?.booking ? `${pack.labels.booking}s` : defaultTypeLabels.booking,
+    service: pack.labels?.service ? `${pack.labels.service}s` : defaultTypeLabels.service,
+    conversation: defaultTypeLabels.conversation,
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -200,6 +210,16 @@ export default function CommandPalette({
   const displayItems = query.length >= 2 ? results : recentItems;
   const showRecent = query.length < 2 && recentItems.length > 0;
 
+  // Group results by type for section headers
+  const groupedTypes =
+    query.length >= 2
+      ? (['customer', 'booking', 'service', 'conversation'] as const).filter((type) =>
+          displayItems.some((item) => item.type === type),
+        )
+      : [];
+
+  let flatIndex = 0;
+
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-[20vh]" onClick={onClose}>
       <div className="fixed inset-0 bg-black/30 backdrop-blur-sm animate-fade-in" />
@@ -249,8 +269,51 @@ export default function CommandPalette({
             </div>
           )}
 
+          {/* Grouped results by type */}
           {!loading &&
-            displayItems.map((item, index) => {
+            query.length >= 2 &&
+            groupedTypes.map((type) => {
+              const typeItems = displayItems.filter((item) => item.type === type);
+              return (
+                <div key={type} data-testid={`group-${type}`}>
+                  <div className="px-4 pt-3 pb-1">
+                    <p className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">
+                      {typeLabels[type]}
+                    </p>
+                  </div>
+                  {typeItems.map((item) => {
+                    const currentIndex = flatIndex++;
+                    const Icon = typeIcons[item.type] || Search;
+                    return (
+                      <button
+                        key={item.id}
+                        data-index={currentIndex}
+                        onClick={() => navigate(item)}
+                        className={cn(
+                          'w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors',
+                          activeIndex === currentIndex
+                            ? 'bg-sage-50 text-sage-900'
+                            : 'hover:bg-slate-50 text-slate-700',
+                        )}
+                      >
+                        <Icon size={16} className="text-slate-400 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium truncate">{item.label}</p>
+                          {item.sublabel && (
+                            <p className="text-xs text-slate-400 truncate">{item.sublabel}</p>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              );
+            })}
+
+          {/* Recent items (ungrouped) */}
+          {!loading &&
+            showRecent &&
+            recentItems.map((item, index) => {
               const Icon = typeIcons[item.type] || Search;
               return (
                 <button
@@ -259,9 +322,7 @@ export default function CommandPalette({
                   onClick={() => navigate(item)}
                   className={cn(
                     'w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors',
-                    (query.length >= 2 ? activeIndex === index : false)
-                      ? 'bg-sage-50 text-sage-900'
-                      : 'hover:bg-slate-50 text-slate-700',
+                    'hover:bg-slate-50 text-slate-700',
                   )}
                 >
                   <Icon size={16} className="text-slate-400 flex-shrink-0" />
@@ -278,6 +339,20 @@ export default function CommandPalette({
               );
             })}
         </div>
+
+        {/* View all results link */}
+        {!loading && query.length >= 2 && results.length > 0 && (
+          <button
+            onClick={() => {
+              onClose();
+              router.push(`/search?q=${encodeURIComponent(query)}`);
+            }}
+            className="w-full flex items-center justify-center gap-1 px-4 py-2.5 text-sm text-sage-600 hover:bg-sage-50 border-t border-slate-100 transition-colors"
+            data-testid="view-all-results"
+          >
+            View all results <ArrowRight size={14} />
+          </button>
+        )}
 
         {/* Footer */}
         <div className="px-4 py-2 border-t border-slate-100 flex items-center gap-4 text-[10px] text-slate-400">

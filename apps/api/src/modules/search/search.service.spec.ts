@@ -17,6 +17,17 @@ describe('SearchService', () => {
     searchService = module.get(SearchService);
   });
 
+  function setupEmptyMocks() {
+    prisma.customer.findMany.mockResolvedValue([]);
+    prisma.booking.findMany.mockResolvedValue([]);
+    prisma.service.findMany.mockResolvedValue([]);
+    prisma.conversation.findMany.mockResolvedValue([]);
+    prisma.customer.count.mockResolvedValue(0);
+    prisma.booking.count.mockResolvedValue(0);
+    prisma.service.count.mockResolvedValue(0);
+    prisma.conversation.count.mockResolvedValue(0);
+  }
+
   it('returns empty results for short queries', async () => {
     const result = await searchService.globalSearch('biz1', 'a');
 
@@ -25,6 +36,7 @@ describe('SearchService', () => {
       bookings: [],
       services: [],
       conversations: [],
+      totals: { customers: 0, bookings: 0, services: 0, conversations: 0 },
     });
     expect(prisma.customer.findMany).not.toHaveBeenCalled();
   });
@@ -37,6 +49,7 @@ describe('SearchService', () => {
       bookings: [],
       services: [],
       conversations: [],
+      totals: { customers: 0, bookings: 0, services: 0, conversations: 0 },
     });
   });
 
@@ -60,6 +73,10 @@ describe('SearchService', () => {
     prisma.booking.findMany.mockResolvedValue(bookings as any);
     prisma.service.findMany.mockResolvedValue(services as any);
     prisma.conversation.findMany.mockResolvedValue(conversations as any);
+    prisma.customer.count.mockResolvedValue(1);
+    prisma.booking.count.mockResolvedValue(1);
+    prisma.service.count.mockResolvedValue(1);
+    prisma.conversation.count.mockResolvedValue(1);
 
     const result = await searchService.globalSearch('biz1', 'Alice');
 
@@ -67,13 +84,16 @@ describe('SearchService', () => {
     expect(result.bookings).toEqual(bookings);
     expect(result.services).toEqual(services);
     expect(result.conversations).toEqual(conversations);
+    expect(result.totals).toEqual({
+      customers: 1,
+      bookings: 1,
+      services: 1,
+      conversations: 1,
+    });
   });
 
   it('scopes search to business', async () => {
-    prisma.customer.findMany.mockResolvedValue([]);
-    prisma.booking.findMany.mockResolvedValue([]);
-    prisma.service.findMany.mockResolvedValue([]);
-    prisma.conversation.findMany.mockResolvedValue([]);
+    setupEmptyMocks();
 
     await searchService.globalSearch('biz1', 'test');
 
@@ -90,13 +110,103 @@ describe('SearchService', () => {
   });
 
   it('respects custom limit', async () => {
-    prisma.customer.findMany.mockResolvedValue([]);
-    prisma.booking.findMany.mockResolvedValue([]);
-    prisma.service.findMany.mockResolvedValue([]);
-    prisma.conversation.findMany.mockResolvedValue([]);
+    setupEmptyMocks();
 
     await searchService.globalSearch('biz1', 'test', 3);
 
     expect(prisma.customer.findMany).toHaveBeenCalledWith(expect.objectContaining({ take: 3 }));
+  });
+
+  // ─── New: Offset ──────────────────────────────────────────────────
+
+  it('applies offset parameter', async () => {
+    setupEmptyMocks();
+
+    await searchService.globalSearch('biz1', 'test', 5, 10);
+
+    expect(prisma.customer.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ skip: 10, take: 5 }),
+    );
+    expect(prisma.booking.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ skip: 10, take: 5 }),
+    );
+  });
+
+  it('defaults offset to 0', async () => {
+    setupEmptyMocks();
+
+    await searchService.globalSearch('biz1', 'test');
+
+    expect(prisma.customer.findMany).toHaveBeenCalledWith(expect.objectContaining({ skip: 0 }));
+  });
+
+  // ─── New: Types filter ────────────────────────────────────────────
+
+  it('filters by types when specified', async () => {
+    setupEmptyMocks();
+
+    await searchService.globalSearch('biz1', 'test', 5, 0, ['customer']);
+
+    expect(prisma.customer.findMany).toHaveBeenCalled();
+    expect(prisma.customer.count).toHaveBeenCalled();
+    expect(prisma.booking.findMany).not.toHaveBeenCalled();
+    expect(prisma.service.findMany).not.toHaveBeenCalled();
+    expect(prisma.conversation.findMany).not.toHaveBeenCalled();
+  });
+
+  it('filters multiple types', async () => {
+    setupEmptyMocks();
+
+    await searchService.globalSearch('biz1', 'test', 5, 0, ['customer', 'service']);
+
+    expect(prisma.customer.findMany).toHaveBeenCalled();
+    expect(prisma.service.findMany).toHaveBeenCalled();
+    expect(prisma.booking.findMany).not.toHaveBeenCalled();
+    expect(prisma.conversation.findMany).not.toHaveBeenCalled();
+  });
+
+  it('searches all types when types array is empty', async () => {
+    setupEmptyMocks();
+
+    await searchService.globalSearch('biz1', 'test', 5, 0, []);
+
+    expect(prisma.customer.findMany).toHaveBeenCalled();
+    expect(prisma.booking.findMany).toHaveBeenCalled();
+    expect(prisma.service.findMany).toHaveBeenCalled();
+    expect(prisma.conversation.findMany).toHaveBeenCalled();
+  });
+
+  // ─── New: Totals ──────────────────────────────────────────────────
+
+  it('returns totals for each entity type', async () => {
+    prisma.customer.findMany.mockResolvedValue([]);
+    prisma.booking.findMany.mockResolvedValue([]);
+    prisma.service.findMany.mockResolvedValue([]);
+    prisma.conversation.findMany.mockResolvedValue([]);
+    prisma.customer.count.mockResolvedValue(15);
+    prisma.booking.count.mockResolvedValue(8);
+    prisma.service.count.mockResolvedValue(3);
+    prisma.conversation.count.mockResolvedValue(2);
+
+    const result = await searchService.globalSearch('biz1', 'test');
+
+    expect(result.totals).toEqual({
+      customers: 15,
+      bookings: 8,
+      services: 3,
+      conversations: 2,
+    });
+  });
+
+  it('returns zero totals for unqueried types', async () => {
+    setupEmptyMocks();
+    prisma.customer.count.mockResolvedValue(5);
+
+    const result = await searchService.globalSearch('biz1', 'test', 5, 0, ['customer']);
+
+    expect(result.totals.customers).toBe(5);
+    expect(result.totals.bookings).toBe(0);
+    expect(result.totals.services).toBe(0);
+    expect(result.totals.conversations).toBe(0);
   });
 });
