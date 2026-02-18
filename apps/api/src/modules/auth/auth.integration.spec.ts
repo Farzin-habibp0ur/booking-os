@@ -63,6 +63,9 @@ describe('Auth Integration', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    // H5: Clear blacklist state between tests to prevent leaking from logout/change-password tests
+    const blacklist = ctx.app.get(JwtBlacklistService);
+    blacklist.clear();
   });
 
   // ---- Existing login tests ----
@@ -376,6 +379,47 @@ describe('Auth Integration', () => {
         .send({ token: 'bad-token', password: 'MyPassword123x' });
 
       expect(res.status).toBe(400);
+    });
+  });
+
+  // H5 fix: Refresh token blacklisting
+  describe('H5: Refresh token blacklisting on logout', () => {
+    it('blacklists refresh token on logout so it cannot be reused', async () => {
+      // Login first to get valid tokens
+      ctx.prisma.staff.findUnique.mockResolvedValue(mockStaff as any);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+
+      const loginRes = await request(ctx.app.getHttpServer())
+        .post('/api/v1/auth/login')
+        .send({ email: 'sarah@glowclinic.com', password: 'password123' });
+
+      expect(loginRes.status).toBe(201);
+
+      // Extract cookies from login response
+      const cookies = loginRes.headers['set-cookie'];
+      const accessToken = getAuthToken(ctx.jwtService);
+
+      // Create a real refresh token for the cookie
+      const refreshToken = ctx.jwtService.sign(
+        { sub: 'staff1', email: 'sarah@glowclinic.com', businessId: 'biz1', role: 'ADMIN' },
+        { expiresIn: '7d' },
+      );
+
+      // Logout with both tokens
+      const logoutRes = await request(ctx.app.getHttpServer())
+        .post('/api/v1/auth/logout')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .set('Cookie', [`access_token=${accessToken}`, `refresh_token=${refreshToken}`]);
+
+      expect(logoutRes.status).toBe(201);
+
+      // Attempt to refresh with the now-blacklisted refresh token
+      const refreshRes = await request(ctx.app.getHttpServer())
+        .post('/api/v1/auth/refresh')
+        .set('Cookie', `refresh_token=${refreshToken}`);
+
+      expect(refreshRes.status).toBe(201);
+      expect(refreshRes.body.message).toBe('Refresh token has been revoked');
     });
   });
 

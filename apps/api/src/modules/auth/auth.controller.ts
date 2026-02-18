@@ -100,6 +100,11 @@ export class AuthController {
     if (!token) {
       return { message: 'No refresh token provided' };
     }
+    // H5 fix: Reject blacklisted refresh tokens
+    if (this.blacklist.isBlacklisted(token)) {
+      this.clearTokenCookies(res);
+      return { message: 'Refresh token has been revoked' };
+    }
     const result = await this.authService.refresh(token);
     this.setTokenCookies(res, result);
     return result;
@@ -112,6 +117,11 @@ export class AuthController {
     const token = req.cookies?.access_token as string;
     if (token) {
       this.blacklist.blacklistToken(token);
+    }
+    // H5 fix: Also blacklist refresh token on logout (7-day TTL to match cookie maxAge)
+    const refreshToken = req.cookies?.refresh_token as string;
+    if (refreshToken) {
+      this.blacklist.blacklistToken(refreshToken, 7 * 24 * 60 * 60 * 1000);
     }
     this.clearTokenCookies(res);
     return { ok: true };
@@ -154,6 +164,11 @@ export class AuthController {
     const oldToken = req.cookies?.access_token as string;
     if (oldToken) {
       this.blacklist.blacklistToken(oldToken);
+    }
+    // H5 fix: Also blacklist old refresh token
+    const oldRefresh = req.cookies?.refresh_token as string;
+    if (oldRefresh) {
+      this.blacklist.blacklistToken(oldRefresh, 7 * 24 * 60 * 60 * 1000);
     }
     // Set new token cookies
     if (result.accessToken && result.refreshToken) {

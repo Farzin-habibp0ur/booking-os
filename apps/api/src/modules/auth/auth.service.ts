@@ -69,6 +69,12 @@ export class AuthService {
     const jwtSecret = this.config.get<string>('JWT_SECRET');
     if (!refreshSecret && !jwtSecret)
       throw new Error('JWT_REFRESH_SECRET or JWT_SECRET must be configured');
+    // M1 fix: In production, require a dedicated refresh secret — no fallback
+    if (!refreshSecret && this.config.get('NODE_ENV') === 'production') {
+      throw new Error(
+        'JWT_REFRESH_SECRET must be set in production. Falling back to JWT_SECRET is not allowed.',
+      );
+    }
     // M3 fix: Warn if refresh and access tokens share the same signing key
     if (!refreshSecret && jwtSecret) {
       this.logger.warn(
@@ -166,6 +172,12 @@ export class AuthService {
     }
 
     this.clearFailedAttempts(email);
+
+    // H6 fix: Warn if staff's email is not verified (soft enforcement — don't block login)
+    if (staff.emailVerified === false) {
+      this.logger.warn(`Login by unverified email: staffId=${staff.id}, email=${staff.email}`);
+    }
+
     const tokens = this.issueTokens(staff);
 
     return {

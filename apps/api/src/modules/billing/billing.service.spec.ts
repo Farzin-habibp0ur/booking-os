@@ -395,6 +395,95 @@ describe('BillingService', () => {
     });
   });
 
+  // M12 fix: Webhook secret startup validation
+  describe('onModuleInit webhook secret validation', () => {
+    it('does not throw when webhook secret is configured', () => {
+      // Default service has both STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET
+      expect(() => service.onModuleInit()).not.toThrow();
+    });
+
+    it('warns in development when webhook secret is missing', async () => {
+      const module2 = await Test.createTestingModule({
+        providers: [
+          BillingService,
+          { provide: PrismaService, useValue: prisma },
+          {
+            provide: ConfigService,
+            useValue: {
+              get: jest.fn((key: string, defaultValue?: any) => {
+                const config: Record<string, string> = {
+                  STRIPE_SECRET_KEY: 'sk_test_123',
+                  NODE_ENV: 'development',
+                };
+                return config[key] ?? defaultValue;
+              }),
+            },
+          },
+        ],
+      }).compile();
+
+      const service2 = module2.get(BillingService);
+      const loggerSpy = jest.spyOn((service2 as any).logger, 'warn');
+
+      expect(() => service2.onModuleInit()).not.toThrow();
+      expect(loggerSpy).toHaveBeenCalledWith(
+        expect.stringContaining('STRIPE_WEBHOOK_SECRET not configured'),
+      );
+    });
+
+    it('throws in production when webhook secret is missing and Stripe is enabled', async () => {
+      const module2 = await Test.createTestingModule({
+        providers: [
+          BillingService,
+          { provide: PrismaService, useValue: prisma },
+          {
+            provide: ConfigService,
+            useValue: {
+              get: jest.fn((key: string, defaultValue?: any) => {
+                const config: Record<string, string> = {
+                  STRIPE_SECRET_KEY: 'sk_test_123',
+                  NODE_ENV: 'production',
+                };
+                return config[key] ?? defaultValue;
+              }),
+            },
+          },
+        ],
+      }).compile();
+
+      const service2 = module2.get(BillingService);
+
+      expect(() => service2.onModuleInit()).toThrow(
+        'STRIPE_WEBHOOK_SECRET must be configured in production',
+      );
+    });
+
+    it('skips validation when Stripe is not configured', async () => {
+      const module2 = await Test.createTestingModule({
+        providers: [
+          BillingService,
+          { provide: PrismaService, useValue: prisma },
+          {
+            provide: ConfigService,
+            useValue: {
+              get: jest.fn((key: string, defaultValue?: any) => {
+                const config: Record<string, string> = {
+                  NODE_ENV: 'production',
+                };
+                return config[key] ?? defaultValue;
+              }),
+            },
+          },
+        ],
+      }).compile();
+
+      const service2 = module2.get(BillingService);
+
+      // Should not throw even in production — Stripe is not enabled
+      expect(() => service2.onModuleInit()).not.toThrow();
+    });
+  });
+
   describe('createCheckoutSession edge cases', () => {
     it('should throw when price ID not configured', async () => {
       prisma.business.findUnique.mockResolvedValue({

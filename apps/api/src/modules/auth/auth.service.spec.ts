@@ -360,6 +360,87 @@ describe('AuthService', () => {
     });
   });
 
+  // H6 fix: Warn on unverified email login
+  describe('login email verification warning', () => {
+    it('logs warning when emailVerified is false', async () => {
+      prisma.staff.findUnique.mockResolvedValue({
+        ...mockStaff,
+        emailVerified: false,
+      } as any);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+
+      const loggerSpy = jest.spyOn((authService as any).logger, 'warn');
+
+      await authService.login('sarah@glowclinic.com', 'password123');
+
+      expect(loggerSpy).toHaveBeenCalledWith(expect.stringContaining('Login by unverified email'));
+    });
+
+    it('does not log warning when emailVerified is true', async () => {
+      prisma.staff.findUnique.mockResolvedValue({
+        ...mockStaff,
+        emailVerified: true,
+      } as any);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+
+      const loggerSpy = jest.spyOn((authService as any).logger, 'warn');
+
+      await authService.login('sarah@glowclinic.com', 'password123');
+
+      expect(loggerSpy).not.toHaveBeenCalledWith(
+        expect.stringContaining('Login by unverified email'),
+      );
+    });
+  });
+
+  // M1 fix: JWT_REFRESH_SECRET production enforcement
+  describe('getRefreshSecret production enforcement', () => {
+    it('throws in production when JWT_REFRESH_SECRET is not set', async () => {
+      // Create a service instance with production config and no refresh secret
+      const prodConfig = {
+        get: jest.fn((key: string, defaultValue?: any) => {
+          const config: Record<string, string> = {
+            NODE_ENV: 'production',
+            JWT_SECRET: 'some-jwt-secret',
+          };
+          return config[key] ?? defaultValue;
+        }),
+      };
+
+      const module = await Test.createTestingModule({
+        providers: [
+          AuthService,
+          { provide: PrismaService, useValue: prisma },
+          { provide: JwtService, useValue: jwtService },
+          { provide: ConfigService, useValue: prodConfig },
+          { provide: TokenService, useValue: tokenService },
+          { provide: EmailService, useValue: emailService },
+        ],
+      }).compile();
+
+      const prodAuthService = module.get(AuthService);
+
+      // Trigger getRefreshSecret via login
+      prisma.staff.findUnique.mockResolvedValue(mockStaff as any);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+
+      await expect(prodAuthService.login('sarah@glowclinic.com', 'password123')).rejects.toThrow(
+        'JWT_REFRESH_SECRET must be set in production',
+      );
+    });
+
+    it('allows fallback to JWT_SECRET in development', async () => {
+      // Default mock config has no JWT_REFRESH_SECRET and NODE_ENV=development
+      prisma.staff.findUnique.mockResolvedValue(mockStaff as any);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+
+      const result = await authService.login('sarah@glowclinic.com', 'password123');
+
+      expect(result.accessToken).toBeDefined();
+      expect(result.refreshToken).toBeDefined();
+    });
+  });
+
   describe('brute-force protection', () => {
     it('locks account after 5 failed attempts', async () => {
       prisma.staff.findUnique.mockResolvedValue(mockStaff as any);

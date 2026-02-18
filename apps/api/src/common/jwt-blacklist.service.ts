@@ -35,6 +35,11 @@ export class JwtBlacklistService {
     return true;
   }
 
+  /** Clear all entries — used in tests to prevent leaking state between test cases */
+  clear() {
+    this.blacklist.clear();
+  }
+
   private cleanup() {
     const now = Date.now();
     for (const [hash, expiry] of this.blacklist) {

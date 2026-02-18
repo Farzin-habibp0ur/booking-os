@@ -1,10 +1,10 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../common/prisma.service';
 import Stripe from 'stripe';
 
 @Injectable()
-export class BillingService {
+export class BillingService implements OnModuleInit {
   private readonly logger = new Logger(BillingService.name);
   private stripe: Stripe | null = null;
 
@@ -17,6 +17,23 @@ export class BillingService {
       this.stripe = new Stripe(secretKey);
     } else {
       this.logger.warn('STRIPE_SECRET_KEY not configured — billing features disabled');
+    }
+  }
+
+  // M12 fix: Validate webhook secret at startup when Stripe is enabled
+  onModuleInit() {
+    if (!this.stripe) return; // Stripe not configured — no webhook to validate
+    const webhookSecret = this.configService.get<string>('STRIPE_WEBHOOK_SECRET');
+    if (!webhookSecret) {
+      const isProduction = this.configService.get('NODE_ENV') === 'production';
+      if (isProduction) {
+        throw new Error(
+          'STRIPE_WEBHOOK_SECRET must be configured in production when STRIPE_SECRET_KEY is set',
+        );
+      }
+      this.logger.warn(
+        'STRIPE_WEBHOOK_SECRET not configured — Stripe webhooks will fail. Set this before deploying.',
+      );
     }
   }
 
