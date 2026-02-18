@@ -136,6 +136,11 @@ All endpoints are prefixed with `/api/v1`. Interactive API docs are available at
 | Public Booking | `/public` | Customer-facing booking portal with waitlist join |
 | Calendar Sync | `/calendar-sync` | Google Calendar integration |
 | iCal Feed | `/ical` | iCal feed for external calendars |
+| ActionCard | `/action-cards` | Action card CRUD, approve/dismiss/snooze/execute, expiry cron |
+| ActionHistory | `/action-history` | Unified audit trail, polymorphic entity references |
+| Autonomy | `/autonomy` | Per-action-type autonomy configs, level checking |
+| Outbound | `/outbound` | Staff-initiated outbound message drafts |
+| Briefing | `/briefing` | Daily briefing feed, opportunity detection (deposit pending, overdue replies, open slots) |
 
 ## Environment Variables
 

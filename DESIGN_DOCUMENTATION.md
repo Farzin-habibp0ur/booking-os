@@ -64,6 +64,22 @@
 - **Enhanced Search** — Search API with offset, types filter, totals; Cmd+K fixed hrefs to detail pages, grouped results, vertical-aware labels, "View all results" link; dedicated `/search` page
 - **Inbox Deep Linking** — `?conversationId=` URL param auto-selects conversation, customer name links to profile
 
+### Agentic-First Transformation — Milestone 1: Agentic Foundations & Trust Rails (Complete — commit d8be527)
+- **ActionCard system** — 4 new Prisma models (ActionCard, ActionHistory, AutonomyConfig, OutboundDraft), 4 new API modules with full CRUD
+- **Action Cards** — AI-generated action recommendations with approve/dismiss/snooze/execute lifecycle, priority levels, expiry cron
+- **Action History** — Unified audit trail with polymorphic entity references (entityType + entityId), tracks STAFF/SYSTEM/AI performers
+- **Autonomy Configuration** — Per-action-type autonomy levels (OFF/SUGGEST/AUTO_WITH_REVIEW/FULL_AUTO), approval thresholds, cooldown periods
+- **Outbound Drafts** — Staff-initiated outbound messages with scheduling, channel selection, draft/queue/send lifecycle
+- **14 new frontend components** — Action card list/item/detail/badge/filters, action history list/item/filters, autonomy settings/level picker, outbound compose/draft list, recent changes panel
+- **Integration** — ActionCardBadge in inbox, OutboundCompose in inbox, RecentChangesPanel in customer detail, /settings/autonomy page
+
+### Agentic-First Transformation — Milestone 2: Daily Briefing Agent (Complete — 4/4 batches)
+- **OpportunityDetectorService** — Cron-based scanner detecting deposit pending bookings, overdue conversation replies, and open time slots
+- **BriefingService** — Grouped ActionCard feed aggregating detected opportunities into a prioritized daily briefing
+- **BriefingController** — `GET /briefing` (grouped feed) and `GET /briefing/opportunities` (raw opportunity list)
+- **Frontend components** — BriefingCard, OpportunityCard, BriefingFeed (3 components in `components/briefing/`)
+- **Dashboard integration** — BriefingFeed rendered above admin metric cards on the dashboard, cards navigate to inbox/bookings/customers based on entity data
+
 ### Tech Stack
 | Layer | Technology |
 |-------|-----------|
@@ -294,7 +310,12 @@ The dashboard layout adapts based on the active mode (admin/agent/provider).
 
 **Admin mode shows the full dashboard:**
 
-**Top: Metric Cards (4-column grid)**
+**Top: Daily Briefing Feed**
+- `BriefingFeed` component rendered above metric cards
+- Grouped action cards from `OpportunityDetectorService` (deposit pending, overdue replies, open slots)
+- Each `BriefingCard` / `OpportunityCard` navigates to the relevant page (inbox, bookings, customers) based on entity data
+
+**Metric Cards (4-column grid)**
 1. **Bookings This Week** — calendar icon (blue), count, "vs last week" with % change arrow
 2. **Revenue (30 days)** — dollar icon (green), formatted currency
 3. **Total Customers** — users icon (purple), count, "X new this week"
@@ -572,6 +593,14 @@ Two tabs: **Info** | **Notes**
 - Offer expiry time
 - Quiet hours (start/end)
 
+#### Autonomy Settings (`/settings/autonomy`)
+- Per-action-type autonomy level configuration
+- `AutonomySettings` component with list of action types
+- `AutonomyLevelPicker` — visual selector for autonomy levels (OFF / SUGGEST / AUTO_WITH_REVIEW / FULL_AUTO)
+- Approval threshold configuration (e.g., require approval above certain amount)
+- Cooldown minutes and notification toggles per action type
+- Saves to `AutonomyConfig` model (unique per businessId + actionType)
+
 ---
 
 ### 3.13 Waitlist (`/waitlist`)
@@ -649,7 +678,7 @@ Two tabs: **Info** | **Notes**
 
 ## 4. Data Models
 
-### 4.1 Entity Relationship Overview (34 Models)
+### 4.1 Entity Relationship Overview (38 Models)
 
 ```
 Business (1) ──┬── (*) Staff ──── (*) WorkingHours
@@ -672,7 +701,10 @@ Business (1) ──┬── (*) Staff ──── (*) WorkingHours
                ├── (*) AutomationRule ──── (*) AutomationLog
                ├── (*) Campaign ──── (*) CampaignSend
                ├── (*) Offer
-               └── (*) SavedView
+               ├── (*) SavedView
+               ├── (*) ActionCard ──── (*) ActionHistory
+               ├── (*) AutonomyConfig
+               └── (*) OutboundDraft
 ```
 
 ### 4.2 Key Models
@@ -792,6 +824,10 @@ Business (1) ──┬── (*) Staff ──── (*) WorkingHours
 - **Campaign:** name, status (DRAFT/SCHEDULED/SENDING/SENT/CANCELLED), templateId, filters (JSON), throttlePerMinute, stats (JSON)
 - **CampaignSend:** campaignId, customerId, status (PENDING/SENT/DELIVERED/READ/FAILED), sentAt, bookingId (attribution)
 - **Offer:** name, description, terms, serviceIds[], validFrom/Until, isActive, maxRedemptions, currentRedemptions
+- **ActionCard:** businessId, type (string), title, summary, priority (LOW/MEDIUM/HIGH/URGENT), status (PENDING/APPROVED/DISMISSED/SNOOZED/EXPIRED/EXECUTED), entityType (string), entityId (string), suggestedAction (JSON), reasoning (string), expiresAt, snoozedUntil — Agentic action recommendations surfaced to staff
+- **ActionHistory:** businessId, actionCardId (optional FK), actionType, entityType, entityId, staffId (optional FK), performedBy (STAFF/SYSTEM/AI), details (JSON), outcome — Unified polymorphic audit trail
+- **AutonomyConfig:** businessId, actionType (unique per business), autonomyLevel (OFF/SUGGEST/AUTO_WITH_REVIEW/FULL_AUTO), requiresApprovalAbove (JSON), notifyOnAction (boolean), cooldownMinutes (int) — Per-action-type autonomy configuration
+- **OutboundDraft:** businessId, customerId (FK), staffId (FK), channel, subject, body, status (DRAFT/QUEUED/SENT/FAILED), scheduledFor, sentAt, metadata (JSON) — Staff-initiated outbound message drafts
 
 ---
 
@@ -978,7 +1014,8 @@ apps/web/src/
 │   ├── settings/notifications/page.tsx
 │   ├── settings/offers/page.tsx          # Promotions
 │   ├── settings/policies/page.tsx        # Cancel/reschedule policies
-│   └── settings/waitlist/page.tsx        # Waitlist config
+│   ├── settings/waitlist/page.tsx        # Waitlist config
+│   └── settings/autonomy/page.tsx       # Autonomy level configuration (Milestone 1)
 ├── components/
 │   ├── shell.tsx              # App layout + mode-grouped sidebar nav + pinned views + Cmd+K
 │   ├── skeleton.tsx           # Loading skeletons + empty states with CTAs
@@ -995,6 +1032,12 @@ apps/web/src/
 │   ├── tooltip-nudge.tsx      # Contextual coaching tooltips (Phase 2)
 │   ├── mode-switcher.tsx      # Role-based mode pill/tab selector (UX Phase 1)
 │   ├── saved-views/           # ViewPicker + SaveViewModal (UX Phase 1)
+│   ├── action-card/           # ActionCardList, ActionCardItem, ActionCardDetail, ActionCardBadge, ActionCardFilters (Milestone 1)
+│   ├── action-history/        # ActionHistoryList, ActionHistoryItem, ActionHistoryFilters (Milestone 1)
+│   ├── autonomy/              # AutonomySettings, AutonomyLevelPicker (Milestone 1)
+│   ├── outbound/              # OutboundCompose, OutboundDraftList (Milestone 1)
+│   ├── recent-changes-panel.tsx # RecentChangesPanel for customer detail (Milestone 1)
+│   ├── briefing/              # BriefingCard, OpportunityCard, BriefingFeed (Milestone 2)
 │   └── language-picker.tsx    # Locale selector
 ├── lib/
 │   ├── api.ts                 # API client singleton

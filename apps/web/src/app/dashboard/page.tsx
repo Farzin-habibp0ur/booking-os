@@ -11,6 +11,7 @@ import { useMode } from '@/lib/use-mode';
 import { KpiStrip } from './components/kpi-strip';
 import { MyWork } from './components/my-work';
 import { AttentionCards } from './components/attention-card';
+import { BriefingFeed } from '@/components/briefing';
 import {
   Calendar,
   MessageSquare,
@@ -291,6 +292,17 @@ export default function DashboardPage() {
       {/* Admin mode: full dashboard sections */}
       {mode === 'admin' && (
         <>
+          {/* Daily Briefing — AI-powered action feed */}
+          <BriefingFeed onCardAction={(card) => {
+            if (card.conversationId) {
+              router.push(`/inbox?conversationId=${card.conversationId}`);
+            } else if (card.booking?.id) {
+              router.push(`/bookings?bookingId=${card.booking.id}`);
+            } else if (card.customer?.id) {
+              router.push(`/customers/${card.customer.id}`);
+            }
+          }} />
+
           {/* Metric Cards */}
           <div
             data-tour-target="dashboard-metrics"

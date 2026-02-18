@@ -87,6 +87,26 @@ jest.mock('@/lib/use-mode', () => ({
   ModeProvider: ({ children }: any) => children,
 }));
 
+// Mock BriefingFeed
+jest.mock('@/components/briefing', () => ({
+  BriefingFeed: ({ onCardAction }: any) => (
+    <div data-testid="briefing-feed">
+      <button
+        data-testid="briefing-card-action"
+        onClick={() =>
+          onCardAction?.({
+            id: 'card-1',
+            conversationId: 'conv-1',
+            customer: { id: 'c1', name: 'Emma' },
+          })
+        }
+      >
+        Test Card
+      </button>
+    </div>
+  ),
+}));
+
 // Mock skeleton components
 jest.mock('@/components/skeleton', () => ({
   PageSkeleton: () => <div data-testid="page-skeleton">Loading...</div>,
@@ -1830,5 +1850,54 @@ describe('DashboardPage', () => {
     });
 
     expect(screen.queryByTestId('dashboard-views')).not.toBeInTheDocument();
+  });
+
+  // ─── Daily Briefing Feed ──────────────────────────────────
+
+  it('shows BriefingFeed for admin mode', async () => {
+    mockMode = 'admin';
+    mockDashboard();
+
+    render(<DashboardPage />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('briefing-feed')).toBeInTheDocument();
+    });
+  });
+
+  it('does not show BriefingFeed for agent mode', async () => {
+    mockMode = 'agent';
+    mockDashboard({
+      ...baseDashboardData,
+      myBookingsToday: [],
+      myAssignedConversations: [],
+      completedTodayByStaff: 0,
+    });
+
+    render(<DashboardPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('dashboard.title')).toBeInTheDocument();
+    });
+
+    expect(screen.queryByTestId('briefing-feed')).not.toBeInTheDocument();
+  });
+
+  it('navigates to inbox when briefing card with conversationId is clicked', async () => {
+    const user = userEvent.setup();
+    mockMode = 'admin';
+    mockDashboard();
+
+    render(<DashboardPage />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('briefing-card-action')).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      await user.click(screen.getByTestId('briefing-card-action'));
+    });
+
+    expect(mockPush).toHaveBeenCalledWith('/inbox?conversationId=conv-1');
   });
 });

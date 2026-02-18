@@ -2,7 +2,7 @@
 
 > **Purpose:** This document gives full context on the Booking OS platform — what it is, what's been built, how it's structured, and what's left to build. Share this with an AI assistant or new developer to get productive immediately.
 >
-> **Last updated:** February 18, 2026
+> **Last updated:** February 18, 2026 (Milestone 2 complete)
 
 ---
 
@@ -119,6 +119,25 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 - **Inbox Deep Linking** — `?conversationId=` URL param auto-selects conversation, customer name links to profile
 - **Final counts:** 2,533 tests total (972 web + 1,561 API)
 
+### Agentic-First Transformation — Milestone 1: "Agentic Foundations & Trust Rails" — COMPLETE (commit d8be527)
+- **ActionCard model + API** — Full CRUD, approve/dismiss/snooze/execute actions, priority levels (LOW/MEDIUM/HIGH/URGENT), expiry cron job
+- **ActionHistory model + API** — Unified audit trail with polymorphic entity references (entityType + entityId), performed-by tracking (STAFF/SYSTEM/AI)
+- **AutonomyConfig model + API** — Per-action-type autonomy levels (OFF/SUGGEST/AUTO_WITH_REVIEW/FULL_AUTO), approval thresholds, cooldown, notification config
+- **OutboundDraft model + API** — Staff-initiated outbound message drafts with scheduling, channel selection, queue/send lifecycle
+- **Frontend components (14)** — ActionCard list/item/detail/badge/filters, ActionHistory list/item/filters, AutonomySettings/LevelPicker, OutboundCompose/DraftList, RecentChangesPanel
+- **Integration points** — Inbox (ActionCardBadge + OutboundCompose), Customer detail (RecentChangesPanel), Mode config (/settings/autonomy)
+- **Demo seed** — 7 action cards, 6 history entries, 3 autonomy configs, 2 outbound drafts
+- **Final counts:** 2,703 tests total (1,637 API + 1,066 web), +170 new tests
+
+### Agentic-First Transformation — Milestone 2: "Daily Briefing Agent" — COMPLETE
+- **OpportunityDetectorService** — Cron-based scanner detecting deposit pending bookings, overdue replies, and open time slots
+- **BriefingService** — Grouped ActionCard feed aggregating detected opportunities into a prioritized briefing
+- **BriefingController** — `GET /briefing` (grouped feed) and `GET /briefing/opportunities` (raw opportunity list)
+- **BriefingModule** — NestJS module wiring detector, service, and controller
+- **Frontend components (3)** — BriefingCard, OpportunityCard, BriefingFeed in `components/briefing/`
+- **Dashboard integration** — BriefingFeed rendered above admin metric cards, cards navigate to inbox/bookings/customers based on entity data
+- **Final counts:** 2,761 tests total (1,661 API + 1,100 web), +58 new tests
+
 ---
 
 ## 3. Tech Stack
@@ -152,7 +171,7 @@ booking-os/
 ├── apps/
 │   ├── api/                    # NestJS REST API (port 3001)
 │   │   ├── src/
-│   │   │   ├── modules/        # 34 feature modules
+│   │   │   ├── modules/        # 39 feature modules
 │   │   │   ├── common/         # Guards, decorators, filters, DTOs, Prisma service
 │   │   │   └── main.ts         # Bootstrap, Swagger, CORS, cookies, validation
 │   │   └── Dockerfile          # Multi-stage production build
@@ -166,7 +185,7 @@ booking-os/
 │   │   └── Dockerfile          # Multi-stage production build
 │   └── whatsapp-simulator/     # WhatsApp testing tool (port 3002)
 ├── packages/
-│   ├── db/                     # Prisma schema (30 models), migrations, seed scripts
+│   ├── db/                     # Prisma schema (38 models), migrations, seed scripts
 │   │   ├── prisma/schema.prisma
 │   │   ├── src/seed.ts         # Base seed (idempotent)
 │   │   └── src/seed-demo.ts    # Rich demo data (idempotent)
@@ -190,7 +209,7 @@ booking-os/
 
 ---
 
-## 5. Database Schema (34 Models)
+## 5. Database Schema (38 Models)
 
 ```
 Business (1) ──┬── (*) Staff ──── (*) WorkingHours
@@ -220,7 +239,10 @@ Business (1) ──┬── (*) Staff ──── (*) WorkingHours
                ├── (*) Campaign ──── (*) CampaignSend
                ├── (*) Offer
                ├── (*) SavedView
-               └── (*) VerticalPackVersion
+               ├── (*) VerticalPackVersion
+               ├── (*) ActionCard ──── (*) ActionHistory
+               ├── (*) AutonomyConfig
+               └── (*) OutboundDraft
 ```
 
 ### Key Enums
@@ -252,10 +274,14 @@ VerticalPack:       AESTHETIC, SALON, TUTORING, GENERAL, DEALERSHIP
 | **AutomationRule** | trigger (6 types), filters (JSON), actions (JSON), quietStart/End | Automation engine |
 | **Campaign** | filters (JSON), throttlePerMinute, stats (JSON) | Bulk messaging |
 | **SavedView** | businessId, staffId, page, name, filters (JSON), icon, color, isPinned, isDashboard, isShared, sortOrder | Named filter presets |
+| **ActionCard** | businessId, type, title, summary, priority (LOW/MEDIUM/HIGH/URGENT), status (PENDING/APPROVED/DISMISSED/SNOOZED/EXPIRED/EXECUTED), entityType, entityId, suggestedAction (JSON), reasoning, expiresAt, snoozedUntil | Agentic action recommendations with approve/dismiss/snooze/execute |
+| **ActionHistory** | businessId, actionCardId (optional), actionType, entityType, entityId, staffId, performedBy (STAFF/SYSTEM/AI), details (JSON), outcome | Unified audit trail for all actions (polymorphic entity references) |
+| **AutonomyConfig** | businessId, actionType (unique per biz), autonomyLevel (OFF/SUGGEST/AUTO_WITH_REVIEW/FULL_AUTO), requiresApprovalAbove (JSON), notifyOnAction, cooldownMinutes | Per-action-type autonomy level configuration |
+| **OutboundDraft** | businessId, customerId, staffId, channel, subject, body, status (DRAFT/QUEUED/SENT/FAILED), scheduledFor, sentAt, metadata (JSON) | Staff-initiated outbound message drafts |
 
 ---
 
-## 6. API Modules (32 Controllers)
+## 6. API Modules (37 Controllers)
 
 All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 
@@ -293,6 +319,11 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 | **Self-Serve** | `/self-serve` | Reschedule, cancel, waitlist claim, quote approval (token-based) |
 | **Saved Views** | `/saved-views` | CRUD, list by page, pinned views, dashboard views, share/unshare |
 | **Health** | `/health` | DB + Redis health check with latency |
+| **Action Card** | `/action-cards` | Action card CRUD, approve/dismiss/snooze/execute, expiry cron |
+| **Action History** | `/action-history` | Unified audit trail, polymorphic entity references |
+| **Autonomy** | `/autonomy` | Per-action-type autonomy configs, level checking |
+| **Outbound** | `/outbound` | Staff-initiated outbound message drafts |
+| **Briefing** | `/briefing` | Daily briefing feed (grouped action cards) and opportunity detection (deposit pending, overdue replies, open slots) |
 
 ### Auth & Multi-tenancy
 - JWT in httpOnly cookies (access: 15 min, refresh: 7 days), automatic client-side refresh on 401
@@ -344,7 +375,7 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 | Reports | `/reports` | 9 chart types |
 | ROI Dashboard | `/roi` | Baseline vs current metrics |
 | Service Board | `/service-board` | Kanban board (dealership) |
-| Settings | `/settings/*` | 11 settings sub-pages (account, AI, templates, translations, calendar, billing, notifications, offers, policies, waitlist, profile fields) |
+| Settings | `/settings/*` | 12 settings sub-pages (account, AI, autonomy, templates, translations, calendar, billing, notifications, offers, policies, waitlist, profile fields) |
 
 ### Key Components
 - `Shell` — Sidebar nav with mode-grouped items + "More" toggle, pinned saved views, i18n, pack provider, dark mode, tour trigger
@@ -361,6 +392,12 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 - `ModeSwitcher` — Role-based mode pill/tab selector (admin/agent/provider)
 - `ViewPicker` / `SaveViewModal` — Saved filter views on list pages
 - `KpiStrip` / `MyWork` / `AttentionCards` — Mission Control dashboard components
+- `ActionCardList` / `ActionCardItem` / `ActionCardDetail` / `ActionCardBadge` / `ActionCardFilters` — Agentic action card components (approve, dismiss, snooze, execute)
+- `ActionHistoryList` / `ActionHistoryItem` / `ActionHistoryFilters` — Unified audit trail components
+- `AutonomySettings` / `AutonomyLevelPicker` — Autonomy configuration UI
+- `OutboundCompose` / `OutboundDraftList` — Staff-initiated outbound message drafts
+- `RecentChangesPanel` — Customer detail panel showing recent action history
+- `BriefingFeed` / `BriefingCard` / `OpportunityCard` — Daily briefing components (grouped action cards, opportunity detection results, dashboard integration)
 
 ---
 
@@ -471,6 +508,13 @@ Key groups (full list in `.env.example`):
 
 ## 14. Roadmap — What's Next
 
+### Agentic-First Transformation (5 Milestones)
+- **Milestone 1: Agentic Foundations & Trust Rails** — COMPLETE (commit d8be527). 4 new models (ActionCard, ActionHistory, AutonomyConfig, OutboundDraft), 4 new API modules, 14 new frontend components, /settings/autonomy page. +170 tests.
+- **Milestone 2: Daily Briefing Agent** — COMPLETE. OpportunityDetectorService (cron-based scanner), BriefingService (grouped ActionCard feed), BriefingController (GET /briefing, GET /briefing/opportunities), 3 frontend components (BriefingCard, OpportunityCard, BriefingFeed), dashboard integration. +58 tests.
+- **Milestone 3: Inbox-as-OS** — NOT STARTED
+- **Milestone 4: Background Agents** — NOT STARTED
+- **Milestone 5: Vertical Pack Agents** — NOT STARTED
+
 ### Phase 4: Engagement OS + Benchmarking + Marketplace (NOT STARTED)
 
 | Item | Description |
@@ -486,7 +530,7 @@ Key groups (full list in `.env.example`):
 
 ### Code Quality
 - **Error Handling Remediation** — COMPLETE (commit 1cf6f99). Replaced ~20 silent `.catch(() => {})` with logged warnings, queue processors throw on failure, NestJS proper exceptions, frontend toast wiring, waitlist loop resilience, WebSocket disconnect logging. +58 tests.
-- **Security Remediation** — COMPLETE (5 batches, 22 fixes applied across 39 audit findings). Key changes: CSP/HSTS/security headers, cross-tenant CampaignSend fix, DTO input validation with MaxLength, pagination caps, booking status state machine, per-customer offer redemption with OfferRedemption model, refresh token blacklisting on logout, JWT_REFRESH_SECRET production enforcement, Stripe redirect URL validation, LoginDto for empty body handling. ~80 tests added. **Final counts:** 2,520 tests total (1,561 API + 959 web).
+- **Security Remediation** — COMPLETE (5 batches, 22 fixes applied across 39 audit findings). Key changes: CSP/HSTS/security headers, cross-tenant CampaignSend fix, DTO input validation with MaxLength, pagination caps, booking status state machine, per-customer offer redemption with OfferRedemption model, refresh token blacklisting on logout, JWT_REFRESH_SECRET production enforcement, Stripe redirect URL validation, LoginDto for empty body handling. ~80 tests added. **Final counts:** 2,761 tests total (1,661 API + 1,100 web).
 
 ### Do Not Build (Yet)
 - Don't chase 5 verticals before aesthetics ROI is repeatable
@@ -535,7 +579,7 @@ npm run dev                    # Starts all apps via Turborepo
 | `npm run dev` | Start all apps |
 | `npm run build` | Build all |
 | `npm run lint` | Lint all (ESLint + TypeScript) |
-| `npm test` | Run all tests (~2,533 tests) |
+| `npm test` | Run all tests (~2,761 tests) |
 | `npm run test:coverage` | Tests with coverage thresholds |
 | `npm run db:generate` | Generate Prisma client |
 | `npm run db:migrate` | Run migrations |
