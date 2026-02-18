@@ -34,6 +34,7 @@ function LoginPage() {
     setLoading(true);
     try {
       await login(email, password);
+      sessionStorage.setItem('booking-os-login-redirect', '1');
       router.push('/dashboard');
     } catch (err: any) {
       setError(err.message || t('errors.login_failed'));

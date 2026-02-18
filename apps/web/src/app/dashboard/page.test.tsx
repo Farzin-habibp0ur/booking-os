@@ -226,18 +226,17 @@ describe('DashboardPage', () => {
   it('redirects agent mode to /inbox on initial login', async () => {
     mockMode = 'agent';
     mockLandingPath = '/inbox';
-    // Simulate arriving from login (empty referrer)
-    Object.defineProperty(document, 'referrer', { value: '', configurable: true });
-    Object.defineProperty(window.performance, 'getEntriesByType', {
-      value: () => [{ type: 'navigate' }],
-      configurable: true,
-    });
+    // Simulate fresh login by setting session flag
+    sessionStorage.setItem('booking-os-login-redirect', '1');
 
     render(<DashboardPage />);
 
     await waitFor(() => {
       expect(mockReplace).toHaveBeenCalledWith('/inbox');
     });
+
+    // Session flag should be cleared after redirect
+    expect(sessionStorage.getItem('booking-os-login-redirect')).toBeNull();
   });
 
   it('does not redirect when mode landing is /dashboard', async () => {

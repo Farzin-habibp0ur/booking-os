@@ -91,24 +91,18 @@ export default function DashboardPage() {
   const { mode, landingPath } = useMode();
   const isAdmin = user?.role === 'ADMIN';
 
-  // Redirect non-dashboard modes to their landing page on initial login
+  // Redirect non-dashboard modes to their landing page on initial login only.
+  // Uses a session flag set by the login page to distinguish "just logged in"
+  // from "explicitly navigated to /dashboard via sidebar".
   useEffect(() => {
+    if (!user) return; // Wait for auth to load so mode/landingPath is accurate
+    const justLoggedIn = sessionStorage.getItem('booking-os-login-redirect');
+    if (!justLoggedIn) return; // Not a fresh login — don't redirect
+    sessionStorage.removeItem('booking-os-login-redirect');
     if (landingPath && landingPath !== '/dashboard') {
-      // Only redirect if user arrived here from login/root (no explicit nav)
-      const navEntry = window.performance?.getEntriesByType?.('navigation')?.[0] as
-        | PerformanceNavigationTiming
-        | undefined;
-      const isDirectLoad = !navEntry || navEntry.type === 'navigate' || navEntry.type === 'reload';
-      const fromLogin =
-        document.referrer.includes('/login') ||
-        document.referrer === '' ||
-        document.referrer.endsWith('/');
-      if (isDirectLoad && fromLogin) {
-        router.replace(landingPath);
-        return;
-      }
+      router.replace(landingPath);
     }
-  }, [landingPath, router]);
+  }, [landingPath, router, user]);
 
   useEffect(() => {
     // Check if onboarding is complete; redirect to setup if not
