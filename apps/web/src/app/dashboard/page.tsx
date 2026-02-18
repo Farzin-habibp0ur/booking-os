@@ -88,8 +88,22 @@ export default function DashboardPage() {
   const [dashboardViews, setDashboardViews] = useState<any[]>([]);
   const { t } = useI18n();
   const { user } = useAuth();
-  const { mode } = useMode();
+  const { mode, landingPath } = useMode();
   const isAdmin = user?.role === 'ADMIN';
+
+  // Redirect non-dashboard modes to their landing page on initial login
+  useEffect(() => {
+    if (landingPath && landingPath !== '/dashboard') {
+      // Only redirect if user arrived here from login/root (no explicit nav)
+      const navEntry = window.performance?.getEntriesByType?.('navigation')?.[0] as PerformanceNavigationTiming | undefined;
+      const isDirectLoad = !navEntry || navEntry.type === 'navigate' || navEntry.type === 'reload';
+      const fromLogin = document.referrer.includes('/login') || document.referrer === '' || document.referrer.endsWith('/');
+      if (isDirectLoad && fromLogin) {
+        router.replace(landingPath);
+        return;
+      }
+    }
+  }, [landingPath, router]);
 
   useEffect(() => {
     // Check if onboarding is complete; redirect to setup if not

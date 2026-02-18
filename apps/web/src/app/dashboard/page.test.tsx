@@ -4,8 +4,9 @@ import DashboardPage from './page';
 
 // Mock next/navigation
 const mockPush = jest.fn();
+const mockReplace = jest.fn();
 jest.mock('next/navigation', () => ({
-  useRouter: () => ({ push: mockPush }),
+  useRouter: () => ({ push: mockPush, replace: mockReplace }),
   useSearchParams: () => new URLSearchParams(),
   useParams: () => ({ id: 'test-id' }),
 }));
@@ -73,14 +74,15 @@ jest.mock('@/lib/api', () => ({
 
 // Mock mode system
 let mockMode = 'admin';
+let mockLandingPath = '/dashboard';
 jest.mock('@/lib/use-mode', () => ({
   useMode: () => ({
     mode: mockMode,
     setMode: jest.fn(),
     availableModes: [],
     modeLabel: 'Admin',
-    landingPath: '/dashboard',
-    modeDef: { key: 'admin', primaryNavPaths: ['/dashboard'] },
+    landingPath: mockLandingPath,
+    modeDef: { key: mockMode, primaryNavPaths: ['/dashboard'] },
   }),
   ModeProvider: ({ children }: any) => children,
 }));
@@ -167,6 +169,7 @@ describe('DashboardPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockMode = 'admin';
+    mockLandingPath = '/dashboard';
     // Reset auth back to ADMIN
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const authMod = require('@/lib/auth');
@@ -216,6 +219,44 @@ describe('DashboardPage', () => {
     await waitFor(() => {
       expect(mockPush).toHaveBeenCalledWith('/setup');
     });
+  });
+
+  // ─── Landing Redirect ──────────────────────────────────────
+
+  it('redirects agent mode to /inbox on initial login', async () => {
+    mockMode = 'agent';
+    mockLandingPath = '/inbox';
+    // Simulate arriving from login (empty referrer)
+    Object.defineProperty(document, 'referrer', { value: '', configurable: true });
+    Object.defineProperty(window.performance, 'getEntriesByType', {
+      value: () => [{ type: 'navigate' }],
+      configurable: true,
+    });
+
+    render(<DashboardPage />);
+
+    await waitFor(() => {
+      expect(mockReplace).toHaveBeenCalledWith('/inbox');
+    });
+  });
+
+  it('does not redirect when mode landing is /dashboard', async () => {
+    mockMode = 'admin';
+    mockLandingPath = '/dashboard';
+
+    mockApi.get.mockImplementation((path: string) => {
+      if (path === '/business') return Promise.resolve({ packConfig: { setupComplete: true } });
+      if (path === '/dashboard') return Promise.resolve(baseDashboardData);
+      if (path.includes('/saved-views')) return Promise.resolve([]);
+      return Promise.resolve([]);
+    });
+
+    render(<DashboardPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('dashboard.title')).toBeInTheDocument();
+    });
+    expect(mockReplace).not.toHaveBeenCalled();
   });
 
   // ─── Error State ────────────────────────────────────────────
