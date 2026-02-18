@@ -110,14 +110,14 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 - **Final counts:** 2,531+ tests total (970 web + 1,561 API)
 
 ### UX Phase 2: "Customer Hub + Unified Timeline + Global Search" (Bundle B) — COMPLETE (7/7 batches)
-- **Customer Hub** — Redesigned `/customers/{id}` with sticky header, context row, notes tab, message deep link, vertical modules
+- **Customer Hub** — Redesigned `/customers/{id}` with sticky header, context row (last booking, last conversation, waitlist count), notes tab, message deep link, vertical modules
 - **Customer Notes** — New `CustomerNote` model with full CRUD, staff ownership validation
 - **Unified Timeline** — Timeline API endpoint (6 data sources: bookings, conversations, notes, waitlist, quotes, campaigns), `CustomerTimeline` component with type filtering, pagination, deep linking
 - **Vertical Modules** — IntakeCard for aesthetic pack, quotes summary for dealership pack, collapsible sections
 - **Enhanced Search** — Search API with offset, types filter, totals; Cmd+K fixed hrefs to detail pages, grouped results, vertical-aware labels, "View all results" link
 - **Search Page** — New `/search` page with URL param sync, type filter chips with counts, grouped results, load more per section
 - **Inbox Deep Linking** — `?conversationId=` URL param auto-selects conversation, customer name links to profile
-- **Final counts:** 2,459 tests total (957 web + 1,502 API)
+- **Final counts:** 2,533 tests total (972 web + 1,561 API)
 
 ---
 
@@ -535,7 +535,7 @@ npm run dev                    # Starts all apps via Turborepo
 | `npm run dev` | Start all apps |
 | `npm run build` | Build all |
 | `npm run lint` | Lint all (ESLint + TypeScript) |
-| `npm test` | Run all tests (~2,459 tests) |
+| `npm test` | Run all tests (~2,533 tests) |
 | `npm run test:coverage` | Tests with coverage thresholds |
 | `npm run db:generate` | Generate Prisma client |
 | `npm run db:migrate` | Run migrations |

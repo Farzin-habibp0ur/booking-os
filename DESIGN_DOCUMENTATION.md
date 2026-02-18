@@ -58,7 +58,7 @@
 - **Staff preferences** — JSON column on Staff for cross-device mode persistence
 
 ### UX Phase 2: Customer Hub + Unified Timeline + Global Search (Bundle B) (Complete — 7/7 batches)
-- **Customer Hub** — Redesigned `/customers/{id}` with sticky header, context row, notes tab, message deep link, vertical modules (IntakeCard for aesthetic, quotes for dealership)
+- **Customer Hub** — Redesigned `/customers/{id}` with sticky header, context row (last booking, last conversation, waitlist count), notes tab, message deep link, vertical modules (IntakeCard for aesthetic, quotes for dealership)
 - **Customer Notes** — New `CustomerNote` model with full CRUD, staff ownership validation
 - **Unified Timeline** — Timeline API endpoint (6 data sources: bookings, conversations, notes, waitlist, quotes, campaigns), `CustomerTimeline` component with type filtering, pagination, deep linking
 - **Enhanced Search** — Search API with offset, types filter, totals; Cmd+K fixed hrefs to detail pages, grouped results, vertical-aware labels, "View all results" link; dedicated `/search` page
@@ -411,7 +411,7 @@ Two tabs: **Info** | **Notes**
 
 **Header:** Back button, customer name (large), "Since {date}" subtitle, "Message" button + "+ New Booking" button
 
-**Context Row:** Last booking date, last conversation date, conversation count
+**Context Row:** Last booking date, last conversation date, conversation count, active waitlist count
 
 **3-Column Layout:**
 
