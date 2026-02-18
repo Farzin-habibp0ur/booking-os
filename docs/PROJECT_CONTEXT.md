@@ -93,7 +93,7 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 
 ### Test Coverage Push — COMPLETE
 - Added ~425 tests across 9 batches
-- **Final counts:** 2,206+ tests total (801 web + 1,405 API)
+- **Final counts:** 2,206+ tests total (801 web + 1,405 API) (before UX Phase 1)
 - **API:** 93.14% statements / 81.11% branches
 - **Web:** 77.76% statements / 72.84% branches
 
@@ -101,6 +101,13 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 - **Rich demo data** — Realistic seed data for both aesthetic clinic and dealership verticals
 - **Interactive demo tour** — 9-step guided walkthrough with spotlight + tooltip overlays
 - **Deployment docs** — Comprehensive DEPLOY.md with Railway, Docker, and troubleshooting
+
+### UX Phase 1: "Role-based Modes + Mission Control + Saved Views" — COMPLETE (6/6 batches)
+- **Role-based Modes** — Mode switcher (admin/agent/provider), mode-grouped sidebar nav with "More" toggle, role-appropriate landing pages, vertical-aware labels
+- **Mission Control Dashboard** — KPI strip for agent/provider modes, "My Work" section (personal bookings + assigned conversations), AttentionCards component, mode-adaptive layout
+- **Saved Views** — SavedView database model, full CRUD API (7 endpoints), ViewPicker + SaveViewModal on inbox/bookings/customers/waitlist, sidebar-pinned views, dashboard-pinned view cards
+- **Staff preferences** — JSON column on Staff model for mode/landing path persistence
+- **Final counts:** 2,302+ tests total (873 web + 1,429 API)
 
 ---
 
@@ -173,7 +180,7 @@ booking-os/
 
 ---
 
-## 5. Database Schema (30 Models)
+## 5. Database Schema (31 Models)
 
 ```
 Business (1) ──┬── (*) Staff ──── (*) WorkingHours
@@ -202,6 +209,7 @@ Business (1) ──┬── (*) Staff ──── (*) WorkingHours
                ├── (*) AutomationRule ──── (*) AutomationLog
                ├── (*) Campaign ──── (*) CampaignSend
                ├── (*) Offer
+               ├── (*) SavedView
                └── (*) VerticalPackVersion
 ```
 
@@ -221,7 +229,7 @@ VerticalPack:       AESTHETIC, SALON, TUTORING, GENERAL, DEALERSHIP
 | Model | Key Fields | Notes |
 |-------|-----------|-------|
 | **Business** | name, slug (unique), timezone, verticalPack, packConfig (JSON), aiSettings (JSON), policySettings (JSON), defaultLocale | Multi-tenant root |
-| **Staff** | email (unique), role, passwordHash, isActive, emailVerified, locale | Auth + assignment |
+| **Staff** | email (unique), role, passwordHash, isActive, emailVerified, locale, preferences (JSON) | Auth + assignment + mode prefs |
 | **Customer** | phone (unique per biz), tags[], customFields (JSON) | Vertical-specific fields |
 | **Service** | kind (CONSULT/TREATMENT/OTHER), depositRequired, bufferBefore/After, isActive | Catalog item |
 | **Booking** | status (7 states), kanbanStatus, locationId, resourceId, recurringSeriesId, customFields (JSON) | Core scheduling |
@@ -232,10 +240,11 @@ VerticalPack:       AESTHETIC, SALON, TUTORING, GENERAL, DEALERSHIP
 | **WaitlistEntry** | status (ACTIVE/OFFERED/BOOKED/EXPIRED/CANCELLED), offeredSlot (JSON) | Smart waitlist |
 | **AutomationRule** | trigger (6 types), filters (JSON), actions (JSON), quietStart/End | Automation engine |
 | **Campaign** | filters (JSON), throttlePerMinute, stats (JSON) | Bulk messaging |
+| **SavedView** | businessId, staffId, page, name, filters (JSON), icon, color, isPinned, isDashboard, isShared, sortOrder | Named filter presets |
 
 ---
 
-## 6. API Modules (31 Controllers)
+## 6. API Modules (32 Controllers)
 
 All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 
@@ -271,6 +280,7 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 | **Vertical Packs** | `/vertical-packs` | Get pack config (public) |
 | **Public Booking** | `/public` | Business info, services, availability, book, join waitlist |
 | **Self-Serve** | `/self-serve` | Reschedule, cancel, waitlist claim, quote approval (token-based) |
+| **Saved Views** | `/saved-views` | CRUD, list by page, pinned views, dashboard views, share/unshare |
 | **Health** | `/health` | DB + Redis health check with latency |
 
 ### Auth & Multi-tenancy
@@ -325,7 +335,7 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 | Settings | `/settings/*` | 11 settings sub-pages (account, AI, templates, translations, calendar, billing, notifications, offers, policies, waitlist, profile fields) |
 
 ### Key Components
-- `Shell` — Sidebar nav, i18n, pack provider, dark mode, tour trigger
+- `Shell` — Sidebar nav with mode-grouped items + "More" toggle, pinned saved views, i18n, pack provider, dark mode, tour trigger
 - `BookingFormModal` / `BookingDetailModal` — Create/view/reschedule bookings
 - `AiSuggestions` / `AiBookingPanel` / `AiSummary` — AI features in inbox
 - `CommandPalette` — Cmd+K global search
@@ -334,6 +344,9 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 - `LanguagePicker` — Locale selector
 - `TooltipNudge` — Dismissible coaching tooltips
 - `Skeleton` / `EmptyState` — Loading and empty states
+- `ModeSwitcher` — Role-based mode pill/tab selector (admin/agent/provider)
+- `ViewPicker` / `SaveViewModal` — Saved filter views on list pages
+- `KpiStrip` / `MyWork` / `AttentionCards` — Mission Control dashboard components
 
 ---
 
@@ -453,8 +466,9 @@ Key groups (full list in `.env.example`):
 | **Vertical Packs Marketplace** | Partner portal, revenue share, certification program |
 | **Customer Mini-Portal** | Booking management, receipts, memberships, referrals |
 
-### UX Improvements (Backlog)
-See `docs/user-stories.md` for complete inventory (280 current capabilities, 215 identified gaps) and `docs/ux-brainstorm-brief.md` for brainstorm prompts.
+### UX Improvements
+- **UX Phase 1** (Role-based Modes + Mission Control + Saved Views) — COMPLETE
+- See `docs/user-stories.md` for complete inventory (280 current capabilities, 215 identified gaps) and `docs/ux-brainstorm-brief.md` for brainstorm prompts.
 
 ### Do Not Build (Yet)
 - Don't chase 5 verticals before aesthetics ROI is repeatable
@@ -503,7 +517,7 @@ npm run dev                    # Starts all apps via Turborepo
 | `npm run dev` | Start all apps |
 | `npm run build` | Build all |
 | `npm run lint` | Lint all (ESLint + TypeScript) |
-| `npm test` | Run all tests (~2,206 tests) |
+| `npm test` | Run all tests (~2,302 tests) |
 | `npm run test:coverage` | Tests with coverage thresholds |
 | `npm run db:generate` | Generate Prisma client |
 | `npm run db:migrate` | Run migrations |

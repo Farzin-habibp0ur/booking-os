@@ -51,6 +51,12 @@
 - **Dark mode** — System/Light/Dark picker, full UI coverage with dark: variants
 - **Visual polish** — CSS keyframe animations, chart theme with brand palette, prefers-reduced-motion
 
+### UX Phase 1: Role-based Modes + Mission Control + Saved Views (Complete — 6/6 batches)
+- **Role-based Modes** — Mode switcher (admin/agent/provider), mode-grouped sidebar nav with primary/secondary split and "More" toggle, role-appropriate landing pages, vertical-aware labels
+- **Mission Control Dashboard** — Mode-adaptive layout with KPI strip, "My Work" section, AttentionCards, dashboard-pinned saved views
+- **Saved Views** — Named filter/sort presets on list pages (inbox, bookings, customers, waitlist), sidebar-pinnable, dashboard-pinnable, personal + shared (admin-governed)
+- **Staff preferences** — JSON column on Staff for cross-device mode persistence
+
 ### Tech Stack
 | Layer | Technology |
 |-------|-----------|
@@ -268,7 +274,18 @@ A linear onboarding wizard with progress bar. Each step has a title, subtitle, a
 
 ---
 
-### 3.3 Dashboard (`/dashboard`)
+### 3.3 Dashboard (`/dashboard`) — Mode-Adaptive
+
+The dashboard layout adapts based on the active mode (admin/agent/provider).
+
+**Agent/Provider modes show:**
+- **KPI Strip** — 3 compact role-appropriate metrics
+- **My Work** — Personal assigned conversations + today's bookings + completed count
+- **Attention Cards** — Items needing action (deposit pending, overdue replies, tomorrow schedule)
+- **Dashboard-pinned Saved Views** — Clickable cards linking to filtered list pages
+- **Today's Schedule** (agent only)
+
+**Admin mode shows the full dashboard:**
 
 **Top: Metric Cards (4-column grid)**
 1. **Bookings This Week** — calendar icon (blue), count, "vs last week" with % change arrow
@@ -280,6 +297,11 @@ A linear onboarding wizard with progress bar. Each step has a title, subtitle, a
 1. **No-Show Rate** — percentage with progress bar (color: red >15%, amber >5%, green ≤5%)
 2. **Avg Response Time** — minutes with status text ("Excellent" ≤5m / "Good" ≤15m / "Needs improvement")
 3. **This Week by Status** — color dots + status name + count for each booking status
+
+**Dashboard-Pinned Saved Views (if any exist):**
+- 2-4 column grid of clickable cards
+- Each card shows: icon, view name, page name
+- Click navigates to the page with the saved view filters applied
 
 **Bottom: Two-Column Section**
 - **Left: Today's Appointments** — time-ordered list with customer name, service, staff, status badge. Empty state: "No appointments today"
@@ -314,6 +336,8 @@ A linear onboarding wizard with progress bar. Each step has a title, subtitle, a
 ### 3.5 Bookings List (`/bookings`)
 
 **Header:** Title + status filter dropdown (All / each status)
+
+**Saved Views:** ViewPicker pill tabs for saved filter presets + "Save current" button
 
 **Table columns:** Customer | Service | Staff Name | Date/Time | Status badge
 
@@ -600,7 +624,7 @@ Two tabs: **Info** | **Notes**
 
 ## 4. Data Models
 
-### 4.1 Entity Relationship Overview (26 Models)
+### 4.1 Entity Relationship Overview (27 Models)
 
 ```
 Business (1) ──┬── (*) Staff ──── (*) WorkingHours
@@ -622,7 +646,8 @@ Business (1) ──┬── (*) Staff ──── (*) WorkingHours
                ├── (*) WaitlistEntry
                ├── (*) AutomationRule ──── (*) AutomationLog
                ├── (*) Campaign ──── (*) CampaignSend
-               └── (*) Offer
+               ├── (*) Offer
+               └── (*) SavedView
 ```
 
 ### 4.2 Key Models
@@ -647,6 +672,7 @@ Business (1) ──┬── (*) Staff ──── (*) WorkingHours
 | passwordHash | String? | Null = invite pending |
 | role | String | "ADMIN", "SERVICE_PROVIDER", "AGENT" |
 | locale | String? | Staff language preference |
+| preferences | JSON | Mode/landing prefs `{ mode, landingPath }` |
 | isActive | Boolean | Soft delete |
 
 #### Customer
@@ -704,6 +730,22 @@ Business (1) ──┬── (*) Staff ──── (*) WorkingHours
 | content | String | Message body |
 | contentType | String | TEXT/IMAGE/DOCUMENT/AUDIO |
 | externalId | String? | WhatsApp message ID |
+
+#### SavedView
+| Field | Type | Notes |
+|-------|------|-------|
+| id | String (CUID) | Primary key |
+| businessId | FK | Parent business |
+| staffId | FK? | Creator (null = shared business-level) |
+| page | String | "inbox", "bookings", "customers", "waitlist" |
+| name | String | Display name |
+| filters | JSON | Serialized filter state (page-specific) |
+| icon | String? | Lucide icon name (flag, bell, star, etc.) |
+| color | String? | Color key (sage, lavender, amber) |
+| isPinned | Boolean | Appears in sidebar |
+| isDashboard | Boolean | Appears on Mission Control dashboard |
+| isShared | Boolean | Visible to all staff (admin-controlled) |
+| sortOrder | Int | Display ordering |
 
 #### Other Models
 - **Reminder:** bookingId, templateId, scheduledAt, sentAt, status (PENDING/SENT/FAILED/CANCELLED), type (REMINDER/CONSULT_FOLLOW_UP/AFTERCARE/TREATMENT_CHECK_IN)
@@ -876,7 +918,9 @@ apps/web/src/
 │   ├── verify-email/page.tsx
 │   ├── accept-invite/page.tsx
 │   ├── setup/page.tsx                    # 10-step onboarding wizard
-│   ├── dashboard/page.tsx
+│   ├── dashboard/
+│   │   ├── page.tsx
+│   │   └── components/        # KpiStrip, MyWork, AttentionCards (UX Phase 1)
 │   ├── calendar/page.tsx
 │   ├── bookings/page.tsx
 │   ├── inbox/page.tsx
@@ -909,7 +953,7 @@ apps/web/src/
 │   ├── settings/policies/page.tsx        # Cancel/reschedule policies
 │   └── settings/waitlist/page.tsx        # Waitlist config
 ├── components/
-│   ├── shell.tsx              # App layout + sidebar nav + dark mode toggle + Cmd+K
+│   ├── shell.tsx              # App layout + mode-grouped sidebar nav + pinned views + Cmd+K
 │   ├── skeleton.tsx           # Loading skeletons + empty states with CTAs
 │   ├── error-boundary.tsx     # Error catching
 │   ├── ai-summary.tsx         # AI conversation summary
@@ -921,6 +965,8 @@ apps/web/src/
 │   ├── command-palette.tsx    # Cmd+K global search (Phase 2)
 │   ├── bulk-action-bar.tsx    # Multi-select action bar (Phase 2)
 │   ├── tooltip-nudge.tsx      # Contextual coaching tooltips (Phase 2)
+│   ├── mode-switcher.tsx      # Role-based mode pill/tab selector (UX Phase 1)
+│   ├── saved-views/           # ViewPicker + SaveViewModal (UX Phase 1)
 │   └── language-picker.tsx    # Locale selector
 ├── lib/
 │   ├── api.ts                 # API client singleton
@@ -931,6 +977,8 @@ apps/web/src/
 │   ├── vertical-pack.tsx      # Pack configuration
 │   ├── use-socket.ts          # WebSocket hook
 │   ├── use-theme.ts           # Dark mode hook (Phase 2)
+│   ├── use-mode.tsx           # Mode context + provider (UX Phase 1)
+│   ├── mode-config.ts         # Mode definitions + helpers (UX Phase 1)
 │   ├── use-focus-trap.ts      # Accessibility focus management
 │   ├── chart-theme.ts         # Recharts brand theme (Phase 2)
 │   ├── phase1.ts              # Phase 1 feature flags

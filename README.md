@@ -124,10 +124,14 @@ All endpoints are prefixed with `/api/v1`. Interactive API docs are available at
 | Campaign | `/campaigns` | Campaign CRUD, audience preview, send engine |
 | Offer | `/offers` | Promotions and offers management |
 | Waitlist | `/waitlist` | Waitlist entries, offers, claims |
+| Saved Views | `/saved-views` | Named filter presets, pinning, sharing |
 | Search | `/search` | Global search across entities |
 | Self-Serve | `/manage` | Customer reschedule/cancel via token links |
 | Webhook | `/webhook` | Incoming messaging webhooks (WhatsApp, generic HMAC) |
 | Email | `/email` | Email notification endpoints |
+| Locations | `/locations` | Multi-location management with resources |
+| Quotes | `/quotes` | Service quotes with customer approval |
+| Pack Builder | `/admin/packs` | Vertical pack CRUD (Super Admin) |
 | Health | `/health` | API health check |
 | Public Booking | `/public` | Customer-facing booking portal with waitlist join |
 | Calendar Sync | `/calendar-sync` | Google Calendar integration |
