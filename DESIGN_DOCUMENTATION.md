@@ -400,9 +400,11 @@ Two tabs: **Info** | **Notes**
 
 ---
 
-### 3.8 Customer Detail (`/customers/{id}`)
+### 3.8 Customer Detail (`/customers/{id}`) — Customer Hub
 
-**Header:** Back button, customer name (large), "Since {date}" subtitle, "+ New Booking" button
+**Header:** Back button, customer name (large), "Since {date}" subtitle, "Message" button + "+ New Booking" button
+
+**Context Row:** Last booking date, last conversation date, conversation count
 
 **3-Column Layout:**
 
@@ -412,20 +414,36 @@ Two tabs: **Info** | **Notes**
 3. Quick Stats card: total bookings, total spent, upcoming, no-shows (red if >0)
 4. Next Appointment card (if exists): date, time, service, staff
 
-**Right Column (2/3) — Tabbed card:**
+**Right Column (2/3) — Tabbed card (5 tabs):**
 
 **AI Chat tab:**
-- Chat interface with user messages (right/blue) and AI responses (left/gray)
+- Chat interface with user messages (right/sage) and AI responses (left/gray)
 - 4 prompt chips: "Summarize customer...", "What treatments...", "Upcoming appointments...", "Any allergies..."
 - Chat input with send button
+
+**Timeline tab:**
+- `CustomerTimeline` component — unified activity feed from 6 sources
+- Filter chips: All, Bookings, Messages, Notes, Waitlist, Quotes, Campaigns
+- System events toggle
+- Deep links to booking detail, inbox with conversationId, campaigns
+- Load more pagination
 
 **Bookings tab:**
 - Upcoming section + History section
 - Each booking: date+time, service, staff+price, status badge
 
+**Notes tab:**
+- Composer textarea + "Add Note" button
+- Yellow sticky note cards: content, author, timestamp, edit/delete (owner only)
+
 **Details tab:**
 - Grid: full name, phone, email, customer since, tags, custom fields
 - Edit modal: name, email, tags (comma-separated), custom fields (boolean=checkbox, select=dropdown, text=input)
+
+**Vertical Modules (below main grid):**
+- Collapsible section with ChevronDown toggle
+- Aesthetic pack (`pack.slug === 'aesthetic'`): `IntakeCard` with clinic intake fields
+- Dealership pack (`pack.slug === 'dealership'`): Quotes summary (pending/approved/total), quote rows with status badges
 
 ---
 
@@ -637,6 +655,7 @@ Business (1) ──┬── (*) Staff ──── (*) WorkingHours
                ├── (*) RecurringSeries
                ├── (*) Conversation ──── (*) Message
                │                        └── (*) ConversationNote
+               ├── (*) CustomerNote
                ├── (*) MessageTemplate
                ├── (*) Translation
                ├── (1) Subscription

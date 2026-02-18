@@ -125,7 +125,7 @@ All endpoints are prefixed with `/api/v1`. Interactive API docs are available at
 | Offer | `/offers` | Promotions and offers management |
 | Waitlist | `/waitlist` | Waitlist entries, offers, claims |
 | Saved Views | `/saved-views` | Named filter presets, pinning, sharing |
-| Search | `/search` | Global search across entities |
+| Search | `/search` | Global search with offset, types filter, totals |
 | Self-Serve | `/manage` | Customer reschedule/cancel via token links |
 | Webhook | `/webhook` | Incoming messaging webhooks (WhatsApp, generic HMAC) |
 | Email | `/email` | Email notification endpoints |

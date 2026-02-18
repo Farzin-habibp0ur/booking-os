@@ -109,6 +109,16 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 - **Staff preferences** — JSON column on Staff model for mode/landing path persistence
 - **Final counts:** 2,360+ tests total (895 web + 1,465 API)
 
+### UX Phase 2: "Customer Hub + Unified Timeline + Global Search" (Bundle B) — COMPLETE (7/7 batches)
+- **Customer Hub** — Redesigned `/customers/{id}` with sticky header, context row, notes tab, message deep link, vertical modules
+- **Customer Notes** — New `CustomerNote` model with full CRUD, staff ownership validation
+- **Unified Timeline** — Timeline API endpoint (6 data sources: bookings, conversations, notes, waitlist, quotes, campaigns), `CustomerTimeline` component with type filtering, pagination, deep linking
+- **Vertical Modules** — IntakeCard for aesthetic pack, quotes summary for dealership pack, collapsible sections
+- **Enhanced Search** — Search API with offset, types filter, totals; Cmd+K fixed hrefs to detail pages, grouped results, vertical-aware labels, "View all results" link
+- **Search Page** — New `/search` page with URL param sync, type filter chips with counts, grouped results, load more per section
+- **Inbox Deep Linking** — `?conversationId=` URL param auto-selects conversation, customer name links to profile
+- **Final counts:** 2,448+ tests total (957 web + 1,502 API)
+
 ---
 
 ## 3. Tech Stack
@@ -253,7 +263,7 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 | **Auth** | `/auth` | signup, login, refresh, logout, forgot/reset/change password, accept-invite, verify-email |
 | **Bookings** | `/bookings` | CRUD, status change, kanban status, calendar view, kanban board, bulk ops, deposit/reschedule/cancel links, policy check |
 | **Recurring** | `/bookings/recurring` | Create series, cancel (single/future/all) |
-| **Customers** | `/customers` | CRUD, search, bulk tag, CSV import, conversation import |
+| **Customers** | `/customers` | CRUD, search, bulk tag, CSV import, conversation import, notes CRUD, timeline |
 | **Services** | `/services` | CRUD with soft delete |
 | **Staff** | `/staff` | CRUD, invite, working hours, time off |
 | **Business** | `/business` | Profile, policies, notifications, waitlist settings, install pack |
@@ -266,7 +276,7 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 | **ROI** | `/roi` | Go-live, baseline, dashboard, weekly review |
 | **AI** | `/ai` | Settings, conversation summary, booking/cancel/reschedule confirm, customer chat |
 | **Availability** | `/availability` | Available slots (by date, service, staff, location, resource) |
-| **Search** | `/search` | Global search (customers, bookings, conversations) |
+| **Search** | `/search` | Global search with offset, types filter, totals |
 | **Automations** | `/automations` | Playbooks toggle, rules CRUD, test, activity log |
 | **Campaigns** | `/campaigns` | CRUD, audience preview, send |
 | **Offers** | `/offers` | CRUD, redeem |
@@ -321,7 +331,8 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 | Calendar | `/calendar` | Day/week view, staff columns, click-to-book |
 | Inbox | `/inbox` | 3-pane messaging with AI suggestions |
 | Customers | `/customers` | Search, import, bulk tag |
-| Customer Detail | `/customers/[id]` | Profile, AI chat, booking history |
+| Customer Detail | `/customers/[id]` | Profile hub: AI chat, timeline, notes, bookings, info, vertical modules |
+| Search | `/search` | Full search results page with type filters, grouped results, load more |
 | Services | `/services` | Category-grouped CRUD |
 | Staff | `/staff` | Expandable table with hours + time off |
 | Waitlist | `/waitlist` | Entry management with filters |
@@ -338,7 +349,9 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 - `Shell` — Sidebar nav with mode-grouped items + "More" toggle, pinned saved views, i18n, pack provider, dark mode, tour trigger
 - `BookingFormModal` / `BookingDetailModal` — Create/view/reschedule bookings
 - `AiSuggestions` / `AiBookingPanel` / `AiSummary` — AI features in inbox
-- `CommandPalette` — Cmd+K global search
+- `CommandPalette` — Cmd+K global search with grouped results, vertical-aware labels, deep links
+- `CustomerTimeline` — Unified activity timeline (6 event types) with filters, pagination, deep links
+- `IntakeCard` — Vertical-specific customer fields card (aesthetic clinic intake)
 - `BulkActionBar` — Multi-select action bar
 - `DemoTourProvider` / `TourSpotlight` / `TourTooltip` — Interactive demo tour
 - `LanguagePicker` — Locale selector
