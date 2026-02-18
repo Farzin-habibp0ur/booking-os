@@ -33,6 +33,7 @@ import {
 import BookingFormModal from '@/components/booking-form-modal';
 import CustomerTimeline from '@/components/customer-timeline';
 import IntakeCard from '@/components/intake-card';
+import { RecentChangesPanel } from '@/components/action-history';
 
 const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
   PENDING: { bg: 'bg-lavender-50', text: 'text-lavender-900' },
@@ -78,6 +79,9 @@ export default function CustomerDetailPage() {
   // Vertical modules state
   const [verticalOpen, setVerticalOpen] = useState(true);
 
+  // Action history state
+  const [recentChanges, setRecentChanges] = useState<any[]>([]);
+
   // AI Chat state
   const [chatMessages, setChatMessages] = useState<Array<{ role: 'user' | 'ai'; text: string }>>(
     [],
@@ -88,7 +92,7 @@ export default function CustomerDetailPage() {
 
   const loadCustomer = async () => {
     try {
-      const [cust, bkgs, convs, notes, wlEntries] = await Promise.all([
+      const [cust, bkgs, convs, notes, wlEntries, changes] = await Promise.all([
         api.get<any>(`/customers/${id}`),
         api.get<any[]>(`/customers/${id}/bookings`),
         api
@@ -108,12 +112,14 @@ export default function CustomerDetailPage() {
               : [],
           )
           .catch(() => []),
+        api.get<any[]>(`/action-history/entity/CUSTOMER/${id}`).catch(() => []),
       ]);
       setCustomer(cust);
       setBookings(bkgs || []);
       setConversations(convs || []);
       setCustomerNotes(notes || []);
       setWaitlistCount((wlEntries || []).length);
+      setRecentChanges(changes || []);
       setEditName(cust.name);
       setEditEmail(cust.email || '');
       setEditTags((cust.tags || []).join(', '));
@@ -484,6 +490,15 @@ export default function CustomerDetailPage() {
                 </div>
               </div>
             </div>
+          )}
+
+          {/* Recent Changes */}
+          {recentChanges.length > 0 && (
+            <RecentChangesPanel
+              entries={recentChanges}
+              entityType="CUSTOMER"
+              entityId={id as string}
+            />
           )}
         </div>
 

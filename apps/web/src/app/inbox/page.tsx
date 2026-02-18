@@ -38,6 +38,8 @@ import AiSummary from '@/components/ai-summary';
 import IntakeCard from '@/components/intake-card';
 import { usePack } from '@/lib/vertical-pack';
 import { ViewPicker } from '@/components/saved-views';
+import { ActionCardBadge } from '@/components/action-card';
+import { OutboundCompose } from '@/components/outbound';
 
 type Filter = 'all' | 'unassigned' | 'mine' | 'overdue' | 'waiting' | 'snoozed' | 'closed';
 
@@ -125,6 +127,8 @@ function InboxPage() {
   const [locations, setLocations] = useState<any[]>([]);
   const [selectedLocationId, setSelectedLocationId] = useState<string>('');
   const [activeViewId, setActiveViewId] = useState<string | null>(null);
+  const [actionCardCount, setActionCardCount] = useState(0);
+  const [showOutboundCompose, setShowOutboundCompose] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const currentFilters = {
@@ -255,6 +259,7 @@ function InboxPage() {
     loadStaff();
     loadTemplates();
     loadLocations();
+    loadActionCardCount();
   }, []);
 
   useEffect(() => {
@@ -396,6 +401,25 @@ function InboxPage() {
       setLocations((await api.get<any[]>('/locations')) || []);
     } catch (e) {
       console.error(e);
+    }
+  };
+
+  const loadActionCardCount = async () => {
+    try {
+      const res = await api.get<{ count: number }>('/action-cards/count');
+      setActionCardCount(res.count || 0);
+    } catch {
+      // Action cards module may not be available
+    }
+  };
+
+  const sendOutboundDraft = async (data: { customerId: string; content: string }) => {
+    try {
+      await api.post('/outbound/draft', data);
+      toast(t('inbox.outbound_draft_created') || 'Draft created');
+      setShowOutboundCompose(false);
+    } catch (e: any) {
+      toast(e?.message || 'Failed to create draft', 'error');
     }
   };
 
@@ -878,6 +902,15 @@ function InboxPage() {
                 >
                   {t('inbox.close_conversation')}
                 </button>
+                {customer && (
+                  <button
+                    onClick={() => setShowOutboundCompose(true)}
+                    className="text-xs text-slate-500 hover:text-sage-600 border px-2 py-1 rounded flex items-center gap-1"
+                    data-testid="inbox-new-outbound"
+                  >
+                    <Send size={12} /> {t('inbox.new_outbound') || 'New Message'}
+                  </button>
+                )}
                 <button
                   onClick={() => setShowBookingForm(!showBookingForm)}
                   className="flex items-center gap-1 bg-sage-600 text-white px-3 py-1.5 rounded-md text-sm hover:bg-sage-700"
@@ -1131,6 +1164,13 @@ function InboxPage() {
                   </div>
                 )}
               </div>
+
+              {/* Action Card Badge */}
+              {actionCardCount > 0 && (
+                <div className="px-4 py-2 border-b" data-testid="inbox-action-card-badge">
+                  <ActionCardBadge count={actionCardCount} />
+                </div>
+              )}
 
               {/* AI Summary */}
               <AiSummary
@@ -1423,6 +1463,15 @@ function InboxPage() {
         customerName={customer?.name}
         conversationId={selected?.id}
       />
+
+      {showOutboundCompose && customer && (
+        <OutboundCompose
+          customerId={customer.id}
+          customerName={customer.name}
+          onSend={sendOutboundDraft}
+          onClose={() => setShowOutboundCompose(false)}
+        />
+      )}
     </div>
   );
 }

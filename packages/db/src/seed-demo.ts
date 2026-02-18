@@ -1522,6 +1522,246 @@ async function main() {
     });
     console.log('✅ 4 sample saved views created (2 pinned, 2 on dashboard, 1 shared)');
 
+    // ── 18. Agentic Foundation Data ───────────────────────────────────────────
+
+    // Autonomy configs
+    await prisma.autonomyConfig.createMany({
+      data: [
+        {
+          businessId: bizId,
+          actionType: '*',
+          autonomyLevel: 'ASSISTED',
+          constraints: {},
+        },
+        {
+          businessId: bizId,
+          actionType: 'DEPOSIT_PENDING',
+          autonomyLevel: 'AUTO',
+          constraints: { maxPerDay: 20 },
+        },
+        {
+          businessId: bizId,
+          actionType: 'OVERDUE_REPLY',
+          autonomyLevel: 'ASSISTED',
+          constraints: {},
+        },
+      ],
+    });
+    console.log('✅ 3 autonomy configs created');
+
+    // Action cards (diverse categories)
+    const actionCards = await Promise.all([
+      prisma.actionCard.create({
+        data: {
+          businessId: bizId,
+          type: 'DEPOSIT_PENDING',
+          category: 'URGENT_TODAY',
+          priority: 90,
+          title: 'Deposit overdue for Emma Wilson',
+          description:
+            'Because her Botox appointment is in 2 days and deposit has not been collected.',
+          suggestedAction: 'Send deposit reminder via WhatsApp',
+          ctaConfig: [{ label: 'Send Reminder', action: 'send_deposit_reminder' }],
+          status: 'PENDING',
+          autonomyLevel: 'AUTO',
+          customerId: emma.id,
+          expiresAt: daysFromNow(2),
+        },
+      }),
+      prisma.actionCard.create({
+        data: {
+          businessId: bizId,
+          type: 'OVERDUE_REPLY',
+          category: 'URGENT_TODAY',
+          priority: 85,
+          title: 'Unread message from James Thompson',
+          description:
+            'Because James sent a message 4 hours ago asking about filler results. No staff has replied.',
+          suggestedAction: 'Draft a reply about normal post-filler recovery',
+          ctaConfig: [{ label: 'Open Chat', action: 'open_conversation' }],
+          status: 'PENDING',
+          autonomyLevel: 'ASSISTED',
+          customerId: james.id,
+          expiresAt: daysFromNow(1),
+        },
+      }),
+      prisma.actionCard.create({
+        data: {
+          businessId: bizId,
+          type: 'OPEN_SLOT',
+          category: 'OPPORTUNITY',
+          priority: 60,
+          title: '3 open slots tomorrow afternoon',
+          description: 'Because tomorrow 2pm-5pm has no bookings. 4 waitlist customers match.',
+          suggestedAction: 'Notify waitlist customers about availability',
+          ctaConfig: [{ label: 'Fill Slots', action: 'notify_waitlist' }],
+          status: 'PENDING',
+          autonomyLevel: 'ASSISTED',
+          staffId: sarah.id,
+          expiresAt: daysFromNow(1),
+        },
+      }),
+      prisma.actionCard.create({
+        data: {
+          businessId: bizId,
+          type: 'STALLED_QUOTE',
+          category: 'NEEDS_APPROVAL',
+          priority: 70,
+          title: 'Consult follow-up needed for Sofia',
+          description:
+            'Because Sofia had a consultation 5 days ago but has not booked a treatment.',
+          suggestedAction: 'Send follow-up message with treatment plan',
+          ctaConfig: [
+            { label: 'Approve & Send', action: 'approve_followup' },
+            { label: 'Edit Message', action: 'edit_draft' },
+          ],
+          status: 'PENDING',
+          autonomyLevel: 'ASSISTED',
+          customerId: sofia.id,
+          expiresAt: daysFromNow(3),
+        },
+      }),
+      prisma.actionCard.create({
+        data: {
+          businessId: bizId,
+          type: 'DEPOSIT_PENDING',
+          category: 'HYGIENE',
+          priority: 40,
+          title: 'Update contact info for Liam Parker',
+          description: 'Because Liam has no email on file. Marketing campaigns cannot reach him.',
+          suggestedAction: 'Ask Liam for email during next visit',
+          ctaConfig: [{ label: 'Dismiss', action: 'dismiss' }],
+          status: 'PENDING',
+          autonomyLevel: 'OFF',
+          customerId: liam.id,
+          expiresAt: daysFromNow(7),
+        },
+      }),
+      // A couple completed/dismissed cards for history
+      prisma.actionCard.create({
+        data: {
+          businessId: bizId,
+          type: 'OVERDUE_REPLY',
+          category: 'URGENT_TODAY',
+          priority: 80,
+          title: 'Replied to Olivia about next session',
+          suggestedAction: 'Reply to booking inquiry',
+          status: 'EXECUTED',
+          autonomyLevel: 'ASSISTED',
+          customerId: olivia.id,
+          resolvedById: maria.id,
+          resolvedAt: hoursAgo(2),
+        },
+      }),
+      prisma.actionCard.create({
+        data: {
+          businessId: bizId,
+          type: 'OPEN_SLOT',
+          category: 'OPPORTUNITY',
+          priority: 55,
+          title: 'Filled gap slot via waitlist',
+          suggestedAction: 'Notify waitlist',
+          status: 'DISMISSED',
+          autonomyLevel: 'ASSISTED',
+          staffId: emily.id,
+          resolvedById: sarah.id,
+          resolvedAt: daysAgo(1),
+        },
+      }),
+    ]);
+    console.log(`✅ ${actionCards.length} action cards created`);
+
+    // Action history entries
+    await prisma.actionHistory.createMany({
+      data: [
+        {
+          businessId: bizId,
+          actorType: 'AI',
+          actorName: 'System',
+          action: 'CARD_CREATED',
+          entityType: 'ACTION_CARD',
+          entityId: actionCards[0].id,
+          description: 'Created deposit pending card for Emma Wilson',
+        },
+        {
+          businessId: bizId,
+          actorType: 'AI',
+          actorName: 'System',
+          action: 'CARD_CREATED',
+          entityType: 'ACTION_CARD',
+          entityId: actionCards[1].id,
+          description: 'Created overdue reply card for James Thompson',
+        },
+        {
+          businessId: bizId,
+          actorType: 'STAFF',
+          actorId: maria.id,
+          actorName: 'Maria',
+          action: 'CARD_APPROVED',
+          entityType: 'ACTION_CARD',
+          entityId: actionCards[5].id,
+          description: 'Approved and executed overdue reply card',
+        },
+        {
+          businessId: bizId,
+          actorType: 'STAFF',
+          actorId: sarah.id,
+          actorName: 'Sarah',
+          action: 'CARD_DISMISSED',
+          entityType: 'ACTION_CARD',
+          entityId: actionCards[6].id,
+          description: 'Dismissed open slot card — already filled manually',
+        },
+        {
+          businessId: bizId,
+          actorType: 'STAFF',
+          actorId: sarah.id,
+          actorName: 'Sarah',
+          action: 'BOOKING_CREATED',
+          entityType: 'BOOKING',
+          entityId: 'demo-booking-placeholder',
+          description: 'Created Botox appointment for Emma Wilson',
+        },
+        {
+          businessId: bizId,
+          actorType: 'AI',
+          actorName: 'System',
+          action: 'BOOKING_STATUS_CHANGED',
+          entityType: 'BOOKING',
+          entityId: 'demo-booking-placeholder',
+          description: 'Booking confirmed after deposit received',
+          diff: { before: { status: 'PENDING_DEPOSIT' }, after: { status: 'CONFIRMED' } },
+        },
+      ],
+    });
+    console.log('✅ 6 action history entries created');
+
+    // Outbound drafts
+    await prisma.outboundDraft.createMany({
+      data: [
+        {
+          businessId: bizId,
+          customerId: emma.id,
+          staffId: maria.id,
+          channel: 'WHATSAPP',
+          content:
+            'Hi Emma! Just a reminder that your deposit of $100 is still pending for your Botox appointment. You can pay via the link we sent. Let me know if you need help!',
+          status: 'DRAFT',
+        },
+        {
+          businessId: bizId,
+          customerId: sofia.id,
+          staffId: sarah.id,
+          channel: 'WHATSAPP',
+          content:
+            'Hi Sofia! It was great meeting you at your consultation. I wanted to follow up — we have availability next week if you would like to proceed with the Chemical Peel we discussed.',
+          status: 'APPROVED',
+          approvedById: sarah.id,
+        },
+      ],
+    });
+    console.log('✅ 2 outbound drafts created');
+
     // ── 17. Mark demo as seeded ───────────────────────────────────────────────
     const latestConfig = (await prisma.business.findUnique({ where: { id: bizId } }))!
       .packConfig as Record<string, unknown>;
@@ -1536,6 +1776,7 @@ async function main() {
     console.log('  - 20 customers, 36 bookings, 8 conversations');
     console.log('  - 6 waitlist entries, 3 campaigns, 3 automation rules');
     console.log('  - 2 offers, 5 deposits, 19 reminders');
+    console.log('  - 7 action cards, 6 action history, 3 autonomy configs, 2 outbound drafts');
   } // end if (!skipClinic)
 
   // ════════════════════════════════════════════════════════════════════════════

@@ -15,6 +15,7 @@ import { BusinessService } from '../business/business.service';
 import { CalendarSyncService } from '../calendar-sync/calendar-sync.service';
 import { TokenService } from '../../common/token.service';
 import { WaitlistService } from '../waitlist/waitlist.service';
+import { ActionHistoryService } from '../action-history/action-history.service';
 
 @Injectable()
 export class BookingService {
@@ -30,6 +31,8 @@ export class BookingService {
     @Optional()
     @Inject(forwardRef(() => WaitlistService))
     private waitlistService?: WaitlistService,
+    @Optional()
+    private actionHistoryService?: ActionHistoryService,
   ) {}
 
   async findAll(
@@ -280,6 +283,27 @@ export class BookingService {
       }),
     );
 
+    // Audit trail
+    this.actionHistoryService
+      ?.create({
+        businessId,
+        actorType: currentUser ? 'STAFF' : 'SYSTEM',
+        actorId: currentUser?.staffId,
+        actorName: currentUser?.staffName,
+        action: 'BOOKING_CREATED',
+        entityType: 'BOOKING',
+        entityId: booking.id,
+        description: `Booking created for ${(booking as any).customer?.name || 'customer'} — ${(booking as any).service?.name || 'service'}`,
+        diff: {
+          after: { status: booking.status, startTime: booking.startTime, staffId: booking.staffId },
+        },
+      })
+      .catch((err) =>
+        this.logger.warn(`Failed to log booking creation audit for ${booking.id}`, {
+          error: err?.message,
+        }),
+      );
+
     return booking;
   }
 
@@ -324,6 +348,23 @@ export class BookingService {
         error: err.message,
       }),
     );
+
+    // Audit trail
+    this.actionHistoryService
+      ?.create({
+        businessId,
+        actorType: 'STAFF',
+        action: 'BOOKING_UPDATED',
+        entityType: 'BOOKING',
+        entityId: result.id,
+        description: `Booking updated`,
+        diff: { after: data },
+      })
+      .catch((err) =>
+        this.logger.warn(`Failed to log booking update audit for ${result.id}`, {
+          error: err?.message,
+        }),
+      );
 
     return result;
   }
@@ -581,6 +622,26 @@ export class BookingService {
         });
       }
     }
+
+    // Audit trail for status change
+    this.actionHistoryService
+      ?.create({
+        businessId,
+        actorType: actor?.staffId ? 'STAFF' : 'SYSTEM',
+        actorId: actor?.staffId,
+        actorName: actor?.staffName,
+        action: status === 'CANCELLED' ? 'BOOKING_CANCELLED' : 'BOOKING_STATUS_CHANGED',
+        entityType: 'BOOKING',
+        entityId: id,
+        description: `Booking status changed from ${previousStatus} to ${status}`,
+        diff: { before: { status: previousStatus }, after: { status } },
+        metadata: actor?.reason ? { reason: actor.reason } : undefined,
+      })
+      .catch((err) =>
+        this.logger.warn(`Failed to log status change audit for booking ${id}`, {
+          error: err?.message,
+        }),
+      );
 
     return booking;
   }

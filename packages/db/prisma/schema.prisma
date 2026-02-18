@@ -8,42 +8,46 @@ datasource db {
 }
 
 model Business {
-  id           String   @id @default(cuid())
-  name         String
-  slug         String   @unique
-  phone        String?
-  timezone     String   @default("UTC")
-  verticalPack  String   @default("general")
-  packConfig    Json     @default("{}")
-  defaultLocale String   @default("en")
-  aiSettings    Json     @default("{}")
-  notificationSettings Json @default("{}")
-  policySettings    Json     @default("{}")
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id                   String   @id @default(cuid())
+  name                 String
+  slug                 String   @unique
+  phone                String?
+  timezone             String   @default("UTC")
+  verticalPack         String   @default("general")
+  packConfig           Json     @default("{}")
+  defaultLocale        String   @default("en")
+  aiSettings           Json     @default("{}")
+  notificationSettings Json     @default("{}")
+  policySettings       Json     @default("{}")
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
-  staff             Staff[]
-  customers         Customer[]
-  services          Service[]
-  bookings          Booking[]
-  recurringSeries   RecurringSeries[]
-  conversations     Conversation[]
-  reminders         Reminder[]
-  messageTemplates  MessageTemplate[]
-  translations      Translation[]
-  subscription      Subscription?
-  aiUsage           AiUsage[]
-  roiBaselines      RoiBaseline[]
-  waitlistEntries   WaitlistEntry[]
-  automationRules   AutomationRule[]
-  campaigns         Campaign[]
-  offers            Offer[]
-  locations         Location[]
-  quotes            Quote[]
+  staff                Staff[]
+  customers            Customer[]
+  services             Service[]
+  bookings             Booking[]
+  recurringSeries      RecurringSeries[]
+  conversations        Conversation[]
+  reminders            Reminder[]
+  messageTemplates     MessageTemplate[]
+  translations         Translation[]
+  subscription         Subscription?
+  aiUsage              AiUsage[]
+  roiBaselines         RoiBaseline[]
+  waitlistEntries      WaitlistEntry[]
+  automationRules      AutomationRule[]
+  campaigns            Campaign[]
+  offers               Offer[]
+  locations            Location[]
+  quotes               Quote[]
   verticalPackVersions VerticalPackVersion[]
-  savedViews        SavedView[]
-  customerNotes     CustomerNote[]
-  offerRedemptions  OfferRedemption[]
+  savedViews           SavedView[]
+  customerNotes        CustomerNote[]
+  offerRedemptions     OfferRedemption[]
+  actionCards          ActionCard[]
+  actionHistory        ActionHistory[]
+  autonomyConfigs      AutonomyConfig[]
+  outboundDrafts       OutboundDraft[]
 
   @@map("businesses")
 }
@@ -61,21 +65,25 @@ model Staff {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  preferences           Json     @default("{}")
+  preferences Json @default("{}")
 
-  business              Business              @relation(fields: [businessId], references: [id])
-  bookings              Booking[]
-  recurringSeries       RecurringSeries[]
-  conversations         Conversation[]        @relation("AssignedConversations")
-  messages              Message[]             @relation("SentMessages")
-  notes                 ConversationNote[]    @relation("StaffNotes")
-  customerNotes         CustomerNote[]        @relation("StaffCustomerNotes")
-  workingHours          WorkingHours[]
-  timeOff               TimeOff[]
-  calendarConnections   CalendarConnection[]
-  waitlistEntries       WaitlistEntry[]       @relation("PreferredStaffWaitlist")
-  staffLocations        StaffLocation[]
-  savedViews            SavedView[]
+  business            Business             @relation(fields: [businessId], references: [id])
+  bookings            Booking[]
+  recurringSeries     RecurringSeries[]
+  conversations       Conversation[]       @relation("AssignedConversations")
+  messages            Message[]            @relation("SentMessages")
+  notes               ConversationNote[]   @relation("StaffNotes")
+  customerNotes       CustomerNote[]       @relation("StaffCustomerNotes")
+  workingHours        WorkingHours[]
+  timeOff             TimeOff[]
+  calendarConnections CalendarConnection[]
+  waitlistEntries     WaitlistEntry[]      @relation("PreferredStaffWaitlist")
+  staffLocations      StaffLocation[]
+  savedViews          SavedView[]
+  assignedActionCards ActionCard[]         @relation("AssignedActionCards")
+  resolvedActionCards ActionCard[]         @relation("ResolvedActionCards")
+  outboundDrafts      OutboundDraft[]      @relation("StaffOutboundDrafts")
+  approvedOutbounds   OutboundDraft[]      @relation("ApprovedOutboundDrafts")
 
   @@index([businessId])
   @@map("staff")
@@ -99,6 +107,8 @@ model Customer {
   waitlistEntries  WaitlistEntry[]
   customerNotes    CustomerNote[]
   offerRedemptions OfferRedemption[]
+  actionCards      ActionCard[]
+  outboundDrafts   OutboundDraft[]
 
   @@unique([businessId, phone])
   @@index([businessId])
@@ -106,22 +116,22 @@ model Customer {
 }
 
 model Service {
-  id             String   @id @default(cuid())
-  businessId     String
-  name           String
-  description    String?
-  durationMins   Int
-  price          Float    @default(0)
-  category       String   @default("General")
-  kind           String   @default("OTHER") // CONSULT, TREATMENT, OTHER
-  isActive       Boolean  @default(true)
-  depositRequired Boolean @default(false)
-  depositAmount  Float?
-  bufferBefore   Int      @default(0)
-  bufferAfter    Int      @default(0)
-  customFields   Json     @default("{}")
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id              String   @id @default(cuid())
+  businessId      String
+  name            String
+  description     String?
+  durationMins    Int
+  price           Float    @default(0)
+  category        String   @default("General")
+  kind            String   @default("OTHER") // CONSULT, TREATMENT, OTHER
+  isActive        Boolean  @default(true)
+  depositRequired Boolean  @default(false)
+  depositAmount   Float?
+  bufferBefore    Int      @default(0)
+  bufferAfter     Int      @default(0)
+  customFields    Json     @default("{}")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   business        Business          @relation(fields: [businessId], references: [id])
   bookings        Booking[]
@@ -133,24 +143,24 @@ model Service {
 }
 
 model Booking {
-  id             String   @id @default(cuid())
-  businessId     String
-  customerId     String
-  serviceId      String
-  staffId        String?
-  conversationId String?
-  recurringSeriesId String?
-  locationId     String?
-  resourceId     String?
-  kanbanStatus   String?
-  status         String   @default("PENDING")
-  startTime      DateTime
-  endTime        DateTime
-  notes                     String?
-  externalCalendarEventId   String?
-  customFields              Json     @default("{}")
-  createdAt                 DateTime @default(now())
-  updatedAt                 DateTime @updatedAt
+  id                      String   @id @default(cuid())
+  businessId              String
+  customerId              String
+  serviceId               String
+  staffId                 String?
+  conversationId          String?
+  recurringSeriesId       String?
+  locationId              String?
+  resourceId              String?
+  kanbanStatus            String?
+  status                  String   @default("PENDING")
+  startTime               DateTime
+  endTime                 DateTime
+  notes                   String?
+  externalCalendarEventId String?
+  customFields            Json     @default("{}")
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
 
   business        Business         @relation(fields: [businessId], references: [id])
   customer        Customer         @relation(fields: [customerId], references: [id])
@@ -163,6 +173,7 @@ model Booking {
   reminders       Reminder[]
   payments        Payment[]
   quotes          Quote[]
+  actionCards     ActionCard[]
 
   @@index([businessId])
   @@index([businessId, startTime])
@@ -212,13 +223,15 @@ model Conversation {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  business   Business           @relation(fields: [businessId], references: [id])
-  customer   Customer           @relation(fields: [customerId], references: [id])
-  assignedTo Staff?             @relation("AssignedConversations", fields: [assignedToId], references: [id])
-  location   Location?          @relation(fields: [locationId], references: [id])
-  messages   Message[]
-  bookings   Booking[]
-  notes      ConversationNote[]
+  business       Business           @relation(fields: [businessId], references: [id])
+  customer       Customer           @relation(fields: [customerId], references: [id])
+  assignedTo     Staff?             @relation("AssignedConversations", fields: [assignedToId], references: [id])
+  location       Location?          @relation(fields: [locationId], references: [id])
+  messages       Message[]
+  bookings       Booking[]
+  notes          ConversationNote[]
+  actionCards    ActionCard[]
+  outboundDrafts OutboundDraft[]
 
   @@index([businessId])
   @@index([businessId, status])
@@ -297,9 +310,9 @@ model ConversationNote {
 }
 
 model WorkingHours {
-  id        String @id @default(cuid())
+  id        String  @id @default(cuid())
   staffId   String
-  dayOfWeek Int    // 0=Sunday, 1=Monday, ..., 6=Saturday
+  dayOfWeek Int // 0=Sunday, 1=Monday, ..., 6=Saturday
   startTime String // "09:00" (HH:mm format)
   endTime   String // "17:00" (HH:mm format)
   isOff     Boolean @default(false)
@@ -341,15 +354,15 @@ model Translation {
 }
 
 model Subscription {
-  id                    String    @id @default(cuid())
-  businessId            String    @unique
-  stripeCustomerId      String
-  stripeSubscriptionId  String    @unique
-  plan                  String    @default("basic") // basic, pro
-  status                String    @default("active") // active, past_due, canceled, trialing
-  currentPeriodEnd      DateTime
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
+  id                   String   @id @default(cuid())
+  businessId           String   @unique
+  stripeCustomerId     String
+  stripeSubscriptionId String   @unique
+  plan                 String   @default("basic") // basic, pro
+  status               String   @default("active") // active, past_due, canceled, trialing
+  currentPeriodEnd     DateTime
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
   business Business @relation(fields: [businessId], references: [id])
 
@@ -358,14 +371,14 @@ model Subscription {
 }
 
 model Payment {
-  id                    String    @id @default(cuid())
+  id                    String   @id @default(cuid())
   bookingId             String
-  stripePaymentIntentId String    @unique
+  stripePaymentIntentId String   @unique
   amount                Float
-  currency              String    @default("usd")
-  status                String    @default("pending") // pending, succeeded, failed, refunded
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
+  currency              String   @default("usd")
+  status                String   @default("pending") // pending, succeeded, failed, refunded
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
   booking Booking @relation(fields: [bookingId], references: [id])
 
@@ -376,7 +389,7 @@ model Payment {
 model AiUsage {
   id         String   @id @default(cuid())
   businessId String
-  date       String   // "2024-01-15" format
+  date       String // "2024-01-15" format
   count      Int      @default(0)
   updatedAt  DateTime @updatedAt
 
@@ -390,7 +403,7 @@ model AiUsage {
 model Token {
   id         String    @id @default(cuid())
   token      String    @unique
-  type       String    // PASSWORD_RESET, STAFF_INVITE, RESCHEDULE_LINK, CANCEL_LINK, EMAIL_VERIFY
+  type       String // PASSWORD_RESET, STAFF_INVITE, RESCHEDULE_LINK, CANCEL_LINK, EMAIL_VERIFY
   email      String
   businessId String?
   staffId    String?
@@ -421,20 +434,20 @@ model RoiBaseline {
 }
 
 model CalendarConnection {
-  id              String    @id @default(cuid())
-  staffId         String
-  provider        String    // "google", "outlook"
-  accessToken     String    // encrypted AES-256-GCM
-  refreshToken    String    // encrypted AES-256-GCM
-  tokenExpiresAt  DateTime?
-  calendarId      String?   // e.g. "primary" for Google
-  icalFeedToken          String?   @unique  // random token for iCal feed URL
+  id                     String    @id @default(cuid())
+  staffId                String
+  provider               String // "google", "outlook"
+  accessToken            String // encrypted AES-256-GCM
+  refreshToken           String // encrypted AES-256-GCM
+  tokenExpiresAt         DateTime?
+  calendarId             String? // e.g. "primary" for Google
+  icalFeedToken          String?   @unique // random token for iCal feed URL
   icalFeedTokenExpiresAt DateTime?
   syncEnabled            Boolean   @default(true)
-  lastSyncedAt    DateTime?
-  lastSyncError   String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  lastSyncedAt           DateTime?
+  lastSyncError          String?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
 
   staff Staff @relation(fields: [staffId], references: [id])
 
@@ -477,7 +490,7 @@ model AutomationRule {
   id                   String   @id @default(cuid())
   businessId           String
   name                 String
-  trigger              String   // BOOKING_CREATED, BOOKING_UPCOMING, STATUS_CHANGED, NO_RESPONSE, TAG_APPLIED, BOOKING_CANCELLED
+  trigger              String // BOOKING_CREATED, BOOKING_UPCOMING, STATUS_CHANGED, NO_RESPONSE, TAG_APPLIED, BOOKING_CANCELLED
   filters              Json     @default("{}")
   actions              Json     @default("[]")
   isActive             Boolean  @default(true)
@@ -503,7 +516,7 @@ model AutomationLog {
   customerId       String?
   conversationId   String?
   action           String
-  outcome          String   // SENT, SKIPPED, FAILED
+  outcome          String // SENT, SKIPPED, FAILED
   reason           String?
   metadata         Json     @default("{}")
   createdAt        DateTime @default(now())
@@ -591,17 +604,17 @@ model OfferRedemption {
 }
 
 model Location {
-  id             String    @id @default(cuid())
+  id             String   @id @default(cuid())
   businessId     String
   name           String
   address        String?
-  isBookable     Boolean   @default(true)
+  isBookable     Boolean  @default(true)
   whatsappConfig Json?
-  isActive       Boolean   @default(true)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  business       Business         @relation(fields: [businessId], references: [id])
+  business       Business        @relation(fields: [businessId], references: [id])
   bookings       Booking[]
   resources      Resource[]
   staffLocations StaffLocation[]
@@ -723,4 +736,108 @@ model CustomerNote {
   @@index([customerId])
   @@index([businessId])
   @@map("customer_notes")
+}
+
+model ActionCard {
+  id              String    @id @default(cuid())
+  businessId      String
+  type            String // DEPOSIT_PENDING, OVERDUE_REPLY, OPEN_SLOT, STALLED_QUOTE, NO_SHOW_RISK, RETENTION_DUE, WAITLIST_MATCH, DATA_HYGIENE, SCHEDULE_GAP, QUOTE_FOLLOWUP
+  category        String // URGENT_TODAY, NEEDS_APPROVAL, OPPORTUNITY, HYGIENE
+  priority        Int       @default(50) // 0-100
+  title           String
+  description     String // "Because..." text
+  suggestedAction String?
+  preview         Json? // JSON diff / before-after
+  ctaConfig       Json      @default("[]") // buttons array [{label, action, variant}]
+  status          String    @default("PENDING") // PENDING, APPROVED, DISMISSED, SNOOZED, EXECUTED, EXPIRED
+  autonomyLevel   String    @default("ASSISTED") // OFF, ASSISTED, AUTO
+  snoozedUntil    DateTime?
+  expiresAt       DateTime?
+  bookingId       String?
+  customerId      String?
+  conversationId  String?
+  staffId         String?
+  resolvedById    String?
+  resolvedAt      DateTime?
+  metadata        Json      @default("{}")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  business     Business      @relation(fields: [businessId], references: [id])
+  booking      Booking?      @relation(fields: [bookingId], references: [id])
+  customer     Customer?     @relation(fields: [customerId], references: [id])
+  conversation Conversation? @relation(fields: [conversationId], references: [id])
+  staff        Staff?        @relation("AssignedActionCards", fields: [staffId], references: [id])
+  resolvedBy   Staff?        @relation("ResolvedActionCards", fields: [resolvedById], references: [id])
+
+  @@index([businessId, status])
+  @@index([businessId, category, status])
+  @@index([businessId, staffId, status])
+  @@index([businessId, type, status])
+  @@index([expiresAt])
+  @@map("action_cards")
+}
+
+model ActionHistory {
+  id          String   @id @default(cuid())
+  businessId  String
+  actorType   String // STAFF, AI, SYSTEM, CUSTOMER
+  actorId     String?
+  actorName   String?
+  action      String // BOOKING_CREATED, BOOKING_UPDATED, BOOKING_CANCELLED, BOOKING_STATUS_CHANGED, CONVERSATION_ASSIGNED, CONVERSATION_STATUS_CHANGED, CARD_APPROVED, CARD_DISMISSED, CARD_EXECUTED, SETTING_CHANGED
+  entityType  String // BOOKING, CONVERSATION, CUSTOMER, ACTION_CARD, SETTING
+  entityId    String
+  description String?
+  diff        Json? // {before, after}
+  metadata    Json     @default("{}")
+  createdAt   DateTime @default(now())
+
+  business Business @relation(fields: [businessId], references: [id])
+
+  @@index([businessId, createdAt])
+  @@index([businessId, entityType, entityId])
+  @@index([businessId, actorId])
+  @@map("action_history")
+}
+
+model AutonomyConfig {
+  id            String   @id @default(cuid())
+  businessId    String
+  actionType    String // matches ActionCard.type or "*" for default
+  autonomyLevel String   @default("ASSISTED") // OFF, ASSISTED, AUTO
+  requiredRole  String?
+  constraints   Json     @default("{}") // {maxPerDay, maxAmount, etc.}
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id])
+
+  @@unique([businessId, actionType])
+  @@index([businessId])
+  @@map("autonomy_configs")
+}
+
+model OutboundDraft {
+  id             String    @id @default(cuid())
+  businessId     String
+  customerId     String
+  staffId        String
+  channel        String    @default("WHATSAPP")
+  content        String
+  status         String    @default("DRAFT") // DRAFT, APPROVED, SENT, REJECTED
+  approvedById   String?
+  sentAt         DateTime?
+  conversationId String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  business     Business      @relation(fields: [businessId], references: [id])
+  customer     Customer      @relation(fields: [customerId], references: [id])
+  staff        Staff         @relation("StaffOutboundDrafts", fields: [staffId], references: [id])
+  approvedBy   Staff?        @relation("ApprovedOutboundDrafts", fields: [approvedById], references: [id])
+  conversation Conversation? @relation(fields: [conversationId], references: [id])
+
+  @@index([businessId, status])
+  @@index([businessId, customerId])
+  @@map("outbound_drafts")
 }

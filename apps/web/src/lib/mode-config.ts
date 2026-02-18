@@ -28,6 +28,7 @@ const MODES: ModeDefinition[] = [
       '/service-board',
       '/roi',
       '/settings',
+      '/settings/autonomy',
     ],
     defaultLandingPath: '/dashboard',
     allowedRoles: ['ADMIN'],

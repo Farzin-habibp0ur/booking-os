@@ -90,6 +90,13 @@ jest.mock('@/components/intake-card', () => ({
     </div>
   ),
 }));
+jest.mock('@/components/action-history', () => ({
+  RecentChangesPanel: ({ entries, entityType, entityId }: any) => (
+    <div data-testid="recent-changes-panel">
+      {entries?.length} changes for {entityType}/{entityId}
+    </div>
+  ),
+}));
 
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -155,11 +162,25 @@ const mockWaitlistEntries = [
   { id: 'wl1', customer: { id: 'cust-1' }, status: 'ACTIVE', service: { name: 'Botox' } },
 ];
 
+const mockActionHistory = [
+  {
+    id: 'ah1',
+    actorType: 'STAFF',
+    actorName: 'Sarah',
+    action: 'BOOKING_CREATED',
+    entityType: 'CUSTOMER',
+    entityId: 'cust-1',
+    description: 'Created booking for Emma',
+    createdAt: '2026-02-18T10:00:00Z',
+  },
+];
+
 function setupMocks(
   customer = mockCustomer,
   bookings = mockBookings,
   notes = mockNotes,
   waitlist = mockWaitlistEntries,
+  actionHistory = mockActionHistory,
 ) {
   mockApi.get.mockImplementation((path: string) => {
     if (path === '/customers/cust-1') return Promise.resolve(customer);
@@ -167,6 +188,7 @@ function setupMocks(
     if (path === '/customers/cust-1/notes') return Promise.resolve(notes);
     if (path.startsWith('/conversations')) return Promise.resolve({ data: mockConversations });
     if (path === '/waitlist') return Promise.resolve(waitlist);
+    if (path === '/action-history/entity/CUSTOMER/cust-1') return Promise.resolve(actionHistory);
     return Promise.reject(new Error('Not found'));
   });
 }
@@ -858,5 +880,23 @@ describe('CustomerDetailPage — Dealership Pack', () => {
     fireEvent.click(screen.getByTestId('vertical-toggle'));
 
     expect(screen.queryByTestId('quotes-summary')).not.toBeInTheDocument();
+  });
+
+  it('renders RecentChangesPanel when action history exists', async () => {
+    setupMocks();
+    render(<CustomerDetailPage />);
+    await waitFor(() => {
+      expect(screen.getByTestId('recent-changes-panel')).toBeInTheDocument();
+    });
+    expect(screen.getByText(/1 changes for CUSTOMER\/cust-1/)).toBeInTheDocument();
+  });
+
+  it('hides RecentChangesPanel when action history is empty', async () => {
+    setupMocks(mockCustomer, mockBookings, mockNotes, mockWaitlistEntries, []);
+    render(<CustomerDetailPage />);
+    await waitFor(() => {
+      expect(screen.getAllByText('Emma Wilson').length).toBeGreaterThan(0);
+    });
+    expect(screen.queryByTestId('recent-changes-panel')).not.toBeInTheDocument();
   });
 });

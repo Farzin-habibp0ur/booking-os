@@ -2,17 +2,24 @@ import { Test } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { ConversationService } from './conversation.service';
 import { PrismaService } from '../../common/prisma.service';
-import { createMockPrisma } from '../../test/mocks';
+import { ActionHistoryService } from '../action-history/action-history.service';
+import { createMockPrisma, createMockActionHistoryService } from '../../test/mocks';
 
 describe('ConversationService', () => {
   let service: ConversationService;
   let prisma: ReturnType<typeof createMockPrisma>;
+  let actionHistoryService: ReturnType<typeof createMockActionHistoryService>;
 
   beforeEach(async () => {
     prisma = createMockPrisma();
+    actionHistoryService = createMockActionHistoryService();
 
     const module = await Test.createTestingModule({
-      providers: [ConversationService, { provide: PrismaService, useValue: prisma }],
+      providers: [
+        ConversationService,
+        { provide: PrismaService, useValue: prisma },
+        { provide: ActionHistoryService, useValue: actionHistoryService },
+      ],
     }).compile();
 
     service = module.get(ConversationService);
@@ -580,17 +587,59 @@ describe('ConversationService', () => {
 
       expect(result.assignedToId).toBeNull();
     });
+
+    it('logs audit entry on assign', async () => {
+      prisma.conversation.update.mockResolvedValue({
+        id: 'conv1',
+        assignedToId: 'staff1',
+        assignedTo: { id: 'staff1', name: 'Sarah' },
+      } as any);
+
+      await service.assign('biz1', 'conv1', 'staff1', { staffId: 's1', staffName: 'Admin' });
+
+      expect(actionHistoryService.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          businessId: 'biz1',
+          action: 'CONVERSATION_ASSIGNED',
+          entityType: 'CONVERSATION',
+          entityId: 'conv1',
+          actorType: 'STAFF',
+        }),
+      );
+    });
   });
 
   // ─── updateStatus ─────────────────────────────────────────────────────
 
   describe('updateStatus', () => {
     it('updates conversation status', async () => {
+      prisma.conversation.findFirst.mockResolvedValue({ id: 'conv1', status: 'OPEN' } as any);
       prisma.conversation.update.mockResolvedValue({ id: 'conv1', status: 'RESOLVED' } as any);
 
       const result = await service.updateStatus('biz1', 'conv1', 'RESOLVED');
 
       expect(result.status).toBe('RESOLVED');
+    });
+
+    it('logs audit entry on status change', async () => {
+      prisma.conversation.findFirst.mockResolvedValue({ id: 'conv1', status: 'OPEN' } as any);
+      prisma.conversation.update.mockResolvedValue({ id: 'conv1', status: 'RESOLVED' } as any);
+
+      await service.updateStatus('biz1', 'conv1', 'RESOLVED', {
+        staffId: 's1',
+        staffName: 'Sarah',
+      });
+
+      expect(actionHistoryService.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          businessId: 'biz1',
+          action: 'CONVERSATION_STATUS_CHANGED',
+          entityType: 'CONVERSATION',
+          entityId: 'conv1',
+          actorType: 'STAFF',
+          actorId: 's1',
+        }),
+      );
     });
   });
 

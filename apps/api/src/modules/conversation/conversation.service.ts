@@ -1,6 +1,7 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, Optional } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../../common/prisma.service';
+import { ActionHistoryService } from '../action-history/action-history.service';
 
 // Default SLA: 10 minutes
 const DEFAULT_SLA_MINUTES = 10;
@@ -9,7 +10,10 @@ const DEFAULT_SLA_MINUTES = 10;
 export class ConversationService {
   private readonly logger = new Logger(ConversationService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    @Optional() private actionHistoryService?: ActionHistoryService,
+  ) {}
 
   @Cron(CronExpression.EVERY_MINUTE)
   async handleSnoozedConversations() {
@@ -301,20 +305,77 @@ export class ConversationService {
     });
   }
 
-  async assign(businessId: string, id: string, staffId: string | null) {
-    return this.prisma.conversation.update({
+  async assign(
+    businessId: string,
+    id: string,
+    staffId: string | null,
+    actor?: { staffId?: string; staffName?: string },
+  ) {
+    const result = await this.prisma.conversation.update({
       where: { id, businessId },
       data: { assignedToId: staffId },
       include: { customer: true, assignedTo: { select: { id: true, name: true } } },
     });
+
+    this.actionHistoryService
+      ?.create({
+        businessId,
+        actorType: actor?.staffId ? 'STAFF' : 'SYSTEM',
+        actorId: actor?.staffId,
+        actorName: actor?.staffName,
+        action: 'CONVERSATION_ASSIGNED',
+        entityType: 'CONVERSATION',
+        entityId: id,
+        description: staffId
+          ? `Conversation assigned to ${result.assignedTo?.name || staffId}`
+          : 'Conversation unassigned',
+        diff: { after: { assignedToId: staffId } },
+      })
+      .catch((err) =>
+        this.logger.warn(`Failed to log conversation assign audit for ${id}`, {
+          error: err?.message,
+        }),
+      );
+
+    return result;
   }
 
-  async updateStatus(businessId: string, id: string, status: string) {
-    return this.prisma.conversation.update({
+  async updateStatus(
+    businessId: string,
+    id: string,
+    status: string,
+    actor?: { staffId?: string; staffName?: string },
+  ) {
+    const current = await this.prisma.conversation.findFirst({
+      where: { id, businessId },
+      select: { status: true },
+    });
+
+    const result = await this.prisma.conversation.update({
       where: { id, businessId },
       data: { status },
       include: { customer: true, assignedTo: { select: { id: true, name: true } } },
     });
+
+    this.actionHistoryService
+      ?.create({
+        businessId,
+        actorType: actor?.staffId ? 'STAFF' : 'SYSTEM',
+        actorId: actor?.staffId,
+        actorName: actor?.staffName,
+        action: 'CONVERSATION_STATUS_CHANGED',
+        entityType: 'CONVERSATION',
+        entityId: id,
+        description: `Conversation status changed from ${current?.status || 'unknown'} to ${status}`,
+        diff: { before: { status: current?.status }, after: { status } },
+      })
+      .catch((err) =>
+        this.logger.warn(`Failed to log conversation status audit for ${id}`, {
+          error: err?.message,
+        }),
+      );
+
+    return result;
   }
 
   async getMessages(businessId: string, conversationId: string) {

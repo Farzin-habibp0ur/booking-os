@@ -40,6 +40,10 @@ import { LocationModule } from './modules/location/location.module';
 import { PackBuilderModule } from './modules/pack-builder/pack-builder.module';
 import { QuoteModule } from './modules/quote/quote.module';
 import { SavedViewModule } from './modules/saved-view/saved-view.module';
+import { ActionHistoryModule } from './modules/action-history/action-history.module';
+import { ActionCardModule } from './modules/action-card/action-card.module';
+import { AutonomyModule } from './modules/autonomy/autonomy.module';
+import { OutboundModule } from './modules/outbound/outbound.module';
 
 @Module({
   imports: [
@@ -96,6 +100,10 @@ import { SavedViewModule } from './modules/saved-view/saved-view.module';
     PackBuilderModule,
     QuoteModule,
     SavedViewModule,
+    ActionHistoryModule,
+    ActionCardModule,
+    AutonomyModule,
+    OutboundModule,
     process.env.REDIS_URL ? QueueModule.forRootWithRedis() : QueueModule.forRoot(),
   ],
 })

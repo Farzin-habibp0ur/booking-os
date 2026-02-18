@@ -103,4 +103,11 @@ describe('mode-config', () => {
       }
     });
   });
+
+  describe('autonomy settings navigation', () => {
+    it('admin mode includes /settings/autonomy in secondary nav', () => {
+      const admin = getModeByKey('admin');
+      expect(admin?.secondaryNavPaths).toContain('/settings/autonomy');
+    });
+  });
 });
