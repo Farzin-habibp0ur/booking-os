@@ -5,7 +5,19 @@ import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { useToast } from '@/lib/toast';
-import { Zap, Plus, ToggleLeft, ToggleRight, Trash2, Play, Search, X } from 'lucide-react';
+import {
+  Zap,
+  Plus,
+  ToggleLeft,
+  ToggleRight,
+  Trash2,
+  Play,
+  Search,
+  X,
+  ShieldCheck,
+  Clock,
+  Users,
+} from 'lucide-react';
 import { TableRowSkeleton, EmptyState } from '@/components/skeleton';
 import TooltipNudge from '@/components/tooltip-nudge';
 import { PlaybookCard } from './components/playbook-card';
@@ -163,6 +175,35 @@ export default function AutomationsPage() {
         ))}
       </div>
 
+      {/* Safety Controls Summary */}
+      {(tab === 'playbooks' || tab === 'rules') && (
+        <div
+          className="mb-4 bg-white rounded-2xl shadow-soft p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4"
+          data-testid="safety-controls-panel"
+        >
+          <div className="flex items-center gap-2">
+            <ShieldCheck size={18} className="text-sage-600" />
+            <span className="text-sm font-medium text-slate-800">Safety Controls</span>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <div className="flex items-center gap-1.5">
+              <Clock size={14} className="text-slate-400" />
+              <span className="text-xs text-slate-600">Quiet hours:</span>
+              <span className="text-xs px-2 py-0.5 rounded-full bg-sage-50 text-sage-700">
+                Active (10pm–8am)
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Users size={14} className="text-slate-400" />
+              <span className="text-xs text-slate-600">Frequency cap:</span>
+              <span className="text-xs px-2 py-0.5 rounded-full bg-sage-50 text-sage-700">
+                3 per customer/day
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Playbooks */}
       {tab === 'playbooks' && (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -201,13 +242,16 @@ export default function AutomationsPage() {
                     Status
                   </th>
                   <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
+                    Safety
+                  </th>
+                  <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
                     Actions
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {loading
-                  ? Array.from({ length: 3 }).map((_, i) => <TableRowSkeleton key={i} cols={4} />)
+                  ? Array.from({ length: 3 }).map((_, i) => <TableRowSkeleton key={i} cols={5} />)
                   : rules
                       .filter((r) => !r.playbook)
                       .map((rule) => (
@@ -225,6 +269,22 @@ export default function AutomationsPage() {
                             >
                               {rule.isActive ? 'Active' : 'Off'}
                             </span>
+                          </td>
+                          <td className="p-3" data-testid={`safety-col-${rule.id}`}>
+                            <div className="flex items-center gap-1">
+                              {rule.quietStart && rule.quietEnd ? (
+                                <span className="text-xs px-2 py-0.5 rounded-full bg-sage-50 text-sage-700">
+                                  Quiet {rule.quietStart}–{rule.quietEnd}
+                                </span>
+                              ) : (
+                                <span className="text-xs text-slate-400">Default</span>
+                              )}
+                              {rule.maxPerCustomerPerDay && rule.maxPerCustomerPerDay !== 3 && (
+                                <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                                  {rule.maxPerCustomerPerDay}/day
+                                </span>
+                              )}
+                            </div>
                           </td>
                           <td className="p-3">
                             <div className="flex items-center gap-1">

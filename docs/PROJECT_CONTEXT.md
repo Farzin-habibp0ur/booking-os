@@ -2,7 +2,7 @@
 
 > **Purpose:** This document gives full context on the Booking OS platform — what it is, what's been built, how it's structured, and what's left to build. Share this with an AI assistant or new developer to get productive immediately.
 >
-> **Last updated:** February 19, 2026 (UX Upgrade Pack Release 2 complete — CSV exports, duplicate review, today timeline, attention cards, briefing snooze)
+> **Last updated:** February 19, 2026 (UX Upgrade Pack Release 3 complete — add-to-calendar, branded errors, automation playbook UX, rule builder, dry-run, safety controls)
 
 ---
 
@@ -48,7 +48,7 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 - **Self-serve links** — Token-based reschedule, cancel, waitlist claim, and quote approval pages
 - **Waitlist** — Auto-offers on cancellation, token-based 1-tap claim, configurable offer count/expiry/quiet hours
 - **Campaigns** — Audience segmentation, template-based bulk messaging, throttled dispatch, delivery tracking
-- **Automations** — 3 built-in playbooks + custom rule builder with 6 triggers, quiet hours, frequency caps, activity log
+- **Automations** — 3 built-in playbooks with rich recipe cards + custom rule builder with plain-language summaries, real dry-run testing, searchable/filterable activity log, safety controls panel
 - **Offers** — Promotional offers with expiry, max redemptions, service linking
 - **Vertical packs** — Pack builder with versioning, publish flow, business-level overrides
 - **Setup wizard** — 10-step onboarding flow for new businesses
@@ -183,6 +183,15 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 - **Briefing Card Snooze + Expandable Details** (Batch 2f) — Snooze dropdown (1h/4h/tomorrow/next week) on briefing cards, expandable detail section (booking info, staff, suggested action), category border colors (red=urgent, lavender=approval, sage=opportunity), auto-refresh every 5 minutes. 11 tests.
 - **Integration + Documentation** (Batch 2g) — ActionHistory logging for CSV exports, i18n keys for new Release 2 features, documentation updates.
 - **Final counts:** 3,309 tests total (2,003 API + 1,306 web), +82 new tests
+
+### UX Upgrade Pack — Release 3 (Batches 3a–3f) — COMPLETE
+- **Add-to-Calendar** (Batch 3a) — Client-side calendar add buttons on all self-serve success screens (Google Calendar URL, Outlook URL, iCal .ics download), `AddToCalendar` component. 12 tests.
+- **Branded Error Pages + Confirmation Polish** (Batch 3b) — `SelfServeError` component with auto-variant detection (expired/used/invalid/policy/generic), "Book Again" link, branded error pages on all 4 manage pages. "What happens next" bullet points on all 5 success screens (booking, reschedule, cancel, quote, claim). 22 tests.
+- **Automation Playbook UX Overhaul** (Batch 3c) — Rich `PlaybookCard` component with expandable recipe details (what/when/who/examples/sample message), impact stats from AutomationLog (`getPlaybookStats` API), color-coded borders per playbook. 15 tests.
+- **Custom Rule Builder Enhancement** (Batch 3d) — Example scenarios per trigger, `getFilterPreview()` plain-language filter preview, `getActionPreview()` action preview, `getPlainLanguageSummary()` full summary on review step, persistent safety bar. 11 tests.
+- **Real Dry-Run + Searchable Activity Log** (Batch 3e) — Enhanced `testRule()` returning real matched/skipped bookings by trigger type, `DryRunModal` component, activity log filters (search input, outcome chips, date range), clear filters. Enhanced `getLogs()` with search/outcome/dateFrom/dateTo params. 25 tests.
+- **Safety Controls + Integration** (Batch 3f) — Safety controls summary panel (quiet hours, frequency cap badges) on playbooks/rules tabs, Safety column in custom rules table showing per-rule quiet hours and frequency caps, documentation updates. 6 tests.
+- **Final counts:** 3,402 tests total (2,010 API + 1,392 web), +93 new tests
 
 ---
 

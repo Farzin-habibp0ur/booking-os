@@ -131,6 +131,9 @@ jest.mock('lucide-react', () => ({
   Play: () => <div data-testid="play-icon" />,
   Search: () => <div data-testid="search-icon" />,
   X: () => <div data-testid="x-icon" />,
+  ShieldCheck: () => <div data-testid="shield-check-icon" />,
+  Clock: () => <div data-testid="clock-icon" />,
+  Users: () => <div data-testid="users-icon" />,
 }));
 
 import { api } from '@/lib/api';
@@ -160,6 +163,9 @@ const mockRules = [
     trigger: 'BOOKING_COMPLETED',
     isActive: true,
     playbook: null,
+    quietStart: '22:00',
+    quietEnd: '08:00',
+    maxPerCustomerPerDay: 3,
   },
   {
     id: 'rule2',
@@ -167,6 +173,9 @@ const mockRules = [
     trigger: 'BOOKING_CANCELLED',
     isActive: false,
     playbook: null,
+    quietStart: null,
+    quietEnd: null,
+    maxPerCustomerPerDay: 5,
   },
   {
     id: 'rule3',
@@ -174,6 +183,9 @@ const mockRules = [
     trigger: 'BOOKING_CREATED',
     isActive: true,
     playbook: 'pb1',
+    quietStart: null,
+    quietEnd: null,
+    maxPerCustomerPerDay: 3,
   },
 ];
 
@@ -990,6 +1002,120 @@ describe('AutomationsPage', () => {
 
     await waitFor(() => {
       expect(mockToast).toHaveBeenCalledWith(expect.any(String), 'error');
+    });
+  });
+
+  // ─── Safety Controls Panel ─────────────────────────────────
+
+  it('shows safety controls panel on playbooks tab', async () => {
+    setupDefaultMocks();
+
+    render(<AutomationsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('safety-controls-panel')).toBeInTheDocument();
+      expect(screen.getByText('Safety Controls')).toBeInTheDocument();
+      expect(screen.getByText(/Quiet hours/)).toBeInTheDocument();
+      expect(screen.getByText(/Frequency cap/)).toBeInTheDocument();
+    });
+  });
+
+  it('shows safety controls panel on rules tab', async () => {
+    const user = userEvent.setup();
+    setupDefaultMocks();
+
+    render(<AutomationsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Playbooks')).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      await user.click(screen.getByText('Custom Rules'));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('safety-controls-panel')).toBeInTheDocument();
+    });
+  });
+
+  it('does not show safety controls panel on logs tab', async () => {
+    const user = userEvent.setup();
+    setupDefaultMocks();
+
+    render(<AutomationsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Playbooks')).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      await user.click(screen.getByText('Activity Log'));
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('safety-controls-panel')).not.toBeInTheDocument();
+    });
+  });
+
+  it('shows safety column with custom quiet hours in rules table', async () => {
+    const user = userEvent.setup();
+    setupDefaultMocks();
+
+    render(<AutomationsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Playbooks')).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      await user.click(screen.getByText('Custom Rules'));
+    });
+
+    await waitFor(() => {
+      // Rule1 has quiet hours 22:00-08:00
+      expect(screen.getByTestId('safety-col-rule1')).toHaveTextContent('Quiet 22:00–08:00');
+      // Rule2 has no quiet hours, shows Default
+      expect(screen.getByTestId('safety-col-rule2')).toHaveTextContent('Default');
+    });
+  });
+
+  it('shows custom frequency cap in safety column', async () => {
+    const user = userEvent.setup();
+    setupDefaultMocks();
+
+    render(<AutomationsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Playbooks')).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      await user.click(screen.getByText('Custom Rules'));
+    });
+
+    await waitFor(() => {
+      // Rule2 has maxPerCustomerPerDay=5 (not default 3), so shows "5/day"
+      expect(screen.getByTestId('safety-col-rule2')).toHaveTextContent('5/day');
+    });
+  });
+
+  it('shows Safety column header in rules table', async () => {
+    const user = userEvent.setup();
+    setupDefaultMocks();
+
+    render(<AutomationsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Playbooks')).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      await user.click(screen.getByText('Custom Rules'));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Safety')).toBeInTheDocument();
     });
   });
 });
