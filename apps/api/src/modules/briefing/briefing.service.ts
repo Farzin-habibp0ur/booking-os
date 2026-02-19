@@ -47,11 +47,7 @@ export class BriefingService {
 
   constructor(private prisma: PrismaService) {}
 
-  async getBriefing(
-    businessId: string,
-    staffId?: string,
-    role?: string,
-  ): Promise<BriefingResult> {
+  async getBriefing(businessId: string, staffId?: string, role?: string): Promise<BriefingResult> {
     const where: any = {
       businessId,
       status: 'PENDING',

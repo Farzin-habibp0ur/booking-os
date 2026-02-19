@@ -80,7 +80,9 @@ describe('WaitlistAgentService', () => {
     });
 
     it('returns true for valid config', () => {
-      expect(service.validateConfig({ maxCardsPerRun: 5, lookAheadDays: 3, topSlots: 3 })).toBe(true);
+      expect(service.validateConfig({ maxCardsPerRun: 5, lookAheadDays: 3, topSlots: 3 })).toBe(
+        true,
+      );
     });
 
     it('returns false for invalid maxCardsPerRun', () => {
@@ -155,9 +157,7 @@ describe('WaitlistAgentService', () => {
     it('skips entries with no available slots', async () => {
       prisma.waitlistEntry.findMany.mockResolvedValue([mockEntry] as any);
       prisma.actionCard.findFirst.mockResolvedValue(null);
-      availabilityService.getAvailableSlots.mockResolvedValue([
-        { ...mockSlot, available: false },
-      ]);
+      availabilityService.getAvailableSlots.mockResolvedValue([{ ...mockSlot, available: false }]);
 
       const result = await service.execute('biz1', {});
 
@@ -167,7 +167,10 @@ describe('WaitlistAgentService', () => {
 
     it('deduplicates — skips entries with existing pending card', async () => {
       prisma.waitlistEntry.findMany.mockResolvedValue([mockEntry] as any);
-      prisma.actionCard.findFirst.mockResolvedValue({ id: 'existing-card', status: 'PENDING' } as any);
+      prisma.actionCard.findFirst.mockResolvedValue({
+        id: 'existing-card',
+        status: 'PENDING',
+      } as any);
 
       const result = await service.execute('biz1', {});
 

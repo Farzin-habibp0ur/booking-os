@@ -40,9 +40,7 @@ export function DuplicateMergeCard({
       data-testid={`duplicate-card-${id}`}
       className={cn(
         'rounded-xl border p-4 my-2',
-        isPending
-          ? 'bg-slate-50 border-slate-200'
-          : 'bg-slate-50 border-slate-200 opacity-75',
+        isPending ? 'bg-slate-50 border-slate-200' : 'bg-slate-50 border-slate-200 opacity-75',
       )}
     >
       <div className="flex items-start gap-3">
@@ -54,9 +52,7 @@ export function DuplicateMergeCard({
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between">
-            <p className="text-sm font-semibold text-slate-800">
-              Possible Duplicate
-            </p>
+            <p className="text-sm font-semibold text-slate-800">Possible Duplicate</p>
             <span
               data-testid="confidence-badge"
               className="text-xs px-2 py-0.5 rounded-full bg-slate-200 text-slate-600"
@@ -118,21 +114,13 @@ export function DuplicateMergeCard({
   );
 }
 
-function CustomerProfileCard({
-  customer,
-  label,
-}: {
-  customer: CustomerProfile;
-  label: string;
-}) {
+function CustomerProfileCard({ customer, label }: { customer: CustomerProfile; label: string }) {
   return (
     <div className="bg-white rounded-lg p-2 border border-slate-100 text-xs">
       <p className="text-slate-400 text-[10px] uppercase tracking-wider">{label}</p>
       <p className="font-medium text-slate-800 truncate">{customer.name}</p>
       <p className="text-slate-500 truncate">{customer.phone}</p>
-      {customer.email && (
-        <p className="text-slate-500 truncate">{customer.email}</p>
-      )}
+      {customer.email && <p className="text-slate-500 truncate">{customer.email}</p>}
     </div>
   );
 }

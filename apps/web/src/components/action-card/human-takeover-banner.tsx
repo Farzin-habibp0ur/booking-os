@@ -23,7 +23,9 @@ export function HumanTakeoverBanner({
     >
       <div className="flex items-center gap-3">
         <div className="flex-shrink-0 w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
-          <span className="text-red-600 text-sm font-bold" data-testid="takeover-icon">!</span>
+          <span className="text-red-600 text-sm font-bold" data-testid="takeover-icon">
+            !
+          </span>
         </div>
         <div>
           <p className="text-sm font-semibold text-red-800">Human Takeover Active</p>

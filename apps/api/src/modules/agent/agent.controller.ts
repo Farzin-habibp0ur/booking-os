@@ -1,13 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Patch,
-  Body,
-  Param,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, Param, Query, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { TenantGuard } from '../../common/tenant.guard';
 import { RolesGuard, Roles } from '../../common/roles.guard';
@@ -35,7 +26,8 @@ export class AgentController {
   upsertConfig(
     @BusinessId() businessId: string,
     @Param('agentType') agentType: string,
-    @Body() body: { isEnabled?: boolean; autonomyLevel?: string; config?: any; roleVisibility?: string[] },
+    @Body()
+    body: { isEnabled?: boolean; autonomyLevel?: string; config?: any; roleVisibility?: string[] },
   ) {
     return this.agentFramework.upsertConfig(businessId, agentType, body);
   }
@@ -76,10 +68,7 @@ export class AgentController {
   }
 
   @Get('feedback/stats')
-  getFeedbackStats(
-    @BusinessId() businessId: string,
-    @Query('agentType') agentType?: string,
-  ) {
+  getFeedbackStats(@BusinessId() businessId: string, @Query('agentType') agentType?: string) {
     return this.agentFramework.getFeedbackStats(businessId, agentType);
   }
 

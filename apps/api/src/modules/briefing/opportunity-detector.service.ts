@@ -105,10 +105,14 @@ export class OpportunityDetectorService {
     });
 
     const existingDepositBookingIds = new Set(
-      existingCards.filter((c) => c.type === 'DEPOSIT_PENDING' && c.bookingId).map((c) => c.bookingId),
+      existingCards
+        .filter((c) => c.type === 'DEPOSIT_PENDING' && c.bookingId)
+        .map((c) => c.bookingId),
     );
     const existingReplyConvIds = new Set(
-      existingCards.filter((c) => c.type === 'OVERDUE_REPLY' && c.conversationId).map((c) => c.conversationId),
+      existingCards
+        .filter((c) => c.type === 'OVERDUE_REPLY' && c.conversationId)
+        .map((c) => c.conversationId),
     );
     const hasOpenSlotCard = existingCards.some((c) => c.type === 'OPEN_SLOT');
 
@@ -214,9 +218,7 @@ export class OpportunityDetectorService {
     }
 
     if (cardsCreated > 0) {
-      this.logger.log(
-        `Created ${cardsCreated} opportunity card(s) for business ${businessId}`,
-      );
+      this.logger.log(`Created ${cardsCreated} opportunity card(s) for business ${businessId}`);
     }
 
     return cardsCreated;

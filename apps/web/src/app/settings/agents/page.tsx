@@ -42,7 +42,9 @@ export default function AgentSkillsPage() {
     try {
       await api.patch(`/agent-skills/${agentType}/${enabled ? 'enable' : 'disable'}`);
       setSkills((prev) =>
-        prev.map((s) => (s.agentType === agentType ? { ...s, isEnabled: enabled, hasConfig: true } : s)),
+        prev.map((s) =>
+          s.agentType === agentType ? { ...s, isEnabled: enabled, hasConfig: true } : s,
+        ),
       );
       toast(`${agentType} ${enabled ? 'enabled' : 'disabled'}`);
     } catch (err: any) {
@@ -57,7 +59,9 @@ export default function AgentSkillsPage() {
     try {
       await api.patch(`/agent-skills/${agentType}/config`, { autonomyLevel: level });
       setSkills((prev) =>
-        prev.map((s) => (s.agentType === agentType ? { ...s, autonomyLevel: level, hasConfig: true } : s)),
+        prev.map((s) =>
+          s.agentType === agentType ? { ...s, autonomyLevel: level, hasConfig: true } : s,
+        ),
       );
       toast('Autonomy level updated');
     } catch (err: any) {

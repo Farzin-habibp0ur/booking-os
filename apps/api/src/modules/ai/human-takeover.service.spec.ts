@@ -96,9 +96,7 @@ describe('HumanTakeoverService', () => {
         metadata: { transferredToHuman: true },
       } as any);
       prisma.conversation.update.mockResolvedValue({} as any);
-      prisma.actionCard.findMany.mockResolvedValue([
-        { id: 'card1', status: 'PENDING' },
-      ] as any);
+      prisma.actionCard.findMany.mockResolvedValue([{ id: 'card1', status: 'PENDING' }] as any);
 
       const result = await service.resolveTakeover('biz1', 'conv1', 'staff1');
 

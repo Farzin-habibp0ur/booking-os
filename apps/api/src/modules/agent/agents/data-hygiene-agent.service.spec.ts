@@ -185,7 +185,10 @@ describe('DataHygieneAgentService', () => {
         { id: 'c1', name: 'Jane', phone: '5551234567', email: 'j@t.com' },
         { id: 'c2', name: 'Jane', phone: '5551234567', email: 'j@t.com' },
       ] as any);
-      prisma.duplicateCandidate.findFirst.mockResolvedValue({ id: 'existing', status: 'PENDING' } as any);
+      prisma.duplicateCandidate.findFirst.mockResolvedValue({
+        id: 'existing',
+        status: 'PENDING',
+      } as any);
 
       const result = await service.execute('biz1', {});
 

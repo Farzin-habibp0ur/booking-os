@@ -30,9 +30,7 @@ export function DepositCard({
       data-testid={`deposit-card-${id}`}
       className={cn(
         'rounded-xl border p-4',
-        isPending
-          ? 'border-amber-200 bg-amber-50'
-          : 'border-slate-200 bg-slate-50 opacity-75',
+        isPending ? 'border-amber-200 bg-amber-50' : 'border-slate-200 bg-slate-50 opacity-75',
       )}
     >
       <div className="flex items-center gap-2 mb-2">
@@ -51,9 +49,7 @@ export function DepositCard({
         for {serviceName}
       </p>
 
-      {bookingDate && (
-        <p className="text-xs text-slate-500 mt-1">Appointment: {bookingDate}</p>
-      )}
+      {bookingDate && <p className="text-xs text-slate-500 mt-1">Appointment: {bookingDate}</p>}
 
       {isPending && (onSendReminder || onDismiss) && (
         <div className="flex gap-2 mt-3" data-testid={`deposit-actions-${id}`}>

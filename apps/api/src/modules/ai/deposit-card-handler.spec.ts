@@ -17,7 +17,9 @@ describe('DepositCardHandler', () => {
       create: jest.fn().mockResolvedValue({ id: 'card1', status: 'PENDING' }),
     };
     policyCompliance = {
-      checkDepositPolicy: jest.fn().mockResolvedValue({ allowed: true, reason: 'Deposit of $50.00 required' }),
+      checkDepositPolicy: jest
+        .fn()
+        .mockResolvedValue({ allowed: true, reason: 'Deposit of $50.00 required' }),
     };
 
     const module = await Test.createTestingModule({

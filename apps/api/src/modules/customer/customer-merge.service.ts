@@ -73,8 +73,14 @@ export class CustomerMergeService {
       const mergedTags = [...new Set([...primary.tags, ...secondary.tags])];
 
       // Merge custom fields (primary wins on conflicts)
-      const primaryFields = typeof primary.customFields === 'object' ? primary.customFields as Record<string, any> : {};
-      const secondaryFields = typeof secondary.customFields === 'object' ? secondary.customFields as Record<string, any> : {};
+      const primaryFields =
+        typeof primary.customFields === 'object'
+          ? (primary.customFields as Record<string, any>)
+          : {};
+      const secondaryFields =
+        typeof secondary.customFields === 'object'
+          ? (secondary.customFields as Record<string, any>)
+          : {};
       const mergedFields = { ...secondaryFields, ...primaryFields };
 
       // Update primary customer with merged data
@@ -126,9 +132,7 @@ export class CustomerMergeService {
           after: { mergedInto: primaryId, primaryName: primary.name },
         },
       })
-      .catch((err) =>
-        this.logger.warn(`Failed to log customer merge audit: ${err?.message}`),
-      );
+      .catch((err) => this.logger.warn(`Failed to log customer merge audit: ${err?.message}`));
 
     this.logger.log(
       `Merged customer ${secondaryId} (${secondary.name}) into ${primaryId} (${primary.name})`,

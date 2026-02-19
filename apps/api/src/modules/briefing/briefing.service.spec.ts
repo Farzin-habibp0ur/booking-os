@@ -11,10 +11,7 @@ describe('BriefingService', () => {
     prisma = createMockPrisma();
 
     const module = await Test.createTestingModule({
-      providers: [
-        BriefingService,
-        { provide: PrismaService, useValue: prisma },
-      ],
+      providers: [BriefingService, { provide: PrismaService, useValue: prisma }],
     }).compile();
 
     service = module.get(BriefingService);
@@ -167,10 +164,38 @@ describe('BriefingService', () => {
 
     it('all four standard categories in correct order', async () => {
       prisma.actionCard.findMany.mockResolvedValue([
-        { id: '1', category: 'HYGIENE', priority: 30, title: 'H', status: 'PENDING', createdAt: new Date() },
-        { id: '2', category: 'OPPORTUNITY', priority: 60, title: 'O', status: 'PENDING', createdAt: new Date() },
-        { id: '3', category: 'URGENT_TODAY', priority: 90, title: 'U', status: 'PENDING', createdAt: new Date() },
-        { id: '4', category: 'NEEDS_APPROVAL', priority: 70, title: 'N', status: 'PENDING', createdAt: new Date() },
+        {
+          id: '1',
+          category: 'HYGIENE',
+          priority: 30,
+          title: 'H',
+          status: 'PENDING',
+          createdAt: new Date(),
+        },
+        {
+          id: '2',
+          category: 'OPPORTUNITY',
+          priority: 60,
+          title: 'O',
+          status: 'PENDING',
+          createdAt: new Date(),
+        },
+        {
+          id: '3',
+          category: 'URGENT_TODAY',
+          priority: 90,
+          title: 'U',
+          status: 'PENDING',
+          createdAt: new Date(),
+        },
+        {
+          id: '4',
+          category: 'NEEDS_APPROVAL',
+          priority: 70,
+          title: 'N',
+          status: 'PENDING',
+          createdAt: new Date(),
+        },
       ] as any);
 
       const result = await service.getBriefing(bizId);

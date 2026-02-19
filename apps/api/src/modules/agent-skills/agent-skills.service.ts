@@ -21,7 +21,8 @@ const PACK_SKILLS: Record<string, AgentSkillDefinition[]> = {
     {
       agentType: 'RETENTION',
       name: 'Patient Retention',
-      description: 'Detects patients who are overdue for their regular treatments and suggests follow-up',
+      description:
+        'Detects patients who are overdue for their regular treatments and suggests follow-up',
       category: 'proactive',
       defaultEnabled: true,
     },
@@ -58,7 +59,8 @@ const PACK_SKILLS: Record<string, AgentSkillDefinition[]> = {
     {
       agentType: 'RETENTION',
       name: 'Service Retention',
-      description: 'Identifies vehicles overdue for regular service based on customer visit patterns',
+      description:
+        'Identifies vehicles overdue for regular service based on customer visit patterns',
       category: 'proactive',
       defaultEnabled: true,
     },

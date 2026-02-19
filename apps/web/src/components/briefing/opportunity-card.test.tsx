@@ -51,9 +51,7 @@ describe('OpportunityCard', () => {
   });
 
   it('does not render suggested action section when not provided', () => {
-    render(
-      <OpportunityCard card={{ ...mockOpportunity, suggestedAction: null }} />,
-    );
+    render(<OpportunityCard card={{ ...mockOpportunity, suggestedAction: null }} />);
 
     expect(
       screen.queryByText('Notify waitlist customers about availability'),
@@ -68,7 +66,9 @@ describe('OpportunityCard', () => {
 
   it('handles different opportunity types', () => {
     render(
-      <OpportunityCard card={{ ...mockOpportunity, type: 'RETENTION_DUE', title: 'Retention check' }} />,
+      <OpportunityCard
+        card={{ ...mockOpportunity, type: 'RETENTION_DUE', title: 'Retention check' }}
+      />,
     );
 
     expect(screen.getByText('Retention check')).toBeInTheDocument();

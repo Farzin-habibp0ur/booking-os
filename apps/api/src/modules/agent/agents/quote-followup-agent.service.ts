@@ -55,11 +55,7 @@ export class QuoteFollowupAgentService implements BackgroundAgent, OnModuleInit 
     const staleDays = agentConfig.staleDays || 3;
     const minQuoteAmount = agentConfig.minQuoteAmount || 0;
 
-    const stalledQuotes = await this.findStalledQuotes(
-      businessId,
-      staleDays,
-      minQuoteAmount,
-    );
+    const stalledQuotes = await this.findStalledQuotes(businessId, staleDays, minQuoteAmount);
 
     if (stalledQuotes.length === 0) {
       this.logger.log(`No stalled quotes found for business ${businessId}`);
@@ -119,9 +115,7 @@ export class QuoteFollowupAgentService implements BackgroundAgent, OnModuleInit 
 
         cardsCreated++;
       } catch (err: any) {
-        this.logger.warn(
-          `Failed to create follow-up card for quote ${quote.id}: ${err.message}`,
-        );
+        this.logger.warn(`Failed to create follow-up card for quote ${quote.id}: ${err.message}`);
       }
     }
 
@@ -166,9 +160,7 @@ export class QuoteFollowupAgentService implements BackgroundAgent, OnModuleInit 
       bookingId: q.bookingId,
       description: q.description,
       totalAmount: q.totalAmount,
-      daysSinceCreated: Math.round(
-        (now - new Date(q.createdAt).getTime()) / (1000 * 60 * 60 * 24),
-      ),
+      daysSinceCreated: Math.round((now - new Date(q.createdAt).getTime()) / (1000 * 60 * 60 * 24)),
       customerName: q.booking.customer.name,
       customerId: q.booking.customer.id,
       serviceName: q.booking.service.name,

@@ -40,7 +40,12 @@ export class DataHygieneAgentService implements BackgroundAgent, OnModuleInit {
       if (typeof config.batchSize !== 'number' || config.batchSize < 10) return false;
     }
     if (config.nameMatchThreshold !== undefined) {
-      if (typeof config.nameMatchThreshold !== 'number' || config.nameMatchThreshold < 0 || config.nameMatchThreshold > 1) return false;
+      if (
+        typeof config.nameMatchThreshold !== 'number' ||
+        config.nameMatchThreshold < 0 ||
+        config.nameMatchThreshold > 1
+      )
+        return false;
     }
     return true;
   }

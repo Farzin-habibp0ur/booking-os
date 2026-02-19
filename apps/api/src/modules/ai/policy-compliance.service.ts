@@ -13,10 +13,7 @@ export class PolicyComplianceService {
 
   constructor(private prisma: PrismaService) {}
 
-  async checkDepositPolicy(
-    businessId: string,
-    serviceId: string,
-  ): Promise<PolicyCheckResult> {
+  async checkDepositPolicy(businessId: string, serviceId: string): Promise<PolicyCheckResult> {
     try {
       const service = await this.prisma.service.findFirst({
         where: { id: serviceId, businessId },
@@ -44,10 +41,7 @@ export class PolicyComplianceService {
     }
   }
 
-  async checkCancellationPolicy(
-    businessId: string,
-    bookingId: string,
-  ): Promise<PolicyCheckResult> {
+  async checkCancellationPolicy(businessId: string, bookingId: string): Promise<PolicyCheckResult> {
     try {
       const business = await this.prisma.business.findUnique({
         where: { id: businessId },
@@ -64,8 +58,7 @@ export class PolicyComplianceService {
       });
       if (!booking) return { allowed: false, reason: 'Booking not found' };
 
-      const hoursUntilBooking =
-        (booking.startTime.getTime() - Date.now()) / (1000 * 60 * 60);
+      const hoursUntilBooking = (booking.startTime.getTime() - Date.now()) / (1000 * 60 * 60);
       const windowHours = policy.cancellationWindowHours || 24;
 
       if (hoursUntilBooking < windowHours) {
@@ -83,10 +76,7 @@ export class PolicyComplianceService {
     }
   }
 
-  async checkReschedulePolicy(
-    businessId: string,
-    bookingId: string,
-  ): Promise<PolicyCheckResult> {
+  async checkReschedulePolicy(businessId: string, bookingId: string): Promise<PolicyCheckResult> {
     try {
       const business = await this.prisma.business.findUnique({
         where: { id: businessId },
@@ -103,8 +93,7 @@ export class PolicyComplianceService {
       });
       if (!booking) return { allowed: false, reason: 'Booking not found' };
 
-      const hoursUntilBooking =
-        (booking.startTime.getTime() - Date.now()) / (1000 * 60 * 60);
+      const hoursUntilBooking = (booking.startTime.getTime() - Date.now()) / (1000 * 60 * 60);
       const windowHours = policy.rescheduleWindowHours || 24;
 
       if (hoursUntilBooking < windowHours) {

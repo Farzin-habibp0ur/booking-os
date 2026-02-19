@@ -38,9 +38,7 @@ describe('AgentFrameworkService', () => {
 
   describe('getConfigs', () => {
     it('returns all configs for business', async () => {
-      const configs = [
-        { id: 'ac1', businessId: 'biz1', agentType: 'WAITLIST', isEnabled: true },
-      ];
+      const configs = [{ id: 'ac1', businessId: 'biz1', agentType: 'WAITLIST', isEnabled: true }];
       prisma.agentConfig.findMany.mockResolvedValue(configs as any);
 
       const result = await service.getConfigs('biz1');
@@ -217,15 +215,21 @@ describe('AgentFrameworkService', () => {
       const feedback = { id: 'fb1', rating: 'HELPFUL', actionCardId: 'card1', staffId: 'staff1' };
       prisma.agentFeedback.upsert.mockResolvedValue(feedback as any);
 
-      const result = await service.submitFeedback('biz1', 'card1', 'staff1', 'HELPFUL', 'Great suggestion');
+      const result = await service.submitFeedback(
+        'biz1',
+        'card1',
+        'staff1',
+        'HELPFUL',
+        'Great suggestion',
+      );
 
       expect(result).toEqual(feedback);
     });
 
     it('throws BadRequestException for invalid rating', async () => {
-      await expect(
-        service.submitFeedback('biz1', 'card1', 'staff1', 'INVALID'),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.submitFeedback('biz1', 'card1', 'staff1', 'INVALID')).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('upserts on duplicate actionCardId+staffId', async () => {
@@ -253,9 +257,7 @@ describe('AgentFrameworkService', () => {
     });
 
     it('returns 0 rate when no feedback', async () => {
-      prisma.agentFeedback.count
-        .mockResolvedValueOnce(0)
-        .mockResolvedValueOnce(0);
+      prisma.agentFeedback.count.mockResolvedValueOnce(0).mockResolvedValueOnce(0);
 
       const result = await service.getFeedbackStats('biz1');
 

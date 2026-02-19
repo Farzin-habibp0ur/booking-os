@@ -118,6 +118,6 @@ export class VerticalActionHandler {
   }
 
   hasVerticalAction(verticalPack: string, intent: string): boolean {
-    return !!(VERTICAL_ACTIONS[verticalPack]?.[intent]);
+    return !!VERTICAL_ACTIONS[verticalPack]?.[intent];
   }
 }

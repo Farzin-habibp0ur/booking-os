@@ -37,9 +37,7 @@ export function WaitlistMatchCard({
       data-testid={`waitlist-match-card-${id}`}
       className={cn(
         'rounded-xl border p-4 my-2',
-        isPending
-          ? 'bg-sage-50 border-sage-200'
-          : 'bg-slate-50 border-slate-200 opacity-75',
+        isPending ? 'bg-sage-50 border-sage-200' : 'bg-slate-50 border-slate-200 opacity-75',
       )}
     >
       <div className="flex items-start gap-3">
@@ -50,9 +48,7 @@ export function WaitlistMatchCard({
         </div>
 
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-slate-800">
-            Waitlist Match: {customerName}
-          </p>
+          <p className="text-sm font-semibold text-slate-800">Waitlist Match: {customerName}</p>
           <p className="text-xs text-slate-500 mt-0.5">
             {serviceName}
             {preferredStaff ? ` · Preferred: ${preferredStaff}` : ''}

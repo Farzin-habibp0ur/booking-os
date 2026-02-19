@@ -33,9 +33,7 @@ export function RetentionCard({
       data-testid={`retention-card-${id}`}
       className={cn(
         'rounded-xl border p-4 my-2',
-        isPending
-          ? 'bg-amber-50 border-amber-200'
-          : 'bg-slate-50 border-slate-200 opacity-75',
+        isPending ? 'bg-amber-50 border-amber-200' : 'bg-slate-50 border-slate-200 opacity-75',
       )}
     >
       <div className="flex items-start gap-3">
@@ -46,9 +44,7 @@ export function RetentionCard({
         </div>
 
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-slate-800">
-            {customerName} may be overdue
-          </p>
+          <p className="text-sm font-semibold text-slate-800">{customerName} may be overdue</p>
           <p className="text-xs text-slate-500 mt-0.5">
             Last visit: {lastServiceName} · {totalBookings} total bookings
           </p>
@@ -60,7 +56,9 @@ export function RetentionCard({
             </div>
             <div className="bg-white rounded-lg px-3 py-1.5 text-xs border border-amber-200">
               <span className="text-amber-600">Overdue by:</span>{' '}
-              <span className="font-medium text-amber-700">{overdueDays > 0 ? overdueDays : 0} days</span>
+              <span className="font-medium text-amber-700">
+                {overdueDays > 0 ? overdueDays : 0} days
+              </span>
             </div>
           </div>
 

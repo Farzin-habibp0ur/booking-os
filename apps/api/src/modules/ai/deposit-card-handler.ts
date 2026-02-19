@@ -80,9 +80,7 @@ export class DepositCardHandler {
         },
       });
     } catch (err: any) {
-      this.logger.error(
-        `Failed to create deposit card for booking ${bookingId}: ${err.message}`,
-      );
+      this.logger.error(`Failed to create deposit card for booking ${bookingId}: ${err.message}`);
       return null;
     }
   }
@@ -115,9 +113,7 @@ export class DepositCardHandler {
         booking.conversationId || undefined,
       );
     } catch (err: any) {
-      this.logger.error(
-        `Failed to check deposit for booking ${bookingId}: ${err.message}`,
-      );
+      this.logger.error(`Failed to check deposit for booking ${bookingId}: ${err.message}`);
       return null;
     }
   }

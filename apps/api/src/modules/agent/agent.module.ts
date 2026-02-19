@@ -14,7 +14,15 @@ import { AvailabilityModule } from '../availability/availability.module';
 @Module({
   imports: [WaitlistModule, ActionCardModule, AvailabilityModule],
   controllers: [AgentController],
-  providers: [AgentFrameworkService, AgentSchedulerService, WaitlistAgentService, RetentionAgentService, DataHygieneAgentService, SchedulingOptimizerService, QuoteFollowupAgentService],
+  providers: [
+    AgentFrameworkService,
+    AgentSchedulerService,
+    WaitlistAgentService,
+    RetentionAgentService,
+    DataHygieneAgentService,
+    SchedulingOptimizerService,
+    QuoteFollowupAgentService,
+  ],
   exports: [AgentFrameworkService],
 })
 export class AgentModule {}

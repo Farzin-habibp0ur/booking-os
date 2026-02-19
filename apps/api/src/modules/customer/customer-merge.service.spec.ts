@@ -50,25 +50,23 @@ describe('CustomerMergeService', () => {
 
   describe('mergeCustomers', () => {
     it('throws BadRequestException when merging customer with themselves', async () => {
-      await expect(service.mergeCustomers('biz1', 'c1', 'c1')).rejects.toThrow(
-        BadRequestException,
-      );
+      await expect(service.mergeCustomers('biz1', 'c1', 'c1')).rejects.toThrow(BadRequestException);
     });
 
     it('throws NotFoundException when primary not found', async () => {
-      prisma.customer.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce(mockSecondary as any);
+      prisma.customer.findFirst
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(mockSecondary as any);
 
-      await expect(service.mergeCustomers('biz1', 'c1', 'c2')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.mergeCustomers('biz1', 'c1', 'c2')).rejects.toThrow(NotFoundException);
     });
 
     it('throws NotFoundException when secondary not found', async () => {
-      prisma.customer.findFirst.mockResolvedValueOnce(mockPrimary as any).mockResolvedValueOnce(null);
+      prisma.customer.findFirst
+        .mockResolvedValueOnce(mockPrimary as any)
+        .mockResolvedValueOnce(null);
 
-      await expect(service.mergeCustomers('biz1', 'c1', 'c2')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.mergeCustomers('biz1', 'c1', 'c2')).rejects.toThrow(NotFoundException);
     });
 
     it('transfers bookings from secondary to primary', async () => {
@@ -212,9 +210,7 @@ describe('CustomerMergeService', () => {
     it('throws NotFoundException when candidate not found', async () => {
       prisma.duplicateCandidate.findFirst.mockResolvedValue(null);
 
-      await expect(service.markNotDuplicate('biz1', 'c1', 'c2')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.markNotDuplicate('biz1', 'c1', 'c2')).rejects.toThrow(NotFoundException);
     });
   });
 });

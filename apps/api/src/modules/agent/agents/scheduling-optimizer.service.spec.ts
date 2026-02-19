@@ -47,7 +47,9 @@ describe('SchedulingOptimizerService', () => {
     });
 
     it('returns true for valid config', () => {
-      expect(service.validateConfig({ maxCardsPerRun: 5, lookAheadDays: 3, gapThresholdMins: 30 })).toBe(true);
+      expect(
+        service.validateConfig({ maxCardsPerRun: 5, lookAheadDays: 3, gapThresholdMins: 30 }),
+      ).toBe(true);
     });
 
     it('returns false for invalid gapThresholdMins (must be >= 15)', () => {
@@ -65,7 +67,7 @@ describe('SchedulingOptimizerService', () => {
       staffId: 'staff1',
       staffName: 'Sarah',
       workStart: 9 * 60, // 09:00
-      workEnd: 17 * 60,  // 17:00
+      workEnd: 17 * 60, // 17:00
       bookings: [] as { startMins: number; endMins: number }[],
     };
 

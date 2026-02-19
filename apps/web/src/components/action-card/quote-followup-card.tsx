@@ -43,9 +43,7 @@ export function QuoteFollowupCard({
         </div>
 
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-slate-800">
-            Quote pending: {customerName}
-          </p>
+          <p className="text-sm font-semibold text-slate-800">Quote pending: {customerName}</p>
           <p className="text-xs text-slate-500 mt-0.5">
             {serviceName} · ${totalAmount.toFixed(2)}
           </p>

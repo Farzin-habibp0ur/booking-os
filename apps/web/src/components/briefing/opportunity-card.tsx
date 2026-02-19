@@ -36,9 +36,7 @@ export function OpportunityCard({ card, onAction }: OpportunityCardProps) {
           <Icon size={18} />
         </div>
         <div className="flex-1 min-w-0">
-          <h4 className="text-sm font-medium text-sage-900 dark:text-sage-100">
-            {card.title}
-          </h4>
+          <h4 className="text-sm font-medium text-sage-900 dark:text-sage-100">{card.title}</h4>
           <p className="text-xs text-sage-600 dark:text-sage-400 mt-0.5 line-clamp-2">
             {card.description}
           </p>

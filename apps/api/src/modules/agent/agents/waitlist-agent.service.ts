@@ -150,9 +150,7 @@ export class WaitlistAgentService implements BackgroundAgent, OnModuleInit {
 
         cardsCreated++;
       } catch (err: any) {
-        this.logger.warn(
-          `Failed to process waitlist entry ${entry.id}: ${err.message}`,
-        );
+        this.logger.warn(`Failed to process waitlist entry ${entry.id}: ${err.message}`);
       }
     }
 
@@ -206,9 +204,7 @@ export class WaitlistAgentService implements BackgroundAgent, OnModuleInit {
           matchedSlots.push(slot);
         }
       } catch (err: any) {
-        this.logger.warn(
-          `Failed to get slots for date ${dateStr}: ${err.message}`,
-        );
+        this.logger.warn(`Failed to get slots for date ${dateStr}: ${err.message}`);
       }
     }
 

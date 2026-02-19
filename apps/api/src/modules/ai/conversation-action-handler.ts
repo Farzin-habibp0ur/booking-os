@@ -106,7 +106,11 @@ export class ConversationActionHandler {
   }
 
   async handleRescheduleState(ctx: ConversationActionContext, reschedule: RescheduleActionData) {
-    if (reschedule.state !== 'CONFIRM_RESCHEDULE' || !reschedule.bookingId || !reschedule.newSlotIso) {
+    if (
+      reschedule.state !== 'CONFIRM_RESCHEDULE' ||
+      !reschedule.bookingId ||
+      !reschedule.newSlotIso
+    ) {
       return null;
     }
 

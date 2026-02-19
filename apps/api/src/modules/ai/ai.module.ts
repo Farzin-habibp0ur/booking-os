@@ -53,6 +53,12 @@ import { ActionCardModule } from '../action-card/action-card.module';
     ClarificationHandler,
     VerticalActionHandler,
   ],
-  exports: [AiService, ProfileExtractor, DepositCardHandler, PolicyComplianceService, HumanTakeoverService],
+  exports: [
+    AiService,
+    ProfileExtractor,
+    DepositCardHandler,
+    PolicyComplianceService,
+    HumanTakeoverService,
+  ],
 })
 export class AiModule {}

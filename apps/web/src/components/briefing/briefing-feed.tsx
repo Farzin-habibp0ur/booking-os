@@ -87,7 +87,10 @@ export function BriefingFeed({ onCardAction }: BriefingFeedProps) {
 
   if (error) {
     return (
-      <div data-testid="briefing-error" className="rounded-2xl bg-red-50 dark:bg-red-950/30 p-6 text-center">
+      <div
+        data-testid="briefing-error"
+        className="rounded-2xl bg-red-50 dark:bg-red-950/30 p-6 text-center"
+      >
         <AlertCircle className="mx-auto mb-2 text-red-400" size={24} />
         <p className="text-sm text-red-600 dark:text-red-400 mb-3">{error}</p>
         <button
@@ -106,14 +109,13 @@ export function BriefingFeed({ onCardAction }: BriefingFeedProps) {
 
   if (!briefing || briefing.totalPending === 0) {
     return (
-      <div data-testid="briefing-empty" className="rounded-2xl bg-sage-50 dark:bg-sage-950/30 p-8 text-center">
+      <div
+        data-testid="briefing-empty"
+        className="rounded-2xl bg-sage-50 dark:bg-sage-950/30 p-8 text-center"
+      >
         <Sparkles className="mx-auto mb-3 text-sage-400" size={28} />
-        <h3 className="text-sm font-medium text-sage-900 dark:text-sage-100 mb-1">
-          All clear
-        </h3>
-        <p className="text-xs text-sage-500">
-          No action items right now. Great job!
-        </p>
+        <h3 className="text-sm font-medium text-sage-900 dark:text-sage-100 mb-1">All clear</h3>
+        <p className="text-xs text-sage-500">No action items right now. Great job!</p>
       </div>
     );
   }
@@ -163,11 +165,7 @@ export function BriefingFeed({ onCardAction }: BriefingFeedProps) {
             <div className="space-y-3">
               {group.cards.map((card) =>
                 isOpportunity ? (
-                  <OpportunityCard
-                    key={card.id}
-                    card={card}
-                    onAction={onCardAction}
-                  />
+                  <OpportunityCard key={card.id} card={card} onAction={onCardAction} />
                 ) : (
                   <BriefingCard
                     key={card.id}

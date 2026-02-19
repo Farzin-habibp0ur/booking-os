@@ -22,9 +22,7 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 export function AgentPerformance({ stats }: AgentPerformanceProps) {
-  const typeEntries = Object.entries(stats.byType).sort(
-    ([, a], [, b]) => b.total - a.total,
-  );
+  const typeEntries = Object.entries(stats.byType).sort(([, a], [, b]) => b.total - a.total);
 
   return (
     <div data-testid="agent-performance">
@@ -55,9 +53,7 @@ export function AgentPerformance({ stats }: AgentPerformanceProps) {
                 <th className="text-left px-4 py-3 text-xs font-medium text-slate-500">
                   Agent Type
                 </th>
-                <th className="text-right px-4 py-3 text-xs font-medium text-slate-500">
-                  Helpful
-                </th>
+                <th className="text-right px-4 py-3 text-xs font-medium text-slate-500">Helpful</th>
                 <th className="text-right px-4 py-3 text-xs font-medium text-slate-500">
                   Not Helpful
                 </th>

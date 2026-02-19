@@ -21,10 +21,7 @@ export class AgentFeedbackController {
   }
 
   @Get('card/:actionCardId')
-  getCardFeedback(
-    @BusinessId() businessId: string,
-    @Param('actionCardId') actionCardId: string,
-  ) {
+  getCardFeedback(@BusinessId() businessId: string, @Param('actionCardId') actionCardId: string) {
     return this.feedbackService.getFeedbackForCard(businessId, actionCardId);
   }
 

@@ -108,9 +108,7 @@ export class AgentFrameworkService {
         },
       });
 
-      this.logger.error(
-        `Agent ${agentType} failed for business ${businessId}: ${err.message}`,
-      );
+      this.logger.error(`Agent ${agentType} failed for business ${businessId}: ${err.message}`);
 
       return failed;
     }

@@ -220,9 +220,7 @@ describe('BriefingFeed', () => {
 
     fireEvent.click(screen.getByTestId('opportunity-card-opp-1'));
 
-    expect(onCardAction).toHaveBeenCalledWith(
-      expect.objectContaining({ id: 'opp-1' }),
-    );
+    expect(onCardAction).toHaveBeenCalledWith(expect.objectContaining({ id: 'opp-1' }));
   });
 
   it('refreshes when refresh button clicked', async () => {

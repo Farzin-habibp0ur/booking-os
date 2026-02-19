@@ -41,7 +41,11 @@ export class RetentionAgentService implements BackgroundAgent, OnModuleInit {
       if (typeof config.maxCardsPerRun !== 'number' || config.maxCardsPerRun < 1) return false;
     }
     if (config.overdueThresholdMultiplier !== undefined) {
-      if (typeof config.overdueThresholdMultiplier !== 'number' || config.overdueThresholdMultiplier < 1) return false;
+      if (
+        typeof config.overdueThresholdMultiplier !== 'number' ||
+        config.overdueThresholdMultiplier < 1
+      )
+        return false;
     }
     if (config.minBookings !== undefined) {
       if (typeof config.minBookings !== 'number' || config.minBookings < 2) return false;
@@ -210,8 +214,7 @@ export class RetentionAgentService implements BackgroundAgent, OnModuleInit {
     // Sort by how overdue they are (most overdue first)
     overdueCustomers.sort(
       (a, b) =>
-        (b.daysSinceLastBooking / b.avgDaysBetween) -
-        (a.daysSinceLastBooking / a.avgDaysBetween),
+        b.daysSinceLastBooking / b.avgDaysBetween - a.daysSinceLastBooking / a.avgDaysBetween,
     );
 
     return overdueCustomers;

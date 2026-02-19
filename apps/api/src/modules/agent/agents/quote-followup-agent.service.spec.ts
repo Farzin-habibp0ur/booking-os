@@ -61,7 +61,9 @@ describe('QuoteFollowupAgentService', () => {
     });
 
     it('returns true for valid config', () => {
-      expect(service.validateConfig({ maxCardsPerRun: 5, staleDays: 7, minQuoteAmount: 100 })).toBe(true);
+      expect(service.validateConfig({ maxCardsPerRun: 5, staleDays: 7, minQuoteAmount: 100 })).toBe(
+        true,
+      );
     });
 
     it('returns false for invalid maxCardsPerRun', () => {

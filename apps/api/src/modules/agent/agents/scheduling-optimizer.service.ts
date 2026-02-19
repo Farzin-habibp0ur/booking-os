@@ -164,13 +164,7 @@ export class SchedulingOptimizerService implements BackgroundAgent, OnModuleInit
 
       for (const s of staff) {
         try {
-          const schedule = await this.getDaySchedule(
-            businessId,
-            s.id,
-            s.name,
-            dateStr,
-            dayOfWeek,
-          );
+          const schedule = await this.getDaySchedule(businessId, s.id, s.name, dateStr, dayOfWeek);
           if (!schedule) continue;
 
           const dayGaps = this.findGapsInSchedule(schedule, gapThresholdMins);
@@ -309,8 +303,13 @@ export class SchedulingOptimizerService implements BackgroundAgent, OnModuleInit
     return gaps;
   }
 
-  private groupGaps(gaps: ScheduleGap[]): { date: string; staffId: string; staffName: string; gaps: ScheduleGap[] }[] {
-    const map = new Map<string, { date: string; staffId: string; staffName: string; gaps: ScheduleGap[] }>();
+  private groupGaps(
+    gaps: ScheduleGap[],
+  ): { date: string; staffId: string; staffName: string; gaps: ScheduleGap[] }[] {
+    const map = new Map<
+      string,
+      { date: string; staffId: string; staffName: string; gaps: ScheduleGap[] }
+    >();
 
     for (const gap of gaps) {
       const key = `${gap.date}:${gap.staffId}`;

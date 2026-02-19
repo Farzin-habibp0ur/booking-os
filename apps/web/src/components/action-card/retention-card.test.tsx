@@ -91,13 +91,7 @@ describe('RetentionCard', () => {
   });
 
   it('shows 0 overdue days when not actually overdue', () => {
-    render(
-      <RetentionCard
-        {...defaultProps}
-        daysSinceLastBooking={20}
-        avgDaysBetween={30}
-      />,
-    );
+    render(<RetentionCard {...defaultProps} daysSinceLastBooking={20} avgDaysBetween={30} />);
 
     expect(screen.getByText('0 days')).toBeInTheDocument();
   });

@@ -80,17 +80,13 @@ describe('ActionCardInline', () => {
   });
 
   it('hides suggested action when not pending', () => {
-    render(
-      <ActionCardInline card={{ ...mockCard, status: 'DISMISSED' }} />,
-    );
+    render(<ActionCardInline card={{ ...mockCard, status: 'DISMISSED' }} />);
 
     expect(screen.queryByText('Approve to confirm the booking')).not.toBeInTheDocument();
   });
 
   it('shows status text for non-pending cards', () => {
-    render(
-      <ActionCardInline card={{ ...mockCard, status: 'APPROVED' }} />,
-    );
+    render(<ActionCardInline card={{ ...mockCard, status: 'APPROVED' }} />);
 
     expect(screen.getByText('approved')).toBeInTheDocument();
   });
@@ -102,29 +98,19 @@ describe('ActionCardInline', () => {
   });
 
   it('handles unknown card types', () => {
-    render(
-      <ActionCardInline card={{ ...mockCard, type: 'CUSTOM_TYPE' }} />,
-    );
+    render(<ActionCardInline card={{ ...mockCard, type: 'CUSTOM_TYPE' }} />);
 
     expect(screen.getByTestId('inline-card-badge-card-1')).toHaveTextContent('CUSTOM_TYPE');
   });
 
   it('handles card without suggested action', () => {
-    render(
-      <ActionCardInline card={{ ...mockCard, suggestedAction: null }} />,
-    );
+    render(<ActionCardInline card={{ ...mockCard, suggestedAction: null }} />);
 
     expect(screen.queryByText('Approve to confirm the booking')).not.toBeInTheDocument();
   });
 
   it('renders both approve and dismiss buttons together', () => {
-    render(
-      <ActionCardInline
-        card={mockCard}
-        onApprove={jest.fn()}
-        onDismiss={jest.fn()}
-      />,
-    );
+    render(<ActionCardInline card={mockCard} onApprove={jest.fn()} onDismiss={jest.fn()} />);
 
     expect(screen.getByTestId('inline-card-actions-card-1')).toBeInTheDocument();
     expect(screen.getByTestId('inline-approve-card-1')).toBeInTheDocument();

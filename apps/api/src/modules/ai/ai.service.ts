@@ -391,9 +391,11 @@ export class AiService {
       // Handle transfer to human
       if (intentResult.intent === 'TRANSFER_TO_HUMAN' && !metadata.transferredToHuman) {
         await this.handleTransferToHuman(businessId, conversationId, metadata);
-        this.conversationActionHandler.handleTransferToHuman(actionCtx).catch((err) =>
-          this.logger.warn(`Failed to create transfer action card: ${err?.message}`),
-        );
+        this.conversationActionHandler
+          .handleTransferToHuman(actionCtx)
+          .catch((err) =>
+            this.logger.warn(`Failed to create transfer action card: ${err?.message}`),
+          );
         return;
       }
 
@@ -682,22 +684,30 @@ export class AiService {
         if (bookingState) {
           this.conversationActionHandler
             .handleBookingState(actionCtx, bookingState)
-            .catch((err) => this.logger.warn(`Failed to create booking action card: ${err?.message}`));
+            .catch((err) =>
+              this.logger.warn(`Failed to create booking action card: ${err?.message}`),
+            );
         }
         if (cancelState) {
           this.conversationActionHandler
             .handleCancelState(actionCtx, cancelState)
-            .catch((err) => this.logger.warn(`Failed to create cancel action card: ${err?.message}`));
+            .catch((err) =>
+              this.logger.warn(`Failed to create cancel action card: ${err?.message}`),
+            );
         }
         if (rescheduleState) {
           this.conversationActionHandler
             .handleRescheduleState(actionCtx, rescheduleState)
-            .catch((err) => this.logger.warn(`Failed to create reschedule action card: ${err?.message}`));
+            .catch((err) =>
+              this.logger.warn(`Failed to create reschedule action card: ${err?.message}`),
+            );
         }
         // Low confidence review card
         this.conversationActionHandler
           .handleLowConfidence(actionCtx)
-          .catch((err) => this.logger.warn(`Failed to create low-confidence card: ${err?.message}`));
+          .catch((err) =>
+            this.logger.warn(`Failed to create low-confidence card: ${err?.message}`),
+          );
 
         // Broadcast AI results via WebSocket (draft mode)
         this.inboxGateway.emitToBusinessRoom(businessId, 'ai:suggestions', {

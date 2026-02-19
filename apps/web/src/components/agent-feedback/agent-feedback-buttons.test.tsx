@@ -64,9 +64,7 @@ describe('AgentFeedbackButtons', () => {
   });
 
   it('shows existing rating as pre-selected', () => {
-    render(
-      <AgentFeedbackButtons actionCardId="c1" existingRating="HELPFUL" onSubmit={onSubmit} />,
-    );
+    render(<AgentFeedbackButtons actionCardId="c1" existingRating="HELPFUL" onSubmit={onSubmit} />);
     expect(screen.getByTestId('helpful-btn')).toBeDisabled();
   });
 

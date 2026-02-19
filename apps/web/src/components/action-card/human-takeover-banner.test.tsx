@@ -20,21 +20,14 @@ describe('HumanTakeoverBanner', () => {
   });
 
   it('displays reason when provided', () => {
-    render(
-      <HumanTakeoverBanner
-        conversationId="conv-1"
-        reason="Customer requested human agent"
-      />,
-    );
+    render(<HumanTakeoverBanner conversationId="conv-1" reason="Customer requested human agent" />);
 
     expect(screen.getByText(/Customer requested human agent/)).toBeInTheDocument();
   });
 
   it('renders resolve button when callback provided', () => {
     const onResolve = jest.fn();
-    render(
-      <HumanTakeoverBanner conversationId="conv-1" onResolve={onResolve} />,
-    );
+    render(<HumanTakeoverBanner conversationId="conv-1" onResolve={onResolve} />);
 
     expect(screen.getByTestId('takeover-resolve-conv-1')).toBeInTheDocument();
     expect(screen.getByText('Resume AI')).toBeInTheDocument();
@@ -42,9 +35,7 @@ describe('HumanTakeoverBanner', () => {
 
   it('calls onResolve with conversationId', () => {
     const onResolve = jest.fn();
-    render(
-      <HumanTakeoverBanner conversationId="conv-1" onResolve={onResolve} />,
-    );
+    render(<HumanTakeoverBanner conversationId="conv-1" onResolve={onResolve} />);
 
     fireEvent.click(screen.getByTestId('takeover-resolve-conv-1'));
 

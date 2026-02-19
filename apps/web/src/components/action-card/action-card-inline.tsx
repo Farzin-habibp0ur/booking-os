@@ -46,9 +46,7 @@ export function ActionCardInline({ card, onApprove, onDismiss }: ActionCardInlin
         >
           {label}
         </span>
-        {!isPending && (
-          <span className="text-xs text-slate-500">{card.status.toLowerCase()}</span>
-        )}
+        {!isPending && <span className="text-xs text-slate-500">{card.status.toLowerCase()}</span>}
       </div>
 
       <p className="text-sm font-medium text-slate-800">{card.title}</p>

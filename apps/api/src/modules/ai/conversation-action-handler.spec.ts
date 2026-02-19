@@ -1,5 +1,8 @@
 import { Test } from '@nestjs/testing';
-import { ConversationActionHandler, ConversationActionContext } from './conversation-action-handler';
+import {
+  ConversationActionHandler,
+  ConversationActionContext,
+} from './conversation-action-handler';
 import { ActionCardService } from '../action-card/action-card.service';
 
 describe('ConversationActionHandler', () => {

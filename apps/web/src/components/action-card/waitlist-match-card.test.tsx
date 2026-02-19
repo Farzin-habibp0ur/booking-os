@@ -28,12 +28,7 @@ describe('WaitlistMatchCard', () => {
 
   it('displays lightning bolt icon', () => {
     render(
-      <WaitlistMatchCard
-        id="card1"
-        customerName="Jane"
-        serviceName="Facial"
-        slots={mockSlots}
-      />,
+      <WaitlistMatchCard id="card1" customerName="Jane" serviceName="Facial" slots={mockSlots} />,
     );
 
     expect(screen.getByTestId('waitlist-icon')).toBeInTheDocument();
@@ -41,12 +36,7 @@ describe('WaitlistMatchCard', () => {
 
   it('renders slot list', () => {
     render(
-      <WaitlistMatchCard
-        id="card1"
-        customerName="Jane"
-        serviceName="Facial"
-        slots={mockSlots}
-      />,
+      <WaitlistMatchCard id="card1" customerName="Jane" serviceName="Facial" slots={mockSlots} />,
     );
 
     expect(screen.getByTestId('slot-list')).toBeInTheDocument();
@@ -167,14 +157,7 @@ describe('WaitlistMatchCard', () => {
   });
 
   it('renders with empty slots array', () => {
-    render(
-      <WaitlistMatchCard
-        id="card1"
-        customerName="Jane"
-        serviceName="Facial"
-        slots={[]}
-      />,
-    );
+    render(<WaitlistMatchCard id="card1" customerName="Jane" serviceName="Facial" slots={[]} />);
 
     expect(screen.queryByTestId('slot-list')).not.toBeInTheDocument();
   });

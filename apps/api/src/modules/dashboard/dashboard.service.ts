@@ -205,9 +205,7 @@ export class DashboardService {
       this.prisma.booking.count({
         where: { businessId, status: 'COMPLETED' },
       }),
-      this.prisma.agentConfig
-        .count({ where: { businessId, isEnabled: true } })
-        .catch(() => 0),
+      this.prisma.agentConfig.count({ where: { businessId, isEnabled: true } }).catch(() => 0),
     ]);
 
     // P1-18: Filter overdue conversations to only those where last message is INBOUND
