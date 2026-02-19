@@ -177,6 +177,85 @@ describe('TokenService', () => {
     });
   });
 
+  // C1/C2/C3 fix: Atomic validate + consume prevents race conditions
+  describe('validateAndConsume', () => {
+    const validRecord = {
+      id: 'token1',
+      token: 'abc123',
+      type: 'PASSWORD_RESET',
+      email: 'test@test.com',
+      staffId: 'staff1',
+      usedAt: new Date(),
+      expiresAt: new Date(Date.now() + 3600000),
+    };
+
+    it('atomically marks token used and returns record when valid', async () => {
+      prisma.token.updateMany.mockResolvedValue({ count: 1 } as any);
+      prisma.token.findUnique.mockResolvedValue(validRecord as any);
+
+      const result = await tokenService.validateAndConsume('abc123', 'PASSWORD_RESET');
+
+      expect(result).toBeDefined();
+      expect(result!.id).toBe('token1');
+      expect(prisma.token.updateMany).toHaveBeenCalledWith({
+        where: {
+          token: 'abc123',
+          type: 'PASSWORD_RESET',
+          usedAt: null,
+          expiresAt: { gt: expect.any(Date) },
+        },
+        data: { usedAt: expect.any(Date) },
+      });
+    });
+
+    it('throws when token already used (race condition blocked)', async () => {
+      prisma.token.updateMany.mockResolvedValue({ count: 0 } as any);
+      prisma.token.findUnique.mockResolvedValue({
+        ...validRecord,
+        usedAt: new Date(), // Already consumed by concurrent request
+      } as any);
+
+      await expect(
+        tokenService.validateAndConsume('abc123', 'PASSWORD_RESET'),
+      ).rejects.toThrow('Token has already been used');
+    });
+
+    it('throws when token is expired', async () => {
+      prisma.token.updateMany.mockResolvedValue({ count: 0 } as any);
+      prisma.token.findUnique.mockResolvedValue({
+        ...validRecord,
+        usedAt: null,
+        expiresAt: new Date(Date.now() - 1000),
+      } as any);
+
+      await expect(
+        tokenService.validateAndConsume('abc123', 'PASSWORD_RESET'),
+      ).rejects.toThrow('Token has expired');
+    });
+
+    it('throws when token not found', async () => {
+      prisma.token.updateMany.mockResolvedValue({ count: 0 } as any);
+      prisma.token.findUnique.mockResolvedValue(null);
+
+      await expect(
+        tokenService.validateAndConsume('nonexistent', 'PASSWORD_RESET'),
+      ).rejects.toThrow('Invalid token');
+    });
+
+    it('throws when token type does not match', async () => {
+      prisma.token.updateMany.mockResolvedValue({ count: 0 } as any);
+      prisma.token.findUnique.mockResolvedValue({
+        ...validRecord,
+        type: 'STAFF_INVITE',
+        usedAt: null,
+      } as any);
+
+      await expect(
+        tokenService.validateAndConsume('abc123', 'PASSWORD_RESET'),
+      ).rejects.toThrow('Invalid token');
+    });
+  });
+
   describe('createToken with bookingId', () => {
     it('stores bookingId when provided', async () => {
       prisma.token.create.mockResolvedValue({} as any);

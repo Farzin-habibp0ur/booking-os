@@ -40,6 +40,35 @@ export class TokenService {
     return record;
   }
 
+  /**
+   * C1/C2/C3 fix: Atomically validate AND mark a token as used in a single query.
+   * Uses updateMany with WHERE conditions so only one concurrent request can succeed.
+   * This prevents race conditions where two requests both validate the same token
+   * before either marks it used.
+   */
+  async validateAndConsume(token: string, type: string) {
+    const result = await this.prisma.token.updateMany({
+      where: {
+        token,
+        type,
+        usedAt: null,
+        expiresAt: { gt: new Date() },
+      },
+      data: { usedAt: new Date() },
+    });
+
+    if (result.count === 0) {
+      // Provide a specific error message
+      const record = await this.prisma.token.findUnique({ where: { token } });
+      if (!record || record.type !== type) throw new BadRequestException('Invalid token');
+      if (record.usedAt) throw new BadRequestException('Token has already been used');
+      if (record.expiresAt < new Date()) throw new BadRequestException('Token has expired');
+      throw new BadRequestException('Invalid token');
+    }
+
+    return this.prisma.token.findUnique({ where: { token } });
+  }
+
   async markUsed(tokenId: string) {
     await this.prisma.token.update({
       where: { id: tokenId },

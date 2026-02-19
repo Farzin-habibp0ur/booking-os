@@ -298,30 +298,32 @@ describe('AuthService', () => {
   });
 
   describe('resetPassword', () => {
-    it('validates token, hashes new password, marks used', async () => {
+    it('atomically validates and consumes token, then hashes new password (C1 fix)', async () => {
       const tokenRecord = {
         id: 'token1',
         staffId: 'staff1',
         email: 'sarah@glowclinic.com',
       };
-      tokenService.validateToken.mockResolvedValue(tokenRecord as any);
+      tokenService.validateAndConsume.mockResolvedValue(tokenRecord as any);
       (bcrypt.hash as jest.Mock).mockResolvedValue('$new-hash');
       prisma.staff.update.mockResolvedValue({} as any);
 
       const result = await authService.resetPassword('valid-token', 'newpassword123');
 
       expect(result).toEqual({ ok: true });
-      expect(tokenService.validateToken).toHaveBeenCalledWith('valid-token', 'PASSWORD_RESET');
+      // C1 fix: Uses validateAndConsume (atomic) instead of separate validateToken + markUsed
+      expect(tokenService.validateAndConsume).toHaveBeenCalledWith('valid-token', 'PASSWORD_RESET');
       expect(bcrypt.hash).toHaveBeenCalledWith('newpassword123', 12);
       expect(prisma.staff.update).toHaveBeenCalledWith({
         where: { id: 'staff1' },
         data: { passwordHash: '$new-hash' },
       });
-      expect(tokenService.markUsed).toHaveBeenCalledWith('token1');
+      // markUsed should NOT be called separately — consumed atomically
+      expect(tokenService.markUsed).not.toHaveBeenCalled();
     });
 
     it('throws on invalid token', async () => {
-      tokenService.validateToken.mockRejectedValue(new BadRequestException('Invalid token'));
+      tokenService.validateAndConsume.mockRejectedValue(new BadRequestException('Invalid token'));
 
       await expect(authService.resetPassword('bad-token', 'newpassword123')).rejects.toThrow(
         BadRequestException,
@@ -484,9 +486,9 @@ describe('AuthService', () => {
   });
 
   describe('acceptInvite', () => {
-    it('validates token, sets password, activates staff, returns tokens', async () => {
+    it('atomically consumes token, sets password, activates staff (C2 fix)', async () => {
       const tokenRecord = { id: 'token1', staffId: 'staff2' };
-      tokenService.validateToken.mockResolvedValue(tokenRecord as any);
+      tokenService.validateAndConsume.mockResolvedValue(tokenRecord as any);
       prisma.staff.findUnique.mockResolvedValue({
         id: 'staff2',
         name: 'Jane',
@@ -510,16 +512,18 @@ describe('AuthService', () => {
 
       expect(result.accessToken).toBe('mock-token');
       expect(result.staff.id).toBe('staff2');
-      expect(tokenService.validateToken).toHaveBeenCalledWith('invite-token', 'STAFF_INVITE');
+      // C2 fix: Uses validateAndConsume (atomic) instead of separate validateToken + markUsed
+      expect(tokenService.validateAndConsume).toHaveBeenCalledWith('invite-token', 'STAFF_INVITE');
       expect(prisma.staff.update).toHaveBeenCalledWith({
         where: { id: 'staff2' },
         data: { passwordHash: '$invite-hash', isActive: true },
       });
-      expect(tokenService.markUsed).toHaveBeenCalledWith('token1');
+      // markUsed should NOT be called separately — consumed atomically
+      expect(tokenService.markUsed).not.toHaveBeenCalled();
     });
 
     it('throws on invalid token', async () => {
-      tokenService.validateToken.mockRejectedValue(new BadRequestException('Invalid token'));
+      tokenService.validateAndConsume.mockRejectedValue(new BadRequestException('Invalid token'));
 
       await expect(authService.acceptInvite('bad-token', 'password123')).rejects.toThrow(
         BadRequestException,
@@ -529,24 +533,26 @@ describe('AuthService', () => {
 
   // M16: Email verification tests
   describe('verifyEmail', () => {
-    it('validates token, marks staff as verified, marks token used', async () => {
+    it('atomically consumes token, then marks staff as verified (C3 fix)', async () => {
       const tokenRecord = { id: 'token1', staffId: 'staff1' };
-      tokenService.validateToken.mockResolvedValue(tokenRecord as any);
+      tokenService.validateAndConsume.mockResolvedValue(tokenRecord as any);
       prisma.staff.update.mockResolvedValue({} as any);
 
       const result = await authService.verifyEmail('verify-token');
 
       expect(result).toEqual({ ok: true });
-      expect(tokenService.validateToken).toHaveBeenCalledWith('verify-token', 'EMAIL_VERIFY');
+      // C3 fix: Uses validateAndConsume (atomic) instead of separate validateToken + markUsed
+      expect(tokenService.validateAndConsume).toHaveBeenCalledWith('verify-token', 'EMAIL_VERIFY');
       expect(prisma.staff.update).toHaveBeenCalledWith({
         where: { id: 'staff1' },
         data: { emailVerified: true },
       });
-      expect(tokenService.markUsed).toHaveBeenCalledWith('token1');
+      // markUsed should NOT be called separately — consumed atomically
+      expect(tokenService.markUsed).not.toHaveBeenCalled();
     });
 
     it('throws on invalid token', async () => {
-      tokenService.validateToken.mockRejectedValue(new BadRequestException('Invalid token'));
+      tokenService.validateAndConsume.mockRejectedValue(new BadRequestException('Invalid token'));
 
       await expect(authService.verifyEmail('bad-token')).rejects.toThrow(BadRequestException);
     });

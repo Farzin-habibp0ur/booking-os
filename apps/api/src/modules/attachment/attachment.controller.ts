@@ -62,8 +62,13 @@ export class AttachmentController {
       attachmentId,
     );
 
+    // M1 fix: Sanitize filename to prevent header injection
+    const sanitizedFileName = fileName
+      .replace(/["\\\r\n]/g, '_')
+      .replace(/[^\x20-\x7E]/g, '_')
+      .substring(0, 255);
     res.setHeader('Content-Type', fileType);
-    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    res.setHeader('Content-Disposition', `attachment; filename="${sanitizedFileName}"`);
     res.sendFile(filePath);
   }
 }

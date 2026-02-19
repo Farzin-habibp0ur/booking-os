@@ -259,15 +259,14 @@ export class AuthService {
   }
 
   async resetPassword(token: string, newPassword: string) {
-    const tokenRecord = await this.tokenService.validateToken(token, 'PASSWORD_RESET');
+    // C1 fix: Atomically validate + consume token to prevent concurrent reuse
+    const tokenRecord = await this.tokenService.validateAndConsume(token, 'PASSWORD_RESET');
 
     const passwordHash = await bcrypt.hash(newPassword, 12);
     await this.prisma.staff.update({
-      where: { id: tokenRecord.staffId! },
+      where: { id: tokenRecord!.staffId! },
       data: { passwordHash },
     });
-
-    await this.tokenService.markUsed(tokenRecord.id);
 
     return { ok: true };
   }
@@ -295,10 +294,11 @@ export class AuthService {
   }
 
   async acceptInvite(token: string, password: string) {
-    const tokenRecord = await this.tokenService.validateToken(token, 'STAFF_INVITE');
+    // C2 fix: Atomically validate + consume token to prevent concurrent reuse
+    const tokenRecord = await this.tokenService.validateAndConsume(token, 'STAFF_INVITE');
 
     const staff = await this.prisma.staff.findUnique({
-      where: { id: tokenRecord.staffId! },
+      where: { id: tokenRecord!.staffId! },
     });
 
     if (!staff) throw new BadRequestException('Staff member not found');
@@ -308,8 +308,6 @@ export class AuthService {
       where: { id: staff.id },
       data: { passwordHash, isActive: true },
     });
-
-    await this.tokenService.markUsed(tokenRecord.id);
 
     const tokens = this.issueTokens(updatedStaff);
 
@@ -327,14 +325,13 @@ export class AuthService {
 
   // M16 fix: Email verification flow
   async verifyEmail(token: string) {
-    const tokenRecord = await this.tokenService.validateToken(token, 'EMAIL_VERIFY');
+    // C3 fix: Atomically validate + consume token to prevent concurrent reuse
+    const tokenRecord = await this.tokenService.validateAndConsume(token, 'EMAIL_VERIFY');
 
     await this.prisma.staff.update({
-      where: { id: tokenRecord.staffId! },
+      where: { id: tokenRecord!.staffId! },
       data: { emailVerified: true },
     });
-
-    await this.tokenService.markUsed(tokenRecord.id);
 
     return { ok: true };
   }

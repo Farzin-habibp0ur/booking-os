@@ -37,6 +37,18 @@ export function createMockTokenService() {
       expiresAt: new Date(Date.now() + 3600000),
       usedAt: null,
     }),
+    // C1/C2/C3 fix: Atomic validate + consume for race condition prevention
+    validateAndConsume: jest.fn().mockResolvedValue({
+      id: 'token1',
+      token: 'mock-token-hex',
+      type: 'PASSWORD_RESET',
+      email: 'test@test.com',
+      businessId: 'biz1',
+      staffId: 'staff1',
+      bookingId: null,
+      expiresAt: new Date(Date.now() + 3600000),
+      usedAt: new Date(),
+    }),
     markUsed: jest.fn().mockResolvedValue(undefined),
     revokeTokens: jest.fn().mockResolvedValue(undefined),
     revokeBookingTokens: jest.fn().mockResolvedValue(undefined),

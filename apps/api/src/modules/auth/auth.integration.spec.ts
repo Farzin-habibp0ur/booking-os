@@ -278,8 +278,8 @@ describe('Auth Integration', () => {
   // ---- New reset-password tests ----
 
   describe('POST /api/v1/auth/reset-password', () => {
-    it('returns 201 on valid token', async () => {
-      tokenService.validateToken.mockResolvedValue({ id: 'token1', staffId: 'staff1' } as any);
+    it('returns 201 on valid token (C1 fix: uses validateAndConsume)', async () => {
+      tokenService.validateAndConsume.mockResolvedValue({ id: 'token1', staffId: 'staff1' } as any);
       (bcrypt.hash as jest.Mock).mockResolvedValue('new-hash');
       ctx.prisma.staff.update.mockResolvedValue({} as any);
 
@@ -292,7 +292,7 @@ describe('Auth Integration', () => {
     });
 
     it('returns 400 on invalid token', async () => {
-      tokenService.validateToken.mockRejectedValue(new BadRequestException('Invalid token'));
+      tokenService.validateAndConsume.mockRejectedValue(new BadRequestException('Invalid token'));
 
       const res = await request(ctx.app.getHttpServer())
         .post('/api/v1/auth/reset-password')
@@ -348,8 +348,8 @@ describe('Auth Integration', () => {
   // ---- New accept-invite tests ----
 
   describe('POST /api/v1/auth/accept-invite', () => {
-    it('returns 201 with tokens on valid invite', async () => {
-      tokenService.validateToken.mockResolvedValue({ id: 'token1', staffId: 'staff1' } as any);
+    it('returns 201 with tokens on valid invite (C2 fix: uses validateAndConsume)', async () => {
+      tokenService.validateAndConsume.mockResolvedValue({ id: 'token1', staffId: 'staff1' } as any);
       ctx.prisma.staff.findUnique.mockResolvedValue({ ...mockStaff, passwordHash: null } as any);
       (bcrypt.hash as jest.Mock).mockResolvedValue('invite-hash');
       ctx.prisma.staff.update.mockResolvedValue({
@@ -372,7 +372,7 @@ describe('Auth Integration', () => {
     });
 
     it('returns 400 on invalid token', async () => {
-      tokenService.validateToken.mockRejectedValue(new BadRequestException('Invalid token'));
+      tokenService.validateAndConsume.mockRejectedValue(new BadRequestException('Invalid token'));
 
       const res = await request(ctx.app.getHttpServer())
         .post('/api/v1/auth/accept-invite')
@@ -450,8 +450,8 @@ describe('Auth Integration', () => {
 
   // M16: Email verification integration tests
   describe('POST /api/v1/auth/verify-email', () => {
-    it('returns 201 on valid token', async () => {
-      tokenService.validateToken.mockResolvedValue({ id: 'token1', staffId: 'staff1' } as any);
+    it('returns 201 on valid token (C3 fix: uses validateAndConsume)', async () => {
+      tokenService.validateAndConsume.mockResolvedValue({ id: 'token1', staffId: 'staff1' } as any);
       ctx.prisma.staff.update.mockResolvedValue({} as any);
 
       const res = await request(ctx.app.getHttpServer())
@@ -463,7 +463,7 @@ describe('Auth Integration', () => {
     });
 
     it('returns 400 on invalid token', async () => {
-      tokenService.validateToken.mockRejectedValue(new BadRequestException('Invalid token'));
+      tokenService.validateAndConsume.mockRejectedValue(new BadRequestException('Invalid token'));
 
       const res = await request(ctx.app.getHttpServer())
         .post('/api/v1/auth/verify-email')

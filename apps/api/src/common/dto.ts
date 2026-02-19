@@ -265,10 +265,12 @@ export class UpdateServiceDto {
 
   @IsString()
   @IsOptional()
+  @MaxLength(100)
   category?: string;
 
   @IsString()
   @IsOptional()
+  @MaxLength(2000)
   description?: string;
 
   @IsOptional()
@@ -326,30 +328,37 @@ export class UpdateStaffDto {
 export class UpdateBusinessDto {
   @IsString()
   @IsOptional()
+  @MaxLength(200)
   name?: string;
 
   @IsString()
   @IsOptional()
+  @MaxLength(30)
   phone?: string;
 
   @IsString()
   @IsOptional()
+  @MaxLength(50)
   timezone?: string;
 
   @IsString()
   @IsOptional()
+  @MaxLength(50)
   verticalPack?: string;
 
   @IsObject()
   @IsOptional()
+  @IsShallowJson()
   packConfig?: Record<string, unknown>;
 
   @IsString()
   @IsOptional()
+  @MaxLength(10)
   defaultLocale?: string;
 
   @IsObject()
   @IsOptional()
+  @IsShallowJson()
   aiSettings?: Record<string, unknown>;
 }
 
@@ -410,14 +419,17 @@ export class CreateTemplateDto {
 export class UpdateTemplateDto {
   @IsString()
   @IsOptional()
+  @MaxLength(200)
   name?: string;
 
   @IsString()
   @IsOptional()
+  @MaxLength(100)
   category?: string;
 
   @IsString()
   @IsOptional()
+  @MaxLength(10000)
   body?: string;
 
   @IsArray()
@@ -555,26 +567,32 @@ export class LoginDto {
   @IsEmail()
   email!: string;
 
+  // H1 fix: MaxLength prevents bcrypt DoS with huge strings
   @IsString()
   @IsNotEmpty()
+  @MaxLength(128)
   password!: string;
 }
 
 export class SignupDto {
   @IsString()
   @IsNotEmpty()
+  @MaxLength(200)
   businessName!: string;
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(200)
   ownerName!: string;
 
   @IsEmail()
   email!: string;
 
   // M1 fix: Require 12+ chars with at least one uppercase, one lowercase, one digit
+  // H1 fix: MaxLength prevents bcrypt DoS with huge strings
   @IsString()
   @MinLength(12, { message: 'Password must be at least 12 characters' })
+  @MaxLength(128)
   @Matches(/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, {
     message:
       'Password must contain at least one uppercase letter, one lowercase letter, and one digit',
@@ -592,8 +610,10 @@ export class ResetPasswordDto {
   @IsNotEmpty()
   token!: string;
 
+  // H1 fix: MaxLength prevents bcrypt DoS
   @IsString()
   @MinLength(12, { message: 'Password must be at least 12 characters' })
+  @MaxLength(128)
   @Matches(/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, {
     message:
       'Password must contain at least one uppercase letter, one lowercase letter, and one digit',
@@ -602,12 +622,16 @@ export class ResetPasswordDto {
 }
 
 export class ChangePasswordDto {
+  // H1 fix: MaxLength prevents bcrypt DoS
   @IsString()
   @IsNotEmpty()
+  @MaxLength(128)
   currentPassword!: string;
 
+  // H1 fix: MaxLength prevents bcrypt DoS
   @IsString()
   @MinLength(12, { message: 'Password must be at least 12 characters' })
+  @MaxLength(128)
   @Matches(/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, {
     message:
       'Password must contain at least one uppercase letter, one lowercase letter, and one digit',
@@ -620,8 +644,10 @@ export class AcceptInviteDto {
   @IsNotEmpty()
   token!: string;
 
+  // H1 fix: MaxLength prevents bcrypt DoS
   @IsString()
   @MinLength(12, { message: 'Password must be at least 12 characters' })
+  @MaxLength(128)
   @Matches(/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, {
     message:
       'Password must contain at least one uppercase letter, one lowercase letter, and one digit',
@@ -634,14 +660,17 @@ export class AcceptInviteDto {
 export class CreateOfferDto {
   @IsString()
   @IsNotEmpty()
+  @MaxLength(200)
   name!: string;
 
   @IsString()
   @IsOptional()
+  @MaxLength(2000)
   description?: string;
 
   @IsString()
   @IsOptional()
+  @MaxLength(5000)
   terms?: string;
 
   @IsArray()
@@ -666,14 +695,17 @@ export class CreateOfferDto {
 export class UpdateOfferDto {
   @IsString()
   @IsOptional()
+  @MaxLength(200)
   name?: string;
 
   @IsString()
   @IsOptional()
+  @MaxLength(2000)
   description?: string;
 
   @IsString()
   @IsOptional()
+  @MaxLength(5000)
   terms?: string;
 
   @IsArray()
@@ -704,10 +736,12 @@ export class UpdateOfferDto {
 export class CreateLocationDto {
   @IsString()
   @IsNotEmpty()
+  @MaxLength(200)
   name!: string;
 
   @IsString()
   @IsOptional()
+  @MaxLength(500)
   address?: string;
 
   @IsBoolean()
@@ -716,16 +750,19 @@ export class CreateLocationDto {
 
   @IsObject()
   @IsOptional()
+  @IsShallowJson()
   whatsappConfig?: Record<string, unknown>;
 }
 
 export class UpdateLocationDto {
   @IsString()
   @IsOptional()
+  @MaxLength(200)
   name?: string;
 
   @IsString()
   @IsOptional()
+  @MaxLength(500)
   address?: string;
 
   @IsBoolean()
@@ -734,6 +771,7 @@ export class UpdateLocationDto {
 
   @IsObject()
   @IsOptional()
+  @IsShallowJson()
   whatsappConfig?: Record<string, unknown>;
 }
 
@@ -880,6 +918,7 @@ export class CancelRecurringSeriesDto {
 export class CreateCampaignDto {
   @IsString()
   @IsNotEmpty()
+  @MaxLength(200)
   name!: string;
 
   @IsString()
@@ -888,6 +927,7 @@ export class CreateCampaignDto {
 
   @IsObject()
   @IsOptional()
+  @IsShallowJson(2, 30)
   filters?: Record<string, unknown>;
 
   @IsDateString()
@@ -898,6 +938,7 @@ export class CreateCampaignDto {
 export class UpdateCampaignDto {
   @IsString()
   @IsOptional()
+  @MaxLength(200)
   name?: string;
 
   @IsString()
@@ -906,6 +947,7 @@ export class UpdateCampaignDto {
 
   @IsObject()
   @IsOptional()
+  @IsShallowJson(2, 30)
   filters?: Record<string, unknown>;
 
   @IsDateString()
@@ -915,27 +957,60 @@ export class UpdateCampaignDto {
 
 export class PreviewAudienceDto {
   @IsObject()
+  @IsShallowJson(2, 30)
   filters!: Record<string, unknown>;
 }
 
 // ---- Automation Rule DTOs (H12) ----
 
+// H6 fix: Typed action DTO for automation rules (replaces any[])
+export class AutomationActionDto {
+  @IsString()
+  @IsNotEmpty()
+  @IsIn(['SEND_TEMPLATE', 'UPDATE_STATUS', 'ASSIGN_STAFF', 'ADD_TAG', 'SEND_NOTIFICATION'])
+  type!: string;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(2000)
+  templateId?: string;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(200)
+  value?: string;
+
+  @IsObject()
+  @IsOptional()
+  @IsShallowJson(2, 20)
+  params?: Record<string, unknown>;
+}
+
 export class CreateAutomationRuleDto {
   @IsString()
   @IsNotEmpty()
+  @MaxLength(200)
   name!: string;
 
+  // H4 fix: Validate trigger against known values
   @IsString()
   @IsNotEmpty()
+  @IsIn(['BOOKING_CREATED', 'BOOKING_UPCOMING', 'STATUS_CHANGED', 'BOOKING_CANCELLED'], {
+    message: 'trigger must be one of: BOOKING_CREATED, BOOKING_UPCOMING, STATUS_CHANGED, BOOKING_CANCELLED',
+  })
   trigger!: string;
 
   @IsObject()
   @IsOptional()
+  @IsShallowJson(2, 30)
   filters?: Record<string, unknown>;
 
+  // H6 fix: Typed actions array replaces any[]
   @IsArray()
   @IsOptional()
-  actions?: any[];
+  @ValidateNested({ each: true })
+  @Type(() => AutomationActionDto)
+  actions?: AutomationActionDto[];
 
   @IsString()
   @IsOptional()
@@ -957,19 +1032,28 @@ export class CreateAutomationRuleDto {
 export class UpdateAutomationRuleDto {
   @IsString()
   @IsOptional()
+  @MaxLength(200)
   name?: string;
 
+  // H4 fix: Validate trigger against known values
   @IsString()
   @IsOptional()
+  @IsIn(['BOOKING_CREATED', 'BOOKING_UPCOMING', 'STATUS_CHANGED', 'BOOKING_CANCELLED'], {
+    message: 'trigger must be one of: BOOKING_CREATED, BOOKING_UPCOMING, STATUS_CHANGED, BOOKING_CANCELLED',
+  })
   trigger?: string;
 
   @IsObject()
   @IsOptional()
+  @IsShallowJson(2, 30)
   filters?: Record<string, unknown>;
 
+  // H6 fix: Typed actions array replaces any[]
   @IsArray()
   @IsOptional()
-  actions?: any[];
+  @ValidateNested({ each: true })
+  @Type(() => AutomationActionDto)
+  actions?: AutomationActionDto[];
 
   @IsBoolean()
   @IsOptional()
@@ -1017,13 +1101,16 @@ export class CreateQuoteDto {
 export class CreateSavedViewDto {
   @IsString()
   @IsNotEmpty()
+  @MaxLength(100)
   page!: string;
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(200)
   name!: string;
 
   @IsObject()
+  @IsShallowJson(2, 30)
   filters!: Record<string, unknown>;
 
   @IsString()
@@ -1038,10 +1125,12 @@ export class CreateSavedViewDto {
 export class UpdateSavedViewDto {
   @IsString()
   @IsOptional()
+  @MaxLength(200)
   name?: string;
 
   @IsObject()
   @IsOptional()
+  @IsShallowJson(2, 30)
   filters?: Record<string, unknown>;
 
   @IsString()
@@ -1094,14 +1183,18 @@ export class CreatePackDto {
 // ---- Customer Note DTOs ----
 
 export class CreateCustomerNoteDto {
+  // H5 fix: MaxLength prevents unlimited-size notes
   @IsString()
   @IsNotEmpty()
+  @MaxLength(5000)
   content!: string;
 }
 
 export class UpdateCustomerNoteDto {
+  // H5 fix: MaxLength prevents unlimited-size notes
   @IsString()
   @IsNotEmpty()
+  @MaxLength(5000)
   content!: string;
 }
 
