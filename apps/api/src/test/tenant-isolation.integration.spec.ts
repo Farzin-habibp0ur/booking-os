@@ -13,6 +13,7 @@ import { NotificationService } from '../modules/notification/notification.servic
 import { BusinessService } from '../modules/business/business.service';
 import { CalendarSyncService } from '../modules/calendar-sync/calendar-sync.service';
 import { TokenService } from '../common/token.service';
+import { CustomerMergeService } from '../modules/customer/customer-merge.service';
 import {
   createMockNotificationService,
   createMockBusinessService,
@@ -44,6 +45,7 @@ describe('Tenant Isolation', () => {
         { provide: BusinessService, useValue: createMockBusinessService() },
         { provide: CalendarSyncService, useValue: createMockCalendarSyncService() },
         { provide: TokenService, useValue: createMockTokenService() },
+        { provide: CustomerMergeService, useValue: { findDuplicates: jest.fn().mockResolvedValue([]), merge: jest.fn() } },
       ],
     );
 

@@ -3585,4 +3585,113 @@ describe('BookingService', () => {
       expect(result.failed).toEqual(['b2']);
     });
   });
+
+  describe('getMonthSummary', () => {
+    it('returns day-by-day booking counts', async () => {
+      prisma.booking.findMany.mockResolvedValue([
+        { startTime: new Date('2026-03-01T10:00:00Z'), status: 'CONFIRMED' },
+        { startTime: new Date('2026-03-01T14:00:00Z'), status: 'PENDING' },
+        { startTime: new Date('2026-03-05T09:00:00Z'), status: 'CANCELLED' },
+        { startTime: new Date('2026-03-05T11:00:00Z'), status: 'CONFIRMED' },
+        { startTime: new Date('2026-03-05T15:00:00Z'), status: 'IN_PROGRESS' },
+      ] as any);
+
+      const result = await bookingService.getMonthSummary('biz1', '2026-03');
+
+      expect(result.days['2026-03-01']).toEqual({
+        total: 2,
+        confirmed: 1,
+        pending: 1,
+        cancelled: 0,
+      });
+      expect(result.days['2026-03-05']).toEqual({
+        total: 3,
+        confirmed: 2,
+        pending: 0,
+        cancelled: 1,
+      });
+    });
+
+    it('queries the correct date range for the month', async () => {
+      prisma.booking.findMany.mockResolvedValue([]);
+
+      await bookingService.getMonthSummary('biz1', '2026-02');
+
+      expect(prisma.booking.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            businessId: 'biz1',
+            startTime: {
+              gte: new Date(2026, 1, 1),
+              lt: new Date(2026, 2, 1),
+            },
+          }),
+        }),
+      );
+    });
+
+    it('applies locationId filter when provided', async () => {
+      prisma.booking.findMany.mockResolvedValue([]);
+
+      await bookingService.getMonthSummary('biz1', '2026-03', 'loc1');
+
+      expect(prisma.booking.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            locationId: 'loc1',
+          }),
+        }),
+      );
+    });
+
+    it('returns empty days object when no bookings', async () => {
+      prisma.booking.findMany.mockResolvedValue([]);
+
+      const result = await bookingService.getMonthSummary('biz1', '2026-03');
+
+      expect(result).toEqual({ days: {} });
+    });
+
+    it('categorizes NO_SHOW as cancelled', async () => {
+      prisma.booking.findMany.mockResolvedValue([
+        { startTime: new Date('2026-03-10T09:00:00Z'), status: 'NO_SHOW' },
+      ] as any);
+
+      const result = await bookingService.getMonthSummary('biz1', '2026-03');
+
+      expect(result.days['2026-03-10']).toEqual({
+        total: 1,
+        confirmed: 0,
+        pending: 0,
+        cancelled: 1,
+      });
+    });
+
+    it('categorizes COMPLETED as confirmed', async () => {
+      prisma.booking.findMany.mockResolvedValue([
+        { startTime: new Date('2026-03-15T10:00:00Z'), status: 'COMPLETED' },
+      ] as any);
+
+      const result = await bookingService.getMonthSummary('biz1', '2026-03');
+
+      expect(result.days['2026-03-15']).toEqual({
+        total: 1,
+        confirmed: 1,
+        pending: 0,
+        cancelled: 0,
+      });
+    });
+
+    it('only selects startTime and status fields', async () => {
+      prisma.booking.findMany.mockResolvedValue([]);
+
+      await bookingService.getMonthSummary('biz1', '2026-03');
+
+      expect(prisma.booking.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          select: { startTime: true, status: true },
+        }),
+      );
+    });
+  });
 });

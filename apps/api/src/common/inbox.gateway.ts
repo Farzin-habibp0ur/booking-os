@@ -1,6 +1,7 @@
 import {
   WebSocketGateway,
   WebSocketServer,
+  SubscribeMessage,
   OnGatewayConnection,
   OnGatewayDisconnect,
   OnGatewayInit,
@@ -25,6 +26,11 @@ export class InboxGateway implements OnGatewayConnection, OnGatewayDisconnect, O
 
   private readonly logger = new Logger(InboxGateway.name);
   private allowedOrigins: string[];
+  // Best-effort presence tracking (in-memory, ephemeral on restart)
+  private presence = new Map<
+    string,
+    Set<{ staffId: string; staffName: string; socketId: string }>
+  >();
 
   constructor(
     private jwtService: JwtService,
@@ -100,6 +106,82 @@ export class InboxGateway implements OnGatewayConnection, OnGatewayDisconnect, O
     this.logger.log(
       `Client disconnected: ${client.id}${user?.businessId ? ` (business: ${user.businessId})` : ''}`,
     );
+    // Clean up presence for this socket
+    for (const [conversationId, viewers] of this.presence.entries()) {
+      for (const viewer of viewers) {
+        if (viewer.socketId === client.id) {
+          viewers.delete(viewer);
+          if (user?.businessId) {
+            this.emitToBusinessRoom(user.businessId, 'presence:update', {
+              conversationId,
+              viewers: Array.from(viewers).map((v) => ({
+                staffId: v.staffId,
+                staffName: v.staffName,
+              })),
+            });
+          }
+          break;
+        }
+      }
+      if (viewers.size === 0) this.presence.delete(conversationId);
+    }
+  }
+
+  @SubscribeMessage('viewing:start')
+  handleViewingStart(client: Socket, data: { conversationId: string }) {
+    const user = (client as any).user;
+    if (!user?.businessId || !data?.conversationId) return;
+
+    if (!this.presence.has(data.conversationId)) {
+      this.presence.set(data.conversationId, new Set());
+    }
+    const viewers = this.presence.get(data.conversationId)!;
+    // Remove any existing entry for this socket
+    for (const v of viewers) {
+      if (v.socketId === client.id) {
+        viewers.delete(v);
+        break;
+      }
+    }
+    viewers.add({
+      staffId: user.sub,
+      staffName: user.name || 'Staff',
+      socketId: client.id,
+    });
+
+    this.emitToBusinessRoom(user.businessId, 'presence:update', {
+      conversationId: data.conversationId,
+      viewers: Array.from(viewers).map((v) => ({
+        staffId: v.staffId,
+        staffName: v.staffName,
+      })),
+    });
+  }
+
+  @SubscribeMessage('viewing:stop')
+  handleViewingStop(client: Socket, data: { conversationId: string }) {
+    const user = (client as any).user;
+    if (!user?.businessId || !data?.conversationId) return;
+
+    const viewers = this.presence.get(data.conversationId);
+    if (!viewers) return;
+
+    for (const v of viewers) {
+      if (v.socketId === client.id) {
+        viewers.delete(v);
+        break;
+      }
+    }
+
+    this.emitToBusinessRoom(user.businessId, 'presence:update', {
+      conversationId: data.conversationId,
+      viewers: Array.from(viewers).map((v) => ({
+        staffId: v.staffId,
+        staffName: v.staffName,
+      })),
+    });
+
+    if (viewers.size === 0) this.presence.delete(data.conversationId);
   }
 
   // Emit events to all clients in a business room

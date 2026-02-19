@@ -72,7 +72,6 @@ export default function QuoteApprovalPage() {
         title="Unable to Load Quote"
         message={error || 'This link is invalid or has expired.'}
         businessName={data?.business?.name}
-        businessSlug={data?.business?.slug}
       />
     );
   }

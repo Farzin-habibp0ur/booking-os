@@ -34,6 +34,7 @@ import BookingFormModal from '@/components/booking-form-modal';
 import CustomerTimeline from '@/components/customer-timeline';
 import IntakeCard from '@/components/intake-card';
 import { RecentChangesPanel } from '@/components/action-history';
+import { OutboundCompose } from '@/components/outbound';
 
 const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
   PENDING: { bg: 'bg-lavender-50', text: 'text-lavender-900' },
@@ -60,6 +61,7 @@ export default function CustomerDetailPage() {
   const [editCustomFields, setEditCustomFields] = useState<Record<string, any>>({});
   const [newTag, setNewTag] = useState('');
   const [showBookingForm, setShowBookingForm] = useState(false);
+  const [showSendMessage, setShowSendMessage] = useState(false);
   const [tab, setTab] = useState<'chat' | 'timeline' | 'bookings' | 'notes' | 'info'>('chat');
   const { toast } = useToast();
 
@@ -306,6 +308,13 @@ export default function CustomerDetailPage() {
             data-testid="message-customer-btn"
           >
             <MessageSquare size={14} /> {t('customer_detail.message')}
+          </button>
+          <button
+            onClick={() => setShowSendMessage(true)}
+            className="flex items-center gap-1 border border-sage-200 text-sage-700 px-3 py-2 rounded-xl text-sm hover:bg-sage-50 transition-colors"
+            data-testid="send-message-btn"
+          >
+            <Send size={14} /> Send Message
           </button>
           <button
             onClick={() => setShowBookingForm(true)}
@@ -1115,6 +1124,29 @@ export default function CustomerDetailPage() {
           loadCustomer();
         }}
       />
+
+      {showSendMessage && customer && (
+        <OutboundCompose
+          customerId={customer.id}
+          customerName={customer.name}
+          onSend={async (data) => {
+            try {
+              const result = await api.post<any>('/outbound/send-direct', {
+                customerId: data.customerId,
+                content: data.content,
+              });
+              toast('Message sent successfully');
+              setShowSendMessage(false);
+              if (result.conversationId) {
+                router.push(`/inbox?conversationId=${result.conversationId}`);
+              }
+            } catch (e: any) {
+              toast(e?.message || 'Failed to send message', 'error');
+            }
+          }}
+          onClose={() => setShowSendMessage(false)}
+        />
+      )}
     </div>
   );
 }

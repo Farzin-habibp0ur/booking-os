@@ -40,17 +40,10 @@ export function TodayTimeline({ todayBookings, onBookingUpdate }: TodayTimelineP
     setActionLoading(bookingId);
     try {
       await api.patch(`/bookings/${bookingId}/status`, { status: newStatus });
-      toast({
-        title: t('common.success'),
-        description: `Booking ${newStatus.toLowerCase().replace('_', ' ')}`,
-      });
+      toast(`Booking ${newStatus.toLowerCase().replace('_', ' ')}`);
       onBookingUpdate?.();
     } catch (err: any) {
-      toast({
-        title: t('common.error'),
-        description: err.message || 'Failed to update status',
-        variant: 'destructive',
-      });
+      toast(err.message || 'Failed to update status', 'error');
     } finally {
       setActionLoading(null);
     }

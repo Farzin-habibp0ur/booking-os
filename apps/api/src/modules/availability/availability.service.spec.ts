@@ -1175,4 +1175,145 @@ describe('AvailabilityService', () => {
       });
     });
   });
+
+  describe('getCalendarContext', () => {
+    it('returns working hours and time-off for each staff', async () => {
+      prisma.staff.findMany.mockResolvedValue([{ id: 's1' }, { id: 's2' }] as any);
+      prisma.workingHours.findMany.mockResolvedValue([
+        { staffId: 's1', dayOfWeek: 1, startTime: '09:00', endTime: '17:00', isOff: false },
+        { staffId: 's2', dayOfWeek: 1, startTime: '10:00', endTime: '18:00', isOff: false },
+      ] as any);
+      prisma.timeOff.findMany.mockResolvedValue([
+        {
+          staffId: 's1',
+          startDate: new Date('2026-03-10'),
+          endDate: new Date('2026-03-11'),
+          reason: 'Vacation',
+        },
+      ] as any);
+
+      const result = await service.getCalendarContext(
+        'biz1',
+        ['s1', 's2'],
+        '2026-03-01',
+        '2026-03-31',
+      );
+
+      expect(result['s1'].workingHours).toHaveLength(1);
+      expect(result['s1'].workingHours[0].startTime).toBe('09:00');
+      expect(result['s1'].timeOff).toHaveLength(1);
+      expect(result['s1'].timeOff[0].reason).toBe('Vacation');
+      expect(result['s2'].workingHours).toHaveLength(1);
+      expect(result['s2'].timeOff).toHaveLength(0);
+    });
+
+    it('only returns data for staff belonging to the business', async () => {
+      prisma.staff.findMany.mockResolvedValue([{ id: 's1' }] as any);
+      prisma.workingHours.findMany.mockResolvedValue([]);
+      prisma.timeOff.findMany.mockResolvedValue([]);
+
+      const result = await service.getCalendarContext(
+        'biz1',
+        ['s1', 's-invalid'],
+        '2026-03-01',
+        '2026-03-31',
+      );
+
+      expect(result['s1']).toBeDefined();
+      expect(result['s-invalid']).toBeUndefined();
+    });
+
+    it('queries time-off overlapping the date range', async () => {
+      prisma.staff.findMany.mockResolvedValue([{ id: 's1' }] as any);
+      prisma.workingHours.findMany.mockResolvedValue([]);
+      prisma.timeOff.findMany.mockResolvedValue([]);
+
+      await service.getCalendarContext('biz1', ['s1'], '2026-03-01', '2026-03-07');
+
+      expect(prisma.timeOff.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            startDate: { lte: new Date('2026-03-07') },
+            endDate: { gte: new Date('2026-03-01') },
+          }),
+        }),
+      );
+    });
+
+    it('returns empty result for empty staff list', async () => {
+      prisma.staff.findMany.mockResolvedValue([]);
+      prisma.workingHours.findMany.mockResolvedValue([]);
+      prisma.timeOff.findMany.mockResolvedValue([]);
+
+      const result = await service.getCalendarContext('biz1', [], '2026-03-01', '2026-03-31');
+
+      expect(result).toEqual({});
+    });
+  });
+
+  describe('getRecommendedSlots', () => {
+    it('returns top 5 slots sorted by score', async () => {
+      // Mock getAvailableSlots dependencies
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        businessId: 'biz1',
+        durationMins: 60,
+      } as any);
+      prisma.staff.findMany.mockResolvedValue([{ id: 's1', name: 'Sarah' }] as any);
+      prisma.workingHours.findUnique.mockResolvedValue({
+        staffId: 's1',
+        dayOfWeek: FUTURE_DATE_DOW,
+        startTime: '08:00',
+        endTime: '18:00',
+        isOff: false,
+      } as any);
+      prisma.timeOff.findFirst.mockResolvedValue(null);
+      prisma.booking.findMany.mockResolvedValue([]);
+      mockCalendarSyncService.pullExternalEvents.mockResolvedValue([]);
+
+      const result = await service.getRecommendedSlots('biz1', 'svc1', FUTURE_DATE);
+
+      expect(result.length).toBeLessThanOrEqual(5);
+      expect(result.length).toBeGreaterThan(0);
+      // Each slot should have time, display, staffId, staffName
+      expect(result[0]).toHaveProperty('time');
+      expect(result[0]).toHaveProperty('display');
+      expect(result[0]).toHaveProperty('staffId');
+      expect(result[0]).toHaveProperty('staffName');
+    });
+
+    it('returns empty when no slots available', async () => {
+      prisma.service.findFirst.mockResolvedValue(null);
+
+      const result = await service.getRecommendedSlots('biz1', 'svc-bad', FUTURE_DATE);
+
+      expect(result).toEqual([]);
+    });
+
+    it('excludes specified booking from conflict check', async () => {
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        businessId: 'biz1',
+        durationMins: 60,
+      } as any);
+      prisma.staff.findMany.mockResolvedValue([{ id: 's1', name: 'Sarah' }] as any);
+      prisma.workingHours.findUnique.mockResolvedValue({
+        staffId: 's1',
+        dayOfWeek: FUTURE_DATE_DOW,
+        startTime: '09:00',
+        endTime: '17:00',
+        isOff: false,
+      } as any);
+      prisma.timeOff.findFirst.mockResolvedValue(null);
+      prisma.booking.findMany.mockResolvedValue([]);
+      mockCalendarSyncService.pullExternalEvents.mockResolvedValue([]);
+
+      await service.getRecommendedSlots('biz1', 'svc1', FUTURE_DATE, 'exclude-id');
+
+      // The load-balance query should exclude the specified booking
+      const loadBalanceCalls = prisma.booking.findMany.mock.calls;
+      const lastCall = loadBalanceCalls[loadBalanceCalls.length - 1]?.[0] as any;
+      expect(lastCall?.where?.id).toEqual({ not: 'exclude-id' });
+    });
+  });
 });

@@ -386,7 +386,10 @@ export class ConversationService {
 
     return this.prisma.message.findMany({
       where: { conversationId },
-      include: { senderStaff: { select: { id: true, name: true } } },
+      include: {
+        senderStaff: { select: { id: true, name: true } },
+        attachments: true,
+      },
       orderBy: { createdAt: 'asc' },
     });
   }

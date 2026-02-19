@@ -8,6 +8,7 @@ import { ConversationService } from '../conversation/conversation.service';
 import { LocationService } from '../location/location.service';
 import { InboxGateway } from '../../common/inbox.gateway';
 import { MessagingService } from './messaging.service';
+import { MessageService } from '../message/message.service';
 import { AiService } from '../ai/ai.service';
 import { createMockPrisma, MockPrisma } from '../../test/mocks';
 
@@ -87,6 +88,7 @@ describe('WebhookController', () => {
         },
         { provide: ConfigService, useValue: configService },
         { provide: AiService, useValue: aiService },
+        { provide: MessageService, useValue: { updateDeliveryStatus: jest.fn() } },
       ],
     }).compile();
 

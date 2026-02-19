@@ -21,6 +21,7 @@ import { ConversationService } from '../conversation/conversation.service';
 import { LocationService } from '../location/location.service';
 import { InboxGateway } from '../../common/inbox.gateway';
 import { MessagingService } from './messaging.service';
+import { MessageService } from '../message/message.service';
 import { AiService } from '../ai/ai.service';
 import { WebhookInboundDto } from '../../common/dto';
 import { WhatsAppCloudProvider } from '@booking-os/messaging-provider';
@@ -37,6 +38,7 @@ export class WebhookController {
     private locationService: LocationService,
     private inboxGateway: InboxGateway,
     private messagingService: MessagingService,
+    private messageService: MessageService,
     private configService: ConfigService,
     @Inject(forwardRef(() => AiService)) private aiService: AiService,
   ) {}
@@ -231,6 +233,31 @@ export class WebhookController {
     );
 
     return { ok: true, ...result };
+  }
+
+  // WhatsApp delivery status callbacks
+  @Post('whatsapp/status')
+  async whatsappStatusCallback(
+    @Body() payload: { externalId: string; status: string; errorMessage?: string },
+  ) {
+    const statusMap: Record<string, 'DELIVERED' | 'READ' | 'FAILED'> = {
+      delivered: 'DELIVERED',
+      read: 'READ',
+      failed: 'FAILED',
+    };
+
+    const mappedStatus = statusMap[payload.status?.toLowerCase()];
+    if (!mappedStatus) {
+      return { ok: true, skipped: true, reason: 'Unrecognized status' };
+    }
+
+    const result = await this.messageService.updateDeliveryStatus(
+      payload.externalId,
+      mappedStatus,
+      payload.errorMessage,
+    );
+
+    return { ok: true, updated: !!result };
   }
 
   // Simulator-only: poll for outbound messages — only available in development

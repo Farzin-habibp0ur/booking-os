@@ -52,6 +52,7 @@ model Business {
   agentRuns            AgentRun[]
   agentFeedback        AgentFeedback[]
   duplicateCandidates  DuplicateCandidate[]
+  messageAttachments   MessageAttachment[]
 
   @@map("businesses")
 }
@@ -247,18 +248,23 @@ model Conversation {
 }
 
 model Message {
-  id             String   @id @default(cuid())
-  conversationId String
-  direction      String
-  senderStaffId  String?
-  content        String
-  contentType    String   @default("TEXT")
-  externalId     String?  @unique
-  metadata       Json     @default("{}")
-  createdAt      DateTime @default(now())
+  id              String    @id @default(cuid())
+  conversationId  String
+  direction       String
+  senderStaffId   String?
+  content         String
+  contentType     String    @default("TEXT")
+  externalId      String?   @unique
+  deliveryStatus  String    @default("SENT") // SENT, DELIVERED, READ, FAILED
+  deliveredAt     DateTime?
+  readAt          DateTime?
+  failureReason   String?
+  metadata        Json      @default("{}")
+  createdAt       DateTime  @default(now())
 
-  conversation Conversation @relation(fields: [conversationId], references: [id])
-  senderStaff  Staff?       @relation("SentMessages", fields: [senderStaffId], references: [id])
+  conversation Conversation        @relation(fields: [conversationId], references: [id])
+  senderStaff  Staff?               @relation("SentMessages", fields: [senderStaffId], references: [id])
+  attachments  MessageAttachment[]
 
   @@index([conversationId])
   @@map("messages")
@@ -901,6 +907,25 @@ model AgentFeedback {
   @@unique([actionCardId, staffId])
   @@index([businessId])
   @@map("agent_feedback")
+}
+
+model MessageAttachment {
+  id           String   @id @default(cuid())
+  messageId    String
+  businessId   String
+  fileName     String
+  fileType     String // MIME type
+  fileSize     Int
+  storageKey   String
+  thumbnailKey String?
+  createdAt    DateTime @default(now())
+
+  message  Message  @relation(fields: [messageId], references: [id])
+  business Business @relation(fields: [businessId], references: [id])
+
+  @@index([messageId])
+  @@index([businessId])
+  @@map("message_attachments")
 }
 
 model DuplicateCandidate {

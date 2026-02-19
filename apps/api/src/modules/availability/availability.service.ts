@@ -253,6 +253,117 @@ export class AvailabilityService {
     });
   }
 
+  async getRecommendedSlots(
+    businessId: string,
+    serviceId: string,
+    date: string,
+    excludeBookingId?: string,
+  ) {
+    // Get all available slots for the date
+    const allSlots = await this.getAvailableSlots(businessId, date, serviceId);
+    const availableSlots = allSlots.filter((s) => s.available);
+
+    if (availableSlots.length === 0) return [];
+
+    // Count existing bookings per staff for load balancing
+    const dayStart = new Date(date + 'T00:00:00');
+    const dayEnd = new Date(date + 'T23:59:59');
+    const bookings = await this.prisma.booking.findMany({
+      where: {
+        businessId,
+        status: { in: ['PENDING', 'PENDING_DEPOSIT', 'CONFIRMED', 'IN_PROGRESS'] },
+        startTime: { gte: dayStart },
+        endTime: { lte: dayEnd },
+        ...(excludeBookingId ? { id: { not: excludeBookingId } } : {}),
+      },
+      select: { staffId: true },
+    });
+
+    const staffLoadMap: Record<string, number> = {};
+    for (const b of bookings) {
+      if (b.staffId) {
+        staffLoadMap[b.staffId] = (staffLoadMap[b.staffId] || 0) + 1;
+      }
+    }
+
+    // Score slots: prefer mid-day and lower staff load
+    const scored = availableSlots.map((slot) => {
+      const slotDate = new Date(slot.time);
+      const hour = slotDate.getHours() + slotDate.getMinutes() / 60;
+      // Proximity to mid-day (12:00): lower = better
+      const proximityScore = Math.abs(hour - 12);
+      // Staff balance: fewer bookings = better
+      const loadScore = staffLoadMap[slot.staffId] || 0;
+      // Combined score (lower is better)
+      const score = proximityScore * 2 + loadScore * 3;
+      return { ...slot, score };
+    });
+
+    scored.sort((a, b) => a.score - b.score);
+
+    return scored.slice(0, 5).map(({ score, ...slot }) => slot);
+  }
+
+  async getCalendarContext(
+    businessId: string,
+    staffIds: string[],
+    dateFrom: string,
+    dateTo: string,
+  ) {
+    const result: Record<
+      string,
+      {
+        workingHours: { dayOfWeek: number; startTime: string; endTime: string; isOff: boolean }[];
+        timeOff: { startDate: string; endDate: string; reason: string | null }[];
+      }
+    > = {};
+
+    // Verify all staff belong to this business
+    const staffList = await this.prisma.staff.findMany({
+      where: { id: { in: staffIds }, businessId },
+      select: { id: true },
+    });
+    const validIds = staffList.map((s) => s.id);
+
+    // Batch fetch working hours
+    const workingHours = await this.prisma.workingHours.findMany({
+      where: { staffId: { in: validIds } },
+      orderBy: { dayOfWeek: 'asc' },
+    });
+
+    // Batch fetch time-off overlapping the date range
+    const timeOffs = await this.prisma.timeOff.findMany({
+      where: {
+        staffId: { in: validIds },
+        startDate: { lte: new Date(dateTo) },
+        endDate: { gte: new Date(dateFrom) },
+      },
+      orderBy: { startDate: 'asc' },
+    });
+
+    for (const id of validIds) {
+      result[id] = {
+        workingHours: workingHours
+          .filter((wh) => wh.staffId === id)
+          .map((wh) => ({
+            dayOfWeek: wh.dayOfWeek,
+            startTime: wh.startTime,
+            endTime: wh.endTime,
+            isOff: wh.isOff,
+          })),
+        timeOff: timeOffs
+          .filter((to) => to.staffId === id)
+          .map((to) => ({
+            startDate: to.startDate.toISOString(),
+            endDate: to.endDate.toISOString(),
+            reason: to.reason,
+          })),
+      };
+    }
+
+    return result;
+  }
+
   async removeTimeOff(businessId: string, id: string) {
     // Verify time-off belongs to a staff member of this business
     const timeOff = await this.prisma.timeOff.findUnique({

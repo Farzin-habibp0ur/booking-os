@@ -929,6 +929,42 @@ export class BookingService {
     });
   }
 
+  async getMonthSummary(businessId: string, month: string, locationId?: string) {
+    const [year, mon] = month.split('-').map(Number);
+    const dateFrom = new Date(year, mon - 1, 1);
+    const dateTo = new Date(year, mon, 1);
+
+    const where: any = {
+      businessId,
+      startTime: { gte: dateFrom, lt: dateTo },
+    };
+    if (locationId) where.locationId = locationId;
+
+    const bookings = await this.prisma.booking.findMany({
+      where,
+      select: { startTime: true, status: true },
+    });
+
+    const days: Record<
+      string,
+      { total: number; confirmed: number; pending: number; cancelled: number }
+    > = {};
+    for (const b of bookings) {
+      const dayKey = b.startTime.toISOString().split('T')[0];
+      if (!days[dayKey]) days[dayKey] = { total: 0, confirmed: 0, pending: 0, cancelled: 0 };
+      days[dayKey].total++;
+      if (['CONFIRMED', 'IN_PROGRESS', 'COMPLETED'].includes(b.status)) {
+        days[dayKey].confirmed++;
+      } else if (['PENDING', 'PENDING_DEPOSIT'].includes(b.status)) {
+        days[dayKey].pending++;
+      } else if (['CANCELLED', 'NO_SHOW'].includes(b.status)) {
+        days[dayKey].cancelled++;
+      }
+    }
+
+    return { days };
+  }
+
   private async attributeCampaignSend(customerId: string, bookingId: string) {
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
     const recentSend = await this.prisma.campaignSend.findFirst({

@@ -24,6 +24,15 @@ export class BookingController {
     return this.bookingService.findAll(businessId, query);
   }
 
+  @Get('calendar/month-summary')
+  monthSummary(
+    @BusinessId() businessId: string,
+    @Query('month') month: string,
+    @Query('locationId') locationId?: string,
+  ) {
+    return this.bookingService.getMonthSummary(businessId, month, locationId);
+  }
+
   @Get('calendar')
   calendar(
     @BusinessId() businessId: string,

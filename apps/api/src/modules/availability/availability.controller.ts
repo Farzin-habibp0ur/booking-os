@@ -11,6 +11,32 @@ import { TenantGuard } from '../../common/tenant.guard';
 export class AvailabilityController {
   constructor(private availabilityService: AvailabilityService) {}
 
+  @Get('recommended-slots')
+  getRecommendedSlots(
+    @BusinessId() businessId: string,
+    @Query('serviceId') serviceId: string,
+    @Query('date') date: string,
+    @Query('excludeBookingId') excludeBookingId?: string,
+  ) {
+    return this.availabilityService.getRecommendedSlots(
+      businessId,
+      serviceId,
+      date,
+      excludeBookingId,
+    );
+  }
+
+  @Get('calendar-context')
+  getCalendarContext(
+    @BusinessId() businessId: string,
+    @Query('staffIds') staffIds: string,
+    @Query('dateFrom') dateFrom: string,
+    @Query('dateTo') dateTo: string,
+  ) {
+    const ids = staffIds ? staffIds.split(',').map((id) => id.trim()) : [];
+    return this.availabilityService.getCalendarContext(businessId, ids, dateFrom, dateTo);
+  }
+
   @Get()
   getSlots(
     @BusinessId() businessId: string,

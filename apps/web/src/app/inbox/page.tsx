@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
-import { useSocket } from '@/lib/use-socket';
+import { useSocket, getGlobalSocket } from '@/lib/use-socket';
 import { useToast } from '@/lib/toast';
 import { useI18n } from '@/lib/i18n';
 import {
@@ -40,6 +40,9 @@ import { usePack } from '@/lib/vertical-pack';
 import { ViewPicker } from '@/components/saved-views';
 import { ActionCardBadge } from '@/components/action-card';
 import { OutboundCompose } from '@/components/outbound';
+import { MediaComposer } from '@/components/inbox/media-composer';
+import { MediaMessage } from '@/components/inbox/media-message';
+import { DeliveryStatus } from '@/components/inbox/delivery-status';
 
 type Filter = 'all' | 'unassigned' | 'mine' | 'overdue' | 'waiting' | 'snoozed' | 'closed';
 
@@ -129,6 +132,7 @@ function InboxPage() {
   const [activeViewId, setActiveViewId] = useState<string | null>(null);
   const [actionCardCount, setActionCardCount] = useState(0);
   const [showOutboundCompose, setShowOutboundCompose] = useState(false);
+  const [viewers, setViewers] = useState<Array<{ staffId: string; staffName: string }>>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const currentFilters = {
@@ -241,6 +245,27 @@ function InboxPage() {
       loadConversations();
       loadFilterCounts();
     }, []),
+    'message:status': useCallback((data: any) => {
+      if (selectedRef.current && data.conversationId === selectedRef.current.id) {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === data.messageId
+              ? {
+                  ...m,
+                  deliveryStatus: data.deliveryStatus,
+                  deliveredAt: data.deliveredAt || m.deliveredAt,
+                  readAt: data.readAt || m.readAt,
+                }
+              : m,
+          ),
+        );
+      }
+    }, []),
+    'presence:update': useCallback((data: any) => {
+      if (selectedRef.current && data.conversationId === selectedRef.current.id) {
+        setViewers(data.viewers || []);
+      }
+    }, []),
   });
 
   // Auto-select conversation from URL param
@@ -279,6 +304,10 @@ function InboxPage() {
       loadNotes(selected.id);
       setConvTags(selected.tags || []);
       setSidebarTab('info');
+      setViewers([]);
+      // Emit viewing start
+      const socket = getGlobalSocket();
+      socket?.emit('viewing:start', { conversationId: selected.id });
       // Load AI metadata from conversation
       const meta = selected.metadata || {};
       setAiSummary(meta.aiSummary || '');
@@ -292,7 +321,14 @@ function InboxPage() {
       setAiConfidence(undefined);
       msgPollRef.current = setInterval(() => loadMessages(selected.id), 15000);
     }
-    return () => clearInterval(msgPollRef.current);
+    return () => {
+      clearInterval(msgPollRef.current);
+      // Emit viewing stop for previous conversation
+      if (selected) {
+        const socket = getGlobalSocket();
+        socket?.emit('viewing:stop', { conversationId: selected.id });
+      }
+    };
   }, [selected?.id]);
 
   useEffect(() => {
@@ -864,6 +900,18 @@ function InboxPage() {
                     )}
                   </div>
                 </div>
+                {viewers.length > 0 && (
+                  <div className="flex items-center gap-1 ml-2" data-testid="presence-pills">
+                    {viewers.map((v) => (
+                      <span
+                        key={v.staffId}
+                        className="text-[10px] bg-lavender-50 text-lavender-700 px-2 py-0.5 rounded-full border border-lavender-200"
+                      >
+                        {v.staffName} is viewing
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 <div className="relative">
@@ -958,18 +1006,29 @@ function InboxPage() {
                         {m.senderStaff.name}
                       </p>
                     )}
-                    <p className="whitespace-pre-wrap">{m.content}</p>
-                    <p
+                    {m.attachments?.length > 0 && (
+                      <MediaMessage attachments={m.attachments} direction={m.direction} />
+                    )}
+                    {m.contentType === 'TEXT' && <p className="whitespace-pre-wrap">{m.content}</p>}
+                    {m.contentType !== 'TEXT' && !m.attachments?.length && (
+                      <p className="whitespace-pre-wrap">{m.content}</p>
+                    )}
+                    <div
                       className={cn(
-                        'text-[10px] mt-1',
-                        m.direction === 'OUTBOUND' ? 'text-sage-200' : 'text-slate-400',
+                        'flex items-center gap-1 mt-1',
+                        m.direction === 'OUTBOUND' ? 'text-sage-200 justify-end' : 'text-slate-400',
                       )}
                     >
-                      {new Date(m.createdAt).toLocaleTimeString([], {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </p>
+                      <span className="text-[10px]">
+                        {new Date(m.createdAt).toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </span>
+                      {m.direction === 'OUTBOUND' && m.deliveryStatus && (
+                        <DeliveryStatus status={m.deliveryStatus} />
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -1038,6 +1097,10 @@ function InboxPage() {
                   >
                     <FileText size={18} />
                   </button>
+                  <MediaComposer
+                    conversationId={selected.id}
+                    onUploadComplete={() => loadMessages(selected.id)}
+                  />
                   <button
                     onClick={() => setShowQuickReplies(!showQuickReplies)}
                     className={cn(

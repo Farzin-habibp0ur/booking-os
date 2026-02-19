@@ -2,7 +2,7 @@
 
 > **Purpose:** This document gives full context on the Booking OS platform — what it is, what's been built, how it's structured, and what's left to build. Share this with an AI assistant or new developer to get productive immediately.
 >
-> **Last updated:** February 19, 2026 (UX Upgrade Pack Release 3 complete — add-to-calendar, branded errors, automation playbook UX, rule builder, dry-run, safety controls)
+> **Last updated:** February 19, 2026 (UX Upgrade Pack all 3 releases complete + implementation fixes — 3,442 total tests)
 
 ---
 
@@ -632,6 +632,8 @@ Key groups (full list in `.env.example`):
 - **UX Phase 1** (Role-based Modes + Mission Control + Saved Views) — COMPLETE
 - **UX Upgrade Pack Release 1** (Media Attachments, Delivery Receipts, Month View, DnD Reschedule, Recommended Slots, Working Hours Viz, Presence Detection) — COMPLETE (Batches 1a–1h, 69 new tests)
 - **UX Upgrade Pack Release 2** (CSV Exports, Duplicate Review, Today Timeline, Enhanced Attention Cards, Briefing Snooze + Expandable Details) — COMPLETE (Batches 2a–2g, 82 new tests)
+- **UX Upgrade Pack Release 3** (Add-to-Calendar, Branded Errors, Automation Playbook UX, Rule Builder, Dry-Run, Safety Controls) — COMPLETE (Batches 3a–3f, 93 new tests)
+- **UX Upgrade Pack COMPLETE** — All 3 releases, 21 batches, **3,442 total tests** (2,050 API + 1,392 web)
 - See `docs/user-stories.md` for complete inventory (280 current capabilities, 215 identified gaps) and `docs/ux-brainstorm-brief.md` for brainstorm prompts.
 
 ### Code Quality
@@ -685,7 +687,7 @@ npm run dev                    # Starts all apps via Turborepo
 | `npm run dev` | Start all apps |
 | `npm run build` | Build all |
 | `npm run lint` | Lint all (ESLint + TypeScript) |
-| `npm test` | Run all tests (~3,309 tests) |
+| `npm test` | Run all tests (~3,442 tests) |
 | `npm run test:coverage` | Tests with coverage thresholds |
 | `npm run db:generate` | Generate Prisma client |
 | `npm run db:migrate` | Run migrations |

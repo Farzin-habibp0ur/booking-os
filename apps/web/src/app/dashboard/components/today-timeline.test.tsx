@@ -131,7 +131,7 @@ describe('TodayTimeline', () => {
     fireEvent.click(screen.getByTestId('action-start'));
 
     await waitFor(() => {
-      expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ variant: 'destructive' }));
+      expect(mockToast).toHaveBeenCalledWith('Network error', 'error');
     });
   });
 

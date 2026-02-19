@@ -48,6 +48,8 @@ import { BriefingModule } from './modules/briefing/briefing.module';
 import { AgentModule } from './modules/agent/agent.module';
 import { AgentSkillsModule } from './modules/agent-skills/agent-skills.module';
 import { AgentFeedbackModule } from './modules/agent-feedback/agent-feedback.module';
+import { AttachmentModule } from './modules/attachment/attachment.module';
+import { ExportModule } from './modules/export/export.module';
 
 @Module({
   imports: [
@@ -112,6 +114,8 @@ import { AgentFeedbackModule } from './modules/agent-feedback/agent-feedback.mod
     AgentModule,
     AgentSkillsModule,
     AgentFeedbackModule,
+    AttachmentModule,
+    ExportModule,
     process.env.REDIS_URL ? QueueModule.forRootWithRedis() : QueueModule.forRoot(),
   ],
 })

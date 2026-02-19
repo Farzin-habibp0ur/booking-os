@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { api } from '@/lib/api';
-import { ChevronLeft, ChevronRight, Plus, Repeat, MapPin } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Repeat, MapPin, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useI18n } from '@/lib/i18n';
 import BookingFormModal from '@/components/booking-form-modal';
@@ -29,8 +29,20 @@ export default function CalendarPage() {
   const [selectedLocationId, setSelectedLocationId] = useState<string>('');
   const [selectedStaff, setSelectedStaff] = useState<string[]>([]);
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [view, setView] = useState<'day' | 'week'>('day');
+  const [view, setView] = useState<'day' | 'week' | 'month'>('day');
+  const [monthSummary, setMonthSummary] = useState<
+    Record<string, { total: number; confirmed: number; pending: number; cancelled: number }>
+  >({});
   const [hoveredBooking, setHoveredBooking] = useState<string | null>(null);
+  const [calendarContext, setCalendarContext] = useState<
+    Record<
+      string,
+      {
+        workingHours: { dayOfWeek: number; startTime: string; endTime: string; isOff: boolean }[];
+        timeOff: { startDate: string; endDate: string; reason: string | null }[];
+      }
+    >
+  >({});
 
   // Modals
   const [bookingFormOpen, setBookingFormOpen] = useState(false);
@@ -40,6 +52,17 @@ export default function CalendarPage() {
   const [prefillTime, setPrefillTime] = useState('');
   const [prefillStaffId, setPrefillStaffId] = useState('');
   const [rescheduleMode, setRescheduleMode] = useState(false);
+
+  // Drag-and-drop state
+  const [dragBooking, setDragBooking] = useState<any>(null);
+  const [dropTarget, setDropTarget] = useState<{
+    staffId: string;
+    day: Date;
+    hour: number;
+    minutes: number;
+  } | null>(null);
+  const [showDropConfirm, setShowDropConfirm] = useState(false);
+  const [dropConflict, setDropConflict] = useState(false);
 
   useEffect(() => {
     api.get<any[]>('/staff').then((s) => {
@@ -53,8 +76,19 @@ export default function CalendarPage() {
   }, []);
 
   useEffect(() => {
-    loadBookings();
+    if (view === 'month') {
+      loadMonthSummary();
+    } else {
+      loadBookings();
+      loadCalendarContext();
+    }
   }, [currentDate, view, selectedLocationId]);
+
+  useEffect(() => {
+    if (staff.length > 0 && view !== 'month') {
+      loadCalendarContext();
+    }
+  }, [staff]);
 
   const loadBookings = () => {
     const dateFrom = new Date(currentDate);
@@ -74,9 +108,70 @@ export default function CalendarPage() {
     api.get<any[]>(`/bookings/calendar?${params}`).then(setBookings).catch(console.error);
   };
 
+  const loadCalendarContext = () => {
+    if (staff.length === 0) return;
+    const dateFrom = new Date(currentDate);
+    if (view === 'week') {
+      dateFrom.setDate(dateFrom.getDate() - dateFrom.getDay());
+    }
+    dateFrom.setHours(0, 0, 0, 0);
+    const dateTo = new Date(dateFrom);
+    dateTo.setDate(dateTo.getDate() + (view === 'week' ? 7 : 1));
+
+    const staffIds = staff.map((s: any) => s.id).join(',');
+    const params = new URLSearchParams({
+      staffIds,
+      dateFrom: dateFrom.toISOString(),
+      dateTo: dateTo.toISOString(),
+    });
+    api
+      .get<typeof calendarContext>(`/availability/calendar-context?${params}`)
+      .then(setCalendarContext)
+      .catch(() => setCalendarContext({}));
+  };
+
+  const isNonWorkingHour = (staffId: string, day: Date, hour: number) => {
+    const ctx = calendarContext[staffId];
+    if (!ctx || ctx.workingHours.length === 0) return false;
+    const dayOfWeek = day.getDay();
+    const wh = ctx.workingHours.find((w) => w.dayOfWeek === dayOfWeek);
+    if (!wh || wh.isOff) return true;
+    const startHour = parseInt(wh.startTime.split(':')[0], 10);
+    const endHour = parseInt(wh.endTime.split(':')[0], 10);
+    return hour < startHour || hour >= endHour;
+  };
+
+  const isTimeOff = (staffId: string, day: Date) => {
+    const ctx = calendarContext[staffId];
+    if (!ctx) return false;
+    const dayStart = new Date(day);
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(day);
+    dayEnd.setHours(23, 59, 59, 999);
+    return ctx.timeOff.some((to) => {
+      const start = new Date(to.startDate);
+      const end = new Date(to.endDate);
+      return start <= dayEnd && end >= dayStart;
+    });
+  };
+
+  const loadMonthSummary = () => {
+    const month = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+    const params = new URLSearchParams({ month });
+    if (selectedLocationId) params.set('locationId', selectedLocationId);
+    api
+      .get<{ days: typeof monthSummary }>(`/bookings/calendar/month-summary?${params}`)
+      .then((res) => setMonthSummary(res.days))
+      .catch(console.error);
+  };
+
   const navigate = (dir: number) => {
     const d = new Date(currentDate);
-    d.setDate(d.getDate() + dir * (view === 'week' ? 7 : 1));
+    if (view === 'month') {
+      d.setMonth(d.getMonth() + dir);
+    } else {
+      d.setDate(d.getDate() + dir * (view === 'week' ? 7 : 1));
+    }
     setCurrentDate(d);
   };
 
@@ -153,6 +248,108 @@ export default function CalendarPage() {
     );
   };
 
+  // Month view helpers
+  const getMonthDays = () => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const startPad = firstDay.getDay(); // 0=Sunday
+    const totalDays = lastDay.getDate();
+    const cells: (Date | null)[] = [];
+    for (let i = 0; i < startPad; i++) cells.push(null);
+    for (let d = 1; d <= totalDays; d++) cells.push(new Date(year, month, d));
+    while (cells.length % 7 !== 0) cells.push(null);
+    return cells;
+  };
+
+  const handleMonthDayClick = (day: Date) => {
+    setCurrentDate(day);
+    setView('day');
+  };
+
+  // Drag-and-drop handlers
+  const handleDragStart = useCallback((e: React.DragEvent, booking: any) => {
+    setDragBooking(booking);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', booking.id);
+  }, []);
+
+  const handleDragOver = useCallback(
+    (e: React.DragEvent, staffId: string, day: Date, hour: number) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      // Snap to 30-min grid
+      const rect = e.currentTarget.getBoundingClientRect();
+      const offsetY = e.clientY - rect.top;
+      const minutes = offsetY < SLOT_HEIGHT / 2 ? 0 : 30;
+      setDropTarget({ staffId, day, hour, minutes });
+    },
+    [],
+  );
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent, staffId: string, day: Date, hour: number) => {
+      e.preventDefault();
+      if (!dragBooking) return;
+
+      const rect = e.currentTarget.getBoundingClientRect();
+      const offsetY = e.clientY - rect.top;
+      const minutes = offsetY < SLOT_HEIGHT / 2 ? 0 : 30;
+
+      // Check for conflicts
+      const newStartTime = new Date(day);
+      newStartTime.setHours(hour, minutes, 0, 0);
+      const duration = dragBooking.service?.durationMins || 60;
+      const newEndTime = new Date(newStartTime.getTime() + duration * 60000);
+
+      const hasConflict = bookings.some((b) => {
+        if (b.id === dragBooking.id) return false;
+        if (b.staffId !== staffId) return false;
+        const bStart = new Date(b.startTime).getTime();
+        const bEnd = new Date(b.endTime).getTime();
+        return newStartTime.getTime() < bEnd && newEndTime.getTime() > bStart;
+      });
+
+      setDropTarget({ staffId, day, hour, minutes });
+      setDropConflict(hasConflict);
+      setShowDropConfirm(true);
+    },
+    [dragBooking, bookings],
+  );
+
+  const confirmDrop = useCallback(async () => {
+    if (!dragBooking || !dropTarget) return;
+
+    const newStartTime = new Date(dropTarget.day);
+    newStartTime.setHours(dropTarget.hour, dropTarget.minutes, 0, 0);
+    const duration = dragBooking.service?.durationMins || 60;
+    const newEndTime = new Date(newStartTime.getTime() + duration * 60000);
+
+    try {
+      await api.patch(`/bookings/${dragBooking.id}`, {
+        startTime: newStartTime.toISOString(),
+        endTime: newEndTime.toISOString(),
+        staffId: dropTarget.staffId,
+      });
+      loadBookings();
+    } catch (err) {
+      console.error('Failed to reschedule:', err);
+    }
+
+    setShowDropConfirm(false);
+    setDragBooking(null);
+    setDropTarget(null);
+    setDropConflict(false);
+  }, [dragBooking, dropTarget]);
+
+  const cancelDrop = useCallback(() => {
+    setShowDropConfirm(false);
+    setDragBooking(null);
+    setDropTarget(null);
+    setDropConflict(false);
+  }, []);
+
   // In day view, columns = staff. In week view, columns = days
   const isStaffColumns = view === 'day';
 
@@ -185,14 +382,16 @@ export default function CalendarPage() {
             </button>
           </div>
           <h2 className="text-lg text-slate-500">
-            {view === 'day'
-              ? currentDate.toLocaleDateString('en-US', {
-                  weekday: 'long',
-                  month: 'long',
-                  day: 'numeric',
-                  year: 'numeric',
-                })
-              : `${days[0].toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${days[6].toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
+            {view === 'month'
+              ? currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+              : view === 'day'
+                ? currentDate.toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    month: 'long',
+                    day: 'numeric',
+                    year: 'numeric',
+                  })
+                : `${days[0].toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${days[6].toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
           </h2>
         </div>
 
@@ -254,6 +453,15 @@ export default function CalendarPage() {
             >
               {t('calendar.view_week')}
             </button>
+            <button
+              onClick={() => setView('month')}
+              className={cn(
+                'px-3 py-1 rounded-lg text-sm transition-colors',
+                view === 'month' && 'bg-white shadow-sm font-medium',
+              )}
+            >
+              {t('calendar.view_month')}
+            </button>
           </div>
 
           <button
@@ -274,7 +482,81 @@ export default function CalendarPage() {
 
       {/* Calendar grid */}
       <div className="flex-1 bg-white rounded-2xl shadow-soft overflow-auto">
-        {isStaffColumns ? (
+        {view === 'month' ? (
+          /* MONTH VIEW: 6x7 grid */
+          <div className="p-4">
+            {/* Day-of-week headers */}
+            <div className="grid grid-cols-7 mb-2">
+              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => (
+                <div
+                  key={d}
+                  className="text-center text-xs font-medium text-slate-400 uppercase py-1"
+                >
+                  {d}
+                </div>
+              ))}
+            </div>
+            {/* Day cells */}
+            <div className="grid grid-cols-7 gap-1">
+              {getMonthDays().map((day, idx) => {
+                if (!day) {
+                  return (
+                    <div key={`empty-${idx}`} className="min-h-[80px] rounded-xl bg-slate-50/50" />
+                  );
+                }
+                const dayKey = day.toISOString().split('T')[0];
+                const summary = monthSummary[dayKey];
+                const isToday = day.toDateString() === new Date().toDateString();
+                const isCurrentMonth = day.getMonth() === currentDate.getMonth();
+                return (
+                  <button
+                    key={dayKey}
+                    onClick={() => handleMonthDayClick(day)}
+                    className={cn(
+                      'min-h-[80px] rounded-xl p-2 text-left transition-colors hover:bg-slate-50 border',
+                      isToday ? 'border-sage-300 bg-sage-50/30' : 'border-transparent',
+                      !isCurrentMonth && 'opacity-50',
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        'text-sm font-medium',
+                        isToday ? 'text-sage-600' : 'text-slate-700',
+                      )}
+                    >
+                      {day.getDate()}
+                    </span>
+                    {summary && summary.total > 0 && (
+                      <div className="mt-1 flex flex-col gap-0.5">
+                        {summary.confirmed > 0 && (
+                          <div className="flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-sage-500" />
+                            <span className="text-[10px] text-sage-700">{summary.confirmed}</span>
+                          </div>
+                        )}
+                        {summary.pending > 0 && (
+                          <div className="flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-lavender-500" />
+                            <span className="text-[10px] text-lavender-700">{summary.pending}</span>
+                          </div>
+                        )}
+                        {summary.cancelled > 0 && (
+                          <div className="flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
+                            <span className="text-[10px] text-red-500">{summary.cancelled}</span>
+                          </div>
+                        )}
+                        <span className="text-[10px] text-slate-400 font-medium">
+                          {summary.total} total
+                        </span>
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : isStaffColumns ? (
           /* DAY VIEW: columns = staff */
           <div className="flex min-h-full">
             {/* Time gutter */}
@@ -301,16 +583,39 @@ export default function CalendarPage() {
                   </div>
                 </div>
 
+                {/* Time-off banner */}
+                {isTimeOff(s.id, currentDate) && (
+                  <div className="text-center text-[10px] text-red-500 bg-red-50/50 py-0.5 font-medium">
+                    Time Off
+                  </div>
+                )}
+
                 {/* Time slots */}
                 <div className="relative">
-                  {HOURS.map((hour) => (
-                    <div
-                      key={hour}
-                      onClick={() => handleSlotClick(s.id, currentDate, hour)}
-                      className="border-b border-dashed border-slate-100 cursor-pointer hover:bg-sage-50/30 transition-colors"
-                      style={{ height: SLOT_HEIGHT }}
-                    />
-                  ))}
+                  {HOURS.map((hour) => {
+                    const nonWorking = isNonWorkingHour(s.id, currentDate, hour);
+                    const offDay = isTimeOff(s.id, currentDate);
+                    return (
+                      <div
+                        key={hour}
+                        onClick={() => !offDay && handleSlotClick(s.id, currentDate, hour)}
+                        onDragOver={(e) => !offDay && handleDragOver(e, s.id, currentDate, hour)}
+                        onDrop={(e) => !offDay && handleDrop(e, s.id, currentDate, hour)}
+                        className={cn(
+                          'border-b border-dashed border-slate-100 transition-colors',
+                          offDay
+                            ? 'bg-red-50/50 cursor-not-allowed'
+                            : nonWorking
+                              ? 'bg-slate-100/60 cursor-pointer'
+                              : 'cursor-pointer hover:bg-sage-50/30',
+                          dropTarget?.staffId === s.id &&
+                            dropTarget?.hour === hour &&
+                            'bg-sage-100/50 ring-1 ring-sage-300',
+                        )}
+                        style={{ height: SLOT_HEIGHT }}
+                      />
+                    );
+                  })}
 
                   {/* Booking cards */}
                   {getBookingsForStaffDay(s.id, currentDate).map((b) => {
@@ -319,6 +624,14 @@ export default function CalendarPage() {
                     return (
                       <div
                         key={b.id}
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, b)}
+                        onDragEnd={() => {
+                          if (!showDropConfirm) {
+                            setDragBooking(null);
+                            setDropTarget(null);
+                          }
+                        }}
                         onClick={(e) => {
                           e.stopPropagation();
                           handleBookingClick(b);
@@ -464,14 +777,30 @@ export default function CalendarPage() {
 
                   {/* Slots */}
                   <div className="relative">
-                    {HOURS.map((hour) => (
-                      <div
-                        key={hour}
-                        onClick={() => handleSlotClick(displayStaff[0]?.id || '', day, hour)}
-                        className="border-b border-dashed border-slate-100 cursor-pointer hover:bg-sage-50/30"
-                        style={{ height: SLOT_HEIGHT }}
-                      />
-                    ))}
+                    {HOURS.map((hour) => {
+                      // In week view, check if any selected staff has this as non-working
+                      const anyTimeOff = displayStaff.some((s) => isTimeOff(s.id, day));
+                      const allNonWorking =
+                        displayStaff.length > 0 &&
+                        displayStaff.every((s) => isNonWorkingHour(s.id, day, hour));
+                      return (
+                        <div
+                          key={hour}
+                          onClick={() =>
+                            !anyTimeOff && handleSlotClick(displayStaff[0]?.id || '', day, hour)
+                          }
+                          className={cn(
+                            'border-b border-dashed border-slate-100',
+                            anyTimeOff
+                              ? 'bg-red-50/50 cursor-not-allowed'
+                              : allNonWorking
+                                ? 'bg-slate-100/60 cursor-pointer'
+                                : 'cursor-pointer hover:bg-sage-50/30',
+                          )}
+                          style={{ height: SLOT_HEIGHT }}
+                        />
+                      );
+                    })}
 
                     {/* Bookings */}
                     {dayBookings.map((b) => {
@@ -512,7 +841,7 @@ export default function CalendarPage() {
         )}
 
         {/* Empty state */}
-        {bookings.length === 0 && (
+        {view !== 'month' && bookings.length === 0 && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="text-center">
               <p className="text-slate-400">{t('calendar.no_bookings')}</p>
@@ -521,6 +850,53 @@ export default function CalendarPage() {
           </div>
         )}
       </div>
+
+      {/* Drop confirmation popover */}
+      {showDropConfirm && dragBooking && dropTarget && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/20"
+          onClick={cancelDrop}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-soft p-4 max-w-xs"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {dropConflict && (
+              <div className="flex items-center gap-2 text-amber-600 mb-2">
+                <AlertTriangle size={16} />
+                <span className="text-sm font-medium">Conflicting booking detected</span>
+              </div>
+            )}
+            <p className="text-sm text-slate-700 mb-1">
+              Reschedule <strong>{dragBooking.customer?.name}</strong>?
+            </p>
+            <p className="text-xs text-slate-500 mb-3">
+              {dropTarget.day.toLocaleDateString('en-US', {
+                weekday: 'short',
+                month: 'short',
+                day: 'numeric',
+              })}
+              {' at '}
+              {dropTarget.hour % 12 || 12}:{dropTarget.minutes.toString().padStart(2, '0')}
+              {dropTarget.hour < 12 ? 'am' : 'pm'}
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={cancelDrop}
+                className="flex-1 px-3 py-1.5 text-sm border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDrop}
+                className="flex-1 px-3 py-1.5 text-sm bg-sage-600 text-white rounded-xl hover:bg-sage-700 transition-colors"
+              >
+                {dropConflict ? 'Reschedule Anyway' : 'Confirm'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Booking form modal */}
       <BookingFormModal

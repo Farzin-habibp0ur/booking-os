@@ -1,5 +1,7 @@
 # Booking OS — Complete User Stories
 
+> **Last updated:** February 19, 2026 (UX Upgrade Pack all 3 releases complete — media attachments, calendar speed pack, exports, today timeline, automation UX, self-serve polish)
+
 Exhaustive inventory of everything each user persona can and cannot do on the platform. Organized by persona, then by feature area. Each story marked with current status.
 
 ---
@@ -119,6 +121,10 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 | 3.25a | See "All clear" empty state when no pending items                                     | Admin           | —                                                                    |
 | 3.26a | View pinned Saved Views as shortcut cards on dashboard                                | All staff       | —                                                                    |
 | 3.27a | See KPI strip + MyWork section (agent/provider modes)                                 | Agent, Provider | Mode-specific dashboard layout                                       |
+| 3.28a | See Today Timeline with time-positioned booking cards + quick actions (Start/Complete/No-Show/Chat) | All staff | TodayTimeline component replacing flat list (UX Upgrade Pack R2) |
+| 3.29a | Click actionable KPIs to navigate to relevant pages                                   | All staff       | KPI cards link to bookings/inbox/customers with action subtitles (UX Upgrade Pack R2) |
+| 3.30a | Snooze a briefing card for later (1h/4h/tomorrow/next week)                           | Admin           | Snooze dropdown on BriefingCard (UX Upgrade Pack R2) |
+| 3.31a | Expand briefing card to see details (booking info, staff, suggested action)            | Admin           | Expandable detail section on briefing cards (UX Upgrade Pack R2) |
 
 ### What Users CANNOT Do
 
@@ -131,7 +137,7 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 | 3.23 | See dashboard for a specific location        | No location filter on dashboard                               |
 | 3.24 | Set personal goals or targets for metrics    | Not implemented                                               |
 | 3.25 | ~~Pin or favorite certain metrics~~          | **DONE** — Saved Views can be pinned to dashboard             |
-| 3.26 | Snooze a briefing card (defer for later)     | Snooze endpoint exists but no UI button in briefing feed      |
+| 3.26 | ~~Snooze a briefing card (defer for later)~~     | **DONE** — Snooze dropdown (1h/4h/tomorrow/next week) on briefing cards (UX Upgrade Pack R2) |
 | 3.27 | Preview action card details before approving | Preview button exists but only shows if card has preview data |
 
 ---
@@ -176,7 +182,7 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 | 4.27 | Filter bookings by staff member in the table view          | No staff filter on bookings table                                                                                                |
 | 4.28 | Filter bookings by service type in the table view          | No service filter on bookings table                                                                                              |
 | 4.29 | Filter bookings by location in the table view              | No location filter on bookings table                                                                                             |
-| 4.30 | Export bookings to CSV/Excel                               | Not implemented                                                                                                                  |
+| 4.30 | ~~Export bookings to CSV/Excel~~                           | **DONE** — `GET /bookings/export` streaming CSV with field selection, date range, 10k cap (UX Upgrade Pack R2)                   |
 | 4.31 | Print a booking confirmation                               | Not implemented                                                                                                                  |
 | 4.32 | Drag-and-drop reschedule from the table                    | Only via modal                                                                                                                   |
 | 4.33 | ~~See booking history/audit log (who changed what)~~       | **PARTIAL** — ActionHistory tracks booking creates/updates/cancels; visible in customer timeline. No per-booking audit modal yet |
@@ -206,18 +212,23 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 | 5.8  | See color-coded booking statuses                     | All staff | —                                  |
 | 5.9  | See recurring booking indicators                     | All staff | Icon on recurring bookings         |
 | 5.10 | View booking tooltip on hover                        | All staff | Full details without opening modal |
+| 5.10a | View month view with booking count summaries per day | All staff | 6x7 grid, colored dots, click-to-drill (UX Upgrade Pack R1) |
+| 5.10b | Drag-and-drop a booking to reschedule                | All staff | 30-min snap, conflict detection, confirmation popover (UX Upgrade Pack R1) |
+| 5.10c | See staff working hours shaded on calendar           | All staff | Non-working hours in gray via calendar-context API (UX Upgrade Pack R1) |
+| 5.10d | See time-off blocks on the calendar grid             | All staff | Red shading with "Time Off" badge (UX Upgrade Pack R1) |
+| 5.10e | See recommended time slots during reschedule         | All staff | Top 5 slots scored by proximity + staff balance (UX Upgrade Pack R1) |
 
 ### What Users CANNOT Do
 
 | #    | Story                                                   | Notes                                                   |
 | ---- | ------------------------------------------------------- | ------------------------------------------------------- |
-| 5.11 | View monthly calendar                                   | Only day and week views                                 |
-| 5.12 | Drag-and-drop to reschedule                             | Click-only interaction                                  |
+| 5.11 | ~~View monthly calendar~~                               | **DONE** — Month view with 6x7 grid, colored dots (sage/lavender/red), click-to-drill to day (UX Upgrade Pack R1) |
+| 5.12 | ~~Drag-and-drop to reschedule~~                         | **DONE** — HTML5 DnD with 30-min snap, conflict detection, confirmation popover (UX Upgrade Pack R1)              |
 | 5.13 | Drag to resize booking duration                         | Not implemented                                         |
 | 5.14 | See external calendar events overlaid (Google/Outlook)  | API supports fetching external events but no UI overlay |
 | 5.15 | Color-code by service type                              | Colored by status only                                  |
-| 5.16 | See staff availability/working hours shaded on calendar | Not visually indicated                                  |
-| 5.17 | See time-off blocks on calendar                         | Not displayed                                           |
+| 5.16 | ~~See staff availability/working hours shaded on calendar~~ | **DONE** — Non-working hours shaded gray via calendar-context API (UX Upgrade Pack R1)                        |
+| 5.17 | ~~See time-off blocks on calendar~~                     | **DONE** — Time-off shaded red with "Time Off" badge (UX Upgrade Pack R1)                                         |
 | 5.18 | Print calendar view                                     | Not implemented                                         |
 | 5.19 | Export calendar to PDF                                  | Not implemented                                         |
 | 5.20 | Set custom time range for calendar grid                 | Fixed 8am–7pm                                           |
@@ -258,8 +269,8 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 | #    | Story                                                             | Notes                                                              |
 | ---- | ----------------------------------------------------------------- | ------------------------------------------------------------------ |
 | 6.17 | Delete a customer                                                 | No delete endpoint — only edit                                     |
-| 6.18 | Merge duplicate customers                                         | Not implemented                                                    |
-| 6.19 | Export customer list to CSV                                       | Not implemented                                                    |
+| 6.18 | ~~Merge duplicate customers~~                                     | **PARTIAL** — DuplicateCandidate model + `/customers/duplicates` review page with merge/dismiss/snooze (UX Upgrade Pack R2) |
+| 6.19 | ~~Export customer list to CSV~~                                   | **DONE** — `GET /customers/export` streaming CSV with field selection, date range, 10k cap (UX Upgrade Pack R2)              |
 | 6.20 | ~~View customer communication history (messages)~~                | **DONE** — Timeline tab + "Message" button deep link               |
 | 6.21 | See customer lifetime value calculation                           | Only total bookings and raw spend                                  |
 | 6.22 | ~~Add notes directly to a customer profile~~                      | **DONE** — CustomerNote model with full CRUD                       |
@@ -313,12 +324,16 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 | 7.31  | Click customer name in inbox to navigate to their profile                      | All staff | Links to `/customers/{id}`                  |
 | 7.32a | Compose a new outbound message to a customer                                   | All staff | "New Message" button in conversation header |
 | 7.33a | See pending action card count badge in customer sidebar                        | All staff | Shows count of PENDING action cards         |
+| 7.34a | Send images, documents, and audio attachments in messages                      | All staff | MediaComposer with drag-drop, preview, validation (UX Upgrade Pack R1) |
+| 7.35a | See delivery/read receipts on outbound messages (sent → delivered → read)      | All staff | DeliveryStatus component with check icons (UX Upgrade Pack R1) |
+| 7.36a | See which other staff are viewing the same conversation (collision detection)  | All staff | Lavender presence pills in thread header (UX Upgrade Pack R1) |
+| 7.37a | Initiate outbound conversation from customer profile ("Send Message" button)   | All staff | Creates conversation + sends directly (UX Upgrade Pack R1) |
 
 ### What Users CANNOT Do
 
 | #    | Story                                                         | Notes                                                                     |
 | ---- | ------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| 7.30 | Send images, documents, or audio                              | Text-only in UI (API supports content types)                              |
+| 7.30 | ~~Send images, documents, or audio~~                          | **DONE** — MediaComposer component with drag-drop, file preview, images/docs/audio (UX Upgrade Pack R1) |
 | 7.31 | Forward or share a conversation                               | Not implemented                                                           |
 | 7.32 | Mark a conversation as read/unread manually                   | Auto-marked on view                                                       |
 | 7.33 | ~~Create a conversation manually (staff-initiated outbound)~~ | **DONE** — Outbound compose modal creates drafts via POST /outbound/draft |
@@ -326,7 +341,7 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 | 7.35 | Bulk assign conversations                                     | No bulk operations                                                        |
 | 7.36 | Edit a sent message                                           | Messages are immutable                                                    |
 | 7.37 | Delete a message                                              | Messages are immutable                                                    |
-| 7.38 | See message delivery/read receipts                            | Not shown in UI                                                           |
+| 7.38 | ~~See message delivery/read receipts~~                        | **DONE** — DeliveryStatus component (sent/delivered/read check icons), WebSocket `message:status` event (UX Upgrade Pack R1) |
 | 7.39 | Schedule a message for later                                  | Not implemented                                                           |
 | 7.40 | Use canned responses / saved replies beyond templates         | Templates only                                                            |
 | 7.41 | See typing indicators                                         | Not implemented                                                           |
@@ -334,7 +349,7 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 | 7.43 | Export conversation history                                   | Not implemented                                                           |
 | 7.44 | Archive a conversation (vs close)                             | Only close/resolve                                                        |
 | 7.45 | ~~Start a new conversation with an existing customer~~        | **DONE** — Outbound compose creates draft message to any customer         |
-| 7.46 | See which staff member is viewing a conversation              | No presence indicators                                                    |
+| 7.46 | ~~See which staff member is viewing a conversation~~          | **DONE** — Presence tracking via InboxGateway (`viewing:start`/`viewing:stop`), lavender pills in thread header (UX Upgrade Pack R1) |
 
 ---
 
@@ -481,6 +496,11 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 | 12.10 | See skipped automation reasons                                       | All staff | In activity log |
 | 12.11 | Set quiet hours for automations                                      | Admin     | Start/end HH:mm |
 | 12.12 | Set max messages per customer per day                                | Admin     | 0-100           |
+| 12.12a | View playbooks as rich recipe cards (what/when/who/examples/stats)  | All staff | PlaybookCard with expandable details, impact stats (UX Upgrade Pack R3) |
+| 12.12b | See plain-language summary of custom rules                          | All staff | `getPlainLanguageSummary()` on review step (UX Upgrade Pack R3) |
+| 12.12c | Run real dry-run test showing matched/skipped bookings              | Admin     | DryRunModal with real booking data (UX Upgrade Pack R3) |
+| 12.12d | Search and filter activity log by outcome, date range               | All staff | Search input, outcome chips, date range filters (UX Upgrade Pack R3) |
+| 12.12e | See safety controls panel (quiet hours, frequency caps) at a glance | All staff | Safety summary panel + safety column in rules table (UX Upgrade Pack R3) |
 
 ### What Users CANNOT Do
 
@@ -713,7 +733,7 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 | 18.17 | See customer reviews or ratings                                    | Not implemented                                    |
 | 18.18 | Select a preferred location                                        | Not shown on portal                                |
 | 18.19 | Choose a recurring schedule                                        | Not available publicly                             |
-| 18.20 | Add booking to their personal calendar (iCal download)             | Not implemented                                    |
+| 18.20 | ~~Add booking to their personal calendar (iCal download)~~         | **DONE** — AddToCalendar component (Google Calendar URL, Outlook URL, iCal .ics download) on all self-serve success screens (UX Upgrade Pack R3) |
 | 18.21 | See real-time availability updates                                 | Static on page load                                |
 
 ---
@@ -731,6 +751,9 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 | 19.5 | See booking summary before taking action                | —                             |
 | 19.6 | See policy text (cancellation/reschedule windows)       | If configured                 |
 | 19.7 | Browse available slots for rescheduling (30-day window) | —                             |
+| 19.8a | Add booking to personal calendar after reschedule/claim (Google, Outlook, iCal) | AddToCalendar component on success screens (UX Upgrade Pack R3) |
+| 19.9a | See branded error page with contextual guidance when link is expired/invalid | SelfServeError component with auto-variant detection (UX Upgrade Pack R3) |
+| 19.10a | See "What happens next" guidance after completing any self-serve action | Bullet points on all 5 success screens (UX Upgrade Pack R3) |
 
 ### What Customers CANNOT Do
 
@@ -814,6 +837,9 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 | 22.7e | Set default landing page per mode                                                | All staff | Persisted in staff preferences             |
 | 22.7f | View dedicated search results page with type filters and load more               | All staff | `/search?q=`                               |
 | 22.7g | Navigate to detail pages from Cmd+K results                                      | All staff | Customers → profile, conversations → inbox |
+| 22.7h | Export customers and bookings to CSV from list pages                              | All staff | ExportModal with date range + field selection, streaming CSV (UX Upgrade Pack R2) |
+| 22.7i | Review and merge duplicate customer records                                      | Admin     | `/customers/duplicates` page with side-by-side merge/dismiss/snooze (UX Upgrade Pack R2) |
+| 22.7j | Export action history / audit trail to CSV                                        | Admin     | `GET /action-history/export` with date/entity/actor filters (UX Upgrade Pack R2) |
 
 ### What Users CANNOT Do
 
@@ -836,24 +862,26 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 | -------------- | ------- | --------- |
 | Authentication | 12      | 9         |
 | Onboarding     | 14      | 6         |
-| Dashboard      | 27      | 9         |
-| Bookings       | 24      | 16        |
-| Calendar       | 10      | 11        |
-| Customers      | 21      | 9         |
-| Inbox          | 33      | 15        |
+| Dashboard      | 31      | 8         |
+| Bookings       | 24      | 15        |
+| Calendar       | 15      | 7         |
+| Customers      | 21      | 7         |
+| Inbox          | 37      | 11        |
 | Services       | 9       | 10        |
 | Staff          | 11      | 11        |
 | Waitlist       | 6       | 6         |
 | Campaigns      | 7       | 9         |
-| Automations    | 12      | 9         |
+| Automations    | 17      | 9         |
 | Settings       | 25      | 11        |
 | Locations      | 12      | 9         |
 | Reports        | 9       | 9         |
 | ROI            | 5       | 4         |
 | AI             | 22      | 9         |
-| Public Booking | 11      | 10        |
-| Self-Serve     | 7       | 6         |
+| Public Booking | 11      | 9         |
+| Self-Serve     | 10      | 6         |
 | Quotes         | 4       | 6         |
 | Billing        | 4       | 7         |
-| Global         | 14      | 7         |
-| **Total**      | **325** | **201**   |
+| Global         | 17      | 7         |
+| **Total**      | **348** | **188**   |
+
+> **UX Upgrade Pack Impact**: +23 new capabilities resolved, 13 previous gaps closed. Total shift from 325/201 to 348/188.

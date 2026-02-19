@@ -22,6 +22,10 @@ function getSocket(token: string): Socket {
   return globalSocket;
 }
 
+export function getGlobalSocket(): Socket | null {
+  return globalSocket;
+}
+
 export function useSocket(events: Record<string, EventHandler>) {
   const { user, token } = useAuth();
   const handlersRef = useRef(events);

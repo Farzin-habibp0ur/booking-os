@@ -13,6 +13,7 @@ describe('BookingController', () => {
       update: jest.fn(),
       updateStatus: jest.fn(),
       getCalendar: jest.fn(),
+      getMonthSummary: jest.fn(),
       checkPolicyAllowed: jest.fn(),
       getKanbanBoard: jest.fn(),
       updateKanbanStatus: jest.fn(),
@@ -218,5 +219,26 @@ describe('BookingController', () => {
       staffName: 'Sarah',
     });
     expect(result).toEqual({ sent: true });
+  });
+
+  it('monthSummary delegates to service.getMonthSummary', async () => {
+    const summary = {
+      days: { '2026-03-01': { total: 3, confirmed: 2, pending: 1, cancelled: 0 } },
+    };
+    mockService.getMonthSummary.mockResolvedValue(summary);
+
+    const result = await controller.monthSummary('biz1', '2026-03', 'loc1');
+
+    expect(mockService.getMonthSummary).toHaveBeenCalledWith('biz1', '2026-03', 'loc1');
+    expect(result).toEqual(summary);
+  });
+
+  it('monthSummary works without locationId', async () => {
+    mockService.getMonthSummary.mockResolvedValue({ days: {} });
+
+    const result = await controller.monthSummary('biz1', '2026-03', undefined);
+
+    expect(mockService.getMonthSummary).toHaveBeenCalledWith('biz1', '2026-03', undefined);
+    expect(result).toEqual({ days: {} });
   });
 });

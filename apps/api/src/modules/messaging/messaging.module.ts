@@ -4,11 +4,18 @@ import { WebhookController } from './webhook.controller';
 import { CustomerModule } from '../customer/customer.module';
 import { ConversationModule } from '../conversation/conversation.module';
 import { LocationModule } from '../location/location.module';
+import { MessageModule } from '../message/message.module';
 import { AiModule } from '../ai/ai.module';
 
 @Global()
 @Module({
-  imports: [CustomerModule, ConversationModule, LocationModule, forwardRef(() => AiModule)],
+  imports: [
+    CustomerModule,
+    ConversationModule,
+    LocationModule,
+    MessageModule,
+    forwardRef(() => AiModule),
+  ],
   controllers: [WebhookController],
   providers: [MessagingService],
   exports: [MessagingService],

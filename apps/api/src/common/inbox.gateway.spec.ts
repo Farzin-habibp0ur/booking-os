@@ -215,4 +215,64 @@ describe('InboxGateway', () => {
       expect((gateway.server as any)._mockRoom.emit).toHaveBeenCalledWith('ai:suggestions', data);
     });
   });
+
+  describe('presence tracking', () => {
+    it('tracks viewing:start and emits presence:update', () => {
+      const socket = createMockSocket({ token: 'valid' });
+      socket.id = 'sock1';
+      (socket as any).user = { sub: 'staff1', name: 'Sarah', businessId: 'biz1' };
+
+      gateway.handleViewingStart(socket, { conversationId: 'conv1' });
+
+      expect(gateway.server.to).toHaveBeenCalledWith('business:biz1');
+      expect((gateway.server as any)._mockRoom.emit).toHaveBeenCalledWith(
+        'presence:update',
+        expect.objectContaining({
+          conversationId: 'conv1',
+          viewers: expect.arrayContaining([
+            expect.objectContaining({ staffId: 'staff1', staffName: 'Sarah' }),
+          ]),
+        }),
+      );
+    });
+
+    it('tracks viewing:stop and removes viewer', () => {
+      const socket = createMockSocket({ token: 'valid' });
+      socket.id = 'sock1';
+      (socket as any).user = { sub: 'staff1', name: 'Sarah', businessId: 'biz1' };
+
+      gateway.handleViewingStart(socket, { conversationId: 'conv1' });
+      gateway.handleViewingStop(socket, { conversationId: 'conv1' });
+
+      // Last call should have empty viewers
+      const lastCall = (gateway.server as any)._mockRoom.emit.mock.calls.at(-1);
+      expect(lastCall[0]).toBe('presence:update');
+      expect(lastCall[1].viewers).toEqual([]);
+    });
+
+    it('cleans up presence on disconnect', () => {
+      const socket = createMockSocket({ token: 'valid' });
+      socket.id = 'sock-dc';
+      (socket as any).user = { sub: 'staff1', name: 'Sarah', businessId: 'biz1' };
+
+      gateway.handleViewingStart(socket, { conversationId: 'conv1' });
+      gateway.handleDisconnect(socket);
+
+      const lastCall = (gateway.server as any)._mockRoom.emit.mock.calls.at(-1);
+      expect(lastCall[0]).toBe('presence:update');
+      expect(lastCall[1].viewers).toEqual([]);
+    });
+
+    it('ignores viewing:start without user', () => {
+      const socket = createMockSocket();
+      socket.id = 'sock-nouser';
+
+      gateway.handleViewingStart(socket, { conversationId: 'conv1' });
+      // Should not emit anything for presence
+      const calls = (gateway.server as any)._mockRoom.emit.mock.calls.filter(
+        (c: any) => c[0] === 'presence:update',
+      );
+      expect(calls.length).toBe(0);
+    });
+  });
 });

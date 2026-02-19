@@ -120,6 +120,16 @@
 - **Integration + Documentation** (Batch 2g) — ActionHistory logging for CSV exports, i18n keys, documentation updates.
 - **Final counts:** 3,309 tests total (2,003 API + 1,306 web), +82 new tests
 
+### UX Upgrade Pack — Release 3 (Batches 3a–3f) (Complete)
+- **Add-to-Calendar** (Batch 3a) — Client-side calendar add buttons on all self-serve success screens (Google Calendar URL, Outlook URL, iCal .ics download), `AddToCalendar` component. 12 tests.
+- **Branded Error Pages + Confirmation Polish** (Batch 3b) — `SelfServeError` component with auto-variant detection (expired/used/invalid/policy/generic), "Book Again" link. "What happens next" bullet points on all 5 success screens (booking, reschedule, cancel, quote, claim). 22 tests.
+- **Automation Playbook UX Overhaul** (Batch 3c) — Rich `PlaybookCard` component with expandable recipe details (what/when/who/examples/sample message), impact stats from AutomationLog, color-coded borders per playbook. 15 tests.
+- **Custom Rule Builder Enhancement** (Batch 3d) — Example scenarios per trigger, plain-language filter/action/summary previews, persistent safety bar. 11 tests.
+- **Real Dry-Run + Searchable Activity Log** (Batch 3e) — Enhanced `testRule()` returning real matched/skipped bookings, `DryRunModal` component, activity log filters (search, outcome chips, date range), clear filters. 25 tests.
+- **Safety Controls + Integration** (Batch 3f) — Safety controls summary panel (quiet hours, frequency cap badges) on playbooks/rules tabs, safety column in custom rules table. 6 tests.
+- **Final counts:** 3,442 tests total (2,050 API + 1,392 web), +133 new tests (R3 + implementation fixes)
+- **UX Upgrade Pack COMPLETE** — All 3 releases, 21 batches
+
 ### Tech Stack
 | Layer | Technology |
 |-------|-----------|
@@ -1170,6 +1180,8 @@ apps/web/src/
 │   │   └── media-composer.tsx   # Media file attachment composer (UX Upgrade Pack R1)
 │   ├── recommended-slots.tsx    # Recommended reschedule slots component (UX Upgrade Pack R1)
 │   ├── export-modal.tsx         # CSV export modal with date range + field selection (UX Upgrade Pack R2)
+│   ├── add-to-calendar.tsx      # Add-to-calendar buttons (Google, Outlook, iCal) (UX Upgrade Pack R3)
+│   ├── self-serve-error.tsx     # Branded error pages with auto-variant detection (UX Upgrade Pack R3)
 │   └── language-picker.tsx    # Locale selector
 ├── lib/
 │   ├── api.ts                 # API client singleton

@@ -7,13 +7,18 @@ import { createMockPrisma } from '../../test/mocks';
 describe('MessageService', () => {
   let service: MessageService;
   let prisma: ReturnType<typeof createMockPrisma>;
-  let mockGateway: { notifyNewMessage: jest.Mock; notifyConversationUpdate: jest.Mock };
+  let mockGateway: {
+    notifyNewMessage: jest.Mock;
+    notifyConversationUpdate: jest.Mock;
+    emitToBusinessRoom: jest.Mock;
+  };
 
   beforeEach(async () => {
     prisma = createMockPrisma();
     mockGateway = {
       notifyNewMessage: jest.fn(),
       notifyConversationUpdate: jest.fn(),
+      emitToBusinessRoom: jest.fn(),
     };
 
     const module = await Test.createTestingModule({
@@ -72,7 +77,10 @@ describe('MessageService', () => {
           content: 'Hello!',
           externalId: 'ext-123',
         }),
-        include: { senderStaff: { select: { id: true, name: true } } },
+        include: {
+          senderStaff: { select: { id: true, name: true } },
+          attachments: true,
+        },
       });
       expect(result.id).toBe('msg1');
     });
@@ -176,6 +184,126 @@ describe('MessageService', () => {
       expect(prisma.message.create).toHaveBeenCalledWith({
         data: expect.objectContaining({ externalId: undefined }),
       });
+    });
+  });
+
+  describe('updateDeliveryStatus', () => {
+    const mockMessage = {
+      id: 'msg1',
+      conversationId: 'conv1',
+      deliveredAt: null,
+      readAt: null,
+      conversation: { businessId: 'biz1' },
+    };
+
+    it('updates status to DELIVERED with timestamp', async () => {
+      prisma.message.findUnique.mockResolvedValue(mockMessage as any);
+      prisma.message.update.mockResolvedValue({
+        ...mockMessage,
+        deliveryStatus: 'DELIVERED',
+      } as any);
+
+      const result = await service.updateDeliveryStatus('ext1', 'DELIVERED');
+
+      expect(result).toBeTruthy();
+      expect(prisma.message.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            deliveryStatus: 'DELIVERED',
+            deliveredAt: expect.any(Date),
+          }),
+        }),
+      );
+    });
+
+    it('updates status to READ and backfills deliveredAt', async () => {
+      prisma.message.findUnique.mockResolvedValue(mockMessage as any);
+      prisma.message.update.mockResolvedValue({
+        ...mockMessage,
+        deliveryStatus: 'READ',
+      } as any);
+
+      await service.updateDeliveryStatus('ext1', 'READ');
+
+      expect(prisma.message.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            deliveryStatus: 'READ',
+            readAt: expect.any(Date),
+            deliveredAt: expect.any(Date),
+          }),
+        }),
+      );
+    });
+
+    it('does not overwrite existing deliveredAt on READ', async () => {
+      const delivered = new Date('2026-01-01');
+      prisma.message.findUnique.mockResolvedValue({
+        ...mockMessage,
+        deliveredAt: delivered,
+      } as any);
+      prisma.message.update.mockResolvedValue({} as any);
+
+      await service.updateDeliveryStatus('ext1', 'READ');
+
+      const updateCall = prisma.message.update.mock.calls[0][0];
+      expect(updateCall.data.deliveredAt).toBeUndefined();
+    });
+
+    it('updates status to FAILED with reason', async () => {
+      prisma.message.findUnique.mockResolvedValue(mockMessage as any);
+      prisma.message.update.mockResolvedValue({
+        ...mockMessage,
+        deliveryStatus: 'FAILED',
+      } as any);
+
+      await service.updateDeliveryStatus('ext1', 'FAILED', 'Number invalid');
+
+      expect(prisma.message.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            deliveryStatus: 'FAILED',
+            failureReason: 'Number invalid',
+          }),
+        }),
+      );
+    });
+
+    it('defaults failureReason to Unknown error', async () => {
+      prisma.message.findUnique.mockResolvedValue(mockMessage as any);
+      prisma.message.update.mockResolvedValue({} as any);
+
+      await service.updateDeliveryStatus('ext1', 'FAILED');
+
+      expect(prisma.message.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ failureReason: 'Unknown error' }),
+        }),
+      );
+    });
+
+    it('returns null when message not found', async () => {
+      prisma.message.findUnique.mockResolvedValue(null);
+
+      const result = await service.updateDeliveryStatus('missing', 'DELIVERED');
+      expect(result).toBeNull();
+    });
+
+    it('emits message:status WebSocket event', async () => {
+      prisma.message.findUnique.mockResolvedValue(mockMessage as any);
+      prisma.message.update.mockResolvedValue({} as any);
+
+      await service.updateDeliveryStatus('ext1', 'DELIVERED');
+
+      expect(mockGateway.emitToBusinessRoom).toHaveBeenCalledWith(
+        'biz1',
+        'message:status',
+        expect.objectContaining({
+          messageId: 'msg1',
+          conversationId: 'conv1',
+          deliveryStatus: 'DELIVERED',
+        }),
+      );
     });
   });
 });

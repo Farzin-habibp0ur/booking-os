@@ -34,9 +34,10 @@ jest.mock('@/lib/toast', () => ({
 jest.mock('@/lib/cn', () => ({ cn: (...args: any[]) => args.filter(Boolean).join(' ') }));
 jest.mock('@/lib/use-socket', () => ({
   useSocket: () => {},
+  getGlobalSocket: () => ({ emit: jest.fn() }),
 }));
 jest.mock('@/lib/api', () => ({
-  api: { get: jest.fn(), post: jest.fn(), patch: jest.fn(), del: jest.fn() },
+  api: { get: jest.fn(), post: jest.fn(), patch: jest.fn(), del: jest.fn(), upload: jest.fn() },
 }));
 jest.mock('@/components/booking-form-modal', () => ({
   __esModule: true,

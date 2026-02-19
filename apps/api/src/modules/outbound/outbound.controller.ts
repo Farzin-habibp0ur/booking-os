@@ -1,13 +1,33 @@
-import { Controller, Get, Post, Patch, Param, Query, Body, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Param,
+  Query,
+  Body,
+  UseGuards,
+  Logger,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { TenantGuard } from '../../common/tenant.guard';
 import { BusinessId, CurrentUser } from '../../common/decorators';
 import { OutboundService } from './outbound.service';
+import { MessageService } from '../message/message.service';
+import { ConversationService } from '../conversation/conversation.service';
+import { MessagingService } from '../messaging/messaging.service';
 
 @Controller('outbound')
 @UseGuards(AuthGuard('jwt'), TenantGuard)
 export class OutboundController {
-  constructor(private outboundService: OutboundService) {}
+  private readonly logger = new Logger(OutboundController.name);
+
+  constructor(
+    private outboundService: OutboundService,
+    private messageService: MessageService,
+    private conversationService: ConversationService,
+    private messagingService: MessagingService,
+  ) {}
 
   @Post('draft')
   createDraft(
@@ -52,5 +72,30 @@ export class OutboundController {
   @Patch(':id/reject')
   reject(@BusinessId() businessId: string, @Param('id') id: string) {
     return this.outboundService.reject(businessId, id);
+  }
+
+  @Post('send-direct')
+  async sendDirect(
+    @BusinessId() businessId: string,
+    @CurrentUser('sub') staffId: string,
+    @Body() body: { customerId: string; content: string; channel?: string },
+  ) {
+    // Find or create conversation
+    const conversation = await this.conversationService.findOrCreate(
+      businessId,
+      body.customerId,
+      body.channel || 'WHATSAPP',
+    );
+
+    // Send message directly
+    const message = await this.messageService.sendMessage(
+      businessId,
+      conversation.id,
+      staffId,
+      body.content,
+      this.messagingService.getProvider(),
+    );
+
+    return { message, conversationId: conversation.id };
   }
 }
