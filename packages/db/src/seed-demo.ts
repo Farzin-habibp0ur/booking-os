@@ -1661,7 +1661,8 @@ async function main() {
           category: 'OPPORTUNITY',
           priority: 55,
           title: 'Filled gap slot via waitlist',
-          description: 'Because a 2pm slot opened up yesterday and 3 waitlist clients were eligible.',
+          description:
+            'Because a 2pm slot opened up yesterday and 3 waitlist clients were eligible.',
           suggestedAction: 'Notify waitlist',
           status: 'DISMISSED',
           autonomyLevel: 'ASSISTED',
