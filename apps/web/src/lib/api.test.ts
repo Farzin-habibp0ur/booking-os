@@ -391,6 +391,90 @@ describe('ApiClient', () => {
     });
   });
 
+  describe('network retry (deployment rollover resilience)', () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('retries once after network error (Failed to fetch)', async () => {
+      mockFetch
+        // First call: network error
+        .mockRejectedValueOnce(new TypeError('Failed to fetch'))
+        // Retry after 1s: success
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ data: 'recovered' }),
+        });
+
+      const promise = api.get('/test');
+      // Advance past the 1s retry delay
+      await jest.advanceTimersByTimeAsync(1100);
+      const result = await promise;
+
+      expect(result).toEqual({ data: 'recovered' });
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+    });
+
+    it('throws if retry also fails with network error', async () => {
+      jest.useRealTimers();
+      mockFetch
+        .mockRejectedValueOnce(new TypeError('Failed to fetch'))
+        .mockRejectedValueOnce(new TypeError('Failed to fetch'));
+
+      await expect(api.get('/test')).rejects.toThrow('Failed to fetch');
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+    });
+
+    it('does not retry on successful HTTP error responses', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        json: async () => ({ message: 'Server Error' }),
+      });
+
+      await expect(api.get('/test')).rejects.toThrow('Server Error');
+      // Only 1 call — no retry for HTTP errors (only network failures)
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+    });
+
+    it('retries network errors for getText', async () => {
+      mockFetch
+        .mockRejectedValueOnce(new TypeError('Failed to fetch'))
+        .mockResolvedValueOnce({
+          ok: true,
+          text: async () => 'csv,data',
+        });
+
+      const promise = api.getText('/export');
+      await jest.advanceTimersByTimeAsync(1100);
+      const result = await promise;
+
+      expect(result).toBe('csv,data');
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+    });
+
+    it('retries network errors for upload', async () => {
+      mockFetch
+        .mockRejectedValueOnce(new TypeError('Failed to fetch'))
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ url: 'uploaded.jpg' }),
+        });
+
+      const formData = new FormData();
+      const promise = api.upload('/upload', formData);
+      await jest.advanceTimersByTimeAsync(1100);
+      const result = await promise;
+
+      expect(result).toEqual({ url: 'uploaded.jpg' });
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+    });
+  });
+
   describe('edge cases', () => {
     it('does not redirect to /login on 401 when already on login page', async () => {
       window.location.pathname = '/login';

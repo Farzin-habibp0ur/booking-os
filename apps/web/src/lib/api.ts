@@ -46,6 +46,20 @@ class ApiClient {
     return this.refreshPromise;
   }
 
+  /**
+   * Retry a fetch call once after a short delay for transient network errors
+   * (e.g., deployment rollover causing "Failed to fetch").
+   */
+  private async fetchWithRetry(url: string, init: RequestInit): Promise<Response> {
+    try {
+      return await fetch(url, init);
+    } catch (err) {
+      // Network error (Failed to fetch) — retry once after 1s
+      await new Promise((r) => setTimeout(r, 1000));
+      return fetch(url, init);
+    }
+  }
+
   private async request<T>(path: string, options: RequestInit = {}, isRetry = false): Promise<T> {
     const token = this.getToken();
     const headers: Record<string, string> = {
@@ -55,7 +69,7 @@ class ApiClient {
     // Send Bearer token as fallback; httpOnly cookies are sent automatically
     if (token) headers['Authorization'] = `Bearer ${token}`;
 
-    const res = await fetch(`${API_URL}${path}`, {
+    const res = await this.fetchWithRetry(`${API_URL}${path}`, {
       ...options,
       headers,
       credentials: 'include', // Send cookies with every request
@@ -99,7 +113,7 @@ class ApiClient {
     const headers: Record<string, string> = {};
     if (token) headers['Authorization'] = `Bearer ${token}`;
 
-    const res = await fetch(`${API_URL}${path}`, {
+    const res = await this.fetchWithRetry(`${API_URL}${path}`, {
       headers,
       credentials: 'include',
     });
@@ -140,7 +154,7 @@ class ApiClient {
     const headers: Record<string, string> = {};
     if (token) headers['Authorization'] = `Bearer ${token}`;
 
-    const res = await fetch(`${API_URL}${path}`, {
+    const res = await this.fetchWithRetry(`${API_URL}${path}`, {
       method: 'POST',
       headers,
       body: formData,
@@ -155,7 +169,7 @@ class ApiClient {
           const retryHeaders: Record<string, string> = {};
           const newToken = this.getToken();
           if (newToken) retryHeaders['Authorization'] = `Bearer ${newToken}`;
-          const retryRes = await fetch(`${API_URL}${path}`, {
+          const retryRes = await this.fetchWithRetry(`${API_URL}${path}`, {
             method: 'POST',
             headers: retryHeaders,
             body: formData,

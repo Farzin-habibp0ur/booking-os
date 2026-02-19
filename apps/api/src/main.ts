@@ -89,6 +89,9 @@ async function bootstrap() {
 
   app.useGlobalFilters(new AllExceptionsFilter());
 
+  // Graceful shutdown: finish in-flight requests before container stops during deploys
+  app.enableShutdownHooks();
+
   const port = process.env.API_PORT || 3001;
   await app.listen(port);
   logger.log(`Booking OS API running on http://localhost:${port}`);
