@@ -8,7 +8,7 @@
 
 ## 1. Product Overview
 
-**Booking OS** is a multi-tenant SaaS platform for service-based businesses (aesthetic clinics, salons, spas, tutoring centers) to manage bookings, customer conversations, and operations — with AI-powered automation.
+**Booking OS** is a multi-tenant SaaS platform for service-based businesses (aesthetic clinics, car dealerships, salons, spas) to manage bookings, customer conversations, and operations — with AI-powered agentic automation.
 
 ### Core Capabilities
 - **Appointment scheduling** with calendar views, conflict detection, recurring bookings, and automated reminders
@@ -21,7 +21,7 @@
 - **Multi-language support** (English, Spanish) with customizable per-business translation overrides
 - **Billing integration** via Stripe (basic/pro plans), deposit collection
 - **Calendar sync** — Google Calendar OAuth integration, iCal feed generation
-- **Vertical packs** — industry-specific configurations (aesthetic, salon, tutoring, general)
+- **Vertical packs** — industry-specific configurations (aesthetic, dealership, salon, tutoring, general)
 - **Public booking portal** — Customer-facing booking page at `/book/{slug}` with waitlist join
 - **Setup wizard** — 10-step onboarding flow with feature readiness checklist and test booking
 - **Dark mode** — System preference detection, manual toggle, full UI coverage
@@ -116,12 +116,18 @@
 | Messaging | WhatsApp Business Cloud API |
 | Monitoring | Sentry |
 
-### Default Seed Data (Demo Account)
-- **Business:** Glow Aesthetic Clinic (slug: glow-aesthetic)
+### Default Seed Data (Demo Accounts)
+
+**Glow Aesthetic Clinic** (slug: glow-aesthetic)
 - **Login:** sarah@glowclinic.com / password123
 - **Staff:** Dr. Sarah Chen (Admin), Maria Garcia (Agent), Dr. Emily Park (Service Provider)
 - **Services:** Botox ($350/30min, deposit $100), Dermal Filler ($500/45min), Chemical Peel ($200/60min), Microneedling ($275/45min), Consultation (Free/20min)
-- **Customers:** Emma Wilson (VIP), James Thompson (New, latex allergy), Sofia Rodriguez (Regular), Liam Parker (deposit demo)
+- **Customers:** 20+ including Emma Wilson (VIP), James Thompson, Sofia Rodriguez, Liam Parker
+
+**Metro Auto Group** (slug: metro-auto)
+- **Login:** mike@metroauto.com / password123
+- **Staff:** Mike Torres (Admin), Jen Davis (Agent), Carlos Ruiz (Service Provider), Priya Shah (Service Provider)
+- **Services:** Oil Change, Full Detailing, Brake Service, Tire Rotation, Pre-Purchase Inspection
 
 ---
 
@@ -706,19 +712,25 @@ Two tabs: **Info** | **Notes**
 
 ## 4. Data Models
 
-### 4.1 Entity Relationship Overview (50 Models)
+### 4.1 Entity Relationship Overview (42 Models)
 
 ```
 Business (1) ──┬── (*) Staff ──── (*) WorkingHours
                │                  ├── (*) TimeOff
-               │                  └── (*) CalendarConnection
+               │                  ├── (*) CalendarConnection
+               │                  └── (*) StaffLocation ──── Location
                ├── (*) Customer ──── (*) CustomerNote
                ├── (*) Service
                ├── (*) Booking ──── (*) Reminder
-               │                    └── (*) Payment
+               │    │               ├── (*) Payment
+               │    │               └── (*) Quote
+               │    ├── Location (optional)
+               │    └── Resource (optional)
                ├── (*) RecurringSeries
                ├── (*) Conversation ──── (*) Message
-               │                        └── (*) ConversationNote
+               │    │                    └── (*) ConversationNote
+               │    └── Location (optional)
+               ├── (*) Location ──── (*) Resource
                ├── (*) MessageTemplate
                ├── (*) Translation
                ├── (1) Subscription
@@ -728,8 +740,9 @@ Business (1) ──┬── (*) Staff ──── (*) WorkingHours
                ├── (*) WaitlistEntry
                ├── (*) AutomationRule ──── (*) AutomationLog
                ├── (*) Campaign ──── (*) CampaignSend
-               ├── (*) Offer
+               ├── (*) Offer ──── (*) OfferRedemption
                ├── (*) SavedView
+               ├── (*) VerticalPackVersion
                ├── (*) ActionCard ──── (*) ActionHistory
                ├── (*) AutonomyConfig
                ├── (*) OutboundDraft
@@ -855,14 +868,14 @@ Business (1) ──┬── (*) Staff ──── (*) WorkingHours
 - **Campaign:** name, status (DRAFT/SCHEDULED/SENDING/SENT/CANCELLED), templateId, filters (JSON), throttlePerMinute, stats (JSON)
 - **CampaignSend:** campaignId, customerId, status (PENDING/SENT/DELIVERED/READ/FAILED), sentAt, bookingId (attribution)
 - **Offer:** name, description, terms, serviceIds[], validFrom/Until, isActive, maxRedemptions, currentRedemptions
-- **ActionCard:** businessId, type (string), title, summary, priority (LOW/MEDIUM/HIGH/URGENT), status (PENDING/APPROVED/DISMISSED/SNOOZED/EXPIRED/EXECUTED), entityType (string), entityId (string), suggestedAction (JSON), reasoning (string), expiresAt, snoozedUntil — Agentic action recommendations surfaced to staff
-- **ActionHistory:** businessId, actionCardId (optional FK), actionType, entityType, entityId, staffId (optional FK), performedBy (STAFF/SYSTEM/AI), details (JSON), outcome — Unified polymorphic audit trail
-- **AutonomyConfig:** businessId, actionType (unique per business), autonomyLevel (OFF/SUGGEST/AUTO_WITH_REVIEW/FULL_AUTO), requiresApprovalAbove (JSON), notifyOnAction (boolean), cooldownMinutes (int) — Per-action-type autonomy configuration
-- **OutboundDraft:** businessId, customerId (FK), staffId (FK), channel, subject, body, status (DRAFT/QUEUED/SENT/FAILED), scheduledFor, sentAt, metadata (JSON) — Staff-initiated outbound message drafts
-- **AgentConfig:** businessId, agentType, isEnabled, config (JSON), autonomyLevel, schedule (JSON) — Per-business agent configuration and scheduling
-- **AgentRun:** businessId, agentConfigId (FK), status, startedAt, completedAt, result (JSON), error — Agent execution run tracking with status and results
-- **AgentFeedback:** agentRunId (FK), staffId, rating, comment — Staff feedback on agent run outcomes
-- **DuplicateCandidate:** businessId, sourceCustomerId, targetCustomerId, confidence, status, resolvedAt, resolvedBy — Duplicate customer detection candidates
+- **ActionCard:** businessId, type (DEPOSIT_PENDING/OVERDUE_REPLY/OPEN_SLOT/etc.), category (URGENT_TODAY/NEEDS_APPROVAL/OPPORTUNITY/HYGIENE), priority (0-100 int), title, description ("Because..." text), suggestedAction, preview (JSON diff), ctaConfig (JSON buttons), status (PENDING/APPROVED/DISMISSED/SNOOZED/EXECUTED/EXPIRED), autonomyLevel (OFF/ASSISTED/AUTO), snoozedUntil, expiresAt, bookingId?, customerId?, conversationId?, staffId?, resolvedById?, metadata — Agentic action recommendations
+- **ActionHistory:** businessId, actorType (STAFF/AI/SYSTEM/CUSTOMER), actorId?, actorName?, action (BOOKING_CREATED/CARD_APPROVED/etc.), entityType (BOOKING/CONVERSATION/CUSTOMER/ACTION_CARD/SETTING), entityId, description?, diff (JSON before/after), metadata — Unified polymorphic audit trail
+- **AutonomyConfig:** businessId, actionType (unique per biz), autonomyLevel (OFF/ASSISTED/AUTO), requiredRole?, constraints (JSON {maxPerDay, maxAmount}) — Per-action-type autonomy configuration
+- **OutboundDraft:** businessId, customerId (FK), staffId (FK), channel (WHATSAPP), content, status (DRAFT/APPROVED/SENT/REJECTED), approvedById?, sentAt?, conversationId? — Staff-initiated outbound message drafts
+- **AgentConfig:** businessId, agentType (WAITLIST/RETENTION/DATA_HYGIENE/SCHEDULING_OPTIMIZER/QUOTE_FOLLOWUP), isEnabled, autonomyLevel (AUTO/SUGGEST/REQUIRE_APPROVAL), config (JSON), roleVisibility (String[]) — Per-business agent configuration
+- **AgentRun:** businessId, agentType, status (RUNNING/COMPLETED/FAILED), cardsCreated (Int), error?, startedAt, completedAt — Agent execution run tracking
+- **AgentFeedback:** businessId, actionCardId (FK), staffId (FK), rating (HELPFUL/NOT_HELPFUL), comment? — Staff feedback on agent suggestions
+- **DuplicateCandidate:** businessId, customerId1 (FK), customerId2 (FK), confidence (Float), matchFields (String[]), status (PENDING/MERGED/NOT_DUPLICATE/SNOOZED), resolvedBy?, resolvedAt — Duplicate customer detection candidates
 
 ---
 

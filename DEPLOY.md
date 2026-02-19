@@ -521,6 +521,15 @@ DATABASE_URL="<public-db-url>" npx tsx packages/db/src/seed-demo.ts
 
 Both scripts are idempotent — they check for existing data before inserting.
 
+**One-time agentic data fill** (only needed if seed-demo.ts was run before agentic tables existed):
+```bash
+# Compile and run via Railway SSH
+npx tsc --esModuleInterop --module commonjs --target ES2020 --outDir /tmp/seed-agentic packages/db/src/seed-agentic.ts
+B64=$(base64 -i /tmp/seed-agentic/seed-agentic.js)
+npx @railway/cli ssh --service api -e production -- "echo '$B64' | base64 -d > /app/seed-agentic.js && cd /app && node seed-agentic.js"
+```
+This script fills autonomyConfig, actionHistory, outboundDraft, and agentConfig tables. It's idempotent (skips tables that already have data).
+
 ### Database Backups
 
 ```bash
@@ -670,6 +679,16 @@ Common causes:
 - Missing required env var (JWT_SECRET, DATABASE_URL)
 - Database unreachable (check DATABASE_URL, network)
 - Prisma migration failed (schema drift — run `npx prisma migrate deploy` manually)
+
+### "Table does not exist" errors after adding new Prisma models
+
+**Root cause:** Models were added during development via `prisma db push` instead of `prisma migrate dev`. `db push` updates the database directly but does NOT create migration files. Production runs `prisma migrate deploy`, which only applies migration files.
+
+**Fix:**
+1. Create a migration file manually: `packages/db/prisma/migrations/<timestamp>_<name>/migration.sql`
+2. Write the CREATE TABLE, indexes, and foreign key SQL
+3. Mark as already applied locally: `npx prisma migrate resolve --applied <timestamp>_<name>`
+4. Commit and push — production will apply the migration on next deploy
 
 ### "Failed to fetch" or API calls blocked by CSP
 

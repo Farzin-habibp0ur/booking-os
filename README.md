@@ -160,18 +160,24 @@ Copy `.env.example` to `.env` for a full list of configuration options. Key vari
 
 ## Deployment
 
-The project includes Docker Compose configurations for production deployment with Nginx reverse proxy. See [`docs/cicd.md`](docs/cicd.md) for the full CI/CD pipeline documentation.
+The project includes Docker Compose configurations for production deployment with Nginx reverse proxy.
+
+- **Production (Railway):** Push to `main` → CI → `railway up --detach`. See [`DEPLOY.md`](DEPLOY.md) for full deployment & operations guide.
+- **Self-hosted:** `docker-compose.prod.yml` with Nginx + SSL. See [`DEPLOY.md`](DEPLOY.md) section 4.
+- **CI/CD Pipeline:** See [`docs/cicd.md`](docs/cicd.md) for pipeline details.
 
 ```bash
-# Production build and deploy
-make deploy
+# Local demo quick-start (auto-seeds)
+docker compose -f docker-compose.demo.yml up -d
 ```
 
 ## Project Documentation
 
 | Document | Description |
 |----------|-------------|
+| [`docs/PROJECT_CONTEXT.md`](docs/PROJECT_CONTEXT.md) | Complete project context — schema, modules, roadmap, architecture |
 | [`DESIGN_DOCUMENTATION.md`](DESIGN_DOCUMENTATION.md) | Product design, data models, user flows, tech stack |
+| [`DEPLOY.md`](DEPLOY.md) | Deployment & operations guide (Railway, Docker, troubleshooting) |
 | [`CLAUDE.md`](CLAUDE.md) | Design system and UI guidelines |
 | [`DEMO_SCRIPT.md`](DEMO_SCRIPT.md) | Demo walkthrough script |
 | [`docs/cicd.md`](docs/cicd.md) | CI/CD pipeline and deployment |

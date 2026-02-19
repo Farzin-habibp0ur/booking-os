@@ -2,7 +2,7 @@
 
 > **Purpose:** This document gives full context on the Booking OS platform — what it is, what's been built, how it's structured, and what's left to build. Share this with an AI assistant or new developer to get productive immediately.
 >
-> **Last updated:** February 19, 2026 (Agentic-First Transformation complete — all 5 milestones)
+> **Last updated:** February 19, 2026 (Agentic-First Transformation complete & deployed to production — all 5 milestones)
 
 ---
 
@@ -196,7 +196,7 @@ booking-os/
 ├── apps/
 │   ├── api/                    # NestJS REST API (port 3001)
 │   │   ├── src/
-│   │   │   ├── modules/        # 46 feature modules
+│   │   │   ├── modules/        # 42 feature modules
 │   │   │   ├── common/         # Guards, decorators, filters, DTOs, Prisma service
 │   │   │   └── main.ts         # Bootstrap, Swagger, CORS, cookies, validation
 │   │   └── Dockerfile          # Multi-stage production build
@@ -210,10 +210,11 @@ booking-os/
 │   │   └── Dockerfile          # Multi-stage production build
 │   └── whatsapp-simulator/     # WhatsApp testing tool (port 3002)
 ├── packages/
-│   ├── db/                     # Prisma schema (50 models), migrations, seed scripts
+│   ├── db/                     # Prisma schema (42 models), migrations, seed scripts
 │   │   ├── prisma/schema.prisma
 │   │   ├── src/seed.ts         # Base seed (idempotent)
-│   │   └── src/seed-demo.ts    # Rich demo data (idempotent)
+│   │   ├── src/seed-demo.ts    # Rich demo data (idempotent)
+│   │   └── src/seed-agentic.ts # One-time agentic data fill (production)
 │   ├── messaging-provider/     # WhatsApp Cloud API abstraction
 │   └── shared/                 # Shared types, DTOs, enums, profile field definitions
 ├── docs/
@@ -234,7 +235,7 @@ booking-os/
 
 ---
 
-## 5. Database Schema (50 Models)
+## 5. Database Schema (42 Models)
 
 ```
 Business (1) ──┬── (*) Staff ──── (*) WorkingHours
@@ -262,7 +263,7 @@ Business (1) ──┬── (*) Staff ──── (*) WorkingHours
                ├── (*) WaitlistEntry
                ├── (*) AutomationRule ──── (*) AutomationLog
                ├── (*) Campaign ──── (*) CampaignSend
-               ├── (*) Offer
+               ├── (*) Offer ──── (*) OfferRedemption
                ├── (*) SavedView
                ├── (*) VerticalPackVersion
                ├── (*) ActionCard ──── (*) ActionHistory
@@ -302,18 +303,18 @@ VerticalPack:       AESTHETIC, SALON, TUTORING, GENERAL, DEALERSHIP
 | **AutomationRule** | trigger (6 types), filters (JSON), actions (JSON), quietStart/End | Automation engine |
 | **Campaign** | filters (JSON), throttlePerMinute, stats (JSON) | Bulk messaging |
 | **SavedView** | businessId, staffId, page, name, filters (JSON), icon, color, isPinned, isDashboard, isShared, sortOrder | Named filter presets |
-| **ActionCard** | businessId, type, title, summary, priority (LOW/MEDIUM/HIGH/URGENT), status (PENDING/APPROVED/DISMISSED/SNOOZED/EXPIRED/EXECUTED), entityType, entityId, suggestedAction (JSON), reasoning, expiresAt, snoozedUntil | Agentic action recommendations with approve/dismiss/snooze/execute |
-| **ActionHistory** | businessId, actionCardId (optional), actionType, entityType, entityId, staffId, performedBy (STAFF/SYSTEM/AI), details (JSON), outcome | Unified audit trail for all actions (polymorphic entity references) |
-| **AutonomyConfig** | businessId, actionType (unique per biz), autonomyLevel (OFF/SUGGEST/AUTO_WITH_REVIEW/FULL_AUTO), requiresApprovalAbove (JSON), notifyOnAction, cooldownMinutes | Per-action-type autonomy level configuration |
-| **OutboundDraft** | businessId, customerId, staffId, channel, subject, body, status (DRAFT/QUEUED/SENT/FAILED), scheduledFor, sentAt, metadata (JSON) | Staff-initiated outbound message drafts |
-| **AgentConfig** | businessId, agentType, isEnabled, config (JSON), autonomyLevel, schedule (JSON) | Per-business agent configuration and scheduling |
-| **AgentRun** | businessId, agentConfigId (FK), status, startedAt, completedAt, result (JSON), error | Agent execution run tracking with status and results |
-| **AgentFeedback** | agentRunId (FK), staffId, rating, comment | Staff feedback on agent run outcomes |
-| **DuplicateCandidate** | businessId, sourceCustomerId, targetCustomerId, confidence, status, resolvedAt, resolvedBy | Duplicate customer detection candidates |
+| **ActionCard** | businessId, type (DEPOSIT_PENDING/OVERDUE_REPLY/OPEN_SLOT/etc.), category (URGENT_TODAY/NEEDS_APPROVAL/OPPORTUNITY/HYGIENE), priority (0-100 int), title, description ("Because..." text), suggestedAction, preview (JSON diff), ctaConfig (JSON buttons), status (PENDING/APPROVED/DISMISSED/SNOOZED/EXECUTED/EXPIRED), autonomyLevel (OFF/ASSISTED/AUTO), snoozedUntil, expiresAt, bookingId?, customerId?, conversationId?, staffId?, resolvedById?, metadata | Agentic action recommendations with approve/dismiss/snooze/execute |
+| **ActionHistory** | businessId, actorType (STAFF/AI/SYSTEM/CUSTOMER), actorId?, actorName?, action (BOOKING_CREATED/CARD_APPROVED/etc.), entityType (BOOKING/CONVERSATION/CUSTOMER/ACTION_CARD/SETTING), entityId, description?, diff (JSON before/after), metadata | Unified polymorphic audit trail |
+| **AutonomyConfig** | businessId, actionType (unique per biz), autonomyLevel (OFF/ASSISTED/AUTO), requiredRole?, constraints (JSON {maxPerDay, maxAmount, etc.}) | Per-action-type autonomy level configuration |
+| **OutboundDraft** | businessId, customerId (FK), staffId (FK), channel (WHATSAPP), content, status (DRAFT/APPROVED/SENT/REJECTED), approvedById?, sentAt?, conversationId? | Staff-initiated outbound message drafts |
+| **AgentConfig** | businessId, agentType (WAITLIST/RETENTION/DATA_HYGIENE/SCHEDULING_OPTIMIZER/QUOTE_FOLLOWUP), isEnabled, autonomyLevel (AUTO/SUGGEST/REQUIRE_APPROVAL), config (JSON), roleVisibility (String[]) | Per-business agent configuration |
+| **AgentRun** | businessId, agentType, status (RUNNING/COMPLETED/FAILED), cardsCreated (Int), error?, startedAt, completedAt | Agent execution run tracking |
+| **AgentFeedback** | businessId, actionCardId (FK), staffId (FK), rating (HELPFUL/NOT_HELPFUL), comment? | Staff feedback on agent suggestions |
+| **DuplicateCandidate** | businessId, customerId1 (FK), customerId2 (FK), confidence (Float), matchFields (String[]), status (PENDING/MERGED/NOT_DUPLICATE/SNOOZED), resolvedBy?, resolvedAt | Duplicate customer detection candidates |
 
 ---
 
-## 6. API Modules (40 Controllers)
+## 6. API Modules (42 Modules)
 
 All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 
@@ -515,8 +516,12 @@ Two scripts, both idempotent:
 - Metro Auto Group (dealership pack): 7 staff, 5 services, 4 locations, 10 resources, 2 customers, 5 templates
 
 **`packages/db/src/seed-demo.ts`** — Rich demo data:
-- Clinic: 20 customers, 36 bookings, 8 conversations, 6 waitlist entries, 3 campaigns, 3 automation rules, 5 payments
+- Clinic: 20 customers, 36 bookings, 8 conversations, 6 waitlist entries, 3 campaigns, 3 automation rules, 5 payments, 7 action cards, 6 action history, 3 autonomy configs, 2 outbound drafts
 - Dealership: 15 customers, 25 bookings with kanban statuses, 3 quotes, 4 conversations, 2 automation rules
+
+**`packages/db/src/seed-agentic.ts`** — One-time agentic data fill (used for production):
+- 6 autonomy configs, 7 action history entries, 2 outbound drafts, 9 agent configs (across both businesses)
+- Cleans up duplicate business entries if present
 
 ---
 
@@ -556,7 +561,7 @@ Key groups (full list in `.env.example`):
 
 ## 14. Roadmap — What's Next
 
-### Agentic-First Transformation (5 Milestones) — ALL COMPLETE
+### Agentic-First Transformation (5 Milestones) — ALL COMPLETE & DEPLOYED TO PRODUCTION
 - **Milestone 1: Agentic Foundations & Trust Rails** — COMPLETE (commit d8be527). 4 new models (ActionCard, ActionHistory, AutonomyConfig, OutboundDraft), 4 new API modules, 14 new frontend components, /settings/autonomy page. +170 tests.
 - **Milestone 2: Daily Briefing Agent** — COMPLETE. OpportunityDetectorService (cron-based scanner), BriefingService (grouped ActionCard feed), BriefingController (GET /briefing, GET /briefing/opportunities), 3 frontend components (BriefingCard, OpportunityCard, BriefingFeed), dashboard integration. +58 tests.
 - **Milestone 3: Inbox-as-OS** — COMPLETE. Agent framework (AgentConfig, AgentRun, AgentFeedback, DuplicateCandidate models), AgentFrameworkService + AgentSchedulerService + AGENT_PROCESSING queue, ConversationActionHandler, PolicyComplianceService, DepositCardHandler, HumanTakeoverService, ClarificationHandler, VerticalActionHandler, 3 frontend components (ActionCardInline, DepositCard, HumanTakeoverBanner). +158 tests.
