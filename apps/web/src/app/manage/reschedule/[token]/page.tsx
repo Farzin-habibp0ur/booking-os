@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import { publicApi } from '@/lib/public-api';
 import { Calendar, Clock, User, CheckCircle, AlertTriangle, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { AddToCalendar } from '@/components/add-to-calendar';
 
 interface BookingSummary {
   booking: {
@@ -132,6 +133,17 @@ export default function ReschedulePage() {
             })}{' '}
             at {selectedSlot.display}
           </p>
+        )}
+        {selectedSlot && data?.booking.service && (
+          <div className="mt-4">
+            <p className="text-xs text-slate-400 mb-2">Add to your calendar</p>
+            <AddToCalendar
+              title={`${data.booking.service.name}${data?.business?.name ? ` at ${data.business.name}` : ''}`}
+              startTime={selectedSlot.time}
+              durationMins={data.booking.service.durationMins}
+              location={data?.business?.name}
+            />
+          </div>
         )}
         <p className="text-sm text-slate-400 mt-4">You can close this page.</p>
       </div>

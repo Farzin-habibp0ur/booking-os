@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { publicApi } from '@/lib/public-api';
 import { Skeleton } from '@/components/skeleton';
+import { AddToCalendar } from '@/components/add-to-calendar';
 import {
   ChevronLeft,
   Clock,
@@ -854,6 +855,17 @@ export default function BookingPortalPage() {
               </div>
             )}
           </div>
+          {!bookingResult.depositRequired && selectedService && (
+            <div className="mt-4">
+              <p className="text-xs text-slate-400 mb-2">Add to your calendar</p>
+              <AddToCalendar
+                title={`${bookingResult.serviceName}${business?.name ? ` at ${business.name}` : ''}`}
+                startTime={bookingResult.startTime as unknown as string}
+                durationMins={selectedService.durationMins}
+                location={business?.name}
+              />
+            </div>
+          )}
           {(business?.cancellationPolicyText || business?.reschedulePolicyText) && (
             <div className="mt-4 bg-slate-50 rounded-xl p-4 text-left">
               <div className="flex items-center gap-1.5 mb-2">

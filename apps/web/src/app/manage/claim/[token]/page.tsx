@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { publicApi } from '@/lib/public-api';
 import { CheckCircle, Clock, AlertTriangle } from 'lucide-react';
+import { AddToCalendar } from '@/components/add-to-calendar';
 
 interface ClaimSummary {
   entry: {
@@ -106,6 +107,17 @@ export default function ClaimWaitlistPage() {
                   })}
                 </span>
               </div>
+            </div>
+          )}
+          {summary && (
+            <div className="mt-4">
+              <p className="text-xs text-slate-400 mb-2">Add to your calendar</p>
+              <AddToCalendar
+                title={`${summary.entry.service.name}${summary.business?.name ? ` at ${summary.business.name}` : ''}`}
+                startTime={summary.entry.offeredSlot.startTime}
+                durationMins={summary.entry.service.durationMins}
+                location={summary.business?.name}
+              />
             </div>
           )}
         </div>

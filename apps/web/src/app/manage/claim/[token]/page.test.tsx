@@ -5,6 +5,9 @@ jest.mock('next/navigation', () => ({
   useParams: () => ({ token: 'test-token-123' }),
 }));
 jest.mock('@/lib/cn', () => ({ cn: (...args: any[]) => args.filter(Boolean).join(' ') }));
+jest.mock('@/components/add-to-calendar', () => ({
+  AddToCalendar: (props: any) => <div data-testid="add-to-calendar" data-title={props.title} />,
+}));
 
 const mockPublicApi = {
   get: jest.fn(),
@@ -121,6 +124,19 @@ describe('ClaimWaitlistPage', () => {
       expect(
         screen.getByText('Your slot has been claimed and your booking is confirmed.'),
       ).toBeInTheDocument();
+    });
+  });
+
+  test('shows add-to-calendar after successful claim', async () => {
+    mockPublicApi.get.mockResolvedValue(mockClaimData);
+    mockPublicApi.post.mockResolvedValue({});
+    render(<ClaimWaitlistPage />);
+    await waitFor(() => screen.getByText('Confirm Booking'));
+
+    fireEvent.click(screen.getByText('Confirm Booking'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('add-to-calendar')).toBeInTheDocument();
     });
   });
 

@@ -23,6 +23,11 @@ jest.mock('@/components/skeleton', () => ({
   Skeleton: ({ className }: any) => <div data-testid="skeleton" className={className} />,
 }));
 
+// Mock add-to-calendar
+jest.mock('@/components/add-to-calendar', () => ({
+  AddToCalendar: (props: any) => <div data-testid="add-to-calendar" data-title={props.title} />,
+}));
+
 // Mock lucide-react icons
 jest.mock('lucide-react', () => ({
   ChevronLeft: (props: any) => <svg data-testid="chevron-left-icon" {...props} />,
@@ -1167,6 +1172,19 @@ describe('BookingPortalPage', () => {
 
       expect(screen.getByText('Cancel at least 24h in advance.')).toBeInTheDocument();
       expect(screen.getByText('Reschedule up to 12h before.')).toBeInTheDocument();
+    });
+
+    it('shows add-to-calendar on confirmed booking', async () => {
+      await goToSuccessStep();
+
+      expect(screen.getByTestId('add-to-calendar')).toBeInTheDocument();
+      expect(screen.getByText('Add to your calendar')).toBeInTheDocument();
+    });
+
+    it('does not show add-to-calendar when deposit required', async () => {
+      await goToSuccessStep(mockBookingResultWithDeposit);
+
+      expect(screen.queryByTestId('add-to-calendar')).not.toBeInTheDocument();
     });
   });
 

@@ -5,6 +5,9 @@ jest.mock('next/navigation', () => ({
   useParams: () => ({ token: 'test-token-123' }),
 }));
 jest.mock('@/lib/cn', () => ({ cn: (...args: any[]) => args.filter(Boolean).join(' ') }));
+jest.mock('@/components/add-to-calendar', () => ({
+  AddToCalendar: (props: any) => <div data-testid="add-to-calendar" data-title={props.title} />,
+}));
 
 const mockPublicApi = {
   get: jest.fn(),
@@ -198,6 +201,23 @@ describe('ReschedulePage', () => {
     await waitFor(() => {
       expect(screen.getByText('Appointment Rescheduled')).toBeInTheDocument();
       expect(screen.getByText(/Hydra Facial/)).toBeInTheDocument();
+    });
+  });
+
+  test('shows add-to-calendar after successful reschedule', async () => {
+    mockPublicApi.get.mockResolvedValueOnce(mockBookingData).mockResolvedValueOnce(mockSlots);
+    mockPublicApi.post.mockResolvedValue({});
+    render(<ReschedulePage />);
+    await waitFor(() => screen.getByText('Select a new date'));
+
+    fireEvent.click(screen.getAllByRole('button')[0]);
+    await waitFor(() => screen.getByText('9:00 AM'));
+
+    fireEvent.click(screen.getByText('9:00 AM'));
+    fireEvent.click(screen.getByText('Confirm New Time'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('add-to-calendar')).toBeInTheDocument();
     });
   });
 
