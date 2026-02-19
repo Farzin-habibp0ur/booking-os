@@ -12,6 +12,7 @@ import { KpiStrip } from './components/kpi-strip';
 import { MyWork } from './components/my-work';
 import { AttentionCards } from './components/attention-card';
 import { BriefingFeed } from '@/components/briefing';
+import { TodayTimeline } from './components/today-timeline';
 import {
   Calendar,
   MessageSquare,
@@ -595,74 +596,8 @@ export default function DashboardPage() {
 
           {/* Today's Appointments + Unassigned */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Today's Appointments */}
-            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft">
-              <div className="flex items-center justify-between p-6 pb-4">
-                <h2 className="font-semibold text-slate-900 dark:text-slate-100">
-                  {t('dashboard.todays_appointments')}
-                </h2>
-                <button
-                  onClick={() => router.push('/calendar')}
-                  className="text-xs text-sage-600 hover:text-sage-700 flex items-center gap-1 transition-colors"
-                >
-                  {t('dashboard.view_calendar')} <ArrowRight size={12} />
-                </button>
-              </div>
-              <div className="px-6 pb-6">
-                {data.todayBookings.length === 0 ? (
-                  <div className="text-center py-6">
-                    <Calendar size={24} className="mx-auto text-slate-300 mb-2" />
-                    <p className="text-slate-400 text-sm">{t('dashboard.no_appointments_today')}</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {data.todayBookings.map((b: any) => (
-                      <div
-                        key={b.id}
-                        className="flex items-center justify-between p-3 rounded-xl bg-slate-50/60 hover:bg-slate-50 transition-colors"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="text-center min-w-[48px]">
-                            <p className="text-sm font-semibold text-slate-900">
-                              {new Date(b.startTime).toLocaleTimeString('en-US', {
-                                hour: 'numeric',
-                                minute: '2-digit',
-                              })}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-slate-800">{b.customer?.name}</p>
-                            <p className="text-xs text-slate-500">
-                              {b.service?.name}
-                              {b.service?.kind === 'CONSULT' && (
-                                <span className="ml-1 text-[9px] bg-lavender-50 text-lavender-900 px-1 py-0 rounded-full">
-                                  C
-                                </span>
-                              )}
-                              {b.service?.kind === 'TREATMENT' && (
-                                <span className="ml-1 text-[9px] bg-sage-50 text-sage-900 px-1 py-0 rounded-full">
-                                  T
-                                </span>
-                              )}
-                              {b.staff ? ` · ${b.staff.name}` : ''}
-                            </p>
-                          </div>
-                        </div>
-                        <span
-                          className={cn(
-                            'text-[10px] px-2 py-0.5 rounded-full font-medium',
-                            STATUS_COLORS[b.status]?.bg,
-                            STATUS_COLORS[b.status]?.text,
-                          )}
-                        >
-                          {t(`status.${b.status.toLowerCase()}`)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
+            {/* Today's Timeline */}
+            <TodayTimeline todayBookings={data.todayBookings} onBookingUpdate={loadDashboard} />
 
             {/* Unassigned Conversations */}
             <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft">

@@ -87,6 +87,21 @@ jest.mock('@/lib/use-mode', () => ({
   ModeProvider: ({ children }: any) => children,
 }));
 
+// Mock TodayTimeline — renders bookings and view_calendar link (uses mockPush above)
+jest.mock('./components/today-timeline', () => ({
+  TodayTimeline: ({ todayBookings }: any) => (
+    <div data-testid="today-timeline">
+      <button onClick={() => mockPush('/calendar')}>dashboard.view_calendar</button>
+      {(!todayBookings || todayBookings.length === 0) && <p>dashboard.no_appointments_today</p>}
+      {todayBookings?.map((b: any) => (
+        <div key={b.id} data-testid="timeline-booking">
+          {b.customer?.name}
+        </div>
+      ))}
+    </div>
+  ),
+}));
+
 // Mock BriefingFeed
 jest.mock('@/components/briefing', () => ({
   BriefingFeed: ({ onCardAction }: any) => (
@@ -687,7 +702,7 @@ describe('DashboardPage', () => {
     });
   });
 
-  it('displays consult badge for CONSULT service kind', async () => {
+  it('passes today bookings to TodayTimeline component', async () => {
     mockDashboard({
       ...baseDashboardData,
       todayBookings: [
@@ -699,26 +714,12 @@ describe('DashboardPage', () => {
           startTime: '2026-02-15T10:00:00Z',
           status: 'CONFIRMED',
         },
-      ],
-    });
-
-    render(<DashboardPage />);
-
-    await waitFor(() => {
-      expect(screen.getByText('C')).toBeInTheDocument();
-    });
-  });
-
-  it('displays treatment badge for TREATMENT service kind', async () => {
-    mockDashboard({
-      ...baseDashboardData,
-      todayBookings: [
         {
-          id: 'b1',
+          id: 'b2',
           customer: { name: 'Bob' },
           service: { name: 'Botox', kind: 'TREATMENT' },
           staff: { name: 'Dr. Smith' },
-          startTime: '2026-02-15T10:00:00Z',
+          startTime: '2026-02-15T11:00:00Z',
           status: 'CONFIRMED',
         },
       ],
@@ -727,7 +728,9 @@ describe('DashboardPage', () => {
     render(<DashboardPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('T')).toBeInTheDocument();
+      expect(screen.getByText('Alice')).toBeInTheDocument();
+      expect(screen.getByText('Bob')).toBeInTheDocument();
+      expect(screen.getByTestId('today-timeline')).toBeInTheDocument();
     });
   });
 
