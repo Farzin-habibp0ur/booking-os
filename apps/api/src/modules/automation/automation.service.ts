@@ -159,6 +159,46 @@ export class AutomationService {
     return { data, total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
   }
 
+  async getPlaybookStats(businessId: string, playbookId: string) {
+    const rule = await this.prisma.automationRule.findFirst({
+      where: { businessId, playbook: playbookId },
+      select: { id: true },
+    });
+
+    if (!rule) {
+      return { sent: 0, skipped: 0, failed: 0, total: 0, lastRun: null };
+    }
+
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const logs = await this.prisma.automationLog.groupBy({
+      by: ['outcome'],
+      where: {
+        automationRuleId: rule.id,
+        createdAt: { gte: sevenDaysAgo },
+      },
+      _count: { outcome: true },
+    });
+
+    const lastLog = await this.prisma.automationLog.findFirst({
+      where: { automationRuleId: rule.id },
+      orderBy: { createdAt: 'desc' },
+      select: { createdAt: true },
+    });
+
+    const stats = { sent: 0, skipped: 0, failed: 0, total: 0, lastRun: lastLog?.createdAt || null };
+    for (const group of logs) {
+      const count = group._count.outcome;
+      stats.total += count;
+      if (group.outcome === 'SENT') stats.sent = count;
+      else if (group.outcome === 'SKIPPED') stats.skipped = count;
+      else if (group.outcome === 'FAILED') stats.failed = count;
+    }
+
+    return stats;
+  }
+
   async testRule(businessId: string, ruleId: string) {
     const rule = await this.prisma.automationRule.findFirst({ where: { id: ruleId, businessId } });
     if (!rule) throw new NotFoundException('Rule not found');

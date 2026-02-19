@@ -85,6 +85,20 @@ jest.mock('@/components/skeleton', () => ({
   ),
 }));
 
+// Mock PlaybookCard
+jest.mock('./components/playbook-card', () => ({
+  PlaybookCard: ({ playbook, onToggle }: any) => (
+    <div data-testid={`playbook-card-${playbook.playbook}`}>
+      <span>{playbook.name}</span>
+      <span>{playbook.description}</span>
+      <span>{playbook.isActive ? 'Active' : 'Off'}</span>
+      <button onClick={() => onToggle(playbook.playbook)}>
+        {playbook.isActive ? 'Disable' : 'Enable'}
+      </button>
+    </div>
+  ),
+}));
+
 // Mock tooltip-nudge
 jest.mock('@/components/tooltip-nudge', () => ({
   __esModule: true,

@@ -32,6 +32,11 @@ export class AutomationController {
     return this.automationService.togglePlaybook(businessId, id);
   }
 
+  @Get('playbooks/:id/stats')
+  getPlaybookStats(@BusinessId() businessId: string, @Param('id') id: string) {
+    return this.automationService.getPlaybookStats(businessId, id);
+  }
+
   @Get('rules')
   getRules(@BusinessId() businessId: string) {
     return this.automationService.getRules(businessId);

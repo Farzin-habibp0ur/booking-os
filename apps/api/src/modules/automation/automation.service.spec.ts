@@ -129,6 +129,36 @@ describe('AutomationService', () => {
     });
   });
 
+  describe('getPlaybookStats', () => {
+    it('returns zero stats when playbook is not installed', async () => {
+      prisma.automationRule.findFirst.mockResolvedValue(null);
+
+      const result = await automationService.getPlaybookStats('biz1', 'no-show-prevention');
+
+      expect(result).toEqual({ sent: 0, skipped: 0, failed: 0, total: 0, lastRun: null });
+    });
+
+    it('returns aggregated stats for installed playbook', async () => {
+      prisma.automationRule.findFirst.mockResolvedValue({ id: 'rule1' } as any);
+      prisma.automationLog.groupBy.mockResolvedValue([
+        { outcome: 'SENT', _count: { outcome: 10 } },
+        { outcome: 'SKIPPED', _count: { outcome: 3 } },
+        { outcome: 'FAILED', _count: { outcome: 1 } },
+      ] as any);
+      prisma.automationLog.findFirst.mockResolvedValue({
+        createdAt: new Date('2026-02-19T10:00:00Z'),
+      } as any);
+
+      const result = await automationService.getPlaybookStats('biz1', 'no-show-prevention');
+
+      expect(result.sent).toBe(10);
+      expect(result.skipped).toBe(3);
+      expect(result.failed).toBe(1);
+      expect(result.total).toBe(14);
+      expect(result.lastRun).toEqual(new Date('2026-02-19T10:00:00Z'));
+    });
+  });
+
   describe('testRule', () => {
     it('returns dry run result for valid rule', async () => {
       prisma.automationRule.findFirst.mockResolvedValue({

@@ -8,6 +8,7 @@ import { useToast } from '@/lib/toast';
 import { Zap, Plus, ToggleLeft, ToggleRight, Trash2, Play } from 'lucide-react';
 import { TableRowSkeleton, EmptyState } from '@/components/skeleton';
 import TooltipNudge from '@/components/tooltip-nudge';
+import { PlaybookCard } from './components/playbook-card';
 
 type Tab = 'playbooks' | 'rules' | 'logs';
 
@@ -134,32 +135,11 @@ export default function AutomationsPage() {
                 </div>
               ))
             : playbooks.map((pb) => (
-                <div key={pb.playbook || pb.id} className="bg-white rounded-2xl shadow-soft p-5">
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="text-sm font-semibold text-slate-900">{pb.name}</h3>
-                    <span
-                      className={cn(
-                        'text-xs px-2 py-0.5 rounded-full',
-                        pb.isActive ? 'bg-sage-50 text-sage-700' : 'bg-slate-100 text-slate-500',
-                      )}
-                    >
-                      {pb.isActive ? 'Active' : 'Off'}
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-500 mb-4">{pb.description}</p>
-                  <button
-                    onClick={() => handleTogglePlaybook(pb.playbook)}
-                    className={cn(
-                      'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm transition-colors',
-                      pb.isActive
-                        ? 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                        : 'bg-sage-600 text-white hover:bg-sage-700',
-                    )}
-                  >
-                    {pb.isActive ? <ToggleRight size={16} /> : <ToggleLeft size={16} />}
-                    {pb.isActive ? 'Disable' : 'Enable'}
-                  </button>
-                </div>
+                <PlaybookCard
+                  key={pb.playbook || pb.id}
+                  playbook={pb}
+                  onToggle={handleTogglePlaybook}
+                />
               ))}
         </div>
       )}
