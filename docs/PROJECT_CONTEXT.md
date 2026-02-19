@@ -2,7 +2,7 @@
 
 > **Purpose:** This document gives full context on the Booking OS platform — what it is, what's been built, how it's structured, and what's left to build. Share this with an AI assistant or new developer to get productive immediately.
 >
-> **Last updated:** February 19, 2026 (Agentic-First Transformation complete & deployed to production — all 5 milestones)
+> **Last updated:** February 19, 2026 (UX Upgrade Pack Release 2 complete — CSV exports, duplicate review, today timeline, attention cards, briefing snooze)
 
 ---
 
@@ -28,8 +28,8 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 
 ### Core Capabilities (All Built & Working)
 
-- **Appointment scheduling** — Calendar views (day/week), conflict detection, recurring bookings, automated reminders, force-book with reason
-- **WhatsApp messaging inbox** — Real-time via Socket.io, AI auto-replies, conversation management (assign, snooze, tag, close)
+- **Appointment scheduling** — Calendar views (day/week/month), conflict detection, recurring bookings, automated reminders, force-book with reason, drag-and-drop reschedule with recommended slots
+- **WhatsApp messaging inbox** — Real-time via Socket.io, AI auto-replies, conversation management (assign, snooze, tag, close), media attachments (images/docs/audio), delivery/read receipts, presence indicators
 - **AI booking assistant** — Guides customers through booking/cancellation/rescheduling via chat (powered by Claude API)
 - **AI features** — Intent detection, reply suggestions, conversation summaries, customer profile collection, per-customer AI chat
 - **Customer management** — Profiles with custom fields, tags, CSV import, AI-powered profile extraction from conversations
@@ -163,6 +163,27 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 - **AI state indicator** — ai-state-indicator.tsx showing real-time agent processing status
 - **Final counts (all 5 milestones):** 3,158 tests total (1,937 API + 1,221 web)
 
+### UX Upgrade Pack — Release 1 (Batches 1a–1h) — COMPLETE
+- **Media Attachments** (Batch 1a) — New `MessageAttachment` model (id, messageId, businessId, fileName, fileType, fileSize, storageKey, thumbnailKey), new Attachment API module (`attachment.service.ts`, `attachment.controller.ts`, `attachment.module.ts`), endpoints: `POST /conversations/:id/messages/media`, `GET /attachments/:id/download`. 18 tests.
+- **Delivery/Read Receipts** (Batch 1b) — New fields on Message model (`deliveryStatus`, `deliveredAt`, `readAt`, `failureReason`), `updateDeliveryStatus()` in MessageService, WebSocket `message:status` event, `POST /webhook/whatsapp/status` endpoint. 7 tests.
+- **Inbox Media UI + Receipt Indicators** (Batch 1c) — New components: `delivery-status.tsx`, `media-message.tsx`, `media-composer.tsx` integrated into inbox page. 14 tests.
+- **Outbound Initiation + Collision Detection** (Batch 1d) — `POST /outbound/send-direct` endpoint, presence tracking in InboxGateway (`viewing:start`/`viewing:stop`/`presence:update`), "Send Message" button on customer detail page, presence pills in inbox. 4 tests.
+- **Calendar Month View** (Batch 1e) — `GET /bookings/calendar/month-summary` endpoint, month view with 6x7 CSS grid, colored dots (sage=confirmed, lavender=pending, red=cancelled), click-to-drill (day), prev/next month navigation. 13 tests.
+- **Working Hours + Time-Off Visualization** (Batch 1f) — `GET /availability/calendar-context` endpoint, non-working hours shading (gray), time-off shading (red with "Time Off" badge). 6 tests.
+- **Drag-and-Drop Reschedule + Recommended Slots** (Batch 1g) — `GET /availability/recommended-slots` endpoint (top 5 scored by proximity + staff balance), `RecommendedSlots` component, HTML5 DnD on calendar (draggable cards, drop targets, 30-min snap, conflict detection, confirmation popover). 7 tests.
+- **Integration + Documentation** (Batch 1h) — Code formatting and documentation updates.
+- **Final counts:** 3,227 tests total (1,982 API + 1,245 web), +69 new tests
+
+### UX Upgrade Pack — Release 2 (Batches 2a–2g) — COMPLETE
+- **CSV Export API** (Batch 2a) — New Export module (`export.service.ts`, `export.controller.ts`), endpoints: `GET /customers/export`, `GET /bookings/export` with streaming CSV response (RFC 4180), field selection, date range filters, 10k row cap. 20 tests.
+- **Export UI + Duplicate Review Page** (Batch 2b) — `ExportModal` component with date range + field selection, `ExportButton` on customers/bookings pages, `/customers/duplicates` page with DuplicateMergeCard, status tabs (Pending/Snoozed/Resolved), merge/dismiss/snooze actions. 14 tests.
+- **Audit Export + Timeline Polish** (Batch 2c) — `GET /action-history/export` CSV endpoint with date/entity/actor filters, customer timeline count badges per event type. 13 tests.
+- **Today Timeline Component** (Batch 2d) — `TodayTimeline` component replacing flat appointments list on dashboard, vertical timeline with time markers (8AM–7PM), current time red indicator, gap indicators, quick action buttons (Start/Complete/No-Show/Open Chat). 14 tests.
+- **Enhanced Attention Cards + Actionable KPIs** (Batch 2e) — Primary action buttons on attention cards (Send Reminders/Open Queue/Confirm Schedule), "Resolve next" button, expand/collapse for >3 items, clickable KPI cards linking to relevant pages with action subtitles. 16 tests.
+- **Briefing Card Snooze + Expandable Details** (Batch 2f) — Snooze dropdown (1h/4h/tomorrow/next week) on briefing cards, expandable detail section (booking info, staff, suggested action), category border colors (red=urgent, lavender=approval, sage=opportunity), auto-refresh every 5 minutes. 11 tests.
+- **Integration + Documentation** (Batch 2g) — ActionHistory logging for CSV exports, i18n keys for new Release 2 features, documentation updates.
+- **Final counts:** 3,309 tests total (2,003 API + 1,306 web), +82 new tests
+
 ---
 
 ## 3. Tech Stack
@@ -196,7 +217,7 @@ booking-os/
 ├── apps/
 │   ├── api/                    # NestJS REST API (port 3001)
 │   │   ├── src/
-│   │   │   ├── modules/        # 42 feature modules
+│   │   │   ├── modules/        # 43 feature modules
 │   │   │   ├── common/         # Guards, decorators, filters, DTOs, Prisma service
 │   │   │   └── main.ts         # Bootstrap, Swagger, CORS, cookies, validation
 │   │   └── Dockerfile          # Multi-stage production build
@@ -210,7 +231,7 @@ booking-os/
 │   │   └── Dockerfile          # Multi-stage production build
 │   └── whatsapp-simulator/     # WhatsApp testing tool (port 3002)
 ├── packages/
-│   ├── db/                     # Prisma schema (42 models), migrations, seed scripts
+│   ├── db/                     # Prisma schema (43 models), migrations, seed scripts
 │   │   ├── prisma/schema.prisma
 │   │   ├── src/seed.ts         # Base seed (idempotent)
 │   │   ├── src/seed-demo.ts    # Rich demo data (idempotent)
@@ -235,7 +256,7 @@ booking-os/
 
 ---
 
-## 5. Database Schema (42 Models)
+## 5. Database Schema (43 Models)
 
 ```
 Business (1) ──┬── (*) Staff ──── (*) WorkingHours
@@ -250,7 +271,7 @@ Business (1) ──┬── (*) Staff ──── (*) WorkingHours
                │    ├── Location (optional)
                │    └── Resource (optional)
                ├── (*) RecurringSeries
-               ├── (*) Conversation ──── (*) Message
+               ├── (*) Conversation ──── (*) Message ──── (*) MessageAttachment
                │    │                    └── (*) ConversationNote
                │    └── Location (optional)
                ├── (*) Location ──── (*) Resource
@@ -311,17 +332,25 @@ VerticalPack:       AESTHETIC, SALON, TUTORING, GENERAL, DEALERSHIP
 | **AgentRun** | businessId, agentType, status (RUNNING/COMPLETED/FAILED), cardsCreated (Int), error?, startedAt, completedAt | Agent execution run tracking |
 | **AgentFeedback** | businessId, actionCardId (FK), staffId (FK), rating (HELPFUL/NOT_HELPFUL), comment? | Staff feedback on agent suggestions |
 | **DuplicateCandidate** | businessId, customerId1 (FK), customerId2 (FK), confidence (Float), matchFields (String[]), status (PENDING/MERGED/NOT_DUPLICATE/SNOOZED), resolvedBy?, resolvedAt | Duplicate customer detection candidates |
+| **MessageAttachment** | id, messageId (FK), businessId (FK), fileName, fileType, fileSize (Int), storageKey, thumbnailKey?, createdAt | Media attachments on messages (images, docs, audio) |
+
+### Message Model — Updated Fields
+The Message model now includes delivery receipt fields:
+- `deliveryStatus` — SENT/DELIVERED/READ/FAILED
+- `deliveredAt` — Timestamp when message was delivered
+- `readAt` — Timestamp when message was read
+- `failureReason` — Error description if delivery failed
 
 ---
 
-## 6. API Modules (42 Modules)
+## 6. API Modules (43 Modules)
 
 All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 
 | Module | Route Prefix | Key Operations |
 |--------|-------------|----------------|
 | **Auth** | `/auth` | signup, login, refresh, logout, forgot/reset/change password, accept-invite, verify-email |
-| **Bookings** | `/bookings` | CRUD, status change, kanban status, calendar view, kanban board, bulk ops, deposit/reschedule/cancel links, policy check |
+| **Bookings** | `/bookings` | CRUD, status change, kanban status, calendar view (day/week/month), month summary, kanban board, bulk ops, deposit/reschedule/cancel links, policy check |
 | **Recurring** | `/bookings/recurring` | Create series, cancel (single/future/all) |
 | **Customers** | `/customers` | CRUD, search, bulk tag, CSV import, conversation import, notes CRUD, timeline |
 | **Services** | `/services` | CRUD with soft delete |
@@ -335,7 +364,7 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 | **Reports** | `/reports` | 9 report types (bookings, revenue, no-shows, staff perf, peak hours, etc.) |
 | **ROI** | `/roi` | Go-live, baseline, dashboard, weekly review |
 | **AI** | `/ai` | Settings, conversation summary, booking/cancel/reschedule confirm, customer chat |
-| **Availability** | `/availability` | Available slots (by date, service, staff, location, resource) |
+| **Availability** | `/availability` | Available slots (by date, service, staff, location, resource), calendar context (working hours + time off), recommended slots (top 5 scored) |
 | **Search** | `/search` | Global search with offset, types filter, totals |
 | **Automations** | `/automations` | Playbooks toggle, rules CRUD, test, activity log |
 | **Campaigns** | `/campaigns` | CRUD, audience preview, send |
@@ -360,6 +389,7 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 | **Agent** | `/agent` | Agent framework CRUD, agent runs, scheduling, AGENT_PROCESSING queue, 5 background agents (waitlist, retention, data-hygiene, scheduling-optimizer, quote-followup) |
 | **Agent Feedback** | `/agent-feedback` | Staff feedback CRUD on agent run outcomes, aggregation stats |
 | **Agent Skills** | `/agent-skills` | Skills catalog per vertical pack, business-level overrides |
+| **Attachment** | `/attachments` | Media attachment upload (`POST /conversations/:id/messages/media`) and download (`GET /attachments/:id/download`) |
 
 ### Auth & Multi-tenancy
 - JWT in httpOnly cookies (access: 15 min, refresh: 7 days), automatic client-side refresh on 401
@@ -396,8 +426,8 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 | Setup Wizard | `/setup` | 10-step onboarding |
 | Dashboard | `/dashboard` | KPI metrics, attention items, checklist, milestones |
 | Bookings | `/bookings` | Filterable list, bulk actions, detail modal |
-| Calendar | `/calendar` | Day/week view, staff columns, click-to-book |
-| Inbox | `/inbox` | 3-pane messaging with AI suggestions |
+| Calendar | `/calendar` | Day/week/month view, staff columns, click-to-book, drag-and-drop reschedule, working hours/time-off visualization, recommended slots |
+| Inbox | `/inbox` | 3-pane messaging with AI suggestions, media attachments, delivery/read receipts, presence indicators |
 | Customers | `/customers` | Search, import, bulk tag |
 | Customer Detail | `/customers/[id]` | Profile hub: AI chat, timeline, notes, bookings, info, vertical modules |
 | Search | `/search` | Full search results page with type filters, grouped results, load more |
@@ -445,6 +475,14 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 - `SkillCard` — Agent skill catalog display with enable/disable per business (Milestone 5)
 - `VerticalLaunchChecklist` — Vertical-specific agent readiness checklist (Milestone 5)
 - `AiStateIndicator` — Real-time agent processing status indicator (Milestone 5)
+- `DeliveryStatus` — Message delivery/read receipt indicator (UX Upgrade Pack R1)
+- `MediaMessage` — Media attachment display (images, docs, audio) in inbox messages (UX Upgrade Pack R1)
+- `MediaComposer` — Media file attachment composer for outbound messages (UX Upgrade Pack R1)
+- `RecommendedSlots` — Top 5 recommended reschedule slots scored by proximity + staff balance (UX Upgrade Pack R1)
+- `ExportModal` — CSV export modal with date range + field selection (UX Upgrade Pack R2)
+- `TodayTimeline` — Vertical chronological timeline of today's bookings with quick actions (UX Upgrade Pack R2)
+- `AttentionCard` — Enhanced attention card with primary action buttons, expand/collapse, resolve-next navigation (UX Upgrade Pack R2)
+- `KpiStrip` — Clickable KPI cards with action subtitles and role-based metrics (UX Upgrade Pack R2)
 
 ---
 
@@ -480,6 +518,9 @@ AI state persisted in `conversation.metadata` JSON for stateful multi-turn flows
 | `ai:booking-state` | AI booking assistant progress |
 | `action-card:created` | New action card created by agent or system |
 | `action-card:updated` | Action card status change (approve/dismiss/snooze/execute) |
+| `message:status` | Message delivery/read receipt update (UX Upgrade Pack R1) |
+| `viewing:start` / `viewing:stop` | Presence tracking — staff viewing a conversation (UX Upgrade Pack R1) |
+| `presence:update` | Presence indicator update for inbox collision detection (UX Upgrade Pack R1) |
 
 ---
 
@@ -580,6 +621,8 @@ Key groups (full list in `.env.example`):
 
 ### UX Improvements
 - **UX Phase 1** (Role-based Modes + Mission Control + Saved Views) — COMPLETE
+- **UX Upgrade Pack Release 1** (Media Attachments, Delivery Receipts, Month View, DnD Reschedule, Recommended Slots, Working Hours Viz, Presence Detection) — COMPLETE (Batches 1a–1h, 69 new tests)
+- **UX Upgrade Pack Release 2** (CSV Exports, Duplicate Review, Today Timeline, Enhanced Attention Cards, Briefing Snooze + Expandable Details) — COMPLETE (Batches 2a–2g, 82 new tests)
 - See `docs/user-stories.md` for complete inventory (280 current capabilities, 215 identified gaps) and `docs/ux-brainstorm-brief.md` for brainstorm prompts.
 
 ### Code Quality
@@ -633,7 +676,7 @@ npm run dev                    # Starts all apps via Turborepo
 | `npm run dev` | Start all apps |
 | `npm run build` | Build all |
 | `npm run lint` | Lint all (ESLint + TypeScript) |
-| `npm test` | Run all tests (~3,158 tests) |
+| `npm test` | Run all tests (~3,309 tests) |
 | `npm run test:coverage` | Tests with coverage thresholds |
 | `npm run db:generate` | Generate Prisma client |
 | `npm run db:migrate` | Run migrations |

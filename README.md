@@ -103,7 +103,7 @@ All endpoints are prefixed with `/api/v1`. Interactive API docs are available at
 | Module | Route | Description |
 |--------|-------|-------------|
 | Auth | `/auth` | Login, registration, token management, email verification |
-| Bookings | `/bookings` | CRUD for appointments, status updates, bulk actions, deposit/reschedule/cancel links |
+| Bookings | `/bookings` | CRUD for appointments, status updates, bulk actions, deposit/reschedule/cancel links, month summary |
 | Recurring | `/bookings/recurring` | Recurring appointment series |
 | Customers | `/customers` | Customer profiles, import/export, bulk tag/untag, notes CRUD, unified timeline |
 | Services | `/services` | Service catalog with categories and service kinds |
@@ -116,7 +116,7 @@ All endpoints are prefixed with `/api/v1`. Interactive API docs are available at
 | Billing | `/billing` | Stripe subscriptions, webhooks, deposit collection |
 | Templates | `/templates` | Message and notification templates |
 | Translations | `/translations` | Multi-language support |
-| Availability | `/availability` | Staff availability and time slots |
+| Availability | `/availability` | Staff availability, time slots, calendar context (working hours + time off), recommended slots |
 | Business | `/business` | Business settings, notification/policy/waitlist settings, pack install |
 | ROI | `/roi` | ROI dashboard, baseline, weekly review, email review |
 | Vertical Packs | `/vertical-packs` | Industry-specific configurations |
@@ -144,6 +144,8 @@ All endpoints are prefixed with `/api/v1`. Interactive API docs are available at
 | Agent | `/agent` | Agent framework CRUD, agent runs, scheduling, AGENT_PROCESSING queue, 5 background agents |
 | Agent Feedback | `/agent-feedback` | Staff feedback CRUD on agent run outcomes, aggregation stats |
 | Agent Skills | `/agent-skills` | Skills catalog per vertical pack, business-level overrides |
+| Attachment | `/attachments` | Media attachment upload and download for messages |
+| Export | `/customers/export`, `/bookings/export` | Streaming CSV export with field selection, date range, 10k row cap |
 
 ## Environment Variables
 

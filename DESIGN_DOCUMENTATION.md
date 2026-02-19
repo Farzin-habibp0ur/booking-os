@@ -100,6 +100,26 @@
 - **Frontend components** — skill-card.tsx (skill catalog display with enable/disable), vertical-launch-checklist.tsx (vertical-specific agent readiness checklist), waitlist-match-card.tsx (waitlist auto-match opportunities), quote-followup-card.tsx (expired/pending quote follow-up actions), ai-state-indicator.tsx (real-time agent processing status)
 - **Final counts (all 5 milestones):** 3,158 tests total (1,937 API + 1,221 web)
 
+### UX Upgrade Pack — Release 1 (Batches 1a–1h) (Complete)
+- **Media Attachments** (Batch 1a) — New `MessageAttachment` model, Attachment API module (upload + download), `POST /conversations/:id/messages/media`, `GET /attachments/:id/download`. 18 tests.
+- **Delivery/Read Receipts** (Batch 1b) — New fields on Message (`deliveryStatus`, `deliveredAt`, `readAt`, `failureReason`), `updateDeliveryStatus()` in MessageService, WebSocket `message:status` event, `POST /webhook/whatsapp/status`. 7 tests.
+- **Inbox Media UI + Receipt Indicators** (Batch 1c) — New components: `delivery-status.tsx` (delivery/read indicators), `media-message.tsx` (image/doc/audio display), `media-composer.tsx` (file attachment composer). 14 tests.
+- **Outbound Initiation + Collision Detection** (Batch 1d) — `POST /outbound/send-direct` endpoint, InboxGateway presence tracking (`viewing:start`/`viewing:stop`/`presence:update`), "Send Message" button on customer detail, presence pills in inbox. 4 tests.
+- **Calendar Month View** (Batch 1e) — `GET /bookings/calendar/month-summary`, 6x7 CSS grid month view, colored dots (sage=confirmed, lavender=pending, red=cancelled), click-to-drill (day). 13 tests.
+- **Working Hours + Time-Off Visualization** (Batch 1f) — `GET /availability/calendar-context`, non-working hours gray shading, time-off red shading with badge. 6 tests.
+- **Drag-and-Drop Reschedule + Recommended Slots** (Batch 1g) — `GET /availability/recommended-slots` (top 5 scored by proximity + staff balance), `RecommendedSlots` component, HTML5 DnD (draggable cards, drop targets, 30-min snap, conflict detection, confirmation popover). 7 tests.
+- **Final counts:** 3,227 tests total (1,982 API + 1,245 web), +69 new tests
+
+### UX Upgrade Pack — Release 2 (Batches 2a–2g) (Complete)
+- **CSV Export API** (Batch 2a) — New Export module with `GET /customers/export`, `GET /bookings/export`, streaming CSV response (RFC 4180), field selection, date range filters, 10k row cap. 20 tests.
+- **Export UI + Duplicate Review Page** (Batch 2b) — `ExportModal` component, export buttons on list pages, `/customers/duplicates` page with status tabs and merge/dismiss/snooze actions. 14 tests.
+- **Audit Export + Timeline Polish** (Batch 2c) — `GET /action-history/export` CSV endpoint, customer timeline count badges per event type. 13 tests.
+- **Today Timeline Component** (Batch 2d) — `TodayTimeline` replacing flat appointments list, vertical timeline with time markers (8AM–7PM), current time indicator, gap indicators, quick action buttons (Start/Complete/No-Show/Open Chat). 14 tests.
+- **Enhanced Attention Cards + Actionable KPIs** (Batch 2e) — Primary action buttons on attention cards (Send Reminders/Open Queue/Confirm Schedule), "Resolve next" navigation, expand/collapse for >3 items, clickable KPI cards linking to relevant pages. 16 tests.
+- **Briefing Card Snooze + Expandable Details** (Batch 2f) — Snooze dropdown (1h/4h/tomorrow/next week), expandable detail section, category border colors (red/lavender/sage), auto-refresh every 5 minutes. 11 tests.
+- **Integration + Documentation** (Batch 2g) — ActionHistory logging for CSV exports, i18n keys, documentation updates.
+- **Final counts:** 3,309 tests total (2,003 API + 1,306 web), +82 new tests
+
 ### Tech Stack
 | Layer | Technology |
 |-------|-----------|
@@ -328,9 +348,9 @@ A linear onboarding wizard with progress bar. Each step has a title, subtitle, a
 The dashboard layout adapts based on the active mode (admin/agent/provider).
 
 **Agent/Provider modes show:**
-- **KPI Strip** — 3 compact role-appropriate metrics
+- **KPI Strip** — 3 compact role-appropriate metrics, clickable → relevant pages with action subtitles (R2)
 - **My Work** — Personal assigned conversations + today's bookings + completed count
-- **Attention Cards** — Items needing action (deposit pending, overdue replies, tomorrow schedule)
+- **Attention Cards** — Items needing action with primary action buttons (Send Reminders/Open Queue/Confirm Schedule), expand/collapse for >3 items, "Resolve next" navigation (R2)
 - **Dashboard-pinned Saved Views** — Clickable cards linking to filtered list pages
 - **Today's Schedule** (agent only)
 
@@ -342,6 +362,13 @@ The dashboard layout adapts based on the active mode (admin/agent/provider).
 - Each `BriefingCard` / `OpportunityCard` navigates to the relevant page (inbox, bookings, customers) based on entity data
 - Briefing cards use contextual CTA labels per card type (e.g., "Send Reminder" for deposit pending, "Nudge Staff" for overdue replies, "Follow Up" for stalled quotes) instead of generic "Approve"
 - Approve/dismiss use dedicated API routes (`PATCH /action-cards/:id/approve`, `PATCH /action-cards/:id/dismiss`)
+- Snooze dropdown (1h/4h/tomorrow/next week) on briefing cards, expandable detail section, category border colors (R2)
+- Auto-refresh every 5 minutes (R2)
+
+**Today's Appointments: TodayTimeline** (R2)
+- Vertical timeline with time markers (8AM–7PM), booking cards positioned chronologically
+- Current time red indicator, gap indicators for free time
+- Quick action buttons: Start (IN_PROGRESS), Complete, No-Show, Open Chat
 
 **Metric Cards (4-column grid)**
 1. **Bookings This Week** — calendar icon (blue), count, "vs last week" with % change arrow
@@ -367,7 +394,7 @@ The dashboard layout adapts based on the active mode (admin/agent/provider).
 
 ### 3.4 Calendar (`/calendar`)
 
-**Header:** Date navigation (< Today >), date display, staff filter chips (toggle), Day/Week view toggle, "+ New Booking" button
+**Header:** Date navigation (< Today >), date display, staff filter chips (toggle), Day/Week/Month view toggle, "+ New Booking" button
 
 **Day View:**
 - Time gutter (8am–7pm, hourly slots)
@@ -376,16 +403,33 @@ The dashboard layout adapts based on the active mode (admin/agent/provider).
 - Booking cards positioned by time, color-coded by status:
   - PENDING=yellow border, CONFIRMED=blue, IN_PROGRESS=green, COMPLETED=gray, CANCELLED=red+strikethrough, NO_SHOW=orange
 - Card content: time range, customer name, service name
+- Non-working hours shaded gray, time-off periods shaded red with "Time Off" badge
+- Draggable booking cards with HTML5 DnD (30-min snap to drop targets, conflict detection, confirmation popover)
 
 **Week View:**
 - 7 day columns with abbreviated day names
 - Today highlighted in blue
 - Compact booking cards with customer name + time
+- Non-working hours and time-off visualization
+
+**Month View:**
+- 6x7 CSS grid calendar layout
+- Colored dots per day: sage=confirmed, lavender=pending, red=cancelled
+- Day number + booking count summary
+- Click day → drills to day view for that date
+- Prev/next month navigation
+
+**Recommended Slots:**
+- `RecommendedSlots` component shown during drag-and-drop reschedule
+- Top 5 slots scored by proximity to original time + staff workload balance
+- Click slot to auto-fill reschedule
 
 **Interactions:**
 - Click time slot → BookingFormModal (create)
 - Click booking card → BookingDetailModal (view/edit)
 - Click "+ New Booking" → BookingFormModal
+- Drag booking card → drop on time slot → confirmation popover with conflict check
+- Click month day → drill to day view
 
 ---
 
@@ -414,10 +458,10 @@ The dashboard layout adapts based on the active mode (admin/agent/provider).
 - Per conversation: overdue red dot, customer name, "New" blue badge, last message preview, status badge, assigned staff, time ago, first 3 tags
 
 **Panel 3: Message Thread (flex-1)**
-- **Header:** Customer name + phone, snooze button, "Resume auto-reply" (purple), close conversation, "+ New Booking"
-- **Messages:** Inbound (left, white/border), Outbound (right, blue bg/white text), timestamps, staff name labels
+- **Header:** Customer name + phone, snooze button, "Resume auto-reply" (purple), close conversation, "+ New Booking", presence pills (who else is viewing)
+- **Messages:** Inbound (left, white/border), Outbound (right, blue bg/white text), timestamps, staff name labels, delivery status indicators (sent/delivered/read checkmarks), media attachments (inline images, document links, audio players)
 - **AI Suggestions section:** Purple-to-blue gradient bg, intent badge (color-coded), editable textarea, Send/Dismiss buttons
-- **Composer:** Template menu (Files icon), quick replies toggle (Zap icon), auto-expanding textarea, Send button
+- **Composer:** Template menu (Files icon), quick replies toggle (Zap icon), media attachment button (paperclip icon, `MediaComposer`), auto-expanding textarea, Send button
 
 **Panel 4: Info Sidebar (w-72)**
 Two tabs: **Info** | **Notes**
@@ -714,7 +758,7 @@ Two tabs: **Info** | **Notes**
 
 ## 4. Data Models
 
-### 4.1 Entity Relationship Overview (42 Models)
+### 4.1 Entity Relationship Overview (43 Models)
 
 ```
 Business (1) ──┬── (*) Staff ──── (*) WorkingHours
@@ -729,7 +773,7 @@ Business (1) ──┬── (*) Staff ──── (*) WorkingHours
                │    ├── Location (optional)
                │    └── Resource (optional)
                ├── (*) RecurringSeries
-               ├── (*) Conversation ──── (*) Message
+               ├── (*) Conversation ──── (*) Message ──── (*) MessageAttachment
                │    │                    └── (*) ConversationNote
                │    └── Location (optional)
                ├── (*) Location ──── (*) Resource
@@ -833,6 +877,23 @@ Business (1) ──┬── (*) Staff ──── (*) WorkingHours
 | content | String | Message body |
 | contentType | String | TEXT/IMAGE/DOCUMENT/AUDIO |
 | externalId | String? | WhatsApp message ID |
+| deliveryStatus | String? | SENT/DELIVERED/READ/FAILED (UX Upgrade Pack R1) |
+| deliveredAt | DateTime? | Timestamp when delivered (UX Upgrade Pack R1) |
+| readAt | DateTime? | Timestamp when read (UX Upgrade Pack R1) |
+| failureReason | String? | Delivery failure reason (UX Upgrade Pack R1) |
+
+#### MessageAttachment (New — UX Upgrade Pack R1)
+| Field | Type | Notes |
+|-------|------|-------|
+| id | String (CUID) | Primary key |
+| messageId | FK | Parent message |
+| businessId | FK | Tenant isolation |
+| fileName | String | Original file name |
+| fileType | String | MIME type (image/jpeg, application/pdf, etc.) |
+| fileSize | Int | File size in bytes |
+| storageKey | String | Storage path/key for the file |
+| thumbnailKey | String? | Storage path/key for thumbnail (images) |
+| createdAt | DateTime | Upload timestamp |
 
 #### SavedView
 | Field | Type | Notes |
@@ -979,12 +1040,15 @@ common, app, nav, login, dashboard, inbox, calendar, bookings, customers, custom
 
 Events handled in the inbox:
 - `message:new` — new inbound/outbound message
+- `message:status` — delivery/read receipt update (sent → delivered → read)
 - `conversation:updated` — status, assignment changes
 - `ai:suggestion` — AI draft suggestion ready
 - `ai:auto-replied` — AI sent an auto-reply (clears draft)
 - `ai:transfer-to-human` — AI escalated to human agent
 - `booking:updated` — booking status change
 - `ai:booking-state` — AI booking assistant state update
+- `viewing:start` / `viewing:stop` — presence tracking (staff viewing conversation)
+- `presence:update` — presence indicator refresh for collision detection
 
 ---
 
@@ -1100,6 +1164,12 @@ apps/web/src/
 │   ├── skill-card.tsx           # Agent skill catalog display with enable/disable (Milestone 5)
 │   ├── vertical-launch-checklist.tsx # Vertical-specific agent readiness checklist (Milestone 5)
 │   ├── ai-state-indicator.tsx   # Real-time agent processing status indicator (Milestone 5)
+│   ├── inbox/
+│   │   ├── delivery-status.tsx  # Message delivery/read receipt indicators (UX Upgrade Pack R1)
+│   │   ├── media-message.tsx    # Media attachment display in messages (UX Upgrade Pack R1)
+│   │   └── media-composer.tsx   # Media file attachment composer (UX Upgrade Pack R1)
+│   ├── recommended-slots.tsx    # Recommended reschedule slots component (UX Upgrade Pack R1)
+│   ├── export-modal.tsx         # CSV export modal with date range + field selection (UX Upgrade Pack R2)
 │   └── language-picker.tsx    # Locale selector
 ├── lib/
 │   ├── api.ts                 # API client singleton
