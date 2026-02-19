@@ -43,6 +43,7 @@ export interface BriefingCardData {
   conversationId?: string | null;
   createdAt: string;
   expiresAt?: string | null;
+  preview?: any;
 }
 
 interface BriefingCardProps {

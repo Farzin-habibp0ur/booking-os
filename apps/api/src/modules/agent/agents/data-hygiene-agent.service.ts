@@ -212,7 +212,7 @@ export class DataHygieneAgentService implements BackgroundAgent, OnModuleInit {
   }
 
   private normalizePhone(phone: string): string {
-    return phone.replace(/[\s\-\(\)\+]/g, '').slice(-10);
+    return phone.replace(/[\s\-()+]/g, '').slice(-10);
   }
 
   private isNameSimilar(name1: string, name2: string): boolean {

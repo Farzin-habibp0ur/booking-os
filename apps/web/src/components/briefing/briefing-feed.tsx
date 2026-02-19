@@ -33,7 +33,7 @@ interface BriefingFeedProps {
 }
 
 export function BriefingFeed({ onCardAction }: BriefingFeedProps) {
-  const toast = useToast();
+  const { toast } = useToast();
   const [briefing, setBriefing] = useState<BriefingResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

@@ -493,13 +493,7 @@ export default function CustomerDetailPage() {
           )}
 
           {/* Recent Changes */}
-          {recentChanges.length > 0 && (
-            <RecentChangesPanel
-              entries={recentChanges}
-              entityType="CUSTOMER"
-              entityId={id as string}
-            />
-          )}
+          {recentChanges.length > 0 && <RecentChangesPanel entries={recentChanges} />}
         </div>
 
         {/* Right Column (2/3): AI Chat + Tabs */}

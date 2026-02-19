@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma.service';
 
-interface BriefingCard {
+export interface BriefingCard {
   id: string;
   type: string;
   category: string;
