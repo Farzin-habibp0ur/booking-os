@@ -80,6 +80,13 @@
 - **Frontend components** — BriefingCard, OpportunityCard, BriefingFeed (3 components in `components/briefing/`)
 - **Dashboard integration** — BriefingFeed rendered above admin metric cards on the dashboard, cards navigate to inbox/bookings/customers based on entity data
 
+### Agentic-First Transformation — Milestone 3: Inbox-as-OS (Complete — 5/5 batches)
+- **Agent Framework** (Batch 3a) — 4 new Prisma models (AgentConfig, AgentRun, AgentFeedback, DuplicateCandidate), agent module with AgentFrameworkService, AgentSchedulerService, AgentController, AGENT_PROCESSING BullMQ queue
+- **Conversation Action Handler** (Batch 3b) — ConversationActionHandler (`ai/conversation-action-handler.ts`) for executing conversation-level actions from action cards, ActionCardInline frontend component
+- **Policy Compliance & Deposits** (Batch 3c) — PolicyComplianceService for automated policy enforcement, DepositCardHandler for deposit-related action cards, deposit-card.tsx frontend component
+- **Human Takeover** (Batch 3d) — HumanTakeoverService for AI-to-human escalation flow, ClarificationHandler for requesting clarification from staff, human-takeover-banner.tsx frontend component
+- **Vertical Actions** (Batch 3e) — VerticalActionHandler (`ai/vertical-action-handler.ts`) for vertical-specific action execution (aesthetic, dealership workflows)
+
 ### Tech Stack
 | Layer | Technology |
 |-------|-----------|
@@ -678,7 +685,7 @@ Two tabs: **Info** | **Notes**
 
 ## 4. Data Models
 
-### 4.1 Entity Relationship Overview (38 Models)
+### 4.1 Entity Relationship Overview (42 Models)
 
 ```
 Business (1) ──┬── (*) Staff ──── (*) WorkingHours
@@ -704,7 +711,10 @@ Business (1) ──┬── (*) Staff ──── (*) WorkingHours
                ├── (*) SavedView
                ├── (*) ActionCard ──── (*) ActionHistory
                ├── (*) AutonomyConfig
-               └── (*) OutboundDraft
+               ├── (*) OutboundDraft
+               ├── (*) AgentConfig
+               ├── (*) AgentRun ──── (*) AgentFeedback
+               └── (*) DuplicateCandidate
 ```
 
 ### 4.2 Key Models
@@ -828,6 +838,10 @@ Business (1) ──┬── (*) Staff ──── (*) WorkingHours
 - **ActionHistory:** businessId, actionCardId (optional FK), actionType, entityType, entityId, staffId (optional FK), performedBy (STAFF/SYSTEM/AI), details (JSON), outcome — Unified polymorphic audit trail
 - **AutonomyConfig:** businessId, actionType (unique per business), autonomyLevel (OFF/SUGGEST/AUTO_WITH_REVIEW/FULL_AUTO), requiresApprovalAbove (JSON), notifyOnAction (boolean), cooldownMinutes (int) — Per-action-type autonomy configuration
 - **OutboundDraft:** businessId, customerId (FK), staffId (FK), channel, subject, body, status (DRAFT/QUEUED/SENT/FAILED), scheduledFor, sentAt, metadata (JSON) — Staff-initiated outbound message drafts
+- **AgentConfig:** businessId, agentType, isEnabled, config (JSON), autonomyLevel, schedule (JSON) — Per-business agent configuration and scheduling
+- **AgentRun:** businessId, agentConfigId (FK), status, startedAt, completedAt, result (JSON), error — Agent execution run tracking with status and results
+- **AgentFeedback:** agentRunId (FK), staffId, rating, comment — Staff feedback on agent run outcomes
+- **DuplicateCandidate:** businessId, sourceCustomerId, targetCustomerId, confidence, status, resolvedAt, resolvedBy — Duplicate customer detection candidates
 
 ---
 
@@ -1038,6 +1052,9 @@ apps/web/src/
 │   ├── outbound/              # OutboundCompose, OutboundDraftList (Milestone 1)
 │   ├── recent-changes-panel.tsx # RecentChangesPanel for customer detail (Milestone 1)
 │   ├── briefing/              # BriefingCard, OpportunityCard, BriefingFeed (Milestone 2)
+│   ├── action-card-inline.tsx # Inline action card for conversation-level actions (Milestone 3)
+│   ├── deposit-card.tsx       # Deposit-related action card with policy compliance (Milestone 3)
+│   ├── human-takeover-banner.tsx # AI-to-human escalation banner with clarification (Milestone 3)
 │   └── language-picker.tsx    # Locale selector
 ├── lib/
 │   ├── api.ts                 # API client singleton

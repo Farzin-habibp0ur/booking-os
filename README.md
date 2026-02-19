@@ -141,6 +141,7 @@ All endpoints are prefixed with `/api/v1`. Interactive API docs are available at
 | Autonomy | `/autonomy` | Per-action-type autonomy configs, level checking |
 | Outbound | `/outbound` | Staff-initiated outbound message drafts |
 | Briefing | `/briefing` | Daily briefing feed, opportunity detection (deposit pending, overdue replies, open slots) |
+| Agent | `/agent` | Agent framework CRUD, agent runs, feedback, scheduling, AGENT_PROCESSING queue |
 
 ## Environment Variables
 
