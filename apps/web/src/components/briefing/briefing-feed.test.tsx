@@ -169,10 +169,10 @@ describe('BriefingFeed', () => {
     fireEvent.click(screen.getByTestId('briefing-approve-card-1'));
 
     await waitFor(() => {
-      expect(mockPatch).toHaveBeenCalledWith('/action-cards/card-1', { status: 'APPROVED' });
+      expect(mockPatch).toHaveBeenCalledWith('/action-cards/card-1/approve');
     });
 
-    expect(mockToast).toHaveBeenCalledWith('Card approved', 'success');
+    expect(mockToast).toHaveBeenCalledWith('Action approved', 'success');
   });
 
   it('dismisses a card and refreshes', async () => {
@@ -187,7 +187,7 @@ describe('BriefingFeed', () => {
     fireEvent.click(screen.getByTestId('briefing-dismiss-card-1'));
 
     await waitFor(() => {
-      expect(mockPatch).toHaveBeenCalledWith('/action-cards/card-1', { status: 'DISMISSED' });
+      expect(mockPatch).toHaveBeenCalledWith('/action-cards/card-1/dismiss');
     });
 
     expect(mockToast).toHaveBeenCalledWith('Card dismissed', 'success');

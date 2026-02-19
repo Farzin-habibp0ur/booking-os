@@ -58,11 +58,19 @@ describe('BriefingCard', () => {
     expect(onView).toHaveBeenCalledWith(mockCard);
   });
 
-  it('renders approve button when onApprove provided', () => {
+  it('renders contextual action label based on card type', () => {
     const onApprove = jest.fn();
     render(<BriefingCard card={mockCard} onApprove={onApprove} />);
 
     expect(screen.getByTestId('briefing-approve-card-1')).toBeInTheDocument();
+    expect(screen.getByText('Send Reminder')).toBeInTheDocument();
+  });
+
+  it('renders "Follow Up" label for stalled quote cards', () => {
+    const onApprove = jest.fn();
+    render(<BriefingCard card={{ ...mockCard, type: 'STALLED_QUOTE' }} onApprove={onApprove} />);
+
+    expect(screen.getByText('Follow Up')).toBeInTheDocument();
   });
 
   it('calls onApprove and stops propagation', () => {

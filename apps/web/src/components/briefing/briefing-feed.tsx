@@ -57,21 +57,21 @@ export function BriefingFeed({ onCardAction }: BriefingFeedProps) {
 
   const handleApprove = async (id: string) => {
     try {
-      await api.patch(`/action-cards/${id}`, { status: 'APPROVED' });
-      toast('Card approved', 'success');
+      await api.patch(`/action-cards/${id}/approve`);
+      toast('Action approved', 'success');
       loadBriefing();
     } catch (err: any) {
-      toast(err.message || 'Failed to approve card', 'error');
+      toast(err.message || 'Failed to approve', 'error');
     }
   };
 
   const handleDismiss = async (id: string) => {
     try {
-      await api.patch(`/action-cards/${id}`, { status: 'DISMISSED' });
+      await api.patch(`/action-cards/${id}/dismiss`);
       toast('Card dismissed', 'success');
       loadBriefing();
     } catch (err: any) {
-      toast(err.message || 'Failed to dismiss card', 'error');
+      toast(err.message || 'Failed to dismiss', 'error');
     }
   };
 

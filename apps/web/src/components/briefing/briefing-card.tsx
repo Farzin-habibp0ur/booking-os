@@ -53,10 +53,22 @@ interface BriefingCardProps {
   onView?: (card: BriefingCardData) => void;
 }
 
+const ACTION_LABELS: Record<string, string> = {
+  DEPOSIT_PENDING: 'Send Reminder',
+  OVERDUE_REPLY: 'Nudge Staff',
+  OPEN_SLOT: 'Notify Waitlist',
+  STALLED_QUOTE: 'Follow Up',
+  NO_SHOW_RISK: 'Send Reminder',
+  RETENTION_DUE: 'Send Outreach',
+  WAITLIST_MATCH: 'Offer Slot',
+  SCHEDULE_GAP: 'Optimize',
+};
+
 export function BriefingCard({ card, onApprove, onDismiss, onView }: BriefingCardProps) {
   const Icon = TYPE_ICONS[card.type] || Sparkles;
   const isPending = card.status === 'PENDING';
   const timeAgo = getTimeAgo(card.createdAt);
+  const actionLabel = ACTION_LABELS[card.type] || 'Approve';
 
   return (
     <div
@@ -143,7 +155,7 @@ export function BriefingCard({ card, onApprove, onDismiss, onView }: BriefingCar
               className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-xl bg-sage-600 text-white hover:bg-sage-700 transition-colors"
               data-testid={`briefing-approve-${card.id}`}
             >
-              <Check size={12} /> Approve
+              <Check size={12} /> {actionLabel}
             </button>
           )}
         </div>

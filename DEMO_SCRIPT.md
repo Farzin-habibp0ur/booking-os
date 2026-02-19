@@ -1,20 +1,41 @@
 # Booking OS - Demo Script
 
+## Demo Overview
+
+| Section | Parts | Duration | What It Covers |
+|---------|-------|----------|----------------|
+| **Core Platform** | 1-15 | ~25 min | Login, onboarding, inbox, AI responses, deposits, self-serve, ROI |
+| **Growth Engine** | 16-21 | ~10 min | Cmd+K search, waitlist, campaigns, automations, bulk actions, dark mode |
+| **Agentic Transformation** | 22-31 | ~18 min | Role modes, briefing, action cards, autonomy, agents, outbound, audit, multi-vertical |
+| **Total** | 31 parts | ~53 min | Full platform walkthrough |
+
+**Quick demo (15 min):** Parts 2, 3, 5, 23-26, 31 — Dashboard, inbox AI, auto-reply, briefing, action cards, autonomy, agents, wrap-up.
+
+**Agentic-only demo (18 min):** Parts 22-31 — Everything new in the agentic transformation.
+
+---
+
 ## Pre-Demo Setup
 
-### 1. Start servers
-```bash
-cd booking-os
-npm run dev   # Starts all apps (API :3001, Web :3000, WhatsApp Simulator :3002)
-```
+### Option A: Production (recommended for stakeholder demos)
+1. Open https://businesscommandcentre.com
+2. No local setup needed — everything is live
 
-### 2. Open browser
-- Navigate to http://localhost:3000
-- Have a second terminal ready for webhook commands (simulating WhatsApp messages)
+### Option B: Local Development
+1. Start servers:
+   ```bash
+   cd booking-os
+   npm run dev   # Starts all apps (API :3001, Web :3000, WhatsApp Simulator :3002)
+   ```
+2. Open http://localhost:3000
+3. Have a second terminal ready for webhook commands (simulating WhatsApp messages)
 
-### 3. Login credentials
-- **Email:** sarah@glowclinic.com
-- **Password:** password123
+### Login Credentials
+
+| Business | Email | Password | Role | Best for |
+|----------|-------|----------|------|----------|
+| Glow Aesthetic Clinic | sarah@glowclinic.com | password123 | Admin | Parts 1-28, 30-31 |
+| Metro Auto Group | mike@metroauto.com | password123 | Admin | Part 29 (multi-vertical) |
 
 ---
 
@@ -579,16 +600,286 @@ Roberto Silva,+14155551005,roberto@example.com,regular;returning
 
 ---
 
-## PART 22: Wrap Up (30 sec)
+## PART 22: Role-Based Modes (1-2 min)
+
+### Scene: Admin Mode (default)
+1. You're currently logged in as Sarah (Admin) — notice the full sidebar with all sections
+2. Point out: Dashboard has Daily Briefing, Settings includes Autonomy + Agents, full Reports access
+3. "Admins see everything — strategic dashboards, team management, AI configuration"
+
+### Scene: Switch to Agent Mode
+1. Click the **mode selector** in the sidebar (or profile dropdown)
+2. Switch to **Agent** mode
+3. Show how the sidebar changes: Dashboard shows KPI Strip + MyWork instead of Briefing, fewer settings
+4. "Agents focus on day-to-day operations — conversations, bookings, customer management"
+5. Show the **MyWork** section: assigned conversations + today's schedule
+
+### Scene: Provider Mode
+1. Switch to **Service Provider** mode
+2. Show the minimal sidebar: only Calendar, My Schedule, active conversations
+3. "Providers see only what's relevant to their appointments — no admin noise"
+4. Switch back to **Admin** mode for the rest of the demo
 
 **Talk through:**
-- "That's Booking OS — a complete WhatsApp-first operating system for service businesses"
-- "Phase 1 delivers the full aesthetic clinic workflow: intake, deposits, consults, aftercare, self-serve, and ROI tracking"
-- "Phase 2 adds the growth engine: waitlists, campaigns, automations, bulk actions, Cmd+K search, dark mode"
-- "AI handles the heavy lifting: responding to customers, booking appointments, handling cancellations"
-- "Staff stay in control with draft review, selective auto-reply, and seamless human handoff"
-- "1,534 tests, 83%+ API coverage, 93%+ web coverage — production-grade quality"
-- "From setup wizard to ROI dashboard — everything a clinic needs to prove value and scale"
+- "Three distinct roles — Admin, Agent, Provider — each sees a tailored interface"
+- "Same app, same login, different experiences based on what each role needs"
+
+---
+
+## PART 23: Mission Control Dashboard & Saved Views (2 min)
+
+### Scene: Mission Control Dashboard
+1. Navigate to **Dashboard** (Admin mode)
+2. Show the **Daily Briefing** section at the top — AI-generated action cards grouped by priority
+3. Point out the 4 categories:
+   - **Urgent Today** (red) — deposit-pending bookings, overdue replies
+   - **Needs Approval** (lavender) — AI-proposed actions waiting for human sign-off
+   - **Opportunities** (sage) — open slots, waitlist matches, re-engagement candidates
+   - **Maintenance** (slate) — data cleanup, duplicate detection
+4. Show the **urgent count badge** on the Daily Briefing header
+5. Click the **Refresh** button to reload the briefing
+
+**Talk through:**
+- "The dashboard is no longer just metrics — it's a mission control that tells you what to do right now"
+- "AI scans your entire business overnight and surfaces what matters most"
+- "Each card explains WHY it's suggesting an action — not just what to do"
+
+### Scene: Saved Views
+1. Scroll to see **pinned Saved Views** on the dashboard (if any)
+2. Navigate to **Bookings** page
+3. Apply filters: status = CONFIRMED, date range = this week
+4. Click **Save View** — name it "This Week Confirmed"
+5. Show the saved view appears in the sidebar under a views section
+6. Click the **pin icon** to pin it to the dashboard
+
+**Talk through:**
+- "Staff can save any filter combination as a named view"
+- "Pin views to the dashboard for one-click access to your most-used queries"
+- "Views can be shared with the team or kept personal"
+
+---
+
+## PART 24: Daily Briefing & Action Cards (3-4 min)
+
+### Scene: Briefing Card Lifecycle
+1. On the **Dashboard**, find a briefing card (e.g., "Deposit pending for Liam Parker's Botox")
+2. Show the card anatomy:
+   - **Title** — what happened
+   - **Description** — "Because..." (AI explains why this matters)
+   - **Suggested Action** — what the AI recommends doing
+   - **CTA Buttons** — Approve, Dismiss, Preview
+3. Click **Preview** on a card — show the diff/detail modal
+
+### Scene: Approve an Action
+1. Find a deposit-pending card
+2. Click **Approve** — the card turns to APPROVED status and fades out
+3. Show toast confirmation: "Action approved"
+4. "The AI just sent a deposit reminder on your behalf — you approved it in one click"
+
+### Scene: Dismiss an Action
+1. Find an opportunity card (e.g., "Open slot tomorrow at 2pm")
+2. Click **Dismiss** — card is removed
+3. "Not every suggestion is right — dismiss what doesn't apply, the AI learns"
+
+### Scene: Snooze an Action
+1. Find a maintenance card
+2. Click the **Snooze** button (clock icon)
+3. "Snooze defers the card — it'll come back later so nothing falls through the cracks"
+
+**Talk through:**
+- "Every AI action goes through this lifecycle: Proposed → Approved/Dismissed/Snoozed → Executed"
+- "Nothing happens without your knowledge — full transparency and control"
+- "Cards expire automatically if not acted on — no stale notifications piling up"
+
+---
+
+## PART 25: AI Autonomy Settings (2 min)
+
+### Scene: Autonomy Configuration
+1. Navigate to **Settings > AI Autonomy** (Shield icon)
+2. Show the autonomy settings page with 8 action types listed:
+   - Deposit Reminders
+   - Overdue Replies
+   - Open Slot Notifications
+   - Stalled Quote Follow-up
+   - Waitlist Matching
+   - Retention Outreach
+   - Data Cleanup
+   - Schedule Optimization
+
+### Scene: Three Autonomy Levels
+1. Point out the three buttons per action type: **Off | Assist | Auto**
+2. Demonstrate toggling **Deposit Reminders** from Assist to Auto
+3. Show toast: "Autonomy level updated"
+4. Explain each level:
+   - **Off** — AI does nothing for this action type
+   - **Assist** — AI proposes the action as a card, human approves or dismisses
+   - **Auto** — AI executes within constraints (e.g., max 10 per day) — no human approval needed
+
+**Talk through:**
+- "This is the trust dial — businesses start with Assist on everything"
+- "As they gain confidence, they promote specific actions to Auto"
+- "Each action type has independent controls — you might auto-approve deposit reminders but keep cancellation responses on Assist"
+- "Constraints prevent runaway automation — max actions per day, required roles, quiet hours"
+
+---
+
+## PART 26: Background Agents (2-3 min)
+
+### Scene: Agent Skills Catalog
+1. Navigate to **Settings > Agent Skills** (Bot icon)
+2. Show the three agent categories:
+
+**Proactive Agents (sage):**
+- **Waitlist Agent** — Monitors cancellations, matches waitlist entries, proposes top-3 candidates
+- **Retention Agent** — Identifies customers overdue for their next visit, drafts re-engagement messages
+- **Quote Follow-up Agent** — Detects stalled quotes, suggests follow-up timing and message
+
+**Reactive Agents (lavender):**
+- (Intent detection, booking assistant — always on, configured in AI Settings)
+
+**Maintenance Agents (slate):**
+- **Data Hygiene Agent** — Detects duplicate customers by phone/name/email, proposes merge
+- **Scheduling Optimizer** — Analyzes gaps in the schedule, suggests slot consolidation
+
+### Scene: Configure an Agent
+1. Toggle the **Retention Agent** ON (if not already enabled)
+2. Show the autonomy dropdown: Suggest Only / Require Approval / Fully Automatic
+3. Change to **Suggest Only** — "The agent will create action cards but never act on its own"
+4. Toggle it to **Fully Automatic** — "Now it runs in the background and sends outreach autonomously"
+
+**Talk through:**
+- "These are specialized AI agents that run behind the scenes"
+- "Each agent has its own skill set and can be independently enabled and configured"
+- "Waitlist Agent has matched X candidates this month — it fills cancellation slots automatically"
+- "Data Hygiene Agent found Y potential duplicate customers and proposed merges"
+- "Every agent action is logged in the audit trail — full accountability"
+
+---
+
+## PART 27: Outbound Messaging (1-2 min)
+
+### Scene: Staff-Initiated Message
+1. Navigate to **Inbox**
+2. Click on a customer conversation
+3. Click the **"New Message"** button (Send icon) in the conversation header
+4. The **Outbound Compose** modal opens
+5. Type a message: "Hi! Just wanted to check in — we have availability next week for your follow-up treatment."
+6. Click **Send Draft** — toast confirms "Draft created"
+
+**Talk through:**
+- "Previously, staff could only reply to incoming messages"
+- "Now they can initiate outbound conversations — proactive outreach, follow-ups, check-ins"
+- "Messages go through a draft-approve flow for quality control"
+
+### Scene: Draft Approval (Admin)
+1. Show the **Outbound Drafts** section (if visible in inbox sidebar or settings)
+2. Show a draft with status badge: **Draft** (lavender)
+3. Click **Approve** — status changes to **Approved** (sage)
+4. "Once approved, the message is sent via WhatsApp — the customer sees it as a normal message"
+
+**Talk through:**
+- "Draft → Approve → Send — prevents accidental or off-brand messages"
+- "Admins can review all pending outbound messages before they go out"
+
+---
+
+## PART 28: Action History & Audit Trail (1-2 min)
+
+### Scene: Activity Feed
+1. Navigate to a **Customer detail** page (click any customer)
+2. Scroll to the **Recent Activity** or **Action History** section
+3. Show the chronological feed with entries like:
+   - **AI** created deposit pending card (lavender Sparkles icon)
+   - **Sarah** approved card (sage User icon)
+   - **System** booking confirmed (sage Bot icon)
+   - **AI** created overdue reply card
+   - **Maria** dismissed card
+
+### Scene: Diff View
+1. Find an entry with a status change (e.g., "Booking status changed")
+2. Show the **before/after diff**: `PENDING_DEPOSIT → CONFIRMED`
+3. "Every change is tracked — who did it, when, and what changed"
+
+**Talk through:**
+- "Complete audit trail for every action — AI and human"
+- "Three actor types: Staff (you), AI (the system), and System (automated processes)"
+- "This is critical for compliance, training, and resolving disputes"
+- "You can see exactly what the AI did and why — full transparency"
+
+---
+
+## PART 29: Multi-Vertical — Dealership Demo (2-3 min)
+
+### Scene: Switch to Dealership
+1. Log out of Glow Clinic
+2. Log in as: **mike@metroauto.com** / **password123**
+3. Show the dashboard — notice different branding and terminology
+
+**Talk through:**
+- "Booking OS isn't just for clinics — it's a platform that adapts to any service vertical"
+- "Metro Auto Group is a dealership — same system, completely different experience"
+
+### Scene: Dealership-Specific Features
+1. Show the **service catalog** — Oil Change, Tire Rotation, Brake Inspection, Full Detail, Diagnostic Check
+2. Show **service kinds** use APPOINTMENT (not CONSULT/TREATMENT)
+3. Navigate to **Bookings** — show the Kanban board with dealership-relevant statuses
+4. Show the **customer list** — 15 auto customers with vehicle-related tags
+5. Navigate to **Settings > Agent Skills** — show the same 5 agents configured for dealership context
+
+### Scene: Vertical Pack Differences
+1. Point out UI differences: terminology, service types, workflow steps
+2. "The vertical pack system configures everything — services, templates, agent behavior, terminology"
+3. "Adding a new vertical is configuration, not code — the platform handles the rest"
+
+**Talk through:**
+- "One platform, multiple verticals — aesthetics, automotive, and more to come"
+- "Vertical packs configure: services, message templates, AI behavior, autonomy defaults, agent skills"
+- "The agentic system works across all verticals — same trust framework, different domain knowledge"
+
+---
+
+## PART 30: Customer Hub & Timeline (1-2 min)
+
+### Scene: Customer Hub
+1. Navigate to **Customers** and click on a customer with activity
+2. Show the **unified customer profile**: contact info, tags, notes
+3. Show the **Customer Notes** section — click **"+ Add Note"**, type a note, save it
+4. "Staff can add contextual notes — preferences, medical info, special requests"
+
+### Scene: Unified Timeline
+1. Scroll to the **Timeline** section on the customer detail page
+2. Show events from 6 sources:
+   - Bookings (created, confirmed, completed, cancelled)
+   - Conversations (messages sent/received)
+   - Notes (staff-added context)
+   - Payments (deposits, invoices)
+   - Action Cards (AI proposals + outcomes)
+   - Automations (triggered rules)
+3. "Everything that ever happened with this customer — in one chronological view"
+
+**Talk through:**
+- "The customer hub replaces scattered data with a single source of truth"
+- "Timeline pulls from 6 different sources — no more switching between pages"
+- "Staff see the full picture before every interaction — better context, better service"
+
+---
+
+## PART 31: Wrap Up (1 min)
+
+**Talk through:**
+- "That's Booking OS — from tools you operate to an AI partner that operates with you"
+- "The system sees what's happening, proposes what to do, and — when you trust it — acts on your behalf"
+- "Five layers of intelligence:"
+  - "**Signals** — AI monitors bookings, conversations, schedules, and customer behavior"
+  - "**Situations** — Patterns are detected: overdue deposits, stalled quotes, open slots, dormant customers"
+  - "**Cards** — Every situation becomes an action card with context, reasoning, and a suggested next step"
+  - "**Autonomy** — You control the trust dial: Off, Assist, or Auto — per action type"
+  - "**Agents** — Background agents run 24/7: filling waitlist gaps, catching duplicates, optimizing schedules"
+- "Full audit trail — every AI action is logged with who, what, when, and why"
+- "Works across verticals — aesthetics, automotive, and any service business"
+- "3,154 tests, production-deployed at businesscommandcentre.com — enterprise-grade quality"
+- "From reactive inbox tool to proactive business co-pilot — that's the agentic transformation"
 
 ---
 
