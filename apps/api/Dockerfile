@@ -46,6 +46,9 @@ COPY --from=builder /app/packages/db/package.json ./packages/db/
 COPY scripts/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
+# Create uploads directory with proper ownership before switching to non-root user
+RUN mkdir -p /app/uploads && chown nestjs:nodejs /app/uploads
+
 USER nestjs
 
 EXPOSE 3001
