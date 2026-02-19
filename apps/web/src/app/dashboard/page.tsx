@@ -138,7 +138,6 @@ export default function DashboardPage() {
 
   useEffect(() => {
     loadDashboard();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleDismissNudge = async (nudgeId: string) => {
