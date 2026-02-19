@@ -1186,6 +1186,20 @@ describe('BookingPortalPage', () => {
 
       expect(screen.queryByTestId('add-to-calendar')).not.toBeInTheDocument();
     });
+
+    it('shows "What happens next" for confirmed booking', async () => {
+      await goToSuccessStep();
+
+      expect(screen.getByTestId('what-happens-next')).toBeInTheDocument();
+      expect(screen.getByText(/confirmation has been sent/)).toBeInTheDocument();
+    });
+
+    it('shows deposit-specific "What happens next" for deposit booking', async () => {
+      await goToSuccessStep(mockBookingResultWithDeposit);
+
+      expect(screen.getByTestId('what-happens-next')).toBeInTheDocument();
+      expect(screen.getByText(/receive a payment link/)).toBeInTheDocument();
+    });
   });
 
   // ─── Deposit Flow ──────────────────────────────────────────────────────

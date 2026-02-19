@@ -8,6 +8,15 @@ jest.mock('@/lib/cn', () => ({ cn: (...args: any[]) => args.filter(Boolean).join
 jest.mock('@/components/add-to-calendar', () => ({
   AddToCalendar: (props: any) => <div data-testid="add-to-calendar" data-title={props.title} />,
 }));
+jest.mock('@/components/self-serve-error', () => ({
+  SelfServeError: (props: any) => (
+    <div data-testid="self-serve-error">
+      <span>{props.title}</span>
+      <span>{props.message}</span>
+      {props.businessSlug && <a href={`/book/${props.businessSlug}`}>Book Again</a>}
+    </div>
+  ),
+}));
 
 const mockPublicApi = {
   get: jest.fn(),
@@ -201,6 +210,24 @@ describe('ReschedulePage', () => {
     await waitFor(() => {
       expect(screen.getByText('Appointment Rescheduled')).toBeInTheDocument();
       expect(screen.getByText(/Hydra Facial/)).toBeInTheDocument();
+    });
+  });
+
+  test('shows "What happens next" on success', async () => {
+    mockPublicApi.get.mockResolvedValueOnce(mockBookingData).mockResolvedValueOnce(mockSlots);
+    mockPublicApi.post.mockResolvedValue({});
+    render(<ReschedulePage />);
+    await waitFor(() => screen.getByText('Select a new date'));
+
+    fireEvent.click(screen.getAllByRole('button')[0]);
+    await waitFor(() => screen.getByText('9:00 AM'));
+
+    fireEvent.click(screen.getByText('9:00 AM'));
+    fireEvent.click(screen.getByText('Confirm New Time'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('what-happens-next')).toBeInTheDocument();
+      expect(screen.getByText(/previous time slot has been released/)).toBeInTheDocument();
     });
   });
 

@@ -6,6 +6,7 @@ import { publicApi } from '@/lib/public-api';
 import { Calendar, Clock, User, CheckCircle, AlertTriangle, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { AddToCalendar } from '@/components/add-to-calendar';
+import { SelfServeError } from '@/components/self-serve-error';
 
 interface BookingSummary {
   booking: {
@@ -103,14 +104,12 @@ export default function ReschedulePage() {
 
   if (state === 'error') {
     return (
-      <div className="text-center py-16">
-        <AlertTriangle size={48} className="mx-auto text-orange-400 mb-4" />
-        <h1 className="text-xl font-serif font-semibold text-slate-900 mb-2">
-          Unable to Reschedule
-        </h1>
-        <p className="text-slate-500 mb-6 max-w-md mx-auto">{error}</p>
-        <p className="text-sm text-slate-400">Please contact the clinic directly for assistance.</p>
-      </div>
+      <SelfServeError
+        title="Unable to Reschedule"
+        message={error || 'This link is invalid or has expired.'}
+        businessName={data?.business?.name}
+        businessSlug={data?.business?.slug}
+      />
     );
   }
 
@@ -124,6 +123,16 @@ export default function ReschedulePage() {
         <p className="text-slate-500 mb-2">
           Your {data?.booking.service.name} has been moved to the new time.
         </p>
+        <div
+          className="bg-sage-50 rounded-xl p-3 text-left max-w-sm mx-auto mb-2"
+          data-testid="what-happens-next"
+        >
+          <p className="text-xs font-medium text-sage-700 mb-1.5">What happens next</p>
+          <ul className="text-xs text-sage-600 space-y-1">
+            <li>Your previous time slot has been released</li>
+            <li>You will receive a confirmation with the updated time</li>
+          </ul>
+        </div>
         {selectedSlot && (
           <p className="text-sm font-medium text-sage-700">
             {new Date(selectedSlot.time).toLocaleDateString('en-US', {

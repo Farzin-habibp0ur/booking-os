@@ -8,6 +8,14 @@ jest.mock('@/lib/cn', () => ({ cn: (...args: any[]) => args.filter(Boolean).join
 jest.mock('@/components/add-to-calendar', () => ({
   AddToCalendar: (props: any) => <div data-testid="add-to-calendar" data-title={props.title} />,
 }));
+jest.mock('@/components/self-serve-error', () => ({
+  SelfServeError: (props: any) => (
+    <div data-testid="self-serve-error">
+      <span>{props.title}</span>
+      <span>{props.message}</span>
+    </div>
+  ),
+}));
 
 const mockPublicApi = {
   get: jest.fn(),
@@ -124,6 +132,20 @@ describe('ClaimWaitlistPage', () => {
       expect(
         screen.getByText('Your slot has been claimed and your booking is confirmed.'),
       ).toBeInTheDocument();
+    });
+  });
+
+  test('shows "What happens next" on success', async () => {
+    mockPublicApi.get.mockResolvedValue(mockClaimData);
+    mockPublicApi.post.mockResolvedValue({});
+    render(<ClaimWaitlistPage />);
+    await waitFor(() => screen.getByText('Confirm Booking'));
+
+    fireEvent.click(screen.getByText('Confirm Booking'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('what-happens-next')).toBeInTheDocument();
+      expect(screen.getByText(/confirmation has been sent/)).toBeInTheDocument();
     });
   });
 

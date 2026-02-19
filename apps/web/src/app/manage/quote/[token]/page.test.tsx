@@ -5,6 +5,14 @@ jest.mock('next/navigation', () => ({
   useParams: () => ({ token: 'test-token-123' }),
 }));
 jest.mock('@/lib/cn', () => ({ cn: (...args: any[]) => args.filter(Boolean).join(' ') }));
+jest.mock('@/components/self-serve-error', () => ({
+  SelfServeError: (props: any) => (
+    <div data-testid="self-serve-error">
+      <span>{props.title}</span>
+      <span>{props.message}</span>
+    </div>
+  ),
+}));
 
 const mockPublicApi = {
   get: jest.fn(),
@@ -201,6 +209,20 @@ describe('QuoteApprovalPage', () => {
       expect(screen.getByText('Quote Approved')).toBeInTheDocument();
       expect(screen.getByText(/Brake Service/)).toBeInTheDocument();
       expect(screen.getByText(/\$450\.00/)).toBeInTheDocument();
+    });
+  });
+
+  test('shows "What happens next" on success', async () => {
+    mockPublicApi.get.mockResolvedValue(mockQuoteData);
+    mockPublicApi.post.mockResolvedValue({});
+    render(<QuoteApprovalPage />);
+    await waitFor(() => screen.getByText('Approve Quote'));
+
+    fireEvent.click(screen.getByText('Approve Quote'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('what-happens-next')).toBeInTheDocument();
+      expect(screen.getByText(/service provider has been notified/)).toBeInTheDocument();
     });
   });
 

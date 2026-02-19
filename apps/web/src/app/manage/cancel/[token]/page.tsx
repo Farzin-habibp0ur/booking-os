@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import { publicApi } from '@/lib/public-api';
 import { Calendar, Clock, User, CheckCircle, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { SelfServeError } from '@/components/self-serve-error';
 
 interface BookingSummary {
   booking: {
@@ -68,12 +69,12 @@ export default function CancelPage() {
 
   if (state === 'error') {
     return (
-      <div className="text-center py-16">
-        <AlertTriangle size={48} className="mx-auto text-orange-400 mb-4" />
-        <h1 className="text-xl font-serif font-semibold text-slate-900 mb-2">Unable to Cancel</h1>
-        <p className="text-slate-500 mb-6 max-w-md mx-auto">{error}</p>
-        <p className="text-sm text-slate-400">Please contact the clinic directly for assistance.</p>
-      </div>
+      <SelfServeError
+        title="Unable to Cancel"
+        message={error || 'This link is invalid or has expired.'}
+        businessName={data?.business?.name}
+        businessSlug={data?.business?.slug}
+      />
     );
   }
 
@@ -87,6 +88,24 @@ export default function CancelPage() {
         <p className="text-slate-500 mb-2">
           Your {data?.booking.service.name} appointment has been cancelled.
         </p>
+        <div
+          className="bg-sage-50 rounded-xl p-3 text-left max-w-sm mx-auto mb-2"
+          data-testid="what-happens-next"
+        >
+          <p className="text-xs font-medium text-sage-700 mb-1.5">What happens next</p>
+          <ul className="text-xs text-sage-600 space-y-1">
+            <li>Your time slot has been released</li>
+            <li>If applicable, any deposit will be handled per the cancellation policy</li>
+          </ul>
+        </div>
+        {data?.business?.slug && (
+          <a
+            href={`/book/${data.business.slug}`}
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-xl bg-sage-600 text-white hover:bg-sage-700 transition-colors mt-2"
+          >
+            Book Again
+          </a>
+        )}
         <p className="text-sm text-slate-400 mt-4">You can close this page.</p>
       </div>
     );

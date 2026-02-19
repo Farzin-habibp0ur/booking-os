@@ -5,6 +5,14 @@ jest.mock('next/navigation', () => ({
   useParams: () => ({ token: 'test-token-123' }),
 }));
 jest.mock('@/lib/cn', () => ({ cn: (...args: any[]) => args.filter(Boolean).join(' ') }));
+jest.mock('@/components/self-serve-error', () => ({
+  SelfServeError: (props: any) => (
+    <div data-testid="self-serve-error">
+      <span>{props.title}</span>
+      <span>{props.message}</span>
+    </div>
+  ),
+}));
 
 const mockPublicApi = {
   get: jest.fn(),
@@ -164,6 +172,37 @@ describe('CancelPage', () => {
     await waitFor(() => {
       expect(screen.getByText('Appointment Cancelled')).toBeInTheDocument();
       expect(screen.getByText(/Deep Facial/)).toBeInTheDocument();
+    });
+  });
+
+  test('shows "What happens next" on success', async () => {
+    mockPublicApi.get.mockResolvedValue(mockBookingData);
+    mockPublicApi.post.mockResolvedValue({});
+    render(<CancelPage />);
+    const cancelBtn = await waitForConfirmState();
+
+    fireEvent.click(cancelBtn);
+    fireEvent.click(screen.getByText('Yes, Cancel'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('what-happens-next')).toBeInTheDocument();
+      expect(screen.getByText(/time slot has been released/)).toBeInTheDocument();
+    });
+  });
+
+  test('shows Book Again link on success when slug available', async () => {
+    mockPublicApi.get.mockResolvedValue(mockBookingData);
+    mockPublicApi.post.mockResolvedValue({});
+    render(<CancelPage />);
+    const cancelBtn = await waitForConfirmState();
+
+    fireEvent.click(cancelBtn);
+    fireEvent.click(screen.getByText('Yes, Cancel'));
+
+    await waitFor(() => {
+      const link = screen.getByText('Book Again');
+      expect(link).toBeInTheDocument();
+      expect(link.closest('a')).toHaveAttribute('href', '/book/glow-clinic');
     });
   });
 

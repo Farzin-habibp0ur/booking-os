@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import { publicApi } from '@/lib/public-api';
 import { CheckCircle, Clock, AlertTriangle } from 'lucide-react';
 import { AddToCalendar } from '@/components/add-to-calendar';
+import { SelfServeError } from '@/components/self-serve-error';
 
 interface ClaimSummary {
   entry: {
@@ -59,13 +60,12 @@ export default function ClaimWaitlistPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-[#FCFCFD] flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-soft p-8 max-w-md w-full text-center">
-          <AlertTriangle size={48} className="mx-auto text-amber-500 mb-4" />
-          <h1 className="text-xl font-serif font-semibold text-slate-900 mb-2">Unable to Claim</h1>
-          <p className="text-sm text-slate-500">{error}</p>
-        </div>
-      </div>
+      <SelfServeError
+        title="Unable to Claim"
+        message={error}
+        businessName={summary?.business?.name}
+        businessSlug={summary?.business?.slug}
+      />
     );
   }
 
@@ -79,9 +79,16 @@ export default function ClaimWaitlistPage() {
           <h1 className="text-xl font-serif font-semibold text-slate-900 mb-2">
             Booking Confirmed!
           </h1>
-          <p className="text-sm text-slate-500 mb-6">
+          <p className="text-sm text-slate-500 mb-4">
             Your slot has been claimed and your booking is confirmed.
           </p>
+          <div className="bg-sage-50 rounded-xl p-3 text-left mb-4" data-testid="what-happens-next">
+            <p className="text-xs font-medium text-sage-700 mb-1.5">What happens next</p>
+            <ul className="text-xs text-sage-600 space-y-1">
+              <li>A confirmation has been sent to you</li>
+              <li>You will receive a reminder before your appointment</li>
+            </ul>
+          </div>
           {summary && (
             <div className="bg-slate-50 rounded-xl p-4 text-left space-y-2 text-sm">
               <div className="flex justify-between">

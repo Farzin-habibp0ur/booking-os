@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { publicApi } from '@/lib/public-api';
 import { CheckCircle, AlertTriangle, FileText, Wrench, User, DollarSign } from 'lucide-react';
+import { SelfServeError } from '@/components/self-serve-error';
 
 interface QuoteSummary {
   quote: {
@@ -67,16 +68,12 @@ export default function QuoteApprovalPage() {
 
   if (state === 'error') {
     return (
-      <div className="text-center py-16">
-        <AlertTriangle size={48} className="mx-auto text-orange-400 mb-4" />
-        <h1 className="text-xl font-serif font-semibold text-slate-900 mb-2">
-          Unable to Load Quote
-        </h1>
-        <p className="text-slate-500 mb-6 max-w-md mx-auto">{error}</p>
-        <p className="text-sm text-slate-400">
-          Please contact the service provider directly for assistance.
-        </p>
-      </div>
+      <SelfServeError
+        title="Unable to Load Quote"
+        message={error || 'This link is invalid or has expired.'}
+        businessName={data?.business?.name}
+        businessSlug={data?.business?.slug}
+      />
     );
   }
 
@@ -88,12 +85,20 @@ export default function QuoteApprovalPage() {
         <p className="text-slate-500 mb-2">
           You have approved the quote for {data?.booking.service.name}.
         </p>
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-slate-500 mb-2">
           Total: {formatCurrency(data?.quote.totalAmount || 0)}
         </p>
-        <p className="text-sm text-slate-400 mt-4">
-          Work will begin shortly. You can close this page.
-        </p>
+        <div
+          className="bg-sage-50 rounded-xl p-3 text-left max-w-sm mx-auto mb-2"
+          data-testid="what-happens-next"
+        >
+          <p className="text-xs font-medium text-sage-700 mb-1.5">What happens next</p>
+          <ul className="text-xs text-sage-600 space-y-1">
+            <li>The service provider has been notified of your approval</li>
+            <li>Work will begin shortly as described in the quote</li>
+          </ul>
+        </div>
+        <p className="text-sm text-slate-400 mt-4">You can close this page.</p>
       </div>
     );
   }

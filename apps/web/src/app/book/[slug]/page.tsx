@@ -826,11 +826,27 @@ export default function BookingPortalPage() {
           <h2 className="text-xl font-serif font-semibold text-slate-900 mb-2">
             {bookingResult.depositRequired ? 'Deposit Required' : 'Booking Confirmed!'}
           </h2>
-          <p className="text-sm text-slate-500 mb-6">
+          <p className="text-sm text-slate-500 mb-4">
             {bookingResult.depositRequired
-              ? `Your appointment has been reserved. A deposit of $${bookingResult.depositAmount || 0} is required to confirm your booking. You'll receive a payment link shortly.`
+              ? `Your appointment has been reserved. A deposit of $${bookingResult.depositAmount || 0} is required to confirm your booking.`
               : "You're all set. We look forward to seeing you."}
           </p>
+          <div className="bg-sage-50 rounded-xl p-3 text-left mb-4" data-testid="what-happens-next">
+            <p className="text-xs font-medium text-sage-700 mb-1.5">What happens next</p>
+            <ul className="text-xs text-sage-600 space-y-1">
+              {bookingResult.depositRequired ? (
+                <>
+                  <li>You will receive a payment link via email or SMS</li>
+                  <li>Your booking is confirmed once the deposit is paid</li>
+                </>
+              ) : (
+                <>
+                  <li>A confirmation has been sent to you</li>
+                  <li>You will receive a reminder before your appointment</li>
+                </>
+              )}
+            </ul>
+          </div>
           <div className="bg-slate-50 rounded-xl p-4 space-y-2 text-sm text-left">
             <div className="flex justify-between">
               <span className="text-slate-500">Service</span>
