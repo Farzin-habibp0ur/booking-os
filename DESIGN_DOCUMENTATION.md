@@ -98,7 +98,7 @@
 - **Agent Skills Catalog** — New AgentSkills API module providing per-pack skill definitions with business-level overrides
 - **Pack-specific agent behaviors** — Agents adapt skills and action card types based on business vertical pack (aesthetic: aftercare follow-ups, consult conversion; dealership: quote follow-up, service bay optimization)
 - **Frontend components** — skill-card.tsx (skill catalog display with enable/disable), vertical-launch-checklist.tsx (vertical-specific agent readiness checklist), waitlist-match-card.tsx (waitlist auto-match opportunities), quote-followup-card.tsx (expired/pending quote follow-up actions), ai-state-indicator.tsx (real-time agent processing status)
-- **Final counts (all 5 milestones):** 3,154 tests total (1,937 API + 1,217 web)
+- **Final counts (all 5 milestones):** 3,158 tests total (1,937 API + 1,221 web)
 
 ### Tech Stack
 | Layer | Technology |
@@ -340,6 +340,8 @@ The dashboard layout adapts based on the active mode (admin/agent/provider).
 - `BriefingFeed` component rendered above metric cards
 - Grouped action cards from `OpportunityDetectorService` (deposit pending, overdue replies, open slots)
 - Each `BriefingCard` / `OpportunityCard` navigates to the relevant page (inbox, bookings, customers) based on entity data
+- Briefing cards use contextual CTA labels per card type (e.g., "Send Reminder" for deposit pending, "Nudge Staff" for overdue replies, "Follow Up" for stalled quotes) instead of generic "Approve"
+- Approve/dismiss use dedicated API routes (`PATCH /action-cards/:id/approve`, `PATCH /action-cards/:id/dismiss`)
 
 **Metric Cards (4-column grid)**
 1. **Bookings This Week** — calendar icon (blue), count, "vs last week" with % change arrow
@@ -560,7 +562,7 @@ Two tabs: **Info** | **Notes**
 - Business Info card: name, phone, timezone (read-only), vertical pack (read-only), Save button
 - Change Password card: current password, new password, confirm password
 - Quick Links grid (cards with icons linking to sub-pages):
-  Message Templates, Translations, Profile Fields, AI Settings, Account & Import, Notifications, Billing, Calendar, Offers, Policies, Waitlist Settings, Setup Wizard
+  Message Templates, Translations, Profile Fields, AI Settings, AI Autonomy, Agent Skills, Account & Import, Notifications, Billing, Calendar, Offers, Policies, Waitlist Settings, Setup Wizard
 
 #### AI Settings (`/settings/ai`)
 - Master toggle: Enable AI Assistance
@@ -1081,7 +1083,7 @@ apps/web/src/
 │   ├── tooltip-nudge.tsx      # Contextual coaching tooltips (Phase 2)
 │   ├── mode-switcher.tsx      # Role-based mode pill/tab selector (UX Phase 1)
 │   ├── saved-views/           # ViewPicker + SaveViewModal (UX Phase 1)
-│   ├── action-card/           # ActionCardList, ActionCardItem, ActionCardDetail, ActionCardBadge, ActionCardFilters (Milestone 1)
+│   ├── action-card/           # ActionCardList, ActionCardItem, ActionCardDetail, ActionCardBadge, ActionCardFilters — contextual CTA labels per card type (Milestone 1)
 │   ├── action-history/        # ActionHistoryList, ActionHistoryItem, ActionHistoryFilters (Milestone 1)
 │   ├── autonomy/              # AutonomySettings, AutonomyLevelPicker (Milestone 1)
 │   ├── outbound/              # OutboundCompose, OutboundDraftList (Milestone 1)

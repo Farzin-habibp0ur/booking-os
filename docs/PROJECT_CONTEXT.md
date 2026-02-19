@@ -161,7 +161,7 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 - **Waitlist match cards** — waitlist-match-card.tsx for surfacing waitlist auto-match opportunities from WaitlistAgent
 - **Quote followup cards** — quote-followup-card.tsx for surfacing expired/pending quote follow-up actions
 - **AI state indicator** — ai-state-indicator.tsx showing real-time agent processing status
-- **Final counts (all 5 milestones):** 3,154 tests total (1,937 API + 1,217 web)
+- **Final counts (all 5 milestones):** 3,158 tests total (1,937 API + 1,221 web)
 
 ---
 
@@ -411,7 +411,7 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 | Reports | `/reports` | 9 chart types |
 | ROI Dashboard | `/roi` | Baseline vs current metrics |
 | Service Board | `/service-board` | Kanban board (dealership) |
-| Settings | `/settings/*` | 13 settings sub-pages (account, AI, agents, autonomy, templates, translations, calendar, billing, notifications, offers, policies, waitlist, profile fields) |
+| Settings | `/settings/*` | 13 settings sub-pages (account, AI, AI Autonomy, Agent Skills, agents, templates, translations, calendar, billing, notifications, offers, policies, waitlist, profile fields); hub page links to all sub-pages |
 
 ### Key Components
 - `Shell` — Sidebar nav with mode-grouped items + "More" toggle, pinned saved views, i18n, pack provider, dark mode, tour trigger
@@ -428,12 +428,12 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 - `ModeSwitcher` — Role-based mode pill/tab selector (admin/agent/provider)
 - `ViewPicker` / `SaveViewModal` — Saved filter views on list pages
 - `KpiStrip` / `MyWork` / `AttentionCards` — Mission Control dashboard components
-- `ActionCardList` / `ActionCardItem` / `ActionCardDetail` / `ActionCardBadge` / `ActionCardFilters` — Agentic action card components (approve, dismiss, snooze, execute)
+- `ActionCardList` / `ActionCardItem` / `ActionCardDetail` / `ActionCardBadge` / `ActionCardFilters` — Agentic action card components (approve, dismiss, snooze, execute) with contextual CTA labels per card type (e.g., "Send Reminder", "Nudge Staff", "Follow Up" instead of generic "Approve")
 - `ActionHistoryList` / `ActionHistoryItem` / `ActionHistoryFilters` — Unified audit trail components
 - `AutonomySettings` / `AutonomyLevelPicker` — Autonomy configuration UI
 - `OutboundCompose` / `OutboundDraftList` — Staff-initiated outbound message drafts
 - `RecentChangesPanel` — Customer detail panel showing recent action history
-- `BriefingFeed` / `BriefingCard` / `OpportunityCard` — Daily briefing components (grouped action cards, opportunity detection results, dashboard integration)
+- `BriefingFeed` / `BriefingCard` / `OpportunityCard` — Daily briefing components (grouped action cards, opportunity detection results, dashboard integration); briefing cards use dedicated approve/dismiss API routes (`PATCH /action-cards/:id/approve`, `PATCH /action-cards/:id/dismiss`) with contextual CTA labels per card type
 - `ActionCardInline` — Inline action card component for conversation-level actions (Milestone 3)
 - `DepositCard` — Deposit-related action card component with policy compliance (Milestone 3)
 - `HumanTakeoverBanner` — AI-to-human escalation banner with clarification flow (Milestone 3)
@@ -567,7 +567,7 @@ Key groups (full list in `.env.example`):
 - **Milestone 3: Inbox-as-OS** — COMPLETE. Agent framework (AgentConfig, AgentRun, AgentFeedback, DuplicateCandidate models), AgentFrameworkService + AgentSchedulerService + AGENT_PROCESSING queue, ConversationActionHandler, PolicyComplianceService, DepositCardHandler, HumanTakeoverService, ClarificationHandler, VerticalActionHandler, 3 frontend components (ActionCardInline, DepositCard, HumanTakeoverBanner). +158 tests.
 - **Milestone 4: Background Agents** — COMPLETE. 5 background agents (WaitlistAgent, RetentionAgent, DataHygieneAgent, SchedulingOptimizerAgent, QuoteFollowupAgent), AgentFeedback API module, /settings/agents page, retention-card + duplicate-merge-card + agent-feedback-buttons + agent-performance frontend components.
 - **Milestone 5: Vertical Pack Agents** — COMPLETE. AgentSkills API module (per-pack skill catalog with business overrides), pack-specific agent behaviors, skill-card + vertical-launch-checklist + waitlist-match-card + quote-followup-card + ai-state-indicator frontend components.
-- **Final counts:** 3,154 tests total (1,937 API + 1,217 web)
+- **Final counts:** 3,158 tests total (1,937 API + 1,221 web)
 
 ### Phase 4: Engagement OS + Benchmarking + Marketplace (NOT STARTED)
 
@@ -633,7 +633,7 @@ npm run dev                    # Starts all apps via Turborepo
 | `npm run dev` | Start all apps |
 | `npm run build` | Build all |
 | `npm run lint` | Lint all (ESLint + TypeScript) |
-| `npm test` | Run all tests (~3,154 tests) |
+| `npm test` | Run all tests (~3,158 tests) |
 | `npm run test:coverage` | Tests with coverage thresholds |
 | `npm run db:generate` | Generate Prisma client |
 | `npm run db:migrate` | Run migrations |
