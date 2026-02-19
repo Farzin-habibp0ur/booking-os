@@ -20,6 +20,9 @@ interface User {
     defaultLocale: string;
     packConfig: Record<string, unknown> | null;
   };
+  viewAs?: boolean;
+  viewAsSessionId?: string;
+  originalRole?: string;
 }
 
 interface AuthContextType {

@@ -209,30 +209,48 @@ export class AuthService {
     }
   }
 
-  async getMe(staffId: string) {
+  async getMe(staffId: string, viewAsClaims?: { viewAs: boolean; viewAsSessionId?: string; originalBusinessId?: string; originalRole?: string }) {
     const staff = await this.prisma.staff.findUnique({
       where: { id: staffId },
       include: { business: true },
     });
     if (!staff) throw new UnauthorizedException();
-    return {
+
+    // If in view-as mode, load the target business instead
+    let business = staff.business;
+    if (viewAsClaims?.viewAs && viewAsClaims.originalBusinessId) {
+      const targetBusiness = await this.prisma.business.findUnique({
+        where: { id: staff.businessId },
+      });
+      if (targetBusiness) business = targetBusiness;
+    }
+
+    const result: Record<string, any> = {
       id: staff.id,
       name: staff.name,
       email: staff.email,
-      role: staff.role,
+      role: viewAsClaims?.viewAs ? 'ADMIN' : staff.role,
       locale: staff.locale,
       emailVerified: staff.emailVerified,
       preferences: (staff as any).preferences || {},
-      businessId: staff.businessId,
+      businessId: viewAsClaims?.viewAs ? business.id : staff.businessId,
       business: {
-        id: staff.business.id,
-        name: staff.business.name,
-        slug: staff.business.slug,
-        verticalPack: staff.business.verticalPack,
-        defaultLocale: staff.business.defaultLocale,
-        packConfig: staff.business.packConfig as Record<string, unknown> | null,
+        id: business.id,
+        name: business.name,
+        slug: business.slug,
+        verticalPack: business.verticalPack,
+        defaultLocale: business.defaultLocale,
+        packConfig: business.packConfig as Record<string, unknown> | null,
       },
     };
+
+    if (viewAsClaims?.viewAs) {
+      result.viewAs = true;
+      result.viewAsSessionId = viewAsClaims.viewAsSessionId;
+      result.originalRole = viewAsClaims.originalRole;
+    }
+
+    return result;
   }
 
   async forgotPassword(email: string) {

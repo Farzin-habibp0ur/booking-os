@@ -50,6 +50,7 @@ import { AgentSkillsModule } from './modules/agent-skills/agent-skills.module';
 import { AgentFeedbackModule } from './modules/agent-feedback/agent-feedback.module';
 import { AttachmentModule } from './modules/attachment/attachment.module';
 import { ExportModule } from './modules/export/export.module';
+import { ConsoleModule } from './modules/console/console.module';
 
 @Module({
   imports: [
@@ -116,6 +117,7 @@ import { ExportModule } from './modules/export/export.module';
     AgentFeedbackModule,
     AttachmentModule,
     ExportModule,
+    ConsoleModule,
     process.env.REDIS_URL ? QueueModule.forRootWithRedis() : QueueModule.forRoot(),
   ],
 })

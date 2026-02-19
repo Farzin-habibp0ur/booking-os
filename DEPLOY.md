@@ -554,6 +554,19 @@ DATABASE_URL="<public-db-url>" npx prisma studio --schema=packages/db/prisma/sch
 
 ## 9. Monitoring & Health Checks
 
+### Graceful Shutdown & Zero-Downtime Deploys
+
+The API uses NestJS's `enableShutdownHooks()` in `main.ts` to handle `SIGTERM` gracefully — in-flight requests complete before the process exits. Railway sends `SIGTERM` during deploys, so this ensures no dropped connections.
+
+**Railway health checks** are configured in `railway.toml`:
+```toml
+[deploy.healthcheckPath]
+path = "/api/v1/health"
+```
+Railway waits for the new container to pass its health check before routing traffic to it, providing zero-downtime deploys.
+
+**Frontend resilience:** The web app's API client (`apps/web/src/lib/api.ts`) includes `fetchWithRetry` logic — if a fetch fails during a deploy window, it retries with exponential backoff. This prevents transient errors during the brief overlap between old and new containers.
+
 ### Health Endpoint
 
 ```
@@ -742,6 +755,11 @@ Before going live, verify:
 - [ ] Rate limiting is active (built-in: 100 req/min global, 3/min signup, 10/min login)
 - [ ] Sentry DSN is configured for error alerting
 - [ ] Database backups are scheduled
+- [ ] Token-based flows (reset password, accept invite, verify email) use atomic `validateAndConsume` (no race conditions)
+- [ ] All password DTO fields have `@MaxLength(128)` (bcrypt DoS prevention)
+- [ ] `forceBook` on booking creation is restricted to ADMIN role only
+- [ ] Content-Disposition filenames are sanitized (no header injection)
+- [ ] Refresh tokens are blacklisted on logout and password change
 
 ### Rate Limits (Built-In)
 

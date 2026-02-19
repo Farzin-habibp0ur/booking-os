@@ -1211,3 +1211,51 @@ export class UpdatePackDto {
   @IsOptional()
   config?: Record<string, unknown>;
 }
+
+// ---- Platform Console DTOs ----
+
+export class ConsoleBusinessQueryDto {
+  @IsString()
+  @IsOptional()
+  @MaxLength(200)
+  search?: string;
+
+  @IsString()
+  @IsOptional()
+  @IsIn(['basic', 'pro', 'trial'])
+  plan?: string;
+
+  @IsString()
+  @IsOptional()
+  @IsIn(['active', 'past_due', 'canceled', 'trialing'])
+  billingStatus?: string;
+
+  @IsString()
+  @IsOptional()
+  vertical?: string;
+
+  @IsString()
+  @IsOptional()
+  @IsIn(['green', 'yellow', 'red'])
+  health?: string;
+
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  @Type(() => Number)
+  page?: number;
+
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  @IsOptional()
+  @Type(() => Number)
+  pageSize?: number;
+}
+
+export class ViewAsReasonDto {
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(500)
+  reason!: string;
+}

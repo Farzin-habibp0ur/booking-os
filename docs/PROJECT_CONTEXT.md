@@ -2,7 +2,7 @@
 
 > **Purpose:** This document gives full context on the Booking OS platform — what it is, what's been built, how it's structured, and what's left to build. Share this with an AI assistant or new developer to get productive immediately.
 >
-> **Last updated:** February 19, 2026 (Manual testing complete — 3,449 total tests: 2,057 API + 1,392 web)
+> **Last updated:** February 19, 2026 (Security audit round 2 complete — 3,461 total tests: 2,064 API + 1,397 web)
 
 ---
 
@@ -633,12 +633,19 @@ Key groups (full list in `.env.example`):
 - **UX Upgrade Pack Release 1** (Media Attachments, Delivery Receipts, Month View, DnD Reschedule, Recommended Slots, Working Hours Viz, Presence Detection) — COMPLETE (Batches 1a–1h, 69 new tests)
 - **UX Upgrade Pack Release 2** (CSV Exports, Duplicate Review, Today Timeline, Enhanced Attention Cards, Briefing Snooze + Expandable Details) — COMPLETE (Batches 2a–2g, 82 new tests)
 - **UX Upgrade Pack Release 3** (Add-to-Calendar, Branded Errors, Automation Playbook UX, Rule Builder, Dry-Run, Safety Controls) — COMPLETE (Batches 3a–3f, 93 new tests)
-- **UX Upgrade Pack COMPLETE** — All 3 releases, 21 batches, **3,449 total tests** (2,057 API + 1,392 web)
+- **UX Upgrade Pack COMPLETE** — All 3 releases, 21 batches, **3,461 total tests** (2,064 API + 1,397 web)
 - See `docs/user-stories.md` for complete inventory (280 current capabilities, 215 identified gaps) and `docs/ux-brainstorm-brief.md` for brainstorm prompts.
 
 ### Code Quality
 - **Error Handling Remediation** — COMPLETE (commit 1cf6f99). Replaced ~20 silent `.catch(() => {})` with logged warnings, queue processors throw on failure, NestJS proper exceptions, frontend toast wiring, waitlist loop resilience, WebSocket disconnect logging. +58 tests.
-- **Security Remediation** — COMPLETE (5 batches, 22 fixes applied across 39 audit findings). Key changes: CSP/HSTS/security headers, cross-tenant CampaignSend fix, DTO input validation with MaxLength, pagination caps, booking status state machine, per-customer offer redemption with OfferRedemption model, refresh token blacklisting on logout, JWT_REFRESH_SECRET production enforcement, Stripe redirect URL validation, LoginDto for empty body handling. ~80 tests added.
+- **Security Remediation Round 1** — COMPLETE (5 batches, 22 fixes). CSP/HSTS/security headers, cross-tenant CampaignSend fix, DTO input validation with MaxLength, pagination caps, booking status state machine, per-customer offer redemption with OfferRedemption model, refresh token blacklisting on logout, JWT_REFRESH_SECRET production enforcement, Stripe redirect URL validation, LoginDto for empty body handling. ~80 tests added.
+- **Security Audit Round 2** — COMPLETE (Feb 19, 2026). Full re-audit with 5 parallel agents covering auth, input validation, infrastructure, tenant isolation, and business logic. 10 additional fixes:
+  - 3 CRITICAL: Atomic `TokenService.validateAndConsume()` prevents race conditions in resetPassword, acceptInvite, verifyEmail (token reuse via concurrent requests)
+  - 4 HIGH: `@MaxLength(128)` on all password fields (bcrypt DoS), `@IsIn` enum on automation trigger, `@MaxLength(5000)` on CustomerNote, typed `AutomationActionDto` replaces `any[]`
+  - 3 MEDIUM: Content-Disposition filename sanitization, `@MaxLength` on ~20 DTO fields, `@IsShallowJson` on 8 filter/config fields
+  - 1 HIGH (business logic): `forceBook` flag restricted to ADMIN role only (was accessible to all staff)
+  - Tenant isolation: verified STRONG (zero critical vulns, all 40+ services filter by businessId)
+- **Deployment Resilience** — COMPLETE (Feb 19, 2026). Zero-downtime deploys via `railway.toml` health checks, NestJS `enableShutdownHooks()` for graceful shutdown, frontend `fetchWithRetry()` auto-retries once on network errors during deployment rollovers.
 - **Manual End-to-End Testing** — COMPLETE (Feb 19, 2026). 72 tests across 7 sessions (Security, Agentic, Inbox/Calendar, Exports/Dashboard, Automations, Self-Serve, Cross-Cutting) + 26 frontend verifications. **72/72 pass rate.** 4 defects found and fixed during testing:
   - D1 (Critical): Circular dependency in MessageModule ↔ MessagingModule preventing API startup — fixed with `forwardRef()`
   - D2 (Critical): Missing database migration for `deliveryStatus`/`deliveredAt`/`readAt` columns and `message_attachments` table — migration created and applied
@@ -692,7 +699,7 @@ npm run dev                    # Starts all apps via Turborepo
 | `npm run dev` | Start all apps |
 | `npm run build` | Build all |
 | `npm run lint` | Lint all (ESLint + TypeScript) |
-| `npm test` | Run all tests (~3,449 tests) |
+| `npm test` | Run all tests (~3,461 tests) |
 | `npm run test:coverage` | Tests with coverage thresholds |
 | `npm run db:generate` | Generate Prisma client |
 | `npm run db:migrate` | Run migrations |

@@ -35,6 +35,17 @@ function LoginPage() {
     try {
       await login(email, password);
       sessionStorage.setItem('booking-os-login-redirect', '1');
+      // Fetch user to check role for redirect
+      const { api } = await import('@/lib/api');
+      try {
+        const me = await api.get<{ role: string }>('/auth/me');
+        if (me.role === 'SUPER_ADMIN') {
+          router.push('/console');
+          return;
+        }
+      } catch {
+        // Fallback to dashboard
+      }
       router.push('/dashboard');
     } catch (err: any) {
       setError(err.message || t('errors.login_failed'));

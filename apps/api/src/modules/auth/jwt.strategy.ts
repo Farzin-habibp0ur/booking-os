@@ -34,7 +34,16 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   async validate(
     req: Request,
-    payload: { sub: string; email: string; businessId: string; role: string },
+    payload: {
+      sub: string;
+      email: string;
+      businessId: string;
+      role: string;
+      viewAs?: boolean;
+      viewAsSessionId?: string;
+      originalBusinessId?: string;
+      originalRole?: string;
+    },
   ) {
     // H1: Check if token is blacklisted
     const token = extractJwtFromCookieOrHeader(req);
@@ -51,12 +60,31 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('Account is deactivated');
     }
 
-    return {
+    // View-as session validation
+    if (payload.viewAs && payload.viewAsSessionId) {
+      const session = await this.prisma.viewAsSession.findUnique({
+        where: { id: payload.viewAsSessionId },
+      });
+      if (!session || session.endedAt || session.expiresAt < new Date()) {
+        throw new UnauthorizedException('View-as session expired');
+      }
+    }
+
+    const user: Record<string, any> = {
       sub: payload.sub,
       staffId: payload.sub,
       email: payload.email,
       businessId: payload.businessId,
       role: payload.role,
     };
+
+    if (payload.viewAs) {
+      user.viewAs = true;
+      user.viewAsSessionId = payload.viewAsSessionId;
+      user.originalBusinessId = payload.originalBusinessId;
+      user.originalRole = payload.originalRole;
+    }
+
+    return user;
   }
 }

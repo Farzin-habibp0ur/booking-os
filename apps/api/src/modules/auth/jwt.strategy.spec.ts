@@ -6,7 +6,7 @@ import { JwtBlacklistService } from '../../common/jwt-blacklist.service';
 
 describe('JwtStrategy', () => {
   let strategy: JwtStrategy;
-  let prisma: { staff: { findUnique: jest.Mock } };
+  let prisma: { staff: { findUnique: jest.Mock }; viewAsSession: { findUnique: jest.Mock } };
   let blacklist: { isBlacklisted: jest.Mock };
 
   const payload = {
@@ -19,6 +19,9 @@ describe('JwtStrategy', () => {
   beforeEach(() => {
     prisma = {
       staff: {
+        findUnique: jest.fn(),
+      },
+      viewAsSession: {
         findUnique: jest.fn(),
       },
     };
@@ -139,5 +142,83 @@ describe('JwtStrategy', () => {
 
     // No token extracted, so isBlacklisted not called (token is null)
     expect(result.staffId).toBe('staff1');
+  });
+
+  describe('view-as JWT validation', () => {
+    const viewAsPayload = {
+      sub: 'admin1',
+      email: 'admin@bookingos.com',
+      businessId: 'target-biz',
+      role: 'ADMIN',
+      viewAs: true,
+      viewAsSessionId: 'session1',
+      originalBusinessId: 'platform-biz',
+      originalRole: 'SUPER_ADMIN',
+    };
+
+    it('validates view-as session and returns extended user object', async () => {
+      prisma.staff.findUnique.mockResolvedValue({ id: 'admin1', isActive: true });
+      prisma.viewAsSession.findUnique.mockResolvedValue({
+        id: 'session1',
+        endedAt: null,
+        expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+      });
+
+      const mockReq = { cookies: {}, headers: {} } as any;
+      const result = await strategy.validate(mockReq, viewAsPayload);
+
+      expect(result).toEqual({
+        sub: 'admin1',
+        staffId: 'admin1',
+        email: 'admin@bookingos.com',
+        businessId: 'target-biz',
+        role: 'ADMIN',
+        viewAs: true,
+        viewAsSessionId: 'session1',
+        originalBusinessId: 'platform-biz',
+        originalRole: 'SUPER_ADMIN',
+      });
+    });
+
+    it('throws UnauthorizedException when view-as session not found', async () => {
+      prisma.staff.findUnique.mockResolvedValue({ id: 'admin1', isActive: true });
+      prisma.viewAsSession.findUnique.mockResolvedValue(null);
+
+      const mockReq = { cookies: {}, headers: {} } as any;
+
+      await expect(strategy.validate(mockReq, viewAsPayload)).rejects.toThrow(
+        new UnauthorizedException('View-as session expired'),
+      );
+    });
+
+    it('throws UnauthorizedException when view-as session has ended', async () => {
+      prisma.staff.findUnique.mockResolvedValue({ id: 'admin1', isActive: true });
+      prisma.viewAsSession.findUnique.mockResolvedValue({
+        id: 'session1',
+        endedAt: new Date(),
+        expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+      });
+
+      const mockReq = { cookies: {}, headers: {} } as any;
+
+      await expect(strategy.validate(mockReq, viewAsPayload)).rejects.toThrow(
+        new UnauthorizedException('View-as session expired'),
+      );
+    });
+
+    it('throws UnauthorizedException when view-as session is expired', async () => {
+      prisma.staff.findUnique.mockResolvedValue({ id: 'admin1', isActive: true });
+      prisma.viewAsSession.findUnique.mockResolvedValue({
+        id: 'session1',
+        endedAt: null,
+        expiresAt: new Date(Date.now() - 1000),
+      });
+
+      const mockReq = { cookies: {}, headers: {} } as any;
+
+      await expect(strategy.validate(mockReq, viewAsPayload)).rejects.toThrow(
+        new UnauthorizedException('View-as session expired'),
+      );
+    });
   });
 });

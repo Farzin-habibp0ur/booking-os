@@ -43,12 +43,14 @@ import {
   Heart,
   Eye,
   Bell,
+  Shield,
 } from 'lucide-react';
 import CommandPalette from '@/components/command-palette';
 import { useTheme } from '@/lib/use-theme';
 import { DemoTourProvider, useDemoTour, TourSpotlight, TourTooltip } from '@/components/demo-tour';
 import { ModeProvider, useMode } from '@/lib/use-mode';
 import ModeSwitcher from '@/components/mode-switcher';
+import { ViewAsBanner } from '@/components/view-as-banner';
 
 const SAVED_VIEW_ICONS: Record<string, any> = {
   filter: Search,
@@ -173,6 +175,12 @@ function ShellInner({ children }: { children: ReactNode }) {
     ...(pack.name !== 'general'
       ? [{ href: '/roi', label: t('nav.roi'), icon: TrendingUp, roles: ['ADMIN'] }]
       : []),
+    {
+      href: '/console',
+      label: 'Platform Console',
+      icon: Shield,
+      roles: ['SUPER_ADMIN'],
+    },
     {
       href: '/admin/pack-builder',
       label: 'Pack Builder',
@@ -368,6 +376,7 @@ function ShellInner({ children }: { children: ReactNode }) {
       </aside>
 
       <main id="main-content" className="flex-1 overflow-auto pt-14 md:pt-0 dark:bg-slate-950">
+        <ViewAsBanner />
         <ErrorBoundary>{children}</ErrorBoundary>
       </main>
 

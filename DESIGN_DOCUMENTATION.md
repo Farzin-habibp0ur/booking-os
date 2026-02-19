@@ -127,8 +127,10 @@
 - **Custom Rule Builder Enhancement** (Batch 3d) — Example scenarios per trigger, plain-language filter/action/summary previews, persistent safety bar. 11 tests.
 - **Real Dry-Run + Searchable Activity Log** (Batch 3e) — Enhanced `testRule()` returning real matched/skipped bookings, `DryRunModal` component, activity log filters (search, outcome chips, date range), clear filters. 25 tests.
 - **Safety Controls + Integration** (Batch 3f) — Safety controls summary panel (quiet hours, frequency cap badges) on playbooks/rules tabs, safety column in custom rules table. 6 tests.
-- **Final counts:** 3,449 tests total (2,057 API + 1,392 web), +133 new tests (R3 + implementation fixes + manual testing fixes)
+- **Final counts:** 3,461 tests total (2,064 API + 1,397 web), +145 new tests (R3 + implementation fixes + manual testing fixes + security audit round 2)
 - **UX Upgrade Pack COMPLETE** — All 3 releases, 21 batches
+- **Security Audit Round 2** — 10 fixes: atomic token consumption (race conditions), bcrypt DoS prevention (@MaxLength(128) on passwords), typed AutomationActionDto, forceBook ADMIN restriction, Content-Disposition sanitization, @IsShallowJson on filter fields
+- **Deployment Resilience** — railway.toml health checks, graceful shutdown hooks, frontend fetchWithRetry for network errors during deployment rollovers
 
 ### Tech Stack
 | Layer | Technology |

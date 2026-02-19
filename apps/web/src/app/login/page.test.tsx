@@ -26,6 +26,12 @@ jest.mock('@/lib/auth', () => ({
   AuthProvider: ({ children }: any) => children,
 }));
 
+// Mock api (used by login page for SUPER_ADMIN redirect check)
+const mockApiGet = jest.fn().mockResolvedValue({ role: 'ADMIN' });
+jest.mock('@/lib/api', () => ({
+  api: { get: (...args: any[]) => mockApiGet(...args) },
+}));
+
 // Mock i18n
 jest.mock('@/lib/i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
@@ -144,6 +150,26 @@ describe('LoginPage', () => {
     resolveLogin!();
     await waitFor(() => {
       expect(submitButton).not.toBeDisabled();
+    });
+  });
+
+  it('redirects SUPER_ADMIN to /console after login', async () => {
+    const user = userEvent.setup();
+    mockLogin.mockResolvedValue(undefined);
+    mockApiGet.mockResolvedValue({ role: 'SUPER_ADMIN' });
+
+    render(<LoginPageWrapper />);
+
+    const emailInput = screen.getByRole('textbox');
+    const passwordInput = document.querySelector('input[type="password"]') as HTMLInputElement;
+    const submitButton = screen.getByRole('button', { name: 'login.sign_in' });
+
+    await user.type(emailInput, 'admin@bookingos.com');
+    await user.type(passwordInput, 'superadmin123');
+    await user.click(submitButton);
+
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith('/console');
     });
   });
 

@@ -69,6 +69,12 @@ All AI-related UI elements use the **lavender** palette:
 
 9. **Never use `document.referrer` or `performance.getEntriesByType('navigation')` to detect SPA navigation state.** These APIs reflect the initial page load, not client-side navigations. Use `sessionStorage` flags instead (set on action, check and clear on target page).
 
+10. **Token-based flows must use `TokenService.validateAndConsume()` — never separate validate+markUsed.** The atomic method uses `updateMany` with WHERE conditions (`usedAt: null, expiresAt > now`) so only one concurrent request can succeed, preventing race conditions in reset-password, accept-invite, and verify-email.
+
+11. **`forceBook` on booking creation is ADMIN-only.** The controller throws `ForbiddenException` if a non-ADMIN user sets `forceBook: true`. Never remove this check.
+
+12. **Graceful shutdown is enabled — do not remove `enableShutdownHooks()` from `main.ts`.** Combined with `railway.toml` health checks, this provides zero-downtime deploys. The frontend's `fetchWithRetry` handles transient failures during the deploy window.
+
 ### After Any Auth or Cookie Change
 
 Verify with:

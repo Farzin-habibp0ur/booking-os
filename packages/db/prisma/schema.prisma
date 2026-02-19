@@ -53,6 +53,7 @@ model Business {
   agentFeedback        AgentFeedback[]
   duplicateCandidates  DuplicateCandidate[]
   messageAttachments   MessageAttachment[]
+  viewAsSessions       ViewAsSession[]      @relation("ViewAsTarget")
 
   @@map("businesses")
 }
@@ -90,6 +91,7 @@ model Staff {
   outboundDrafts      OutboundDraft[]      @relation("StaffOutboundDrafts")
   approvedOutbounds   OutboundDraft[]      @relation("ApprovedOutboundDrafts")
   agentFeedback       AgentFeedback[]
+  viewAsSessions      ViewAsSession[]      @relation("ViewAsSuperAdmin")
 
   @@index([businessId])
   @@map("staff")
@@ -948,4 +950,41 @@ model DuplicateCandidate {
   @@unique([businessId, customerId1, customerId2])
   @@index([businessId, status])
   @@map("duplicate_candidates")
+}
+
+model ViewAsSession {
+  id               String    @id @default(cuid())
+  superAdminId     String
+  targetBusinessId String
+  reason           String
+  startedAt        DateTime  @default(now())
+  endedAt          DateTime?
+  expiresAt        DateTime
+  actionsLog       Json      @default("[]")
+  createdAt        DateTime  @default(now())
+
+  superAdmin     Staff    @relation("ViewAsSuperAdmin", fields: [superAdminId], references: [id])
+  targetBusiness Business @relation("ViewAsTarget", fields: [targetBusinessId], references: [id])
+
+  @@index([superAdminId])
+  @@index([targetBusinessId])
+  @@map("view_as_sessions")
+}
+
+model PlatformAuditLog {
+  id         String   @id @default(cuid())
+  actorId    String
+  actorEmail String
+  action     String
+  targetType String?
+  targetId   String?
+  reason     String?
+  metadata   Json     @default("{}")
+  createdAt  DateTime @default(now())
+
+  @@index([actorId])
+  @@index([action])
+  @@index([targetId])
+  @@index([createdAt])
+  @@map("platform_audit_logs")
 }
