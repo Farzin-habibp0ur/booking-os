@@ -355,4 +355,32 @@ describe('SettingsPage', () => {
 
     expect(mockPush).toHaveBeenCalledWith('/settings/offers');
   });
+
+  // ─── AI Autonomy and Agent Skills ─────────────────────────────────
+
+  test('shows AI Autonomy and Agent Skills links', async () => {
+    render(<SettingsPage />);
+    await waitFor(() => {
+      expect(screen.getByText('AI Autonomy')).toBeInTheDocument();
+      expect(screen.getByText('Agent Skills')).toBeInTheDocument();
+    });
+  });
+
+  test('navigates to autonomy settings', async () => {
+    render(<SettingsPage />);
+    await waitFor(() => screen.getByText('AI Autonomy'));
+
+    fireEvent.click(screen.getByText('AI Autonomy'));
+
+    expect(mockPush).toHaveBeenCalledWith('/settings/autonomy');
+  });
+
+  test('navigates to agent skills settings', async () => {
+    render(<SettingsPage />);
+    await waitFor(() => screen.getByText('Agent Skills'));
+
+    fireEvent.click(screen.getByText('Agent Skills'));
+
+    expect(mockPush).toHaveBeenCalledWith('/settings/agents');
+  });
 });

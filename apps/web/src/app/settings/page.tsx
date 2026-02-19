@@ -20,6 +20,8 @@ import {
   ClipboardList,
   Tag,
   Palette,
+  Shield,
+  Bot,
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { useTheme } from '@/lib/use-theme';
@@ -344,6 +346,38 @@ export default function SettingsPage() {
               <div>
                 <p className="text-sm font-medium">{t('settings.ai_settings')}</p>
                 <p className="text-xs text-slate-500">{t('settings.ai_settings_desc')}</p>
+              </div>
+            </button>
+          )}
+          {role === 'ADMIN' && (
+            <button
+              onClick={() => router.push('/settings/autonomy')}
+              className="flex items-center gap-3 w-full text-left p-3 rounded-xl hover:bg-slate-50 border border-slate-100 transition-colors"
+            >
+              <div className="w-9 h-9 bg-lavender-50 rounded-lg flex items-center justify-center">
+                <Shield size={18} className="text-lavender-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium">AI Autonomy</p>
+                <p className="text-xs text-slate-500">
+                  Control how much the AI can do on its own per action type
+                </p>
+              </div>
+            </button>
+          )}
+          {role === 'ADMIN' && (
+            <button
+              onClick={() => router.push('/settings/agents')}
+              className="flex items-center gap-3 w-full text-left p-3 rounded-xl hover:bg-slate-50 border border-slate-100 transition-colors"
+            >
+              <div className="w-9 h-9 bg-sage-50 rounded-lg flex items-center justify-center">
+                <Bot size={18} className="text-sage-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium">Agent Skills</p>
+                <p className="text-xs text-slate-500">
+                  Configure background AI agents and their autonomy levels
+                </p>
               </div>
             </button>
           )}
