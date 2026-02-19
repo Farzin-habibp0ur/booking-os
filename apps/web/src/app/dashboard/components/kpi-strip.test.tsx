@@ -1,4 +1,11 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
+
+const mockPush = jest.fn();
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({ push: mockPush }),
+  useSearchParams: () => new URLSearchParams(),
+  useParams: () => ({}),
+}));
 
 jest.mock('@/lib/i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
@@ -95,5 +102,45 @@ describe('KpiStrip', () => {
 
     // Should render 0 for today bookings when myBookingsToday not provided
     expect(screen.getByText('0')).toBeInTheDocument();
+  });
+
+  it('navigates to reports when admin revenue KPI is clicked', () => {
+    render(<KpiStrip mode="admin" metrics={baseMetrics} />);
+
+    const cards = screen.getAllByTestId('kpi-card');
+    fireEvent.click(cards[0]); // Revenue card
+
+    expect(mockPush).toHaveBeenCalledWith('/reports');
+  });
+
+  it('navigates to bookings when admin bookings KPI is clicked', () => {
+    render(<KpiStrip mode="admin" metrics={baseMetrics} />);
+
+    const cards = screen.getAllByTestId('kpi-card');
+    fireEvent.click(cards[1]); // Bookings card
+
+    expect(mockPush).toHaveBeenCalledWith('/bookings');
+  });
+
+  it('navigates to customers when admin customers KPI is clicked', () => {
+    render(<KpiStrip mode="admin" metrics={baseMetrics} />);
+
+    const cards = screen.getAllByTestId('kpi-card');
+    fireEvent.click(cards[2]); // Customers card
+
+    expect(mockPush).toHaveBeenCalledWith('/customers');
+  });
+
+  it('shows action subtitle for unassigned conversations in agent mode', () => {
+    render(<KpiStrip mode="agent" metrics={{ ...baseMetrics, openConversationCount: 5 }} />);
+
+    expect(screen.getByTestId('kpi-action-subtitle')).toBeInTheDocument();
+    expect(screen.getByText(/5 dashboard.kpi_pending/)).toBeInTheDocument();
+  });
+
+  it('shows action subtitle for new customers in admin mode', () => {
+    render(<KpiStrip mode="admin" metrics={{ ...baseMetrics, newCustomersThisWeek: 3 }} />);
+
+    expect(screen.getByText(/3 dashboard.kpi_new_this_week/)).toBeInTheDocument();
   });
 });

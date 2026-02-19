@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import {
   Calendar,
   MessageSquare,
@@ -23,6 +24,7 @@ interface KpiStripProps {
     openConversationCount: number;
     totalCustomers: number;
     noShowRate: number;
+    newCustomersThisWeek?: number;
   };
   myBookingsToday?: any[];
   completedTodayByStaff?: number;
@@ -36,6 +38,8 @@ interface KpiItem {
   color: string;
   trend?: 'up' | 'down' | 'flat';
   subtitle?: string;
+  actionSubtitle?: string;
+  href?: string;
 }
 
 export function KpiStrip({
@@ -46,6 +50,7 @@ export function KpiStrip({
   myAssignedConversations = [],
 }: KpiStripProps) {
   const { t } = useI18n();
+  const router = useRouter();
 
   const weekChange =
     metrics.totalBookingsLastWeek > 0
@@ -67,18 +72,25 @@ export function KpiStrip({
           icon: Clock,
           color: 'text-amber-600 bg-amber-50',
           trend: metrics.avgResponseTimeMins <= 5 ? ('up' as const) : ('down' as const),
+          href: '/inbox',
         },
         {
           label: t('dashboard.kpi_unassigned'),
           value: metrics.openConversationCount,
           icon: MessageSquare,
           color: 'text-lavender-600 bg-lavender-50',
+          href: '/inbox?filter=unassigned',
+          actionSubtitle:
+            metrics.openConversationCount > 0
+              ? `${metrics.openConversationCount} ${t('dashboard.kpi_pending')}`
+              : undefined,
         },
         {
           label: t('dashboard.kpi_today_bookings'),
           value: myBookingsToday.length,
           icon: Calendar,
           color: 'text-sage-600 bg-sage-50',
+          href: '/calendar',
         },
       ];
     }
@@ -90,18 +102,22 @@ export function KpiStrip({
           value: myBookingsToday.length,
           icon: Calendar,
           color: 'text-sage-600 bg-sage-50',
+          href: '/calendar',
         },
         {
           label: t('dashboard.kpi_completed_today'),
           value: completedTodayByStaff,
           icon: CheckCircle2,
           color: 'text-sage-700 bg-sage-50',
+          href: '/bookings?status=COMPLETED',
         },
         {
           label: t('dashboard.kpi_no_show_rate'),
           value: `${metrics.noShowRate}%`,
           icon: Users,
           color: metrics.noShowRate > 15 ? 'text-red-600 bg-red-50' : 'text-amber-600 bg-amber-50',
+          href: '/reports',
+          actionSubtitle: metrics.noShowRate > 10 ? t('dashboard.kpi_needs_attention') : undefined,
         },
       ];
     }
@@ -113,6 +129,7 @@ export function KpiStrip({
         value: `$${metrics.revenueThisMonth.toLocaleString()}`,
         icon: DollarSign,
         color: 'text-sage-700 bg-sage-50',
+        href: '/reports',
       },
       {
         label: t('dashboard.kpi_bookings_week'),
@@ -122,12 +139,18 @@ export function KpiStrip({
         trend:
           weekChange > 0 ? ('up' as const) : weekChange < 0 ? ('down' as const) : ('flat' as const),
         subtitle: weekChange !== 0 ? `${weekChange > 0 ? '+' : ''}${weekChange}%` : undefined,
+        href: '/bookings',
       },
       {
         label: t('dashboard.kpi_customers'),
         value: metrics.totalCustomers,
         icon: Users,
         color: 'text-lavender-600 bg-lavender-50',
+        href: '/customers',
+        actionSubtitle:
+          (metrics.newCustomersThisWeek || 0) > 0
+            ? `${metrics.newCustomersThisWeek} ${t('dashboard.kpi_new_this_week')}`
+            : undefined,
       },
     ];
   })();
@@ -137,9 +160,11 @@ export function KpiStrip({
       {kpis.map((kpi) => {
         const Icon = kpi.icon;
         return (
-          <div
+          <button
             key={kpi.label}
-            className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-4 flex items-center gap-3"
+            onClick={() => kpi.href && router.push(kpi.href)}
+            className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-4 flex items-center gap-3 text-left hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            data-testid="kpi-card"
           >
             <div className={cn('p-2 rounded-xl', kpi.color)}>
               <Icon size={16} />
@@ -156,8 +181,13 @@ export function KpiStrip({
               </p>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">{kpi.label}</p>
               {kpi.subtitle && <p className="text-[10px] text-sage-600">{kpi.subtitle}</p>}
+              {kpi.actionSubtitle && (
+                <p className="text-[10px] text-amber-600" data-testid="kpi-action-subtitle">
+                  {kpi.actionSubtitle}
+                </p>
+              )}
             </div>
-          </div>
+          </button>
         );
       })}
     </div>

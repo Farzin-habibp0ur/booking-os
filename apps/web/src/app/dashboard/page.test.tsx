@@ -161,6 +161,11 @@ jest.mock('lucide-react', () => ({
   Eye: (props: any) => <div data-testid="eye-icon" {...props} />,
   Bell: (props: any) => <div data-testid="bell-icon" {...props} />,
   Zap: (props: any) => <div data-testid="zap-icon" {...props} />,
+  ChevronDown: (props: any) => <div data-testid="chevron-down-icon" {...props} />,
+  ChevronUp: (props: any) => <div data-testid="chevron-up-icon" {...props} />,
+  Play: (props: any) => <div data-testid="play-icon" {...props} />,
+  CheckCircle: (props: any) => <div data-testid="check-circle-icon" {...props} />,
+  UserX: (props: any) => <div data-testid="user-x-icon" {...props} />,
 }));
 
 import { api } from '@/lib/api';
