@@ -126,4 +126,89 @@ describe('BriefingCard', () => {
 
     expect(screen.getByText('30m ago')).toBeInTheDocument();
   });
+
+  it('shows expand toggle button', () => {
+    render(<BriefingCard card={mockCard} />);
+
+    expect(screen.getByTestId('briefing-expand-card-1')).toBeInTheDocument();
+  });
+
+  it('expands to show details when expand clicked', () => {
+    render(<BriefingCard card={mockCard} />);
+
+    fireEvent.click(screen.getByTestId('briefing-expand-card-1'));
+
+    expect(screen.getByTestId('briefing-details-card-1')).toBeInTheDocument();
+  });
+
+  it('shows booking details in expanded view', () => {
+    render(
+      <BriefingCard
+        card={{
+          ...mockCard,
+          booking: {
+            id: 'b1',
+            startTime: '2026-02-20T10:00:00Z',
+            service: { name: 'Filler Treatment' },
+          },
+        }}
+      />,
+    );
+
+    fireEvent.click(screen.getByTestId('briefing-expand-card-1'));
+
+    expect(screen.getByText(/Filler Treatment/)).toBeInTheDocument();
+  });
+
+  it('shows staff name in expanded view', () => {
+    render(<BriefingCard card={{ ...mockCard, staff: { id: 's1', name: 'Dr. Chen' } }} />);
+
+    fireEvent.click(screen.getByTestId('briefing-expand-card-1'));
+
+    expect(screen.getByText('Dr. Chen')).toBeInTheDocument();
+  });
+
+  it('shows snooze button when onSnooze provided', () => {
+    render(<BriefingCard card={mockCard} onSnooze={jest.fn()} />);
+
+    expect(screen.getByTestId('briefing-snooze-card-1')).toBeInTheDocument();
+  });
+
+  it('opens snooze menu on click', () => {
+    render(<BriefingCard card={mockCard} onSnooze={jest.fn()} />);
+
+    fireEvent.click(screen.getByTestId('briefing-snooze-card-1'));
+
+    expect(screen.getByTestId('snooze-menu-card-1')).toBeInTheDocument();
+    expect(screen.getByText('1 hour')).toBeInTheDocument();
+    expect(screen.getByText('4 hours')).toBeInTheDocument();
+    expect(screen.getByText('Tomorrow')).toBeInTheDocument();
+    expect(screen.getByText('Next week')).toBeInTheDocument();
+  });
+
+  it('calls onSnooze with correct duration when option selected', () => {
+    const onSnooze = jest.fn();
+    render(<BriefingCard card={mockCard} onSnooze={onSnooze} />);
+
+    fireEvent.click(screen.getByTestId('briefing-snooze-card-1'));
+    fireEvent.click(screen.getByTestId('snooze-option-1'));
+
+    expect(onSnooze).toHaveBeenCalledWith('card-1', expect.any(String));
+  });
+
+  it('has category border color for URGENT_TODAY', () => {
+    const { container } = render(<BriefingCard card={mockCard} />);
+
+    const cardEl = container.querySelector('[data-testid="briefing-card-card-1"]');
+    expect(cardEl?.className).toContain('border-l-red-400');
+  });
+
+  it('has category border color for NEEDS_APPROVAL', () => {
+    const { container } = render(
+      <BriefingCard card={{ ...mockCard, category: 'NEEDS_APPROVAL' }} />,
+    );
+
+    const cardEl = container.querySelector('[data-testid="briefing-card-card-1"]');
+    expect(cardEl?.className).toContain('border-l-lavender-400');
+  });
 });

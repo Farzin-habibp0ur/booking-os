@@ -223,6 +223,35 @@ describe('BriefingFeed', () => {
     expect(onCardAction).toHaveBeenCalledWith(expect.objectContaining({ id: 'opp-1' }));
   });
 
+  it('snoozes a card via the snooze button', async () => {
+    mockGet.mockResolvedValue(mockBriefing);
+    mockPatch.mockResolvedValue({ id: 'card-1', status: 'SNOOZED' });
+    render(<BriefingFeed />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('briefing-snooze-card-1')).toBeInTheDocument();
+    });
+
+    // Open snooze menu
+    fireEvent.click(screen.getByTestId('briefing-snooze-card-1'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('snooze-menu-card-1')).toBeInTheDocument();
+    });
+
+    // Select 1 hour option
+    fireEvent.click(screen.getByTestId('snooze-option-1'));
+
+    await waitFor(() => {
+      expect(mockPatch).toHaveBeenCalledWith(
+        '/action-cards/card-1/snooze',
+        expect.objectContaining({ until: expect.any(String) }),
+      );
+    });
+
+    expect(mockToast).toHaveBeenCalledWith('Card snoozed', 'success');
+  });
+
   it('refreshes when refresh button clicked', async () => {
     mockGet.mockResolvedValue(mockBriefing);
     render(<BriefingFeed />);

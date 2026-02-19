@@ -75,6 +75,27 @@ export function BriefingFeed({ onCardAction }: BriefingFeedProps) {
     }
   };
 
+  const handleSnooze = async (id: string, until: string) => {
+    try {
+      await api.patch(`/action-cards/${id}/snooze`, { until });
+      toast('Card snoozed', 'success');
+      loadBriefing();
+    } catch (err: any) {
+      toast(err.message || 'Failed to snooze', 'error');
+    }
+  };
+
+  // Auto-refresh every 5 minutes
+  useEffect(() => {
+    const interval = setInterval(
+      () => {
+        loadBriefing();
+      },
+      5 * 60 * 1000,
+    );
+    return () => clearInterval(interval);
+  }, [loadBriefing]);
+
   if (loading) {
     return (
       <div data-testid="briefing-loading" className="space-y-4">
@@ -172,6 +193,7 @@ export function BriefingFeed({ onCardAction }: BriefingFeedProps) {
                     card={card}
                     onApprove={handleApprove}
                     onDismiss={handleDismiss}
+                    onSnooze={handleSnooze}
                     onView={onCardAction}
                   />
                 ),
