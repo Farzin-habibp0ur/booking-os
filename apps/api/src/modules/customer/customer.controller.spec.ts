@@ -1,10 +1,12 @@
 import { BadRequestException } from '@nestjs/common';
 import { CustomerController } from './customer.controller';
 import { CustomerService } from './customer.service';
+import { CustomerMergeService } from './customer-merge.service';
 
 describe('CustomerController', () => {
   let controller: CustomerController;
   let mockService: Record<string, jest.Mock>;
+  let mockMergeService: Record<string, jest.Mock>;
 
   beforeEach(() => {
     mockService = {
@@ -22,7 +24,16 @@ describe('CustomerController', () => {
       bulkCreate: jest.fn().mockResolvedValue({ created: 3, skipped: 0 }),
       createFromConversations: jest.fn().mockResolvedValue({ created: 5 }),
     };
-    controller = new CustomerController(mockService as unknown as CustomerService);
+    mockMergeService = {
+      listDuplicates: jest.fn().mockResolvedValue({ data: [], total: 0, page: 1, pageSize: 20 }),
+      mergeDuplicateById: jest.fn().mockResolvedValue({ id: 'cust1', name: 'Merged' }),
+      markNotDuplicateById: jest.fn().mockResolvedValue({ id: 'dc1', status: 'NOT_DUPLICATE' }),
+      snoozeDuplicate: jest.fn().mockResolvedValue({ id: 'dc1', status: 'SNOOZED' }),
+    };
+    controller = new CustomerController(
+      mockService as unknown as CustomerService,
+      mockMergeService as unknown as CustomerMergeService,
+    );
   });
 
   describe('list', () => {
@@ -262,6 +273,105 @@ describe('CustomerController', () => {
     it('passes includeMessages=false when specified', async () => {
       await controller.importFromConversations('biz1', { includeMessages: false });
       expect(mockService.createFromConversations).toHaveBeenCalledWith('biz1', false);
+    });
+  });
+
+  describe('listDuplicates', () => {
+    it('delegates to mergeService with parsed query params', async () => {
+      await controller.listDuplicates('biz1', 'PENDING', '2', '10');
+      expect(mockMergeService.listDuplicates).toHaveBeenCalledWith('biz1', {
+        status: 'PENDING',
+        page: 2,
+        pageSize: 10,
+      });
+    });
+
+    it('handles missing query params', async () => {
+      await controller.listDuplicates('biz1');
+      expect(mockMergeService.listDuplicates).toHaveBeenCalledWith('biz1', {
+        status: undefined,
+        page: undefined,
+        pageSize: undefined,
+      });
+    });
+
+    it('returns paginated duplicate list', async () => {
+      const expected = {
+        data: [{ id: 'dc1', confidence: 0.95 }],
+        total: 1,
+        page: 1,
+        pageSize: 20,
+      };
+      mockMergeService.listDuplicates.mockResolvedValue(expected);
+      const result = await controller.listDuplicates('biz1');
+      expect(result).toEqual(expected);
+    });
+  });
+
+  describe('mergeDuplicate', () => {
+    it('delegates to mergeService with candidate id and user info', async () => {
+      await controller.mergeDuplicate('biz1', 'dc1', { id: 'staff1', name: 'Sarah' });
+      expect(mockMergeService.mergeDuplicateById).toHaveBeenCalledWith(
+        'biz1',
+        'dc1',
+        'staff1',
+        'Sarah',
+      );
+    });
+
+    it('handles user without name', async () => {
+      await controller.mergeDuplicate('biz1', 'dc1', { id: 'staff1' });
+      expect(mockMergeService.mergeDuplicateById).toHaveBeenCalledWith(
+        'biz1',
+        'dc1',
+        'staff1',
+        undefined,
+      );
+    });
+
+    it('returns merged customer', async () => {
+      const merged = { id: 'cust1', name: 'Merged Customer' };
+      mockMergeService.mergeDuplicateById.mockResolvedValue(merged);
+      const result = await controller.mergeDuplicate('biz1', 'dc1', { id: 'staff1' });
+      expect(result).toEqual(merged);
+    });
+  });
+
+  describe('markNotDuplicate', () => {
+    it('delegates to mergeService with candidate id and user id', async () => {
+      await controller.markNotDuplicate('biz1', 'dc1', { id: 'staff1' });
+      expect(mockMergeService.markNotDuplicateById).toHaveBeenCalledWith('biz1', 'dc1', 'staff1');
+    });
+
+    it('handles missing user id', async () => {
+      await controller.markNotDuplicate('biz1', 'dc1', {});
+      expect(mockMergeService.markNotDuplicateById).toHaveBeenCalledWith('biz1', 'dc1', undefined);
+    });
+
+    it('returns updated candidate', async () => {
+      const updated = { id: 'dc1', status: 'NOT_DUPLICATE' };
+      mockMergeService.markNotDuplicateById.mockResolvedValue(updated);
+      const result = await controller.markNotDuplicate('biz1', 'dc1', { id: 'staff1' });
+      expect(result).toEqual(updated);
+    });
+  });
+
+  describe('snoozeDuplicate', () => {
+    it('delegates to mergeService with candidate id and user id', async () => {
+      await controller.snoozeDuplicate('biz1', 'dc1', { id: 'staff1' });
+      expect(mockMergeService.snoozeDuplicate).toHaveBeenCalledWith('biz1', 'dc1', 'staff1');
+    });
+
+    it('handles missing user id', async () => {
+      await controller.snoozeDuplicate('biz1', 'dc1', {});
+      expect(mockMergeService.snoozeDuplicate).toHaveBeenCalledWith('biz1', 'dc1', undefined);
+    });
+
+    it('returns snoozed candidate', async () => {
+      const snoozed = { id: 'dc1', status: 'SNOOZED' };
+      mockMergeService.snoozeDuplicate.mockResolvedValue(snoozed);
+      const result = await controller.snoozeDuplicate('biz1', 'dc1', { id: 'staff1' });
+      expect(result).toEqual(snoozed);
     });
   });
 });

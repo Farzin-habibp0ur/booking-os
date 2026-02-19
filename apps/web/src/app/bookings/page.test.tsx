@@ -89,6 +89,20 @@ jest.mock('@/components/skeleton', () => ({
 jest.mock('lucide-react', () => ({
   BookOpen: () => <div data-testid="book-open-icon" />,
   X: () => <div data-testid="x-icon" />,
+  Download: () => <div data-testid="download-icon" />,
+}));
+
+// Mock ExportModal
+jest.mock('@/components/export-modal', () => ({
+  __esModule: true,
+  default: ({ isOpen, onClose }: any) =>
+    isOpen ? (
+      <div data-testid="export-modal">
+        <button data-testid="export-close" onClick={onClose}>
+          Close Export
+        </button>
+      </div>
+    ) : null,
 }));
 
 // Mock BookingDetailModal with prop-forwarding so we can test interactions

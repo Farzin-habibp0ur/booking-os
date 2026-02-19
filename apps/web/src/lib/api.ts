@@ -94,6 +94,32 @@ class ApiClient {
     return this.request<T>(path);
   }
 
+  async getText(path: string): Promise<string> {
+    const token = this.getToken();
+    const headers: Record<string, string> = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const res = await fetch(`${API_URL}${path}`, {
+      headers,
+      credentials: 'include',
+    });
+
+    if (!res.ok) {
+      if (res.status === 401) {
+        const refreshed = await this.tryRefresh();
+        if (refreshed) return this.getText(path);
+        this.setToken(null);
+        if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
+          window.location.href = '/login';
+        }
+      }
+      const error = await res.json().catch(() => ({ message: 'Export failed' }));
+      throw new Error(error.message || `HTTP ${res.status}`);
+    }
+
+    return res.text();
+  }
+
   post<T>(path: string, body?: unknown) {
     return this.request<T>(path, { method: 'POST', body: body ? JSON.stringify(body) : undefined });
   }

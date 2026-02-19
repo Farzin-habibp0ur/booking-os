@@ -213,4 +213,231 @@ describe('CustomerMergeService', () => {
       await expect(service.markNotDuplicate('biz1', 'c1', 'c2')).rejects.toThrow(NotFoundException);
     });
   });
+
+  describe('listDuplicates', () => {
+    it('returns paginated duplicate candidates ordered by confidence desc', async () => {
+      const mockCandidates = [
+        {
+          id: 'dc1',
+          confidence: 0.95,
+          customer1: { id: 'c1', name: 'Jane' },
+          customer2: { id: 'c2', name: 'Jane D.' },
+        },
+        {
+          id: 'dc2',
+          confidence: 0.8,
+          customer1: { id: 'c3', name: 'Bob' },
+          customer2: { id: 'c4', name: 'Robert' },
+        },
+      ];
+      prisma.duplicateCandidate.findMany.mockResolvedValue(mockCandidates as any);
+      prisma.duplicateCandidate.count.mockResolvedValue(2);
+
+      const result = await service.listDuplicates('biz1');
+
+      expect(result).toEqual({ data: mockCandidates, total: 2, page: 1, pageSize: 20 });
+      expect(prisma.duplicateCandidate.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { businessId: 'biz1' },
+          orderBy: { confidence: 'desc' },
+          skip: 0,
+          take: 20,
+          include: expect.objectContaining({
+            customer1: expect.any(Object),
+            customer2: expect.any(Object),
+          }),
+        }),
+      );
+    });
+
+    it('filters by status when provided', async () => {
+      prisma.duplicateCandidate.findMany.mockResolvedValue([]);
+      prisma.duplicateCandidate.count.mockResolvedValue(0);
+
+      await service.listDuplicates('biz1', { status: 'PENDING' });
+
+      expect(prisma.duplicateCandidate.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { businessId: 'biz1', status: 'PENDING' },
+        }),
+      );
+      expect(prisma.duplicateCandidate.count).toHaveBeenCalledWith({
+        where: { businessId: 'biz1', status: 'PENDING' },
+      });
+    });
+
+    it('applies pagination correctly', async () => {
+      prisma.duplicateCandidate.findMany.mockResolvedValue([]);
+      prisma.duplicateCandidate.count.mockResolvedValue(25);
+
+      const result = await service.listDuplicates('biz1', { page: 2, pageSize: 10 });
+
+      expect(result.page).toBe(2);
+      expect(result.pageSize).toBe(10);
+      expect(prisma.duplicateCandidate.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          skip: 10,
+          take: 10,
+        }),
+      );
+    });
+
+    it('clamps page to minimum of 1', async () => {
+      prisma.duplicateCandidate.findMany.mockResolvedValue([]);
+      prisma.duplicateCandidate.count.mockResolvedValue(0);
+
+      const result = await service.listDuplicates('biz1', { page: 0 });
+
+      expect(result.page).toBe(1);
+      expect(prisma.duplicateCandidate.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ skip: 0 }),
+      );
+    });
+
+    it('clamps pageSize to maximum of 100', async () => {
+      prisma.duplicateCandidate.findMany.mockResolvedValue([]);
+      prisma.duplicateCandidate.count.mockResolvedValue(0);
+
+      const result = await service.listDuplicates('biz1', { pageSize: 500 });
+
+      expect(result.pageSize).toBe(100);
+      expect(prisma.duplicateCandidate.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ take: 100 }),
+      );
+    });
+  });
+
+  describe('snoozeDuplicate', () => {
+    it('updates candidate status to SNOOZED', async () => {
+      prisma.duplicateCandidate.findFirst.mockResolvedValue({
+        id: 'dc1',
+        businessId: 'biz1',
+        status: 'PENDING',
+      } as any);
+      prisma.duplicateCandidate.update.mockResolvedValue({
+        id: 'dc1',
+        status: 'SNOOZED',
+      } as any);
+
+      const result = await service.snoozeDuplicate('biz1', 'dc1', 'staff1');
+
+      expect(result.status).toBe('SNOOZED');
+      expect(prisma.duplicateCandidate.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'dc1' },
+          data: expect.objectContaining({
+            status: 'SNOOZED',
+            resolvedBy: 'staff1',
+          }),
+        }),
+      );
+    });
+
+    it('throws NotFoundException when candidate not found', async () => {
+      prisma.duplicateCandidate.findFirst.mockResolvedValue(null);
+
+      await expect(service.snoozeDuplicate('biz1', 'dc-nonexistent', 'staff1')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('sets resolvedAt timestamp', async () => {
+      prisma.duplicateCandidate.findFirst.mockResolvedValue({
+        id: 'dc1',
+        businessId: 'biz1',
+        status: 'PENDING',
+      } as any);
+      prisma.duplicateCandidate.update.mockResolvedValue({ id: 'dc1', status: 'SNOOZED' } as any);
+
+      await service.snoozeDuplicate('biz1', 'dc1');
+
+      expect(prisma.duplicateCandidate.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            resolvedAt: expect.any(Date),
+          }),
+        }),
+      );
+    });
+  });
+
+  describe('mergeDuplicateById', () => {
+    it('looks up candidate and delegates to mergeCustomers', async () => {
+      prisma.duplicateCandidate.findFirst.mockResolvedValue({
+        id: 'dc1',
+        businessId: 'biz1',
+        customerId1: 'c1',
+        customerId2: 'c2',
+        status: 'PENDING',
+      } as any);
+
+      // Mock the mergeCustomers flow
+      prisma.customer.findFirst
+        .mockResolvedValueOnce(mockPrimary as any) // first call: find candidate by id
+        .mockResolvedValueOnce(mockPrimary as any) // mergeCustomers: primary
+        .mockResolvedValueOnce(mockSecondary as any); // mergeCustomers: secondary
+      prisma.customer.findUnique.mockResolvedValue(mockPrimary as any);
+
+      await service.mergeDuplicateById('biz1', 'dc1', 'staff1', 'Sarah');
+
+      // Verify candidate lookup
+      expect(prisma.duplicateCandidate.findFirst).toHaveBeenCalledWith({
+        where: { id: 'dc1', businessId: 'biz1' },
+      });
+
+      // Verify mergeCustomers was invoked (checks booking transfer as proxy)
+      expect(prisma.booking.updateMany).toHaveBeenCalledWith({
+        where: { customerId: 'c2', businessId: 'biz1' },
+        data: { customerId: 'c1' },
+      });
+    });
+
+    it('throws NotFoundException when candidate not found', async () => {
+      prisma.duplicateCandidate.findFirst.mockResolvedValue(null);
+
+      await expect(service.mergeDuplicateById('biz1', 'dc-missing')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+  });
+
+  describe('markNotDuplicateById', () => {
+    it('looks up candidate and delegates to markNotDuplicate', async () => {
+      // First call: markNotDuplicateById finds the candidate by id
+      prisma.duplicateCandidate.findFirst
+        .mockResolvedValueOnce({
+          id: 'dc1',
+          businessId: 'biz1',
+          customerId1: 'c1',
+          customerId2: 'c2',
+          status: 'PENDING',
+        } as any)
+        // Second call: markNotDuplicate finds by customer pair
+        .mockResolvedValueOnce({
+          id: 'dc1',
+          businessId: 'biz1',
+          status: 'PENDING',
+        } as any);
+      prisma.duplicateCandidate.update.mockResolvedValue({
+        id: 'dc1',
+        status: 'NOT_DUPLICATE',
+      } as any);
+
+      const result = await service.markNotDuplicateById('biz1', 'dc1', 'staff1');
+
+      expect(result.status).toBe('NOT_DUPLICATE');
+      // Verify candidate lookup by id
+      expect(prisma.duplicateCandidate.findFirst).toHaveBeenCalledWith({
+        where: { id: 'dc1', businessId: 'biz1' },
+      });
+    });
+
+    it('throws NotFoundException when candidate not found', async () => {
+      prisma.duplicateCandidate.findFirst.mockResolvedValue(null);
+
+      await expect(service.markNotDuplicateById('biz1', 'dc-missing')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+  });
 });

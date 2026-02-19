@@ -15,8 +15,11 @@ import {
   Tag,
   AlertTriangle,
   RefreshCw,
+  Download,
+  Copy,
 } from 'lucide-react';
 import BulkActionBar from '@/components/bulk-action-bar';
+import ExportModal from '@/components/export-modal';
 import { cn } from '@/lib/cn';
 import { usePack } from '@/lib/vertical-pack';
 import { useI18n } from '@/lib/i18n';
@@ -38,6 +41,8 @@ export default function CustomersPage() {
   const [bulkTagModal, setBulkTagModal] = useState<'tag' | 'untag' | null>(null);
   const [tagInput, setTagInput] = useState('');
   const [activeViewId, setActiveViewId] = useState<string | null>(null);
+  const [showExport, setShowExport] = useState(false);
+  const [duplicateCount, setDuplicateCount] = useState(0);
   const retryCountRef = useRef(0);
 
   const currentFilters = { search };
@@ -84,6 +89,10 @@ export default function CustomersPage() {
 
   useEffect(() => {
     load();
+    api
+      .get<any>('/customers/duplicates?status=PENDING&pageSize=1')
+      .then((res) => setDuplicateCount(res.total || 0))
+      .catch(() => {});
   }, []);
 
   const toggleSelect = (id: string) => {
@@ -137,6 +146,23 @@ export default function CustomersPage() {
           </p>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+          {duplicateCount > 0 && (
+            <button
+              onClick={() => router.push('/customers/duplicates')}
+              className="flex items-center justify-center gap-1 border border-amber-200 bg-amber-50 px-3 py-2 rounded-xl text-sm text-amber-700 hover:bg-amber-100 transition-colors"
+            >
+              <Copy size={16} /> Review Duplicates
+              <span className="bg-amber-200 text-amber-800 text-xs px-1.5 py-0.5 rounded-full ml-1">
+                {duplicateCount}
+              </span>
+            </button>
+          )}
+          <button
+            onClick={() => setShowExport(true)}
+            className="flex items-center justify-center gap-1 border px-3 py-2 rounded-xl text-sm hover:bg-slate-50 transition-colors"
+          >
+            <Download size={16} /> Export CSV
+          </button>
           <button
             onClick={() => setShowImport(true)}
             className="flex items-center justify-center gap-1 border px-3 py-2 rounded-xl text-sm hover:bg-slate-50 transition-colors"
@@ -393,6 +419,20 @@ export default function CustomersPage() {
           }}
         />
       )}
+      <ExportModal
+        isOpen={showExport}
+        onClose={() => setShowExport(false)}
+        entity="customers"
+        allFields={[
+          { key: 'id', label: 'ID' },
+          { key: 'name', label: 'Name' },
+          { key: 'phone', label: 'Phone' },
+          { key: 'email', label: 'Email' },
+          { key: 'tags', label: 'Tags' },
+          { key: 'createdAt', label: 'Created' },
+          { key: 'updatedAt', label: 'Updated' },
+        ]}
+      />
     </div>
   );
 }

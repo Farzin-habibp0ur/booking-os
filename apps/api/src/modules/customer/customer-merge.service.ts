@@ -144,6 +144,79 @@ export class CustomerMergeService {
     });
   }
 
+  async listDuplicates(
+    businessId: string,
+    opts?: { status?: string; page?: number; pageSize?: number },
+  ) {
+    const page = Math.max(1, opts?.page || 1);
+    const pageSize = Math.min(100, Math.max(1, opts?.pageSize || 20));
+    const where: any = { businessId };
+    if (opts?.status) {
+      where.status = opts.status;
+    }
+
+    const [data, total] = await Promise.all([
+      this.prisma.duplicateCandidate.findMany({
+        where,
+        include: {
+          customer1: { select: { id: true, name: true, phone: true, email: true, tags: true } },
+          customer2: { select: { id: true, name: true, phone: true, email: true, tags: true } },
+        },
+        orderBy: { confidence: 'desc' },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+      this.prisma.duplicateCandidate.count({ where }),
+    ]);
+
+    return { data, total, page, pageSize };
+  }
+
+  async snoozeDuplicate(businessId: string, candidateId: string, staffId?: string) {
+    const candidate = await this.prisma.duplicateCandidate.findFirst({
+      where: { id: candidateId, businessId },
+    });
+    if (!candidate) throw new NotFoundException('Duplicate candidate not found');
+
+    return this.prisma.duplicateCandidate.update({
+      where: { id: candidateId },
+      data: {
+        status: 'SNOOZED',
+        resolvedBy: staffId,
+        resolvedAt: new Date(),
+      },
+    });
+  }
+
+  async mergeDuplicateById(
+    businessId: string,
+    candidateId: string,
+    staffId?: string,
+    staffName?: string,
+  ) {
+    const candidate = await this.prisma.duplicateCandidate.findFirst({
+      where: { id: candidateId, businessId },
+    });
+    if (!candidate) throw new NotFoundException('Duplicate candidate not found');
+
+    return this.mergeCustomers(
+      businessId,
+      candidate.customerId1,
+      candidate.customerId2,
+      staffId,
+      staffName,
+    );
+  }
+
+  async markNotDuplicateById(businessId: string, candidateId: string, staffId?: string) {
+    const candidate = await this.prisma.duplicateCandidate.findFirst({
+      where: { id: candidateId, businessId },
+    });
+    if (!candidate) throw new NotFoundException('Duplicate candidate not found');
+
+    return this.markNotDuplicate(businessId, candidate.customerId1, candidate.customerId2, staffId);
+  }
+
   async markNotDuplicate(
     businessId: string,
     customerId1: string,

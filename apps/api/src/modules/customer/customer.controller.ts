@@ -17,6 +17,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CustomerService } from './customer.service';
+import { CustomerMergeService } from './customer-merge.service';
 import { BusinessId, CurrentUser } from '../../common/decorators';
 import { TenantGuard } from '../../common/tenant.guard';
 import {
@@ -32,7 +33,10 @@ import {
 export class CustomerController {
   private readonly logger = new Logger(CustomerController.name);
 
-  constructor(private customerService: CustomerService) {}
+  constructor(
+    private customerService: CustomerService,
+    private customerMergeService: CustomerMergeService,
+  ) {}
 
   @Get()
   list(
@@ -44,6 +48,47 @@ export class CustomerController {
       page: query.page ? parseInt(query.page) : undefined,
       pageSize: query.pageSize ? parseInt(query.pageSize) : undefined,
     });
+  }
+
+  @Get('duplicates')
+  listDuplicates(
+    @BusinessId() businessId: string,
+    @Query('status') status?: string,
+    @Query('page') page?: string,
+    @Query('pageSize') pageSize?: string,
+  ) {
+    return this.customerMergeService.listDuplicates(businessId, {
+      status,
+      page: page ? parseInt(page) : undefined,
+      pageSize: pageSize ? parseInt(pageSize) : undefined,
+    });
+  }
+
+  @Post('duplicates/:id/merge')
+  mergeDuplicate(
+    @BusinessId() businessId: string,
+    @Param('id') id: string,
+    @CurrentUser() user: any,
+  ) {
+    return this.customerMergeService.mergeDuplicateById(businessId, id, user?.id, user?.name);
+  }
+
+  @Post('duplicates/:id/not-duplicate')
+  markNotDuplicate(
+    @BusinessId() businessId: string,
+    @Param('id') id: string,
+    @CurrentUser() user: any,
+  ) {
+    return this.customerMergeService.markNotDuplicateById(businessId, id, user?.id);
+  }
+
+  @Post('duplicates/:id/snooze')
+  snoozeDuplicate(
+    @BusinessId() businessId: string,
+    @Param('id') id: string,
+    @CurrentUser() user: any,
+  ) {
+    return this.customerMergeService.snoozeDuplicate(businessId, id, user?.id);
   }
 
   @Get(':id')

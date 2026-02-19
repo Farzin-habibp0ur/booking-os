@@ -42,10 +42,29 @@ jest.mock('@/lib/toast', () => ({
 }));
 jest.mock('@/lib/cn', () => ({ cn: (...args: any[]) => args.filter(Boolean).join(' ') }));
 jest.mock('@/lib/api', () => ({
-  api: { get: jest.fn(), post: jest.fn(), patch: jest.fn(), del: jest.fn(), upload: jest.fn() },
+  api: {
+    get: jest.fn(),
+    post: jest.fn(),
+    patch: jest.fn(),
+    del: jest.fn(),
+    upload: jest.fn(),
+    getText: jest.fn(),
+  },
 }));
 import { api } from '@/lib/api';
 const mockApi = api as jest.Mocked<typeof api>;
+
+jest.mock('@/components/export-modal', () => ({
+  __esModule: true,
+  default: ({ isOpen, onClose }: any) =>
+    isOpen ? (
+      <div data-testid="export-modal">
+        <button data-testid="export-close" onClick={onClose}>
+          Close Export
+        </button>
+      </div>
+    ) : null,
+}));
 
 jest.mock('@/components/skeleton', () => ({
   PageSkeleton: () => <div data-testid="page-skeleton" />,
@@ -373,7 +392,7 @@ describe('CustomersPage', () => {
 
       // First call fails, triggers retry after 1500ms
       await waitFor(() => {
-        expect(mockApi.get).toHaveBeenCalledTimes(1);
+        expect(mockApi.get).toHaveBeenCalledWith('/customers?search=&pageSize=50');
       });
 
       // Advance timer to trigger retry
@@ -390,7 +409,7 @@ describe('CustomersPage', () => {
       render(<CustomersPage />);
 
       await waitFor(() => {
-        expect(mockApi.get).toHaveBeenCalledTimes(1);
+        expect(mockApi.get).toHaveBeenCalledWith('/customers?search=&pageSize=50');
       });
 
       jest.advanceTimersByTime(1500);
@@ -405,7 +424,7 @@ describe('CustomersPage', () => {
       render(<CustomersPage />);
 
       await waitFor(() => {
-        expect(mockApi.get).toHaveBeenCalledTimes(1);
+        expect(mockApi.get).toHaveBeenCalledWith('/customers?search=&pageSize=50');
       });
 
       // Should not show error yet (retry pending)
@@ -413,9 +432,12 @@ describe('CustomersPage', () => {
 
       jest.advanceTimersByTime(1500);
 
-      // After retry, should have called API twice total
+      // After retry, customers endpoint should have been called at least twice
       await waitFor(() => {
-        expect(mockApi.get).toHaveBeenCalledTimes(2);
+        const customerCalls = mockApi.get.mock.calls.filter(
+          (c: any) => c[0] === '/customers?search=&pageSize=50',
+        );
+        expect(customerCalls.length).toBeGreaterThanOrEqual(2);
       });
 
       await waitFor(() => {
@@ -428,7 +450,7 @@ describe('CustomersPage', () => {
       render(<CustomersPage />);
 
       await waitFor(() => {
-        expect(mockApi.get).toHaveBeenCalledTimes(1);
+        expect(mockApi.get).toHaveBeenCalledWith('/customers?search=&pageSize=50');
       });
 
       jest.advanceTimersByTime(1500);
@@ -444,7 +466,7 @@ describe('CustomersPage', () => {
       render(<CustomersPage />);
 
       await waitFor(() => {
-        expect(mockApi.get).toHaveBeenCalledTimes(1);
+        expect(mockApi.get).toHaveBeenCalledWith('/customers?search=&pageSize=50');
       });
 
       jest.advanceTimersByTime(1500);
@@ -465,17 +487,19 @@ describe('CustomersPage', () => {
     });
 
     it('recovers on auto-retry if second attempt succeeds', async () => {
-      let callCount = 0;
-      mockApi.get.mockImplementation(() => {
-        callCount++;
-        if (callCount === 1) return Promise.reject(new Error('Transient error'));
+      let customerCallCount = 0;
+      mockApi.get.mockImplementation((path: string) => {
+        if (path.startsWith('/customers/duplicates'))
+          return Promise.resolve({ data: [], total: 0 });
+        customerCallCount++;
+        if (customerCallCount === 1) return Promise.reject(new Error('Transient error'));
         return Promise.resolve({ data: MOCK_CUSTOMERS, total: 3 });
       });
 
       render(<CustomersPage />);
 
       await waitFor(() => {
-        expect(mockApi.get).toHaveBeenCalledTimes(1);
+        expect(mockApi.get).toHaveBeenCalledWith('/customers?search=&pageSize=50');
       });
 
       jest.advanceTimersByTime(1500);
@@ -493,7 +517,7 @@ describe('CustomersPage', () => {
       render(<CustomersPage />);
 
       await waitFor(() => {
-        expect(mockApi.get).toHaveBeenCalledTimes(1);
+        expect(mockApi.get).toHaveBeenCalledWith('/customers?search=&pageSize=50');
       });
 
       jest.advanceTimersByTime(1500);

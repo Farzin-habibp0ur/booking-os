@@ -7,10 +7,11 @@ import { usePack } from '@/lib/vertical-pack';
 import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/lib/toast';
 import { TableRowSkeleton, EmptyState } from '@/components/skeleton';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, Download } from 'lucide-react';
 import BookingDetailModal from '@/components/booking-detail-modal';
 import BookingFormModal from '@/components/booking-form-modal';
 import BulkActionBar from '@/components/bulk-action-bar';
+import ExportModal from '@/components/export-modal';
 import { ViewPicker } from '@/components/saved-views';
 
 const statusColors: Record<string, string> = {
@@ -35,6 +36,7 @@ export default function BookingsPage() {
   const [bulkAssignModal, setBulkAssignModal] = useState(false);
   const [staff, setStaff] = useState<any[]>([]);
   const [activeViewId, setActiveViewId] = useState<string | null>(null);
+  const [showExport, setShowExport] = useState(false);
   const pack = usePack();
   const { t } = useI18n();
   const { toast } = useToast();
@@ -141,18 +143,26 @@ export default function BookingsPage() {
         <h1 className="text-2xl font-serif font-semibold text-slate-900">
           {t('bookings.title', { entity: pack.labels.booking })}
         </h1>
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="border border-slate-200 rounded-xl px-3 py-2 text-sm transition-colors w-full sm:w-auto"
-        >
-          <option value="">{t('bookings.all_statuses')}</option>
-          {Object.keys(statusColors).map((s) => (
-            <option key={s} value={s}>
-              {t(`status.${s.toLowerCase()}`)}
-            </option>
-          ))}
-        </select>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <button
+            onClick={() => setShowExport(true)}
+            className="flex items-center justify-center gap-1 border px-3 py-2 rounded-xl text-sm hover:bg-slate-50 transition-colors"
+          >
+            <Download size={16} /> Export CSV
+          </button>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="border border-slate-200 rounded-xl px-3 py-2 text-sm transition-colors w-full sm:w-auto"
+          >
+            <option value="">{t('bookings.all_statuses')}</option>
+            {Object.keys(statusColors).map((s) => (
+              <option key={s} value={s}>
+                {t(`status.${s.toLowerCase()}`)}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <ViewPicker
@@ -337,6 +347,24 @@ export default function BookingsPage() {
           </div>
         </div>
       )}
+      <ExportModal
+        isOpen={showExport}
+        onClose={() => setShowExport(false)}
+        entity="bookings"
+        allFields={[
+          { key: 'id', label: 'ID' },
+          { key: 'customerName', label: 'Customer' },
+          { key: 'customerPhone', label: 'Phone' },
+          { key: 'customerEmail', label: 'Email' },
+          { key: 'serviceName', label: 'Service' },
+          { key: 'staffName', label: 'Staff' },
+          { key: 'status', label: 'Status' },
+          { key: 'startTime', label: 'Start Time' },
+          { key: 'endTime', label: 'End Time' },
+          { key: 'notes', label: 'Notes' },
+          { key: 'createdAt', label: 'Created' },
+        ]}
+      />
     </div>
   );
 }
