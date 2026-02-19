@@ -1,16 +1,19 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { useToast } from '@/lib/toast';
-import { Zap, Plus, ToggleLeft, ToggleRight, Trash2, Play } from 'lucide-react';
+import { Zap, Plus, ToggleLeft, ToggleRight, Trash2, Play, Search, X } from 'lucide-react';
 import { TableRowSkeleton, EmptyState } from '@/components/skeleton';
 import TooltipNudge from '@/components/tooltip-nudge';
 import { PlaybookCard } from './components/playbook-card';
+import { DryRunModal } from './components/dry-run-modal';
 
 type Tab = 'playbooks' | 'rules' | 'logs';
+
+const OUTCOME_OPTIONS = ['SENT', 'SKIPPED', 'FAILED'] as const;
 
 export default function AutomationsPage() {
   const [tab, setTab] = useState<Tab>('playbooks');
@@ -18,6 +21,12 @@ export default function AutomationsPage() {
   const [rules, setRules] = useState<any[]>([]);
   const [logs, setLogs] = useState<any>({ data: [], total: 0 });
   const [loading, setLoading] = useState(true);
+  const [logSearch, setLogSearch] = useState('');
+  const [logOutcome, setLogOutcome] = useState('');
+  const [logDateFrom, setLogDateFrom] = useState('');
+  const [logDateTo, setLogDateTo] = useState('');
+  const [dryRunResult, setDryRunResult] = useState<any>(null);
+  const [dryRunLoading, setDryRunLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
 
@@ -31,15 +40,29 @@ export default function AutomationsPage() {
       .get<any>('/automations/rules')
       .then((r) => setRules(Array.isArray(r) ? r : []))
       .catch((err: any) => toast(err.message || 'Failed to load rules', 'error'));
-  const loadLogs = () =>
-    api
-      .get<any>('/automations/logs?pageSize=50')
-      .then(setLogs)
-      .catch((err: any) => toast(err.message || 'Failed to load activity logs', 'error'));
+
+  const loadLogs = useCallback(
+    (opts?: { search?: string; outcome?: string; dateFrom?: string; dateTo?: string }) => {
+      const params = new URLSearchParams({ pageSize: '50' });
+      const s = opts?.search ?? logSearch;
+      const o = opts?.outcome ?? logOutcome;
+      const df = opts?.dateFrom ?? logDateFrom;
+      const dt = opts?.dateTo ?? logDateTo;
+      if (s) params.set('search', s);
+      if (o) params.set('outcome', o);
+      if (df) params.set('dateFrom', df);
+      if (dt) params.set('dateTo', dt);
+      return api
+        .get<any>(`/automations/logs?${params.toString()}`)
+        .then(setLogs)
+        .catch((err: any) => toast(err.message || 'Failed to load activity logs', 'error'));
+    },
+    [logSearch, logOutcome, logDateFrom, logDateTo, toast],
+  );
 
   useEffect(() => {
     setLoading(true);
-    Promise.all([loadPlaybooks(), loadRules(), loadLogs()]).finally(() => setLoading(false));
+    Promise.all([loadPlaybooks(), loadRules(), loadLogs({})]).finally(() => setLoading(false));
   }, []);
 
   const handleTogglePlaybook = async (playbookId: string) => {
@@ -71,13 +94,30 @@ export default function AutomationsPage() {
   };
 
   const handleTestRule = async (id: string) => {
+    setDryRunLoading(true);
     try {
       const result = await api.post<any>(`/automations/rules/${id}/test`);
-      alert(result.message);
+      setDryRunResult(result);
     } catch (err: any) {
-      alert(`Test failed: ${err.message}`);
+      toast(err.message || 'Failed to test rule', 'error');
+    } finally {
+      setDryRunLoading(false);
     }
   };
+
+  const handleLogFilterApply = () => {
+    loadLogs({ search: logSearch, outcome: logOutcome, dateFrom: logDateFrom, dateTo: logDateTo });
+  };
+
+  const handleClearFilters = () => {
+    setLogSearch('');
+    setLogOutcome('');
+    setLogDateFrom('');
+    setLogDateTo('');
+    loadLogs({ search: '', outcome: '', dateFrom: '', dateTo: '' });
+  };
+
+  const hasActiveFilters = logSearch || logOutcome || logDateFrom || logDateTo;
 
   const tabs: { key: Tab; label: string }[] = [
     { key: 'playbooks', label: 'Playbooks' },
@@ -201,6 +241,7 @@ export default function AutomationsPage() {
                               <button
                                 onClick={() => handleTestRule(rule.id)}
                                 className="text-slate-400 hover:text-sage-600 p-1"
+                                data-testid={`test-rule-${rule.id}`}
                               >
                                 <Play size={16} />
                               </button>
@@ -229,69 +270,165 @@ export default function AutomationsPage() {
 
       {/* Activity Log */}
       {tab === 'logs' && (
-        <div className="bg-white rounded-2xl shadow-soft overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px]">
-              <thead className="bg-slate-50 border-b">
-                <tr>
-                  <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
-                    Rule
-                  </th>
-                  <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
-                    Action
-                  </th>
-                  <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
-                    Outcome
-                  </th>
-                  <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
-                    Time
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {loading
-                  ? Array.from({ length: 3 }).map((_, i) => <TableRowSkeleton key={i} cols={4} />)
-                  : logs.data.map((log: any) => (
-                      <tr key={log.id} className="hover:bg-slate-50">
-                        <td className="p-3 text-sm font-medium">{log.rule?.name || '—'}</td>
-                        <td className="p-3 text-sm text-slate-600">{log.action}</td>
-                        <td className="p-3">
-                          <span
-                            className={cn(
-                              'text-xs px-2 py-0.5 rounded-full',
-                              log.outcome === 'SENT'
-                                ? 'bg-sage-50 text-sage-700'
-                                : log.outcome === 'SKIPPED'
-                                  ? 'bg-amber-50 text-amber-700'
-                                  : 'bg-red-50 text-red-700',
-                            )}
-                          >
-                            {log.outcome}
-                          </span>
-                          {log.reason && (
-                            <span className="text-xs text-slate-400 ml-1">{log.reason}</span>
-                          )}
-                        </td>
-                        <td className="p-3 text-sm text-slate-500">
-                          {new Date(log.createdAt).toLocaleString('en-US', {
-                            dateStyle: 'medium',
-                            timeStyle: 'short',
-                          })}
-                        </td>
-                      </tr>
-                    ))}
-              </tbody>
-            </table>
+        <div className="space-y-3">
+          {/* Filters */}
+          <div className="bg-white rounded-2xl shadow-soft p-4" data-testid="log-filters">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1">
+                <Search
+                  size={16}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                />
+                <input
+                  type="text"
+                  placeholder="Search logs..."
+                  value={logSearch}
+                  onChange={(e) => setLogSearch(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleLogFilterApply()}
+                  className="w-full pl-9 pr-3 py-2 bg-slate-50 border-transparent rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-sage-500"
+                  data-testid="log-search-input"
+                />
+              </div>
+              <div className="flex gap-1.5 items-center flex-wrap">
+                {OUTCOME_OPTIONS.map((o) => (
+                  <button
+                    key={o}
+                    onClick={() => {
+                      const next = logOutcome === o ? '' : o;
+                      setLogOutcome(next);
+                      loadLogs({
+                        search: logSearch,
+                        outcome: next,
+                        dateFrom: logDateFrom,
+                        dateTo: logDateTo,
+                      });
+                    }}
+                    className={cn(
+                      'px-3 py-1.5 text-xs rounded-lg transition-colors',
+                      logOutcome === o
+                        ? o === 'SENT'
+                          ? 'bg-sage-100 text-sage-700 font-medium'
+                          : o === 'SKIPPED'
+                            ? 'bg-amber-100 text-amber-700 font-medium'
+                            : 'bg-red-100 text-red-700 font-medium'
+                        : 'bg-slate-100 text-slate-500 hover:bg-slate-200',
+                    )}
+                    data-testid={`outcome-filter-${o}`}
+                  >
+                    {o}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3 mt-3">
+              <div className="flex items-center gap-2">
+                <label className="text-xs text-slate-500">From</label>
+                <input
+                  type="date"
+                  value={logDateFrom}
+                  onChange={(e) => setLogDateFrom(e.target.value)}
+                  className="px-2 py-1.5 bg-slate-50 border-transparent rounded-lg text-xs focus:bg-white focus:ring-2 focus:ring-sage-500"
+                  data-testid="log-date-from"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-xs text-slate-500">To</label>
+                <input
+                  type="date"
+                  value={logDateTo}
+                  onChange={(e) => setLogDateTo(e.target.value)}
+                  className="px-2 py-1.5 bg-slate-50 border-transparent rounded-lg text-xs focus:bg-white focus:ring-2 focus:ring-sage-500"
+                  data-testid="log-date-to"
+                />
+              </div>
+              <button
+                onClick={handleLogFilterApply}
+                className="px-3 py-1.5 bg-sage-600 text-white rounded-lg text-xs hover:bg-sage-700 transition-colors"
+                data-testid="apply-log-filters"
+              >
+                Apply
+              </button>
+              {hasActiveFilters && (
+                <button
+                  onClick={handleClearFilters}
+                  className="flex items-center gap-1 px-3 py-1.5 text-slate-500 hover:text-slate-700 text-xs"
+                  data-testid="clear-log-filters"
+                >
+                  <X size={12} />
+                  Clear
+                </button>
+              )}
+            </div>
           </div>
-          {!loading && logs.data.length === 0 && (
-            <EmptyState
-              icon={Zap}
-              title="No activity yet"
-              description="Automation logs will appear here once rules start executing."
-            />
-          )}
+
+          {/* Log Table */}
+          <div className="bg-white rounded-2xl shadow-soft overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[640px]">
+                <thead className="bg-slate-50 border-b">
+                  <tr>
+                    <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
+                      Rule
+                    </th>
+                    <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
+                      Action
+                    </th>
+                    <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
+                      Outcome
+                    </th>
+                    <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
+                      Time
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {loading
+                    ? Array.from({ length: 3 }).map((_, i) => <TableRowSkeleton key={i} cols={4} />)
+                    : logs.data.map((log: any) => (
+                        <tr key={log.id} className="hover:bg-slate-50">
+                          <td className="p-3 text-sm font-medium">{log.rule?.name || '—'}</td>
+                          <td className="p-3 text-sm text-slate-600">{log.action}</td>
+                          <td className="p-3">
+                            <span
+                              className={cn(
+                                'text-xs px-2 py-0.5 rounded-full',
+                                log.outcome === 'SENT'
+                                  ? 'bg-sage-50 text-sage-700'
+                                  : log.outcome === 'SKIPPED'
+                                    ? 'bg-amber-50 text-amber-700'
+                                    : 'bg-red-50 text-red-700',
+                              )}
+                            >
+                              {log.outcome}
+                            </span>
+                            {log.reason && (
+                              <span className="text-xs text-slate-400 ml-1">{log.reason}</span>
+                            )}
+                          </td>
+                          <td className="p-3 text-sm text-slate-500">
+                            {new Date(log.createdAt).toLocaleString('en-US', {
+                              dateStyle: 'medium',
+                              timeStyle: 'short',
+                            })}
+                          </td>
+                        </tr>
+                      ))}
+                </tbody>
+              </table>
+            </div>
+            {!loading && logs.data.length === 0 && (
+              <EmptyState
+                icon={Zap}
+                title="No activity yet"
+                description="Automation logs will appear here once rules start executing."
+              />
+            )}
+          </div>
         </div>
       )}
+
+      {/* Dry Run Modal */}
+      {dryRunResult && <DryRunModal result={dryRunResult} onClose={() => setDryRunResult(null)} />}
     </div>
   );
 }

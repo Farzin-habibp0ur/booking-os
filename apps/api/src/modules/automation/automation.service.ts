@@ -139,11 +139,35 @@ export class AutomationService {
     return { deleted: true };
   }
 
-  async getLogs(businessId: string, query: { ruleId?: string; page?: number; pageSize?: number }) {
+  async getLogs(
+    businessId: string,
+    query: {
+      ruleId?: string;
+      page?: number;
+      pageSize?: number;
+      search?: string;
+      outcome?: string;
+      dateFrom?: string;
+      dateTo?: string;
+    },
+  ) {
     const page = Math.max(1, Number(query.page) || 1);
     const pageSize = Math.min(100, Math.max(1, Number(query.pageSize) || 20));
     const where: any = { businessId };
     if (query.ruleId) where.automationRuleId = query.ruleId;
+    if (query.outcome) where.outcome = query.outcome;
+    if (query.dateFrom || query.dateTo) {
+      where.createdAt = {};
+      if (query.dateFrom) where.createdAt.gte = new Date(query.dateFrom);
+      if (query.dateTo) where.createdAt.lte = new Date(query.dateTo);
+    }
+    if (query.search) {
+      where.OR = [
+        { rule: { name: { contains: query.search, mode: 'insensitive' } } },
+        { action: { contains: query.search, mode: 'insensitive' } },
+        { reason: { contains: query.search, mode: 'insensitive' } },
+      ];
+    }
 
     const [data, total] = await Promise.all([
       this.prisma.automationLog.findMany({
@@ -151,7 +175,9 @@ export class AutomationService {
         skip: (page - 1) * pageSize,
         take: pageSize,
         orderBy: { createdAt: 'desc' },
-        include: { rule: { select: { name: true } } },
+        include: {
+          rule: { select: { name: true } },
+        },
       }),
       this.prisma.automationLog.count({ where }),
     ]);
@@ -203,11 +229,92 @@ export class AutomationService {
     const rule = await this.prisma.automationRule.findFirst({ where: { id: ruleId, businessId } });
     if (!rule) throw new NotFoundException('Rule not found');
 
-    // Dry run — just return what would match
+    const filters = (rule.filters || {}) as any;
+    const now = new Date();
+    let matchedBookings: any[] = [];
+    const skippedReasons: { bookingId: string; reason: string }[] = [];
+
+    switch (rule.trigger) {
+      case 'BOOKING_CREATED': {
+        const recent = await this.prisma.booking.findMany({
+          where: { businessId, createdAt: { gte: new Date(now.getTime() - 24 * 60 * 60 * 1000) } },
+          include: { customer: { select: { name: true } }, service: { select: { name: true } } },
+          take: 20,
+        });
+        matchedBookings = recent;
+        break;
+      }
+      case 'BOOKING_UPCOMING': {
+        const hoursBefore = filters.hoursBefore || 24;
+        const windowEnd = new Date(now.getTime() + hoursBefore * 60 * 60 * 1000);
+        const bookings = await this.prisma.booking.findMany({
+          where: {
+            businessId,
+            startTime: { gte: now, lt: windowEnd },
+            status: { in: ['CONFIRMED', 'PENDING_DEPOSIT'] },
+          },
+          include: { customer: { select: { name: true } }, service: { select: { name: true } } },
+          take: 20,
+        });
+        matchedBookings = bookings;
+        break;
+      }
+      case 'STATUS_CHANGED': {
+        const bookings = await this.prisma.booking.findMany({
+          where: {
+            businessId,
+            updatedAt: { gte: new Date(now.getTime() - 24 * 60 * 60 * 1000) },
+            ...(filters.newStatus && { status: filters.newStatus }),
+          },
+          include: {
+            customer: { select: { name: true } },
+            service: { select: { name: true, kind: true } },
+          },
+          take: 20,
+        });
+        for (const b of bookings) {
+          if (filters.serviceKind && (b.service as any)?.kind !== filters.serviceKind) {
+            skippedReasons.push({
+              bookingId: b.id,
+              reason: `Service kind mismatch (expected ${filters.serviceKind})`,
+            });
+          } else {
+            matchedBookings.push(b);
+          }
+        }
+        break;
+      }
+      case 'BOOKING_CANCELLED': {
+        const bookings = await this.prisma.booking.findMany({
+          where: {
+            businessId,
+            status: 'CANCELLED',
+            updatedAt: { gte: new Date(now.getTime() - 24 * 60 * 60 * 1000) },
+          },
+          include: { customer: { select: { name: true } }, service: { select: { name: true } } },
+          take: 20,
+        });
+        matchedBookings = bookings;
+        break;
+      }
+    }
+
     return {
       rule: { id: rule.id, name: rule.name, trigger: rule.trigger },
       dryRun: true,
-      message: `Rule "${rule.name}" is valid and would trigger on ${rule.trigger} events`,
+      matchedCount: matchedBookings.length,
+      matchedBookings: matchedBookings.map((b) => ({
+        id: b.id,
+        customerName: b.customer?.name || 'Unknown',
+        serviceName: b.service?.name || 'Unknown',
+        startTime: b.startTime,
+        status: b.status,
+      })),
+      skipped: skippedReasons,
+      message:
+        matchedBookings.length > 0
+          ? `Rule "${rule.name}" would match ${matchedBookings.length} booking(s) in the last 24 hours`
+          : `Rule "${rule.name}" would not match any bookings right now`,
     };
   }
 }

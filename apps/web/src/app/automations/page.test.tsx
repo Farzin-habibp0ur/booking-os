@@ -110,6 +110,17 @@ jest.mock('@/components/tooltip-nudge', () => ({
   ),
 }));
 
+// Mock DryRunModal
+jest.mock('./components/dry-run-modal', () => ({
+  DryRunModal: ({ result, onClose }: any) => (
+    <div data-testid="dry-run-modal">
+      <span data-testid="dry-run-message">{result.message}</span>
+      <span data-testid="dry-run-matched">{result.matchedCount}</span>
+      <button onClick={onClose}>Close Modal</button>
+    </div>
+  ),
+}));
+
 // Mock lucide-react icons
 jest.mock('lucide-react', () => ({
   Zap: () => <div data-testid="zap-icon" />,
@@ -118,6 +129,8 @@ jest.mock('lucide-react', () => ({
   ToggleRight: () => <div data-testid="toggle-right-icon" />,
   Trash2: () => <div data-testid="trash2-icon" />,
   Play: () => <div data-testid="play-icon" />,
+  Search: () => <div data-testid="search-icon" />,
+  X: () => <div data-testid="x-icon" />,
 }));
 
 import { api } from '@/lib/api';
@@ -190,7 +203,7 @@ const setupDefaultMocks = () => {
   mockApi.get.mockImplementation((path: string) => {
     if (path === '/automations/playbooks') return Promise.resolve(mockPlaybooks);
     if (path === '/automations/rules') return Promise.resolve(mockRules);
-    if (path === '/automations/logs?pageSize=50') return Promise.resolve(mockLogs);
+    if (path.startsWith('/automations/logs')) return Promise.resolve(mockLogs);
     return Promise.resolve({});
   });
 };
@@ -414,7 +427,7 @@ describe('AutomationsPage', () => {
     mockApi.get.mockImplementation((path: string) => {
       if (path === '/automations/playbooks') return Promise.resolve(mockPlaybooks);
       if (path === '/automations/rules') return Promise.resolve([]);
-      if (path === '/automations/logs?pageSize=50') return Promise.resolve({ data: [], total: 0 });
+      if (path.startsWith('/automations/logs')) return Promise.resolve({ data: [], total: 0 });
       return Promise.resolve({});
     });
 
@@ -513,8 +526,9 @@ describe('AutomationsPage', () => {
     await waitFor(() => {
       expect(screen.getByText('ADD_TAG')).toBeInTheDocument();
       expect(screen.getByText('SEND_MESSAGE')).toBeInTheDocument();
-      expect(screen.getByText('SENT')).toBeInTheDocument();
-      expect(screen.getByText('SKIPPED')).toBeInTheDocument();
+      // SENT/SKIPPED appear both in outcome filter chips and log rows
+      expect(screen.getAllByText('SENT').length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText('SKIPPED').length).toBeGreaterThanOrEqual(1);
     });
   });
 
@@ -542,7 +556,7 @@ describe('AutomationsPage', () => {
     mockApi.get.mockImplementation((path: string) => {
       if (path === '/automations/playbooks') return Promise.resolve(mockPlaybooks);
       if (path === '/automations/rules') return Promise.resolve(mockRules);
-      if (path === '/automations/logs?pageSize=50') return Promise.resolve({ data: [], total: 0 });
+      if (path.startsWith('/automations/logs')) return Promise.resolve({ data: [], total: 0 });
       return Promise.resolve({});
     });
 
@@ -584,7 +598,7 @@ describe('AutomationsPage', () => {
     await waitFor(() => {
       expect(mockApi.get).toHaveBeenCalledWith('/automations/playbooks');
       expect(mockApi.get).toHaveBeenCalledWith('/automations/rules');
-      expect(mockApi.get).toHaveBeenCalledWith('/automations/logs?pageSize=50');
+      expect(mockApi.get).toHaveBeenCalledWith(expect.stringContaining('/automations/logs'));
     });
   });
 
@@ -624,8 +638,7 @@ describe('AutomationsPage', () => {
     mockApi.get.mockImplementation((path: string) => {
       if (path === '/automations/playbooks') return Promise.resolve(mockPlaybooks);
       if (path === '/automations/rules') return Promise.resolve(mockRules);
-      if (path === '/automations/logs?pageSize=50')
-        return Promise.reject(new Error('Network error'));
+      if (path.startsWith('/automations/logs')) return Promise.reject(new Error('Network error'));
       return Promise.resolve({});
     });
 
@@ -707,6 +720,272 @@ describe('AutomationsPage', () => {
     const toggleIcons = screen.getAllByTestId('toggle-right-icon');
     await act(async () => {
       await user.click(toggleIcons[0]);
+    });
+
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith(expect.any(String), 'error');
+    });
+  });
+
+  // ─── Activity Log Filters ──────────────────────────────────
+
+  it('shows log filter bar on Activity Log tab', async () => {
+    const user = userEvent.setup();
+    setupDefaultMocks();
+
+    render(<AutomationsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Playbooks')).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      await user.click(screen.getByText('Activity Log'));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('log-filters')).toBeInTheDocument();
+      expect(screen.getByTestId('log-search-input')).toBeInTheDocument();
+      expect(screen.getByTestId('outcome-filter-SENT')).toBeInTheDocument();
+      expect(screen.getByTestId('outcome-filter-SKIPPED')).toBeInTheDocument();
+      expect(screen.getByTestId('outcome-filter-FAILED')).toBeInTheDocument();
+    });
+  });
+
+  it('applies search filter when Apply is clicked', async () => {
+    const user = userEvent.setup();
+    setupDefaultMocks();
+
+    render(<AutomationsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Playbooks')).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      await user.click(screen.getByText('Activity Log'));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('log-search-input')).toBeInTheDocument();
+    });
+
+    mockApi.get.mockClear();
+    setupDefaultMocks();
+
+    await act(async () => {
+      await user.type(screen.getByTestId('log-search-input'), 'VIP');
+    });
+    await act(async () => {
+      await user.click(screen.getByTestId('apply-log-filters'));
+    });
+
+    await waitFor(() => {
+      expect(mockApi.get).toHaveBeenCalledWith(expect.stringContaining('search=VIP'));
+    });
+  });
+
+  it('filters by outcome when chip is clicked', async () => {
+    const user = userEvent.setup();
+    setupDefaultMocks();
+
+    render(<AutomationsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Playbooks')).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      await user.click(screen.getByText('Activity Log'));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('outcome-filter-SENT')).toBeInTheDocument();
+    });
+
+    mockApi.get.mockClear();
+    setupDefaultMocks();
+
+    await act(async () => {
+      await user.click(screen.getByTestId('outcome-filter-SENT'));
+    });
+
+    await waitFor(() => {
+      expect(mockApi.get).toHaveBeenCalledWith(expect.stringContaining('outcome=SENT'));
+    });
+  });
+
+  it('shows clear button when filters are active', async () => {
+    const user = userEvent.setup();
+    setupDefaultMocks();
+
+    render(<AutomationsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Playbooks')).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      await user.click(screen.getByText('Activity Log'));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('outcome-filter-SENT')).toBeInTheDocument();
+    });
+
+    // No clear button initially
+    expect(screen.queryByTestId('clear-log-filters')).not.toBeInTheDocument();
+
+    await act(async () => {
+      await user.click(screen.getByTestId('outcome-filter-SENT'));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('clear-log-filters')).toBeInTheDocument();
+    });
+  });
+
+  it('clears all filters when Clear is clicked', async () => {
+    const user = userEvent.setup();
+    setupDefaultMocks();
+
+    render(<AutomationsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Playbooks')).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      await user.click(screen.getByText('Activity Log'));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('outcome-filter-SENT')).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      await user.click(screen.getByTestId('outcome-filter-SENT'));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('clear-log-filters')).toBeInTheDocument();
+    });
+
+    mockApi.get.mockClear();
+    setupDefaultMocks();
+
+    await act(async () => {
+      await user.click(screen.getByTestId('clear-log-filters'));
+    });
+
+    await waitFor(() => {
+      // Should reload without filters
+      expect(mockApi.get).toHaveBeenCalledWith('/automations/logs?pageSize=50');
+    });
+  });
+
+  // ─── Dry Run Modal ────────────────────────────────────────
+
+  it('opens dry-run modal when test rule button is clicked', async () => {
+    const user = userEvent.setup();
+    setupDefaultMocks();
+    mockApi.post.mockResolvedValue({
+      rule: { id: 'rule1', name: 'Tag VIP', trigger: 'BOOKING_COMPLETED' },
+      dryRun: true,
+      matchedCount: 3,
+      matchedBookings: [],
+      skipped: [],
+      message: 'Rule "Tag VIP" would match 3 booking(s)',
+    });
+
+    render(<AutomationsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Playbooks')).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      await user.click(screen.getByText('Custom Rules'));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Tag VIP')).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      await user.click(screen.getByTestId('test-rule-rule1'));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('dry-run-modal')).toBeInTheDocument();
+      expect(screen.getByTestId('dry-run-message')).toHaveTextContent('would match 3');
+    });
+  });
+
+  it('closes dry-run modal when Close Modal is clicked', async () => {
+    const user = userEvent.setup();
+    setupDefaultMocks();
+    mockApi.post.mockResolvedValue({
+      rule: { id: 'rule1', name: 'Tag VIP', trigger: 'BOOKING_COMPLETED' },
+      dryRun: true,
+      matchedCount: 0,
+      matchedBookings: [],
+      skipped: [],
+      message: 'No matches',
+    });
+
+    render(<AutomationsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Playbooks')).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      await user.click(screen.getByText('Custom Rules'));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Tag VIP')).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      await user.click(screen.getByTestId('test-rule-rule1'));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('dry-run-modal')).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      await user.click(screen.getByText('Close Modal'));
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('dry-run-modal')).not.toBeInTheDocument();
+    });
+  });
+
+  it('shows error toast when test rule fails', async () => {
+    const user = userEvent.setup();
+    setupDefaultMocks();
+    mockApi.post.mockRejectedValueOnce(new Error('Rule test failed'));
+
+    render(<AutomationsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Playbooks')).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      await user.click(screen.getByText('Custom Rules'));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Tag VIP')).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      await user.click(screen.getByTestId('test-rule-rule1'));
     });
 
     await waitFor(() => {

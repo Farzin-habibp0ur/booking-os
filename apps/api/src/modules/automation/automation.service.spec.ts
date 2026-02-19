@@ -160,22 +160,134 @@ describe('AutomationService', () => {
   });
 
   describe('testRule', () => {
-    it('returns dry run result for valid rule', async () => {
+    it('returns matched bookings for BOOKING_CREATED trigger', async () => {
       prisma.automationRule.findFirst.mockResolvedValue({
         id: 'r1',
         name: 'Test',
         trigger: 'BOOKING_CREATED',
+        filters: {},
       } as any);
+      prisma.booking.findMany.mockResolvedValue([
+        {
+          id: 'b1',
+          customer: { name: 'Alice' },
+          service: { name: 'Facial' },
+          startTime: new Date(),
+          status: 'CONFIRMED',
+        },
+      ] as any);
 
       const result = await automationService.testRule('biz1', 'r1');
 
       expect(result.dryRun).toBe(true);
+      expect(result.matchedCount).toBe(1);
+      expect(result.matchedBookings[0].customerName).toBe('Alice');
+    });
+
+    it('returns empty matched when no bookings match', async () => {
+      prisma.automationRule.findFirst.mockResolvedValue({
+        id: 'r1',
+        name: 'Test',
+        trigger: 'BOOKING_CREATED',
+        filters: {},
+      } as any);
+      prisma.booking.findMany.mockResolvedValue([]);
+
+      const result = await automationService.testRule('biz1', 'r1');
+
+      expect(result.matchedCount).toBe(0);
+      expect(result.message).toContain('would not match');
+    });
+
+    it('returns skipped bookings for STATUS_CHANGED with serviceKind filter', async () => {
+      prisma.automationRule.findFirst.mockResolvedValue({
+        id: 'r1',
+        name: 'Test',
+        trigger: 'STATUS_CHANGED',
+        filters: { serviceKind: 'CONSULT' },
+      } as any);
+      prisma.booking.findMany.mockResolvedValue([
+        {
+          id: 'b1',
+          customer: { name: 'Alice' },
+          service: { name: 'Facial', kind: 'TREATMENT' },
+          startTime: new Date(),
+          status: 'COMPLETED',
+        },
+        {
+          id: 'b2',
+          customer: { name: 'Bob' },
+          service: { name: 'Consult', kind: 'CONSULT' },
+          startTime: new Date(),
+          status: 'COMPLETED',
+        },
+      ] as any);
+
+      const result = await automationService.testRule('biz1', 'r1');
+
+      expect(result.matchedCount).toBe(1);
+      expect(result.matchedBookings[0].customerName).toBe('Bob');
+      expect(result.skipped).toHaveLength(1);
+      expect(result.skipped[0].reason).toContain('Service kind mismatch');
     });
 
     it('throws for unknown rule', async () => {
       prisma.automationRule.findFirst.mockResolvedValue(null);
 
       await expect(automationService.testRule('biz1', 'nope')).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('getLogs with filters', () => {
+    it('filters logs by outcome', async () => {
+      prisma.automationLog.findMany.mockResolvedValue([]);
+      prisma.automationLog.count.mockResolvedValue(0);
+
+      await automationService.getLogs('biz1', { outcome: 'SENT' });
+
+      expect(prisma.automationLog.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ outcome: 'SENT' }),
+        }),
+      );
+    });
+
+    it('filters logs by date range', async () => {
+      prisma.automationLog.findMany.mockResolvedValue([]);
+      prisma.automationLog.count.mockResolvedValue(0);
+
+      await automationService.getLogs('biz1', {
+        dateFrom: '2026-02-01',
+        dateTo: '2026-02-28',
+      });
+
+      expect(prisma.automationLog.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            createdAt: {
+              gte: expect.any(Date),
+              lte: expect.any(Date),
+            },
+          }),
+        }),
+      );
+    });
+
+    it('filters logs by search term', async () => {
+      prisma.automationLog.findMany.mockResolvedValue([]);
+      prisma.automationLog.count.mockResolvedValue(0);
+
+      await automationService.getLogs('biz1', { search: 'VIP' });
+
+      expect(prisma.automationLog.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            OR: expect.arrayContaining([
+              expect.objectContaining({ rule: { name: { contains: 'VIP', mode: 'insensitive' } } }),
+            ]),
+          }),
+        }),
+      );
     });
   });
 });
