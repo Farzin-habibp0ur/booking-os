@@ -120,9 +120,9 @@ The `--detach` flag means the CI job doesn't wait for Railway's own build to fin
 | -------------- | ---------------------------------------- |
 | Project ID     | `37eeca20-7dfe-45d9-8d29-e902a545f475`   |
 | Environment    | `production`                             |
-| Services       | `api`, `web`, `postgres`, `redis`, `postgres-volume` |
-| API URL        | `api-production-*.up.railway.app`        |
-| Web URL        | `web-production-84ffe.up.railway.app`    |
+| Services       | `api`, `web`, `postgres`, `redis`        |
+| API domain     | `api.businesscommandcentre.com`          |
+| Web domain     | `businesscommandcentre.com`              |
 
 ### Database migrations
 
@@ -248,3 +248,6 @@ Then commit the changes.
 
 ### Docker build fails with prerender errors
 Usually a Next.js page using client-side hooks (e.g., `useSearchParams`) without a `Suspense` boundary. Wrap the component in `<Suspense fallback={null}>`.
+
+### "Table does not exist" errors after deploying new models
+If new Prisma models were added during development using `prisma db push` instead of `prisma migrate dev`, no migration file exists. Production runs `prisma migrate deploy` which only applies migration files. Create the migration SQL manually, mark it as applied locally with `prisma migrate resolve --applied`, and push. See `DEPLOY.md` troubleshooting for details.
