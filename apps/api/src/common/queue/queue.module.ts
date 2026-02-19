@@ -8,6 +8,7 @@ export const QUEUE_NAMES = {
   REMINDERS: 'reminders',
   NOTIFICATIONS: 'notifications',
   CALENDAR_SYNC: 'calendar-sync',
+  AGENT_PROCESSING: 'agent-processing',
 } as const;
 
 @Global()
@@ -59,6 +60,7 @@ export class QueueModule {
           { name: QUEUE_NAMES.REMINDERS },
           { name: QUEUE_NAMES.NOTIFICATIONS },
           { name: QUEUE_NAMES.CALENDAR_SYNC },
+          { name: QUEUE_NAMES.AGENT_PROCESSING },
         ),
       ],
       providers: [

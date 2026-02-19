@@ -48,6 +48,10 @@ model Business {
   actionHistory        ActionHistory[]
   autonomyConfigs      AutonomyConfig[]
   outboundDrafts       OutboundDraft[]
+  agentConfigs         AgentConfig[]
+  agentRuns            AgentRun[]
+  agentFeedback        AgentFeedback[]
+  duplicateCandidates  DuplicateCandidate[]
 
   @@map("businesses")
 }
@@ -84,6 +88,7 @@ model Staff {
   resolvedActionCards ActionCard[]         @relation("ResolvedActionCards")
   outboundDrafts      OutboundDraft[]      @relation("StaffOutboundDrafts")
   approvedOutbounds   OutboundDraft[]      @relation("ApprovedOutboundDrafts")
+  agentFeedback       AgentFeedback[]
 
   @@index([businessId])
   @@map("staff")
@@ -107,8 +112,10 @@ model Customer {
   waitlistEntries  WaitlistEntry[]
   customerNotes    CustomerNote[]
   offerRedemptions OfferRedemption[]
-  actionCards      ActionCard[]
-  outboundDrafts   OutboundDraft[]
+  actionCards             ActionCard[]
+  outboundDrafts          OutboundDraft[]
+  duplicatesAsCustomer1   DuplicateCandidate[] @relation("DuplicateCustomer1")
+  duplicatesAsCustomer2   DuplicateCandidate[] @relation("DuplicateCustomer2")
 
   @@unique([businessId, phone])
   @@index([businessId])
@@ -769,6 +776,7 @@ model ActionCard {
   conversation Conversation? @relation(fields: [conversationId], references: [id])
   staff        Staff?        @relation("AssignedActionCards", fields: [staffId], references: [id])
   resolvedBy   Staff?        @relation("ResolvedActionCards", fields: [resolvedById], references: [id])
+  feedback     AgentFeedback[]
 
   @@index([businessId, status])
   @@index([businessId, category, status])
@@ -840,4 +848,79 @@ model OutboundDraft {
   @@index([businessId, status])
   @@index([businessId, customerId])
   @@map("outbound_drafts")
+}
+
+model AgentConfig {
+  id              String   @id @default(cuid())
+  businessId      String
+  agentType       String // WAITLIST, RETENTION, DATA_HYGIENE, SCHEDULING_OPTIMIZER, QUOTE_FOLLOWUP
+  isEnabled       Boolean  @default(false)
+  autonomyLevel   String   @default("SUGGEST") // AUTO, SUGGEST, REQUIRE_APPROVAL
+  config          Json     @default("{}")
+  roleVisibility  String[] @default([])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id])
+
+  @@unique([businessId, agentType])
+  @@index([businessId])
+  @@map("agent_configs")
+}
+
+model AgentRun {
+  id           String    @id @default(cuid())
+  businessId   String
+  agentType    String
+  status       String    @default("RUNNING") // RUNNING, COMPLETED, FAILED
+  cardsCreated Int       @default(0)
+  error        String?
+  startedAt    DateTime  @default(now())
+  completedAt  DateTime?
+
+  business Business @relation(fields: [businessId], references: [id])
+
+  @@index([businessId, agentType])
+  @@index([businessId, startedAt])
+  @@map("agent_runs")
+}
+
+model AgentFeedback {
+  id           String   @id @default(cuid())
+  businessId   String
+  actionCardId String
+  staffId      String
+  rating       String // HELPFUL, NOT_HELPFUL
+  comment      String?
+  createdAt    DateTime @default(now())
+
+  business   Business   @relation(fields: [businessId], references: [id])
+  actionCard ActionCard @relation(fields: [actionCardId], references: [id])
+  staff      Staff      @relation(fields: [staffId], references: [id])
+
+  @@unique([actionCardId, staffId])
+  @@index([businessId])
+  @@map("agent_feedback")
+}
+
+model DuplicateCandidate {
+  id          String    @id @default(cuid())
+  businessId  String
+  customerId1 String
+  customerId2 String
+  confidence  Float
+  matchFields String[] @default([])
+  status      String    @default("PENDING") // PENDING, MERGED, NOT_DUPLICATE, SNOOZED
+  resolvedBy  String?
+  resolvedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  business  Business @relation(fields: [businessId], references: [id])
+  customer1 Customer @relation("DuplicateCustomer1", fields: [customerId1], references: [id])
+  customer2 Customer @relation("DuplicateCustomer2", fields: [customerId2], references: [id])
+
+  @@unique([businessId, customerId1, customerId2])
+  @@index([businessId, status])
+  @@map("duplicate_candidates")
 }

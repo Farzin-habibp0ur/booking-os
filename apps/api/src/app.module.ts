@@ -45,6 +45,7 @@ import { ActionCardModule } from './modules/action-card/action-card.module';
 import { AutonomyModule } from './modules/autonomy/autonomy.module';
 import { OutboundModule } from './modules/outbound/outbound.module';
 import { BriefingModule } from './modules/briefing/briefing.module';
+import { AgentModule } from './modules/agent/agent.module';
 
 @Module({
   imports: [
@@ -106,6 +107,7 @@ import { BriefingModule } from './modules/briefing/briefing.module';
     AutonomyModule,
     OutboundModule,
     BriefingModule,
+    AgentModule,
     process.env.REDIS_URL ? QueueModule.forRootWithRedis() : QueueModule.forRoot(),
   ],
 })
