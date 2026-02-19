@@ -46,6 +46,8 @@ import { AutonomyModule } from './modules/autonomy/autonomy.module';
 import { OutboundModule } from './modules/outbound/outbound.module';
 import { BriefingModule } from './modules/briefing/briefing.module';
 import { AgentModule } from './modules/agent/agent.module';
+import { AgentSkillsModule } from './modules/agent-skills/agent-skills.module';
+import { AgentFeedbackModule } from './modules/agent-feedback/agent-feedback.module';
 
 @Module({
   imports: [
@@ -108,6 +110,8 @@ import { AgentModule } from './modules/agent/agent.module';
     OutboundModule,
     BriefingModule,
     AgentModule,
+    AgentSkillsModule,
+    AgentFeedbackModule,
     process.env.REDIS_URL ? QueueModule.forRootWithRedis() : QueueModule.forRoot(),
   ],
 })

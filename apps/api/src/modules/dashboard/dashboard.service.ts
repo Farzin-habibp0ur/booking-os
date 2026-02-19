@@ -179,6 +179,7 @@ export class DashboardService {
       depositPaymentCount,
       roiBaselineCount,
       completedBookingsCount,
+      enabledAgentCount,
     ] = await Promise.all([
       this.prisma.staff.count({
         where: { businessId, role: { not: 'ADMIN' }, isActive: true },
@@ -204,6 +205,9 @@ export class DashboardService {
       this.prisma.booking.count({
         where: { businessId, status: 'COMPLETED' },
       }),
+      this.prisma.agentConfig
+        .count({ where: { businessId, isEnabled: true } })
+        .catch(() => 0),
     ]);
 
     // P1-18: Filter overdue conversations to only those where last message is INBOUND
@@ -240,6 +244,11 @@ export class DashboardService {
       { key: 'first_booking', done: anyBookingCount > 0, fixUrl: '/calendar' },
       { key: 'first_deposit', done: depositPaymentCount > 0, fixUrl: '/bookings' },
       { key: 'roi_baseline', done: roiBaselineCount > 0, fixUrl: '/roi' },
+      {
+        key: 'agents_configured',
+        done: enabledAgentCount > 0,
+        fixUrl: '/settings/agents',
+      },
     ];
 
     const goLiveChecklist = {

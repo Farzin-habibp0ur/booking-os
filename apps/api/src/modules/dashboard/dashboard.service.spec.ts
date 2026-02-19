@@ -59,6 +59,7 @@ describe('DashboardService', () => {
     depositPaymentCount?: number;
     roiBaselineCount?: number;
     completedBookingsCount?: number;
+    enabledAgentCount?: number;
     business?: any;
   }) {
     const o = overrides || {};
@@ -100,6 +101,7 @@ describe('DashboardService', () => {
     prisma.messageTemplate.findMany.mockResolvedValueOnce(o.templates ?? []);
     prisma.payment.count.mockResolvedValueOnce(o.depositPaymentCount ?? 0);
     prisma.roiBaseline.count.mockResolvedValueOnce(o.roiBaselineCount ?? 0);
+    prisma.agentConfig.count.mockResolvedValueOnce(o.enabledAgentCount ?? 0);
 
     // P1-21 business query
     prisma.business.findUnique.mockResolvedValueOnce(
@@ -115,6 +117,7 @@ describe('DashboardService', () => {
       prisma.booking.count.mockResolvedValue(0);
       prisma.customer.count.mockResolvedValue(0);
       prisma.conversation.count.mockResolvedValue(0);
+      prisma.agentConfig.count.mockResolvedValue(0);
     });
 
     it('returns dashboard with all sections', async () => {
@@ -144,6 +147,7 @@ describe('DashboardService', () => {
       prisma.messageTemplate.findMany.mockResolvedValueOnce([]);
       prisma.payment.count.mockResolvedValueOnce(0);
       prisma.roiBaseline.count.mockResolvedValueOnce(0);
+      prisma.agentConfig.count.mockResolvedValueOnce(0);
       prisma.business.findUnique.mockResolvedValueOnce({
         name: 'Test Clinic',
         packConfig: {},
@@ -192,6 +196,7 @@ describe('DashboardService', () => {
       prisma.messageTemplate.findMany.mockResolvedValueOnce([]);
       prisma.payment.count.mockResolvedValueOnce(0);
       prisma.roiBaseline.count.mockResolvedValueOnce(0);
+      prisma.agentConfig.count.mockResolvedValueOnce(0);
       prisma.business.findUnique.mockResolvedValueOnce({ name: 'Test', packConfig: {} } as any);
 
       const result = await dashboardService.getDashboard('biz1');
@@ -282,6 +287,7 @@ describe('DashboardService', () => {
         anyBookingCount: 5,
         depositPaymentCount: 1,
         roiBaselineCount: 1,
+        enabledAgentCount: 1,
         business: { name: 'Glow Clinic', packConfig: {} },
       });
 
@@ -333,6 +339,7 @@ describe('DashboardService', () => {
         first_booking: '/calendar',
         first_deposit: '/bookings',
         roi_baseline: '/roi',
+        agents_configured: '/settings/agents',
       };
 
       for (const item of result.goLiveChecklist.items) {
@@ -428,6 +435,7 @@ describe('DashboardService', () => {
       prisma.messageTemplate.findMany.mockResolvedValueOnce([]);
       prisma.payment.count.mockResolvedValueOnce(0);
       prisma.roiBaseline.count.mockResolvedValueOnce(0);
+      prisma.agentConfig.count.mockResolvedValueOnce(0);
       prisma.business.findUnique.mockResolvedValueOnce({ name: 'Test', packConfig: {} } as any);
 
       const result = await dashboardService.getDashboard('biz1', 'staff1', 'ADMIN', 'admin');
@@ -465,6 +473,7 @@ describe('DashboardService', () => {
       prisma.messageTemplate.findMany.mockResolvedValueOnce([]);
       prisma.payment.count.mockResolvedValueOnce(0);
       prisma.roiBaseline.count.mockResolvedValueOnce(0);
+      prisma.agentConfig.count.mockResolvedValueOnce(0);
       prisma.business.findUnique.mockResolvedValueOnce({ name: 'Test', packConfig: {} } as any);
 
       await dashboardService.getDashboard('biz1', 'staff42', 'AGENT', 'agent');
