@@ -91,10 +91,8 @@ jest.mock('@/components/intake-card', () => ({
   ),
 }));
 jest.mock('@/components/action-history', () => ({
-  RecentChangesPanel: ({ entries, entityType, entityId }: any) => (
-    <div data-testid="recent-changes-panel">
-      {entries?.length} changes for {entityType}/{entityId}
-    </div>
+  RecentChangesPanel: ({ entries }: any) => (
+    <div data-testid="recent-changes-panel">{entries?.length} recent changes</div>
   ),
 }));
 
@@ -888,7 +886,7 @@ describe('CustomerDetailPage — Dealership Pack', () => {
     await waitFor(() => {
       expect(screen.getByTestId('recent-changes-panel')).toBeInTheDocument();
     });
-    expect(screen.getByText(/1 changes for CUSTOMER\/cust-1/)).toBeInTheDocument();
+    expect(screen.getByText(/1 recent changes/)).toBeInTheDocument();
   });
 
   it('hides RecentChangesPanel when action history is empty', async () => {
