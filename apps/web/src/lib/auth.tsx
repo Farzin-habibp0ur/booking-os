@@ -29,7 +29,7 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<User>;
   signup: (
     businessName: string,
     ownerName: string,
@@ -43,7 +43,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   token: null,
   loading: true,
-  login: async () => {},
+  login: async () => ({} as User),
   signup: async () => {},
   logout: () => {},
 });
@@ -61,7 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => setLoading(false));
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<User> => {
     // Use Bearer token from login response for the immediate /auth/me call
     // to avoid stale cookie/cache issues when switching accounts
     const { accessToken } = await api.post<{ accessToken: string; staff: any }>('/auth/login', {
@@ -71,6 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     api.setToken(accessToken);
     const me = await api.get<User>('/auth/me');
     setUser(me);
+    return me;
   };
 
   const signup = async (

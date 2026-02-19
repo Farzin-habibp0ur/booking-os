@@ -113,12 +113,12 @@ export default function DashboardPage() {
   const loadDashboard = () => {
     setLoading(true);
     setError(null);
-    // Check if onboarding is complete; redirect to setup if not
+    // Check if onboarding is complete; redirect to setup if not (skip for SUPER_ADMIN)
     api
       .get<any>('/business')
       .then((biz) => {
         const config = biz.packConfig || {};
-        if (!config.setupComplete) {
+        if (!config.setupComplete && user?.role !== 'SUPER_ADMIN') {
           routerRef.current.push('/setup');
           return;
         }

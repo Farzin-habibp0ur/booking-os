@@ -26,12 +26,6 @@ jest.mock('@/lib/auth', () => ({
   AuthProvider: ({ children }: any) => children,
 }));
 
-// Mock api (used by login page for SUPER_ADMIN redirect check)
-const mockApiGet = jest.fn().mockResolvedValue({ role: 'ADMIN' });
-jest.mock('@/lib/api', () => ({
-  api: { get: (...args: any[]) => mockApiGet(...args) },
-}));
-
 // Mock i18n
 jest.mock('@/lib/i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
@@ -67,7 +61,7 @@ describe('LoginPage', () => {
 
   it('calls login on form submit', async () => {
     const user = userEvent.setup();
-    mockLogin.mockResolvedValue(undefined);
+    mockLogin.mockResolvedValue({ role: 'ADMIN' });
 
     render(<LoginPageWrapper />);
 
@@ -86,7 +80,7 @@ describe('LoginPage', () => {
 
   it('redirects to /dashboard on success', async () => {
     const user = userEvent.setup();
-    mockLogin.mockResolvedValue(undefined);
+    mockLogin.mockResolvedValue({ role: 'ADMIN' });
 
     render(<LoginPageWrapper />);
 
@@ -155,8 +149,7 @@ describe('LoginPage', () => {
 
   it('redirects SUPER_ADMIN to /console after login', async () => {
     const user = userEvent.setup();
-    mockLogin.mockResolvedValue(undefined);
-    mockApiGet.mockResolvedValue({ role: 'SUPER_ADMIN' });
+    mockLogin.mockResolvedValue({ role: 'SUPER_ADMIN' });
 
     render(<LoginPageWrapper />);
 
