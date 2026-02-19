@@ -237,6 +237,28 @@ describe('CustomerTimeline', () => {
     });
   });
 
+  it('shows count badges on filter chips for types with events', async () => {
+    setupMocks();
+    render(<CustomerTimeline customerId="cust-1" />);
+    await waitFor(() => {
+      // booking has 1 event, conversation has 1, note has 1, waitlist has 1, campaign has 1
+      const bookingFilter = screen.getByTestId('filter-booking');
+      expect(bookingFilter.textContent).toContain('1');
+      const conversationFilter = screen.getByTestId('filter-conversation');
+      expect(conversationFilter.textContent).toContain('1');
+    });
+  });
+
+  it('does not show count badge for types with zero events', async () => {
+    setupMocks();
+    render(<CustomerTimeline customerId="cust-1" />);
+    await waitFor(() => {
+      const quoteFilter = screen.getByTestId('filter-quote');
+      // quote filter should only have the label text, no count badge
+      expect(quoteFilter.textContent).toBe('Quotes');
+    });
+  });
+
   it('passes customerId to API call', async () => {
     setupMocks();
     render(<CustomerTimeline customerId="cust-42" />);

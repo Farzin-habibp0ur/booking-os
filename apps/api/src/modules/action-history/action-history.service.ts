@@ -78,6 +78,63 @@ export class ActionHistoryService {
     return { items, total, page, pageSize };
   }
 
+  async exportCsv(
+    businessId: string,
+    opts?: { dateFrom?: string; dateTo?: string; entityType?: string; actorType?: string },
+  ): Promise<string> {
+    const where: any = { businessId };
+    if (opts?.entityType) where.entityType = opts.entityType;
+    if (opts?.actorType) where.actorType = opts.actorType;
+    if (opts?.dateFrom || opts?.dateTo) {
+      where.createdAt = {};
+      if (opts?.dateFrom) where.createdAt.gte = new Date(opts.dateFrom);
+      if (opts?.dateTo) where.createdAt.lte = new Date(opts.dateTo);
+    }
+
+    const items = await this.prisma.actionHistory.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      take: 10000,
+    });
+
+    const headers = [
+      'id',
+      'actorType',
+      'actorName',
+      'action',
+      'entityType',
+      'entityId',
+      'description',
+      'createdAt',
+    ];
+
+    const escapeCsv = (val: string | null | undefined): string => {
+      if (val == null) return '';
+      const str = String(val);
+      if (str.includes('"') || str.includes(',') || str.includes('\n') || str.includes('\r')) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
+
+    const rows = items.map((item) =>
+      [
+        item.id,
+        item.actorType,
+        item.actorName,
+        item.action,
+        item.entityType,
+        item.entityId,
+        item.description,
+        item.createdAt?.toISOString(),
+      ]
+        .map(escapeCsv)
+        .join(','),
+    );
+
+    return [headers.join(','), ...rows].join('\r\n') + '\r\n';
+  }
+
   async findByEntity(businessId: string, entityType: string, entityId: string) {
     return this.prisma.actionHistory.findMany({
       where: { businessId, entityType, entityId },

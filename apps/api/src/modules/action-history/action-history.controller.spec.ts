@@ -18,6 +18,47 @@ describe('ActionHistoryController', () => {
     controller = module.get(ActionHistoryController);
   });
 
+  describe('exportCsv', () => {
+    it('sets CSV headers and sends response', async () => {
+      const csvData = 'id,actorType\r\nah1,STAFF\r\n';
+      service.exportCsv.mockResolvedValue(csvData);
+
+      const mockRes = {
+        setHeader: jest.fn(),
+        send: jest.fn(),
+      } as any;
+
+      await controller.exportCsv('biz1', undefined, undefined, undefined, undefined, mockRes);
+
+      expect(service.exportCsv).toHaveBeenCalledWith('biz1', {
+        dateFrom: undefined,
+        dateTo: undefined,
+        entityType: undefined,
+        actorType: undefined,
+      });
+      expect(mockRes.setHeader).toHaveBeenCalledWith('Content-Type', 'text/csv; charset=utf-8');
+      expect(mockRes.setHeader).toHaveBeenCalledWith(
+        'Content-Disposition',
+        expect.stringContaining('attachment; filename="audit-log-'),
+      );
+      expect(mockRes.send).toHaveBeenCalledWith(csvData);
+    });
+
+    it('passes filter params to service', async () => {
+      service.exportCsv.mockResolvedValue('');
+      const mockRes = { setHeader: jest.fn(), send: jest.fn() } as any;
+
+      await controller.exportCsv('biz1', '2026-01-01', '2026-01-31', 'BOOKING', 'AI', mockRes);
+
+      expect(service.exportCsv).toHaveBeenCalledWith('biz1', {
+        dateFrom: '2026-01-01',
+        dateTo: '2026-01-31',
+        entityType: 'BOOKING',
+        actorType: 'AI',
+      });
+    });
+  });
+
   describe('findAll', () => {
     it('calls service.findAll with parsed params', async () => {
       service.findAll.mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 20 });

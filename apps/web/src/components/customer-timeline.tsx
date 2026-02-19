@@ -106,13 +106,32 @@ export default function CustomerTimeline({ customerId }: { customerId: string })
     const date = new Date(ts);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 0) return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays === 1) return 'Yesterday';
     if (diffDays < 7) return `${diffDays}d ago`;
     return date.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
   };
+
+  const formatAbsoluteTimestamp = (ts: string) => {
+    return new Date(ts).toLocaleString([], {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  // Compute per-type counts from loaded events
+  const typeCounts = events.reduce<Record<string, number>>((acc, e) => {
+    acc[e.type] = (acc[e.type] || 0) + 1;
+    return acc;
+  }, {});
 
   const typeFilters = Object.entries(TYPE_CONFIG);
 
@@ -153,6 +172,11 @@ export default function CustomerTimeline({ customerId }: { customerId: string })
             data-testid={`filter-${type}`}
           >
             {config.label}
+            {(typeCounts[type] || 0) > 0 && (
+              <span className="ml-1 text-[10px] bg-white/60 px-1 rounded-full">
+                {typeCounts[type]}
+              </span>
+            )}
           </button>
         ))}
         <label className="flex items-center gap-1.5 text-xs text-slate-500 ml-auto cursor-pointer">

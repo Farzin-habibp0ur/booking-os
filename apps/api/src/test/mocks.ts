@@ -179,6 +179,7 @@ export function createMockActionHistoryService() {
     create: jest.fn().mockResolvedValue({ id: 'ah1' }),
     findAll: jest.fn().mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 20 }),
     findByEntity: jest.fn().mockResolvedValue([]),
+    exportCsv: jest.fn().mockResolvedValue('id,actorType\r\n'),
   };
 }
 

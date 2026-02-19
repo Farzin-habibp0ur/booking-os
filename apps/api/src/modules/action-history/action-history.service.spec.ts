@@ -211,6 +211,128 @@ describe('ActionHistoryService', () => {
     });
   });
 
+  describe('exportCsv', () => {
+    const makeItem = (overrides: any = {}) => ({
+      id: 'ah1',
+      actorType: 'STAFF',
+      actorName: 'Sarah',
+      action: 'BOOKING_CREATED',
+      entityType: 'BOOKING',
+      entityId: 'book1',
+      description: 'Booking created',
+      createdAt: new Date('2026-02-01T10:00:00Z'),
+      ...overrides,
+    });
+
+    it('returns CSV with headers and rows', async () => {
+      prisma.actionHistory.findMany.mockResolvedValue([makeItem()] as any);
+
+      const csv = await service.exportCsv('biz1');
+
+      expect(csv).toContain(
+        'id,actorType,actorName,action,entityType,entityId,description,createdAt',
+      );
+      expect(csv).toContain('ah1,STAFF,Sarah,BOOKING_CREATED,BOOKING,book1,Booking created,');
+      expect(csv).toContain('2026-02-01T10:00:00.000Z');
+    });
+
+    it('returns only headers when no data', async () => {
+      prisma.actionHistory.findMany.mockResolvedValue([]);
+
+      const csv = await service.exportCsv('biz1');
+
+      const lines = csv.trim().split('\r\n');
+      expect(lines).toHaveLength(1);
+      expect(lines[0]).toBe(
+        'id,actorType,actorName,action,entityType,entityId,description,createdAt',
+      );
+    });
+
+    it('escapes values containing commas', async () => {
+      prisma.actionHistory.findMany.mockResolvedValue([
+        makeItem({ description: 'Status changed from PENDING, to CONFIRMED' }),
+      ] as any);
+
+      const csv = await service.exportCsv('biz1');
+
+      expect(csv).toContain('"Status changed from PENDING, to CONFIRMED"');
+    });
+
+    it('escapes values containing quotes', async () => {
+      prisma.actionHistory.findMany.mockResolvedValue([
+        makeItem({ description: 'Said "hello"' }),
+      ] as any);
+
+      const csv = await service.exportCsv('biz1');
+
+      expect(csv).toContain('"Said ""hello"""');
+    });
+
+    it('filters by entityType', async () => {
+      prisma.actionHistory.findMany.mockResolvedValue([]);
+
+      await service.exportCsv('biz1', { entityType: 'BOOKING' });
+
+      expect(prisma.actionHistory.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ entityType: 'BOOKING' }),
+        }),
+      );
+    });
+
+    it('filters by actorType', async () => {
+      prisma.actionHistory.findMany.mockResolvedValue([]);
+
+      await service.exportCsv('biz1', { actorType: 'AI' });
+
+      expect(prisma.actionHistory.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ actorType: 'AI' }),
+        }),
+      );
+    });
+
+    it('filters by date range', async () => {
+      prisma.actionHistory.findMany.mockResolvedValue([]);
+
+      await service.exportCsv('biz1', {
+        dateFrom: '2026-01-01',
+        dateTo: '2026-01-31',
+      });
+
+      expect(prisma.actionHistory.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            createdAt: {
+              gte: new Date('2026-01-01'),
+              lte: new Date('2026-01-31'),
+            },
+          }),
+        }),
+      );
+    });
+
+    it('caps at 10000 rows', async () => {
+      prisma.actionHistory.findMany.mockResolvedValue([]);
+
+      await service.exportCsv('biz1');
+
+      expect(prisma.actionHistory.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ take: 10000 }),
+      );
+    });
+
+    it('handles null values gracefully', async () => {
+      prisma.actionHistory.findMany.mockResolvedValue([
+        makeItem({ actorName: null, description: null }),
+      ] as any);
+
+      const csv = await service.exportCsv('biz1');
+
+      expect(csv).toContain('ah1,STAFF,,BOOKING_CREATED,BOOKING,book1,,');
+    });
+  });
+
   describe('findByEntity', () => {
     it('returns history for specific entity', async () => {
       const items = [
