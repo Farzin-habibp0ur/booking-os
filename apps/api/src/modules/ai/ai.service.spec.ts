@@ -15,6 +15,7 @@ import { AvailabilityService } from '../availability/availability.service';
 import { BookingService } from '../booking/booking.service';
 import { MessageService } from '../message/message.service';
 import { MessagingService } from '../messaging/messaging.service';
+import { ConversationActionHandler } from './conversation-action-handler';
 import { createMockPrisma } from '../../test/mocks';
 
 describe('AiService', () => {
@@ -136,6 +137,16 @@ describe('AiService', () => {
         { provide: BookingService, useValue: bookingService },
         { provide: MessageService, useValue: messageService },
         { provide: MessagingService, useValue: messagingService },
+        {
+          provide: ConversationActionHandler,
+          useValue: {
+            handleBookingState: jest.fn().mockResolvedValue(null),
+            handleCancelState: jest.fn().mockResolvedValue(null),
+            handleRescheduleState: jest.fn().mockResolvedValue(null),
+            handleLowConfidence: jest.fn().mockResolvedValue(null),
+            handleTransferToHuman: jest.fn().mockResolvedValue(null),
+          },
+        },
       ],
     }).compile();
 

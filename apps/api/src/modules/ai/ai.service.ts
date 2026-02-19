@@ -15,6 +15,7 @@ import { AvailabilityService } from '../availability/availability.service';
 import { BookingService } from '../booking/booking.service';
 import { MessageService } from '../message/message.service';
 import { MessagingService } from '../messaging/messaging.service';
+import { ConversationActionHandler } from './conversation-action-handler';
 
 interface AiSettings {
   enabled: boolean;
@@ -76,6 +77,7 @@ export class AiService {
     private bookingService: BookingService,
     private messageService: MessageService,
     private messagingService: MessagingService,
+    private conversationActionHandler: ConversationActionHandler,
   ) {}
 
   private getAiSettings(business: any): AiSettings {
@@ -376,9 +378,22 @@ export class AiService {
         }
       }
 
+      // Build context for action card generation
+      const actionCtx = {
+        businessId,
+        conversationId,
+        customerId: customerData?.id,
+        customerName: customerData?.name,
+        intent: intentResult.intent,
+        confidence: intentResult.confidence,
+      };
+
       // Handle transfer to human
       if (intentResult.intent === 'TRANSFER_TO_HUMAN' && !metadata.transferredToHuman) {
         await this.handleTransferToHuman(businessId, conversationId, metadata);
+        this.conversationActionHandler.handleTransferToHuman(actionCtx).catch((err) =>
+          this.logger.warn(`Failed to create transfer action card: ${err?.message}`),
+        );
         return;
       }
 
@@ -663,6 +678,27 @@ export class AiService {
           this.logger.error(`Auto-reply failed: ${err.message}`);
         }
       } else {
+        // Create action cards for states needing staff approval (non-auto-reply path)
+        if (bookingState) {
+          this.conversationActionHandler
+            .handleBookingState(actionCtx, bookingState)
+            .catch((err) => this.logger.warn(`Failed to create booking action card: ${err?.message}`));
+        }
+        if (cancelState) {
+          this.conversationActionHandler
+            .handleCancelState(actionCtx, cancelState)
+            .catch((err) => this.logger.warn(`Failed to create cancel action card: ${err?.message}`));
+        }
+        if (rescheduleState) {
+          this.conversationActionHandler
+            .handleRescheduleState(actionCtx, rescheduleState)
+            .catch((err) => this.logger.warn(`Failed to create reschedule action card: ${err?.message}`));
+        }
+        // Low confidence review card
+        this.conversationActionHandler
+          .handleLowConfidence(actionCtx)
+          .catch((err) => this.logger.warn(`Failed to create low-confidence card: ${err?.message}`));
+
         // Broadcast AI results via WebSocket (draft mode)
         this.inboxGateway.emitToBusinessRoom(businessId, 'ai:suggestions', {
           conversationId,
