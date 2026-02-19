@@ -147,7 +147,7 @@ describe('JwtStrategy', () => {
   describe('view-as JWT validation', () => {
     const viewAsPayload = {
       sub: 'admin1',
-      email: 'admin@bookingos.com',
+      email: 'admin@businesscommandcentre.com',
       businessId: 'target-biz',
       role: 'ADMIN',
       viewAs: true,
@@ -170,7 +170,7 @@ describe('JwtStrategy', () => {
       expect(result).toEqual({
         sub: 'admin1',
         staffId: 'admin1',
-        email: 'admin@bookingos.com',
+        email: 'admin@businesscommandcentre.com',
         businessId: 'target-biz',
         role: 'ADMIN',
         viewAs: true,

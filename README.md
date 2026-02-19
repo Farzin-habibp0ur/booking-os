@@ -77,6 +77,7 @@ booking-os/
    - API: [http://localhost:3001/api/v1](http://localhost:3001/api/v1)
    - API Docs (Swagger): [http://localhost:3001/api/docs](http://localhost:3001/api/docs)
    - Login: `sarah@glowclinic.com` / `password123`
+   - Platform Console: `admin@businesscommandcentre.com` / `superadmin123`
 
 ## Available Scripts
 

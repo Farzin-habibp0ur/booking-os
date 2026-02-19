@@ -14,7 +14,7 @@ jest.mock('next/link', () => {
 });
 jest.mock('@/lib/auth', () => ({
   useAuth: () => ({
-    user: { id: 'admin1', role: 'SUPER_ADMIN', email: 'admin@bookingos.com' },
+    user: { id: 'admin1', role: 'SUPER_ADMIN', email: 'admin@businesscommandcentre.com' },
     loading: false,
   }),
 }));

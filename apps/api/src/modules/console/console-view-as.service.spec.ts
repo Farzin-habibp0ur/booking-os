@@ -18,7 +18,7 @@ describe('ConsoleViewAsService', () => {
 
   const superAdmin = {
     sub: 'admin1',
-    email: 'admin@bookingos.com',
+    email: 'admin@businesscommandcentre.com',
     businessId: 'platform-biz',
   };
 

@@ -15,7 +15,7 @@ jest.mock('next/link', () => {
 let mockUser: any = {
   id: 'admin1',
   name: 'Platform Admin',
-  email: 'admin@bookingos.com',
+  email: 'admin@businesscommandcentre.com',
   role: 'SUPER_ADMIN',
   businessId: 'platform-biz',
 };
@@ -53,7 +53,7 @@ describe('ConsoleShell', () => {
     mockUser = {
       id: 'admin1',
       name: 'Platform Admin',
-      email: 'admin@bookingos.com',
+      email: 'admin@businesscommandcentre.com',
       role: 'SUPER_ADMIN',
       businessId: 'platform-biz',
     };
@@ -79,7 +79,7 @@ describe('ConsoleShell', () => {
     render(<ConsoleShell><div>Content</div></ConsoleShell>);
 
     expect(screen.getAllByText('Platform Console')).toHaveLength(2); // mobile + sidebar
-    expect(screen.getByText('admin@bookingos.com')).toBeInTheDocument();
+    expect(screen.getByText('admin@businesscommandcentre.com')).toBeInTheDocument();
   });
 
   it('renders children', () => {

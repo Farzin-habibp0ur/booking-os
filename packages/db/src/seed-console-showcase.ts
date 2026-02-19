@@ -28,12 +28,12 @@ async function main() {
     console.log('• Platform business exists:', platformBiz.id);
   }
 
-  let superAdmin = await prisma.staff.findFirst({ where: { email: 'admin@bookingos.com' } });
+  let superAdmin = await prisma.staff.findFirst({ where: { email: 'admin@businesscommandcentre.com' } });
   if (!superAdmin) {
     superAdmin = await prisma.staff.create({
       data: {
         name: 'Platform Admin',
-        email: 'admin@bookingos.com',
+        email: 'admin@businesscommandcentre.com',
         passwordHash: await hashPassword('superadmin123'),
         role: 'SUPER_ADMIN',
         businessId: platformBiz.id,
@@ -363,7 +363,7 @@ async function main() {
 
   console.log('\n🎉 Platform Console showcase data complete!');
   console.log('\nLogin credentials:');
-  console.log('  Super Admin: admin@bookingos.com / superadmin123');
+  console.log('  Super Admin: admin@businesscommandcentre.com / superadmin123');
   console.log('\nExpected Console experience:');
   console.log('  - 8+ businesses in directory (2 existing + 6 new)');
   console.log('  - Health: green (Zen, Bright Smile, Elite, Luxe), yellow (Paws), red (Harmony)');

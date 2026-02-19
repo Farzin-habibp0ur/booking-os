@@ -164,7 +164,7 @@ describe('LoginPage', () => {
     const passwordInput = document.querySelector('input[type="password"]') as HTMLInputElement;
     const submitButton = screen.getByRole('button', { name: 'login.sign_in' });
 
-    await user.type(emailInput, 'admin@bookingos.com');
+    await user.type(emailInput, 'admin@businesscommandcentre.com');
     await user.type(passwordInput, 'superadmin123');
     await user.click(submitButton);
 

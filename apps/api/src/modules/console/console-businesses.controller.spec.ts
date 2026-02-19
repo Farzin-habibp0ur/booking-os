@@ -8,7 +8,7 @@ describe('ConsoleBusinessesController', () => {
   let service: jest.Mocked<ConsoleBusinessesService>;
   let auditService: jest.Mocked<PlatformAuditService>;
 
-  const mockUser = { sub: 'admin1', email: 'admin@bookingos.com' };
+  const mockUser = { sub: 'admin1', email: 'admin@businesscommandcentre.com' };
 
   beforeEach(async () => {
     const mockService = {
@@ -43,7 +43,7 @@ describe('ConsoleBusinessesController', () => {
     expect(service.findAll).toHaveBeenCalledWith({ search: 'test' });
     expect(auditService.log).toHaveBeenCalledWith(
       'admin1',
-      'admin@bookingos.com',
+      'admin@businesscommandcentre.com',
       'BUSINESS_LIST',
       expect.any(Object),
     );
@@ -59,7 +59,7 @@ describe('ConsoleBusinessesController', () => {
     expect(service.findById).toHaveBeenCalledWith('biz1');
     expect(auditService.log).toHaveBeenCalledWith(
       'admin1',
-      'admin@bookingos.com',
+      'admin@businesscommandcentre.com',
       'BUSINESS_LOOKUP',
       expect.objectContaining({ targetType: 'BUSINESS', targetId: 'biz1' }),
     );
@@ -74,7 +74,7 @@ describe('ConsoleBusinessesController', () => {
     expect(service.getStaff).toHaveBeenCalledWith('biz1');
     expect(auditService.log).toHaveBeenCalledWith(
       'admin1',
-      'admin@bookingos.com',
+      'admin@businesscommandcentre.com',
       'BUSINESS_STAFF_LOOKUP',
       expect.objectContaining({ targetType: 'BUSINESS', targetId: 'biz1' }),
     );
@@ -90,7 +90,7 @@ describe('ConsoleBusinessesController', () => {
     expect(service.getUsageSnapshot).toHaveBeenCalledWith('biz1');
     expect(auditService.log).toHaveBeenCalledWith(
       'admin1',
-      'admin@bookingos.com',
+      'admin@businesscommandcentre.com',
       'BUSINESS_USAGE_LOOKUP',
       expect.objectContaining({ targetType: 'BUSINESS', targetId: 'biz1' }),
     );

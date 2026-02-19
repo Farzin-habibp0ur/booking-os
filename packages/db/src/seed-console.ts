@@ -26,7 +26,7 @@ async function main() {
 
   // Create or find super admin staff
   let superAdmin = await prisma.staff.findFirst({
-    where: { email: 'admin@bookingos.com' },
+    where: { email: 'admin@businesscommandcentre.com' },
   });
 
   if (!superAdmin) {
@@ -34,7 +34,7 @@ async function main() {
     superAdmin = await prisma.staff.create({
       data: {
         name: 'Platform Admin',
-        email: 'admin@bookingos.com',
+        email: 'admin@businesscommandcentre.com',
         passwordHash,
         role: 'SUPER_ADMIN',
         businessId: platformBiz.id,
