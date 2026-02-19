@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Patch, Param, Body, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Param,
+  Body,
+  Query,
+  UseGuards,
+  ForbiddenException,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { Throttle } from '@nestjs/throttler';
@@ -65,6 +75,10 @@ export class BookingController {
     @Body() body: CreateBookingDto,
     @CurrentUser() user: any,
   ) {
+    // Security fix: Only ADMIN can force-book (override conflicts)
+    if (body.forceBook && user.role !== 'ADMIN') {
+      throw new ForbiddenException('Only admins can force book');
+    }
     const currentUser = body.forceBook
       ? { staffId: user.id, staffName: user.name, role: user.role }
       : undefined;

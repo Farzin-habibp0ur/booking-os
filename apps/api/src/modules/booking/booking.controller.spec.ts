@@ -1,3 +1,4 @@
+import { ForbiddenException } from '@nestjs/common';
 import { BookingController } from './booking.controller';
 import { BookingService } from './booking.service';
 
@@ -78,6 +79,33 @@ describe('BookingController', () => {
       role: 'ADMIN',
     });
     expect(result).toEqual({ id: 'b1' });
+  });
+
+  // Security fix: forceBook requires ADMIN role
+  it('throws ForbiddenException when non-admin tries forceBook', () => {
+    const body = {
+      customerId: 'c1',
+      serviceId: 's1',
+      startTime: '2026-03-01T10:00:00Z',
+      forceBook: true,
+    } as any;
+    const user = { id: 'staff1', name: 'Jane', role: 'SERVICE_PROVIDER' };
+
+    expect(() => controller.create('biz1', body, user)).toThrow(ForbiddenException);
+    expect(mockService.create).not.toHaveBeenCalled();
+  });
+
+  it('throws ForbiddenException when AGENT tries forceBook', () => {
+    const body = {
+      customerId: 'c1',
+      serviceId: 's1',
+      startTime: '2026-03-01T10:00:00Z',
+      forceBook: true,
+    } as any;
+    const user = { id: 'staff2', name: 'Agent', role: 'AGENT' };
+
+    expect(() => controller.create('biz1', body, user)).toThrow(ForbiddenException);
+    expect(mockService.create).not.toHaveBeenCalled();
   });
 
   it('update delegates to service.update', async () => {
