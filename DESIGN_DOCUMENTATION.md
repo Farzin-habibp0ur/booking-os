@@ -87,6 +87,19 @@
 - **Human Takeover** (Batch 3d) — HumanTakeoverService for AI-to-human escalation flow, ClarificationHandler for requesting clarification from staff, human-takeover-banner.tsx frontend component
 - **Vertical Actions** (Batch 3e) — VerticalActionHandler (`ai/vertical-action-handler.ts`) for vertical-specific action execution (aesthetic, dealership workflows)
 
+### Agentic-First Transformation — Milestone 4: Background Agents (Complete)
+- **5 Background Agents** — WaitlistAgent (auto-match waitlist entries to cancelled slots), RetentionAgent (detect at-risk customers, generate win-back action cards), DataHygieneAgent (duplicate detection, incomplete profile flagging), SchedulingOptimizerAgent (gap detection, optimal slot suggestions), QuoteFollowupAgent (expired quote reminders, follow-up action cards)
+- **Agent Scheduler** — Cron-driven scheduler runs agents per their AgentConfig schedule, tracks AgentRun status/results/errors
+- **Agent Feedback** — New AgentFeedback API module with staff feedback CRUD (thumbs up/down + comments) and aggregation stats for agent run outcomes
+- **Frontend components** — agent-feedback-buttons.tsx (inline feedback on agent runs), agent-performance.tsx (run history, success rates, feedback summary), retention-card.tsx (win-back recommendations), duplicate-merge-card.tsx (merge/dismiss duplicate customers)
+- **Settings page** — `/settings/agents` page for enabling/disabling agents, configuring schedules and autonomy levels per agent type
+
+### Agentic-First Transformation — Milestone 5: Vertical Pack Agents (Complete)
+- **Agent Skills Catalog** — New AgentSkills API module providing per-pack skill definitions with business-level overrides
+- **Pack-specific agent behaviors** — Agents adapt skills and action card types based on business vertical pack (aesthetic: aftercare follow-ups, consult conversion; dealership: quote follow-up, service bay optimization)
+- **Frontend components** — skill-card.tsx (skill catalog display with enable/disable), vertical-launch-checklist.tsx (vertical-specific agent readiness checklist), waitlist-match-card.tsx (waitlist auto-match opportunities), quote-followup-card.tsx (expired/pending quote follow-up actions), ai-state-indicator.tsx (real-time agent processing status)
+- **Final counts (all 5 milestones):** 3,154 tests total (1,937 API + 1,217 web)
+
 ### Tech Stack
 | Layer | Technology |
 |-------|-----------|
@@ -600,6 +613,14 @@ Two tabs: **Info** | **Notes**
 - Offer expiry time
 - Quiet hours (start/end)
 
+#### Agent Settings (`/settings/agents`)
+- Per-agent configuration for 5 background agents (waitlist, retention, data-hygiene, scheduling-optimizer, quote-followup)
+- Enable/disable toggle per agent type
+- Schedule configuration (cron expression or interval)
+- Autonomy level selector per agent (OFF/SUGGEST/AUTO_WITH_REVIEW/FULL_AUTO)
+- Agent performance summary: run history, success rates, staff feedback stats
+- Saves to `AgentConfig` model (unique per businessId + agentType)
+
 #### Autonomy Settings (`/settings/autonomy`)
 - Per-action-type autonomy level configuration
 - `AutonomySettings` component with list of action types
@@ -685,7 +706,7 @@ Two tabs: **Info** | **Notes**
 
 ## 4. Data Models
 
-### 4.1 Entity Relationship Overview (42 Models)
+### 4.1 Entity Relationship Overview (50 Models)
 
 ```
 Business (1) ──┬── (*) Staff ──── (*) WorkingHours
@@ -968,7 +989,7 @@ Events handled in the inbox:
 - **Brand-themed charts** using sage/lavender Recharts theme
 - Real-time updates in inbox via Socket.io
 - Responsive grid layouts
-- Comprehensive feature set across 40 pages
+- Comprehensive feature set across 46 pages
 
 ### Remaining Opportunities
 - **No third-party component library** — all components hand-built, some inconsistency possible
@@ -1029,7 +1050,8 @@ apps/web/src/
 │   ├── settings/offers/page.tsx          # Promotions
 │   ├── settings/policies/page.tsx        # Cancel/reschedule policies
 │   ├── settings/waitlist/page.tsx        # Waitlist config
-│   └── settings/autonomy/page.tsx       # Autonomy level configuration (Milestone 1)
+│   ├── settings/autonomy/page.tsx       # Autonomy level configuration (Milestone 1)
+│   └── settings/agents/page.tsx        # Background agent configuration (Milestone 4)
 ├── components/
 │   ├── shell.tsx              # App layout + mode-grouped sidebar nav + pinned views + Cmd+K
 │   ├── skeleton.tsx           # Loading skeletons + empty states with CTAs
@@ -1055,6 +1077,14 @@ apps/web/src/
 │   ├── action-card-inline.tsx # Inline action card for conversation-level actions (Milestone 3)
 │   ├── deposit-card.tsx       # Deposit-related action card with policy compliance (Milestone 3)
 │   ├── human-takeover-banner.tsx # AI-to-human escalation banner with clarification (Milestone 3)
+│   ├── agent-feedback/          # AgentFeedbackButtons, AgentPerformance (Milestone 4)
+│   ├── retention-card.tsx       # Win-back action card for at-risk customers (Milestone 4)
+│   ├── duplicate-merge-card.tsx # Duplicate customer merge/dismiss card (Milestone 4)
+│   ├── waitlist-match-card.tsx  # Waitlist auto-match opportunity card (Milestone 5)
+│   ├── quote-followup-card.tsx  # Quote follow-up action card (Milestone 5)
+│   ├── skill-card.tsx           # Agent skill catalog display with enable/disable (Milestone 5)
+│   ├── vertical-launch-checklist.tsx # Vertical-specific agent readiness checklist (Milestone 5)
+│   ├── ai-state-indicator.tsx   # Real-time agent processing status indicator (Milestone 5)
 │   └── language-picker.tsx    # Locale selector
 ├── lib/
 │   ├── api.ts                 # API client singleton

@@ -2,7 +2,7 @@
 
 > **Purpose:** This document gives full context on the Booking OS platform — what it is, what's been built, how it's structured, and what's left to build. Share this with an AI assistant or new developer to get productive immediately.
 >
-> **Last updated:** February 18, 2026 (Milestone 3 complete)
+> **Last updated:** February 19, 2026 (Agentic-First Transformation complete — all 5 milestones)
 
 ---
 
@@ -146,6 +146,23 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 - **Vertical Actions** (Batch 3e) — VerticalActionHandler (`ai/vertical-action-handler.ts`) for vertical-specific action execution (aesthetic, dealership workflows)
 - **Final counts:** 2,919 tests total (1,787 API + 1,132 web), +158 new tests
 
+### Agentic-First Transformation — Milestone 4: "Background Agents" — COMPLETE
+- **5 Background Agents** — WaitlistAgent (auto-match waitlist entries to cancelled slots), RetentionAgent (detect at-risk customers, generate win-back action cards), DataHygieneAgent (duplicate detection, incomplete profile flagging), SchedulingOptimizerAgent (gap detection, optimal slot suggestions), QuoteFollowupAgent (expired quote reminders, follow-up action cards)
+- **Agent Scheduler** — Cron-driven scheduler runs agents per their AgentConfig schedule, tracks AgentRun status/results/errors
+- **Agent Feedback** — New AgentFeedback API module with staff feedback CRUD and aggregation stats for agent run outcomes
+- **Frontend components** — agent-feedback-buttons (thumbs up/down + comment), agent-performance (run history, success rates, feedback summary)
+- **Settings page** — `/settings/agents` page for enabling/disabling agents, configuring schedules and autonomy levels per agent type
+- **Retention & duplicate cards** — retention-card.tsx (win-back recommendations), duplicate-merge-card.tsx (merge/dismiss duplicate customers)
+
+### Agentic-First Transformation — Milestone 5: "Vertical Pack Agents" — COMPLETE
+- **Agent Skills Catalog** — New AgentSkills API module providing per-pack skill definitions with business-level overrides
+- **Pack-specific agent behaviors** — Agents adapt skills and action card types based on business vertical pack (aesthetic: aftercare follow-ups, consult conversion; dealership: quote follow-up, service bay optimization)
+- **Frontend components** — skill-card.tsx (skill catalog display with enable/disable), vertical-launch-checklist.tsx (vertical-specific agent readiness checklist)
+- **Waitlist match cards** — waitlist-match-card.tsx for surfacing waitlist auto-match opportunities from WaitlistAgent
+- **Quote followup cards** — quote-followup-card.tsx for surfacing expired/pending quote follow-up actions
+- **AI state indicator** — ai-state-indicator.tsx showing real-time agent processing status
+- **Final counts (all 5 milestones):** 3,154 tests total (1,937 API + 1,217 web)
+
 ---
 
 ## 3. Tech Stack
@@ -179,13 +196,13 @@ booking-os/
 ├── apps/
 │   ├── api/                    # NestJS REST API (port 3001)
 │   │   ├── src/
-│   │   │   ├── modules/        # 40 feature modules
+│   │   │   ├── modules/        # 46 feature modules
 │   │   │   ├── common/         # Guards, decorators, filters, DTOs, Prisma service
 │   │   │   └── main.ts         # Bootstrap, Swagger, CORS, cookies, validation
 │   │   └── Dockerfile          # Multi-stage production build
 │   ├── web/                    # Next.js admin dashboard (port 3000)
 │   │   ├── src/
-│   │   │   ├── app/            # 44 pages
+│   │   │   ├── app/            # 46 pages
 │   │   │   ├── components/     # Shared components (shell, modals, tour, etc.)
 │   │   │   ├── lib/            # Utility modules (API client, auth, i18n, socket, theme)
 │   │   │   ├── locales/        # en.json, es.json (600+ keys each)
@@ -193,7 +210,7 @@ booking-os/
 │   │   └── Dockerfile          # Multi-stage production build
 │   └── whatsapp-simulator/     # WhatsApp testing tool (port 3002)
 ├── packages/
-│   ├── db/                     # Prisma schema (42 models), migrations, seed scripts
+│   ├── db/                     # Prisma schema (50 models), migrations, seed scripts
 │   │   ├── prisma/schema.prisma
 │   │   ├── src/seed.ts         # Base seed (idempotent)
 │   │   └── src/seed-demo.ts    # Rich demo data (idempotent)
@@ -217,7 +234,7 @@ booking-os/
 
 ---
 
-## 5. Database Schema (42 Models)
+## 5. Database Schema (50 Models)
 
 ```
 Business (1) ──┬── (*) Staff ──── (*) WorkingHours
@@ -296,7 +313,7 @@ VerticalPack:       AESTHETIC, SALON, TUTORING, GENERAL, DEALERSHIP
 
 ---
 
-## 6. API Modules (38 Controllers)
+## 6. API Modules (40 Controllers)
 
 All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 
@@ -339,7 +356,9 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 | **Autonomy** | `/autonomy` | Per-action-type autonomy configs, level checking |
 | **Outbound** | `/outbound` | Staff-initiated outbound message drafts |
 | **Briefing** | `/briefing` | Daily briefing feed (grouped action cards) and opportunity detection (deposit pending, overdue replies, open slots) |
-| **Agent** | `/agent` | Agent framework CRUD, agent runs, feedback, scheduling, AGENT_PROCESSING queue |
+| **Agent** | `/agent` | Agent framework CRUD, agent runs, scheduling, AGENT_PROCESSING queue, 5 background agents (waitlist, retention, data-hygiene, scheduling-optimizer, quote-followup) |
+| **Agent Feedback** | `/agent-feedback` | Staff feedback CRUD on agent run outcomes, aggregation stats |
+| **Agent Skills** | `/agent-skills` | Skills catalog per vertical pack, business-level overrides |
 
 ### Auth & Multi-tenancy
 - JWT in httpOnly cookies (access: 15 min, refresh: 7 days), automatic client-side refresh on 401
@@ -353,7 +372,7 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 
 ---
 
-## 7. Frontend Pages (40+ Pages)
+## 7. Frontend Pages (46 Pages)
 
 ### Public Pages
 | Page | Route | Description |
@@ -391,7 +410,7 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 | Reports | `/reports` | 9 chart types |
 | ROI Dashboard | `/roi` | Baseline vs current metrics |
 | Service Board | `/service-board` | Kanban board (dealership) |
-| Settings | `/settings/*` | 12 settings sub-pages (account, AI, autonomy, templates, translations, calendar, billing, notifications, offers, policies, waitlist, profile fields) |
+| Settings | `/settings/*` | 13 settings sub-pages (account, AI, agents, autonomy, templates, translations, calendar, billing, notifications, offers, policies, waitlist, profile fields) |
 
 ### Key Components
 - `Shell` — Sidebar nav with mode-grouped items + "More" toggle, pinned saved views, i18n, pack provider, dark mode, tour trigger
@@ -417,6 +436,14 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 - `ActionCardInline` — Inline action card component for conversation-level actions (Milestone 3)
 - `DepositCard` — Deposit-related action card component with policy compliance (Milestone 3)
 - `HumanTakeoverBanner` — AI-to-human escalation banner with clarification flow (Milestone 3)
+- `AgentFeedbackButtons` / `AgentPerformance` — Staff feedback on agent runs (thumbs up/down, comments), agent run history and success rate stats (Milestone 4)
+- `RetentionCard` — Win-back action card for at-risk customers detected by RetentionAgent (Milestone 4)
+- `DuplicateMergeCard` — Duplicate customer merge/dismiss card from DataHygieneAgent (Milestone 4)
+- `WaitlistMatchCard` — Waitlist auto-match opportunity card from WaitlistAgent (Milestone 5)
+- `QuoteFollowupCard` — Expired/pending quote follow-up card from QuoteFollowupAgent (Milestone 5)
+- `SkillCard` — Agent skill catalog display with enable/disable per business (Milestone 5)
+- `VerticalLaunchChecklist` — Vertical-specific agent readiness checklist (Milestone 5)
+- `AiStateIndicator` — Real-time agent processing status indicator (Milestone 5)
 
 ---
 
@@ -450,6 +477,8 @@ AI state persisted in `conversation.metadata` JSON for stateful multi-turn flows
 | `ai:transfer-to-human` | AI escalated to human |
 | `booking:updated` | Booking created/updated |
 | `ai:booking-state` | AI booking assistant progress |
+| `action-card:created` | New action card created by agent or system |
+| `action-card:updated` | Action card status change (approve/dismiss/snooze/execute) |
 
 ---
 
@@ -527,12 +556,13 @@ Key groups (full list in `.env.example`):
 
 ## 14. Roadmap — What's Next
 
-### Agentic-First Transformation (5 Milestones)
+### Agentic-First Transformation (5 Milestones) — ALL COMPLETE
 - **Milestone 1: Agentic Foundations & Trust Rails** — COMPLETE (commit d8be527). 4 new models (ActionCard, ActionHistory, AutonomyConfig, OutboundDraft), 4 new API modules, 14 new frontend components, /settings/autonomy page. +170 tests.
 - **Milestone 2: Daily Briefing Agent** — COMPLETE. OpportunityDetectorService (cron-based scanner), BriefingService (grouped ActionCard feed), BriefingController (GET /briefing, GET /briefing/opportunities), 3 frontend components (BriefingCard, OpportunityCard, BriefingFeed), dashboard integration. +58 tests.
 - **Milestone 3: Inbox-as-OS** — COMPLETE. Agent framework (AgentConfig, AgentRun, AgentFeedback, DuplicateCandidate models), AgentFrameworkService + AgentSchedulerService + AGENT_PROCESSING queue, ConversationActionHandler, PolicyComplianceService, DepositCardHandler, HumanTakeoverService, ClarificationHandler, VerticalActionHandler, 3 frontend components (ActionCardInline, DepositCard, HumanTakeoverBanner). +158 tests.
-- **Milestone 4: Background Agents** — NOT STARTED
-- **Milestone 5: Vertical Pack Agents** — NOT STARTED
+- **Milestone 4: Background Agents** — COMPLETE. 5 background agents (WaitlistAgent, RetentionAgent, DataHygieneAgent, SchedulingOptimizerAgent, QuoteFollowupAgent), AgentFeedback API module, /settings/agents page, retention-card + duplicate-merge-card + agent-feedback-buttons + agent-performance frontend components.
+- **Milestone 5: Vertical Pack Agents** — COMPLETE. AgentSkills API module (per-pack skill catalog with business overrides), pack-specific agent behaviors, skill-card + vertical-launch-checklist + waitlist-match-card + quote-followup-card + ai-state-indicator frontend components.
+- **Final counts:** 3,154 tests total (1,937 API + 1,217 web)
 
 ### Phase 4: Engagement OS + Benchmarking + Marketplace (NOT STARTED)
 
@@ -598,7 +628,7 @@ npm run dev                    # Starts all apps via Turborepo
 | `npm run dev` | Start all apps |
 | `npm run build` | Build all |
 | `npm run lint` | Lint all (ESLint + TypeScript) |
-| `npm test` | Run all tests (~2,919 tests) |
+| `npm test` | Run all tests (~3,154 tests) |
 | `npm run test:coverage` | Tests with coverage thresholds |
 | `npm run db:generate` | Generate Prisma client |
 | `npm run db:migrate` | Run migrations |
