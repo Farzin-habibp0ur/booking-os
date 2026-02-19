@@ -15,6 +15,7 @@ import { DepositCardHandler } from './deposit-card-handler';
 import { PolicyComplianceService } from './policy-compliance.service';
 import { HumanTakeoverService } from './human-takeover.service';
 import { ClarificationHandler } from './clarification-handler';
+import { VerticalActionHandler } from './vertical-action-handler';
 import { BusinessModule } from '../business/business.module';
 import { ServiceModule } from '../service/service.module';
 import { AvailabilityModule } from '../availability/availability.module';
@@ -50,6 +51,7 @@ import { ActionCardModule } from '../action-card/action-card.module';
     PolicyComplianceService,
     HumanTakeoverService,
     ClarificationHandler,
+    VerticalActionHandler,
   ],
   exports: [AiService, ProfileExtractor, DepositCardHandler, PolicyComplianceService, HumanTakeoverService],
 })
