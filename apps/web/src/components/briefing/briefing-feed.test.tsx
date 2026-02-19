@@ -7,7 +7,7 @@ jest.mock('@/lib/cn', () => ({
 
 const mockToast = jest.fn();
 jest.mock('@/lib/toast', () => ({
-  useToast: () => mockToast,
+  useToast: () => ({ toast: mockToast }),
 }));
 
 const mockGet = jest.fn();
