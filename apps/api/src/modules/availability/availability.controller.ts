@@ -1,4 +1,4 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards, BadRequestException } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { AvailabilityService } from './availability.service';
@@ -18,6 +18,9 @@ export class AvailabilityController {
     @Query('date') date: string,
     @Query('excludeBookingId') excludeBookingId?: string,
   ) {
+    if (!serviceId || !date) {
+      throw new BadRequestException('serviceId and date are required');
+    }
     return this.availabilityService.getRecommendedSlots(
       businessId,
       serviceId,
@@ -33,6 +36,9 @@ export class AvailabilityController {
     @Query('dateFrom') dateFrom: string,
     @Query('dateTo') dateTo: string,
   ) {
+    if (!dateFrom || !dateTo) {
+      throw new BadRequestException('dateFrom and dateTo are required');
+    }
     const ids = staffIds ? staffIds.split(',').map((id) => id.trim()) : [];
     return this.availabilityService.getCalendarContext(businessId, ids, dateFrom, dateTo);
   }

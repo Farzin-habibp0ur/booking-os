@@ -13,7 +13,7 @@ import { AiModule } from '../ai/ai.module';
     CustomerModule,
     ConversationModule,
     LocationModule,
-    MessageModule,
+    forwardRef(() => MessageModule),
     forwardRef(() => AiModule),
   ],
   controllers: [WebhookController],

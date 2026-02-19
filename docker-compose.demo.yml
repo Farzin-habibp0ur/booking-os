@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   db:
     image: postgres:16-alpine
@@ -32,7 +30,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: packages/api/Dockerfile
+      dockerfile: apps/api/Dockerfile
     restart: unless-stopped
     depends_on:
       db:
@@ -43,8 +41,9 @@ services:
       DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-postgres}@db:5432/booking_os?schema=public
       REDIS_URL: redis://redis:6379
       JWT_SECRET: ${JWT_SECRET:-demo-secret-change-in-production-min32chars}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-demo-refresh-secret-change-in-production-min32chars}
       NODE_ENV: production
-      PORT: '3001'
+      API_PORT: '3001'
     ports:
       - '3001:3001'
     entrypoint: >
@@ -52,19 +51,22 @@ services:
         npx prisma migrate deploy --schema=packages/db/prisma/schema.prisma &&
         npx tsx packages/db/src/seed.ts &&
         npx tsx packages/db/src/seed-demo.ts &&
-        node dist/main.js
+        node dist/apps/api/src/main.js
       "
 
   web:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001/api/v1}
+        NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL:-http://localhost:3001}
     restart: unless-stopped
     depends_on:
       - api
     environment:
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001}
-      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001/api/v1}
+      NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL:-http://localhost:3001}
     ports:
       - '3000:3000'
 

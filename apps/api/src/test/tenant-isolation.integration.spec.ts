@@ -45,7 +45,10 @@ describe('Tenant Isolation', () => {
         { provide: BusinessService, useValue: createMockBusinessService() },
         { provide: CalendarSyncService, useValue: createMockCalendarSyncService() },
         { provide: TokenService, useValue: createMockTokenService() },
-        { provide: CustomerMergeService, useValue: { findDuplicates: jest.fn().mockResolvedValue([]), merge: jest.fn() } },
+        {
+          provide: CustomerMergeService,
+          useValue: { findDuplicates: jest.fn().mockResolvedValue([]), merge: jest.fn() },
+        },
       ],
     );
 
