@@ -17,6 +17,7 @@ async function main() {
         name: 'Booking OS Platform',
         slug: 'platform',
         verticalPack: 'general',
+        packConfig: { setupComplete: true },
       },
     });
     console.log('Created platform business:', platformBiz.id);

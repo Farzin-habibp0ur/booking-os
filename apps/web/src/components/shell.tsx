@@ -2,7 +2,7 @@
 
 import { ReactNode, useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { usePack, VerticalPackProvider } from '@/lib/vertical-pack';
 import { I18nProvider, useI18n } from '@/lib/i18n';
@@ -81,6 +81,7 @@ export function Shell({ children }: { children: ReactNode }) {
 
 function ShellInner({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { user, logout } = useAuth();
   const pack = usePack();
   const { t } = useI18n();
@@ -91,6 +92,13 @@ function ShellInner({ children }: { children: ReactNode }) {
   const { state: tourState, startTour } = useDemoTour();
   const { modeDef } = useMode();
   const [pinnedViews, setPinnedViews] = useState<any[]>([]);
+
+  // SUPER_ADMIN should always be in the console, not tenant UI
+  useEffect(() => {
+    if (user?.role === 'SUPER_ADMIN' && !user?.viewAs) {
+      router.replace('/console');
+    }
+  }, [user, router]);
 
   // Close sidebar on route change (mobile)
   useEffect(() => {
