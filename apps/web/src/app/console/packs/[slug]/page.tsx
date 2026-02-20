@@ -4,16 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { api } from '@/lib/api';
 import Link from 'next/link';
-import {
-  ChevronRight,
-  Play,
-  Pause,
-  RotateCcw,
-  FastForward,
-  Pin,
-  X,
-  Users,
-} from 'lucide-react';
+import { ChevronRight, Play, Pause, RotateCcw, FastForward, Pin, X, Users } from 'lucide-react';
 
 interface PackVersion {
   id: string;
@@ -166,7 +157,9 @@ export default function PackDetailPage() {
     return (
       <div className="p-6 md:p-8 max-w-5xl">
         <nav className="flex items-center gap-1 text-sm text-slate-500 mb-4">
-          <Link href="/console/packs" className="hover:text-slate-700">Packs & Skills</Link>
+          <Link href="/console/packs" className="hover:text-slate-700">
+            Packs & Skills
+          </Link>
           <ChevronRight size={14} />
           <span className="text-slate-900 dark:text-white font-medium">{slug}</span>
         </nav>
@@ -190,7 +183,9 @@ export default function PackDetailPage() {
     <div className="p-6 md:p-8 max-w-5xl">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-1 text-sm text-slate-500 mb-4" data-testid="breadcrumb">
-        <Link href="/console/packs" className="hover:text-slate-700">Packs & Skills</Link>
+        <Link href="/console/packs" className="hover:text-slate-700">
+          Packs & Skills
+        </Link>
         <ChevronRight size={14} />
         <span className="text-slate-900 dark:text-white font-medium">{detail.name}</span>
       </nav>
@@ -208,7 +203,10 @@ export default function PackDetailPage() {
         <div className="flex items-center gap-3 text-sm text-slate-500">
           <div className="flex items-center gap-1">
             <Users size={14} />
-            <span>{detail.businessCount} / {detail.totalBusinesses} businesses ({detail.adoptionPercent}%)</span>
+            <span>
+              {detail.businessCount} / {detail.totalBusinesses} businesses ({detail.adoptionPercent}
+              %)
+            </span>
           </div>
         </div>
       </div>
@@ -222,7 +220,10 @@ export default function PackDetailPage() {
 
       {/* Rollout Control Panel */}
       {activeVersion && (
-        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-5 mb-6" data-testid="rollout-panel">
+        <div
+          className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-5 mb-6"
+          data-testid="rollout-panel"
+        >
           <h2 className="text-sm font-semibold text-slate-900 dark:text-white mb-3">
             Rollout — v{activeVersion.version}
           </h2>
@@ -257,18 +258,20 @@ export default function PackDetailPage() {
           <div className="flex items-center gap-2">
             {activeVersion.rolloutStage === 'rolling_out' && (
               <>
-                {ROLLOUT_STAGES.filter((pct) => pct > activeVersion.rolloutPercent).slice(0, 1).map((nextPct) => (
-                  <button
-                    key={nextPct}
-                    onClick={() => handleRolloutAdvance(activeVersion, nextPct)}
-                    disabled={actionLoading}
-                    className="flex items-center gap-1 px-3 py-1.5 bg-sage-600 hover:bg-sage-700 text-white text-xs font-medium rounded-xl transition-colors disabled:opacity-50"
-                    data-testid="advance-rollout"
-                  >
-                    <FastForward size={12} />
-                    Advance to {nextPct}%
-                  </button>
-                ))}
+                {ROLLOUT_STAGES.filter((pct) => pct > activeVersion.rolloutPercent)
+                  .slice(0, 1)
+                  .map((nextPct) => (
+                    <button
+                      key={nextPct}
+                      onClick={() => handleRolloutAdvance(activeVersion, nextPct)}
+                      disabled={actionLoading}
+                      className="flex items-center gap-1 px-3 py-1.5 bg-sage-600 hover:bg-sage-700 text-white text-xs font-medium rounded-xl transition-colors disabled:opacity-50"
+                      data-testid="advance-rollout"
+                    >
+                      <FastForward size={12} />
+                      Advance to {nextPct}%
+                    </button>
+                  ))}
                 <button
                   onClick={() => handlePause(activeVersion)}
                   disabled={actionLoading}
@@ -305,7 +308,10 @@ export default function PackDetailPage() {
       )}
 
       {/* Version History */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft overflow-hidden mb-6" data-testid="version-table">
+      <div
+        className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft overflow-hidden mb-6"
+        data-testid="version-table"
+      >
         <div className="px-5 py-3 border-b border-slate-100 dark:border-slate-800">
           <h2 className="text-sm font-semibold text-slate-900 dark:text-white">Version History</h2>
         </div>
@@ -331,7 +337,9 @@ export default function PackDetailPage() {
                     v{v.version}
                   </td>
                   <td className="px-5 py-3">
-                    <span className={`text-xs font-medium px-2 py-1 rounded-full ${stageColors[v.rolloutStage] || stageColors.draft}`}>
+                    <span
+                      className={`text-xs font-medium px-2 py-1 rounded-full ${stageColors[v.rolloutStage] || stageColors.draft}`}
+                    >
                       {stageLabel(v.rolloutStage)}
                     </span>
                   </td>
@@ -353,7 +361,9 @@ export default function PackDetailPage() {
                           Start Rollout
                         </button>
                       )}
-                      {(v.rolloutStage === 'rolling_out' || v.rolloutStage === 'paused' || v.rolloutStage === 'completed') && (
+                      {(v.rolloutStage === 'rolling_out' ||
+                        v.rolloutStage === 'paused' ||
+                        v.rolloutStage === 'completed') && (
                         <button
                           onClick={() => setShowRollbackModal(v)}
                           disabled={actionLoading}
@@ -372,7 +382,10 @@ export default function PackDetailPage() {
       </div>
 
       {/* Pinned Tenants */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft overflow-hidden mb-6" data-testid="pinned-tenants">
+      <div
+        className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft overflow-hidden mb-6"
+        data-testid="pinned-tenants"
+      >
         <div className="px-5 py-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-slate-900 dark:text-white">
             Pinned Tenants ({pins.length})
@@ -441,14 +454,20 @@ export default function PackDetailPage() {
 
       {/* Config Viewer */}
       {detail.versions[0] && (
-        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft overflow-hidden" data-testid="config-viewer">
+        <div
+          className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft overflow-hidden"
+          data-testid="config-viewer"
+        >
           <button
             onClick={() => setShowConfig(!showConfig)}
             className="w-full px-5 py-3 flex items-center justify-between text-sm font-semibold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800"
             data-testid="toggle-config"
           >
             <span>Config — v{detail.versions[0].version}</span>
-            <ChevronRight size={14} className={`transition-transform ${showConfig ? 'rotate-90' : ''}`} />
+            <ChevronRight
+              size={14}
+              className={`transition-transform ${showConfig ? 'rotate-90' : ''}`}
+            />
           </button>
           {showConfig && (
             <pre className="px-5 py-4 text-xs text-slate-600 dark:text-slate-400 overflow-x-auto max-h-96">
@@ -519,7 +538,10 @@ function RollbackModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" data-testid="rollback-modal">
+    <div
+      className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
+      data-testid="rollback-modal"
+    >
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl max-w-lg w-full p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
@@ -530,7 +552,8 @@ function RollbackModal({
           </button>
         </div>
         <p className="text-sm text-slate-500 mb-4">
-          This will mark version {version.version} as rolled back. Provide a reason for the rollback.
+          This will mark version {version.version} as rolled back. Provide a reason for the
+          rollback.
         </p>
         <form onSubmit={handleSubmit} className="space-y-4">
           <textarea
@@ -600,7 +623,10 @@ function PinModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" data-testid="pin-modal">
+    <div
+      className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
+      data-testid="pin-modal"
+    >
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl max-w-lg w-full p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Pin Business</h2>

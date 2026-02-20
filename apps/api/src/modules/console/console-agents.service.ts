@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  Logger,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma.service';
 
 const KNOWN_AGENT_TYPES = [
@@ -53,11 +48,8 @@ export class ConsoleAgentsService {
       const typeRuns = runs.filter((r) => r.agentType === agentType);
       const typeCompleted = typeRuns.filter((r) => r.status === 'COMPLETED').length;
       const typeFailed = typeRuns.filter((r) => r.status === 'FAILED').length;
-      const typeFeedback = feedback.filter(
-        (f) =>
-          runs.some(
-            (r) => r.agentType === agentType && r.businessId === f.businessId,
-          ),
+      const typeFeedback = feedback.filter((f) =>
+        runs.some((r) => r.agentType === agentType && r.businessId === f.businessId),
       );
       const typeHelpful = typeFeedback.filter((f) => f.rating === 'HELPFUL').length;
 
@@ -66,15 +58,10 @@ export class ConsoleAgentsService {
         runs: typeRuns.length,
         completed: typeCompleted,
         failed: typeFailed,
-        successRate:
-          typeRuns.length > 0
-            ? Math.round((typeCompleted / typeRuns.length) * 100)
-            : 0,
+        successRate: typeRuns.length > 0 ? Math.round((typeCompleted / typeRuns.length) * 100) : 0,
         cardsCreated: typeRuns.reduce((sum, r) => sum + r.cardsCreated, 0),
         helpfulRate:
-          typeFeedback.length > 0
-            ? Math.round((typeHelpful / typeFeedback.length) * 100)
-            : 0,
+          typeFeedback.length > 0 ? Math.round((typeHelpful / typeFeedback.length) * 100) : 0,
       };
     });
 
@@ -100,10 +87,8 @@ export class ConsoleAgentsService {
     const expired = cards.filter((c) => c.status === 'EXPIRED').length;
     const snoozed = cards.filter((c) => c.status === 'SNOOZED').length;
 
-    const approvalRate =
-      total > 0 ? Math.round(((approved + executed) / total) * 100) : 0;
-    const executionRate =
-      total > 0 ? Math.round((executed / total) * 100) : 0;
+    const approvalRate = total > 0 ? Math.round(((approved + executed) / total) * 100) : 0;
+    const executionRate = total > 0 ? Math.round((executed / total) * 100) : 0;
 
     return {
       total,
@@ -124,10 +109,7 @@ export class ConsoleAgentsService {
       orderBy: { startedAt: 'desc' },
     });
 
-    const errorMap = new Map<
-      string,
-      { count: number; agentType: string; lastSeen: Date }
-    >();
+    const errorMap = new Map<string, { count: number; agentType: string; lastSeen: Date }>();
 
     for (const run of failedRuns) {
       const errorKey = run.error || 'Unknown error';
@@ -161,10 +143,7 @@ export class ConsoleAgentsService {
 
     if (runs.length === 0) return [];
 
-    const tenantMap = new Map<
-      string,
-      { totalRuns: number; failedRuns: number }
-    >();
+    const tenantMap = new Map<string, { totalRuns: number; failedRuns: number }>();
 
     for (const run of runs) {
       const existing = tenantMap.get(run.businessId) || {
@@ -177,8 +156,7 @@ export class ConsoleAgentsService {
     }
 
     const totalFailed = runs.filter((r) => r.status === 'FAILED').length;
-    const platformAvgRate =
-      runs.length > 0 ? totalFailed / runs.length : 0;
+    const platformAvgRate = runs.length > 0 ? totalFailed / runs.length : 0;
 
     const abnormalIds: string[] = [];
     for (const [businessId, stats] of tenantMap) {
@@ -247,10 +225,7 @@ export class ConsoleAgentsService {
         isEnabled: config?.isEnabled ?? false,
         autonomyLevel: config?.autonomyLevel ?? 'SUGGEST',
         runsLast7d: typeRuns.length,
-        successRate:
-          typeRuns.length > 0
-            ? Math.round((completed / typeRuns.length) * 100)
-            : 0,
+        successRate: typeRuns.length > 0 ? Math.round((completed / typeRuns.length) * 100) : 0,
         cardsCreated: typeRuns.reduce((sum, r) => sum + r.cardsCreated, 0),
       };
     });
@@ -352,7 +327,7 @@ export class ConsoleAgentsService {
   }
 
   async getPlatformDefaults() {
-    let defaults = await this.prisma.platformAgentDefault.findMany({
+    const defaults = await this.prisma.platformAgentDefault.findMany({
       orderBy: { agentType: 'asc' },
     });
 

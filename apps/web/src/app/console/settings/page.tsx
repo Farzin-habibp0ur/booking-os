@@ -18,9 +18,18 @@ interface GroupedSettings {
 }
 
 const TIMEZONE_OPTIONS = [
-  'UTC', 'America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles',
-  'Europe/London', 'Europe/Paris', 'Europe/Berlin', 'Asia/Tokyo', 'Asia/Shanghai',
-  'Australia/Sydney', 'Pacific/Auckland',
+  'UTC',
+  'America/New_York',
+  'America/Chicago',
+  'America/Denver',
+  'America/Los_Angeles',
+  'Europe/London',
+  'Europe/Paris',
+  'Europe/Berlin',
+  'Asia/Tokyo',
+  'Asia/Shanghai',
+  'Australia/Sydney',
+  'Pacific/Auckland',
 ];
 
 const LOCALE_OPTIONS = [
@@ -147,8 +156,13 @@ export default function ConsoleSettingsPage() {
   if (error && !settings) {
     return (
       <div className="p-6 md:p-8 max-w-5xl">
-        <h1 className="text-2xl font-serif font-bold text-slate-900 dark:text-white mb-6">Settings</h1>
-        <div className="bg-red-50 dark:bg-red-900/20 rounded-2xl p-6 text-red-700 dark:text-red-400" data-testid="settings-error">
+        <h1 className="text-2xl font-serif font-bold text-slate-900 dark:text-white mb-6">
+          Settings
+        </h1>
+        <div
+          className="bg-red-50 dark:bg-red-900/20 rounded-2xl p-6 text-red-700 dark:text-red-400"
+          data-testid="settings-error"
+        >
           {error}
         </div>
       </div>
@@ -159,28 +173,41 @@ export default function ConsoleSettingsPage() {
 
   return (
     <div className="p-6 md:p-8 max-w-5xl">
-      <h1 className="text-2xl font-serif font-bold text-slate-900 dark:text-white mb-6">Platform Settings</h1>
+      <h1 className="text-2xl font-serif font-bold text-slate-900 dark:text-white mb-6">
+        Platform Settings
+      </h1>
 
       {successMessage && (
-        <div className="mb-4 bg-sage-50 dark:bg-sage-900/20 text-sage-700 dark:text-sage-400 px-4 py-3 rounded-xl text-sm" data-testid="success-toast">
+        <div
+          className="mb-4 bg-sage-50 dark:bg-sage-900/20 text-sage-700 dark:text-sage-400 px-4 py-3 rounded-xl text-sm"
+          data-testid="success-toast"
+        >
           {successMessage}
         </div>
       )}
 
       {error && settings && (
-        <div className="mb-4 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 px-4 py-3 rounded-xl text-sm" data-testid="inline-error">
+        <div
+          className="mb-4 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 px-4 py-3 rounded-xl text-sm"
+          data-testid="inline-error"
+        >
           {error}
         </div>
       )}
 
       <div className="space-y-6">
         {/* Security Posture */}
-        <section className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6" data-testid="section-security">
+        <section
+          className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6"
+          data-testid="section-security"
+        >
           <div className="flex items-center gap-3 mb-5">
             <div className="p-2 bg-sage-50 dark:bg-sage-900/20 rounded-xl">
               <Shield className="text-sage-600" size={20} />
             </div>
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Security Posture</h2>
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+              Security Posture
+            </h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <NumberField
@@ -227,12 +254,17 @@ export default function ConsoleSettingsPage() {
         </section>
 
         {/* Notification Defaults */}
-        <section className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6" data-testid="section-notifications">
+        <section
+          className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6"
+          data-testid="section-notifications"
+        >
           <div className="flex items-center gap-3 mb-5">
             <div className="p-2 bg-lavender-50 dark:bg-lavender-900/20 rounded-xl">
               <Bell className="text-lavender-600" size={20} />
             </div>
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Notification Defaults</h2>
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+              Notification Defaults
+            </h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <NumberField
@@ -269,12 +301,17 @@ export default function ConsoleSettingsPage() {
         </section>
 
         {/* Regional Defaults */}
-        <section className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6" data-testid="section-regional">
+        <section
+          className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6"
+          data-testid="section-regional"
+        >
           <div className="flex items-center gap-3 mb-5">
             <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-xl">
               <Globe className="text-slate-600 dark:text-slate-400" size={20} />
             </div>
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Regional Defaults</h2>
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+              Regional Defaults
+            </h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <SelectField
@@ -312,12 +349,17 @@ export default function ConsoleSettingsPage() {
         </section>
 
         {/* Platform Configuration */}
-        <section className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6" data-testid="section-platform">
+        <section
+          className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6"
+          data-testid="section-platform"
+        >
           <div className="flex items-center gap-3 mb-5">
             <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-xl">
               <Settings className="text-slate-600 dark:text-slate-400" size={20} />
             </div>
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Platform Configuration</h2>
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+              Platform Configuration
+            </h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
@@ -335,7 +377,9 @@ export default function ConsoleSettingsPage() {
               >
                 <span
                   className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    (localValues['platform.maintenanceMode'] as boolean) ? 'translate-x-6' : 'translate-x-1'
+                    (localValues['platform.maintenanceMode'] as boolean)
+                      ? 'translate-x-6'
+                      : 'translate-x-1'
                   }`}
                 />
               </button>
@@ -377,16 +421,22 @@ export default function ConsoleSettingsPage() {
 
       {/* Maintenance Mode Confirmation Modal */}
       {maintenanceConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" data-testid="maintenance-modal">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+          data-testid="maintenance-modal"
+        >
           <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-lg p-6 max-w-md mx-4">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 bg-red-50 dark:bg-red-900/20 rounded-xl">
                 <AlertTriangle className="text-red-600" size={20} />
               </div>
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Enable Maintenance Mode?</h3>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                Enable Maintenance Mode?
+              </h3>
             </div>
             <p className="text-sm text-slate-500 mb-6">
-              This will prevent all tenant access to the platform. Only super admins will be able to use the console.
+              This will prevent all tenant access to the platform. Only super admins will be able to
+              use the console.
             </p>
             <div className="flex gap-3 justify-end">
               <button
@@ -430,7 +480,9 @@ function NumberField({
 }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{label}</label>
+      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+        {label}
+      </label>
       <input
         type="number"
         value={value ?? ''}
@@ -457,7 +509,9 @@ function ToggleField({
 }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{label}</label>
+      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+        {label}
+      </label>
       <button
         onClick={() => onChange(!value)}
         className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
@@ -488,7 +542,9 @@ function TimeField({
 }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{label}</label>
+      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+        {label}
+      </label>
       <input
         type="time"
         value={value ?? ''}
@@ -515,7 +571,9 @@ function SelectField({
 }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{label}</label>
+      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+        {label}
+      </label>
       <select
         value={value ?? ''}
         onChange={(e) => onChange(e.target.value)}

@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Param,
-  Query,
-  Body,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Post, Param, Query, Body, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard, Roles } from '../../common/roles.guard';
@@ -31,9 +23,7 @@ export class ConsoleBillingController {
   ) {}
 
   @Get('dashboard')
-  async getDashboard(
-    @CurrentUser() user: { sub: string; email: string },
-  ) {
+  async getDashboard(@CurrentUser() user: { sub: string; email: string }) {
     const result = await this.billingService.getDashboard();
 
     this.auditService.log(user.sub, user.email, 'BILLING_DASHBOARD_VIEW');
@@ -42,9 +32,7 @@ export class ConsoleBillingController {
   }
 
   @Get('past-due')
-  async getPastDue(
-    @CurrentUser() user: { sub: string; email: string },
-  ) {
+  async getPastDue(@CurrentUser() user: { sub: string; email: string }) {
     const result = await this.billingService.getPastDue();
 
     this.auditService.log(user.sub, user.email, 'BILLING_PAST_DUE_VIEW');
@@ -78,10 +66,7 @@ export class ConsoleBusinessBillingController {
   ) {}
 
   @Get(':id/billing')
-  async getBilling(
-    @Param('id') id: string,
-    @CurrentUser() user: { sub: string; email: string },
-  ) {
+  async getBilling(@Param('id') id: string, @CurrentUser() user: { sub: string; email: string }) {
     const result = await this.billingService.getBillingForBusiness(id);
 
     this.auditService.log(user.sub, user.email, 'BUSINESS_BILLING_VIEW', {
@@ -93,10 +78,7 @@ export class ConsoleBusinessBillingController {
   }
 
   @Get(':id/billing/invoices')
-  async getInvoices(
-    @Param('id') id: string,
-    @CurrentUser() user: { sub: string; email: string },
-  ) {
+  async getInvoices(@Param('id') id: string, @CurrentUser() user: { sub: string; email: string }) {
     const result = await this.billingService.getInvoicesForBusiness(id);
 
     this.auditService.log(user.sub, user.email, 'BUSINESS_INVOICES_VIEW', {
@@ -185,11 +167,7 @@ export class ConsoleBusinessBillingController {
     @Param('id') id: string,
     @CurrentUser() user: { sub: string; email: string },
   ) {
-    const result = await this.billingService.reactivateSubscription(
-      id,
-      user.sub,
-      user.email,
-    );
+    const result = await this.billingService.reactivateSubscription(id, user.sub, user.email);
 
     this.auditService.log(user.sub, user.email, 'BILLING_REACTIVATE', {
       targetType: 'BUSINESS',
@@ -200,10 +178,7 @@ export class ConsoleBusinessBillingController {
   }
 
   @Get(':id/billing/credits')
-  async getCredits(
-    @Param('id') id: string,
-    @CurrentUser() user: { sub: string; email: string },
-  ) {
+  async getCredits(@Param('id') id: string, @CurrentUser() user: { sub: string; email: string }) {
     const result = await this.billingService.getCreditsForBusiness(id);
 
     this.auditService.log(user.sub, user.email, 'BUSINESS_CREDITS_VIEW', {

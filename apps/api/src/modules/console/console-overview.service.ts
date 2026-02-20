@@ -52,31 +52,32 @@ export class ConsoleOverviewService {
       ]);
 
       // Batch 3: Subscription + agent counts
-      const [
-        activeSubscriptions,
-        trialSubscriptions,
-        pastDueSubscriptions,
-        canceledSubscriptions,
-      ] = await Promise.all([
-        this.prisma.subscription.count({ where: { status: 'active' } }),
-        this.prisma.subscription.count({ where: { status: 'trialing' } }),
-        this.prisma.subscription.count({ where: { status: 'past_due' } }),
-        this.prisma.subscription.count({ where: { status: 'canceled' } }),
-      ]);
+      const [activeSubscriptions, trialSubscriptions, pastDueSubscriptions, canceledSubscriptions] =
+        await Promise.all([
+          this.prisma.subscription.count({ where: { status: 'active' } }),
+          this.prisma.subscription.count({ where: { status: 'trialing' } }),
+          this.prisma.subscription.count({ where: { status: 'past_due' } }),
+          this.prisma.subscription.count({ where: { status: 'canceled' } }),
+        ]);
 
       // Batch 4: Agents + support + security
-      const [totalAgentRuns, agentRuns7d, failedAgentRuns7d, openSupportCases, activeViewAsSessions] =
-        await Promise.all([
-          this.prisma.agentRun.count(),
-          this.prisma.agentRun.count({ where: { startedAt: { gte: sevenDaysAgo } } }),
-          this.prisma.agentRun.count({
-            where: { startedAt: { gte: sevenDaysAgo }, status: 'FAILED' },
-          }),
-          this.prisma.supportCase.count({ where: { status: { in: ['open', 'in_progress'] } } }),
-          this.prisma.viewAsSession.count({
-            where: { endedAt: null, expiresAt: { gt: now } },
-          }),
-        ]);
+      const [
+        totalAgentRuns,
+        agentRuns7d,
+        failedAgentRuns7d,
+        openSupportCases,
+        activeViewAsSessions,
+      ] = await Promise.all([
+        this.prisma.agentRun.count(),
+        this.prisma.agentRun.count({ where: { startedAt: { gte: sevenDaysAgo } } }),
+        this.prisma.agentRun.count({
+          where: { startedAt: { gte: sevenDaysAgo }, status: 'FAILED' },
+        }),
+        this.prisma.supportCase.count({ where: { status: { in: ['open', 'in_progress'] } } }),
+        this.prisma.viewAsSession.count({
+          where: { endedAt: null, expiresAt: { gt: now } },
+        }),
+      ]);
 
       // Batch 5: Audit logs (single query)
       const recentAuditLogs = await this.prisma.platformAuditLog.findMany({
@@ -258,7 +259,11 @@ export class ConsoleOverviewService {
           severity: 'info',
           category: 'businesses',
           title: `${dormantBusinesses.length} dormant business${dormantBusinesses.length !== 1 ? 'es' : ''} (no bookings 7d)`,
-          description: dormantBusinesses.slice(0, 3).map((b) => b.name).join(', ') +
+          description:
+            dormantBusinesses
+              .slice(0, 3)
+              .map((b) => b.name)
+              .join(', ') +
             (dormantBusinesses.length > 3 ? ` and ${dormantBusinesses.length - 3} more` : ''),
           actionLabel: 'View Businesses',
           actionHref: '/console/businesses',
@@ -343,7 +348,7 @@ export class ConsoleOverviewService {
       for (const biz of businesses) {
         // Billing score (35%)
         let billingScore = 0;
-        let billingStatus = biz.subscription?.status || null;
+        const billingStatus = biz.subscription?.status || null;
         if (billingStatus === 'past_due') billingScore = 70;
         else if (billingStatus === 'canceled') billingScore = 100;
 
@@ -353,7 +358,8 @@ export class ConsoleOverviewService {
         if (!lastBooking) {
           activityScore = 100;
         } else {
-          const daysSince = (now.getTime() - new Date(lastBooking).getTime()) / (1000 * 60 * 60 * 24);
+          const daysSince =
+            (now.getTime() - new Date(lastBooking).getTime()) / (1000 * 60 * 60 * 24);
           if (daysSince > 30) activityScore = 100;
           else if (daysSince > 7) activityScore = 50;
         }
@@ -369,24 +375,22 @@ export class ConsoleOverviewService {
         let aiScore = 0;
         const bizRuns = agentsByBiz.get(biz.id) || [];
         if (bizRuns.length > 0) {
-          const failRate = (bizRuns.filter((r) => r.status === 'FAILED').length / bizRuns.length) * 100;
+          const failRate =
+            (bizRuns.filter((r) => r.status === 'FAILED').length / bizRuns.length) * 100;
           if (failRate > 20) aiScore = 100;
           else if (failRate >= 5) aiScore = 50;
         }
 
         const riskScore = Math.round(
-          billingScore * 0.35 +
-          activityScore * 0.30 +
-          supportScore * 0.20 +
-          aiScore * 0.15,
+          billingScore * 0.35 + activityScore * 0.3 + supportScore * 0.2 + aiScore * 0.15,
         );
 
         if (riskScore > 30) {
           // Determine top signal
           const signals = [
             { name: 'Billing', score: billingScore * 0.35 },
-            { name: 'Inactivity', score: activityScore * 0.30 },
-            { name: 'Support issues', score: supportScore * 0.20 },
+            { name: 'Inactivity', score: activityScore * 0.3 },
+            { name: 'Support issues', score: supportScore * 0.2 },
             { name: 'AI failures', score: aiScore * 0.15 },
           ];
           const topSignal = signals.sort((a, b) => b.score - a.score)[0].name;

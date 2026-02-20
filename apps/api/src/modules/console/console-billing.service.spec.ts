@@ -29,14 +29,14 @@ describe('ConsoleBillingService', () => {
   describe('getDashboard', () => {
     it('computes MRR correctly with mixed plans', async () => {
       prisma.subscription.count
-        .mockResolvedValueOnce(5)   // active basic
-        .mockResolvedValueOnce(3)   // active pro
-        .mockResolvedValueOnce(2)   // trialing
-        .mockResolvedValueOnce(1)   // past_due
-        .mockResolvedValueOnce(4)   // canceled
-        .mockResolvedValueOnce(2)   // canceled recent
-        .mockResolvedValueOnce(10)  // trial created recent
-        .mockResolvedValueOnce(7);  // trial converted recent
+        .mockResolvedValueOnce(5) // active basic
+        .mockResolvedValueOnce(3) // active pro
+        .mockResolvedValueOnce(2) // trialing
+        .mockResolvedValueOnce(1) // past_due
+        .mockResolvedValueOnce(4) // canceled
+        .mockResolvedValueOnce(2) // canceled recent
+        .mockResolvedValueOnce(10) // trial created recent
+        .mockResolvedValueOnce(7); // trial converted recent
 
       const result = await service.getDashboard();
 
@@ -58,14 +58,14 @@ describe('ConsoleBillingService', () => {
 
     it('calculates churn rate correctly', async () => {
       prisma.subscription.count
-        .mockResolvedValueOnce(8)   // active basic
-        .mockResolvedValueOnce(2)   // active pro
-        .mockResolvedValueOnce(0)   // trialing
-        .mockResolvedValueOnce(0)   // past_due
-        .mockResolvedValueOnce(5)   // canceled total
-        .mockResolvedValueOnce(2)   // canceled recent (30d)
-        .mockResolvedValueOnce(0)   // trial created recent
-        .mockResolvedValueOnce(0);  // trial converted recent
+        .mockResolvedValueOnce(8) // active basic
+        .mockResolvedValueOnce(2) // active pro
+        .mockResolvedValueOnce(0) // trialing
+        .mockResolvedValueOnce(0) // past_due
+        .mockResolvedValueOnce(5) // canceled total
+        .mockResolvedValueOnce(2) // canceled recent (30d)
+        .mockResolvedValueOnce(0) // trial created recent
+        .mockResolvedValueOnce(0); // trial converted recent
 
       const result = await service.getDashboard();
 
@@ -75,14 +75,14 @@ describe('ConsoleBillingService', () => {
 
     it('calculates ARPA correctly', async () => {
       prisma.subscription.count
-        .mockResolvedValueOnce(10)  // active basic
-        .mockResolvedValueOnce(0)   // active pro
-        .mockResolvedValueOnce(0)   // trialing
-        .mockResolvedValueOnce(0)   // past_due
-        .mockResolvedValueOnce(0)   // canceled
-        .mockResolvedValueOnce(0)   // canceled recent
-        .mockResolvedValueOnce(0)   // trial created recent
-        .mockResolvedValueOnce(0);  // trial converted recent
+        .mockResolvedValueOnce(10) // active basic
+        .mockResolvedValueOnce(0) // active pro
+        .mockResolvedValueOnce(0) // trialing
+        .mockResolvedValueOnce(0) // past_due
+        .mockResolvedValueOnce(0) // canceled
+        .mockResolvedValueOnce(0) // canceled recent
+        .mockResolvedValueOnce(0) // trial created recent
+        .mockResolvedValueOnce(0); // trial converted recent
 
       const result = await service.getDashboard();
 
@@ -91,14 +91,14 @@ describe('ConsoleBillingService', () => {
 
     it('calculates trial-to-paid rate', async () => {
       prisma.subscription.count
-        .mockResolvedValueOnce(5)   // active basic
-        .mockResolvedValueOnce(0)   // active pro
-        .mockResolvedValueOnce(3)   // trialing
-        .mockResolvedValueOnce(0)   // past_due
-        .mockResolvedValueOnce(0)   // canceled
-        .mockResolvedValueOnce(0)   // canceled recent
-        .mockResolvedValueOnce(10)  // trial created recent
-        .mockResolvedValueOnce(6);  // trial converted recent
+        .mockResolvedValueOnce(5) // active basic
+        .mockResolvedValueOnce(0) // active pro
+        .mockResolvedValueOnce(3) // trialing
+        .mockResolvedValueOnce(0) // past_due
+        .mockResolvedValueOnce(0) // canceled
+        .mockResolvedValueOnce(0) // canceled recent
+        .mockResolvedValueOnce(10) // trial created recent
+        .mockResolvedValueOnce(6); // trial converted recent
 
       const result = await service.getDashboard();
 
@@ -107,14 +107,14 @@ describe('ConsoleBillingService', () => {
 
     it('returns plan distribution counts', async () => {
       prisma.subscription.count
-        .mockResolvedValueOnce(7)   // active basic
-        .mockResolvedValueOnce(3)   // active pro
-        .mockResolvedValueOnce(0)   // trialing
-        .mockResolvedValueOnce(0)   // past_due
-        .mockResolvedValueOnce(0)   // canceled
-        .mockResolvedValueOnce(0)   // canceled recent
-        .mockResolvedValueOnce(0)   // trial created recent
-        .mockResolvedValueOnce(0);  // trial converted recent
+        .mockResolvedValueOnce(7) // active basic
+        .mockResolvedValueOnce(3) // active pro
+        .mockResolvedValueOnce(0) // trialing
+        .mockResolvedValueOnce(0) // past_due
+        .mockResolvedValueOnce(0) // canceled
+        .mockResolvedValueOnce(0) // canceled recent
+        .mockResolvedValueOnce(0) // trial created recent
+        .mockResolvedValueOnce(0); // trial converted recent
 
       const result = await service.getDashboard();
 
@@ -314,7 +314,12 @@ describe('ConsoleBillingService', () => {
         },
       } as any);
       prisma.billingCredit.findMany.mockResolvedValue([
-        { id: 'credit1', amount: 50, reason: 'Goodwill', issuedBy: { name: 'Admin', email: 'admin@test.com' } },
+        {
+          id: 'credit1',
+          amount: 50,
+          reason: 'Goodwill',
+          issuedBy: { name: 'Admin', email: 'admin@test.com' },
+        },
       ] as any);
 
       const result = await service.getBillingForBusiness('biz1');
@@ -328,9 +333,7 @@ describe('ConsoleBillingService', () => {
     it('throws NotFoundException when business not found', async () => {
       prisma.business.findUnique.mockResolvedValue(null);
 
-      await expect(service.getBillingForBusiness('nonexistent')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.getBillingForBusiness('nonexistent')).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -371,9 +374,7 @@ describe('ConsoleBillingService', () => {
     it('throws NotFoundException when business not found', async () => {
       prisma.business.findUnique.mockResolvedValue(null);
 
-      await expect(service.getCreditsForBusiness('nonexistent')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.getCreditsForBusiness('nonexistent')).rejects.toThrow(NotFoundException);
     });
   });
 

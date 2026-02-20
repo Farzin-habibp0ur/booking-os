@@ -82,7 +82,8 @@ export class ConsoleViewAsController {
   // No @Roles — must work during view-as (role=ADMIN with viewAs claim)
   @Post('view-as/end')
   async endViewAs(
-    @CurrentUser() user: {
+    @CurrentUser()
+    user: {
       sub: string;
       email: string;
       viewAsSessionId?: string;
@@ -90,11 +91,7 @@ export class ConsoleViewAsController {
     },
     @Res({ passthrough: true }) res: Response,
   ) {
-    const result = await this.viewAsService.endSession(
-      user.sub,
-      user.email,
-      user.viewAsSessionId,
-    );
+    const result = await this.viewAsService.endSession(user.sub, user.email, user.viewAsSessionId);
 
     if (result.accessToken && result.refreshToken) {
       this.setTokenCookies(res, {
@@ -108,9 +105,7 @@ export class ConsoleViewAsController {
 
   // No @Roles — must work during view-as
   @Get('view-as/active')
-  async getActiveSession(
-    @CurrentUser() user: { sub: string },
-  ) {
+  async getActiveSession(@CurrentUser() user: { sub: string }) {
     return this.viewAsService.getActiveSession(user.sub);
   }
 }

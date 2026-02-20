@@ -48,7 +48,9 @@ describe('ConsoleAgentsController', () => {
     expect(service.getPerformanceDashboard).toHaveBeenCalled();
     expect(result).toEqual(data);
     expect(auditService.log).toHaveBeenCalledWith(
-      'admin1', 'admin@test.com', 'AGENT_PERFORMANCE_VIEW',
+      'admin1',
+      'admin@test.com',
+      'AGENT_PERFORMANCE_VIEW',
     );
   });
 
@@ -60,9 +62,7 @@ describe('ConsoleAgentsController', () => {
 
     expect(service.getActionCardFunnel).toHaveBeenCalled();
     expect(result).toEqual(data);
-    expect(auditService.log).toHaveBeenCalledWith(
-      'admin1', 'admin@test.com', 'AGENT_FUNNEL_VIEW',
-    );
+    expect(auditService.log).toHaveBeenCalledWith('admin1', 'admin@test.com', 'AGENT_FUNNEL_VIEW');
   });
 
   it('GET /failures delegates to service', async () => {
@@ -74,7 +74,9 @@ describe('ConsoleAgentsController', () => {
     expect(service.getTopFailures).toHaveBeenCalled();
     expect(result).toEqual(data);
     expect(auditService.log).toHaveBeenCalledWith(
-      'admin1', 'admin@test.com', 'AGENT_FAILURES_VIEW',
+      'admin1',
+      'admin@test.com',
+      'AGENT_FAILURES_VIEW',
     );
   });
 
@@ -87,7 +89,9 @@ describe('ConsoleAgentsController', () => {
     expect(service.getAbnormalTenants).toHaveBeenCalled();
     expect(result).toEqual(data);
     expect(auditService.log).toHaveBeenCalledWith(
-      'admin1', 'admin@test.com', 'AGENT_ABNORMAL_TENANTS_VIEW',
+      'admin1',
+      'admin@test.com',
+      'AGENT_ABNORMAL_TENANTS_VIEW',
     );
   });
 
@@ -100,7 +104,9 @@ describe('ConsoleAgentsController', () => {
     expect(service.getTenantAgentStatus).toHaveBeenCalledWith('biz1');
     expect(result).toEqual(data);
     expect(auditService.log).toHaveBeenCalledWith(
-      'admin1', 'admin@test.com', 'AGENT_TENANT_STATUS_VIEW',
+      'admin1',
+      'admin@test.com',
+      'AGENT_TENANT_STATUS_VIEW',
       expect.objectContaining({ targetType: 'BUSINESS', targetId: 'biz1' }),
     );
   });
@@ -108,14 +114,14 @@ describe('ConsoleAgentsController', () => {
   it('POST /tenant/:businessId/pause-all delegates and audit logs with reason', async () => {
     service.pauseAllAgents.mockResolvedValue({ affectedCount: 3 });
 
-    const result = await controller.pauseAllAgents(
-      'biz1', { reason: 'Security review' }, mockUser,
-    );
+    const result = await controller.pauseAllAgents('biz1', { reason: 'Security review' }, mockUser);
 
     expect(service.pauseAllAgents).toHaveBeenCalledWith('biz1');
     expect(result).toEqual({ affectedCount: 3 });
     expect(auditService.log).toHaveBeenCalledWith(
-      'admin1', 'admin@test.com', 'AGENT_PAUSE_ALL',
+      'admin1',
+      'admin@test.com',
+      'AGENT_PAUSE_ALL',
       expect.objectContaining({
         targetType: 'BUSINESS',
         targetId: 'biz1',
@@ -128,13 +134,17 @@ describe('ConsoleAgentsController', () => {
     service.resumeAllAgents.mockResolvedValue({ affectedCount: 3 });
 
     const result = await controller.resumeAllAgents(
-      'biz1', { reason: 'Review complete' }, mockUser,
+      'biz1',
+      { reason: 'Review complete' },
+      mockUser,
     );
 
     expect(service.resumeAllAgents).toHaveBeenCalledWith('biz1');
     expect(result).toEqual({ affectedCount: 3 });
     expect(auditService.log).toHaveBeenCalledWith(
-      'admin1', 'admin@test.com', 'AGENT_RESUME_ALL',
+      'admin1',
+      'admin@test.com',
+      'AGENT_RESUME_ALL',
       expect.objectContaining({
         targetType: 'BUSINESS',
         targetId: 'biz1',
@@ -148,7 +158,8 @@ describe('ConsoleAgentsController', () => {
     service.updateTenantAgent.mockResolvedValue(config as any);
 
     const result = await controller.updateTenantAgent(
-      'biz1', 'WAITLIST',
+      'biz1',
+      'WAITLIST',
       { isEnabled: false, reason: 'Too aggressive' } as any,
       mockUser,
     );
@@ -159,7 +170,9 @@ describe('ConsoleAgentsController', () => {
     });
     expect(result).toEqual(config);
     expect(auditService.log).toHaveBeenCalledWith(
-      'admin1', 'admin@test.com', 'AGENT_TENANT_UPDATE',
+      'admin1',
+      'admin@test.com',
+      'AGENT_TENANT_UPDATE',
       expect.objectContaining({
         targetType: 'AGENT_CONFIG',
         targetId: 'biz1/WAITLIST',
@@ -177,7 +190,9 @@ describe('ConsoleAgentsController', () => {
     expect(service.getPlatformDefaults).toHaveBeenCalled();
     expect(result).toEqual(data);
     expect(auditService.log).toHaveBeenCalledWith(
-      'admin1', 'admin@test.com', 'AGENT_PLATFORM_DEFAULTS_VIEW',
+      'admin1',
+      'admin@test.com',
+      'AGENT_PLATFORM_DEFAULTS_VIEW',
     );
   });
 
@@ -196,7 +211,9 @@ describe('ConsoleAgentsController', () => {
     expect(service.updatePlatformDefault).toHaveBeenCalledWith('WAITLIST', data, 'admin1');
     expect(result).toEqual(updated);
     expect(auditService.log).toHaveBeenCalledWith(
-      'admin1', 'admin@test.com', 'AGENT_PLATFORM_DEFAULT_UPDATE',
+      'admin1',
+      'admin@test.com',
+      'AGENT_PLATFORM_DEFAULT_UPDATE',
       expect.objectContaining({
         targetType: 'PLATFORM_AGENT_DEFAULT',
         targetId: 'WAITLIST',

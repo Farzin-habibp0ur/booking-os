@@ -102,11 +102,7 @@ export class ConsoleViewAsService {
     };
   }
 
-  async endSession(
-    superAdminId: string,
-    superAdminEmail: string,
-    viewAsSessionId?: string,
-  ) {
+  async endSession(superAdminId: string, superAdminEmail: string, viewAsSessionId?: string) {
     let session;
 
     if (viewAsSessionId) {

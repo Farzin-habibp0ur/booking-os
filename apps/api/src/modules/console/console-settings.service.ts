@@ -36,7 +36,10 @@ export class ConsoleSettingsService {
       const stored = await this.prisma.platformSetting.findMany();
       const storedMap = new Map(stored.map((s) => [s.key, s.value]));
 
-      const grouped: Record<string, Array<{ key: string; value: unknown; isDefault: boolean }>> = {};
+      const grouped: Record<
+        string,
+        Array<{ key: string; value: unknown; isDefault: boolean }>
+      > = {};
 
       for (const [key, def] of Object.entries(SETTING_DEFAULTS)) {
         const category = key.split('.')[0];

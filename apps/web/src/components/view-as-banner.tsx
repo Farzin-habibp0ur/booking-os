@@ -77,9 +77,7 @@ export function ViewAsBanner() {
           Viewing as <strong>{user.business?.name}</strong>
         </span>
         {remaining && (
-          <span className="bg-amber-600 px-2 py-0.5 rounded text-xs font-mono">
-            {remaining}
-          </span>
+          <span className="bg-amber-600 px-2 py-0.5 rounded text-xs font-mono">{remaining}</span>
         )}
       </div>
       <button

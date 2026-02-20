@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Param,
-  Body,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Post, Put, Param, Body, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard, Roles } from '../../common/roles.guard';
@@ -30,9 +22,7 @@ export class ConsoleAgentsController {
   ) {}
 
   @Get('performance')
-  async getPerformance(
-    @CurrentUser() user: { sub: string; email: string },
-  ) {
+  async getPerformance(@CurrentUser() user: { sub: string; email: string }) {
     const result = await this.agentsService.getPerformanceDashboard();
 
     this.auditService.log(user.sub, user.email, 'AGENT_PERFORMANCE_VIEW');
@@ -41,9 +31,7 @@ export class ConsoleAgentsController {
   }
 
   @Get('funnel')
-  async getFunnel(
-    @CurrentUser() user: { sub: string; email: string },
-  ) {
+  async getFunnel(@CurrentUser() user: { sub: string; email: string }) {
     const result = await this.agentsService.getActionCardFunnel();
 
     this.auditService.log(user.sub, user.email, 'AGENT_FUNNEL_VIEW');
@@ -52,9 +40,7 @@ export class ConsoleAgentsController {
   }
 
   @Get('failures')
-  async getFailures(
-    @CurrentUser() user: { sub: string; email: string },
-  ) {
+  async getFailures(@CurrentUser() user: { sub: string; email: string }) {
     const result = await this.agentsService.getTopFailures();
 
     this.auditService.log(user.sub, user.email, 'AGENT_FAILURES_VIEW');
@@ -63,9 +49,7 @@ export class ConsoleAgentsController {
   }
 
   @Get('abnormal-tenants')
-  async getAbnormalTenants(
-    @CurrentUser() user: { sub: string; email: string },
-  ) {
+  async getAbnormalTenants(@CurrentUser() user: { sub: string; email: string }) {
     const result = await this.agentsService.getAbnormalTenants();
 
     this.auditService.log(user.sub, user.email, 'AGENT_ABNORMAL_TENANTS_VIEW');
@@ -145,9 +129,7 @@ export class ConsoleAgentsController {
   }
 
   @Get('platform-defaults')
-  async getPlatformDefaults(
-    @CurrentUser() user: { sub: string; email: string },
-  ) {
+  async getPlatformDefaults(@CurrentUser() user: { sub: string; email: string }) {
     const result = await this.agentsService.getPlatformDefaults();
 
     this.auditService.log(user.sub, user.email, 'AGENT_PLATFORM_DEFAULTS_VIEW');

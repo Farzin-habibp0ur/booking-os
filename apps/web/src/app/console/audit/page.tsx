@@ -24,7 +24,10 @@ interface AuditResponse {
 }
 
 function formatAction(action: string): string {
-  return action.replace(/_/g, ' ').toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
+  return action
+    .replace(/_/g, ' ')
+    .toLowerCase()
+    .replace(/^\w/, (c) => c.toUpperCase());
 }
 
 function formatDate(dateStr: string): string {
@@ -41,8 +44,10 @@ const ACTION_COLORS: Record<string, string> = {
   VIEW_AS_START: 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
   VIEW_AS_END: 'bg-sage-50 text-sage-700 dark:bg-sage-900/30 dark:text-sage-400',
   BUSINESS_LOOKUP: 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-  SUPPORT_CASE_CREATE: 'bg-lavender-50 text-lavender-700 dark:bg-lavender-900/30 dark:text-lavender-400',
-  SUPPORT_CASE_UPDATE: 'bg-lavender-50 text-lavender-700 dark:bg-lavender-900/30 dark:text-lavender-400',
+  SUPPORT_CASE_CREATE:
+    'bg-lavender-50 text-lavender-700 dark:bg-lavender-900/30 dark:text-lavender-400',
+  SUPPORT_CASE_UPDATE:
+    'bg-lavender-50 text-lavender-700 dark:bg-lavender-900/30 dark:text-lavender-400',
 };
 
 export default function ConsoleAuditPage() {
@@ -73,7 +78,10 @@ export default function ConsoleAuditPage() {
   }, [search, actionFilter, page]);
 
   useEffect(() => {
-    api.get<string[]>('/admin/audit-logs/action-types').then(setActionTypes).catch(() => {});
+    api
+      .get<string[]>('/admin/audit-logs/action-types')
+      .then(setActionTypes)
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -85,7 +93,9 @@ export default function ConsoleAuditPage() {
 
   return (
     <div className="p-6 md:p-8 max-w-7xl">
-      <h1 className="text-2xl font-serif font-bold text-slate-900 dark:text-white mb-6">Security & Audit</h1>
+      <h1 className="text-2xl font-serif font-bold text-slate-900 dark:text-white mb-6">
+        Security & Audit
+      </h1>
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
@@ -95,18 +105,26 @@ export default function ConsoleAuditPage() {
             type="text"
             placeholder="Search by actor, action, or target..."
             value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
             className="w-full pl-9 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-transparent focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-sage-500 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400"
           />
         </div>
         <select
           value={actionFilter}
-          onChange={(e) => { setActionFilter(e.target.value); setPage(1); }}
+          onChange={(e) => {
+            setActionFilter(e.target.value);
+            setPage(1);
+          }}
           className="px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-sage-500"
         >
           <option value="">All Actions</option>
           {actionTypes.map((a) => (
-            <option key={a} value={a}>{formatAction(a)}</option>
+            <option key={a} value={a}>
+              {formatAction(a)}
+            </option>
           ))}
         </select>
       </div>
@@ -128,29 +146,50 @@ export default function ConsoleAuditPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-100 dark:border-slate-800">
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase">Time</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase">Actor</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase">Action</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase hidden md:table-cell">Target</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase hidden lg:table-cell">Reason</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase">
+                      Time
+                    </th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase">
+                      Actor
+                    </th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase">
+                      Action
+                    </th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase hidden md:table-cell">
+                      Target
+                    </th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase hidden lg:table-cell">
+                      Reason
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
                   {data.items.map((log) => (
                     <tr key={log.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                      <td className="px-4 py-3 text-slate-500 whitespace-nowrap">{formatDate(log.createdAt)}</td>
-                      <td className="px-4 py-3 text-slate-900 dark:text-white truncate max-w-[200px]">{log.actorEmail}</td>
+                      <td className="px-4 py-3 text-slate-500 whitespace-nowrap">
+                        {formatDate(log.createdAt)}
+                      </td>
+                      <td className="px-4 py-3 text-slate-900 dark:text-white truncate max-w-[200px]">
+                        {log.actorEmail}
+                      </td>
                       <td className="px-4 py-3">
-                        <span className={`px-2 py-1 rounded-lg text-xs font-medium ${ACTION_COLORS[log.action] || 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}>
+                        <span
+                          className={`px-2 py-1 rounded-lg text-xs font-medium ${ACTION_COLORS[log.action] || 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}
+                        >
                           {formatAction(log.action)}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-slate-500 hidden md:table-cell">
                         {log.targetType ? (
                           <span className="text-xs">
-                            {log.targetType}: <span className="font-mono text-slate-400">{log.targetId?.slice(0, 12)}...</span>
+                            {log.targetType}:{' '}
+                            <span className="font-mono text-slate-400">
+                              {log.targetId?.slice(0, 12)}...
+                            </span>
                           </span>
-                        ) : '—'}
+                        ) : (
+                          '—'
+                        )}
                       </td>
                       <td className="px-4 py-3 text-slate-500 hidden lg:table-cell truncate max-w-[200px]">
                         {log.reason || '—'}
@@ -172,7 +211,9 @@ export default function ConsoleAuditPage() {
                 >
                   <ChevronLeft size={16} />
                 </button>
-                <span className="text-xs text-slate-500">Page {page} of {totalPages}</span>
+                <span className="text-xs text-slate-500">
+                  Page {page} of {totalPages}
+                </span>
                 <button
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={page >= totalPages}

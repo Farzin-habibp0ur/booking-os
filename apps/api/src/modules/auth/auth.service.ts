@@ -209,7 +209,15 @@ export class AuthService {
     }
   }
 
-  async getMe(staffId: string, viewAsClaims?: { viewAs: boolean; viewAsSessionId?: string; originalBusinessId?: string; originalRole?: string }) {
+  async getMe(
+    staffId: string,
+    viewAsClaims?: {
+      viewAs: boolean;
+      viewAsSessionId?: string;
+      originalBusinessId?: string;
+      originalRole?: string;
+    },
+  ) {
     const staff = await this.prisma.staff.findUnique({
       where: { id: staffId },
       include: { business: true },

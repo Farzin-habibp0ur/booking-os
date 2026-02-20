@@ -41,7 +41,9 @@ describe('ConsoleSkillsController', () => {
     expect(service.getCatalog).toHaveBeenCalled();
     expect(result).toEqual(catalogData);
     expect(auditService.log).toHaveBeenCalledWith(
-      'admin1', 'admin@test.com', 'SKILLS_CATALOG_VIEW',
+      'admin1',
+      'admin@test.com',
+      'SKILLS_CATALOG_VIEW',
     );
   });
 
@@ -54,7 +56,9 @@ describe('ConsoleSkillsController', () => {
     expect(service.getSkillAdoption).toHaveBeenCalledWith('WAITLIST');
     expect(result).toEqual(adoptionData);
     expect(auditService.log).toHaveBeenCalledWith(
-      'admin1', 'admin@test.com', 'SKILL_ADOPTION_VIEW',
+      'admin1',
+      'admin@test.com',
+      'SKILL_ADOPTION_VIEW',
       expect.objectContaining({ targetType: 'SKILL', targetId: 'WAITLIST' }),
     );
   });
@@ -72,7 +76,9 @@ describe('ConsoleSkillsController', () => {
     expect(service.platformOverride).toHaveBeenCalledWith('WAITLIST', true, 'admin1');
     expect(result).toEqual(overrideData);
     expect(auditService.log).toHaveBeenCalledWith(
-      'admin1', 'admin@test.com', 'SKILL_PLATFORM_OVERRIDE',
+      'admin1',
+      'admin@test.com',
+      'SKILL_PLATFORM_OVERRIDE',
       expect.objectContaining({
         targetType: 'SKILL',
         targetId: 'WAITLIST',
@@ -95,7 +101,9 @@ describe('ConsoleSkillsController', () => {
     expect(service.platformOverride).toHaveBeenCalledWith('RETENTION', false, 'admin1');
     expect(result).toEqual(overrideData);
     expect(auditService.log).toHaveBeenCalledWith(
-      'admin1', 'admin@test.com', 'SKILL_PLATFORM_OVERRIDE',
+      'admin1',
+      'admin@test.com',
+      'SKILL_PLATFORM_OVERRIDE',
       expect.objectContaining({
         targetType: 'SKILL',
         targetId: 'RETENTION',

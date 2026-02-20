@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  Logger,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../common/prisma.service';
 import Stripe from 'stripe';
@@ -79,8 +74,7 @@ export class ConsoleBillingService {
     const churnDenominator = activeCount + canceledRecent;
     const churnRate = churnDenominator > 0 ? canceledRecent / churnDenominator : 0;
     const arpa = activeCount > 0 ? mrr / activeCount : 0;
-    const trialToPaidRate =
-      trialCreatedRecent > 0 ? trialConvertedRecent / trialCreatedRecent : 0;
+    const trialToPaidRate = trialCreatedRecent > 0 ? trialConvertedRecent / trialCreatedRecent : 0;
 
     return {
       mrr,
@@ -209,9 +203,7 @@ export class ConsoleBillingService {
 
     let invoices: any[] = [];
     if (business.subscription?.stripeCustomerId) {
-      invoices = await this.fetchInvoicesFromStripe(
-        business.subscription.stripeCustomerId,
-      );
+      invoices = await this.fetchInvoicesFromStripe(business.subscription.stripeCustomerId);
     }
 
     return {
@@ -242,9 +234,7 @@ export class ConsoleBillingService {
     return this.fetchInvoicesFromStripe(subscription.stripeCustomerId);
   }
 
-  private async fetchInvoicesFromStripe(
-    stripeCustomerId: string,
-  ): Promise<any[]> {
+  private async fetchInvoicesFromStripe(stripeCustomerId: string): Promise<any[]> {
     try {
       const stripe = this.requireStripe();
       const invoices = await stripe.invoices.list({
@@ -256,9 +246,7 @@ export class ConsoleBillingService {
         id: inv.id,
         amount: (inv.amount_paid || 0) / 100,
         status: inv.status,
-        date: inv.created
-          ? new Date(inv.created * 1000).toISOString()
-          : null,
+        date: inv.created ? new Date(inv.created * 1000).toISOString() : null,
         pdfUrl: inv.invoice_pdf || null,
       }));
     } catch (error) {
@@ -287,9 +275,7 @@ export class ConsoleBillingService {
     }
 
     const stripe = this.requireStripe();
-    const stripeSub = await stripe.subscriptions.retrieve(
-      subscription.stripeSubscriptionId,
-    );
+    const stripeSub = await stripe.subscriptions.retrieve(subscription.stripeSubscriptionId);
     const itemId = stripeSub.items.data[0]?.id;
     if (!itemId) throw new BadRequestException('No subscription item found');
 
@@ -358,10 +344,7 @@ export class ConsoleBillingService {
 
       return { ...credit, appliedAt: new Date(), stripeId: balanceTx.id };
     } catch (error) {
-      this.logger.warn(
-        `Failed to apply credit to Stripe for business ${businessId}`,
-        error,
-      );
+      this.logger.warn(`Failed to apply credit to Stripe for business ${businessId}`, error);
       return credit;
     }
   }
@@ -404,11 +387,7 @@ export class ConsoleBillingService {
     return updated;
   }
 
-  async reactivateSubscription(
-    businessId: string,
-    actorId: string,
-    actorEmail: string,
-  ) {
+  async reactivateSubscription(businessId: string, actorId: string, actorEmail: string) {
     const subscription = await this.prisma.subscription.findUnique({
       where: { businessId },
     });

@@ -30,23 +30,15 @@ export class ConsoleMessagingService {
     const messagesDelivered = outbound.filter(
       (m) => m.deliveryStatus === 'DELIVERED' || m.deliveryStatus === 'READ',
     ).length;
-    const messagesFailed = outbound.filter(
-      (m) => m.deliveryStatus === 'FAILED',
-    ).length;
+    const messagesFailed = outbound.filter((m) => m.deliveryStatus === 'FAILED').length;
     const deliveryRate =
-      messagesSent > 0
-        ? Math.round((messagesDelivered / messagesSent) * 100)
-        : 0;
+      messagesSent > 0 ? Math.round((messagesDelivered / messagesSent) * 100) : 0;
 
     const remindersSent = reminders.filter((r) => r.sentAt !== null).length;
-    const remindersFailed = reminders.filter(
-      (r) => r.status === 'FAILED',
-    ).length;
+    const remindersFailed = reminders.filter((r) => r.status === 'FAILED').length;
     const reminderSuccessRate =
       reminders.length > 0
-        ? Math.round(
-            ((remindersSent - remindersFailed) / reminders.length) * 100,
-          )
+        ? Math.round(((remindersSent - remindersFailed) / reminders.length) * 100)
         : 0;
 
     return {
@@ -138,19 +130,13 @@ export class ConsoleMessagingService {
       select: { direction: true, deliveryStatus: true },
     });
 
-    const recentInbound24h = recentMessages.filter(
-      (m) => m.direction === 'INBOUND',
-    ).length;
-    const recentOutbound24h = recentMessages.filter(
-      (m) => m.direction === 'OUTBOUND',
-    ).length;
+    const recentInbound24h = recentMessages.filter((m) => m.direction === 'INBOUND').length;
+    const recentOutbound24h = recentMessages.filter((m) => m.direction === 'OUTBOUND').length;
     const failedOutbound24h = recentMessages.filter(
       (m) => m.direction === 'OUTBOUND' && m.deliveryStatus === 'FAILED',
     ).length;
 
-    const isHealthy =
-      recentOutbound24h === 0 ||
-      failedOutbound24h / recentOutbound24h < 0.1;
+    const isHealthy = recentOutbound24h === 0 || failedOutbound24h / recentOutbound24h < 0.1;
 
     return {
       isHealthy,
@@ -188,22 +174,15 @@ export class ConsoleMessagingService {
     });
 
     return businesses.map((business) => {
-      const bizLocations = locations.filter(
-        (l) => l.businessId === business.id && l.isActive,
-      );
-      const configuredLocations = bizLocations.filter(
-        (l) => l.whatsappConfig !== null,
-      );
+      const bizLocations = locations.filter((l) => l.businessId === business.id && l.isActive);
+      const configuredLocations = bizLocations.filter((l) => l.whatsappConfig !== null);
       const bizMessages = recentMessages.filter(
         (m) => m.conversation.businessId === business.id && m.direction === 'OUTBOUND',
       );
       const delivered = bizMessages.filter(
-        (m) =>
-          m.deliveryStatus === 'DELIVERED' || m.deliveryStatus === 'READ',
+        (m) => m.deliveryStatus === 'DELIVERED' || m.deliveryStatus === 'READ',
       ).length;
-      const bizConversation = conversations.find(
-        (c) => c.businessId === business.id,
-      );
+      const bizConversation = conversations.find((c) => c.businessId === business.id);
 
       return {
         businessId: business.id,
@@ -212,9 +191,7 @@ export class ConsoleMessagingService {
         locationCount: bizLocations.length,
         configuredLocationCount: configuredLocations.length,
         recentDeliveryRate:
-          bizMessages.length > 0
-            ? Math.round((delivered / bizMessages.length) * 100)
-            : 0,
+          bizMessages.length > 0 ? Math.round((delivered / bizMessages.length) * 100) : 0,
         lastMessageAt: bizConversation?.lastMessageAt || null,
       };
     });
@@ -236,31 +213,30 @@ export class ConsoleMessagingService {
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    const [locations, recentMessages, stuckReminders, activeConversations] =
-      await Promise.all([
-        this.prisma.location.findMany({
-          where: { businessId, isActive: true },
-          select: { whatsappConfig: true },
-        }),
-        this.prisma.message.findMany({
-          where: {
-            conversation: { businessId },
-            createdAt: { gte: sevenDaysAgo },
-            direction: 'OUTBOUND',
-          },
-          select: { deliveryStatus: true },
-        }),
-        this.prisma.reminder.count({
-          where: {
-            businessId,
-            status: 'PENDING',
-            scheduledAt: { lte: oneHourAgo },
-          },
-        }),
-        this.prisma.conversation.count({
-          where: { businessId, status: { in: ['OPEN', 'WAITING'] } },
-        }),
-      ]);
+    const [locations, recentMessages, stuckReminders, activeConversations] = await Promise.all([
+      this.prisma.location.findMany({
+        where: { businessId, isActive: true },
+        select: { whatsappConfig: true },
+      }),
+      this.prisma.message.findMany({
+        where: {
+          conversation: { businessId },
+          createdAt: { gte: sevenDaysAgo },
+          direction: 'OUTBOUND',
+        },
+        select: { deliveryStatus: true },
+      }),
+      this.prisma.reminder.count({
+        where: {
+          businessId,
+          status: 'PENDING',
+          scheduledAt: { lte: oneHourAgo },
+        },
+      }),
+      this.prisma.conversation.count({
+        where: { businessId, status: { in: ['OPEN', 'WAITING'] } },
+      }),
+    ]);
 
     const hasWhatsappConfig = locations.some((l) => l.whatsappConfig !== null);
     const hasSuccessfulMessages = recentMessages.some(

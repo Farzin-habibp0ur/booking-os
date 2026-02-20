@@ -31,9 +31,19 @@ jest.mock('@/lib/auth', () => ({
 jest.mock('@/lib/cn', () => ({ cn: (...args: any[]) => args.filter(Boolean).join(' ') }));
 jest.mock('lucide-react', () => {
   const icons = [
-    'LayoutDashboard', 'Building2', 'CreditCard', 'Package', 'Bot',
-    'MessageSquare', 'LifeBuoy', 'Shield', 'Activity', 'Settings',
-    'LogOut', 'Menu', 'X',
+    'LayoutDashboard',
+    'Building2',
+    'CreditCard',
+    'Package',
+    'Bot',
+    'MessageSquare',
+    'LifeBuoy',
+    'Shield',
+    'Activity',
+    'Settings',
+    'LogOut',
+    'Menu',
+    'X',
   ];
   const mocks: Record<string, any> = {};
   icons.forEach((name) => {
@@ -61,7 +71,11 @@ describe('ConsoleShell', () => {
   });
 
   it('renders all 10 nav items', () => {
-    render(<ConsoleShell><div>Content</div></ConsoleShell>);
+    render(
+      <ConsoleShell>
+        <div>Content</div>
+      </ConsoleShell>,
+    );
 
     expect(screen.getByText('Overview')).toBeInTheDocument();
     expect(screen.getByText('Businesses')).toBeInTheDocument();
@@ -76,14 +90,22 @@ describe('ConsoleShell', () => {
   });
 
   it('renders Platform Console header', () => {
-    render(<ConsoleShell><div>Content</div></ConsoleShell>);
+    render(
+      <ConsoleShell>
+        <div>Content</div>
+      </ConsoleShell>,
+    );
 
     expect(screen.getAllByText('Platform Console')).toHaveLength(2); // mobile + sidebar
     expect(screen.getByText('admin@businesscommandcentre.com')).toBeInTheDocument();
   });
 
   it('renders children', () => {
-    render(<ConsoleShell><div>Test Content</div></ConsoleShell>);
+    render(
+      <ConsoleShell>
+        <div>Test Content</div>
+      </ConsoleShell>,
+    );
 
     expect(screen.getByText('Test Content')).toBeInTheDocument();
   });
@@ -91,7 +113,11 @@ describe('ConsoleShell', () => {
   it('redirects non-SUPER_ADMIN to dashboard', () => {
     mockUser = { ...mockUser, role: 'ADMIN' };
 
-    render(<ConsoleShell><div>Content</div></ConsoleShell>);
+    render(
+      <ConsoleShell>
+        <div>Content</div>
+      </ConsoleShell>,
+    );
 
     expect(mockPush).toHaveBeenCalledWith('/dashboard');
   });
@@ -99,7 +125,11 @@ describe('ConsoleShell', () => {
   it('shows loading spinner when loading', () => {
     mockLoading = true;
 
-    const { container } = render(<ConsoleShell><div>Content</div></ConsoleShell>);
+    const { container } = render(
+      <ConsoleShell>
+        <div>Content</div>
+      </ConsoleShell>,
+    );
 
     expect(container.querySelector('.animate-spin')).toBeInTheDocument();
   });
@@ -107,7 +137,11 @@ describe('ConsoleShell', () => {
   it('calls logout on logout button click', async () => {
     const user = userEvent.setup();
 
-    render(<ConsoleShell><div>Content</div></ConsoleShell>);
+    render(
+      <ConsoleShell>
+        <div>Content</div>
+      </ConsoleShell>,
+    );
 
     await user.click(screen.getByText('Logout'));
 
@@ -117,7 +151,11 @@ describe('ConsoleShell', () => {
   it('highlights active nav item', () => {
     mockPathname.mockReturnValue('/console/businesses');
 
-    render(<ConsoleShell><div>Content</div></ConsoleShell>);
+    render(
+      <ConsoleShell>
+        <div>Content</div>
+      </ConsoleShell>,
+    );
 
     const businessLink = screen.getByText('Businesses').closest('a');
     expect(businessLink?.getAttribute('aria-current')).toBe('page');

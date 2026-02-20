@@ -215,9 +215,9 @@ describe('TokenService', () => {
         usedAt: new Date(), // Already consumed by concurrent request
       } as any);
 
-      await expect(
-        tokenService.validateAndConsume('abc123', 'PASSWORD_RESET'),
-      ).rejects.toThrow('Token has already been used');
+      await expect(tokenService.validateAndConsume('abc123', 'PASSWORD_RESET')).rejects.toThrow(
+        'Token has already been used',
+      );
     });
 
     it('throws when token is expired', async () => {
@@ -228,9 +228,9 @@ describe('TokenService', () => {
         expiresAt: new Date(Date.now() - 1000),
       } as any);
 
-      await expect(
-        tokenService.validateAndConsume('abc123', 'PASSWORD_RESET'),
-      ).rejects.toThrow('Token has expired');
+      await expect(tokenService.validateAndConsume('abc123', 'PASSWORD_RESET')).rejects.toThrow(
+        'Token has expired',
+      );
     });
 
     it('throws when token not found', async () => {
@@ -250,9 +250,9 @@ describe('TokenService', () => {
         usedAt: null,
       } as any);
 
-      await expect(
-        tokenService.validateAndConsume('abc123', 'PASSWORD_RESET'),
-      ).rejects.toThrow('Invalid token');
+      await expect(tokenService.validateAndConsume('abc123', 'PASSWORD_RESET')).rejects.toThrow(
+        'Invalid token',
+      );
     });
   });
 

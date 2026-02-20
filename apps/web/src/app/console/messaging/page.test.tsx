@@ -10,7 +10,9 @@ jest.mock('@/lib/api', () => ({
 jest.mock('next/link', () => ({
   __esModule: true,
   default: ({ children, href, ...props }: any) => (
-    <a href={href} {...props}>{children}</a>
+    <a href={href} {...props}>
+      {children}
+    </a>
   ),
 }));
 
@@ -19,7 +21,9 @@ jest.mock('next/navigation', () => ({
   usePathname: () => '/console/messaging',
 }));
 
-const { api } = require('@/lib/api');
+const { api } = jest.requireMock<{ api: jest.Mocked<(typeof import('@/lib/api'))['api']> }>(
+  '@/lib/api',
+);
 
 const mockDashboard = {
   messagesSent: 500,
@@ -38,8 +42,18 @@ const mockFailures = {
     { reason: 'RATE_LIMITED', count: 5 },
   ],
   impactedTenants: [
-    { businessId: 'biz1', businessName: 'Clinic A', failureCount: 8, lastFailure: '2026-02-20T10:00:00Z' },
-    { businessId: 'biz2', businessName: 'Clinic B', failureCount: 3, lastFailure: '2026-02-19T10:00:00Z' },
+    {
+      businessId: 'biz1',
+      businessName: 'Clinic A',
+      failureCount: 8,
+      lastFailure: '2026-02-20T10:00:00Z',
+    },
+    {
+      businessId: 'biz2',
+      businessName: 'Clinic B',
+      failureCount: 3,
+      lastFailure: '2026-02-19T10:00:00Z',
+    },
   ],
 };
 
@@ -74,10 +88,30 @@ const mockTenantStatuses = [
 const mockChecklist = {
   businessName: 'Clinic A',
   items: [
-    { id: 'whatsapp-config', label: 'WhatsApp configuration', status: 'ok', description: 'At least one location has WhatsApp configured' },
-    { id: 'recent-messages', label: 'Recent message delivery', status: 'ok', description: 'Messages delivered in the last 7 days' },
-    { id: 'stuck-reminders', label: 'Reminder processing', status: 'error', description: '3 reminders stuck' },
-    { id: 'active-conversations', label: 'Active conversations', status: 'warning', description: 'No active conversations' },
+    {
+      id: 'whatsapp-config',
+      label: 'WhatsApp configuration',
+      status: 'ok',
+      description: 'At least one location has WhatsApp configured',
+    },
+    {
+      id: 'recent-messages',
+      label: 'Recent message delivery',
+      status: 'ok',
+      description: 'Messages delivered in the last 7 days',
+    },
+    {
+      id: 'stuck-reminders',
+      label: 'Reminder processing',
+      status: 'error',
+      description: '3 reminders stuck',
+    },
+    {
+      id: 'active-conversations',
+      label: 'Active conversations',
+      status: 'warning',
+      description: 'No active conversations',
+    },
   ],
 };
 
@@ -126,7 +160,8 @@ describe('ConsoleMessagingPage', () => {
     api.get.mockImplementation((url: string) => {
       if (url.includes('/dashboard')) return Promise.resolve(mockDashboard);
       if (url.includes('/failures')) return Promise.resolve(mockFailures);
-      if (url.includes('/webhook-health')) return Promise.resolve({ ...mockWebhook, isHealthy: false });
+      if (url.includes('/webhook-health'))
+        return Promise.resolve({ ...mockWebhook, isHealthy: false });
       return Promise.resolve({});
     });
     render(<ConsoleMessagingPage />);
@@ -164,7 +199,8 @@ describe('ConsoleMessagingPage', () => {
   it('shows empty state when no messages', async () => {
     api.get.mockImplementation((url: string) => {
       if (url.includes('/dashboard')) return Promise.resolve({ ...mockDashboard, messagesSent: 0 });
-      if (url.includes('/failures')) return Promise.resolve({ topReasons: [], impactedTenants: [] });
+      if (url.includes('/failures'))
+        return Promise.resolve({ topReasons: [], impactedTenants: [] });
       if (url.includes('/webhook-health')) return Promise.resolve(mockWebhook);
       return Promise.resolve({});
     });

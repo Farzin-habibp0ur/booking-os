@@ -118,7 +118,10 @@ function timeAgo(dateStr: string): string {
 }
 
 function formatAction(action: string): string {
-  return action.replace(/_/g, ' ').toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
+  return action
+    .replace(/_/g, ' ')
+    .toLowerCase()
+    .replace(/^\w/, (c) => c.toUpperCase());
 }
 
 const SEVERITY_CONFIG = {
@@ -153,7 +156,10 @@ function RiskBar({ score }: { score: number }) {
           data-testid="risk-bar"
         />
       </div>
-      <span className={`text-xs font-medium ${score > 70 ? 'text-red-600' : 'text-amber-600'}`} data-testid="risk-score">
+      <span
+        className={`text-xs font-medium ${score > 70 ? 'text-red-600' : 'text-amber-600'}`}
+        data-testid="risk-score"
+      >
         {score}
       </span>
     </div>
@@ -165,13 +171,19 @@ export default function ConsoleOverviewPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get<OverviewData>('/admin/overview').then(setData).catch(console.error).finally(() => setLoading(false));
+    api
+      .get<OverviewData>('/admin/overview')
+      .then(setData)
+      .catch(console.error)
+      .finally(() => setLoading(false));
   }, []);
 
   if (loading) {
     return (
       <div className="p-6 md:p-8 max-w-7xl">
-        <h1 className="text-2xl font-serif font-bold text-slate-900 dark:text-white mb-6">Overview</h1>
+        <h1 className="text-2xl font-serif font-bold text-slate-900 dark:text-white mb-6">
+          Overview
+        </h1>
         <div className="flex items-center justify-center py-20">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sage-600" />
         </div>
@@ -182,7 +194,9 @@ export default function ConsoleOverviewPage() {
   if (!data) {
     return (
       <div className="p-6 md:p-8 max-w-7xl">
-        <h1 className="text-2xl font-serif font-bold text-slate-900 dark:text-white mb-6">Overview</h1>
+        <h1 className="text-2xl font-serif font-bold text-slate-900 dark:text-white mb-6">
+          Overview
+        </h1>
         <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-8 text-center">
           <p className="text-slate-500">Failed to load overview data.</p>
         </div>
@@ -192,12 +206,23 @@ export default function ConsoleOverviewPage() {
 
   return (
     <div className="p-6 md:p-8 max-w-7xl">
-      <h1 className="text-2xl font-serif font-bold text-slate-900 dark:text-white mb-6">Platform Overview</h1>
+      <h1 className="text-2xl font-serif font-bold text-slate-900 dark:text-white mb-6">
+        Platform Overview
+      </h1>
 
       {/* Top KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <StatCard label="Total Businesses" value={data.businesses.total} icon={Building2} href="/console/businesses" />
-        <StatCard label="Active Subscriptions" value={data.businesses.withActiveSubscription} icon={Activity} />
+        <StatCard
+          label="Total Businesses"
+          value={data.businesses.total}
+          icon={Building2}
+          href="/console/businesses"
+        />
+        <StatCard
+          label="Active Subscriptions"
+          value={data.businesses.withActiveSubscription}
+          icon={Activity}
+        />
         <StatCard label="Bookings Today" value={data.bookings.today} icon={Calendar} />
         <StatCard label="Total Customers" value={data.platform.totalCustomers} icon={Users} />
       </div>
@@ -206,15 +231,26 @@ export default function ConsoleOverviewPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <StatCard label="Bookings (7d)" value={data.bookings.last7d} icon={Calendar} />
         <StatCard label="Bookings (30d)" value={data.bookings.last30d} icon={Calendar} />
-        <StatCard label="Total Conversations" value={data.platform.totalConversations} icon={MessageSquare} />
+        <StatCard
+          label="Total Conversations"
+          value={data.platform.totalConversations}
+          icon={MessageSquare}
+        />
         <StatCard label="Agent Runs (7d)" value={data.platform.agentRuns7d} icon={Bot} />
       </div>
 
       {/* Attention Feed */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-5 mb-6" data-testid="attention-feed">
-        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-4">Attention Feed</h3>
+      <div
+        className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-5 mb-6"
+        data-testid="attention-feed"
+      >
+        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-4">
+          Attention Feed
+        </h3>
         {data.attentionItems.length === 0 ? (
-          <p className="text-sm text-slate-500 text-center py-4" data-testid="attention-empty">All clear</p>
+          <p className="text-sm text-slate-500 text-center py-4" data-testid="attention-empty">
+            All clear
+          </p>
         ) : (
           <div className="space-y-3">
             {data.attentionItems.map((item) => {
@@ -231,7 +267,10 @@ export default function ConsoleOverviewPage() {
                       <SeverityIcon size={16} className="mt-0.5 shrink-0" />
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${config.badge}`} data-testid="severity-badge">
+                          <span
+                            className={`text-xs font-medium px-2 py-0.5 rounded-full ${config.badge}`}
+                            data-testid="severity-badge"
+                          >
                             {item.severity}
                           </span>
                           <span className="text-sm font-medium text-slate-900 dark:text-white truncate">
@@ -258,10 +297,17 @@ export default function ConsoleOverviewPage() {
       </div>
 
       {/* Accounts at Risk */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-5 mb-6" data-testid="at-risk-section">
-        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-4">Accounts at Risk</h3>
+      <div
+        className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-5 mb-6"
+        data-testid="at-risk-section"
+      >
+        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-4">
+          Accounts at Risk
+        </h3>
         {data.accountsAtRisk.length === 0 ? (
-          <p className="text-sm text-slate-500 text-center py-4" data-testid="at-risk-empty">No accounts at risk</p>
+          <p className="text-sm text-slate-500 text-center py-4" data-testid="at-risk-empty">
+            No accounts at risk
+          </p>
         ) : (
           <div className="overflow-x-auto" data-testid="at-risk-table">
             <table className="w-full text-sm">
@@ -277,7 +323,10 @@ export default function ConsoleOverviewPage() {
               </thead>
               <tbody>
                 {data.accountsAtRisk.map((account) => (
-                  <tr key={account.businessId} className="border-b border-slate-50 dark:border-slate-800/50">
+                  <tr
+                    key={account.businessId}
+                    className="border-b border-slate-50 dark:border-slate-800/50"
+                  >
                     <td className="py-3 pr-4">
                       <Link
                         href={`/console/businesses/${account.businessId}`}
@@ -309,7 +358,9 @@ export default function ConsoleOverviewPage() {
       {/* Recent Activity */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-5">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">Recent Activity</h3>
+          <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+            Recent Activity
+          </h3>
           <Link href="/console/audit" className="text-sm text-sage-600 hover:text-sage-700">
             View all
           </Link>
@@ -326,7 +377,9 @@ export default function ConsoleOverviewPage() {
                     {formatAction(log.action)}
                   </span>
                 </div>
-                <span className="text-xs text-slate-400 whitespace-nowrap ml-2">{timeAgo(log.createdAt)}</span>
+                <span className="text-xs text-slate-400 whitespace-nowrap ml-2">
+                  {timeAgo(log.createdAt)}
+                </span>
               </div>
             ))}
           </div>
@@ -347,7 +400,9 @@ function StatusBadge({ status }: { status: string | null }) {
   };
 
   return (
-    <span className={`text-xs px-2 py-0.5 rounded-full ${styles[status] || 'bg-slate-100 text-slate-600'}`}>
+    <span
+      className={`text-xs px-2 py-0.5 rounded-full ${styles[status] || 'bg-slate-100 text-slate-600'}`}
+    >
       {status.replace('_', ' ')}
     </span>
   );

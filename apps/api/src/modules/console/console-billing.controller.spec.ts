@@ -232,11 +232,7 @@ describe('ConsoleBusinessBillingController', () => {
 
     await controller.reactivateSubscription('biz1', mockUser);
 
-    expect(service.reactivateSubscription).toHaveBeenCalledWith(
-      'biz1',
-      'admin1',
-      'admin@test.com',
-    );
+    expect(service.reactivateSubscription).toHaveBeenCalledWith('biz1', 'admin1', 'admin@test.com');
     expect(auditService.log).toHaveBeenCalledWith(
       'admin1',
       'admin@test.com',

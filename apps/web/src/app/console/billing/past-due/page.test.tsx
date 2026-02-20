@@ -10,7 +10,9 @@ jest.mock('next/navigation', () => ({
 }));
 
 jest.mock('next/link', () => ({ children, href, ...rest }: any) => (
-  <a href={href} {...rest}>{children}</a>
+  <a href={href} {...rest}>
+    {children}
+  </a>
 ));
 
 jest.mock('@/lib/auth', () => ({

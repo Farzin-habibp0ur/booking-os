@@ -32,9 +32,21 @@ const mockApi = api as jest.Mocked<typeof api>;
 
 jest.mock('lucide-react', () => {
   const icons = [
-    'Building2', 'Users', 'Calendar', 'MessageSquare', 'Bot',
-    'ShieldCheck', 'LifeBuoy', 'Activity', 'Eye', 'TrendingUp', 'TrendingDown',
-    'AlertTriangle', 'AlertCircle', 'Info', 'ArrowRight',
+    'Building2',
+    'Users',
+    'Calendar',
+    'MessageSquare',
+    'Bot',
+    'ShieldCheck',
+    'LifeBuoy',
+    'Activity',
+    'Eye',
+    'TrendingUp',
+    'TrendingDown',
+    'AlertTriangle',
+    'AlertCircle',
+    'Info',
+    'ArrowRight',
   ];
   const mocks: Record<string, any> = {};
   icons.forEach((name) => {
@@ -50,7 +62,14 @@ import ConsoleOverviewPage from './page';
 const mockOverviewData = {
   businesses: { total: 9, withActiveSubscription: 6, trial: 2, pastDue: 1, canceled: 0 },
   bookings: { total: 500, today: 12, last7d: 85, last30d: 300 },
-  platform: { totalStaff: 45, totalCustomers: 890, totalConversations: 234, totalAgentRuns: 50, agentRuns7d: 10, failedAgentRuns7d: 0 },
+  platform: {
+    totalStaff: 45,
+    totalCustomers: 890,
+    totalConversations: 234,
+    totalAgentRuns: 50,
+    agentRuns7d: 10,
+    failedAgentRuns7d: 0,
+  },
   support: { openCases: 3 },
   security: { activeViewAsSessions: 0 },
   recentAuditLogs: [

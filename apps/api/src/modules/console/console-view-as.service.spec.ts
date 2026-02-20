@@ -1,9 +1,5 @@
 import { Test } from '@nestjs/testing';
-import {
-  BadRequestException,
-  ConflictException,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConsoleViewAsService } from './console-view-as.service';
 import { PlatformAuditService } from './platform-audit.service';
@@ -123,7 +119,13 @@ describe('ConsoleViewAsService', () => {
 
     it('throws BadRequestException when reason is whitespace only', async () => {
       await expect(
-        service.startSession(superAdmin.sub, superAdmin.email, superAdmin.businessId, 'biz1', '   '),
+        service.startSession(
+          superAdmin.sub,
+          superAdmin.email,
+          superAdmin.businessId,
+          'biz1',
+          '   ',
+        ),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -131,7 +133,13 @@ describe('ConsoleViewAsService', () => {
       prisma.business.findUnique.mockResolvedValue(null);
 
       await expect(
-        service.startSession(superAdmin.sub, superAdmin.email, superAdmin.businessId, 'nonexistent', 'Reason'),
+        service.startSession(
+          superAdmin.sub,
+          superAdmin.email,
+          superAdmin.businessId,
+          'nonexistent',
+          'Reason',
+        ),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -143,7 +151,13 @@ describe('ConsoleViewAsService', () => {
       } as any);
 
       await expect(
-        service.startSession(superAdmin.sub, superAdmin.email, superAdmin.businessId, 'biz1', 'Reason'),
+        service.startSession(
+          superAdmin.sub,
+          superAdmin.email,
+          superAdmin.businessId,
+          'biz1',
+          'Reason',
+        ),
       ).rejects.toThrow(ConflictException);
     });
 

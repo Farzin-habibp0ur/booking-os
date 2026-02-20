@@ -11,10 +11,7 @@ describe('ConsoleAgentsService', () => {
   beforeEach(async () => {
     prisma = createMockPrisma();
     const module = await Test.createTestingModule({
-      providers: [
-        ConsoleAgentsService,
-        { provide: PrismaService, useValue: prisma },
-      ],
+      providers: [ConsoleAgentsService, { provide: PrismaService, useValue: prisma }],
     }).compile();
     service = module.get(ConsoleAgentsService);
   });
@@ -23,9 +20,36 @@ describe('ConsoleAgentsService', () => {
     it('returns aggregated stats from runs and feedback', async () => {
       const now = new Date();
       prisma.agentRun.findMany.mockResolvedValue([
-        { id: '1', businessId: 'biz1', agentType: 'WAITLIST', status: 'COMPLETED', cardsCreated: 3, startedAt: now, completedAt: now, error: null },
-        { id: '2', businessId: 'biz1', agentType: 'WAITLIST', status: 'FAILED', cardsCreated: 0, startedAt: now, completedAt: null, error: 'timeout' },
-        { id: '3', businessId: 'biz2', agentType: 'RETENTION', status: 'COMPLETED', cardsCreated: 2, startedAt: now, completedAt: now, error: null },
+        {
+          id: '1',
+          businessId: 'biz1',
+          agentType: 'WAITLIST',
+          status: 'COMPLETED',
+          cardsCreated: 3,
+          startedAt: now,
+          completedAt: now,
+          error: null,
+        },
+        {
+          id: '2',
+          businessId: 'biz1',
+          agentType: 'WAITLIST',
+          status: 'FAILED',
+          cardsCreated: 0,
+          startedAt: now,
+          completedAt: null,
+          error: 'timeout',
+        },
+        {
+          id: '3',
+          businessId: 'biz2',
+          agentType: 'RETENTION',
+          status: 'COMPLETED',
+          cardsCreated: 2,
+          startedAt: now,
+          completedAt: now,
+          error: null,
+        },
       ] as any);
       prisma.agentFeedback.findMany.mockResolvedValue([
         { id: 'f1', businessId: 'biz1', rating: 'HELPFUL', createdAt: now },
@@ -64,8 +88,22 @@ describe('ConsoleAgentsService', () => {
     it('groups stats by agent type correctly', async () => {
       const now = new Date();
       prisma.agentRun.findMany.mockResolvedValue([
-        { id: '1', businessId: 'biz1', agentType: 'DATA_HYGIENE', status: 'COMPLETED', cardsCreated: 5, startedAt: now },
-        { id: '2', businessId: 'biz1', agentType: 'DATA_HYGIENE', status: 'COMPLETED', cardsCreated: 3, startedAt: now },
+        {
+          id: '1',
+          businessId: 'biz1',
+          agentType: 'DATA_HYGIENE',
+          status: 'COMPLETED',
+          cardsCreated: 5,
+          startedAt: now,
+        },
+        {
+          id: '2',
+          businessId: 'biz1',
+          agentType: 'DATA_HYGIENE',
+          status: 'COMPLETED',
+          cardsCreated: 3,
+          startedAt: now,
+        },
       ] as any);
       prisma.agentFeedback.findMany.mockResolvedValue([]);
 
@@ -246,9 +284,7 @@ describe('ConsoleAgentsService', () => {
     it('throws NotFoundException for invalid business', async () => {
       prisma.business.findUnique.mockResolvedValue(null);
 
-      await expect(service.getTenantAgentStatus('invalid')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.getTenantAgentStatus('invalid')).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -269,9 +305,7 @@ describe('ConsoleAgentsService', () => {
     it('throws NotFoundException for invalid business', async () => {
       prisma.business.findUnique.mockResolvedValue(null);
 
-      await expect(service.pauseAllAgents('invalid')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.pauseAllAgents('invalid')).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -292,9 +326,7 @@ describe('ConsoleAgentsService', () => {
     it('throws NotFoundException for invalid business', async () => {
       prisma.business.findUnique.mockResolvedValue(null);
 
-      await expect(service.resumeAllAgents('invalid')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.resumeAllAgents('invalid')).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -367,11 +399,46 @@ describe('ConsoleAgentsService', () => {
   describe('getPlatformDefaults', () => {
     it('returns existing defaults', async () => {
       const defaults = [
-        { id: 'd1', agentType: 'DATA_HYGIENE', maxAutonomyLevel: 'SUGGEST', defaultEnabled: false, confidenceThreshold: 0.7, requiresReview: true },
-        { id: 'd2', agentType: 'QUOTE_FOLLOWUP', maxAutonomyLevel: 'AUTO', defaultEnabled: true, confidenceThreshold: 0.8, requiresReview: false },
-        { id: 'd3', agentType: 'RETENTION', maxAutonomyLevel: 'SUGGEST', defaultEnabled: false, confidenceThreshold: 0.7, requiresReview: true },
-        { id: 'd4', agentType: 'SCHEDULING_OPTIMIZER', maxAutonomyLevel: 'SUGGEST', defaultEnabled: false, confidenceThreshold: 0.7, requiresReview: true },
-        { id: 'd5', agentType: 'WAITLIST', maxAutonomyLevel: 'SUGGEST', defaultEnabled: false, confidenceThreshold: 0.7, requiresReview: true },
+        {
+          id: 'd1',
+          agentType: 'DATA_HYGIENE',
+          maxAutonomyLevel: 'SUGGEST',
+          defaultEnabled: false,
+          confidenceThreshold: 0.7,
+          requiresReview: true,
+        },
+        {
+          id: 'd2',
+          agentType: 'QUOTE_FOLLOWUP',
+          maxAutonomyLevel: 'AUTO',
+          defaultEnabled: true,
+          confidenceThreshold: 0.8,
+          requiresReview: false,
+        },
+        {
+          id: 'd3',
+          agentType: 'RETENTION',
+          maxAutonomyLevel: 'SUGGEST',
+          defaultEnabled: false,
+          confidenceThreshold: 0.7,
+          requiresReview: true,
+        },
+        {
+          id: 'd4',
+          agentType: 'SCHEDULING_OPTIMIZER',
+          maxAutonomyLevel: 'SUGGEST',
+          defaultEnabled: false,
+          confidenceThreshold: 0.7,
+          requiresReview: true,
+        },
+        {
+          id: 'd5',
+          agentType: 'WAITLIST',
+          maxAutonomyLevel: 'SUGGEST',
+          defaultEnabled: false,
+          confidenceThreshold: 0.7,
+          requiresReview: true,
+        },
       ];
       prisma.platformAgentDefault.findMany.mockResolvedValue(defaults as any);
 
@@ -382,15 +449,24 @@ describe('ConsoleAgentsService', () => {
 
     it('auto-seeds missing agent types', async () => {
       prisma.platformAgentDefault.findMany.mockResolvedValue([
-        { id: 'd1', agentType: 'WAITLIST', maxAutonomyLevel: 'SUGGEST', defaultEnabled: false, confidenceThreshold: 0.7, requiresReview: true },
+        {
+          id: 'd1',
+          agentType: 'WAITLIST',
+          maxAutonomyLevel: 'SUGGEST',
+          defaultEnabled: false,
+          confidenceThreshold: 0.7,
+          requiresReview: true,
+        },
       ] as any);
 
-      (prisma.platformAgentDefault.create as jest.Mock).mockImplementation(async ({ data }: any) => ({
-        id: `new-${data.agentType}`,
-        ...data,
-        updatedAt: new Date(),
-        updatedById: null,
-      }));
+      (prisma.platformAgentDefault.create as jest.Mock).mockImplementation(
+        async ({ data }: any) => ({
+          id: `new-${data.agentType}`,
+          ...data,
+          updatedAt: new Date(),
+          updatedById: null,
+        }),
+      );
 
       const result = await service.getPlatformDefaults();
 
@@ -424,12 +500,16 @@ describe('ConsoleAgentsService', () => {
 
     it('throws BadRequestException for unknown agent type', async () => {
       await expect(
-        service.updatePlatformDefault('UNKNOWN', {
-          maxAutonomyLevel: 'AUTO',
-          defaultEnabled: true,
-          confidenceThreshold: 0.8,
-          requiresReview: false,
-        }, 'admin1'),
+        service.updatePlatformDefault(
+          'UNKNOWN',
+          {
+            maxAutonomyLevel: 'AUTO',
+            defaultEnabled: true,
+            confidenceThreshold: 0.8,
+            requiresReview: false,
+          },
+          'admin1',
+        ),
       ).rejects.toThrow(BadRequestException);
     });
   });

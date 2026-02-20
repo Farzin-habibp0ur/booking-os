@@ -8,7 +8,9 @@ jest.mock('@/lib/api', () => ({
 
 jest.mock('next/link', () => {
   return ({ children, href, ...props }: any) => (
-    <a href={href} {...props}>{children}</a>
+    <a href={href} {...props}>
+      {children}
+    </a>
   );
 });
 

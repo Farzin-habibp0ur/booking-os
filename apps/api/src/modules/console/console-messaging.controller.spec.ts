@@ -43,7 +43,9 @@ describe('ConsoleMessagingController', () => {
     expect(service.getDashboard).toHaveBeenCalled();
     expect(result).toEqual(data);
     expect(auditService.log).toHaveBeenCalledWith(
-      'admin1', 'admin@test.com', 'MESSAGING_DASHBOARD_VIEW',
+      'admin1',
+      'admin@test.com',
+      'MESSAGING_DASHBOARD_VIEW',
     );
   });
 
@@ -56,7 +58,9 @@ describe('ConsoleMessagingController', () => {
     expect(service.getFailures).toHaveBeenCalled();
     expect(result).toEqual(data);
     expect(auditService.log).toHaveBeenCalledWith(
-      'admin1', 'admin@test.com', 'MESSAGING_FAILURES_VIEW',
+      'admin1',
+      'admin@test.com',
+      'MESSAGING_FAILURES_VIEW',
     );
   });
 
@@ -69,7 +73,9 @@ describe('ConsoleMessagingController', () => {
     expect(service.getWebhookHealth).toHaveBeenCalled();
     expect(result).toEqual(data);
     expect(auditService.log).toHaveBeenCalledWith(
-      'admin1', 'admin@test.com', 'MESSAGING_WEBHOOK_HEALTH_VIEW',
+      'admin1',
+      'admin@test.com',
+      'MESSAGING_WEBHOOK_HEALTH_VIEW',
     );
   });
 
@@ -82,7 +88,9 @@ describe('ConsoleMessagingController', () => {
     expect(service.getTenantStatus).toHaveBeenCalled();
     expect(result).toEqual(data);
     expect(auditService.log).toHaveBeenCalledWith(
-      'admin1', 'admin@test.com', 'MESSAGING_TENANT_STATUS_VIEW',
+      'admin1',
+      'admin@test.com',
+      'MESSAGING_TENANT_STATUS_VIEW',
     );
   });
 
@@ -95,7 +103,9 @@ describe('ConsoleMessagingController', () => {
     expect(service.getFixChecklist).toHaveBeenCalledWith('biz1');
     expect(result).toEqual(data);
     expect(auditService.log).toHaveBeenCalledWith(
-      'admin1', 'admin@test.com', 'MESSAGING_FIX_CHECKLIST_VIEW',
+      'admin1',
+      'admin@test.com',
+      'MESSAGING_FIX_CHECKLIST_VIEW',
       expect.objectContaining({ targetType: 'BUSINESS', targetId: 'biz1' }),
     );
   });

@@ -9,7 +9,9 @@ jest.mock('@/lib/api', () => ({
 jest.mock('next/link', () => ({
   __esModule: true,
   default: ({ children, href, ...props }: any) => (
-    <a href={href} {...props}>{children}</a>
+    <a href={href} {...props}>
+      {children}
+    </a>
   ),
 }));
 
@@ -31,7 +33,9 @@ import React from 'react';
 import { render, screen, waitFor, fireEvent, act } from '@testing-library/react';
 import ConsoleSettingsPage from './page';
 
-const { api } = require('@/lib/api');
+const { api } = jest.requireMock<{ api: jest.Mocked<(typeof import('@/lib/api'))['api']> }>(
+  '@/lib/api',
+);
 
 const mockSettings = {
   security: [

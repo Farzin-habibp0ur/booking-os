@@ -12,10 +12,7 @@ describe('ConsoleBusinessesService', () => {
     prisma = createMockPrisma();
 
     const module = await Test.createTestingModule({
-      providers: [
-        ConsoleBusinessesService,
-        { provide: PrismaService, useValue: prisma },
-      ],
+      providers: [ConsoleBusinessesService, { provide: PrismaService, useValue: prisma }],
     }).compile();
 
     service = module.get(ConsoleBusinessesService);
@@ -177,8 +174,22 @@ describe('ConsoleBusinessesService', () => {
     it('returns staff list for business', async () => {
       prisma.business.findUnique.mockResolvedValue({ id: 'biz1' } as any);
       prisma.staff.findMany.mockResolvedValue([
-        { id: 's1', name: 'Admin', email: 'admin@test.com', role: 'ADMIN', isActive: true, createdAt: new Date() },
-        { id: 's2', name: 'Agent', email: 'agent@test.com', role: 'AGENT', isActive: true, createdAt: new Date() },
+        {
+          id: 's1',
+          name: 'Admin',
+          email: 'admin@test.com',
+          role: 'ADMIN',
+          isActive: true,
+          createdAt: new Date(),
+        },
+        {
+          id: 's2',
+          name: 'Agent',
+          email: 'agent@test.com',
+          role: 'AGENT',
+          isActive: true,
+          createdAt: new Date(),
+        },
       ] as any);
 
       const result = await service.getStaff('biz1');

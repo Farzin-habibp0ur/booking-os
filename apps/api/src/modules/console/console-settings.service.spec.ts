@@ -11,10 +11,7 @@ describe('ConsoleSettingsService', () => {
   beforeEach(async () => {
     prisma = createMockPrisma();
     const module = await Test.createTestingModule({
-      providers: [
-        ConsoleSettingsService,
-        { provide: PrismaService, useValue: prisma },
-      ],
+      providers: [ConsoleSettingsService, { provide: PrismaService, useValue: prisma }],
     }).compile();
     service = module.get(ConsoleSettingsService);
   });
@@ -40,7 +37,9 @@ describe('ConsoleSettingsService', () => {
 
       const result = await service.getAllSettings();
 
-      const sessionTimeout = result.security.find((s: any) => s.key === 'security.sessionTimeoutMins');
+      const sessionTimeout = result.security.find(
+        (s: any) => s.key === 'security.sessionTimeoutMins',
+      );
       expect(sessionTimeout).toEqual({
         key: 'security.sessionTimeoutMins',
         value: 60,
@@ -50,12 +49,20 @@ describe('ConsoleSettingsService', () => {
 
     it('uses stored value when setting exists in DB', async () => {
       prisma.platformSetting.findMany.mockResolvedValue([
-        { id: '1', key: 'security.sessionTimeoutMins', value: 120, updatedAt: new Date(), updatedBy: 'admin1' },
+        {
+          id: '1',
+          key: 'security.sessionTimeoutMins',
+          value: 120,
+          updatedAt: new Date(),
+          updatedBy: 'admin1',
+        },
       ] as any);
 
       const result = await service.getAllSettings();
 
-      const sessionTimeout = result.security.find((s: any) => s.key === 'security.sessionTimeoutMins');
+      const sessionTimeout = result.security.find(
+        (s: any) => s.key === 'security.sessionTimeoutMins',
+      );
       expect(sessionTimeout).toEqual({
         key: 'security.sessionTimeoutMins',
         value: 120,
@@ -133,7 +140,11 @@ describe('ConsoleSettingsService', () => {
         updatedBy: 'admin1',
       } as any);
 
-      const result = await service.updateSetting('security.requireEmailVerification', false, 'admin1');
+      const result = await service.updateSetting(
+        'security.requireEmailVerification',
+        false,
+        'admin1',
+      );
 
       expect(result.value).toBe(false);
     });
@@ -163,9 +174,9 @@ describe('ConsoleSettingsService', () => {
     });
 
     it('throws NotFoundException for unknown key', async () => {
-      await expect(
-        service.updateSetting('unknown.key', 42, 'admin1'),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.updateSetting('unknown.key', 42, 'admin1')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('rejects wrong type for string setting', async () => {
@@ -250,7 +261,9 @@ describe('ConsoleSettingsService', () => {
     });
 
     it('throws NotFoundException for unknown key', async () => {
-      await expect(service.resetSetting('unknown.key', 'admin1')).rejects.toThrow(NotFoundException);
+      await expect(service.resetSetting('unknown.key', 'admin1')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 

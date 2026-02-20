@@ -173,9 +173,7 @@ export default function Business360Page() {
   const fetchStaff = useCallback(async () => {
     if (staff) return;
     try {
-      const data = await api.get<StaffMember[]>(
-        `/admin/businesses/${businessId}/staff`,
-      );
+      const data = await api.get<StaffMember[]>(`/admin/businesses/${businessId}/staff`);
       setStaff(data);
     } catch {
       setStaff([]);
@@ -434,7 +432,10 @@ export default function Business360Page() {
                 Health Status
               </h2>
               <div
-                className={cn('inline-flex items-center gap-2 px-3 py-1.5 rounded-xl', healthInfo.bg)}
+                className={cn(
+                  'inline-flex items-center gap-2 px-3 py-1.5 rounded-xl',
+                  healthInfo.bg,
+                )}
               >
                 <span
                   className={cn(
@@ -550,10 +551,7 @@ export default function Business360Page() {
               </thead>
               <tbody>
                 {staff.map((member) => (
-                  <tr
-                    key={member.id}
-                    className="border-b border-slate-50 dark:border-slate-800/50"
-                  >
+                  <tr key={member.id} className="border-b border-slate-50 dark:border-slate-800/50">
                     <td className="px-4 py-3 text-slate-900 dark:text-white font-medium">
                       {member.name}
                     </td>
@@ -574,9 +572,7 @@ export default function Business360Page() {
                       <span
                         className={cn(
                           'inline-block px-2 py-0.5 text-xs rounded-lg font-medium',
-                          member.isActive
-                            ? 'bg-sage-50 text-sage-700'
-                            : 'bg-red-50 text-red-700',
+                          member.isActive ? 'bg-sage-50 text-sage-700' : 'bg-red-50 text-red-700',
                         )}
                       >
                         {member.isActive ? 'Active' : 'Inactive'}
@@ -597,28 +593,40 @@ export default function Business360Page() {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sage-600 mx-auto" />
             </div>
           ) : !sub ? (
-            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-8 text-center" data-testid="no-subscription">
+            <div
+              className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-8 text-center"
+              data-testid="no-subscription"
+            >
               <CreditCard size={40} className="text-slate-300 mx-auto mb-3" />
               <p className="text-lg font-medium text-slate-900 dark:text-white">No subscription</p>
-              <p className="text-sm text-slate-400 mt-1">This business has no active subscription.</p>
+              <p className="text-sm text-slate-400 mt-1">
+                This business has no active subscription.
+              </p>
             </div>
           ) : (
             <>
               {/* Subscription Info */}
-              <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6" data-testid="subscription-info">
+              <div
+                className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6"
+                data-testid="subscription-info"
+              >
                 <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-4">
                   Subscription
                 </h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div>
                     <p className="text-xs text-slate-400">Plan</p>
-                    <span className={`inline-block mt-1 text-xs font-medium px-2 py-1 rounded-full capitalize ${STATUS_BADGE[sub.plan] || 'bg-slate-100 text-slate-700'}`}>
+                    <span
+                      className={`inline-block mt-1 text-xs font-medium px-2 py-1 rounded-full capitalize ${STATUS_BADGE[sub.plan] || 'bg-slate-100 text-slate-700'}`}
+                    >
                       {sub.plan}
                     </span>
                   </div>
                   <div>
                     <p className="text-xs text-slate-400">Status</p>
-                    <span className={`inline-block mt-1 text-xs font-medium px-2 py-1 rounded-full ${STATUS_BADGE[sub.status] || ''}`}>
+                    <span
+                      className={`inline-block mt-1 text-xs font-medium px-2 py-1 rounded-full ${STATUS_BADGE[sub.status] || ''}`}
+                    >
                       {sub.status.replace('_', ' ')}
                     </span>
                   </div>
@@ -630,7 +638,10 @@ export default function Business360Page() {
                   </div>
                   <div>
                     <p className="text-xs text-slate-400">Stripe ID</p>
-                    <p className="text-xs font-mono text-slate-500 mt-1 truncate" title={sub.stripeSubscriptionId}>
+                    <p
+                      className="text-xs font-mono text-slate-500 mt-1 truncate"
+                      title={sub.stripeSubscriptionId}
+                    >
                       {sub.stripeSubscriptionId}
                     </p>
                   </div>
@@ -644,7 +655,10 @@ export default function Business360Page() {
               </div>
 
               {/* Quick Actions */}
-              <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6" data-testid="billing-actions">
+              <div
+                className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6"
+                data-testid="billing-actions"
+              >
                 <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-4">
                   Actions
                 </h2>
@@ -686,7 +700,10 @@ export default function Business360Page() {
               </div>
 
               {/* Credits History */}
-              <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6" data-testid="credits-table">
+              <div
+                className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6"
+                data-testid="credits-table"
+              >
                 <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-4">
                   Credits
                 </h2>
@@ -696,22 +713,45 @@ export default function Business360Page() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-slate-100 dark:border-slate-800">
-                        <th className="text-left text-xs font-medium text-slate-400 uppercase px-2 py-2">Amount</th>
-                        <th className="text-left text-xs font-medium text-slate-400 uppercase px-2 py-2">Reason</th>
-                        <th className="text-left text-xs font-medium text-slate-400 uppercase px-2 py-2 hidden md:table-cell">Issued By</th>
-                        <th className="text-left text-xs font-medium text-slate-400 uppercase px-2 py-2 hidden md:table-cell">Date</th>
-                        <th className="text-left text-xs font-medium text-slate-400 uppercase px-2 py-2">Status</th>
+                        <th className="text-left text-xs font-medium text-slate-400 uppercase px-2 py-2">
+                          Amount
+                        </th>
+                        <th className="text-left text-xs font-medium text-slate-400 uppercase px-2 py-2">
+                          Reason
+                        </th>
+                        <th className="text-left text-xs font-medium text-slate-400 uppercase px-2 py-2 hidden md:table-cell">
+                          Issued By
+                        </th>
+                        <th className="text-left text-xs font-medium text-slate-400 uppercase px-2 py-2 hidden md:table-cell">
+                          Date
+                        </th>
+                        <th className="text-left text-xs font-medium text-slate-400 uppercase px-2 py-2">
+                          Status
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       {credits.map((c) => (
-                        <tr key={c.id} className="border-b border-slate-50 dark:border-slate-800/50">
-                          <td className="px-2 py-2 font-medium text-slate-900 dark:text-white">${c.amount}</td>
-                          <td className="px-2 py-2 text-slate-600 dark:text-slate-400 truncate max-w-[200px]">{c.reason}</td>
-                          <td className="px-2 py-2 text-slate-500 hidden md:table-cell">{c.issuedBy.name}</td>
-                          <td className="px-2 py-2 text-slate-500 hidden md:table-cell">{new Date(c.createdAt).toLocaleDateString()}</td>
+                        <tr
+                          key={c.id}
+                          className="border-b border-slate-50 dark:border-slate-800/50"
+                        >
+                          <td className="px-2 py-2 font-medium text-slate-900 dark:text-white">
+                            ${c.amount}
+                          </td>
+                          <td className="px-2 py-2 text-slate-600 dark:text-slate-400 truncate max-w-[200px]">
+                            {c.reason}
+                          </td>
+                          <td className="px-2 py-2 text-slate-500 hidden md:table-cell">
+                            {c.issuedBy.name}
+                          </td>
+                          <td className="px-2 py-2 text-slate-500 hidden md:table-cell">
+                            {new Date(c.createdAt).toLocaleDateString()}
+                          </td>
                           <td className="px-2 py-2">
-                            <span className={`text-xs px-2 py-0.5 rounded-full ${c.appliedAt ? 'bg-sage-50 text-sage-900' : 'bg-amber-50 text-amber-700'}`}>
+                            <span
+                              className={`text-xs px-2 py-0.5 rounded-full ${c.appliedAt ? 'bg-sage-50 text-sage-900' : 'bg-amber-50 text-amber-700'}`}
+                            >
                               {c.appliedAt ? 'Applied' : 'Pending'}
                             </span>
                           </td>
@@ -723,7 +763,10 @@ export default function Business360Page() {
               </div>
 
               {/* Invoice History */}
-              <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6" data-testid="invoices-table">
+              <div
+                className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6"
+                data-testid="invoices-table"
+              >
                 <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-4">
                   Invoices
                 </h2>
@@ -733,27 +776,47 @@ export default function Business360Page() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-slate-100 dark:border-slate-800">
-                        <th className="text-left text-xs font-medium text-slate-400 uppercase px-2 py-2">Date</th>
-                        <th className="text-left text-xs font-medium text-slate-400 uppercase px-2 py-2">Amount</th>
-                        <th className="text-left text-xs font-medium text-slate-400 uppercase px-2 py-2">Status</th>
-                        <th className="text-left text-xs font-medium text-slate-400 uppercase px-2 py-2">PDF</th>
+                        <th className="text-left text-xs font-medium text-slate-400 uppercase px-2 py-2">
+                          Date
+                        </th>
+                        <th className="text-left text-xs font-medium text-slate-400 uppercase px-2 py-2">
+                          Amount
+                        </th>
+                        <th className="text-left text-xs font-medium text-slate-400 uppercase px-2 py-2">
+                          Status
+                        </th>
+                        <th className="text-left text-xs font-medium text-slate-400 uppercase px-2 py-2">
+                          PDF
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       {invoices.map((inv) => (
-                        <tr key={inv.id} className="border-b border-slate-50 dark:border-slate-800/50">
+                        <tr
+                          key={inv.id}
+                          className="border-b border-slate-50 dark:border-slate-800/50"
+                        >
                           <td className="px-2 py-2 text-slate-600 dark:text-slate-400">
                             {inv.date ? new Date(inv.date).toLocaleDateString() : '—'}
                           </td>
-                          <td className="px-2 py-2 font-medium text-slate-900 dark:text-white">${inv.amount}</td>
+                          <td className="px-2 py-2 font-medium text-slate-900 dark:text-white">
+                            ${inv.amount}
+                          </td>
                           <td className="px-2 py-2">
-                            <span className={`text-xs px-2 py-0.5 rounded-full ${INVOICE_STATUS[inv.status] || 'bg-slate-100 text-slate-600'}`}>
+                            <span
+                              className={`text-xs px-2 py-0.5 rounded-full ${INVOICE_STATUS[inv.status] || 'bg-slate-100 text-slate-600'}`}
+                            >
                               {inv.status}
                             </span>
                           </td>
                           <td className="px-2 py-2">
                             {inv.pdfUrl ? (
-                              <a href={inv.pdfUrl} target="_blank" rel="noreferrer" className="text-sage-600 hover:text-sage-700 text-xs font-medium">
+                              <a
+                                href={inv.pdfUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-sage-600 hover:text-sage-700 text-xs font-medium"
+                              >
                                 Download
                               </a>
                             ) : (
@@ -777,8 +840,15 @@ export default function Business360Page() {
           currentPlan={sub.plan}
           businessName={business.name}
           businessId={businessId}
-          onClose={() => { setShowChangePlan(false); setMutationError(''); }}
-          onSuccess={() => { setShowChangePlan(false); refreshBilling(); fetchSummary(); }}
+          onClose={() => {
+            setShowChangePlan(false);
+            setMutationError('');
+          }}
+          onSuccess={() => {
+            setShowChangePlan(false);
+            refreshBilling();
+            fetchSummary();
+          }}
         />
       )}
 
@@ -787,8 +857,14 @@ export default function Business360Page() {
         <IssueCreditModal
           businessId={businessId}
           businessName={business.name}
-          onClose={() => { setShowCredit(false); setMutationError(''); }}
-          onSuccess={() => { setShowCredit(false); refreshBilling(); }}
+          onClose={() => {
+            setShowCredit(false);
+            setMutationError('');
+          }}
+          onSuccess={() => {
+            setShowCredit(false);
+            refreshBilling();
+          }}
         />
       )}
 
@@ -798,8 +874,15 @@ export default function Business360Page() {
           businessId={businessId}
           businessName={business.name}
           periodEnd={sub?.currentPeriodEnd || ''}
-          onClose={() => { setShowCancel(false); setMutationError(''); }}
-          onSuccess={() => { setShowCancel(false); refreshBilling(); fetchSummary(); }}
+          onClose={() => {
+            setShowCancel(false);
+            setMutationError('');
+          }}
+          onSuccess={() => {
+            setShowCancel(false);
+            refreshBilling();
+            fetchSummary();
+          }}
         />
       )}
 
@@ -808,8 +891,14 @@ export default function Business360Page() {
         <ReactivateModal
           businessId={businessId}
           businessName={business.name}
-          onClose={() => { setShowReactivate(false); }}
-          onSuccess={() => { setShowReactivate(false); refreshBilling(); fetchSummary(); }}
+          onClose={() => {
+            setShowReactivate(false);
+          }}
+          onSuccess={() => {
+            setShowReactivate(false);
+            refreshBilling();
+            fetchSummary();
+          }}
         />
       )}
     </div>
@@ -818,7 +907,13 @@ export default function Business360Page() {
 
 // ─── Modals ──────────────────────────────────────────────
 
-function ChangePlanModal({ currentPlan, businessName, businessId, onClose, onSuccess }: {
+function ChangePlanModal({
+  currentPlan,
+  businessName,
+  businessId,
+  onClose,
+  onSuccess,
+}: {
   currentPlan: string;
   businessName: string;
   businessId: string;
@@ -845,22 +940,34 @@ function ChangePlanModal({ currentPlan, businessName, businessId, onClose, onSuc
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" data-testid="change-plan-modal">
+    <div
+      className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
+      data-testid="change-plan-modal"
+    >
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl max-w-lg w-full p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Change Plan</h2>
-          <button onClick={onClose} data-testid="modal-close"><X size={18} /></button>
+          <button onClick={onClose} data-testid="modal-close">
+            <X size={18} />
+          </button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="text-sm text-slate-600 dark:text-slate-400 block mb-2">New Plan</label>
+            <label className="text-sm text-slate-600 dark:text-slate-400 block mb-2">
+              New Plan
+            </label>
             <div className="space-y-2">
               {['basic', 'pro'].map((plan) => (
-                <label key={plan} className={cn(
-                  'flex items-center gap-3 p-3 rounded-xl border cursor-pointer',
-                  plan === newPlan ? 'border-sage-500 bg-sage-50 dark:bg-sage-900/20' : 'border-slate-200 dark:border-slate-700',
-                  plan === currentPlan && 'opacity-50 cursor-not-allowed',
-                )}>
+                <label
+                  key={plan}
+                  className={cn(
+                    'flex items-center gap-3 p-3 rounded-xl border cursor-pointer',
+                    plan === newPlan
+                      ? 'border-sage-500 bg-sage-50 dark:bg-sage-900/20'
+                      : 'border-slate-200 dark:border-slate-700',
+                    plan === currentPlan && 'opacity-50 cursor-not-allowed',
+                  )}
+                >
                   <input
                     type="radio"
                     name="plan"
@@ -877,11 +984,14 @@ function ChangePlanModal({ currentPlan, businessName, businessId, onClose, onSuc
             </div>
           </div>
           <p className="text-sm text-slate-500 p-3 bg-slate-50 dark:bg-slate-800 rounded-xl">
-            Plan will change from <strong className="capitalize">{currentPlan}</strong> (${PLAN_PRICES[currentPlan]}/mo) to{' '}
-            <strong className="capitalize">{newPlan}</strong> (${PLAN_PRICES[newPlan]}/mo). Prorated charges will apply.
+            Plan will change from <strong className="capitalize">{currentPlan}</strong> ($
+            {PLAN_PRICES[currentPlan]}/mo) to <strong className="capitalize">{newPlan}</strong> ($
+            {PLAN_PRICES[newPlan]}/mo). Prorated charges will apply.
           </p>
           <div>
-            <label className="text-sm text-slate-600 dark:text-slate-400 block mb-1">Reason *</label>
+            <label className="text-sm text-slate-600 dark:text-slate-400 block mb-1">
+              Reason *
+            </label>
             <textarea
               value={reason}
               onChange={(e) => setReason(e.target.value)}
@@ -894,7 +1004,13 @@ function ChangePlanModal({ currentPlan, businessName, businessId, onClose, onSuc
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex justify-end gap-3 pt-2">
-            <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-slate-600 hover:text-slate-800">Cancel</button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-sm text-slate-600 hover:text-slate-800"
+            >
+              Cancel
+            </button>
             <button
               type="submit"
               disabled={submitting || !reason.trim()}
@@ -910,7 +1026,12 @@ function ChangePlanModal({ currentPlan, businessName, businessId, onClose, onSuc
   );
 }
 
-function IssueCreditModal({ businessId, businessName, onClose, onSuccess }: {
+function IssueCreditModal({
+  businessId,
+  businessName,
+  onClose,
+  onSuccess,
+}: {
   businessId: string;
   businessName: string;
   onClose: () => void;
@@ -941,15 +1062,22 @@ function IssueCreditModal({ businessId, businessName, onClose, onSuccess }: {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" data-testid="credit-modal">
+    <div
+      className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
+      data-testid="credit-modal"
+    >
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl max-w-lg w-full p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Issue Credit</h2>
-          <button onClick={onClose}><X size={18} /></button>
+          <button onClick={onClose}>
+            <X size={18} />
+          </button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="text-sm text-slate-600 dark:text-slate-400 block mb-1">Amount ($) *</label>
+            <label className="text-sm text-slate-600 dark:text-slate-400 block mb-1">
+              Amount ($) *
+            </label>
             <input
               type="number"
               min="1"
@@ -963,7 +1091,9 @@ function IssueCreditModal({ businessId, businessName, onClose, onSuccess }: {
             />
           </div>
           <div>
-            <label className="text-sm text-slate-600 dark:text-slate-400 block mb-1">Reason *</label>
+            <label className="text-sm text-slate-600 dark:text-slate-400 block mb-1">
+              Reason *
+            </label>
             <textarea
               value={reason}
               onChange={(e) => setReason(e.target.value)}
@@ -975,7 +1105,9 @@ function IssueCreditModal({ businessId, businessName, onClose, onSuccess }: {
             />
           </div>
           <div>
-            <label className="text-sm text-slate-600 dark:text-slate-400 block mb-1">Expires (optional)</label>
+            <label className="text-sm text-slate-600 dark:text-slate-400 block mb-1">
+              Expires (optional)
+            </label>
             <input
               type="date"
               value={expiresAt}
@@ -985,7 +1117,13 @@ function IssueCreditModal({ businessId, businessName, onClose, onSuccess }: {
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex justify-end gap-3 pt-2">
-            <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-slate-600 hover:text-slate-800">Cancel</button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-sm text-slate-600 hover:text-slate-800"
+            >
+              Cancel
+            </button>
             <button
               type="submit"
               disabled={submitting || !amount || !reason.trim()}
@@ -1001,7 +1139,13 @@ function IssueCreditModal({ businessId, businessName, onClose, onSuccess }: {
   );
 }
 
-function CancelModal({ businessId, businessName, periodEnd, onClose, onSuccess }: {
+function CancelModal({
+  businessId,
+  businessName,
+  periodEnd,
+  onClose,
+  onSuccess,
+}: {
   businessId: string;
   businessName: string;
   periodEnd: string;
@@ -1031,11 +1175,16 @@ function CancelModal({ businessId, businessName, periodEnd, onClose, onSuccess }
   const canSubmit = reason.trim() && confirmation === businessName;
 
   return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" data-testid="cancel-modal">
+    <div
+      className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
+      data-testid="cancel-modal"
+    >
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl max-w-lg w-full p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-red-700">Cancel Subscription</h2>
-          <button onClick={onClose}><X size={18} /></button>
+          <button onClick={onClose}>
+            <X size={18} />
+          </button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-xl text-sm text-red-700 dark:text-red-400 flex items-start gap-2">
@@ -1049,7 +1198,9 @@ function CancelModal({ businessId, businessName, periodEnd, onClose, onSuccess }
             </p>
           </div>
           <div>
-            <label className="text-sm text-slate-600 dark:text-slate-400 block mb-1">Reason *</label>
+            <label className="text-sm text-slate-600 dark:text-slate-400 block mb-1">
+              Reason *
+            </label>
             <textarea
               value={reason}
               onChange={(e) => setReason(e.target.value)}
@@ -1093,7 +1244,13 @@ function CancelModal({ businessId, businessName, periodEnd, onClose, onSuccess }
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex justify-end gap-3 pt-2">
-            <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-slate-600 hover:text-slate-800">Go Back</button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-sm text-slate-600 hover:text-slate-800"
+            >
+              Go Back
+            </button>
             <button
               type="submit"
               disabled={submitting || !canSubmit}
@@ -1109,7 +1266,12 @@ function CancelModal({ businessId, businessName, periodEnd, onClose, onSuccess }
   );
 }
 
-function ReactivateModal({ businessId, businessName, onClose, onSuccess }: {
+function ReactivateModal({
+  businessId,
+  businessName,
+  onClose,
+  onSuccess,
+}: {
   businessId: string;
   businessName: string;
   onClose: () => void;
@@ -1132,18 +1294,31 @@ function ReactivateModal({ businessId, businessName, onClose, onSuccess }: {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" data-testid="reactivate-modal">
+    <div
+      className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
+      data-testid="reactivate-modal"
+    >
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl max-w-md w-full p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Reactivate Subscription</h2>
-          <button onClick={onClose}><X size={18} /></button>
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+            Reactivate Subscription
+          </h2>
+          <button onClick={onClose}>
+            <X size={18} />
+          </button>
         </div>
         <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
-          Reactivate <strong>{businessName}</strong>&apos;s subscription? This will resume billing at the next period.
+          Reactivate <strong>{businessName}</strong>&apos;s subscription? This will resume billing
+          at the next period.
         </p>
         {error && <p className="text-sm text-red-600 mb-4">{error}</p>}
         <div className="flex justify-end gap-3">
-          <button onClick={onClose} className="px-4 py-2 text-sm text-slate-600 hover:text-slate-800">Cancel</button>
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-sm text-slate-600 hover:text-slate-800"
+          >
+            Cancel
+          </button>
           <button
             onClick={handleConfirm}
             disabled={submitting}

@@ -8,7 +8,9 @@ jest.mock('@/lib/api', () => ({
 
 jest.mock('next/link', () => {
   return ({ children, href, ...props }: any) => (
-    <a href={href} {...props}>{children}</a>
+    <a href={href} {...props}>
+      {children}
+    </a>
   );
 });
 
@@ -158,26 +160,24 @@ describe('SkillsCatalogPage', () => {
   });
 
   it('expands skill detail row when clicking a skill', async () => {
-    (api.get as jest.Mock)
-      .mockResolvedValueOnce(mockCatalog)
-      .mockResolvedValueOnce({
-        agentType: 'RETENTION',
-        name: 'Patient Retention',
-        category: 'proactive',
-        totalBusinesses: 5,
-        enabledCount: 3,
-        configs: [
-          {
-            businessId: 'biz1',
-            businessName: 'Glow Clinic',
-            businessSlug: 'glow-clinic',
-            verticalPack: 'aesthetic',
-            isEnabled: true,
-            autonomyLevel: 'SUGGEST',
-            createdAt: '2026-02-20T10:00:00Z',
-          },
-        ],
-      });
+    (api.get as jest.Mock).mockResolvedValueOnce(mockCatalog).mockResolvedValueOnce({
+      agentType: 'RETENTION',
+      name: 'Patient Retention',
+      category: 'proactive',
+      totalBusinesses: 5,
+      enabledCount: 3,
+      configs: [
+        {
+          businessId: 'biz1',
+          businessName: 'Glow Clinic',
+          businessSlug: 'glow-clinic',
+          verticalPack: 'aesthetic',
+          isEnabled: true,
+          autonomyLevel: 'SUGGEST',
+          createdAt: '2026-02-20T10:00:00Z',
+        },
+      ],
+    });
 
     render(<SkillsCatalogPage />);
 

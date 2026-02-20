@@ -11,10 +11,7 @@ describe('ConsoleAuditService', () => {
     prisma = createMockPrisma();
 
     const module = await Test.createTestingModule({
-      providers: [
-        ConsoleAuditService,
-        { provide: PrismaService, useValue: prisma },
-      ],
+      providers: [ConsoleAuditService, { provide: PrismaService, useValue: prisma }],
     }).compile();
 
     service = module.get(ConsoleAuditService);

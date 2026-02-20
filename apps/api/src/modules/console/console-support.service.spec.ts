@@ -12,10 +12,7 @@ describe('ConsoleSupportService', () => {
     prisma = createMockPrisma();
 
     const module = await Test.createTestingModule({
-      providers: [
-        ConsoleSupportService,
-        { provide: PrismaService, useValue: prisma },
-      ],
+      providers: [ConsoleSupportService, { provide: PrismaService, useValue: prisma }],
     }).compile();
 
     service = module.get(ConsoleSupportService);
@@ -68,9 +65,7 @@ describe('ConsoleSupportService', () => {
         businessName: 'Glow Clinic',
         subject: 'Login issue',
         status: 'open',
-        notes: [
-          { id: 'note1', content: 'Investigating', createdAt: new Date() },
-        ],
+        notes: [{ id: 'note1', content: 'Investigating', createdAt: new Date() }],
         business: { id: 'biz1', name: 'Glow Clinic', slug: 'glow-clinic' },
       };
       prisma.supportCase.findUnique.mockResolvedValue(mockCase as any);

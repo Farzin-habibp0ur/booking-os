@@ -442,12 +442,10 @@ describe('ApiClient', () => {
     });
 
     it('retries network errors for getText', async () => {
-      mockFetch
-        .mockRejectedValueOnce(new TypeError('Failed to fetch'))
-        .mockResolvedValueOnce({
-          ok: true,
-          text: async () => 'csv,data',
-        });
+      mockFetch.mockRejectedValueOnce(new TypeError('Failed to fetch')).mockResolvedValueOnce({
+        ok: true,
+        text: async () => 'csv,data',
+      });
 
       const promise = api.getText('/export');
       await jest.advanceTimersByTimeAsync(1100);
@@ -458,12 +456,10 @@ describe('ApiClient', () => {
     });
 
     it('retries network errors for upload', async () => {
-      mockFetch
-        .mockRejectedValueOnce(new TypeError('Failed to fetch'))
-        .mockResolvedValueOnce({
-          ok: true,
-          json: async () => ({ url: 'uploaded.jpg' }),
-        });
+      mockFetch.mockRejectedValueOnce(new TypeError('Failed to fetch')).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ url: 'uploaded.jpg' }),
+      });
 
       const formData = new FormData();
       const promise = api.upload('/upload', formData);

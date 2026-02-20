@@ -87,8 +87,13 @@ export default function SubscriptionsPage() {
   if (error && !data) {
     return (
       <div className="p-6 md:p-8 max-w-6xl">
-        <h1 className="text-2xl font-serif font-bold text-slate-900 dark:text-white mb-6">Subscriptions</h1>
-        <div className="bg-red-50 dark:bg-red-900/20 rounded-2xl p-6 text-red-700 dark:text-red-400" data-testid="subscriptions-error">
+        <h1 className="text-2xl font-serif font-bold text-slate-900 dark:text-white mb-6">
+          Subscriptions
+        </h1>
+        <div
+          className="bg-red-50 dark:bg-red-900/20 rounded-2xl p-6 text-red-700 dark:text-red-400"
+          data-testid="subscriptions-error"
+        >
           {error}
         </div>
       </div>
@@ -99,12 +104,16 @@ export default function SubscriptionsPage() {
     <div className="p-6 md:p-8 max-w-6xl">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-slate-400 mb-4">
-        <Link href="/console/billing" className="hover:text-slate-600">Billing</Link>
+        <Link href="/console/billing" className="hover:text-slate-600">
+          Billing
+        </Link>
         <ChevronRight size={14} />
         <span className="text-slate-900 dark:text-white">Subscriptions</span>
       </div>
 
-      <h1 className="text-2xl font-serif font-bold text-slate-900 dark:text-white mb-6">Subscriptions</h1>
+      <h1 className="text-2xl font-serif font-bold text-slate-900 dark:text-white mb-6">
+        Subscriptions
+      </h1>
 
       {/* Filters */}
       <div className="flex flex-col md:flex-row gap-3 mb-4">
@@ -121,7 +130,10 @@ export default function SubscriptionsPage() {
         </div>
         <select
           value={planFilter}
-          onChange={(e) => { setPlanFilter(e.target.value); setPage(1); }}
+          onChange={(e) => {
+            setPlanFilter(e.target.value);
+            setPage(1);
+          }}
           className="px-3 py-2 bg-slate-50 dark:bg-slate-800 rounded-xl text-sm border-transparent focus:ring-2 focus:ring-sage-500 outline-none"
           data-testid="plan-filter"
         >
@@ -131,7 +143,10 @@ export default function SubscriptionsPage() {
         </select>
         <select
           value={statusFilter}
-          onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+          onChange={(e) => {
+            setStatusFilter(e.target.value);
+            setPage(1);
+          }}
           className="px-3 py-2 bg-slate-50 dark:bg-slate-800 rounded-xl text-sm border-transparent focus:ring-2 focus:ring-sage-500 outline-none"
           data-testid="status-filter"
         >
@@ -151,9 +166,14 @@ export default function SubscriptionsPage() {
           ))}
         </div>
       ) : !data || data.items.length === 0 ? (
-        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-8 text-center" data-testid="subscriptions-empty">
+        <div
+          className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-8 text-center"
+          data-testid="subscriptions-empty"
+        >
           <CreditCard size={40} className="text-slate-300 mx-auto mb-3" />
-          <p className="text-lg font-medium text-slate-900 dark:text-white">No subscriptions found</p>
+          <p className="text-lg font-medium text-slate-900 dark:text-white">
+            No subscriptions found
+          </p>
           <p className="text-sm text-slate-400 mt-1">Try adjusting your filters.</p>
         </div>
       ) : (
@@ -162,12 +182,24 @@ export default function SubscriptionsPage() {
             <table className="w-full" data-testid="subscriptions-table">
               <thead>
                 <tr className="border-b border-slate-100 dark:border-slate-800">
-                  <th className="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-4 py-3">Business</th>
-                  <th className="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-4 py-3">Plan</th>
-                  <th className="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-4 py-3">Status</th>
-                  <th className="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-4 py-3 hidden md:table-cell">Owner</th>
-                  <th className="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-4 py-3 hidden md:table-cell">Period End</th>
-                  <th className="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-4 py-3 hidden lg:table-cell">Created</th>
+                  <th className="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-4 py-3">
+                    Business
+                  </th>
+                  <th className="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-4 py-3">
+                    Plan
+                  </th>
+                  <th className="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-4 py-3">
+                    Status
+                  </th>
+                  <th className="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-4 py-3 hidden md:table-cell">
+                    Owner
+                  </th>
+                  <th className="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-4 py-3 hidden md:table-cell">
+                    Period End
+                  </th>
+                  <th className="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-4 py-3 hidden lg:table-cell">
+                    Created
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -179,16 +211,22 @@ export default function SubscriptionsPage() {
                     data-testid={`sub-row-${item.id}`}
                   >
                     <td className="px-4 py-3">
-                      <p className="text-sm font-medium text-slate-900 dark:text-white">{item.businessName}</p>
+                      <p className="text-sm font-medium text-slate-900 dark:text-white">
+                        {item.businessName}
+                      </p>
                       <p className="text-xs text-slate-400">{item.businessSlug}</p>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`text-xs font-medium px-2 py-1 rounded-full capitalize ${PLAN_COLORS[item.plan] || ''}`}>
+                      <span
+                        className={`text-xs font-medium px-2 py-1 rounded-full capitalize ${PLAN_COLORS[item.plan] || ''}`}
+                      >
                         {item.plan}
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`text-xs font-medium px-2 py-1 rounded-full ${STATUS_COLORS[item.status] || ''}`}>
+                      <span
+                        className={`text-xs font-medium px-2 py-1 rounded-full ${STATUS_COLORS[item.status] || ''}`}
+                      >
                         {item.status.replace('_', ' ')}
                       </span>
                     </td>

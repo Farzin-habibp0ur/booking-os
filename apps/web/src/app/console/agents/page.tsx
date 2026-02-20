@@ -169,7 +169,9 @@ export default function ConsoleAgentsPage() {
     async (reason: string) => {
       if (!tenantStatus) return;
       try {
-        await api.post(`/admin/agents-console/tenant/${tenantStatus.businessId}/pause-all`, { reason });
+        await api.post(`/admin/agents-console/tenant/${tenantStatus.businessId}/pause-all`, {
+          reason,
+        });
         setConfirmModal(null);
         setConfirmReason('');
         searchTenant();
@@ -184,7 +186,9 @@ export default function ConsoleAgentsPage() {
     async (reason: string) => {
       if (!tenantStatus) return;
       try {
-        await api.post(`/admin/agents-console/tenant/${tenantStatus.businessId}/resume-all`, { reason });
+        await api.post(`/admin/agents-console/tenant/${tenantStatus.businessId}/resume-all`, {
+          reason,
+        });
         setConfirmModal(null);
         setConfirmReason('');
         searchTenant();
@@ -196,7 +200,11 @@ export default function ConsoleAgentsPage() {
   );
 
   const handleUpdateAgent = useCallback(
-    async (agentType: string, data: { isEnabled?: boolean; autonomyLevel?: string }, reason: string) => {
+    async (
+      agentType: string,
+      data: { isEnabled?: boolean; autonomyLevel?: string },
+      reason: string,
+    ) => {
       if (!tenantStatus) return;
       try {
         await api.post(
@@ -262,7 +270,10 @@ export default function ConsoleAgentsPage() {
       )}
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-6 bg-slate-100 dark:bg-slate-800 rounded-xl p-1" data-testid="agents-tabs">
+      <div
+        className="flex gap-1 mb-6 bg-slate-100 dark:bg-slate-800 rounded-xl p-1"
+        data-testid="agents-tabs"
+      >
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -289,42 +300,65 @@ export default function ConsoleAgentsPage() {
                 <Bot size={14} className="text-lavender-600" />
                 <span className="text-xs text-slate-400 uppercase tracking-wider">Runs (7d)</span>
               </div>
-              <p className="text-2xl font-serif font-bold text-slate-900 dark:text-white" data-testid="total-runs">
+              <p
+                className="text-2xl font-serif font-bold text-slate-900 dark:text-white"
+                data-testid="total-runs"
+              >
                 {performance.totalRuns}
               </p>
             </div>
             <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-4">
               <div className="flex items-center gap-2 mb-2">
                 <CheckCircle size={14} className="text-sage-600" />
-                <span className="text-xs text-slate-400 uppercase tracking-wider">Success Rate</span>
+                <span className="text-xs text-slate-400 uppercase tracking-wider">
+                  Success Rate
+                </span>
               </div>
-              <p className="text-2xl font-serif font-bold text-slate-900 dark:text-white" data-testid="success-rate">
+              <p
+                className="text-2xl font-serif font-bold text-slate-900 dark:text-white"
+                data-testid="success-rate"
+              >
                 {performance.successRate}%
               </p>
             </div>
             <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-4">
               <div className="flex items-center gap-2 mb-2">
                 <BarChart3 size={14} className="text-sage-600" />
-                <span className="text-xs text-slate-400 uppercase tracking-wider">Cards Created</span>
+                <span className="text-xs text-slate-400 uppercase tracking-wider">
+                  Cards Created
+                </span>
               </div>
-              <p className="text-2xl font-serif font-bold text-slate-900 dark:text-white" data-testid="cards-created">
+              <p
+                className="text-2xl font-serif font-bold text-slate-900 dark:text-white"
+                data-testid="cards-created"
+              >
                 {performance.cardsCreated}
               </p>
             </div>
             <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-4">
               <div className="flex items-center gap-2 mb-2">
                 <Bot size={14} className="text-lavender-600" />
-                <span className="text-xs text-slate-400 uppercase tracking-wider">Helpful Rate</span>
+                <span className="text-xs text-slate-400 uppercase tracking-wider">
+                  Helpful Rate
+                </span>
               </div>
-              <p className="text-2xl font-serif font-bold text-slate-900 dark:text-white" data-testid="helpful-rate">
+              <p
+                className="text-2xl font-serif font-bold text-slate-900 dark:text-white"
+                data-testid="helpful-rate"
+              >
                 {performance.feedbackHelpfulRate}%
               </p>
             </div>
           </div>
 
           {/* Performance by Agent Type */}
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6 mb-6" data-testid="performance-table">
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Performance by Agent Type</h2>
+          <div
+            className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6 mb-6"
+            data-testid="performance-table"
+          >
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+              Performance by Agent Type
+            </h2>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
@@ -340,14 +374,25 @@ export default function ConsoleAgentsPage() {
                 </thead>
                 <tbody>
                   {performance.byAgentType.map((agent) => (
-                    <tr key={agent.agentType} className="border-b border-slate-50 dark:border-slate-800/50">
-                      <td className="py-3 pr-4 font-medium text-slate-900 dark:text-white">{agent.agentType}</td>
+                    <tr
+                      key={agent.agentType}
+                      className="border-b border-slate-50 dark:border-slate-800/50"
+                    >
+                      <td className="py-3 pr-4 font-medium text-slate-900 dark:text-white">
+                        {agent.agentType}
+                      </td>
                       <td className="py-3 pr-4 text-slate-600 dark:text-slate-300">{agent.runs}</td>
                       <td className="py-3 pr-4 text-sage-600">{agent.completed}</td>
                       <td className="py-3 pr-4 text-red-500">{agent.failed}</td>
-                      <td className="py-3 pr-4 text-slate-600 dark:text-slate-300">{agent.successRate}%</td>
-                      <td className="py-3 pr-4 text-slate-600 dark:text-slate-300">{agent.cardsCreated}</td>
-                      <td className="py-3 text-slate-600 dark:text-slate-300">{agent.helpfulRate}%</td>
+                      <td className="py-3 pr-4 text-slate-600 dark:text-slate-300">
+                        {agent.successRate}%
+                      </td>
+                      <td className="py-3 pr-4 text-slate-600 dark:text-slate-300">
+                        {agent.cardsCreated}
+                      </td>
+                      <td className="py-3 text-slate-600 dark:text-slate-300">
+                        {agent.helpfulRate}%
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -357,20 +402,31 @@ export default function ConsoleAgentsPage() {
 
           {/* ActionCard Funnel */}
           {funnel && (
-            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6 mb-6" data-testid="funnel-section">
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">ActionCard Funnel</h2>
+            <div
+              className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6 mb-6"
+              data-testid="funnel-section"
+            >
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+                ActionCard Funnel
+              </h2>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                 <div>
                   <span className="text-xs text-slate-400">Total</span>
-                  <p className="text-xl font-serif font-bold text-slate-900 dark:text-white">{funnel.total}</p>
+                  <p className="text-xl font-serif font-bold text-slate-900 dark:text-white">
+                    {funnel.total}
+                  </p>
                 </div>
                 <div>
                   <span className="text-xs text-slate-400">Approval Rate</span>
-                  <p className="text-xl font-serif font-bold text-sage-600">{funnel.approvalRate}%</p>
+                  <p className="text-xl font-serif font-bold text-sage-600">
+                    {funnel.approvalRate}%
+                  </p>
                 </div>
                 <div>
                   <span className="text-xs text-slate-400">Execution Rate</span>
-                  <p className="text-xl font-serif font-bold text-lavender-600">{funnel.executionRate}%</p>
+                  <p className="text-xl font-serif font-bold text-lavender-600">
+                    {funnel.executionRate}%
+                  </p>
                 </div>
                 <div>
                   <span className="text-xs text-slate-400">Dismissed</span>
@@ -402,32 +458,52 @@ export default function ConsoleAgentsPage() {
                     />
                     <div
                       className="bg-slate-300 dark:bg-slate-600"
-                      style={{ width: `${((funnel.expired + funnel.snoozed) / funnel.total) * 100}%` }}
+                      style={{
+                        width: `${((funnel.expired + funnel.snoozed) / funnel.total) * 100}%`,
+                      }}
                       title={`Expired/Snoozed: ${funnel.expired + funnel.snoozed}`}
                     />
                   </>
                 )}
               </div>
               <div className="flex gap-4 mt-2 text-xs text-slate-500">
-                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-amber-200 dark:bg-amber-700" /> Pending</span>
-                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-sage-300 dark:bg-sage-700" /> Approved</span>
-                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-sage-500" /> Executed</span>
-                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-red-300 dark:bg-red-700" /> Dismissed</span>
+                <span className="flex items-center gap-1">
+                  <span className="w-3 h-3 rounded bg-amber-200 dark:bg-amber-700" /> Pending
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="w-3 h-3 rounded bg-sage-300 dark:bg-sage-700" /> Approved
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="w-3 h-3 rounded bg-sage-500" /> Executed
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="w-3 h-3 rounded bg-red-300 dark:bg-red-700" /> Dismissed
+                </span>
               </div>
             </div>
           )}
 
           {/* Top Failure Reasons */}
           {failures.length > 0 && (
-            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6 mb-6" data-testid="failure-list">
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Top Failure Reasons</h2>
+            <div
+              className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6 mb-6"
+              data-testid="failure-list"
+            >
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+                Top Failure Reasons
+              </h2>
               <div className="space-y-3">
                 {failures.map((f, i) => (
-                  <div key={i} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-xl">
+                  <div
+                    key={i}
+                    className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-xl"
+                  >
                     <div className="flex items-center gap-3">
                       <XCircle size={16} className="text-red-500 shrink-0" />
                       <div>
-                        <p className="text-sm font-medium text-slate-900 dark:text-white">{f.error}</p>
+                        <p className="text-sm font-medium text-slate-900 dark:text-white">
+                          {f.error}
+                        </p>
                         <p className="text-xs text-slate-500">{f.agentType}</p>
                       </div>
                     </div>
@@ -440,8 +516,13 @@ export default function ConsoleAgentsPage() {
 
           {/* Abnormal Tenants */}
           {abnormalTenants.length > 0 && (
-            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6" data-testid="abnormal-tenants">
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Abnormal Tenants</h2>
+            <div
+              className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6"
+              data-testid="abnormal-tenants"
+            >
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+                Abnormal Tenants
+              </h2>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
@@ -455,7 +536,10 @@ export default function ConsoleAgentsPage() {
                   </thead>
                   <tbody>
                     {abnormalTenants.map((tenant) => (
-                      <tr key={tenant.businessId} className="border-b border-slate-50 dark:border-slate-800/50">
+                      <tr
+                        key={tenant.businessId}
+                        className="border-b border-slate-50 dark:border-slate-800/50"
+                      >
                         <td className="py-3 pr-4">
                           <Link
                             href={`/console/businesses/${tenant.businessId}`}
@@ -464,9 +548,13 @@ export default function ConsoleAgentsPage() {
                             {tenant.businessName}
                           </Link>
                         </td>
-                        <td className="py-3 pr-4 text-slate-600 dark:text-slate-300">{tenant.totalRuns}</td>
+                        <td className="py-3 pr-4 text-slate-600 dark:text-slate-300">
+                          {tenant.totalRuns}
+                        </td>
                         <td className="py-3 pr-4 text-red-500">{tenant.failedRuns}</td>
-                        <td className="py-3 pr-4 text-red-500 font-medium">{tenant.failureRate}%</td>
+                        <td className="py-3 pr-4 text-red-500 font-medium">
+                          {tenant.failureRate}%
+                        </td>
                         <td className="py-3 text-slate-500">{tenant.platformAvgRate}%</td>
                       </tr>
                     ))}
@@ -477,7 +565,10 @@ export default function ConsoleAgentsPage() {
           )}
 
           {performance.totalRuns === 0 && (
-            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-8 text-center" data-testid="empty-state">
+            <div
+              className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-8 text-center"
+              data-testid="empty-state"
+            >
               <Bot size={32} className="mx-auto text-slate-300 mb-3" />
               <p className="text-slate-500">No agent runs recorded yet</p>
             </div>
@@ -490,7 +581,10 @@ export default function ConsoleAgentsPage() {
         <div data-testid="tenant-controls-tab">
           <div className="flex gap-3 mb-6">
             <div className="relative flex-1">
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Search
+                size={16}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+              />
               <input
                 type="text"
                 value={tenantSearch}
@@ -562,7 +656,9 @@ export default function ConsoleAgentsPage() {
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-3">
                         <Bot size={16} className="text-lavender-600" />
-                        <span className="font-medium text-slate-900 dark:text-white">{agent.agentType}</span>
+                        <span className="font-medium text-slate-900 dark:text-white">
+                          {agent.agentType}
+                        </span>
                         <span
                           className={`text-xs px-2 py-0.5 rounded-full ${
                             agent.isEnabled
@@ -580,7 +676,11 @@ export default function ConsoleAgentsPage() {
                             setConfirmModal({
                               action: `Update ${agent.agentType} autonomy`,
                               onConfirm: (reason) =>
-                                handleUpdateAgent(agent.agentType, { autonomyLevel: e.target.value }, reason),
+                                handleUpdateAgent(
+                                  agent.agentType,
+                                  { autonomyLevel: e.target.value },
+                                  reason,
+                                ),
                             })
                           }
                           className="text-sm bg-slate-50 dark:bg-slate-800 rounded-lg px-2 py-1 border-transparent"
@@ -595,7 +695,11 @@ export default function ConsoleAgentsPage() {
                             setConfirmModal({
                               action: `${agent.isEnabled ? 'Disable' : 'Enable'} ${agent.agentType}`,
                               onConfirm: (reason) =>
-                                handleUpdateAgent(agent.agentType, { isEnabled: !agent.isEnabled }, reason),
+                                handleUpdateAgent(
+                                  agent.agentType,
+                                  { isEnabled: !agent.isEnabled },
+                                  reason,
+                                ),
                             })
                           }
                           className={`text-xs px-3 py-1 rounded-lg font-medium ${
@@ -609,9 +713,24 @@ export default function ConsoleAgentsPage() {
                       </div>
                     </div>
                     <div className="flex gap-6 text-xs text-slate-500">
-                      <span>Runs (7d): <span className="font-medium text-slate-700 dark:text-slate-300">{agent.runsLast7d}</span></span>
-                      <span>Success: <span className="font-medium text-slate-700 dark:text-slate-300">{agent.successRate}%</span></span>
-                      <span>Cards: <span className="font-medium text-slate-700 dark:text-slate-300">{agent.cardsCreated}</span></span>
+                      <span>
+                        Runs (7d):{' '}
+                        <span className="font-medium text-slate-700 dark:text-slate-300">
+                          {agent.runsLast7d}
+                        </span>
+                      </span>
+                      <span>
+                        Success:{' '}
+                        <span className="font-medium text-slate-700 dark:text-slate-300">
+                          {agent.successRate}%
+                        </span>
+                      </span>
+                      <span>
+                        Cards:{' '}
+                        <span className="font-medium text-slate-700 dark:text-slate-300">
+                          {agent.cardsCreated}
+                        </span>
+                      </span>
                     </div>
                   </div>
                 ))}
@@ -624,8 +743,13 @@ export default function ConsoleAgentsPage() {
       {/* Platform Defaults Tab */}
       {activeTab === 'platform-defaults' && (
         <div data-testid="platform-defaults-tab">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6" data-testid="defaults-table">
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Platform Agent Defaults</h2>
+          <div
+            className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6"
+            data-testid="defaults-table"
+          >
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+              Platform Agent Defaults
+            </h2>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
@@ -640,11 +764,7 @@ export default function ConsoleAgentsPage() {
                 </thead>
                 <tbody>
                   {platformDefaults.map((def) => (
-                    <DefaultRow
-                      key={def.agentType}
-                      default_={def}
-                      onSave={handleUpdateDefault}
-                    />
+                    <DefaultRow key={def.agentType} default_={def} onSave={handleUpdateDefault} />
                   ))}
                 </tbody>
               </table>
@@ -655,7 +775,10 @@ export default function ConsoleAgentsPage() {
 
       {/* Confirmation Modal */}
       {confirmModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" data-testid="confirm-modal">
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          data-testid="confirm-modal"
+        >
           <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-lg p-6 max-w-md w-full mx-4">
             <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
               {confirmModal.action}
@@ -673,7 +796,10 @@ export default function ConsoleAgentsPage() {
             />
             <div className="flex gap-3 justify-end">
               <button
-                onClick={() => { setConfirmModal(null); setConfirmReason(''); }}
+                onClick={() => {
+                  setConfirmModal(null);
+                  setConfirmReason('');
+                }}
                 className="px-4 py-2 text-sm text-slate-600 hover:text-slate-800 font-medium"
               >
                 Cancel
@@ -713,7 +839,10 @@ function DefaultRow({
   };
 
   return (
-    <tr className="border-b border-slate-50 dark:border-slate-800/50" data-testid={`default-row-${default_.agentType}`}>
+    <tr
+      className="border-b border-slate-50 dark:border-slate-800/50"
+      data-testid={`default-row-${default_.agentType}`}
+    >
       <td className="py-3 pr-4 font-medium text-slate-900 dark:text-white">{default_.agentType}</td>
       <td className="py-3 pr-4">
         <select

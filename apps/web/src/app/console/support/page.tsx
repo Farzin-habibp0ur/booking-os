@@ -2,15 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { api } from '@/lib/api';
-import {
-  LifeBuoy,
-  Search,
-  Plus,
-  ChevronLeft,
-  ChevronRight,
-  X,
-  MessageSquare,
-} from 'lucide-react';
+import { LifeBuoy, Search, Plus, ChevronLeft, ChevronRight, X, MessageSquare } from 'lucide-react';
 
 interface SupportCase {
   id: string;
@@ -125,7 +117,9 @@ export default function ConsoleSupportPage() {
   return (
     <div className="p-6 md:p-8 max-w-7xl">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-serif font-bold text-slate-900 dark:text-white">Support Cases</h1>
+        <h1 className="text-2xl font-serif font-bold text-slate-900 dark:text-white">
+          Support Cases
+        </h1>
         <button
           onClick={() => setShowCreate(true)}
           className="flex items-center gap-2 px-4 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl text-sm font-medium hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors"
@@ -143,13 +137,19 @@ export default function ConsoleSupportPage() {
             type="text"
             placeholder="Search cases..."
             value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
             className="w-full pl-9 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-transparent focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-sage-500 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400"
           />
         </div>
         <select
           value={statusFilter}
-          onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+          onChange={(e) => {
+            setStatusFilter(e.target.value);
+            setPage(1);
+          }}
           className="px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-sage-500"
         >
           <option value="">All Status</option>
@@ -160,7 +160,10 @@ export default function ConsoleSupportPage() {
         </select>
         <select
           value={priorityFilter}
-          onChange={(e) => { setPriorityFilter(e.target.value); setPage(1); }}
+          onChange={(e) => {
+            setPriorityFilter(e.target.value);
+            setPage(1);
+          }}
           className="px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-sage-500"
         >
           <option value="">All Priority</option>
@@ -188,12 +191,24 @@ export default function ConsoleSupportPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-100 dark:border-slate-800">
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase">Subject</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase hidden md:table-cell">Business</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase">Status</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase hidden sm:table-cell">Priority</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase hidden lg:table-cell">Notes</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase">Created</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase">
+                      Subject
+                    </th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase hidden md:table-cell">
+                      Business
+                    </th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase">
+                      Status
+                    </th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase hidden sm:table-cell">
+                      Priority
+                    </th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase hidden lg:table-cell">
+                      Notes
+                    </th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase">
+                      Created
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
@@ -203,15 +218,23 @@ export default function ConsoleSupportPage() {
                       onClick={() => openDetail(c.id)}
                       className="hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer"
                     >
-                      <td className="px-4 py-3 text-slate-900 dark:text-white font-medium truncate max-w-[250px]">{c.subject}</td>
-                      <td className="px-4 py-3 text-slate-500 hidden md:table-cell truncate max-w-[150px]">{c.businessName}</td>
+                      <td className="px-4 py-3 text-slate-900 dark:text-white font-medium truncate max-w-[250px]">
+                        {c.subject}
+                      </td>
+                      <td className="px-4 py-3 text-slate-500 hidden md:table-cell truncate max-w-[150px]">
+                        {c.businessName}
+                      </td>
                       <td className="px-4 py-3">
-                        <span className={`px-2 py-1 rounded-lg text-xs font-medium ${STATUS_COLORS[c.status] || ''}`}>
+                        <span
+                          className={`px-2 py-1 rounded-lg text-xs font-medium ${STATUS_COLORS[c.status] || ''}`}
+                        >
                           {c.status.replace('_', ' ')}
                         </span>
                       </td>
                       <td className="px-4 py-3 hidden sm:table-cell">
-                        <span className={`px-2 py-1 rounded-lg text-xs font-medium ${PRIORITY_COLORS[c.priority] || ''}`}>
+                        <span
+                          className={`px-2 py-1 rounded-lg text-xs font-medium ${PRIORITY_COLORS[c.priority] || ''}`}
+                        >
                           {c.priority}
                         </span>
                       </td>
@@ -221,7 +244,9 @@ export default function ConsoleSupportPage() {
                           {c._count.notes}
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-slate-500 whitespace-nowrap">{timeAgo(c.createdAt)}</td>
+                      <td className="px-4 py-3 text-slate-500 whitespace-nowrap">
+                        {timeAgo(c.createdAt)}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -239,7 +264,9 @@ export default function ConsoleSupportPage() {
                 >
                   <ChevronLeft size={16} />
                 </button>
-                <span className="text-xs text-slate-500">Page {page} of {totalPages}</span>
+                <span className="text-xs text-slate-500">
+                  Page {page} of {totalPages}
+                </span>
                 <button
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={page >= totalPages}
@@ -254,14 +281,28 @@ export default function ConsoleSupportPage() {
       </div>
 
       {/* Create Case Modal */}
-      {showCreate && <CreateCaseModal onClose={() => setShowCreate(false)} onCreated={() => { setShowCreate(false); fetchCases(); }} />}
+      {showCreate && (
+        <CreateCaseModal
+          onClose={() => setShowCreate(false)}
+          onCreated={() => {
+            setShowCreate(false);
+            fetchCases();
+          }}
+        />
+      )}
 
       {/* Case Detail Drawer */}
       {showDetail && selectedCase && (
         <CaseDetailDrawer
           caseData={selectedCase}
-          onClose={() => { setShowDetail(false); setSelectedCase(null); }}
-          onUpdated={() => { fetchCases(); openDetail(selectedCase.id); }}
+          onClose={() => {
+            setShowDetail(false);
+            setSelectedCase(null);
+          }}
+          onUpdated={() => {
+            fetchCases();
+            openDetail(selectedCase.id);
+          }}
         />
       )}
     </div>
@@ -279,7 +320,8 @@ function CreateCaseModal({ onClose, onCreated }: { onClose: () => void; onCreate
   const [error, setError] = useState('');
 
   useEffect(() => {
-    api.get<{ items: Array<{ id: string; name: string }> }>('/admin/businesses?pageSize=100')
+    api
+      .get<{ items: Array<{ id: string; name: string }> }>('/admin/businesses?pageSize=100')
       .then((r) => setBusinesses(r.items))
       .catch(() => {});
   }, []);
@@ -313,14 +355,19 @@ function CreateCaseModal({ onClose, onCreated }: { onClose: () => void; onCreate
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl max-w-lg w-full p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white">New Support Case</h2>
-          <button onClick={onClose} className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+          <button
+            onClick={onClose}
+            className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
+          >
             <X size={18} />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Business</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              Business
+            </label>
             <select
               value={businessId}
               onChange={(e) => setBusinessId(e.target.value)}
@@ -329,13 +376,17 @@ function CreateCaseModal({ onClose, onCreated }: { onClose: () => void; onCreate
             >
               <option value="">Select a business</option>
               {businesses.map((b) => (
-                <option key={b.id} value={b.id}>{b.name}</option>
+                <option key={b.id} value={b.id}>
+                  {b.name}
+                </option>
               ))}
             </select>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Subject</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              Subject
+            </label>
             <input
               type="text"
               value={subject}
@@ -347,7 +398,9 @@ function CreateCaseModal({ onClose, onCreated }: { onClose: () => void; onCreate
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Description</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              Description
+            </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -360,7 +413,9 @@ function CreateCaseModal({ onClose, onCreated }: { onClose: () => void; onCreate
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Priority</label>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                Priority
+              </label>
               <select
                 value={priority}
                 onChange={(e) => setPriority(e.target.value)}
@@ -373,7 +428,9 @@ function CreateCaseModal({ onClose, onCreated }: { onClose: () => void; onCreate
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Category</label>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                Category
+              </label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
@@ -466,14 +523,21 @@ function CaseDetailDrawer({
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-3 min-w-0">
-            <span className={`px-2 py-1 rounded-lg text-xs font-medium ${STATUS_COLORS[caseData.status] || ''}`}>
+            <span
+              className={`px-2 py-1 rounded-lg text-xs font-medium ${STATUS_COLORS[caseData.status] || ''}`}
+            >
               {caseData.status.replace('_', ' ')}
             </span>
-            <span className={`px-2 py-1 rounded-lg text-xs font-medium ${PRIORITY_COLORS[caseData.priority] || ''}`}>
+            <span
+              className={`px-2 py-1 rounded-lg text-xs font-medium ${PRIORITY_COLORS[caseData.priority] || ''}`}
+            >
               {caseData.priority}
             </span>
           </div>
-          <button onClick={onClose} className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+          <button
+            onClick={onClose}
+            className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
+          >
             <X size={18} />
           </button>
         </div>
@@ -481,20 +545,28 @@ function CaseDetailDrawer({
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           <div>
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-1">{caseData.subject}</h2>
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-1">
+              {caseData.subject}
+            </h2>
             <p className="text-sm text-slate-500">
               {caseData.business.name} &middot; {timeAgo(caseData.createdAt)}
             </p>
           </div>
 
           <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4">
-            <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{caseData.description}</p>
+            <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap">
+              {caseData.description}
+            </p>
           </div>
 
           {caseData.resolution && (
             <div className="bg-sage-50 dark:bg-sage-900/20 rounded-xl p-4">
-              <p className="text-xs font-medium text-sage-700 dark:text-sage-400 mb-1">Resolution</p>
-              <p className="text-sm text-sage-900 dark:text-sage-300 whitespace-pre-wrap">{caseData.resolution}</p>
+              <p className="text-xs font-medium text-sage-700 dark:text-sage-400 mb-1">
+                Resolution
+              </p>
+              <p className="text-sm text-sage-900 dark:text-sage-300 whitespace-pre-wrap">
+                {caseData.resolution}
+              </p>
             </div>
           )}
 
@@ -522,7 +594,9 @@ function CaseDetailDrawer({
                       <span className="font-medium">{note.authorName}</span>
                       <span>{timeAgo(note.createdAt)}</span>
                     </div>
-                    <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{note.content}</p>
+                    <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap">
+                      {note.content}
+                    </p>
                   </div>
                 ))}
               </div>

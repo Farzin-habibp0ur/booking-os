@@ -8,7 +8,9 @@ jest.mock('@/lib/api', () => ({
 
 jest.mock('next/link', () => {
   return ({ children, href, ...props }: any) => (
-    <a href={href} {...props}>{children}</a>
+    <a href={href} {...props}>
+      {children}
+    </a>
   );
 });
 
@@ -85,9 +87,7 @@ describe('PackDetailPage', () => {
   });
 
   it('renders version history table', async () => {
-    (api.get as jest.Mock)
-      .mockResolvedValueOnce(mockDetail)
-      .mockResolvedValueOnce(mockPins);
+    (api.get as jest.Mock).mockResolvedValueOnce(mockDetail).mockResolvedValueOnce(mockPins);
 
     render(<PackDetailPage />);
 
@@ -99,9 +99,7 @@ describe('PackDetailPage', () => {
   });
 
   it('shows rollout progress bar for active rollout', async () => {
-    (api.get as jest.Mock)
-      .mockResolvedValueOnce(mockDetail)
-      .mockResolvedValueOnce(mockPins);
+    (api.get as jest.Mock).mockResolvedValueOnce(mockDetail).mockResolvedValueOnce(mockPins);
 
     render(<PackDetailPage />);
 
@@ -112,9 +110,7 @@ describe('PackDetailPage', () => {
   });
 
   it('shows advance and pause buttons for rolling_out version', async () => {
-    (api.get as jest.Mock)
-      .mockResolvedValueOnce(mockDetail)
-      .mockResolvedValueOnce(mockPins);
+    (api.get as jest.Mock).mockResolvedValueOnce(mockDetail).mockResolvedValueOnce(mockPins);
 
     render(<PackDetailPage />);
 
@@ -133,9 +129,7 @@ describe('PackDetailPage', () => {
         mockDetail.versions[1],
       ],
     };
-    (api.get as jest.Mock)
-      .mockResolvedValueOnce(pausedDetail)
-      .mockResolvedValueOnce(mockPins);
+    (api.get as jest.Mock).mockResolvedValueOnce(pausedDetail).mockResolvedValueOnce(mockPins);
 
     render(<PackDetailPage />);
 
@@ -145,9 +139,7 @@ describe('PackDetailPage', () => {
   });
 
   it('opens rollback modal when clicking rollback', async () => {
-    (api.get as jest.Mock)
-      .mockResolvedValueOnce(mockDetail)
-      .mockResolvedValueOnce(mockPins);
+    (api.get as jest.Mock).mockResolvedValueOnce(mockDetail).mockResolvedValueOnce(mockPins);
 
     render(<PackDetailPage />);
 
@@ -162,9 +154,7 @@ describe('PackDetailPage', () => {
   });
 
   it('renders pinned tenants table', async () => {
-    (api.get as jest.Mock)
-      .mockResolvedValueOnce(mockDetail)
-      .mockResolvedValueOnce(mockPins);
+    (api.get as jest.Mock).mockResolvedValueOnce(mockDetail).mockResolvedValueOnce(mockPins);
 
     render(<PackDetailPage />);
 
@@ -177,9 +167,7 @@ describe('PackDetailPage', () => {
   });
 
   it('opens pin modal when clicking Pin Business', async () => {
-    (api.get as jest.Mock)
-      .mockResolvedValueOnce(mockDetail)
-      .mockResolvedValueOnce(mockPins);
+    (api.get as jest.Mock).mockResolvedValueOnce(mockDetail).mockResolvedValueOnce(mockPins);
 
     render(<PackDetailPage />);
 
@@ -193,9 +181,7 @@ describe('PackDetailPage', () => {
   });
 
   it('renders breadcrumb navigation', async () => {
-    (api.get as jest.Mock)
-      .mockResolvedValueOnce(mockDetail)
-      .mockResolvedValueOnce(mockPins);
+    (api.get as jest.Mock).mockResolvedValueOnce(mockDetail).mockResolvedValueOnce(mockPins);
 
     render(<PackDetailPage />);
 
@@ -218,9 +204,7 @@ describe('PackDetailPage', () => {
   });
 
   it('shows no pins message when pinned list is empty', async () => {
-    (api.get as jest.Mock)
-      .mockResolvedValueOnce(mockDetail)
-      .mockResolvedValueOnce([]);
+    (api.get as jest.Mock).mockResolvedValueOnce(mockDetail).mockResolvedValueOnce([]);
 
     render(<PackDetailPage />);
 
@@ -230,9 +214,7 @@ describe('PackDetailPage', () => {
   });
 
   it('toggles config viewer', async () => {
-    (api.get as jest.Mock)
-      .mockResolvedValueOnce(mockDetail)
-      .mockResolvedValueOnce(mockPins);
+    (api.get as jest.Mock).mockResolvedValueOnce(mockDetail).mockResolvedValueOnce(mockPins);
 
     render(<PackDetailPage />);
 

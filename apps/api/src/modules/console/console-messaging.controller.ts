@@ -17,9 +17,7 @@ export class ConsoleMessagingController {
   ) {}
 
   @Get('dashboard')
-  async getDashboard(
-    @CurrentUser() user: { sub: string; email: string },
-  ) {
+  async getDashboard(@CurrentUser() user: { sub: string; email: string }) {
     const result = await this.messagingService.getDashboard();
 
     this.auditService.log(user.sub, user.email, 'MESSAGING_DASHBOARD_VIEW');
@@ -28,9 +26,7 @@ export class ConsoleMessagingController {
   }
 
   @Get('failures')
-  async getFailures(
-    @CurrentUser() user: { sub: string; email: string },
-  ) {
+  async getFailures(@CurrentUser() user: { sub: string; email: string }) {
     const result = await this.messagingService.getFailures();
 
     this.auditService.log(user.sub, user.email, 'MESSAGING_FAILURES_VIEW');
@@ -39,9 +35,7 @@ export class ConsoleMessagingController {
   }
 
   @Get('webhook-health')
-  async getWebhookHealth(
-    @CurrentUser() user: { sub: string; email: string },
-  ) {
+  async getWebhookHealth(@CurrentUser() user: { sub: string; email: string }) {
     const result = await this.messagingService.getWebhookHealth();
 
     this.auditService.log(user.sub, user.email, 'MESSAGING_WEBHOOK_HEALTH_VIEW');
@@ -50,9 +44,7 @@ export class ConsoleMessagingController {
   }
 
   @Get('tenant-status')
-  async getTenantStatus(
-    @CurrentUser() user: { sub: string; email: string },
-  ) {
+  async getTenantStatus(@CurrentUser() user: { sub: string; email: string }) {
     const result = await this.messagingService.getTenantStatus();
 
     this.auditService.log(user.sub, user.email, 'MESSAGING_TENANT_STATUS_VIEW');

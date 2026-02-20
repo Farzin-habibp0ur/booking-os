@@ -80,9 +80,7 @@ export default function BusinessDirectoryPage() {
       params.set('page', String(page));
       params.set('pageSize', '20');
 
-      const result = await api.get<BusinessListResponse>(
-        `/admin/businesses?${params.toString()}`,
-      );
+      const result = await api.get<BusinessListResponse>(`/admin/businesses?${params.toString()}`);
       setData(result);
     } catch {
       setData({ items: [], total: 0, page: 1, pageSize: 20 });
@@ -110,21 +108,14 @@ export default function BusinessDirectoryPage() {
   return (
     <div className="p-6 md:p-8">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-serif font-bold text-slate-900 dark:text-white">
-          Businesses
-        </h1>
-        <span className="text-sm text-slate-500">
-          {data ? `${data.total} total` : ''}
-        </span>
+        <h1 className="text-2xl font-serif font-bold text-slate-900 dark:text-white">Businesses</h1>
+        <span className="text-sm text-slate-500">{data ? `${data.total} total` : ''}</span>
       </div>
 
       {/* Search and Filters */}
       <div className="flex flex-wrap gap-3 mb-6">
         <div className="relative flex-1 min-w-[200px]">
-          <Search
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-            size={16}
-          />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
           <input
             type="text"
             placeholder="Search by name, slug, or owner email..."
@@ -136,7 +127,10 @@ export default function BusinessDirectoryPage() {
         </div>
         <select
           value={plan}
-          onChange={(e) => { setPlan(e.target.value); setPage(1); }}
+          onChange={(e) => {
+            setPlan(e.target.value);
+            setPage(1);
+          }}
           className="px-3 py-2 bg-slate-50 dark:bg-slate-800 rounded-xl text-sm border-transparent focus:outline-none focus:ring-2 focus:ring-sage-500"
           data-testid="filter-plan"
         >
@@ -147,7 +141,10 @@ export default function BusinessDirectoryPage() {
         </select>
         <select
           value={billingStatus}
-          onChange={(e) => { setBillingStatus(e.target.value); setPage(1); }}
+          onChange={(e) => {
+            setBillingStatus(e.target.value);
+            setPage(1);
+          }}
           className="px-3 py-2 bg-slate-50 dark:bg-slate-800 rounded-xl text-sm border-transparent focus:outline-none focus:ring-2 focus:ring-sage-500"
           data-testid="filter-billing"
         >
@@ -159,7 +156,10 @@ export default function BusinessDirectoryPage() {
         </select>
         <select
           value={health}
-          onChange={(e) => { setHealth(e.target.value); setPage(1); }}
+          onChange={(e) => {
+            setHealth(e.target.value);
+            setPage(1);
+          }}
           className="px-3 py-2 bg-slate-50 dark:bg-slate-800 rounded-xl text-sm border-transparent focus:outline-none focus:ring-2 focus:ring-sage-500"
           data-testid="filter-health"
         >
@@ -217,9 +217,7 @@ export default function BusinessDirectoryPage() {
                   data-testid={`business-row-${biz.id}`}
                 >
                   <td className="px-4 py-3">
-                    <div className="font-medium text-slate-900 dark:text-white">
-                      {biz.name}
-                    </div>
+                    <div className="font-medium text-slate-900 dark:text-white">{biz.name}</div>
                     <div className="text-xs text-slate-400">{biz.slug}</div>
                   </td>
                   <td className="px-4 py-3 hidden md:table-cell">

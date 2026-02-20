@@ -3,13 +3,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { api } from '@/lib/api';
 import Link from 'next/link';
-import {
-  ChevronRight,
-  ChevronDown,
-  ToggleLeft,
-  ToggleRight,
-  Users,
-} from 'lucide-react';
+import { ChevronRight, ChevronDown, ToggleLeft, ToggleRight, Users } from 'lucide-react';
 
 interface SkillStat {
   agentType: string;
@@ -58,7 +52,11 @@ export default function SkillsCatalogPage() {
   const [expandedSkill, setExpandedSkill] = useState<string | null>(null);
   const [skillAdoption, setSkillAdoption] = useState<SkillAdoption | null>(null);
   const [adoptionLoading, setAdoptionLoading] = useState(false);
-  const [showOverrideModal, setShowOverrideModal] = useState<{ agentType: string; name: string; enabled: boolean } | null>(null);
+  const [showOverrideModal, setShowOverrideModal] = useState<{
+    agentType: string;
+    name: string;
+    enabled: boolean;
+  } | null>(null);
 
   const fetchCatalog = useCallback(async () => {
     try {
@@ -139,8 +137,13 @@ export default function SkillsCatalogPage() {
   return (
     <div className="p-6 md:p-8 max-w-6xl">
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-1 text-sm text-slate-500 mb-4" data-testid="skills-breadcrumb">
-        <Link href="/console/packs" className="hover:text-slate-700">Packs & Skills</Link>
+      <nav
+        className="flex items-center gap-1 text-sm text-slate-500 mb-4"
+        data-testid="skills-breadcrumb"
+      >
+        <Link href="/console/packs" className="hover:text-slate-700">
+          Packs & Skills
+        </Link>
         <ChevronRight size={14} />
         <span className="text-slate-900 dark:text-white font-medium">Skills Catalog</span>
       </nav>
@@ -235,7 +238,10 @@ export default function SkillsCatalogPage() {
                                     style={{ width: `${skill.adoptionPercent}%` }}
                                   />
                                 </div>
-                                <span className="text-xs text-slate-500" data-testid={`adoption-pct-${skill.agentType}`}>
+                                <span
+                                  className="text-xs text-slate-500"
+                                  data-testid={`adoption-pct-${skill.agentType}`}
+                                >
                                   {skill.adoptionPercent}%
                                 </span>
                               </div>
@@ -246,7 +252,10 @@ export default function SkillsCatalogPage() {
                               </span>
                             </td>
                             <td className="px-5 py-3">
-                              <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                              <div
+                                className="flex items-center gap-1"
+                                onClick={(e) => e.stopPropagation()}
+                              >
                                 <button
                                   onClick={() =>
                                     setShowOverrideModal({
@@ -281,13 +290,17 @@ export default function SkillsCatalogPage() {
                           {/* Expanded detail row */}
                           {expandedSkill === `${pack.slug}-${skill.agentType}` && (
                             <tr data-testid={`skill-detail-${skill.agentType}`}>
-                              <td colSpan={7} className="px-5 py-3 bg-slate-50 dark:bg-slate-800/50">
+                              <td
+                                colSpan={7}
+                                className="px-5 py-3 bg-slate-50 dark:bg-slate-800/50"
+                              >
                                 {adoptionLoading ? (
                                   <p className="text-sm text-slate-400">Loading adoption data...</p>
                                 ) : skillAdoption ? (
                                   <div>
                                     <p className="text-xs text-slate-500 mb-2">
-                                      {skillAdoption.enabledCount} of {skillAdoption.totalBusinesses} businesses enabled
+                                      {skillAdoption.enabledCount} of{' '}
+                                      {skillAdoption.totalBusinesses} businesses enabled
                                     </p>
                                     {skillAdoption.configs.length > 0 ? (
                                       <div className="space-y-1">
@@ -300,7 +313,9 @@ export default function SkillsCatalogPage() {
                                               {c.businessName}
                                             </span>
                                             <div className="flex items-center gap-2">
-                                              <span className="text-slate-400">{c.verticalPack}</span>
+                                              <span className="text-slate-400">
+                                                {c.verticalPack}
+                                              </span>
                                               <span
                                                 className={`font-medium ${c.isEnabled ? 'text-sage-600' : 'text-red-500'}`}
                                               >
@@ -311,11 +326,15 @@ export default function SkillsCatalogPage() {
                                         ))}
                                       </div>
                                     ) : (
-                                      <p className="text-xs text-slate-400">No configurations found</p>
+                                      <p className="text-xs text-slate-400">
+                                        No configurations found
+                                      </p>
                                     )}
                                   </div>
                                 ) : (
-                                  <p className="text-sm text-slate-400">Failed to load adoption data</p>
+                                  <p className="text-sm text-slate-400">
+                                    Failed to load adoption data
+                                  </p>
                                 )}
                               </td>
                             </tr>
@@ -383,7 +402,10 @@ function OverrideModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" data-testid="override-modal">
+    <div
+      className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
+      data-testid="override-modal"
+    >
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl max-w-lg w-full p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
@@ -393,9 +415,11 @@ function OverrideModal({
             <Users size={18} className="text-slate-400 hover:text-slate-600" />
           </button>
         </div>
-        <div className={`rounded-xl p-3 mb-4 text-sm ${enabled ? 'bg-sage-50 text-sage-700 dark:bg-sage-900/20 dark:text-sage-400' : 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400'}`}>
-          This will {enabled ? 'enable' : 'disable'} <strong>{name}</strong> for all businesses platform-wide.
-          This is a high-risk action.
+        <div
+          className={`rounded-xl p-3 mb-4 text-sm ${enabled ? 'bg-sage-50 text-sage-700 dark:bg-sage-900/20 dark:text-sage-400' : 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400'}`}
+        >
+          This will {enabled ? 'enable' : 'disable'} <strong>{name}</strong> for all businesses
+          platform-wide. This is a high-risk action.
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -427,9 +451,7 @@ function OverrideModal({
               }`}
               data-testid="confirm-override"
             >
-              {submitting
-                ? 'Applying...'
-                : `${enabled ? 'Enable' : 'Disable'} All`}
+              {submitting ? 'Applying...' : `${enabled ? 'Enable' : 'Disable'} All`}
             </button>
           </div>
         </form>

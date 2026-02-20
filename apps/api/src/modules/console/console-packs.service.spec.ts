@@ -12,10 +12,7 @@ describe('ConsolePacksService', () => {
     prisma = createMockPrisma();
 
     const module = await Test.createTestingModule({
-      providers: [
-        ConsolePacksService,
-        { provide: PrismaService, useValue: prisma },
-      ],
+      providers: [ConsolePacksService, { provide: PrismaService, useValue: prisma }],
     }).compile();
 
     service = module.get(ConsolePacksService);
@@ -24,13 +21,49 @@ describe('ConsolePacksService', () => {
   describe('getRegistry', () => {
     it('returns packs with adoption stats', async () => {
       prisma.verticalPackVersion.findMany.mockResolvedValue([
-        { id: 'v1', slug: 'aesthetic', version: 2, name: 'Aesthetic', description: 'For clinics', isPublished: true, rolloutStage: 'completed', rolloutPercent: 100, config: {}, createdAt: new Date(), updatedAt: new Date() },
-        { id: 'v2', slug: 'aesthetic', version: 1, name: 'Aesthetic', description: 'For clinics', isPublished: true, rolloutStage: 'completed', rolloutPercent: 100, config: {}, createdAt: new Date(), updatedAt: new Date() },
-        { id: 'v3', slug: 'general', version: 1, name: 'General', description: 'General pack', isPublished: true, rolloutStage: 'published', rolloutPercent: 0, config: {}, createdAt: new Date(), updatedAt: new Date() },
+        {
+          id: 'v1',
+          slug: 'aesthetic',
+          version: 2,
+          name: 'Aesthetic',
+          description: 'For clinics',
+          isPublished: true,
+          rolloutStage: 'completed',
+          rolloutPercent: 100,
+          config: {},
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          id: 'v2',
+          slug: 'aesthetic',
+          version: 1,
+          name: 'Aesthetic',
+          description: 'For clinics',
+          isPublished: true,
+          rolloutStage: 'completed',
+          rolloutPercent: 100,
+          config: {},
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          id: 'v3',
+          slug: 'general',
+          version: 1,
+          name: 'General',
+          description: 'General pack',
+          isPublished: true,
+          rolloutStage: 'published',
+          rolloutPercent: 0,
+          config: {},
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
       ] as any);
       prisma.business.count
         .mockResolvedValueOnce(10) // totalBusinesses
-        .mockResolvedValueOnce(6)  // aesthetic businesses
+        .mockResolvedValueOnce(6) // aesthetic businesses
         .mockResolvedValueOnce(4); // general businesses
 
       const result = await service.getRegistry();
@@ -57,7 +90,18 @@ describe('ConsolePacksService', () => {
 
     it('handles zero businesses gracefully', async () => {
       prisma.verticalPackVersion.findMany.mockResolvedValue([
-        { id: 'v1', slug: 'general', version: 1, name: 'General', isPublished: true, rolloutStage: 'draft', rolloutPercent: 0, config: {}, createdAt: new Date(), updatedAt: new Date() },
+        {
+          id: 'v1',
+          slug: 'general',
+          version: 1,
+          name: 'General',
+          isPublished: true,
+          rolloutStage: 'draft',
+          rolloutPercent: 0,
+          config: {},
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
       ] as any);
       prisma.business.count.mockResolvedValue(0);
 
@@ -71,11 +115,45 @@ describe('ConsolePacksService', () => {
   describe('getPackDetail', () => {
     it('returns pack detail with versions and stats', async () => {
       prisma.verticalPackVersion.findMany.mockResolvedValue([
-        { id: 'v2', slug: 'aesthetic', version: 2, name: 'Aesthetic', description: 'Clinics', isPublished: true, rolloutStage: 'rolling_out', rolloutPercent: 25, rolloutStartedAt: new Date(), rolloutCompletedAt: null, rolloutPausedAt: null, rolledBackAt: null, rolledBackReason: null, config: {}, createdAt: new Date(), updatedAt: new Date() },
-        { id: 'v1', slug: 'aesthetic', version: 1, name: 'Aesthetic', description: 'Clinics', isPublished: true, rolloutStage: 'completed', rolloutPercent: 100, rolloutStartedAt: new Date(), rolloutCompletedAt: new Date(), rolloutPausedAt: null, rolledBackAt: null, rolledBackReason: null, config: {}, createdAt: new Date(), updatedAt: new Date() },
+        {
+          id: 'v2',
+          slug: 'aesthetic',
+          version: 2,
+          name: 'Aesthetic',
+          description: 'Clinics',
+          isPublished: true,
+          rolloutStage: 'rolling_out',
+          rolloutPercent: 25,
+          rolloutStartedAt: new Date(),
+          rolloutCompletedAt: null,
+          rolloutPausedAt: null,
+          rolledBackAt: null,
+          rolledBackReason: null,
+          config: {},
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          id: 'v1',
+          slug: 'aesthetic',
+          version: 1,
+          name: 'Aesthetic',
+          description: 'Clinics',
+          isPublished: true,
+          rolloutStage: 'completed',
+          rolloutPercent: 100,
+          rolloutStartedAt: new Date(),
+          rolloutCompletedAt: new Date(),
+          rolloutPausedAt: null,
+          rolledBackAt: null,
+          rolledBackReason: null,
+          config: {},
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
       ] as any);
       prisma.business.count
-        .mockResolvedValueOnce(6)   // businessCount
+        .mockResolvedValueOnce(6) // businessCount
         .mockResolvedValueOnce(10); // totalBusinesses
       prisma.packTenantPin.count.mockResolvedValue(2);
 
@@ -98,7 +176,20 @@ describe('ConsolePacksService', () => {
   describe('getVersions', () => {
     it('returns versions for a pack', async () => {
       prisma.verticalPackVersion.findMany.mockResolvedValue([
-        { id: 'v2', slug: 'aesthetic', version: 2, name: 'Aesthetic', isPublished: true, rolloutStage: 'rolling_out', rolloutPercent: 25, rolloutStartedAt: new Date(), rolloutCompletedAt: null, rolledBackAt: null, rolledBackReason: null, createdAt: new Date() },
+        {
+          id: 'v2',
+          slug: 'aesthetic',
+          version: 2,
+          name: 'Aesthetic',
+          isPublished: true,
+          rolloutStage: 'rolling_out',
+          rolloutPercent: 25,
+          rolloutStartedAt: new Date(),
+          rolloutCompletedAt: null,
+          rolledBackAt: null,
+          rolledBackReason: null,
+          createdAt: new Date(),
+        },
       ] as any);
 
       const result = await service.getVersions('aesthetic');
@@ -118,10 +209,22 @@ describe('ConsolePacksService', () => {
   describe('startOrAdvanceRollout', () => {
     it('starts rollout from published state', async () => {
       prisma.verticalPackVersion.findUnique.mockResolvedValue({
-        id: 'v1', slug: 'aesthetic', version: 2, rolloutStage: 'published', rolloutPercent: 0, rolloutStartedAt: null, isPublished: true,
+        id: 'v1',
+        slug: 'aesthetic',
+        version: 2,
+        rolloutStage: 'published',
+        rolloutPercent: 0,
+        rolloutStartedAt: null,
+        isPublished: true,
       } as any);
       prisma.verticalPackVersion.update.mockResolvedValue({
-        id: 'v1', slug: 'aesthetic', version: 2, rolloutStage: 'rolling_out', rolloutPercent: 5, rolloutStartedAt: new Date(), rolloutCompletedAt: null,
+        id: 'v1',
+        slug: 'aesthetic',
+        version: 2,
+        rolloutStage: 'rolling_out',
+        rolloutPercent: 5,
+        rolloutStartedAt: new Date(),
+        rolloutCompletedAt: null,
       } as any);
 
       const result = await service.startOrAdvanceRollout('aesthetic', 2, 5);
@@ -132,10 +235,22 @@ describe('ConsolePacksService', () => {
 
     it('advances rollout from 5% to 25%', async () => {
       prisma.verticalPackVersion.findUnique.mockResolvedValue({
-        id: 'v1', slug: 'aesthetic', version: 2, rolloutStage: 'rolling_out', rolloutPercent: 5, rolloutStartedAt: new Date(), isPublished: true,
+        id: 'v1',
+        slug: 'aesthetic',
+        version: 2,
+        rolloutStage: 'rolling_out',
+        rolloutPercent: 5,
+        rolloutStartedAt: new Date(),
+        isPublished: true,
       } as any);
       prisma.verticalPackVersion.update.mockResolvedValue({
-        id: 'v1', slug: 'aesthetic', version: 2, rolloutStage: 'rolling_out', rolloutPercent: 25, rolloutStartedAt: new Date(), rolloutCompletedAt: null,
+        id: 'v1',
+        slug: 'aesthetic',
+        version: 2,
+        rolloutStage: 'rolling_out',
+        rolloutPercent: 25,
+        rolloutStartedAt: new Date(),
+        rolloutCompletedAt: null,
       } as any);
 
       const result = await service.startOrAdvanceRollout('aesthetic', 2, 25);
@@ -145,10 +260,22 @@ describe('ConsolePacksService', () => {
 
     it('completes rollout at 100%', async () => {
       prisma.verticalPackVersion.findUnique.mockResolvedValue({
-        id: 'v1', slug: 'aesthetic', version: 2, rolloutStage: 'rolling_out', rolloutPercent: 50, rolloutStartedAt: new Date(), isPublished: true,
+        id: 'v1',
+        slug: 'aesthetic',
+        version: 2,
+        rolloutStage: 'rolling_out',
+        rolloutPercent: 50,
+        rolloutStartedAt: new Date(),
+        isPublished: true,
       } as any);
       prisma.verticalPackVersion.update.mockResolvedValue({
-        id: 'v1', slug: 'aesthetic', version: 2, rolloutStage: 'completed', rolloutPercent: 100, rolloutStartedAt: new Date(), rolloutCompletedAt: new Date(),
+        id: 'v1',
+        slug: 'aesthetic',
+        version: 2,
+        rolloutStage: 'completed',
+        rolloutPercent: 100,
+        rolloutStartedAt: new Date(),
+        rolloutCompletedAt: new Date(),
       } as any);
 
       const result = await service.startOrAdvanceRollout('aesthetic', 2, 100);
@@ -159,7 +286,12 @@ describe('ConsolePacksService', () => {
 
     it('rejects rollout from draft stage', async () => {
       prisma.verticalPackVersion.findUnique.mockResolvedValue({
-        id: 'v1', slug: 'aesthetic', version: 2, rolloutStage: 'draft', rolloutPercent: 0, isPublished: false,
+        id: 'v1',
+        slug: 'aesthetic',
+        version: 2,
+        rolloutStage: 'draft',
+        rolloutPercent: 0,
+        isPublished: false,
       } as any);
 
       await expect(service.startOrAdvanceRollout('aesthetic', 2, 5)).rejects.toThrow(
@@ -169,7 +301,12 @@ describe('ConsolePacksService', () => {
 
     it('rejects rollout from completed stage', async () => {
       prisma.verticalPackVersion.findUnique.mockResolvedValue({
-        id: 'v1', slug: 'aesthetic', version: 2, rolloutStage: 'completed', rolloutPercent: 100, isPublished: true,
+        id: 'v1',
+        slug: 'aesthetic',
+        version: 2,
+        rolloutStage: 'completed',
+        rolloutPercent: 100,
+        isPublished: true,
       } as any);
 
       await expect(service.startOrAdvanceRollout('aesthetic', 2, 100)).rejects.toThrow(
@@ -179,7 +316,12 @@ describe('ConsolePacksService', () => {
 
     it('rejects rollout from rolled_back stage', async () => {
       prisma.verticalPackVersion.findUnique.mockResolvedValue({
-        id: 'v1', slug: 'aesthetic', version: 2, rolloutStage: 'rolled_back', rolloutPercent: 25, isPublished: true,
+        id: 'v1',
+        slug: 'aesthetic',
+        version: 2,
+        rolloutStage: 'rolled_back',
+        rolloutPercent: 25,
+        isPublished: true,
       } as any);
 
       await expect(service.startOrAdvanceRollout('aesthetic', 2, 50)).rejects.toThrow(
@@ -189,7 +331,13 @@ describe('ConsolePacksService', () => {
 
     it('rejects if target percent not greater than current', async () => {
       prisma.verticalPackVersion.findUnique.mockResolvedValue({
-        id: 'v1', slug: 'aesthetic', version: 2, rolloutStage: 'rolling_out', rolloutPercent: 25, rolloutStartedAt: new Date(), isPublished: true,
+        id: 'v1',
+        slug: 'aesthetic',
+        version: 2,
+        rolloutStage: 'rolling_out',
+        rolloutPercent: 25,
+        rolloutStartedAt: new Date(),
+        isPublished: true,
       } as any);
 
       await expect(service.startOrAdvanceRollout('aesthetic', 2, 25)).rejects.toThrow(
@@ -209,10 +357,19 @@ describe('ConsolePacksService', () => {
   describe('pauseRollout', () => {
     it('pauses a rolling_out version', async () => {
       prisma.verticalPackVersion.findUnique.mockResolvedValue({
-        id: 'v1', slug: 'aesthetic', version: 2, rolloutStage: 'rolling_out', rolloutPercent: 25,
+        id: 'v1',
+        slug: 'aesthetic',
+        version: 2,
+        rolloutStage: 'rolling_out',
+        rolloutPercent: 25,
       } as any);
       prisma.verticalPackVersion.update.mockResolvedValue({
-        id: 'v1', slug: 'aesthetic', version: 2, rolloutStage: 'paused', rolloutPercent: 25, rolloutPausedAt: new Date(),
+        id: 'v1',
+        slug: 'aesthetic',
+        version: 2,
+        rolloutStage: 'paused',
+        rolloutPercent: 25,
+        rolloutPausedAt: new Date(),
       } as any);
 
       const result = await service.pauseRollout('aesthetic', 2);
@@ -222,7 +379,11 @@ describe('ConsolePacksService', () => {
 
     it('rejects pause from non-rolling_out stage', async () => {
       prisma.verticalPackVersion.findUnique.mockResolvedValue({
-        id: 'v1', slug: 'aesthetic', version: 2, rolloutStage: 'published', rolloutPercent: 0,
+        id: 'v1',
+        slug: 'aesthetic',
+        version: 2,
+        rolloutStage: 'published',
+        rolloutPercent: 0,
       } as any);
 
       await expect(service.pauseRollout('aesthetic', 2)).rejects.toThrow(BadRequestException);
@@ -232,10 +393,18 @@ describe('ConsolePacksService', () => {
   describe('resumeRollout', () => {
     it('resumes a paused version', async () => {
       prisma.verticalPackVersion.findUnique.mockResolvedValue({
-        id: 'v1', slug: 'aesthetic', version: 2, rolloutStage: 'paused', rolloutPercent: 25,
+        id: 'v1',
+        slug: 'aesthetic',
+        version: 2,
+        rolloutStage: 'paused',
+        rolloutPercent: 25,
       } as any);
       prisma.verticalPackVersion.update.mockResolvedValue({
-        id: 'v1', slug: 'aesthetic', version: 2, rolloutStage: 'rolling_out', rolloutPercent: 25,
+        id: 'v1',
+        slug: 'aesthetic',
+        version: 2,
+        rolloutStage: 'rolling_out',
+        rolloutPercent: 25,
       } as any);
 
       const result = await service.resumeRollout('aesthetic', 2);
@@ -245,7 +414,11 @@ describe('ConsolePacksService', () => {
 
     it('rejects resume from non-paused stage', async () => {
       prisma.verticalPackVersion.findUnique.mockResolvedValue({
-        id: 'v1', slug: 'aesthetic', version: 2, rolloutStage: 'rolling_out', rolloutPercent: 25,
+        id: 'v1',
+        slug: 'aesthetic',
+        version: 2,
+        rolloutStage: 'rolling_out',
+        rolloutPercent: 25,
       } as any);
 
       await expect(service.resumeRollout('aesthetic', 2)).rejects.toThrow(BadRequestException);
@@ -255,10 +428,19 @@ describe('ConsolePacksService', () => {
   describe('rollbackVersion', () => {
     it('rolls back a rolling_out version', async () => {
       prisma.verticalPackVersion.findUnique.mockResolvedValue({
-        id: 'v1', slug: 'aesthetic', version: 2, rolloutStage: 'rolling_out', rolloutPercent: 25,
+        id: 'v1',
+        slug: 'aesthetic',
+        version: 2,
+        rolloutStage: 'rolling_out',
+        rolloutPercent: 25,
       } as any);
       prisma.verticalPackVersion.update.mockResolvedValue({
-        id: 'v1', slug: 'aesthetic', version: 2, rolloutStage: 'rolled_back', rolledBackAt: new Date(), rolledBackReason: 'Bug found',
+        id: 'v1',
+        slug: 'aesthetic',
+        version: 2,
+        rolloutStage: 'rolled_back',
+        rolledBackAt: new Date(),
+        rolledBackReason: 'Bug found',
       } as any);
 
       const result = await service.rollbackVersion('aesthetic', 2, 'Bug found');
@@ -269,10 +451,19 @@ describe('ConsolePacksService', () => {
 
     it('rolls back a completed version', async () => {
       prisma.verticalPackVersion.findUnique.mockResolvedValue({
-        id: 'v1', slug: 'aesthetic', version: 2, rolloutStage: 'completed', rolloutPercent: 100,
+        id: 'v1',
+        slug: 'aesthetic',
+        version: 2,
+        rolloutStage: 'completed',
+        rolloutPercent: 100,
       } as any);
       prisma.verticalPackVersion.update.mockResolvedValue({
-        id: 'v1', slug: 'aesthetic', version: 2, rolloutStage: 'rolled_back', rolledBackAt: new Date(), rolledBackReason: 'Critical issue',
+        id: 'v1',
+        slug: 'aesthetic',
+        version: 2,
+        rolloutStage: 'rolled_back',
+        rolledBackAt: new Date(),
+        rolledBackReason: 'Critical issue',
       } as any);
 
       const result = await service.rollbackVersion('aesthetic', 2, 'Critical issue');
@@ -282,7 +473,11 @@ describe('ConsolePacksService', () => {
 
     it('rejects rollback from draft stage', async () => {
       prisma.verticalPackVersion.findUnique.mockResolvedValue({
-        id: 'v1', slug: 'aesthetic', version: 2, rolloutStage: 'draft', rolloutPercent: 0,
+        id: 'v1',
+        slug: 'aesthetic',
+        version: 2,
+        rolloutStage: 'draft',
+        rolloutPercent: 0,
       } as any);
 
       await expect(service.rollbackVersion('aesthetic', 2, 'reason')).rejects.toThrow(
@@ -295,8 +490,13 @@ describe('ConsolePacksService', () => {
     it('returns pinned businesses with details', async () => {
       prisma.packTenantPin.findMany.mockResolvedValue([
         {
-          id: 'pin1', businessId: 'biz1', packSlug: 'aesthetic', pinnedVersion: 1, reason: 'Legacy config',
-          pinnedById: 'admin1', createdAt: new Date(),
+          id: 'pin1',
+          businessId: 'biz1',
+          packSlug: 'aesthetic',
+          pinnedVersion: 1,
+          reason: 'Legacy config',
+          pinnedById: 'admin1',
+          createdAt: new Date(),
           business: { id: 'biz1', name: 'Glow Clinic', slug: 'glow-clinic' },
           pinnedBy: { id: 'admin1', name: 'Admin', email: 'admin@test.com' },
         },
@@ -323,10 +523,17 @@ describe('ConsolePacksService', () => {
     it('pins a business to a version', async () => {
       prisma.business.findUnique.mockResolvedValue({ id: 'biz1', name: 'Glow Clinic' } as any);
       prisma.verticalPackVersion.findUnique.mockResolvedValue({
-        id: 'v1', slug: 'aesthetic', version: 1,
+        id: 'v1',
+        slug: 'aesthetic',
+        version: 1,
       } as any);
       prisma.packTenantPin.upsert.mockResolvedValue({
-        id: 'pin1', businessId: 'biz1', packSlug: 'aesthetic', pinnedVersion: 1, reason: 'Legacy config', pinnedById: 'admin1',
+        id: 'pin1',
+        businessId: 'biz1',
+        packSlug: 'aesthetic',
+        pinnedVersion: 1,
+        reason: 'Legacy config',
+        pinnedById: 'admin1',
       } as any);
 
       const result = await service.pinBusiness('aesthetic', 'biz1', 1, 'Legacy config', 'admin1');
@@ -339,25 +546,27 @@ describe('ConsolePacksService', () => {
       prisma.business.findUnique.mockResolvedValue(null);
       prisma.verticalPackVersion.findUnique.mockResolvedValue({ id: 'v1' } as any);
 
-      await expect(service.pinBusiness('aesthetic', 'biz99', 1, 'reason', 'admin1')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(
+        service.pinBusiness('aesthetic', 'biz99', 1, 'reason', 'admin1'),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('throws NotFoundException when pack version not found', async () => {
       prisma.business.findUnique.mockResolvedValue({ id: 'biz1' } as any);
       prisma.verticalPackVersion.findUnique.mockResolvedValue(null);
 
-      await expect(service.pinBusiness('aesthetic', 'biz1', 99, 'reason', 'admin1')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(
+        service.pinBusiness('aesthetic', 'biz1', 99, 'reason', 'admin1'),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
   describe('unpinBusiness', () => {
     it('unpins a business', async () => {
       prisma.packTenantPin.findUnique.mockResolvedValue({
-        id: 'pin1', businessId: 'biz1', packSlug: 'aesthetic',
+        id: 'pin1',
+        businessId: 'biz1',
+        packSlug: 'aesthetic',
       } as any);
       prisma.packTenantPin.delete.mockResolvedValue({} as any);
 
@@ -370,9 +579,7 @@ describe('ConsolePacksService', () => {
     it('throws NotFoundException when pin not found', async () => {
       prisma.packTenantPin.findUnique.mockResolvedValue(null);
 
-      await expect(service.unpinBusiness('aesthetic', 'biz99')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.unpinBusiness('aesthetic', 'biz99')).rejects.toThrow(NotFoundException);
     });
   });
 });

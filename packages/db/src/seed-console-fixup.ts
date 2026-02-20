@@ -25,7 +25,13 @@ async function main() {
 
     // Services
     const zenServices = [];
-    for (const svc of ['Swedish Massage', 'Deep Tissue Massage', 'Hot Stone Therapy', 'Aromatherapy', 'Couples Massage']) {
+    for (const svc of [
+      'Swedish Massage',
+      'Deep Tissue Massage',
+      'Hot Stone Therapy',
+      'Aromatherapy',
+      'Couples Massage',
+    ]) {
       const durationMins = [30, 45, 60, 90][Math.floor(Math.random() * 4)];
       const service = await prisma.service.create({
         data: {
@@ -41,13 +47,80 @@ async function main() {
     console.log(`  ✓ ${zenServices.length} services created`);
 
     // Customers
-    const firstNames = ['Emma', 'Liam', 'Olivia', 'Noah', 'Ava', 'Elijah', 'Sophia', 'Lucas', 'Isabella', 'Mason',
-      'Mia', 'Logan', 'Charlotte', 'Alexander', 'Amelia', 'Ethan', 'Harper', 'Aiden', 'Evelyn', 'Jacob',
-      'Luna', 'Michael', 'Camila', 'Daniel', 'Gianna', 'Henry', 'Abigail', 'Sebastian', 'Emily', 'Jack',
-      'Ella', 'Owen', 'Elizabeth', 'Samuel', 'Sofia', 'Ryan', 'Avery', 'Nathan', 'Chloe', 'Caleb',
-      'Scarlett', 'Christian', 'Penelope', 'Isaiah', 'Layla', 'Thomas', 'Riley', 'Aaron', 'Zoey', 'Isaac'];
-    const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez',
-      'Wilson', 'Anderson', 'Taylor', 'Thomas', 'Lee', 'Harris', 'Clark', 'Lewis', 'Robinson', 'Walker'];
+    const firstNames = [
+      'Emma',
+      'Liam',
+      'Olivia',
+      'Noah',
+      'Ava',
+      'Elijah',
+      'Sophia',
+      'Lucas',
+      'Isabella',
+      'Mason',
+      'Mia',
+      'Logan',
+      'Charlotte',
+      'Alexander',
+      'Amelia',
+      'Ethan',
+      'Harper',
+      'Aiden',
+      'Evelyn',
+      'Jacob',
+      'Luna',
+      'Michael',
+      'Camila',
+      'Daniel',
+      'Gianna',
+      'Henry',
+      'Abigail',
+      'Sebastian',
+      'Emily',
+      'Jack',
+      'Ella',
+      'Owen',
+      'Elizabeth',
+      'Samuel',
+      'Sofia',
+      'Ryan',
+      'Avery',
+      'Nathan',
+      'Chloe',
+      'Caleb',
+      'Scarlett',
+      'Christian',
+      'Penelope',
+      'Isaiah',
+      'Layla',
+      'Thomas',
+      'Riley',
+      'Aaron',
+      'Zoey',
+      'Isaac',
+    ];
+    const lastNames = [
+      'Smith',
+      'Johnson',
+      'Williams',
+      'Brown',
+      'Jones',
+      'Garcia',
+      'Miller',
+      'Davis',
+      'Rodriguez',
+      'Martinez',
+      'Wilson',
+      'Anderson',
+      'Taylor',
+      'Thomas',
+      'Lee',
+      'Harris',
+      'Clark',
+      'Lewis',
+      'Robinson',
+      'Walker',
+    ];
 
     const zenCustomers = [];
     for (let i = 0; i < 50; i++) {
@@ -85,13 +158,15 @@ async function main() {
           staffId: staff.id,
           startTime,
           endTime: new Date(startTime.getTime() + (service.durationMins || 60) * 60 * 1000),
-          status: daysAgo === 0 ? 'CONFIRMED' : statuses[Math.floor(Math.random() * statuses.length)],
+          status:
+            daysAgo === 0 ? 'CONFIRMED' : statuses[Math.floor(Math.random() * statuses.length)],
         },
       });
       bookingCount++;
     }
 
-    for (let i = 0; i < 44; i++) { // 62 - 18 = 44
+    for (let i = 0; i < 44; i++) {
+      // 62 - 18 = 44
       const daysAgo = 8 + Math.floor(Math.random() * 23);
       const startTime = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
       startTime.setHours(9 + Math.floor(Math.random() * 9), Math.random() > 0.5 ? 0 : 30, 0, 0);

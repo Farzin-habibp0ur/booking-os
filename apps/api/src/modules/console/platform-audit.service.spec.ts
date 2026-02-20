@@ -11,10 +11,7 @@ describe('PlatformAuditService', () => {
     prisma = createMockPrisma();
 
     const module = await Test.createTestingModule({
-      providers: [
-        PlatformAuditService,
-        { provide: PrismaService, useValue: prisma },
-      ],
+      providers: [PlatformAuditService, { provide: PrismaService, useValue: prisma }],
     }).compile();
 
     service = module.get(PlatformAuditService);
@@ -42,9 +39,7 @@ describe('PlatformAuditService', () => {
   it('does not throw on failure', async () => {
     prisma.platformAuditLog.create.mockRejectedValue(new Error('DB error'));
 
-    await expect(
-      service.log('admin1', 'admin@test.com', 'BUSINESS_LOOKUP'),
-    ).resolves.not.toThrow();
+    await expect(service.log('admin1', 'admin@test.com', 'BUSINESS_LOOKUP')).resolves.not.toThrow();
   });
 
   it('logs with metadata', async () => {

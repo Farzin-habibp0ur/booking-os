@@ -149,9 +149,7 @@ describe('BusinessDirectoryPage', () => {
     });
 
     // Should have called with search param
-    expect(mockApi.get).toHaveBeenCalledWith(
-      expect.stringContaining('search=glow'),
-    );
+    expect(mockApi.get).toHaveBeenCalledWith(expect.stringContaining('search=glow'));
 
     jest.useRealTimers();
   });
@@ -170,9 +168,7 @@ describe('BusinessDirectoryPage', () => {
     });
 
     await waitFor(() => {
-      expect(mockApi.get).toHaveBeenCalledWith(
-        expect.stringContaining('plan=pro'),
-      );
+      expect(mockApi.get).toHaveBeenCalledWith(expect.stringContaining('plan=pro'));
     });
   });
 

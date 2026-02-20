@@ -11,10 +11,7 @@ describe('ConsoleHealthService', () => {
     prisma = createMockPrisma();
 
     const module = await Test.createTestingModule({
-      providers: [
-        ConsoleHealthService,
-        { provide: PrismaService, useValue: prisma },
-      ],
+      providers: [ConsoleHealthService, { provide: PrismaService, useValue: prisma }],
     }).compile();
 
     service = module.get(ConsoleHealthService);
@@ -78,14 +75,10 @@ describe('ConsoleHealthService', () => {
       .mockResolvedValueOnce(8); // failed 7d
 
     // Calendar sync: 10 connections, 3 with errors => 30% error rate => degraded
-    prisma.calendarConnection.count
-      .mockResolvedValueOnce(10)
-      .mockResolvedValueOnce(3);
+    prisma.calendarConnection.count.mockResolvedValueOnce(10).mockResolvedValueOnce(3);
 
     // Message delivery: 100 outbound, 1 failed => 1% => healthy
-    prisma.message.count
-      .mockResolvedValueOnce(100)
-      .mockResolvedValueOnce(1);
+    prisma.message.count.mockResolvedValueOnce(100).mockResolvedValueOnce(1);
 
     // Business health distribution
     prisma.business.findMany.mockResolvedValue([

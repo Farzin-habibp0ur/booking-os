@@ -102,9 +102,7 @@ export class ConsoleBusinessesService {
     );
 
     // Filter by health if requested (post-query since it's computed)
-    const filtered = query.health
-      ? items.filter((item) => item.health === query.health)
-      : items;
+    const filtered = query.health ? items.filter((item) => item.health === query.health) : items;
 
     return {
       items: filtered,

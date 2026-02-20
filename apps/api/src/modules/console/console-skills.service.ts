@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma.service';
 import { PACK_SKILLS, AgentSkillDefinition } from '../agent-skills/agent-skills.service';
 
@@ -21,15 +17,16 @@ export class ConsoleSkillsService {
 
         const skillStats = await Promise.all(
           skills.map(async (skill) => {
-            const enabledCount = businessCount > 0
-              ? await this.prisma.agentConfig.count({
-                  where: {
-                    agentType: skill.agentType,
-                    isEnabled: true,
-                    business: { verticalPack: slug },
-                  },
-                })
-              : 0;
+            const enabledCount =
+              businessCount > 0
+                ? await this.prisma.agentConfig.count({
+                    where: {
+                      agentType: skill.agentType,
+                      isEnabled: true,
+                      business: { verticalPack: slug },
+                    },
+                  })
+                : 0;
 
             return {
               agentType: skill.agentType,
@@ -40,9 +37,7 @@ export class ConsoleSkillsService {
               enabledCount,
               businessCount,
               adoptionPercent:
-                businessCount > 0
-                  ? Math.round((enabledCount / businessCount) * 100)
-                  : 0,
+                businessCount > 0 ? Math.round((enabledCount / businessCount) * 100) : 0,
             };
           }),
         );

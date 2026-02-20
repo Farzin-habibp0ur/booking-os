@@ -128,13 +128,25 @@ export class AuthController {
   @Get('me')
   @UseGuards(AuthGuard('jwt'))
   async getMe(
-    @CurrentUser() user: { sub: string; viewAs?: boolean; viewAsSessionId?: string; originalBusinessId?: string; originalRole?: string },
+    @CurrentUser()
+    user: {
+      sub: string;
+      viewAs?: boolean;
+      viewAsSessionId?: string;
+      originalBusinessId?: string;
+      originalRole?: string;
+    },
     @Res({ passthrough: true }) res: Response,
   ) {
     res.set('Cache-Control', 'no-store');
     res.removeHeader('ETag');
     const viewAsClaims = user.viewAs
-      ? { viewAs: true, viewAsSessionId: user.viewAsSessionId, originalBusinessId: user.originalBusinessId, originalRole: user.originalRole }
+      ? {
+          viewAs: true,
+          viewAsSessionId: user.viewAsSessionId,
+          originalBusinessId: user.originalBusinessId,
+          originalRole: user.originalRole,
+        }
       : undefined;
     return this.authService.getMe(user.sub, viewAsClaims);
   }

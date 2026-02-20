@@ -12,7 +12,9 @@ jest.mock('@/lib/api', () => ({
 jest.mock('next/link', () => ({
   __esModule: true,
   default: ({ children, href, ...props }: any) => (
-    <a href={href} {...props}>{children}</a>
+    <a href={href} {...props}>
+      {children}
+    </a>
   ),
 }));
 
@@ -21,7 +23,9 @@ jest.mock('next/navigation', () => ({
   usePathname: () => '/console/agents',
 }));
 
-const { api } = require('@/lib/api');
+const { api } = jest.requireMock<{ api: jest.Mocked<(typeof import('@/lib/api'))['api']> }>(
+  '@/lib/api',
+);
 
 const mockPerformance = {
   totalRuns: 42,
@@ -29,11 +33,51 @@ const mockPerformance = {
   cardsCreated: 120,
   feedbackHelpfulRate: 75,
   byAgentType: [
-    { agentType: 'WAITLIST', runs: 10, completed: 9, failed: 1, successRate: 90, cardsCreated: 30, helpfulRate: 80 },
-    { agentType: 'RETENTION', runs: 8, completed: 7, failed: 1, successRate: 88, cardsCreated: 20, helpfulRate: 70 },
-    { agentType: 'DATA_HYGIENE', runs: 12, completed: 10, failed: 2, successRate: 83, cardsCreated: 40, helpfulRate: 65 },
-    { agentType: 'SCHEDULING_OPTIMIZER', runs: 6, completed: 6, failed: 0, successRate: 100, cardsCreated: 15, helpfulRate: 90 },
-    { agentType: 'QUOTE_FOLLOWUP', runs: 6, completed: 5, failed: 1, successRate: 83, cardsCreated: 15, helpfulRate: 70 },
+    {
+      agentType: 'WAITLIST',
+      runs: 10,
+      completed: 9,
+      failed: 1,
+      successRate: 90,
+      cardsCreated: 30,
+      helpfulRate: 80,
+    },
+    {
+      agentType: 'RETENTION',
+      runs: 8,
+      completed: 7,
+      failed: 1,
+      successRate: 88,
+      cardsCreated: 20,
+      helpfulRate: 70,
+    },
+    {
+      agentType: 'DATA_HYGIENE',
+      runs: 12,
+      completed: 10,
+      failed: 2,
+      successRate: 83,
+      cardsCreated: 40,
+      helpfulRate: 65,
+    },
+    {
+      agentType: 'SCHEDULING_OPTIMIZER',
+      runs: 6,
+      completed: 6,
+      failed: 0,
+      successRate: 100,
+      cardsCreated: 15,
+      helpfulRate: 90,
+    },
+    {
+      agentType: 'QUOTE_FOLLOWUP',
+      runs: 6,
+      completed: 5,
+      failed: 1,
+      successRate: 83,
+      cardsCreated: 15,
+      helpfulRate: 70,
+    },
   ],
 };
 
@@ -50,17 +94,49 @@ const mockFunnel = {
 };
 
 const mockFailures = [
-  { error: 'Timeout connecting to API', count: 5, agentType: 'WAITLIST', lastSeen: '2026-02-20T10:00:00Z' },
-  { error: 'Rate limit exceeded', count: 3, agentType: 'RETENTION', lastSeen: '2026-02-19T10:00:00Z' },
+  {
+    error: 'Timeout connecting to API',
+    count: 5,
+    agentType: 'WAITLIST',
+    lastSeen: '2026-02-20T10:00:00Z',
+  },
+  {
+    error: 'Rate limit exceeded',
+    count: 3,
+    agentType: 'RETENTION',
+    lastSeen: '2026-02-19T10:00:00Z',
+  },
 ];
 
 const mockAbnormal = [
-  { businessId: 'biz1', businessName: 'Bad Clinic', businessSlug: 'bad-clinic', totalRuns: 20, failedRuns: 15, failureRate: 75, platformAvgRate: 12 },
+  {
+    businessId: 'biz1',
+    businessName: 'Bad Clinic',
+    businessSlug: 'bad-clinic',
+    totalRuns: 20,
+    failedRuns: 15,
+    failureRate: 75,
+    platformAvgRate: 12,
+  },
 ];
 
 const mockDefaults = [
-  { id: 'd1', agentType: 'WAITLIST', maxAutonomyLevel: 'SUGGEST', defaultEnabled: false, confidenceThreshold: 0.7, requiresReview: true },
-  { id: 'd2', agentType: 'RETENTION', maxAutonomyLevel: 'AUTO', defaultEnabled: true, confidenceThreshold: 0.8, requiresReview: false },
+  {
+    id: 'd1',
+    agentType: 'WAITLIST',
+    maxAutonomyLevel: 'SUGGEST',
+    defaultEnabled: false,
+    confidenceThreshold: 0.7,
+    requiresReview: true,
+  },
+  {
+    id: 'd2',
+    agentType: 'RETENTION',
+    maxAutonomyLevel: 'AUTO',
+    defaultEnabled: true,
+    confidenceThreshold: 0.8,
+    requiresReview: false,
+  },
 ];
 
 function setupMocks() {
@@ -70,13 +146,21 @@ function setupMocks() {
     if (url.includes('/failures')) return Promise.resolve(mockFailures);
     if (url.includes('/abnormal')) return Promise.resolve(mockAbnormal);
     if (url.includes('/platform-defaults')) return Promise.resolve(mockDefaults);
-    if (url.includes('/tenant/')) return Promise.resolve({
-      businessId: 'biz1',
-      businessName: 'Test Clinic',
-      agents: [
-        { agentType: 'WAITLIST', isEnabled: true, autonomyLevel: 'SUGGEST', runsLast7d: 5, successRate: 90, cardsCreated: 10 },
-      ],
-    });
+    if (url.includes('/tenant/'))
+      return Promise.resolve({
+        businessId: 'biz1',
+        businessName: 'Test Clinic',
+        agents: [
+          {
+            agentType: 'WAITLIST',
+            isEnabled: true,
+            autonomyLevel: 'SUGGEST',
+            runsLast7d: 5,
+            successRate: 90,
+            cardsCreated: 10,
+          },
+        ],
+      });
     return Promise.resolve({});
   });
 }
@@ -138,7 +222,8 @@ describe('ConsoleAgentsPage', () => {
 
   it('shows empty state when no runs', async () => {
     api.get.mockImplementation((url: string) => {
-      if (url.includes('/performance')) return Promise.resolve({ ...mockPerformance, totalRuns: 0 });
+      if (url.includes('/performance'))
+        return Promise.resolve({ ...mockPerformance, totalRuns: 0 });
       if (url.includes('/funnel')) return Promise.resolve(mockFunnel);
       if (url.includes('/failures')) return Promise.resolve([]);
       if (url.includes('/abnormal')) return Promise.resolve([]);

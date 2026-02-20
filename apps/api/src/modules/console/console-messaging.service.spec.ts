@@ -11,10 +11,7 @@ describe('ConsoleMessagingService', () => {
   beforeEach(async () => {
     prisma = createMockPrisma();
     const module = await Test.createTestingModule({
-      providers: [
-        ConsoleMessagingService,
-        { provide: PrismaService, useValue: prisma },
-      ],
+      providers: [ConsoleMessagingService, { provide: PrismaService, useValue: prisma }],
     }).compile();
     service = module.get(ConsoleMessagingService);
   });
@@ -92,9 +89,7 @@ describe('ConsoleMessagingService', () => {
         { failureReason: null, createdAt: now, conversation: { businessId: 'biz1' } },
       ] as any);
 
-      prisma.business.findMany.mockResolvedValue([
-        { id: 'biz1', name: 'Clinic A' },
-      ] as any);
+      prisma.business.findMany.mockResolvedValue([{ id: 'biz1', name: 'Clinic A' }] as any);
 
       const result = await service.getFailures();
 
@@ -115,7 +110,10 @@ describe('ConsoleMessagingService', () => {
     it('returns healthy when failure rate is below 10%', async () => {
       prisma.message.findMany.mockResolvedValue([
         // 11 outbound with 1 failed = 9.09% < 10%
-        ...Array.from({ length: 10 }, () => ({ direction: 'OUTBOUND', deliveryStatus: 'DELIVERED' })),
+        ...Array.from({ length: 10 }, () => ({
+          direction: 'OUTBOUND',
+          deliveryStatus: 'DELIVERED',
+        })),
         { direction: 'OUTBOUND', deliveryStatus: 'FAILED' },
         { direction: 'INBOUND', deliveryStatus: 'DELIVERED' },
         { direction: 'INBOUND', deliveryStatus: 'DELIVERED' },
@@ -171,7 +169,11 @@ describe('ConsoleMessagingService', () => {
       ] as any);
 
       prisma.message.findMany.mockResolvedValue([
-        { deliveryStatus: 'DELIVERED', direction: 'OUTBOUND', conversation: { businessId: 'biz1' } },
+        {
+          deliveryStatus: 'DELIVERED',
+          direction: 'OUTBOUND',
+          conversation: { businessId: 'biz1' },
+        },
         { deliveryStatus: 'FAILED', direction: 'OUTBOUND', conversation: { businessId: 'biz1' } },
       ] as any);
 
@@ -199,13 +201,9 @@ describe('ConsoleMessagingService', () => {
         name: 'Test Clinic',
       } as any);
 
-      prisma.location.findMany.mockResolvedValue([
-        { whatsappConfig: { phone: '123' } },
-      ] as any);
+      prisma.location.findMany.mockResolvedValue([{ whatsappConfig: { phone: '123' } }] as any);
 
-      prisma.message.findMany.mockResolvedValue([
-        { deliveryStatus: 'DELIVERED' },
-      ] as any);
+      prisma.message.findMany.mockResolvedValue([{ deliveryStatus: 'DELIVERED' }] as any);
 
       prisma.reminder.count.mockResolvedValue(0);
       prisma.conversation.count.mockResolvedValue(3);
@@ -223,9 +221,7 @@ describe('ConsoleMessagingService', () => {
         name: 'Test Clinic',
       } as any);
 
-      prisma.location.findMany.mockResolvedValue([
-        { whatsappConfig: null },
-      ] as any);
+      prisma.location.findMany.mockResolvedValue([{ whatsappConfig: null }] as any);
 
       prisma.message.findMany.mockResolvedValue([]);
 
@@ -250,9 +246,7 @@ describe('ConsoleMessagingService', () => {
     it('throws NotFoundException for invalid business', async () => {
       prisma.business.findUnique.mockResolvedValue(null);
 
-      await expect(service.getFixChecklist('invalid')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.getFixChecklist('invalid')).rejects.toThrow(NotFoundException);
     });
   });
 });

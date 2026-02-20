@@ -12,10 +12,7 @@ describe('ConsoleSkillsService', () => {
     prisma = createMockPrisma();
 
     const module = await Test.createTestingModule({
-      providers: [
-        ConsoleSkillsService,
-        { provide: PrismaService, useValue: prisma },
-      ],
+      providers: [ConsoleSkillsService, { provide: PrismaService, useValue: prisma }],
     }).compile();
 
     service = module.get(ConsoleSkillsService);
@@ -25,18 +22,18 @@ describe('ConsoleSkillsService', () => {
     it('returns skills grouped by pack with adoption stats', async () => {
       // Business counts for each pack (aesthetic, dealership, general)
       prisma.business.count
-        .mockResolvedValueOnce(5)  // aesthetic
-        .mockResolvedValueOnce(3)  // dealership
+        .mockResolvedValueOnce(5) // aesthetic
+        .mockResolvedValueOnce(3) // dealership
         .mockResolvedValueOnce(2); // general
 
       // Agent config counts for each skill in each pack
       // aesthetic: 5 skills
       prisma.agentConfig.count
-        .mockResolvedValueOnce(4)  // WAITLIST enabled on aesthetic
-        .mockResolvedValueOnce(3)  // RETENTION
-        .mockResolvedValueOnce(1)  // DATA_HYGIENE
-        .mockResolvedValueOnce(5)  // SCHEDULING_OPTIMIZER
-        .mockResolvedValueOnce(2)  // QUOTE_FOLLOWUP
+        .mockResolvedValueOnce(4) // WAITLIST enabled on aesthetic
+        .mockResolvedValueOnce(3) // RETENTION
+        .mockResolvedValueOnce(1) // DATA_HYGIENE
+        .mockResolvedValueOnce(5) // SCHEDULING_OPTIMIZER
+        .mockResolvedValueOnce(2) // QUOTE_FOLLOWUP
         // dealership: 5 skills
         .mockResolvedValueOnce(2)
         .mockResolvedValueOnce(3)
@@ -96,12 +93,28 @@ describe('ConsoleSkillsService', () => {
     it('returns per-tenant adoption breakdown', async () => {
       prisma.agentConfig.findMany.mockResolvedValue([
         {
-          agentType: 'WAITLIST', isEnabled: true, autonomyLevel: 'SUGGEST', createdAt: new Date(),
-          business: { id: 'biz1', name: 'Glow Clinic', slug: 'glow-clinic', verticalPack: 'aesthetic' },
+          agentType: 'WAITLIST',
+          isEnabled: true,
+          autonomyLevel: 'SUGGEST',
+          createdAt: new Date(),
+          business: {
+            id: 'biz1',
+            name: 'Glow Clinic',
+            slug: 'glow-clinic',
+            verticalPack: 'aesthetic',
+          },
         },
         {
-          agentType: 'WAITLIST', isEnabled: false, autonomyLevel: 'SUGGEST', createdAt: new Date(),
-          business: { id: 'biz2', name: 'Auto Shop', slug: 'auto-shop', verticalPack: 'dealership' },
+          agentType: 'WAITLIST',
+          isEnabled: false,
+          autonomyLevel: 'SUGGEST',
+          createdAt: new Date(),
+          business: {
+            id: 'biz2',
+            name: 'Auto Shop',
+            slug: 'auto-shop',
+            verticalPack: 'dealership',
+          },
         },
       ] as any);
       prisma.business.count.mockResolvedValue(10);
@@ -118,9 +131,7 @@ describe('ConsoleSkillsService', () => {
     });
 
     it('throws NotFoundException for invalid agentType', async () => {
-      await expect(service.getSkillAdoption('INVALID')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.getSkillAdoption('INVALID')).rejects.toThrow(NotFoundException);
     });
 
     it('handles no configs', async () => {
@@ -151,10 +162,7 @@ describe('ConsoleSkillsService', () => {
     });
 
     it('disables skill for all businesses', async () => {
-      prisma.business.findMany.mockResolvedValue([
-        { id: 'biz1' },
-        { id: 'biz2' },
-      ] as any);
+      prisma.business.findMany.mockResolvedValue([{ id: 'biz1' }, { id: 'biz2' }] as any);
       prisma.agentConfig.upsert.mockResolvedValue({} as any);
 
       const result = await service.platformOverride('WAITLIST', false, 'admin1');

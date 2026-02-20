@@ -185,7 +185,10 @@ export default function ConsoleMessagingPage() {
       )}
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-6 bg-slate-100 dark:bg-slate-800 rounded-xl p-1" data-testid="messaging-tabs">
+      <div
+        className="flex gap-1 mb-6 bg-slate-100 dark:bg-slate-800 rounded-xl p-1"
+        data-testid="messaging-tabs"
+      >
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -206,22 +209,33 @@ export default function ConsoleMessagingPage() {
       {activeTab === 'dashboard' && dashboard && (
         <div data-testid="dashboard-tab">
           {/* KPI Strip */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" data-testid="messaging-kpi-cards">
+          <div
+            className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6"
+            data-testid="messaging-kpi-cards"
+          >
             <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-4">
               <div className="flex items-center gap-2 mb-2">
                 <Send size={14} className="text-sage-600" />
                 <span className="text-xs text-slate-400 uppercase tracking-wider">Sent (30d)</span>
               </div>
-              <p className="text-2xl font-serif font-bold text-slate-900 dark:text-white" data-testid="messages-sent">
+              <p
+                className="text-2xl font-serif font-bold text-slate-900 dark:text-white"
+                data-testid="messages-sent"
+              >
                 {dashboard.messagesSent}
               </p>
             </div>
             <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-4">
               <div className="flex items-center gap-2 mb-2">
                 <CheckCircle size={14} className="text-sage-600" />
-                <span className="text-xs text-slate-400 uppercase tracking-wider">Delivery Rate</span>
+                <span className="text-xs text-slate-400 uppercase tracking-wider">
+                  Delivery Rate
+                </span>
               </div>
-              <p className="text-2xl font-serif font-bold text-slate-900 dark:text-white" data-testid="delivery-rate">
+              <p
+                className="text-2xl font-serif font-bold text-slate-900 dark:text-white"
+                data-testid="delivery-rate"
+              >
                 {dashboard.deliveryRate}%
               </p>
             </div>
@@ -230,16 +244,24 @@ export default function ConsoleMessagingPage() {
                 <XCircle size={14} className="text-red-500" />
                 <span className="text-xs text-slate-400 uppercase tracking-wider">Failed</span>
               </div>
-              <p className="text-2xl font-serif font-bold text-red-500" data-testid="messages-failed">
+              <p
+                className="text-2xl font-serif font-bold text-red-500"
+                data-testid="messages-failed"
+              >
                 {dashboard.messagesFailed}
               </p>
             </div>
             <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-4">
               <div className="flex items-center gap-2 mb-2">
                 <MessageSquare size={14} className="text-sage-600" />
-                <span className="text-xs text-slate-400 uppercase tracking-wider">Reminders Sent</span>
+                <span className="text-xs text-slate-400 uppercase tracking-wider">
+                  Reminders Sent
+                </span>
               </div>
-              <p className="text-2xl font-serif font-bold text-slate-900 dark:text-white" data-testid="reminders-sent">
+              <p
+                className="text-2xl font-serif font-bold text-slate-900 dark:text-white"
+                data-testid="reminders-sent"
+              >
                 {dashboard.remindersSent}
               </p>
             </div>
@@ -271,7 +293,9 @@ export default function ConsoleMessagingPage() {
                     Webhook Status: {webhookHealth.isHealthy ? 'Healthy' : 'Degraded'}
                   </p>
                   <p className="text-xs text-slate-500">
-                    Inbound: {webhookHealth.recentInbound24h} | Outbound: {webhookHealth.recentOutbound24h} | Failed: {webhookHealth.failedOutbound24h} (24h)
+                    Inbound: {webhookHealth.recentInbound24h} | Outbound:{' '}
+                    {webhookHealth.recentOutbound24h} | Failed: {webhookHealth.failedOutbound24h}{' '}
+                    (24h)
                   </p>
                 </div>
               </div>
@@ -280,14 +304,24 @@ export default function ConsoleMessagingPage() {
 
           {/* Top Failure Reasons */}
           {failures && failures.topReasons.length > 0 && (
-            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6 mb-6" data-testid="failure-reasons">
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Top Failure Reasons</h2>
+            <div
+              className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6 mb-6"
+              data-testid="failure-reasons"
+            >
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+                Top Failure Reasons
+              </h2>
               <div className="space-y-3">
                 {failures.topReasons.map((r, i) => (
-                  <div key={i} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-xl">
+                  <div
+                    key={i}
+                    className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-xl"
+                  >
                     <div className="flex items-center gap-3">
                       <AlertCircle size={16} className="text-red-500 shrink-0" />
-                      <p className="text-sm font-medium text-slate-900 dark:text-white">{r.reason}</p>
+                      <p className="text-sm font-medium text-slate-900 dark:text-white">
+                        {r.reason}
+                      </p>
                     </div>
                     <span className="text-sm font-medium text-red-500">{r.count}</span>
                   </div>
@@ -298,8 +332,13 @@ export default function ConsoleMessagingPage() {
 
           {/* Top Impacted Tenants */}
           {failures && failures.impactedTenants.length > 0 && (
-            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6" data-testid="impacted-tenants">
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Top Impacted Tenants</h2>
+            <div
+              className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6"
+              data-testid="impacted-tenants"
+            >
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+                Top Impacted Tenants
+              </h2>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
@@ -311,7 +350,10 @@ export default function ConsoleMessagingPage() {
                   </thead>
                   <tbody>
                     {failures.impactedTenants.map((tenant) => (
-                      <tr key={tenant.businessId} className="border-b border-slate-50 dark:border-slate-800/50">
+                      <tr
+                        key={tenant.businessId}
+                        className="border-b border-slate-50 dark:border-slate-800/50"
+                      >
                         <td className="py-3 pr-4">
                           <Link
                             href={`/console/businesses/${tenant.businessId}`}
@@ -320,7 +362,9 @@ export default function ConsoleMessagingPage() {
                             {tenant.businessName}
                           </Link>
                         </td>
-                        <td className="py-3 pr-4 text-red-500 font-medium">{tenant.failureCount}</td>
+                        <td className="py-3 pr-4 text-red-500 font-medium">
+                          {tenant.failureCount}
+                        </td>
                         <td className="py-3 text-slate-500">
                           {new Date(tenant.lastFailure).toLocaleDateString()}
                         </td>
@@ -333,7 +377,10 @@ export default function ConsoleMessagingPage() {
           )}
 
           {dashboard.messagesSent === 0 && (
-            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-8 text-center" data-testid="empty-state">
+            <div
+              className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-8 text-center"
+              data-testid="empty-state"
+            >
               <MessageSquare size={32} className="mx-auto text-slate-300 mb-3" />
               <p className="text-slate-500">No messages sent in the last 30 days</p>
             </div>
@@ -345,13 +392,21 @@ export default function ConsoleMessagingPage() {
       {activeTab === 'tenant-status' && (
         <div data-testid="tenant-status-tab">
           {tenantStatuses.length === 0 ? (
-            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-8 text-center" data-testid="tenant-empty-state">
+            <div
+              className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-8 text-center"
+              data-testid="tenant-empty-state"
+            >
               <MessageSquare size={32} className="mx-auto text-slate-300 mb-3" />
               <p className="text-slate-500">No businesses found</p>
             </div>
           ) : (
-            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6" data-testid="tenant-status-table">
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">WhatsApp Status by Tenant</h2>
+            <div
+              className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6"
+              data-testid="tenant-status-table"
+            >
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+                WhatsApp Status by Tenant
+              </h2>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
@@ -404,7 +459,9 @@ export default function ConsoleMessagingPage() {
                                   style={{ width: `${tenant.recentDeliveryRate}%` }}
                                 />
                               </div>
-                              <span className="text-xs text-slate-500">{tenant.recentDeliveryRate}%</span>
+                              <span className="text-xs text-slate-500">
+                                {tenant.recentDeliveryRate}%
+                              </span>
                             </div>
                           </td>
                           <td className="py-3 pr-4 text-xs text-slate-500">
@@ -426,7 +483,10 @@ export default function ConsoleMessagingPage() {
                               {checklistLoading ? (
                                 <div className="animate-pulse space-y-2">
                                   {[...Array(4)].map((_, i) => (
-                                    <div key={i} className="h-8 bg-slate-200 dark:bg-slate-700 rounded" />
+                                    <div
+                                      key={i}
+                                      className="h-8 bg-slate-200 dark:bg-slate-700 rounded"
+                                    />
                                   ))}
                                 </div>
                               ) : checklist ? (
@@ -442,19 +502,30 @@ export default function ConsoleMessagingPage() {
                                         data-testid={`checklist-item-${item.id}`}
                                       >
                                         {item.status === 'ok' && (
-                                          <CheckCircle size={16} className="text-sage-600 shrink-0 mt-0.5" />
+                                          <CheckCircle
+                                            size={16}
+                                            className="text-sage-600 shrink-0 mt-0.5"
+                                          />
                                         )}
                                         {item.status === 'warning' && (
-                                          <AlertCircle size={16} className="text-amber-600 shrink-0 mt-0.5" />
+                                          <AlertCircle
+                                            size={16}
+                                            className="text-amber-600 shrink-0 mt-0.5"
+                                          />
                                         )}
                                         {item.status === 'error' && (
-                                          <XCircle size={16} className="text-red-500 shrink-0 mt-0.5" />
+                                          <XCircle
+                                            size={16}
+                                            className="text-red-500 shrink-0 mt-0.5"
+                                          />
                                         )}
                                         <div>
                                           <p className="text-sm font-medium text-slate-900 dark:text-white">
                                             {item.label}
                                           </p>
-                                          <p className="text-xs text-slate-500">{item.description}</p>
+                                          <p className="text-xs text-slate-500">
+                                            {item.description}
+                                          </p>
                                         </div>
                                       </div>
                                     ))}

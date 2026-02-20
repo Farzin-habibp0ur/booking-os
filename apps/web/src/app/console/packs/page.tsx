@@ -3,13 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { api } from '@/lib/api';
 import Link from 'next/link';
-import {
-  Package,
-  Layers,
-  ArrowRight,
-  ToggleLeft,
-  Users,
-} from 'lucide-react';
+import { Package, Layers, ArrowRight, ToggleLeft, Users } from 'lucide-react';
 
 interface PackRegistryItem {
   slug: string;
@@ -100,7 +94,10 @@ export default function ConsolePacksPage() {
       </h1>
 
       {/* Sub-navigation tabs */}
-      <div className="flex gap-1 mb-6 border-b border-slate-100 dark:border-slate-800" data-testid="packs-tabs">
+      <div
+        className="flex gap-1 mb-6 border-b border-slate-100 dark:border-slate-800"
+        data-testid="packs-tabs"
+      >
         <button
           onClick={() => setTab('registry')}
           className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-px ${
@@ -175,7 +172,10 @@ export default function ConsolePacksPage() {
               <div className="mb-3">
                 <div className="flex items-center justify-between text-xs mb-1">
                   <span className="text-slate-400">Adoption</span>
-                  <span className="text-slate-600 dark:text-slate-300 font-medium" data-testid={`adoption-${pack.slug}`}>
+                  <span
+                    className="text-slate-600 dark:text-slate-300 font-medium"
+                    data-testid={`adoption-${pack.slug}`}
+                  >
                     {pack.adoptionPercent}%
                   </span>
                 </div>

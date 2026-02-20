@@ -32,10 +32,7 @@ export class ConsoleBusinessesController {
   }
 
   @Get(':id')
-  async findOne(
-    @Param('id') id: string,
-    @CurrentUser() user: { sub: string; email: string },
-  ) {
+  async findOne(@Param('id') id: string, @CurrentUser() user: { sub: string; email: string }) {
     const result = await this.businessesService.findById(id);
 
     this.auditService.log(user.sub, user.email, 'BUSINESS_LOOKUP', {
@@ -47,10 +44,7 @@ export class ConsoleBusinessesController {
   }
 
   @Get(':id/staff')
-  async getStaff(
-    @Param('id') id: string,
-    @CurrentUser() user: { sub: string; email: string },
-  ) {
+  async getStaff(@Param('id') id: string, @CurrentUser() user: { sub: string; email: string }) {
     const result = await this.businessesService.getStaff(id);
 
     this.auditService.log(user.sub, user.email, 'BUSINESS_STAFF_LOOKUP', {
@@ -62,10 +56,7 @@ export class ConsoleBusinessesController {
   }
 
   @Get(':id/usage')
-  async getUsage(
-    @Param('id') id: string,
-    @CurrentUser() user: { sub: string; email: string },
-  ) {
+  async getUsage(@Param('id') id: string, @CurrentUser() user: { sub: string; email: string }) {
     const result = await this.businessesService.getUsageSnapshot(id);
 
     this.auditService.log(user.sub, user.email, 'BUSINESS_USAGE_LOOKUP', {

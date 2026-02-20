@@ -14,11 +14,7 @@ import { RolesGuard, Roles } from '../../common/roles.guard';
 import { ConsolePacksService } from './console-packs.service';
 import { PlatformAuditService } from './platform-audit.service';
 import { CurrentUser } from '../../common/decorators';
-import {
-  ConsoleRolloutDto,
-  ConsoleRollbackDto,
-  ConsolePinDto,
-} from '../../common/dto';
+import { ConsoleRolloutDto, ConsoleRollbackDto, ConsolePinDto } from '../../common/dto';
 
 @ApiTags('Console - Packs')
 @Controller('admin/packs-console')
@@ -31,9 +27,7 @@ export class ConsolePacksController {
   ) {}
 
   @Get('registry')
-  async getRegistry(
-    @CurrentUser() user: { sub: string; email: string },
-  ) {
+  async getRegistry(@CurrentUser() user: { sub: string; email: string }) {
     const result = await this.packsService.getRegistry();
 
     this.auditService.log(user.sub, user.email, 'PACK_REGISTRY_VIEW');
@@ -78,11 +72,7 @@ export class ConsolePacksController {
     @Body() body: ConsoleRolloutDto,
     @CurrentUser() user: { sub: string; email: string },
   ) {
-    const result = await this.packsService.startOrAdvanceRollout(
-      slug,
-      version,
-      body.targetPercent,
-    );
+    const result = await this.packsService.startOrAdvanceRollout(slug, version, body.targetPercent);
 
     this.auditService.log(user.sub, user.email, 'PACK_ROLLOUT_ADVANCE', {
       targetType: 'PACK_VERSION',
@@ -145,10 +135,7 @@ export class ConsolePacksController {
   }
 
   @Get(':slug/pins')
-  async getPins(
-    @Param('slug') slug: string,
-    @CurrentUser() user: { sub: string; email: string },
-  ) {
+  async getPins(@Param('slug') slug: string, @CurrentUser() user: { sub: string; email: string }) {
     const result = await this.packsService.getPins(slug);
 
     this.auditService.log(user.sub, user.email, 'PACK_PINS_VIEW', {

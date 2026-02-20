@@ -1,11 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Param,
-  Body,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Post, Param, Body, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard, Roles } from '../../common/roles.guard';
@@ -25,9 +18,7 @@ export class ConsoleSkillsController {
   ) {}
 
   @Get('catalog')
-  async getCatalog(
-    @CurrentUser() user: { sub: string; email: string },
-  ) {
+  async getCatalog(@CurrentUser() user: { sub: string; email: string }) {
     const result = await this.skillsService.getCatalog();
 
     this.auditService.log(user.sub, user.email, 'SKILLS_CATALOG_VIEW');
@@ -56,11 +47,7 @@ export class ConsoleSkillsController {
     @Body() body: ConsoleSkillOverrideDto,
     @CurrentUser() user: { sub: string; email: string },
   ) {
-    const result = await this.skillsService.platformOverride(
-      agentType,
-      body.enabled,
-      user.sub,
-    );
+    const result = await this.skillsService.platformOverride(agentType, body.enabled, user.sub);
 
     this.auditService.log(user.sub, user.email, 'SKILL_PLATFORM_OVERRIDE', {
       targetType: 'SKILL',

@@ -84,8 +84,13 @@ export default function ConsoleBillingPage() {
   if (error) {
     return (
       <div className="p-6 md:p-8 max-w-6xl">
-        <h1 className="text-2xl font-serif font-bold text-slate-900 dark:text-white mb-6">Billing</h1>
-        <div className="bg-red-50 dark:bg-red-900/20 rounded-2xl p-6 text-red-700 dark:text-red-400" data-testid="billing-error">
+        <h1 className="text-2xl font-serif font-bold text-slate-900 dark:text-white mb-6">
+          Billing
+        </h1>
+        <div
+          className="bg-red-50 dark:bg-red-900/20 rounded-2xl p-6 text-red-700 dark:text-red-400"
+          data-testid="billing-error"
+        >
           {error}
         </div>
       </div>
@@ -105,7 +110,10 @@ export default function ConsoleBillingPage() {
             <DollarSign size={14} className="text-sage-600" />
             <span className="text-xs text-slate-400 uppercase tracking-wider">MRR</span>
           </div>
-          <p className="text-2xl font-serif font-bold text-slate-900 dark:text-white" data-testid="mrr-value">
+          <p
+            className="text-2xl font-serif font-bold text-slate-900 dark:text-white"
+            data-testid="mrr-value"
+          >
             {formatCurrency(data.mrr)}
           </p>
         </div>
@@ -115,14 +123,20 @@ export default function ConsoleBillingPage() {
             <Users size={14} className="text-sage-600" />
             <span className="text-xs text-slate-400 uppercase tracking-wider">Active</span>
           </div>
-          <p className="text-2xl font-serif font-bold text-slate-900 dark:text-white" data-testid="active-count">
+          <p
+            className="text-2xl font-serif font-bold text-slate-900 dark:text-white"
+            data-testid="active-count"
+          >
             {data.activeCount}
           </p>
         </div>
 
         <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-4">
           <div className="flex items-center gap-2 mb-2">
-            <Percent size={14} className={data.churnRate > 0.05 ? 'text-red-500' : 'text-sage-600'} />
+            <Percent
+              size={14}
+              className={data.churnRate > 0.05 ? 'text-red-500' : 'text-sage-600'}
+            />
             <span className="text-xs text-slate-400 uppercase tracking-wider">Churn</span>
           </div>
           <p
@@ -138,7 +152,10 @@ export default function ConsoleBillingPage() {
             <DollarSign size={14} className="text-sage-600" />
             <span className="text-xs text-slate-400 uppercase tracking-wider">ARPA</span>
           </div>
-          <p className="text-2xl font-serif font-bold text-slate-900 dark:text-white" data-testid="arpa-value">
+          <p
+            className="text-2xl font-serif font-bold text-slate-900 dark:text-white"
+            data-testid="arpa-value"
+          >
             {formatCurrency(data.arpa)}
           </p>
         </div>
@@ -148,7 +165,10 @@ export default function ConsoleBillingPage() {
             <TrendingUp size={14} className="text-sage-600" />
             <span className="text-xs text-slate-400 uppercase tracking-wider">Trial → Paid</span>
           </div>
-          <p className="text-2xl font-serif font-bold text-slate-900 dark:text-white" data-testid="trial-to-paid">
+          <p
+            className="text-2xl font-serif font-bold text-slate-900 dark:text-white"
+            data-testid="trial-to-paid"
+          >
             {formatPercent(data.trialToPaidRate)}
           </p>
         </div>
@@ -167,17 +187,25 @@ export default function ConsoleBillingPage() {
                 <AlertTriangle size={18} className="text-amber-600" />
               </div>
               <div>
-                <p className="text-sm font-medium text-slate-900 dark:text-white">Past-Due Accounts</p>
+                <p className="text-sm font-medium text-slate-900 dark:text-white">
+                  Past-Due Accounts
+                </p>
                 <p className="text-xs text-slate-400">Requires attention</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               {data.pastDueCount > 0 && (
-                <span className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 text-xs font-medium px-2 py-1 rounded-full" data-testid="past-due-badge">
+                <span
+                  className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 text-xs font-medium px-2 py-1 rounded-full"
+                  data-testid="past-due-badge"
+                >
                   {data.pastDueCount}
                 </span>
               )}
-              <ArrowRight size={14} className="text-slate-400 group-hover:text-slate-600 transition-colors" />
+              <ArrowRight
+                size={14}
+                className="text-slate-400 group-hover:text-slate-600 transition-colors"
+              />
             </div>
           </div>
         </Link>
@@ -193,20 +221,35 @@ export default function ConsoleBillingPage() {
                 <CreditCard size={18} className="text-sage-600" />
               </div>
               <div>
-                <p className="text-sm font-medium text-slate-900 dark:text-white">All Subscriptions</p>
+                <p className="text-sm font-medium text-slate-900 dark:text-white">
+                  All Subscriptions
+                </p>
                 <p className="text-xs text-slate-400">Manage plans</p>
               </div>
             </div>
-            <ArrowRight size={14} className="text-slate-400 group-hover:text-slate-600 transition-colors" />
+            <ArrowRight
+              size={14}
+              className="text-slate-400 group-hover:text-slate-600 transition-colors"
+            />
           </div>
         </Link>
 
-        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-5" data-testid="plan-distribution">
-          <p className="text-sm font-medium text-slate-900 dark:text-white mb-3">Plan Distribution</p>
+        <div
+          className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-5"
+          data-testid="plan-distribution"
+        >
+          <p className="text-sm font-medium text-slate-900 dark:text-white mb-3">
+            Plan Distribution
+          </p>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-sm text-slate-500">Basic ($49/mo)</span>
-              <span className="text-sm font-medium text-slate-900 dark:text-white" data-testid="basic-count">{data.planDistribution.basic}</span>
+              <span
+                className="text-sm font-medium text-slate-900 dark:text-white"
+                data-testid="basic-count"
+              >
+                {data.planDistribution.basic}
+              </span>
             </div>
             <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
               <div
@@ -218,7 +261,12 @@ export default function ConsoleBillingPage() {
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-slate-500">Pro ($149/mo)</span>
-              <span className="text-sm font-medium text-slate-900 dark:text-white" data-testid="pro-count">{data.planDistribution.pro}</span>
+              <span
+                className="text-sm font-medium text-slate-900 dark:text-white"
+                data-testid="pro-count"
+              >
+                {data.planDistribution.pro}
+              </span>
             </div>
             <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
               <div
@@ -234,7 +282,10 @@ export default function ConsoleBillingPage() {
 
       {/* Past-Due Alert */}
       {data.pastDueCount > 0 && (
-        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-2xl p-4" data-testid="past-due-alert">
+        <div
+          className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-2xl p-4"
+          data-testid="past-due-alert"
+        >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <AlertTriangle size={18} className="text-amber-600" />
@@ -256,15 +307,21 @@ export default function ConsoleBillingPage() {
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-6">
         <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-4">
           <span className="text-xs text-slate-400">Trialing</span>
-          <p className="text-lg font-serif font-bold text-slate-900 dark:text-white">{data.trialCount}</p>
+          <p className="text-lg font-serif font-bold text-slate-900 dark:text-white">
+            {data.trialCount}
+          </p>
         </div>
         <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-4">
           <span className="text-xs text-slate-400">Canceled</span>
-          <p className="text-lg font-serif font-bold text-slate-900 dark:text-white">{data.canceledCount}</p>
+          <p className="text-lg font-serif font-bold text-slate-900 dark:text-white">
+            {data.canceledCount}
+          </p>
         </div>
         <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-4">
           <span className="text-xs text-slate-400">30d Revenue</span>
-          <p className="text-lg font-serif font-bold text-slate-900 dark:text-white">{formatCurrency(data.totalRevenue30d)}</p>
+          <p className="text-lg font-serif font-bold text-slate-900 dark:text-white">
+            {formatCurrency(data.totalRevenue30d)}
+          </p>
         </div>
       </div>
     </div>

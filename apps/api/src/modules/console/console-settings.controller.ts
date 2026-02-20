@@ -18,9 +18,7 @@ export class ConsoleSettingsController {
   ) {}
 
   @Get()
-  async getAllSettings(
-    @CurrentUser() user: { sub: string; email: string },
-  ) {
+  async getAllSettings(@CurrentUser() user: { sub: string; email: string }) {
     const result = await this.settingsService.getAllSettings();
 
     this.auditService.log(user.sub, user.email, 'SETTINGS_VIEW');
@@ -29,10 +27,7 @@ export class ConsoleSettingsController {
   }
 
   @Get(':key')
-  async getSetting(
-    @Param('key') key: string,
-    @CurrentUser() user: { sub: string; email: string },
-  ) {
+  async getSetting(@Param('key') key: string, @CurrentUser() user: { sub: string; email: string }) {
     return this.settingsService.getSetting(key);
   }
 

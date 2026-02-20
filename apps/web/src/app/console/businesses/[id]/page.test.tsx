@@ -32,9 +32,21 @@ const mockApi = api as jest.Mocked<typeof api>;
 
 jest.mock('lucide-react', () => {
   const icons = [
-    'ChevronRight', 'Globe', 'Calendar', 'Users', 'MessageSquare',
-    'ClipboardList', 'Megaphone', 'Bot', 'Eye', 'CreditCard', 'X',
-    'AlertTriangle', 'DollarSign', 'FileText', 'RefreshCw',
+    'ChevronRight',
+    'Globe',
+    'Calendar',
+    'Users',
+    'MessageSquare',
+    'ClipboardList',
+    'Megaphone',
+    'Bot',
+    'Eye',
+    'CreditCard',
+    'X',
+    'AlertTriangle',
+    'DollarSign',
+    'FileText',
+    'RefreshCw',
   ];
   const mocks: Record<string, any> = {};
   icons.forEach((name) => {
@@ -301,7 +313,8 @@ describe('Business360Page', () => {
       if (url.includes('/usage')) return Promise.resolve(mockUsage);
       if (url.includes('/billing/credits')) return Promise.resolve([]);
       if (url.includes('/billing/invoices')) return Promise.resolve([]);
-      if (url.includes('/billing')) return Promise.resolve({ subscription: null, credits: [], recentInvoices: [] });
+      if (url.includes('/billing'))
+        return Promise.resolve({ subscription: null, credits: [], recentInvoices: [] });
       return Promise.resolve(mockBusiness);
     });
 
@@ -444,15 +457,16 @@ describe('Business360Page', () => {
       if (url.includes('/usage')) return Promise.resolve(mockUsage);
       if (url.includes('/billing/credits')) return Promise.resolve([]);
       if (url.includes('/billing/invoices')) return Promise.resolve([]);
-      if (url.includes('/billing')) return Promise.resolve({
-        ...mockBillingData,
-        subscription: {
-          ...mockBillingData.subscription,
-          status: 'canceled',
-          canceledAt: '2026-02-10T00:00:00Z',
-          cancelReason: 'Non-payment',
-        },
-      });
+      if (url.includes('/billing'))
+        return Promise.resolve({
+          ...mockBillingData,
+          subscription: {
+            ...mockBillingData.subscription,
+            status: 'canceled',
+            canceledAt: '2026-02-10T00:00:00Z',
+            cancelReason: 'Non-payment',
+          },
+        });
       return Promise.resolve(mockBusiness);
     });
 

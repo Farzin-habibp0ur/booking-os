@@ -98,7 +98,9 @@ describe('ConsoleAuditPage', () => {
     render(<ConsoleAuditPage />);
 
     await waitFor(() => {
-      expect(screen.getByPlaceholderText('Search by actor, action, or target...')).toBeInTheDocument();
+      expect(
+        screen.getByPlaceholderText('Search by actor, action, or target...'),
+      ).toBeInTheDocument();
     });
 
     // Action filter dropdown with options

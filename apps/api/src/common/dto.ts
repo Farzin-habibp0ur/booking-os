@@ -996,7 +996,8 @@ export class CreateAutomationRuleDto {
   @IsString()
   @IsNotEmpty()
   @IsIn(['BOOKING_CREATED', 'BOOKING_UPCOMING', 'STATUS_CHANGED', 'BOOKING_CANCELLED'], {
-    message: 'trigger must be one of: BOOKING_CREATED, BOOKING_UPCOMING, STATUS_CHANGED, BOOKING_CANCELLED',
+    message:
+      'trigger must be one of: BOOKING_CREATED, BOOKING_UPCOMING, STATUS_CHANGED, BOOKING_CANCELLED',
   })
   trigger!: string;
 
@@ -1039,7 +1040,8 @@ export class UpdateAutomationRuleDto {
   @IsString()
   @IsOptional()
   @IsIn(['BOOKING_CREATED', 'BOOKING_UPCOMING', 'STATUS_CHANGED', 'BOOKING_CANCELLED'], {
-    message: 'trigger must be one of: BOOKING_CREATED, BOOKING_UPCOMING, STATUS_CHANGED, BOOKING_CANCELLED',
+    message:
+      'trigger must be one of: BOOKING_CREATED, BOOKING_UPCOMING, STATUS_CHANGED, BOOKING_CANCELLED',
   })
   trigger?: string;
 

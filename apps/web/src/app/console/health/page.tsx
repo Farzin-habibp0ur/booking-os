@@ -73,7 +73,9 @@ export default function ConsoleHealthPage() {
   if (loading && !data) {
     return (
       <div className="p-6 md:p-8 max-w-5xl">
-        <h1 className="text-2xl font-serif font-bold text-slate-900 dark:text-white mb-6">System Health</h1>
+        <h1 className="text-2xl font-serif font-bold text-slate-900 dark:text-white mb-6">
+          System Health
+        </h1>
         <div className="flex items-center justify-center py-20">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sage-600" />
         </div>
@@ -84,7 +86,9 @@ export default function ConsoleHealthPage() {
   if (!data) {
     return (
       <div className="p-6 md:p-8 max-w-5xl">
-        <h1 className="text-2xl font-serif font-bold text-slate-900 dark:text-white mb-6">System Health</h1>
+        <h1 className="text-2xl font-serif font-bold text-slate-900 dark:text-white mb-6">
+          System Health
+        </h1>
         <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-8 text-center">
           <XCircle className="mx-auto text-red-400 mb-4" size={48} />
           <p className="text-sm text-slate-500">Failed to load health data.</p>
@@ -99,7 +103,9 @@ export default function ConsoleHealthPage() {
   return (
     <div className="p-6 md:p-8 max-w-5xl">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-serif font-bold text-slate-900 dark:text-white">System Health</h1>
+        <h1 className="text-2xl font-serif font-bold text-slate-900 dark:text-white">
+          System Health
+        </h1>
         <button
           onClick={fetchHealth}
           disabled={loading}
@@ -126,17 +132,24 @@ export default function ConsoleHealthPage() {
       </div>
 
       {/* Service Checks */}
-      <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Service Checks</h2>
+      <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">
+        Service Checks
+      </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         {data.checks.map((check) => {
           const config = STATUS_CONFIG[check.status];
           const CheckIcon = config.icon;
           return (
-            <div key={check.name} className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-5">
+            <div
+              key={check.name}
+              className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-5"
+            >
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <div className={`w-2 h-2 rounded-full ${config.dot}`} />
-                  <h3 className="text-sm font-semibold text-slate-900 dark:text-white">{check.name}</h3>
+                  <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
+                    {check.name}
+                  </h3>
                 </div>
                 <CheckIcon className={config.color} size={18} />
               </div>
@@ -150,7 +163,9 @@ export default function ConsoleHealthPage() {
       </div>
 
       {/* Business Health Distribution */}
-      <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Business Health Distribution</h2>
+      <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">
+        Business Health Distribution
+      </h2>
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-5">
         <div className="grid grid-cols-3 gap-4 mb-4">
           <div className="text-center">
@@ -158,21 +173,27 @@ export default function ConsoleHealthPage() {
               <div className="w-3 h-3 rounded-full bg-sage-500" />
               <span className="text-sm text-slate-500">Healthy</span>
             </div>
-            <p className="text-2xl font-serif font-bold text-sage-700 dark:text-sage-400">{data.businessHealth.green}</p>
+            <p className="text-2xl font-serif font-bold text-sage-700 dark:text-sage-400">
+              {data.businessHealth.green}
+            </p>
           </div>
           <div className="text-center">
             <div className="flex items-center justify-center gap-2 mb-1">
               <div className="w-3 h-3 rounded-full bg-amber-500" />
               <span className="text-sm text-slate-500">At Risk</span>
             </div>
-            <p className="text-2xl font-serif font-bold text-amber-700 dark:text-amber-400">{data.businessHealth.yellow}</p>
+            <p className="text-2xl font-serif font-bold text-amber-700 dark:text-amber-400">
+              {data.businessHealth.yellow}
+            </p>
           </div>
           <div className="text-center">
             <div className="flex items-center justify-center gap-2 mb-1">
               <div className="w-3 h-3 rounded-full bg-red-500" />
               <span className="text-sm text-slate-500">Critical</span>
             </div>
-            <p className="text-2xl font-serif font-bold text-red-700 dark:text-red-400">{data.businessHealth.red}</p>
+            <p className="text-2xl font-serif font-bold text-red-700 dark:text-red-400">
+              {data.businessHealth.red}
+            </p>
           </div>
         </div>
 
@@ -185,7 +206,9 @@ export default function ConsoleHealthPage() {
             />
             <div
               className="bg-amber-500 transition-all"
-              style={{ width: `${(data.businessHealth.yellow / data.businessHealth.total) * 100}%` }}
+              style={{
+                width: `${(data.businessHealth.yellow / data.businessHealth.total) * 100}%`,
+              }}
             />
             <div
               className="bg-red-500 transition-all"
@@ -193,7 +216,9 @@ export default function ConsoleHealthPage() {
             />
           </div>
         )}
-        <p className="text-xs text-slate-400 mt-2 text-center">{data.businessHealth.total} total businesses</p>
+        <p className="text-xs text-slate-400 mt-2 text-center">
+          {data.businessHealth.total} total businesses
+        </p>
       </div>
     </div>
   );

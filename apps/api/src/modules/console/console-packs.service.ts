@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  Logger,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma.service';
 import { PACK_SKILLS } from '../agent-skills/agent-skills.service';
 
@@ -55,9 +50,7 @@ export class ConsolePacksService {
           businessCount,
           totalBusinesses,
           adoptionPercent:
-            totalBusinesses > 0
-              ? Math.round((businessCount / totalBusinesses) * 100)
-              : 0,
+            totalBusinesses > 0 ? Math.round((businessCount / totalBusinesses) * 100) : 0,
           skillCount: skills.length,
           versionCount: versions.length,
         };
@@ -105,9 +98,7 @@ export class ConsolePacksService {
       businessCount,
       totalBusinesses,
       adoptionPercent:
-        totalBusinesses > 0
-          ? Math.round((businessCount / totalBusinesses) * 100)
-          : 0,
+        totalBusinesses > 0 ? Math.round((businessCount / totalBusinesses) * 100) : 0,
       pinnedCount,
     };
   }
@@ -206,9 +197,7 @@ export class ConsolePacksService {
     }
 
     if (packVersion.rolloutStage !== 'rolling_out') {
-      throw new BadRequestException(
-        `Cannot pause rollout in "${packVersion.rolloutStage}" stage`,
-      );
+      throw new BadRequestException(`Cannot pause rollout in "${packVersion.rolloutStage}" stage`);
     }
 
     const updated = await this.prisma.verticalPackVersion.update({
@@ -241,9 +230,7 @@ export class ConsolePacksService {
     }
 
     if (packVersion.rolloutStage !== 'paused') {
-      throw new BadRequestException(
-        `Cannot resume rollout in "${packVersion.rolloutStage}" stage`,
-      );
+      throw new BadRequestException(`Cannot resume rollout in "${packVersion.rolloutStage}" stage`);
     }
 
     const updated = await this.prisma.verticalPackVersion.update({
@@ -276,9 +263,7 @@ export class ConsolePacksService {
 
     const rollbackable = ['rolling_out', 'paused', 'completed'];
     if (!rollbackable.includes(packVersion.rolloutStage)) {
-      throw new BadRequestException(
-        `Cannot rollback from "${packVersion.rolloutStage}" stage`,
-      );
+      throw new BadRequestException(`Cannot rollback from "${packVersion.rolloutStage}" stage`);
     }
 
     const updated = await this.prisma.verticalPackVersion.update({

@@ -28,7 +28,9 @@ async function main() {
     console.log('• Platform business exists:', platformBiz.id);
   }
 
-  let superAdmin = await prisma.staff.findFirst({ where: { email: 'admin@businesscommandcentre.com' } });
+  let superAdmin = await prisma.staff.findFirst({
+    where: { email: 'admin@businesscommandcentre.com' },
+  });
   if (!superAdmin) {
     superAdmin = await prisma.staff.create({
       data: {
@@ -60,7 +62,13 @@ async function main() {
       staffCount: 4,
       customerCount: 85,
       bookingDays: { recent7d: 18, recent30d: 62 },
-      services: ['Swedish Massage', 'Deep Tissue Massage', 'Hot Stone Therapy', 'Aromatherapy', 'Couples Massage'],
+      services: [
+        'Swedish Massage',
+        'Deep Tissue Massage',
+        'Hot Stone Therapy',
+        'Aromatherapy',
+        'Couples Massage',
+      ],
     },
     {
       slug: 'bright-smile-dental',
@@ -125,7 +133,14 @@ async function main() {
       staffCount: 5,
       customerCount: 120,
       bookingDays: { recent7d: 12, recent30d: 48 },
-      services: ['Botox', 'Filler', 'Chemical Peel', 'Microneedling', 'Laser Hair Removal', 'Hydrafacial'],
+      services: [
+        'Botox',
+        'Filler',
+        'Chemical Peel',
+        'Microneedling',
+        'Laser Hair Removal',
+        'Hydrafacial',
+      ],
     },
   ];
 
@@ -160,9 +175,10 @@ async function main() {
         stripeSubscriptionId: `sub_showcase_${biz.slug}`,
         plan: biz.plan,
         status: biz.billingStatus,
-        currentPeriodEnd: biz.billingStatus === 'canceled'
-          ? new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // 30 days ago
-          : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+        currentPeriodEnd:
+          biz.billingStatus === 'canceled'
+            ? new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // 30 days ago
+            : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
       },
     });
     console.log(`  ✓ Subscription: ${biz.plan} / ${biz.billingStatus}`);
@@ -210,15 +226,83 @@ async function main() {
 
     // Create customers
     const customers = [];
-    const firstNames = ['Emma', 'Liam', 'Olivia', 'Noah', 'Ava', 'Elijah', 'Sophia', 'Lucas', 'Isabella', 'Mason',
-      'Mia', 'Logan', 'Charlotte', 'Alexander', 'Amelia', 'Ethan', 'Harper', 'Aiden', 'Evelyn', 'Jacob',
-      'Luna', 'Michael', 'Camila', 'Daniel', 'Gianna', 'Henry', 'Abigail', 'Sebastian', 'Emily', 'Jack',
-      'Ella', 'Owen', 'Elizabeth', 'Samuel', 'Sofia', 'Ryan', 'Avery', 'Nathan', 'Chloe', 'Caleb',
-      'Scarlett', 'Christian', 'Penelope', 'Isaiah', 'Layla', 'Thomas', 'Riley', 'Aaron', 'Zoey', 'Isaac'];
-    const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez',
-      'Wilson', 'Anderson', 'Taylor', 'Thomas', 'Lee', 'Harris', 'Clark', 'Lewis', 'Robinson', 'Walker'];
+    const firstNames = [
+      'Emma',
+      'Liam',
+      'Olivia',
+      'Noah',
+      'Ava',
+      'Elijah',
+      'Sophia',
+      'Lucas',
+      'Isabella',
+      'Mason',
+      'Mia',
+      'Logan',
+      'Charlotte',
+      'Alexander',
+      'Amelia',
+      'Ethan',
+      'Harper',
+      'Aiden',
+      'Evelyn',
+      'Jacob',
+      'Luna',
+      'Michael',
+      'Camila',
+      'Daniel',
+      'Gianna',
+      'Henry',
+      'Abigail',
+      'Sebastian',
+      'Emily',
+      'Jack',
+      'Ella',
+      'Owen',
+      'Elizabeth',
+      'Samuel',
+      'Sofia',
+      'Ryan',
+      'Avery',
+      'Nathan',
+      'Chloe',
+      'Caleb',
+      'Scarlett',
+      'Christian',
+      'Penelope',
+      'Isaiah',
+      'Layla',
+      'Thomas',
+      'Riley',
+      'Aaron',
+      'Zoey',
+      'Isaac',
+    ];
+    const lastNames = [
+      'Smith',
+      'Johnson',
+      'Williams',
+      'Brown',
+      'Jones',
+      'Garcia',
+      'Miller',
+      'Davis',
+      'Rodriguez',
+      'Martinez',
+      'Wilson',
+      'Anderson',
+      'Taylor',
+      'Thomas',
+      'Lee',
+      'Harris',
+      'Clark',
+      'Lewis',
+      'Robinson',
+      'Walker',
+    ];
 
-    for (let i = 0; i < Math.min(biz.customerCount, 50); i++) { // Cap at 50 for speed
+    for (let i = 0; i < Math.min(biz.customerCount, 50); i++) {
+      // Cap at 50 for speed
       const fn = firstNames[i % firstNames.length];
       const ln = lastNames[i % lastNames.length];
       const customer = await prisma.customer.create({
@@ -254,7 +338,8 @@ async function main() {
           staffId: staff.id,
           startTime,
           endTime: new Date(startTime.getTime() + (service.durationMins || 60) * 60 * 1000),
-          status: daysAgo === 0 ? 'CONFIRMED' : statuses[Math.floor(Math.random() * statuses.length)],
+          status:
+            daysAgo === 0 ? 'CONFIRMED' : statuses[Math.floor(Math.random() * statuses.length)],
         },
       });
       bookingCount++;

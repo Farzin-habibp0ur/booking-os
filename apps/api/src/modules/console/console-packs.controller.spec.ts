@@ -47,9 +47,7 @@ describe('ConsolePacksController', () => {
 
     expect(service.getRegistry).toHaveBeenCalled();
     expect(result).toEqual(registryData);
-    expect(auditService.log).toHaveBeenCalledWith(
-      'admin1', 'admin@test.com', 'PACK_REGISTRY_VIEW',
-    );
+    expect(auditService.log).toHaveBeenCalledWith('admin1', 'admin@test.com', 'PACK_REGISTRY_VIEW');
   });
 
   it('GET /:slug/detail delegates to service', async () => {
@@ -61,7 +59,9 @@ describe('ConsolePacksController', () => {
     expect(service.getPackDetail).toHaveBeenCalledWith('aesthetic');
     expect(result).toEqual(detailData);
     expect(auditService.log).toHaveBeenCalledWith(
-      'admin1', 'admin@test.com', 'PACK_DETAIL_VIEW',
+      'admin1',
+      'admin@test.com',
+      'PACK_DETAIL_VIEW',
       expect.objectContaining({ targetType: 'PACK', targetId: 'aesthetic' }),
     );
   });
@@ -81,13 +81,18 @@ describe('ConsolePacksController', () => {
     service.startOrAdvanceRollout.mockResolvedValue(rolloutData as any);
 
     const result = await controller.startOrAdvanceRollout(
-      'aesthetic', 2, { targetPercent: 5 } as any, mockUser,
+      'aesthetic',
+      2,
+      { targetPercent: 5 } as any,
+      mockUser,
     );
 
     expect(service.startOrAdvanceRollout).toHaveBeenCalledWith('aesthetic', 2, 5);
     expect(result).toEqual(rolloutData);
     expect(auditService.log).toHaveBeenCalledWith(
-      'admin1', 'admin@test.com', 'PACK_ROLLOUT_ADVANCE',
+      'admin1',
+      'admin@test.com',
+      'PACK_ROLLOUT_ADVANCE',
       expect.objectContaining({
         targetType: 'PACK_VERSION',
         targetId: 'aesthetic/v2',
@@ -105,7 +110,9 @@ describe('ConsolePacksController', () => {
     expect(service.pauseRollout).toHaveBeenCalledWith('aesthetic', 2);
     expect(result).toEqual(pauseData);
     expect(auditService.log).toHaveBeenCalledWith(
-      'admin1', 'admin@test.com', 'PACK_ROLLOUT_PAUSE',
+      'admin1',
+      'admin@test.com',
+      'PACK_ROLLOUT_PAUSE',
       expect.objectContaining({ targetType: 'PACK_VERSION' }),
     );
   });
@@ -119,7 +126,9 @@ describe('ConsolePacksController', () => {
     expect(service.resumeRollout).toHaveBeenCalledWith('aesthetic', 2);
     expect(result).toEqual(resumeData);
     expect(auditService.log).toHaveBeenCalledWith(
-      'admin1', 'admin@test.com', 'PACK_ROLLOUT_RESUME',
+      'admin1',
+      'admin@test.com',
+      'PACK_ROLLOUT_RESUME',
       expect.objectContaining({ targetType: 'PACK_VERSION' }),
     );
   });
@@ -129,13 +138,18 @@ describe('ConsolePacksController', () => {
     service.rollbackVersion.mockResolvedValue(rollbackData as any);
 
     const result = await controller.rollbackVersion(
-      'aesthetic', 2, { reason: 'Bug found' }, mockUser,
+      'aesthetic',
+      2,
+      { reason: 'Bug found' },
+      mockUser,
     );
 
     expect(service.rollbackVersion).toHaveBeenCalledWith('aesthetic', 2, 'Bug found');
     expect(result).toEqual(rollbackData);
     expect(auditService.log).toHaveBeenCalledWith(
-      'admin1', 'admin@test.com', 'PACK_ROLLOUT_ROLLBACK',
+      'admin1',
+      'admin@test.com',
+      'PACK_ROLLOUT_ROLLBACK',
       expect.objectContaining({ reason: 'Bug found' }),
     );
   });
@@ -163,7 +177,9 @@ describe('ConsolePacksController', () => {
     expect(service.pinBusiness).toHaveBeenCalledWith('aesthetic', 'biz1', 1, 'Legacy', 'admin1');
     expect(result).toEqual(pinData);
     expect(auditService.log).toHaveBeenCalledWith(
-      'admin1', 'admin@test.com', 'PACK_TENANT_PIN',
+      'admin1',
+      'admin@test.com',
+      'PACK_TENANT_PIN',
       expect.objectContaining({
         targetType: 'BUSINESS',
         targetId: 'biz1',
@@ -180,7 +196,9 @@ describe('ConsolePacksController', () => {
     expect(service.unpinBusiness).toHaveBeenCalledWith('aesthetic', 'biz1');
     expect(result).toEqual({ success: true });
     expect(auditService.log).toHaveBeenCalledWith(
-      'admin1', 'admin@test.com', 'PACK_TENANT_UNPIN',
+      'admin1',
+      'admin@test.com',
+      'PACK_TENANT_UNPIN',
       expect.objectContaining({ targetType: 'BUSINESS', targetId: 'biz1' }),
     );
   });

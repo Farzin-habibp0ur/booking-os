@@ -63,8 +63,13 @@ export default function PastDuePage() {
   if (error) {
     return (
       <div className="p-6 md:p-8 max-w-5xl">
-        <h1 className="text-2xl font-serif font-bold text-slate-900 dark:text-white mb-6">Past-Due Accounts</h1>
-        <div className="bg-red-50 dark:bg-red-900/20 rounded-2xl p-6 text-red-700 dark:text-red-400" data-testid="past-due-error">
+        <h1 className="text-2xl font-serif font-bold text-slate-900 dark:text-white mb-6">
+          Past-Due Accounts
+        </h1>
+        <div
+          className="bg-red-50 dark:bg-red-900/20 rounded-2xl p-6 text-red-700 dark:text-red-400"
+          data-testid="past-due-error"
+        >
           {error}
         </div>
       </div>
@@ -75,15 +80,22 @@ export default function PastDuePage() {
     <div className="p-6 md:p-8 max-w-5xl">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-slate-400 mb-4">
-        <Link href="/console/billing" className="hover:text-slate-600">Billing</Link>
+        <Link href="/console/billing" className="hover:text-slate-600">
+          Billing
+        </Link>
         <ChevronRight size={14} />
         <span className="text-slate-900 dark:text-white">Past-Due</span>
       </div>
 
-      <h1 className="text-2xl font-serif font-bold text-slate-900 dark:text-white mb-6">Past-Due Accounts</h1>
+      <h1 className="text-2xl font-serif font-bold text-slate-900 dark:text-white mb-6">
+        Past-Due Accounts
+      </h1>
 
       {items.length === 0 ? (
-        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-8 text-center" data-testid="past-due-empty">
+        <div
+          className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-8 text-center"
+          data-testid="past-due-empty"
+        >
           <CheckCircle size={40} className="text-sage-500 mx-auto mb-3" />
           <p className="text-lg font-medium text-slate-900 dark:text-white">No past-due accounts</p>
           <p className="text-sm text-slate-400 mt-1">All accounts are in good standing.</p>
@@ -93,11 +105,21 @@ export default function PastDuePage() {
           <table className="w-full" data-testid="past-due-table">
             <thead>
               <tr className="border-b border-slate-100 dark:border-slate-800">
-                <th className="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-4 py-3">Business</th>
-                <th className="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-4 py-3">Plan</th>
-                <th className="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-4 py-3 hidden md:table-cell">Owner</th>
-                <th className="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-4 py-3">Days Past Due</th>
-                <th className="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-4 py-3 hidden md:table-cell">Period End</th>
+                <th className="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-4 py-3">
+                  Business
+                </th>
+                <th className="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-4 py-3">
+                  Plan
+                </th>
+                <th className="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-4 py-3 hidden md:table-cell">
+                  Owner
+                </th>
+                <th className="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-4 py-3">
+                  Days Past Due
+                </th>
+                <th className="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-4 py-3 hidden md:table-cell">
+                  Period End
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -109,7 +131,9 @@ export default function PastDuePage() {
                   data-testid={`past-due-row-${item.businessId}`}
                 >
                   <td className="px-4 py-3">
-                    <p className="text-sm font-medium text-slate-900 dark:text-white">{item.businessName}</p>
+                    <p className="text-sm font-medium text-slate-900 dark:text-white">
+                      {item.businessName}
+                    </p>
                   </td>
                   <td className="px-4 py-3">
                     <span className="text-xs font-medium px-2 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 capitalize">
@@ -120,7 +144,10 @@ export default function PastDuePage() {
                     <span className="text-sm text-slate-500">{item.ownerEmail || '—'}</span>
                   </td>
                   <td className="px-4 py-3">
-                    <span className={`text-xs font-bold px-2 py-1 rounded-full ${agingColor(item.daysPastDue)}`} data-testid={`days-badge-${item.businessId}`}>
+                    <span
+                      className={`text-xs font-bold px-2 py-1 rounded-full ${agingColor(item.daysPastDue)}`}
+                      data-testid={`days-badge-${item.businessId}`}
+                    >
                       {item.daysPastDue}d
                     </span>
                   </td>

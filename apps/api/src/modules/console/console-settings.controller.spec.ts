@@ -68,7 +68,11 @@ describe('ConsoleSettingsController', () => {
     );
 
     expect(result).toEqual(mockResult);
-    expect(settingsService.updateSetting).toHaveBeenCalledWith('security.sessionTimeoutMins', 90, 'admin1');
+    expect(settingsService.updateSetting).toHaveBeenCalledWith(
+      'security.sessionTimeoutMins',
+      90,
+      'admin1',
+    );
     expect(auditService.log).toHaveBeenCalledWith('admin1', 'admin@test.com', 'SETTING_UPDATE', {
       targetType: 'SETTING',
       targetId: 'security.sessionTimeoutMins',
@@ -94,9 +98,14 @@ describe('ConsoleSettingsController', () => {
 
     expect(result).toEqual(mockResult);
     expect(settingsService.bulkUpdate).toHaveBeenCalledWith(dto.settings, 'admin1');
-    expect(auditService.log).toHaveBeenCalledWith('admin1', 'admin@test.com', 'SETTINGS_BULK_UPDATE', {
-      metadata: { keys: ['security.sessionTimeoutMins', 'platform.maintenanceMode'] },
-    });
+    expect(auditService.log).toHaveBeenCalledWith(
+      'admin1',
+      'admin@test.com',
+      'SETTINGS_BULK_UPDATE',
+      {
+        metadata: { keys: ['security.sessionTimeoutMins', 'platform.maintenanceMode'] },
+      },
+    );
   });
 
   it('resetSetting delegates to service and logs audit', async () => {
@@ -106,7 +115,10 @@ describe('ConsoleSettingsController', () => {
     const result = await controller.resetSetting('security.sessionTimeoutMins', mockUser);
 
     expect(result).toEqual(mockResult);
-    expect(settingsService.resetSetting).toHaveBeenCalledWith('security.sessionTimeoutMins', 'admin1');
+    expect(settingsService.resetSetting).toHaveBeenCalledWith(
+      'security.sessionTimeoutMins',
+      'admin1',
+    );
     expect(auditService.log).toHaveBeenCalledWith('admin1', 'admin@test.com', 'SETTING_RESET', {
       targetType: 'SETTING',
       targetId: 'security.sessionTimeoutMins',

@@ -11,10 +11,7 @@ describe('ConsoleOverviewService', () => {
     prisma = createMockPrisma();
 
     const module = await Test.createTestingModule({
-      providers: [
-        ConsoleOverviewService,
-        { provide: PrismaService, useValue: prisma },
-      ],
+      providers: [ConsoleOverviewService, { provide: PrismaService, useValue: prisma }],
     }).compile();
 
     service = module.get(ConsoleOverviewService);
@@ -201,9 +198,7 @@ describe('ConsoleOverviewService', () => {
     });
 
     it('generates info for dormant businesses', async () => {
-      prisma.business.findMany.mockResolvedValue([
-        { id: 'biz1', name: 'Idle Clinic' },
-      ] as any);
+      prisma.business.findMany.mockResolvedValue([{ id: 'biz1', name: 'Idle Clinic' }] as any);
 
       const result = await service.getAttentionItems();
 
@@ -416,9 +411,7 @@ describe('ConsoleOverviewService', () => {
       prisma.supportCase.findMany.mockResolvedValue([
         { businessId: 'biz1', priority: 'urgent' },
       ] as any);
-      prisma.agentRun.findMany.mockResolvedValue([
-        { businessId: 'biz1', status: 'FAILED' },
-      ] as any);
+      prisma.agentRun.findMany.mockResolvedValue([{ businessId: 'biz1', status: 'FAILED' }] as any);
 
       const result = await service.getAccountsAtRisk();
 
