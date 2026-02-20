@@ -9,11 +9,8 @@ import {
   MessageSquare,
   Bot,
   ShieldCheck,
-  LifeBuoy,
   Activity,
   Eye,
-  TrendingUp,
-  TrendingDown,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -105,7 +102,6 @@ export default function ConsoleOverviewPage() {
 
   useEffect(() => {
     api.get<OverviewData>('/admin/overview').then(setData).catch(console.error).finally(() => setLoading(false));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (loading) {
