@@ -6,6 +6,7 @@ import { NotificationService } from '../notification/notification.service';
 @Injectable()
 export class ReminderService {
   private readonly logger = new Logger(ReminderService.name);
+  private processing = false;
 
   constructor(
     private prisma: PrismaService,
@@ -14,6 +15,16 @@ export class ReminderService {
 
   @Cron(CronExpression.EVERY_MINUTE)
   async processPendingReminders() {
+    if (this.processing) return;
+    this.processing = true;
+    try {
+      await this._processPendingReminders();
+    } finally {
+      this.processing = false;
+    }
+  }
+
+  private async _processPendingReminders() {
     const now = new Date();
     const dueReminders = await this.prisma.reminder.findMany({
       where: {
