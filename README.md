@@ -88,7 +88,7 @@ Run from the monorepo root:
 | `npm run dev` | Start all apps in development mode |
 | `npm run build` | Build all apps and packages |
 | `npm run lint` | Lint all apps and packages |
-| `npm run test` | Run all unit/integration tests (3,543 tests across API + Web) |
+| `npm run test` | Run all unit/integration tests (3,600 tests across API + Web) |
 | `npm run test:e2e` | Run Playwright end-to-end tests (requires running dev servers) |
 | `npm run format` | Format code with Prettier |
 | `npm run format:check` | Check code formatting |
@@ -133,7 +133,7 @@ All endpoints are prefixed with `/api/v1`. Interactive API docs are available at
 | Locations | `/locations` | Multi-location management with resources |
 | Quotes | `/quotes` | Service quotes with customer approval |
 | Pack Builder | `/admin/packs` | Vertical pack CRUD (Super Admin) |
-| Console | `/admin/businesses`, `/admin/view-as` | Platform Console: business directory, 360 view, view-as tenant (Super Admin) |
+| Console | `/admin/businesses`, `/admin/view-as`, `/admin/overview`, `/admin/audit-logs`, `/admin/health`, `/admin/support-cases` | Platform Console: business directory, 360 view, view-as, overview KPIs, audit log, health checks, support cases (Super Admin) |
 | Health | `/health` | API health check |
 | Public Booking | `/public` | Customer-facing booking portal with waitlist join |
 | Calendar Sync | `/calendar-sync` | Google Calendar integration |

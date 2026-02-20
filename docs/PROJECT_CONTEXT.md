@@ -2,7 +2,7 @@
 
 > **Purpose:** This document gives full context on the Booking OS platform — what it is, what's been built, how it's structured, and what's left to build. Share this with an AI assistant or new developer to get productive immediately.
 >
-> **Last updated:** February 19, 2026 (Security audit round 2 complete — 3,461 total tests: 2,064 API + 1,397 web)
+> **Last updated:** February 20, 2026 (Platform Console Phase 2 complete — 3,600 total tests: 2,138 API + 1,462 web)
 
 ---
 
@@ -226,7 +226,7 @@ booking-os/
 ├── apps/
 │   ├── api/                    # NestJS REST API (port 3001)
 │   │   ├── src/
-│   │   │   ├── modules/        # 43 feature modules
+│   │   │   ├── modules/        # 47 feature modules
 │   │   │   ├── common/         # Guards, decorators, filters, DTOs, Prisma service
 │   │   │   └── main.ts         # Bootstrap, Swagger, CORS, cookies, validation
 │   │   └── Dockerfile          # Multi-stage production build
@@ -265,7 +265,7 @@ booking-os/
 
 ---
 
-## 5. Database Schema (43 Models)
+## 5. Database Schema (46 Models)
 
 ```
 Business (1) ──┬── (*) Staff ──── (*) WorkingHours
@@ -301,7 +301,10 @@ Business (1) ──┬── (*) Staff ──── (*) WorkingHours
                ├── (*) OutboundDraft
                ├── (*) AgentConfig
                ├── (*) AgentRun ──── (*) AgentFeedback
-               └── (*) DuplicateCandidate
+               ├── (*) DuplicateCandidate
+               └── (*) SupportCase ──── (*) SupportCaseNote
+ViewAsSession ──── Staff (superAdmin) + Business (target)
+PlatformAuditLog (standalone)
 ```
 
 ### Key Enums
@@ -342,6 +345,10 @@ VerticalPack:       AESTHETIC, SALON, TUTORING, GENERAL, DEALERSHIP
 | **AgentFeedback** | businessId, actionCardId (FK), staffId (FK), rating (HELPFUL/NOT_HELPFUL), comment? | Staff feedback on agent suggestions |
 | **DuplicateCandidate** | businessId, customerId1 (FK), customerId2 (FK), confidence (Float), matchFields (String[]), status (PENDING/MERGED/NOT_DUPLICATE/SNOOZED), resolvedBy?, resolvedAt | Duplicate customer detection candidates |
 | **MessageAttachment** | id, messageId (FK), businessId (FK), fileName, fileType, fileSize (Int), storageKey, thumbnailKey?, createdAt | Media attachments on messages (images, docs, audio) |
+| **ViewAsSession** | superAdminId (FK), targetBusinessId (FK), reason, startedAt, endedAt?, expiresAt, actionsLog (JSON) | Time-limited view-as session for Super Admin tenant impersonation |
+| **PlatformAuditLog** | actorId, actorEmail, action, targetType?, targetId?, reason?, metadata (JSON), createdAt | Platform-level audit trail for Super Admin actions |
+| **SupportCase** | businessId (FK), businessName, subject, description, status (open/in_progress/resolved/closed), priority (low/normal/high/urgent), category?, resolution?, resolvedAt?, closedAt?, createdById | Support case tracking for platform console |
+| **SupportCaseNote** | caseId (FK), authorId, authorName, content, createdAt | Notes on support cases with cascade delete |
 
 ### Message Model — Updated Fields
 The Message model now includes delivery receipt fields:
@@ -352,7 +359,7 @@ The Message model now includes delivery receipt fields:
 
 ---
 
-## 6. API Modules (43 Modules)
+## 6. API Modules (47 Modules)
 
 All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 
@@ -399,6 +406,10 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 | **Agent Feedback** | `/agent-feedback` | Staff feedback CRUD on agent run outcomes, aggregation stats |
 | **Agent Skills** | `/agent-skills` | Skills catalog per vertical pack, business-level overrides |
 | **Attachment** | `/attachments` | Media attachment upload (`POST /conversations/:id/messages/media`) and download (`GET /attachments/:id/download`) |
+| **Console Overview** | `/admin/overview` | Platform KPIs (businesses, bookings, staff, agents, support, security) |
+| **Console Audit** | `/admin/audit-logs` | Searchable/filterable platform audit log, action types |
+| **Console Health** | `/admin/health` | System health checks (DB, business activity, agents, calendar, messaging) + business health distribution |
+| **Console Support** | `/admin/support-cases` | Support case CRUD, notes, status management (open/in_progress/resolved/closed) |
 
 ### Auth & Multi-tenancy
 - JWT in httpOnly cookies (access: 15 min, refresh: 7 days), automatic client-side refresh on 401
@@ -633,8 +644,13 @@ Key groups (full list in `.env.example`):
 - **UX Upgrade Pack Release 1** (Media Attachments, Delivery Receipts, Month View, DnD Reschedule, Recommended Slots, Working Hours Viz, Presence Detection) — COMPLETE (Batches 1a–1h, 69 new tests)
 - **UX Upgrade Pack Release 2** (CSV Exports, Duplicate Review, Today Timeline, Enhanced Attention Cards, Briefing Snooze + Expandable Details) — COMPLETE (Batches 2a–2g, 82 new tests)
 - **UX Upgrade Pack Release 3** (Add-to-Calendar, Branded Errors, Automation Playbook UX, Rule Builder, Dry-Run, Safety Controls) — COMPLETE (Batches 3a–3f, 93 new tests)
-- **UX Upgrade Pack COMPLETE** — All 3 releases, 21 batches, **3,461 total tests** (2,064 API + 1,397 web)
+- **UX Upgrade Pack COMPLETE** — All 3 releases, 21 batches, **3,402 total tests** (2,010 API + 1,392 web)
 - See `docs/user-stories.md` for complete inventory (280 current capabilities, 215 identified gaps) and `docs/ux-brainstorm-brief.md` for brainstorm prompts.
+
+### Platform Console — COMPLETE (Phases 1-2)
+- **Phase 1** (4 batches): Console Shell, Business Directory (search/filter/paginate), Business 360 (Summary + People tabs), View-as Tenant (time-limited JWT, audit-logged). Models: ViewAsSession, PlatformAuditLog. Seed scripts: `seed-console.ts`, `seed-console-showcase.ts`. 28 migrations.
+- **Phase 2**: Overview KPI dashboard (businesses, bookings, staff, agents, support, security), Security & Audit log explorer (search, filters, pagination), System Health checks (DB, business activity, agents, calendar, messaging) with business health distribution, Support Cases CRUD with notes. Models: SupportCase, SupportCaseNote. Enhanced placeholders for Billing, Packs, Agents, Messaging, Settings.
+- **Final counts:** 3,600 tests total (2,138 API + 1,462 web), 46 Prisma models, 29 migrations
 
 ### Code Quality
 - **Error Handling Remediation** — COMPLETE (commit 1cf6f99). Replaced ~20 silent `.catch(() => {})` with logged warnings, queue processors throw on failure, NestJS proper exceptions, frontend toast wiring, waitlist loop resilience, WebSocket disconnect logging. +58 tests.
@@ -699,7 +715,7 @@ npm run dev                    # Starts all apps via Turborepo
 | `npm run dev` | Start all apps |
 | `npm run build` | Build all |
 | `npm run lint` | Lint all (ESLint + TypeScript) |
-| `npm test` | Run all tests (~3,461 tests) |
+| `npm test` | Run all tests (~3,600 tests) |
 | `npm run test:coverage` | Tests with coverage thresholds |
 | `npm run db:generate` | Generate Prisma client |
 | `npm run db:migrate` | Run migrations |
