@@ -5,6 +5,14 @@ import { ConsoleBusinessesController } from './console-businesses.controller';
 import { ConsoleBusinessesService } from './console-businesses.service';
 import { ConsoleViewAsController } from './console-view-as.controller';
 import { ConsoleViewAsService } from './console-view-as.service';
+import { ConsoleOverviewController } from './console-overview.controller';
+import { ConsoleOverviewService } from './console-overview.service';
+import { ConsoleAuditController } from './console-audit.controller';
+import { ConsoleAuditService } from './console-audit.service';
+import { ConsoleHealthController } from './console-health.controller';
+import { ConsoleHealthService } from './console-health.service';
+import { ConsoleSupportController } from './console-support.controller';
+import { ConsoleSupportService } from './console-support.service';
 import { PlatformAuditService } from './platform-audit.service';
 
 @Module({
@@ -18,8 +26,23 @@ import { PlatformAuditService } from './platform-audit.service';
       }),
     }),
   ],
-  controllers: [ConsoleBusinessesController, ConsoleViewAsController],
-  providers: [ConsoleBusinessesService, ConsoleViewAsService, PlatformAuditService],
+  controllers: [
+    ConsoleBusinessesController,
+    ConsoleViewAsController,
+    ConsoleOverviewController,
+    ConsoleAuditController,
+    ConsoleHealthController,
+    ConsoleSupportController,
+  ],
+  providers: [
+    ConsoleBusinessesService,
+    ConsoleViewAsService,
+    ConsoleOverviewService,
+    ConsoleAuditService,
+    ConsoleHealthService,
+    ConsoleSupportService,
+    PlatformAuditService,
+  ],
   exports: [PlatformAuditService],
 })
 export class ConsoleModule {}

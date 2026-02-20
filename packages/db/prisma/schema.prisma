@@ -54,6 +54,7 @@ model Business {
   duplicateCandidates  DuplicateCandidate[]
   messageAttachments   MessageAttachment[]
   viewAsSessions       ViewAsSession[]      @relation("ViewAsTarget")
+  supportCases         SupportCase[]
 
   @@map("businesses")
 }
@@ -987,4 +988,43 @@ model PlatformAuditLog {
   @@index([targetId])
   @@index([createdAt])
   @@map("platform_audit_logs")
+}
+
+model SupportCase {
+  id           String    @id @default(cuid())
+  businessId   String
+  businessName String
+  subject      String
+  description  String
+  status       String    @default("open") // open, in_progress, resolved, closed
+  priority     String    @default("normal") // low, normal, high, urgent
+  category     String?
+  resolution   String?
+  resolvedAt   DateTime?
+  closedAt     DateTime?
+  createdById  String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  business Business          @relation(fields: [businessId], references: [id])
+  notes    SupportCaseNote[]
+
+  @@index([businessId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("support_cases")
+}
+
+model SupportCaseNote {
+  id         String   @id @default(cuid())
+  caseId     String
+  authorId   String
+  authorName String
+  content    String
+  createdAt  DateTime @default(now())
+
+  supportCase SupportCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  @@index([caseId])
+  @@map("support_case_notes")
 }

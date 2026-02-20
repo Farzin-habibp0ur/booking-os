@@ -1259,3 +1259,129 @@ export class ViewAsReasonDto {
   @MaxLength(500)
   reason!: string;
 }
+
+// --- Console Phase 2 DTOs ---
+
+export class ConsoleAuditQueryDto {
+  @IsString()
+  @IsOptional()
+  @MaxLength(200)
+  search?: string;
+
+  @IsString()
+  @IsOptional()
+  action?: string;
+
+  @IsString()
+  @IsOptional()
+  actorId?: string;
+
+  @IsString()
+  @IsOptional()
+  targetId?: string;
+
+  @IsString()
+  @IsOptional()
+  from?: string;
+
+  @IsString()
+  @IsOptional()
+  to?: string;
+
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  @Type(() => Number)
+  page?: number;
+
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  @IsOptional()
+  @Type(() => Number)
+  pageSize?: number;
+}
+
+export class ConsoleSupportCaseQueryDto {
+  @IsString()
+  @IsOptional()
+  @MaxLength(200)
+  search?: string;
+
+  @IsString()
+  @IsOptional()
+  @IsIn(['open', 'in_progress', 'resolved', 'closed'])
+  status?: string;
+
+  @IsString()
+  @IsOptional()
+  @IsIn(['low', 'normal', 'high', 'urgent'])
+  priority?: string;
+
+  @IsString()
+  @IsOptional()
+  businessId?: string;
+
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  @Type(() => Number)
+  page?: number;
+
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  @IsOptional()
+  @Type(() => Number)
+  pageSize?: number;
+}
+
+export class CreateSupportCaseDto {
+  @IsString()
+  @IsNotEmpty()
+  businessId!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(200)
+  subject!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(5000)
+  description!: string;
+
+  @IsString()
+  @IsOptional()
+  @IsIn(['low', 'normal', 'high', 'urgent'])
+  priority?: string;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(100)
+  category?: string;
+}
+
+export class UpdateSupportCaseDto {
+  @IsString()
+  @IsOptional()
+  @IsIn(['open', 'in_progress', 'resolved', 'closed'])
+  status?: string;
+
+  @IsString()
+  @IsOptional()
+  @IsIn(['low', 'normal', 'high', 'urgent'])
+  priority?: string;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(5000)
+  resolution?: string;
+}
+
+export class AddSupportCaseNoteDto {
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(5000)
+  content!: string;
+}
