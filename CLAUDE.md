@@ -59,7 +59,9 @@ All AI-related UI elements use the **lavender** palette:
 
 4. **`railway up --detach` does NOT mean the deploy is live.** CI passing only means Railway received the code. The actual build takes 2-5 more minutes. Always verify with curl or Railway logs.
 
-5. **Never set `sameSite: 'strict'` on auth cookies.** It must be `lax` for cross-subdomain auth to work.
+5. **Deploy BOTH services when code changes span API and Web.** `railway up` only deploys the currently linked service. Run `railway service api && railway up --detach` AND `railway service web && railway up --detach` separately. Verify both with `railway deployment list`. The `railway.toml` health check path (`/api/v1/health`) must exist in both — do NOT remove `apps/web/src/app/api/v1/health/route.ts`.
+
+6. **Never set `sameSite: 'strict'` on auth cookies.** It must be `lax` for cross-subdomain auth to work.
 
 6. **Every deploy must include tests.** Never push code without associated tests for new/changed features.
 

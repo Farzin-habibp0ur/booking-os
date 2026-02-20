@@ -649,6 +649,47 @@ curl -s -D - -o /dev/null -X POST https://api.yourdomain.com/api/v1/auth/login \
 
 **Already fixed:** The `/auth/me` endpoint sets `Cache-Control: no-store` and removes the ETag header. If you see this issue, confirm the latest API code is deployed.
 
+### Deploying both services (CRITICAL)
+
+The monorepo has two Railway services: `api` and `web`. The Railway CLI links to ONE service at a time. **You must deploy both separately when code changes affect both.**
+
+```bash
+# Deploy API
+railway service api && railway up --detach
+
+# Deploy Web (MUST be separate)
+railway service web && railway up --detach
+
+# Switch back to API (default)
+railway service api
+```
+
+**Health check:** The shared `railway.toml` at the repo root sets `healthcheckPath = "/api/v1/health"`. Both services must respond to this path:
+- API: NestJS `/api/v1/health` endpoint (built-in)
+- Web: Next.js route handler at `apps/web/src/app/api/v1/health/route.ts`
+
+If the web service deploy fails with no error logs, check that the health route exists. Railway kills containers that fail health checks.
+
+**Verify both deploys succeeded:**
+```bash
+railway service api && railway deployment list | head -3
+railway service web && railway deployment list | head -3
+# Both should show SUCCESS
+```
+
+### API becomes unresponsive (frozen, 502/timeout)
+
+**Symptoms:** Health endpoint times out, login hangs, but Railway shows service as running.
+
+**Immediate fix:** Redeploy the API:
+```bash
+railway service api && railway deployment redeploy --yes
+```
+
+**Root cause:** The API container may freeze under sustained load or during deploy transitions. Railway's restart policy (`ON_FAILURE`, max 3 retries) handles crashes but not freezes.
+
+**Prevention:** The `railway.toml` health check will detect unresponsive containers and restart them. If this persists, consider increasing the Railway service memory allocation.
+
 ### Deploy passed in CI but old code is still running
 
 **Root cause:** `railway up --detach` returns immediately. Railway builds asynchronously.
