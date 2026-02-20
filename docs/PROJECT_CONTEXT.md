@@ -584,6 +584,16 @@ Two scripts, both idempotent:
 - 6 autonomy configs, 7 action history entries, 2 outbound drafts, 9 agent configs (across both businesses)
 - Cleans up duplicate business entries if present
 
+**`packages/db/src/seed-console.ts`** — Platform Console base data:
+- Creates "Booking OS Platform" business (slug: `platform`, verticalPack: `general`)
+- Creates Super Admin staff: `admin@businesscommandcentre.com` / `superadmin123`
+- Idempotent (checks before inserting)
+
+**`packages/db/src/seed-console-showcase.ts`** — Console showcase data:
+- Creates 6 diverse businesses with varied health states (green/yellow/red), plans (basic/pro), billing statuses (active/past_due/canceled), verticals, and timezones
+- Each business gets staff, customers, services, bookings, conversations, subscriptions
+- Used to populate the Business Directory with realistic data for demos
+
 ---
 
 ## 12. Environment Variables

@@ -770,7 +770,7 @@ Two tabs: **Info** | **Notes**
 
 ## 4. Data Models
 
-### 4.1 Entity Relationship Overview (43 Models)
+### 4.1 Entity Relationship Overview (46 Models)
 
 ```
 Business (1) ──┬── (*) Staff ──── (*) WorkingHours
@@ -806,7 +806,10 @@ Business (1) ──┬── (*) Staff ──── (*) WorkingHours
                ├── (*) OutboundDraft
                ├── (*) AgentConfig
                ├── (*) AgentRun ──── (*) AgentFeedback
-               └── (*) DuplicateCandidate
+               ├── (*) DuplicateCandidate
+               └── (*) SupportCase ──── (*) SupportCaseNote
+ViewAsSession ──── Staff (superAdmin) + Business (target)
+PlatformAuditLog (standalone)
 ```
 
 ### 4.2 Key Models
@@ -1091,7 +1094,50 @@ Events handled in the inbox:
 
 ---
 
-## 10. File Structure Reference
+## 10. Platform Console (Super Admin)
+
+The Platform Console is an internal operator surface for managing tenants, health, and support. Accessible only to `SUPER_ADMIN` role at `/console`. All API endpoints are under `/admin/*` with `@Roles('SUPER_ADMIN')` guard (no TenantGuard).
+
+### 10.1 Console Shell & Navigation
+- Dedicated layout (`/console/layout.tsx`) with `ConsoleShell` component
+- 10 sidebar items: Overview, Businesses, Billing, Packs & Skills, AI & Agents, Messaging Ops, Support, Security & Audit, System Health, Settings
+- Login redirects SUPER_ADMIN to `/console` instead of `/dashboard`
+
+### 10.2 Pages (Phases 1-2 Complete)
+
+| Page | Route | API Endpoints | Description |
+|------|-------|---------------|-------------|
+| Overview | `/console` | `GET /admin/overview` | Platform KPIs (businesses, bookings, staff, agents), billing breakdown, support count, security summary, recent audit feed |
+| Business Directory | `/console/businesses` | `GET /admin/businesses` | Search/filter by name/slug/email/plan/billing/health, paginated table with health dots |
+| Business 360 | `/console/businesses/[id]` | `GET /admin/businesses/:id`, `/admin/businesses/:id/usage`, `/admin/businesses/:id/staff` | Summary tab (metadata, usage snapshot, health, quick actions) + People tab (read-only staff list) |
+| Security & Audit | `/console/audit` | `GET /admin/audit-logs`, `GET /admin/audit-logs/action-types` | Searchable audit log with action type filter, paginated table |
+| System Health | `/console/health` | `GET /admin/health` | Overall status banner, 5 service checks (DB, Business Activity, AI Agents, Calendar Sync, Message Delivery), business health distribution bar |
+| Support Cases | `/console/support` | `GET/POST /admin/support-cases`, `GET/PATCH /admin/support-cases/:id`, `POST /admin/support-cases/:id/notes` | Full CRUD with search, status/priority filters, case detail drawer with notes |
+| Billing | `/console/billing` | — | Placeholder (Phase 3) |
+| Packs & Skills | `/console/packs` | — | Placeholder (Phase 4) |
+| AI & Agents | `/console/agents` | — | Placeholder (Phase 5) |
+| Messaging Ops | `/console/messaging` | — | Placeholder (Phase 5) |
+| Settings | `/console/settings` | — | Placeholder (Phase 6) |
+
+### 10.3 View-as Tenant
+- Super Admin can impersonate any business for 15 minutes
+- Requires reason (audit-logged), issues scoped JWT with `viewAs: true` claim
+- Persistent amber countdown banner with "Exit" button
+- Session tracked in `ViewAsSession` model, all actions logged to `PlatformAuditLog`
+
+### 10.4 Console-Specific Models
+- **ViewAsSession** — Time-limited impersonation sessions (superAdminId, targetBusinessId, reason, expiresAt)
+- **PlatformAuditLog** — All Super Admin actions (actorEmail, action, targetType, targetId, reason, metadata)
+- **SupportCase** — Support case tracking (businessId, subject, description, status, priority, category, resolution)
+- **SupportCaseNote** — Notes on support cases (caseId, authorName, content) with cascade delete
+
+### 10.5 Seed Scripts
+- `packages/db/src/seed-console.ts` — Platform business + Super Admin staff
+- `packages/db/src/seed-console-showcase.ts` — 6 diverse businesses with varied health/billing/plans
+
+---
+
+## 11. File Structure Reference
 
 ```
 apps/web/src/
@@ -1142,7 +1188,21 @@ apps/web/src/
 │   ├── settings/policies/page.tsx        # Cancel/reschedule policies
 │   ├── settings/waitlist/page.tsx        # Waitlist config
 │   ├── settings/autonomy/page.tsx       # Autonomy level configuration (Milestone 1)
-│   └── settings/agents/page.tsx        # Background agent configuration (Milestone 4)
+│   ├── settings/agents/page.tsx        # Background agent configuration (Milestone 4)
+│   ├── console/                         # Platform Console (Super Admin only)
+│   │   ├── layout.tsx                   # ConsoleShell + AuthProvider
+│   │   ├── page.tsx                     # Overview dashboard
+│   │   ├── businesses/page.tsx          # Business Directory
+│   │   ├── businesses/[id]/page.tsx     # Business 360
+│   │   ├── billing/page.tsx             # Placeholder (Phase 3)
+│   │   ├── packs/page.tsx               # Placeholder (Phase 4)
+│   │   ├── agents/page.tsx              # Placeholder (Phase 5)
+│   │   ├── messaging/page.tsx           # Placeholder (Phase 5)
+│   │   ├── support/page.tsx             # Support Cases
+│   │   ├── audit/page.tsx               # Security & Audit Log
+│   │   ├── health/page.tsx              # System Health
+│   │   └── settings/page.tsx            # Placeholder (Phase 6)
+│   └── ...
 ├── components/
 │   ├── shell.tsx              # App layout + mode-grouped sidebar nav + pinned views + Cmd+K
 │   ├── skeleton.tsx           # Loading skeletons + empty states with CTAs

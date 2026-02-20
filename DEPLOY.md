@@ -530,6 +530,16 @@ npx @railway/cli ssh --service api -e production -- "echo '$B64' | base64 -d > /
 ```
 This script fills autonomyConfig, actionHistory, outboundDraft, and agentConfig tables. It's idempotent (skips tables that already have data).
 
+**Platform Console data** (creates Super Admin + showcase businesses):
+```bash
+# Super Admin account + platform business
+DATABASE_URL="<public-db-url>" npx tsx packages/db/src/seed-console.ts
+
+# Showcase businesses (6 diverse tenants for demo)
+DATABASE_URL="<public-db-url>" npx tsx packages/db/src/seed-console-showcase.ts
+```
+Both scripts are idempotent. Console login: `admin@businesscommandcentre.com` / `superadmin123`.
+
 ### Database Backups
 
 ```bash
