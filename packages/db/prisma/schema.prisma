@@ -54,7 +54,7 @@ model Business {
   agentFeedback        AgentFeedback[]
   duplicateCandidates  DuplicateCandidate[]
   messageAttachments   MessageAttachment[]
-  viewAsSessions       ViewAsSession[]      @relation("ViewAsTarget")
+  viewAsSessions       ViewAsSession[]       @relation("ViewAsTarget")
   supportCases         SupportCase[]
   packTenantPins       PackTenantPin[]
 
@@ -113,17 +113,17 @@ model Customer {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  business         Business          @relation(fields: [businessId], references: [id])
-  bookings         Booking[]
-  recurringSeries  RecurringSeries[]
-  conversations    Conversation[]
-  waitlistEntries  WaitlistEntry[]
-  customerNotes    CustomerNote[]
-  offerRedemptions OfferRedemption[]
-  actionCards             ActionCard[]
-  outboundDrafts          OutboundDraft[]
-  duplicatesAsCustomer1   DuplicateCandidate[] @relation("DuplicateCustomer1")
-  duplicatesAsCustomer2   DuplicateCandidate[] @relation("DuplicateCustomer2")
+  business              Business             @relation(fields: [businessId], references: [id])
+  bookings              Booking[]
+  recurringSeries       RecurringSeries[]
+  conversations         Conversation[]
+  waitlistEntries       WaitlistEntry[]
+  customerNotes         CustomerNote[]
+  offerRedemptions      OfferRedemption[]
+  actionCards           ActionCard[]
+  outboundDrafts        OutboundDraft[]
+  duplicatesAsCustomer1 DuplicateCandidate[] @relation("DuplicateCustomer1")
+  duplicatesAsCustomer2 DuplicateCandidate[] @relation("DuplicateCustomer2")
 
   @@unique([businessId, phone])
   @@index([businessId])
@@ -255,22 +255,22 @@ model Conversation {
 }
 
 model Message {
-  id              String    @id @default(cuid())
-  conversationId  String
-  direction       String
-  senderStaffId   String?
-  content         String
-  contentType     String    @default("TEXT")
-  externalId      String?   @unique
-  deliveryStatus  String    @default("SENT") // SENT, DELIVERED, READ, FAILED
-  deliveredAt     DateTime?
-  readAt          DateTime?
-  failureReason   String?
-  metadata        Json      @default("{}")
-  createdAt       DateTime  @default(now())
+  id             String    @id @default(cuid())
+  conversationId String
+  direction      String
+  senderStaffId  String?
+  content        String
+  contentType    String    @default("TEXT")
+  externalId     String?   @unique
+  deliveryStatus String    @default("SENT") // SENT, DELIVERED, READ, FAILED
+  deliveredAt    DateTime?
+  readAt         DateTime?
+  failureReason  String?
+  metadata       Json      @default("{}")
+  createdAt      DateTime  @default(now())
 
   conversation Conversation        @relation(fields: [conversationId], references: [id])
-  senderStaff  Staff?               @relation("SentMessages", fields: [senderStaffId], references: [id])
+  senderStaff  Staff?              @relation("SentMessages", fields: [senderStaffId], references: [id])
   attachments  MessageAttachment[]
 
   @@index([conversationId])
@@ -731,8 +731,8 @@ model PackTenantPin {
   pinnedById    String
   createdAt     DateTime @default(now())
 
-  business Business              @relation(fields: [businessId], references: [id])
-  pinnedBy Staff                 @relation("PackPinStaff", fields: [pinnedById], references: [id])
+  business Business @relation(fields: [businessId], references: [id])
+  pinnedBy Staff    @relation("PackPinStaff", fields: [pinnedById], references: [id])
 
   @@unique([businessId, packSlug])
   @@index([packSlug])
@@ -829,12 +829,12 @@ model ActionCard {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  business     Business      @relation(fields: [businessId], references: [id])
-  booking      Booking?      @relation(fields: [bookingId], references: [id])
-  customer     Customer?     @relation(fields: [customerId], references: [id])
-  conversation Conversation? @relation(fields: [conversationId], references: [id])
-  staff        Staff?        @relation("AssignedActionCards", fields: [staffId], references: [id])
-  resolvedBy   Staff?        @relation("ResolvedActionCards", fields: [resolvedById], references: [id])
+  business     Business        @relation(fields: [businessId], references: [id])
+  booking      Booking?        @relation(fields: [bookingId], references: [id])
+  customer     Customer?       @relation(fields: [customerId], references: [id])
+  conversation Conversation?   @relation(fields: [conversationId], references: [id])
+  staff        Staff?          @relation("AssignedActionCards", fields: [staffId], references: [id])
+  resolvedBy   Staff?          @relation("ResolvedActionCards", fields: [resolvedById], references: [id])
   feedback     AgentFeedback[]
 
   @@index([businessId, status])
@@ -910,15 +910,15 @@ model OutboundDraft {
 }
 
 model AgentConfig {
-  id              String   @id @default(cuid())
-  businessId      String
-  agentType       String // WAITLIST, RETENTION, DATA_HYGIENE, SCHEDULING_OPTIMIZER, QUOTE_FOLLOWUP
-  isEnabled       Boolean  @default(false)
-  autonomyLevel   String   @default("SUGGEST") // AUTO, SUGGEST, REQUIRE_APPROVAL
-  config          Json     @default("{}")
-  roleVisibility  String[] @default([])
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id             String   @id @default(cuid())
+  businessId     String
+  agentType      String // WAITLIST, RETENTION, DATA_HYGIENE, SCHEDULING_OPTIMIZER, QUOTE_FOLLOWUP
+  isEnabled      Boolean  @default(false)
+  autonomyLevel  String   @default("SUGGEST") // AUTO, SUGGEST, REQUIRE_APPROVAL
+  config         Json     @default("{}")
+  roleVisibility String[] @default([])
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   business Business @relation(fields: [businessId], references: [id])
 
@@ -987,7 +987,7 @@ model DuplicateCandidate {
   customerId1 String
   customerId2 String
   confidence  Float
-  matchFields String[] @default([])
+  matchFields String[]  @default([])
   status      String    @default("PENDING") // PENDING, MERGED, NOT_DUPLICATE, SNOOZED
   resolvedBy  String?
   resolvedAt  DateTime?

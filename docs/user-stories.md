@@ -1,6 +1,6 @@
 # Booking OS — Complete User Stories
 
-> **Last updated:** February 20, 2026 (Platform Console Phases 1-3 complete — Console Shell, Business Directory, Business 360, View-as, Audit, Health, Support, Billing & Revenue Operations)
+> **Last updated:** February 20, 2026 (Platform Console Phases 1-6 COMPLETE — Console Shell, Business Directory, Business 360, View-as, Audit, Health, Support, Billing & Revenue Operations, Packs & Skills, AI & Agents Governance, Messaging Ops, Platform Settings)
 
 Exhaustive inventory of everything each user persona can and cannot do on the platform. Organized by persona, then by feature area. Each story marked with current status.
 
@@ -880,20 +880,39 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 | 23.16  | Reactivate a canceled subscription                                                             | Super Admin | Reactivate button on canceled subscriptions (Phase 3)                 |
 | 23.17  | View billing credits table per business                                                        | Super Admin | Credits history in Business 360 Billing tab (Phase 3)                 |
 | 23.18  | View invoices table per business                                                               | Super Admin | Invoice history in Business 360 Billing tab (Phase 3)                 |
+| 23.19  | Browse pack registry with version history, install counts, and status                          | Super Admin | Pack listing with search and version timeline (Phase 4)               |
+| 23.20  | View pack detail page with version history, installed businesses, and skills                   | Super Admin | Drill-down from pack registry (Phase 4)                               |
+| 23.21  | Browse skills catalog with per-pack filtering                                                  | Super Admin | Skills listing with pack association (Phase 4)                        |
+| 23.22  | View AI agent performance dashboard (runs, success rate, cards created, helpful rate)           | Super Admin | KPI cards + per-agent-type breakdown table (Phase 5)                  |
+| 23.23  | View action card funnel (pending/approved/dismissed/executed/expired/snoozed)                  | Super Admin | Approval rate and execution rate metrics (Phase 5)                    |
+| 23.24  | View top agent failure errors with count and last seen                                         | Super Admin | Error aggregation across all agent runs (Phase 5)                     |
+| 23.25  | View abnormal tenants with failure rates above platform average                                | Super Admin | Tenant-level agent health monitoring (Phase 5)                        |
+| 23.26  | Search tenant agent status by business ID                                                      | Super Admin | Per-business agent config and run stats (Phase 5)                     |
+| 23.27  | Pause/resume all agents for a specific business                                                | Super Admin | Emergency kill switch per tenant (Phase 5)                            |
+| 23.28  | Update individual agent config per business (enable/disable, autonomy level)                   | Super Admin | Autonomy level capped by platform ceiling (Phase 5)                   |
+| 23.29  | View and update platform agent defaults (max autonomy, confidence threshold, review required)  | Super Admin | Platform-wide agent governance controls (Phase 5)                     |
+| 23.30  | View messaging ops dashboard (messages sent/delivered/failed, delivery rate, reminders)        | Super Admin | KPI cards with 7-day metrics (Phase 5)                                |
+| 23.31  | View webhook health status (healthy/degraded indicator)                                        | Super Admin | Inbound/outbound counts, failed outbound tracking (Phase 5)          |
+| 23.32  | View messaging failure reasons and impacted tenants                                            | Super Admin | Top failure reasons with affected business list (Phase 5)             |
+| 23.33  | View tenant messaging status (WhatsApp config, location coverage, delivery rate)               | Super Admin | Per-tenant messaging health overview (Phase 5)                        |
+| 23.34  | Expand tenant row to view fix checklist (WhatsApp config, delivery, reminders, conversations)  | Super Admin | Diagnostic checklist with ok/warning/error status (Phase 5)           |
+| 23.35  | Configure platform settings (security, notifications, regional, platform)                      | Super Admin | 4-category settings with bulk save (Phase 6)                          |
+| 23.36  | Toggle maintenance mode with confirmation modal                                                | Super Admin | Safety confirmation before enabling maintenance mode (Phase 6)        |
+| 23.37  | View overview attention items (past-due subs, urgent cases, active view-as, agent failures)    | Super Admin | Severity-ranked attention feed on overview dashboard (Phase 6)        |
+| 23.38  | View accounts at risk with weighted risk scoring                                               | Super Admin | Risk score from billing, activity, support, AI health signals (Phase 6) |
 
 ### What Users CANNOT Do
 
 | #      | Story                                                   | Notes                                              |
 | ------ | ------------------------------------------------------- | -------------------------------------------------- |
-| 23.19  | Edit business details (name, slug, timezone) directly   | Read-only; must use View-as to access business UI  |
-| 23.20  | Create a new business from the console                  | Businesses created via signup only                  |
-| 23.21  | Delete a business                                       | No business deletion                                |
-| 23.22  | Process refunds from the console                        | Must use Stripe dashboard                           |
-| 23.23  | View per-business revenue analytics                     | No revenue reporting in console yet                 |
-| 23.24  | Configure global platform settings                      | Placeholder page for future phase                   |
-| 23.25  | Manage vertical packs from the console                  | Placeholder page for future phase                   |
-| 23.26  | Manage AI agents platform-wide                          | Placeholder page for future phase                   |
-| 23.27  | Send platform-wide announcements                        | Placeholder page for future phase                   |
+| 23.39  | Edit business details (name, slug, timezone) directly   | Read-only; must use View-as to access business UI  |
+| 23.40  | Create a new business from the console                  | Businesses created via signup only                  |
+| 23.41  | Delete a business                                       | No business deletion                                |
+| 23.42  | Process refunds from the console                        | Must use Stripe dashboard                           |
+| 23.43  | View per-business revenue analytics                     | No revenue reporting in console yet                 |
+| 23.44  | Send platform-wide announcements                        | Not yet implemented                                 |
+| 23.45  | Create/edit vertical packs from the console              | Pack builder is a separate admin tool               |
+| 23.46  | View per-business messaging conversation content        | Privacy boundary; use View-as for this              |
 
 ---
 
@@ -923,7 +942,7 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 | Quotes            | 4       | 6         |
 | Billing           | 4       | 7         |
 | Global            | 17      | 7         |
-| Platform Console  | 18      | 9         |
-| **Total**         | **366** | **197**   |
+| Platform Console  | 38      | 8         |
+| **Total**         | **386** | **196**   |
 
-> **Platform Console Impact**: +18 new capabilities (Phases 1-3). Total shift from 348/188 to 366/197.
+> **Platform Console Impact**: +38 capabilities across all 6 phases (Phases 1-3: 18, Phase 4: 3, Phase 5: 13, Phase 6: 4). Total shift from 348/188 to 386/196.
