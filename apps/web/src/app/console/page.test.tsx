@@ -34,6 +34,7 @@ jest.mock('lucide-react', () => {
   const icons = [
     'Building2', 'Users', 'Calendar', 'MessageSquare', 'Bot',
     'ShieldCheck', 'LifeBuoy', 'Activity', 'Eye', 'TrendingUp', 'TrendingDown',
+    'AlertTriangle', 'AlertCircle', 'Info', 'ArrowRight',
   ];
   const mocks: Record<string, any> = {};
   icons.forEach((name) => {
@@ -62,6 +63,8 @@ const mockOverviewData = {
       createdAt: new Date().toISOString(),
     },
   ],
+  attentionItems: [],
+  accountsAtRisk: [],
 };
 
 describe('ConsoleOverviewPage', () => {
@@ -76,7 +79,6 @@ describe('ConsoleOverviewPage', () => {
     render(<ConsoleOverviewPage />);
 
     expect(screen.getByText('Overview')).toBeInTheDocument();
-    // Spinner present via animate-spin class
     expect(document.querySelector('.animate-spin')).toBeInTheDocument();
   });
 
@@ -87,41 +89,14 @@ describe('ConsoleOverviewPage', () => {
       expect(screen.getByText('Platform Overview')).toBeInTheDocument();
     });
 
-    // Top KPIs
-    expect(screen.getByText('9')).toBeInTheDocument(); // Total Businesses
+    expect(screen.getByText('9')).toBeInTheDocument();
     expect(screen.getByText('Total Businesses')).toBeInTheDocument();
-    expect(screen.getByText('6')).toBeInTheDocument(); // Active Subscriptions
+    expect(screen.getByText('6')).toBeInTheDocument();
     expect(screen.getByText('Active Subscriptions')).toBeInTheDocument();
-    expect(screen.getByText('12')).toBeInTheDocument(); // Bookings Today
+    expect(screen.getByText('12')).toBeInTheDocument();
     expect(screen.getByText('Bookings Today')).toBeInTheDocument();
-    expect(screen.getByText('890')).toBeInTheDocument(); // Total Customers
+    expect(screen.getByText('890')).toBeInTheDocument();
     expect(screen.getByText('Total Customers')).toBeInTheDocument();
-  });
-
-  it('renders billing section with trial/past due/canceled counts', async () => {
-    render(<ConsoleOverviewPage />);
-
-    await waitFor(() => {
-      expect(screen.getByText('Billing')).toBeInTheDocument();
-    });
-
-    expect(screen.getByText('Trial')).toBeInTheDocument();
-    expect(screen.getByText('2')).toBeInTheDocument(); // trial count
-    expect(screen.getByText('Past Due')).toBeInTheDocument();
-    expect(screen.getByText('1')).toBeInTheDocument(); // past due count
-    expect(screen.getByText('Canceled')).toBeInTheDocument();
-    expect(screen.getByText('0')).toBeInTheDocument(); // canceled count
-  });
-
-  it('renders support section with open cases count', async () => {
-    render(<ConsoleOverviewPage />);
-
-    await waitFor(() => {
-      expect(screen.getByText('Support')).toBeInTheDocument();
-    });
-
-    expect(screen.getByText('3')).toBeInTheDocument(); // open cases
-    expect(screen.getByText('Open cases')).toBeInTheDocument();
   });
 
   it('renders recent audit log entries', async () => {
@@ -134,17 +109,6 @@ describe('ConsoleOverviewPage', () => {
     expect(screen.getByText('admin@businesscommandcentre.com')).toBeInTheDocument();
     expect(screen.getByText('Business lookup')).toBeInTheDocument();
     expect(screen.getByText('View all')).toBeInTheDocument();
-  });
-
-  it('renders security section', async () => {
-    render(<ConsoleOverviewPage />);
-
-    await waitFor(() => {
-      expect(screen.getByText('Security')).toBeInTheDocument();
-    });
-
-    expect(screen.getByText('0 active view-as sessions')).toBeInTheDocument();
-    expect(screen.getByText('No failed agent runs')).toBeInTheDocument();
   });
 
   it('renders error state when API fails', async () => {
@@ -168,5 +132,248 @@ describe('ConsoleOverviewPage', () => {
 
     const link = screen.getByText('Total Businesses').closest('a');
     expect(link).toHaveAttribute('href', '/console/businesses');
+  });
+
+  // --- Attention Feed Tests ---
+
+  it('shows "All clear" when no attention items', async () => {
+    render(<ConsoleOverviewPage />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('attention-feed')).toBeInTheDocument();
+    });
+
+    expect(screen.getByTestId('attention-empty')).toBeInTheDocument();
+    expect(screen.getByText('All clear')).toBeInTheDocument();
+  });
+
+  it('renders attention items with severity badges', async () => {
+    mockApi.get.mockResolvedValue({
+      ...mockOverviewData,
+      attentionItems: [
+        {
+          id: 'past-due-subs',
+          severity: 'critical',
+          category: 'billing',
+          title: '2 past-due subscriptions (>3 days)',
+          description: 'Test Clinic, Bad Clinic',
+          actionLabel: 'View Billing',
+          actionHref: '/console/billing',
+          timestamp: new Date().toISOString(),
+        },
+        {
+          id: 'dormant-businesses',
+          severity: 'info',
+          category: 'businesses',
+          title: '3 dormant businesses',
+          description: 'Idle Clinic and 2 more',
+          actionLabel: 'View Businesses',
+          actionHref: '/console/businesses',
+          timestamp: new Date().toISOString(),
+        },
+      ],
+    });
+
+    render(<ConsoleOverviewPage />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('attention-feed')).toBeInTheDocument();
+    });
+
+    expect(screen.getByTestId('attention-item-critical')).toBeInTheDocument();
+    expect(screen.getByTestId('attention-item-info')).toBeInTheDocument();
+    expect(screen.getByText('2 past-due subscriptions (>3 days)')).toBeInTheDocument();
+  });
+
+  it('renders critical severity with red styling', async () => {
+    mockApi.get.mockResolvedValue({
+      ...mockOverviewData,
+      attentionItems: [
+        {
+          id: 'past-due-subs',
+          severity: 'critical',
+          category: 'billing',
+          title: 'Critical alert',
+          description: 'Test',
+          actionLabel: 'View',
+          actionHref: '/console/billing',
+          timestamp: new Date().toISOString(),
+        },
+      ],
+    });
+
+    render(<ConsoleOverviewPage />);
+
+    await waitFor(() => {
+      const badge = screen.getByTestId('severity-badge');
+      expect(badge).toHaveTextContent('critical');
+    });
+  });
+
+  it('renders action buttons that link to correct pages', async () => {
+    mockApi.get.mockResolvedValue({
+      ...mockOverviewData,
+      attentionItems: [
+        {
+          id: 'urgent-support',
+          severity: 'warning',
+          category: 'support',
+          title: '1 urgent support case',
+          description: 'Help needed',
+          actionLabel: 'View Support',
+          actionHref: '/console/support',
+          timestamp: new Date().toISOString(),
+        },
+      ],
+    });
+
+    render(<ConsoleOverviewPage />);
+
+    await waitFor(() => {
+      const actionLink = screen.getByTestId('attention-action');
+      expect(actionLink).toHaveAttribute('href', '/console/support');
+      expect(actionLink).toHaveTextContent('View Support');
+    });
+  });
+
+  // --- Accounts at Risk Tests ---
+
+  it('shows "No accounts at risk" when empty', async () => {
+    render(<ConsoleOverviewPage />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('at-risk-section')).toBeInTheDocument();
+    });
+
+    expect(screen.getByTestId('at-risk-empty')).toBeInTheDocument();
+    expect(screen.getByText('No accounts at risk')).toBeInTheDocument();
+  });
+
+  it('renders at-risk table with business data', async () => {
+    mockApi.get.mockResolvedValue({
+      ...mockOverviewData,
+      accountsAtRisk: [
+        {
+          businessId: 'biz1',
+          businessName: 'Troubled Clinic',
+          riskScore: 85,
+          plan: 'basic',
+          status: 'past_due',
+          lastBooking: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
+          topSignal: 'Billing',
+        },
+        {
+          businessId: 'biz2',
+          businessName: 'At Risk Salon',
+          riskScore: 45,
+          plan: 'pro',
+          status: 'active',
+          lastBooking: null,
+          topSignal: 'Inactivity',
+        },
+      ],
+    });
+
+    render(<ConsoleOverviewPage />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('at-risk-table')).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('Troubled Clinic')).toBeInTheDocument();
+    expect(screen.getByText('At Risk Salon')).toBeInTheDocument();
+  });
+
+  it('renders risk bar colors correctly (red >70, amber 30-70)', async () => {
+    mockApi.get.mockResolvedValue({
+      ...mockOverviewData,
+      accountsAtRisk: [
+        {
+          businessId: 'biz1',
+          businessName: 'High Risk',
+          riskScore: 85,
+          plan: 'basic',
+          status: 'canceled',
+          lastBooking: null,
+          topSignal: 'Billing',
+        },
+      ],
+    });
+
+    render(<ConsoleOverviewPage />);
+
+    await waitFor(() => {
+      const riskBar = screen.getByTestId('risk-bar');
+      expect(riskBar.className).toContain('bg-red-500');
+    });
+  });
+
+  it('links business names to Business 360 page', async () => {
+    mockApi.get.mockResolvedValue({
+      ...mockOverviewData,
+      accountsAtRisk: [
+        {
+          businessId: 'biz123',
+          businessName: 'Test Clinic',
+          riskScore: 55,
+          plan: 'pro',
+          status: 'past_due',
+          lastBooking: new Date().toISOString(),
+          topSignal: 'Billing',
+        },
+      ],
+    });
+
+    render(<ConsoleOverviewPage />);
+
+    await waitFor(() => {
+      const link = screen.getByTestId('business-link');
+      expect(link).toHaveAttribute('href', '/console/businesses/biz123');
+    });
+  });
+
+  it('shows "Never" for businesses with no bookings', async () => {
+    mockApi.get.mockResolvedValue({
+      ...mockOverviewData,
+      accountsAtRisk: [
+        {
+          businessId: 'biz1',
+          businessName: 'New Biz',
+          riskScore: 50,
+          plan: 'basic',
+          status: 'active',
+          lastBooking: null,
+          topSignal: 'Inactivity',
+        },
+      ],
+    });
+
+    render(<ConsoleOverviewPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Never')).toBeInTheDocument();
+    });
+  });
+
+  it('existing KPIs still work correctly', async () => {
+    render(<ConsoleOverviewPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Bookings (7d)')).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('85')).toBeInTheDocument();
+    expect(screen.getByText('Bookings (30d)')).toBeInTheDocument();
+    expect(screen.getByText('300')).toBeInTheDocument();
+  });
+
+  it('existing recent activity still works', async () => {
+    render(<ConsoleOverviewPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Recent Activity')).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('Business lookup')).toBeInTheDocument();
   });
 });

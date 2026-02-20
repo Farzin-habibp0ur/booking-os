@@ -1,6 +1,6 @@
 # Booking OS — Complete User Stories
 
-> **Last updated:** February 19, 2026 (UX Upgrade Pack all 3 releases complete — media attachments, calendar speed pack, exports, today timeline, automation UX, self-serve polish)
+> **Last updated:** February 20, 2026 (Platform Console Phases 1-3 complete — Console Shell, Business Directory, Business 360, View-as, Audit, Health, Support, Billing & Revenue Operations)
 
 Exhaustive inventory of everything each user persona can and cannot do on the platform. Organized by persona, then by feature area. Each story marked with current status.
 
@@ -15,7 +15,7 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 | **Agent**                    | Front desk / reception. Manages bookings and conversations.                         | AGENT            |
 | **Customer (Authenticated)** | End customer using self-serve links (reschedule, cancel, claim, quote). No login.   | Token-based      |
 | **Customer (Public)**        | Visitor to the public booking portal. No auth required.                             | None             |
-| **Super Admin**              | Platform-wide admin for pack management.                                            | SUPER_ADMIN      |
+| **Super Admin**              | Platform-wide admin for pack management, billing, audit, and multi-tenant operations. | SUPER_ADMIN      |
 
 ---
 
@@ -856,32 +856,74 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 
 ---
 
+## 23. Platform Console (Super Admin)
+
+### What Users CAN Do
+
+| #      | Story                                                                                          | Persona     | Notes                                                                 |
+| ------ | ---------------------------------------------------------------------------------------------- | ----------- | --------------------------------------------------------------------- |
+| 23.1   | View platform overview dashboard (business count, bookings, staff, agents, billing, security)  | Super Admin | Console home page with KPI cards                                      |
+| 23.2   | Browse all businesses in a paginated directory with search                                      | Super Admin | Filter by plan, billing status, health                                |
+| 23.3   | View Business 360 detail (Summary tab: metadata, usage, health)                                | Super Admin | Read-only business overview                                           |
+| 23.4   | View Business 360 detail (People tab: staff list)                                              | Super Admin | Read-only staff listing                                               |
+| 23.5   | View Business 360 detail (Billing tab: subscription info, credits, invoices)                   | Super Admin | Full billing management per business (Phase 3)                        |
+| 23.6   | Impersonate a business via View-as (time-limited 15-min JWT, audit-logged)                     | Super Admin | Countdown banner, scoped to target business                           |
+| 23.7   | Browse platform audit log with search, action type filter, pagination                          | Super Admin | Time, Actor, Action, Target, Reason columns                          |
+| 23.8   | View system health (overall status, 5 service checks, business health distribution)            | Super Admin | DB, Business Activity, AI Agents, Calendar Sync, Message Delivery    |
+| 23.9   | Manage support cases (CRUD with search, status/priority filters, case detail drawer, notes)    | Super Admin | open/in_progress/resolved/closed lifecycle                            |
+| 23.10  | View billing dashboard (subscription stats, plan distribution, MRR, churn rate)                | Super Admin | Platform-wide billing overview (Phase 3)                              |
+| 23.11  | View past-due businesses list with quick actions                                               | Super Admin | Filtered view of past-due subscriptions (Phase 3)                     |
+| 23.12  | Browse all subscriptions with search, plan/status filters, sortable table                      | Super Admin | All business subscriptions (Phase 3)                                  |
+| 23.13  | Change a business plan (upgrade/downgrade)                                                     | Super Admin | Plan change modal with audit logging (Phase 3)                        |
+| 23.14  | Apply billing credits to a business                                                            | Super Admin | Credit modal with amount + reason, audit-logged (Phase 3)             |
+| 23.15  | Cancel a business subscription with reason                                                     | Super Admin | Cancel modal with reason field, sets canceledAt + cancelReason (Phase 3) |
+| 23.16  | Reactivate a canceled subscription                                                             | Super Admin | Reactivate button on canceled subscriptions (Phase 3)                 |
+| 23.17  | View billing credits table per business                                                        | Super Admin | Credits history in Business 360 Billing tab (Phase 3)                 |
+| 23.18  | View invoices table per business                                                               | Super Admin | Invoice history in Business 360 Billing tab (Phase 3)                 |
+
+### What Users CANNOT Do
+
+| #      | Story                                                   | Notes                                              |
+| ------ | ------------------------------------------------------- | -------------------------------------------------- |
+| 23.19  | Edit business details (name, slug, timezone) directly   | Read-only; must use View-as to access business UI  |
+| 23.20  | Create a new business from the console                  | Businesses created via signup only                  |
+| 23.21  | Delete a business                                       | No business deletion                                |
+| 23.22  | Process refunds from the console                        | Must use Stripe dashboard                           |
+| 23.23  | View per-business revenue analytics                     | No revenue reporting in console yet                 |
+| 23.24  | Configure global platform settings                      | Placeholder page for future phase                   |
+| 23.25  | Manage vertical packs from the console                  | Placeholder page for future phase                   |
+| 23.26  | Manage AI agents platform-wide                          | Placeholder page for future phase                   |
+| 23.27  | Send platform-wide announcements                        | Placeholder page for future phase                   |
+
+---
+
 ## Summary Statistics
 
-| Category       | Can Do  | Cannot Do |
-| -------------- | ------- | --------- |
-| Authentication | 12      | 9         |
-| Onboarding     | 14      | 6         |
-| Dashboard      | 31      | 8         |
-| Bookings       | 24      | 15        |
-| Calendar       | 15      | 7         |
-| Customers      | 21      | 7         |
-| Inbox          | 37      | 11        |
-| Services       | 9       | 10        |
-| Staff          | 11      | 11        |
-| Waitlist       | 6       | 6         |
-| Campaigns      | 7       | 9         |
-| Automations    | 17      | 9         |
-| Settings       | 25      | 11        |
-| Locations      | 12      | 9         |
-| Reports        | 9       | 9         |
-| ROI            | 5       | 4         |
-| AI             | 22      | 9         |
-| Public Booking | 11      | 9         |
-| Self-Serve     | 10      | 6         |
-| Quotes         | 4       | 6         |
-| Billing        | 4       | 7         |
-| Global         | 17      | 7         |
-| **Total**      | **348** | **188**   |
+| Category          | Can Do  | Cannot Do |
+| ----------------- | ------- | --------- |
+| Authentication    | 12      | 9         |
+| Onboarding        | 14      | 6         |
+| Dashboard         | 31      | 8         |
+| Bookings          | 24      | 15        |
+| Calendar          | 15      | 7         |
+| Customers         | 21      | 7         |
+| Inbox             | 37      | 11        |
+| Services          | 9       | 10        |
+| Staff             | 11      | 11        |
+| Waitlist          | 6       | 6         |
+| Campaigns         | 7       | 9         |
+| Automations       | 17      | 9         |
+| Settings          | 25      | 11        |
+| Locations         | 12      | 9         |
+| Reports           | 9       | 9         |
+| ROI               | 5       | 4         |
+| AI                | 22      | 9         |
+| Public Booking    | 11      | 9         |
+| Self-Serve        | 10      | 6         |
+| Quotes            | 4       | 6         |
+| Billing           | 4       | 7         |
+| Global            | 17      | 7         |
+| Platform Console  | 18      | 9         |
+| **Total**         | **366** | **197**   |
 
-> **UX Upgrade Pack Impact**: +23 new capabilities resolved, 13 previous gaps closed. Total shift from 325/201 to 348/188.
+> **Platform Console Impact**: +18 new capabilities (Phases 1-3). Total shift from 348/188 to 366/197.

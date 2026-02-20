@@ -1385,3 +1385,185 @@ export class AddSupportCaseNoteDto {
   @MaxLength(5000)
   content!: string;
 }
+
+// ---- Console Phase 3: Billing DTOs ----
+
+export class ConsoleBillingSubscriptionsQueryDto {
+  @IsString()
+  @IsOptional()
+  @MaxLength(200)
+  search?: string;
+
+  @IsString()
+  @IsOptional()
+  @IsIn(['basic', 'pro'])
+  plan?: string;
+
+  @IsString()
+  @IsOptional()
+  @IsIn(['active', 'past_due', 'canceled', 'trialing'])
+  status?: string;
+
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  @Type(() => Number)
+  page?: number;
+
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  @IsOptional()
+  @Type(() => Number)
+  pageSize?: number;
+}
+
+export class ConsolePlanChangeDto {
+  @IsString()
+  @IsNotEmpty()
+  @IsIn(['basic', 'pro'])
+  newPlan!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(500)
+  reason!: string;
+}
+
+export class ConsoleCreditDto {
+  @IsNumber()
+  @Min(1)
+  @Max(10000)
+  amount!: number;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(500)
+  reason!: string;
+
+  @IsDateString()
+  @IsOptional()
+  expiresAt?: string;
+}
+
+export class ConsoleCancelDto {
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(500)
+  reason!: string;
+
+  @IsBoolean()
+  @IsOptional()
+  immediate?: boolean;
+}
+
+// ---- Console Phase 4: Packs & Skills DTOs ----
+
+export class ConsoleRolloutDto {
+  @IsInt()
+  @IsIn([5, 25, 50, 100])
+  targetPercent!: number;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(500)
+  reason?: string;
+}
+
+export class ConsoleRollbackDto {
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(500)
+  reason!: string;
+}
+
+export class ConsolePinDto {
+  @IsString()
+  @IsNotEmpty()
+  businessId!: string;
+
+  @IsInt()
+  @Min(1)
+  pinnedVersion!: number;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(500)
+  reason!: string;
+}
+
+export class ConsoleSkillOverrideDto {
+  @IsBoolean()
+  enabled!: boolean;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(500)
+  reason?: string;
+}
+
+// ---- Console Phase 5: Agent Governance DTOs ----
+
+export class ConsolePauseAgentsDto {
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(500)
+  reason!: string;
+}
+
+export class ConsoleUpdateTenantAgentDto {
+  @IsBoolean()
+  @IsOptional()
+  isEnabled?: boolean;
+
+  @IsString()
+  @IsOptional()
+  @IsIn(['AUTO', 'SUGGEST', 'REQUIRE_APPROVAL'])
+  autonomyLevel?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(500)
+  reason!: string;
+}
+
+export class ConsolePlatformDefaultDto {
+  @IsString()
+  @IsIn(['AUTO', 'SUGGEST', 'REQUIRE_APPROVAL'])
+  maxAutonomyLevel!: string;
+
+  @IsBoolean()
+  defaultEnabled!: boolean;
+
+  @IsNumber()
+  @Min(0)
+  @Max(1)
+  confidenceThreshold!: number;
+
+  @IsBoolean()
+  requiresReview!: boolean;
+}
+
+// ---- Console Phase 6: Platform Settings DTOs ----
+
+export class ConsoleSettingUpdateDto {
+  @IsNotEmpty()
+  value!: unknown;
+}
+
+export class ConsoleSettingBulkItem {
+  @IsString()
+  @IsNotEmpty()
+  key!: string;
+
+  @IsNotEmpty()
+  value!: unknown;
+}
+
+export class ConsoleSettingsBulkUpdateDto {
+  @IsArray()
+  @ArrayNotEmpty()
+  @ValidateNested({ each: true })
+  @Type(() => ConsoleSettingBulkItem)
+  settings!: ConsoleSettingBulkItem[];
+}

@@ -2,7 +2,7 @@
 
 > **Purpose:** This document gives full context on the Booking OS platform — what it is, what's been built, how it's structured, and what's left to build. Share this with an AI assistant or new developer to get productive immediately.
 >
-> **Last updated:** February 20, 2026 (Platform Console Phase 2 complete — 3,600 total tests: 2,138 API + 1,462 web)
+> **Last updated:** February 20, 2026 (Platform Console Phase 3 complete — 3,676 total tests: 2,177 API + 1,499 web)
 
 ---
 
@@ -226,7 +226,7 @@ booking-os/
 ├── apps/
 │   ├── api/                    # NestJS REST API (port 3001)
 │   │   ├── src/
-│   │   │   ├── modules/        # 47 feature modules
+│   │   │   ├── modules/        # 49 feature modules
 │   │   │   ├── common/         # Guards, decorators, filters, DTOs, Prisma service
 │   │   │   └── main.ts         # Bootstrap, Swagger, CORS, cookies, validation
 │   │   └── Dockerfile          # Multi-stage production build
@@ -240,7 +240,7 @@ booking-os/
 │   │   └── Dockerfile          # Multi-stage production build
 │   └── whatsapp-simulator/     # WhatsApp testing tool (port 3002)
 ├── packages/
-│   ├── db/                     # Prisma schema (43 models), migrations, seed scripts
+│   ├── db/                     # Prisma schema (47 models), migrations, seed scripts
 │   │   ├── prisma/schema.prisma
 │   │   ├── src/seed.ts         # Base seed (idempotent)
 │   │   ├── src/seed-demo.ts    # Rich demo data (idempotent)
@@ -265,7 +265,7 @@ booking-os/
 
 ---
 
-## 5. Database Schema (46 Models)
+## 5. Database Schema (47 Models)
 
 ```
 Business (1) ──┬── (*) Staff ──── (*) WorkingHours
@@ -286,7 +286,7 @@ Business (1) ──┬── (*) Staff ──── (*) WorkingHours
                ├── (*) Location ──── (*) Resource
                ├── (*) MessageTemplate
                ├── (*) Translation
-               ├── (1) Subscription
+               ├── (1) Subscription ──── (*) BillingCredit
                ├── (*) AiUsage
                ├── (*) Token
                ├── (*) RoiBaseline
@@ -349,6 +349,13 @@ VerticalPack:       AESTHETIC, SALON, TUTORING, GENERAL, DEALERSHIP
 | **PlatformAuditLog** | actorId, actorEmail, action, targetType?, targetId?, reason?, metadata (JSON), createdAt | Platform-level audit trail for Super Admin actions |
 | **SupportCase** | businessId (FK), businessName, subject, description, status (open/in_progress/resolved/closed), priority (low/normal/high/urgent), category?, resolution?, resolvedAt?, closedAt?, createdById | Support case tracking for platform console |
 | **SupportCaseNote** | caseId (FK), authorId, authorName, content, createdAt | Notes on support cases with cascade delete |
+| **BillingCredit** | businessId (FK), amount (Decimal), reason, appliedById, appliedByEmail, createdAt | Platform-issued billing credits for businesses |
+
+### Subscription Model — Updated Fields
+The Subscription model now includes additional billing management fields:
+- `canceledAt` — Timestamp when subscription was canceled
+- `cancelReason` — Reason provided for cancellation
+- `planChangedAt` — Timestamp of last plan change
 
 ### Message Model — Updated Fields
 The Message model now includes delivery receipt fields:
@@ -359,7 +366,7 @@ The Message model now includes delivery receipt fields:
 
 ---
 
-## 6. API Modules (47 Modules)
+## 6. API Modules (49 Modules)
 
 All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 
@@ -410,6 +417,7 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 | **Console Audit** | `/admin/audit-logs` | Searchable/filterable platform audit log, action types |
 | **Console Health** | `/admin/health` | System health checks (DB, business activity, agents, calendar, messaging) + business health distribution |
 | **Console Support** | `/admin/support-cases` | Support case CRUD, notes, status management (open/in_progress/resolved/closed) |
+| **Console Billing** | `/admin/billing`, `/admin/businesses/:id/billing` | Platform-wide billing dashboard (subscription stats, plan distribution, MRR, past-due list), per-business billing operations (subscription details, plan change, credits, cancel/reactivate, invoices) |
 
 ### Auth & Multi-tenancy
 - JWT in httpOnly cookies (access: 15 min, refresh: 7 days), automatic client-side refresh on 401
@@ -423,7 +431,7 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 
 ---
 
-## 7. Frontend Pages (46 Pages)
+## 7. Frontend Pages (49 Pages)
 
 ### Public Pages
 | Page | Route | Description |
@@ -462,6 +470,19 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 | ROI Dashboard | `/roi` | Baseline vs current metrics |
 | Service Board | `/service-board` | Kanban board (dealership) |
 | Settings | `/settings/*` | 13 settings sub-pages (account, AI, AI Autonomy, Agent Skills, agents, templates, translations, calendar, billing, notifications, offers, policies, waitlist, profile fields); hub page links to all sub-pages |
+
+### Console Pages (Super Admin Only)
+| Page | Route | Description |
+|------|-------|-------------|
+| Console Overview | `/console` | Platform KPIs, billing breakdown, support cases, security summary, audit feed |
+| Business Directory | `/console/businesses` | Search, filter by plan/billing/health, paginated table |
+| Business 360 | `/console/businesses/[id]` | Summary, People, and Billing tabs (subscription info, plan change, credits, cancel/reactivate, invoices) |
+| Security & Audit | `/console/audit` | Audit log explorer with search, action type filter, paginated table |
+| System Health | `/console/health` | Overall status, 5 service checks, business health distribution |
+| Support Cases | `/console/support` | Full CRUD with search, status/priority filters, case detail drawer, notes |
+| Billing Dashboard | `/console/billing` | Subscription stats, plan distribution, MRR, churn rate, past-due businesses |
+| Past-Due | `/console/billing/past-due` | Filtered list of past-due businesses with quick actions |
+| Subscriptions | `/console/billing/subscriptions` | All subscriptions with search, plan/status filters, sortable table |
 
 ### Key Components
 - `Shell` — Sidebar nav with mode-grouped items + "More" toggle, pinned saved views, i18n, pack provider, dark mode, tour trigger
@@ -657,10 +678,11 @@ Key groups (full list in `.env.example`):
 - **UX Upgrade Pack COMPLETE** — All 3 releases, 21 batches, **3,402 total tests** (2,010 API + 1,392 web)
 - See `docs/user-stories.md` for complete inventory (280 current capabilities, 215 identified gaps) and `docs/ux-brainstorm-brief.md` for brainstorm prompts.
 
-### Platform Console — COMPLETE (Phases 1-2)
+### Platform Console — Phases 1-3 COMPLETE
 - **Phase 1** (4 batches): Console Shell, Business Directory (search/filter/paginate), Business 360 (Summary + People tabs), View-as Tenant (time-limited JWT, audit-logged). Models: ViewAsSession, PlatformAuditLog. Seed scripts: `seed-console.ts`, `seed-console-showcase.ts`. 28 migrations.
 - **Phase 2**: Overview KPI dashboard (businesses, bookings, staff, agents, support, security), Security & Audit log explorer (search, filters, pagination), System Health checks (DB, business activity, agents, calendar, messaging) with business health distribution, Support Cases CRUD with notes. Models: SupportCase, SupportCaseNote. Enhanced placeholders for Billing, Packs, Agents, Messaging, Settings.
-- **Final counts:** 3,600 tests total (2,138 API + 1,462 web), 46 Prisma models, 29 migrations
+- **Phase 3** (Billing & Revenue Operations): Extended Subscription model (canceledAt, cancelReason, planChangedAt), new BillingCredit model (47 Prisma models total). 10 new API endpoints under `/admin/billing` and `/admin/businesses/:id/billing`. 4 new DTOs (ConsoleBillingSubscriptionsQueryDto, ConsolePlanChangeDto, ConsoleCreditDto, ConsoleCancelDto). New console-billing.controller.ts + console-billing.service.ts. 3 new frontend pages (billing dashboard, past-due, subscriptions). Business 360 updated with Billing tab (subscription info, modals for plan change/credit/cancel/reactivate, credits table, invoices table). 76 new tests (39 API + 37 web). Migration #30.
+- **Final counts:** 3,676 tests total (2,177 API + 1,499 web), 47 Prisma models, 30 migrations
 
 ### Code Quality
 - **Error Handling Remediation** — COMPLETE (commit 1cf6f99). Replaced ~20 silent `.catch(() => {})` with logged warnings, queue processors throw on failure, NestJS proper exceptions, frontend toast wiring, waitlist loop resilience, WebSocket disconnect logging. +58 tests.
@@ -725,7 +747,7 @@ npm run dev                    # Starts all apps via Turborepo
 | `npm run dev` | Start all apps |
 | `npm run build` | Build all |
 | `npm run lint` | Lint all (ESLint + TypeScript) |
-| `npm test` | Run all tests (~3,600 tests) |
+| `npm test` | Run all tests (~3,676 tests) |
 | `npm run test:coverage` | Tests with coverage thresholds |
 | `npm run db:generate` | Generate Prisma client |
 | `npm run db:migrate` | Run migrations |

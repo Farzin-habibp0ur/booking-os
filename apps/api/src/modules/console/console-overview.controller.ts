@@ -15,4 +15,14 @@ export class ConsoleOverviewController {
   async getOverview() {
     return this.overviewService.getOverview();
   }
+
+  @Get('attention')
+  async getAttentionItems() {
+    return this.overviewService.getAttentionItems();
+  }
+
+  @Get('at-risk')
+  async getAccountsAtRisk() {
+    return this.overviewService.getAccountsAtRisk();
+  }
 }

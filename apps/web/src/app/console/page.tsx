@@ -8,11 +8,34 @@ import {
   Calendar,
   MessageSquare,
   Bot,
-  ShieldCheck,
   Activity,
-  Eye,
+  AlertTriangle,
+  AlertCircle,
+  Info,
+  ArrowRight,
 } from 'lucide-react';
 import Link from 'next/link';
+
+interface AttentionItem {
+  id: string;
+  severity: 'critical' | 'warning' | 'info';
+  category: string;
+  title: string;
+  description: string;
+  actionLabel: string;
+  actionHref: string;
+  timestamp: string;
+}
+
+interface AtRiskAccount {
+  businessId: string;
+  businessName: string;
+  riskScore: number;
+  plan: string | null;
+  status: string | null;
+  lastBooking: string | null;
+  topSignal: string;
+}
 
 interface OverviewData {
   businesses: {
@@ -50,6 +73,8 @@ interface OverviewData {
     targetId: string | null;
     createdAt: string;
   }>;
+  attentionItems: AttentionItem[];
+  accountsAtRisk: AtRiskAccount[];
 }
 
 function StatCard({
@@ -94,6 +119,45 @@ function timeAgo(dateStr: string): string {
 
 function formatAction(action: string): string {
   return action.replace(/_/g, ' ').toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
+}
+
+const SEVERITY_CONFIG = {
+  critical: {
+    bg: 'bg-red-50 dark:bg-red-900/20',
+    border: 'border-red-200 dark:border-red-800',
+    badge: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+    icon: AlertTriangle,
+  },
+  warning: {
+    bg: 'bg-amber-50 dark:bg-amber-900/20',
+    border: 'border-amber-200 dark:border-amber-800',
+    badge: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+    icon: AlertCircle,
+  },
+  info: {
+    bg: 'bg-blue-50 dark:bg-blue-900/20',
+    border: 'border-blue-200 dark:border-blue-800',
+    badge: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+    icon: Info,
+  },
+};
+
+function RiskBar({ score }: { score: number }) {
+  const color = score > 70 ? 'bg-red-500' : 'bg-amber-500';
+  return (
+    <div className="flex items-center gap-2">
+      <div className="w-20 bg-slate-100 dark:bg-slate-800 rounded-full h-2">
+        <div
+          className={`${color} h-2 rounded-full transition-all`}
+          style={{ width: `${Math.min(score, 100)}%` }}
+          data-testid="risk-bar"
+        />
+      </div>
+      <span className={`text-xs font-medium ${score > 70 ? 'text-red-600' : 'text-amber-600'}`} data-testid="risk-score">
+        {score}
+      </span>
+    </div>
+  );
 }
 
 export default function ConsoleOverviewPage() {
@@ -146,52 +210,100 @@ export default function ConsoleOverviewPage() {
         <StatCard label="Agent Runs (7d)" value={data.platform.agentRuns7d} icon={Bot} />
       </div>
 
-      {/* Attention Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        {/* Billing Attention */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-5">
-          <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Billing</h3>
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-slate-500">Trial</span>
-              <span className="font-medium text-slate-900 dark:text-white">{data.businesses.trial}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-amber-600">Past Due</span>
-              <span className="font-medium text-amber-600">{data.businesses.pastDue}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-red-600">Canceled</span>
-              <span className="font-medium text-red-600">{data.businesses.canceled}</span>
-            </div>
+      {/* Attention Feed */}
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-5 mb-6" data-testid="attention-feed">
+        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-4">Attention Feed</h3>
+        {data.attentionItems.length === 0 ? (
+          <p className="text-sm text-slate-500 text-center py-4" data-testid="attention-empty">All clear</p>
+        ) : (
+          <div className="space-y-3">
+            {data.attentionItems.map((item) => {
+              const config = SEVERITY_CONFIG[item.severity];
+              const SeverityIcon = config.icon;
+              return (
+                <div
+                  key={item.id}
+                  className={`${config.bg} border ${config.border} rounded-xl p-4`}
+                  data-testid={`attention-item-${item.severity}`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-3 min-w-0">
+                      <SeverityIcon size={16} className="mt-0.5 shrink-0" />
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${config.badge}`} data-testid="severity-badge">
+                            {item.severity}
+                          </span>
+                          <span className="text-sm font-medium text-slate-900 dark:text-white truncate">
+                            {item.title}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-500 truncate">{item.description}</p>
+                      </div>
+                    </div>
+                    <Link
+                      href={item.actionHref}
+                      className="shrink-0 flex items-center gap-1 text-xs font-medium text-sage-600 hover:text-sage-700 whitespace-nowrap"
+                      data-testid="attention-action"
+                    >
+                      {item.actionLabel}
+                      <ArrowRight size={12} />
+                    </Link>
+                  </div>
+                </div>
+              );
+            })}
           </div>
-        </div>
+        )}
+      </div>
 
-        {/* Support */}
-        <Link href="/console/support" className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-5 hover:shadow-md transition-shadow">
-          <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Support</h3>
-          <p className="text-3xl font-serif font-bold text-slate-900 dark:text-white">{data.support.openCases}</p>
-          <p className="text-sm text-slate-500 mt-1">Open cases</p>
-        </Link>
-
-        {/* Security */}
-        <Link href="/console/audit" className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-5 hover:shadow-md transition-shadow">
-          <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Security</h3>
-          <div className="flex items-center gap-2">
-            <Eye size={16} className="text-slate-400" />
-            <span className="text-sm text-slate-500">
-              {data.security.activeViewAsSessions} active view-as session{data.security.activeViewAsSessions !== 1 ? 's' : ''}
-            </span>
+      {/* Accounts at Risk */}
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-5 mb-6" data-testid="at-risk-section">
+        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-4">Accounts at Risk</h3>
+        {data.accountsAtRisk.length === 0 ? (
+          <p className="text-sm text-slate-500 text-center py-4" data-testid="at-risk-empty">No accounts at risk</p>
+        ) : (
+          <div className="overflow-x-auto" data-testid="at-risk-table">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-xs text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800">
+                  <th className="pb-2 pr-4">Business</th>
+                  <th className="pb-2 pr-4">Risk Score</th>
+                  <th className="pb-2 pr-4">Plan</th>
+                  <th className="pb-2 pr-4">Status</th>
+                  <th className="pb-2 pr-4">Last Booking</th>
+                  <th className="pb-2">Top Signal</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.accountsAtRisk.map((account) => (
+                  <tr key={account.businessId} className="border-b border-slate-50 dark:border-slate-800/50">
+                    <td className="py-3 pr-4">
+                      <Link
+                        href={`/console/businesses/${account.businessId}`}
+                        className="text-sage-600 hover:text-sage-700 font-medium"
+                        data-testid="business-link"
+                      >
+                        {account.businessName}
+                      </Link>
+                    </td>
+                    <td className="py-3 pr-4">
+                      <RiskBar score={account.riskScore} />
+                    </td>
+                    <td className="py-3 pr-4 text-slate-500">{account.plan || '—'}</td>
+                    <td className="py-3 pr-4">
+                      <StatusBadge status={account.status} />
+                    </td>
+                    <td className="py-3 pr-4 text-slate-500">
+                      {account.lastBooking ? timeAgo(account.lastBooking) : 'Never'}
+                    </td>
+                    <td className="py-3 text-slate-500">{account.topSignal}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-          <div className="flex items-center gap-2 mt-2">
-            <ShieldCheck size={16} className="text-sage-600" />
-            <span className="text-sm text-slate-500">
-              {data.platform.failedAgentRuns7d === 0
-                ? 'No failed agent runs'
-                : `${data.platform.failedAgentRuns7d} failed agent runs (7d)`}
-            </span>
-          </div>
-        </Link>
+        )}
       </div>
 
       {/* Recent Activity */}
@@ -221,5 +333,22 @@ export default function ConsoleOverviewPage() {
         )}
       </div>
     </div>
+  );
+}
+
+function StatusBadge({ status }: { status: string | null }) {
+  if (!status) return <span className="text-slate-400">—</span>;
+
+  const styles: Record<string, string> = {
+    active: 'bg-sage-50 text-sage-900',
+    trialing: 'bg-lavender-50 text-lavender-900',
+    past_due: 'bg-amber-50 text-amber-700',
+    canceled: 'bg-red-50 text-red-700',
+  };
+
+  return (
+    <span className={`text-xs px-2 py-0.5 rounded-full ${styles[status] || 'bg-slate-100 text-slate-600'}`}>
+      {status.replace('_', ' ')}
+    </span>
   );
 }

@@ -32,6 +32,7 @@ model Business {
   messageTemplates     MessageTemplate[]
   translations         Translation[]
   subscription         Subscription?
+  billingCredits       BillingCredit[]
   aiUsage              AiUsage[]
   roiBaselines         RoiBaseline[]
   waitlistEntries      WaitlistEntry[]
@@ -55,6 +56,7 @@ model Business {
   messageAttachments   MessageAttachment[]
   viewAsSessions       ViewAsSession[]      @relation("ViewAsTarget")
   supportCases         SupportCase[]
+  packTenantPins       PackTenantPin[]
 
   @@map("businesses")
 }
@@ -93,6 +95,8 @@ model Staff {
   approvedOutbounds   OutboundDraft[]      @relation("ApprovedOutboundDrafts")
   agentFeedback       AgentFeedback[]
   viewAsSessions      ViewAsSession[]      @relation("ViewAsSuperAdmin")
+  issuedCredits       BillingCredit[]      @relation("BillingCreditIssuer")
+  packPins            PackTenantPin[]      @relation("PackPinStaff")
 
   @@index([businessId])
   @@map("staff")
@@ -370,20 +374,42 @@ model Translation {
 }
 
 model Subscription {
-  id                   String   @id @default(cuid())
-  businessId           String   @unique
+  id                   String    @id @default(cuid())
+  businessId           String    @unique
   stripeCustomerId     String
-  stripeSubscriptionId String   @unique
-  plan                 String   @default("basic") // basic, pro
-  status               String   @default("active") // active, past_due, canceled, trialing
+  stripeSubscriptionId String    @unique
+  plan                 String    @default("basic") // basic, pro
+  status               String    @default("active") // active, past_due, canceled, trialing
   currentPeriodEnd     DateTime
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  canceledAt           DateTime?
+  cancelReason         String?
+  planChangedAt        DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 
   business Business @relation(fields: [businessId], references: [id])
 
   @@index([stripeCustomerId])
   @@map("subscriptions")
+}
+
+model BillingCredit {
+  id         String    @id @default(cuid())
+  businessId String
+  issuedById String
+  amount     Float
+  reason     String
+  expiresAt  DateTime?
+  appliedAt  DateTime?
+  stripeId   String?
+  createdAt  DateTime  @default(now())
+
+  business Business @relation(fields: [businessId], references: [id])
+  issuedBy Staff    @relation("BillingCreditIssuer", fields: [issuedById], references: [id])
+
+  @@index([businessId])
+  @@index([issuedById])
+  @@map("billing_credits")
 }
 
 model Payment {
@@ -671,22 +697,46 @@ model StaffLocation {
 }
 
 model VerticalPackVersion {
-  id          String   @id @default(cuid())
-  businessId  String?
-  slug        String
-  version     Int      @default(1)
-  name        String
-  description String?
-  config      Json
-  isPublished Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                 String    @id @default(cuid())
+  businessId         String?
+  slug               String
+  version            Int       @default(1)
+  name               String
+  description        String?
+  config             Json
+  isPublished        Boolean   @default(false)
+  rolloutStage       String    @default("draft")
+  rolloutPercent     Int       @default(0)
+  rolloutStartedAt   DateTime?
+  rolloutCompletedAt DateTime?
+  rolloutPausedAt    DateTime?
+  rolledBackAt       DateTime?
+  rolledBackReason   String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   business Business? @relation(fields: [businessId], references: [id])
 
   @@unique([slug, version])
   @@index([slug])
   @@map("vertical_pack_versions")
+}
+
+model PackTenantPin {
+  id            String   @id @default(cuid())
+  businessId    String
+  packSlug      String
+  pinnedVersion Int
+  reason        String
+  pinnedById    String
+  createdAt     DateTime @default(now())
+
+  business Business              @relation(fields: [businessId], references: [id])
+  pinnedBy Staff                 @relation("PackPinStaff", fields: [pinnedById], references: [id])
+
+  @@unique([businessId, packSlug])
+  @@index([packSlug])
+  @@map("pack_tenant_pins")
 }
 
 model Quote {
@@ -1027,4 +1077,27 @@ model SupportCaseNote {
 
   @@index([caseId])
   @@map("support_case_notes")
+}
+
+model PlatformAgentDefault {
+  id                  String   @id @default(cuid())
+  agentType           String   @unique // WAITLIST, RETENTION, DATA_HYGIENE, SCHEDULING_OPTIMIZER, QUOTE_FOLLOWUP
+  maxAutonomyLevel    String   @default("SUGGEST") // AUTO, SUGGEST, REQUIRE_APPROVAL
+  defaultEnabled      Boolean  @default(false)
+  confidenceThreshold Float    @default(0.7)
+  requiresReview      Boolean  @default(true)
+  updatedAt           DateTime @updatedAt
+  updatedById         String?
+
+  @@map("platform_agent_defaults")
+}
+
+model PlatformSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     Json
+  updatedAt DateTime @updatedAt
+  updatedBy String?
+
+  @@map("platform_settings")
 }

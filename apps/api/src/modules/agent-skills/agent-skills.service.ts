@@ -9,7 +9,7 @@ export interface AgentSkillDefinition {
   defaultEnabled: boolean;
 }
 
-const PACK_SKILLS: Record<string, AgentSkillDefinition[]> = {
+export const PACK_SKILLS: Record<string, AgentSkillDefinition[]> = {
   aesthetic: [
     {
       agentType: 'WAITLIST',
