@@ -35,7 +35,7 @@ booking-os/
 
 - **Node.js** 20+
 - **PostgreSQL** 16
-- **Redis** (optional, for caching)
+- **Redis** — optional. Not needed for development or small-scale deployments (<50 clients). The API gracefully falls back to fire-and-forget async processing without Redis. Required for BullMQ job queues and multi-instance WebSocket scaling.
 
 ## Getting Started
 
@@ -166,7 +166,7 @@ Copy `.env.example` to `.env` for a full list of configuration options. Key vari
 
 The project includes Docker Compose configurations for production deployment with Nginx reverse proxy.
 
-- **Production (Railway):** Push to `main` → CI → `railway up --detach`. See [`DEPLOY.md`](DEPLOY.md) for full deployment & operations guide.
+- **Production (Railway):** Push to `main` → CI → `railway up --detach`. Currently running a lean 3-service setup (api, web, postgres — no Redis) to minimize costs during pre-customer phase. See [`DEPLOY.md`](DEPLOY.md) for full deployment & operations guide.
 - **Self-hosted:** `docker-compose.prod.yml` with Nginx + SSL. See [`DEPLOY.md`](DEPLOY.md) section 4.
 - **CI/CD Pipeline:** See [`docs/cicd.md`](docs/cicd.md) for pipeline details.
 

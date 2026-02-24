@@ -9,6 +9,7 @@ Complete reference for deploying, configuring, and operating Booking OS in produ
 1. [Architecture Overview](#1-architecture-overview)
 2. [Environment Variables Reference](#2-environment-variables-reference)
 3. [Railway Deployment (Current Production)](#3-railway-deployment-current-production)
+   - [Cost Optimization (Pre-Customer Phase)](#cost-optimization-pre-customer-phase)
 4. [Self-Hosted Docker Deployment](#4-self-hosted-docker-deployment)
 5. [Local Demo Quick Start](#5-local-demo-quick-start)
 6. [Authentication & Cookie Configuration](#6-authentication--cookie-configuration)
@@ -35,12 +36,14 @@ Complete reference for deploying, configuring, and operating Booking OS in produ
                                │
                     ┌──────────┼──────────┐
                     ▼                     ▼
-             ┌───────────┐         ┌───────────┐
-             │ PostgreSQL│         │   Redis   │
+             ┌───────────┐         ┌ ─ ─ ─ ─ ─┐
+             │ PostgreSQL│           Redis
              │    16     │         │     7     │
-             │ port 5432 │         │ port 6379 │
-             └───────────┘         └───────────┘
+             │ port 5432 │           port 6379
+             └───────────┘         └ ─ ─ ─ ─ ─┘
 ```
+
+> **Lean setup (current):** Redis is optional. Without `REDIS_URL`, the API uses fire-and-forget async processing and single-instance WebSocket — sufficient for <50 concurrent clients. See [Cost Optimization](#cost-optimization-pre-customer-phase) for details.
 
 **Monorepo structure:**
 - `apps/api` — NestJS REST API + WebSocket (Socket.IO)
@@ -108,7 +111,7 @@ Complete reference for deploying, configuring, and operating Booking OS in produ
 |----------|-------|
 | Project ID | `37eeca20-7dfe-45d9-8d29-e902a545f475` |
 | Environment | `production` |
-| Services | `api`, `web`, `postgres`, `redis` |
+| Services | `api`, `web`, `postgres` (Redis removed — see [Cost Optimization](#cost-optimization-pre-customer-phase)) |
 | API domain | `api.businesscommandcentre.com` |
 | Web domain | `businesscommandcentre.com` |
 | CORS_ORIGINS | `https://businesscommandcentre.com,https://www.businesscommandcentre.com` |
@@ -179,6 +182,48 @@ DNS is managed via **Cloudflare** (free plan) with CNAME flattening for the root
 | Secret | Purpose | How to Refresh |
 |--------|---------|----------------|
 | `RAILWAY_TOKEN` | Project deploy token (NOT account token) | Railway → Project Settings → Tokens → Create → then `gh secret set RAILWAY_TOKEN` |
+
+---
+
+## Cost Optimization (Pre-Customer Phase)
+
+The Railway deployment currently runs a **lean setup** without Redis, reducing the number of paid services from 4 to 3 (`api`, `web`, `postgres`). This is appropriate while the product has no paying customers.
+
+### What This Means
+
+Without `REDIS_URL` set, the API automatically falls back to:
+
+- **Fire-and-forget async processing** instead of BullMQ job queues — background tasks (reminders, notifications, agent runs) execute immediately in the same process rather than being queued
+- **Single-instance WebSocket** instead of Redis-backed Socket.IO adapter — real-time events only broadcast within a single API instance
+- **No job persistence or retry** — if a background task fails, it won't be retried automatically
+
+### Limitations
+
+| Feature | With Redis | Without Redis (current) |
+|---------|-----------|------------------------|
+| Background jobs | BullMQ queues with retry, backoff, concurrency control | Fire-and-forget (no retry) |
+| WebSocket scaling | Redis adapter, works across multiple API instances | Single instance only |
+| Cron jobs | Run normally | Run normally |
+| Health check | Shows `database` + `redis` checks | Shows `database` check only |
+
+### When to Re-Enable Redis
+
+Add Redis back when any of these apply:
+- Onboarding test users or paying customers
+- Running multiple API instances (horizontal scaling)
+- Needing reliable job retry/backoff (e.g., payment webhooks, critical notifications)
+
+### How to Re-Enable Redis
+
+1. Add a **Redis** service in the Railway dashboard (or use Railway's managed Redis plugin)
+2. Copy the `REDIS_URL` from the Redis service's variables
+3. Set `REDIS_URL` in the API service's environment variables
+4. The API will automatically redeploy and switch to BullMQ queues + Redis WebSocket adapter
+
+The conditional logic is in `apps/api/src/app.module.ts` (line 121):
+```typescript
+process.env.REDIS_URL ? QueueModule.forRootWithRedis() : QueueModule.forRoot()
+```
 
 ---
 
@@ -583,18 +628,27 @@ Railway waits for the new container to pass its health check before routing traf
 GET /api/v1/health
 ```
 
-Returns:
+Returns (lean setup, no Redis):
 ```json
 {
   "status": "healthy",
   "uptime": 3600,
   "version": "0.1.0",
   "checks": {
-    "database": { "status": "ok", "latencyMs": 15 },
-    "redis": { "status": "ok", "latencyMs": 8 }
+    "database": { "status": "ok", "latencyMs": 15 }
   },
   "memory": { "rss": "128 MB" },
   "timestamp": "2026-02-17T12:00:00.000Z"
+}
+```
+
+When Redis is enabled (`REDIS_URL` is set), the response also includes:
+```json
+{
+  "checks": {
+    "database": { "status": "ok", "latencyMs": 15 },
+    "redis": { "status": "ok", "latencyMs": 8 }
+  }
 }
 ```
 
