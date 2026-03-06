@@ -69,7 +69,7 @@ import { ConsoleModule } from './modules/console/console.module';
         },
       },
     }),
-    ScheduleModule.forRoot(),
+    ...(process.env.ENABLE_CRON === 'true' ? [ScheduleModule.forRoot()] : []),
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
     PrismaModule,
     InboxGatewayModule,
@@ -118,7 +118,9 @@ import { ConsoleModule } from './modules/console/console.module';
     AttachmentModule,
     ExportModule,
     ConsoleModule,
-    process.env.REDIS_URL ? QueueModule.forRootWithRedis() : QueueModule.forRoot(),
+    ...(process.env.ENABLE_WORKERS === 'true'
+      ? [process.env.REDIS_URL ? QueueModule.forRootWithRedis() : QueueModule.forRoot()]
+      : []),
   ],
 })
 export class AppModule {}
