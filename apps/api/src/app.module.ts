@@ -118,9 +118,7 @@ import { ConsoleModule } from './modules/console/console.module';
     AttachmentModule,
     ExportModule,
     ConsoleModule,
-    ...(process.env.ENABLE_WORKERS === 'true'
-      ? [process.env.REDIS_URL ? QueueModule.forRootWithRedis() : QueueModule.forRoot()]
-      : []),
+    process.env.REDIS_URL ? QueueModule.forRootWithRedis() : QueueModule.forRoot(),
   ],
 })
 export class AppModule {}
