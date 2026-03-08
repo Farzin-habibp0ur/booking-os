@@ -265,7 +265,8 @@
     "email_placeholder": "Correo (opcional)",
     "load_error": "Error al cargar {{entity}}s",
     "load_error_title": "No se pudieron cargar los datos",
-    "load_error_description": "Verifica tu conexión e intenta de nuevo."
+    "load_error_description": "Verifica tu conexión e intenta de nuevo.",
+    "try_different_search": "Prueba con otro término de búsqueda o agrega un nuevo cliente."
   },
 
   "customer_detail": {

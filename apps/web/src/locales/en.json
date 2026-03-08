@@ -299,7 +299,8 @@
     "email_placeholder": "Email (optional)",
     "load_error": "Failed to load {{entity}}s",
     "load_error_title": "Unable to load data",
-    "load_error_description": "Check your connection and try again."
+    "load_error_description": "Check your connection and try again.",
+    "try_different_search": "Try a different search term or add a new customer."
   },
 
   "customer_detail": {

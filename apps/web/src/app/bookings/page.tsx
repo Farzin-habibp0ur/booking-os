@@ -32,6 +32,7 @@ export default function BookingsPage() {
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [rescheduleOpen, setRescheduleOpen] = useState(false);
+  const [newBookingOpen, setNewBookingOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkStatusModal, setBulkStatusModal] = useState(false);
   const [bulkAssignModal, setBulkAssignModal] = useState(false);
@@ -475,7 +476,7 @@ export default function BookingsPage() {
             }
             action={
               !(searchQuery || statusFilter || dateFrom || dateTo || staffFilter)
-                ? { label: 'Go to Calendar', onClick: () => (window.location.href = '/calendar') }
+                ? { label: 'Create New Booking', onClick: () => setNewBookingOpen(true) }
                 : undefined
             }
           />
@@ -498,6 +499,12 @@ export default function BookingsPage() {
         customerName={selectedBooking?.customer?.name}
         rescheduleBookingId={selectedBooking?.id}
         rescheduleData={selectedBooking}
+      />
+
+      <BookingFormModal
+        isOpen={newBookingOpen}
+        onClose={() => setNewBookingOpen(false)}
+        onCreated={handleUpdated}
       />
 
       <BulkActionBar
