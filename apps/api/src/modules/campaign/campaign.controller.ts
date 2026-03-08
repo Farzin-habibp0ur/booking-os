@@ -13,12 +13,14 @@ import { AuthGuard } from '@nestjs/passport';
 import { Throttle } from '@nestjs/throttler';
 import { TenantGuard } from '../../common/tenant.guard';
 import { RolesGuard, Roles } from '../../common/roles.guard';
+import { PlanGuard, RequiresFeature } from '../../common/plan.guard';
 import { BusinessId } from '../../common/decorators';
 import { CampaignService } from './campaign.service';
 import { CreateCampaignDto, UpdateCampaignDto, PreviewAudienceDto } from '../../common/dto';
 
 @Controller('campaigns')
-@UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+@UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard, PlanGuard)
+@RequiresFeature('campaigns')
 export class CampaignController {
   constructor(private campaignService: CampaignService) {}
 

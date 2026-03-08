@@ -11,6 +11,8 @@ import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../../common/prisma.service';
 import { TokenService } from '../../common/token.service';
 import { EmailService } from '../email/email.service';
+import { OnboardingDripService } from '../onboarding-drip/onboarding-drip.service';
+import { TRIAL_DAYS, GRACE_PERIOD_DAYS } from '../../common/plan-config';
 
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_MINUTES = 15;
@@ -27,6 +29,7 @@ export class AuthService {
     private config: ConfigService,
     private tokenService: TokenService,
     private emailService: EmailService,
+    private onboardingDrip: OnboardingDripService,
   ) {
     // M2 fix: Clean up expired brute force entries every 5 minutes
     const timer = setInterval(
@@ -119,8 +122,12 @@ export class AuthService {
 
     const passwordHash = await bcrypt.hash(data.password, 12);
 
+    // Calculate trial dates
+    const trialEndsAt = new Date(Date.now() + TRIAL_DAYS * 24 * 60 * 60 * 1000);
+    const graceEndsAt = new Date(trialEndsAt.getTime() + GRACE_PERIOD_DAYS * 24 * 60 * 60 * 1000);
+
     const business = await this.prisma.business.create({
-      data: { name: data.businessName, slug },
+      data: { name: data.businessName, slug, trialEndsAt, graceEndsAt },
     });
 
     const staff = await this.prisma.staff.create({
@@ -136,6 +143,27 @@ export class AuthService {
 
     // M16 fix: Send email verification on signup
     await this.sendVerificationEmail(staff.id, staff.email, staff.name, staff.businessId);
+
+    // Send welcome email
+    try {
+      const webUrl = this.getWebUrl();
+      await this.emailService.sendGeneric(staff.email, {
+        subject: "Welcome to Booking OS — let's get your first booking live in 10 minutes",
+        headline: `Welcome, ${staff.name}!`,
+        body: `You've just started your 14-day free trial of Booking OS. Every feature is unlocked — no credit card required. Let's get your clinic set up and accepting bookings.`,
+        ctaLabel: 'Start Setup',
+        ctaUrl: `${webUrl}/setup`,
+      });
+    } catch (err) {
+      this.logger.warn(`Failed to send welcome email to ${staff.email}`, err);
+    }
+
+    // Schedule onboarding drip emails
+    try {
+      await this.onboardingDrip.scheduleDrip(business.id, staff.email, staff.name);
+    } catch (err) {
+      this.logger.warn(`Failed to schedule drip for ${staff.email}`, err);
+    }
 
     const tokens = this.issueTokens(staff);
 
@@ -233,6 +261,19 @@ export class AuthService {
       if (targetBusiness) business = targetBusiness;
     }
 
+    // Calculate trial status
+    const now = new Date();
+    const isTrial = business.trialEndsAt ? business.trialEndsAt > now : false;
+    const trialDaysRemaining = isTrial && business.trialEndsAt
+      ? Math.max(0, Math.ceil((business.trialEndsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
+      : 0;
+    const trialExpired = business.trialEndsAt ? now > business.trialEndsAt : false;
+    const isGracePeriod =
+      business.trialEndsAt &&
+      business.graceEndsAt &&
+      now > business.trialEndsAt &&
+      now <= business.graceEndsAt;
+
     const result: Record<string, any> = {
       id: staff.id,
       name: staff.name,
@@ -249,6 +290,13 @@ export class AuthService {
         verticalPack: business.verticalPack,
         defaultLocale: business.defaultLocale,
         packConfig: business.packConfig as Record<string, unknown> | null,
+      },
+      trial: {
+        isTrial,
+        trialDaysRemaining,
+        trialExpired,
+        trialEndsAt: business.trialEndsAt?.toISOString() || null,
+        isGracePeriod: !!isGracePeriod,
       },
     };
 

@@ -7,6 +7,7 @@ import { AuthService } from './auth.service';
 import { PrismaService } from '../../common/prisma.service';
 import { TokenService } from '../../common/token.service';
 import { EmailService } from '../email/email.service';
+import { OnboardingDripService } from '../onboarding-drip/onboarding-drip.service';
 import {
   createMockPrisma,
   createMockConfigService,
@@ -59,6 +60,7 @@ describe('AuthService', () => {
         { provide: ConfigService, useValue: createMockConfigService() },
         { provide: TokenService, useValue: tokenService },
         { provide: EmailService, useValue: emailService },
+        { provide: OnboardingDripService, useValue: { scheduleDrip: jest.fn(), cancelDrip: jest.fn() } },
       ],
     }).compile();
 
@@ -417,6 +419,7 @@ describe('AuthService', () => {
           { provide: ConfigService, useValue: prodConfig },
           { provide: TokenService, useValue: tokenService },
           { provide: EmailService, useValue: emailService },
+          { provide: OnboardingDripService, useValue: { scheduleDrip: jest.fn(), cancelDrip: jest.fn() } },
         ],
       }).compile();
 

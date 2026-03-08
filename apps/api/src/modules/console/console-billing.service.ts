@@ -2,8 +2,16 @@ import { Injectable, Logger, NotFoundException, BadRequestException } from '@nes
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../common/prisma.service';
 import Stripe from 'stripe';
+import { PLAN_CONFIGS, normalizePlanTier, PlanTier } from '../../common/plan-config';
 
-const PLAN_PRICES: Record<string, number> = { basic: 49, pro: 149 };
+const PLAN_PRICES: Record<string, number> = {
+  starter: PLAN_CONFIGS.starter.monthlyPrice,
+  professional: PLAN_CONFIGS.professional.monthlyPrice,
+  enterprise: PLAN_CONFIGS.enterprise.monthlyPrice,
+  // Legacy mappings
+  basic: PLAN_CONFIGS.starter.monthlyPrice,
+  pro: PLAN_CONFIGS.professional.monthlyPrice,
+};
 
 interface SubscriptionListQuery {
   search?: string;
@@ -40,21 +48,31 @@ export class ConsoleBillingService {
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
     // Batch 1: status counts + plan counts
-    const [activeBasic, activePro, trialCount, pastDueCount, canceledCount, canceledRecent] =
-      await Promise.all([
-        this.prisma.subscription.count({
-          where: { status: 'active', plan: 'basic' },
-        }),
-        this.prisma.subscription.count({
-          where: { status: 'active', plan: 'pro' },
-        }),
-        this.prisma.subscription.count({ where: { status: 'trialing' } }),
-        this.prisma.subscription.count({ where: { status: 'past_due' } }),
-        this.prisma.subscription.count({ where: { status: 'canceled' } }),
-        this.prisma.subscription.count({
-          where: { status: 'canceled', updatedAt: { gte: thirtyDaysAgo } },
-        }),
-      ]);
+    const [
+      activeStarter,
+      activeProfessional,
+      activeEnterprise,
+      trialCount,
+      pastDueCount,
+      canceledCount,
+      canceledRecent,
+    ] = await Promise.all([
+      this.prisma.subscription.count({
+        where: { status: 'active', plan: { in: ['starter', 'basic'] } },
+      }),
+      this.prisma.subscription.count({
+        where: { status: 'active', plan: { in: ['professional', 'pro'] } },
+      }),
+      this.prisma.subscription.count({
+        where: { status: 'active', plan: 'enterprise' },
+      }),
+      this.prisma.subscription.count({ where: { status: 'trialing' } }),
+      this.prisma.subscription.count({ where: { status: 'past_due' } }),
+      this.prisma.subscription.count({ where: { status: 'canceled' } }),
+      this.prisma.subscription.count({
+        where: { status: 'canceled', updatedAt: { gte: thirtyDaysAgo } },
+      }),
+    ]);
 
     // Batch 2: trial-to-paid rate
     const [trialCreatedRecent, trialConvertedRecent] = await Promise.all([
@@ -69,8 +87,11 @@ export class ConsoleBillingService {
       }),
     ]);
 
-    const activeCount = activeBasic + activePro;
-    const mrr = activeBasic * PLAN_PRICES.basic + activePro * PLAN_PRICES.pro;
+    const activeCount = activeStarter + activeProfessional + activeEnterprise;
+    const mrr =
+      activeStarter * PLAN_PRICES.starter +
+      activeProfessional * PLAN_PRICES.professional +
+      activeEnterprise * PLAN_PRICES.enterprise;
     const churnDenominator = activeCount + canceledRecent;
     const churnRate = churnDenominator > 0 ? canceledRecent / churnDenominator : 0;
     const arpa = activeCount > 0 ? mrr / activeCount : 0;
@@ -85,7 +106,11 @@ export class ConsoleBillingService {
       churnRate,
       arpa,
       trialToPaidRate,
-      planDistribution: { basic: activeBasic, pro: activePro },
+      planDistribution: {
+        starter: activeStarter,
+        professional: activeProfessional,
+        enterprise: activeEnterprise,
+      },
       totalRevenue30d: mrr,
     };
   }
@@ -279,10 +304,9 @@ export class ConsoleBillingService {
     const itemId = stripeSub.items.data[0]?.id;
     if (!itemId) throw new BadRequestException('No subscription item found');
 
-    const newPriceId =
-      newPlan === 'pro'
-        ? this.configService.get<string>('STRIPE_PRICE_ID_PRO')
-        : this.configService.get<string>('STRIPE_PRICE_ID_BASIC');
+    const tier = normalizePlanTier(newPlan);
+    const planConfig = PLAN_CONFIGS[tier];
+    const newPriceId = this.configService.get<string>(planConfig.stripePriceEnvMonthly);
 
     if (!newPriceId) {
       throw new BadRequestException(`No price configured for plan: ${newPlan}`);

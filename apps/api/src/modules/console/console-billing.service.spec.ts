@@ -29,9 +29,10 @@ describe('ConsoleBillingService', () => {
   describe('getDashboard', () => {
     it('computes MRR correctly with mixed plans', async () => {
       prisma.subscription.count
-        .mockResolvedValueOnce(5) // active basic
-        .mockResolvedValueOnce(3) // active pro
-        .mockResolvedValueOnce(2) // trialing
+        .mockResolvedValueOnce(5) // active starter
+        .mockResolvedValueOnce(3) // active professional
+        .mockResolvedValueOnce(2) // active enterprise
+        .mockResolvedValueOnce(1) // trialing
         .mockResolvedValueOnce(1) // past_due
         .mockResolvedValueOnce(4) // canceled
         .mockResolvedValueOnce(2) // canceled recent
@@ -40,8 +41,9 @@ describe('ConsoleBillingService', () => {
 
       const result = await service.getDashboard();
 
-      expect(result.mrr).toBe(5 * 49 + 3 * 149); // 245 + 447 = 692
-      expect(result.activeCount).toBe(8);
+      // 5*49 + 3*99 + 2*199 = 245 + 297 + 398 = 940
+      expect(result.mrr).toBe(5 * 49 + 3 * 99 + 2 * 199);
+      expect(result.activeCount).toBe(10);
     });
 
     it('handles zero subscriptions gracefully', async () => {
@@ -58,8 +60,9 @@ describe('ConsoleBillingService', () => {
 
     it('calculates churn rate correctly', async () => {
       prisma.subscription.count
-        .mockResolvedValueOnce(8) // active basic
-        .mockResolvedValueOnce(2) // active pro
+        .mockResolvedValueOnce(5) // active starter
+        .mockResolvedValueOnce(3) // active professional
+        .mockResolvedValueOnce(2) // active enterprise
         .mockResolvedValueOnce(0) // trialing
         .mockResolvedValueOnce(0) // past_due
         .mockResolvedValueOnce(5) // canceled total
@@ -75,8 +78,9 @@ describe('ConsoleBillingService', () => {
 
     it('calculates ARPA correctly', async () => {
       prisma.subscription.count
-        .mockResolvedValueOnce(10) // active basic
-        .mockResolvedValueOnce(0) // active pro
+        .mockResolvedValueOnce(10) // active starter
+        .mockResolvedValueOnce(0) // active professional
+        .mockResolvedValueOnce(0) // active enterprise
         .mockResolvedValueOnce(0) // trialing
         .mockResolvedValueOnce(0) // past_due
         .mockResolvedValueOnce(0) // canceled
@@ -91,8 +95,9 @@ describe('ConsoleBillingService', () => {
 
     it('calculates trial-to-paid rate', async () => {
       prisma.subscription.count
-        .mockResolvedValueOnce(5) // active basic
-        .mockResolvedValueOnce(0) // active pro
+        .mockResolvedValueOnce(5) // active starter
+        .mockResolvedValueOnce(0) // active professional
+        .mockResolvedValueOnce(0) // active enterprise
         .mockResolvedValueOnce(3) // trialing
         .mockResolvedValueOnce(0) // past_due
         .mockResolvedValueOnce(0) // canceled
@@ -107,8 +112,9 @@ describe('ConsoleBillingService', () => {
 
     it('returns plan distribution counts', async () => {
       prisma.subscription.count
-        .mockResolvedValueOnce(7) // active basic
-        .mockResolvedValueOnce(3) // active pro
+        .mockResolvedValueOnce(7) // active starter
+        .mockResolvedValueOnce(3) // active professional
+        .mockResolvedValueOnce(1) // active enterprise
         .mockResolvedValueOnce(0) // trialing
         .mockResolvedValueOnce(0) // past_due
         .mockResolvedValueOnce(0) // canceled
@@ -118,7 +124,7 @@ describe('ConsoleBillingService', () => {
 
       const result = await service.getDashboard();
 
-      expect(result.planDistribution).toEqual({ basic: 7, pro: 3 });
+      expect(result.planDistribution).toEqual({ starter: 7, professional: 3, enterprise: 1 });
     });
 
     it('returns all KPI fields', async () => {

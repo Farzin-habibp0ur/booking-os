@@ -11,13 +11,15 @@ import {
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { TenantGuard } from '../../common/tenant.guard';
+import { PlanGuard, RequiresFeature } from '../../common/plan.guard';
 import { BusinessId, CurrentUser } from '../../common/decorators';
 import { BusinessService } from '../business/business.service';
 import { AiService } from './ai.service';
 
 @ApiTags('AI')
 @Controller('ai')
-@UseGuards(AuthGuard('jwt'), TenantGuard)
+@UseGuards(AuthGuard('jwt'), TenantGuard, PlanGuard)
+@RequiresFeature('aiAutoReplies')
 export class AiController {
   constructor(
     private businessService: BusinessService,

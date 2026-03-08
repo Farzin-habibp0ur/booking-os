@@ -3,8 +3,9 @@ import userEvent from '@testing-library/user-event';
 import BillingPage from './page';
 
 const mockPush = jest.fn();
+const mockReplace = jest.fn();
 jest.mock('next/navigation', () => ({
-  useRouter: () => ({ push: mockPush }),
+  useRouter: () => ({ push: mockPush, replace: mockReplace }),
   useSearchParams: () => new URLSearchParams(),
 }));
 jest.mock('next/link', () => ({ children, href, ...rest }: any) => (
@@ -43,10 +44,40 @@ jest.mock('lucide-react', () => ({
   Check: () => <span data-testid="check-icon" />,
   ExternalLink: () => <span data-testid="external-link-icon" />,
   ArrowLeft: () => <span data-testid="arrow-left-icon" />,
+  Sparkles: () => <span data-testid="sparkles-icon" />,
+  Clock: () => <span data-testid="clock-icon" />,
 }));
 
 import { api } from '@/lib/api';
 const mockApi = api as jest.Mocked<typeof api>;
+
+const NO_SUB_BILLING = {
+  plan: 'starter',
+  status: 'none',
+  isTrial: false,
+  trialDaysRemaining: 0,
+  trialEndsAt: null,
+  isGracePeriod: false,
+  graceEndsAt: null,
+  subscription: null,
+};
+
+const ACTIVE_SUB_BILLING = {
+  plan: 'professional',
+  status: 'active',
+  isTrial: false,
+  trialDaysRemaining: 0,
+  trialEndsAt: null,
+  isGracePeriod: false,
+  graceEndsAt: null,
+  subscription: {
+    id: 'sub1',
+    plan: 'professional',
+    status: 'active',
+    currentPeriodEnd: '2026-04-15T00:00:00Z',
+    canceledAt: null,
+  },
+};
 
 describe('BillingPage', () => {
   beforeEach(() => {
@@ -54,7 +85,7 @@ describe('BillingPage', () => {
   });
 
   test('renders billing title', async () => {
-    mockApi.get.mockResolvedValue(null);
+    mockApi.get.mockResolvedValue(NO_SUB_BILLING);
 
     render(<BillingPage />);
 
@@ -63,33 +94,44 @@ describe('BillingPage', () => {
     });
   });
 
-  test('shows plan cards when no subscription', async () => {
-    mockApi.get.mockResolvedValue(null);
+  test('shows three plan cards when no subscription', async () => {
+    mockApi.get.mockResolvedValue(NO_SUB_BILLING);
 
     render(<BillingPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('billing.basic_plan')).toBeInTheDocument();
-      expect(screen.getByText('billing.pro_plan')).toBeInTheDocument();
+      expect(screen.getByText('Starter')).toBeInTheDocument();
+      expect(screen.getByText('Professional')).toBeInTheDocument();
+      expect(screen.getByText('Enterprise')).toBeInTheDocument();
     });
   });
 
-  test('shows two subscribe buttons when no subscription', async () => {
-    mockApi.get.mockResolvedValue(null);
+  test('shows three subscribe buttons when no subscription', async () => {
+    mockApi.get.mockResolvedValue(NO_SUB_BILLING);
 
     render(<BillingPage />);
 
     await waitFor(() => {
-      const buttons = screen.getAllByText('billing.subscribe');
-      expect(buttons).toHaveLength(2);
+      const buttons = screen.getAllByText('Subscribe');
+      expect(buttons).toHaveLength(3);
     });
   });
 
-  test('calls checkout API and redirects on subscribe click', async () => {
-    mockApi.get.mockResolvedValue(null);
+  test('shows monthly/annual toggle', async () => {
+    mockApi.get.mockResolvedValue(NO_SUB_BILLING);
+
+    render(<BillingPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Monthly')).toBeInTheDocument();
+      expect(screen.getByText('Annual')).toBeInTheDocument();
+    });
+  });
+
+  test('calls checkout API with plan and billing interval', async () => {
+    mockApi.get.mockResolvedValue(NO_SUB_BILLING);
     mockApi.post.mockResolvedValue({ url: 'https://checkout.stripe.com/test' });
 
-    // Mock window.location.href
     const originalLocation = window.location;
     Object.defineProperty(window, 'location', {
       writable: true,
@@ -99,14 +141,17 @@ describe('BillingPage', () => {
     render(<BillingPage />);
 
     await waitFor(() => {
-      expect(screen.getAllByText('billing.subscribe')).toHaveLength(2);
+      expect(screen.getAllByText('Subscribe')).toHaveLength(3);
     });
 
-    const buttons = screen.getAllByText('billing.subscribe');
+    const buttons = screen.getAllByText('Subscribe');
     await userEvent.click(buttons[0]);
 
     await waitFor(() => {
-      expect(mockApi.post).toHaveBeenCalledWith('/billing/checkout', { plan: 'basic' });
+      expect(mockApi.post).toHaveBeenCalledWith('/billing/checkout', {
+        plan: 'starter',
+        billing: 'monthly',
+      });
     });
 
     expect(window.location.href).toBe('https://checkout.stripe.com/test');
@@ -118,40 +163,40 @@ describe('BillingPage', () => {
   });
 
   test('shows current plan when subscription exists', async () => {
-    mockApi.get.mockResolvedValue({
-      plan: 'pro',
-      status: 'active',
-      currentPeriodEnd: '2026-03-15T00:00:00Z',
-    });
+    mockApi.get.mockResolvedValue(ACTIVE_SUB_BILLING);
 
     render(<BillingPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('billing.pro_plan')).toBeInTheDocument();
-      expect(screen.getByText('billing.status_active')).toBeInTheDocument();
+      expect(screen.getByText('Professional Plan')).toBeInTheDocument();
+      expect(screen.getByText('Active')).toBeInTheDocument();
     });
   });
 
-  test('shows change plan and manage billing buttons', async () => {
-    mockApi.get.mockResolvedValue({
-      plan: 'basic',
-      status: 'active',
-      currentPeriodEnd: '2026-03-15T00:00:00Z',
-    });
+  test('shows manage billing button for active subscription', async () => {
+    mockApi.get.mockResolvedValue(ACTIVE_SUB_BILLING);
 
     render(<BillingPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('billing.change_plan')).toBeInTheDocument();
       expect(screen.getByText('billing.manage_billing')).toBeInTheDocument();
+    });
+  });
+
+  test('marks current plan with "Current Plan" label', async () => {
+    mockApi.get.mockResolvedValue(ACTIVE_SUB_BILLING);
+
+    render(<BillingPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Current Plan')).toBeInTheDocument();
     });
   });
 
   test('shows warning banner for past_due', async () => {
     mockApi.get.mockResolvedValue({
-      plan: 'pro',
-      status: 'past_due',
-      currentPeriodEnd: '2026-03-15T00:00:00Z',
+      ...ACTIVE_SUB_BILLING,
+      subscription: { ...ACTIVE_SUB_BILLING.subscription, status: 'past_due' },
     });
 
     render(<BillingPage />);
@@ -164,9 +209,8 @@ describe('BillingPage', () => {
 
   test('shows warning banner for canceled', async () => {
     mockApi.get.mockResolvedValue({
-      plan: 'basic',
-      status: 'canceled',
-      currentPeriodEnd: '2026-03-15T00:00:00Z',
+      ...ACTIVE_SUB_BILLING,
+      subscription: { ...ACTIVE_SUB_BILLING.subscription, status: 'canceled' },
     });
 
     render(<BillingPage />);
@@ -177,9 +221,39 @@ describe('BillingPage', () => {
     });
   });
 
+  test('shows trial info banner during trial', async () => {
+    mockApi.get.mockResolvedValue({
+      ...NO_SUB_BILLING,
+      isTrial: true,
+      trialDaysRemaining: 10,
+      trialEndsAt: '2026-03-18T00:00:00Z',
+      status: 'trialing',
+    });
+
+    render(<BillingPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/10 days left/)).toBeInTheDocument();
+    });
+  });
+
+  test('shows grace period warning', async () => {
+    mockApi.get.mockResolvedValue({
+      ...NO_SUB_BILLING,
+      isGracePeriod: true,
+      status: 'expired',
+    });
+
+    render(<BillingPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/trial has ended/)).toBeInTheDocument();
+    });
+  });
+
   // M11 fix: Stripe redirect URL validation
   test('rejects non-Stripe checkout URL and shows error', async () => {
-    mockApi.get.mockResolvedValue(null);
+    mockApi.get.mockResolvedValue(NO_SUB_BILLING);
     mockApi.post.mockResolvedValue({ url: 'https://evil.com/phish' });
 
     const originalLocation = window.location;
@@ -191,10 +265,10 @@ describe('BillingPage', () => {
     render(<BillingPage />);
 
     await waitFor(() => {
-      expect(screen.getAllByText('billing.subscribe')).toHaveLength(2);
+      expect(screen.getAllByText('Subscribe')).toHaveLength(3);
     });
 
-    await userEvent.click(screen.getAllByText('billing.subscribe')[0]);
+    await userEvent.click(screen.getAllByText('Subscribe')[0]);
 
     await waitFor(() => {
       expect(screen.getByText('billing.checkout_error')).toBeInTheDocument();
@@ -210,11 +284,7 @@ describe('BillingPage', () => {
   });
 
   test('rejects non-Stripe portal URL and shows error', async () => {
-    mockApi.get.mockResolvedValue({
-      plan: 'pro',
-      status: 'active',
-      currentPeriodEnd: '2026-03-15T00:00:00Z',
-    });
+    mockApi.get.mockResolvedValue(ACTIVE_SUB_BILLING);
     mockApi.post.mockResolvedValue({ url: 'http://not-stripe.com/portal' });
 
     const originalLocation = window.location;
@@ -244,11 +314,7 @@ describe('BillingPage', () => {
   });
 
   test('calls portal API on manage billing click', async () => {
-    mockApi.get.mockResolvedValue({
-      plan: 'pro',
-      status: 'active',
-      currentPeriodEnd: '2026-03-15T00:00:00Z',
-    });
+    mockApi.get.mockResolvedValue(ACTIVE_SUB_BILLING);
     mockApi.post.mockResolvedValue({ url: 'https://billing.stripe.com/portal' });
 
     const originalLocation = window.location;

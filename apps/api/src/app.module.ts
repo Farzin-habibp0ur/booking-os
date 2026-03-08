@@ -51,6 +51,7 @@ import { AgentFeedbackModule } from './modules/agent-feedback/agent-feedback.mod
 import { AttachmentModule } from './modules/attachment/attachment.module';
 import { ExportModule } from './modules/export/export.module';
 import { ConsoleModule } from './modules/console/console.module';
+import { OnboardingDripModule } from './modules/onboarding-drip/onboarding-drip.module';
 
 @Module({
   imports: [
@@ -118,6 +119,7 @@ import { ConsoleModule } from './modules/console/console.module';
     AttachmentModule,
     ExportModule,
     ConsoleModule,
+    OnboardingDripModule,
     process.env.REDIS_URL ? QueueModule.forRootWithRedis() : QueueModule.forRoot(),
   ],
 })

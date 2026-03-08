@@ -1,7 +1,16 @@
 import { Injectable, Logger, BadRequestException, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../common/prisma.service';
+import { EmailService } from '../email/email.service';
+import { OnboardingDripService } from '../onboarding-drip/onboarding-drip.service';
 import Stripe from 'stripe';
+import {
+  PlanTier,
+  PLAN_CONFIGS,
+  normalizePlanTier,
+  TRIAL_DAYS,
+  GRACE_PERIOD_DAYS,
+} from '../../common/plan-config';
 
 @Injectable()
 export class BillingService implements OnModuleInit {
@@ -11,6 +20,8 @@ export class BillingService implements OnModuleInit {
   constructor(
     private prisma: PrismaService,
     private configService: ConfigService,
+    private emailService: EmailService,
+    private onboardingDrip: OnboardingDripService,
   ) {
     const secretKey = this.configService.get<string>('STRIPE_SECRET_KEY');
     if (secretKey) {
@@ -44,18 +55,24 @@ export class BillingService implements OnModuleInit {
     return this.stripe;
   }
 
-  async createCheckoutSession(businessId: string, plan: 'basic' | 'pro') {
+  async createCheckoutSession(
+    businessId: string,
+    plan: PlanTier,
+    billing: 'monthly' | 'annual' = 'monthly',
+  ) {
     const stripe = this.requireStripe();
+
+    const planConfig = PLAN_CONFIGS[plan];
+    if (!planConfig) throw new BadRequestException(`Invalid plan: ${plan}`);
 
     const business = await this.prisma.business.findUnique({ where: { id: businessId } });
     if (!business) throw new BadRequestException('Business not found');
 
-    const priceId =
-      plan === 'pro'
-        ? this.configService.get<string>('STRIPE_PRICE_ID_PRO')
-        : this.configService.get<string>('STRIPE_PRICE_ID_BASIC');
+    const envKey =
+      billing === 'annual' ? planConfig.stripePriceEnvAnnual : planConfig.stripePriceEnvMonthly;
+    const priceId = this.configService.get<string>(envKey);
 
-    if (!priceId) throw new BadRequestException(`No price configured for plan: ${plan}`);
+    if (!priceId) throw new BadRequestException(`No price configured for plan: ${plan} (${billing})`);
 
     // Get or create Stripe customer
     const subscription = await this.prisma.subscription.findUnique({
@@ -71,15 +88,15 @@ export class BillingService implements OnModuleInit {
       customerId = customer.id;
     }
 
-    const apiUrl = this.configService.get<string>('API_URL', 'http://localhost:3001');
+    const webUrl = this.configService.get<string>('WEB_URL', 'http://localhost:3000');
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       payment_method_types: ['card'],
       mode: 'subscription',
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${apiUrl}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${apiUrl}/billing/cancel`,
-      metadata: { businessId, plan },
+      success_url: `${webUrl}/settings/billing?success=true&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${webUrl}/settings/billing?canceled=true`,
+      metadata: { businessId, plan, billing },
     });
 
     return { url: session.url };
@@ -131,6 +148,16 @@ export class BillingService implements OnModuleInit {
         await this.handleSubscriptionDeleted(sub);
         break;
       }
+      case 'customer.subscription.updated': {
+        const sub = event.data.object as Stripe.Subscription;
+        await this.handleSubscriptionUpdated(sub);
+        break;
+      }
+      case 'customer.subscription.trial_will_end': {
+        const sub = event.data.object as Stripe.Subscription;
+        await this.handleTrialWillEnd(sub);
+        break;
+      }
       default:
         this.logger.log(`Unhandled Stripe event: ${event.type}`);
     }
@@ -140,7 +167,8 @@ export class BillingService implements OnModuleInit {
 
   private async handleCheckoutComplete(session: Stripe.Checkout.Session) {
     const businessId = session.metadata?.businessId;
-    const plan = session.metadata?.plan || 'basic';
+    const rawPlan = session.metadata?.plan || 'starter';
+    const plan = normalizePlanTier(rawPlan);
     if (!businessId || !session.subscription) return;
 
     const stripe = this.requireStripe();
@@ -163,6 +191,39 @@ export class BillingService implements OnModuleInit {
         currentPeriodEnd: new Date((sub as any).current_period_end * 1000),
       },
     });
+
+    // Clear trial/grace dates on successful conversion
+    await this.prisma.business.update({
+      where: { id: businessId },
+      data: { trialEndsAt: null, graceEndsAt: null },
+    });
+
+    // Cancel onboarding drip (user converted)
+    try {
+      await this.onboardingDrip.cancelDrip(businessId);
+    } catch {
+      // Non-critical — drip emails will skip subscribed businesses anyway
+    }
+
+    // Send welcome-to-paid email
+    try {
+      const business = await this.prisma.business.findUnique({
+        where: { id: businessId },
+        include: { staff: { where: { role: 'ADMIN' }, take: 1 } },
+      });
+      if (business?.staff[0]) {
+        const staff = business.staff[0];
+        await this.emailService.sendGeneric(staff.email, {
+          subject: `Welcome to Booking OS ${PLAN_CONFIGS[plan].label}!`,
+          headline: 'Your subscription is active',
+          body: `Thanks for subscribing to Booking OS ${PLAN_CONFIGS[plan].label}. All features for your plan are now unlocked. If you have any questions, reply to this email.`,
+          ctaLabel: 'Go to Dashboard',
+          ctaUrl: `${this.configService.get('WEB_URL', 'http://localhost:3000')}/dashboard`,
+        });
+      }
+    } catch (err) {
+      this.logger.warn(`Failed to send welcome-to-paid email for business ${businessId}`, err);
+    }
 
     this.logger.log(`Subscription created for business ${businessId}: ${plan}`);
   }
@@ -206,9 +267,67 @@ export class BillingService implements OnModuleInit {
     if (subscription) {
       await this.prisma.subscription.update({
         where: { id: subscription.id },
-        data: { status: 'canceled' },
+        data: { status: 'canceled', canceledAt: new Date() },
       });
+
+      // Set grace period: 7 days from now
+      const graceEnd = new Date(Date.now() + GRACE_PERIOD_DAYS * 24 * 60 * 60 * 1000);
+      await this.prisma.business.update({
+        where: { id: subscription.businessId },
+        data: { graceEndsAt: graceEnd },
+      });
+
       this.logger.log(`Subscription canceled for business ${subscription.businessId}`);
+    }
+  }
+
+  private async handleSubscriptionUpdated(sub: Stripe.Subscription) {
+    const subscription = await this.prisma.subscription.findFirst({
+      where: { stripeSubscriptionId: sub.id },
+    });
+
+    if (subscription) {
+      const plan = normalizePlanTier(
+        (sub as any).metadata?.plan || subscription.plan,
+      );
+      await this.prisma.subscription.update({
+        where: { id: subscription.id },
+        data: {
+          status: sub.status,
+          plan,
+          currentPeriodEnd: new Date((sub as any).current_period_end * 1000),
+        },
+      });
+    }
+  }
+
+  private async handleTrialWillEnd(sub: Stripe.Subscription) {
+    // Triggered 3 days before trial ends
+    const subscription = await this.prisma.subscription.findFirst({
+      where: { stripeSubscriptionId: sub.id },
+    });
+
+    if (!subscription) return;
+
+    try {
+      const business = await this.prisma.business.findUnique({
+        where: { id: subscription.businessId },
+        include: { staff: { where: { role: 'ADMIN' }, take: 1 } },
+      });
+
+      if (business?.staff[0]) {
+        const staff = business.staff[0];
+        const webUrl = this.configService.get('WEB_URL', 'http://localhost:3000');
+        await this.emailService.sendGeneric(staff.email, {
+          subject: 'Your Booking OS trial ends in 3 days',
+          headline: 'Trial ending soon',
+          body: `Your 14-day free trial of Booking OS ends in 3 days. Choose a plan to keep all your data, settings, and automations running without interruption.`,
+          ctaLabel: 'Choose a Plan',
+          ctaUrl: `${webUrl}/settings/billing`,
+        });
+      }
+    } catch (err) {
+      this.logger.warn(`Failed to send trial-will-end email for business ${subscription.businessId}`, err);
     }
   }
 
@@ -262,5 +381,64 @@ export class BillingService implements OnModuleInit {
 
   async getSubscription(businessId: string) {
     return this.prisma.subscription.findUnique({ where: { businessId } });
+  }
+
+  /** Get billing status including trial info for the frontend */
+  async getBillingStatus(businessId: string) {
+    const business = await this.prisma.business.findUnique({
+      where: { id: businessId },
+      include: { subscription: true },
+    });
+
+    if (!business) throw new BadRequestException('Business not found');
+
+    const now = new Date();
+    const isTrial = business.trialEndsAt ? business.trialEndsAt > now : false;
+    const trialDaysRemaining = isTrial && business.trialEndsAt
+      ? Math.max(0, Math.ceil((business.trialEndsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
+      : 0;
+
+    const isGracePeriod =
+      business.trialEndsAt &&
+      business.graceEndsAt &&
+      now > business.trialEndsAt &&
+      now <= business.graceEndsAt;
+
+    const trialExpired = business.trialEndsAt ? now > business.trialEndsAt : false;
+
+    const subscription = business.subscription;
+    const plan = subscription ? normalizePlanTier(subscription.plan) : 'starter';
+
+    return {
+      plan,
+      status: subscription?.status || (isTrial ? 'trialing' : trialExpired ? 'expired' : 'none'),
+      isTrial,
+      trialDaysRemaining,
+      trialEndsAt: business.trialEndsAt?.toISOString() || null,
+      isGracePeriod: !!isGracePeriod,
+      graceEndsAt: business.graceEndsAt?.toISOString() || null,
+      subscription: subscription
+        ? {
+            id: subscription.id,
+            plan: normalizePlanTier(subscription.plan),
+            status: subscription.status,
+            currentPeriodEnd: subscription.currentPeriodEnd.toISOString(),
+            canceledAt: subscription.canceledAt?.toISOString() || null,
+          }
+        : null,
+    };
+  }
+
+  /** Start a free trial for a business */
+  async startTrial(businessId: string) {
+    const trialEndsAt = new Date(Date.now() + TRIAL_DAYS * 24 * 60 * 60 * 1000);
+    const graceEndsAt = new Date(trialEndsAt.getTime() + GRACE_PERIOD_DAYS * 24 * 60 * 60 * 1000);
+
+    await this.prisma.business.update({
+      where: { id: businessId },
+      data: { trialEndsAt, graceEndsAt },
+    });
+
+    return { trialEndsAt, graceEndsAt };
   }
 }

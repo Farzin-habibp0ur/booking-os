@@ -9,6 +9,7 @@ export const QUEUE_NAMES = {
   NOTIFICATIONS: 'notifications',
   CALENDAR_SYNC: 'calendar-sync',
   AGENT_PROCESSING: 'agent-processing',
+  ONBOARDING_DRIP: 'onboarding-drip',
 } as const;
 
 @Global()
@@ -61,6 +62,7 @@ export class QueueModule {
           { name: QUEUE_NAMES.NOTIFICATIONS },
           { name: QUEUE_NAMES.CALENDAR_SYNC },
           { name: QUEUE_NAMES.AGENT_PROCESSING },
+          { name: QUEUE_NAMES.ONBOARDING_DRIP },
         ),
       ],
       providers: [

@@ -57,6 +57,8 @@ model Business {
   viewAsSessions       ViewAsSession[]       @relation("ViewAsTarget")
   supportCases         SupportCase[]
   packTenantPins       PackTenantPin[]
+  trialEndsAt          DateTime?
+  graceEndsAt          DateTime?
 
   @@map("businesses")
 }
@@ -378,7 +380,7 @@ model Subscription {
   businessId           String    @unique
   stripeCustomerId     String
   stripeSubscriptionId String    @unique
-  plan                 String    @default("basic") // basic, pro
+  plan                 String    @default("starter") // starter, professional, enterprise
   status               String    @default("active") // active, past_due, canceled, trialing
   currentPeriodEnd     DateTime
   canceledAt           DateTime?

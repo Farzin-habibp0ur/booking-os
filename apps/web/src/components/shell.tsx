@@ -50,6 +50,7 @@ import { DemoTourProvider, useDemoTour, TourSpotlight, TourTooltip } from '@/com
 import { ModeProvider, useMode } from '@/lib/use-mode';
 import ModeSwitcher from '@/components/mode-switcher';
 import { ViewAsBanner } from '@/components/view-as-banner';
+import { TrialBanner } from '@/components/trial-banner';
 import { OnboardingChecklist } from '@/components/onboarding-checklist';
 
 const SAVED_VIEW_ICONS: Record<string, any> = {
@@ -414,6 +415,7 @@ function ShellInner({ children }: { children: ReactNode }) {
         className="flex-1 overflow-auto md:pt-0 pb-16 md:pb-0 dark:bg-slate-950"
       >
         <ViewAsBanner />
+        <TrialBanner />
         <ErrorBoundary>{children}</ErrorBoundary>
       </main>
 

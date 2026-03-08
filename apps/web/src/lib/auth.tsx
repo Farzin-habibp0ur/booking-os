@@ -20,6 +20,13 @@ interface User {
     defaultLocale: string;
     packConfig: Record<string, unknown> | null;
   };
+  trial?: {
+    isTrial: boolean;
+    trialDaysRemaining: number;
+    trialExpired: boolean;
+    trialEndsAt: string | null;
+    isGracePeriod: boolean;
+  };
   viewAs?: boolean;
   viewAsSessionId?: string;
   originalRole?: string;

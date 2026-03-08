@@ -1224,7 +1224,7 @@ export class ConsoleBusinessQueryDto {
 
   @IsString()
   @IsOptional()
-  @IsIn(['basic', 'pro', 'trial'])
+  @IsIn(['starter', 'professional', 'enterprise', 'basic', 'pro', 'trial'])
   plan?: string;
 
   @IsString()
@@ -1398,7 +1398,7 @@ export class ConsoleBillingSubscriptionsQueryDto {
 
   @IsString()
   @IsOptional()
-  @IsIn(['basic', 'pro'])
+  @IsIn(['starter', 'professional', 'enterprise', 'basic', 'pro'])
   plan?: string;
 
   @IsString()
@@ -1423,7 +1423,7 @@ export class ConsoleBillingSubscriptionsQueryDto {
 export class ConsolePlanChangeDto {
   @IsString()
   @IsNotEmpty()
-  @IsIn(['basic', 'pro'])
+  @IsIn(['starter', 'professional', 'enterprise', 'basic', 'pro'])
   newPlan!: string;
 
   @IsString()

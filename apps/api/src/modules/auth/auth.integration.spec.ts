@@ -11,6 +11,7 @@ import {
   getAuthToken,
   IntegrationTestContext,
 } from '../../test/integration-setup';
+import { OnboardingDripService } from '../onboarding-drip/onboarding-drip.service';
 import { createMockTokenService, createMockEmailService } from '../../test/mocks';
 import { BadRequestException } from '@nestjs/common';
 
@@ -53,6 +54,7 @@ describe('Auth Integration', () => {
         JwtBlacklistService,
         { provide: TokenService, useValue: tokenService },
         { provide: EmailService, useValue: emailService },
+        { provide: OnboardingDripService, useValue: { scheduleDrip: jest.fn(), cancelDrip: jest.fn() } },
       ],
     );
   });

@@ -2,6 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { BillingService } from './billing.service';
 import { PrismaService } from '../../common/prisma.service';
+import { EmailService } from '../email/email.service';
+import { OnboardingDripService } from '../onboarding-drip/onboarding-drip.service';
 import { createMockPrisma } from '../../test/mocks';
 
 // Shared mock instance so tests can override constructEvent
@@ -43,7 +45,7 @@ const mockStripeInstance = {
         object: {
           customer: 'cus_test123',
           subscription: 'sub_test123',
-          metadata: { businessId: 'biz1', plan: 'basic' },
+          metadata: { businessId: 'biz1', plan: 'starter' },
         },
       },
     }),
@@ -66,15 +68,25 @@ describe('BillingService', () => {
         BillingService,
         { provide: PrismaService, useValue: prisma },
         {
+          provide: EmailService,
+          useValue: { sendGeneric: jest.fn().mockResolvedValue(true) },
+        },
+        { provide: OnboardingDripService, useValue: { scheduleDrip: jest.fn(), cancelDrip: jest.fn() } },
+        {
           provide: ConfigService,
           useValue: {
             get: jest.fn((key: string, defaultValue?: any) => {
               const config: Record<string, string> = {
                 STRIPE_SECRET_KEY: 'sk_test_123',
                 STRIPE_WEBHOOK_SECRET: 'whsec_test',
-                STRIPE_PRICE_ID_BASIC: 'price_basic',
-                STRIPE_PRICE_ID_PRO: 'price_pro',
+                STRIPE_PRICE_ID_STARTER_MONTHLY: 'price_starter_m',
+                STRIPE_PRICE_ID_STARTER_ANNUAL: 'price_starter_a',
+                STRIPE_PRICE_ID_PROFESSIONAL_MONTHLY: 'price_pro_m',
+                STRIPE_PRICE_ID_PROFESSIONAL_ANNUAL: 'price_pro_a',
+                STRIPE_PRICE_ID_ENTERPRISE_MONTHLY: 'price_ent_m',
+                STRIPE_PRICE_ID_ENTERPRISE_ANNUAL: 'price_ent_a',
                 API_URL: 'http://localhost:3001',
+                WEB_URL: 'http://localhost:3000',
               };
               return config[key] ?? defaultValue;
             }),
@@ -87,21 +99,21 @@ describe('BillingService', () => {
   });
 
   describe('createCheckoutSession', () => {
-    it('should create a checkout session for basic plan', async () => {
+    it('should create a checkout session for starter plan', async () => {
       prisma.business.findUnique.mockResolvedValue({
         id: 'biz1',
         name: 'Test Business',
       } as any);
       prisma.subscription.findUnique.mockResolvedValue(null);
 
-      const result = await service.createCheckoutSession('biz1', 'basic');
+      const result = await service.createCheckoutSession('biz1', 'starter');
       expect(result.url).toBe('https://checkout.stripe.com/test');
     });
 
     it('should throw for missing business', async () => {
       prisma.business.findUnique.mockResolvedValue(null);
 
-      await expect(service.createCheckoutSession('missing', 'basic')).rejects.toThrow(
+      await expect(service.createCheckoutSession('missing', 'starter')).rejects.toThrow(
         'Business not found',
       );
     });
@@ -169,6 +181,11 @@ describe('BillingService', () => {
 
     it('should process checkout.session.completed event', async () => {
       prisma.subscription.upsert.mockResolvedValue({} as any);
+      prisma.business.update.mockResolvedValue({} as any);
+      prisma.business.findUnique.mockResolvedValue({
+        id: 'biz1',
+        staff: [{ email: 'admin@test.com', name: 'Admin' }],
+      } as any);
 
       const result = await service.handleWebhookEvent(mockRawBody, mockSignature);
       expect(result).toEqual({ received: true });
@@ -177,13 +194,18 @@ describe('BillingService', () => {
           where: { businessId: 'biz1' },
           create: expect.objectContaining({
             businessId: 'biz1',
-            plan: 'basic',
+            plan: 'starter',
             stripeCustomerId: 'cus_test123',
             stripeSubscriptionId: 'sub_test123',
             status: 'active',
           }),
         }),
       );
+      // Should clear trial dates
+      expect(prisma.business.update).toHaveBeenCalledWith({
+        where: { id: 'biz1' },
+        data: { trialEndsAt: null, graceEndsAt: null },
+      });
     });
 
     it('should skip handleCheckoutComplete when no businessId in metadata', async () => {
@@ -310,12 +332,18 @@ describe('BillingService', () => {
         stripeSubscriptionId: 'sub_test123',
       } as any);
       prisma.subscription.update.mockResolvedValue({} as any);
+      prisma.business.update.mockResolvedValue({} as any);
 
       const result = await service.handleWebhookEvent(mockRawBody, mockSignature);
       expect(result).toEqual({ received: true });
       expect(prisma.subscription.update).toHaveBeenCalledWith({
         where: { id: 'sub1' },
-        data: { status: 'canceled' },
+        data: { status: 'canceled', canceledAt: expect.any(Date) },
+      });
+      // Should set grace period on business
+      expect(prisma.business.update).toHaveBeenCalledWith({
+        where: { id: 'biz1' },
+        data: { graceEndsAt: expect.any(Date) },
       });
     });
 
@@ -351,7 +379,7 @@ describe('BillingService', () => {
         stripeCustomerId: 'existing_cus_id',
       } as any);
 
-      await service.createCheckoutSession('biz1', 'pro');
+      await service.createCheckoutSession('biz1', 'professional');
 
       expect(mockStripeInstance.customers.create).not.toHaveBeenCalled();
     });
@@ -407,6 +435,8 @@ describe('BillingService', () => {
         providers: [
           BillingService,
           { provide: PrismaService, useValue: prisma },
+          { provide: EmailService, useValue: { sendGeneric: jest.fn().mockResolvedValue(true) } },
+          { provide: OnboardingDripService, useValue: { scheduleDrip: jest.fn(), cancelDrip: jest.fn() } },
           {
             provide: ConfigService,
             useValue: {
@@ -436,6 +466,8 @@ describe('BillingService', () => {
         providers: [
           BillingService,
           { provide: PrismaService, useValue: prisma },
+          { provide: EmailService, useValue: { sendGeneric: jest.fn().mockResolvedValue(true) } },
+          { provide: OnboardingDripService, useValue: { scheduleDrip: jest.fn(), cancelDrip: jest.fn() } },
           {
             provide: ConfigService,
             useValue: {
@@ -463,6 +495,8 @@ describe('BillingService', () => {
         providers: [
           BillingService,
           { provide: PrismaService, useValue: prisma },
+          { provide: EmailService, useValue: { sendGeneric: jest.fn().mockResolvedValue(true) } },
+          { provide: OnboardingDripService, useValue: { scheduleDrip: jest.fn(), cancelDrip: jest.fn() } },
           {
             provide: ConfigService,
             useValue: {
@@ -497,6 +531,8 @@ describe('BillingService', () => {
         providers: [
           BillingService,
           { provide: PrismaService, useValue: prisma },
+          { provide: EmailService, useValue: { sendGeneric: jest.fn().mockResolvedValue(true) } },
+          { provide: OnboardingDripService, useValue: { scheduleDrip: jest.fn(), cancelDrip: jest.fn() } },
           {
             provide: ConfigService,
             useValue: {
@@ -512,7 +548,7 @@ describe('BillingService', () => {
       }).compile();
 
       const service2 = module2.get(BillingService);
-      await expect(service2.createCheckoutSession('biz1', 'basic')).rejects.toThrow(
+      await expect(service2.createCheckoutSession('biz1', 'starter')).rejects.toThrow(
         'No price configured',
       );
     });
