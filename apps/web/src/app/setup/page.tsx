@@ -34,22 +34,15 @@ import { PROFILE_FIELDS } from '@booking-os/shared';
 
 // New 6-step flow (consolidated from original 10 steps)
 const STEP_KEYS = [
-  'welcome_and_type',      // Step 0: Welcome + Business Type (was 0 + 1)
-  'business_and_hours',    // Step 1: Business Info + Working Hours (was 1 + 5)
-  'whatsapp',              // Step 2: Connect WhatsApp (was 2)
-  'staff_and_services',    // Step 3: Staff + Services (was 3 + 4)
+  'welcome_and_type', // Step 0: Welcome + Business Type (was 0 + 1)
+  'business_and_hours', // Step 1: Business Info + Working Hours (was 1 + 5)
+  'whatsapp', // Step 2: Connect WhatsApp (was 2)
+  'staff_and_services', // Step 3: Staff + Services (was 3 + 4)
   'templates_and_policies', // Step 4: Templates + Policies (was 6 + 7)
-  'test_and_launch',       // Step 5: Test & Launch (was 8 + 9)
+  'test_and_launch', // Step 5: Test & Launch (was 8 + 9)
 ] as const;
 
-const STEP_ICONS = [
-  Sparkles,
-  Building2,
-  MessageCircle,
-  Users,
-  FileText,
-  Rocket,
-];
+const STEP_ICONS = [Sparkles, Building2, MessageCircle, Users, FileText, Rocket];
 
 // Time estimates for each step (in minutes)
 const STEP_TIME_ESTIMATES: Record<(typeof STEP_KEYS)[number], number> = {
@@ -603,7 +596,9 @@ function SetupPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">{t('setup.timezone_label')}</label>
+                <label className="block text-sm font-medium mb-1">
+                  {t('setup.timezone_label')}
+                </label>
                 <select
                   value={timezone}
                   onChange={(e) => setTimezone(e.target.value)}
@@ -629,7 +624,9 @@ function SetupPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">{t('setup.currency_label')}</label>
+                <label className="block text-sm font-medium mb-1">
+                  {t('setup.currency_label')}
+                </label>
                 <select
                   value={currency}
                   onChange={(e) => setCurrency(e.target.value)}
@@ -760,28 +757,28 @@ function SetupPage() {
                 </div>
                 <TimeEstimateBadge minutes={STEP_TIME_ESTIMATES.whatsapp} />
               </div>
-            <div className="border border-slate-100 rounded-xl p-4 bg-green-50">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center">
-                  <MessageCircle size={20} className="text-white" />
+              <div className="border border-slate-100 rounded-xl p-4 bg-green-50">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center">
+                    <MessageCircle size={20} className="text-white" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm">{t('setup.whatsapp_api')}</p>
+                    <p className="text-xs text-slate-500">{t('setup.whatsapp_api_desc')}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-medium text-sm">{t('setup.whatsapp_api')}</p>
-                  <p className="text-xs text-slate-500">{t('setup.whatsapp_api_desc')}</p>
+                <div className="mt-4 flex gap-2">
+                  <button className="bg-green-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-green-700">
+                    {t('setup.connect_whatsapp')}
+                  </button>
+                  <button
+                    onClick={handleSkip}
+                    className="border px-4 py-2 rounded-xl text-sm hover:bg-slate-50"
+                  >
+                    {t('setup.skip_for_now')}
+                  </button>
                 </div>
               </div>
-              <div className="mt-4 flex gap-2">
-                <button className="bg-green-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-green-700">
-                  {t('setup.connect_whatsapp')}
-                </button>
-                <button
-                  onClick={handleSkip}
-                  className="border px-4 py-2 rounded-xl text-sm hover:bg-slate-50"
-                >
-                  {t('setup.skip_for_now')}
-                </button>
-              </div>
-            </div>
               <div className="text-xs text-slate-400 mt-2">{t('setup.whatsapp_note')}</div>
             </div>
           </div>
@@ -802,99 +799,99 @@ function SetupPage() {
                 <TimeEstimateBadge minutes={STEP_TIME_ESTIMATES.staff_and_services} />
               </div>
 
-            {staffList.length > 0 && (
-              <div className="border border-slate-100 rounded-xl divide-y">
-                {staffList.map((s) => (
-                  <div key={s.id} className="flex items-center justify-between px-4 py-3">
-                    <div>
-                      <p className="text-sm font-medium">{s.name}</p>
-                      <p className="text-xs text-slate-500">{s.email}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {s.invitePending ? (
-                        <>
-                          <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full flex items-center gap-1">
-                            <Mail size={10} /> Invite pending
+              {staffList.length > 0 && (
+                <div className="border border-slate-100 rounded-xl divide-y">
+                  {staffList.map((s) => (
+                    <div key={s.id} className="flex items-center justify-between px-4 py-3">
+                      <div>
+                        <p className="text-sm font-medium">{s.name}</p>
+                        <p className="text-xs text-slate-500">{s.email}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {s.invitePending ? (
+                          <>
+                            <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full flex items-center gap-1">
+                              <Mail size={10} /> Invite pending
+                            </span>
+                            <button
+                              onClick={() => resendInvite(s.id)}
+                              className="text-slate-400 hover:text-sage-500 p-1"
+                              title="Resend invitation"
+                            >
+                              <RefreshCw size={14} />
+                            </button>
+                          </>
+                        ) : (
+                          <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full flex items-center gap-1">
+                            <Check size={10} /> Active
                           </span>
-                          <button
-                            onClick={() => resendInvite(s.id)}
-                            className="text-slate-400 hover:text-sage-500 p-1"
-                            title="Resend invitation"
-                          >
-                            <RefreshCw size={14} />
-                          </button>
-                        </>
-                      ) : (
-                        <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full flex items-center gap-1">
-                          <Check size={10} /> Active
+                        )}
+                        <span className="text-xs bg-slate-100 px-2 py-0.5 rounded-full">
+                          {s.role}
                         </span>
-                      )}
-                      <span className="text-xs bg-slate-100 px-2 py-0.5 rounded-full">
-                        {s.role}
-                      </span>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
 
-            {lastInvitedEmail && (
-              <div className="border border-green-200 bg-green-50 rounded-lg p-4 space-y-1">
-                <p className="text-sm font-medium text-green-800">Invitation sent</p>
-                <p className="text-xs text-green-700">
-                  An invitation email has been sent to <strong>{lastInvitedEmail}</strong>. They'll
-                  receive a link to set their password and join the team.
-                </p>
-                <button
-                  onClick={() => setLastInvitedEmail(null)}
-                  className="text-xs text-green-600 hover:text-green-800 mt-1"
-                >
-                  Dismiss
-                </button>
-              </div>
-            )}
+              {lastInvitedEmail && (
+                <div className="border border-green-200 bg-green-50 rounded-lg p-4 space-y-1">
+                  <p className="text-sm font-medium text-green-800">Invitation sent</p>
+                  <p className="text-xs text-green-700">
+                    An invitation email has been sent to <strong>{lastInvitedEmail}</strong>.
+                    They'll receive a link to set their password and join the team.
+                  </p>
+                  <button
+                    onClick={() => setLastInvitedEmail(null)}
+                    className="text-xs text-green-600 hover:text-green-800 mt-1"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              )}
 
-            <div className="border-t pt-4 space-y-3">
-              <p className="text-sm font-medium">{t('setup.add_another_staff')}</p>
-              <div className="grid grid-cols-2 gap-3">
-                <input
-                  value={newStaffName}
-                  onChange={(e) => setNewStaffName(e.target.value)}
-                  placeholder={t('common.name')}
-                  className="border border-slate-200 rounded-xl px-3 py-2 text-sm"
-                />
-                <input
-                  value={newStaffEmail}
-                  onChange={(e) => setNewStaffEmail(e.target.value)}
-                  placeholder={t('common.email')}
-                  type="email"
-                  className="border border-slate-200 rounded-xl px-3 py-2 text-sm"
-                />
+              <div className="border-t pt-4 space-y-3">
+                <p className="text-sm font-medium">{t('setup.add_another_staff')}</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <input
+                    value={newStaffName}
+                    onChange={(e) => setNewStaffName(e.target.value)}
+                    placeholder={t('common.name')}
+                    className="border border-slate-200 rounded-xl px-3 py-2 text-sm"
+                  />
+                  <input
+                    value={newStaffEmail}
+                    onChange={(e) => setNewStaffEmail(e.target.value)}
+                    placeholder={t('common.email')}
+                    type="email"
+                    className="border border-slate-200 rounded-xl px-3 py-2 text-sm"
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <select
+                    value={newStaffRole}
+                    onChange={(e) => setNewStaffRole(e.target.value)}
+                    className="border border-slate-200 rounded-xl px-3 py-2 text-sm"
+                  >
+                    <option value="AGENT">{t('setup.role_agent')}</option>
+                    <option value="SERVICE_PROVIDER">{t('setup.role_service_provider')}</option>
+                    <option value="ADMIN">{t('setup.role_admin')}</option>
+                  </select>
+                  <button
+                    onClick={addStaff}
+                    disabled={!newStaffName || !newStaffEmail || inviteSending}
+                    className="bg-sage-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-sage-700 disabled:opacity-50 flex items-center gap-1"
+                  >
+                    {inviteSending ? (
+                      <Loader2 size={14} className="animate-spin" />
+                    ) : (
+                      <Mail size={14} />
+                    )}{' '}
+                    {inviteSending ? 'Sending...' : 'Send invite'}
+                  </button>
+                </div>
               </div>
-              <div className="flex gap-3">
-                <select
-                  value={newStaffRole}
-                  onChange={(e) => setNewStaffRole(e.target.value)}
-                  className="border border-slate-200 rounded-xl px-3 py-2 text-sm"
-                >
-                  <option value="AGENT">{t('setup.role_agent')}</option>
-                  <option value="SERVICE_PROVIDER">{t('setup.role_service_provider')}</option>
-                  <option value="ADMIN">{t('setup.role_admin')}</option>
-                </select>
-                <button
-                  onClick={addStaff}
-                  disabled={!newStaffName || !newStaffEmail || inviteSending}
-                  className="bg-sage-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-sage-700 disabled:opacity-50 flex items-center gap-1"
-                >
-                  {inviteSending ? (
-                    <Loader2 size={14} className="animate-spin" />
-                  ) : (
-                    <Mail size={14} />
-                  )}{' '}
-                  {inviteSending ? 'Sending...' : 'Send invite'}
-                </button>
-              </div>
-            </div>
             </div>
 
             {/* Services Section */}
@@ -904,139 +901,139 @@ function SetupPage() {
               </h3>
               <p className="text-sm text-slate-500">{t('setup.services_subtitle')}</p>
 
-            {services.length > 0 && (
-              <div className="border border-slate-100 rounded-xl divide-y">
-                {services
-                  .filter((s: any) => s.isActive !== false)
-                  .map((s: any) => (
-                    <div key={s.id} className="px-4 py-3">
-                      {editingSvcId === s.id ? (
-                        <div className="space-y-2">
-                          <input
-                            value={editSvcName}
-                            onChange={(e) => setEditSvcName(e.target.value)}
-                            className="w-full border border-slate-200 rounded-xl px-3 py-1.5 text-sm"
-                          />
-                          <div className="grid grid-cols-2 gap-2">
-                            <div>
-                              <label className="text-xs text-slate-500">
-                                {t('setup.duration_label')}
-                              </label>
-                              <input
-                                value={editSvcDuration}
-                                onChange={(e) => setEditSvcDuration(Number(e.target.value))}
-                                type="number"
-                                className="w-full border border-slate-200 rounded-xl px-3 py-1.5 text-sm"
-                              />
+              {services.length > 0 && (
+                <div className="border border-slate-100 rounded-xl divide-y">
+                  {services
+                    .filter((s: any) => s.isActive !== false)
+                    .map((s: any) => (
+                      <div key={s.id} className="px-4 py-3">
+                        {editingSvcId === s.id ? (
+                          <div className="space-y-2">
+                            <input
+                              value={editSvcName}
+                              onChange={(e) => setEditSvcName(e.target.value)}
+                              className="w-full border border-slate-200 rounded-xl px-3 py-1.5 text-sm"
+                            />
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <label className="text-xs text-slate-500">
+                                  {t('setup.duration_label')}
+                                </label>
+                                <input
+                                  value={editSvcDuration}
+                                  onChange={(e) => setEditSvcDuration(Number(e.target.value))}
+                                  type="number"
+                                  className="w-full border border-slate-200 rounded-xl px-3 py-1.5 text-sm"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-xs text-slate-500">
+                                  {t('setup.price_label')}
+                                </label>
+                                <input
+                                  value={editSvcPrice}
+                                  onChange={(e) => setEditSvcPrice(e.target.value)}
+                                  type="number"
+                                  step="0.01"
+                                  className="w-full border border-slate-200 rounded-xl px-3 py-1.5 text-sm"
+                                />
+                              </div>
                             </div>
-                            <div>
-                              <label className="text-xs text-slate-500">
-                                {t('setup.price_label')}
-                              </label>
-                              <input
-                                value={editSvcPrice}
-                                onChange={(e) => setEditSvcPrice(e.target.value)}
-                                type="number"
-                                step="0.01"
-                                className="w-full border border-slate-200 rounded-xl px-3 py-1.5 text-sm"
-                              />
+                            <div className="flex gap-2">
+                              <button
+                                onClick={saveEditService}
+                                className="bg-sage-600 text-white px-3 py-1 rounded text-xs hover:bg-sage-700"
+                              >
+                                <Check size={12} className="inline mr-1" />{' '}
+                                {t('common.save') || 'Save'}
+                              </button>
+                              <button
+                                onClick={cancelEditService}
+                                className="border px-3 py-1 rounded text-xs hover:bg-slate-50"
+                              >
+                                {t('common.cancel') || 'Cancel'}
+                              </button>
                             </div>
                           </div>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={saveEditService}
-                              className="bg-sage-600 text-white px-3 py-1 rounded text-xs hover:bg-sage-700"
-                            >
-                              <Check size={12} className="inline mr-1" />{' '}
-                              {t('common.save') || 'Save'}
-                            </button>
-                            <button
-                              onClick={cancelEditService}
-                              className="border px-3 py-1 rounded text-xs hover:bg-slate-50"
-                            >
-                              {t('common.cancel') || 'Cancel'}
-                            </button>
+                        ) : (
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm font-medium">{s.name}</p>
+                              <p className="text-xs text-slate-500">
+                                {s.durationMins} {t('services.min_short')} ·{' '}
+                                {s.price > 0 ? `$${s.price}` : t('services.price_free')}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-slate-400">{s.category}</span>
+                              <button
+                                onClick={() => startEditService(s)}
+                                className="text-slate-400 hover:text-sage-500 transition-colors p-1"
+                                title="Edit"
+                              >
+                                <Pencil size={14} />
+                              </button>
+                              <button
+                                onClick={async () => {
+                                  try {
+                                    await api.del(`/services/${s.id}`);
+                                    const updated = await api.get<any>('/services');
+                                    setServices(updated?.data || updated || []);
+                                  } catch (e) {
+                                    console.error(e);
+                                  }
+                                }}
+                                className="text-slate-400 hover:text-red-500 transition-colors p-1"
+                                title={t('common.delete')}
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
                           </div>
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm font-medium">{s.name}</p>
-                            <p className="text-xs text-slate-500">
-                              {s.durationMins} {t('services.min_short')} ·{' '}
-                              {s.price > 0 ? `$${s.price}` : t('services.price_free')}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-slate-400">{s.category}</span>
-                            <button
-                              onClick={() => startEditService(s)}
-                              className="text-slate-400 hover:text-sage-500 transition-colors p-1"
-                              title="Edit"
-                            >
-                              <Pencil size={14} />
-                            </button>
-                            <button
-                              onClick={async () => {
-                                try {
-                                  await api.del(`/services/${s.id}`);
-                                  const updated = await api.get<any>('/services');
-                                  setServices(updated?.data || updated || []);
-                                } catch (e) {
-                                  console.error(e);
-                                }
-                              }}
-                              className="text-slate-400 hover:text-red-500 transition-colors p-1"
-                              title={t('common.delete')}
-                            >
-                              <Trash2 size={14} />
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-              </div>
-            )}
+                        )}
+                      </div>
+                    ))}
+                </div>
+              )}
 
-            <div className="border-t pt-4 space-y-3">
-              <p className="text-sm font-medium">{t('setup.add_service')}</p>
-              <input
-                value={newSvcName}
-                onChange={(e) => setNewSvcName(e.target.value)}
-                placeholder={t('setup.service_name_placeholder')}
-                className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
-              />
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs text-slate-500">{t('setup.duration_label')}</label>
-                  <input
-                    value={newSvcDuration}
-                    onChange={(e) => setNewSvcDuration(Number(e.target.value))}
-                    type="number"
-                    className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
-                  />
+              <div className="border-t pt-4 space-y-3">
+                <p className="text-sm font-medium">{t('setup.add_service')}</p>
+                <input
+                  value={newSvcName}
+                  onChange={(e) => setNewSvcName(e.target.value)}
+                  placeholder={t('setup.service_name_placeholder')}
+                  className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
+                />
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs text-slate-500">{t('setup.duration_label')}</label>
+                    <input
+                      value={newSvcDuration}
+                      onChange={(e) => setNewSvcDuration(Number(e.target.value))}
+                      type="number"
+                      className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-slate-500">{t('setup.price_label')}</label>
+                    <input
+                      value={newSvcPrice}
+                      onChange={(e) => setNewSvcPrice(e.target.value)}
+                      type="number"
+                      step="0.01"
+                      placeholder="0"
+                      className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="text-xs text-slate-500">{t('setup.price_label')}</label>
-                  <input
-                    value={newSvcPrice}
-                    onChange={(e) => setNewSvcPrice(e.target.value)}
-                    type="number"
-                    step="0.01"
-                    placeholder="0"
-                    className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
-                  />
-                </div>
+                <button
+                  onClick={addService}
+                  disabled={!newSvcName}
+                  className="bg-sage-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-sage-700 disabled:opacity-50"
+                >
+                  <Plus size={14} className="inline mr-1" /> {t('setup.add_service_button')}
+                </button>
               </div>
-              <button
-                onClick={addService}
-                disabled={!newSvcName}
-                className="bg-sage-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-sage-700 disabled:opacity-50"
-              >
-                <Plus size={14} className="inline mr-1" /> {t('setup.add_service_button')}
-              </button>
-            </div>
             </div>
 
             {/* Skip for now link */}
@@ -1094,49 +1091,49 @@ function SetupPage() {
 
             {/* Profile Requirements Section */}
             <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
-            <h2 className="text-lg font-serif font-semibold text-slate-900">
-              {t('setup.profile_title')}
-            </h2>
-            <p className="text-sm text-slate-500">{t('setup.profile_subtitle')}</p>
+              <h2 className="text-lg font-serif font-semibold text-slate-900">
+                {t('setup.profile_title')}
+              </h2>
+              <p className="text-sm text-slate-500">{t('setup.profile_subtitle')}</p>
 
-            {(['basic', 'medical'] as const).map((category) => {
-              const fields = PROFILE_FIELDS.filter((f) => f.category === category);
-              if (fields.length === 0) return null;
-              return (
-                <div key={category}>
-                  <h3 className="text-xs font-semibold text-slate-500 uppercase mb-2">
-                    {t(`setup.profile_category_${category}` as any)}
-                  </h3>
-                  <div className="border border-slate-100 rounded-xl divide-y">
-                    {fields.map((field) => (
-                      <label
-                        key={field.key}
-                        className="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-slate-50"
-                      >
-                        <div>
-                          <p className="text-sm font-medium">{field.label}</p>
-                          <p className="text-xs text-slate-500">{field.type}</p>
-                        </div>
-                        <input
-                          type="checkbox"
-                          checked={requiredProfileFields.includes(field.key)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setRequiredProfileFields([...requiredProfileFields, field.key]);
-                            } else {
-                              setRequiredProfileFields(
-                                requiredProfileFields.filter((k) => k !== field.key),
-                              );
-                            }
-                          }}
-                          className="rounded text-sage-600 w-4 h-4"
-                        />
-                      </label>
-                    ))}
+              {(['basic', 'medical'] as const).map((category) => {
+                const fields = PROFILE_FIELDS.filter((f) => f.category === category);
+                if (fields.length === 0) return null;
+                return (
+                  <div key={category}>
+                    <h3 className="text-xs font-semibold text-slate-500 uppercase mb-2">
+                      {t(`setup.profile_category_${category}` as any)}
+                    </h3>
+                    <div className="border border-slate-100 rounded-xl divide-y">
+                      {fields.map((field) => (
+                        <label
+                          key={field.key}
+                          className="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-slate-50"
+                        >
+                          <div>
+                            <p className="text-sm font-medium">{field.label}</p>
+                            <p className="text-xs text-slate-500">{field.type}</p>
+                          </div>
+                          <input
+                            type="checkbox"
+                            checked={requiredProfileFields.includes(field.key)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setRequiredProfileFields([...requiredProfileFields, field.key]);
+                              } else {
+                                setRequiredProfileFields(
+                                  requiredProfileFields.filter((k) => k !== field.key),
+                                );
+                              }
+                            }}
+                            className="rounded text-sage-600 w-4 h-4"
+                          />
+                        </label>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
 
               <p className="text-xs text-slate-400">{t('setup.profile_note')}</p>
             </div>
@@ -1292,7 +1289,6 @@ function SetupPage() {
             })()}
           </div>
         )}
-
       </div>
 
       {/* Footer navigation */}

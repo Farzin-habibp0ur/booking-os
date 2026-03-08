@@ -733,453 +733,464 @@ function InboxPage() {
             mobileView !== 'list' && 'hidden md:flex',
           )}
         >
-        <div className="p-3 border-b space-y-2">
-          <div className="flex items-center justify-between">
-            <h2 className="font-semibold">{t('inbox.title')}</h2>
-            <input
-              type="checkbox"
-              checked={conversations.length > 0 && selectedConvoIds.size === conversations.length}
-              onChange={toggleSelectAllConvos}
-              className="rounded text-sage-600"
-              aria-label="Select all conversations"
+          <div className="p-3 border-b space-y-2">
+            <div className="flex items-center justify-between">
+              <h2 className="font-semibold">{t('inbox.title')}</h2>
+              <input
+                type="checkbox"
+                checked={conversations.length > 0 && selectedConvoIds.size === conversations.length}
+                onChange={toggleSelectAllConvos}
+                className="rounded text-sage-600"
+                aria-label="Select all conversations"
+              />
+            </div>
+            <div className="relative">
+              <Search size={14} className="absolute left-2.5 top-2.5 text-slate-400" />
+              <input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={t('inbox.search_placeholder')}
+                aria-label="Search conversations"
+                className="w-full pl-8 pr-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-sage-500"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600"
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+          </div>
+          <div className="px-3 pt-2">
+            <ViewPicker
+              page="inbox"
+              currentFilters={currentFilters}
+              activeViewId={activeViewId}
+              onApplyView={handleApplyView}
+              onClearView={handleClearView}
             />
           </div>
-          <div className="relative">
-            <Search size={14} className="absolute left-2.5 top-2.5 text-slate-400" />
-            <input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={t('inbox.search_placeholder')}
-              aria-label="Search conversations"
-              className="w-full pl-8 pr-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-sage-500"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600"
+          <div className="flex-1 overflow-auto">
+            {conversations.map((c) => (
+              <div
+                key={c.id}
+                className={cn(
+                  'p-3 border-b hover:bg-slate-50 transition-colors',
+                  selected?.id === c.id && 'bg-sage-50',
+                  selectedConvoIds.has(c.id) && 'bg-sage-100',
+                )}
               >
-                <X size={14} />
-              </button>
+                <div className="flex items-start gap-2">
+                  <input
+                    type="checkbox"
+                    checked={selectedConvoIds.has(c.id)}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      toggleSelectConvo(c.id);
+                    }}
+                    className="rounded text-sage-600 mt-1 flex-shrink-0"
+                  />
+                  <div
+                    onClick={() => {
+                      setSelected(c);
+                      setMobileView('thread');
+                    }}
+                    className="flex-1 cursor-pointer min-w-0"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        {c.isOverdue && (
+                          <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" />
+                        )}
+                        <p className="text-sm font-medium truncate">
+                          {c.customer?.name || t('common.unknown')}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        {c.isNew && (
+                          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-sage-100 text-sage-700 font-medium">
+                            {t('inbox.new_badge')}
+                          </span>
+                        )}
+                        {c.status === 'SNOOZED' && (
+                          <AlarmClock size={12} className="text-lavender-500" />
+                        )}
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-500 truncate mt-0.5">
+                      {c.messages?.[0]?.content || t('dashboard.no_messages')}
+                    </p>
+                    <div className="flex items-center justify-between mt-1">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span
+                          className={cn(
+                            'text-[9px] px-1.5 py-0.5 rounded-full flex-shrink-0',
+                            c.status === 'OPEN'
+                              ? 'bg-sage-50 text-sage-700'
+                              : c.status === 'WAITING'
+                                ? 'bg-amber-50 text-amber-700'
+                                : c.status === 'SNOOZED'
+                                  ? 'bg-lavender-100 text-lavender-700'
+                                  : c.status === 'RESOLVED'
+                                    ? 'bg-slate-100 text-slate-500'
+                                    : 'bg-slate-100 text-slate-600',
+                          )}
+                        >
+                          {t(`status.${c.status.toLowerCase()}`)}
+                        </span>
+                        {c.assignedTo && (
+                          <span className="text-[9px] text-slate-400 truncate">
+                            {c.assignedTo.name}
+                          </span>
+                        )}
+                        {c.location && (
+                          <span className="text-[9px] text-slate-400 flex items-center gap-0.5 flex-shrink-0">
+                            <MapPin size={8} /> {c.location.name}
+                          </span>
+                        )}
+                      </div>
+                      {c.lastMessageAt && (
+                        <span className="text-[9px] text-slate-400 flex-shrink-0">
+                          {formatRelativeTime(c.lastMessageAt)}
+                        </span>
+                      )}
+                    </div>
+                    {c.tags?.length > 0 && (
+                      <div className="flex gap-1 mt-1">
+                        {c.tags.slice(0, 3).map((tg: string) => (
+                          <span
+                            key={tg}
+                            className="text-[8px] bg-sage-50 text-sage-600 px-1 py-0.5 rounded"
+                          >
+                            {tg}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+            {conversations.length === 0 && (
+              <div className="text-center p-6">
+                <InboxIcon size={32} className="mx-auto text-slate-300 mb-2" />
+                <p className="text-slate-400 text-sm">
+                  {searchQuery
+                    ? t('inbox.no_search_results', { query: searchQuery })
+                    : t('inbox.no_conversations')}
+                </p>
+              </div>
             )}
           </div>
         </div>
-        <div className="px-3 pt-2">
-          <ViewPicker
-            page="inbox"
-            currentFilters={currentFilters}
-            activeViewId={activeViewId}
-            onApplyView={handleApplyView}
-            onClearView={handleClearView}
-          />
-        </div>
-        <div className="flex-1 overflow-auto">
-          {conversations.map((c) => (
-            <div
-              key={c.id}
-              className={cn(
-                'p-3 border-b hover:bg-slate-50 transition-colors',
-                selected?.id === c.id && 'bg-sage-50',
-                selectedConvoIds.has(c.id) && 'bg-sage-100',
-              )}
-            >
-              <div className="flex items-start gap-2">
-                <input
-                  type="checkbox"
-                  checked={selectedConvoIds.has(c.id)}
-                  onChange={(e) => {
-                    e.stopPropagation();
-                    toggleSelectConvo(c.id);
-                  }}
-                  className="rounded text-sage-600 mt-1 flex-shrink-0"
-                />
-                <div
-                  onClick={() => {
-                    setSelected(c);
-                    setMobileView('thread');
-                  }}
-                  className="flex-1 cursor-pointer min-w-0"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      {c.isOverdue && (
-                        <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" />
-                      )}
-                      <p className="text-sm font-medium truncate">
-                        {c.customer?.name || t('common.unknown')}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-1 flex-shrink-0">
-                      {c.isNew && (
-                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-sage-100 text-sage-700 font-medium">
-                          {t('inbox.new_badge')}
-                        </span>
-                      )}
-                      {c.status === 'SNOOZED' && <AlarmClock size={12} className="text-lavender-500" />}
-                    </div>
-                  </div>
-                  <p className="text-xs text-slate-500 truncate mt-0.5">
-                    {c.messages?.[0]?.content || t('dashboard.no_messages')}
-                  </p>
-                  <div className="flex items-center justify-between mt-1">
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <span
-                        className={cn(
-                          'text-[9px] px-1.5 py-0.5 rounded-full flex-shrink-0',
-                          c.status === 'OPEN'
-                            ? 'bg-sage-50 text-sage-700'
-                            : c.status === 'WAITING'
-                              ? 'bg-amber-50 text-amber-700'
-                              : c.status === 'SNOOZED'
-                                ? 'bg-lavender-100 text-lavender-700'
-                                : c.status === 'RESOLVED'
-                                  ? 'bg-slate-100 text-slate-500'
-                                  : 'bg-slate-100 text-slate-600',
-                        )}
-                      >
-                        {t(`status.${c.status.toLowerCase()}`)}
-                      </span>
-                      {c.assignedTo && (
-                        <span className="text-[9px] text-slate-400 truncate">{c.assignedTo.name}</span>
-                      )}
-                      {c.location && (
-                        <span className="text-[9px] text-slate-400 flex items-center gap-0.5 flex-shrink-0">
-                          <MapPin size={8} /> {c.location.name}
-                        </span>
-                      )}
-                    </div>
-                    {c.lastMessageAt && (
-                      <span className="text-[9px] text-slate-400 flex-shrink-0">
-                        {formatRelativeTime(c.lastMessageAt)}
-                      </span>
-                    )}
-                  </div>
-                  {c.tags?.length > 0 && (
-                    <div className="flex gap-1 mt-1">
-                      {c.tags.slice(0, 3).map((tg: string) => (
-                        <span
-                          key={tg}
-                          className="text-[8px] bg-sage-50 text-sage-600 px-1 py-0.5 rounded"
-                        >
-                          {tg}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-          {conversations.length === 0 && (
-            <div className="text-center p-6">
-              <InboxIcon size={32} className="mx-auto text-slate-300 mb-2" />
-              <p className="text-slate-400 text-sm">
-                {searchQuery
-                  ? t('inbox.no_search_results', { query: searchQuery })
-                  : t('inbox.no_conversations')}
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
 
-      {/* Message thread */}
-      <div
-        className={cn(
-          'flex-1 flex flex-col bg-slate-50',
-          mobileView !== 'thread' && 'hidden md:flex',
-        )}
-        style={{ minWidth: 0 }}
-      >
-        {selected ? (
-          <>
-            <div className="p-3 border-b bg-white flex items-center justify-between">
-              <div className="flex items-center gap-2 flex-1 min-w-0">
-                <button
-                  onClick={() => {
-                    setSelected(null);
-                    setMobileView('list');
-                  }}
-                  className="md:hidden text-slate-400 hover:text-slate-600 transition-colors flex-shrink-0"
-                  aria-label="Back to conversations"
-                >
-                  <ChevronLeft size={20} />
-                </button>
-                <div className="min-w-0">
-                  <p className="font-medium truncate">{selected.customer?.name}</p>
-                  <div className="flex items-center gap-2">
-                    <p className="text-xs text-slate-500 truncate">{selected.customer?.phone}</p>
-                    {selected.location && (
-                      <span className="text-[10px] text-slate-400 flex items-center gap-0.5 flex-shrink-0">
-                        <MapPin size={10} /> {selected.location.name}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                {viewers.length > 0 && (
-                  <div className="flex items-center gap-1 ml-2 flex-shrink-0" data-testid="presence-pills">
-                    {viewers.map((v) => (
-                      <span
-                        key={v.staffId}
-                        className="text-[10px] bg-lavender-50 text-lavender-700 px-2 py-0.5 rounded-full border border-lavender-200"
-                      >
-                        {v.staffName} is viewing
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <div className="flex items-center gap-2 flex-wrap justify-end">
-                <button
-                  onClick={() => setMobileView(mobileView === 'info' ? 'thread' : 'info')}
-                  className="hidden md:block text-slate-400 hover:text-slate-600 border px-2 py-1 rounded transition-colors"
-                  aria-label="Toggle info sidebar"
-                  title="Toggle customer info"
-                >
-                  <Info size={14} />
-                </button>
-                <div className="relative">
+        {/* Message thread */}
+        <div
+          className={cn(
+            'flex-1 flex flex-col bg-slate-50',
+            mobileView !== 'thread' && 'hidden md:flex',
+          )}
+          style={{ minWidth: 0 }}
+        >
+          {selected ? (
+            <>
+              <div className="p-3 border-b bg-white flex items-center justify-between">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
                   <button
-                    onClick={() => setShowSnoozeMenu(!showSnoozeMenu)}
-                    aria-expanded={showSnoozeMenu}
-                    className="text-xs text-slate-500 hover:text-lavender-600 border px-2 py-1 rounded flex items-center gap-1"
+                    onClick={() => {
+                      setSelected(null);
+                      setMobileView('list');
+                    }}
+                    className="md:hidden text-slate-400 hover:text-slate-600 transition-colors flex-shrink-0"
+                    aria-label="Back to conversations"
                   >
-                    <AlarmClock size={12} /> {t('inbox.snooze')}
+                    <ChevronLeft size={20} />
                   </button>
-                  {showSnoozeMenu && (
-                    <div className="absolute right-0 mt-1 w-40 bg-white border rounded-md shadow-lg z-20">
-                      {SNOOZE_HOURS.map((opt) => (
-                        <button
-                          key={opt.key}
-                          onClick={() => snoozeConversation(opt.hours)}
-                          className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50 border-b last:border-0"
+                  <div className="min-w-0">
+                    <p className="font-medium truncate">{selected.customer?.name}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs text-slate-500 truncate">{selected.customer?.phone}</p>
+                      {selected.location && (
+                        <span className="text-[10px] text-slate-400 flex items-center gap-0.5 flex-shrink-0">
+                          <MapPin size={10} /> {selected.location.name}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  {viewers.length > 0 && (
+                    <div
+                      className="flex items-center gap-1 ml-2 flex-shrink-0"
+                      data-testid="presence-pills"
+                    >
+                      {viewers.map((v) => (
+                        <span
+                          key={v.staffId}
+                          className="text-[10px] bg-lavender-50 text-lavender-700 px-2 py-0.5 rounded-full border border-lavender-200"
                         >
-                          {SNOOZE_LABELS[opt.key]}
-                        </button>
+                          {v.staffName} is viewing
+                        </span>
                       ))}
                     </div>
                   )}
                 </div>
-                {transferredToHuman && (
-                  <button
-                    onClick={resumeAutoReply}
-                    className="text-xs text-lavender-600 hover:text-lavender-700 border border-lavender-300 bg-lavender-50 px-2 py-1 rounded flex items-center gap-1"
-                  >
-                    <Zap size={12} /> {t('ai.resume_auto_reply')}
-                  </button>
-                )}
-                <button
-                  onClick={closeConversation}
-                  className="text-xs text-slate-500 hover:text-slate-700 border px-2 py-1 rounded"
-                >
-                  {t('inbox.close_conversation')}
-                </button>
-                {customer && (
-                  <button
-                    onClick={() => setShowOutboundCompose(true)}
-                    className="text-xs text-slate-500 hover:text-sage-600 border px-2 py-1 rounded flex items-center gap-1"
-                    data-testid="inbox-new-outbound"
-                  >
-                    <Send size={12} /> {t('inbox.new_outbound') || 'New Message'}
-                  </button>
-                )}
-                <button
-                  onClick={() => setShowBookingForm(!showBookingForm)}
-                  className="flex items-center gap-1 bg-sage-600 text-white px-3 py-1.5 rounded-md text-sm hover:bg-sage-700"
-                >
-                  <Plus size={14} />{' '}
-                  <span className="hidden sm:inline">{t('inbox.new_booking')}</span>
-                </button>
-                {customer && (
+                <div className="flex items-center gap-2 flex-wrap justify-end">
                   <button
                     onClick={() => setMobileView(mobileView === 'info' ? 'thread' : 'info')}
-                    className="md:hidden text-slate-500 hover:text-slate-700 border px-2 py-1 rounded"
-                    aria-label="Toggle customer info"
+                    className="hidden md:block text-slate-400 hover:text-slate-600 border px-2 py-1 rounded transition-colors"
+                    aria-label="Toggle info sidebar"
+                    title="Toggle customer info"
                   >
                     <Info size={14} />
                   </button>
-                )}
-              </div>
-            </div>
-
-            {/* Messages */}
-            <div className="flex-1 overflow-auto p-4 space-y-3" aria-live="polite">
-              {messages.map((m) => (
-                <div
-                  key={m.id}
-                  className={cn(
-                    'flex',
-                    m.direction === 'OUTBOUND' ? 'justify-end' : 'justify-start',
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowSnoozeMenu(!showSnoozeMenu)}
+                      aria-expanded={showSnoozeMenu}
+                      className="text-xs text-slate-500 hover:text-lavender-600 border px-2 py-1 rounded flex items-center gap-1"
+                    >
+                      <AlarmClock size={12} /> {t('inbox.snooze')}
+                    </button>
+                    {showSnoozeMenu && (
+                      <div className="absolute right-0 mt-1 w-40 bg-white border rounded-md shadow-lg z-20">
+                        {SNOOZE_HOURS.map((opt) => (
+                          <button
+                            key={opt.key}
+                            onClick={() => snoozeConversation(opt.hours)}
+                            className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50 border-b last:border-0"
+                          >
+                            {SNOOZE_LABELS[opt.key]}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  {transferredToHuman && (
+                    <button
+                      onClick={resumeAutoReply}
+                      className="text-xs text-lavender-600 hover:text-lavender-700 border border-lavender-300 bg-lavender-50 px-2 py-1 rounded flex items-center gap-1"
+                    >
+                      <Zap size={12} /> {t('ai.resume_auto_reply')}
+                    </button>
                   )}
-                >
+                  <button
+                    onClick={closeConversation}
+                    className="text-xs text-slate-500 hover:text-slate-700 border px-2 py-1 rounded"
+                  >
+                    {t('inbox.close_conversation')}
+                  </button>
+                  {customer && (
+                    <button
+                      onClick={() => setShowOutboundCompose(true)}
+                      className="text-xs text-slate-500 hover:text-sage-600 border px-2 py-1 rounded flex items-center gap-1"
+                      data-testid="inbox-new-outbound"
+                    >
+                      <Send size={12} /> {t('inbox.new_outbound') || 'New Message'}
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setShowBookingForm(!showBookingForm)}
+                    className="flex items-center gap-1 bg-sage-600 text-white px-3 py-1.5 rounded-md text-sm hover:bg-sage-700"
+                  >
+                    <Plus size={14} />{' '}
+                    <span className="hidden sm:inline">{t('inbox.new_booking')}</span>
+                  </button>
+                  {customer && (
+                    <button
+                      onClick={() => setMobileView(mobileView === 'info' ? 'thread' : 'info')}
+                      className="md:hidden text-slate-500 hover:text-slate-700 border px-2 py-1 rounded"
+                      aria-label="Toggle customer info"
+                    >
+                      <Info size={14} />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Messages */}
+              <div className="flex-1 overflow-auto p-4 space-y-3" aria-live="polite">
+                {messages.map((m) => (
                   <div
+                    key={m.id}
                     className={cn(
-                      'max-w-[70%] p-3 rounded-lg text-sm',
-                      m.direction === 'OUTBOUND'
-                        ? 'bg-sage-600 text-white rounded-br-none'
-                        : 'bg-white shadow-soft-sm rounded-xl rounded-bl-none',
+                      'flex',
+                      m.direction === 'OUTBOUND' ? 'justify-end' : 'justify-start',
                     )}
                   >
-                    {m.senderStaff && (
-                      <p
-                        className={cn(
-                          'text-[10px] mb-1',
-                          m.direction === 'OUTBOUND' ? 'text-sage-200' : 'text-slate-400',
-                        )}
-                      >
-                        {m.senderStaff.name}
-                      </p>
-                    )}
-                    {m.attachments?.length > 0 && (
-                      <MediaMessage attachments={m.attachments} direction={m.direction} />
-                    )}
-                    {m.contentType === 'TEXT' && <p className="whitespace-pre-wrap">{m.content}</p>}
-                    {m.contentType !== 'TEXT' && !m.attachments?.length && (
-                      <p className="whitespace-pre-wrap">{m.content}</p>
-                    )}
                     <div
                       className={cn(
-                        'flex items-center gap-1 mt-1',
-                        m.direction === 'OUTBOUND' ? 'text-sage-200 justify-end' : 'text-slate-400',
+                        'max-w-[70%] p-3 rounded-lg text-sm',
+                        m.direction === 'OUTBOUND'
+                          ? 'bg-sage-600 text-white rounded-br-none'
+                          : 'bg-white shadow-soft-sm rounded-xl rounded-bl-none',
                       )}
                     >
-                      <span className="text-[10px]">
-                        {new Date(m.createdAt).toLocaleTimeString([], {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </span>
-                      {m.direction === 'OUTBOUND' && m.deliveryStatus && (
-                        <DeliveryStatus status={m.deliveryStatus} />
+                      {m.senderStaff && (
+                        <p
+                          className={cn(
+                            'text-[10px] mb-1',
+                            m.direction === 'OUTBOUND' ? 'text-sage-200' : 'text-slate-400',
+                          )}
+                        >
+                          {m.senderStaff.name}
+                        </p>
                       )}
+                      {m.attachments?.length > 0 && (
+                        <MediaMessage attachments={m.attachments} direction={m.direction} />
+                      )}
+                      {m.contentType === 'TEXT' && (
+                        <p className="whitespace-pre-wrap">{m.content}</p>
+                      )}
+                      {m.contentType !== 'TEXT' && !m.attachments?.length && (
+                        <p className="whitespace-pre-wrap">{m.content}</p>
+                      )}
+                      <div
+                        className={cn(
+                          'flex items-center gap-1 mt-1',
+                          m.direction === 'OUTBOUND'
+                            ? 'text-sage-200 justify-end'
+                            : 'text-slate-400',
+                        )}
+                      >
+                        <span className="text-[10px]">
+                          {new Date(m.createdAt).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </span>
+                        {m.direction === 'OUTBOUND' && m.deliveryStatus && (
+                          <DeliveryStatus status={m.deliveryStatus} />
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-              <div ref={messagesEndRef} />
-            </div>
-
-            {/* Quick replies */}
-            {showQuickReplies && (
-              <div className="px-3 pb-1 bg-white border-t">
-                <div className="flex flex-wrap gap-1.5 py-2">
-                  {QUICK_REPLIES.map((qr) => (
-                    <button
-                      key={qr}
-                      onClick={() => sendMessage(qr)}
-                      className="text-xs bg-slate-100 hover:bg-sage-50 hover:text-sage-700 px-2.5 py-1.5 rounded-full transition-colors"
-                    >
-                      {qr}
-                    </button>
-                  ))}
-                </div>
+                ))}
+                <div ref={messagesEndRef} />
               </div>
-            )}
 
-            {/* AI Suggestions Ghost Bubble — above composer */}
-            {aiDraftText && (
-              <AiSuggestions
-                intent={aiIntent}
-                confidence={aiConfidence}
-                draftText={aiDraftText}
-                onSendDraft={(text) => sendMessage(text)}
-                onDismiss={() => setAiDraftText('')}
-              />
-            )}
-
-            {/* Composer */}
-            <div className="p-3 border-t bg-white">
-              {showTemplates && (
-                <div className="mb-2 border rounded-md bg-white shadow-lg max-h-48 overflow-auto">
-                  <div className="px-3 py-2 border-b bg-slate-50 flex items-center justify-between">
-                    <span className="text-xs font-medium text-slate-600">
-                      {t('inbox.templates')}
-                    </span>
-                    <button
-                      onClick={() => setShowTemplates(false)}
-                      className="text-slate-400 hover:text-slate-600"
-                    >
-                      <X size={14} />
-                    </button>
+              {/* Quick replies */}
+              {showQuickReplies && (
+                <div className="px-3 pb-1 bg-white border-t">
+                  <div className="flex flex-wrap gap-1.5 py-2">
+                    {QUICK_REPLIES.map((qr) => (
+                      <button
+                        key={qr}
+                        onClick={() => sendMessage(qr)}
+                        className="text-xs bg-slate-100 hover:bg-sage-50 hover:text-sage-700 px-2.5 py-1.5 rounded-full transition-colors"
+                      >
+                        {qr}
+                      </button>
+                    ))}
                   </div>
-                  {templates.map((tpl) => (
-                    <button
-                      key={tpl.id}
-                      onClick={() => insertTemplate(tpl)}
-                      className="w-full text-left px-3 py-2 hover:bg-slate-50 border-b last:border-0"
-                    >
-                      <p className="text-sm font-medium">{tpl.name}</p>
-                      <p className="text-xs text-slate-500 truncate">{tpl.body}</p>
-                    </button>
-                  ))}
                 </div>
               )}
-              <div className="flex gap-2 items-end">
-                <div className="flex gap-0.5">
-                  <button
-                    onClick={() => setShowTemplates(!showTemplates)}
-                    className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded"
-                    title={t('inbox.templates')}
-                  >
-                    <FileText size={18} />
-                  </button>
-                  <MediaComposer
-                    conversationId={selected.id}
-                    onUploadComplete={() => loadMessages(selected.id)}
+
+              {/* AI Suggestions Ghost Bubble — above composer */}
+              {aiDraftText && (
+                <AiSuggestions
+                  intent={aiIntent}
+                  confidence={aiConfidence}
+                  draftText={aiDraftText}
+                  onSendDraft={(text) => sendMessage(text)}
+                  onDismiss={() => setAiDraftText('')}
+                />
+              )}
+
+              {/* Composer */}
+              <div className="p-3 border-t bg-white">
+                {showTemplates && (
+                  <div className="mb-2 border rounded-md bg-white shadow-lg max-h-48 overflow-auto">
+                    <div className="px-3 py-2 border-b bg-slate-50 flex items-center justify-between">
+                      <span className="text-xs font-medium text-slate-600">
+                        {t('inbox.templates')}
+                      </span>
+                      <button
+                        onClick={() => setShowTemplates(false)}
+                        className="text-slate-400 hover:text-slate-600"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                    {templates.map((tpl) => (
+                      <button
+                        key={tpl.id}
+                        onClick={() => insertTemplate(tpl)}
+                        className="w-full text-left px-3 py-2 hover:bg-slate-50 border-b last:border-0"
+                      >
+                        <p className="text-sm font-medium">{tpl.name}</p>
+                        <p className="text-xs text-slate-500 truncate">{tpl.body}</p>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <div className="flex gap-2 items-end">
+                  <div className="flex gap-0.5">
+                    <button
+                      onClick={() => setShowTemplates(!showTemplates)}
+                      className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded"
+                      title={t('inbox.templates')}
+                    >
+                      <FileText size={18} />
+                    </button>
+                    <MediaComposer
+                      conversationId={selected.id}
+                      onUploadComplete={() => loadMessages(selected.id)}
+                    />
+                    <button
+                      onClick={() => setShowQuickReplies(!showQuickReplies)}
+                      className={cn(
+                        'p-2 rounded',
+                        showQuickReplies
+                          ? 'text-sage-600 bg-sage-50'
+                          : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100',
+                      )}
+                      title={t('inbox.quick_replies')}
+                    >
+                      <Zap size={18} />
+                    </button>
+                  </div>
+                  <textarea
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendMessage();
+                      }
+                      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                        e.preventDefault();
+                        sendMessage();
+                      }
+                    }}
+                    placeholder={t('inbox.type_message')}
+                    rows={1}
+                    className="flex-1 border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sage-500 resize-none min-h-[38px] max-h-24"
+                    style={{ height: 'auto' }}
+                    onInput={(e) => {
+                      const el = e.currentTarget;
+                      el.style.height = 'auto';
+                      el.style.height = Math.min(el.scrollHeight, 96) + 'px';
+                    }}
                   />
                   <button
-                    onClick={() => setShowQuickReplies(!showQuickReplies)}
-                    className={cn(
-                      'p-2 rounded',
-                      showQuickReplies
-                        ? 'text-sage-600 bg-sage-50'
-                        : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100',
-                    )}
-                    title={t('inbox.quick_replies')}
+                    onClick={() => sendMessage()}
+                    disabled={sending || !newMessage.trim()}
+                    className="bg-sage-600 text-white p-2 rounded-md hover:bg-sage-700 disabled:opacity-50 flex-shrink-0"
                   >
-                    <Zap size={18} />
+                    <Send size={18} />
                   </button>
                 </div>
-                <textarea
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      sendMessage();
-                    }
-                    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-                      e.preventDefault();
-                      sendMessage();
-                    }
-                  }}
-                  placeholder={t('inbox.type_message')}
-                  rows={1}
-                  className="flex-1 border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sage-500 resize-none min-h-[38px] max-h-24"
-                  style={{ height: 'auto' }}
-                  onInput={(e) => {
-                    const el = e.currentTarget;
-                    el.style.height = 'auto';
-                    el.style.height = Math.min(el.scrollHeight, 96) + 'px';
-                  }}
-                />
-                <button
-                  onClick={() => sendMessage()}
-                  disabled={sending || !newMessage.trim()}
-                  className="bg-sage-600 text-white p-2 rounded-md hover:bg-sage-700 disabled:opacity-50 flex-shrink-0"
-                >
-                  <Send size={18} />
-                </button>
               </div>
+            </>
+          ) : (
+            <div className="flex-1 flex flex-col items-center justify-center text-slate-400">
+              <MessageSquare size={48} className="mb-3 text-slate-300" />
+              <p className="font-medium">{t('inbox.select_conversation')}</p>
+              <p className="text-sm">{t('inbox.select_conversation_hint')}</p>
             </div>
-          </>
-        ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-slate-400">
-            <MessageSquare size={48} className="mb-3 text-slate-300" />
-            <p className="font-medium">{t('inbox.select_conversation')}</p>
-            <p className="text-sm">{t('inbox.select_conversation_hint')}</p>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
       </div>
 
       {/* Customer sidebar */}
@@ -1581,7 +1592,9 @@ function InboxPage() {
                   onClick={(e) => {
                     // Show dropdown for assign
                     const btn = e.currentTarget;
-                    const dropdown = btn.parentElement?.querySelector('[data-dropdown]') as HTMLElement;
+                    const dropdown = btn.parentElement?.querySelector(
+                      '[data-dropdown]',
+                    ) as HTMLElement;
                     if (dropdown) dropdown.classList.toggle('hidden');
                   }}
                   className="px-3 py-2 text-sm border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"

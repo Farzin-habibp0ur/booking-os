@@ -531,10 +531,13 @@ describe('BookingsPage', () => {
     });
 
     // Debounce wait
-    await waitFor(() => {
-      expect(screen.getByText('Jane Smith')).toBeInTheDocument();
-      expect(screen.queryByText('John Doe')).not.toBeInTheDocument();
-    }, { timeout: 500 });
+    await waitFor(
+      () => {
+        expect(screen.getByText('Jane Smith')).toBeInTheDocument();
+        expect(screen.queryByText('John Doe')).not.toBeInTheDocument();
+      },
+      { timeout: 500 },
+    );
   });
 
   it('filters bookings by service name in search', async () => {
@@ -560,10 +563,13 @@ describe('BookingsPage', () => {
       await user.type(searchInput, 'Massage');
     });
 
-    await waitFor(() => {
-      expect(screen.getByText('Massage')).toBeInTheDocument();
-      expect(screen.queryByText('Haircut')).not.toBeInTheDocument();
-    }, { timeout: 500 });
+    await waitFor(
+      () => {
+        expect(screen.getByText('Massage')).toBeInTheDocument();
+        expect(screen.queryByText('Haircut')).not.toBeInTheDocument();
+      },
+      { timeout: 500 },
+    );
   });
 
   it('clears search when X button is clicked', async () => {
@@ -588,9 +594,12 @@ describe('BookingsPage', () => {
       await user.type(searchInput, 'John');
     });
 
-    await waitFor(() => {
-      expect(screen.queryByText('Jane')).not.toBeInTheDocument();
-    }, { timeout: 500 });
+    await waitFor(
+      () => {
+        expect(screen.queryByText('Jane')).not.toBeInTheDocument();
+      },
+      { timeout: 500 },
+    );
 
     // The X button appears when search has text
     expect(searchInput.value).toBe('John');
@@ -603,10 +612,13 @@ describe('BookingsPage', () => {
         await user.click(clearButton!);
       });
 
-      await waitFor(() => {
-        expect(searchInput.value).toBe('');
-        expect(screen.getByText('Jane')).toBeInTheDocument();
-      }, { timeout: 500 });
+      await waitFor(
+        () => {
+          expect(searchInput.value).toBe('');
+          expect(screen.getByText('Jane')).toBeInTheDocument();
+        },
+        { timeout: 500 },
+      );
     }
   });
 
@@ -715,7 +727,9 @@ describe('BookingsPage', () => {
       expect(screen.getByText('bookings.title')).toBeInTheDocument();
     });
 
-    const filterButton = screen.getAllByRole('button').find(btn => btn.textContent?.includes('common.filters'));
+    const filterButton = screen
+      .getAllByRole('button')
+      .find((btn) => btn.textContent?.includes('common.filters'));
 
     // Initially filters panel should not be visible
     let fromDateLabel = screen.queryByText('common.from_date');
@@ -755,7 +769,9 @@ describe('BookingsPage', () => {
       expect(screen.getByText('John')).toBeInTheDocument();
     });
 
-    const filterButton = screen.getAllByRole('button').find(btn => btn.textContent?.includes('common.filters'));
+    const filterButton = screen
+      .getAllByRole('button')
+      .find((btn) => btn.textContent?.includes('common.filters'));
 
     await act(async () => {
       await user.click(filterButton!);
@@ -763,7 +779,7 @@ describe('BookingsPage', () => {
 
     // Find date inputs by type=date
     const dateInputs = screen.getAllByDisplayValue('') as HTMLInputElement[];
-    const dateTypeInputs = dateInputs.filter(input => input.type === 'date');
+    const dateTypeInputs = dateInputs.filter((input) => input.type === 'date');
 
     if (dateTypeInputs.length >= 2) {
       const fromDateInput = dateTypeInputs[0]; // from date
@@ -774,21 +790,25 @@ describe('BookingsPage', () => {
         await user.type(toDateInput, '2026-01-19');
       });
 
-      await waitFor(() => {
-        // With range 2026-01-16 to 2026-01-19, neither John (01-15) nor Jane (01-20) should match
-        expect(screen.queryByText('John')).not.toBeInTheDocument();
-        expect(screen.queryByText('Jane')).not.toBeInTheDocument();
-      }, { timeout: 500 });
+      await waitFor(
+        () => {
+          // With range 2026-01-16 to 2026-01-19, neither John (01-15) nor Jane (01-20) should match
+          expect(screen.queryByText('John')).not.toBeInTheDocument();
+          expect(screen.queryByText('Jane')).not.toBeInTheDocument();
+        },
+        { timeout: 500 },
+      );
     }
   });
 
   it('filters by staff member', async () => {
     const user = userEvent.setup();
     mockApi.get.mockImplementation((path: string) => {
-      if (path === '/staff') return Promise.resolve([
-        { id: 's1', name: 'Sarah' },
-        { id: 's2', name: 'Mike' },
-      ]);
+      if (path === '/staff')
+        return Promise.resolve([
+          { id: 's1', name: 'Sarah' },
+          { id: 's2', name: 'Mike' },
+        ]);
       return Promise.resolve({
         data: [
           createBooking({ id: 'b1', staff: { name: 'Sarah' }, staffId: 's1' }),
@@ -804,7 +824,9 @@ describe('BookingsPage', () => {
       expect(screen.getByText('bookings.title')).toBeInTheDocument();
     });
 
-    const filterButton = screen.getAllByRole('button').find(btn => btn.textContent?.includes('common.filters'));
+    const filterButton = screen
+      .getAllByRole('button')
+      .find((btn) => btn.textContent?.includes('common.filters'));
 
     await act(async () => {
       await user.click(filterButton!);
@@ -823,10 +845,13 @@ describe('BookingsPage', () => {
       await user.selectOptions(staffSelect, 's1');
     });
 
-    await waitFor(() => {
-      expect(screen.getByText('Sarah')).toBeInTheDocument();
-      expect(screen.queryByText('Mike')).not.toBeInTheDocument();
-    }, { timeout: 500 });
+    await waitFor(
+      () => {
+        expect(screen.getByText('Sarah')).toBeInTheDocument();
+        expect(screen.queryByText('Mike')).not.toBeInTheDocument();
+      },
+      { timeout: 500 },
+    );
   });
 
   // ─── Booking Detail Modal ───────────────────────────────────

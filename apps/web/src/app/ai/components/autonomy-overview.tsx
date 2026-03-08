@@ -108,10 +108,7 @@ export function AutonomyOverview() {
                     className={cn(
                       'px-3 py-1 rounded-lg text-xs font-medium transition-all',
                       item.level === level
-                        ? cn(
-                            getLevelColor(level),
-                            'text-white shadow-sm',
-                          )
+                        ? cn(getLevelColor(level), 'text-white shadow-sm')
                         : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700',
                     )}
                   >
@@ -125,8 +122,8 @@ export function AutonomyOverview() {
       </div>
 
       <p className="text-xs text-slate-500 dark:text-slate-400 mt-6 pt-6 border-t border-lavender-200 dark:border-slate-800">
-        <strong>Off:</strong> Disabled. <strong>Assist:</strong> Suggests actions for approval. <strong>Auto:</strong> Runs
-        autonomously.
+        <strong>Off:</strong> Disabled. <strong>Assist:</strong> Suggests actions for approval.{' '}
+        <strong>Auto:</strong> Runs autonomously.
       </p>
     </div>
   );

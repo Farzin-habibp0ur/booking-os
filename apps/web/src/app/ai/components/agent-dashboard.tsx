@@ -16,7 +16,13 @@ interface Agent {
   successRate: number;
 }
 
-const AGENT_TYPES = ['Booking Agent', 'Follow-up Agent', 'Review Agent', 'Waitlist Agent', 'Outbound Agent'];
+const AGENT_TYPES = [
+  'Booking Agent',
+  'Follow-up Agent',
+  'Review Agent',
+  'Waitlist Agent',
+  'Outbound Agent',
+];
 
 export function AgentDashboard() {
   const { t } = useI18n();
@@ -143,7 +149,9 @@ export function AgentDashboard() {
                   {agent.name}
                 </h3>
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">{getStatusLabel(agent.status)}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                {getStatusLabel(agent.status)}
+              </p>
             </div>
           </div>
 

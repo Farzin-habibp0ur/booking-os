@@ -555,9 +555,12 @@ describe('CustomersPage', () => {
       await user.type(searchInput, 'Emma');
 
       // With debounce, the API call should happen after the timeout
-      await waitFor(() => {
-        expect(mockApi.get).toHaveBeenCalledWith('/customers?search=Emma&pageSize=50');
-      }, { timeout: 500 });
+      await waitFor(
+        () => {
+          expect(mockApi.get).toHaveBeenCalledWith('/customers?search=Emma&pageSize=50');
+        },
+        { timeout: 500 },
+      );
     });
 
     it('clears results and reloads when search input is cleared', async () => {

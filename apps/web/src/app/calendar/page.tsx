@@ -2,7 +2,15 @@
 
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { api } from '@/lib/api';
-import { ChevronLeft, ChevronRight, Plus, Repeat, MapPin, AlertTriangle, PanelRight } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  Repeat,
+  MapPin,
+  AlertTriangle,
+  PanelRight,
+} from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useI18n } from '@/lib/i18n';
 import BookingFormModal from '@/components/booking-form-modal';
@@ -15,13 +23,16 @@ const HOURS = Array.from({ length: 12 }, (_, i) => i + 8); // 8am - 7pm
 const SLOT_HEIGHT = 60; // pixels per hour
 
 // Wrap centralized tokens — calendar adds line-through for CANCELLED
-const STATUS_COLORS = new Proxy({} as Record<string, { bg: string; border: string; text: string }>, {
-  get(_, status: string) {
-    const base = statusCalendarClasses(status);
-    if (status === 'CANCELLED') return { ...base, text: base.text + ' line-through' };
-    return base;
+const STATUS_COLORS = new Proxy(
+  {} as Record<string, { bg: string; border: string; text: string }>,
+  {
+    get(_, status: string) {
+      const base = statusCalendarClasses(status);
+      if (status === 'CANCELLED') return { ...base, text: base.text + ' line-through' };
+      return base;
+    },
   },
-});
+);
 
 export default function CalendarPage() {
   const { t } = useI18n();
@@ -534,225 +545,196 @@ export default function CalendarPage() {
 
       {/* Calendar grid + optional sidebar */}
       <div className="flex-1 flex overflow-hidden">
-      <div className={cn('flex-1 bg-white rounded-2xl shadow-soft overflow-auto', sidebarOpen && 'rounded-r-none')}>
-      {/* Calendar grid */}
-      <div className="flex-1 bg-white rounded-2xl shadow-soft overflow-auto">
-        {view === 'month' ? (
-          /* MONTH VIEW: 6x7 grid */
-          <div className="p-4">
-            {/* Day-of-week headers */}
-            <div className="grid grid-cols-7 mb-2">
-              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => (
-                <div
-                  key={d}
-                  className="text-center text-xs font-medium text-slate-400 uppercase py-1"
-                >
-                  {d}
-                </div>
-              ))}
-            </div>
-            {/* Day cells */}
-            <div className="grid grid-cols-7 gap-1">
-              {getMonthDays().map((day, idx) => {
-                if (!day) {
-                  return (
-                    <div key={`empty-${idx}`} className="min-h-[80px] rounded-xl bg-slate-50/50" />
-                  );
-                }
-                const dayKey = day.toISOString().split('T')[0];
-                const summary = monthSummary[dayKey];
-                const isToday = day.toDateString() === new Date().toDateString();
-                const isCurrentMonth = day.getMonth() === currentDate.getMonth();
-                return (
-                  <button
-                    key={dayKey}
-                    onClick={() => handleMonthDayClick(day)}
-                    className={cn(
-                      'min-h-[80px] rounded-xl p-2 text-left transition-colors hover:bg-slate-50 border',
-                      isToday ? 'border-sage-300 bg-sage-50/30' : 'border-transparent',
-                      !isCurrentMonth && 'opacity-50',
-                    )}
-                  >
-                    <span
-                      className={cn(
-                        'text-sm font-medium',
-                        isToday ? 'text-sage-600' : 'text-slate-700',
-                      )}
+        <div
+          className={cn(
+            'flex-1 bg-white rounded-2xl shadow-soft overflow-auto',
+            sidebarOpen && 'rounded-r-none',
+          )}
+        >
+          {/* Calendar grid */}
+          <div className="flex-1 bg-white rounded-2xl shadow-soft overflow-auto">
+            {view === 'month' ? (
+              /* MONTH VIEW: 6x7 grid */
+              <div className="p-4">
+                {/* Day-of-week headers */}
+                <div className="grid grid-cols-7 mb-2">
+                  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => (
+                    <div
+                      key={d}
+                      className="text-center text-xs font-medium text-slate-400 uppercase py-1"
                     >
-                      {day.getDate()}
-                    </span>
-                    {summary && summary.total > 0 && (
-                      <div className="mt-1 flex flex-col gap-0.5">
-                        {summary.confirmed > 0 && (
-                          <div className="flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-sage-500" />
-                            <span className="text-[10px] text-sage-700">{summary.confirmed}</span>
-                          </div>
-                        )}
-                        {summary.pending > 0 && (
-                          <div className="flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-lavender-500" />
-                            <span className="text-[10px] text-lavender-700">{summary.pending}</span>
-                          </div>
-                        )}
-                        {summary.cancelled > 0 && (
-                          <div className="flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
-                            <span className="text-[10px] text-red-500">{summary.cancelled}</span>
-                          </div>
-                        )}
-                        <span className="text-[10px] text-slate-400 font-medium">
-                          {summary.total} total
-                        </span>
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        ) : isStaffColumns ? (
-          /* DAY VIEW: columns = staff */
-          <div className="flex min-h-full">
-            {/* Time gutter */}
-            <div className="w-16 flex-shrink-0 border-r">
-              <div className="h-12 border-b" /> {/* header spacer */}
-              {HOURS.map((hour) => (
-                <div key={hour} className="relative" style={{ height: SLOT_HEIGHT }}>
-                  <span className="absolute -top-2 right-2 text-xs text-slate-400">
-                    {hour % 12 || 12}
-                    {hour < 12 ? 'am' : 'pm'}
-                  </span>
+                      {d}
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-
-            {/* Staff columns */}
-            {displayStaff.map((s) => (
-              <div key={s.id} className="flex-1 min-w-[180px] border-r last:border-r-0">
-                {/* Staff header */}
-                <div className="h-12 border-b flex items-center justify-center sticky top-0 bg-white z-10">
-                  <div className="text-center">
-                    <p className="text-sm font-serif font-medium">{s.name}</p>
-                    <p className="text-[10px] text-slate-400">{s.role}</p>
-                  </div>
-                </div>
-
-                {/* Time-off banner */}
-                {isTimeOff(s.id, currentDate) && (
-                  <div className="text-center text-[10px] text-red-500 bg-red-50/50 py-0.5 font-medium">
-                    Time Off
-                  </div>
-                )}
-
-                {/* Time slots */}
-                <div className="relative">
-                  {HOURS.map((hour) => {
-                    const nonWorking = isNonWorkingHour(s.id, currentDate, hour);
-                    const offDay = isTimeOff(s.id, currentDate);
+                {/* Day cells */}
+                <div className="grid grid-cols-7 gap-1">
+                  {getMonthDays().map((day, idx) => {
+                    if (!day) {
+                      return (
+                        <div
+                          key={`empty-${idx}`}
+                          className="min-h-[80px] rounded-xl bg-slate-50/50"
+                        />
+                      );
+                    }
+                    const dayKey = day.toISOString().split('T')[0];
+                    const summary = monthSummary[dayKey];
+                    const isToday = day.toDateString() === new Date().toDateString();
+                    const isCurrentMonth = day.getMonth() === currentDate.getMonth();
                     return (
-                      <div
-                        key={hour}
-                        onClick={() => !offDay && handleSlotClick(s.id, currentDate, hour)}
-                        onDragOver={(e) => !offDay && handleDragOver(e, s.id, currentDate, hour)}
-                        onDrop={(e) => !offDay && handleDrop(e, s.id, currentDate, hour)}
+                      <button
+                        key={dayKey}
+                        onClick={() => handleMonthDayClick(day)}
                         className={cn(
-                          'border-b border-dashed border-slate-100 transition-colors',
-                          offDay
-                            ? 'bg-red-50/50 cursor-not-allowed'
-                            : nonWorking
-                              ? 'bg-slate-100/60 cursor-pointer'
-                              : 'cursor-pointer hover:bg-sage-50/30',
-                          dropTarget?.staffId === s.id &&
-                            dropTarget?.hour === hour &&
-                            'bg-sage-100/50 ring-1 ring-sage-300',
+                          'min-h-[80px] rounded-xl p-2 text-left transition-colors hover:bg-slate-50 border',
+                          isToday ? 'border-sage-300 bg-sage-50/30' : 'border-transparent',
+                          !isCurrentMonth && 'opacity-50',
                         )}
-                        style={{ height: SLOT_HEIGHT }}
-                      />
-                    );
-                  })}
-
-                  {/* Booking cards */}
-                  {getBookingsForStaffDay(s.id, currentDate).map((b) => {
-                    const { top, height } = getBookingPosition(b);
-                    const colors = STATUS_COLORS[b.status] || STATUS_COLORS.CONFIRMED;
-                    return (
-                      <div
-                        key={b.id}
-                        draggable
-                        onDragStart={(e) => handleDragStart(e, b)}
-                        onDragEnd={() => {
-                          if (!showDropConfirm) {
-                            setDragBooking(null);
-                            setDropTarget(null);
-                          }
-                        }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleBookingClick(b);
-                        }}
-                        onMouseEnter={() => setHoveredBooking(b.id)}
-                        onMouseLeave={() => setHoveredBooking(null)}
-                        className={cn(
-                          'absolute left-1 right-1 rounded-xl px-2 py-1 cursor-pointer transition-shadow shadow-soft-sm',
-                          colors.bg,
-                          colors.border,
-                          hoveredBooking === b.id && 'shadow-md ring-1 ring-sage-200',
-                        )}
-                        style={{ top, height, borderLeftWidth: 3 }}
                       >
-                        <p
+                        <span
                           className={cn(
-                            'text-xs font-medium truncate flex items-center gap-1',
-                            colors.text,
+                            'text-sm font-medium',
+                            isToday ? 'text-sage-600' : 'text-slate-700',
                           )}
                         >
-                          {b.recurringSeriesId && <Repeat size={9} className="flex-shrink-0" />}
-                          {new Date(b.startTime).toLocaleTimeString([], {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
-                          {' – '}
-                          {new Date(b.endTime).toLocaleTimeString([], {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
-                        </p>
-                        <p className="text-xs font-medium truncate">{b.customer?.name}</p>
-                        {height > 35 && (
-                          <p className="text-[10px] text-slate-500 truncate">
-                            {b.service?.name}
-                            {b.service?.kind === 'CONSULT' && (
-                              <span className="ml-1 text-[9px] bg-lavender-50 text-lavender-900 px-1 py-0 rounded-full">
-                                C
-                              </span>
+                          {day.getDate()}
+                        </span>
+                        {summary && summary.total > 0 && (
+                          <div className="mt-1 flex flex-col gap-0.5">
+                            {summary.confirmed > 0 && (
+                              <div className="flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-sage-500" />
+                                <span className="text-[10px] text-sage-700">
+                                  {summary.confirmed}
+                                </span>
+                              </div>
                             )}
-                            {b.service?.kind === 'TREATMENT' && (
-                              <span className="ml-1 text-[9px] bg-sage-50 text-sage-900 px-1 py-0 rounded-full">
-                                T
-                              </span>
+                            {summary.pending > 0 && (
+                              <div className="flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-lavender-500" />
+                                <span className="text-[10px] text-lavender-700">
+                                  {summary.pending}
+                                </span>
+                              </div>
                             )}
-                          </p>
+                            {summary.cancelled > 0 && (
+                              <div className="flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
+                                <span className="text-[10px] text-red-500">
+                                  {summary.cancelled}
+                                </span>
+                              </div>
+                            )}
+                            <span className="text-[10px] text-slate-400 font-medium">
+                              {summary.total} total
+                            </span>
+                          </div>
                         )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : isStaffColumns ? (
+              /* DAY VIEW: columns = staff */
+              <div className="flex min-h-full">
+                {/* Time gutter */}
+                <div className="w-16 flex-shrink-0 border-r">
+                  <div className="h-12 border-b" /> {/* header spacer */}
+                  {HOURS.map((hour) => (
+                    <div key={hour} className="relative" style={{ height: SLOT_HEIGHT }}>
+                      <span className="absolute -top-2 right-2 text-xs text-slate-400">
+                        {hour % 12 || 12}
+                        {hour < 12 ? 'am' : 'pm'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
 
-                        {/* Hover tooltip */}
-                        {hoveredBooking === b.id && (
-                          <div className="absolute z-20 left-full top-0 ml-2 bg-white shadow-soft rounded-xl p-2.5 w-48 pointer-events-none">
-                            <p className="text-sm font-medium">{b.customer?.name}</p>
-                            <p className="text-xs text-slate-500">
-                              {b.service?.name} · {b.service?.durationMins}min
-                              {b.service?.kind === 'CONSULT' && (
-                                <span className="ml-1 text-[9px] bg-lavender-50 text-lavender-900 px-1 py-0 rounded-full">
-                                  Consult
-                                </span>
+                {/* Staff columns */}
+                {displayStaff.map((s) => (
+                  <div key={s.id} className="flex-1 min-w-[180px] border-r last:border-r-0">
+                    {/* Staff header */}
+                    <div className="h-12 border-b flex items-center justify-center sticky top-0 bg-white z-10">
+                      <div className="text-center">
+                        <p className="text-sm font-serif font-medium">{s.name}</p>
+                        <p className="text-[10px] text-slate-400">{s.role}</p>
+                      </div>
+                    </div>
+
+                    {/* Time-off banner */}
+                    {isTimeOff(s.id, currentDate) && (
+                      <div className="text-center text-[10px] text-red-500 bg-red-50/50 py-0.5 font-medium">
+                        Time Off
+                      </div>
+                    )}
+
+                    {/* Time slots */}
+                    <div className="relative">
+                      {HOURS.map((hour) => {
+                        const nonWorking = isNonWorkingHour(s.id, currentDate, hour);
+                        const offDay = isTimeOff(s.id, currentDate);
+                        return (
+                          <div
+                            key={hour}
+                            onClick={() => !offDay && handleSlotClick(s.id, currentDate, hour)}
+                            onDragOver={(e) =>
+                              !offDay && handleDragOver(e, s.id, currentDate, hour)
+                            }
+                            onDrop={(e) => !offDay && handleDrop(e, s.id, currentDate, hour)}
+                            className={cn(
+                              'border-b border-dashed border-slate-100 transition-colors',
+                              offDay
+                                ? 'bg-red-50/50 cursor-not-allowed'
+                                : nonWorking
+                                  ? 'bg-slate-100/60 cursor-pointer'
+                                  : 'cursor-pointer hover:bg-sage-50/30',
+                              dropTarget?.staffId === s.id &&
+                                dropTarget?.hour === hour &&
+                                'bg-sage-100/50 ring-1 ring-sage-300',
+                            )}
+                            style={{ height: SLOT_HEIGHT }}
+                          />
+                        );
+                      })}
+
+                      {/* Booking cards */}
+                      {getBookingsForStaffDay(s.id, currentDate).map((b) => {
+                        const { top, height } = getBookingPosition(b);
+                        const colors = STATUS_COLORS[b.status] || STATUS_COLORS.CONFIRMED;
+                        return (
+                          <div
+                            key={b.id}
+                            draggable
+                            onDragStart={(e) => handleDragStart(e, b)}
+                            onDragEnd={() => {
+                              if (!showDropConfirm) {
+                                setDragBooking(null);
+                                setDropTarget(null);
+                              }
+                            }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleBookingClick(b);
+                            }}
+                            onMouseEnter={() => setHoveredBooking(b.id)}
+                            onMouseLeave={() => setHoveredBooking(null)}
+                            className={cn(
+                              'absolute left-1 right-1 rounded-xl px-2 py-1 cursor-pointer transition-shadow shadow-soft-sm',
+                              colors.bg,
+                              colors.border,
+                              hoveredBooking === b.id && 'shadow-md ring-1 ring-sage-200',
+                            )}
+                            style={{ top, height, borderLeftWidth: 3 }}
+                          >
+                            <p
+                              className={cn(
+                                'text-xs font-medium truncate flex items-center gap-1',
+                                colors.text,
                               )}
-                              {b.service?.kind === 'TREATMENT' && (
-                                <span className="ml-1 text-[9px] bg-sage-50 text-sage-900 px-1 py-0 rounded-full">
-                                  Treatment
-                                </span>
-                              )}
-                            </p>
-                            <p className="text-xs text-slate-500 mt-1">
+                            >
+                              {b.recurringSeriesId && <Repeat size={9} className="flex-shrink-0" />}
                               {new Date(b.startTime).toLocaleTimeString([], {
                                 hour: '2-digit',
                                 minute: '2-digit',
@@ -763,201 +745,250 @@ export default function CalendarPage() {
                                 minute: '2-digit',
                               })}
                             </p>
-                            <p className="text-xs text-slate-400 mt-1">
-                              {t('calendar.with_staff', { name: b.staff?.name })}
-                            </p>
-                            <span
-                              className={cn(
-                                'inline-block text-[10px] px-1.5 py-0.5 rounded-full mt-1',
-                                STATUS_COLORS[b.status]?.bg,
-                                STATUS_COLORS[b.status]?.text?.replace('line-through', ''),
-                              )}
-                            >
-                              {t(`status.${b.status.toLowerCase()}`)}
-                            </span>
+                            <p className="text-xs font-medium truncate">{b.customer?.name}</p>
+                            {height > 35 && (
+                              <p className="text-[10px] text-slate-500 truncate">
+                                {b.service?.name}
+                                {b.service?.kind === 'CONSULT' && (
+                                  <span className="ml-1 text-[9px] bg-lavender-50 text-lavender-900 px-1 py-0 rounded-full">
+                                    C
+                                  </span>
+                                )}
+                                {b.service?.kind === 'TREATMENT' && (
+                                  <span className="ml-1 text-[9px] bg-sage-50 text-sage-900 px-1 py-0 rounded-full">
+                                    T
+                                  </span>
+                                )}
+                              </p>
+                            )}
+
+                            {/* Hover tooltip */}
+                            {hoveredBooking === b.id && (
+                              <div className="absolute z-20 left-full top-0 ml-2 bg-white shadow-soft rounded-xl p-2.5 w-48 pointer-events-none">
+                                <p className="text-sm font-medium">{b.customer?.name}</p>
+                                <p className="text-xs text-slate-500">
+                                  {b.service?.name} · {b.service?.durationMins}min
+                                  {b.service?.kind === 'CONSULT' && (
+                                    <span className="ml-1 text-[9px] bg-lavender-50 text-lavender-900 px-1 py-0 rounded-full">
+                                      Consult
+                                    </span>
+                                  )}
+                                  {b.service?.kind === 'TREATMENT' && (
+                                    <span className="ml-1 text-[9px] bg-sage-50 text-sage-900 px-1 py-0 rounded-full">
+                                      Treatment
+                                    </span>
+                                  )}
+                                </p>
+                                <p className="text-xs text-slate-500 mt-1">
+                                  {new Date(b.startTime).toLocaleTimeString([], {
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  })}
+                                  {' – '}
+                                  {new Date(b.endTime).toLocaleTimeString([], {
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  })}
+                                </p>
+                                <p className="text-xs text-slate-400 mt-1">
+                                  {t('calendar.with_staff', { name: b.staff?.name })}
+                                </p>
+                                <span
+                                  className={cn(
+                                    'inline-block text-[10px] px-1.5 py-0.5 rounded-full mt-1',
+                                    STATUS_COLORS[b.status]?.bg,
+                                    STATUS_COLORS[b.status]?.text?.replace('line-through', ''),
+                                  )}
+                                >
+                                  {t(`status.${b.status.toLowerCase()}`)}
+                                </span>
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        ) : (
-          /* WEEK VIEW: columns = days */
-          <div className="flex min-h-full">
-            {/* Time gutter */}
-            <div className="w-16 flex-shrink-0 border-r">
-              <div className="h-12 border-b" />
-              {HOURS.map((hour) => (
-                <div key={hour} className="relative" style={{ height: SLOT_HEIGHT }}>
-                  <span className="absolute -top-2 right-2 text-xs text-slate-400">
-                    {hour % 12 || 12}
-                    {hour < 12 ? 'am' : 'pm'}
-                  </span>
+            ) : (
+              /* WEEK VIEW: columns = days */
+              <div className="flex min-h-full">
+                {/* Time gutter */}
+                <div className="w-16 flex-shrink-0 border-r">
+                  <div className="h-12 border-b" />
+                  {HOURS.map((hour) => (
+                    <div key={hour} className="relative" style={{ height: SLOT_HEIGHT }}>
+                      <span className="absolute -top-2 right-2 text-xs text-slate-400">
+                        {hour % 12 || 12}
+                        {hour < 12 ? 'am' : 'pm'}
+                      </span>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
 
-            {/* Day columns */}
-            {days.map((day) => {
-              const isToday = day.toDateString() === new Date().toDateString();
-              const dayBookings = bookings.filter((b) => {
-                const start = new Date(b.startTime);
-                return (
-                  start.toDateString() === day.toDateString() && selectedStaff.includes(b.staffId)
-                );
-              });
+                {/* Day columns */}
+                {days.map((day) => {
+                  const isToday = day.toDateString() === new Date().toDateString();
+                  const dayBookings = bookings.filter((b) => {
+                    const start = new Date(b.startTime);
+                    return (
+                      start.toDateString() === day.toDateString() &&
+                      selectedStaff.includes(b.staffId)
+                    );
+                  });
 
-              return (
-                <div
-                  key={day.toISOString()}
-                  className="flex-1 min-w-[120px] border-r last:border-r-0"
-                >
-                  {/* Day header */}
-                  <div
-                    className={cn(
-                      'h-12 border-b flex flex-col items-center justify-center sticky top-0 bg-white z-10',
-                      isToday && 'bg-sage-50',
-                    )}
-                  >
-                    <p className="text-[10px] text-slate-500 uppercase">
-                      {day.toLocaleDateString('en-US', { weekday: 'short' })}
-                    </p>
-                    <p className={cn('text-sm font-semibold', isToday && 'text-sage-600')}>
-                      {day.getDate()}
-                    </p>
-                  </div>
+                  return (
+                    <div
+                      key={day.toISOString()}
+                      className="flex-1 min-w-[120px] border-r last:border-r-0"
+                    >
+                      {/* Day header */}
+                      <div
+                        className={cn(
+                          'h-12 border-b flex flex-col items-center justify-center sticky top-0 bg-white z-10',
+                          isToday && 'bg-sage-50',
+                        )}
+                      >
+                        <p className="text-[10px] text-slate-500 uppercase">
+                          {day.toLocaleDateString('en-US', { weekday: 'short' })}
+                        </p>
+                        <p className={cn('text-sm font-semibold', isToday && 'text-sage-600')}>
+                          {day.getDate()}
+                        </p>
+                      </div>
 
-                  {/* Slots */}
-                  <div className="relative">
-                    {HOURS.map((hour) => {
-                      // In week view, check if any selected staff has this as non-working
-                      const anyTimeOff = displayStaff.some((s) => isTimeOff(s.id, day));
-                      const allNonWorking =
-                        displayStaff.length > 0 &&
-                        displayStaff.every((s) => isNonWorkingHour(s.id, day, hour));
-                      return (
-                        <div
-                          key={hour}
-                          onClick={() =>
-                            !anyTimeOff && handleSlotClick(displayStaff[0]?.id || '', day, hour)
-                          }
-                          className={cn(
-                            'border-b border-dashed border-slate-100',
-                            anyTimeOff
-                              ? 'bg-red-50/50 cursor-not-allowed'
-                              : allNonWorking
-                                ? 'bg-slate-100/60 cursor-pointer'
-                                : 'cursor-pointer hover:bg-sage-50/30',
-                          )}
-                          style={{ height: SLOT_HEIGHT }}
-                        />
-                      );
-                    })}
+                      {/* Slots */}
+                      <div className="relative">
+                        {HOURS.map((hour) => {
+                          // In week view, check if any selected staff has this as non-working
+                          const anyTimeOff = displayStaff.some((s) => isTimeOff(s.id, day));
+                          const allNonWorking =
+                            displayStaff.length > 0 &&
+                            displayStaff.every((s) => isNonWorkingHour(s.id, day, hour));
+                          return (
+                            <div
+                              key={hour}
+                              onClick={() =>
+                                !anyTimeOff && handleSlotClick(displayStaff[0]?.id || '', day, hour)
+                              }
+                              className={cn(
+                                'border-b border-dashed border-slate-100',
+                                anyTimeOff
+                                  ? 'bg-red-50/50 cursor-not-allowed'
+                                  : allNonWorking
+                                    ? 'bg-slate-100/60 cursor-pointer'
+                                    : 'cursor-pointer hover:bg-sage-50/30',
+                              )}
+                              style={{ height: SLOT_HEIGHT }}
+                            />
+                          );
+                        })}
 
-                    {/* Bookings */}
-                    {dayBookings.map((b) => {
-                      const { top, height } = getBookingPosition(b);
-                      const colors = STATUS_COLORS[b.status] || STATUS_COLORS.CONFIRMED;
-                      return (
-                        <div
-                          key={b.id}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleBookingClick(b);
-                          }}
-                          className={cn(
-                            'absolute left-0.5 right-0.5 rounded border-l-2 px-1 py-0.5 cursor-pointer hover:shadow-md',
-                            colors.bg,
-                            colors.border,
-                          )}
-                          style={{ top, height, borderLeftWidth: 2 }}
-                        >
-                          <p className="text-[10px] font-medium truncate flex items-center gap-0.5">
-                            {b.recurringSeriesId && <Repeat size={8} className="flex-shrink-0" />}
-                            {b.customer?.name}
-                          </p>
-                          <p className="text-[9px] text-slate-500 truncate">
-                            {new Date(b.startTime).toLocaleTimeString([], {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
-                          </p>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Empty state */}
-        {view !== 'month' && bookings.length === 0 && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="text-center">
-              <p className="text-slate-400">{t('calendar.no_bookings')}</p>
-              <p className="text-sm text-slate-300">{t('calendar.click_to_create')}</p>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Drop confirmation popover */}
-      {showDropConfirm && dragBooking && dropTarget && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/20"
-          onClick={cancelDrop}
-        >
-          <div
-            className="bg-white rounded-2xl shadow-soft p-4 max-w-xs"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {dropConflict && (
-              <div className="flex items-center gap-2 text-amber-600 mb-2">
-                <AlertTriangle size={16} />
-                <span className="text-sm font-medium">Conflicting booking detected</span>
+                        {/* Bookings */}
+                        {dayBookings.map((b) => {
+                          const { top, height } = getBookingPosition(b);
+                          const colors = STATUS_COLORS[b.status] || STATUS_COLORS.CONFIRMED;
+                          return (
+                            <div
+                              key={b.id}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleBookingClick(b);
+                              }}
+                              className={cn(
+                                'absolute left-0.5 right-0.5 rounded border-l-2 px-1 py-0.5 cursor-pointer hover:shadow-md',
+                                colors.bg,
+                                colors.border,
+                              )}
+                              style={{ top, height, borderLeftWidth: 2 }}
+                            >
+                              <p className="text-[10px] font-medium truncate flex items-center gap-0.5">
+                                {b.recurringSeriesId && (
+                                  <Repeat size={8} className="flex-shrink-0" />
+                                )}
+                                {b.customer?.name}
+                              </p>
+                              <p className="text-[9px] text-slate-500 truncate">
+                                {new Date(b.startTime).toLocaleTimeString([], {
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })}
+                              </p>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
-            <p className="text-sm text-slate-700 mb-1">
-              Reschedule <strong>{dragBooking.customer?.name}</strong>?
-            </p>
-            <p className="text-xs text-slate-500 mb-3">
-              {dropTarget.day.toLocaleDateString('en-US', {
-                weekday: 'short',
-                month: 'short',
-                day: 'numeric',
-              })}
-              {' at '}
-              {dropTarget.hour % 12 || 12}:{dropTarget.minutes.toString().padStart(2, '0')}
-              {dropTarget.hour < 12 ? 'am' : 'pm'}
-            </p>
-            <div className="flex gap-2">
-              <button
-                onClick={cancelDrop}
-                className="flex-1 px-3 py-1.5 text-sm border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDrop}
-                className="flex-1 px-3 py-1.5 text-sm bg-sage-600 text-white rounded-xl hover:bg-sage-700 transition-colors"
-              >
-                {dropConflict ? 'Reschedule Anyway' : 'Confirm'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
-      </div>{/* end calendar card */}
-      {sidebarOpen && (
-        <CalendarSidebar currentDate={currentDate} onClose={() => setSidebarOpen(false)} />
-      )}
-      </div>{/* end flex wrapper */}
+            {/* Empty state */}
+            {view !== 'month' && bookings.length === 0 && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="text-center">
+                  <p className="text-slate-400">{t('calendar.no_bookings')}</p>
+                  <p className="text-sm text-slate-300">{t('calendar.click_to_create')}</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Drop confirmation popover */}
+          {showDropConfirm && dragBooking && dropTarget && (
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/20"
+              onClick={cancelDrop}
+            >
+              <div
+                className="bg-white rounded-2xl shadow-soft p-4 max-w-xs"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {dropConflict && (
+                  <div className="flex items-center gap-2 text-amber-600 mb-2">
+                    <AlertTriangle size={16} />
+                    <span className="text-sm font-medium">Conflicting booking detected</span>
+                  </div>
+                )}
+                <p className="text-sm text-slate-700 mb-1">
+                  Reschedule <strong>{dragBooking.customer?.name}</strong>?
+                </p>
+                <p className="text-xs text-slate-500 mb-3">
+                  {dropTarget.day.toLocaleDateString('en-US', {
+                    weekday: 'short',
+                    month: 'short',
+                    day: 'numeric',
+                  })}
+                  {' at '}
+                  {dropTarget.hour % 12 || 12}:{dropTarget.minutes.toString().padStart(2, '0')}
+                  {dropTarget.hour < 12 ? 'am' : 'pm'}
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={cancelDrop}
+                    className="flex-1 px-3 py-1.5 text-sm border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={confirmDrop}
+                    className="flex-1 px-3 py-1.5 text-sm bg-sage-600 text-white rounded-xl hover:bg-sage-700 transition-colors"
+                  >
+                    {dropConflict ? 'Reschedule Anyway' : 'Confirm'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+        {/* end calendar card */}
+        {sidebarOpen && (
+          <CalendarSidebar currentDate={currentDate} onClose={() => setSidebarOpen(false)} />
+        )}
+      </div>
+      {/* end flex wrapper */}
 
       {/* Booking popover */}
       {popoverBooking && (

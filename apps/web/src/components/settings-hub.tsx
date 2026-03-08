@@ -27,7 +27,11 @@ export function SettingsHub() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {categories.map((cat) => (
-        <SettingsCategoryCard key={cat.key} category={cat} onClick={() => router.push(getFirstPageForCategory(cat))} />
+        <SettingsCategoryCard
+          key={cat.key}
+          category={cat}
+          onClick={() => router.push(getFirstPageForCategory(cat))}
+        />
       ))}
     </div>
   );
@@ -59,9 +63,7 @@ function SettingsCategoryCard({
         <Icon size={20} />
       </div>
       <div className="flex-1 min-w-0">
-        <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
-          {category.label}
-        </h3>
+        <h3 className="text-sm font-semibold text-slate-900 dark:text-white">{category.label}</h3>
         <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-2">
           {category.description}
         </p>

@@ -356,7 +356,9 @@ export default function AICommandCenterPage() {
                       </p>
                     </div>
                     <div className="rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-soft border border-slate-100 dark:border-slate-800">
-                      <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">Success Rate</p>
+                      <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
+                        Success Rate
+                      </p>
                       <p className="font-serif text-3xl font-bold text-sage-600 dark:text-sage-400">
                         {Math.round(metrics.successRate)}%
                       </p>

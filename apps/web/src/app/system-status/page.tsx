@@ -187,9 +187,7 @@ export default function SystemStatusPage() {
       </div>
 
       {/* Overall Status Banner */}
-      <div
-        className={`rounded-2xl border ${statusConfig.border} ${statusConfig.bg} p-6 mb-6`}
-      >
+      <div className={`rounded-2xl border ${statusConfig.border} ${statusConfig.bg} p-6 mb-6`}>
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-4">
             <StatusIcon className={`${statusConfig.color} flex-shrink-0 mt-0.5`} size={32} />

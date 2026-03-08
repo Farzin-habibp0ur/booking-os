@@ -273,10 +273,7 @@ export default function CustomerDetailPage() {
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Sticky Header */}
-      <div className={cn(
-        'sticky top-0 z-40 bg-white border-b border-slate-200',
-        ELEVATION.card
-      )}>
+      <div className={cn('sticky top-0 z-40 bg-white border-b border-slate-200', ELEVATION.card)}>
         <div className={SPACING.page}>
           <div className="flex items-center gap-4 mb-4">
             <button
@@ -289,13 +286,17 @@ export default function CustomerDetailPage() {
               {customer.name.charAt(0).toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
-              <h1 className="text-xl font-serif font-semibold text-slate-900 truncate">{customer.name}</h1>
+              <h1 className="text-xl font-serif font-semibold text-slate-900 truncate">
+                {customer.name}
+              </h1>
             </div>
             <div className="flex items-center gap-6 text-xs text-slate-600">
               {lastBooking && (
                 <div className="text-center">
                   <p className="text-slate-400 mb-0.5">{t('customer_detail.last_visit')}</p>
-                  <p className="font-medium">{new Date(lastBooking.startTime).toLocaleDateString()}</p>
+                  <p className="font-medium">
+                    {new Date(lastBooking.startTime).toLocaleDateString()}
+                  </p>
                 </div>
               )}
               <div className="text-center">
@@ -316,7 +317,8 @@ export default function CustomerDetailPage() {
             onClick={() => setShowBookingForm(true)}
             className="flex items-center gap-1.5 bg-sage-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-sage-700 transition-colors active:scale-95 btn-press"
           >
-            <Plus size={14} /> {t('customer_detail.new_booking', { bookingEntity: pack.labels.booking })}
+            <Plus size={14} />{' '}
+            {t('customer_detail.new_booking', { bookingEntity: pack.labels.booking })}
           </button>
           <button
             onClick={handleMessageCustomer}
@@ -340,7 +342,9 @@ export default function CustomerDetailPage() {
         {upcomingBookings.length > 0 && (
           <div className={cn(ELEVATION.card, 'bg-white p-5 mb-6')}>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-semibold text-slate-900 uppercase">{t('customer_detail.upcoming_section')}</h2>
+              <h2 className="text-sm font-semibold text-slate-900 uppercase">
+                {t('customer_detail.upcoming_section')}
+              </h2>
               <span className="text-xs bg-sage-50 text-sage-700 px-2 py-1 rounded-full font-medium">
                 {upcomingBookings.length}
               </span>
@@ -355,14 +359,18 @@ export default function CustomerDetailPage() {
 
         {/* Activity Timeline */}
         <div className={cn(ELEVATION.card, 'bg-white p-5 mb-6')}>
-          <h2 className="text-sm font-semibold text-slate-900 uppercase mb-4">{t('customer_detail.timeline_tab')}</h2>
+          <h2 className="text-sm font-semibold text-slate-900 uppercase mb-4">
+            {t('customer_detail.timeline_tab')}
+          </h2>
           <CustomerTimeline customerId={id as string} />
         </div>
 
         {/* Profile Details Card */}
         <div className={cn(ELEVATION.card, 'bg-white p-5 mb-6')}>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold text-slate-900 uppercase">{t('customer_detail.contact')}</h2>
+            <h2 className="text-sm font-semibold text-slate-900 uppercase">
+              {t('customer_detail.contact')}
+            </h2>
             <button
               onClick={() => setEditing(true)}
               className="text-slate-400 hover:text-sage-600 transition-colors"
@@ -396,16 +404,20 @@ export default function CustomerDetailPage() {
             {customer.customFields?.address && (
               <div className="col-span-2">
                 <p className="text-xs text-slate-500 mb-1">{t('common.address')}</p>
-                <p className="text-sm font-medium text-slate-900">{customer.customFields.address}</p>
+                <p className="text-sm font-medium text-slate-900">
+                  {customer.customFields.address}
+                </p>
               </div>
             )}
           </div>
         </div>
 
         {/* Tags Card */}
-        {(customer.tags && customer.tags.length > 0) && (
+        {customer.tags && customer.tags.length > 0 && (
           <div className={cn(ELEVATION.card, 'bg-white p-5 mb-6')}>
-            <h3 className="text-sm font-semibold text-slate-900 uppercase mb-3">{t('customer_detail.tags')}</h3>
+            <h3 className="text-sm font-semibold text-slate-900 uppercase mb-3">
+              {t('customer_detail.tags')}
+            </h3>
             <div className="flex flex-wrap gap-2">
               {(customer.tags || []).map((tag: string) => (
                 <span
@@ -414,7 +426,10 @@ export default function CustomerDetailPage() {
                 >
                   <Tag size={12} />
                   {tag}
-                  <button onClick={() => removeTag(tag)} className="hover:text-red-500 transition-colors">
+                  <button
+                    onClick={() => removeTag(tag)}
+                    className="hover:text-red-500 transition-colors"
+                  >
                     <X size={10} />
                   </button>
                 </span>
@@ -427,7 +442,9 @@ export default function CustomerDetailPage() {
         {customerNotes.length > 0 && (
           <div className={cn(ELEVATION.card, 'bg-white p-5 mb-6')}>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-semibold text-slate-900 uppercase">{t('customer_detail.notes_tab')}</h2>
+              <h2 className="text-sm font-semibold text-slate-900 uppercase">
+                {t('customer_detail.notes_tab')}
+              </h2>
               <span className="text-xs bg-amber-50 text-amber-700 px-2 py-1 rounded-full font-medium">
                 {customerNotes.length}
               </span>

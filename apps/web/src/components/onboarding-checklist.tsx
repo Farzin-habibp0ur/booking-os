@@ -73,9 +73,7 @@ export function OnboardingChecklist() {
 
   const loadStatus = async () => {
     try {
-      const data = await api.get<{ steps: OnboardingStatus }>(
-        '/business/onboarding-status',
-      );
+      const data = await api.get<{ steps: OnboardingStatus }>('/business/onboarding-status');
       setStatus(data.steps);
     } catch (error) {
       console.error('Failed to load onboarding status:', error);
@@ -110,9 +108,7 @@ export function OnboardingChecklist() {
         className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
       >
         <div className="flex-1 text-left">
-          <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
-            Getting Started
-          </p>
+          <p className="text-sm font-medium text-slate-900 dark:text-slate-100">Getting Started</p>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             {completedCount} of {totalCount} steps done
           </p>
@@ -163,9 +159,7 @@ export function OnboardingChecklist() {
                   >
                     {isComplete && <Check size={14} className="text-white" />}
                   </div>
-                  <span className={isComplete ? 'line-through' : ''}>
-                    {item.label}
-                  </span>
+                  <span className={isComplete ? 'line-through' : ''}>{item.label}</span>
                 </Link>
               );
             })}

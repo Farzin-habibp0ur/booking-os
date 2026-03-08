@@ -93,9 +93,7 @@ export default function ScheduledMessage({
 
           <div className="space-y-3">
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">
-                Date
-              </label>
+              <label className="block text-xs font-medium text-slate-700 mb-1">Date</label>
               <input
                 type="date"
                 value={selectedDate}
@@ -106,9 +104,7 @@ export default function ScheduledMessage({
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">
-                Time
-              </label>
+              <label className="block text-xs font-medium text-slate-700 mb-1">Time</label>
               <input
                 type="time"
                 value={selectedTime}

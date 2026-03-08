@@ -270,7 +270,9 @@ function ShellInner({ children }: { children: ReactNode }) {
         {/* WORKSPACE section */}
         {workspaceNav.length > 0 && (
           <>
-            <p className="nav-section-label">{t('nav.section_workspace', undefined) || 'Workspace'}</p>
+            <p className="nav-section-label">
+              {t('nav.section_workspace', undefined) || 'Workspace'}
+            </p>
             {workspaceNav.map(renderNavLink)}
           </>
         )}
@@ -288,7 +290,9 @@ function ShellInner({ children }: { children: ReactNode }) {
         {insightsNav.length > 0 && (
           <>
             <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
-            <p className="nav-section-label">{t('nav.section_insights', undefined) || 'Insights'}</p>
+            <p className="nav-section-label">
+              {t('nav.section_insights', undefined) || 'Insights'}
+            </p>
             {insightsNav.map(renderNavLink)}
           </>
         )}
@@ -405,7 +409,10 @@ function ShellInner({ children }: { children: ReactNode }) {
         {sidebarContent}
       </aside>
 
-      <main id="main-content" className="flex-1 overflow-auto md:pt-0 pb-16 md:pb-0 dark:bg-slate-950">
+      <main
+        id="main-content"
+        className="flex-1 overflow-auto md:pt-0 pb-16 md:pb-0 dark:bg-slate-950"
+      >
         <ViewAsBanner />
         <ErrorBoundary>{children}</ErrorBoundary>
       </main>
@@ -516,9 +523,13 @@ function ShellInner({ children }: { children: ReactNode }) {
 
             {/* Business info */}
             <div className="px-3 py-3 border-b border-slate-100 dark:border-slate-800 mb-3">
-              <h2 className="font-semibold text-slate-900 dark:text-slate-100">{user?.business?.name}</h2>
+              <h2 className="font-semibold text-slate-900 dark:text-slate-100">
+                {user?.business?.name}
+              </h2>
               {pack.name !== 'general' && (
-                <p className="text-xs text-sage-600 dark:text-sage-400 mt-1 capitalize">{pack.name} Pack</p>
+                <p className="text-xs text-sage-600 dark:text-sage-400 mt-1 capitalize">
+                  {pack.name} Pack
+                </p>
               )}
             </div>
 

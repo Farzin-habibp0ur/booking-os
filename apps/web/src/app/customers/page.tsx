@@ -264,9 +264,7 @@ export default function CustomersPage() {
                   <div className="flex items-center gap-1">
                     {t('common.name')}
                     {sortBy === 'name' && (
-                      <span className="text-sage-600">
-                        {sortDir === 'asc' ? '↑' : '↓'}
-                      </span>
+                      <span className="text-sage-600">{sortDir === 'asc' ? '↑' : '↓'}</span>
                     )}
                   </div>
                 </th>
@@ -277,9 +275,7 @@ export default function CustomersPage() {
                   <div className="flex items-center gap-1">
                     {t('common.phone')}
                     {sortBy === 'phone' && (
-                      <span className="text-sage-600">
-                        {sortDir === 'asc' ? '↑' : '↓'}
-                      </span>
+                      <span className="text-sage-600">{sortDir === 'asc' ? '↑' : '↓'}</span>
                     )}
                   </div>
                 </th>
@@ -290,9 +286,7 @@ export default function CustomersPage() {
                   <div className="flex items-center gap-1">
                     {t('common.email')}
                     {sortBy === 'email' && (
-                      <span className="text-sage-600">
-                        {sortDir === 'asc' ? '↑' : '↓'}
-                      </span>
+                      <span className="text-sage-600">{sortDir === 'asc' ? '↑' : '↓'}</span>
                     )}
                   </div>
                 </th>
@@ -306,9 +300,7 @@ export default function CustomersPage() {
                   <div className="flex items-center gap-1">
                     {t('common.date')}
                     {sortBy === 'date' && (
-                      <span className="text-sage-600">
-                        {sortDir === 'asc' ? '↑' : '↓'}
-                      </span>
+                      <span className="text-sage-600">{sortDir === 'asc' ? '↑' : '↓'}</span>
                     )}
                   </div>
                 </th>

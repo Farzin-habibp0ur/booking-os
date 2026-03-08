@@ -30,9 +30,13 @@ interface BookingDetailModalProps {
 }
 
 // Derive STATUS_CONFIG from centralized tokens (preserving .color / .bg / .label shape)
-const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = Object.fromEntries(
-  Object.entries(BOOKING_STATUS_STYLES).map(([k, v]) => [k, { label: v.label, color: v.text, bg: v.bg }]),
-);
+const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> =
+  Object.fromEntries(
+    Object.entries(BOOKING_STATUS_STYLES).map(([k, v]) => [
+      k,
+      { label: v.label, color: v.text, bg: v.bg },
+    ]),
+  );
 
 export default function BookingDetailModal({
   booking,

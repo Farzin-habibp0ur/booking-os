@@ -15,7 +15,15 @@ import ExportModal from '@/components/export-modal';
 import { ViewPicker } from '@/components/saved-views';
 import { statusBadgeClasses } from '@/lib/design-tokens';
 
-const BOOKING_STATUSES = ['PENDING', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'NO_SHOW', 'RESCHEDULED'];
+const BOOKING_STATUSES = [
+  'PENDING',
+  'CONFIRMED',
+  'IN_PROGRESS',
+  'COMPLETED',
+  'CANCELLED',
+  'NO_SHOW',
+  'RESCHEDULED',
+];
 
 export default function BookingsPage() {
   const [bookings, setBookings] = useState<any>({ data: [], total: 0 });
@@ -153,9 +161,10 @@ export default function BookingsPage() {
     // Apply text search
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      filtered = filtered.filter((b: any) =>
-        (b.customer?.name || '').toLowerCase().includes(q) ||
-        (b.service?.name || '').toLowerCase().includes(q)
+      filtered = filtered.filter(
+        (b: any) =>
+          (b.customer?.name || '').toLowerCase().includes(q) ||
+          (b.service?.name || '').toLowerCase().includes(q),
       );
     }
 
@@ -280,7 +289,7 @@ export default function BookingsPage() {
             'flex items-center gap-2 px-3 py-2 rounded-xl text-sm border transition-colors',
             showFilters
               ? 'border-sage-500 bg-sage-50 text-sage-700'
-              : 'border-slate-200 hover:bg-slate-50'
+              : 'border-slate-200 hover:bg-slate-50',
           )}
         >
           <Filter size={14} />
@@ -361,7 +370,9 @@ export default function BookingsPage() {
                 <th className="w-10 p-3">
                   <input
                     type="checkbox"
-                    checked={filteredAndSorted.length > 0 && selectedIds.size === filteredAndSorted.length}
+                    checked={
+                      filteredAndSorted.length > 0 && selectedIds.size === filteredAndSorted.length
+                    }
                     onChange={() => {
                       if (selectedIds.size === filteredAndSorted.length) {
                         setSelectedIds(new Set());
@@ -440,7 +451,10 @@ export default function BookingsPage() {
                       </td>
                       <td className="p-3" onClick={() => handleRowClick(b)}>
                         <span
-                          className={cn('text-xs px-2 py-0.5 rounded-full', statusBadgeClasses(b.status))}
+                          className={cn(
+                            'text-xs px-2 py-0.5 rounded-full',
+                            statusBadgeClasses(b.status),
+                          )}
                         >
                           {t(`status.${b.status.toLowerCase()}`)}
                         </span>

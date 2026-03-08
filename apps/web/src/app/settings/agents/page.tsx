@@ -90,7 +90,10 @@ export default function AgentSkillsPage() {
 
   return (
     <div className="p-6 max-w-3xl" data-testid="agent-skills-page">
-      <Link href="/settings" className="inline-flex items-center gap-1 text-sm text-sage-600 hover:text-sage-700 dark:text-sage-400 dark:hover:text-sage-300 mb-3 transition-colors">
+      <Link
+        href="/settings"
+        className="inline-flex items-center gap-1 text-sm text-sage-600 hover:text-sage-700 dark:text-sage-400 dark:hover:text-sage-300 mb-3 transition-colors"
+      >
         <ArrowLeft size={14} />
         Back to Settings
       </Link>
