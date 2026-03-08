@@ -352,7 +352,7 @@ describe('DashboardPage', () => {
 
   // ─── Landing Redirect ──────────────────────────────────────
 
-  it('redirects agent mode to /inbox on initial login', async () => {
+  it('clears login redirect flag and stays on dashboard for all modes', async () => {
     mockMode = 'agent';
     mockLandingPath = '/inbox';
     // Simulate fresh login by setting session flag
@@ -361,29 +361,11 @@ describe('DashboardPage', () => {
     render(<DashboardPage />);
 
     await waitFor(() => {
-      expect(mockReplace).toHaveBeenCalledWith('/inbox');
+      // Session flag should be cleared
+      expect(sessionStorage.getItem('booking-os-login-redirect')).toBeNull();
     });
 
-    // Session flag should be cleared after redirect
-    expect(sessionStorage.getItem('booking-os-login-redirect')).toBeNull();
-  });
-
-  it('does not redirect when mode landing is /dashboard', async () => {
-    mockMode = 'admin';
-    mockLandingPath = '/dashboard';
-
-    mockApi.get.mockImplementation((path: string) => {
-      if (path === '/business') return Promise.resolve({ packConfig: { setupComplete: true } });
-      if (path === '/dashboard') return Promise.resolve(baseDashboardData);
-      if (path.includes('/saved-views')) return Promise.resolve([]);
-      return Promise.resolve([]);
-    });
-
-    render(<DashboardPage />);
-
-    await waitFor(() => {
-      expect(screen.getByText('dashboard.title')).toBeInTheDocument();
-    });
+    // Should NOT redirect away from dashboard
     expect(mockReplace).not.toHaveBeenCalled();
   });
 

@@ -84,21 +84,13 @@ export default function DashboardPage() {
   const [dashboardViews, setDashboardViews] = useState<any[]>([]);
   const { t } = useI18n();
   const { user } = useAuth();
-  const { mode, landingPath } = useMode();
+  const { mode } = useMode();
   const isAdmin = user?.role === 'ADMIN';
 
-  // Redirect non-dashboard modes to their landing page on initial login only.
-  // Uses a session flag set by the login page to distinguish "just logged in"
-  // from "explicitly navigated to /dashboard via sidebar".
+  // Clear the login redirect flag — dashboard is always the post-login landing page
   useEffect(() => {
-    if (!user) return; // Wait for auth to load so mode/landingPath is accurate
-    const justLoggedIn = sessionStorage.getItem('booking-os-login-redirect');
-    if (!justLoggedIn) return; // Not a fresh login — don't redirect
     sessionStorage.removeItem('booking-os-login-redirect');
-    if (landingPath && landingPath !== '/dashboard') {
-      router.replace(landingPath);
-    }
-  }, [landingPath, router, user]);
+  }, []);
 
   const routerRef = useRef(router);
   routerRef.current = router;
