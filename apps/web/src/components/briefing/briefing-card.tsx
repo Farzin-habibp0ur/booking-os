@@ -104,10 +104,13 @@ export function BriefingCard({ card, onApprove, onDismiss, onSnooze, onView }: B
         'border-l-4 p-4 transition-all hover:shadow-soft cursor-pointer',
         CATEGORY_BORDER[card.category] || 'border-l-slate-200',
       )}
-      onClick={() => onView?.(card)}
-      role="button"
-      tabIndex={0}
+      onClick={(e) => {
+        // Only trigger card view if clicking on the card itself, not on action buttons
+        if ((e.target as HTMLElement).closest('button, [role="button"]')) return;
+        onView?.(card);
+      }}
       onKeyDown={(e) => e.key === 'Enter' && onView?.(card)}
+      tabIndex={0}
     >
       <div className="flex items-start gap-3">
         <div

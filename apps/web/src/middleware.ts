@@ -16,6 +16,8 @@ const PUBLIC_PATHS = [
   '/book',
   '/manage',
   '/claim',
+  '/pricing',
+  '/og-image.png',
 ];
 
 export function middleware(request: NextRequest) {
@@ -38,7 +40,7 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Match all paths except Next.js internals and static files
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    // Match all paths except Next.js internals, static files, and SEO assets
+    '/((?!api|_next/static|_next/image|favicon.ico|sitemap\\.xml|robots\\.txt|og-image\\.png).*)',
   ],
 };
