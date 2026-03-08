@@ -2,7 +2,7 @@
 
 > **Purpose:** This document gives full context on the Booking OS platform — what it is, what's been built, how it's structured, and what's left to build. Share this with an AI assistant or new developer to get productive immediately.
 >
-> **Last updated:** February 20, 2026 (Platform Console ALL 6 PHASES COMPLETE — 3,944 total tests: 2,360 API + 1,584 web)
+> **Last updated:** March 8, 2026 (PLG Phase 4 Retention & Growth COMPLETE — ~4,600+ total tests across 242 test files, 53 Prisma models, 37 migrations)
 
 ---
 
@@ -39,15 +39,15 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 - **Resource management** — Equipment/bays/rooms per location with metadata, resource-level booking
 - **Service kanban** — Dealership workflow board (CHECKED_IN → DIAGNOSING → AWAITING_APPROVAL → IN_PROGRESS → READY_FOR_PICKUP)
 - **Quotes** — Create quotes for bookings, customer self-serve approval via token link with IP audit
-- **Analytics & reports** — Bookings over time, revenue, service breakdown, staff performance, no-show rates, peak hours, consult conversion
+- **Analytics & reports** — Bookings over time, revenue, service breakdown, staff performance, no-show rates, peak hours, consult conversion, CSV/PDF export for all reports
 - **ROI dashboard** — Baseline vs current metrics, recovered revenue estimate, weekly review with email
 - **Multi-language** — English & Spanish (600+ translation keys), per-business overrides, language picker
-- **Billing** — Stripe integration (Basic/Pro plans), checkout, customer portal, webhooks, deposit collection
+- **Billing** — Stripe integration (Starter/Professional/Enterprise plans), checkout, customer portal, webhooks, deposit collection, dunning email flow, referral credits
 - **Calendar sync** — Google Calendar + Outlook OAuth integration, iCal feed generation
 - **Public booking portal** — Customer-facing booking page at `/book/{slug}` with service selection, availability, booking, waitlist join
 - **Self-serve links** — Token-based reschedule, cancel, waitlist claim, and quote approval pages
 - **Waitlist** — Auto-offers on cancellation, token-based 1-tap claim, configurable offer count/expiry/quiet hours
-- **Campaigns** — Audience segmentation, template-based bulk messaging, throttled dispatch, delivery tracking
+- **Campaigns** — Audience segmentation, template-based bulk messaging, throttled dispatch, delivery tracking, recurring schedules (daily/weekly/biweekly/monthly)
 - **Automations** — 3 built-in playbooks with rich recipe cards + custom rule builder with plain-language summaries, real dry-run testing, searchable/filterable activity log, safety controls panel
 - **Offers** — Promotional offers with expiry, max redemptions, service linking
 - **Vertical packs** — Pack builder with versioning, publish flow, business-level overrides
@@ -55,7 +55,7 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 - **Dark mode** — System preference detection, manual toggle, full UI coverage
 - **Global search** — Cmd+K command palette searching across customers, bookings, services, conversations
 - **Interactive demo tour** — 9-step guided walkthrough with spotlight overlays, tooltips, keyboard navigation, localStorage persistence
-- **Notifications** — Email via Resend, WhatsApp, automated booking reminders, notification timeline
+- **Notifications** — Email via Resend, WhatsApp, SMS via Twilio, automated booking reminders, notification timeline, weekly digest email, NPS survey
 - **Security** — Helmet CSP, rate limiting, JWT blacklisting, brute force protection, httpOnly cookies, automatic token refresh, tenant isolation
 
 ---
@@ -226,13 +226,13 @@ booking-os/
 ├── apps/
 │   ├── api/                    # NestJS REST API (port 3001)
 │   │   ├── src/
-│   │   │   ├── modules/        # 45 feature modules
+│   │   │   ├── modules/        # 50 feature modules
 │   │   │   ├── common/         # Guards, decorators, filters, DTOs, Prisma service
 │   │   │   └── main.ts         # Bootstrap, Swagger, CORS, cookies, validation
 │   │   └── Dockerfile          # Multi-stage production build
 │   ├── web/                    # Next.js admin dashboard (port 3000)
 │   │   ├── src/
-│   │   │   ├── app/            # 62 pages
+│   │   │   ├── app/            # 66 pages
 │   │   │   ├── components/     # Shared components (shell, modals, tour, etc.)
 │   │   │   ├── lib/            # Utility modules (API client, auth, i18n, socket, theme)
 │   │   │   ├── locales/        # en.json, es.json (600+ keys each)
@@ -240,7 +240,7 @@ booking-os/
 │   │   └── Dockerfile          # Multi-stage production build
 │   └── whatsapp-simulator/     # WhatsApp testing tool (port 3002)
 ├── packages/
-│   ├── db/                     # Prisma schema (51 models), migrations, seed scripts
+│   ├── db/                     # Prisma schema (53 models), migrations, seed scripts
 │   │   ├── prisma/schema.prisma
 │   │   ├── src/seed.ts         # Base seed (idempotent)
 │   │   ├── src/seed-demo.ts    # Rich demo data (idempotent)
@@ -265,7 +265,7 @@ booking-os/
 
 ---
 
-## 5. Database Schema (51 Models)
+## 5. Database Schema (53 Models)
 
 ```
 Business (1) ──┬── (*) Staff ──── (*) WorkingHours
@@ -302,6 +302,8 @@ Business (1) ──┬── (*) Staff ──── (*) WorkingHours
                ├── (*) AgentConfig
                ├── (*) AgentRun ──── (*) AgentFeedback
                ├── (*) DuplicateCandidate
+               ├── (*) Referral (referrer ↔ referred businesses)
+               ├── (*) StaffServicePrice (per-staff pricing overrides)
                └── (*) SupportCase ──── (*) SupportCaseNote
 ViewAsSession ──── Staff (superAdmin) + Business (target)
 PlatformAuditLog (standalone)
@@ -354,6 +356,8 @@ VerticalPack:       AESTHETIC, SALON, TUTORING, GENERAL, DEALERSHIP
 | **BillingCredit** | businessId (FK), amount (Decimal), reason, appliedById, appliedByEmail, createdAt | Platform-issued billing credits for businesses |
 | **PlatformAgentDefault** | agentType (unique), maxAutonomyLevel, defaultEnabled, confidenceThreshold (Float), requiresReview, updatedById? | Platform-wide agent governance defaults per agent type |
 | **PlatformSetting** | key (unique), value (JSON), category, description?, isDefault, updatedById?, updatedAt | Platform-wide configuration settings (security, notifications, regional, platform) |
+| **Referral** | referrerBusinessId (FK), referredBusinessId (FK), referralCode, status (PENDING/CONVERTED/CREDITED), creditAmount (default $50), convertedAt?, creditedAt? | Referral program tracking with Stripe credit application |
+| **StaffServicePrice** | staffId (FK), serviceId (FK), businessId (FK), price (Float), unique(staffId, serviceId) | Per-staff pricing overrides for services |
 
 ### Subscription Model — Updated Fields
 The Subscription model now includes additional billing management fields:
@@ -370,7 +374,7 @@ The Message model now includes delivery receipt fields:
 
 ---
 
-## 6. API Modules (45 Modules)
+## 6. API Modules (50 Modules)
 
 All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 
@@ -381,24 +385,24 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 | **Recurring** | `/bookings/recurring` | Create series, cancel (single/future/all) |
 | **Customers** | `/customers` | CRUD, search, bulk tag, CSV import, conversation import, notes CRUD, timeline |
 | **Services** | `/services` | CRUD with soft delete |
-| **Staff** | `/staff` | CRUD, invite, working hours, time off |
-| **Business** | `/business` | Profile, policies, notifications, waitlist settings, install pack |
+| **Staff** | `/staff` | CRUD, invite, working hours, time off, per-staff service pricing |
+| **Business** | `/business` | Profile, policies, notifications, waitlist settings, install pack, activation status, NPS submission |
 | **Locations** | `/locations` | CRUD locations, resources, staff assignments |
 | **Conversations** | `/conversations` | List, assign, status, snooze, tags, messages, notes, booking creation |
 | **Messages** | `/conversations/:id/messages` | Send message |
 | **Templates** | `/templates` | Full CRUD |
 | **Dashboard** | `/dashboard` | Stats, AI usage, dismiss nudge |
-| **Reports** | `/reports` | 9 report types (bookings, revenue, no-shows, staff perf, peak hours, etc.) |
+| **Reports** | `/reports` | 9 report types (bookings, revenue, no-shows, staff perf, peak hours, etc.), CSV/PDF export |
 | **ROI** | `/roi` | Go-live, baseline, dashboard, weekly review |
 | **AI** | `/ai` | Settings, conversation summary, booking/cancel/reschedule confirm, customer chat |
 | **Availability** | `/availability` | Available slots (by date, service, staff, location, resource), calendar context (working hours + time off), recommended slots (top 5 scored) |
 | **Search** | `/search` | Global search with offset, types filter, totals |
 | **Automations** | `/automations` | Playbooks toggle, rules CRUD, test, activity log |
-| **Campaigns** | `/campaigns` | CRUD, audience preview, send |
+| **Campaigns** | `/campaigns` | CRUD, audience preview, send, recurring schedules, stop recurrence |
 | **Offers** | `/offers` | CRUD, redeem |
 | **Quotes** | `/quotes` | Create, view, per-booking |
 | **Waitlist** | `/waitlist` | List, update, cancel, resolve |
-| **Billing** | `/billing` | Checkout, portal, subscription, webhook, deposit |
+| **Billing** | `/billing` | Checkout, portal, subscription, webhook, deposit, dunning trigger |
 | **Calendar Sync** | `/calendar-sync` | OAuth connect/disconnect (Google/Outlook), iCal feed, manual sync |
 | **iCal Feed** | `/ical` | Token-based iCal feed |
 | **Translations** | `/translations` | Get/upsert/delete per locale |
@@ -427,6 +431,11 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 | **Console Agents** | `/admin/agents-console` | Agent performance dashboard, action card funnel, top failures, abnormal tenants, tenant agent status, pause/resume, platform defaults (Phase 5) |
 | **Console Messaging** | `/admin/messaging-console` | Messaging dashboard (sent/delivered/failed, delivery rate), webhook health, failure reasons, impacted tenants, tenant messaging status, fix checklist (Phase 5) |
 | **Console Settings** | `/admin/settings` | Platform settings CRUD (security, notifications, regional, platform categories), bulk update (Phase 6) |
+| **Referral** | `/referral` | Referral link, referral stats, code generation (ADMIN only) |
+| **Dunning** | — (internal) | 3-email dunning sequence via BullMQ, auto-downgrade after 14 days |
+| **Weekly Digest** | — (cron) | Weekly digest email (Monday 9am), opt-out via packConfig |
+| **Onboarding Drip** | — (internal) | 13-email onboarding sequence via BullMQ delayed jobs |
+| **Export** | `/customers/export`, `/bookings/export`, `/reports/:type/export` | CSV/PDF export for customers, bookings, and all 10 report types |
 
 ### Auth & Multi-tenancy
 - JWT in httpOnly cookies (access: 15 min, refresh: 7 days), automatic client-side refresh on 401
@@ -676,7 +685,7 @@ Key groups (full list in `.env.example`):
 - **Milestone 5: Vertical Pack Agents** — COMPLETE. AgentSkills API module (per-pack skill catalog with business overrides), pack-specific agent behaviors, skill-card + vertical-launch-checklist + waitlist-match-card + quote-followup-card + ai-state-indicator frontend components.
 - **Final counts:** 3,158 tests total (1,937 API + 1,221 web)
 
-### Phase 4: Engagement OS + Benchmarking + Marketplace (NOT STARTED)
+### Phase 5: Engagement OS + Benchmarking + Marketplace (NOT STARTED)
 
 | Item | Description |
 |------|-------------|
@@ -697,10 +706,37 @@ Key groups (full list in `.env.example`):
 - **Phase 1** (4 batches): Console Shell, Business Directory (search/filter/paginate), Business 360 (Summary + People tabs), View-as Tenant (time-limited JWT, audit-logged). Models: ViewAsSession, PlatformAuditLog. Seed scripts: `seed-console.ts`, `seed-console-showcase.ts`. 28 migrations.
 - **Phase 2**: Overview KPI dashboard (businesses, bookings, staff, agents, support, security), Security & Audit log explorer (search, filters, pagination), System Health checks (DB, business activity, agents, calendar, messaging) with business health distribution, Support Cases CRUD with notes. Models: SupportCase, SupportCaseNote.
 - **Phase 3** (Billing & Revenue Operations): Extended Subscription model (canceledAt, cancelReason, planChangedAt), new BillingCredit model. 10 new API endpoints under `/admin/billing` and `/admin/businesses/:id/billing`. 4 new DTOs. New console-billing.controller.ts + console-billing.service.ts. 3 new frontend pages (billing dashboard, past-due, subscriptions). Business 360 Billing tab. 76 new tests (39 API + 37 web). Migration #30.
-- **Phase 4** (Packs & Skills Release Management): Pack registry API (`/admin/packs-console`) with version history, install counts, installed businesses. Skills catalog API (`/admin/skills-console`) with per-pack filtering. New console-packs.controller.ts + console-packs.service.ts + console-skills.controller.ts + console-skills.service.ts. 3 new frontend pages (pack registry, pack detail, skills catalog). New PackTenantPin model (51 Prisma models total). Migration #31.
+- **Phase 4** (Packs & Skills Release Management): Pack registry API (`/admin/packs-console`) with version history, install counts, installed businesses. Skills catalog API (`/admin/skills-console`) with per-pack filtering. New console-packs.controller.ts + console-packs.service.ts + console-skills.controller.ts + console-skills.service.ts. 3 new frontend pages (pack registry, pack detail, skills catalog). New PackTenantPin model (53 Prisma models total). Migration #31.
 - **Phase 5** (AI & Agents Governance + Messaging Ops): Agent performance dashboard API (`/admin/agents-console`) with performance metrics, action card funnel, top failures, abnormal tenants, tenant agent status, pause/resume, platform defaults governance. Messaging ops API (`/admin/messaging-console`) with dashboard KPIs, webhook health, failure analysis, tenant messaging status, fix checklist. New PlatformAgentDefault model. console-agents.controller.ts + console-agents.service.ts + console-messaging.controller.ts + console-messaging.service.ts. 2 new frontend pages (agents with 3 tabs, messaging with 2 tabs). Migration #32.
 - **Phase 6** (Platform Settings + Mission Control): Platform settings API (`/admin/settings`) with CRUD and bulk update across 4 categories (security, notifications, regional, platform). Enhanced overview with attention items (past-due subs, urgent support cases, active view-as, high agent failure rate, dormant businesses) and accounts-at-risk scoring (billing × activity × support × AI health). New PlatformSetting model. console-settings.controller.ts + console-settings.service.ts. 1 new frontend page (settings with maintenance mode confirmation). Migration #33.
-- **Final counts:** 3,944 tests total (2,360 API + 1,584 web), 51 Prisma models, 33 migrations
+- **Final counts:** 3,944 tests total (2,360 API + 1,584 web), 51 Prisma models, 33 migrations (before PLG phases)
+
+### PLG Phase 2: Signup & Onboarding — COMPLETE
+- Stripe 3-tier plans (Starter/Professional/Enterprise) with trial support
+- Plan-gated features via `@RequiresFeature()` decorator and `PlanLimits` interface
+- 13-email onboarding drip via BullMQ delayed jobs
+- Upgrade modal with plan comparison and Stripe checkout
+- Trial banner with countdown and upgrade CTA
+- Migration #34 (trial fields and 3-tier plans)
+
+### PLG Phase 3: Outreach & Growth — COMPLETE (Tasks 3.1-3.6)
+- SMS notifications via Twilio provider (implements existing MessagingProvider interface)
+- Google Review auto-prompt (REVIEW_REQUEST reminder type, 2h after booking completion)
+- Activation widget (5-step progress tracker in sidebar)
+- PLG footer on public booking pages with PostHog tracking
+- Empty state CTAs across bookings, inbox, campaigns, reports pages
+- Mobile polish on public booking pages (responsive padding, touch targets)
+
+### PLG Phase 4: Retention & Growth — COMPLETE (Tasks 4.1-4.8)
+- **Referral program** — Give $50, Get $50 via Stripe balance credits. New Referral model, signup `?ref=CODE` handling, referral stats on settings page. Migration #35.
+- **CSV/PDF export** — Extended ExportService for all 10 report types. HTML-based PDF generation, download buttons on reports page.
+- **Recurring campaigns** — DAILY/WEEKLY/BIWEEKLY/MONTHLY recurrence rules. Auto-schedules next occurrence after SENT. Migration #35.
+- **Booking search + date range** — Server-side search (customer name/phone/email), date presets (Today/This Week/This Month/Custom), URL-persisted filters.
+- **Per-staff pricing** — New StaffServicePrice model. Staff pricing tab, booking creation uses override price. Migration #37.
+- **Dunning email flow** — 3-email BullMQ sequence (immediate/3-day/7-day), auto-downgrade after 14 days, cancellation on payment recovery. New DUNNING queue.
+- **NPS survey** — In-app modal at day 30, 0-10 scale + feedback, PostHog tracking, stored in packConfig.
+- **Weekly digest email** — Monday 9am cron, bookings/revenue week-over-week deltas, top services, opt-out via packConfig.
+- **Final counts:** ~4,600+ tests across 242 test files, 53 Prisma models, 37 migrations, 50 API modules, 66 pages
 
 ### Code Quality
 - **Error Handling Remediation** — COMPLETE (commit 1cf6f99). Replaced ~20 silent `.catch(() => {})` with logged warnings, queue processors throw on failure, NestJS proper exceptions, frontend toast wiring, waitlist loop resilience, WebSocket disconnect logging. +58 tests.
@@ -765,7 +801,7 @@ npm run dev                    # Starts all apps via Turborepo
 | `npm run dev` | Start all apps |
 | `npm run build` | Build all |
 | `npm run lint` | Lint all (ESLint + TypeScript) |
-| `npm test` | Run all tests (~3,944 tests) |
+| `npm test` | Run all tests (~4,600+ tests) |
 | `npm run test:coverage` | Tests with coverage thresholds |
 | `npm run db:generate` | Generate Prisma client |
 | `npm run db:migrate` | Run migrations |
