@@ -30,11 +30,7 @@ function SignupPage() {
   const router = useRouter();
   const { t } = useI18n();
 
-  useEffect(() => {
-    if (!authLoading && user) {
-      router.push('/dashboard');
-    }
-  }, [user, authLoading, router]);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,7 +54,7 @@ function SignupPage() {
     }
   };
 
-  if (authLoading || user) return null;
+  if (authLoading) return null;
 
   return (
     <div
