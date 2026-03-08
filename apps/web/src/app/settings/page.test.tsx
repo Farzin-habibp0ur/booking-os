@@ -252,10 +252,18 @@ describe('SettingsPage', () => {
   test('displays category descriptions', async () => {
     render(<SettingsPage />);
     await waitFor(() => {
-      expect(screen.getByText('Team accounts, login methods, and custom profile fields')).toBeInTheDocument();
-      expect(screen.getByText('Calendar rules, message templates, and booking policies')).toBeInTheDocument();
-      expect(screen.getByText('Notification preferences and language translations')).toBeInTheDocument();
-      expect(screen.getByText('AI assistant, autonomy levels, and background agents')).toBeInTheDocument();
+      expect(
+        screen.getByText('Team accounts, login methods, and custom profile fields'),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText('Calendar rules, message templates, and booking policies'),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText('Notification preferences and language translations'),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText('AI assistant, autonomy levels, and background agents'),
+      ).toBeInTheDocument();
     });
   });
 

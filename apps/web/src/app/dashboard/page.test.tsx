@@ -209,7 +209,11 @@ jest.mock('./components/attention-card', () => ({
             <button onClick={() => mockPush('/bookings?status=PENDING_DEPOSIT')}>
               dashboard.view_deposit_pending
             </button>
-            <button onClick={() => mockPush(`/bookings?bookingId=${attentionNeeded.depositPendingBookings[0]?.id}`)}>
+            <button
+              onClick={() =>
+                mockPush(`/bookings?bookingId=${attentionNeeded.depositPendingBookings[0]?.id}`)
+              }
+            >
               dashboard.send_reminders
             </button>
           </div>
@@ -226,7 +230,11 @@ jest.mock('./components/attention-card', () => ({
             <button onClick={() => mockPush('/inbox?filter=overdue')}>
               dashboard.view_overdue
             </button>
-            <button onClick={() => mockPush(`/inbox?conversationId=${attentionNeeded.overdueConversations[0]?.id}`)}>
+            <button
+              onClick={() =>
+                mockPush(`/inbox?conversationId=${attentionNeeded.overdueConversations[0]?.id}`)
+              }
+            >
               dashboard.open_queue
             </button>
           </div>
@@ -240,12 +248,8 @@ jest.mock('./components/attention-card', () => ({
                 <span>{b.customer?.name}</span>
               </div>
             ))}
-            <button onClick={() => mockPush('/calendar')}>
-              dashboard.view_tomorrow
-            </button>
-            <button onClick={() => mockPush('/calendar')}>
-              dashboard.confirm_schedule
-            </button>
+            <button onClick={() => mockPush('/calendar')}>dashboard.view_tomorrow</button>
+            <button onClick={() => mockPush('/calendar')}>dashboard.confirm_schedule</button>
           </div>
         )}
       </div>

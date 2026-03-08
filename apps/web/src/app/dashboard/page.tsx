@@ -507,34 +507,38 @@ export default function DashboardPage() {
                 />
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {checklist.items.filter((item: any) => CHECKLIST_LABELS[item.key]).map((item: any) => (
-                  <div
-                    key={item.key}
-                    className={cn(
-                      'flex items-center gap-2.5 p-3 rounded-xl',
-                      item.done ? 'bg-sage-50/50' : 'bg-slate-50/60',
-                    )}
-                  >
-                    {item.done ? (
-                      <Check size={16} className="text-sage-600 shrink-0" />
-                    ) : (
-                      <Circle size={16} className="text-slate-300 shrink-0" />
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <p className={cn('text-xs', item.done ? 'text-sage-700' : 'text-slate-600')}>
-                        {t(`dashboard.${CHECKLIST_LABELS[item.key]}`)}
-                      </p>
-                      {!item.done && (
-                        <button
-                          onClick={() => router.push(item.fixUrl)}
-                          className="text-[10px] text-sage-600 hover:text-sage-700 flex items-center gap-0.5 mt-0.5 transition-colors"
-                        >
-                          {t('dashboard.fix')} <ArrowRight size={10} />
-                        </button>
+                {checklist.items
+                  .filter((item: any) => CHECKLIST_LABELS[item.key])
+                  .map((item: any) => (
+                    <div
+                      key={item.key}
+                      className={cn(
+                        'flex items-center gap-2.5 p-3 rounded-xl',
+                        item.done ? 'bg-sage-50/50' : 'bg-slate-50/60',
                       )}
+                    >
+                      {item.done ? (
+                        <Check size={16} className="text-sage-600 shrink-0" />
+                      ) : (
+                        <Circle size={16} className="text-slate-300 shrink-0" />
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p
+                          className={cn('text-xs', item.done ? 'text-sage-700' : 'text-slate-600')}
+                        >
+                          {t(`dashboard.${CHECKLIST_LABELS[item.key]}`)}
+                        </p>
+                        {!item.done && (
+                          <button
+                            onClick={() => router.push(item.fixUrl)}
+                            className="text-[10px] text-sage-600 hover:text-sage-700 flex items-center gap-0.5 mt-0.5 transition-colors"
+                          >
+                            {t('dashboard.fix')} <ArrowRight size={10} />
+                          </button>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
               </div>
             </div>
           )}

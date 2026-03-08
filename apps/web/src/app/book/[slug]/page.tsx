@@ -464,7 +464,9 @@ export default function BookingPortalPage() {
               <div className="flex items-center justify-between mb-3">
                 <p className="text-sm font-medium text-slate-700">Available times</p>
                 {business && (
-                  <p className="text-xs text-slate-400">Times shown in {friendlyTimezone(business.timezone)}</p>
+                  <p className="text-xs text-slate-400">
+                    Times shown in {friendlyTimezone(business.timezone)}
+                  </p>
                 )}
               </div>
               {slotsLoading ? (
@@ -748,7 +750,9 @@ export default function BookingPortalPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">Time</span>
-                <span className="font-medium text-slate-800">{formatSlotTime(selectedSlot.time)}</span>
+                <span className="font-medium text-slate-800">
+                  {formatSlotTime(selectedSlot.time)}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">Staff</span>
