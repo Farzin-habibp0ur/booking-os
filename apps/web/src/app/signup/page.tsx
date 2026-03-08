@@ -30,8 +30,6 @@ function SignupPage() {
   const router = useRouter();
   const { t } = useI18n();
 
-
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');

@@ -25,11 +25,6 @@ const jsonLd = {
     priceCurrency: 'USD',
     description: 'Free trial available',
   },
-  aggregateRating: {
-    '@type': 'AggregateRating',
-    ratingValue: '4.9',
-    ratingCount: '120',
-  },
   featureList: [
     'Appointment Scheduling',
     'Client Messaging via WhatsApp',

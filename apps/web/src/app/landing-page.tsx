@@ -105,7 +105,7 @@ const PLANS = [
       '1 staff member',
       'Unlimited bookings',
       'Client management',
-      'WhatsApp inbox',
+      'Email notifications',
       'Basic analytics',
     ],
   },
