@@ -7,7 +7,7 @@ import { useI18n } from '@/lib/i18n';
 import { Bell, ArrowLeft } from 'lucide-react';
 
 interface NotificationSettings {
-  channels: 'email' | 'whatsapp' | 'both';
+  channels: 'email' | 'whatsapp' | 'sms' | 'both';
   followUpDelayHours: number;
   consultFollowUpDays: number;
   treatmentCheckInHours: number;
@@ -104,6 +104,19 @@ export default function NotificationSettingsPage() {
                 className="text-sage-600"
               />
               <span className="text-sm">{t('notification_settings.channel_whatsapp')}</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="channels"
+                checked={settings.channels === 'sms'}
+                onChange={() => setSettings({ ...settings, channels: 'sms' })}
+                className="text-sage-600"
+              />
+              <span className="text-sm">SMS (via Twilio)</span>
+              <span className="text-[10px] bg-lavender-50 text-lavender-700 px-1.5 py-0.5 rounded-full">
+                Pro
+              </span>
             </label>
           </div>
         </div>

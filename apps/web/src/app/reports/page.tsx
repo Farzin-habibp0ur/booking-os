@@ -171,7 +171,9 @@ export default function ReportsPage() {
         <div className="bg-white rounded-2xl shadow-soft p-4">
           <h2 className="font-semibold mb-4">{t('reports.service_popularity')}</h2>
           {serviceData.length === 0 ? (
-            <p className="text-slate-400 text-sm py-8 text-center">{t('reports.no_data')}</p>
+            <p className="text-slate-400 text-sm py-8 text-center">
+              Not enough data yet. Reports will populate after your first week of bookings.
+            </p>
           ) : (
             <div className="space-y-3">
               {serviceData.map((s, i) => {
@@ -203,7 +205,9 @@ export default function ReportsPage() {
         <div className="bg-white rounded-2xl shadow-soft p-4">
           <h2 className="font-semibold mb-4">{t('reports.status_breakdown')}</h2>
           {statusData.length === 0 ? (
-            <p className="text-slate-400 text-sm py-8 text-center">{t('reports.no_data')}</p>
+            <p className="text-slate-400 text-sm py-8 text-center">
+              Not enough data yet. Reports will populate after your first week of bookings.
+            </p>
           ) : (
             <div className="flex items-center gap-6">
               <ResponsiveContainer width={160} height={160}>

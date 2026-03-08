@@ -1549,8 +1549,9 @@ describe('BookingService', () => {
       await bookingService.updateStatus('biz1', 'b1', 'COMPLETED');
 
       const calls = prisma.reminder.create.mock.calls;
-      expect(calls).toHaveLength(1);
+      expect(calls).toHaveLength(2);
       expect(calls[0][0].data.type).toBe('FOLLOW_UP');
+      expect(calls[1][0].data.type).toBe('REVIEW_REQUEST');
     });
 
     it('uses default followUpDelayHours of 2 when settings return null', async () => {

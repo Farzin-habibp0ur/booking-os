@@ -89,6 +89,8 @@ export class ReminderService {
           await this.notificationService.sendTreatmentCheckIn(booking);
         } else if (type === 'FOLLOW_UP') {
           await this.notificationService.sendFollowUp(booking);
+        } else if (type === 'REVIEW_REQUEST') {
+          await this.notificationService.sendReviewRequest(booking);
         } else {
           await this.notificationService.sendReminder(booking);
         }

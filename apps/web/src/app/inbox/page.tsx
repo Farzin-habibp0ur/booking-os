@@ -874,12 +874,17 @@ function InboxPage() {
               </div>
             ))}
             {conversations.length === 0 && (
-              <div className="text-center p-6">
-                <InboxIcon size={32} className="mx-auto text-slate-300 mb-2" />
-                <p className="text-slate-400 text-sm">
+              <div className="flex flex-col items-center justify-center py-12 text-center px-4">
+                <InboxIcon size={40} className="text-slate-300 mb-3" />
+                <h3 className="text-sm font-medium text-slate-600 mb-1">
                   {searchQuery
                     ? t('inbox.no_search_results', { query: searchQuery })
                     : t('inbox.no_conversations')}
+                </h3>
+                <p className="text-xs text-slate-400 max-w-[200px]">
+                  {searchQuery
+                    ? 'Try a different search term.'
+                    : 'Connect WhatsApp to start receiving client messages.'}
                 </p>
               </div>
             )}

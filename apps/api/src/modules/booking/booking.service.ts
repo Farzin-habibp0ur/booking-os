@@ -621,6 +621,17 @@ export class BookingService {
           },
         });
       }
+
+      // Schedule Google Review request 2 hours after completion
+      await this.prisma.reminder.create({
+        data: {
+          businessId,
+          bookingId: id,
+          scheduledAt: new Date(Date.now() + 2 * 3600000),
+          status: 'PENDING',
+          type: 'REVIEW_REQUEST',
+        },
+      });
     }
 
     // Audit trail for status change

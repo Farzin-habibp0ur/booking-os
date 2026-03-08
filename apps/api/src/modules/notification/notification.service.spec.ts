@@ -2181,7 +2181,7 @@ describe('NotificationService', () => {
 
     it('defaults to "both" when settings.channels is an invalid value', async () => {
       prisma.messageTemplate.findMany.mockResolvedValue([]);
-      businessService.getNotificationSettings.mockResolvedValue({ channels: 'sms' });
+      businessService.getNotificationSettings.mockResolvedValue({ channels: 'carrier-pigeon' });
 
       await notificationService.sendBookingConfirmation(mockBooking);
 

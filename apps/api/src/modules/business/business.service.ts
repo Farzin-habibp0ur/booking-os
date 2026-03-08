@@ -311,6 +311,72 @@ export class BusinessService {
     };
   }
 
+  async getActivationStatus(businessId: string) {
+    const business = await this.prisma.business.findUnique({
+      where: { id: businessId },
+      include: {
+        _count: {
+          select: {
+            bookings: true,
+          },
+        },
+      },
+    });
+
+    if (!business) return { steps: {} };
+
+    // Check for real bookings (not test data)
+    const realBooking = await this.prisma.booking.findFirst({
+      where: {
+        businessId,
+        customer: { email: { not: 'test@example.com' } },
+      },
+    });
+
+    // Check if booking link was shared (tracked in packConfig)
+    const packConfig =
+      typeof business.packConfig === 'object' && business.packConfig
+        ? (business.packConfig as Record<string, unknown>)
+        : {};
+
+    // Check if any outbound message was sent by staff
+    const staffReply = await this.prisma.message.findFirst({
+      where: {
+        conversation: { businessId },
+        direction: 'OUTBOUND',
+        senderStaffId: { not: null },
+      },
+    });
+
+    // Check if briefing was viewed (tracked in packConfig)
+    const briefingViewed = !!packConfig.briefingViewed;
+    const linkShared = !!packConfig.bookingLinkShared;
+
+    return {
+      steps: {
+        real_booking: !!realBooking,
+        link_shared: linkShared,
+        notification_received: business._count.bookings > 0,
+        inbox_reply: !!staffReply,
+        briefing_viewed: briefingViewed,
+      },
+    };
+  }
+
+  async markActivationAction(businessId: string, action: string) {
+    const business = await this.prisma.business.findUnique({ where: { id: businessId } });
+    if (!business) return null;
+    const packConfig =
+      typeof business.packConfig === 'object' && business.packConfig
+        ? (business.packConfig as Record<string, unknown>)
+        : {};
+    const updated = { ...packConfig, [action]: true } as any;
+    return this.prisma.business.update({
+      where: { id: businessId },
+      data: { packConfig: updated },
+    });
+  }
+
   async createTestBooking(businessId: string) {
     const service = await this.prisma.service.findFirst({
       where: { businessId, isActive: true },

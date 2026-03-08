@@ -41,12 +41,23 @@ export class PublicBookingController {
       typeof business.policySettings === 'object' && business.policySettings
         ? (business.policySettings as any)
         : {};
+    // Check if business has white-label booking (enterprise feature)
+    const subscription = await this.prisma.subscription.findFirst({
+      where: { businessId: business.id, status: { in: ['active', 'trialing'] } },
+      select: { plan: true },
+    });
+    const isWhiteLabel =
+      subscription?.plan === 'enterprise' &&
+      typeof business.packConfig === 'object' &&
+      (business.packConfig as any)?.whiteLabelBooking === true;
+
     return {
       name: business.name,
       slug: business.slug,
       timezone: business.timezone,
       cancellationPolicyText: policySettings.cancellationPolicyText || '',
       reschedulePolicyText: policySettings.reschedulePolicyText || '',
+      whiteLabel: isWhiteLabel,
     };
   }
 

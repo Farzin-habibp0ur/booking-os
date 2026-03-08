@@ -67,6 +67,10 @@ export class NotificationService {
         await this.dispatchWhatsApp(booking.customer.phone, body, booking.businessId);
       }
 
+      if (channels === 'sms') {
+        await this.dispatchSms(booking.customer.phone, body, booking.businessId);
+      }
+
       if (channels === 'email' || channels === 'both') {
         if (booking.customer.email) {
           const subject = `Booking Confirmed - ${booking.service.name} at ${businessName}`;
@@ -666,11 +670,50 @@ export class NotificationService {
     }
   }
 
-  private async getChannelPreference(businessId: string): Promise<'email' | 'whatsapp' | 'both'> {
+  async sendReviewRequest(booking: BookingWithRelations): Promise<void> {
+    try {
+      const business = await this.businessService.findById(booking.businessId);
+      if (!business) return;
+
+      const packConfig =
+        typeof business.packConfig === 'object' && business.packConfig
+          ? (business.packConfig as Record<string, unknown>)
+          : {};
+      const reviewUrl = packConfig.googleReviewUrl as string | undefined;
+      if (!reviewUrl) return;
+
+      const businessName = business.name || 'Our Business';
+      const customerName = booking.customer.name;
+
+      const body = `Hi ${customerName}, thanks for visiting ${businessName} today! If you had a great experience, we'd love your feedback: ${reviewUrl}`;
+
+      const channels = await this.getChannelPreference(booking.businessId);
+
+      if (channels === 'whatsapp' || channels === 'both') {
+        await this.dispatchWhatsApp(booking.customer.phone, body, booking.businessId);
+      }
+      if (channels === 'email' || channels === 'both') {
+        if (booking.customer.email) {
+          const subject = `How was your visit to ${businessName}?`;
+          const html = this.wrapInEmailHtml(body, businessName);
+          await this.dispatchEmail(booking.customer.email, subject, html);
+        }
+      }
+
+      await this.logNotificationEvent(booking.id, 'review_request_sent', 'REVIEW_REQUEST');
+      this.logger.log(`Review request sent for booking ${booking.id}`);
+    } catch (error) {
+      this.logger.error(`Failed to send review request for booking ${booking.id}:`, error);
+    }
+  }
+
+  private async getChannelPreference(
+    businessId: string,
+  ): Promise<'email' | 'whatsapp' | 'sms' | 'both'> {
     const settings = await this.businessService.getNotificationSettings(businessId);
     const channels = settings?.channels || 'both';
-    if (['email', 'whatsapp', 'both'].includes(channels)) {
-      return channels as 'email' | 'whatsapp' | 'both';
+    if (['email', 'whatsapp', 'sms', 'both'].includes(channels)) {
+      return channels as 'email' | 'whatsapp' | 'sms' | 'both';
     }
     return 'both';
   }
@@ -723,6 +766,15 @@ export class NotificationService {
   private async dispatchWhatsApp(to: string, body: string, businessId: string): Promise<void> {
     const provider = this.messagingService.getProvider();
     await provider.sendMessage({ to, body, businessId });
+  }
+
+  async dispatchSms(to: string, body: string, businessId: string): Promise<void> {
+    const smsProvider = this.messagingService.getSmsProvider();
+    if (!smsProvider) {
+      this.logger.warn(`SMS not available — skipping SMS to ${to}`);
+      return;
+    }
+    await smsProvider.sendMessage({ to, body, businessId });
   }
 
   private wrapInEmailHtml(body: string, businessName: string): string {

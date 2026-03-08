@@ -230,7 +230,7 @@ describe('ReportsPage', () => {
     setupApiMocks({ serviceData: [] });
     render(<ReportsPage />);
     await waitFor(() => {
-      const noDataElements = screen.getAllByText('reports.no_data');
+      const noDataElements = screen.getAllByText(/Not enough data yet/);
       expect(noDataElements.length).toBeGreaterThan(0);
     });
   });
@@ -260,7 +260,7 @@ describe('ReportsPage', () => {
     setupApiMocks({ statusData: [] });
     render(<ReportsPage />);
     await waitFor(() => {
-      const noDataElements = screen.getAllByText('reports.no_data');
+      const noDataElements = screen.getAllByText(/Not enough data yet/);
       expect(noDataElements.length).toBeGreaterThan(0);
     });
   });

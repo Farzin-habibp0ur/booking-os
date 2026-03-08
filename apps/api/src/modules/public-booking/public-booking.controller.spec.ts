@@ -58,6 +58,7 @@ describe('PublicBookingController', () => {
   describe('getBusiness', () => {
     it('returns business info by slug with empty policy text by default', async () => {
       prisma.business.findFirst.mockResolvedValue(mockBusiness as any);
+      prisma.subscription.findFirst.mockResolvedValue(null);
       const result = await controller.getBusiness('glow-clinic');
       expect(result).toEqual({
         name: 'Glow Clinic',
@@ -65,6 +66,7 @@ describe('PublicBookingController', () => {
         timezone: 'America/New_York',
         cancellationPolicyText: '',
         reschedulePolicyText: '',
+        whiteLabel: false,
       });
     });
 
@@ -76,6 +78,7 @@ describe('PublicBookingController', () => {
           reschedulePolicyText: 'No reschedules within 24h',
         },
       } as any);
+      prisma.subscription.findFirst.mockResolvedValue(null);
       const result = await controller.getBusiness('glow-clinic');
       expect(result.cancellationPolicyText).toBe('No cancellations within 24h');
       expect(result.reschedulePolicyText).toBe('No reschedules within 24h');

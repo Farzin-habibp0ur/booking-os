@@ -10,6 +10,8 @@ export interface PlanLimits {
   maxClients: number; // -1 = unlimited
   maxAgents: number; // 0 = none, -1 = unlimited
   whatsappInbox: boolean;
+  smsNotifications: boolean;
+  googleReviews: boolean;
   aiAutoReplies: boolean;
   campaigns: boolean;
   advancedReports: boolean;
@@ -41,6 +43,8 @@ export const PLAN_CONFIGS: Record<PlanTier, PlanConfig> = {
       maxClients: 50,
       maxAgents: 0,
       whatsappInbox: false,
+      smsNotifications: false,
+      googleReviews: false,
       aiAutoReplies: false,
       campaigns: false,
       advancedReports: false,
@@ -61,6 +65,8 @@ export const PLAN_CONFIGS: Record<PlanTier, PlanConfig> = {
       maxClients: -1,
       maxAgents: 3,
       whatsappInbox: true,
+      smsNotifications: true,
+      googleReviews: true,
       aiAutoReplies: true,
       campaigns: true,
       advancedReports: true,
@@ -81,6 +87,8 @@ export const PLAN_CONFIGS: Record<PlanTier, PlanConfig> = {
       maxClients: -1,
       maxAgents: -1,
       whatsappInbox: true,
+      smsNotifications: true,
+      googleReviews: true,
       aiAutoReplies: true,
       campaigns: true,
       advancedReports: true,

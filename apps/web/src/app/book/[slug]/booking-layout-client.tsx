@@ -6,7 +6,7 @@ export default function BookingLayoutClient({ children }: { children: React.Reac
   return (
     <ToastProvider>
       <div className="min-h-screen" style={{ backgroundColor: '#FCFCFD' }}>
-        <div className="max-w-2xl mx-auto px-4 py-8">{children}</div>
+        <div className="max-w-2xl mx-auto px-3 py-4 sm:px-4 sm:py-8 pb-safe">{children}</div>
       </div>
     </ToastProvider>
   );

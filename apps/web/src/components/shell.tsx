@@ -52,6 +52,7 @@ import ModeSwitcher from '@/components/mode-switcher';
 import { ViewAsBanner } from '@/components/view-as-banner';
 import { TrialBanner } from '@/components/trial-banner';
 import { OnboardingChecklist } from '@/components/onboarding-checklist';
+import { ActivationWidget } from '@/components/activation-widget';
 
 const SAVED_VIEW_ICONS: Record<string, any> = {
   filter: Search,
@@ -310,6 +311,8 @@ function ShellInner({ children }: { children: ReactNode }) {
       {(user?.business as Record<string, unknown>)?.onboardingComplete !== true && (
         <OnboardingChecklist />
       )}
+      {/* Activation Widget */}
+      <ActivationWidget />
       {/* Sidebar Pinned Views */}
       {pinnedViews.length > 0 && (
         <div

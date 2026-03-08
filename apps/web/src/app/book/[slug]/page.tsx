@@ -25,6 +25,7 @@ interface Business {
   timezone: string;
   cancellationPolicyText: string;
   reschedulePolicyText: string;
+  whiteLabel?: boolean;
 }
 interface Service {
   id: string;
@@ -152,6 +153,9 @@ export default function BookingPortalPage() {
         setBusiness(biz);
         setServices(svcs);
         trackEvent('booking_page_viewed', { business_slug: slug });
+        if (!biz.whiteLabel) {
+          trackEvent('plg_impression', { source: slug });
+        }
       } catch (err: any) {
         setError(err.message || 'Business not found');
       } finally {
@@ -452,7 +456,7 @@ export default function BookingPortalPage() {
                         (e.currentTarget.previousElementSibling as HTMLElement)?.focus();
                       }
                     }}
-                    className={`flex-shrink-0 w-16 py-2 rounded-xl text-center transition-colors ${
+                    className={`flex-shrink-0 w-14 sm:w-16 py-2.5 sm:py-2 rounded-xl text-center transition-colors ${
                       selectedDate === d
                         ? 'bg-sage-600 text-white'
                         : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
@@ -598,7 +602,7 @@ export default function BookingPortalPage() {
                               });
                               setStep('details');
                             }}
-                            className={`px-3 py-2 rounded-xl text-sm transition-colors ${
+                            className={`px-3 py-2.5 sm:py-2 min-h-[44px] rounded-xl text-sm transition-colors ${
                               selectedSlot?.time === slot.time &&
                               selectedSlot?.staffId === slot.staffId
                                 ? 'bg-sage-600 text-white'
@@ -620,7 +624,7 @@ export default function BookingPortalPage() {
 
       {/* Step 3: Customer Details */}
       {step === 'details' && (
-        <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
+        <div className="bg-white rounded-2xl shadow-soft p-4 sm:p-6 space-y-4">
           <div>
             <label
               htmlFor="booking-name"
@@ -750,7 +754,7 @@ export default function BookingPortalPage() {
       {/* Step 4: Confirmation */}
       {step === 'confirm' && selectedService && selectedSlot && (
         <div className="space-y-4">
-          <div className="bg-white rounded-2xl shadow-soft p-6 space-y-3">
+          <div className="bg-white rounded-2xl shadow-soft p-4 sm:p-6 space-y-3">
             <h3 className="font-semibold text-slate-800">Booking Summary</h3>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
@@ -850,7 +854,7 @@ export default function BookingPortalPage() {
 
       {/* Success */}
       {step === 'success' && bookingResult && (
-        <div className="bg-white rounded-2xl shadow-soft p-8 text-center">
+        <div className="bg-white rounded-2xl shadow-soft p-5 sm:p-8 text-center">
           <div className="flex justify-center mb-4">
             <div
               className={`w-16 h-16 rounded-full flex items-center justify-center ${bookingResult.depositRequired ? 'bg-amber-50' : 'bg-sage-50'}`}
@@ -934,6 +938,35 @@ export default function BookingPortalPage() {
               )}
             </div>
           )}
+        </div>
+      )}
+
+      {/* PLG footer — hidden for white-label enterprise customers */}
+      {business && !business.whiteLabel && (
+        <div className="mt-8 pt-4 border-t border-slate-100 text-center">
+          <p className="text-xs text-slate-400">
+            Powered by{' '}
+            <a
+              href={`/signup?ref=booking-page&source=${encodeURIComponent(slug)}`}
+              onClick={() => trackEvent('plg_click', { source: slug, location: 'booking_footer' })}
+              className="text-sage-600 hover:text-sage-700 hover:underline font-medium"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Booking OS
+            </a>
+          </p>
+          <p className="text-[10px] text-slate-300 mt-0.5">
+            <a
+              href={`/signup?ref=booking-page&source=${encodeURIComponent(slug)}`}
+              onClick={() => trackEvent('plg_click', { source: slug, location: 'booking_cta' })}
+              className="hover:text-slate-400 transition-colors"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Get your own booking page — free for 14 days
+            </a>
+          </p>
         </div>
       )}
     </div>

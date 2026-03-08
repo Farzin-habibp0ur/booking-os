@@ -1358,4 +1358,252 @@ describe('BusinessService', () => {
       expect(result.steps.staff_added).toBe(false);
     });
   });
+
+  // ────────────────────────────────────────────────────────────
+  // getActivationStatus
+  // ────────────────────────────────────────────────────────────
+  describe('getActivationStatus', () => {
+    it('returns empty steps if business not found', async () => {
+      prisma.business.findUnique.mockResolvedValue(null);
+
+      const result = await service.getActivationStatus('nonexistent');
+
+      expect(result).toEqual({ steps: {} });
+    });
+
+    it('returns all steps false for a fresh business', async () => {
+      prisma.business.findUnique.mockResolvedValue({
+        id: 'biz1',
+        packConfig: {},
+        _count: { bookings: 0 },
+      } as any);
+      prisma.booking.findFirst.mockResolvedValue(null);
+      prisma.message.findFirst.mockResolvedValue(null);
+
+      const result = await service.getActivationStatus('biz1');
+
+      expect(result).toEqual({
+        steps: {
+          real_booking: false,
+          link_shared: false,
+          notification_received: false,
+          inbox_reply: false,
+          briefing_viewed: false,
+        },
+      });
+    });
+
+    it('returns all steps true for a fully activated business', async () => {
+      prisma.business.findUnique.mockResolvedValue({
+        id: 'biz1',
+        packConfig: { bookingLinkShared: true, briefingViewed: true },
+        _count: { bookings: 3 },
+      } as any);
+      prisma.booking.findFirst.mockResolvedValue({ id: 'bk1' } as any);
+      prisma.message.findFirst.mockResolvedValue({ id: 'msg1' } as any);
+
+      const result = await service.getActivationStatus('biz1');
+
+      expect(result).toEqual({
+        steps: {
+          real_booking: true,
+          link_shared: true,
+          notification_received: true,
+          inbox_reply: true,
+          briefing_viewed: true,
+        },
+      });
+    });
+
+    it('checks for real bookings excluding test@example.com', async () => {
+      prisma.business.findUnique.mockResolvedValue({
+        id: 'biz1',
+        packConfig: {},
+        _count: { bookings: 0 },
+      } as any);
+      prisma.booking.findFirst.mockResolvedValue(null);
+      prisma.message.findFirst.mockResolvedValue(null);
+
+      await service.getActivationStatus('biz1');
+
+      expect(prisma.booking.findFirst).toHaveBeenCalledWith({
+        where: {
+          businessId: 'biz1',
+          customer: { email: { not: 'test@example.com' } },
+        },
+      });
+    });
+
+    it('checks for staff replies (outbound messages with senderStaffId)', async () => {
+      prisma.business.findUnique.mockResolvedValue({
+        id: 'biz1',
+        packConfig: {},
+        _count: { bookings: 0 },
+      } as any);
+      prisma.booking.findFirst.mockResolvedValue(null);
+      prisma.message.findFirst.mockResolvedValue(null);
+
+      await service.getActivationStatus('biz1');
+
+      expect(prisma.message.findFirst).toHaveBeenCalledWith({
+        where: {
+          conversation: { businessId: 'biz1' },
+          direction: 'OUTBOUND',
+          senderStaffId: { not: null },
+        },
+      });
+    });
+
+    it('reads linkShared and briefingViewed from packConfig', async () => {
+      prisma.business.findUnique.mockResolvedValue({
+        id: 'biz1',
+        packConfig: { bookingLinkShared: true, briefingViewed: true },
+        _count: { bookings: 0 },
+      } as any);
+      prisma.booking.findFirst.mockResolvedValue(null);
+      prisma.message.findFirst.mockResolvedValue(null);
+
+      const result = await service.getActivationStatus('biz1');
+
+      expect(result.steps.link_shared).toBe(true);
+      expect(result.steps.briefing_viewed).toBe(true);
+    });
+
+    it('handles null packConfig gracefully', async () => {
+      prisma.business.findUnique.mockResolvedValue({
+        id: 'biz1',
+        packConfig: null,
+        _count: { bookings: 0 },
+      } as any);
+      prisma.booking.findFirst.mockResolvedValue(null);
+      prisma.message.findFirst.mockResolvedValue(null);
+
+      const result = await service.getActivationStatus('biz1');
+
+      expect(result.steps.link_shared).toBe(false);
+      expect(result.steps.briefing_viewed).toBe(false);
+    });
+
+    it('handles non-object packConfig gracefully', async () => {
+      prisma.business.findUnique.mockResolvedValue({
+        id: 'biz1',
+        packConfig: 'invalid-string',
+        _count: { bookings: 0 },
+      } as any);
+      prisma.booking.findFirst.mockResolvedValue(null);
+      prisma.message.findFirst.mockResolvedValue(null);
+
+      const result = await service.getActivationStatus('biz1');
+
+      expect(result.steps.link_shared).toBe(false);
+      expect(result.steps.briefing_viewed).toBe(false);
+    });
+
+    it('notification_received is true when bookings count > 0', async () => {
+      prisma.business.findUnique.mockResolvedValue({
+        id: 'biz1',
+        packConfig: {},
+        _count: { bookings: 5 },
+      } as any);
+      prisma.booking.findFirst.mockResolvedValue(null);
+      prisma.message.findFirst.mockResolvedValue(null);
+
+      const result = await service.getActivationStatus('biz1');
+
+      expect(result.steps.notification_received).toBe(true);
+    });
+  });
+
+  // ────────────────────────────────────────────────────────────
+  // markActivationAction
+  // ────────────────────────────────────────────────────────────
+  describe('markActivationAction', () => {
+    it('returns null if business not found', async () => {
+      prisma.business.findUnique.mockResolvedValue(null);
+
+      const result = await service.markActivationAction('nonexistent', 'bookingLinkShared');
+
+      expect(result).toBeNull();
+      expect(prisma.business.update).not.toHaveBeenCalled();
+    });
+
+    it('sets the action key to true in packConfig', async () => {
+      prisma.business.findUnique.mockResolvedValue({
+        id: 'biz1',
+        packConfig: { existingKey: 'value' },
+      } as any);
+      prisma.business.update.mockResolvedValue({ id: 'biz1' } as any);
+
+      await service.markActivationAction('biz1', 'bookingLinkShared');
+
+      expect(prisma.business.update).toHaveBeenCalledWith({
+        where: { id: 'biz1' },
+        data: { packConfig: { existingKey: 'value', bookingLinkShared: true } },
+      });
+    });
+
+    it('handles null packConfig', async () => {
+      prisma.business.findUnique.mockResolvedValue({
+        id: 'biz1',
+        packConfig: null,
+      } as any);
+      prisma.business.update.mockResolvedValue({ id: 'biz1' } as any);
+
+      await service.markActivationAction('biz1', 'briefingViewed');
+
+      expect(prisma.business.update).toHaveBeenCalledWith({
+        where: { id: 'biz1' },
+        data: { packConfig: { briefingViewed: true } },
+      });
+    });
+
+    it('handles non-object packConfig', async () => {
+      prisma.business.findUnique.mockResolvedValue({
+        id: 'biz1',
+        packConfig: 'invalid',
+      } as any);
+      prisma.business.update.mockResolvedValue({ id: 'biz1' } as any);
+
+      await service.markActivationAction('biz1', 'briefingViewed');
+
+      expect(prisma.business.update).toHaveBeenCalledWith({
+        where: { id: 'biz1' },
+        data: { packConfig: { briefingViewed: true } },
+      });
+    });
+
+    it('preserves existing packConfig keys when adding action', async () => {
+      prisma.business.findUnique.mockResolvedValue({
+        id: 'biz1',
+        packConfig: { requireConsultation: true, waitlist: { offerCount: 3 } },
+      } as any);
+      prisma.business.update.mockResolvedValue({ id: 'biz1' } as any);
+
+      await service.markActivationAction('biz1', 'bookingLinkShared');
+
+      expect(prisma.business.update).toHaveBeenCalledWith({
+        where: { id: 'biz1' },
+        data: {
+          packConfig: {
+            requireConsultation: true,
+            waitlist: { offerCount: 3 },
+            bookingLinkShared: true,
+          },
+        },
+      });
+    });
+
+    it('returns the updated business', async () => {
+      const updatedBiz = { id: 'biz1', packConfig: { bookingLinkShared: true } };
+      prisma.business.findUnique.mockResolvedValue({
+        id: 'biz1',
+        packConfig: {},
+      } as any);
+      prisma.business.update.mockResolvedValue(updatedBiz as any);
+
+      const result = await service.markActivationAction('biz1', 'bookingLinkShared');
+
+      expect(result).toEqual(updatedBiz);
+    });
+  });
 });

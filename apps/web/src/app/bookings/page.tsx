@@ -473,6 +473,11 @@ export default function BookingsPage() {
                 ? `No ${pack.labels.booking.toLowerCase()} match your filters`
                 : t('bookings.create_first', { entity: pack.labels.booking.toLowerCase() })
             }
+            action={
+              !(searchQuery || statusFilter || dateFrom || dateTo || staffFilter)
+                ? { label: 'Go to Calendar', onClick: () => (window.location.href = '/calendar') }
+                : undefined
+            }
           />
         )}
       </div>

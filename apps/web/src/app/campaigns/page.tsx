@@ -113,7 +113,8 @@ export default function CampaignsPage() {
           <EmptyState
             icon={Megaphone}
             title="No campaigns yet"
-            description="Create your first campaign to re-engage customers and drive bookings."
+            description="Create a campaign to reach all your clients at once."
+            action={{ label: 'Create Campaign', onClick: () => router.push('/campaigns/new') }}
           />
         )}
       </div>

@@ -24,7 +24,7 @@ import { MessagingService } from './messaging.service';
 import { MessageService } from '../message/message.service';
 import { AiService } from '../ai/ai.service';
 import { WebhookInboundDto } from '../../common/dto';
-import { WhatsAppCloudProvider } from '@booking-os/messaging-provider';
+import { WhatsAppCloudProvider, TwilioSmsProvider } from '@booking-os/messaging-provider';
 
 @ApiTags('Messaging Webhooks')
 @Controller('webhook')
@@ -273,5 +273,35 @@ export class WebhookController {
       return provider.getOutboxSince(new Date(since));
     }
     return provider.getFullOutbox();
+  }
+
+  /**
+   * Twilio SMS inbound webhook.
+   * Twilio sends a POST with form-urlencoded body containing From, Body, MessageSid, etc.
+   */
+  @Post('sms/inbound')
+  async smsInbound(@Body() body: Record<string, string>) {
+    const parsed = TwilioSmsProvider.parseInboundWebhook(body);
+    if (!parsed) {
+      throw new BadRequestException('Invalid SMS webhook payload');
+    }
+
+    this.logger.log(`SMS inbound from ${parsed.from}: ${parsed.body.substring(0, 50)}`);
+
+    try {
+      const result = await this.processInboundMessage(
+        parsed.from,
+        parsed.body,
+        parsed.externalId,
+        undefined,
+      );
+      return {
+        status: 'EVENT_RECEIVED',
+        processed: result.duplicate ? 0 : 1,
+      };
+    } catch (err: any) {
+      this.logger.error(`SMS inbound processing error: ${err.message}`, err.stack);
+      return { status: 'EVENT_RECEIVED', processed: 0 };
+    }
   }
 }

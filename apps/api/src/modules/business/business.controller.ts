@@ -83,4 +83,14 @@ export class BusinessController {
   createTestBooking(@BusinessId() businessId: string) {
     return this.businessService.createTestBooking(businessId);
   }
+
+  @Get('activation-status')
+  async getActivationStatus(@BusinessId() businessId: string) {
+    return this.businessService.getActivationStatus(businessId);
+  }
+
+  @Post('activation-action')
+  async markActivationAction(@BusinessId() businessId: string, @Body() body: { action: string }) {
+    return this.businessService.markActivationAction(businessId, body.action);
+  }
 }

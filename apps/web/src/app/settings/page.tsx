@@ -22,6 +22,7 @@ import {
   Palette,
   Shield,
   Bot,
+  Star,
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { useTheme } from '@/lib/use-theme';
@@ -46,6 +47,8 @@ export default function SettingsPage() {
   const [passwordError, setPasswordError] = useState('');
   const [passwordSaved, setPasswordSaved] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [googleReviewUrl, setGoogleReviewUrl] = useState('');
+  const [reviewSaved, setReviewSaved] = useState(false);
 
   useEffect(() => {
     api.get<any>('/business').then((b) => {
@@ -53,6 +56,7 @@ export default function SettingsPage() {
       setName(b.name);
       setPhone(b.phone || '');
       setTimezone(b.timezone);
+      setGoogleReviewUrl(b.packConfig?.googleReviewUrl || '');
     });
   }, []);
 
@@ -221,6 +225,39 @@ export default function SettingsPage() {
           </div>
         </div>
       )}
+
+      {/* Google Review URL */}
+      <div className="bg-white rounded-2xl shadow-soft p-6 mt-6">
+        <div className="flex items-center gap-2 mb-1">
+          <Star size={18} className="text-amber-500" />
+          <h3 className="font-semibold text-slate-800">Google Reviews</h3>
+        </div>
+        <p className="text-sm text-slate-500 mt-1">
+          Add your Google Business review link to auto-prompt clients after appointments.
+        </p>
+        <div className="flex items-center gap-2 mt-3">
+          <input
+            type="url"
+            value={googleReviewUrl}
+            onChange={(e) => {
+              setGoogleReviewUrl(e.target.value);
+              setReviewSaved(false);
+            }}
+            placeholder="https://g.page/r/your-business/review"
+            className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-sage-500 focus:border-transparent outline-none"
+          />
+          <button
+            onClick={async () => {
+              await api.patch('/business', { packConfig: { googleReviewUrl } });
+              setReviewSaved(true);
+              setTimeout(() => setReviewSaved(false), 2000);
+            }}
+            className="bg-sage-600 hover:bg-sage-700 text-white rounded-xl px-4 py-2 text-sm transition-colors"
+          >
+            {reviewSaved ? 'Saved!' : 'Save'}
+          </button>
+        </div>
+      </div>
 
       {/* Settings Hub — category cards */}
       <div className="mt-6">
