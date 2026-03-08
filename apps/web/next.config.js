@@ -36,7 +36,7 @@ const nextConfig = {
                 "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
                 "font-src 'self' https://fonts.gstatic.com",
                 "img-src 'self' data: https:",
-                "connect-src 'self' " + apiOrigin,
+                "connect-src 'self' " + apiOrigin + " https://us.i.posthog.com",
                 "frame-ancestors 'none'",
                 "object-src 'none'",
                 "base-uri 'self'",
