@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   Calendar,
@@ -16,7 +15,6 @@ import {
   ArrowRight,
   Check,
 } from 'lucide-react';
-import { getModeByKey, AppMode } from '@/lib/mode-config';
 
 /* ------------------------------------------------------------------ */
 /*  FAQ data                                                           */
@@ -181,23 +179,8 @@ function FaqItem({ q, a }: { q: string; a: string }) {
 /*  Landing Page                                                       */
 /* ================================================================== */
 export default function LandingPage() {
-  const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [ready, setReady] = useState(false);
-
-  /* Redirect authenticated users to their dashboard */
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      const storedMode = localStorage.getItem('app-mode') as AppMode | null;
-      const modeDef = storedMode ? getModeByKey(storedMode) : null;
-      const landing = modeDef?.defaultLandingPath || '/dashboard';
-      router.replace(landing);
-      return;
-    }
-    setReady(true);
-  }, [router]);
 
   /* Sticky header background on scroll */
   useEffect(() => {
@@ -210,9 +193,6 @@ export default function LandingPage() {
     setMenuOpen(false);
     scrollTo(id);
   }, []);
-
-  /* Don't render landing page for authenticated users */
-  if (!ready) return null;
 
   return (
     <div className="min-h-screen bg-[#FCFCFD] text-slate-800">
