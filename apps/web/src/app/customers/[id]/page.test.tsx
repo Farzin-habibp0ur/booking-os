@@ -246,12 +246,12 @@ describe('CustomerDetailPage', () => {
     });
   });
 
-  it('shows no-show count', async () => {
+  it('shows upcoming bookings count badge', async () => {
     setupMocks();
     render(<CustomerDetailPage />);
     await waitFor(() => {
-      // "1" appears in multiple stats (upcoming=1, no-show=1), verify both exist
-      expect(screen.getAllByText('1').length).toBeGreaterThanOrEqual(2);
+      // "1" appears as the upcoming bookings count badge
+      expect(screen.getAllByText('1').length).toBeGreaterThanOrEqual(1);
     });
   });
 
@@ -263,59 +263,53 @@ describe('CustomerDetailPage', () => {
     });
   });
 
-  it('shows next appointment card', async () => {
+  it('shows upcoming bookings section with service name', async () => {
     setupMocks();
     render(<CustomerDetailPage />);
     await waitFor(() => {
-      expect(screen.getByText('customer_detail.next_appointment')).toBeInTheDocument();
+      expect(screen.getByText('customer_detail.upcoming_section')).toBeInTheDocument();
       expect(screen.getByText('Follow-up')).toBeInTheDocument();
     });
   });
 
-  // ─── Tab Switching ────────────────────────────────────────────────────
+  // ─── Content Sections (single-scroll layout) ────────────────────────
 
-  it('shows AI chat tab by default', async () => {
+  it('shows activity timeline section', async () => {
     setupMocks();
     render(<CustomerDetailPage />);
     await waitFor(() => {
-      expect(screen.getByText('customer_detail.chat_welcome')).toBeInTheDocument();
+      expect(screen.getByText('customer_detail.timeline_tab')).toBeInTheDocument();
+      expect(screen.getByTestId('customer-timeline')).toBeInTheDocument();
     });
   });
 
-  it('switches to bookings tab', async () => {
+  it('shows upcoming bookings section', async () => {
     setupMocks();
     render(<CustomerDetailPage />);
-    await waitFor(() => screen.getAllByText('Emma Wilson'));
-
-    const bookingsTab = screen.getByText(/customer_detail\.bookings_tab/);
-    fireEvent.click(bookingsTab);
-
     await waitFor(() => {
       expect(screen.getByText('customer_detail.upcoming_section')).toBeInTheDocument();
-      expect(screen.getByText('customer_detail.history_section')).toBeInTheDocument();
     });
   });
 
-  it('switches to info tab', async () => {
+  it('shows contact details section', async () => {
     setupMocks();
     render(<CustomerDetailPage />);
-    await waitFor(() => screen.getAllByText('Emma Wilson'));
-
-    const infoTab = screen.getByText('customer_detail.details_tab');
-    fireEvent.click(infoTab);
-
     await waitFor(() => {
+      expect(screen.getByText('customer_detail.contact')).toBeInTheDocument();
       expect(screen.getByText('customer_detail.full_name')).toBeInTheDocument();
       expect(screen.getByText('customer_detail.customer_since')).toBeInTheDocument();
     });
   });
 
-  it('shows custom fields in info tab', async () => {
+  it('shows custom fields in edit modal', async () => {
     setupMocks();
     render(<CustomerDetailPage />);
     await waitFor(() => screen.getAllByText('Emma Wilson'));
 
-    fireEvent.click(screen.getByText('customer_detail.details_tab'));
+    // Open edit modal via contact section pencil button
+    const contactHeader = screen.getByText('customer_detail.contact');
+    const editBtn = contactHeader.parentElement?.querySelector('button');
+    if (editBtn) fireEvent.click(editBtn);
 
     await waitFor(() => {
       expect(screen.getByText('Skin Type')).toBeInTheDocument();
@@ -404,57 +398,14 @@ describe('CustomerDetailPage', () => {
     });
   });
 
-  // ─── AI Chat ──────────────────────────────────────────────────────────
+  // ─── Quick Actions ───────────────────────────────────────────────────
 
-  it('shows prompt chips when chat is empty', async () => {
+  it('shows edit profile button in quick actions bar', async () => {
     setupMocks();
     render(<CustomerDetailPage />);
     await waitFor(() => screen.getAllByText('Emma Wilson'));
 
-    expect(screen.getByText('customer_detail.chip_summarize')).toBeInTheDocument();
-    expect(screen.getByText('customer_detail.chip_treatments')).toBeInTheDocument();
-  });
-
-  it('sets chat input when prompt chip is clicked', async () => {
-    setupMocks();
-    render(<CustomerDetailPage />);
-    await waitFor(() => screen.getAllByText('Emma Wilson'));
-
-    fireEvent.click(screen.getByText('customer_detail.chip_summarize'));
-
-    const chatInput = screen.getByPlaceholderText('customer_detail.chat_placeholder');
-    expect(chatInput).toHaveValue('customer_detail.chip_summarize');
-  });
-
-  it('sends chat message and shows response', async () => {
-    setupMocks();
-    mockApi.post.mockResolvedValue({ answer: 'Emma is a regular customer.' });
-    render(<CustomerDetailPage />);
-    await waitFor(() => screen.getAllByText('Emma Wilson'));
-
-    const chatInput = screen.getByPlaceholderText('customer_detail.chat_placeholder');
-    await userEvent.type(chatInput, 'Tell me about this customer');
-    fireEvent.keyDown(chatInput, { key: 'Enter' });
-
-    await waitFor(() => {
-      expect(screen.getByText('Tell me about this customer')).toBeInTheDocument();
-      expect(screen.getByText('Emma is a regular customer.')).toBeInTheDocument();
-    });
-  });
-
-  it('shows error message when chat fails', async () => {
-    setupMocks();
-    mockApi.post.mockRejectedValue(new Error('API error'));
-    render(<CustomerDetailPage />);
-    await waitFor(() => screen.getAllByText('Emma Wilson'));
-
-    const chatInput = screen.getByPlaceholderText('customer_detail.chat_placeholder');
-    await userEvent.type(chatInput, 'Tell me about this customer');
-    fireEvent.keyDown(chatInput, { key: 'Enter' });
-
-    await waitFor(() => {
-      expect(screen.getByText('customer_detail.chat_error')).toBeInTheDocument();
-    });
+    expect(screen.getByText('customer_detail.edit_profile')).toBeInTheDocument();
   });
 
   // ─── Booking Form Modal ───────────────────────────────────────────────
@@ -473,39 +424,32 @@ describe('CustomerDetailPage', () => {
 
   // ─── Booking Rows ─────────────────────────────────────────────────────
 
-  it('shows bookings with status badges in bookings tab', async () => {
+  it('shows upcoming bookings with service names', async () => {
     setupMocks();
     render(<CustomerDetailPage />);
     await waitFor(() => screen.getAllByText('Emma Wilson'));
 
-    fireEvent.click(screen.getByText(/customer_detail\.bookings_tab/));
-
     await waitFor(() => {
-      expect(screen.getByText('Botox')).toBeInTheDocument();
-      expect(screen.getByText('Filler')).toBeInTheDocument();
-      // Follow-up appears in both next appointment card and bookings list
-      expect(screen.getAllByText('Follow-up').length).toBeGreaterThanOrEqual(2);
+      // Follow-up is the only upcoming booking (2028-06-01)
+      expect(screen.getByText('Follow-up')).toBeInTheDocument();
+      expect(screen.getByText('customer_detail.upcoming_section')).toBeInTheDocument();
     });
   });
 
-  it('shows no history message when no past bookings', async () => {
+  it('hides upcoming section when no upcoming bookings', async () => {
     setupMocks(mockCustomer, [
       {
-        id: 'b3',
-        startTime: '2028-06-01T10:00:00Z',
-        status: 'CONFIRMED',
-        service: { name: 'Follow-up', price: 100 },
+        id: 'b1',
+        startTime: '2025-01-01T10:00:00Z',
+        status: 'COMPLETED',
+        service: { name: 'Botox', price: 200 },
         staff: { name: 'Dr. Chen' },
       },
     ]);
     render(<CustomerDetailPage />);
     await waitFor(() => screen.getAllByText('Emma Wilson'));
 
-    fireEvent.click(screen.getByText(/customer_detail\.bookings_tab/));
-
-    await waitFor(() => {
-      expect(screen.getByText('customer_detail.no_booking_history')).toBeInTheDocument();
-    });
+    expect(screen.queryByText('customer_detail.upcoming_section')).not.toBeInTheDocument();
   });
 
   // ─── Back Navigation ──────────────────────────────────────────────────
@@ -552,38 +496,32 @@ describe('CustomerDetailPage', () => {
     expect(mockPush).toHaveBeenCalledWith('/inbox');
   });
 
-  // ─── Context Row ───────────────────────────────────────────────────
+  // ─── Header Stats ─────────────────────────────────────────────────
 
-  it('shows last booking date in context row', async () => {
+  it('shows last visit date in header stats', async () => {
     setupMocks();
     render(<CustomerDetailPage />);
     await waitFor(() => {
-      expect(screen.getByTestId('last-booking-date')).toBeInTheDocument();
+      expect(screen.getByText('customer_detail.last_visit')).toBeInTheDocument();
     });
   });
 
-  it('shows last conversation date in context row', async () => {
+  it('shows total spent in header stats', async () => {
     setupMocks();
     render(<CustomerDetailPage />);
     await waitFor(() => {
-      expect(screen.getByTestId('last-conversation-date')).toBeInTheDocument();
+      expect(screen.getByText('customer_detail.total_spent')).toBeInTheDocument();
+      expect(screen.getByText('$200')).toBeInTheDocument();
     });
   });
 
-  it('shows waitlist count in context row when customer has active entries', async () => {
+  it('shows total bookings count in header stats', async () => {
     setupMocks();
     render(<CustomerDetailPage />);
     await waitFor(() => {
-      expect(screen.getByTestId('waitlist-count')).toBeInTheDocument();
-      expect(screen.getByTestId('waitlist-count')).toHaveTextContent('1');
+      expect(screen.getByText('customer_detail.total_bookings')).toBeInTheDocument();
+      expect(screen.getByText('3')).toBeInTheDocument();
     });
-  });
-
-  it('hides waitlist count when no active entries', async () => {
-    setupMocks(mockCustomer, mockBookings, mockNotes, []);
-    render(<CustomerDetailPage />);
-    await waitFor(() => screen.getAllByText('Emma Wilson'));
-    expect(screen.queryByTestId('waitlist-count')).not.toBeInTheDocument();
   });
 
   // ─── Notes Section ─────────────────────────────────────────────────────
@@ -657,7 +595,7 @@ describe('CustomerDetailPage', () => {
     render(<CustomerDetailPage />);
     await waitFor(() => screen.getAllByText('Emma Wilson'));
 
-    expect(screen.queryByTestId('vertical-modules')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('vertical-toggle')).not.toBeInTheDocument();
   });
 
   it('shows toast on note deletion error', async () => {
@@ -687,7 +625,7 @@ describe('CustomerDetailPage — Aesthetic Pack', () => {
     render(<CustomerDetailPage />);
     await waitFor(() => screen.getAllByText('Emma Wilson'));
 
-    expect(screen.getByTestId('vertical-modules')).toBeInTheDocument();
+    expect(screen.getByTestId('vertical-toggle')).toBeInTheDocument();
     expect(screen.getByTestId('intake-card')).toBeInTheDocument();
   });
 
@@ -752,7 +690,7 @@ describe('CustomerDetailPage — Dealership Pack', () => {
     render(<CustomerDetailPage />);
     await waitFor(() => screen.getAllByText('Emma Wilson'));
 
-    expect(screen.getByTestId('vertical-modules')).toBeInTheDocument();
+    expect(screen.getByTestId('vertical-toggle')).toBeInTheDocument();
     expect(screen.getByTestId('quotes-summary')).toBeInTheDocument();
   });
 
@@ -817,21 +755,13 @@ describe('CustomerDetailPage — Dealership Pack', () => {
     expect(screen.queryByTestId('quotes-summary')).not.toBeInTheDocument();
   });
 
-  it('renders RecentChangesPanel when action history exists', async () => {
+  it('does not render RecentChangesPanel (removed from layout)', async () => {
     setupMocks();
-    render(<CustomerDetailPage />);
-    await waitFor(() => {
-      expect(screen.getByTestId('recent-changes-panel')).toBeInTheDocument();
-    });
-    expect(screen.getByText(/1 recent changes/)).toBeInTheDocument();
-  });
-
-  it('hides RecentChangesPanel when action history is empty', async () => {
-    setupMocks(mockCustomer, mockBookings, mockNotes, mockWaitlistEntries, []);
     render(<CustomerDetailPage />);
     await waitFor(() => {
       expect(screen.getAllByText('Emma Wilson').length).toBeGreaterThan(0);
     });
+    // RecentChangesPanel is imported but not rendered in the new single-scroll layout
     expect(screen.queryByTestId('recent-changes-panel')).not.toBeInTheDocument();
   });
 });

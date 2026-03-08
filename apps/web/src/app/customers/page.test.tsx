@@ -290,12 +290,10 @@ describe('CustomersPage', () => {
       render(<CustomersPage />);
 
       await waitFor(() => {
-        expect(screen.getByTestId('empty-state')).toBeInTheDocument();
+        expect(screen.getByText(/customers\.no_customers/)).toBeInTheDocument();
       });
       // The description should be the "add first" message (no search query)
-      expect(screen.getByTestId('empty-state-description')).toHaveTextContent(
-        'customers.add_first',
-      );
+      expect(screen.getByText(/customers\.add_first/)).toBeInTheDocument();
     });
 
     it('shows add button in empty state when not searching', async () => {
@@ -303,7 +301,10 @@ describe('CustomersPage', () => {
       render(<CustomersPage />);
 
       await waitFor(() => {
-        expect(screen.getByTestId('empty-state-action')).toBeInTheDocument();
+        // The inline empty state renders an add button with the add_button i18n key
+        const addButtons = screen.getAllByText(/customers\.add_button/);
+        // At least the one in the empty state area
+        expect(addButtons.length).toBeGreaterThanOrEqual(1);
       });
     });
 
@@ -313,10 +314,12 @@ describe('CustomersPage', () => {
       render(<CustomersPage />);
 
       await waitFor(() => {
-        expect(screen.getByTestId('empty-state-action')).toBeInTheDocument();
+        expect(screen.getByText(/customers\.no_customers/)).toBeInTheDocument();
       });
 
-      await user.click(screen.getByTestId('empty-state-action'));
+      // The empty state add button is the last one with add_button text
+      const addButtons = screen.getAllByText(/customers\.add_button/);
+      await user.click(addButtons[addButtons.length - 1]);
 
       await waitFor(() => {
         expect(screen.getByText(/customers\.add_title/)).toBeInTheDocument();
@@ -324,53 +327,57 @@ describe('CustomersPage', () => {
     });
 
     it('shows "no search results" description when search is active and no results', async () => {
-      const user = userEvent.setup();
-      // First load returns data so we can type in search
-      let callCount = 0;
-      mockApi.get.mockImplementation(() => {
-        callCount++;
-        if (callCount === 1) return Promise.resolve({ data: [], total: 0 });
-        return Promise.resolve({ data: [], total: 0 });
-      });
+      jest.useFakeTimers();
+      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+      setupApiEmpty();
 
       render(<CustomersPage />);
 
       await waitFor(() => {
-        expect(screen.getByTestId('empty-state')).toBeInTheDocument();
+        expect(screen.getByText(/customers\.no_customers/)).toBeInTheDocument();
       });
 
-      // Type a search term
+      // Type a search term — auto-search fires after 300ms debounce
       const searchInput = screen.getByPlaceholderText('customers.search_placeholder');
       await user.type(searchInput, 'nonexistent');
 
-      // Submit the search form
-      const searchButton = screen.getByText('common.search');
-      await user.click(searchButton);
+      // Advance past debounce timer
+      jest.advanceTimersByTime(300);
 
       await waitFor(() => {
-        const desc = screen.getByTestId('empty-state-description');
-        expect(desc.textContent).toContain('customers.no_search_results');
+        expect(screen.getByText(/customers\.no_search_results/)).toBeInTheDocument();
       });
+
+      jest.useRealTimers();
     });
 
     it('does NOT show empty state action when search is active', async () => {
-      const user = userEvent.setup();
+      jest.useFakeTimers();
+      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
       setupApiEmpty();
       render(<CustomersPage />);
 
       await waitFor(() => {
-        expect(screen.getByTestId('empty-state')).toBeInTheDocument();
+        expect(screen.getByText(/customers\.no_customers/)).toBeInTheDocument();
       });
 
       const searchInput = screen.getByPlaceholderText('customers.search_placeholder');
       await user.type(searchInput, 'xyz');
 
-      const searchButton = screen.getByText('common.search');
-      await user.click(searchButton);
+      // Advance past debounce timer
+      jest.advanceTimersByTime(300);
 
       await waitFor(() => {
-        expect(screen.queryByTestId('empty-state-action')).not.toBeInTheDocument();
+        // When search is active, the no_search_results heading shows and the add button is hidden
+        expect(screen.getByText(/customers\.no_search_results/)).toBeInTheDocument();
       });
+
+      // Only the header add button should remain, not the empty state one
+      // The empty state add button is only rendered when !search
+      const addButtons = screen.getAllByText(/customers\.add_button/);
+      expect(addButtons.length).toBe(1); // Only the header button
+
+      jest.useRealTimers();
     });
   });
 
@@ -525,7 +532,7 @@ describe('CustomersPage', () => {
       await waitFor(() => {
         expect(screen.getByTestId('error-state')).toBeInTheDocument();
       });
-      expect(screen.queryByTestId('empty-state')).not.toBeInTheDocument();
+      expect(screen.queryByText(/customers\.no_customers/)).not.toBeInTheDocument();
     });
   });
 

@@ -88,7 +88,7 @@ Run from the monorepo root:
 | `npm run dev` | Start all apps in development mode |
 | `npm run build` | Build all apps and packages |
 | `npm run lint` | Lint all apps and packages |
-| `npm run test` | Run all unit/integration tests (3,906 tests across API + Web) |
+| `npm run test` | Run all unit/integration tests (3,944 tests across API + Web) |
 | `npm run test:e2e` | Run Playwright end-to-end tests (requires running dev servers) |
 | `npm run format` | Format code with Prettier |
 | `npm run format:check` | Check code formatting |

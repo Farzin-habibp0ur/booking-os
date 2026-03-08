@@ -46,6 +46,7 @@ jest.mock('lucide-react', () => ({
   X: (p: any) => <span data-testid="icon-x" {...p} />,
   FileText: (p: any) => <span data-testid="icon-file-text" {...p} />,
   AlertTriangle: (p: any) => <span data-testid="icon-alert" {...p} />,
+  ArrowLeft: (p: any) => <span data-testid="icon-arrow-left" {...p} />,
 }));
 
 const mockTemplates = [

@@ -330,11 +330,11 @@ describe('InboxPage', () => {
       fireEvent.click(markReadBtn);
     });
 
-    // Verify API call was made
+    // Verify API call was made (page now patches each conversation individually)
     await waitFor(() => {
       expect(mockApi.patch).toHaveBeenCalledWith(
-        expect.stringContaining('/conversations/mark-read'),
-        expect.any(Object),
+        expect.stringContaining('/conversations/conv-1'),
+        expect.objectContaining({ isNew: false }),
       );
     });
   });

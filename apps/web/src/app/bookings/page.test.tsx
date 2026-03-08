@@ -639,9 +639,9 @@ describe('BookingsPage', () => {
       expect(screen.getByText('John')).toBeInTheDocument();
     });
 
-    // Headers should be clickable
-    const customerHeader = screen.getAllByText('Customer')[0];
-    expect(customerHeader.parentElement).toHaveClass('cursor-pointer');
+    // Headers should be clickable — the <th> itself has cursor-pointer
+    const customerHeader = screen.getAllByText('Customer')[0].closest('th')!;
+    expect(customerHeader).toHaveClass('cursor-pointer');
   });
 
   it('sorts by customer name when customer header is clicked', async () => {
@@ -660,10 +660,10 @@ describe('BookingsPage', () => {
       expect(screen.getByText('John')).toBeInTheDocument();
     });
 
-    const customerHeader = screen.getAllByText('Customer')[0];
+    const customerHeader = screen.getAllByText('Customer')[0].closest('th')!;
 
     await act(async () => {
-      await user.click(customerHeader.parentElement!);
+      await user.click(customerHeader);
     });
 
     // After first click, should sort ascending (Alice before John)
@@ -845,10 +845,12 @@ describe('BookingsPage', () => {
       await user.selectOptions(staffSelect, 's1');
     });
 
+    // Check within the table body — Mike's option still exists in the staff filter dropdown
+    const tableBody = screen.getAllByRole('rowgroup')[1]; // tbody
     await waitFor(
       () => {
-        expect(screen.getByText('Sarah')).toBeInTheDocument();
-        expect(screen.queryByText('Mike')).not.toBeInTheDocument();
+        expect(within(tableBody).getByText('Sarah')).toBeInTheDocument();
+        expect(within(tableBody).queryByText('Mike')).not.toBeInTheDocument();
       },
       { timeout: 500 },
     );

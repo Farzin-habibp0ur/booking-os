@@ -12,6 +12,19 @@ jest.mock('next/link', () => ({ children, href, ...rest }: any) => (
     {children}
   </a>
 ));
+jest.mock('lucide-react', () => {
+  const stub = (name: string) => {
+    const C = (props: any) => <svg data-testid={`icon-${name}`} {...props} />;
+    C.displayName = name;
+    return C;
+  };
+  return new Proxy(
+    {},
+    {
+      get: (_target, prop: string) => stub(prop),
+    },
+  );
+});
 jest.mock('@/lib/auth', () => ({
   useAuth: () => ({
     user: { id: '1', name: 'Sarah', role: 'ADMIN', businessId: 'b1' },
@@ -33,6 +46,9 @@ jest.mock('@/lib/toast', () => ({
   useToast: () => ({ toast: jest.fn() }),
 }));
 jest.mock('@/lib/cn', () => ({ cn: (...args: any[]) => args.filter(Boolean).join(' ') }));
+jest.mock('@/lib/design-tokens', () => ({
+  ELEVATION: { card: 'shadow-soft rounded-2xl', cardSm: 'shadow-soft-sm rounded-xl' },
+}));
 const mockSetTheme = jest.fn();
 jest.mock('@/lib/use-theme', () => ({
   useTheme: () => ({ theme: 'light' as const, setTheme: mockSetTheme, toggle: jest.fn() }),
@@ -87,14 +103,12 @@ describe('SettingsPage', () => {
     render(<SettingsPage />);
     await waitFor(() => screen.getByDisplayValue('Glow Clinic'));
 
-    // Modify name
     const nameInput = screen.getByDisplayValue('Glow Clinic');
     await userEvent.clear(nameInput);
     await userEvent.type(nameInput, 'New Clinic');
 
-    // Click save
     const saveButtons = screen.getAllByText('settings.save_changes');
-    fireEvent.click(saveButtons[0]); // First save button is for business info
+    fireEvent.click(saveButtons[0]);
 
     await waitFor(() => {
       expect(mockApi.patch).toHaveBeenCalledWith(
@@ -123,9 +137,6 @@ describe('SettingsPage', () => {
     render(<SettingsPage />);
     await waitFor(() => screen.getByText('settings.change_password'));
 
-    // Get password inputs by their preceding labels
-    const passwordInputs = screen.getAllByRole('textbox', { hidden: true });
-    // Use the actual password inputs
     const allInputs = document.querySelectorAll('input[type="password"]');
     if (allInputs.length >= 3) {
       fireEvent.change(allInputs[0], { target: { value: 'current' } });
@@ -216,161 +227,98 @@ describe('SettingsPage', () => {
     expect(screen.queryByText('settings.booking_link')).not.toBeInTheDocument();
   });
 
-  // ─── Quick Links Navigation ───────────────────────────────────────────
+  // ─── Settings Hub Categories ──────────────────────────────────────────
 
-  test('navigates to templates settings', async () => {
+  test('shows settings hub section heading', async () => {
     render(<SettingsPage />);
-    await waitFor(() => screen.getByText('settings.message_templates'));
-
-    fireEvent.click(screen.getByText('settings.message_templates'));
-
-    expect(mockPush).toHaveBeenCalledWith('/settings/templates');
+    await waitFor(() => {
+      expect(screen.getByText('settings.more_settings')).toBeInTheDocument();
+    });
   });
 
-  test('navigates to notifications settings', async () => {
+  test('renders all settings hub category cards for ADMIN role', async () => {
     render(<SettingsPage />);
-    await waitFor(() => screen.getByText('settings.notifications'));
-
-    fireEvent.click(screen.getByText('settings.notifications'));
-
-    expect(mockPush).toHaveBeenCalledWith('/settings/notifications');
+    await waitFor(() => {
+      expect(screen.getByText('Account & Security')).toBeInTheDocument();
+      expect(screen.getByText('Operations')).toBeInTheDocument();
+      expect(screen.getByText('Communication')).toBeInTheDocument();
+      expect(screen.getByText('AI & Automation')).toBeInTheDocument();
+      expect(screen.getByText('Growth')).toBeInTheDocument();
+      expect(screen.getByText('Billing')).toBeInTheDocument();
+      expect(screen.getByText('Appearance')).toBeInTheDocument();
+    });
   });
 
-  test('navigates to policies settings', async () => {
+  test('displays category descriptions', async () => {
     render(<SettingsPage />);
-    await waitFor(() => screen.getByText('settings.policies'));
-
-    fireEvent.click(screen.getByText('settings.policies'));
-
-    expect(mockPush).toHaveBeenCalledWith('/settings/policies');
+    await waitFor(() => {
+      expect(screen.getByText('Team accounts, login methods, and custom profile fields')).toBeInTheDocument();
+      expect(screen.getByText('Calendar rules, message templates, and booking policies')).toBeInTheDocument();
+      expect(screen.getByText('Notification preferences and language translations')).toBeInTheDocument();
+      expect(screen.getByText('AI assistant, autonomy levels, and background agents')).toBeInTheDocument();
+    });
   });
 
-  test('navigates to calendar sync settings', async () => {
+  test('navigates to account settings when Account & Security card is clicked', async () => {
     render(<SettingsPage />);
-    await waitFor(() => screen.getByText('settings.calendar_sync'));
+    await waitFor(() => screen.getByText('Account & Security'));
 
-    fireEvent.click(screen.getByText('settings.calendar_sync'));
-
-    expect(mockPush).toHaveBeenCalledWith('/settings/calendar');
-  });
-
-  test('navigates to AI settings', async () => {
-    render(<SettingsPage />);
-    await waitFor(() => screen.getByText('settings.ai_settings'));
-
-    fireEvent.click(screen.getByText('settings.ai_settings'));
-
-    expect(mockPush).toHaveBeenCalledWith('/settings/ai');
-  });
-
-  test('navigates to billing', async () => {
-    render(<SettingsPage />);
-    await waitFor(() => screen.getByText('settings.billing'));
-
-    fireEvent.click(screen.getByText('settings.billing'));
-
-    expect(mockPush).toHaveBeenCalledWith('/settings/billing');
-  });
-
-  test('navigates to translations', async () => {
-    render(<SettingsPage />);
-    await waitFor(() => screen.getByText('settings.translations'));
-
-    fireEvent.click(screen.getByText('settings.translations'));
-
-    expect(mockPush).toHaveBeenCalledWith('/settings/translations');
-  });
-
-  test('navigates to profile fields', async () => {
-    render(<SettingsPage />);
-    await waitFor(() => screen.getByText('settings.profile_fields'));
-
-    fireEvent.click(screen.getByText('settings.profile_fields'));
-
-    expect(mockPush).toHaveBeenCalledWith('/settings/profile-fields');
-  });
-
-  test('navigates to setup wizard', async () => {
-    render(<SettingsPage />);
-    await waitFor(() => screen.getByText('settings.setup_wizard'));
-
-    fireEvent.click(screen.getByText('settings.setup_wizard'));
-
-    expect(mockPush).toHaveBeenCalledWith('/setup');
-  });
-
-  test('navigates to account import', async () => {
-    render(<SettingsPage />);
-    await waitFor(() => screen.getByText('settings.account_import'));
-
-    fireEvent.click(screen.getByText('settings.account_import'));
+    fireEvent.click(screen.getByText('Account & Security'));
 
     expect(mockPush).toHaveBeenCalledWith('/settings/account');
   });
 
-  // ─── Theme ────────────────────────────────────────────────────────────
-
-  test('shows appearance section with theme buttons', async () => {
+  test('navigates to calendar settings when Operations card is clicked', async () => {
     render(<SettingsPage />);
-    await waitFor(() => {
-      expect(screen.getByText('Appearance')).toBeInTheDocument();
-      expect(screen.getByText('light')).toBeInTheDocument();
-      expect(screen.getByText('dark')).toBeInTheDocument();
-    });
+    await waitFor(() => screen.getByText('Operations'));
+
+    fireEvent.click(screen.getByText('Operations'));
+
+    expect(mockPush).toHaveBeenCalledWith('/settings/calendar');
   });
 
-  test('sets theme when theme button is clicked', async () => {
+  test('navigates to notifications settings when Communication card is clicked', async () => {
     render(<SettingsPage />);
-    await waitFor(() => screen.getByText('dark'));
+    await waitFor(() => screen.getByText('Communication'));
 
-    fireEvent.click(screen.getByText('dark'));
+    fireEvent.click(screen.getByText('Communication'));
 
-    expect(mockSetTheme).toHaveBeenCalledWith('dark');
+    expect(mockPush).toHaveBeenCalledWith('/settings/notifications');
   });
 
-  // ─── Waitlist and Offers quick links ──────────────────────────────────
-
-  test('shows waitlist and offers quick links', async () => {
-    render(<SettingsPage />);
-    await waitFor(() => {
-      expect(screen.getByText('Waitlist')).toBeInTheDocument();
-      expect(screen.getByText('Offers')).toBeInTheDocument();
-    });
-  });
-
-  test('navigates to waitlist settings', async () => {
-    render(<SettingsPage />);
-    await waitFor(() => screen.getByText('Waitlist'));
-
-    fireEvent.click(screen.getByText('Waitlist'));
-
-    expect(mockPush).toHaveBeenCalledWith('/settings/waitlist');
-  });
-
-  test('navigates to offers settings', async () => {
-    render(<SettingsPage />);
-    await waitFor(() => screen.getByText('Offers'));
-
-    fireEvent.click(screen.getByText('Offers'));
-
-    expect(mockPush).toHaveBeenCalledWith('/settings/offers');
-  });
-
-  // ─── Settings Hub Navigation ─────────────────────────────────────
-
-  test('shows settings hub categories', async () => {
-    render(<SettingsPage />);
-    await waitFor(() => {
-      expect(screen.getByText('AI & Automation')).toBeInTheDocument();
-    });
-  });
-
-  test('navigates to AI settings when AI & Automation category is clicked', async () => {
+  test('navigates to AI settings when AI & Automation card is clicked', async () => {
     render(<SettingsPage />);
     await waitFor(() => screen.getByText('AI & Automation'));
 
     fireEvent.click(screen.getByText('AI & Automation'));
 
     expect(mockPush).toHaveBeenCalledWith('/settings/ai');
+  });
+
+  test('navigates to waitlist settings when Growth card is clicked', async () => {
+    render(<SettingsPage />);
+    await waitFor(() => screen.getByText('Growth'));
+
+    fireEvent.click(screen.getByText('Growth'));
+
+    expect(mockPush).toHaveBeenCalledWith('/settings/waitlist');
+  });
+
+  test('navigates to billing settings when Billing card is clicked', async () => {
+    render(<SettingsPage />);
+    await waitFor(() => screen.getByText('Billing'));
+
+    fireEvent.click(screen.getByText('Billing'));
+
+    expect(mockPush).toHaveBeenCalledWith('/settings/billing');
+  });
+
+  test('navigates to settings root when Appearance card is clicked (no sub-pages)', async () => {
+    render(<SettingsPage />);
+    await waitFor(() => screen.getByText('Appearance'));
+
+    fireEvent.click(screen.getByText('Appearance'));
+
+    expect(mockPush).toHaveBeenCalledWith('/settings');
   });
 });

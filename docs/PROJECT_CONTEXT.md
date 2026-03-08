@@ -2,7 +2,7 @@
 
 > **Purpose:** This document gives full context on the Booking OS platform — what it is, what's been built, how it's structured, and what's left to build. Share this with an AI assistant or new developer to get productive immediately.
 >
-> **Last updated:** February 20, 2026 (Platform Console ALL 6 PHASES COMPLETE — 3,906 total tests: 2,329 API + 1,577 web)
+> **Last updated:** February 20, 2026 (Platform Console ALL 6 PHASES COMPLETE — 3,944 total tests: 2,360 API + 1,584 web)
 
 ---
 
@@ -700,7 +700,7 @@ Key groups (full list in `.env.example`):
 - **Phase 4** (Packs & Skills Release Management): Pack registry API (`/admin/packs-console`) with version history, install counts, installed businesses. Skills catalog API (`/admin/skills-console`) with per-pack filtering. New console-packs.controller.ts + console-packs.service.ts + console-skills.controller.ts + console-skills.service.ts. 3 new frontend pages (pack registry, pack detail, skills catalog). New PackTenantPin model (51 Prisma models total). Migration #31.
 - **Phase 5** (AI & Agents Governance + Messaging Ops): Agent performance dashboard API (`/admin/agents-console`) with performance metrics, action card funnel, top failures, abnormal tenants, tenant agent status, pause/resume, platform defaults governance. Messaging ops API (`/admin/messaging-console`) with dashboard KPIs, webhook health, failure analysis, tenant messaging status, fix checklist. New PlatformAgentDefault model. console-agents.controller.ts + console-agents.service.ts + console-messaging.controller.ts + console-messaging.service.ts. 2 new frontend pages (agents with 3 tabs, messaging with 2 tabs). Migration #32.
 - **Phase 6** (Platform Settings + Mission Control): Platform settings API (`/admin/settings`) with CRUD and bulk update across 4 categories (security, notifications, regional, platform). Enhanced overview with attention items (past-due subs, urgent support cases, active view-as, high agent failure rate, dormant businesses) and accounts-at-risk scoring (billing × activity × support × AI health). New PlatformSetting model. console-settings.controller.ts + console-settings.service.ts. 1 new frontend page (settings with maintenance mode confirmation). Migration #33.
-- **Final counts:** 3,906 tests total (2,329 API + 1,577 web), 51 Prisma models, 33 migrations
+- **Final counts:** 3,944 tests total (2,360 API + 1,584 web), 51 Prisma models, 33 migrations
 
 ### Code Quality
 - **Error Handling Remediation** — COMPLETE (commit 1cf6f99). Replaced ~20 silent `.catch(() => {})` with logged warnings, queue processors throw on failure, NestJS proper exceptions, frontend toast wiring, waitlist loop resilience, WebSocket disconnect logging. +58 tests.
@@ -765,7 +765,7 @@ npm run dev                    # Starts all apps via Turborepo
 | `npm run dev` | Start all apps |
 | `npm run build` | Build all |
 | `npm run lint` | Lint all (ESLint + TypeScript) |
-| `npm test` | Run all tests (~3,906 tests) |
+| `npm test` | Run all tests (~3,944 tests) |
 | `npm run test:coverage` | Tests with coverage thresholds |
 | `npm run db:generate` | Generate Prisma client |
 | `npm run db:migrate` | Run migrations |

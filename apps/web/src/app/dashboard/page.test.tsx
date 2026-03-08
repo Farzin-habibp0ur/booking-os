@@ -173,11 +173,84 @@ jest.mock('./components/kpi-strip', () => ({
 }));
 
 jest.mock('./components/my-work', () => ({
-  MyWork: () => <div data-testid="my-work">MyWork</div>,
+  MyWork: ({ myBookingsToday, myAssignedConversations }: any) => (
+    <div data-testid="my-work">
+      {myBookingsToday?.map((b: any) => (
+        <div key={b.id}>{b.customer?.name}</div>
+      ))}
+      {myAssignedConversations?.map((c: any) => (
+        <div key={c.id}>{c.customer?.name}</div>
+      ))}
+    </div>
+  ),
 }));
 
 jest.mock('./components/attention-card', () => ({
-  AttentionCards: () => <div data-testid="attention-cards">AttentionCards</div>,
+  AttentionCards: ({ attentionNeeded }: any) => {
+    if (!attentionNeeded) return null;
+    const hasItems =
+      (attentionNeeded.depositPendingBookings?.length || 0) > 0 ||
+      (attentionNeeded.overdueConversations?.length || 0) > 0 ||
+      (attentionNeeded.tomorrowBookings?.length || 0) > 0;
+    if (!hasItems) return null;
+    return (
+      <div data-testid="attention-cards">
+        <h2>dashboard.attention_needed</h2>
+        {attentionNeeded.depositPendingBookings?.length > 0 && (
+          <div>
+            <p>dashboard.deposit_pending</p>
+            <span>{attentionNeeded.depositPendingBookings.length}</span>
+            {attentionNeeded.depositPendingBookings.slice(0, 3).map((b: any) => (
+              <div key={b.id}>
+                <span>{b.customer?.name}</span>
+                <span>{b.service?.name}</span>
+              </div>
+            ))}
+            <button onClick={() => mockPush('/bookings?status=PENDING_DEPOSIT')}>
+              dashboard.view_deposit_pending
+            </button>
+            <button onClick={() => mockPush(`/bookings?bookingId=${attentionNeeded.depositPendingBookings[0]?.id}`)}>
+              dashboard.send_reminders
+            </button>
+          </div>
+        )}
+        {attentionNeeded.overdueConversations?.length > 0 && (
+          <div>
+            <p>dashboard.overdue_replies</p>
+            <span>{attentionNeeded.overdueConversations.length}</span>
+            {attentionNeeded.overdueConversations.slice(0, 3).map((c: any) => (
+              <div key={c.id}>
+                <span>{c.customer?.name}</span>
+              </div>
+            ))}
+            <button onClick={() => mockPush('/inbox?filter=overdue')}>
+              dashboard.view_overdue
+            </button>
+            <button onClick={() => mockPush(`/inbox?conversationId=${attentionNeeded.overdueConversations[0]?.id}`)}>
+              dashboard.open_queue
+            </button>
+          </div>
+        )}
+        {attentionNeeded.tomorrowBookings?.length > 0 && (
+          <div>
+            <p>dashboard.tomorrow_schedule</p>
+            <span>{attentionNeeded.tomorrowBookings.length}</span>
+            {attentionNeeded.tomorrowBookings.slice(0, 3).map((b: any) => (
+              <div key={b.id}>
+                <span>{b.customer?.name}</span>
+              </div>
+            ))}
+            <button onClick={() => mockPush('/calendar')}>
+              dashboard.view_tomorrow
+            </button>
+            <button onClick={() => mockPush('/calendar')}>
+              dashboard.confirm_schedule
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  },
 }));
 
 import { api } from '@/lib/api';

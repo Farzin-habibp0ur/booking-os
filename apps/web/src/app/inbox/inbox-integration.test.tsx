@@ -363,11 +363,11 @@ describe('Inbox Agentic Integration', () => {
       fireEvent.click(screen.getByText('Close Selected'));
     });
 
-    // Verify API call was made
+    // Verify API call was made (page now patches each conversation's status individually)
     await waitFor(() => {
       expect(mockApi.patch).toHaveBeenCalledWith(
-        expect.stringContaining('/conversations/close'),
-        expect.any(Object),
+        expect.stringContaining('/conversations/conv-1/status'),
+        expect.objectContaining({ status: 'RESOLVED' }),
       );
     });
   });

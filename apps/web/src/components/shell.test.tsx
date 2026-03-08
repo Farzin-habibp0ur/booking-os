@@ -193,12 +193,15 @@ describe('Shell', () => {
       </Shell>,
     );
 
+    // Settings already exists in the sidebar
+    const beforeCount = screen.getAllByText('nav.settings').length;
+
     const moreBtn = screen.getByRole('tab', { name: 'More options' });
     await userEvent.click(moreBtn);
 
-    // After opening, tools and insights nav items should be visible in the sheet
-    // Settings should also be visible in the sheet
-    expect(await screen.findByText('nav.settings')).toBeInTheDocument();
+    // After opening, the "More" sheet adds another Settings link
+    const afterCount = screen.getAllByText('nav.settings').length;
+    expect(afterCount).toBeGreaterThan(beforeCount);
   });
 
   it('renders main content', () => {
