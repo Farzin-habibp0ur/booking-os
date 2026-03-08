@@ -67,6 +67,7 @@ const STEP_LABELS: Record<Step, string> = {
 };
 
 import { validateName, validatePhone, validateEmail } from './validators';
+import { trackEvent } from '@/lib/posthog';
 
 function formatSlotTime(display: string): string {
   return new Date('2000-01-01T' + display).toLocaleTimeString('en-US', {
@@ -150,6 +151,7 @@ export default function BookingPortalPage() {
         ]);
         setBusiness(biz);
         setServices(svcs);
+        trackEvent('booking_page_viewed', { business_slug: slug });
       } catch (err: any) {
         setError(err.message || 'Business not found');
       } finally {
@@ -212,6 +214,12 @@ export default function BookingPortalPage() {
         notes: customerNotes || undefined,
       });
       setBookingResult(result);
+      trackEvent('booking_completed', {
+        booking_id: result.id,
+        service_name: result.serviceName,
+        business_slug: slug,
+        deposit_required: result.depositRequired,
+      });
       setStep('success');
     } catch (err: any) {
       setSubmitError(err.message || 'Failed to book. Please try again.');
@@ -374,6 +382,7 @@ export default function BookingPortalPage() {
                 key={svc.id}
                 onClick={() => {
                   setSelectedService(svc);
+                  trackEvent('service_selected', { service_name: svc.name, service_id: svc.id });
                   setStep('datetime');
                 }}
                 className="w-full bg-white rounded-2xl shadow-soft p-4 text-left hover:shadow-soft-lg transition-shadow"
@@ -583,6 +592,10 @@ export default function BookingPortalPage() {
                             }
                             onClick={() => {
                               setSelectedSlot(slot);
+                              trackEvent('time_selected', {
+                                time: slot.display,
+                                staff: slot.staffName,
+                              });
                               setStep('details');
                             }}
                             className={`px-3 py-2 rounded-xl text-sm transition-colors ${

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import { useI18n, I18nProvider } from '@/lib/i18n';
 import { LanguagePicker } from '@/components/language-picker';
+import { trackEvent, identifyUser } from '@/lib/posthog';
 
 export default function LoginPageWrapper() {
   return (
@@ -34,6 +35,8 @@ function LoginPage() {
     setLoading(true);
     try {
       const me = await login(email, password);
+      identifyUser(me.id, { email: me.email, role: me.role });
+      trackEvent('login_completed', { role: me.role });
       sessionStorage.setItem('booking-os-login-redirect', '1');
       if (me.role === 'SUPER_ADMIN') {
         router.push('/console');

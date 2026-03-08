@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import { useI18n, I18nProvider } from '@/lib/i18n';
 import { LanguagePicker } from '@/components/language-picker';
+import { trackEvent } from '@/lib/posthog';
 
 export default function SignupPageWrapper() {
   return (
@@ -45,8 +46,10 @@ function SignupPage() {
     }
 
     setLoading(true);
+    trackEvent('signup_started');
     try {
       await signup(businessName, ownerName, email, password);
+      trackEvent('signup_completed');
       router.push('/setup');
     } catch (err: any) {
       setError(err.message || 'Signup failed');

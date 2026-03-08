@@ -108,7 +108,7 @@ export class SystemStatusService {
       environment: this.config.get<string>('NODE_ENV', 'development'),
       services: {
         database: checks.database,
-        ...(redisUrl && { redis: checks.redis }),
+        redis: checks.redis,
       },
       cron: {
         enabled: cronEnabled,

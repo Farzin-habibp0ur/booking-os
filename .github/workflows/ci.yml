@@ -56,17 +56,7 @@ jobs:
         run: npm run lint
 
       - name: Run tests
-        id: tests
-        continue-on-error: true
-        run: npm test 2>&1 | tee test-output.log
-
-      - name: Show test failures (if any)
-        if: steps.tests.outcome == 'failure'
-        run: |
-          echo "::warning::Tests failed — showing summary:"
-          grep -E "^(FAIL|PASS|Tests:|Test Suites:)" test-output.log || true
-          echo "---"
-          grep -A 5 "● " test-output.log | head -100 || true
+        run: npm test
 
   docker-build:
     runs-on: ubuntu-latest

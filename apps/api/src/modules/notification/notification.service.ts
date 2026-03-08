@@ -726,13 +726,9 @@ export class NotificationService {
   }
 
   private wrapInEmailHtml(body: string, businessName: string): string {
-    return `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h2 style="color: #71907C;">${businessName}</h2>
-        <p style="font-size: 16px; line-height: 1.5; color: #333;">${body}</p>
-        <hr style="border: none; border-top: 1px solid #E4EBE6; margin: 20px 0;" />
-        <p style="font-size: 12px; color: #999;">Sent by ${businessName} via Booking OS</p>
-      </div>
-    `;
+    const bodyContent = `
+<h2 style="margin:0 0 16px 0;font-size:20px;color:#1E293B;">${businessName}</h2>
+<p style="margin:0;font-size:16px;line-height:1.6;color:#334155;white-space:pre-line;">${body}</p>`;
+    return this.emailService.buildBrandedHtml(bodyContent);
   }
 }

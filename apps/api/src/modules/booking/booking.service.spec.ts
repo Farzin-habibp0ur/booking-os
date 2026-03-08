@@ -27,6 +27,15 @@ describe('BookingService', () => {
   let mockTokenService: ReturnType<typeof createMockTokenService>;
   let mockConfigService: ReturnType<typeof createMockConfigService>;
 
+  beforeAll(() => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2026-01-15T12:00:00Z'));
+  });
+
+  afterAll(() => {
+    jest.useRealTimers();
+  });
+
   beforeEach(async () => {
     prisma = createMockPrisma();
     mockNotificationService = createMockNotificationService();
@@ -588,7 +597,7 @@ describe('BookingService', () => {
       await bookingService.create('biz1', createData);
 
       // Allow async fire-and-forget to settle
-      await new Promise((r) => setTimeout(r, 50));
+      await jest.advanceTimersByTimeAsync(50);
 
       expect(prisma.campaignSend.findFirst).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -621,7 +630,7 @@ describe('BookingService', () => {
       await bookingService.create('biz1', createData);
 
       // Allow async fire-and-forget to settle
-      await new Promise((r) => setTimeout(r, 50));
+      await jest.advanceTimersByTimeAsync(50);
 
       expect(prisma.campaignSend.update).not.toHaveBeenCalled();
     });

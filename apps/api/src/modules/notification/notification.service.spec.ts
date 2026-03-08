@@ -70,6 +70,9 @@ describe('NotificationService', () => {
 
     emailService = {
       send: jest.fn().mockResolvedValue(true),
+      buildBrandedHtml: jest.fn().mockImplementation((bodyContent: string) => {
+        return `<html><body>${bodyContent}<footer>Powered by Booking OS</footer></body></html>`;
+      }),
     };
 
     messagingService = {
@@ -2034,7 +2037,7 @@ describe('NotificationService', () => {
       await notificationService.sendCampaignMessage(customer, campaignBody, 'biz1');
 
       const emailCall = emailService.send.mock.calls[0][0];
-      expect(emailCall.html).toContain('<div');
+      expect(emailCall.html).toContain('<html>');
       expect(emailCall.html).toContain(campaignBody);
       expect(emailCall.html).toContain('Booking OS');
     });
@@ -2203,10 +2206,9 @@ describe('NotificationService', () => {
       await notificationService.sendBookingConfirmation(mockBooking);
 
       const emailCall = emailService.send.mock.calls[0][0];
-      expect(emailCall.html).toContain('<div');
-      expect(emailCall.html).toContain('font-family: Arial, sans-serif');
-      expect(emailCall.html).toContain('max-width: 600px');
-      expect(emailCall.html).toContain('#71907C'); // sage color
+      expect(emailCall.html).toContain('<html>');
+      expect(emailCall.html).toContain('Glow Clinic');
+      expect(emailService.buildBrandedHtml).toHaveBeenCalled();
     });
 
     it('includes business name in header and footer', async () => {
@@ -2217,8 +2219,10 @@ describe('NotificationService', () => {
       const emailCall = emailService.send.mock.calls[0][0];
       // Header h2 with business name
       expect(emailCall.html).toContain('Glow Clinic');
-      // Footer mentions "Sent by ... via Booking OS"
-      expect(emailCall.html).toContain('Sent by Glow Clinic via Booking OS');
+      // Branded layout is used via buildBrandedHtml
+      expect(emailService.buildBrandedHtml).toHaveBeenCalledWith(
+        expect.stringContaining('Glow Clinic'),
+      );
     });
   });
 

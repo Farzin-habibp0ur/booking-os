@@ -42,7 +42,7 @@ describe('SystemStatusService', () => {
       expect(result.status).toBe('healthy');
       expect(result.services.database.status).toBe('ok');
       expect(result.services.database.latencyMs).toBeGreaterThanOrEqual(0);
-      expect(result.services.redis).toBeUndefined();
+      expect(result.services.redis?.status).toBe('unavailable');
     });
 
     it('should return degraded status when database is ok but redis fails', async () => {
@@ -167,6 +167,13 @@ describe('SystemStatusService', () => {
     });
 
     it('should include workers with registered queues', async () => {
+      configService.get.mockImplementation((key: string, defaultValue?: any) => {
+        if (key === 'REDIS_URL') return 'redis://localhost:6379';
+        if (key === 'ENABLE_CRON') return false;
+        if (key === 'NODE_ENV') return 'test';
+        return defaultValue;
+      });
+
       prisma.$queryRaw.mockResolvedValue([{ '1': 1 }]);
 
       const result = await service.getSystemStatus();

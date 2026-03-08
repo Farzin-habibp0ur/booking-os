@@ -9,6 +9,7 @@ import { useI18n } from '@/lib/i18n';
 import { useAuth } from '@/lib/auth';
 import { useMode } from '@/lib/use-mode';
 import { BOOKING_STATUS_STYLES } from '@/lib/design-tokens';
+import { trackEvent } from '@/lib/posthog';
 import { KpiStrip } from './components/kpi-strip';
 import { MyWork } from './components/my-work';
 import { AttentionCards } from './components/attention-card';
@@ -90,6 +91,7 @@ export default function DashboardPage() {
   // Clear the login redirect flag — dashboard is always the post-login landing page
   useEffect(() => {
     sessionStorage.removeItem('booking-os-login-redirect');
+    trackEvent('dashboard_viewed');
   }, []);
 
   const routerRef = useRef(router);

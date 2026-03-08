@@ -205,4 +205,105 @@ describe('EmailService', () => {
       expect(result).toBe(true);
     });
   });
+
+  describe('sendEmailVerification', () => {
+    it('sends email verification', async () => {
+      const result = await service.sendEmailVerification('test@example.com', {
+        name: 'Emma',
+        verifyUrl: 'https://example.com/verify/token789',
+      });
+      expect(result).toBe(true);
+    });
+  });
+
+  describe('sendBookingReminder', () => {
+    it('sends booking reminder email', async () => {
+      const result = await service.sendBookingReminder('test@example.com', {
+        customerName: 'Emma',
+        serviceName: 'Facial',
+        dateTime: '2026-03-02 14:00',
+        businessName: 'Glow Clinic',
+      });
+      expect(result).toBe(true);
+    });
+
+    it('includes staff name when provided', async () => {
+      const result = await service.sendBookingReminder('test@example.com', {
+        customerName: 'Emma',
+        serviceName: 'Facial',
+        dateTime: '2026-03-02 14:00',
+        businessName: 'Glow Clinic',
+        staffName: 'Dr. Chen',
+      });
+      expect(result).toBe(true);
+    });
+  });
+
+  describe('sendPaymentReceipt', () => {
+    it('sends payment receipt email', async () => {
+      const result = await service.sendPaymentReceipt('test@example.com', {
+        customerName: 'Emma',
+        businessName: 'Glow Clinic',
+        serviceName: 'Botox',
+        amount: '$250.00',
+        date: '2026-03-01',
+      });
+      expect(result).toBe(true);
+    });
+
+    it('includes optional payment method and invoice number', async () => {
+      const result = await service.sendPaymentReceipt('test@example.com', {
+        customerName: 'Emma',
+        businessName: 'Glow Clinic',
+        serviceName: 'Botox',
+        amount: '$250.00',
+        date: '2026-03-01',
+        paymentMethod: 'Visa ending 4242',
+        invoiceNumber: 'INV-2026-001',
+      });
+      expect(result).toBe(true);
+    });
+  });
+
+  // ─── buildBrandedHtml ──────────────────────────────────────────────
+
+  describe('buildBrandedHtml', () => {
+    it('wraps content in branded layout with header and footer', () => {
+      const html = service.buildBrandedHtml('<p>Hello</p>');
+      expect(html).toContain('Booking OS');
+      expect(html).toContain('#71907C');
+      expect(html).toContain('<p>Hello</p>');
+      expect(html).toContain('Powered by Booking OS');
+    });
+  });
+
+  // ─── RESEND_API_KEY fallback ───────────────────────────────────────
+
+  describe('RESEND_API_KEY fallback', () => {
+    it('uses RESEND_API_KEY when EMAIL_API_KEY is not set', async () => {
+      const svc = await createService({
+        EMAIL_PROVIDER: 'resend',
+        RESEND_API_KEY: 'resend-fallback-key',
+      });
+
+      const mockFetch = jest.fn().mockResolvedValue({ ok: true });
+      global.fetch = mockFetch;
+
+      const result = await svc.send({
+        to: 'test@example.com',
+        subject: 'Hello',
+        html: '<p>Hi</p>',
+      });
+
+      expect(result).toBe(true);
+      expect(mockFetch).toHaveBeenCalledWith(
+        'https://api.resend.com/emails',
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            Authorization: 'Bearer resend-fallback-key',
+          }),
+        }),
+      );
+    });
+  });
 });
