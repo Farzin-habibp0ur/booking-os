@@ -143,7 +143,7 @@ describe('SystemStatusController', () => {
 
       expect(result.status).toBe('degraded');
       expect(result.services.database.status).toBe('ok');
-      expect(result.services.redis.status).toBe('error');
+      expect(result.services.redis?.status).toBe('error');
     });
 
     it('should handle unhealthy status', async () => {
@@ -177,7 +177,7 @@ describe('SystemStatusController', () => {
 
       expect(result.status).toBe('unhealthy');
       expect(result.services.database.status).toBe('error');
-      expect(result.services.redis.status).toBe('error');
+      expect(result.services.redis?.status).toBe('error');
     });
 
     it('should include redis as unavailable when not configured', async () => {
@@ -209,8 +209,8 @@ describe('SystemStatusController', () => {
 
       const result = await controller.getSystemStatus();
 
-      expect(result.services.redis.status).toBe('unavailable');
-      expect(result.services.redis.latencyMs).toBeUndefined();
+      expect(result.services.redis?.status).toBe('unavailable');
+      expect(result.services.redis?.latencyMs).toBeUndefined();
     });
 
     it('should return memory stats with proper units', async () => {

@@ -90,8 +90,8 @@ describe('SystemStatusService', () => {
 
       const result = await service.getSystemStatus();
 
-      expect(result.services.redis.status).toBe('unavailable');
-      expect(result.services.redis.latencyMs).toBeUndefined();
+      expect(result.services.redis?.status).toBe('unavailable');
+      expect(result.services.redis?.latencyMs).toBeUndefined();
       expect(configService.get).toHaveBeenCalledWith('REDIS_URL');
     });
 
