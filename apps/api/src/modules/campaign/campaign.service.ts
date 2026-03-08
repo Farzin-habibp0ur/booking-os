@@ -11,16 +11,29 @@ export class CampaignService {
 
   async create(
     businessId: string,
-    data: { name: string; templateId?: string; filters?: any; scheduledAt?: string },
+    data: {
+      name: string;
+      templateId?: string;
+      filters?: any;
+      scheduledAt?: string;
+      recurrenceRule?: string;
+    },
   ) {
+    const recurrenceRule = data.recurrenceRule || 'NONE';
+    const scheduledAt = data.scheduledAt ? new Date(data.scheduledAt) : null;
     return this.prisma.campaign.create({
       data: {
         businessId,
         name: data.name,
         templateId: data.templateId || null,
         filters: data.filters || {},
-        scheduledAt: data.scheduledAt ? new Date(data.scheduledAt) : null,
+        scheduledAt,
         status: 'DRAFT',
+        recurrenceRule,
+        nextRunAt:
+          recurrenceRule !== 'NONE' && scheduledAt
+            ? this.computeNextRun(scheduledAt, recurrenceRule)
+            : null,
       },
     });
   }
@@ -59,21 +72,40 @@ export class CampaignService {
       filters?: any;
       scheduledAt?: string;
       throttlePerMinute?: number;
+      recurrenceRule?: string;
     },
   ) {
     const campaign = await this.findById(businessId, id);
     if (campaign.status !== 'DRAFT') {
       throw new BadRequestException('Only draft campaigns can be edited');
     }
+    const updateData: any = {
+      ...(data.name !== undefined && { name: data.name }),
+      ...(data.templateId !== undefined && { templateId: data.templateId }),
+      ...(data.filters !== undefined && { filters: data.filters }),
+      ...(data.scheduledAt !== undefined && { scheduledAt: new Date(data.scheduledAt) }),
+      ...(data.throttlePerMinute !== undefined && { throttlePerMinute: data.throttlePerMinute }),
+      ...(data.recurrenceRule !== undefined && { recurrenceRule: data.recurrenceRule }),
+    };
+
+    // Recompute nextRunAt if recurrence or schedule changed
+    if (data.recurrenceRule !== undefined || data.scheduledAt !== undefined) {
+      const rule = data.recurrenceRule ?? (campaign as any).recurrenceRule ?? 'NONE';
+      const scheduled = data.scheduledAt
+        ? new Date(data.scheduledAt)
+        : (campaign as any).scheduledAt;
+      updateData.nextRunAt =
+        rule !== 'NONE' && scheduled ? this.computeNextRun(new Date(scheduled), rule) : null;
+    }
+
+    return this.prisma.campaign.update({ where: { id }, data: updateData });
+  }
+
+  async stopRecurrence(businessId: string, id: string) {
+    const campaign = await this.findById(businessId, id);
     return this.prisma.campaign.update({
       where: { id },
-      data: {
-        ...(data.name !== undefined && { name: data.name }),
-        ...(data.templateId !== undefined && { templateId: data.templateId }),
-        ...(data.filters !== undefined && { filters: data.filters }),
-        ...(data.scheduledAt !== undefined && { scheduledAt: new Date(data.scheduledAt) }),
-        ...(data.throttlePerMinute !== undefined && { throttlePerMinute: data.throttlePerMinute }),
-      },
+      data: { recurrenceRule: 'NONE', nextRunAt: null },
     });
   }
 
@@ -162,5 +194,24 @@ export class CampaignService {
     });
 
     return { status: 'SENDING', audienceSize: total };
+  }
+
+  computeNextRun(fromDate: Date, rule: string): Date {
+    const next = new Date(fromDate);
+    switch (rule) {
+      case 'DAILY':
+        next.setDate(next.getDate() + 1);
+        break;
+      case 'WEEKLY':
+        next.setDate(next.getDate() + 7);
+        break;
+      case 'BIWEEKLY':
+        next.setDate(next.getDate() + 14);
+        break;
+      case 'MONTHLY':
+        next.setMonth(next.getMonth() + 1);
+        break;
+    }
+    return next;
   }
 }

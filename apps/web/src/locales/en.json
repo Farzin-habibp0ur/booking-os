@@ -417,7 +417,15 @@
     "password_placeholder": "Password",
     "role_agent": "Agent",
     "role_admin": "Admin",
-    "role_service_provider": "Service Provider"
+    "role_service_provider": "Service Provider",
+    "pricing": "Pricing",
+    "pricing_description": "Set custom prices for this staff member. Leave blank to use the service base price.",
+    "service": "Service",
+    "base_price": "Base Price",
+    "override_price": "Override",
+    "use_base": "Use base",
+    "save_pricing": "Save Pricing",
+    "no_services": "No active services found."
   },
 
   "days": {

@@ -383,7 +383,15 @@
     "password_placeholder": "Contraseña",
     "role_agent": "Agente",
     "role_admin": "Administrador",
-    "role_service_provider": "Proveedor de Servicios"
+    "role_service_provider": "Proveedor de Servicios",
+    "pricing": "Precios",
+    "pricing_description": "Establece precios personalizados para este miembro del personal. Deja en blanco para usar el precio base del servicio.",
+    "service": "Servicio",
+    "base_price": "Precio Base",
+    "override_price": "Precio Especial",
+    "use_base": "Usar base",
+    "save_pricing": "Guardar Precios",
+    "no_services": "No se encontraron servicios activos."
   },
 
   "days": {

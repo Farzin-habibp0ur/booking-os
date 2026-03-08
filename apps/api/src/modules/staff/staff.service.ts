@@ -154,6 +154,92 @@ export class StaffService {
     });
   }
 
+  async getServicePricing(businessId: string, staffId: string) {
+    // Verify staff belongs to this business
+    const staff = await this.prisma.staff.findFirst({
+      where: { id: staffId, businessId },
+      select: { id: true },
+    });
+    if (!staff) throw new NotFoundException('Staff member not found');
+
+    // Get all active services for this business
+    const services = await this.prisma.service.findMany({
+      where: { businessId, isActive: true },
+      orderBy: { category: 'asc' },
+    });
+
+    // Get existing staff price overrides
+    const overrides = await this.prisma.staffServicePrice.findMany({
+      where: { staffId, businessId },
+    });
+
+    const overrideMap = new Map(overrides.map((o) => [o.serviceId, o.price]));
+
+    return services.map((service) => ({
+      serviceId: service.id,
+      serviceName: service.name,
+      category: service.category,
+      basePrice: service.price,
+      overridePrice: overrideMap.get(service.id) ?? null,
+    }));
+  }
+
+  async setServicePricing(
+    businessId: string,
+    staffId: string,
+    overrides: Array<{ serviceId: string; price: number | null }>,
+  ) {
+    // Verify staff belongs to this business
+    const staff = await this.prisma.staff.findFirst({
+      where: { id: staffId, businessId },
+      select: { id: true },
+    });
+    if (!staff) throw new NotFoundException('Staff member not found');
+
+    // Process each override in a transaction
+    await this.prisma.$transaction(async (tx) => {
+      for (const override of overrides) {
+        if (override.price === null || override.price === undefined) {
+          // Remove the override
+          await tx.staffServicePrice.deleteMany({
+            where: { staffId, serviceId: override.serviceId, businessId },
+          });
+        } else {
+          // Upsert the override
+          await tx.staffServicePrice.upsert({
+            where: {
+              staffId_serviceId: { staffId, serviceId: override.serviceId },
+            },
+            create: {
+              staffId,
+              serviceId: override.serviceId,
+              businessId,
+              price: override.price,
+            },
+            update: {
+              price: override.price,
+            },
+          });
+        }
+      }
+    });
+
+    // Return the updated pricing
+    return this.getServicePricing(businessId, staffId);
+  }
+
+  async getStaffPriceForService(
+    staffId: string,
+    serviceId: string,
+  ): Promise<number | null> {
+    const override = await this.prisma.staffServicePrice.findUnique({
+      where: {
+        staffId_serviceId: { staffId, serviceId },
+      },
+    });
+    return override?.price ?? null;
+  }
+
   async revokeInvite(businessId: string, staffId: string) {
     const staff = await this.prisma.staff.findFirst({
       where: { id: staffId, businessId },

@@ -1,13 +1,18 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../../common/prisma.service';
+import { CampaignService } from './campaign.service';
 
 @Injectable()
 export class CampaignDispatchService {
   private readonly logger = new Logger(CampaignDispatchService.name);
   private processing = false;
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    @Inject(forwardRef(() => CampaignService))
+    private campaignService: CampaignService,
+  ) {}
 
   @Cron(CronExpression.EVERY_MINUTE)
   async processSendingCampaigns() {
@@ -42,6 +47,9 @@ export class CampaignDispatchService {
         where: { id: campaign.id },
         data: { status: 'SENT', sentAt: new Date(), stats },
       });
+
+      // Schedule next occurrence if campaign has a recurrence rule
+      await this.scheduleNextRecurrence(campaign);
       return;
     }
 
@@ -122,5 +130,35 @@ export class CampaignDispatchService {
     stats.bookings = bookings;
 
     return stats;
+  }
+
+  async scheduleNextRecurrence(campaign: any) {
+    if (!campaign.recurrenceRule || campaign.recurrenceRule === 'NONE') return;
+
+    const baseDate = campaign.sentAt || campaign.scheduledAt || new Date();
+    const nextRunAt = this.campaignService.computeNextRun(
+      new Date(baseDate),
+      campaign.recurrenceRule,
+    );
+
+    // Create a new child campaign scheduled for the next occurrence
+    await this.prisma.campaign.create({
+      data: {
+        businessId: campaign.businessId,
+        name: campaign.name,
+        status: 'DRAFT',
+        templateId: campaign.templateId,
+        filters: campaign.filters || {},
+        scheduledAt: nextRunAt,
+        throttlePerMinute: campaign.throttlePerMinute || 10,
+        recurrenceRule: campaign.recurrenceRule,
+        nextRunAt: this.campaignService.computeNextRun(nextRunAt, campaign.recurrenceRule),
+        parentCampaignId: campaign.parentCampaignId || campaign.id,
+      },
+    });
+
+    this.logger.log(
+      `Scheduled next ${campaign.recurrenceRule} occurrence of campaign "${campaign.name}" for ${nextRunAt.toISOString()}`,
+    );
   }
 }

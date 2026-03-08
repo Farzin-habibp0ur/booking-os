@@ -44,6 +44,7 @@ export class BookingService {
       locationId?: string;
       dateFrom?: string;
       dateTo?: string;
+      search?: string;
       page?: number;
       pageSize?: number;
     },
@@ -64,6 +65,18 @@ export class BookingService {
       if (query.dateTo) {
         const to = new Date(query.dateTo);
         if (!isNaN(to.getTime())) where.startTime.lte = to;
+      }
+    }
+    if (query.search) {
+      const searchTerm = query.search.trim();
+      if (searchTerm) {
+        where.customer = {
+          OR: [
+            { name: { contains: searchTerm, mode: 'insensitive' } },
+            { phone: { contains: searchTerm, mode: 'insensitive' } },
+            { email: { contains: searchTerm, mode: 'insensitive' } },
+          ],
+        };
       }
     }
 
@@ -130,6 +143,19 @@ export class BookingService {
     }
     const endTime = new Date(startTime.getTime() + service.durationMins * 60000);
 
+    // Resolve effective price: staff override > service base price
+    let effectivePrice = service.price;
+    if (data.staffId) {
+      const staffOverride = await this.prisma.staffServicePrice.findUnique({
+        where: {
+          staffId_serviceId: { staffId: data.staffId, serviceId: data.serviceId },
+        },
+      });
+      if (staffOverride) {
+        effectivePrice = staffOverride.price;
+      }
+    }
+
     const isDepositRequired = service.depositRequired === true;
 
     // Validate resource belongs to the specified location
@@ -168,6 +194,9 @@ export class BookingService {
     const mergedCustomFields = {
       ...(data.customFields || {}),
       ...(overrideLog ? { overrideLog } : {}),
+      ...(effectivePrice !== service.price
+        ? { effectivePrice, basePrice: service.price }
+        : {}),
     };
 
     // C1 fix: Wrap conflict check + create in transaction with row lock to prevent double-booking

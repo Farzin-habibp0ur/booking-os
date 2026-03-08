@@ -24,6 +24,7 @@ import {
   AddTimeOffDto,
   InviteStaffDto,
   UpdatePreferencesDto,
+  SetStaffServicePricingDto,
 } from '../../common/dto';
 
 @ApiTags('Staff')
@@ -80,6 +81,21 @@ export class StaffController {
   @Roles('ADMIN')
   deactivate(@BusinessId() businessId: string, @Param('id') id: string) {
     return this.staffService.deactivate(businessId, id);
+  }
+
+  @Get(':id/pricing')
+  getServicePricing(@BusinessId() businessId: string, @Param('id') id: string) {
+    return this.staffService.getServicePricing(businessId, id);
+  }
+
+  @Patch(':id/pricing')
+  @Roles('ADMIN')
+  setServicePricing(
+    @BusinessId() businessId: string,
+    @Param('id') id: string,
+    @Body() body: SetStaffServicePricingDto,
+  ) {
+    return this.staffService.setServicePricing(businessId, id, body.overrides);
   }
 
   @Get(':id/working-hours')

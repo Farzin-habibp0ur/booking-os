@@ -2,7 +2,15 @@
 
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
-import { Plus, ChevronDown, ChevronRight, Clock, CalendarOff, Trash2 } from 'lucide-react';
+import {
+  Plus,
+  ChevronDown,
+  ChevronRight,
+  Clock,
+  CalendarOff,
+  Trash2,
+  DollarSign,
+} from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useI18n } from '@/lib/i18n';
 
@@ -15,7 +23,8 @@ export default function StaffPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [workingHours, setWorkingHours] = useState<Record<string, any[]>>({});
   const [timeOff, setTimeOff] = useState<Record<string, any[]>>({});
-  const [tab, setTab] = useState<'hours' | 'timeoff'>('hours');
+  const [pricing, setPricing] = useState<Record<string, any[]>>({});
+  const [tab, setTab] = useState<'hours' | 'timeoff' | 'pricing'>('hours');
   const [saving, setSaving] = useState(false);
 
   // Time off form
@@ -46,11 +55,29 @@ export default function StaffPage() {
     }
   };
 
+  const loadPricing = async (staffId: string) => {
+    if (!pricing[staffId]) {
+      const p = await api.get<any[]>(`/staff/${staffId}/pricing`);
+      setPricing((prev) => ({ ...prev, [staffId]: p }));
+    }
+  };
+
   const updateHour = (staffId: string, dayOfWeek: number, field: string, value: any) => {
     setWorkingHours((prev) => ({
       ...prev,
       [staffId]: (prev[staffId] || []).map((h: any) =>
         h.dayOfWeek === dayOfWeek ? { ...h, [field]: value } : h,
+      ),
+    }));
+  };
+
+  const updatePriceOverride = (staffId: string, serviceId: string, value: string) => {
+    setPricing((prev) => ({
+      ...prev,
+      [staffId]: (prev[staffId] || []).map((p: any) =>
+        p.serviceId === serviceId
+          ? { ...p, overridePrice: value === '' ? null : parseFloat(value) }
+          : p,
       ),
     }));
   };
@@ -64,6 +91,17 @@ export default function StaffPage() {
       isOff: h.isOff,
     }));
     await api.patch(`/staff/${staffId}/working-hours`, { hours });
+    setSaving(false);
+  };
+
+  const savePricing = async (staffId: string) => {
+    setSaving(true);
+    const overrides = (pricing[staffId] || []).map((p: any) => ({
+      serviceId: p.serviceId,
+      price: p.overridePrice,
+    }));
+    const updated = await api.patch<any[]>(`/staff/${staffId}/pricing`, { overrides });
+    setPricing((prev) => ({ ...prev, [staffId]: updated }));
     setSaving(false);
   };
 
@@ -198,6 +236,21 @@ export default function StaffPage() {
                                   {timeOff[s.id].length}
                                 </span>
                               )}
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setTab('pricing');
+                                loadPricing(s.id);
+                              }}
+                              className={cn(
+                                'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm transition-colors',
+                                tab === 'pricing'
+                                  ? 'bg-white border shadow-sm font-medium'
+                                  : 'text-slate-500 hover:bg-white/50',
+                              )}
+                            >
+                              <DollarSign size={14} /> {t('staff.pricing')}
                             </button>
                           </div>
 
@@ -343,6 +396,82 @@ export default function StaffPage() {
                                   {t('staff.add_time_off')}
                                 </button>
                               </div>
+                            </div>
+                          )}
+
+                          {/* Pricing Tab */}
+                          {tab === 'pricing' && (
+                            <div>
+                              <p className="text-xs text-slate-500 mb-3">
+                                {t('staff.pricing_description')}
+                              </p>
+                              <div className="bg-white border border-slate-100 rounded-xl divide-y">
+                                <div className="flex items-center gap-3 px-4 py-2 bg-slate-50 rounded-t-xl">
+                                  <div className="flex-1 text-xs font-medium text-slate-500 uppercase">
+                                    {t('staff.service')}
+                                  </div>
+                                  <div className="w-24 text-xs font-medium text-slate-500 uppercase text-right">
+                                    {t('staff.base_price')}
+                                  </div>
+                                  <div className="w-32 text-xs font-medium text-slate-500 uppercase text-right">
+                                    {t('staff.override_price')}
+                                  </div>
+                                </div>
+                                {(pricing[s.id] || []).map((p: any) => (
+                                  <div
+                                    key={p.serviceId}
+                                    className="flex items-center gap-3 px-4 py-2.5"
+                                  >
+                                    <div className="flex-1">
+                                      <span className="text-sm font-medium">{p.serviceName}</span>
+                                      <span className="text-xs text-slate-400 ml-2">
+                                        {p.category}
+                                      </span>
+                                    </div>
+                                    <div className="w-24 text-sm text-slate-500 text-right">
+                                      ${p.basePrice.toFixed(2)}
+                                    </div>
+                                    <div className="w-32">
+                                      <input
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        value={
+                                          p.overridePrice !== null && p.overridePrice !== undefined
+                                            ? p.overridePrice
+                                            : ''
+                                        }
+                                        onChange={(e) =>
+                                          updatePriceOverride(s.id, p.serviceId, e.target.value)
+                                        }
+                                        placeholder={t('staff.use_base')}
+                                        className={cn(
+                                          'w-full border rounded-lg px-2 py-1 text-sm text-right',
+                                          p.overridePrice !== null && p.overridePrice !== undefined
+                                            ? 'border-sage-300 bg-sage-50'
+                                            : 'border-slate-200',
+                                        )}
+                                      />
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                              {(pricing[s.id] || []).length === 0 && (
+                                <p className="text-sm text-slate-400 text-center py-4">
+                                  {t('staff.no_services')}
+                                </p>
+                              )}
+                              {(pricing[s.id] || []).length > 0 && (
+                                <div className="mt-3 flex justify-end">
+                                  <button
+                                    onClick={() => savePricing(s.id)}
+                                    disabled={saving}
+                                    className="bg-sage-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-sage-700 disabled:opacity-50 transition-colors"
+                                  >
+                                    {saving ? t('common.saving') : t('staff.save_pricing')}
+                                  </button>
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>

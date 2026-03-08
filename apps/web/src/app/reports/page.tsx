@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { useI18n } from '@/lib/i18n';
+import { Download, FileText, Loader2 } from 'lucide-react';
 import {
   BarChart,
   Bar,
@@ -37,6 +38,67 @@ const STATUS_COLORS: Record<string, string> = new Proxy({} as Record<string, str
 });
 
 const DAYS_SHORT = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+
+type ExportFormat = 'csv' | 'pdf';
+
+function triggerDownload(content: string, filename: string, mimeType: string) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+function ExportButtons({
+  reportType,
+  days,
+}: {
+  reportType: string;
+  days: number;
+}) {
+  const [exporting, setExporting] = useState<ExportFormat | null>(null);
+
+  const handleExport = async (format: ExportFormat) => {
+    setExporting(format);
+    try {
+      const content = await api.getText(
+        `/reports/${reportType}/export?days=${days}&format=${format}`,
+      );
+      const ext = format === 'pdf' ? 'html' : 'csv';
+      const mime = format === 'pdf' ? 'text/html;charset=utf-8;' : 'text/csv;charset=utf-8;';
+      triggerDownload(content, `${reportType}-${new Date().toISOString().split('T')[0]}.${ext}`, mime);
+    } catch {
+      // silently fail — the api client handles auth errors
+    } finally {
+      setExporting(null);
+    }
+  };
+
+  return (
+    <div className="flex gap-1">
+      <button
+        onClick={() => handleExport('csv')}
+        disabled={exporting !== null}
+        className="p-1.5 rounded-lg text-slate-400 hover:text-sage-600 hover:bg-sage-50 transition-colors disabled:opacity-50"
+        title="Export CSV"
+      >
+        {exporting === 'csv' ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+      </button>
+      <button
+        onClick={() => handleExport('pdf')}
+        disabled={exporting !== null}
+        className="p-1.5 rounded-lg text-slate-400 hover:text-lavender-600 hover:bg-lavender-50 transition-colors disabled:opacity-50"
+        title="Export PDF"
+      >
+        {exporting === 'pdf' ? <Loader2 size={14} className="animate-spin" /> : <FileText size={14} />}
+      </button>
+    </div>
+  );
+}
 
 export default function ReportsPage() {
   const { t } = useI18n();
@@ -126,7 +188,10 @@ export default function ReportsPage() {
       {/* Row 1: Bookings Over Time + Revenue */}
       <div className="grid grid-cols-2 gap-6">
         <div className="bg-white rounded-2xl shadow-soft p-4">
-          <h2 className="font-semibold mb-4">{t('reports.bookings_over_time')}</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-semibold">{t('reports.bookings_over_time')}</h2>
+            <ExportButtons reportType="bookings-over-time" days={days} />
+          </div>
           <ResponsiveContainer width="100%" height={220}>
             <AreaChart data={bookingsData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -146,7 +211,10 @@ export default function ReportsPage() {
         </div>
 
         <div className="bg-white rounded-2xl shadow-soft p-4">
-          <h2 className="font-semibold mb-4">{t('reports.revenue_over_time')}</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-semibold">{t('reports.revenue_over_time')}</h2>
+            <ExportButtons reportType="revenue-over-time" days={days} />
+          </div>
           <ResponsiveContainer width="100%" height={220}>
             <AreaChart data={revenueData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -169,7 +237,10 @@ export default function ReportsPage() {
       {/* Row 2: Service Breakdown + Status Breakdown */}
       <div className="grid grid-cols-2 gap-6">
         <div className="bg-white rounded-2xl shadow-soft p-4">
-          <h2 className="font-semibold mb-4">{t('reports.service_popularity')}</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-semibold">{t('reports.service_popularity')}</h2>
+            <ExportButtons reportType="service-breakdown" days={days} />
+          </div>
           {serviceData.length === 0 ? (
             <p className="text-slate-400 text-sm py-8 text-center">
               Not enough data yet. Reports will populate after your first week of bookings.
@@ -203,7 +274,10 @@ export default function ReportsPage() {
         </div>
 
         <div className="bg-white rounded-2xl shadow-soft p-4">
-          <h2 className="font-semibold mb-4">{t('reports.status_breakdown')}</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-semibold">{t('reports.status_breakdown')}</h2>
+            <ExportButtons reportType="status-breakdown" days={days} />
+          </div>
           {statusData.length === 0 ? (
             <p className="text-slate-400 text-sm py-8 text-center">
               Not enough data yet. Reports will populate after your first week of bookings.
@@ -254,7 +328,10 @@ export default function ReportsPage() {
 
       {/* Row 3: Staff Performance */}
       <div className="bg-white rounded-2xl shadow-soft p-4">
-        <h2 className="font-semibold mb-4">{t('reports.staff_performance')}</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-semibold">{t('reports.staff_performance')}</h2>
+          <ExportButtons reportType="staff-performance" days={days} />
+        </div>
         {staffData.length === 0 ? (
           <p className="text-slate-400 text-sm py-4 text-center">{t('reports.no_staff_data')}</p>
         ) : (
@@ -316,7 +393,10 @@ export default function ReportsPage() {
       {peakData && (
         <div className="grid grid-cols-2 gap-6">
           <div className="bg-white rounded-2xl shadow-soft p-4">
-            <h2 className="font-semibold mb-4">{t('reports.bookings_by_hour')}</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-semibold">{t('reports.bookings_by_hour')}</h2>
+              <ExportButtons reportType="peak-hours" days={days} />
+            </div>
             <ResponsiveContainer width="100%" height={200}>
               <BarChart
                 data={(peakData.byHour || []).filter((h: any) => h.hour >= 7 && h.hour <= 20)}
@@ -331,7 +411,9 @@ export default function ReportsPage() {
           </div>
 
           <div className="bg-white rounded-2xl shadow-soft p-4">
-            <h2 className="font-semibold mb-4">{t('reports.bookings_by_day')}</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-semibold">{t('reports.bookings_by_day')}</h2>
+            </div>
             <ResponsiveContainer width="100%" height={200}>
               <BarChart
                 data={(peakData.byDay || []).map((d: any) => ({

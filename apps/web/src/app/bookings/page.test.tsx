@@ -4,8 +4,9 @@ import BookingsPage from './page';
 
 // Mock next/navigation
 const mockPush = jest.fn();
+const mockReplace = jest.fn();
 jest.mock('next/navigation', () => ({
-  useRouter: () => ({ push: mockPush }),
+  useRouter: () => ({ push: mockPush, replace: mockReplace }),
   useSearchParams: () => new URLSearchParams(),
   useParams: () => ({ id: 'test-id' }),
 }));
@@ -94,6 +95,7 @@ jest.mock('lucide-react', () => ({
   ChevronUp: () => <div data-testid="chevron-up-icon" />,
   ChevronDown: () => <div data-testid="chevron-down-icon" />,
   Filter: () => <div data-testid="filter-icon" />,
+  Calendar: () => <div data-testid="calendar-icon" />,
 }));
 
 // Mock ExportModal
@@ -424,7 +426,7 @@ describe('BookingsPage', () => {
     });
 
     await waitFor(() => {
-      expect(mockApi.get).toHaveBeenCalledWith('/bookings?status=CONFIRMED&pageSize=50');
+      expect(mockApi.get).toHaveBeenCalledWith('/bookings?pageSize=50&status=CONFIRMED');
     });
   });
 
@@ -445,7 +447,7 @@ describe('BookingsPage', () => {
     });
 
     await waitFor(() => {
-      expect(mockApi.get).toHaveBeenCalledWith('/bookings?status=PENDING&pageSize=50');
+      expect(mockApi.get).toHaveBeenCalledWith('/bookings?pageSize=50&status=PENDING');
     });
   });
 
@@ -466,7 +468,7 @@ describe('BookingsPage', () => {
     });
 
     await waitFor(() => {
-      expect(mockApi.get).toHaveBeenCalledWith('/bookings?status=RESCHEDULED&pageSize=50');
+      expect(mockApi.get).toHaveBeenCalledWith('/bookings?pageSize=50&status=RESCHEDULED');
     });
   });
 
@@ -488,7 +490,7 @@ describe('BookingsPage', () => {
     });
 
     await waitFor(() => {
-      expect(mockApi.get).toHaveBeenCalledWith('/bookings?status=CONFIRMED&pageSize=50');
+      expect(mockApi.get).toHaveBeenCalledWith('/bookings?pageSize=50&status=CONFIRMED');
     });
 
     // Reset to all statuses
@@ -506,7 +508,7 @@ describe('BookingsPage', () => {
 
   // ─── Search Functionality ──────────────────────────────────
 
-  it('filters bookings by customer name in search', async () => {
+  it('sends search query to API after debounce', async () => {
     const user = userEvent.setup();
     mockApi.get.mockResolvedValue({
       data: [
@@ -520,7 +522,6 @@ describe('BookingsPage', () => {
 
     await waitFor(() => {
       expect(screen.getByText('John Doe')).toBeInTheDocument();
-      expect(screen.getByText('Jane Smith')).toBeInTheDocument();
     });
 
     // Find and use the search input
@@ -530,43 +531,12 @@ describe('BookingsPage', () => {
       await user.type(searchInput, 'Jane');
     });
 
-    // Debounce wait
+    // After debounce, should call API with search param
     await waitFor(
       () => {
-        expect(screen.getByText('Jane Smith')).toBeInTheDocument();
-        expect(screen.queryByText('John Doe')).not.toBeInTheDocument();
-      },
-      { timeout: 500 },
-    );
-  });
-
-  it('filters bookings by service name in search', async () => {
-    const user = userEvent.setup();
-    mockApi.get.mockResolvedValue({
-      data: [
-        createBooking({ id: 'b1', service: { name: 'Haircut' } }),
-        createBooking({ id: 'b2', service: { name: 'Massage' } }),
-      ],
-      total: 2,
-    });
-
-    render(<BookingsPage />);
-
-    await waitFor(() => {
-      expect(screen.getByText('Haircut')).toBeInTheDocument();
-      expect(screen.getByText('Massage')).toBeInTheDocument();
-    });
-
-    const searchInput = screen.getByPlaceholderText(/search.*booking/i);
-
-    await act(async () => {
-      await user.type(searchInput, 'Massage');
-    });
-
-    await waitFor(
-      () => {
-        expect(screen.getByText('Massage')).toBeInTheDocument();
-        expect(screen.queryByText('Haircut')).not.toBeInTheDocument();
+        expect(mockApi.get).toHaveBeenCalledWith(
+          expect.stringContaining('search=Jane'),
+        );
       },
       { timeout: 500 },
     );
@@ -594,32 +564,21 @@ describe('BookingsPage', () => {
       await user.type(searchInput, 'John');
     });
 
-    await waitFor(
-      () => {
-        expect(screen.queryByText('Jane')).not.toBeInTheDocument();
-      },
-      { timeout: 500 },
-    );
-
     // The X button appears when search has text
     expect(searchInput.value).toBe('John');
 
-    // Find the X button by looking for the button with the X icon
-    const xButtons = screen.queryAllByTestId('x-icon');
-    if (xButtons.length > 0) {
-      const clearButton = xButtons[0].closest('button');
-      await act(async () => {
-        await user.click(clearButton!);
-      });
+    // Find the clear button via data-testid
+    const clearButton = screen.getByTestId('search-clear');
+    await act(async () => {
+      await user.click(clearButton);
+    });
 
-      await waitFor(
-        () => {
-          expect(searchInput.value).toBe('');
-          expect(screen.getByText('Jane')).toBeInTheDocument();
-        },
-        { timeout: 500 },
-      );
-    }
+    await waitFor(
+      () => {
+        expect(searchInput.value).toBe('');
+      },
+      { timeout: 500 },
+    );
   });
 
   // ─── Sorting Functionality ──────────────────────────────────
@@ -753,14 +712,13 @@ describe('BookingsPage', () => {
     expect(fromDateLabel).not.toBeInTheDocument();
   });
 
-  it('filters by date range', async () => {
+  it('sends date range filters to API', async () => {
     const user = userEvent.setup();
     mockApi.get.mockResolvedValue({
       data: [
         createBooking({ id: 'b1', customer: { name: 'John' }, startTime: '2026-01-15T10:00:00Z' }),
-        createBooking({ id: 'b2', customer: { name: 'Jane' }, startTime: '2026-01-20T10:00:00Z' }),
       ],
-      total: 2,
+      total: 1,
     });
 
     render(<BookingsPage />);
@@ -777,31 +735,29 @@ describe('BookingsPage', () => {
       await user.click(filterButton!);
     });
 
-    // Find date inputs by type=date
-    const dateInputs = screen.getAllByDisplayValue('') as HTMLInputElement[];
-    const dateTypeInputs = dateInputs.filter((input) => input.type === 'date');
+    // Find date inputs by data-testid
+    const fromDateInput = screen.getByTestId('date-from');
+    const toDateInput = screen.getByTestId('date-to');
 
-    if (dateTypeInputs.length >= 2) {
-      const fromDateInput = dateTypeInputs[0]; // from date
-      const toDateInput = dateTypeInputs[1]; // to date
+    await act(async () => {
+      await user.type(fromDateInput, '2026-01-16');
+      await user.type(toDateInput, '2026-01-19');
+    });
 
-      await act(async () => {
-        await user.type(fromDateInput, '2026-01-16');
-        await user.type(toDateInput, '2026-01-19');
-      });
-
-      await waitFor(
-        () => {
-          // With range 2026-01-16 to 2026-01-19, neither John (01-15) nor Jane (01-20) should match
-          expect(screen.queryByText('John')).not.toBeInTheDocument();
-          expect(screen.queryByText('Jane')).not.toBeInTheDocument();
-        },
-        { timeout: 500 },
-      );
-    }
+    await waitFor(
+      () => {
+        expect(mockApi.get).toHaveBeenCalledWith(
+          expect.stringContaining('dateFrom=2026-01-16'),
+        );
+        expect(mockApi.get).toHaveBeenCalledWith(
+          expect.stringContaining('dateTo=2026-01-19'),
+        );
+      },
+      { timeout: 500 },
+    );
   });
 
-  it('filters by staff member', async () => {
+  it('sends staff filter to API', async () => {
     const user = userEvent.setup();
     mockApi.get.mockImplementation((path: string) => {
       if (path === '/staff')
@@ -812,9 +768,8 @@ describe('BookingsPage', () => {
       return Promise.resolve({
         data: [
           createBooking({ id: 'b1', staff: { name: 'Sarah' }, staffId: 's1' }),
-          createBooking({ id: 'b2', staff: { name: 'Mike' }, staffId: 's2' }),
         ],
-        total: 2,
+        total: 1,
       });
     });
 
@@ -837,20 +792,17 @@ describe('BookingsPage', () => {
       expect(screen.getByText('common.staff')).toBeInTheDocument();
     });
 
-    const staffSelects = screen.getAllByRole('combobox');
-    // First select is status filter at top, last one should be staff in filters panel
-    const staffSelect = staffSelects[staffSelects.length - 1];
+    const staffSelect = screen.getByTestId('staff-filter');
 
     await act(async () => {
       await user.selectOptions(staffSelect, 's1');
     });
 
-    // Check within the table body — Mike's option still exists in the staff filter dropdown
-    const tableBody = screen.getAllByRole('rowgroup')[1]; // tbody
     await waitFor(
       () => {
-        expect(within(tableBody).getByText('Sarah')).toBeInTheDocument();
-        expect(within(tableBody).queryByText('Mike')).not.toBeInTheDocument();
+        expect(mockApi.get).toHaveBeenCalledWith(
+          expect.stringContaining('staffId=s1'),
+        );
       },
       { timeout: 500 },
     );
@@ -1942,7 +1894,7 @@ describe('BookingsPage', () => {
     });
 
     await waitFor(() => {
-      expect(mockApi.get).toHaveBeenCalledWith('/bookings?status=COMPLETED&pageSize=50');
+      expect(mockApi.get).toHaveBeenCalledWith('/bookings?pageSize=50&status=COMPLETED');
     });
 
     // Change to NO_SHOW
@@ -1951,7 +1903,7 @@ describe('BookingsPage', () => {
     });
 
     await waitFor(() => {
-      expect(mockApi.get).toHaveBeenCalledWith('/bookings?status=NO_SHOW&pageSize=50');
+      expect(mockApi.get).toHaveBeenCalledWith('/bookings?pageSize=50&status=NO_SHOW');
     });
 
     // Change to IN_PROGRESS
@@ -1960,7 +1912,144 @@ describe('BookingsPage', () => {
     });
 
     await waitFor(() => {
-      expect(mockApi.get).toHaveBeenCalledWith('/bookings?status=IN_PROGRESS&pageSize=50');
+      expect(mockApi.get).toHaveBeenCalledWith('/bookings?pageSize=50&status=IN_PROGRESS');
+    });
+  });
+
+  // ─── Date Preset Buttons ───────────────────────────────────
+
+  it('shows date preset buttons when filters panel is open', async () => {
+    const user = userEvent.setup();
+    mockApi.get.mockResolvedValue({ data: [], total: 0 });
+
+    render(<BookingsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('bookings.title')).toBeInTheDocument();
+    });
+
+    const filterButton = screen.getByTestId('filters-toggle');
+    await act(async () => {
+      await user.click(filterButton);
+    });
+
+    expect(screen.getByTestId('date-preset-today')).toBeInTheDocument();
+    expect(screen.getByTestId('date-preset-this_week')).toBeInTheDocument();
+    expect(screen.getByTestId('date-preset-this_month')).toBeInTheDocument();
+    expect(screen.getByTestId('date-preset-custom')).toBeInTheDocument();
+  });
+
+  it('sets date range when Today preset is clicked', async () => {
+    const user = userEvent.setup();
+    mockApi.get.mockResolvedValue({ data: [], total: 0 });
+
+    render(<BookingsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('bookings.title')).toBeInTheDocument();
+    });
+
+    const filterButton = screen.getByTestId('filters-toggle');
+    await act(async () => {
+      await user.click(filterButton);
+    });
+
+    await act(async () => {
+      await user.click(screen.getByTestId('date-preset-today'));
+    });
+
+    await waitFor(() => {
+      expect(mockApi.get).toHaveBeenCalledWith(
+        expect.stringContaining('dateFrom='),
+      );
+    });
+  });
+
+  // ─── URL Param Persistence ─────────────────────────────────
+
+  it('updates URL search params when filters change', async () => {
+    const user = userEvent.setup();
+    mockApi.get.mockResolvedValue({ data: [], total: 0 });
+
+    render(<BookingsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('bookings.title')).toBeInTheDocument();
+    });
+
+    const select = screen.getByRole('combobox');
+
+    await act(async () => {
+      await user.selectOptions(select, 'CONFIRMED');
+    });
+
+    await waitFor(() => {
+      expect(mockReplace).toHaveBeenCalledWith(
+        expect.stringContaining('status=CONFIRMED'),
+        expect.objectContaining({ scroll: false }),
+      );
+    });
+  });
+
+  it('clears filters and URL params when clear button is clicked', async () => {
+    const user = userEvent.setup();
+    mockApi.get.mockResolvedValue({ data: [], total: 0 });
+
+    render(<BookingsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('bookings.title')).toBeInTheDocument();
+    });
+
+    // Open filters panel
+    const filterButton = screen.getByTestId('filters-toggle');
+    await act(async () => {
+      await user.click(filterButton);
+    });
+
+    // Set a date preset to activate filters
+    await act(async () => {
+      await user.click(screen.getByTestId('date-preset-today'));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('clear-filters')).toBeInTheDocument();
+    });
+
+    // Click clear
+    await act(async () => {
+      await user.click(screen.getByTestId('clear-filters'));
+    });
+
+    // Should call API without date filters
+    await waitFor(() => {
+      const lastBookingCall = mockApi.get.mock.calls
+        .filter((c: any) => c[0].startsWith('/bookings'))
+        .pop();
+      expect(lastBookingCall?.[0]).toBe('/bookings?pageSize=50');
+    });
+  });
+
+  it('shows active filter count badge', async () => {
+    const user = userEvent.setup();
+    mockApi.get.mockResolvedValue({ data: [], total: 0 });
+
+    render(<BookingsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('bookings.title')).toBeInTheDocument();
+    });
+
+    // Set status filter to add one active filter
+    const select = screen.getByRole('combobox');
+    await act(async () => {
+      await user.selectOptions(select, 'CONFIRMED');
+    });
+
+    await waitFor(() => {
+      // The filter count badge should show "1"
+      const filtersButton = screen.getByTestId('filters-toggle');
+      expect(filtersButton.textContent).toContain('1');
     });
   });
 });

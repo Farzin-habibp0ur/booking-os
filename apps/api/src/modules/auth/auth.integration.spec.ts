@@ -38,6 +38,7 @@ describe('Auth Integration', () => {
       verticalPack: 'AESTHETIC',
       defaultLocale: 'en',
       packConfig: { requireConsultation: true },
+      createdAt: new Date('2025-01-15T12:00:00Z'),
     },
   };
 

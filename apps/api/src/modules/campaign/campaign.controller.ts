@@ -67,4 +67,10 @@ export class CampaignController {
   previewAudience(@BusinessId() businessId: string, @Body() body: PreviewAudienceDto) {
     return this.campaignService.previewAudience(businessId, body.filters);
   }
+
+  @Post(':id/stop-recurrence')
+  @Roles('ADMIN')
+  stopRecurrence(@BusinessId() businessId: string, @Param('id') id: string) {
+    return this.campaignService.stopRecurrence(businessId, id);
+  }
 }

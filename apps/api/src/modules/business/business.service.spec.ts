@@ -1606,4 +1606,100 @@ describe('BusinessService', () => {
       expect(result).toEqual(updatedBiz);
     });
   });
+
+  // ────────────────────────────────────────────────────────────
+  // submitNps
+  // ────────────────────────────────────────────────────────────
+  describe('submitNps', () => {
+    it('saves NPS score and feedback to packConfig', async () => {
+      prisma.business.findUnique.mockResolvedValue({
+        id: 'biz1',
+        packConfig: { someExisting: true },
+      } as any);
+      prisma.business.update.mockResolvedValue({ id: 'biz1' } as any);
+
+      await service.submitNps('biz1', 9, 'Great product!');
+
+      expect(prisma.business.update).toHaveBeenCalledWith({
+        where: { id: 'biz1' },
+        data: {
+          packConfig: {
+            someExisting: true,
+            npsResponse: {
+              score: 9,
+              feedback: 'Great product!',
+              submittedAt: expect.any(String),
+            },
+          },
+        },
+      });
+    });
+
+    it('saves NPS with null feedback when not provided', async () => {
+      prisma.business.findUnique.mockResolvedValue({
+        id: 'biz1',
+        packConfig: {},
+      } as any);
+      prisma.business.update.mockResolvedValue({ id: 'biz1' } as any);
+
+      await service.submitNps('biz1', 5);
+
+      expect(prisma.business.update).toHaveBeenCalledWith({
+        where: { id: 'biz1' },
+        data: {
+          packConfig: {
+            npsResponse: {
+              score: 5,
+              feedback: null,
+              submittedAt: expect.any(String),
+            },
+          },
+        },
+      });
+    });
+
+    it('throws BadRequestException for invalid score below 0', async () => {
+      await expect(service.submitNps('biz1', -1)).rejects.toThrow(BadRequestException);
+    });
+
+    it('throws BadRequestException for invalid score above 10', async () => {
+      await expect(service.submitNps('biz1', 11)).rejects.toThrow(BadRequestException);
+    });
+
+    it('throws BadRequestException for non-integer score', async () => {
+      await expect(service.submitNps('biz1', 7.5)).rejects.toThrow(BadRequestException);
+    });
+
+    it('returns null when business not found', async () => {
+      prisma.business.findUnique.mockResolvedValue(null);
+
+      const result = await service.submitNps('nonexistent', 8);
+
+      expect(result).toBeNull();
+      expect(prisma.business.update).not.toHaveBeenCalled();
+    });
+
+    it('handles business with null packConfig', async () => {
+      prisma.business.findUnique.mockResolvedValue({
+        id: 'biz1',
+        packConfig: null,
+      } as any);
+      prisma.business.update.mockResolvedValue({ id: 'biz1' } as any);
+
+      await service.submitNps('biz1', 10, 'Love it');
+
+      expect(prisma.business.update).toHaveBeenCalledWith({
+        where: { id: 'biz1' },
+        data: {
+          packConfig: {
+            npsResponse: {
+              score: 10,
+              feedback: 'Love it',
+              submittedAt: expect.any(String),
+            },
+          },
+        },
+      });
+    });
+  });
 });

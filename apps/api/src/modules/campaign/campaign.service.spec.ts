@@ -202,4 +202,104 @@ describe('CampaignService', () => {
       );
     });
   });
+
+  describe('create with recurrence', () => {
+    it('creates campaign with recurrence rule', async () => {
+      const campaign = { id: 'camp1', name: 'Weekly Promo', status: 'DRAFT', recurrenceRule: 'WEEKLY' };
+      prisma.campaign.create.mockResolvedValue(campaign as any);
+
+      const result = await campaignService.create('biz1', {
+        name: 'Weekly Promo',
+        recurrenceRule: 'WEEKLY',
+        scheduledAt: '2026-03-15T10:00:00Z',
+      });
+
+      expect(result).toEqual(campaign);
+      expect(prisma.campaign.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          recurrenceRule: 'WEEKLY',
+          nextRunAt: expect.any(Date),
+        }),
+      });
+    });
+
+    it('defaults recurrence to NONE', async () => {
+      prisma.campaign.create.mockResolvedValue({ id: 'camp1' } as any);
+
+      await campaignService.create('biz1', { name: 'One-off' });
+
+      expect(prisma.campaign.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          recurrenceRule: 'NONE',
+          nextRunAt: null,
+        }),
+      });
+    });
+  });
+
+  describe('update with recurrence', () => {
+    it('updates recurrence rule on draft campaign', async () => {
+      prisma.campaign.findFirst.mockResolvedValue({
+        id: 'camp1',
+        status: 'DRAFT',
+        recurrenceRule: 'NONE',
+        scheduledAt: new Date('2026-03-15T10:00:00Z'),
+      } as any);
+      prisma.campaign.update.mockResolvedValue({ id: 'camp1', recurrenceRule: 'MONTHLY' } as any);
+
+      const result = await campaignService.update('biz1', 'camp1', { recurrenceRule: 'MONTHLY' });
+
+      expect(prisma.campaign.update).toHaveBeenCalledWith({
+        where: { id: 'camp1' },
+        data: expect.objectContaining({
+          recurrenceRule: 'MONTHLY',
+          nextRunAt: expect.any(Date),
+        }),
+      });
+    });
+  });
+
+  describe('stopRecurrence', () => {
+    it('sets recurrence to NONE and clears nextRunAt', async () => {
+      prisma.campaign.findFirst.mockResolvedValue({
+        id: 'camp1',
+        businessId: 'biz1',
+        recurrenceRule: 'WEEKLY',
+      } as any);
+      prisma.campaign.update.mockResolvedValue({ id: 'camp1', recurrenceRule: 'NONE' } as any);
+
+      await campaignService.stopRecurrence('biz1', 'camp1');
+
+      expect(prisma.campaign.update).toHaveBeenCalledWith({
+        where: { id: 'camp1' },
+        data: { recurrenceRule: 'NONE', nextRunAt: null },
+      });
+    });
+  });
+
+  describe('computeNextRun', () => {
+    it('adds 1 day for DAILY', () => {
+      const base = new Date('2026-03-08T10:00:00Z');
+      const next = campaignService.computeNextRun(base, 'DAILY');
+      expect(next.toISOString()).toBe('2026-03-09T10:00:00.000Z');
+    });
+
+    it('adds 7 days for WEEKLY', () => {
+      const base = new Date('2026-03-08T10:00:00Z');
+      const next = campaignService.computeNextRun(base, 'WEEKLY');
+      expect(next.toISOString()).toBe('2026-03-15T10:00:00.000Z');
+    });
+
+    it('adds 14 days for BIWEEKLY', () => {
+      const base = new Date('2026-03-08T10:00:00Z');
+      const next = campaignService.computeNextRun(base, 'BIWEEKLY');
+      expect(next.toISOString()).toBe('2026-03-22T10:00:00.000Z');
+    });
+
+    it('adds 1 month for MONTHLY', () => {
+      const base = new Date('2026-03-08T10:00:00Z');
+      const next = campaignService.computeNextRun(base, 'MONTHLY');
+      expect(next.toISOString()).toBe('2026-04-08T10:00:00.000Z');
+    });
+  });
 });

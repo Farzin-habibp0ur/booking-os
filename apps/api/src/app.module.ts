@@ -52,6 +52,9 @@ import { AttachmentModule } from './modules/attachment/attachment.module';
 import { ExportModule } from './modules/export/export.module';
 import { ConsoleModule } from './modules/console/console.module';
 import { OnboardingDripModule } from './modules/onboarding-drip/onboarding-drip.module';
+import { DunningModule } from './modules/dunning/dunning.module';
+import { ReferralModule } from './modules/referral/referral.module';
+import { WeeklyDigestModule } from './modules/weekly-digest/weekly-digest.module';
 
 @Module({
   imports: [
@@ -120,6 +123,9 @@ import { OnboardingDripModule } from './modules/onboarding-drip/onboarding-drip.
     ExportModule,
     ConsoleModule,
     OnboardingDripModule,
+    DunningModule,
+    ReferralModule,
+    WeeklyDigestModule,
     process.env.REDIS_URL ? QueueModule.forRootWithRedis() : QueueModule.forRoot(),
   ],
 })

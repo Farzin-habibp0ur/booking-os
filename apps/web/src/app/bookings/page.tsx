@@ -1,13 +1,14 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { usePack } from '@/lib/vertical-pack';
 import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/lib/toast';
 import { TableRowSkeleton, EmptyState } from '@/components/skeleton';
-import { BookOpen, Download, Search, ChevronUp, ChevronDown, Filter, X } from 'lucide-react';
+import { BookOpen, Download, Search, ChevronUp, ChevronDown, Filter, X, Calendar } from 'lucide-react';
 import BookingDetailModal from '@/components/booking-detail-modal';
 import BookingFormModal from '@/components/booking-form-modal';
 import BulkActionBar from '@/components/bulk-action-bar';
@@ -25,10 +26,56 @@ const BOOKING_STATUSES = [
   'RESCHEDULED',
 ];
 
+type DatePreset = 'today' | 'this_week' | 'this_month' | 'custom' | '';
+
+function getDatePresetRange(preset: DatePreset): { from: string; to: string } {
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+  const today = `${yyyy}-${mm}-${dd}`;
+
+  switch (preset) {
+    case 'today':
+      return { from: today, to: today };
+    case 'this_week': {
+      const dayOfWeek = now.getDay();
+      const startOfWeek = new Date(now);
+      startOfWeek.setDate(now.getDate() - dayOfWeek);
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6);
+      const fmt = (d: Date) =>
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      return { from: fmt(startOfWeek), to: fmt(endOfWeek) };
+    }
+    case 'this_month': {
+      const lastDay = new Date(yyyy, now.getMonth() + 1, 0).getDate();
+      return {
+        from: `${yyyy}-${mm}-01`,
+        to: `${yyyy}-${mm}-${String(lastDay).padStart(2, '0')}`,
+      };
+    }
+    default:
+      return { from: '', to: '' };
+  }
+}
+
 export default function BookingsPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Initialize state from URL search params
+  const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || '');
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
+  const [dateFrom, setDateFrom] = useState(searchParams.get('dateFrom') || '');
+  const [dateTo, setDateTo] = useState(searchParams.get('dateTo') || '');
+  const [staffFilter, setStaffFilter] = useState(searchParams.get('staffId') || '');
+  const [datePreset, setDatePreset] = useState<DatePreset>(
+    (searchParams.get('datePreset') as DatePreset) || '',
+  );
+
   const [bookings, setBookings] = useState<any>({ data: [], total: 0 });
   const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState('');
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [rescheduleOpen, setRescheduleOpen] = useState(false);
@@ -39,19 +86,52 @@ export default function BookingsPage() {
   const [staff, setStaff] = useState<any[]>([]);
   const [activeViewId, setActiveViewId] = useState<string | null>(null);
   const [showExport, setShowExport] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const [sortCol, setSortCol] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
-  const [staffFilter, setStaffFilter] = useState('');
-  const [showFilters, setShowFilters] = useState(false);
-  const [searchDebounce, setSearchDebounce] = useState(0);
+  const [showFilters, setShowFilters] = useState(
+    !!(searchParams.get('dateFrom') || searchParams.get('dateTo') || searchParams.get('staffId') || searchParams.get('datePreset')),
+  );
+  const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
   const pack = usePack();
   const { t } = useI18n();
   const { toast } = useToast();
 
   const currentFilters = { status: statusFilter };
+
+  // Sync filters to URL search params
+  const updateUrlParams = useCallback(
+    (overrides: Record<string, string> = {}) => {
+      const params = new URLSearchParams();
+      const values: Record<string, string> = {
+        status: statusFilter,
+        search: debouncedSearch,
+        dateFrom,
+        dateTo,
+        staffId: staffFilter,
+        datePreset,
+        ...overrides,
+      };
+      Object.entries(values).forEach(([key, value]) => {
+        if (value) params.set(key, value);
+      });
+      const qs = params.toString();
+      router.replace(`/bookings${qs ? `?${qs}` : ''}`, { scroll: false });
+    },
+    [statusFilter, debouncedSearch, dateFrom, dateTo, staffFilter, datePreset, router],
+  );
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Update URL whenever filters change
+  useEffect(() => {
+    updateUrlParams();
+  }, [statusFilter, debouncedSearch, dateFrom, dateTo, staffFilter, datePreset]);
 
   const handleApplyView = (filters: Record<string, unknown>, viewId: string) => {
     setStatusFilter((filters.status as string) || '');
@@ -63,18 +143,26 @@ export default function BookingsPage() {
     setActiveViewId(null);
   };
 
-  const load = () => {
-    const params = statusFilter ? `?status=${statusFilter}&pageSize=50` : '?pageSize=50';
+  const load = useCallback(() => {
+    const params = new URLSearchParams();
+    params.set('pageSize', '50');
+    if (statusFilter) params.set('status', statusFilter);
+    if (debouncedSearch) params.set('search', debouncedSearch);
+    if (dateFrom) params.set('dateFrom', dateFrom);
+    if (dateTo) params.set('dateTo', `${dateTo}T23:59:59`);
+    if (staffFilter) params.set('staffId', staffFilter);
+
+    setLoading(true);
     api
-      .get<any>(`/bookings${params}`)
+      .get<any>(`/bookings?${params.toString()}`)
       .then(setBookings)
       .catch((err) => toast(err.message || 'Failed to load bookings', 'error'))
       .finally(() => setLoading(false));
-  };
+  }, [statusFilter, debouncedSearch, dateFrom, dateTo, staffFilter, toast]);
 
   useEffect(() => {
     load();
-  }, [statusFilter]);
+  }, [load]);
 
   const handleRowClick = (booking: any) => {
     setSelectedBooking(booking);
@@ -147,74 +235,66 @@ export default function BookingsPage() {
     load();
   };
 
-  // Debounced search
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setSearchDebounce(Date.now());
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
-
-  // Filter and sort bookings
-  const filteredAndSorted = useMemo(() => {
-    let filtered = bookings.data || [];
-
-    // Apply text search
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (b: any) =>
-          (b.customer?.name || '').toLowerCase().includes(q) ||
-          (b.service?.name || '').toLowerCase().includes(q),
-      );
+  // Handle date preset selection
+  const handleDatePreset = (preset: DatePreset) => {
+    setDatePreset(preset);
+    if (preset && preset !== 'custom') {
+      const range = getDatePresetRange(preset);
+      setDateFrom(range.from);
+      setDateTo(range.to);
+    } else if (preset === '') {
+      setDateFrom('');
+      setDateTo('');
     }
+    // For 'custom', keep existing date values and let user pick
+  };
 
-    // Apply date range filter
-    if (dateFrom || dateTo) {
-      filtered = filtered.filter((b: any) => {
-        const bookingDate = new Date(b.startTime).getTime();
-        const fromTime = dateFrom ? new Date(dateFrom).getTime() : 0;
-        const toTime = dateTo ? new Date(dateTo + 'T23:59:59').getTime() : Infinity;
-        return bookingDate >= fromTime && bookingDate <= toTime;
-      });
-    }
+  const handleClearFilters = () => {
+    setDateFrom('');
+    setDateTo('');
+    setStaffFilter('');
+    setDatePreset('');
+    setShowFilters(false);
+  };
 
-    // Apply staff filter
-    if (staffFilter) {
-      filtered = filtered.filter((b: any) => b.staffId === staffFilter);
-    }
+  const hasActiveFilters = !!(dateFrom || dateTo || staffFilter || datePreset);
+  const activeFilterCount =
+    (statusFilter ? 1 : 0) +
+    (dateFrom || dateTo ? 1 : 0) +
+    (staffFilter ? 1 : 0) +
+    (debouncedSearch ? 1 : 0);
 
-    // Apply sorting
-    if (sortCol) {
-      filtered.sort((a: any, b: any) => {
-        let aVal: any = a;
-        let bVal: any = b;
+  // Sort bookings client-side (data is already filtered server-side)
+  const sortedBookings = useMemo(() => {
+    const data = bookings.data || [];
+    if (!sortCol) return data;
 
-        if (sortCol === 'customer') {
-          aVal = a.customer?.name || '';
-          bVal = b.customer?.name || '';
-        } else if (sortCol === 'service') {
-          aVal = a.service?.name || '';
-          bVal = b.service?.name || '';
-        } else if (sortCol === 'staff') {
-          aVal = a.staff?.name || '';
-          bVal = b.staff?.name || '';
-        } else if (sortCol === 'startTime') {
-          aVal = new Date(a.startTime).getTime();
-          bVal = new Date(b.startTime).getTime();
-        } else if (sortCol === 'status') {
-          aVal = a.status;
-          bVal = b.status;
-        }
+    return [...data].sort((a: any, b: any) => {
+      let aVal: any = a;
+      let bVal: any = b;
 
-        if (aVal < bVal) return sortDir === 'asc' ? -1 : 1;
-        if (aVal > bVal) return sortDir === 'asc' ? 1 : -1;
-        return 0;
-      });
-    }
+      if (sortCol === 'customer') {
+        aVal = a.customer?.name || '';
+        bVal = b.customer?.name || '';
+      } else if (sortCol === 'service') {
+        aVal = a.service?.name || '';
+        bVal = b.service?.name || '';
+      } else if (sortCol === 'staff') {
+        aVal = a.staff?.name || '';
+        bVal = b.staff?.name || '';
+      } else if (sortCol === 'startTime') {
+        aVal = new Date(a.startTime).getTime();
+        bVal = new Date(b.startTime).getTime();
+      } else if (sortCol === 'status') {
+        aVal = a.status;
+        bVal = b.status;
+      }
 
-    return filtered;
-  }, [bookings.data, searchQuery, sortCol, sortDir, dateFrom, dateTo, staffFilter, searchDebounce]);
+      if (aVal < bVal) return sortDir === 'asc' ? -1 : 1;
+      if (aVal > bVal) return sortDir === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [bookings.data, sortCol, sortDir]);
 
   const handleColumnSort = (col: string) => {
     if (sortCol === col) {
@@ -251,6 +331,7 @@ export default function BookingsPage() {
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
             className="border border-slate-200 rounded-xl px-3 py-2 text-sm transition-colors w-full sm:w-auto"
+            data-testid="status-filter"
           >
             <option value="">{t('bookings.all_statuses')}</option>
             {BOOKING_STATUSES.map((s) => (
@@ -271,11 +352,13 @@ export default function BookingsPage() {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="w-full border border-slate-200 rounded-xl px-10 py-2 text-sm transition-colors focus:outline-none focus:border-sage-500 focus:ring-1 focus:ring-sage-500"
+          data-testid="search-input"
         />
         {searchQuery && (
           <button
             onClick={() => setSearchQuery('')}
             className="absolute right-3 top-3 text-slate-400 hover:text-slate-600"
+            data-testid="search-clear"
           >
             <X size={16} />
           </button>
@@ -292,19 +375,21 @@ export default function BookingsPage() {
               ? 'border-sage-500 bg-sage-50 text-sage-700'
               : 'border-slate-200 hover:bg-slate-50',
           )}
+          data-testid="filters-toggle"
         >
           <Filter size={14} />
           {t('common.filters')}
+          {activeFilterCount > 0 && (
+            <span className="ml-1 bg-sage-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+              {activeFilterCount}
+            </span>
+          )}
         </button>
-        {(dateFrom || dateTo || staffFilter) && (
+        {hasActiveFilters && (
           <button
-            onClick={() => {
-              setDateFrom('');
-              setDateTo('');
-              setStaffFilter('');
-              setShowFilters(false);
-            }}
+            onClick={handleClearFilters}
             className="text-xs text-slate-500 hover:text-slate-700 underline"
+            data-testid="clear-filters"
           >
             Clear filters
           </button>
@@ -312,45 +397,86 @@ export default function BookingsPage() {
       </div>
 
       {showFilters && (
-        <div className="mb-4 p-4 border border-slate-200 rounded-xl bg-white grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div>
+        <div className="mb-4 p-4 border border-slate-200 rounded-xl bg-white" data-testid="filters-panel">
+          {/* Date preset buttons */}
+          <div className="mb-3">
             <label className="block text-xs font-medium text-slate-700 mb-2">
-              {t('common.from_date')}
+              Date Range
             </label>
-            <input
-              type="date"
-              value={dateFrom}
-              onChange={(e) => setDateFrom(e.target.value)}
-              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-slate-700 mb-2">
-              {t('common.to_date')}
-            </label>
-            <input
-              type="date"
-              value={dateTo}
-              onChange={(e) => setDateTo(e.target.value)}
-              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-slate-700 mb-2">
-              {t('common.staff')}
-            </label>
-            <select
-              value={staffFilter}
-              onChange={(e) => setStaffFilter(e.target.value)}
-              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"
-            >
-              <option value="">All staff</option>
-              {staff.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
+            <div className="flex flex-wrap gap-2">
+              {([
+                { value: 'today', label: 'Today' },
+                { value: 'this_week', label: 'This Week' },
+                { value: 'this_month', label: 'This Month' },
+                { value: 'custom', label: 'Custom' },
+              ] as { value: DatePreset; label: string }[]).map((preset) => (
+                <button
+                  key={preset.value}
+                  onClick={() => handleDatePreset(preset.value)}
+                  className={cn(
+                    'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm border transition-colors',
+                    datePreset === preset.value
+                      ? 'border-sage-500 bg-sage-50 text-sage-700'
+                      : 'border-slate-200 hover:bg-slate-50 text-slate-600',
+                  )}
+                  data-testid={`date-preset-${preset.value}`}
+                >
+                  <Calendar size={14} />
+                  {preset.label}
+                </button>
               ))}
-            </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-2">
+                {t('common.from_date')}
+              </label>
+              <input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => {
+                  setDateFrom(e.target.value);
+                  if (datePreset !== 'custom') setDatePreset('custom');
+                }}
+                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"
+                data-testid="date-from"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-2">
+                {t('common.to_date')}
+              </label>
+              <input
+                type="date"
+                value={dateTo}
+                onChange={(e) => {
+                  setDateTo(e.target.value);
+                  if (datePreset !== 'custom') setDatePreset('custom');
+                }}
+                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"
+                data-testid="date-to"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-2">
+                {t('common.staff')}
+              </label>
+              <select
+                value={staffFilter}
+                onChange={(e) => setStaffFilter(e.target.value)}
+                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"
+                data-testid="staff-filter"
+              >
+                <option value="">All staff</option>
+                {staff.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
       )}
@@ -372,13 +498,13 @@ export default function BookingsPage() {
                   <input
                     type="checkbox"
                     checked={
-                      filteredAndSorted.length > 0 && selectedIds.size === filteredAndSorted.length
+                      sortedBookings.length > 0 && selectedIds.size === sortedBookings.length
                     }
                     onChange={() => {
-                      if (selectedIds.size === filteredAndSorted.length) {
+                      if (selectedIds.size === sortedBookings.length) {
                         setSelectedIds(new Set());
                       } else {
-                        setSelectedIds(new Set(filteredAndSorted.map((b: any) => b.id)));
+                        setSelectedIds(new Set(sortedBookings.map((b: any) => b.id)));
                       }
                     }}
                     className="rounded text-sage-600"
@@ -419,7 +545,7 @@ export default function BookingsPage() {
             <tbody className="divide-y">
               {loading
                 ? Array.from({ length: 5 }).map((_, i) => <TableRowSkeleton key={i} cols={6} />)
-                : filteredAndSorted.map((b: any) => (
+                : sortedBookings.map((b: any) => (
                     <tr
                       key={b.id}
                       className={cn(
@@ -465,7 +591,7 @@ export default function BookingsPage() {
             </tbody>
           </table>
         </div>
-        {!loading && filteredAndSorted.length === 0 && (
+        {!loading && sortedBookings.length === 0 && (
           <EmptyState
             icon={BookOpen}
             title={t('bookings.no_bookings', { entity: pack.labels.booking.toLowerCase() })}

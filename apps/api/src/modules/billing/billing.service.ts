@@ -3,6 +3,8 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../common/prisma.service';
 import { EmailService } from '../email/email.service';
 import { OnboardingDripService } from '../onboarding-drip/onboarding-drip.service';
+import { DunningService } from '../dunning/dunning.service';
+import { ReferralService } from '../referral/referral.service';
 import Stripe from 'stripe';
 import {
   PlanTier,
@@ -22,6 +24,8 @@ export class BillingService implements OnModuleInit {
     private configService: ConfigService,
     private emailService: EmailService,
     private onboardingDrip: OnboardingDripService,
+    private dunningService: DunningService,
+    private referralService: ReferralService,
   ) {
     const secretKey = this.configService.get<string>('STRIPE_SECRET_KEY');
     if (secretKey) {
@@ -226,6 +230,15 @@ export class BillingService implements OnModuleInit {
       this.logger.warn(`Failed to send welcome-to-paid email for business ${businessId}`, err);
     }
 
+    // Convert referral if this is a referred business making their first payment
+    try {
+      await this.referralService.convertReferral(businessId, stripe);
+    } catch (err) {
+      this.logger.warn(
+        `Failed to process referral conversion for business ${businessId}: ${(err as Error).message}`,
+      );
+    }
+
     this.logger.log(`Subscription created for business ${businessId}: ${plan}`);
   }
 
@@ -241,6 +254,13 @@ export class BillingService implements OnModuleInit {
         where: { id: subscription.id },
         data: { status: 'active' },
       });
+
+      // Cancel any active dunning sequence (payment recovered)
+      try {
+        await this.dunningService.cancelDunning(subscription.businessId);
+      } catch {
+        // Non-critical — dunning emails will skip active subscriptions anyway
+      }
     }
   }
 
@@ -257,6 +277,26 @@ export class BillingService implements OnModuleInit {
         data: { status: 'past_due' },
       });
       this.logger.warn(`Payment failed for business ${subscription.businessId}`);
+
+      // Trigger dunning email sequence
+      try {
+        const business = await this.prisma.business.findUnique({
+          where: { id: subscription.businessId },
+          include: { staff: { where: { role: 'ADMIN' }, take: 1 } },
+        });
+        if (business?.staff[0]) {
+          const staff = business.staff[0];
+          await this.dunningService.scheduleDunning(
+            subscription.businessId,
+            staff.email,
+            staff.name,
+          );
+        }
+      } catch (err) {
+        this.logger.warn(
+          `Failed to schedule dunning for business ${subscription.businessId}: ${(err as Error).message}`,
+        );
+      }
     }
   }
 

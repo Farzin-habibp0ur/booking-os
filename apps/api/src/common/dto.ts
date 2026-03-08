@@ -598,6 +598,11 @@ export class SignupDto {
       'Password must contain at least one uppercase letter, one lowercase letter, and one digit',
   })
   password!: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  referralCode?: string;
 }
 
 export class ForgotPasswordDto {
@@ -817,6 +822,27 @@ export class VerifyEmailDto {
   token!: string;
 }
 
+// ---- Staff Service Pricing DTOs ----
+
+export class StaffServicePriceItemDto {
+  @IsString()
+  @IsNotEmpty()
+  serviceId!: string;
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  price!: number | null;
+}
+
+export class SetStaffServicePricingDto {
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => StaffServicePriceItemDto)
+  @ArrayMinSize(1)
+  overrides!: StaffServicePriceItemDto[];
+}
+
 // ---- Staff Preferences DTOs ----
 
 export class UpdatePreferencesDto {
@@ -933,6 +959,10 @@ export class CreateCampaignDto {
   @IsDateString()
   @IsOptional()
   scheduledAt?: string;
+
+  @IsIn(['NONE', 'DAILY', 'WEEKLY', 'BIWEEKLY', 'MONTHLY'])
+  @IsOptional()
+  recurrenceRule?: string;
 }
 
 export class UpdateCampaignDto {
@@ -953,6 +983,10 @@ export class UpdateCampaignDto {
   @IsDateString()
   @IsOptional()
   scheduledAt?: string;
+
+  @IsIn(['NONE', 'DAILY', 'WEEKLY', 'BIWEEKLY', 'MONTHLY'])
+  @IsOptional()
+  recurrenceRule?: string;
 }
 
 export class PreviewAudienceDto {

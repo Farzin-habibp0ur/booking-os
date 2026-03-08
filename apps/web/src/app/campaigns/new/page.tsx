@@ -21,6 +21,7 @@ export default function NewCampaignPage() {
   const [scheduleType, setScheduleType] = useState<'now' | 'later'>('now');
   const [scheduledAt, setScheduledAt] = useState('');
   const [throttle, setThrottle] = useState(10);
+  const [recurrenceRule, setRecurrenceRule] = useState('NONE');
   const [preview, setPreview] = useState<any>(null);
   const [templates, setTemplates] = useState<any[]>([]);
   const [tagInput, setTagInput] = useState('');
@@ -65,6 +66,7 @@ export default function NewCampaignPage() {
         filters,
         scheduledAt: scheduleType === 'later' ? scheduledAt : undefined,
         throttlePerMinute: throttle,
+        recurrenceRule: recurrenceRule !== 'NONE' ? recurrenceRule : undefined,
       });
       router.push(`/campaigns/${campaign.id}`);
     } catch (err) {
@@ -290,6 +292,26 @@ export default function NewCampaignPage() {
               className="w-24 text-sm bg-slate-50 border-transparent rounded-xl px-3 py-2 focus:bg-white focus:ring-2 focus:ring-sage-500"
             />
           </div>
+
+          <div>
+            <label className="text-xs text-slate-500 mb-1 block">Repeat campaign</label>
+            <select
+              value={recurrenceRule}
+              onChange={(e) => setRecurrenceRule(e.target.value)}
+              className="w-full text-sm bg-slate-50 border-transparent rounded-xl px-3 py-2 focus:bg-white focus:ring-2 focus:ring-sage-500"
+            >
+              <option value="NONE">No repeat</option>
+              <option value="DAILY">Daily</option>
+              <option value="WEEKLY">Weekly</option>
+              <option value="BIWEEKLY">Bi-weekly</option>
+              <option value="MONTHLY">Monthly</option>
+            </select>
+            {recurrenceRule !== 'NONE' && (
+              <p className="text-xs text-slate-400 mt-1">
+                A new campaign will be automatically created after each send completes.
+              </p>
+            )}
+          </div>
         </div>
       )}
 
@@ -329,6 +351,14 @@ export default function NewCampaignPage() {
                 <dt className="text-slate-500">Throttle</dt>
                 <dd className="font-medium">{throttle} msg/min</dd>
               </div>
+              {recurrenceRule !== 'NONE' && (
+                <div className="flex justify-between">
+                  <dt className="text-slate-500">Recurrence</dt>
+                  <dd className="font-medium">
+                    {{ DAILY: 'Daily', WEEKLY: 'Weekly', BIWEEKLY: 'Bi-weekly', MONTHLY: 'Monthly' }[recurrenceRule]}
+                  </dd>
+                </div>
+              )}
             </dl>
           </div>
 

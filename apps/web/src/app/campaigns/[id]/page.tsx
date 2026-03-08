@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
-import { ArrowLeft, Send } from 'lucide-react';
+import { ArrowLeft, Send, Repeat, StopCircle } from 'lucide-react';
 
 const statusColors: Record<string, string> = {
   DRAFT: 'bg-slate-100 text-slate-600',
@@ -43,6 +43,16 @@ export default function CampaignDetailPage() {
     router.push('/campaigns');
   };
 
+  const handleStopRecurrence = async () => {
+    if (!confirm('Stop recurring schedule for this campaign?')) return;
+    try {
+      const updated = await api.post<any>(`/campaigns/${id}/stop-recurrence`);
+      setCampaign(updated);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   if (loading) {
     return (
       <div className="p-6">
@@ -70,14 +80,22 @@ export default function CampaignDetailPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-serif font-semibold text-slate-900">{campaign.name}</h1>
-          <span
-            className={cn(
-              'text-xs px-2 py-0.5 rounded-full mt-1 inline-block',
-              statusColors[campaign.status],
+          <div className="flex items-center gap-2 mt-1">
+            <span
+              className={cn(
+                'text-xs px-2 py-0.5 rounded-full inline-block',
+                statusColors[campaign.status],
+              )}
+            >
+              {campaign.status}
+            </span>
+            {campaign.recurrenceRule && campaign.recurrenceRule !== 'NONE' && (
+              <span className="inline-flex items-center gap-0.5 px-2 py-0.5 bg-lavender-50 text-lavender-700 text-xs rounded-full font-medium">
+                <Repeat size={12} />
+                {{ DAILY: 'Daily', WEEKLY: 'Weekly', BIWEEKLY: 'Bi-weekly', MONTHLY: 'Monthly' }[campaign.recurrenceRule]}
+              </span>
             )}
-          >
-            {campaign.status}
-          </span>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           {campaign.status === 'DRAFT' && (
@@ -96,6 +114,15 @@ export default function CampaignDetailPage() {
                 Delete
               </button>
             </>
+          )}
+          {campaign.recurrenceRule && campaign.recurrenceRule !== 'NONE' && (
+            <button
+              onClick={handleStopRecurrence}
+              className="flex items-center gap-1.5 px-4 py-2 text-sm text-amber-700 bg-amber-50 rounded-xl hover:bg-amber-100 transition-colors"
+            >
+              <StopCircle size={14} />
+              Stop Recurrence
+            </button>
           )}
         </div>
       </div>
@@ -156,6 +183,31 @@ export default function CampaignDetailPage() {
             <dt className="text-slate-500">Throttle</dt>
             <dd>{campaign.throttlePerMinute} msg/min</dd>
           </div>
+          {campaign.recurrenceRule && campaign.recurrenceRule !== 'NONE' && (
+            <div className="flex justify-between">
+              <dt className="text-slate-500">Recurrence</dt>
+              <dd>{{ DAILY: 'Daily', WEEKLY: 'Weekly', BIWEEKLY: 'Bi-weekly', MONTHLY: 'Monthly' }[campaign.recurrenceRule]}</dd>
+            </div>
+          )}
+          {campaign.nextRunAt && (
+            <div className="flex justify-between">
+              <dt className="text-slate-500">Next Run</dt>
+              <dd>{new Date(campaign.nextRunAt).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}</dd>
+            </div>
+          )}
+          {campaign.parentCampaignId && (
+            <div className="flex justify-between">
+              <dt className="text-slate-500">Part of Series</dt>
+              <dd>
+                <button
+                  onClick={() => router.push(`/campaigns/${campaign.parentCampaignId}`)}
+                  className="text-sage-600 hover:text-sage-700 underline"
+                >
+                  View original
+                </button>
+              </dd>
+            </div>
+          )}
           {campaign.filters && Object.keys(campaign.filters).length > 0 && (
             <div className="flex justify-between">
               <dt className="text-slate-500">Filters</dt>

@@ -12,6 +12,7 @@ import { PrismaService } from '../../common/prisma.service';
 import { TokenService } from '../../common/token.service';
 import { EmailService } from '../email/email.service';
 import { OnboardingDripService } from '../onboarding-drip/onboarding-drip.service';
+import { ReferralService } from '../referral/referral.service';
 import { TRIAL_DAYS, GRACE_PERIOD_DAYS } from '../../common/plan-config';
 
 const MAX_FAILED_ATTEMPTS = 5;
@@ -30,6 +31,7 @@ export class AuthService {
     private tokenService: TokenService,
     private emailService: EmailService,
     private onboardingDrip: OnboardingDripService,
+    private referralService: ReferralService,
   ) {
     // M2 fix: Clean up expired brute force entries every 5 minutes
     const timer = setInterval(
@@ -108,7 +110,13 @@ export class AuthService {
     return this.config.get<string>('WEB_URL') || 'http://localhost:3000';
   }
 
-  async signup(data: { businessName: string; ownerName: string; email: string; password: string }) {
+  async signup(data: {
+    businessName: string;
+    ownerName: string;
+    email: string;
+    password: string;
+    referralCode?: string;
+  }) {
     const existing = await this.prisma.staff.findUnique({ where: { email: data.email } });
     if (existing) throw new ConflictException('Email already in use');
 
@@ -140,6 +148,17 @@ export class AuthService {
         emailVerified: false,
       },
     });
+
+    // Track referral if a referral code was provided
+    if (data.referralCode) {
+      try {
+        await this.referralService.trackReferral(data.referralCode, business.id);
+      } catch (err) {
+        this.logger.warn(
+          `Failed to track referral for code ${data.referralCode}: ${(err as Error).message}`,
+        );
+      }
+    }
 
     // M16 fix: Send email verification on signup
     await this.sendVerificationEmail(staff.id, staff.email, staff.name, staff.businessId);
@@ -294,6 +313,7 @@ export class AuthService {
         verticalPack: business.verticalPack,
         defaultLocale: business.defaultLocale,
         packConfig: business.packConfig as Record<string, unknown> | null,
+        createdAt: business.createdAt.toISOString(),
       },
       trial: {
         isTrial,

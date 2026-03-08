@@ -377,6 +377,31 @@ export class BusinessService {
     });
   }
 
+  async submitNps(businessId: string, score: number, feedback?: string) {
+    if (score < 0 || score > 10 || !Number.isInteger(score)) {
+      throw new BadRequestException('NPS score must be an integer between 0 and 10');
+    }
+
+    const business = await this.prisma.business.findUnique({ where: { id: businessId } });
+    if (!business) return null;
+
+    const packConfig =
+      typeof business.packConfig === 'object' && business.packConfig
+        ? (business.packConfig as Record<string, unknown>)
+        : {};
+
+    const npsResponse = {
+      score,
+      feedback: feedback || null,
+      submittedAt: new Date().toISOString(),
+    };
+
+    return this.prisma.business.update({
+      where: { id: businessId },
+      data: { packConfig: { ...packConfig, npsResponse } },
+    });
+  }
+
   async createTestBooking(businessId: string) {
     const service = await this.prisma.service.findFirst({
       where: { businessId, isActive: true },

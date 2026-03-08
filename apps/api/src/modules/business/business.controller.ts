@@ -93,4 +93,12 @@ export class BusinessController {
   async markActivationAction(@BusinessId() businessId: string, @Body() body: { action: string }) {
     return this.businessService.markActivationAction(businessId, body.action);
   }
+
+  @Post('nps')
+  async submitNps(
+    @BusinessId() businessId: string,
+    @Body() body: { score: number; feedback?: string },
+  ) {
+    return this.businessService.submitNps(businessId, body.score, body.feedback);
+  }
 }

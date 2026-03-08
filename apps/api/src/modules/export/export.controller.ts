@@ -1,17 +1,34 @@
-import { Controller, Get, Query, Res, UseGuards } from '@nestjs/common';
+import { BadRequestException, Controller, Get, Param, Query, Res, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { Response } from 'express';
-import { ExportService } from './export.service';
+import { ExportService, ReportType } from './export.service';
 import { BusinessId } from '../../common/decorators';
 import { TenantGuard } from '../../common/tenant.guard';
 import { RolesGuard } from '../../common/roles.guard';
+import { ReportsService } from '../reports/reports.service';
+
+const VALID_REPORT_TYPES: ReportType[] = [
+  'bookings-over-time',
+  'revenue-over-time',
+  'no-show-rate',
+  'response-times',
+  'service-breakdown',
+  'staff-performance',
+  'status-breakdown',
+  'peak-hours',
+  'consult-conversion',
+  'deposit-compliance',
+];
 
 @ApiTags('Export')
 @Controller()
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
 export class ExportController {
-  constructor(private exportService: ExportService) {}
+  constructor(
+    private exportService: ExportService,
+    private reportsService: ReportsService,
+  ) {}
 
   @Get('customers/export')
   async exportCustomers(
@@ -51,5 +68,67 @@ export class ExportController {
     res!.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res!.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res!.send(csv);
+  }
+
+  @Get('reports/:reportType/export')
+  async exportReport(
+    @BusinessId() businessId: string,
+    @Param('reportType') reportType: string,
+    @Query('days') days?: string,
+    @Query('format') format?: string,
+    @Res() res?: Response,
+  ) {
+    if (!VALID_REPORT_TYPES.includes(reportType as ReportType)) {
+      throw new BadRequestException(`Invalid report type: ${reportType}`);
+    }
+
+    const parsedDays = days ? parseInt(days) : 30;
+    const data = await this.getReportData(businessId, reportType as ReportType, parsedDays);
+    const exportFormat = format === 'pdf' ? 'pdf' : 'csv';
+
+    if (exportFormat === 'pdf') {
+      const html = this.exportService.exportReportPdf(reportType as ReportType, data);
+      const filename = `${reportType}-${new Date().toISOString().split('T')[0]}.html`;
+      res!.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res!.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res!.send(html);
+    } else {
+      const csv = this.exportService.exportReportCsv(reportType as ReportType, data);
+      const filename = `${reportType}-${new Date().toISOString().split('T')[0]}.csv`;
+      res!.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res!.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res!.send(csv);
+    }
+  }
+
+  private async getReportData(
+    businessId: string,
+    reportType: ReportType,
+    days: number,
+  ): Promise<any> {
+    switch (reportType) {
+      case 'bookings-over-time':
+        return this.reportsService.bookingsOverTime(businessId, days);
+      case 'revenue-over-time':
+        return this.reportsService.revenueOverTime(businessId, days);
+      case 'no-show-rate':
+        return this.reportsService.noShowRate(businessId, days);
+      case 'response-times':
+        return this.reportsService.responseTimes(businessId);
+      case 'service-breakdown':
+        return this.reportsService.serviceBreakdown(businessId, days);
+      case 'staff-performance':
+        return this.reportsService.staffPerformance(businessId, days);
+      case 'status-breakdown':
+        return this.reportsService.statusBreakdown(businessId, days);
+      case 'peak-hours':
+        return this.reportsService.peakHours(businessId, days);
+      case 'consult-conversion':
+        return this.reportsService.consultToTreatmentConversion(businessId, days);
+      case 'deposit-compliance':
+        return this.reportsService.depositComplianceRate(businessId);
+      default:
+        throw new BadRequestException(`Invalid report type: ${reportType}`);
+    }
   }
 }

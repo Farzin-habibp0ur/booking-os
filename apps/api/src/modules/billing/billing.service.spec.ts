@@ -4,6 +4,8 @@ import { BillingService } from './billing.service';
 import { PrismaService } from '../../common/prisma.service';
 import { EmailService } from '../email/email.service';
 import { OnboardingDripService } from '../onboarding-drip/onboarding-drip.service';
+import { DunningService } from '../dunning/dunning.service';
+import { ReferralService } from '../referral/referral.service';
 import { createMockPrisma } from '../../test/mocks';
 
 // Shared mock instance so tests can override constructEvent
@@ -59,9 +61,14 @@ jest.mock('stripe', () => {
 describe('BillingService', () => {
   let service: BillingService;
   let prisma: ReturnType<typeof createMockPrisma>;
+  let mockDunningService: { scheduleDunning: jest.Mock; cancelDunning: jest.Mock };
 
   beforeEach(async () => {
     prisma = createMockPrisma();
+    mockDunningService = {
+      scheduleDunning: jest.fn().mockResolvedValue(undefined),
+      cancelDunning: jest.fn().mockResolvedValue(undefined),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -74,6 +81,14 @@ describe('BillingService', () => {
         {
           provide: OnboardingDripService,
           useValue: { scheduleDrip: jest.fn(), cancelDrip: jest.fn() },
+        },
+        {
+          provide: DunningService,
+          useValue: mockDunningService,
+        },
+        {
+          provide: ReferralService,
+          useValue: { convertReferral: jest.fn().mockResolvedValue(undefined) },
         },
         {
           provide: ConfigService,
@@ -245,7 +260,7 @@ describe('BillingService', () => {
       expect(prisma.subscription.upsert).not.toHaveBeenCalled();
     });
 
-    it('should process invoice.paid event', async () => {
+    it('should process invoice.paid event and cancel dunning', async () => {
       mockStripeInstance.webhooks.constructEvent.mockReturnValue({
         type: 'invoice.paid',
         data: {
@@ -254,6 +269,7 @@ describe('BillingService', () => {
       });
       prisma.subscription.findFirst.mockResolvedValue({
         id: 'sub1',
+        businessId: 'biz1',
         stripeSubscriptionId: 'sub_test123',
       } as any);
       prisma.subscription.update.mockResolvedValue({} as any);
@@ -264,6 +280,7 @@ describe('BillingService', () => {
         where: { id: 'sub1' },
         data: { status: 'active' },
       });
+      expect(mockDunningService.cancelDunning).toHaveBeenCalledWith('biz1');
     });
 
     it('should skip invoice.paid when no subscription in invoice', async () => {
@@ -289,7 +306,7 @@ describe('BillingService', () => {
       expect(prisma.subscription.update).not.toHaveBeenCalled();
     });
 
-    it('should process invoice.payment_failed event', async () => {
+    it('should process invoice.payment_failed event and trigger dunning', async () => {
       mockStripeInstance.webhooks.constructEvent.mockReturnValue({
         type: 'invoice.payment_failed',
         data: {
@@ -302,6 +319,10 @@ describe('BillingService', () => {
         stripeSubscriptionId: 'sub_test123',
       } as any);
       prisma.subscription.update.mockResolvedValue({} as any);
+      prisma.business.findUnique.mockResolvedValue({
+        id: 'biz1',
+        staff: [{ email: 'admin@test.com', name: 'Admin' }],
+      } as any);
 
       const result = await service.handleWebhookEvent(mockRawBody, mockSignature);
       expect(result).toEqual({ received: true });
@@ -309,6 +330,11 @@ describe('BillingService', () => {
         where: { id: 'sub1' },
         data: { status: 'past_due' },
       });
+      expect(mockDunningService.scheduleDunning).toHaveBeenCalledWith(
+        'biz1',
+        'admin@test.com',
+        'Admin',
+      );
     });
 
     it('should skip invoice.payment_failed when no subscription', async () => {
@@ -444,6 +470,14 @@ describe('BillingService', () => {
             useValue: { scheduleDrip: jest.fn(), cancelDrip: jest.fn() },
           },
           {
+            provide: DunningService,
+            useValue: { scheduleDunning: jest.fn(), cancelDunning: jest.fn() },
+          },
+          {
+            provide: ReferralService,
+            useValue: { convertReferral: jest.fn().mockResolvedValue(undefined) },
+          },
+          {
             provide: ConfigService,
             useValue: {
               get: jest.fn((key: string, defaultValue?: any) => {
@@ -478,6 +512,14 @@ describe('BillingService', () => {
             useValue: { scheduleDrip: jest.fn(), cancelDrip: jest.fn() },
           },
           {
+            provide: DunningService,
+            useValue: { scheduleDunning: jest.fn(), cancelDunning: jest.fn() },
+          },
+          {
+            provide: ReferralService,
+            useValue: { convertReferral: jest.fn().mockResolvedValue(undefined) },
+          },
+          {
             provide: ConfigService,
             useValue: {
               get: jest.fn((key: string, defaultValue?: any) => {
@@ -508,6 +550,14 @@ describe('BillingService', () => {
           {
             provide: OnboardingDripService,
             useValue: { scheduleDrip: jest.fn(), cancelDrip: jest.fn() },
+          },
+          {
+            provide: DunningService,
+            useValue: { scheduleDunning: jest.fn(), cancelDunning: jest.fn() },
+          },
+          {
+            provide: ReferralService,
+            useValue: { convertReferral: jest.fn().mockResolvedValue(undefined) },
           },
           {
             provide: ConfigService,
@@ -547,6 +597,14 @@ describe('BillingService', () => {
           {
             provide: OnboardingDripService,
             useValue: { scheduleDrip: jest.fn(), cancelDrip: jest.fn() },
+          },
+          {
+            provide: DunningService,
+            useValue: { scheduleDunning: jest.fn(), cancelDunning: jest.fn() },
+          },
+          {
+            provide: ReferralService,
+            useValue: { convertReferral: jest.fn().mockResolvedValue(undefined) },
           },
           {
             provide: ConfigService,

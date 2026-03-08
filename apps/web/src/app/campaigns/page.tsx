@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
-import { Megaphone, Plus } from 'lucide-react';
+import { Megaphone, Plus, Repeat } from 'lucide-react';
 import { TableRowSkeleton, EmptyState } from '@/components/skeleton';
 import TooltipNudge from '@/components/tooltip-nudge';
 
@@ -14,6 +14,13 @@ const statusColors: Record<string, string> = {
   SENDING: 'bg-amber-100 text-amber-700',
   SENT: 'bg-sage-100 text-sage-700',
   CANCELLED: 'bg-red-100 text-red-700',
+};
+
+const recurrenceLabels: Record<string, string> = {
+  DAILY: 'Daily',
+  WEEKLY: 'Weekly',
+  BIWEEKLY: 'Bi-weekly',
+  MONTHLY: 'Monthly',
 };
 
 export default function CampaignsPage() {
@@ -74,7 +81,17 @@ export default function CampaignsPage() {
                       className="hover:bg-slate-50 cursor-pointer"
                       onClick={() => router.push(`/campaigns/${c.id}`)}
                     >
-                      <td className="p-3 text-sm font-medium">{c.name}</td>
+                      <td className="p-3 text-sm font-medium">
+                        <span className="flex items-center gap-1.5">
+                          {c.name}
+                          {c.recurrenceRule && c.recurrenceRule !== 'NONE' && (
+                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-lavender-50 text-lavender-700 text-[10px] rounded-full font-medium">
+                              <Repeat size={10} />
+                              {recurrenceLabels[c.recurrenceRule] || c.recurrenceRule}
+                            </span>
+                          )}
+                        </span>
+                      </td>
                       <td className="p-3">
                         <span
                           className={cn(

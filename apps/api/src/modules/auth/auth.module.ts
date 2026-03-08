@@ -7,10 +7,12 @@ import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
 import { TokenService } from '../../common/token.service';
 import { JwtBlacklistService } from '../../common/jwt-blacklist.service';
+import { ReferralModule } from '../referral/referral.module';
 
 @Module({
   imports: [
     ConfigModule,
+    ReferralModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],

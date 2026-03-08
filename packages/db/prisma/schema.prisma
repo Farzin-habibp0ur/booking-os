@@ -59,6 +59,11 @@ model Business {
   packTenantPins       PackTenantPin[]
   trialEndsAt          DateTime?
   graceEndsAt          DateTime?
+  referralCode         String?   @unique
+
+  referralsGiven       Referral[] @relation("ReferrerBusiness")
+  referralsReceived    Referral[] @relation("ReferredBusiness")
+  staffServicePrices   StaffServicePrice[]
 
   @@map("businesses")
 }
@@ -99,6 +104,7 @@ model Staff {
   viewAsSessions      ViewAsSession[]      @relation("ViewAsSuperAdmin")
   issuedCredits       BillingCredit[]      @relation("BillingCreditIssuer")
   packPins            PackTenantPin[]      @relation("PackPinStaff")
+  staffServicePrices  StaffServicePrice[]
 
   @@index([businessId])
   @@map("staff")
@@ -150,10 +156,11 @@ model Service {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  business        Business          @relation(fields: [businessId], references: [id])
-  bookings        Booking[]
-  recurringSeries RecurringSeries[]
-  waitlistEntries WaitlistEntry[]
+  business           Business            @relation(fields: [businessId], references: [id])
+  bookings           Booking[]
+  recurringSeries    RecurringSeries[]
+  waitlistEntries    WaitlistEntry[]
+  staffServicePrices StaffServicePrice[]
 
   @@index([businessId])
   @@map("services")
@@ -583,13 +590,19 @@ model Campaign {
   sentAt            DateTime?
   throttlePerMinute Int       @default(10)
   stats             Json      @default("{}")
+  recurrenceRule    String    @default("NONE") // NONE, DAILY, WEEKLY, BIWEEKLY, MONTHLY
+  nextRunAt         DateTime?
+  parentCampaignId  String?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
-  business Business       @relation(fields: [businessId], references: [id])
-  sends    CampaignSend[]
+  business       Business       @relation(fields: [businessId], references: [id])
+  sends          CampaignSend[]
+  parentCampaign Campaign?      @relation("CampaignRecurrence", fields: [parentCampaignId], references: [id])
+  childCampaigns Campaign[]     @relation("CampaignRecurrence")
 
   @@index([businessId])
+  @@index([parentCampaignId])
   @@map("campaigns")
 }
 
@@ -1102,4 +1115,44 @@ model PlatformSetting {
   updatedBy String?
 
   @@map("platform_settings")
+}
+
+model Referral {
+  id                  String    @id @default(cuid())
+  referrerBusinessId  String
+  referredBusinessId  String?
+  referralCode        String
+  status              String    @default("PENDING") // PENDING, CONVERTED, CREDITED
+  creditAmount        Float     @default(50)
+  createdAt           DateTime  @default(now())
+  convertedAt         DateTime?
+  creditedAt          DateTime?
+
+  referrerBusiness    Business  @relation("ReferrerBusiness", fields: [referrerBusinessId], references: [id])
+  referredBusiness    Business? @relation("ReferredBusiness", fields: [referredBusinessId], references: [id])
+
+  @@unique([referrerBusinessId, referredBusinessId])
+  @@index([referrerBusinessId])
+  @@index([referredBusinessId])
+  @@index([referralCode])
+  @@map("referrals")
+}
+
+model StaffServicePrice {
+  id         String   @id @default(cuid())
+  staffId    String
+  serviceId  String
+  businessId String
+  price      Float
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  staff    Staff    @relation(fields: [staffId], references: [id])
+  service  Service  @relation(fields: [serviceId], references: [id])
+  business Business @relation(fields: [businessId], references: [id])
+
+  @@unique([staffId, serviceId])
+  @@index([businessId])
+  @@index([staffId])
+  @@map("staff_service_prices")
 }

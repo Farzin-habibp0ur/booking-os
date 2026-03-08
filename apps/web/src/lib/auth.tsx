@@ -19,6 +19,7 @@ interface User {
     verticalPack: string;
     defaultLocale: string;
     packConfig: Record<string, unknown> | null;
+    createdAt: string;
   };
   trial?: {
     isTrial: boolean;
@@ -42,6 +43,7 @@ interface AuthContextType {
     ownerName: string,
     email: string,
     password: string,
+    referralCode?: string,
   ) => Promise<void>;
   logout: () => void;
 }
@@ -86,6 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     ownerName: string,
     email: string,
     password: string,
+    referralCode?: string,
   ) => {
     // C2 fix: Don't store token — httpOnly cookies handle auth
     await api.post<{ accessToken: string; staff: any }>('/auth/signup', {
@@ -93,6 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       ownerName,
       email,
       password,
+      ...(referralCode && { referralCode }),
     });
     const me = await api.get<User>('/auth/me');
     setUser(me);

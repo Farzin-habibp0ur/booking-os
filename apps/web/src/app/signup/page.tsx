@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import { useI18n, I18nProvider } from '@/lib/i18n';
@@ -28,6 +28,8 @@ function SignupPage() {
   const [loading, setLoading] = useState(false);
   const { user, signup } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const referralCode = searchParams.get('ref') || undefined;
   const { t } = useI18n();
 
   useEffect(() => {
@@ -44,10 +46,10 @@ function SignupPage() {
     }
 
     setLoading(true);
-    trackEvent('signup_started');
+    trackEvent('signup_started', { referralCode: referralCode || null });
     try {
-      await signup(businessName, ownerName, email, password);
-      trackEvent('signup_completed');
+      await signup(businessName, ownerName, email, password, referralCode);
+      trackEvent('signup_completed', { referralCode: referralCode || null });
       router.push('/setup');
     } catch (err: any) {
       setError(err.message || 'Signup failed');
@@ -66,6 +68,13 @@ function SignupPage() {
           {t('signup.title')}
         </h1>
         <p className="text-slate-500 text-center mb-6">{t('signup.subtitle')}</p>
+        {referralCode && (
+          <div className="bg-sage-50 border border-sage-100 rounded-xl p-3 mb-4 text-center">
+            <p className="text-sm text-sage-800 font-medium">
+              You&apos;ve been referred! Sign up and get $50 credit after your first payment.
+            </p>
+          </div>
+        )}
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm">{error}</div>}
           <div>

@@ -99,6 +99,7 @@ jest.mock('@/components/tooltip-nudge', () => ({
 jest.mock('lucide-react', () => ({
   Megaphone: () => <div data-testid="megaphone-icon" />,
   Plus: () => <div data-testid="plus-icon" />,
+  Repeat: () => <div data-testid="repeat-icon" />,
 }));
 
 import { api } from '@/lib/api';
@@ -347,6 +348,47 @@ describe('CampaignsPage', () => {
       expect(screen.getByText('SENDING')).toBeInTheDocument();
       expect(screen.getByText('SENT')).toBeInTheDocument();
       expect(screen.getByText('CANCELLED')).toBeInTheDocument();
+    });
+  });
+
+  // ─── Recurrence Badge ──────────────────────────────────────
+
+  it('shows recurrence badge for recurring campaigns', async () => {
+    mockApi.get.mockResolvedValue({
+      data: [
+        createCampaign({ id: 'c1', name: 'Weekly Promo', recurrenceRule: 'WEEKLY' }),
+        createCampaign({ id: 'c2', name: 'One-off', recurrenceRule: 'NONE' }),
+        createCampaign({ id: 'c3', name: 'No Rule' }),
+      ],
+      total: 3,
+    });
+
+    render(<CampaignsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Weekly')).toBeInTheDocument();
+    });
+
+    // The one-off campaign should not have a recurrence badge
+    expect(screen.queryByText('No repeat')).not.toBeInTheDocument();
+  });
+
+  it('shows correct labels for all recurrence types', async () => {
+    mockApi.get.mockResolvedValue({
+      data: [
+        createCampaign({ id: 'c1', name: 'A', recurrenceRule: 'DAILY' }),
+        createCampaign({ id: 'c2', name: 'B', recurrenceRule: 'BIWEEKLY' }),
+        createCampaign({ id: 'c3', name: 'C', recurrenceRule: 'MONTHLY' }),
+      ],
+      total: 3,
+    });
+
+    render(<CampaignsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Daily')).toBeInTheDocument();
+      expect(screen.getByText('Bi-weekly')).toBeInTheDocument();
+      expect(screen.getByText('Monthly')).toBeInTheDocument();
     });
   });
 

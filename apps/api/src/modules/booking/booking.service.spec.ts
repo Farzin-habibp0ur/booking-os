@@ -229,6 +229,67 @@ describe('BookingService', () => {
         }),
       );
     });
+
+    it('applies search filter to customer name, phone, and email', async () => {
+      prisma.booking.findMany.mockResolvedValue([]);
+      prisma.booking.count.mockResolvedValue(0);
+
+      await bookingService.findAll('biz1', { search: 'John' });
+
+      expect(prisma.booking.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            businessId: 'biz1',
+            customer: {
+              OR: [
+                { name: { contains: 'John', mode: 'insensitive' } },
+                { phone: { contains: 'John', mode: 'insensitive' } },
+                { email: { contains: 'John', mode: 'insensitive' } },
+              ],
+            },
+          },
+        }),
+      );
+    });
+
+    it('ignores empty search string', async () => {
+      prisma.booking.findMany.mockResolvedValue([]);
+      prisma.booking.count.mockResolvedValue(0);
+
+      await bookingService.findAll('biz1', { search: '   ' });
+
+      expect(prisma.booking.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { businessId: 'biz1' },
+        }),
+      );
+    });
+
+    it('combines search with other filters', async () => {
+      prisma.booking.findMany.mockResolvedValue([]);
+      prisma.booking.count.mockResolvedValue(0);
+
+      await bookingService.findAll('biz1', {
+        search: 'Jane',
+        status: 'CONFIRMED',
+      });
+
+      expect(prisma.booking.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            businessId: 'biz1',
+            status: 'CONFIRMED',
+            customer: {
+              OR: [
+                { name: { contains: 'Jane', mode: 'insensitive' } },
+                { phone: { contains: 'Jane', mode: 'insensitive' } },
+                { email: { contains: 'Jane', mode: 'insensitive' } },
+              ],
+            },
+          },
+        }),
+      );
+    });
   });
 
   describe('findById', () => {
@@ -3702,6 +3763,94 @@ describe('BookingService', () => {
           select: { startTime: true, status: true },
         }),
       );
+    });
+  });
+
+  describe('create - staff pricing override', () => {
+    const createData = {
+      customerId: 'cust1',
+      serviceId: 'svc1',
+      staffId: 'staff1',
+      startTime: '2026-03-01T10:00:00Z',
+    };
+
+    it('uses staff override price when one exists', async () => {
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        durationMins: 60,
+        price: 100,
+        depositRequired: false,
+      } as any);
+      prisma.staffServicePrice.findUnique.mockResolvedValue({
+        price: 150,
+      } as any);
+      prisma.booking.findFirst.mockResolvedValue(null);
+      prisma.booking.create.mockResolvedValue({ id: 'b1' } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+
+      await bookingService.create('biz1', createData);
+
+      expect(prisma.staffServicePrice.findUnique).toHaveBeenCalledWith({
+        where: {
+          staffId_serviceId: { staffId: 'staff1', serviceId: 'svc1' },
+        },
+      });
+      expect(prisma.booking.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            customFields: expect.objectContaining({
+              effectivePrice: 150,
+              basePrice: 100,
+            }),
+          }),
+        }),
+      );
+    });
+
+    it('uses base service price when no staff override exists', async () => {
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        durationMins: 60,
+        price: 100,
+        depositRequired: false,
+      } as any);
+      prisma.staffServicePrice.findUnique.mockResolvedValue(null);
+      prisma.booking.findFirst.mockResolvedValue(null);
+      prisma.booking.create.mockResolvedValue({ id: 'b1' } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+
+      await bookingService.create('biz1', createData);
+
+      // customFields should NOT contain effectivePrice/basePrice
+      expect(prisma.booking.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            customFields: expect.not.objectContaining({
+              effectivePrice: expect.any(Number),
+            }),
+          }),
+        }),
+      );
+    });
+
+    it('skips staff price lookup when no staffId provided', async () => {
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        durationMins: 60,
+        price: 100,
+        depositRequired: false,
+      } as any);
+      prisma.booking.findFirst.mockResolvedValue(null);
+      prisma.booking.create.mockResolvedValue({ id: 'b1' } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+
+      await bookingService.create('biz1', {
+        customerId: 'cust1',
+        serviceId: 'svc1',
+        startTime: '2026-03-01T10:00:00Z',
+      });
+
+      expect(prisma.staffServicePrice.findUnique).not.toHaveBeenCalled();
     });
   });
 });
