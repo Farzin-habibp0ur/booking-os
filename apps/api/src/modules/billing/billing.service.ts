@@ -72,7 +72,8 @@ export class BillingService implements OnModuleInit {
       billing === 'annual' ? planConfig.stripePriceEnvAnnual : planConfig.stripePriceEnvMonthly;
     const priceId = this.configService.get<string>(envKey);
 
-    if (!priceId) throw new BadRequestException(`No price configured for plan: ${plan} (${billing})`);
+    if (!priceId)
+      throw new BadRequestException(`No price configured for plan: ${plan} (${billing})`);
 
     // Get or create Stripe customer
     const subscription = await this.prisma.subscription.findUnique({
@@ -287,9 +288,7 @@ export class BillingService implements OnModuleInit {
     });
 
     if (subscription) {
-      const plan = normalizePlanTier(
-        (sub as any).metadata?.plan || subscription.plan,
-      );
+      const plan = normalizePlanTier((sub as any).metadata?.plan || subscription.plan);
       await this.prisma.subscription.update({
         where: { id: subscription.id },
         data: {
@@ -327,7 +326,10 @@ export class BillingService implements OnModuleInit {
         });
       }
     } catch (err) {
-      this.logger.warn(`Failed to send trial-will-end email for business ${subscription.businessId}`, err);
+      this.logger.warn(
+        `Failed to send trial-will-end email for business ${subscription.businessId}`,
+        err,
+      );
     }
   }
 
@@ -394,9 +396,13 @@ export class BillingService implements OnModuleInit {
 
     const now = new Date();
     const isTrial = business.trialEndsAt ? business.trialEndsAt > now : false;
-    const trialDaysRemaining = isTrial && business.trialEndsAt
-      ? Math.max(0, Math.ceil((business.trialEndsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
-      : 0;
+    const trialDaysRemaining =
+      isTrial && business.trialEndsAt
+        ? Math.max(
+            0,
+            Math.ceil((business.trialEndsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)),
+          )
+        : 0;
 
     const isGracePeriod =
       business.trialEndsAt &&

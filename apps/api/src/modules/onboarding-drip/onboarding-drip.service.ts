@@ -45,7 +45,7 @@ export const DRIP_EMAILS: DripEmail[] = [
     delayHours: 48,
     subject: 'Connect WhatsApp to never miss a message',
     headline: 'Connect WhatsApp',
-    body: "Most of your clients already use WhatsApp. Connect it to Booking OS and manage all conversations from one inbox — no more switching between apps.",
+    body: 'Most of your clients already use WhatsApp. Connect it to Booking OS and manage all conversations from one inbox — no more switching between apps.',
     ctaLabel: 'Connect WhatsApp',
     ctaPath: '/settings/notifications',
   },
@@ -54,7 +54,7 @@ export const DRIP_EMAILS: DripEmail[] = [
     delayHours: 72,
     subject: 'Let AI handle your routine replies',
     headline: 'Turn on AI auto-replies',
-    body: "Booking OS can automatically detect customer intent — booking requests, cancellations, general questions — and reply instantly. Your clients get faster responses, and you save hours every week.",
+    body: 'Booking OS can automatically detect customer intent — booking requests, cancellations, general questions — and reply instantly. Your clients get faster responses, and you save hours every week.',
     ctaLabel: 'Configure AI',
     ctaPath: '/settings/ai',
   },
@@ -72,7 +72,7 @@ export const DRIP_EMAILS: DripEmail[] = [
     delayHours: 144, // Day 6
     subject: 'Set up automatic booking reminders',
     headline: 'Reduce no-shows with reminders',
-    body: "No-shows cost clinics thousands per year. Booking OS sends automatic reminders via email before each appointment. Set it up once, and it runs forever.",
+    body: 'No-shows cost clinics thousands per year. Booking OS sends automatic reminders via email before each appointment. Set it up once, and it runs forever.',
     ctaLabel: 'Set Up Reminders',
     ctaPath: '/settings/notifications',
   },
@@ -90,7 +90,7 @@ export const DRIP_EMAILS: DripEmail[] = [
     delayHours: 216, // Day 9
     subject: 'Create message templates to save time',
     headline: 'Templates for faster replies',
-    body: "Stop typing the same messages over and over. Create templates for your most common replies — booking confirmations, follow-ups, aftercare instructions — and send them in one click.",
+    body: 'Stop typing the same messages over and over. Create templates for your most common replies — booking confirmations, follow-ups, aftercare instructions — and send them in one click.',
     ctaLabel: 'Create Templates',
     ctaPath: '/settings/templates',
   },
@@ -99,7 +99,7 @@ export const DRIP_EMAILS: DripEmail[] = [
     delayHours: 240, // Day 10
     subject: 'Try campaigns: reach all your clients at once',
     headline: 'Send your first campaign',
-    body: "Have a promotion, a new service, or seasonal availability? Campaigns let you message your entire client base (or a filtered segment) in one go. Great for filling slow days.",
+    body: 'Have a promotion, a new service, or seasonal availability? Campaigns let you message your entire client base (or a filtered segment) in one go. Great for filling slow days.',
     ctaLabel: 'Create Campaign',
     ctaPath: '/campaigns/new',
   },
@@ -108,23 +108,23 @@ export const DRIP_EMAILS: DripEmail[] = [
     delayHours: 264, // Day 11
     subject: '5 background AI agents working for you',
     headline: 'Meet your AI agents',
-    body: "While you focus on clients, 5 AI agents work behind the scenes: matching waitlist entries, detecting at-risk customers, cleaning up data, optimizing your schedule, and following up on quotes.",
+    body: 'While you focus on clients, 5 AI agents work behind the scenes: matching waitlist entries, detecting at-risk customers, cleaning up data, optimizing your schedule, and following up on quotes.',
     ctaLabel: 'View AI Agents',
     ctaPath: '/ai',
   },
   {
     step: 11,
     delayHours: 288, // Day 12
-    subject: 'Your trial ends in 2 days — here\'s what you\'ll keep',
+    subject: "Your trial ends in 2 days — here's what you'll keep",
     headline: 'Trial ending soon',
-    body: "Your 14-day free trial ends in 2 days. All your data, settings, templates, and client history will be preserved when you subscribe. Choose a plan to continue without interruption.",
+    body: 'Your 14-day free trial ends in 2 days. All your data, settings, templates, and client history will be preserved when you subscribe. Choose a plan to continue without interruption.',
     ctaLabel: 'Choose a Plan',
     ctaPath: '/settings/billing',
   },
   {
     step: 12,
     delayHours: 312, // Day 13
-    subject: 'Last day of your trial — don\'t lose your setup',
+    subject: "Last day of your trial — don't lose your setup",
     headline: 'Final day',
     body: "Tomorrow your trial ends and your account moves to read-only mode. Everything you've built — services, templates, client data, booking history — is saved. Subscribe now to keep it all running.",
     ctaLabel: 'Subscribe Now',
@@ -264,8 +264,7 @@ export class OnboardingDripService {
         const admin = business.staff[0];
         if (!admin) continue;
 
-        const hoursSinceSignup =
-          (Date.now() - business.createdAt.getTime()) / (1000 * 60 * 60);
+        const hoursSinceSignup = (Date.now() - business.createdAt.getTime()) / (1000 * 60 * 60);
 
         // Find the latest drip step that should have been sent
         for (const drip of DRIP_EMAILS) {

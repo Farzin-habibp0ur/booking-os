@@ -26,9 +26,7 @@ describe('UpgradeModal', () => {
   });
 
   test('renders feature name and plan', () => {
-    render(
-      <UpgradeModal isOpen={true} onClose={jest.fn()} feature="whatsappInbox" />,
-    );
+    render(<UpgradeModal isOpen={true} onClose={jest.fn()} feature="whatsappInbox" />);
     expect(screen.getByText('Upgrade to Professional')).toBeInTheDocument();
     expect(screen.getByText(/WhatsApp messages/)).toBeInTheDocument();
   });
@@ -47,9 +45,7 @@ describe('UpgradeModal', () => {
 
   test('calls onClose and navigates to billing on View Plans click', async () => {
     const onClose = jest.fn();
-    render(
-      <UpgradeModal isOpen={true} onClose={onClose} feature="campaigns" />,
-    );
+    render(<UpgradeModal isOpen={true} onClose={onClose} feature="campaigns" />);
 
     await userEvent.click(screen.getByText('View Plans'));
 
@@ -59,9 +55,7 @@ describe('UpgradeModal', () => {
 
   test('calls onClose on Maybe Later click', async () => {
     const onClose = jest.fn();
-    render(
-      <UpgradeModal isOpen={true} onClose={onClose} feature="campaigns" />,
-    );
+    render(<UpgradeModal isOpen={true} onClose={onClose} feature="campaigns" />);
 
     await userEvent.click(screen.getByText('Maybe Later'));
 
@@ -69,9 +63,7 @@ describe('UpgradeModal', () => {
   });
 
   test('shows professional plan features by default', () => {
-    render(
-      <UpgradeModal isOpen={true} onClose={jest.fn()} feature="campaigns" />,
-    );
+    render(<UpgradeModal isOpen={true} onClose={jest.fn()} feature="campaigns" />);
     expect(screen.getByText('WhatsApp inbox')).toBeInTheDocument();
     expect(screen.getByText('AI auto-replies')).toBeInTheDocument();
   });

@@ -6,15 +6,7 @@ import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { useI18n } from '@/lib/i18n';
-import {
-  CreditCard,
-  Loader2,
-  Check,
-  ExternalLink,
-  ArrowLeft,
-  Sparkles,
-  Clock,
-} from 'lucide-react';
+import { CreditCard, Loader2, Check, ExternalLink, ArrowLeft, Sparkles, Clock } from 'lucide-react';
 
 type PlanTier = 'starter' | 'professional' | 'enterprise';
 type BillingInterval = 'monthly' | 'annual';
@@ -195,7 +187,8 @@ export default function BillingPage() {
   }
 
   const subscription = billing?.subscription;
-  const hasWarning = subscription && (subscription.status === 'past_due' || subscription.status === 'canceled');
+  const hasWarning =
+    subscription && (subscription.status === 'past_due' || subscription.status === 'canceled');
 
   return (
     <div className="p-6 max-w-5xl">
@@ -236,8 +229,8 @@ export default function BillingPage() {
       {billing?.isGracePeriod && (
         <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
           <p className="text-sm font-medium text-red-700">
-            Your trial has ended. You have read-only access during the grace period. Subscribe now to
-            keep all your data and features.
+            Your trial has ended. You have read-only access during the grace period. Subscribe now
+            to keep all your data and features.
           </p>
         </div>
       )}

@@ -25,7 +25,9 @@ export function TrialBanner() {
         <div className="flex items-center gap-2">
           {urgent ? <AlertTriangle size={16} /> : <Clock size={16} />}
           <span>
-            <strong>{trial.trialDaysRemaining} day{trial.trialDaysRemaining !== 1 ? 's' : ''}</strong>{' '}
+            <strong>
+              {trial.trialDaysRemaining} day{trial.trialDaysRemaining !== 1 ? 's' : ''}
+            </strong>{' '}
             left in your free trial
             {urgent ? ' — choose a plan to keep your data' : ''}
           </span>
@@ -54,8 +56,8 @@ export function TrialBanner() {
         <div className="flex items-center gap-2">
           <XCircle size={16} />
           <span>
-            Your trial has ended. You have <strong>read-only access</strong> during the grace period.
-            Subscribe to unlock all features.
+            Your trial has ended. You have <strong>read-only access</strong> during the grace
+            period. Subscribe to unlock all features.
           </span>
         </div>
         <Link

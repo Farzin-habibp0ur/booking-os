@@ -13,9 +13,8 @@ export class OnboardingDripProcessor extends WorkerHost {
       `Processing drip step ${job.data.step} for ${job.data.email} (business ${job.data.businessId})`,
     );
 
-    const { OnboardingDripService } = await import(
-      '../../modules/onboarding-drip/onboarding-drip.service'
-    );
+    const { OnboardingDripService } =
+      await import('../../modules/onboarding-drip/onboarding-drip.service');
     const dripService = (this as any).moduleRef?.get(OnboardingDripService);
 
     if (!dripService) {

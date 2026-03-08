@@ -54,7 +54,10 @@ describe('Auth Integration', () => {
         JwtBlacklistService,
         { provide: TokenService, useValue: tokenService },
         { provide: EmailService, useValue: emailService },
-        { provide: OnboardingDripService, useValue: { scheduleDrip: jest.fn(), cancelDrip: jest.fn() } },
+        {
+          provide: OnboardingDripService,
+          useValue: { scheduleDrip: jest.fn(), cancelDrip: jest.fn() },
+        },
       ],
     );
   });

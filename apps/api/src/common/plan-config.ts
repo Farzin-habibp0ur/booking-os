@@ -108,10 +108,7 @@ export function getEffectivePlan(subscription: { plan: string; status: string } 
 }
 
 /** During trial, all features are unlocked (returns enterprise limits) */
-export function getEffectiveLimits(
-  plan: PlanTier,
-  isTrial: boolean,
-): PlanLimits {
+export function getEffectiveLimits(plan: PlanTier, isTrial: boolean): PlanLimits {
   if (isTrial) return PLAN_CONFIGS.enterprise.limits;
   return PLAN_CONFIGS[plan].limits;
 }

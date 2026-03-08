@@ -89,10 +89,24 @@ export function UpgradeModal({ isOpen, onClose, feature, requiredPlan }: Upgrade
           </div>
           <ul className="space-y-2">
             {(requiredPlan === 'enterprise'
-              ? ['Multi-location support', 'API access', 'White-label booking', 'Dedicated account manager']
-              : ['WhatsApp inbox', 'AI auto-replies', 'Campaigns', 'Advanced reports', 'Up to 5 staff']
+              ? [
+                  'Multi-location support',
+                  'API access',
+                  'White-label booking',
+                  'Dedicated account manager',
+                ]
+              : [
+                  'WhatsApp inbox',
+                  'AI auto-replies',
+                  'Campaigns',
+                  'Advanced reports',
+                  'Up to 5 staff',
+                ]
             ).map((item) => (
-              <li key={item} className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+              <li
+                key={item}
+                className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400"
+              >
                 <Check size={14} className="text-lavender-600 shrink-0" />
                 {item}
               </li>

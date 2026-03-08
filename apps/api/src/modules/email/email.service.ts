@@ -315,13 +315,14 @@ ${invoiceLine}
       ctaUrl?: string;
     },
   ) {
-    const ctaHtml = data.ctaLabel && data.ctaUrl
-      ? `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px 0;">
+    const ctaHtml =
+      data.ctaLabel && data.ctaUrl
+        ? `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px 0;">
 <tr><td style="border-radius:12px;background-color:#71907C;text-align:center;">
 <a href="${data.ctaUrl}" style="display:inline-block;padding:14px 32px;color:#FFFFFF;font-size:15px;font-weight:600;text-decoration:none;">${data.ctaLabel}</a>
 </td></tr>
 </table>`
-      : '';
+        : '';
 
     const html = `<h2 style="margin:0 0 16px 0;font-size:22px;font-weight:700;color:#1E293B;">${data.headline}</h2>
 <p style="margin:0 0 8px 0;font-size:15px;color:#475569;line-height:1.6;">${data.body}</p>

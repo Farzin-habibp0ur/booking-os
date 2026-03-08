@@ -60,7 +60,10 @@ describe('AuthService', () => {
         { provide: ConfigService, useValue: createMockConfigService() },
         { provide: TokenService, useValue: tokenService },
         { provide: EmailService, useValue: emailService },
-        { provide: OnboardingDripService, useValue: { scheduleDrip: jest.fn(), cancelDrip: jest.fn() } },
+        {
+          provide: OnboardingDripService,
+          useValue: { scheduleDrip: jest.fn(), cancelDrip: jest.fn() },
+        },
       ],
     }).compile();
 
@@ -419,7 +422,10 @@ describe('AuthService', () => {
           { provide: ConfigService, useValue: prodConfig },
           { provide: TokenService, useValue: tokenService },
           { provide: EmailService, useValue: emailService },
-          { provide: OnboardingDripService, useValue: { scheduleDrip: jest.fn(), cancelDrip: jest.fn() } },
+          {
+            provide: OnboardingDripService,
+            useValue: { scheduleDrip: jest.fn(), cancelDrip: jest.fn() },
+          },
         ],
       }).compile();
 

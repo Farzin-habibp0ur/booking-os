@@ -5,10 +5,7 @@ import { PlanGuard } from './plan.guard';
 import { PrismaService } from './prisma.service';
 import { createMockPrisma } from '../test/mocks';
 
-function createMockContext(
-  businessId: string,
-  method = 'GET',
-): ExecutionContext {
+function createMockContext(businessId: string, method = 'GET'): ExecutionContext {
   return {
     switchToHttp: () => ({
       getRequest: () => ({

@@ -264,9 +264,13 @@ export class AuthService {
     // Calculate trial status
     const now = new Date();
     const isTrial = business.trialEndsAt ? business.trialEndsAt > now : false;
-    const trialDaysRemaining = isTrial && business.trialEndsAt
-      ? Math.max(0, Math.ceil((business.trialEndsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
-      : 0;
+    const trialDaysRemaining =
+      isTrial && business.trialEndsAt
+        ? Math.max(
+            0,
+            Math.ceil((business.trialEndsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)),
+          )
+        : 0;
     const trialExpired = business.trialEndsAt ? now > business.trialEndsAt : false;
     const isGracePeriod =
       business.trialEndsAt &&

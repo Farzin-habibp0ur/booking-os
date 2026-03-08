@@ -71,7 +71,10 @@ describe('BillingService', () => {
           provide: EmailService,
           useValue: { sendGeneric: jest.fn().mockResolvedValue(true) },
         },
-        { provide: OnboardingDripService, useValue: { scheduleDrip: jest.fn(), cancelDrip: jest.fn() } },
+        {
+          provide: OnboardingDripService,
+          useValue: { scheduleDrip: jest.fn(), cancelDrip: jest.fn() },
+        },
         {
           provide: ConfigService,
           useValue: {
@@ -436,7 +439,10 @@ describe('BillingService', () => {
           BillingService,
           { provide: PrismaService, useValue: prisma },
           { provide: EmailService, useValue: { sendGeneric: jest.fn().mockResolvedValue(true) } },
-          { provide: OnboardingDripService, useValue: { scheduleDrip: jest.fn(), cancelDrip: jest.fn() } },
+          {
+            provide: OnboardingDripService,
+            useValue: { scheduleDrip: jest.fn(), cancelDrip: jest.fn() },
+          },
           {
             provide: ConfigService,
             useValue: {
@@ -467,7 +473,10 @@ describe('BillingService', () => {
           BillingService,
           { provide: PrismaService, useValue: prisma },
           { provide: EmailService, useValue: { sendGeneric: jest.fn().mockResolvedValue(true) } },
-          { provide: OnboardingDripService, useValue: { scheduleDrip: jest.fn(), cancelDrip: jest.fn() } },
+          {
+            provide: OnboardingDripService,
+            useValue: { scheduleDrip: jest.fn(), cancelDrip: jest.fn() },
+          },
           {
             provide: ConfigService,
             useValue: {
@@ -496,7 +505,10 @@ describe('BillingService', () => {
           BillingService,
           { provide: PrismaService, useValue: prisma },
           { provide: EmailService, useValue: { sendGeneric: jest.fn().mockResolvedValue(true) } },
-          { provide: OnboardingDripService, useValue: { scheduleDrip: jest.fn(), cancelDrip: jest.fn() } },
+          {
+            provide: OnboardingDripService,
+            useValue: { scheduleDrip: jest.fn(), cancelDrip: jest.fn() },
+          },
           {
             provide: ConfigService,
             useValue: {
@@ -532,7 +544,10 @@ describe('BillingService', () => {
           BillingService,
           { provide: PrismaService, useValue: prisma },
           { provide: EmailService, useValue: { sendGeneric: jest.fn().mockResolvedValue(true) } },
-          { provide: OnboardingDripService, useValue: { scheduleDrip: jest.fn(), cancelDrip: jest.fn() } },
+          {
+            provide: OnboardingDripService,
+            useValue: { scheduleDrip: jest.fn(), cancelDrip: jest.fn() },
+          },
           {
             provide: ConfigService,
             useValue: {

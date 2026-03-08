@@ -1,10 +1,6 @@
 import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
-import {
-  OnboardingDripService,
-  DRIP_EMAILS,
-  DripJobData,
-} from './onboarding-drip.service';
+import { OnboardingDripService, DRIP_EMAILS, DripJobData } from './onboarding-drip.service';
 import { PrismaService } from '../../common/prisma.service';
 import { EmailService } from '../email/email.service';
 import { createMockPrisma } from '../../test/mocks';
@@ -187,7 +183,10 @@ describe('OnboardingDripService', () => {
 
   describe('cancelDrip', () => {
     test('removes delayed jobs from queue', async () => {
-      const mockJob = { isDelayed: jest.fn().mockResolvedValue(true), remove: jest.fn().mockResolvedValue(undefined) };
+      const mockJob = {
+        isDelayed: jest.fn().mockResolvedValue(true),
+        remove: jest.fn().mockResolvedValue(undefined),
+      };
       mockQueue.getJob.mockResolvedValue(mockJob);
 
       await service.cancelDrip('biz1');
@@ -216,9 +215,7 @@ describe('OnboardingDripService', () => {
       await service.scheduleDrip('biz1', 'user@test.com', 'Sarah');
 
       expect(mockQueue.add).not.toHaveBeenCalled();
-      expect(logSpy).toHaveBeenCalledWith(
-        expect.stringContaining('cron fallback'),
-      );
+      expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('cron fallback'));
     });
   });
 });
