@@ -26,9 +26,13 @@ function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { user, loading: authLoading, signup } = useAuth();
+  const { user, signup } = useAuth();
   const router = useRouter();
   const { t } = useI18n();
+
+  useEffect(() => {
+    if (user) router.push('/dashboard');
+  }, [user, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,8 +55,6 @@ function SignupPage() {
       setLoading(false);
     }
   };
-
-  if (authLoading) return null;
 
   return (
     <div
