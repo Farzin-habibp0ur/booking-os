@@ -2,12 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../common/prisma.service';
 
-interface ServiceCheck {
+export interface ServiceCheck {
   status: 'ok' | 'error' | 'unavailable';
   latencyMs?: number;
 }
 
-interface SystemStatusResponse {
+export interface SystemStatusResponse {
   status: 'healthy' | 'degraded' | 'unhealthy';
   uptime: number;
   version: string;

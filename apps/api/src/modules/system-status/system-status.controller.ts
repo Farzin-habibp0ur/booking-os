@@ -1,6 +1,6 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { SystemStatusService } from './system-status.service';
+import { SystemStatusService, SystemStatusResponse } from './system-status.service';
 
 @ApiTags('System Status')
 @Controller('system-status')
@@ -38,7 +38,7 @@ export class SystemStatusController {
       },
     },
   })
-  async getSystemStatus() {
+  async getSystemStatus(): Promise<SystemStatusResponse> {
     return this.systemStatusService.getSystemStatus();
   }
 }
