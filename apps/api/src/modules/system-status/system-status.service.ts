@@ -83,9 +83,7 @@ export class SystemStatusService {
     }
 
     // Determine overall status
-    const activeChecks = Object.values(checks).filter(
-      (c) => c.status !== 'unavailable',
-    );
+    const activeChecks = Object.values(checks).filter((c) => c.status !== 'unavailable');
     const statuses = activeChecks.map((c) => c.status);
     const allOk = statuses.every((s) => s === 'ok');
     const allError = statuses.every((s) => s === 'error');
@@ -98,9 +96,7 @@ export class SystemStatusService {
     const cronEnabled = this.config.get<boolean>('ENABLE_CRON', false);
 
     // Get queues if Redis is available
-    const queuesRegistered = redisUrl
-      ? this.getRegisteredQueues()
-      : [];
+    const queuesRegistered = redisUrl ? this.getRegisteredQueues() : [];
 
     // Get memory information
     const mem = process.memoryUsage();
