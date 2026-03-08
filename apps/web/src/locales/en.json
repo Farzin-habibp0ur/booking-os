@@ -762,7 +762,12 @@
       "templates": "Templates",
       "profile": "Profile Reqs",
       "customers": "Import Customers",
-      "finish": "Test & Finish"
+      "finish": "Test & Finish",
+      "welcome_and_type": "Welcome & Business Type",
+      "business_and_hours": "Business Info & Hours",
+      "staff_and_services": "Staff & Services",
+      "templates_and_policies": "Templates & Policies",
+      "test_and_launch": "Test & Launch"
     },
     "customers_title": "Import Customers",
     "customers_subtitle": "Import your existing customer contacts to get started quickly.",

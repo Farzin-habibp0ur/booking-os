@@ -277,6 +277,40 @@ export class BusinessService {
     };
   }
 
+  async getOnboardingStatus(businessId: string) {
+    const business = await this.prisma.business.findUnique({
+      where: { id: businessId },
+      include: {
+        _count: {
+          select: {
+            services: true,
+            messageTemplates: true,
+            staff: true,
+            bookings: true,
+          },
+        },
+      },
+    });
+
+    if (!business) return { steps: {} };
+
+    const notifSettings =
+      typeof business.notificationSettings === 'object' && business.notificationSettings
+        ? (business.notificationSettings as Record<string, unknown>)
+        : {};
+
+    return {
+      steps: {
+        business_name: !!(business.name && business.phone),
+        whatsapp_connected: !!notifSettings.channels && notifSettings.channels !== 'email',
+        staff_added: business._count.staff > 1,
+        services_created: business._count.services > 0,
+        templates_ready: business._count.messageTemplates > 0,
+        first_booking: business._count.bookings > 0,
+      },
+    };
+  }
+
   async createTestBooking(businessId: string) {
     const service = await this.prisma.service.findFirst({
       where: { businessId, isActive: true },

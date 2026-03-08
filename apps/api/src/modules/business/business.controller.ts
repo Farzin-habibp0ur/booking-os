@@ -73,6 +73,11 @@ export class BusinessController {
     return this.businessService.updateWaitlistSettings(businessId, body);
   }
 
+  @Get('onboarding-status')
+  async getOnboardingStatus(@BusinessId() businessId: string) {
+    return this.businessService.getOnboardingStatus(businessId);
+  }
+
   @Post('create-test-booking')
   @Roles('ADMIN')
   createTestBooking(@BusinessId() businessId: string) {

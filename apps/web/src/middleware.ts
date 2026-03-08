@@ -17,6 +17,7 @@ const PUBLIC_PATHS = [
   '/manage',
   '/claim',
   '/pricing',
+  '/upgrade',
   '/og-image.png',
 ];
 

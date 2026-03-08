@@ -75,8 +75,16 @@ export function OnboardingChecklist() {
     try {
       const data = await api.get<{ steps: OnboardingStatus }>('/business/onboarding-status');
       setStatus(data.steps);
-    } catch (error) {
-      console.error('Failed to load onboarding status:', error);
+    } catch {
+      // Gracefully degrade: show all steps as incomplete if API fails
+      setStatus({
+        business_name: false,
+        whatsapp_connected: false,
+        staff_added: false,
+        services_created: false,
+        templates_ready: false,
+        first_booking: false,
+      });
     } finally {
       setIsLoading(false);
     }

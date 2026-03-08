@@ -1271,4 +1271,91 @@ describe('BusinessService', () => {
       expect(startTime.getDate()).toBe(expectedDate.getDate());
     });
   });
+
+  // ────────────────────────────────────────────────────────────
+  // getOnboardingStatus
+  // ────────────────────────────────────────────────────────────
+  describe('getOnboardingStatus', () => {
+    it('returns all steps as false for a fresh business', async () => {
+      prisma.business.findUnique.mockResolvedValue({
+        id: 'biz1',
+        name: 'Test',
+        phone: null,
+        notificationSettings: {},
+        _count: { services: 0, messageTemplates: 0, staff: 1, bookings: 0 },
+      } as any);
+
+      const result = await service.getOnboardingStatus('biz1');
+
+      expect(result).toEqual({
+        steps: {
+          business_name: false,
+          whatsapp_connected: false,
+          staff_added: false,
+          services_created: false,
+          templates_ready: false,
+          first_booking: false,
+        },
+      });
+    });
+
+    it('returns all steps as true for a fully set up business', async () => {
+      prisma.business.findUnique.mockResolvedValue({
+        id: 'biz1',
+        name: 'Glow Clinic',
+        phone: '+1234567890',
+        notificationSettings: { channels: 'whatsapp' },
+        _count: { services: 3, messageTemplates: 5, staff: 3, bookings: 2 },
+      } as any);
+
+      const result = await service.getOnboardingStatus('biz1');
+
+      expect(result).toEqual({
+        steps: {
+          business_name: true,
+          whatsapp_connected: true,
+          staff_added: true,
+          services_created: true,
+          templates_ready: true,
+          first_booking: true,
+        },
+      });
+    });
+
+    it('returns empty steps if business not found', async () => {
+      prisma.business.findUnique.mockResolvedValue(null);
+
+      const result = await service.getOnboardingStatus('nonexistent');
+
+      expect(result).toEqual({ steps: {} });
+    });
+
+    it('whatsapp_connected is false when channels is email', async () => {
+      prisma.business.findUnique.mockResolvedValue({
+        id: 'biz1',
+        name: 'Test',
+        phone: '+1',
+        notificationSettings: { channels: 'email' },
+        _count: { services: 1, messageTemplates: 1, staff: 2, bookings: 1 },
+      } as any);
+
+      const result = await service.getOnboardingStatus('biz1');
+
+      expect(result.steps.whatsapp_connected).toBe(false);
+    });
+
+    it('staff_added requires more than 1 staff (owner counts)', async () => {
+      prisma.business.findUnique.mockResolvedValue({
+        id: 'biz1',
+        name: 'Test',
+        phone: '+1',
+        notificationSettings: {},
+        _count: { services: 0, messageTemplates: 0, staff: 1, bookings: 0 },
+      } as any);
+
+      const result = await service.getOnboardingStatus('biz1');
+
+      expect(result.steps.staff_added).toBe(false);
+    });
+  });
 });

@@ -728,7 +728,12 @@
       "templates": "Plantillas",
       "profile": "Requisitos",
       "customers": "Importar clientes",
-      "finish": "Finalizar"
+      "finish": "Finalizar",
+      "welcome_and_type": "Bienvenida y Tipo de Negocio",
+      "business_and_hours": "Información y Horarios",
+      "staff_and_services": "Personal y Servicios",
+      "templates_and_policies": "Plantillas y Políticas",
+      "test_and_launch": "Probar y Lanzar"
     },
     "customers_title": "Importar clientes",
     "customers_subtitle": "Importa tus contactos de clientes existentes para comenzar rapidamente.",
