@@ -68,8 +68,8 @@ const STEP_LABELS: Record<Step, string> = {
 
 import { validateName, validatePhone, validateEmail } from './validators';
 
-function formatSlotTime(time: string): string {
-  return new Date('2000-01-01T' + time).toLocaleTimeString('en-US', {
+function formatSlotTime(display: string): string {
+  return new Date('2000-01-01T' + display).toLocaleTimeString('en-US', {
     hour: 'numeric',
     minute: '2-digit',
     hour12: true,
@@ -592,7 +592,7 @@ export default function BookingPortalPage() {
                                 : 'bg-slate-50 text-slate-700 hover:bg-sage-50 hover:text-sage-700'
                             }`}
                           >
-                            {formatSlotTime(slot.time)}
+                            {formatSlotTime(slot.display)}
                           </button>
                         ))}
                       </div>
@@ -751,7 +751,7 @@ export default function BookingPortalPage() {
               <div className="flex justify-between">
                 <span className="text-slate-500">Time</span>
                 <span className="font-medium text-slate-800">
-                  {formatSlotTime(selectedSlot.time)}
+                  {formatSlotTime(selectedSlot.display)}
                 </span>
               </div>
               <div className="flex justify-between">

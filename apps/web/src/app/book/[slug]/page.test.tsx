@@ -91,27 +91,45 @@ const mockServices = [
 
 const mockSlots = [
   {
-    time: '10:00',
-    display: '10:00 AM',
+    time: '2026-03-10T10:00:00.000Z',
+    display: '10:00',
     staffId: 'staff-1',
     staffName: 'Dr. Smith',
     available: true,
   },
   {
-    time: '11:00',
-    display: '11:00 AM',
+    time: '2026-03-10T11:00:00.000Z',
+    display: '11:00',
     staffId: 'staff-1',
     staffName: 'Dr. Smith',
     available: true,
   },
   {
-    time: '14:00',
-    display: '2:00 PM',
+    time: '2026-03-10T14:00:00.000Z',
+    display: '14:00',
     staffId: 'staff-2',
     staffName: 'Dr. Jones',
     available: true,
   },
 ];
+
+// formatSlotTime converts display (HH:mm) to 12h format via toLocaleTimeString
+// In Node/jsdom, this may produce "10:00 AM" or "10:00\u202fAM" depending on ICU
+const SLOT_10AM = new Date('2000-01-01T10:00').toLocaleTimeString('en-US', {
+  hour: 'numeric',
+  minute: '2-digit',
+  hour12: true,
+});
+const SLOT_11AM = new Date('2000-01-01T11:00').toLocaleTimeString('en-US', {
+  hour: 'numeric',
+  minute: '2-digit',
+  hour12: true,
+});
+const SLOT_2PM = new Date('2000-01-01T14:00').toLocaleTimeString('en-US', {
+  hour: 'numeric',
+  minute: '2-digit',
+  hour12: true,
+});
 
 const mockBookingResult = {
   id: 'booking-123',
@@ -406,9 +424,9 @@ describe('BookingPortalPage', () => {
 
       // Should show time slots
       await waitFor(() => {
-        expect(screen.getByText('10:00 AM')).toBeInTheDocument();
-        expect(screen.getByText('11:00 AM')).toBeInTheDocument();
-        expect(screen.getByText('2:00 PM')).toBeInTheDocument();
+        expect(screen.getByText(SLOT_10AM)).toBeInTheDocument();
+        expect(screen.getByText(SLOT_11AM)).toBeInTheDocument();
+        expect(screen.getByText(SLOT_2PM)).toBeInTheDocument();
       });
     });
 
@@ -542,11 +560,11 @@ describe('BookingPortalPage', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByText('10:00 AM')).toBeInTheDocument();
+        expect(screen.getByText(SLOT_10AM)).toBeInTheDocument();
       });
 
       await act(async () => {
-        await user.click(screen.getByText('10:00 AM'));
+        await user.click(screen.getByText(SLOT_10AM));
       });
 
       await waitFor(() => {
@@ -624,11 +642,11 @@ describe('BookingPortalPage', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByText('10:00 AM')).toBeInTheDocument();
+        expect(screen.getByText(SLOT_10AM)).toBeInTheDocument();
       });
 
       await act(async () => {
-        await user.click(screen.getByText('10:00 AM'));
+        await user.click(screen.getByText(SLOT_10AM));
       });
 
       await waitFor(() => {
@@ -876,10 +894,10 @@ describe('BookingPortalPage', () => {
         await user.click(dateButtons[0]);
       });
       await waitFor(() => {
-        expect(screen.getByText('10:00 AM')).toBeInTheDocument();
+        expect(screen.getByText(SLOT_10AM)).toBeInTheDocument();
       });
       await act(async () => {
-        await user.click(screen.getByText('10:00 AM'));
+        await user.click(screen.getByText(SLOT_10AM));
       });
 
       // Step 3
@@ -909,7 +927,7 @@ describe('BookingPortalPage', () => {
 
       expect(screen.getByText('Booking Summary')).toBeInTheDocument();
       expect(screen.getByText('Botox Treatment')).toBeInTheDocument();
-      expect(screen.getByText('10:00 AM')).toBeInTheDocument();
+      expect(screen.getByText(SLOT_10AM)).toBeInTheDocument();
       expect(screen.getByText('Dr. Smith')).toBeInTheDocument();
       expect(screen.getByText('30 min')).toBeInTheDocument();
       expect(screen.getByText('$250')).toBeInTheDocument();
@@ -1095,10 +1113,10 @@ describe('BookingPortalPage', () => {
         await user.click(dateButtons[0]);
       });
       await waitFor(() => {
-        expect(screen.getByText('10:00 AM')).toBeInTheDocument();
+        expect(screen.getByText(SLOT_10AM)).toBeInTheDocument();
       });
       await act(async () => {
-        await user.click(screen.getByText('10:00 AM'));
+        await user.click(screen.getByText(SLOT_10AM));
       });
 
       // Step 3
@@ -1225,10 +1243,10 @@ describe('BookingPortalPage', () => {
         await user.click(dateButtons[0]);
       });
       await waitFor(() => {
-        expect(screen.getByText('10:00 AM')).toBeInTheDocument();
+        expect(screen.getByText(SLOT_10AM)).toBeInTheDocument();
       });
       await act(async () => {
-        await user.click(screen.getByText('10:00 AM'));
+        await user.click(screen.getByText(SLOT_10AM));
       });
 
       // Details
@@ -1623,10 +1641,10 @@ describe('BookingPortalPage', () => {
         await user.click(dateButtons[0]);
       });
       await waitFor(() => {
-        expect(screen.getByText('10:00 AM')).toBeInTheDocument();
+        expect(screen.getByText(SLOT_10AM)).toBeInTheDocument();
       });
       await act(async () => {
-        await user.click(screen.getByText('10:00 AM'));
+        await user.click(screen.getByText(SLOT_10AM));
       });
       await act(async () => {
         await user.type(screen.getByLabelText(/Name \*/), 'Jane');
@@ -1668,10 +1686,10 @@ describe('BookingPortalPage', () => {
         await user.click(dateButtons[2]); // pick a different date
       });
       await waitFor(() => {
-        expect(screen.getByText('2:00 PM')).toBeInTheDocument();
+        expect(screen.getByText(SLOT_2PM)).toBeInTheDocument();
       });
       await act(async () => {
-        await user.click(screen.getByText('2:00 PM'));
+        await user.click(screen.getByText(SLOT_2PM));
       });
 
       // Step 3: Enter details (only required fields)
