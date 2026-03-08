@@ -1,28 +1,21 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { usePack } from '@/lib/vertical-pack';
 import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/lib/toast';
 import { TableRowSkeleton, EmptyState } from '@/components/skeleton';
-import { BookOpen, Download } from 'lucide-react';
+import { BookOpen, Download, Search, ChevronUp, ChevronDown, Filter, X } from 'lucide-react';
 import BookingDetailModal from '@/components/booking-detail-modal';
 import BookingFormModal from '@/components/booking-form-modal';
 import BulkActionBar from '@/components/bulk-action-bar';
 import ExportModal from '@/components/export-modal';
 import { ViewPicker } from '@/components/saved-views';
+import { statusBadgeClasses } from '@/lib/design-tokens';
 
-const statusColors: Record<string, string> = {
-  PENDING: 'bg-lavender-100 text-lavender-700',
-  PENDING_DEPOSIT: 'bg-amber-100 text-amber-700',
-  CONFIRMED: 'bg-sage-100 text-sage-700',
-  IN_PROGRESS: 'bg-amber-100 text-amber-700',
-  COMPLETED: 'bg-sage-50 text-sage-900',
-  CANCELLED: 'bg-slate-100 text-slate-600',
-  NO_SHOW: 'bg-red-100 text-red-700',
-};
+const BOOKING_STATUSES = ['PENDING', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'NO_SHOW', 'RESCHEDULED'];
 
 export default function BookingsPage() {
   const [bookings, setBookings] = useState<any>({ data: [], total: 0 });
@@ -37,6 +30,14 @@ export default function BookingsPage() {
   const [staff, setStaff] = useState<any[]>([]);
   const [activeViewId, setActiveViewId] = useState<string | null>(null);
   const [showExport, setShowExport] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortCol, setSortCol] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [staffFilter, setStaffFilter] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+  const [searchDebounce, setSearchDebounce] = useState(0);
   const pack = usePack();
   const { t } = useI18n();
   const { toast } = useToast();
@@ -137,6 +138,92 @@ export default function BookingsPage() {
     load();
   };
 
+  // Debounced search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchDebounce(Date.now());
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Filter and sort bookings
+  const filteredAndSorted = useMemo(() => {
+    let filtered = bookings.data || [];
+
+    // Apply text search
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      filtered = filtered.filter((b: any) =>
+        (b.customer?.name || '').toLowerCase().includes(q) ||
+        (b.service?.name || '').toLowerCase().includes(q)
+      );
+    }
+
+    // Apply date range filter
+    if (dateFrom || dateTo) {
+      filtered = filtered.filter((b: any) => {
+        const bookingDate = new Date(b.startTime).getTime();
+        const fromTime = dateFrom ? new Date(dateFrom).getTime() : 0;
+        const toTime = dateTo ? new Date(dateTo + 'T23:59:59').getTime() : Infinity;
+        return bookingDate >= fromTime && bookingDate <= toTime;
+      });
+    }
+
+    // Apply staff filter
+    if (staffFilter) {
+      filtered = filtered.filter((b: any) => b.staffId === staffFilter);
+    }
+
+    // Apply sorting
+    if (sortCol) {
+      filtered.sort((a: any, b: any) => {
+        let aVal: any = a;
+        let bVal: any = b;
+
+        if (sortCol === 'customer') {
+          aVal = a.customer?.name || '';
+          bVal = b.customer?.name || '';
+        } else if (sortCol === 'service') {
+          aVal = a.service?.name || '';
+          bVal = b.service?.name || '';
+        } else if (sortCol === 'staff') {
+          aVal = a.staff?.name || '';
+          bVal = b.staff?.name || '';
+        } else if (sortCol === 'startTime') {
+          aVal = new Date(a.startTime).getTime();
+          bVal = new Date(b.startTime).getTime();
+        } else if (sortCol === 'status') {
+          aVal = a.status;
+          bVal = b.status;
+        }
+
+        if (aVal < bVal) return sortDir === 'asc' ? -1 : 1;
+        if (aVal > bVal) return sortDir === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return filtered;
+  }, [bookings.data, searchQuery, sortCol, sortDir, dateFrom, dateTo, staffFilter, searchDebounce]);
+
+  const handleColumnSort = (col: string) => {
+    if (sortCol === col) {
+      setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortCol(col);
+      setSortDir('asc');
+    }
+  };
+
+  const SortIndicator = ({ col }: { col: string }) => {
+    if (sortCol !== col) return null;
+    return sortDir === 'asc' ? (
+      <ChevronUp size={14} className="inline ml-1" />
+    ) : (
+      <ChevronDown size={14} className="inline ml-1" />
+    );
+  };
+
   return (
     <div className="p-6" data-tour-target="bookings-table">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
@@ -156,7 +243,7 @@ export default function BookingsPage() {
             className="border border-slate-200 rounded-xl px-3 py-2 text-sm transition-colors w-full sm:w-auto"
           >
             <option value="">{t('bookings.all_statuses')}</option>
-            {Object.keys(statusColors).map((s) => (
+            {BOOKING_STATUSES.map((s) => (
               <option key={s} value={s}>
                 {t(`status.${s.toLowerCase()}`)}
               </option>
@@ -164,6 +251,99 @@ export default function BookingsPage() {
           </select>
         </div>
       </div>
+
+      {/* Search bar */}
+      <div className="mb-4 relative">
+        <Search size={16} className="absolute left-3 top-3 text-slate-400" />
+        <input
+          type="text"
+          placeholder={`${t('common.search')} ${pack.labels.booking.toLowerCase()}...`}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full border border-slate-200 rounded-xl px-10 py-2 text-sm transition-colors focus:outline-none focus:border-sage-500 focus:ring-1 focus:ring-sage-500"
+        />
+        {searchQuery && (
+          <button
+            onClick={() => setSearchQuery('')}
+            className="absolute right-3 top-3 text-slate-400 hover:text-slate-600"
+          >
+            <X size={16} />
+          </button>
+        )}
+      </div>
+
+      {/* Filters bar */}
+      <div className="mb-4 flex items-center gap-2">
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className={cn(
+            'flex items-center gap-2 px-3 py-2 rounded-xl text-sm border transition-colors',
+            showFilters
+              ? 'border-sage-500 bg-sage-50 text-sage-700'
+              : 'border-slate-200 hover:bg-slate-50'
+          )}
+        >
+          <Filter size={14} />
+          {t('common.filters')}
+        </button>
+        {(dateFrom || dateTo || staffFilter) && (
+          <button
+            onClick={() => {
+              setDateFrom('');
+              setDateTo('');
+              setStaffFilter('');
+              setShowFilters(false);
+            }}
+            className="text-xs text-slate-500 hover:text-slate-700 underline"
+          >
+            Clear filters
+          </button>
+        )}
+      </div>
+
+      {showFilters && (
+        <div className="mb-4 p-4 border border-slate-200 rounded-xl bg-white grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label className="block text-xs font-medium text-slate-700 mb-2">
+              {t('common.from_date')}
+            </label>
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-700 mb-2">
+              {t('common.to_date')}
+            </label>
+            <input
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-700 mb-2">
+              {t('common.staff')}
+            </label>
+            <select
+              value={staffFilter}
+              onChange={(e) => setStaffFilter(e.target.value)}
+              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"
+            >
+              <option value="">All staff</option>
+              {staff.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      )}
 
       <ViewPicker
         page="bookings"
@@ -181,32 +361,53 @@ export default function BookingsPage() {
                 <th className="w-10 p-3">
                   <input
                     type="checkbox"
-                    checked={bookings.data.length > 0 && selectedIds.size === bookings.data.length}
-                    onChange={toggleSelectAll}
+                    checked={filteredAndSorted.length > 0 && selectedIds.size === filteredAndSorted.length}
+                    onChange={() => {
+                      if (selectedIds.size === filteredAndSorted.length) {
+                        setSelectedIds(new Set());
+                      } else {
+                        setSelectedIds(new Set(filteredAndSorted.map((b: any) => b.id)));
+                      }
+                    }}
                     className="rounded text-sage-600"
                   />
                 </th>
-                <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
-                  {pack.labels.customer}
+                <th
+                  className="text-left p-3 text-xs font-medium text-slate-500 uppercase cursor-pointer hover:text-slate-700 select-none"
+                  onClick={() => handleColumnSort('customer')}
+                >
+                  {pack.labels.customer} <SortIndicator col="customer" />
                 </th>
-                <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
-                  {pack.labels.service}
+                <th
+                  className="text-left p-3 text-xs font-medium text-slate-500 uppercase cursor-pointer hover:text-slate-700 select-none"
+                  onClick={() => handleColumnSort('service')}
+                >
+                  {pack.labels.service} <SortIndicator col="service" />
                 </th>
-                <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
-                  {t('common.name')}
+                <th
+                  className="text-left p-3 text-xs font-medium text-slate-500 uppercase cursor-pointer hover:text-slate-700 select-none"
+                  onClick={() => handleColumnSort('staff')}
+                >
+                  {t('common.name')} <SortIndicator col="staff" />
                 </th>
-                <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
-                  {t('bookings.date_time')}
+                <th
+                  className="text-left p-3 text-xs font-medium text-slate-500 uppercase cursor-pointer hover:text-slate-700 select-none"
+                  onClick={() => handleColumnSort('startTime')}
+                >
+                  {t('bookings.date_time')} <SortIndicator col="startTime" />
                 </th>
-                <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
-                  {t('common.status')}
+                <th
+                  className="text-left p-3 text-xs font-medium text-slate-500 uppercase cursor-pointer hover:text-slate-700 select-none"
+                  onClick={() => handleColumnSort('status')}
+                >
+                  {t('common.status')} <SortIndicator col="status" />
                 </th>
               </tr>
             </thead>
             <tbody className="divide-y">
               {loading
                 ? Array.from({ length: 5 }).map((_, i) => <TableRowSkeleton key={i} cols={6} />)
-                : bookings.data.map((b: any) => (
+                : filteredAndSorted.map((b: any) => (
                     <tr
                       key={b.id}
                       className={cn(
@@ -239,7 +440,7 @@ export default function BookingsPage() {
                       </td>
                       <td className="p-3" onClick={() => handleRowClick(b)}>
                         <span
-                          className={cn('text-xs px-2 py-0.5 rounded-full', statusColors[b.status])}
+                          className={cn('text-xs px-2 py-0.5 rounded-full', statusBadgeClasses(b.status))}
                         >
                           {t(`status.${b.status.toLowerCase()}`)}
                         </span>
@@ -249,16 +450,13 @@ export default function BookingsPage() {
             </tbody>
           </table>
         </div>
-        {!loading && bookings.data.length === 0 && (
+        {!loading && filteredAndSorted.length === 0 && (
           <EmptyState
             icon={BookOpen}
             title={t('bookings.no_bookings', { entity: pack.labels.booking.toLowerCase() })}
             description={
-              statusFilter
-                ? t('bookings.no_bookings_status', {
-                    entity: pack.labels.booking.toLowerCase(),
-                    status: t(`status.${statusFilter.toLowerCase()}`),
-                  })
+              searchQuery || statusFilter || dateFrom || dateTo || staffFilter
+                ? `No ${pack.labels.booking.toLowerCase()} match your filters`
                 : t('bookings.create_first', { entity: pack.labels.booking.toLowerCase() })
             }
           />

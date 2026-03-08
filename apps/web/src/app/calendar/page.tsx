@@ -2,24 +2,26 @@
 
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { api } from '@/lib/api';
-import { ChevronLeft, ChevronRight, Plus, Repeat, MapPin, AlertTriangle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Repeat, MapPin, AlertTriangle, PanelRight } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useI18n } from '@/lib/i18n';
 import BookingFormModal from '@/components/booking-form-modal';
 import BookingDetailModal from '@/components/booking-detail-modal';
+import { BookingPopover } from '@/components/booking-popover';
+import { CalendarSidebar } from './components/calendar-sidebar';
+import { statusCalendarClasses } from '@/lib/design-tokens';
 
 const HOURS = Array.from({ length: 12 }, (_, i) => i + 8); // 8am - 7pm
 const SLOT_HEIGHT = 60; // pixels per hour
 
-const STATUS_COLORS: Record<string, { bg: string; border: string; text: string }> = {
-  PENDING: { bg: 'bg-lavender-50', border: 'border-l-lavender-500', text: 'text-lavender-900' },
-  PENDING_DEPOSIT: { bg: 'bg-amber-50', border: 'border-l-amber-400', text: 'text-amber-700' },
-  CONFIRMED: { bg: 'bg-sage-50', border: 'border-l-sage-500', text: 'text-sage-900' },
-  IN_PROGRESS: { bg: 'bg-amber-50', border: 'border-l-amber-500', text: 'text-amber-700' },
-  COMPLETED: { bg: 'bg-slate-50', border: 'border-l-slate-400', text: 'text-slate-500' },
-  CANCELLED: { bg: 'bg-red-50', border: 'border-l-red-300', text: 'text-red-400 line-through' },
-  NO_SHOW: { bg: 'bg-red-50', border: 'border-l-red-400', text: 'text-red-500' },
-};
+// Wrap centralized tokens — calendar adds line-through for CANCELLED
+const STATUS_COLORS = new Proxy({} as Record<string, { bg: string; border: string; text: string }>, {
+  get(_, status: string) {
+    const base = statusCalendarClasses(status);
+    if (status === 'CANCELLED') return { ...base, text: base.text + ' line-through' };
+    return base;
+  },
+});
 
 export default function CalendarPage() {
   const { t } = useI18n();
@@ -43,6 +45,11 @@ export default function CalendarPage() {
       }
     >
   >({});
+
+  // Sidebar & popover
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [popoverBooking, setPopoverBooking] = useState<any>(null);
+  const [popoverAnchor, setPopoverAnchor] = useState<DOMRect | null>(null);
 
   // Modals
   const [bookingFormOpen, setBookingFormOpen] = useState(false);
@@ -89,6 +96,39 @@ export default function CalendarPage() {
       loadCalendarContext();
     }
   }, [staff]);
+
+  // Keyboard shortcuts: t=today, n=new booking, arrows=nav, s=sidebar toggle
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      // Don't fire when typing in inputs
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement ||
+        e.target instanceof HTMLSelectElement
+      )
+        return;
+
+      switch (e.key) {
+        case 't':
+          setCurrentDate(new Date());
+          break;
+        case 'n':
+          setBookingFormOpen(true);
+          break;
+        case 's':
+          setSidebarOpen((prev) => !prev);
+          break;
+        case 'ArrowLeft':
+          navigate(-1);
+          break;
+        case 'ArrowRight':
+          navigate(1);
+          break;
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [view]);
 
   const loadBookings = () => {
     const dateFrom = new Date(currentDate);
@@ -477,9 +517,24 @@ export default function CalendarPage() {
           >
             <Plus size={14} /> {t('calendar.new_booking')}
           </button>
+          <button
+            onClick={() => setSidebarOpen((prev) => !prev)}
+            className={cn(
+              'hidden lg:flex items-center gap-1 px-3 py-1.5 rounded-xl text-sm border transition-colors',
+              sidebarOpen
+                ? 'bg-sage-50 border-sage-200 text-sage-700'
+                : 'border-slate-200 text-slate-600 hover:bg-slate-50',
+            )}
+            title="Toggle sidebar (S)"
+          >
+            <PanelRight size={14} />
+          </button>
         </div>
       </div>
 
+      {/* Calendar grid + optional sidebar */}
+      <div className="flex-1 flex overflow-hidden">
+      <div className={cn('flex-1 bg-white rounded-2xl shadow-soft overflow-auto', sidebarOpen && 'rounded-r-none')}>
       {/* Calendar grid */}
       <div className="flex-1 bg-white rounded-2xl shadow-soft overflow-auto">
         {view === 'month' ? (
@@ -896,6 +951,41 @@ export default function CalendarPage() {
             </div>
           </div>
         </div>
+      )}
+
+      </div>{/* end calendar card */}
+      {sidebarOpen && (
+        <CalendarSidebar currentDate={currentDate} onClose={() => setSidebarOpen(false)} />
+      )}
+      </div>{/* end flex wrapper */}
+
+      {/* Booking popover */}
+      {popoverBooking && (
+        <BookingPopover
+          booking={popoverBooking}
+          anchorRect={popoverAnchor}
+          onClose={() => {
+            setPopoverBooking(null);
+            setPopoverAnchor(null);
+          }}
+          onStart={(b) => {
+            setPopoverBooking(null);
+            setSelectedBooking(b);
+            // Trigger start action through detail modal
+            setBookingDetailOpen(true);
+          }}
+          onReschedule={(b) => {
+            setPopoverBooking(null);
+            setSelectedBooking(b);
+            setRescheduleMode(true);
+            setBookingFormOpen(true);
+          }}
+          onViewDetails={(b) => {
+            setPopoverBooking(null);
+            setSelectedBooking(b);
+            setBookingDetailOpen(true);
+          }}
+        />
       )}
 
       {/* Booking form modal */}

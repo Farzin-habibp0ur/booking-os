@@ -157,7 +157,8 @@ describe('InboxPage', () => {
     render(<InboxPage />);
     await waitFor(() => screen.getByText('Emma Wilson'));
 
-    fireEvent.click(screen.getByText('Emma Wilson'));
+    const emmaWilsonText = screen.getAllByText('Emma Wilson')[0];
+    fireEvent.click(emmaWilsonText);
 
     await waitFor(() => {
       expect(screen.getByText('Hello there')).toBeInTheDocument();
@@ -183,7 +184,8 @@ describe('InboxPage', () => {
     await waitFor(() => screen.getByText('Emma Wilson'));
 
     // Click to select a conversation first
-    fireEvent.click(screen.getByText('Emma Wilson'));
+    const emmaWilsonText = screen.getAllByText('Emma Wilson')[0];
+    fireEvent.click(emmaWilsonText);
 
     await waitFor(() => {
       const customerLink = screen.getByTestId('customer-name-link');
@@ -196,7 +198,8 @@ describe('InboxPage', () => {
     render(<InboxPage />);
     await waitFor(() => screen.getByText('Emma Wilson'));
 
-    fireEvent.click(screen.getByText('Emma Wilson'));
+    const emmaWilsonText = screen.getAllByText('Emma Wilson')[0];
+    fireEvent.click(emmaWilsonText);
 
     await waitFor(() => screen.getByTestId('customer-name-link'));
 
@@ -235,6 +238,128 @@ describe('InboxPage', () => {
     render(<InboxPage />);
     await waitFor(() => {
       expect(screen.getByText('inbox.select_conversation')).toBeInTheDocument();
+    });
+  });
+
+  it('toggles individual conversation checkbox selection', async () => {
+    setupMocks();
+    render(<InboxPage />);
+    await waitFor(() => screen.getByText('Emma Wilson'));
+
+    // Get the checkbox for Emma Wilson's conversation
+    const checkboxes = screen.getAllByRole('checkbox');
+    const emmaCheckbox = checkboxes[checkboxes.length - 2]; // Second to last (Emma)
+
+    fireEvent.click(emmaCheckbox);
+
+    // Verify the conversation gets highlighted with bg-sage-100
+    await waitFor(() => {
+      const emmaConversationDiv = emmaCheckbox.closest('div[class*="border-b"]');
+      expect(emmaConversationDiv).toHaveClass('bg-sage-100');
+    });
+  });
+
+  it('toggles select-all checkbox to select all conversations', async () => {
+    setupMocks();
+    render(<InboxPage />);
+    await waitFor(() => screen.getByText('Emma Wilson'));
+
+    // Get the select-all checkbox in the header
+    const checkboxes = screen.getAllByRole('checkbox');
+    const selectAllCheckbox = checkboxes[0]; // First checkbox in header
+
+    fireEvent.click(selectAllCheckbox);
+
+    // Verify both conversations are highlighted
+    await waitFor(() => {
+      const conversations = screen.getAllByText(/Emma Wilson|Bob Smith/);
+      expect(conversations.length).toBeGreaterThan(0);
+    });
+  });
+
+  it('shows floating bulk action bar when conversations are selected', async () => {
+    setupMocks();
+    render(<InboxPage />);
+    await waitFor(() => screen.getByText('Emma Wilson'));
+
+    // Select a conversation
+    const checkboxes = screen.getAllByRole('checkbox');
+    const emmaCheckbox = checkboxes[checkboxes.length - 2];
+    fireEvent.click(emmaCheckbox);
+
+    // Verify bulk action bar appears with selection count
+    await waitFor(() => {
+      expect(screen.getByText(/1 selected/)).toBeInTheDocument();
+    });
+  });
+
+  it('displays bulk action buttons in floating bar', async () => {
+    setupMocks();
+    render(<InboxPage />);
+    await waitFor(() => screen.getByText('Emma Wilson'));
+
+    // Select a conversation
+    const checkboxes = screen.getAllByRole('checkbox');
+    const emmaCheckbox = checkboxes[checkboxes.length - 2];
+    fireEvent.click(emmaCheckbox);
+
+    // Verify action buttons are present
+    await waitFor(() => {
+      expect(screen.getByText('Mark as Read')).toBeInTheDocument();
+      expect(screen.getByText('Assign to Me')).toBeInTheDocument();
+      expect(screen.getByText('Close Selected')).toBeInTheDocument();
+      expect(screen.getByText('Cancel')).toBeInTheDocument();
+    });
+  });
+
+  it('calls bulk mark read API when Mark as Read button clicked', async () => {
+    setupMocks();
+    mockApi.patch.mockResolvedValue({});
+    render(<InboxPage />);
+    await waitFor(() => screen.getByText('Emma Wilson'));
+
+    // Select a conversation
+    const checkboxes = screen.getAllByRole('checkbox');
+    const emmaCheckbox = checkboxes[checkboxes.length - 2];
+    fireEvent.click(emmaCheckbox);
+
+    // Click Mark as Read button
+    await waitFor(() => {
+      const markReadBtn = screen.getByText('Mark as Read');
+      expect(markReadBtn).toBeInTheDocument();
+      fireEvent.click(markReadBtn);
+    });
+
+    // Verify API call was made
+    await waitFor(() => {
+      expect(mockApi.patch).toHaveBeenCalledWith(
+        expect.stringContaining('/conversations/mark-read'),
+        expect.any(Object),
+      );
+    });
+  });
+
+  it('hides bulk action bar when Cancel is clicked', async () => {
+    setupMocks();
+    render(<InboxPage />);
+    await waitFor(() => screen.getByText('Emma Wilson'));
+
+    // Select a conversation
+    const checkboxes = screen.getAllByRole('checkbox');
+    const emmaCheckbox = checkboxes[checkboxes.length - 2];
+    fireEvent.click(emmaCheckbox);
+
+    // Verify bulk action bar appears
+    await waitFor(() => {
+      expect(screen.getByText(/1 selected/)).toBeInTheDocument();
+    });
+
+    // Click Cancel button
+    fireEvent.click(screen.getByText('Cancel'));
+
+    // Verify bulk action bar is hidden
+    await waitFor(() => {
+      expect(screen.queryByText(/1 selected/)).not.toBeInTheDocument();
     });
   });
 });

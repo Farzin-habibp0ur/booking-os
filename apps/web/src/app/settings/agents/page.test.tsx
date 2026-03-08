@@ -15,6 +15,7 @@ jest.mock('@/lib/api', () => ({
 }));
 jest.mock('lucide-react', () => ({
   Bot: () => <span data-testid="bot-icon" />,
+  ArrowLeft: () => <span data-testid="arrow-left-icon" />,
 }));
 jest.mock('@/components/agent-skills/skill-card', () => ({
   SkillCard: ({ skill, onToggle, onAutonomyChange, disabled }: any) => (

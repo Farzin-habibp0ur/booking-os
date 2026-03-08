@@ -1,11 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { useI18n } from '@/lib/i18n';
-import { CreditCard, Loader2, Check, ExternalLink } from 'lucide-react';
+import { CreditCard, Loader2, Check, ExternalLink, ArrowLeft } from 'lucide-react';
 
 interface Subscription {
   plan: 'basic' | 'pro';
@@ -132,6 +133,10 @@ export default function BillingPage() {
 
   return (
     <div className="p-6 max-w-3xl">
+      <Link href="/settings" className="inline-flex items-center gap-1 text-sm text-sage-600 hover:text-sage-700 dark:text-sage-400 dark:hover:text-sage-300 mb-3 transition-colors">
+        <ArrowLeft size={14} />
+        Back to Settings
+      </Link>
       <div className="flex items-center gap-2 mb-6">
         <CreditCard size={24} className="text-amber-600" />
         <h1 className="text-2xl font-serif font-semibold text-slate-900">{t('billing.title')}</h1>

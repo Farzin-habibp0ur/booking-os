@@ -25,6 +25,16 @@ jest.mock('@/components/autonomy', () => ({
   ),
 }));
 
+jest.mock('lucide-react', () => ({
+  ArrowLeft: () => <span data-testid="arrow-left-icon" />,
+}));
+
+jest.mock('next/link', () => ({ children, href, ...rest }: any) => (
+  <a href={href} {...rest}>
+    {children}
+  </a>
+));
+
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { api } from '@/lib/api';
 import AutonomySettingsPage from './page';

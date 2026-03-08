@@ -32,17 +32,14 @@ import {
 } from 'lucide-react';
 import { PROFILE_FIELDS } from '@booking-os/shared';
 
+// New 6-step flow (consolidated from original 10 steps)
 const STEP_KEYS = [
-  'clinic_type',
-  'business',
-  'whatsapp',
-  'staff',
-  'services',
-  'hours',
-  'templates',
-  'profile',
-  'customers',
-  'finish',
+  'welcome_and_type',      // Step 0: Welcome + Business Type (was 0 + 1)
+  'business_and_hours',    // Step 1: Business Info + Working Hours (was 1 + 5)
+  'whatsapp',              // Step 2: Connect WhatsApp (was 2)
+  'staff_and_services',    // Step 3: Staff + Services (was 3 + 4)
+  'templates_and_policies', // Step 4: Templates + Policies (was 6 + 7)
+  'test_and_launch',       // Step 5: Test & Launch (was 8 + 9)
 ] as const;
 
 const STEP_ICONS = [
@@ -50,15 +47,30 @@ const STEP_ICONS = [
   Building2,
   MessageCircle,
   Users,
-  Scissors,
-  Clock,
   FileText,
-  ClipboardCheck,
-  Upload,
   Rocket,
 ];
 
+// Time estimates for each step (in minutes)
+const STEP_TIME_ESTIMATES: Record<(typeof STEP_KEYS)[number], number> = {
+  welcome_and_type: 2,
+  business_and_hours: 5,
+  whatsapp: 3,
+  staff_and_services: 8,
+  templates_and_policies: 3,
+  test_and_launch: 5,
+};
+
 const DAYS_KEYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+
+// Helper component for time estimate badge
+function TimeEstimateBadge({ minutes }: { minutes: number }) {
+  return (
+    <span className="text-xs bg-lavender-50 text-lavender-700 px-2 py-1 rounded-full font-medium">
+      ~{minutes} min
+    </span>
+  );
+}
 
 export default function SetupPageWrapper() {
   return (
@@ -378,14 +390,24 @@ function SetupPage() {
   };
 
   const handleNext = async () => {
-    if (step === 1) await saveBusiness();
-    if (step === 5 && selectedStaffForHours) await saveWorkingHours(selectedStaffForHours);
-    if (step === 7) await saveProfileRequirements();
+    // Step 1: Business Info + Hours
+    if (step === 1) {
+      await saveBusiness();
+      if (selectedStaffForHours) await saveWorkingHours(selectedStaffForHours);
+    }
+    // Step 4: Templates + Policies
+    if (step === 4) {
+      await saveProfileRequirements();
+    }
     if (step < STEP_KEYS.length - 1) setStep(step + 1);
   };
 
   const handleBack = () => {
     if (step > 0) setStep(step - 1);
+  };
+
+  const handleSkip = () => {
+    if (step < STEP_KEYS.length - 1) setStep(step + 1);
   };
 
   if (loading) {
@@ -437,15 +459,20 @@ function SetupPage() {
       </div>
 
       {/* Content */}
-      <div className="max-w-2xl mx-auto px-6 py-8">
-        {/* Step 0: Clinic Type */}
+      <div className="max-w-2xl mx-auto px-6 py-8 pb-32">
+        {/* Step 0: Welcome + Business Type */}
         {step === 0 && (
           <div className="space-y-4">
             <div className="bg-white rounded-2xl shadow-soft p-6 space-y-2">
-              <h2 className="text-lg font-serif font-semibold text-slate-900">
-                {t('setup.clinic_type_title')}
-              </h2>
-              <p className="text-sm text-slate-500">{t('setup.clinic_type_subtitle')}</p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-serif font-semibold text-slate-900">
+                    {t('setup.clinic_type_title')}
+                  </h2>
+                  <p className="text-sm text-slate-500 mt-1">{t('setup.clinic_type_subtitle')}</p>
+                </div>
+                <TimeEstimateBadge minutes={STEP_TIME_ESTIMATES.welcome_and_type} />
+              </div>
             </div>
 
             {packInstalled ? (
@@ -537,12 +564,12 @@ function SetupPage() {
                   </div>
                 )}
 
-                <div className="text-center">
+                <div className="text-center mt-6 pt-4 border-t border-slate-100">
                   <button
-                    onClick={() => setStep(1)}
+                    onClick={handleSkip}
                     className="text-xs text-slate-400 hover:text-slate-600 transition-colors"
                   >
-                    {t('setup.clinic_type_skip')}
+                    {t('setup.skip_for_now')} →
                   </button>
                 </div>
               </>
@@ -550,74 +577,189 @@ function SetupPage() {
           </div>
         )}
 
-        {/* Step 1: Business Info */}
+        {/* Step 1: Business Info + Working Hours */}
         {step === 1 && (
-          <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
-            <h2 className="text-lg font-serif font-semibold text-slate-900">
-              {t('setup.business_title')}
-            </h2>
-            <p className="text-sm text-slate-500">{t('setup.business_subtitle')}</p>
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                {t('setup.business_name_label')}
-              </label>
-              <input
-                value={bizName}
-                onChange={(e) => setBizName(e.target.value)}
-                className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
-                placeholder={t('setup.business_name_placeholder')}
-              />
+          <div className="space-y-4">
+            {/* Business Info Section */}
+            <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-serif font-semibold text-slate-900">
+                    {t('setup.business_title')}
+                  </h2>
+                  <p className="text-sm text-slate-500 mt-1">{t('setup.business_subtitle')}</p>
+                </div>
+                <TimeEstimateBadge minutes={STEP_TIME_ESTIMATES.business_and_hours} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  {t('setup.business_name_label')}
+                </label>
+                <input
+                  value={bizName}
+                  onChange={(e) => setBizName(e.target.value)}
+                  className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
+                  placeholder={t('setup.business_name_placeholder')}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">{t('setup.timezone_label')}</label>
+                <select
+                  value={timezone}
+                  onChange={(e) => setTimezone(e.target.value)}
+                  className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
+                >
+                  {[
+                    'America/New_York',
+                    'America/Chicago',
+                    'America/Denver',
+                    'America/Los_Angeles',
+                    'America/Phoenix',
+                    'Europe/London',
+                    'Europe/Paris',
+                    'Asia/Dubai',
+                    'Asia/Singapore',
+                    'Australia/Sydney',
+                    'UTC',
+                  ].map((tz) => (
+                    <option key={tz} value={tz}>
+                      {tz}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">{t('setup.currency_label')}</label>
+                <select
+                  value={currency}
+                  onChange={(e) => setCurrency(e.target.value)}
+                  className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
+                >
+                  {['USD', 'EUR', 'GBP', 'AED', 'AUD', 'CAD', 'SGD'].map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">{t('setup.timezone_label')}</label>
-              <select
-                value={timezone}
-                onChange={(e) => setTimezone(e.target.value)}
-                className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
+
+            {/* Working Hours Section */}
+            {staffList.length > 0 && (
+              <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
+                <h3 className="font-serif font-semibold text-slate-900 text-lg">
+                  {t('setup.hours_title')}
+                </h3>
+                <p className="text-sm text-slate-500">{t('setup.hours_subtitle')}</p>
+
+                {staffList.length > 1 && (
+                  <div className="flex gap-2">
+                    {staffList.map((s) => (
+                      <button
+                        key={s.id}
+                        onClick={async () => {
+                          setSelectedStaffForHours(s.id);
+                          if (!staffHours[s.id]) await loadWorkingHours(s.id);
+                        }}
+                        className={cn(
+                          'px-3 py-1.5 rounded-xl text-sm',
+                          selectedStaffForHours === s.id
+                            ? 'bg-sage-600 text-white'
+                            : 'bg-slate-100 hover:bg-slate-200',
+                        )}
+                      >
+                        {s.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                <div className="border border-slate-100 rounded-xl divide-y">
+                  {(staffHours[selectedStaffForHours] || []).map((h: any) => (
+                    <div key={h.dayOfWeek} className="flex items-center gap-3 px-4 py-2.5">
+                      <div className="w-24 text-sm font-medium">
+                        {t(`days.${DAYS_KEYS[h.dayOfWeek]}`)}
+                      </div>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={!h.isOff}
+                          onChange={(e) =>
+                            updateHourForDay(
+                              selectedStaffForHours,
+                              h.dayOfWeek,
+                              'isOff',
+                              !e.target.checked,
+                            )
+                          }
+                          className="rounded"
+                        />
+                        <span className="text-xs text-slate-500">
+                          {h.isOff ? t('common.off') : t('common.working')}
+                        </span>
+                      </label>
+                      {!h.isOff && (
+                        <>
+                          <input
+                            type="time"
+                            value={h.startTime}
+                            onChange={(e) =>
+                              updateHourForDay(
+                                selectedStaffForHours,
+                                h.dayOfWeek,
+                                'startTime',
+                                e.target.value,
+                              )
+                            }
+                            className="border rounded px-2 py-1 text-sm"
+                          />
+                          <span className="text-slate-400">{t('common.to')}</span>
+                          <input
+                            type="time"
+                            value={h.endTime}
+                            onChange={(e) =>
+                              updateHourForDay(
+                                selectedStaffForHours,
+                                h.dayOfWeek,
+                                'endTime',
+                                e.target.value,
+                              )
+                            }
+                            className="border rounded px-2 py-1 text-sm"
+                          />
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Skip for now link */}
+            <div className="text-center pt-2">
+              <button
+                onClick={handleSkip}
+                className="text-xs text-slate-400 hover:text-slate-600 transition-colors"
               >
-                {[
-                  'America/New_York',
-                  'America/Chicago',
-                  'America/Denver',
-                  'America/Los_Angeles',
-                  'America/Phoenix',
-                  'Europe/London',
-                  'Europe/Paris',
-                  'Asia/Dubai',
-                  'Asia/Singapore',
-                  'Australia/Sydney',
-                  'UTC',
-                ].map((tz) => (
-                  <option key={tz} value={tz}>
-                    {tz}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">{t('setup.currency_label')}</label>
-              <select
-                value={currency}
-                onChange={(e) => setCurrency(e.target.value)}
-                className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
-              >
-                {['USD', 'EUR', 'GBP', 'AED', 'AUD', 'CAD', 'SGD'].map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
+                {t('setup.skip_for_now')} →
+              </button>
             </div>
           </div>
         )}
 
         {/* Step 2: Connect WhatsApp */}
         {step === 2 && (
-          <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
-            <h2 className="text-lg font-serif font-semibold text-slate-900">
-              {t('setup.whatsapp_title')}
-            </h2>
-            <p className="text-sm text-slate-500">{t('setup.whatsapp_subtitle')}</p>
+          <div className="space-y-4">
+            <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-serif font-semibold text-slate-900">
+                    {t('setup.whatsapp_title')}
+                  </h2>
+                  <p className="text-sm text-slate-500 mt-1">{t('setup.whatsapp_subtitle')}</p>
+                </div>
+                <TimeEstimateBadge minutes={STEP_TIME_ESTIMATES.whatsapp} />
+              </div>
             <div className="border border-slate-100 rounded-xl p-4 bg-green-50">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center">
@@ -633,24 +775,32 @@ function SetupPage() {
                   {t('setup.connect_whatsapp')}
                 </button>
                 <button
-                  onClick={handleNext}
+                  onClick={handleSkip}
                   className="border px-4 py-2 rounded-xl text-sm hover:bg-slate-50"
                 >
                   {t('setup.skip_for_now')}
                 </button>
               </div>
             </div>
-            <div className="text-xs text-slate-400 mt-2">{t('setup.whatsapp_note')}</div>
+              <div className="text-xs text-slate-400 mt-2">{t('setup.whatsapp_note')}</div>
+            </div>
           </div>
         )}
 
-        {/* Step 3: Add Staff */}
+        {/* Step 3: Add Staff + Services */}
         {step === 3 && (
-          <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
-            <h2 className="text-lg font-serif font-semibold text-slate-900">
-              {t('setup.staff_title')}
-            </h2>
-            <p className="text-sm text-slate-500">{t('setup.staff_subtitle')}</p>
+          <div className="space-y-4">
+            {/* Staff Section */}
+            <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-serif font-semibold text-slate-900">
+                    {t('setup.staff_title')}
+                  </h2>
+                  <p className="text-sm text-slate-500 mt-1">{t('setup.staff_subtitle')}</p>
+                </div>
+                <TimeEstimateBadge minutes={STEP_TIME_ESTIMATES.staff_and_services} />
+              </div>
 
             {staffList.length > 0 && (
               <div className="border border-slate-100 rounded-xl divide-y">
@@ -745,16 +895,14 @@ function SetupPage() {
                 </button>
               </div>
             </div>
-          </div>
-        )}
+            </div>
 
-        {/* Step 4: Define Services */}
-        {step === 4 && (
-          <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
-            <h2 className="text-lg font-serif font-semibold text-slate-900">
-              {t('setup.services_title')}
-            </h2>
-            <p className="text-sm text-slate-500">{t('setup.services_subtitle')}</p>
+            {/* Services Section */}
+            <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
+              <h3 className="text-lg font-serif font-semibold text-slate-900">
+                {t('setup.services_title')}
+              </h3>
+              <p className="text-sm text-slate-500">{t('setup.services_subtitle')}</p>
 
             {services.length > 0 && (
               <div className="border border-slate-100 rounded-xl divide-y">
@@ -889,138 +1037,63 @@ function SetupPage() {
                 <Plus size={14} className="inline mr-1" /> {t('setup.add_service_button')}
               </button>
             </div>
-          </div>
-        )}
+            </div>
 
-        {/* Step 5: Working Hours */}
-        {step === 5 && (
-          <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
-            <h2 className="text-lg font-serif font-semibold text-slate-900">
-              {t('setup.hours_title')}
-            </h2>
-            <p className="text-sm text-slate-500">{t('setup.hours_subtitle')}</p>
-
-            {staffList.length > 1 && (
-              <div className="flex gap-2">
-                {staffList.map((s) => (
-                  <button
-                    key={s.id}
-                    onClick={async () => {
-                      setSelectedStaffForHours(s.id);
-                      if (!staffHours[s.id]) await loadWorkingHours(s.id);
-                    }}
-                    className={cn(
-                      'px-3 py-1.5 rounded-xl text-sm',
-                      selectedStaffForHours === s.id
-                        ? 'bg-sage-600 text-white'
-                        : 'bg-slate-100 hover:bg-slate-200',
-                    )}
-                  >
-                    {s.name}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            <div className="border border-slate-100 rounded-xl divide-y">
-              {(staffHours[selectedStaffForHours] || []).map((h: any) => (
-                <div key={h.dayOfWeek} className="flex items-center gap-3 px-4 py-2.5">
-                  <div className="w-24 text-sm font-medium">
-                    {t(`days.${DAYS_KEYS[h.dayOfWeek]}`)}
-                  </div>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={!h.isOff}
-                      onChange={(e) =>
-                        updateHourForDay(
-                          selectedStaffForHours,
-                          h.dayOfWeek,
-                          'isOff',
-                          !e.target.checked,
-                        )
-                      }
-                      className="rounded"
-                    />
-                    <span className="text-xs text-slate-500">
-                      {h.isOff ? t('common.off') : t('common.working')}
-                    </span>
-                  </label>
-                  {!h.isOff && (
-                    <>
-                      <input
-                        type="time"
-                        value={h.startTime}
-                        onChange={(e) =>
-                          updateHourForDay(
-                            selectedStaffForHours,
-                            h.dayOfWeek,
-                            'startTime',
-                            e.target.value,
-                          )
-                        }
-                        className="border rounded px-2 py-1 text-sm"
-                      />
-                      <span className="text-slate-400">{t('common.to')}</span>
-                      <input
-                        type="time"
-                        value={h.endTime}
-                        onChange={(e) =>
-                          updateHourForDay(
-                            selectedStaffForHours,
-                            h.dayOfWeek,
-                            'endTime',
-                            e.target.value,
-                          )
-                        }
-                        className="border rounded px-2 py-1 text-sm"
-                      />
-                    </>
-                  )}
-                </div>
-              ))}
+            {/* Skip for now link */}
+            <div className="text-center pt-2">
+              <button
+                onClick={handleSkip}
+                className="text-xs text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                {t('setup.skip_for_now')} →
+              </button>
             </div>
           </div>
         )}
 
-        {/* Step 6: Templates */}
-        {step === 6 && (
-          <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
-            <h2 className="text-lg font-serif font-semibold text-slate-900">
-              {t('setup.templates_title')}
-            </h2>
-            <p className="text-sm text-slate-500">{t('setup.templates_subtitle')}</p>
+        {/* Step 4: Templates + Profile Policies */}
+        {step === 4 && (
+          <div className="space-y-4">
+            {/* Templates Section */}
+            <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-serif font-semibold text-slate-900">
+                    {t('setup.templates_title')}
+                  </h2>
+                  <p className="text-sm text-slate-500 mt-1">{t('setup.templates_subtitle')}</p>
+                </div>
+                <TimeEstimateBadge minutes={STEP_TIME_ESTIMATES.templates_and_policies} />
+              </div>
 
-            <div className="space-y-3">
-              {templates.map((tpl) => (
-                <div key={tpl.id} className="border border-slate-100 rounded-xl p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium">{tpl.name}</p>
-                      <span className="text-[10px] bg-slate-100 px-2 py-0.5 rounded-full">
-                        {tpl.category}
-                      </span>
+              <div className="space-y-3">
+                {templates.map((tpl) => (
+                  <div key={tpl.id} className="border border-slate-100 rounded-xl p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium">{tpl.name}</p>
+                        <span className="text-[10px] bg-slate-100 px-2 py-0.5 rounded-full">
+                          {tpl.category}
+                        </span>
+                      </div>
+                    </div>
+                    <p className="text-sm text-slate-600 bg-slate-50 rounded p-2">{tpl.body}</p>
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {tpl.variables?.map((v: string) => (
+                        <span
+                          key={v}
+                          className="text-[10px] bg-sage-50 text-sage-600 px-1.5 py-0.5 rounded"
+                        >{`{{${v}}}`}</span>
+                      ))}
                     </div>
                   </div>
-                  <p className="text-sm text-slate-600 bg-slate-50 rounded p-2">{tpl.body}</p>
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {tpl.variables?.map((v: string) => (
-                      <span
-                        key={v}
-                        className="text-[10px] bg-sage-50 text-sage-600 px-1.5 py-0.5 rounded"
-                      >{`{{${v}}}`}</span>
-                    ))}
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
+              <p className="text-xs text-slate-400">{t('setup.templates_note')}</p>
             </div>
-            <p className="text-xs text-slate-400">{t('setup.templates_note')}</p>
-          </div>
-        )}
 
-        {/* Step 7: Profile Requirements */}
-        {step === 7 && (
-          <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
+            {/* Profile Requirements Section */}
+            <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
             <h2 className="text-lg font-serif font-semibold text-slate-900">
               {t('setup.profile_title')}
             </h2>
@@ -1065,176 +1138,65 @@ function SetupPage() {
               );
             })}
 
-            <p className="text-xs text-slate-400">{t('setup.profile_note')}</p>
+              <p className="text-xs text-slate-400">{t('setup.profile_note')}</p>
+            </div>
+
+            {/* Skip for now link */}
+            <div className="text-center pt-2">
+              <button
+                onClick={handleSkip}
+                className="text-xs text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                {t('setup.skip_for_now')} →
+              </button>
+            </div>
           </div>
         )}
 
-        {/* Step 8: Import Customers */}
-        {step === 8 && (
+        {/* Step 5: Test & Launch (combines former steps 8 & 9) */}
+        {step === 5 && (
           <div className="space-y-4">
             <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
-              <h2 className="text-lg font-serif font-semibold text-slate-900">
-                {t('setup.customers_title')}
-              </h2>
-              <p className="text-sm text-slate-500">{t('setup.customers_subtitle')}</p>
-            </div>
-
-            {/* CSV Import Card */}
-            <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
-              <div className="flex items-center gap-2">
-                <FileText size={18} className="text-sage-600" />
-                <h3 className="font-medium text-sm">{t('import.csv_title')}</h3>
-              </div>
-              <div
-                onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:border-sage-400 transition-colors"
-              >
-                <Upload size={20} className="mx-auto text-slate-400 mb-1" />
-                <p className="text-xs text-slate-600">
-                  {csvFile ? csvFile.name : t('import.csv_drop_zone')}
-                </p>
-              </div>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".csv"
-                className="hidden"
-                onChange={(e) => e.target.files?.[0] && handleCsvSelect(e.target.files[0])}
-              />
-
-              {csvPreview.length > 0 && (
-                <div className="border rounded overflow-auto max-h-32">
-                  <table className="w-full text-xs">
-                    <thead className="bg-slate-50 border-b">
-                      <tr>
-                        <th className="text-left p-1.5">{t('common.name')}</th>
-                        <th className="text-left p-1.5">{t('common.phone')}</th>
-                        <th className="text-left p-1.5">{t('common.email')}</th>
-                        <th className="text-left p-1.5">{t('common.tags')}</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y">
-                      {csvPreview.map((row, i) => (
-                        <tr key={i}>
-                          <td className="p-1.5">{row.name}</td>
-                          <td className="p-1.5">{row.phone}</td>
-                          <td className="p-1.5">{row.email}</td>
-                          <td className="p-1.5">{row.tags}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-
-              {csvFile && (
-                <button
-                  onClick={importCsv}
-                  disabled={csvImporting}
-                  className="bg-sage-600 text-white px-3 py-1.5 rounded text-sm hover:bg-sage-700 disabled:opacity-50 flex items-center gap-2"
-                >
-                  {csvImporting && <Loader2 size={14} className="animate-spin" />}
-                  {t('import.import_button')}
-                </button>
-              )}
-              {csvResult && (
-                <p className="text-xs text-green-700 bg-green-50 border border-green-200 rounded p-2">
-                  {t('import.csv_result', {
-                    created: csvResult.created,
-                    skipped: csvResult.skipped,
-                    errors: csvResult.errors,
-                  })}
-                </p>
-              )}
-            </div>
-
-            {/* Conversation Import Card */}
-            <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
-              <div className="flex items-center gap-2">
-                <Users size={18} className="text-lavender-600" />
-                <h3 className="font-medium text-sm">{t('import.conversations_title')}</h3>
-              </div>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={includeMessages}
-                  onChange={(e) => setIncludeMessages(e.target.checked)}
-                  className="rounded text-lavender-600"
-                />
-                <span className="text-xs">{t('import.include_messages')}</span>
-              </label>
-              <button
-                onClick={importFromConversations}
-                disabled={convImporting}
-                className="bg-lavender-600 text-white px-3 py-1.5 rounded text-sm hover:bg-lavender-700 disabled:opacity-50 flex items-center gap-2"
-              >
-                {convImporting && <Loader2 size={14} className="animate-spin" />}
-                {t('import.generate_profiles')}
-              </button>
-              {convResult && (
-                <p className="text-xs text-green-700 bg-green-50 border border-green-200 rounded p-2">
-                  {t('import.conversations_result', {
-                    created: convResult.created,
-                    updated: convResult.updated,
-                  })}
-                </p>
-              )}
-            </div>
-
-            {/* Manual Card */}
-            <div className="bg-white rounded-2xl shadow-soft p-6">
-              <div className="flex items-center gap-2 mb-2">
-                <Plus size={18} className="text-slate-600" />
-                <h3 className="font-medium text-sm">{t('setup.add_manually')}</h3>
-              </div>
-              <p className="text-xs text-slate-500">{t('setup.add_manually_desc')}</p>
-              <button
-                onClick={() => router.push('/customers')}
-                className="mt-3 text-sm text-sage-600 hover:text-sage-700 font-medium"
-              >
-                {t('setup.go_to_customers')} &rarr;
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Step 9: Test & Finish */}
-        {step === 9 &&
-          (() => {
-            const activeServices = services.filter((s: any) => s.isActive !== false);
-            const hasWorkingHours = Object.values(staffHours).some(
-              (hours: any) => Array.isArray(hours) && hours.length > 0,
-            );
-            const readinessItems = [
-              {
-                label: t('setup.readiness_staff'),
-                ok: staffList.length > 0,
-                count: staffList.length,
-              },
-              {
-                label: t('setup.readiness_services'),
-                ok: activeServices.length > 0,
-                count: activeServices.length,
-              },
-              {
-                label: t('setup.readiness_templates'),
-                ok: templates.length > 0,
-                count: templates.length,
-              },
-              { label: t('setup.readiness_notifications'), ok: !!business?.notificationSettings },
-              { label: t('setup.readiness_hours'), ok: hasWorkingHours },
-              { label: t('setup.readiness_pack'), ok: !!business?.verticalPack },
-            ];
-            return (
-              <div className="space-y-4">
-                <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
                   <h2 className="text-lg font-serif font-semibold text-slate-900">
                     {t('setup.finish_title')}
                   </h2>
-                  <p className="text-sm text-slate-500">{t('setup.finish_subtitle')}</p>
+                  <p className="text-sm text-slate-500 mt-1">{t('setup.finish_subtitle')}</p>
+                </div>
+                <TimeEstimateBadge minutes={STEP_TIME_ESTIMATES.test_and_launch} />
+              </div>
+            </div>
 
+            {(() => {
+              const activeServices = services.filter((s: any) => s.isActive !== false);
+              const hasWorkingHours = Object.values(staffHours).some(
+                (hours: any) => Array.isArray(hours) && hours.length > 0,
+              );
+              const readinessItems = [
+                {
+                  label: t('setup.readiness_staff'),
+                  ok: staffList.length > 0,
+                  count: staffList.length,
+                },
+                {
+                  label: t('setup.readiness_services'),
+                  ok: activeServices.length > 0,
+                  count: activeServices.length,
+                },
+                {
+                  label: t('setup.readiness_templates'),
+                  ok: templates.length > 0,
+                  count: templates.length,
+                },
+                { label: t('setup.readiness_notifications'), ok: !!business?.notificationSettings },
+                { label: t('setup.readiness_hours'), ok: hasWorkingHours },
+                { label: t('setup.readiness_pack'), ok: !!business?.verticalPack },
+              ];
+              return (
+                <>
                   {/* Feature Readiness Checklist */}
-                  <div>
+                  <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
                     <h3 className="text-sm font-medium text-slate-700 mb-2">
                       {t('setup.readiness_title')}
                     </h3>
@@ -1263,72 +1225,74 @@ function SetupPage() {
                       ))}
                     </div>
                   </div>
-                </div>
 
-                {/* Test Booking Card */}
-                <div className="bg-white rounded-2xl shadow-soft p-6 space-y-3">
-                  <h3 className="text-sm font-medium text-slate-700">
-                    {t('setup.create_test_booking')}
-                  </h3>
-                  <button
-                    onClick={async () => {
-                      setTestBookingLoading(true);
-                      try {
-                        const result = await api.post<any>('/business/create-test-booking');
-                        setTestBookingResult(result);
-                        const dateStr = new Date(result.startTime).toLocaleDateString();
-                        toast(
-                          t('setup.test_booking_created', {
-                            service: result.service?.name,
-                            date: dateStr,
-                          }),
-                        );
-                      } catch (err: any) {
-                        toast(t('setup.test_booking_error'), 'error');
-                      }
-                      setTestBookingLoading(false);
-                    }}
-                    disabled={testBookingLoading}
-                    className="bg-slate-900 text-white px-4 py-2 rounded-xl text-sm hover:bg-slate-800 disabled:opacity-50 flex items-center gap-2"
-                  >
-                    {testBookingLoading && <Loader2 size={14} className="animate-spin" />}
-                    {t('setup.create_test_booking')}
-                  </button>
-                  {testBookingResult && (
-                    <p className="text-xs text-sage-700 bg-sage-50 rounded-lg p-2">
-                      {t('setup.test_booking_created', {
-                        service: testBookingResult.service?.name,
-                        date: new Date(testBookingResult.startTime).toLocaleDateString(),
-                      })}
-                    </p>
-                  )}
-                </div>
+                  {/* Test Booking Card */}
+                  <div className="bg-white rounded-2xl shadow-soft p-6 space-y-3">
+                    <h3 className="text-sm font-medium text-slate-700">
+                      {t('setup.create_test_booking')}
+                    </h3>
+                    <button
+                      onClick={async () => {
+                        setTestBookingLoading(true);
+                        try {
+                          const result = await api.post<any>('/business/create-test-booking');
+                          setTestBookingResult(result);
+                          const dateStr = new Date(result.startTime).toLocaleDateString();
+                          toast(
+                            t('setup.test_booking_created', {
+                              service: result.service?.name,
+                              date: dateStr,
+                            }),
+                          );
+                        } catch (err: any) {
+                          toast(t('setup.test_booking_error'), 'error');
+                        }
+                        setTestBookingLoading(false);
+                      }}
+                      disabled={testBookingLoading}
+                      className="bg-slate-900 text-white px-4 py-2 rounded-xl text-sm hover:bg-slate-800 disabled:opacity-50 flex items-center gap-2"
+                    >
+                      {testBookingLoading && <Loader2 size={14} className="animate-spin" />}
+                      {t('setup.create_test_booking')}
+                    </button>
+                    {testBookingResult && (
+                      <p className="text-xs text-sage-700 bg-sage-50 rounded-lg p-2">
+                        {t('setup.test_booking_created', {
+                          service: testBookingResult.service?.name,
+                          date: new Date(testBookingResult.startTime).toLocaleDateString(),
+                        })}
+                      </p>
+                    )}
+                  </div>
 
-                {/* Actions */}
-                <div className="bg-white rounded-2xl shadow-soft p-6 space-y-2">
-                  <button
-                    onClick={() => window.open('http://localhost:3002', '_blank')}
-                    className="w-full border rounded-xl py-2.5 text-sm hover:bg-slate-50"
-                  >
-                    {t('setup.open_simulator')}
-                  </button>
-                  <button
-                    onClick={async () => {
-                      try {
-                        await api.patch('/business', { packConfig: { setupComplete: true } });
-                      } catch (e) {
-                        console.error(e);
-                      }
-                      router.push('/dashboard');
-                    }}
-                    className="w-full bg-sage-600 text-white rounded-xl py-2.5 text-sm hover:bg-sage-700 font-medium"
-                  >
-                    {t('setup.go_to_dashboard')}
-                  </button>
-                </div>
-              </div>
-            );
-          })()}
+                  {/* Actions */}
+                  <div className="bg-white rounded-2xl shadow-soft p-6 space-y-2">
+                    <button
+                      onClick={() => window.open('http://localhost:3002', '_blank')}
+                      className="w-full border rounded-xl py-2.5 text-sm hover:bg-slate-50"
+                    >
+                      {t('setup.open_simulator')}
+                    </button>
+                    <button
+                      onClick={async () => {
+                        try {
+                          await api.patch('/business', { packConfig: { setupComplete: true } });
+                        } catch (e) {
+                          console.error(e);
+                        }
+                        router.push('/dashboard');
+                      }}
+                      className="w-full bg-sage-600 text-white rounded-xl py-2.5 text-sm hover:bg-sage-700 font-medium"
+                    >
+                      {t('setup.go_to_dashboard')}
+                    </button>
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+        )}
+
       </div>
 
       {/* Footer navigation */}

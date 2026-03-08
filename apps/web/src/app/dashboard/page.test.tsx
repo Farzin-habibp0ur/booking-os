@@ -168,6 +168,18 @@ jest.mock('lucide-react', () => ({
   UserX: (props: any) => <div data-testid="user-x-icon" {...props} />,
 }));
 
+jest.mock('./components/kpi-strip', () => ({
+  KpiStrip: () => <div data-testid="kpi-strip">KpiStrip</div>,
+}));
+
+jest.mock('./components/my-work', () => ({
+  MyWork: () => <div data-testid="my-work">MyWork</div>,
+}));
+
+jest.mock('./components/attention-card', () => ({
+  AttentionCards: () => <div data-testid="attention-cards">AttentionCards</div>,
+}));
+
 import { api } from '@/lib/api';
 const mockApi = api as jest.Mocked<typeof api>;
 

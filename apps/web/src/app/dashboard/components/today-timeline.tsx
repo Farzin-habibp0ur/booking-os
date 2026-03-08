@@ -7,16 +7,7 @@ import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/lib/toast';
 import { cn } from '@/lib/cn';
 import { Calendar, Play, CheckCircle2, UserX, MessageSquare, ArrowRight } from 'lucide-react';
-
-const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
-  PENDING: { bg: 'bg-lavender-50', text: 'text-lavender-900' },
-  PENDING_DEPOSIT: { bg: 'bg-amber-50', text: 'text-amber-700' },
-  CONFIRMED: { bg: 'bg-sage-50', text: 'text-sage-900' },
-  IN_PROGRESS: { bg: 'bg-amber-50', text: 'text-amber-700' },
-  COMPLETED: { bg: 'bg-sage-50', text: 'text-sage-900' },
-  NO_SHOW: { bg: 'bg-red-50', text: 'text-red-700' },
-  CANCELLED: { bg: 'bg-slate-100', text: 'text-slate-600' },
-};
+import { BOOKING_STATUS_STYLES as STATUS_COLORS } from '@/lib/design-tokens';
 
 const HOUR_START = 8;
 const HOUR_END = 19;

@@ -34,8 +34,6 @@ import {
   Package,
   Kanban,
   Compass,
-  ChevronDown,
-  ChevronUp,
   Pin,
   Bookmark,
   Star,
@@ -44,6 +42,7 @@ import {
   Eye,
   Bell,
   Shield,
+  Sparkles,
 } from 'lucide-react';
 import CommandPalette from '@/components/command-palette';
 import { useTheme } from '@/lib/use-theme';
@@ -51,6 +50,7 @@ import { DemoTourProvider, useDemoTour, TourSpotlight, TourTooltip } from '@/com
 import { ModeProvider, useMode } from '@/lib/use-mode';
 import ModeSwitcher from '@/components/mode-switcher';
 import { ViewAsBanner } from '@/components/view-as-banner';
+import { OnboardingChecklist } from '@/components/onboarding-checklist';
 
 const SAVED_VIEW_ICONS: Record<string, any> = {
   filter: Search,
@@ -87,11 +87,11 @@ function ShellInner({ children }: { children: ReactNode }) {
   const { t } = useI18n();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [cmdkOpen, setCmdkOpen] = useState(false);
-  const [showMore, setShowMore] = useState(false);
   const { theme, toggle: toggleTheme } = useTheme();
   const { state: tourState, startTour } = useDemoTour();
   const { modeDef } = useMode();
   const [pinnedViews, setPinnedViews] = useState<any[]>([]);
+  const [moreSheetOpen, setMoreSheetOpen] = useState(false);
 
   // SUPER_ADMIN should always be in the console, not tenant UI
   useEffect(() => {
@@ -183,6 +183,7 @@ function ShellInner({ children }: { children: ReactNode }) {
     ...(pack.name !== 'general'
       ? [{ href: '/roi', label: t('nav.roi'), icon: TrendingUp, roles: ['ADMIN'] }]
       : []),
+    { href: '/ai', label: 'AI & Agents', icon: Sparkles, roles: ['ADMIN'] },
     {
       href: '/console',
       label: 'Platform Console',
@@ -195,20 +196,23 @@ function ShellInner({ children }: { children: ReactNode }) {
       icon: Package,
       roles: ['SUPER_ADMIN'],
     },
-    {
-      href: '/settings',
-      label: t('nav.settings'),
-      icon: Settings,
-      roles: ['ADMIN', 'AGENT', 'SERVICE_PROVIDER'],
-    },
   ];
 
   const nav = allNav.filter((item) => !role || item.roles.includes(role));
 
-  // Split nav into primary and secondary based on current mode
-  const primaryPaths = modeDef?.primaryNavPaths || [];
-  const primaryNav = nav.filter((item) => primaryPaths.includes(item.href));
-  const secondaryNav = nav.filter((item) => !primaryPaths.includes(item.href));
+  // 3-section nav model: Workspace / Tools / Insights
+  const sections = modeDef?.sections;
+  const workspaceNav = nav.filter((item) => sections?.workspace.includes(item.href));
+  const toolsNav = nav.filter((item) => sections?.tools.includes(item.href));
+  const insightsNav = nav.filter((item) => sections?.insights.includes(item.href));
+  // Items not in any section (e.g. console, pack-builder for SUPER_ADMIN)
+  const extraNav = nav.filter(
+    (item) =>
+      item.href !== '/settings' &&
+      !sections?.workspace.includes(item.href) &&
+      !sections?.tools.includes(item.href) &&
+      !sections?.insights.includes(item.href),
+  );
 
   const renderNavLink = ({ href, label, icon: Icon }: (typeof nav)[0]) => (
     <Link
@@ -216,9 +220,9 @@ function ShellInner({ children }: { children: ReactNode }) {
       href={href}
       aria-current={pathname.startsWith(href) ? 'page' : undefined}
       className={cn(
-        'flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition-colors',
+        'flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition-colors btn-press',
         pathname.startsWith(href)
-          ? 'bg-sage-50 dark:bg-sage-900/20 text-sage-700 dark:text-sage-400 font-medium'
+          ? 'bg-sage-100 dark:bg-sage-900/30 text-sage-700 dark:text-sage-400 font-medium border-l-2 border-sage-600 dark:border-sage-500'
           : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800',
       )}
     >
@@ -263,25 +267,44 @@ function ShellInner({ children }: { children: ReactNode }) {
         aria-label="Main navigation"
         className="flex-1 p-2 space-y-0.5 overflow-y-auto"
       >
-        {/* Primary nav items */}
-        {primaryNav.map(renderNavLink)}
-
-        {/* Separator + More toggle if secondary items exist */}
-        {secondaryNav.length > 0 && (
+        {/* WORKSPACE section */}
+        {workspaceNav.length > 0 && (
           <>
-            <div className="my-1.5 border-t border-slate-100 dark:border-slate-800" />
-            <button
-              onClick={() => setShowMore((v) => !v)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors w-full"
-              aria-expanded={showMore}
-            >
-              {showMore ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-              {t('nav.more', undefined) || 'More'}
-            </button>
-            {showMore && secondaryNav.map(renderNavLink)}
+            <p className="nav-section-label">{t('nav.section_workspace', undefined) || 'Workspace'}</p>
+            {workspaceNav.map(renderNavLink)}
+          </>
+        )}
+
+        {/* TOOLS section */}
+        {toolsNav.length > 0 && (
+          <>
+            <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
+            <p className="nav-section-label">{t('nav.section_tools', undefined) || 'Tools'}</p>
+            {toolsNav.map(renderNavLink)}
+          </>
+        )}
+
+        {/* INSIGHTS section */}
+        {insightsNav.length > 0 && (
+          <>
+            <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
+            <p className="nav-section-label">{t('nav.section_insights', undefined) || 'Insights'}</p>
+            {insightsNav.map(renderNavLink)}
+          </>
+        )}
+
+        {/* Extra items (SUPER_ADMIN console, pack-builder, etc.) */}
+        {extraNav.length > 0 && (
+          <>
+            <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
+            {extraNav.map(renderNavLink)}
           </>
         )}
       </nav>
+      {/* Onboarding Checklist */}
+      {(user?.business as Record<string, unknown>)?.onboardingComplete !== true && (
+        <OnboardingChecklist />
+      )}
       {/* Sidebar Pinned Views */}
       {pinnedViews.length > 0 && (
         <div
@@ -312,6 +335,19 @@ function ShellInner({ children }: { children: ReactNode }) {
         </div>
       )}
       <div className="p-2 border-t border-slate-100 dark:border-slate-800 space-y-1">
+        {/* Settings — moved from nav to footer for cleanliness */}
+        <Link
+          href="/settings"
+          className={cn(
+            'flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition-colors btn-press',
+            pathname.startsWith('/settings')
+              ? 'bg-sage-100 dark:bg-sage-900/30 text-sage-700 dark:text-sage-400 font-medium'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800',
+          )}
+        >
+          <Settings size={18} />
+          {t('nav.settings')}
+        </Link>
         <button
           onClick={startTour}
           className="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-lavender-600 dark:text-lavender-400 hover:bg-lavender-50 dark:hover:bg-lavender-900/20 w-full transition-colors"
@@ -350,20 +386,6 @@ function ShellInner({ children }: { children: ReactNode }) {
         Skip to main content
       </a>
 
-      {/* Mobile top bar */}
-      <div className="fixed top-0 left-0 right-0 z-30 md:hidden bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 px-4 py-3 flex items-center gap-3">
-        <button
-          onClick={() => setSidebarOpen(true)}
-          className="text-slate-600 hover:text-slate-800 transition-colors"
-          aria-label="Open menu"
-        >
-          <Menu size={22} />
-        </button>
-        <h1 className="text-sm font-serif font-bold text-slate-900 truncate">
-          {user?.business?.name || t('app.title')}
-        </h1>
-      </div>
-
       {/* Mobile backdrop */}
       {sidebarOpen && (
         <div
@@ -383,10 +405,226 @@ function ShellInner({ children }: { children: ReactNode }) {
         {sidebarContent}
       </aside>
 
-      <main id="main-content" className="flex-1 overflow-auto pt-14 md:pt-0 dark:bg-slate-950">
+      <main id="main-content" className="flex-1 overflow-auto md:pt-0 pb-16 md:pb-0 dark:bg-slate-950">
         <ViewAsBanner />
         <ErrorBoundary>{children}</ErrorBoundary>
       </main>
+
+      {/* Mobile bottom tab bar */}
+      <nav
+        className="fixed bottom-0 left-0 right-0 z-30 md:hidden bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 flex items-center justify-around safe-bottom"
+        role="tablist"
+        aria-label="Mobile navigation"
+      >
+        {/* Calendar */}
+        <Link
+          href="/calendar"
+          className={cn(
+            'flex-1 flex flex-col items-center justify-center py-3 px-2 transition-colors relative',
+            pathname.startsWith('/calendar')
+              ? 'text-sage-600 dark:text-sage-400 tab-active'
+              : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300',
+          )}
+          aria-current={pathname.startsWith('/calendar') ? 'page' : undefined}
+          role="tab"
+        >
+          <Calendar size={24} />
+          <span className="text-[10px] mt-1">Calendar</span>
+        </Link>
+
+        {/* Inbox */}
+        <Link
+          href="/inbox"
+          className={cn(
+            'flex-1 flex flex-col items-center justify-center py-3 px-2 transition-colors relative',
+            pathname.startsWith('/inbox')
+              ? 'text-sage-600 dark:text-sage-400 tab-active'
+              : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300',
+          )}
+          aria-current={pathname.startsWith('/inbox') ? 'page' : undefined}
+          role="tab"
+        >
+          <MessageSquare size={24} />
+          <span className="text-[10px] mt-1">Inbox</span>
+        </Link>
+
+        {/* Clients/Customers */}
+        <Link
+          href="/customers"
+          className={cn(
+            'flex-1 flex flex-col items-center justify-center py-3 px-2 transition-colors relative',
+            pathname.startsWith('/customers')
+              ? 'text-sage-600 dark:text-sage-400 tab-active'
+              : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300',
+          )}
+          aria-current={pathname.startsWith('/customers') ? 'page' : undefined}
+          role="tab"
+        >
+          <Users size={24} />
+          <span className="text-[10px] mt-1">Clients</span>
+        </Link>
+
+        {/* Home/Dashboard */}
+        <Link
+          href="/dashboard"
+          className={cn(
+            'flex-1 flex flex-col items-center justify-center py-3 px-2 transition-colors relative',
+            pathname.startsWith('/dashboard')
+              ? 'text-sage-600 dark:text-sage-400 tab-active'
+              : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300',
+          )}
+          aria-current={pathname.startsWith('/dashboard') ? 'page' : undefined}
+          role="tab"
+        >
+          <LayoutDashboard size={24} />
+          <span className="text-[10px] mt-1">Home</span>
+        </Link>
+
+        {/* More */}
+        <button
+          onClick={() => setMoreSheetOpen(true)}
+          className={cn(
+            'flex-1 flex flex-col items-center justify-center py-3 px-2 transition-colors relative',
+            moreSheetOpen
+              ? 'text-sage-600 dark:text-sage-400 tab-active'
+              : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300',
+          )}
+          aria-label="More options"
+          role="tab"
+        >
+          <Menu size={24} />
+          <span className="text-[10px] mt-1">More</span>
+        </button>
+      </nav>
+
+      {/* More sheet backdrop */}
+      {moreSheetOpen && (
+        <div
+          className="fixed inset-0 z-40 md:hidden bg-black/30 animate-fade-in"
+          onClick={() => setMoreSheetOpen(false)}
+        />
+      )}
+
+      {/* More sheet */}
+      {moreSheetOpen && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-white dark:bg-slate-900 rounded-t-2xl animate-slide-in-from-bottom max-h-[80vh] overflow-y-auto safe-bottom">
+          <div className="p-4">
+            {/* Sheet handle */}
+            <div className="flex justify-center mb-4">
+              <div className="w-12 h-1 bg-slate-200 dark:bg-slate-700 rounded-full" />
+            </div>
+
+            {/* Business info */}
+            <div className="px-3 py-3 border-b border-slate-100 dark:border-slate-800 mb-3">
+              <h2 className="font-semibold text-slate-900 dark:text-slate-100">{user?.business?.name}</h2>
+              {pack.name !== 'general' && (
+                <p className="text-xs text-sage-600 dark:text-sage-400 mt-1 capitalize">{pack.name} Pack</p>
+              )}
+            </div>
+
+            {/* More nav items */}
+            <nav className="space-y-1 px-2 mb-4">
+              {toolsNav.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={cn(
+                      'flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-colors',
+                      pathname.startsWith(item.href)
+                        ? 'bg-sage-100 dark:bg-sage-900/30 text-sage-700 dark:text-sage-400 font-medium'
+                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800',
+                    )}
+                    onClick={() => setMoreSheetOpen(false)}
+                  >
+                    <Icon size={20} />
+                    {item.label}
+                  </Link>
+                );
+              })}
+              {insightsNav.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={cn(
+                      'flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-colors',
+                      pathname.startsWith(item.href)
+                        ? 'bg-sage-100 dark:bg-sage-900/30 text-sage-700 dark:text-sage-400 font-medium'
+                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800',
+                    )}
+                    onClick={() => setMoreSheetOpen(false)}
+                  >
+                    <Icon size={20} />
+                    {item.label}
+                  </Link>
+                );
+              })}
+              {extraNav.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={cn(
+                      'flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-colors',
+                      pathname.startsWith(item.href)
+                        ? 'bg-sage-100 dark:bg-sage-900/30 text-sage-700 dark:text-sage-400 font-medium'
+                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800',
+                    )}
+                    onClick={() => setMoreSheetOpen(false)}
+                  >
+                    <Icon size={20} />
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </nav>
+
+            {/* More sheet action buttons */}
+            <div className="space-y-1 px-2 pt-4 border-t border-slate-100 dark:border-slate-800">
+              <Link
+                href="/settings"
+                className={cn(
+                  'flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-colors',
+                  pathname.startsWith('/settings')
+                    ? 'bg-sage-100 dark:bg-sage-900/30 text-sage-700 dark:text-sage-400 font-medium'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800',
+                )}
+                onClick={() => setMoreSheetOpen(false)}
+              >
+                <Settings size={20} />
+                {t('nav.settings')}
+              </Link>
+              <button
+                onClick={() => {
+                  toggleTheme();
+                  setMoreSheetOpen(false);
+                }}
+                className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 w-full transition-colors"
+              >
+                {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+                {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+              </button>
+              <div className="px-4 py-2">
+                <LanguagePicker />
+              </div>
+              <button
+                onClick={() => {
+                  logout();
+                  setMoreSheetOpen(false);
+                }}
+                className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 w-full transition-colors"
+              >
+                <LogOut size={20} />
+                {t('nav.logout')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <CommandPalette isOpen={cmdkOpen} onClose={() => setCmdkOpen(false)} />
       {tourState === 'running' && (

@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { api } from '@/lib/api';
-import { ClipboardList } from 'lucide-react';
+import { ClipboardList, ArrowLeft } from 'lucide-react';
 
 interface WaitlistSettings {
   offerCount: number;
@@ -46,6 +47,10 @@ export default function WaitlistSettingsPage() {
 
   return (
     <div className="p-6 max-w-2xl">
+      <Link href="/settings" className="inline-flex items-center gap-1 text-sm text-sage-600 hover:text-sage-700 dark:text-sage-400 dark:hover:text-sage-300 mb-3 transition-colors">
+        <ArrowLeft size={14} />
+        Back to Settings
+      </Link>
       <div className="flex items-center gap-2 mb-6">
         <ClipboardList size={24} className="text-sage-600" />
         <h1 className="text-2xl font-serif font-semibold text-slate-900">Waitlist Settings</h1>

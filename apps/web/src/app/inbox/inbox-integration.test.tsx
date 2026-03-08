@@ -153,9 +153,10 @@ async function renderAndSelectConversation(actionCardCount = 5) {
     expect(screen.getByText('Emma Wilson')).toBeInTheDocument();
   });
 
-  // Select the conversation
+  // Select the conversation by clicking on the conversation list item text
+  const emmaWilsonTexts = screen.getAllByText('Emma Wilson');
   await act(async () => {
-    fireEvent.click(screen.getByText('Emma Wilson'));
+    fireEvent.click(emmaWilsonTexts[0]);
   });
 
   // Wait for customer data to load (the new outbound button depends on customer state)
@@ -276,5 +277,133 @@ describe('Inbox Agentic Integration', () => {
 
     // Should not crash — action card count defaults to 0
     expect(screen.queryByTestId('action-card-badge')).not.toBeInTheDocument();
+  });
+
+  it('supports bulk selection of conversations', async () => {
+    setupMocks(0);
+
+    await act(async () => {
+      render(<InboxPage />);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Emma Wilson')).toBeInTheDocument();
+    });
+
+    // Get conversation checkboxes
+    const checkboxes = screen.getAllByRole('checkbox');
+    // Select the conversation checkbox (second checkbox, first is select-all)
+    const conversationCheckbox = checkboxes[1];
+
+    await act(async () => {
+      fireEvent.click(conversationCheckbox);
+    });
+
+    // Verify floating action bar appears
+    await waitFor(() => {
+      expect(screen.getByText(/1 selected/)).toBeInTheDocument();
+    });
+  });
+
+  it('displays bulk action buttons when conversations are selected', async () => {
+    setupMocks(0);
+
+    await act(async () => {
+      render(<InboxPage />);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Emma Wilson')).toBeInTheDocument();
+    });
+
+    // Select the conversation
+    const checkboxes = screen.getAllByRole('checkbox');
+    const conversationCheckbox = checkboxes[1];
+
+    await act(async () => {
+      fireEvent.click(conversationCheckbox);
+    });
+
+    // Verify action buttons appear in floating bar
+    await waitFor(() => {
+      expect(screen.getByText('Mark as Read')).toBeInTheDocument();
+      expect(screen.getByText('Assign to Me')).toBeInTheDocument();
+      expect(screen.getByText('Close Selected')).toBeInTheDocument();
+      expect(screen.getByText('Cancel')).toBeInTheDocument();
+    });
+  });
+
+  it('calls bulk close API when Close Selected is clicked', async () => {
+    setupMocks(0);
+    mockApi.patch.mockResolvedValue({});
+
+    await act(async () => {
+      render(<InboxPage />);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Emma Wilson')).toBeInTheDocument();
+    });
+
+    // Select the conversation
+    const checkboxes = screen.getAllByRole('checkbox');
+    const conversationCheckbox = checkboxes[1];
+
+    await act(async () => {
+      fireEvent.click(conversationCheckbox);
+    });
+
+    // Click Close Selected button
+    await waitFor(() => {
+      const closeBtn = screen.getByText('Close Selected');
+      expect(closeBtn).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByText('Close Selected'));
+    });
+
+    // Verify API call was made
+    await waitFor(() => {
+      expect(mockApi.patch).toHaveBeenCalledWith(
+        expect.stringContaining('/conversations/close'),
+        expect.any(Object),
+      );
+    });
+  });
+
+  it('clears selection when Cancel button clicked in bulk action bar', async () => {
+    setupMocks(0);
+
+    await act(async () => {
+      render(<InboxPage />);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Emma Wilson')).toBeInTheDocument();
+    });
+
+    // Select the conversation
+    const checkboxes = screen.getAllByRole('checkbox');
+    const conversationCheckbox = checkboxes[1];
+
+    await act(async () => {
+      fireEvent.click(conversationCheckbox);
+    });
+
+    // Verify floating bar appears
+    await waitFor(() => {
+      expect(screen.getByText(/1 selected/)).toBeInTheDocument();
+    });
+
+    // Click Cancel
+    await act(async () => {
+      fireEvent.click(screen.getByText('Cancel'));
+    });
+
+    // Verify floating bar disappears
+    await waitFor(() => {
+      expect(screen.queryByText(/1 selected/)).not.toBeInTheDocument();
+    });
   });
 });

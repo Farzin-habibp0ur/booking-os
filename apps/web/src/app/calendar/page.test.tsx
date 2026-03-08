@@ -76,6 +76,16 @@ jest.mock(
     props.isOpen ? <div data-testid="booking-detail-modal">BookingDetailModal</div> : null,
 );
 
+jest.mock(
+  '@/components/booking-popover',
+  () => ({ BookingPopover: () => <div data-testid="booking-popover">BookingPopover</div> }),
+);
+
+jest.mock(
+  './components/calendar-sidebar',
+  () => ({ CalendarSidebar: () => <div data-testid="calendar-sidebar">CalendarSidebar</div> }),
+);
+
 const mockStaff = [
   { id: 's1', name: 'Sarah Johnson', role: 'ADMIN' },
   { id: 's2', name: 'Lisa Chen', role: 'SERVICE_PROVIDER' },

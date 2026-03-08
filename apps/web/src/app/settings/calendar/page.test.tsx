@@ -44,6 +44,7 @@ jest.mock('lucide-react', () => ({
   Copy: (p: any) => <span data-testid="icon-copy" {...p} />,
   Check: (p: any) => <span data-testid="icon-check" {...p} />,
   ExternalLink: (p: any) => <span data-testid="icon-external-link" {...p} />,
+  ArrowLeft: (p: any) => <span data-testid="icon-arrow-left" {...p} />,
 }));
 
 function setupMockApi(opts?: {

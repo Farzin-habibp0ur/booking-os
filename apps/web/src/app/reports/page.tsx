@@ -25,17 +25,16 @@ const PERIOD_OPTIONS = [
   { label: '90 days', value: 90, key: 'period_90d' },
 ];
 
+import { statusHex } from '@/lib/design-tokens';
+
 const PIE_COLORS = ['#8AA694', '#71907C', '#f59e0b', '#ef4444', '#9F8ECB', '#64748b'];
 
-const STATUS_COLORS: Record<string, string> = {
-  PENDING: '#9F8ECB',
-  PENDING_DEPOSIT: '#f59e0b',
-  CONFIRMED: '#8AA694',
-  IN_PROGRESS: '#f59e0b',
-  COMPLETED: '#71907C',
-  NO_SHOW: '#ef4444',
-  CANCELLED: '#64748b',
-};
+// Use centralized hex values from design tokens
+const STATUS_COLORS: Record<string, string> = new Proxy({} as Record<string, string>, {
+  get(_, status: string) {
+    return statusHex(status);
+  },
+});
 
 const DAYS_SHORT = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
 

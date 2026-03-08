@@ -112,18 +112,11 @@ jest.mock('@/lib/use-mode', () => ({
     landingPath: '/dashboard',
     modeDef: {
       key: 'admin',
-      primaryNavPaths: ['/dashboard', '/reports', '/staff', '/campaigns', '/automations'],
-      secondaryNavPaths: [
-        '/inbox',
-        '/calendar',
-        '/customers',
-        '/bookings',
-        '/services',
-        '/waitlist',
-        '/service-board',
-        '/roi',
-        '/settings',
-      ],
+      sections: {
+        workspace: ['/dashboard', '/inbox', '/calendar', '/customers', '/bookings'],
+        tools: ['/services', '/campaigns', '/automations', '/waitlist', '/service-board'],
+        insights: ['/reports', '/roi', '/ai'],
+      },
       defaultLandingPath: '/dashboard',
     },
   }),
@@ -168,7 +161,7 @@ describe('Shell', () => {
     expect(screen.getByTestId('mode-switcher')).toBeInTheDocument();
   });
 
-  it('renders primary nav items for admin mode', () => {
+  it('renders workspace nav items for admin mode', () => {
     render(
       <Shell>
         <div>Content</div>
@@ -176,37 +169,36 @@ describe('Shell', () => {
     );
 
     const nav = screen.getByRole('navigation', { name: 'Main navigation' });
-    // Dashboard, Reports, Staff should be visible as primary for admin mode
+    // Workspace section items: Dashboard, Inbox, Calendar, Customers, Bookings
     expect(within(nav).getByText('nav.dashboard')).toBeInTheDocument();
-    expect(within(nav).getByText('nav.reports')).toBeInTheDocument();
-    expect(within(nav).getByText('nav.staff')).toBeInTheDocument();
+    expect(within(nav).getByText('nav.inbox')).toBeInTheDocument();
+    expect(within(nav).getByText('nav.calendar')).toBeInTheDocument();
   });
 
-  it('shows "More" toggle button for secondary items', () => {
+  it('shows "More" button in mobile tab bar', () => {
     render(
       <Shell>
         <div>Content</div>
       </Shell>,
     );
 
-    const moreBtn = screen.getByText('More');
+    const moreBtn = screen.getByRole('tab', { name: 'More options' });
     expect(moreBtn).toBeInTheDocument();
   });
 
-  it('expands secondary nav when "More" is clicked', async () => {
+  it('opens more sheet when "More" button is clicked on mobile', async () => {
     render(
       <Shell>
         <div>Content</div>
       </Shell>,
     );
 
-    const moreBtn = screen.getByText('More');
+    const moreBtn = screen.getByRole('tab', { name: 'More options' });
     await userEvent.click(moreBtn);
 
-    // After expanding, secondary items should be visible
-    const nav = screen.getByRole('navigation', { name: 'Main navigation' });
-    expect(within(nav).getByText('nav.inbox')).toBeInTheDocument();
-    expect(within(nav).getByText('nav.settings')).toBeInTheDocument();
+    // After opening, tools and insights nav items should be visible in the sheet
+    // Settings should also be visible in the sheet
+    expect(await screen.findByText('nav.settings')).toBeInTheDocument();
   });
 
   it('renders main content', () => {

@@ -1,13 +1,48 @@
 export type AppMode = 'admin' | 'agent' | 'provider';
 
+export interface NavSections {
+  workspace: string[];
+  tools: string[];
+  insights: string[];
+}
+
 export interface ModeDefinition {
   key: AppMode;
   labels: Record<string, string>; // per vertical pack name
+  /** @deprecated — use `sections` instead. Kept for backwards compat. */
   primaryNavPaths: string[];
+  /** @deprecated — use `sections` instead. Kept for backwards compat. */
   secondaryNavPaths: string[];
+  /** 3-section nav model: Workspace / Tools / Insights */
+  sections: NavSections;
   defaultLandingPath: string;
   allowedRoles: string[];
 }
+
+function flattenSections(s: NavSections): { primary: string[]; secondary: string[] } {
+  return {
+    primary: [...s.workspace, ...s.tools, ...s.insights],
+    secondary: [],
+  };
+}
+
+const adminSections: NavSections = {
+  workspace: ['/inbox', '/calendar', '/customers', '/bookings'],
+  tools: ['/services', '/staff', '/campaigns', '/automations'],
+  insights: ['/dashboard', '/reports', '/roi', '/ai'],
+};
+
+const agentSections: NavSections = {
+  workspace: ['/inbox', '/calendar', '/customers', '/bookings', '/waitlist'],
+  tools: ['/services'],
+  insights: ['/dashboard', '/reports'],
+};
+
+const providerSections: NavSections = {
+  workspace: ['/calendar', '/bookings'],
+  tools: ['/services', '/service-board'],
+  insights: ['/dashboard'],
+};
 
 const MODES: ModeDefinition[] = [
   {
@@ -17,19 +52,9 @@ const MODES: ModeDefinition[] = [
       aesthetic: 'Clinic Manager',
       dealership: 'Service Manager',
     },
-    primaryNavPaths: ['/dashboard', '/reports', '/staff', '/campaigns', '/automations'],
-    secondaryNavPaths: [
-      '/inbox',
-      '/calendar',
-      '/customers',
-      '/bookings',
-      '/services',
-      '/waitlist',
-      '/service-board',
-      '/roi',
-      '/settings',
-      '/settings/autonomy',
-    ],
+    sections: adminSections,
+    primaryNavPaths: flattenSections(adminSections).primary,
+    secondaryNavPaths: [],
     defaultLandingPath: '/dashboard',
     allowedRoles: ['ADMIN'],
   },
@@ -40,8 +65,9 @@ const MODES: ModeDefinition[] = [
       aesthetic: 'Reception',
       dealership: 'Service Advisor',
     },
-    primaryNavPaths: ['/inbox', '/calendar', '/customers', '/bookings', '/waitlist'],
-    secondaryNavPaths: ['/dashboard', '/services', '/reports', '/service-board', '/settings'],
+    sections: agentSections,
+    primaryNavPaths: flattenSections(agentSections).primary,
+    secondaryNavPaths: [],
     defaultLandingPath: '/inbox',
     allowedRoles: ['ADMIN', 'AGENT'],
   },
@@ -52,8 +78,9 @@ const MODES: ModeDefinition[] = [
       aesthetic: 'Provider',
       dealership: 'Technician',
     },
-    primaryNavPaths: ['/calendar', '/bookings', '/services', '/service-board'],
-    secondaryNavPaths: ['/dashboard', '/settings'],
+    sections: providerSections,
+    primaryNavPaths: flattenSections(providerSections).primary,
+    secondaryNavPaths: [],
     defaultLandingPath: '/calendar',
     allowedRoles: ['ADMIN', 'SERVICE_PROVIDER'],
   },

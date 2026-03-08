@@ -586,15 +586,11 @@ describe('CustomerDetailPage', () => {
     expect(screen.queryByTestId('waitlist-count')).not.toBeInTheDocument();
   });
 
-  // ─── Notes Tab ─────────────────────────────────────────────────────
+  // ─── Notes Section ─────────────────────────────────────────────────────
 
-  it('switches to notes tab and shows notes', async () => {
+  it('displays notes directly on page when notes exist', async () => {
     setupMocks();
     render(<CustomerDetailPage />);
-    await waitFor(() => screen.getAllByText('Emma Wilson'));
-
-    fireEvent.click(screen.getByText('customer_detail.notes_tab'));
-
     await waitFor(() => {
       expect(screen.getByText('Prefers morning appointments')).toBeInTheDocument();
       expect(screen.getByText('Allergic to latex')).toBeInTheDocument();
@@ -604,58 +600,24 @@ describe('CustomerDetailPage', () => {
   it('shows note author and timestamp', async () => {
     setupMocks();
     render(<CustomerDetailPage />);
-    await waitFor(() => screen.getAllByText('Emma Wilson'));
-
-    fireEvent.click(screen.getByText('customer_detail.notes_tab'));
-
     await waitFor(() => {
       const noteCards = screen.getAllByTestId('note-card');
       expect(noteCards.length).toBe(2);
     });
   });
 
-  it('creates a new note', async () => {
-    setupMocks();
-    mockApi.post.mockResolvedValue({ id: 'n3', content: 'New note' });
-    render(<CustomerDetailPage />);
-    await waitFor(() => screen.getAllByText('Emma Wilson'));
-
-    fireEvent.click(screen.getByText('customer_detail.notes_tab'));
-
-    await waitFor(() => screen.getByTestId('note-composer'));
-
-    const textarea = screen.getByTestId('note-composer');
-    await userEvent.type(textarea, 'New important note');
-
-    fireEvent.click(screen.getByTestId('add-note-btn'));
-
-    await waitFor(() => {
-      expect(mockApi.post).toHaveBeenCalledWith('/customers/cust-1/notes', {
-        content: 'New important note',
-      });
-    });
-  });
-
-  it('shows empty notes message when no notes exist', async () => {
+  it('does not show notes section when no notes exist', async () => {
     setupMocks(mockCustomer, mockBookings, []);
     render(<CustomerDetailPage />);
     await waitFor(() => screen.getAllByText('Emma Wilson'));
 
-    fireEvent.click(screen.getByText('customer_detail.notes_tab'));
-
-    await waitFor(() => {
-      expect(screen.getByText('customer_detail.no_notes')).toBeInTheDocument();
-    });
+    expect(screen.queryByTestId('note-card')).not.toBeInTheDocument();
   });
 
   it('deletes a note', async () => {
     setupMocks();
     mockApi.del.mockResolvedValue({});
     render(<CustomerDetailPage />);
-    await waitFor(() => screen.getAllByText('Emma Wilson'));
-
-    fireEvent.click(screen.getByText('customer_detail.notes_tab'));
-
     await waitFor(() => screen.getAllByTestId('delete-note-btn'));
 
     fireEvent.click(screen.getAllByTestId('delete-note-btn')[0]);
@@ -668,10 +630,6 @@ describe('CustomerDetailPage', () => {
   it('enters edit mode for a note', async () => {
     setupMocks();
     render(<CustomerDetailPage />);
-    await waitFor(() => screen.getAllByText('Emma Wilson'));
-
-    fireEvent.click(screen.getByText('customer_detail.notes_tab'));
-
     await waitFor(() => screen.getAllByTestId('edit-note-btn'));
 
     fireEvent.click(screen.getAllByTestId('edit-note-btn')[0]);
@@ -681,7 +639,7 @@ describe('CustomerDetailPage', () => {
     });
   });
 
-  it('shows note count badge on notes tab', async () => {
+  it('shows note count badge', async () => {
     setupMocks();
     render(<CustomerDetailPage />);
     await waitFor(() => screen.getAllByText('Emma Wilson'));
@@ -691,23 +649,6 @@ describe('CustomerDetailPage', () => {
       expect(screen.getByText('2')).toBeInTheDocument();
     });
   });
-
-  // ─── Timeline Tab (Placeholder) ───────────────────────────────────
-
-  it('renders timeline component when switching to timeline tab', async () => {
-    setupMocks();
-    render(<CustomerDetailPage />);
-    await waitFor(() => screen.getAllByText('Emma Wilson'));
-
-    fireEvent.click(screen.getByText('customer_detail.timeline_tab'));
-
-    await waitFor(() => {
-      expect(screen.getByTestId('customer-timeline')).toBeInTheDocument();
-      expect(screen.getByText('Timeline for cust-1')).toBeInTheDocument();
-    });
-  });
-
-  // ─── Note CRUD Error Handling ──────────────────────────────────────
 
   // ─── Vertical Modules ─────────────────────────────────────────────
 
@@ -719,17 +660,13 @@ describe('CustomerDetailPage', () => {
     expect(screen.queryByTestId('vertical-modules')).not.toBeInTheDocument();
   });
 
-  it('shows toast on note creation error', async () => {
+  it('shows toast on note deletion error', async () => {
     setupMocks();
-    mockApi.post.mockRejectedValue(new Error('Server error'));
+    mockApi.del.mockRejectedValue(new Error('Server error'));
     render(<CustomerDetailPage />);
-    await waitFor(() => screen.getAllByText('Emma Wilson'));
+    await waitFor(() => screen.getAllByTestId('delete-note-btn'));
 
-    fireEvent.click(screen.getByText('customer_detail.notes_tab'));
-    await waitFor(() => screen.getByTestId('note-composer'));
-
-    await userEvent.type(screen.getByTestId('note-composer'), 'Failing note');
-    fireEvent.click(screen.getByTestId('add-note-btn'));
+    fireEvent.click(screen.getAllByTestId('delete-note-btn')[0]);
 
     await waitFor(() => {
       expect(mockToast).toHaveBeenCalledWith(expect.any(String), 'error');

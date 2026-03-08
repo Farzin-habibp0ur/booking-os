@@ -53,6 +53,44 @@ html.dark body {
 .animate-slide-in-right { animation: slideInRight 0.3s ease-out; }
 .animate-slide-in-from-bottom { animation: slideInFromBottom 0.3s ease-out; }
 
+/* --- Design-system utilities --- */
+
+/* Status dot indicator (inline before label) */
+.status-dot {
+  @apply w-1.5 h-1.5 rounded-full inline-block shrink-0;
+}
+
+/* Button press feedback */
+.btn-press {
+  transition: transform 100ms ease;
+}
+.btn-press:active {
+  transform: scale(0.98);
+}
+
+/* Sidebar nav section labels */
+.nav-section-label {
+  @apply px-3 py-1.5 text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider select-none;
+}
+
+/* Safe area utility for notch/safe zones */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Bottom tab active indicator */
+.tab-active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 2px;
+  background: currentColor;
+  border-radius: 1px;
+}
+
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

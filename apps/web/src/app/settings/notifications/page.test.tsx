@@ -35,6 +35,12 @@ jest.mock('@/lib/cn', () => ({ cn: (...args: any[]) => args.filter(Boolean).join
 jest.mock('@/lib/api', () => ({
   api: { get: jest.fn(), post: jest.fn(), patch: jest.fn(), del: jest.fn(), upload: jest.fn() },
 }));
+
+jest.mock('lucide-react', () => ({
+  Bell: () => <span data-testid="bell-icon" />,
+  ArrowLeft: () => <span data-testid="arrow-left-icon" />,
+}));
+
 import { api } from '@/lib/api';
 const mockApi = api as jest.Mocked<typeof api>;
 

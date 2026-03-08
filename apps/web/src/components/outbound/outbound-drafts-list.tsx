@@ -18,12 +18,7 @@ interface OutboundDraftsListProps {
   onReject?: (id: string) => void;
 }
 
-const STATUS_STYLES: Record<string, { label: string; style: string }> = {
-  DRAFT: { label: 'Draft', style: 'bg-lavender-50 text-lavender-700' },
-  APPROVED: { label: 'Approved', style: 'bg-sage-50 text-sage-700' },
-  SENT: { label: 'Sent', style: 'bg-sage-100 text-sage-800' },
-  REJECTED: { label: 'Rejected', style: 'bg-red-50 text-red-700' },
-};
+import { OUTBOUND_STATUS_STYLES as STATUS_STYLES } from '@/lib/design-tokens';
 
 export function OutboundDraftsList({ drafts, onApprove, onReject }: OutboundDraftsListProps) {
   if (drafts.length === 0) {

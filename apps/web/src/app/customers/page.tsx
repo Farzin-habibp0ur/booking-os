@@ -43,7 +43,10 @@ export default function CustomersPage() {
   const [activeViewId, setActiveViewId] = useState<string | null>(null);
   const [showExport, setShowExport] = useState(false);
   const [duplicateCount, setDuplicateCount] = useState(0);
+  const [sortBy, setSortBy] = useState<'name' | 'phone' | 'email' | 'date' | null>(null);
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const retryCountRef = useRef(0);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const currentFilters = { search };
 
@@ -131,6 +134,46 @@ export default function CustomersPage() {
     load();
   };
 
+  const handleSearchChange = (query: string) => {
+    setSearch(query);
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+    if (!query) {
+      load('');
+    } else {
+      searchTimeoutRef.current = setTimeout(() => load(query), 300);
+    }
+  };
+
+  const handleSort = (column: 'name' | 'phone' | 'email' | 'date') => {
+    if (sortBy === column) {
+      setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(column);
+      setSortDir('asc');
+    }
+  };
+
+  const getSortedCustomers = () => {
+    if (!sortBy) return customers.data || [];
+    const data = [...(customers.data || [])];
+    const dir = sortDir === 'asc' ? 1 : -1;
+
+    return data.sort((a: any, b: any) => {
+      let aVal = a[sortBy];
+      let bVal = b[sortBy];
+
+      if (sortBy === 'date') {
+        aVal = new Date(a.createdAt);
+        bVal = new Date(b.createdAt);
+      }
+
+      if (typeof aVal === 'string') {
+        return aVal.localeCompare(bVal || '') * dir;
+      }
+      return ((aVal || 0) > (bVal || 0) ? 1 : -1) * dir;
+    });
+  };
+
   return (
     <div className="p-6" data-tour-target="customers-table">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
@@ -186,26 +229,17 @@ export default function CustomersPage() {
         onClearView={handleClearView}
       />
 
-      <form onSubmit={handleSearch} className="mb-4 flex gap-2">
+      <div className="mb-4 flex gap-2">
         <div className="relative flex-1">
           <Search size={16} className="absolute left-3 top-2.5 text-slate-400" />
           <input
             value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              if (!e.target.value) load('');
-            }}
+            onChange={(e) => handleSearchChange(e.target.value)}
             placeholder={t('customers.search_placeholder')}
             className="w-full border border-slate-200 rounded-xl pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sage-500"
           />
         </div>
-        <button
-          type="submit"
-          className="border rounded-xl px-4 py-2 text-sm hover:bg-slate-50 transition-colors"
-        >
-          {t('common.search')}
-        </button>
-      </form>
+      </div>
 
       <div className="bg-white rounded-2xl shadow-soft overflow-hidden">
         <div className="overflow-x-auto">
@@ -223,20 +257,60 @@ export default function CustomersPage() {
                     className="rounded text-sage-600"
                   />
                 </th>
-                <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
-                  {t('common.name')}
+                <th
+                  className="text-left p-3 text-xs font-medium text-slate-500 uppercase cursor-pointer hover:text-slate-700 transition-colors group"
+                  onClick={() => handleSort('name')}
+                >
+                  <div className="flex items-center gap-1">
+                    {t('common.name')}
+                    {sortBy === 'name' && (
+                      <span className="text-sage-600">
+                        {sortDir === 'asc' ? '↑' : '↓'}
+                      </span>
+                    )}
+                  </div>
                 </th>
-                <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
-                  {t('common.phone')}
+                <th
+                  className="text-left p-3 text-xs font-medium text-slate-500 uppercase cursor-pointer hover:text-slate-700 transition-colors"
+                  onClick={() => handleSort('phone')}
+                >
+                  <div className="flex items-center gap-1">
+                    {t('common.phone')}
+                    {sortBy === 'phone' && (
+                      <span className="text-sage-600">
+                        {sortDir === 'asc' ? '↑' : '↓'}
+                      </span>
+                    )}
+                  </div>
                 </th>
-                <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
-                  {t('common.email')}
+                <th
+                  className="text-left p-3 text-xs font-medium text-slate-500 uppercase cursor-pointer hover:text-slate-700 transition-colors"
+                  onClick={() => handleSort('email')}
+                >
+                  <div className="flex items-center gap-1">
+                    {t('common.email')}
+                    {sortBy === 'email' && (
+                      <span className="text-sage-600">
+                        {sortDir === 'asc' ? '↑' : '↓'}
+                      </span>
+                    )}
+                  </div>
                 </th>
                 <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
                   {t('common.tags')}
                 </th>
-                <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
-                  {t('common.date')}
+                <th
+                  className="text-left p-3 text-xs font-medium text-slate-500 uppercase cursor-pointer hover:text-slate-700 transition-colors"
+                  onClick={() => handleSort('date')}
+                >
+                  <div className="flex items-center gap-1">
+                    {t('common.date')}
+                    {sortBy === 'date' && (
+                      <span className="text-sage-600">
+                        {sortDir === 'asc' ? '↑' : '↓'}
+                      </span>
+                    )}
+                  </div>
                 </th>
                 <th className="w-8"></th>
               </tr>
@@ -244,7 +318,7 @@ export default function CustomersPage() {
             <tbody className="divide-y">
               {loading
                 ? Array.from({ length: 5 }).map((_, i) => <TableRowSkeleton key={i} cols={7} />)
-                : (customers.data || []).map((c: any) => (
+                : getSortedCustomers().map((c: any) => (
                     <tr
                       key={c.id}
                       className={cn(
@@ -327,23 +401,30 @@ export default function CustomersPage() {
           </div>
         )}
         {!loading && !error && (!customers.data || customers.data.length === 0) && (
-          <EmptyState
-            icon={Users}
-            title={t('customers.no_customers', { entity: pack.labels.customer.toLowerCase() })}
-            description={
-              search
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">
+              <Users size={32} className="text-slate-400" />
+            </div>
+            <h3 className="text-lg font-serif font-semibold text-slate-900 mb-2">
+              {search
                 ? t('customers.no_search_results', { query: search })
-                : t('customers.add_first', { entity: pack.labels.customer.toLowerCase() })
-            }
-            action={
-              !search
-                ? {
-                    label: t('customers.add_button', { entity: pack.labels.customer }),
-                    onClick: () => setShowForm(true),
-                  }
-                : undefined
-            }
-          />
+                : t('customers.no_customers', { entity: pack.labels.customer.toLowerCase() })}
+            </h3>
+            <p className="text-sm text-slate-500 max-w-sm mb-6">
+              {search
+                ? t('customers.try_different_search')
+                : t('customers.add_first', { entity: pack.labels.customer.toLowerCase() })}
+            </p>
+            {!search && (
+              <button
+                onClick={() => setShowForm(true)}
+                className="flex items-center gap-2 bg-sage-600 text-white px-6 py-3 rounded-xl text-sm font-medium hover:bg-sage-700 transition-colors active:scale-95"
+              >
+                <Plus size={16} />
+                {t('customers.add_button', { entity: pack.labels.customer })}
+              </button>
+            )}
+          </div>
         )}
       </div>
 

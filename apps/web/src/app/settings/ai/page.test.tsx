@@ -40,6 +40,7 @@ const mockApi = api as jest.Mocked<typeof api>;
 
 jest.mock('lucide-react', () => ({
   Sparkles: (p: any) => <span data-testid="icon-sparkles" {...p} />,
+  ArrowLeft: () => <span data-testid="arrow-left-icon" />,
 }));
 
 const mockSettings = {

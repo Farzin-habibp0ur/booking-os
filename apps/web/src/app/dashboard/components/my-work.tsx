@@ -4,14 +4,7 @@ import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/cn';
 import { useI18n } from '@/lib/i18n';
 import { Calendar, MessageSquare, ArrowRight, CheckCircle2 } from 'lucide-react';
-
-const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
-  PENDING: { bg: 'bg-lavender-50', text: 'text-lavender-900' },
-  CONFIRMED: { bg: 'bg-sage-50', text: 'text-sage-900' },
-  IN_PROGRESS: { bg: 'bg-amber-50', text: 'text-amber-700' },
-  COMPLETED: { bg: 'bg-sage-50', text: 'text-sage-900' },
-  NO_SHOW: { bg: 'bg-red-50', text: 'text-red-700' },
-};
+import { BOOKING_STATUS_STYLES as STATUS_COLORS } from '@/lib/design-tokens';
 
 interface MyWorkProps {
   myBookingsToday: any[];

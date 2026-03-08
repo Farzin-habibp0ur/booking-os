@@ -19,6 +19,7 @@ import { cn } from '@/lib/cn';
 import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/lib/toast';
 import { useFocusTrap } from '@/lib/use-focus-trap';
+import { BOOKING_STATUS_STYLES } from '@/lib/design-tokens';
 
 interface BookingDetailModalProps {
   booking: any;
@@ -28,15 +29,10 @@ interface BookingDetailModalProps {
   onReschedule: (booking: any) => void;
 }
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-  PENDING: { label: 'Pending', color: 'text-lavender-900', bg: 'bg-lavender-50' },
-  PENDING_DEPOSIT: { label: 'Pending Deposit', color: 'text-amber-700', bg: 'bg-amber-50' },
-  CONFIRMED: { label: 'Confirmed', color: 'text-sage-900', bg: 'bg-sage-50' },
-  IN_PROGRESS: { label: 'In Progress', color: 'text-amber-700', bg: 'bg-amber-50' },
-  COMPLETED: { label: 'Completed', color: 'text-sage-900', bg: 'bg-sage-50' },
-  CANCELLED: { label: 'Cancelled', color: 'text-red-700', bg: 'bg-red-50' },
-  NO_SHOW: { label: 'No Show', color: 'text-red-700', bg: 'bg-red-50' },
-};
+// Derive STATUS_CONFIG from centralized tokens (preserving .color / .bg / .label shape)
+const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = Object.fromEntries(
+  Object.entries(BOOKING_STATUS_STYLES).map(([k, v]) => [k, { label: v.label, color: v.text, bg: v.bg }]),
+);
 
 export default function BookingDetailModal({
   booking,

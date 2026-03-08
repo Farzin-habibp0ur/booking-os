@@ -1,10 +1,11 @@
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useI18n } from '@/lib/i18n';
-import { CalendarDays, RefreshCw, Copy, Check, ExternalLink } from 'lucide-react';
+import { CalendarDays, RefreshCw, Copy, Check, ExternalLink, ArrowLeft } from 'lucide-react';
 
 interface Connection {
   id: string;
@@ -163,6 +164,10 @@ function CalendarSyncPage() {
 
   return (
     <div className="p-6 max-w-2xl">
+      <Link href="/settings" className="inline-flex items-center gap-1 text-sm text-sage-600 hover:text-sage-700 dark:text-sage-400 dark:hover:text-sage-300 mb-3 transition-colors">
+        <ArrowLeft size={14} />
+        Back to Settings
+      </Link>
       <div className="flex items-center gap-2 mb-6">
         <CalendarDays size={24} className="text-sage-600" />
         <h1 className="text-2xl font-serif font-semibold text-slate-900">

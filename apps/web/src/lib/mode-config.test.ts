@@ -104,10 +104,10 @@ describe('mode-config', () => {
     });
   });
 
-  describe('autonomy settings navigation', () => {
-    it('admin mode includes /settings/autonomy in secondary nav', () => {
+  describe('admin insights section', () => {
+    it('admin mode includes /ai in insights section', () => {
       const admin = getModeByKey('admin');
-      expect(admin?.secondaryNavPaths).toContain('/settings/autonomy');
+      expect(admin?.sections.insights).toContain('/ai');
     });
   });
 });

@@ -542,16 +542,7 @@ describe('CustomersPage', () => {
       });
     });
 
-    it('has a search button', async () => {
-      setupApiWithCustomers();
-      render(<CustomersPage />);
-
-      await waitFor(() => {
-        expect(screen.getByText('common.search')).toBeInTheDocument();
-      });
-    });
-
-    it('triggers search on form submit', async () => {
+    it('triggers search on input change with debounce', async () => {
       const user = userEvent.setup();
       setupApiWithCustomers();
       render(<CustomersPage />);
@@ -563,13 +554,10 @@ describe('CustomersPage', () => {
       const searchInput = screen.getByPlaceholderText('customers.search_placeholder');
       await user.type(searchInput, 'Emma');
 
-      const searchButton = screen.getByText('common.search');
-      await user.click(searchButton);
-
-      // The API should be called again with the search term
+      // With debounce, the API call should happen after the timeout
       await waitFor(() => {
         expect(mockApi.get).toHaveBeenCalledWith('/customers?search=Emma&pageSize=50');
-      });
+      }, { timeout: 500 });
     });
 
     it('clears results and reloads when search input is cleared', async () => {
@@ -587,10 +575,87 @@ describe('CustomersPage', () => {
       // Clear the input completely
       await user.clear(searchInput);
 
-      // Should call load('') when input is emptied
+      // Should call load('') immediately when input is emptied
       await waitFor(() => {
         expect(mockApi.get).toHaveBeenCalledWith('/customers?search=&pageSize=50');
       });
+    });
+  });
+
+  // =============================
+  // SORTING
+  // =============================
+  describe('sorting', () => {
+    it('displays sort indicators on column headers when sorted', async () => {
+      const user = userEvent.setup();
+      setupApiWithCustomers();
+      render(<CustomersPage />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Emma Stone')).toBeInTheDocument();
+      });
+
+      const nameHeader = screen.getByText('common.name').closest('th');
+      await user.click(nameHeader!);
+
+      // Sort indicator (arrow) should appear
+      await waitFor(() => {
+        expect(screen.getByText('↑')).toBeInTheDocument();
+      });
+    });
+
+    it('toggles sort direction when clicking same column header', async () => {
+      const user = userEvent.setup();
+      setupApiWithCustomers();
+      render(<CustomersPage />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Emma Stone')).toBeInTheDocument();
+      });
+
+      const nameHeader = screen.getByText('common.name').closest('th');
+      await user.click(nameHeader!);
+
+      // Should show ascending indicator
+      await waitFor(() => {
+        expect(screen.getByText('↑')).toBeInTheDocument();
+      });
+
+      // Click again to toggle to descending
+      await user.click(nameHeader!);
+
+      // Should show descending indicator
+      await waitFor(() => {
+        expect(screen.getByText('↓')).toBeInTheDocument();
+      });
+    });
+
+    it('changes sort column when clicking different header', async () => {
+      const user = userEvent.setup();
+      setupApiWithCustomers();
+      render(<CustomersPage />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Emma Stone')).toBeInTheDocument();
+      });
+
+      const nameHeader = screen.getByText('common.name').closest('th');
+      await user.click(nameHeader!);
+
+      // Verify name is sorted
+      await waitFor(() => {
+        const indicators = screen.getAllByText('↑');
+        expect(indicators.length).toBe(1);
+      });
+
+      const phoneHeader = screen.getByText('common.phone').closest('th');
+      await user.click(phoneHeader!);
+
+      // Name indicator should be gone, phone indicator should be present
+      await waitFor(() => {
+        expect(screen.getByText('↑')).toBeInTheDocument();
+      });
+      expect(screen.getByText('common.name').closest('th')).not.toHaveTextContent('↑');
     });
   });
 

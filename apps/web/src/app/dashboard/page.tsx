@@ -8,6 +8,7 @@ import { PageSkeleton } from '@/components/skeleton';
 import { useI18n } from '@/lib/i18n';
 import { useAuth } from '@/lib/auth';
 import { useMode } from '@/lib/use-mode';
+import { BOOKING_STATUS_STYLES } from '@/lib/design-tokens';
 import { KpiStrip } from './components/kpi-strip';
 import { MyWork } from './components/my-work';
 import { AttentionCards } from './components/attention-card';
@@ -53,15 +54,7 @@ const DASHBOARD_VIEW_ICONS: Record<string, any> = {
   zap: Zap,
 };
 
-const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
-  PENDING: { bg: 'bg-lavender-50', text: 'text-lavender-900' },
-  PENDING_DEPOSIT: { bg: 'bg-amber-50', text: 'text-amber-700' },
-  CONFIRMED: { bg: 'bg-sage-50', text: 'text-sage-900' },
-  IN_PROGRESS: { bg: 'bg-amber-50', text: 'text-amber-700' },
-  COMPLETED: { bg: 'bg-sage-50', text: 'text-sage-900' },
-  NO_SHOW: { bg: 'bg-red-50', text: 'text-red-700' },
-  CANCELLED: { bg: 'bg-slate-100', text: 'text-slate-600' },
-};
+const STATUS_COLORS = BOOKING_STATUS_STYLES;
 
 const NUDGE_MESSAGES: Record<string, string> = {
   nudge_0: 'nudge_get_started',

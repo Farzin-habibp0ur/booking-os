@@ -133,6 +133,7 @@ function InboxPage() {
   const [actionCardCount, setActionCardCount] = useState(0);
   const [showOutboundCompose, setShowOutboundCompose] = useState(false);
   const [viewers, setViewers] = useState<Array<{ staffId: string; staffName: string }>>([]);
+  const [selectedConvoIds, setSelectedConvoIds] = useState<Set<string>>(new Set());
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const currentFilters = {
@@ -623,16 +624,77 @@ function InboxPage() {
     setShowTemplates(false);
   };
 
+  const toggleSelectConvo = (id: string) => {
+    setSelectedConvoIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAllConvos = () => {
+    if (selectedConvoIds.size === conversations.length) {
+      setSelectedConvoIds(new Set());
+    } else {
+      setSelectedConvoIds(new Set(conversations.map((c: any) => c.id)));
+    }
+  };
+
+  const handleBulkCloseConvos = async () => {
+    try {
+      const ids = Array.from(selectedConvoIds);
+      for (const id of ids) {
+        await api.patch(`/conversations/${id}/status`, { status: 'RESOLVED' });
+      }
+      setSelectedConvoIds(new Set());
+      toast(t('inbox.bulk_closed_success'));
+      await loadConversations();
+      await loadFilterCounts();
+    } catch (e) {
+      toast(t('inbox.bulk_action_failed'));
+      console.error(e);
+    }
+  };
+
+  const handleBulkAssignConvos = async (staffId: string) => {
+    try {
+      const ids = Array.from(selectedConvoIds);
+      for (const id of ids) {
+        await api.patch(`/conversations/${id}/assign`, { staffId });
+      }
+      setSelectedConvoIds(new Set());
+      toast(t('inbox.bulk_assigned_success'));
+      await loadConversations();
+      await loadFilterCounts();
+    } catch (e) {
+      toast(t('inbox.bulk_action_failed'));
+      console.error(e);
+    }
+  };
+
+  const handleBulkMarkRead = async () => {
+    try {
+      const ids = Array.from(selectedConvoIds);
+      for (const id of ids) {
+        await api.patch(`/conversations/${id}`, { isNew: false });
+      }
+      setSelectedConvoIds(new Set());
+      toast(t('inbox.bulk_marked_read'));
+      await loadConversations();
+      await loadFilterCounts();
+    } catch (e) {
+      toast(t('inbox.bulk_action_failed'));
+      console.error(e);
+    }
+  };
+
   return (
-    <div className="flex flex-col md:flex-row h-full" data-tour-target="inbox-panel">
-      {/* Filter sidebar — desktop */}
-      <div className="hidden md:flex w-48 border-r bg-slate-50 flex-col">
-        <div className="p-3 border-b">
-          <h2 className="font-semibold text-sm text-slate-700">{t('inbox.title')}</h2>
-        </div>
-        <div className="flex-1 py-1">
+    <div className="flex flex-col h-full" data-tour-target="inbox-panel">
+      {/* Horizontal filter chip bar — replaces sidebar */}
+      <div className="border-b bg-white px-3 py-2.5 overflow-x-auto">
+        <div className="flex items-center gap-2 min-w-max">
           {FILTER_KEYS.map((key) => {
-            const Icon = FILTER_ICONS[key];
             const count = filterCounts[key] || 0;
             return (
               <button
@@ -643,90 +705,15 @@ function InboxPage() {
                   setMobileView('list');
                 }}
                 className={cn(
-                  'w-full flex items-center justify-between px-3 py-2 text-sm transition-colors',
+                  'flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors',
                   activeFilter === key
-                    ? 'bg-sage-50 text-sage-700 font-medium border-r-2 border-sage-600'
-                    : 'text-slate-600 hover:bg-slate-100',
-                )}
-              >
-                <div className="flex items-center gap-2">
-                  <Icon size={15} />
-                  <span>{FILTER_LABELS[key]}</span>
-                </div>
-                {count > 0 && (
-                  <span
-                    className={cn(
-                      'text-[10px] px-1.5 py-0.5 rounded-full min-w-[20px] text-center',
-                      key === 'overdue'
-                        ? 'bg-red-100 text-red-700'
-                        : key === 'unassigned'
-                          ? 'bg-orange-50 text-orange-700'
-                          : key === 'snoozed'
-                            ? 'bg-lavender-100 text-lavender-700'
-                            : 'bg-slate-200 text-slate-600',
-                    )}
-                  >
-                    {count}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-        {locations.length > 0 && (
-          <div className="p-3 border-t">
-            <div className="flex items-center gap-1.5 mb-1.5">
-              <MapPin size={12} className="text-slate-400" />
-              <span className="text-[10px] font-semibold text-slate-500 uppercase">
-                {t('inbox.location_filter')}
-              </span>
-            </div>
-            <select
-              value={selectedLocationId}
-              onChange={(e) => {
-                setSelectedLocationId(e.target.value);
-                setSelected(null);
-              }}
-              className="w-full text-xs border rounded-md px-2 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-sage-500"
-            >
-              <option value="">{t('inbox.all_locations')}</option>
-              {locations.map((loc: any) => (
-                <option key={loc.id} value={loc.id}>
-                  {loc.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-      </div>
-
-      {/* Filter bar — mobile (horizontal scrollable) */}
-      <div
-        className={cn(
-          'md:hidden border-b bg-slate-50 overflow-x-auto',
-          mobileView !== 'list' && 'hidden',
-        )}
-      >
-        <div className="flex items-center gap-1 px-3 py-2 min-w-max">
-          {FILTER_KEYS.map((key) => {
-            const count = filterCounts[key] || 0;
-            return (
-              <button
-                key={key}
-                onClick={() => {
-                  setActiveFilter(key);
-                  setSelected(null);
-                }}
-                className={cn(
-                  'flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors',
-                  activeFilter === key
-                    ? 'bg-sage-100 text-sage-700'
-                    : 'bg-white text-slate-600 border border-slate-200',
+                    ? 'bg-sage-100 text-sage-700 dark:bg-sage-900/30 dark:text-sage-400'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700',
                 )}
               >
                 {FILTER_LABELS[key]}
-                {count > 0 && (
-                  <span className="text-[10px] bg-slate-200 text-slate-600 px-1 py-0.5 rounded-full min-w-[16px] text-center">
+                {(key === 'unassigned' || key === 'overdue') && count > 0 && (
+                  <span className="text-[10px] bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-200 px-1.5 py-0.5 rounded-full min-w-[18px] text-center font-semibold">
                     {count}
                   </span>
                 )}
@@ -736,16 +723,27 @@ function InboxPage() {
         </div>
       </div>
 
-      {/* Conversation list */}
-      <div
-        className={cn(
-          'border-r bg-white flex flex-col',
-          'w-full md:w-80',
-          mobileView !== 'list' && 'hidden md:flex',
-        )}
-      >
+      {/* Main 3-panel layout */}
+      <div className="flex flex-1 gap-0 min-h-0">
+        {/* Conversation list */}
+        <div
+          className={cn(
+            'border-r bg-white flex flex-col',
+            'w-full md:w-80',
+            mobileView !== 'list' && 'hidden md:flex',
+          )}
+        >
         <div className="p-3 border-b space-y-2">
-          <h2 className="font-semibold">{t('inbox.title')}</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="font-semibold">{t('inbox.title')}</h2>
+            <input
+              type="checkbox"
+              checked={conversations.length > 0 && selectedConvoIds.size === conversations.length}
+              onChange={toggleSelectAllConvos}
+              className="rounded text-sage-600"
+              aria-label="Select all conversations"
+            />
+          </div>
           <div className="relative">
             <Search size={14} className="absolute left-2.5 top-2.5 text-slate-400" />
             <input
@@ -778,81 +776,97 @@ function InboxPage() {
           {conversations.map((c) => (
             <div
               key={c.id}
-              onClick={() => {
-                setSelected(c);
-                setMobileView('thread');
-              }}
               className={cn(
-                'p-3 border-b cursor-pointer hover:bg-slate-50 transition-colors',
+                'p-3 border-b hover:bg-slate-50 transition-colors',
                 selected?.id === c.id && 'bg-sage-50',
+                selectedConvoIds.has(c.id) && 'bg-sage-100',
               )}
             >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  {c.isOverdue && (
-                    <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" />
-                  )}
-                  <p className="text-sm font-medium truncate">
-                    {c.customer?.name || t('common.unknown')}
+              <div className="flex items-start gap-2">
+                <input
+                  type="checkbox"
+                  checked={selectedConvoIds.has(c.id)}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    toggleSelectConvo(c.id);
+                  }}
+                  className="rounded text-sage-600 mt-1 flex-shrink-0"
+                />
+                <div
+                  onClick={() => {
+                    setSelected(c);
+                    setMobileView('thread');
+                  }}
+                  className="flex-1 cursor-pointer min-w-0"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      {c.isOverdue && (
+                        <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" />
+                      )}
+                      <p className="text-sm font-medium truncate">
+                        {c.customer?.name || t('common.unknown')}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      {c.isNew && (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-sage-100 text-sage-700 font-medium">
+                          {t('inbox.new_badge')}
+                        </span>
+                      )}
+                      {c.status === 'SNOOZED' && <AlarmClock size={12} className="text-lavender-500" />}
+                    </div>
+                  </div>
+                  <p className="text-xs text-slate-500 truncate mt-0.5">
+                    {c.messages?.[0]?.content || t('dashboard.no_messages')}
                   </p>
-                </div>
-                <div className="flex items-center gap-1">
-                  {c.isNew && (
-                    <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-sage-100 text-sage-700 font-medium">
-                      {t('inbox.new_badge')}
-                    </span>
-                  )}
-                  {c.status === 'SNOOZED' && <AlarmClock size={12} className="text-lavender-500" />}
-                </div>
-              </div>
-              <p className="text-xs text-slate-500 truncate mt-0.5">
-                {c.messages?.[0]?.content || t('dashboard.no_messages')}
-              </p>
-              <div className="flex items-center justify-between mt-1">
-                <div className="flex items-center gap-1.5">
-                  <span
-                    className={cn(
-                      'text-[9px] px-1.5 py-0.5 rounded-full',
-                      c.status === 'OPEN'
-                        ? 'bg-sage-50 text-sage-700'
-                        : c.status === 'WAITING'
-                          ? 'bg-amber-50 text-amber-700'
-                          : c.status === 'SNOOZED'
-                            ? 'bg-lavender-100 text-lavender-700'
-                            : c.status === 'RESOLVED'
-                              ? 'bg-slate-100 text-slate-500'
-                              : 'bg-slate-100 text-slate-600',
+                  <div className="flex items-center justify-between mt-1">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span
+                        className={cn(
+                          'text-[9px] px-1.5 py-0.5 rounded-full flex-shrink-0',
+                          c.status === 'OPEN'
+                            ? 'bg-sage-50 text-sage-700'
+                            : c.status === 'WAITING'
+                              ? 'bg-amber-50 text-amber-700'
+                              : c.status === 'SNOOZED'
+                                ? 'bg-lavender-100 text-lavender-700'
+                                : c.status === 'RESOLVED'
+                                  ? 'bg-slate-100 text-slate-500'
+                                  : 'bg-slate-100 text-slate-600',
+                        )}
+                      >
+                        {t(`status.${c.status.toLowerCase()}`)}
+                      </span>
+                      {c.assignedTo && (
+                        <span className="text-[9px] text-slate-400 truncate">{c.assignedTo.name}</span>
+                      )}
+                      {c.location && (
+                        <span className="text-[9px] text-slate-400 flex items-center gap-0.5 flex-shrink-0">
+                          <MapPin size={8} /> {c.location.name}
+                        </span>
+                      )}
+                    </div>
+                    {c.lastMessageAt && (
+                      <span className="text-[9px] text-slate-400 flex-shrink-0">
+                        {formatRelativeTime(c.lastMessageAt)}
+                      </span>
                     )}
-                  >
-                    {t(`status.${c.status.toLowerCase()}`)}
-                  </span>
-                  {c.assignedTo && (
-                    <span className="text-[9px] text-slate-400">{c.assignedTo.name}</span>
-                  )}
-                  {c.location && (
-                    <span className="text-[9px] text-slate-400 flex items-center gap-0.5">
-                      <MapPin size={8} /> {c.location.name}
-                    </span>
+                  </div>
+                  {c.tags?.length > 0 && (
+                    <div className="flex gap-1 mt-1">
+                      {c.tags.slice(0, 3).map((tg: string) => (
+                        <span
+                          key={tg}
+                          className="text-[8px] bg-sage-50 text-sage-600 px-1 py-0.5 rounded"
+                        >
+                          {tg}
+                        </span>
+                      ))}
+                    </div>
                   )}
                 </div>
-                {c.lastMessageAt && (
-                  <span className="text-[9px] text-slate-400">
-                    {formatRelativeTime(c.lastMessageAt)}
-                  </span>
-                )}
               </div>
-              {c.tags?.length > 0 && (
-                <div className="flex gap-1 mt-1">
-                  {c.tags.slice(0, 3).map((tg: string) => (
-                    <span
-                      key={tg}
-                      className="text-[8px] bg-sage-50 text-sage-600 px-1 py-0.5 rounded"
-                    >
-                      {tg}
-                    </span>
-                  ))}
-                </div>
-              )}
             </div>
           ))}
           {conversations.length === 0 && (
@@ -874,34 +888,35 @@ function InboxPage() {
           'flex-1 flex flex-col bg-slate-50',
           mobileView !== 'thread' && 'hidden md:flex',
         )}
+        style={{ minWidth: 0 }}
       >
         {selected ? (
           <>
             <div className="p-3 border-b bg-white flex items-center justify-between">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-1 min-w-0">
                 <button
                   onClick={() => {
                     setSelected(null);
                     setMobileView('list');
                   }}
-                  className="md:hidden text-slate-400 hover:text-slate-600 transition-colors"
+                  className="md:hidden text-slate-400 hover:text-slate-600 transition-colors flex-shrink-0"
                   aria-label="Back to conversations"
                 >
                   <ChevronLeft size={20} />
                 </button>
-                <div>
-                  <p className="font-medium">{selected.customer?.name}</p>
+                <div className="min-w-0">
+                  <p className="font-medium truncate">{selected.customer?.name}</p>
                   <div className="flex items-center gap-2">
-                    <p className="text-xs text-slate-500">{selected.customer?.phone}</p>
+                    <p className="text-xs text-slate-500 truncate">{selected.customer?.phone}</p>
                     {selected.location && (
-                      <span className="text-[10px] text-slate-400 flex items-center gap-0.5">
+                      <span className="text-[10px] text-slate-400 flex items-center gap-0.5 flex-shrink-0">
                         <MapPin size={10} /> {selected.location.name}
                       </span>
                     )}
                   </div>
                 </div>
                 {viewers.length > 0 && (
-                  <div className="flex items-center gap-1 ml-2" data-testid="presence-pills">
+                  <div className="flex items-center gap-1 ml-2 flex-shrink-0" data-testid="presence-pills">
                     {viewers.map((v) => (
                       <span
                         key={v.staffId}
@@ -913,7 +928,15 @@ function InboxPage() {
                   </div>
                 )}
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap justify-end">
+                <button
+                  onClick={() => setMobileView(mobileView === 'info' ? 'thread' : 'info')}
+                  className="hidden md:block text-slate-400 hover:text-slate-600 border px-2 py-1 rounded transition-colors"
+                  aria-label="Toggle info sidebar"
+                  title="Toggle customer info"
+                >
+                  <Info size={14} />
+                </button>
                 <div className="relative">
                   <button
                     onClick={() => setShowSnoozeMenu(!showSnoozeMenu)}
@@ -1035,15 +1058,6 @@ function InboxPage() {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* AI Draft Response */}
-            <AiSuggestions
-              intent={aiIntent}
-              confidence={aiConfidence}
-              draftText={aiDraftText}
-              onSendDraft={(text) => sendMessage(text)}
-              onDismiss={() => setAiDraftText('')}
-            />
-
             {/* Quick replies */}
             {showQuickReplies && (
               <div className="px-3 pb-1 bg-white border-t">
@@ -1059,6 +1073,17 @@ function InboxPage() {
                   ))}
                 </div>
               </div>
+            )}
+
+            {/* AI Suggestions Ghost Bubble — above composer */}
+            {aiDraftText && (
+              <AiSuggestions
+                intent={aiIntent}
+                confidence={aiConfidence}
+                draftText={aiDraftText}
+                onSendDraft={(text) => sendMessage(text)}
+                onDismiss={() => setAiDraftText('')}
+              />
             )}
 
             {/* Composer */}
@@ -1154,6 +1179,7 @@ function InboxPage() {
             <p className="text-sm">{t('inbox.select_conversation_hint')}</p>
           </div>
         )}
+      </div>
       </div>
 
       {/* Customer sidebar */}
@@ -1534,6 +1560,68 @@ function InboxPage() {
           onSend={sendOutboundDraft}
           onClose={() => setShowOutboundCompose(false)}
         />
+      )}
+
+      {/* Bulk action bar for inbox */}
+      {selectedConvoIds.size > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-white rounded-2xl shadow-soft border border-slate-200 p-4 z-40">
+          <div className="flex items-center justify-between gap-4">
+            <span className="text-sm font-medium text-slate-700">
+              {selectedConvoIds.size} selected
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleBulkMarkRead}
+                className="px-3 py-2 text-sm border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+              >
+                Mark as Read
+              </button>
+              <div className="relative">
+                <button
+                  onClick={(e) => {
+                    // Show dropdown for assign
+                    const btn = e.currentTarget;
+                    const dropdown = btn.parentElement?.querySelector('[data-dropdown]') as HTMLElement;
+                    if (dropdown) dropdown.classList.toggle('hidden');
+                  }}
+                  className="px-3 py-2 text-sm border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+                >
+                  Assign to Me
+                </button>
+                <div
+                  data-dropdown
+                  className="hidden absolute right-0 mt-1 w-40 bg-white border border-slate-200 rounded-lg shadow-soft z-50"
+                >
+                  {staffList.map((s) => (
+                    <button
+                      key={s.id}
+                      onClick={(e) => {
+                        handleBulkAssignConvos(s.id);
+                        const dropdown = (e.currentTarget as HTMLElement).parentElement;
+                        if (dropdown) dropdown.classList.add('hidden');
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 border-b last:border-0"
+                    >
+                      {s.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <button
+                onClick={handleBulkCloseConvos}
+                className="px-3 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Close Selected
+              </button>
+              <button
+                onClick={() => setSelectedConvoIds(new Set())}
+                className="px-3 py-2 text-sm border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

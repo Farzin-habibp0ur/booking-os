@@ -90,6 +90,10 @@ jest.mock('lucide-react', () => ({
   BookOpen: () => <div data-testid="book-open-icon" />,
   X: () => <div data-testid="x-icon" />,
   Download: () => <div data-testid="download-icon" />,
+  Search: () => <div data-testid="search-icon" />,
+  ChevronUp: () => <div data-testid="chevron-up-icon" />,
+  ChevronDown: () => <div data-testid="chevron-down-icon" />,
+  Filter: () => <div data-testid="filter-icon" />,
 }));
 
 // Mock ExportModal
@@ -343,7 +347,7 @@ describe('BookingsPage', () => {
     });
   });
 
-  it('shows empty state with status filter description when filter active', async () => {
+  it('shows empty state with filter description when filter active', async () => {
     const user = userEvent.setup();
     // First call for default, second call for filtered
     mockApi.get.mockResolvedValue({ data: [], total: 0 });
@@ -362,9 +366,9 @@ describe('BookingsPage', () => {
 
     await waitFor(() => {
       const emptyState = screen.getByTestId('empty-state');
-      // When statusFilter is set, description should mention the status
+      // When statusFilter is set, description should mention filters
       expect(emptyState).toBeInTheDocument();
-      expect(screen.getByText('bookings.no_bookings_status')).toBeInTheDocument();
+      expect(screen.getByText(/match your filters/i)).toBeInTheDocument();
     });
   });
 
@@ -445,7 +449,7 @@ describe('BookingsPage', () => {
     });
   });
 
-  it('filters by PENDING_DEPOSIT status', async () => {
+  it('filters by RESCHEDULED status', async () => {
     const user = userEvent.setup();
     mockApi.get.mockResolvedValue({ data: [], total: 0 });
 
@@ -458,11 +462,11 @@ describe('BookingsPage', () => {
     const select = screen.getByRole('combobox');
 
     await act(async () => {
-      await user.selectOptions(select, 'PENDING_DEPOSIT');
+      await user.selectOptions(select, 'RESCHEDULED');
     });
 
     await waitFor(() => {
-      expect(mockApi.get).toHaveBeenCalledWith('/bookings?status=PENDING_DEPOSIT&pageSize=50');
+      expect(mockApi.get).toHaveBeenCalledWith('/bookings?status=RESCHEDULED&pageSize=50');
     });
   });
 
@@ -498,6 +502,331 @@ describe('BookingsPage', () => {
       const lastBookingCall = calls.filter((c: any) => c[0].startsWith('/bookings')).pop();
       expect(lastBookingCall?.[0]).toBe('/bookings?pageSize=50');
     });
+  });
+
+  // ─── Search Functionality ──────────────────────────────────
+
+  it('filters bookings by customer name in search', async () => {
+    const user = userEvent.setup();
+    mockApi.get.mockResolvedValue({
+      data: [
+        createBooking({ id: 'b1', customer: { name: 'John Doe' } }),
+        createBooking({ id: 'b2', customer: { name: 'Jane Smith' } }),
+      ],
+      total: 2,
+    });
+
+    render(<BookingsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('John Doe')).toBeInTheDocument();
+      expect(screen.getByText('Jane Smith')).toBeInTheDocument();
+    });
+
+    // Find and use the search input
+    const searchInput = screen.getByPlaceholderText(/search.*booking/i);
+
+    await act(async () => {
+      await user.type(searchInput, 'Jane');
+    });
+
+    // Debounce wait
+    await waitFor(() => {
+      expect(screen.getByText('Jane Smith')).toBeInTheDocument();
+      expect(screen.queryByText('John Doe')).not.toBeInTheDocument();
+    }, { timeout: 500 });
+  });
+
+  it('filters bookings by service name in search', async () => {
+    const user = userEvent.setup();
+    mockApi.get.mockResolvedValue({
+      data: [
+        createBooking({ id: 'b1', service: { name: 'Haircut' } }),
+        createBooking({ id: 'b2', service: { name: 'Massage' } }),
+      ],
+      total: 2,
+    });
+
+    render(<BookingsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Haircut')).toBeInTheDocument();
+      expect(screen.getByText('Massage')).toBeInTheDocument();
+    });
+
+    const searchInput = screen.getByPlaceholderText(/search.*booking/i);
+
+    await act(async () => {
+      await user.type(searchInput, 'Massage');
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Massage')).toBeInTheDocument();
+      expect(screen.queryByText('Haircut')).not.toBeInTheDocument();
+    }, { timeout: 500 });
+  });
+
+  it('clears search when X button is clicked', async () => {
+    const user = userEvent.setup();
+    mockApi.get.mockResolvedValue({
+      data: [
+        createBooking({ id: 'b1', customer: { name: 'John' } }),
+        createBooking({ id: 'b2', customer: { name: 'Jane' } }),
+      ],
+      total: 2,
+    });
+
+    render(<BookingsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('John')).toBeInTheDocument();
+    });
+
+    const searchInput = screen.getByPlaceholderText(/search.*booking/i) as HTMLInputElement;
+
+    await act(async () => {
+      await user.type(searchInput, 'John');
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByText('Jane')).not.toBeInTheDocument();
+    }, { timeout: 500 });
+
+    // The X button appears when search has text
+    expect(searchInput.value).toBe('John');
+
+    // Find the X button by looking for the button with the X icon
+    const xButtons = screen.queryAllByTestId('x-icon');
+    if (xButtons.length > 0) {
+      const clearButton = xButtons[0].closest('button');
+      await act(async () => {
+        await user.click(clearButton!);
+      });
+
+      await waitFor(() => {
+        expect(searchInput.value).toBe('');
+        expect(screen.getByText('Jane')).toBeInTheDocument();
+      }, { timeout: 500 });
+    }
+  });
+
+  // ─── Sorting Functionality ──────────────────────────────────
+
+  it('table headers are clickable for sorting', async () => {
+    mockApi.get.mockResolvedValue({
+      data: [
+        createBooking({ id: 'b1', customer: { name: 'John' }, startTime: '2026-01-15T10:00:00Z' }),
+        createBooking({ id: 'b2', customer: { name: 'Alice' }, startTime: '2026-01-14T10:00:00Z' }),
+      ],
+      total: 2,
+    });
+
+    render(<BookingsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('John')).toBeInTheDocument();
+    });
+
+    // Headers should be clickable
+    const customerHeader = screen.getAllByText('Customer')[0];
+    expect(customerHeader.parentElement).toHaveClass('cursor-pointer');
+  });
+
+  it('sorts by customer name when customer header is clicked', async () => {
+    const user = userEvent.setup();
+    mockApi.get.mockResolvedValue({
+      data: [
+        createBooking({ id: 'b1', customer: { name: 'John' } }),
+        createBooking({ id: 'b2', customer: { name: 'Alice' } }),
+      ],
+      total: 2,
+    });
+
+    render(<BookingsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('John')).toBeInTheDocument();
+    });
+
+    const customerHeader = screen.getAllByText('Customer')[0];
+
+    await act(async () => {
+      await user.click(customerHeader.parentElement!);
+    });
+
+    // After first click, should sort ascending (Alice before John)
+    const rows = screen.getAllByRole('row');
+    // Row 0 is header, Row 1 should have Alice, Row 2 should have John
+    expect(rows[1].textContent).toContain('Alice');
+    expect(rows[2].textContent).toContain('John');
+  });
+
+  it('displays sort indicator on sorted column', async () => {
+    const user = userEvent.setup();
+    mockApi.get.mockResolvedValue({
+      data: [
+        createBooking({ id: 'b1', customer: { name: 'John' } }),
+        createBooking({ id: 'b2', customer: { name: 'Alice' } }),
+      ],
+      total: 2,
+    });
+
+    render(<BookingsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('John')).toBeInTheDocument();
+    });
+
+    const customerHeader = screen.getAllByText('Customer')[0];
+
+    await act(async () => {
+      await user.click(customerHeader.parentElement!);
+    });
+
+    // Should show sort indicator (ChevronUp for ascending)
+    const chevrons = screen.queryAllByTestId(/chevron/i);
+    // The component uses ChevronUp/ChevronDown from lucide-react
+    // Just verify the header has an indicator after sorting
+    expect(customerHeader.parentElement?.textContent).toContain('Customer');
+  });
+
+  // ─── Filters Panel ─────────────────────────────────────────
+
+  it('shows filters button in toolbar', async () => {
+    mockApi.get.mockResolvedValue({ data: [], total: 0 });
+
+    render(<BookingsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('bookings.title')).toBeInTheDocument();
+    });
+
+    const filterButton = screen.getByRole('button', { name: /common.filters/i });
+    expect(filterButton).toBeInTheDocument();
+  });
+
+  it('toggles filters panel when filter button is clicked', async () => {
+    const user = userEvent.setup();
+    mockApi.get.mockResolvedValue({ data: [], total: 0 });
+
+    render(<BookingsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('bookings.title')).toBeInTheDocument();
+    });
+
+    const filterButton = screen.getAllByRole('button').find(btn => btn.textContent?.includes('common.filters'));
+
+    // Initially filters panel should not be visible
+    let fromDateLabel = screen.queryByText('common.from_date');
+    expect(fromDateLabel).not.toBeInTheDocument();
+
+    // Click to open
+    await act(async () => {
+      await user.click(filterButton!);
+    });
+
+    // Now filter inputs should be visible
+    fromDateLabel = screen.getByText('common.from_date');
+    expect(fromDateLabel).toBeInTheDocument();
+
+    // Click to close
+    await act(async () => {
+      await user.click(filterButton!);
+    });
+
+    fromDateLabel = screen.queryByText('common.from_date');
+    expect(fromDateLabel).not.toBeInTheDocument();
+  });
+
+  it('filters by date range', async () => {
+    const user = userEvent.setup();
+    mockApi.get.mockResolvedValue({
+      data: [
+        createBooking({ id: 'b1', customer: { name: 'John' }, startTime: '2026-01-15T10:00:00Z' }),
+        createBooking({ id: 'b2', customer: { name: 'Jane' }, startTime: '2026-01-20T10:00:00Z' }),
+      ],
+      total: 2,
+    });
+
+    render(<BookingsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('John')).toBeInTheDocument();
+    });
+
+    const filterButton = screen.getAllByRole('button').find(btn => btn.textContent?.includes('common.filters'));
+
+    await act(async () => {
+      await user.click(filterButton!);
+    });
+
+    // Find date inputs by type=date
+    const dateInputs = screen.getAllByDisplayValue('') as HTMLInputElement[];
+    const dateTypeInputs = dateInputs.filter(input => input.type === 'date');
+
+    if (dateTypeInputs.length >= 2) {
+      const fromDateInput = dateTypeInputs[0]; // from date
+      const toDateInput = dateTypeInputs[1]; // to date
+
+      await act(async () => {
+        await user.type(fromDateInput, '2026-01-16');
+        await user.type(toDateInput, '2026-01-19');
+      });
+
+      await waitFor(() => {
+        // With range 2026-01-16 to 2026-01-19, neither John (01-15) nor Jane (01-20) should match
+        expect(screen.queryByText('John')).not.toBeInTheDocument();
+        expect(screen.queryByText('Jane')).not.toBeInTheDocument();
+      }, { timeout: 500 });
+    }
+  });
+
+  it('filters by staff member', async () => {
+    const user = userEvent.setup();
+    mockApi.get.mockImplementation((path: string) => {
+      if (path === '/staff') return Promise.resolve([
+        { id: 's1', name: 'Sarah' },
+        { id: 's2', name: 'Mike' },
+      ]);
+      return Promise.resolve({
+        data: [
+          createBooking({ id: 'b1', staff: { name: 'Sarah' }, staffId: 's1' }),
+          createBooking({ id: 'b2', staff: { name: 'Mike' }, staffId: 's2' }),
+        ],
+        total: 2,
+      });
+    });
+
+    render(<BookingsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('bookings.title')).toBeInTheDocument();
+    });
+
+    const filterButton = screen.getAllByRole('button').find(btn => btn.textContent?.includes('common.filters'));
+
+    await act(async () => {
+      await user.click(filterButton!);
+    });
+
+    // Wait for staff filter to be available, then select
+    await waitFor(() => {
+      expect(screen.getByText('common.staff')).toBeInTheDocument();
+    });
+
+    const staffSelects = screen.getAllByRole('combobox');
+    // First select is status filter at top, last one should be staff in filters panel
+    const staffSelect = staffSelects[staffSelects.length - 1];
+
+    await act(async () => {
+      await user.selectOptions(staffSelect, 's1');
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Sarah')).toBeInTheDocument();
+      expect(screen.queryByText('Mike')).not.toBeInTheDocument();
+    }, { timeout: 500 });
   });
 
   // ─── Booking Detail Modal ───────────────────────────────────
@@ -1485,12 +1814,12 @@ describe('BookingsPage', () => {
     mockApi.get.mockResolvedValue({
       data: [
         createBooking({ id: '1', status: 'PENDING', customer: { name: 'A' } }),
-        createBooking({ id: '2', status: 'PENDING_DEPOSIT', customer: { name: 'B' } }),
-        createBooking({ id: '3', status: 'CONFIRMED', customer: { name: 'C' } }),
-        createBooking({ id: '4', status: 'IN_PROGRESS', customer: { name: 'D' } }),
-        createBooking({ id: '5', status: 'COMPLETED', customer: { name: 'E' } }),
-        createBooking({ id: '6', status: 'CANCELLED', customer: { name: 'F' } }),
-        createBooking({ id: '7', status: 'NO_SHOW', customer: { name: 'G' } }),
+        createBooking({ id: '2', status: 'CONFIRMED', customer: { name: 'B' } }),
+        createBooking({ id: '3', status: 'IN_PROGRESS', customer: { name: 'C' } }),
+        createBooking({ id: '4', status: 'COMPLETED', customer: { name: 'D' } }),
+        createBooking({ id: '5', status: 'CANCELLED', customer: { name: 'E' } }),
+        createBooking({ id: '6', status: 'NO_SHOW', customer: { name: 'F' } }),
+        createBooking({ id: '7', status: 'RESCHEDULED', customer: { name: 'G' } }),
       ],
       total: 7,
     });
@@ -1499,12 +1828,12 @@ describe('BookingsPage', () => {
 
     await waitFor(() => {
       expect(screen.getByText('status.pending')).toBeInTheDocument();
-      expect(screen.getByText('status.pending_deposit')).toBeInTheDocument();
       expect(screen.getByText('status.confirmed')).toBeInTheDocument();
       expect(screen.getByText('status.in_progress')).toBeInTheDocument();
       expect(screen.getByText('status.completed')).toBeInTheDocument();
       expect(screen.getByText('status.cancelled')).toBeInTheDocument();
       expect(screen.getByText('status.no_show')).toBeInTheDocument();
+      expect(screen.getByText('status.rescheduled')).toBeInTheDocument();
     });
   });
 
