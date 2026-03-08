@@ -507,7 +507,7 @@ export default function DashboardPage() {
                 />
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {checklist.items.map((item: any) => (
+                {checklist.items.filter((item: any) => CHECKLIST_LABELS[item.key]).map((item: any) => (
                   <div
                     key={item.key}
                     className={cn(

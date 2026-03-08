@@ -399,7 +399,7 @@ export default function BookingsPage() {
                   className="text-left p-3 text-xs font-medium text-slate-500 uppercase cursor-pointer hover:text-slate-700 select-none"
                   onClick={() => handleColumnSort('staff')}
                 >
-                  {t('common.name')} <SortIndicator col="staff" />
+                  {t('common.provider')} <SortIndicator col="staff" />
                 </th>
                 <th
                   className="text-left p-3 text-xs font-medium text-slate-500 uppercase cursor-pointer hover:text-slate-700 select-none"

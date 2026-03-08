@@ -38,7 +38,13 @@
     "none": "None",
     "off": "Off",
     "working": "Working",
-    "retry": "Retry"
+    "retry": "Retry",
+    "filters": "Filters",
+    "from_date": "From date",
+    "to_date": "To date",
+    "staff": "Staff",
+    "address": "Address",
+    "provider": "Provider"
   },
 
   "app": {
@@ -58,7 +64,10 @@
     "settings": "Settings",
     "logout": "Logout",
     "more": "More",
-    "views": "Views"
+    "views": "Views",
+    "section_workspace": "Workspace",
+    "section_tools": "Tools",
+    "section_insights": "Insights"
   },
 
   "mode": {
@@ -239,7 +248,8 @@
     "intake_save": "Save",
     "intake_cancel": "Cancel",
     "intake_saved": "Intake updated",
-    "intake_save_failed": "Failed to update intake"
+    "intake_save_failed": "Failed to update intake",
+    "new_outbound": "New Message"
   },
 
   "calendar": {
@@ -247,6 +257,7 @@
     "today": "Today",
     "view_day": "Day",
     "view_week": "Week",
+    "view_month": "Month",
     "new_booking": "New Booking",
     "no_bookings": "No bookings scheduled",
     "click_to_create": "Click on the calendar to create one",
@@ -295,6 +306,7 @@
     "since": "{{entity}} since {{date}}",
     "new_booking": "New {{bookingEntity}}",
     "edit": "Edit",
+    "edit_profile": "Edit Profile",
     "contact": "Contact",
     "tags": "Tags",
     "add_tag_placeholder": "Add tag...",

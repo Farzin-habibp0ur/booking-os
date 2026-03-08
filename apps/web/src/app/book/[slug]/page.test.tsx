@@ -91,21 +91,21 @@ const mockServices = [
 
 const mockSlots = [
   {
-    time: '2026-03-01T10:00:00Z',
+    time: '10:00',
     display: '10:00 AM',
     staffId: 'staff-1',
     staffName: 'Dr. Smith',
     available: true,
   },
   {
-    time: '2026-03-01T11:00:00Z',
+    time: '11:00',
     display: '11:00 AM',
     staffId: 'staff-1',
     staffName: 'Dr. Smith',
     available: true,
   },
   {
-    time: '2026-03-01T14:00:00Z',
+    time: '14:00',
     display: '2:00 PM',
     staffId: 'staff-2',
     staffName: 'Dr. Jones',
@@ -402,7 +402,7 @@ describe('BookingPortalPage', () => {
       });
 
       // Should show timezone info
-      expect(screen.getByText('Times shown in America/New_York')).toBeInTheDocument();
+      expect(screen.getByText('Times shown in Eastern Time (ET)')).toBeInTheDocument();
 
       // Should show time slots
       await waitFor(() => {

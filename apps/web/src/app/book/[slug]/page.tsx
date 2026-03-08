@@ -68,6 +68,27 @@ const STEP_LABELS: Record<Step, string> = {
 
 import { validateName, validatePhone, validateEmail } from './validators';
 
+function formatSlotTime(time: string): string {
+  return new Date('2000-01-01T' + time).toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+}
+
+const TIMEZONE_FRIENDLY_NAMES: Record<string, string> = {
+  'America/New_York': 'Eastern Time (ET)',
+  'America/Chicago': 'Central Time (CT)',
+  'America/Denver': 'Mountain Time (MT)',
+  'America/Los_Angeles': 'Pacific Time (PT)',
+  'Europe/London': 'GMT',
+  UTC: 'UTC',
+};
+
+function friendlyTimezone(tz: string): string {
+  return TIMEZONE_FRIENDLY_NAMES[tz] || tz;
+}
+
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('en-US', {
     weekday: 'long',
@@ -443,7 +464,7 @@ export default function BookingPortalPage() {
               <div className="flex items-center justify-between mb-3">
                 <p className="text-sm font-medium text-slate-700">Available times</p>
                 {business && (
-                  <p className="text-xs text-slate-400">Times shown in {business.timezone}</p>
+                  <p className="text-xs text-slate-400">Times shown in {friendlyTimezone(business.timezone)}</p>
                 )}
               </div>
               {slotsLoading ? (
@@ -569,7 +590,7 @@ export default function BookingPortalPage() {
                                 : 'bg-slate-50 text-slate-700 hover:bg-sage-50 hover:text-sage-700'
                             }`}
                           >
-                            {slot.display}
+                            {formatSlotTime(slot.time)}
                           </button>
                         ))}
                       </div>
@@ -727,7 +748,7 @@ export default function BookingPortalPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">Time</span>
-                <span className="font-medium text-slate-800">{selectedSlot.display}</span>
+                <span className="font-medium text-slate-800">{formatSlotTime(selectedSlot.time)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">Staff</span>

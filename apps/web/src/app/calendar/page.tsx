@@ -22,6 +22,16 @@ import { statusCalendarClasses } from '@/lib/design-tokens';
 const HOURS = Array.from({ length: 12 }, (_, i) => i + 8); // 8am - 7pm
 const SLOT_HEIGHT = 60; // pixels per hour
 
+const ROLE_LABELS: Record<string, string> = {
+  ADMIN: 'Admin',
+  AGENT: 'Agent',
+  SERVICE_PROVIDER: 'Provider',
+  OWNER: 'Owner',
+};
+function friendlyRole(role: string): string {
+  return ROLE_LABELS[role] || role;
+}
+
 // Wrap centralized tokens — calendar adds line-through for CANCELLED
 const STATUS_COLORS = new Proxy(
   {} as Record<string, { bg: string; border: string; text: string }>,
@@ -659,7 +669,7 @@ export default function CalendarPage() {
                     <div className="h-12 border-b flex items-center justify-center sticky top-0 bg-white z-10">
                       <div className="text-center">
                         <p className="text-sm font-serif font-medium">{s.name}</p>
-                        <p className="text-[10px] text-slate-400">{s.role}</p>
+                        <p className="text-[10px] text-slate-400">{friendlyRole(s.role)}</p>
                       </div>
                     </div>
 

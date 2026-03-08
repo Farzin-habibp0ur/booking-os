@@ -38,7 +38,13 @@
     "none": "Ninguno",
     "off": "Libre",
     "working": "Laboral",
-    "retry": "Reintentar"
+    "retry": "Reintentar",
+    "filters": "Filtros",
+    "from_date": "Desde",
+    "to_date": "Hasta",
+    "staff": "Personal",
+    "address": "Dirección",
+    "provider": "Proveedor"
   },
 
   "app": {
@@ -56,7 +62,10 @@
     "reports": "Reportes",
     "roi": "ROI",
     "settings": "Configuración",
-    "logout": "Cerrar sesión"
+    "logout": "Cerrar sesión",
+    "section_workspace": "Espacio de trabajo",
+    "section_tools": "Herramientas",
+    "section_insights": "Análisis"
   },
 
   "login": {
@@ -205,7 +214,8 @@
     "intake_save": "Guardar",
     "intake_cancel": "Cancelar",
     "intake_saved": "Ficha actualizada",
-    "intake_save_failed": "Error al actualizar ficha"
+    "intake_save_failed": "Error al actualizar ficha",
+    "new_outbound": "Nuevo Mensaje"
   },
 
   "calendar": {
@@ -213,6 +223,7 @@
     "today": "Hoy",
     "view_day": "Día",
     "view_week": "Semana",
+    "view_month": "Mes",
     "new_booking": "Nueva reserva",
     "no_bookings": "Sin reservas programadas",
     "click_to_create": "Haz clic en el calendario para crear una",
@@ -261,6 +272,7 @@
     "since": "{{entity}} desde {{date}}",
     "new_booking": "Nueva {{bookingEntity}}",
     "edit": "Editar",
+    "edit_profile": "Editar Perfil",
     "contact": "Contacto",
     "tags": "Etiquetas",
     "add_tag_placeholder": "Agregar etiqueta...",

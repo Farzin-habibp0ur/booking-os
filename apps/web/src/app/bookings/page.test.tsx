@@ -242,7 +242,7 @@ describe('BookingsPage', () => {
     await waitFor(() => {
       expect(screen.getByText('Customer')).toBeInTheDocument();
       expect(screen.getByText('Service')).toBeInTheDocument();
-      expect(screen.getByText('common.name')).toBeInTheDocument();
+      expect(screen.getByText('common.provider')).toBeInTheDocument();
       expect(screen.getByText('bookings.date_time')).toBeInTheDocument();
       expect(screen.getByText('common.status')).toBeInTheDocument();
     });
