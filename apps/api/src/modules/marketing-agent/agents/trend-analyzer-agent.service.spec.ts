@@ -68,7 +68,12 @@ describe('TrendAnalyzerAgentService', () => {
       const result = await service.execute('biz1', {});
 
       expect(result).toEqual({ cardsCreated: 0 });
-      expect(claudeClient.complete).toHaveBeenCalledWith('haiku', expect.any(String), expect.any(Array), 1024);
+      expect(claudeClient.complete).toHaveBeenCalledWith(
+        'haiku',
+        expect.any(String),
+        expect.any(Array),
+        1024,
+      );
     });
 
     it('returns 0 when Claude is unavailable', async () => {

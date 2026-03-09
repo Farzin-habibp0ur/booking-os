@@ -134,11 +134,15 @@ async function main() {
       created++;
     }
 
-    console.log(`    → ${created} drafts created (${SEED_CONTENT.length - created} already existed)`);
+    console.log(
+      `    → ${created} drafts created (${SEED_CONTENT.length - created} already existed)`,
+    );
     totalCreated += created;
   }
 
-  console.log(`\n✅ Content seeding complete: ${totalCreated} drafts created across ${businesses.length} business(es)`);
+  console.log(
+    `\n✅ Content seeding complete: ${totalCreated} drafts created across ${businesses.length} business(es)`,
+  );
   console.log(`   Pillars covered: ${Object.values(PILLAR_MAP).join(', ')}`);
 }
 

@@ -26,29 +26,24 @@ export class PerformanceTrackerAgentService implements BackgroundAgent, OnModule
     const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     const last7d = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-    const [
-      totalDrafts,
-      draftsLast24h,
-      byStatus,
-      byContentType,
-      publishedLast7d,
-    ] = await Promise.all([
-      this.prisma.contentDraft.count({ where: { businessId } }),
-      this.prisma.contentDraft.count({ where: { businessId, createdAt: { gte: last24h } } }),
-      this.prisma.contentDraft.groupBy({
-        by: ['status'],
-        where: { businessId },
-        _count: true,
-      }),
-      this.prisma.contentDraft.groupBy({
-        by: ['contentType'],
-        where: { businessId },
-        _count: true,
-      }),
-      this.prisma.contentDraft.count({
-        where: { businessId, status: 'PUBLISHED', publishedAt: { gte: last7d } },
-      }),
-    ]);
+    const [totalDrafts, draftsLast24h, byStatus, byContentType, publishedLast7d] =
+      await Promise.all([
+        this.prisma.contentDraft.count({ where: { businessId } }),
+        this.prisma.contentDraft.count({ where: { businessId, createdAt: { gte: last24h } } }),
+        this.prisma.contentDraft.groupBy({
+          by: ['status'],
+          where: { businessId },
+          _count: true,
+        }),
+        this.prisma.contentDraft.groupBy({
+          by: ['contentType'],
+          where: { businessId },
+          _count: true,
+        }),
+        this.prisma.contentDraft.count({
+          where: { businessId, status: 'PUBLISHED', publishedAt: { gte: last7d } },
+        }),
+      ]);
 
     const statusMap: Record<string, number> = {};
     for (const r of byStatus as any[]) {
@@ -61,9 +56,7 @@ export class PerformanceTrackerAgentService implements BackgroundAgent, OnModule
     const acceptedTotal = approved + published + scheduled;
 
     const approvalRate =
-      acceptedTotal > 0 && totalDrafts > 0
-        ? Math.round((acceptedTotal / totalDrafts) * 100)
-        : 0;
+      acceptedTotal > 0 && totalDrafts > 0 ? Math.round((acceptedTotal / totalDrafts) * 100) : 0;
 
     // Store stats in the run metadata (the framework stores the run result)
     this.logger.log(

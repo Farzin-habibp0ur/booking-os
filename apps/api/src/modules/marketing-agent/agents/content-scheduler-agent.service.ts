@@ -60,9 +60,7 @@ export class ContentSchedulerAgentService implements BackgroundAgent, OnModuleIn
       scheduled++;
     }
 
-    this.logger.log(
-      `Scheduler agent scheduled ${scheduled} drafts for business ${businessId}`,
-    );
+    this.logger.log(`Scheduler agent scheduled ${scheduled} drafts for business ${businessId}`);
 
     return { cardsCreated: scheduled };
   }

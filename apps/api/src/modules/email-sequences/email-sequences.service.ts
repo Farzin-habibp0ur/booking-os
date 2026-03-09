@@ -1,4 +1,11 @@
-import { Injectable, Inject, Logger, Optional, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  Logger,
+  Optional,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { PrismaService } from '../../common/prisma.service';
@@ -33,11 +40,51 @@ export const DEFAULT_SEQUENCES = [
     triggerEvent: 'SIGNUP',
     stopOnEvent: 'SUBSCRIPTION_ACTIVE',
     steps: [
-      { step: 1, delayHours: 0, subject: 'Welcome to Booking OS!', headline: 'Welcome aboard!', body: 'Thanks for signing up. We\'re excited to help you manage your business more efficiently. Let\'s get you set up in under 5 minutes.', ctaLabel: 'Get Started', ctaPath: '/settings' },
-      { step: 2, delayHours: 24, subject: 'Quick win: Add your first service', headline: 'Create your first service', body: 'The fastest way to see Booking OS in action is to create your first service. It takes under 2 minutes and unlocks your online booking page.', ctaLabel: 'Add a Service', ctaPath: '/services' },
-      { step: 3, delayHours: 48, subject: 'Your booking page is ready', headline: 'Share your booking link', body: 'Your online booking page is live. Share it with clients so they can self-book appointments anytime.', ctaLabel: 'View Booking Page', ctaPath: '/settings' },
-      { step: 4, delayHours: 96, subject: 'Connect your communication channels', headline: 'Connect WhatsApp & more', body: 'Manage all client conversations from one inbox. Connect WhatsApp, set up auto-replies, and never miss a message.', ctaLabel: 'Connect Channels', ctaPath: '/settings/notifications' },
-      { step: 5, delayHours: 168, subject: 'Your first week recap', headline: 'How your first week went', body: 'You\'ve been on Booking OS for a week. Check your dashboard to see your progress and discover features you haven\'t tried yet.', ctaLabel: 'View Dashboard', ctaPath: '/dashboard' },
+      {
+        step: 1,
+        delayHours: 0,
+        subject: 'Welcome to Booking OS!',
+        headline: 'Welcome aboard!',
+        body: "Thanks for signing up. We're excited to help you manage your business more efficiently. Let's get you set up in under 5 minutes.",
+        ctaLabel: 'Get Started',
+        ctaPath: '/settings',
+      },
+      {
+        step: 2,
+        delayHours: 24,
+        subject: 'Quick win: Add your first service',
+        headline: 'Create your first service',
+        body: 'The fastest way to see Booking OS in action is to create your first service. It takes under 2 minutes and unlocks your online booking page.',
+        ctaLabel: 'Add a Service',
+        ctaPath: '/services',
+      },
+      {
+        step: 3,
+        delayHours: 48,
+        subject: 'Your booking page is ready',
+        headline: 'Share your booking link',
+        body: 'Your online booking page is live. Share it with clients so they can self-book appointments anytime.',
+        ctaLabel: 'View Booking Page',
+        ctaPath: '/settings',
+      },
+      {
+        step: 4,
+        delayHours: 96,
+        subject: 'Connect your communication channels',
+        headline: 'Connect WhatsApp & more',
+        body: 'Manage all client conversations from one inbox. Connect WhatsApp, set up auto-replies, and never miss a message.',
+        ctaLabel: 'Connect Channels',
+        ctaPath: '/settings/notifications',
+      },
+      {
+        step: 5,
+        delayHours: 168,
+        subject: 'Your first week recap',
+        headline: 'How your first week went',
+        body: "You've been on Booking OS for a week. Check your dashboard to see your progress and discover features you haven't tried yet.",
+        ctaLabel: 'View Dashboard',
+        ctaPath: '/dashboard',
+      },
     ],
   },
   {
@@ -46,10 +93,42 @@ export const DEFAULT_SEQUENCES = [
     triggerEvent: 'ONBOARDING_COMPLETE',
     stopOnEvent: null,
     steps: [
-      { step: 1, delayHours: 24, subject: 'Unlock AI-powered auto-replies', headline: 'Let AI handle routine messages', body: 'Booking OS can automatically detect customer intent and reply instantly. Your clients get faster responses, and you save hours every week.', ctaLabel: 'Configure AI', ctaPath: '/settings/ai' },
-      { step: 2, delayHours: 72, subject: 'Send targeted campaigns', headline: 'Reach the right clients', body: 'Campaigns let you message your entire client base or a filtered segment. Great for promotions, announcements, and filling slow days.', ctaLabel: 'Create Campaign', ctaPath: '/campaigns/new' },
-      { step: 3, delayHours: 168, subject: 'Set up automations', headline: 'Automate your workflows', body: 'Create rules that run automatically — send follow-ups, update statuses, notify staff. Set it up once and let it work for you.', ctaLabel: 'View Automations', ctaPath: '/automations' },
-      { step: 4, delayHours: 336, subject: 'Deep dive into reports', headline: 'Understand your business', body: 'Reports show you revenue trends, booking patterns, staff performance, and client retention. Use data to make smarter decisions.', ctaLabel: 'View Reports', ctaPath: '/reports' },
+      {
+        step: 1,
+        delayHours: 24,
+        subject: 'Unlock AI-powered auto-replies',
+        headline: 'Let AI handle routine messages',
+        body: 'Booking OS can automatically detect customer intent and reply instantly. Your clients get faster responses, and you save hours every week.',
+        ctaLabel: 'Configure AI',
+        ctaPath: '/settings/ai',
+      },
+      {
+        step: 2,
+        delayHours: 72,
+        subject: 'Send targeted campaigns',
+        headline: 'Reach the right clients',
+        body: 'Campaigns let you message your entire client base or a filtered segment. Great for promotions, announcements, and filling slow days.',
+        ctaLabel: 'Create Campaign',
+        ctaPath: '/campaigns/new',
+      },
+      {
+        step: 3,
+        delayHours: 168,
+        subject: 'Set up automations',
+        headline: 'Automate your workflows',
+        body: 'Create rules that run automatically — send follow-ups, update statuses, notify staff. Set it up once and let it work for you.',
+        ctaLabel: 'View Automations',
+        ctaPath: '/automations',
+      },
+      {
+        step: 4,
+        delayHours: 336,
+        subject: 'Deep dive into reports',
+        headline: 'Understand your business',
+        body: 'Reports show you revenue trends, booking patterns, staff performance, and client retention. Use data to make smarter decisions.',
+        ctaLabel: 'View Reports',
+        ctaPath: '/reports',
+      },
     ],
   },
   {
@@ -58,9 +137,33 @@ export const DEFAULT_SEQUENCES = [
     triggerEvent: 'TRIAL_DAY_5',
     stopOnEvent: 'SUBSCRIPTION_ACTIVE',
     steps: [
-      { step: 1, delayHours: 0, subject: 'How clinics like yours save 10+ hours/week', headline: 'Real results from real businesses', body: 'Businesses using Booking OS reduce admin time by 40% and cut no-shows by 60%. Here\'s how they do it.', ctaLabel: 'See Case Studies', ctaPath: '/blog' },
-      { step: 2, delayHours: 48, subject: 'What our customers say', headline: 'Don\'t just take our word for it', body: '"Booking OS transformed how we manage our clinic. The AI handles most client questions, and we\'ve doubled our online bookings." — Sarah, Clinic Owner', ctaLabel: 'Start Using AI', ctaPath: '/settings/ai' },
-      { step: 3, delayHours: 120, subject: 'Join 500+ businesses on Booking OS', headline: 'You\'re in good company', body: 'Hundreds of service businesses trust Booking OS to manage their operations. Choose a plan and join them today.', ctaLabel: 'Choose a Plan', ctaPath: '/settings/billing' },
+      {
+        step: 1,
+        delayHours: 0,
+        subject: 'How clinics like yours save 10+ hours/week',
+        headline: 'Real results from real businesses',
+        body: "Businesses using Booking OS reduce admin time by 40% and cut no-shows by 60%. Here's how they do it.",
+        ctaLabel: 'See Case Studies',
+        ctaPath: '/blog',
+      },
+      {
+        step: 2,
+        delayHours: 48,
+        subject: 'What our customers say',
+        headline: "Don't just take our word for it",
+        body: '"Booking OS transformed how we manage our clinic. The AI handles most client questions, and we\'ve doubled our online bookings." — Sarah, Clinic Owner',
+        ctaLabel: 'Start Using AI',
+        ctaPath: '/settings/ai',
+      },
+      {
+        step: 3,
+        delayHours: 120,
+        subject: 'Join 500+ businesses on Booking OS',
+        headline: "You're in good company",
+        body: 'Hundreds of service businesses trust Booking OS to manage their operations. Choose a plan and join them today.',
+        ctaLabel: 'Choose a Plan',
+        ctaPath: '/settings/billing',
+      },
     ],
   },
   {
@@ -69,9 +172,33 @@ export const DEFAULT_SEQUENCES = [
     triggerEvent: 'TRIAL_ENDING',
     stopOnEvent: 'SUBSCRIPTION_ACTIVE',
     steps: [
-      { step: 1, delayHours: 0, subject: 'Your trial ends in 3 days', headline: 'Trial ending soon', body: 'Your 14-day free trial ends in 3 days. All your data, settings, and client history will be preserved when you subscribe.', ctaLabel: 'Choose a Plan', ctaPath: '/settings/billing' },
-      { step: 2, delayHours: 48, subject: 'Last day of your trial', headline: 'Final day of your free trial', body: 'Tomorrow your trial ends. Everything you\'ve built is saved. Subscribe now to keep it all running without interruption.', ctaLabel: 'Subscribe Now', ctaPath: '/settings/billing' },
-      { step: 3, delayHours: 96, subject: 'Your trial has ended — data saved for 7 days', headline: 'Grace period active', body: 'Your free trial has ended, but we\'ve kept everything intact. You have 7 days before your data is archived. Subscribe to pick up where you left off.', ctaLabel: 'Reactivate', ctaPath: '/settings/billing' },
+      {
+        step: 1,
+        delayHours: 0,
+        subject: 'Your trial ends in 3 days',
+        headline: 'Trial ending soon',
+        body: 'Your 14-day free trial ends in 3 days. All your data, settings, and client history will be preserved when you subscribe.',
+        ctaLabel: 'Choose a Plan',
+        ctaPath: '/settings/billing',
+      },
+      {
+        step: 2,
+        delayHours: 48,
+        subject: 'Last day of your trial',
+        headline: 'Final day of your free trial',
+        body: "Tomorrow your trial ends. Everything you've built is saved. Subscribe now to keep it all running without interruption.",
+        ctaLabel: 'Subscribe Now',
+        ctaPath: '/settings/billing',
+      },
+      {
+        step: 3,
+        delayHours: 96,
+        subject: 'Your trial has ended — data saved for 7 days',
+        headline: 'Grace period active',
+        body: "Your free trial has ended, but we've kept everything intact. You have 7 days before your data is archived. Subscribe to pick up where you left off.",
+        ctaLabel: 'Reactivate',
+        ctaPath: '/settings/billing',
+      },
     ],
   },
   {
@@ -80,10 +207,42 @@ export const DEFAULT_SEQUENCES = [
     triggerEvent: 'CHURN_DETECTED',
     stopOnEvent: 'SUBSCRIPTION_ACTIVE',
     steps: [
-      { step: 1, delayHours: 24, subject: 'We noticed you left — can we help?', headline: 'We miss you!', body: 'We noticed your subscription ended. If something wasn\'t working right, we\'d love to hear about it and help fix it.', ctaLabel: 'Give Feedback', ctaPath: '/settings/billing' },
-      { step: 2, delayHours: 168, subject: 'What\'s new in Booking OS', headline: 'A lot has changed', body: 'We\'ve shipped new features since you left: AI marketing agents, content automation, advanced reports, and more. Come back and see what\'s new.', ctaLabel: 'See What\'s New', ctaPath: '/' },
-      { step: 3, delayHours: 336, subject: 'Special offer: 20% off for 3 months', headline: 'A special deal for you', body: 'We want to win you back. Use code COMEBACK20 for 20% off any plan for 3 months. Your data is still safe and waiting.', ctaLabel: 'Claim Offer', ctaPath: '/settings/billing' },
-      { step: 4, delayHours: 720, subject: 'Final note from our team', headline: 'One last thing', body: 'This is our final message. Your data will be archived soon. If you ever want to come back, we\'ll be here. No hard feelings.', ctaLabel: 'Reactivate', ctaPath: '/settings/billing' },
+      {
+        step: 1,
+        delayHours: 24,
+        subject: 'We noticed you left — can we help?',
+        headline: 'We miss you!',
+        body: "We noticed your subscription ended. If something wasn't working right, we'd love to hear about it and help fix it.",
+        ctaLabel: 'Give Feedback',
+        ctaPath: '/settings/billing',
+      },
+      {
+        step: 2,
+        delayHours: 168,
+        subject: "What's new in Booking OS",
+        headline: 'A lot has changed',
+        body: "We've shipped new features since you left: AI marketing agents, content automation, advanced reports, and more. Come back and see what's new.",
+        ctaLabel: "See What's New",
+        ctaPath: '/',
+      },
+      {
+        step: 3,
+        delayHours: 336,
+        subject: 'Special offer: 20% off for 3 months',
+        headline: 'A special deal for you',
+        body: 'We want to win you back. Use code COMEBACK20 for 20% off any plan for 3 months. Your data is still safe and waiting.',
+        ctaLabel: 'Claim Offer',
+        ctaPath: '/settings/billing',
+      },
+      {
+        step: 4,
+        delayHours: 720,
+        subject: 'Final note from our team',
+        headline: 'One last thing',
+        body: "This is our final message. Your data will be archived soon. If you ever want to come back, we'll be here. No hard feelings.",
+        ctaLabel: 'Reactivate',
+        ctaPath: '/settings/billing',
+      },
     ],
   },
   {
@@ -92,9 +251,33 @@ export const DEFAULT_SEQUENCES = [
     triggerEvent: 'PLAN_LIMIT_HIT',
     stopOnEvent: 'PLAN_UPGRADED',
     steps: [
-      { step: 1, delayHours: 0, subject: 'You\'ve hit your plan limit', headline: 'Time to level up?', body: 'You\'ve reached the limits of your current plan. Upgrade to unlock more staff seats, services, AI features, and advanced reports.', ctaLabel: 'Compare Plans', ctaPath: '/settings/billing' },
-      { step: 2, delayHours: 72, subject: 'What you\'re missing on your current plan', headline: 'Unlock more features', body: 'Higher plans include AI auto-replies, marketing automation, custom reports, and priority support. See what fits your business.', ctaLabel: 'Upgrade Now', ctaPath: '/settings/billing' },
-      { step: 3, delayHours: 168, subject: 'Businesses that upgrade see 2x growth', headline: 'Growth starts here', body: 'On average, businesses that upgrade see 2x more bookings within 30 days. Ready to grow?', ctaLabel: 'Upgrade', ctaPath: '/settings/billing' },
+      {
+        step: 1,
+        delayHours: 0,
+        subject: "You've hit your plan limit",
+        headline: 'Time to level up?',
+        body: "You've reached the limits of your current plan. Upgrade to unlock more staff seats, services, AI features, and advanced reports.",
+        ctaLabel: 'Compare Plans',
+        ctaPath: '/settings/billing',
+      },
+      {
+        step: 2,
+        delayHours: 72,
+        subject: "What you're missing on your current plan",
+        headline: 'Unlock more features',
+        body: 'Higher plans include AI auto-replies, marketing automation, custom reports, and priority support. See what fits your business.',
+        ctaLabel: 'Upgrade Now',
+        ctaPath: '/settings/billing',
+      },
+      {
+        step: 3,
+        delayHours: 168,
+        subject: 'Businesses that upgrade see 2x growth',
+        headline: 'Growth starts here',
+        body: 'On average, businesses that upgrade see 2x more bookings within 30 days. Ready to grow?',
+        ctaLabel: 'Upgrade',
+        ctaPath: '/settings/billing',
+      },
     ],
   },
   {
@@ -103,8 +286,24 @@ export const DEFAULT_SEQUENCES = [
     triggerEvent: 'REFERRAL_CREATED',
     stopOnEvent: null,
     steps: [
-      { step: 1, delayHours: 0, subject: 'Your referral link is ready!', headline: 'Start sharing and earning', body: 'Thanks for referring a friend! Share your unique referral link and earn rewards when they sign up and subscribe.', ctaLabel: 'Share Link', ctaPath: '/settings/referrals' },
-      { step: 2, delayHours: 72, subject: 'Reminder: Share your referral link', headline: 'Don\'t forget to share', body: 'You have a referral link waiting. Each successful referral earns you a reward. The more you share, the more you earn.', ctaLabel: 'Share Now', ctaPath: '/settings/referrals' },
+      {
+        step: 1,
+        delayHours: 0,
+        subject: 'Your referral link is ready!',
+        headline: 'Start sharing and earning',
+        body: 'Thanks for referring a friend! Share your unique referral link and earn rewards when they sign up and subscribe.',
+        ctaLabel: 'Share Link',
+        ctaPath: '/settings/referrals',
+      },
+      {
+        step: 2,
+        delayHours: 72,
+        subject: 'Reminder: Share your referral link',
+        headline: "Don't forget to share",
+        body: 'You have a referral link waiting. Each successful referral earns you a reward. The more you share, the more you earn.',
+        ctaLabel: 'Share Now',
+        ctaPath: '/settings/referrals',
+      },
     ],
   },
 ];
@@ -204,8 +403,14 @@ export class EmailSequenceService {
     ]);
 
     return {
-      byType: byType.reduce((acc: Record<string, number>, r: any) => ({ ...acc, [r.type]: r._count }), {}),
-      byStatus: byStatus.reduce((acc: Record<string, number>, r: any) => ({ ...acc, [r.status]: r._count }), {}),
+      byType: byType.reduce(
+        (acc: Record<string, number>, r: any) => ({ ...acc, [r.type]: r._count }),
+        {},
+      ),
+      byStatus: byStatus.reduce(
+        (acc: Record<string, number>, r: any) => ({ ...acc, [r.status]: r._count }),
+        {},
+      ),
       totalEnrolled,
     };
   }
@@ -392,15 +597,23 @@ export class EmailSequenceService {
         },
       });
 
-      this.logger.log(`Sent sequence step ${step} to ${enrollment.email} (enrollment ${enrollmentId})`);
+      this.logger.log(
+        `Sent sequence step ${step} to ${enrollment.email} (enrollment ${enrollmentId})`,
+      );
     } catch (err) {
-      this.logger.warn(`Failed to send sequence step ${step} to ${enrollment.email}: ${(err as Error).message}`);
+      this.logger.warn(
+        `Failed to send sequence step ${step} to ${enrollment.email}: ${(err as Error).message}`,
+      );
     }
   }
 
   // ─── Trigger Events ────────────────────────────────────────────────────
 
-  async handleTriggerEvent(businessId: string, event: string, payload: { email: string; name: string }) {
+  async handleTriggerEvent(
+    businessId: string,
+    event: string,
+    payload: { email: string; name: string },
+  ) {
     const sequences = await this.prisma.emailSequence.findMany({
       where: {
         triggerEvent: event,
@@ -451,7 +664,9 @@ export class EmailSequenceService {
         try {
           await this.cancelEnrollment(businessId, enrollment.id);
         } catch (err) {
-          this.logger.warn(`Failed to cancel enrollment ${enrollment.id}: ${(err as Error).message}`);
+          this.logger.warn(
+            `Failed to cancel enrollment ${enrollment.id}: ${(err as Error).message}`,
+          );
         }
       }
     }

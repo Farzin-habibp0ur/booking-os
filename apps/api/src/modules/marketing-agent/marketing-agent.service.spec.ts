@@ -10,10 +10,7 @@ describe('MarketingAgentService', () => {
   beforeEach(async () => {
     prisma = createMockPrisma();
     const module = await Test.createTestingModule({
-      providers: [
-        MarketingAgentService,
-        { provide: PrismaService, useValue: prisma },
-      ],
+      providers: [MarketingAgentService, { provide: PrismaService, useValue: prisma }],
     }).compile();
 
     service = module.get(MarketingAgentService);

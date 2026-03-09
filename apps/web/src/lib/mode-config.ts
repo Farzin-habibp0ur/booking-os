@@ -28,7 +28,15 @@ function flattenSections(s: NavSections): { primary: string[]; secondary: string
 
 const adminSections: NavSections = {
   workspace: ['/inbox', '/calendar', '/customers', '/bookings'],
-  tools: ['/services', '/staff', '/campaigns', '/automations', '/marketing/queue', '/marketing/agents', '/marketing/sequences'],
+  tools: [
+    '/services',
+    '/staff',
+    '/campaigns',
+    '/automations',
+    '/marketing/queue',
+    '/marketing/agents',
+    '/marketing/sequences',
+  ],
   insights: ['/dashboard', '/reports', '/roi', '/ai'],
 };
 

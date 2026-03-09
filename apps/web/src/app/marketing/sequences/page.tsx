@@ -254,9 +254,7 @@ export default function EmailSequencesPage() {
                               {formatDelay(step.delayHours)}
                             </span>
                           </div>
-                          <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">
-                            {step.body}
-                          </p>
+                          <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">{step.body}</p>
                         </div>
                       </div>
                     ))}

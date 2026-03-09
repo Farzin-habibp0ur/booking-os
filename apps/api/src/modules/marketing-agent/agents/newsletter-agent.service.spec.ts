@@ -33,7 +33,9 @@ describe('NewsletterAgentService', () => {
         topServices: [],
       }),
       getRecentDraftTopics: jest.fn().mockResolvedValue([]),
-      parseAIResponse: jest.fn().mockReturnValue({ title: 'Weekly Update', body: '<p>Newsletter</p>' }),
+      parseAIResponse: jest
+        .fn()
+        .mockReturnValue({ title: 'Weekly Update', body: '<p>Newsletter</p>' }),
     };
 
     const module = await Test.createTestingModule({

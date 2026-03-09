@@ -53,9 +53,7 @@ export class ContentPublisherAgentService implements BackgroundAgent, OnModuleIn
       published++;
     }
 
-    this.logger.log(
-      `Publisher agent published ${published} drafts for business ${businessId}`,
-    );
+    this.logger.log(`Publisher agent published ${published} drafts for business ${businessId}`);
 
     return { cardsCreated: published };
   }

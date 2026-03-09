@@ -40,10 +40,7 @@ export class OnboardingDripProcessor extends WorkerHost {
         await dripService.sendDripEmail(job.data as DripJobData);
       }
     } catch (err) {
-      this.logger.error(
-        `Job ${job.id} failed: ${(err as Error).message}`,
-        (err as Error).stack,
-      );
+      this.logger.error(`Job ${job.id} failed: ${(err as Error).message}`, (err as Error).stack);
       throw err;
     }
   }

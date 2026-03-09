@@ -121,25 +121,24 @@ export default function MarketingAgentsPage() {
   const marketingRuns = runs.filter((r) => marketingTypes.includes(r.agentType));
 
   const enabledCount = marketingConfigs.filter((c) => c.isEnabled).length;
-  const draftsLast24h = marketingRuns.filter(
-    (r) =>
-      r.status === 'COMPLETED' &&
-      new Date(r.startedAt) > new Date(Date.now() - 24 * 60 * 60 * 1000),
-  ).reduce((sum, r) => sum + (r.cardsCreated || 0), 0);
+  const draftsLast24h = marketingRuns
+    .filter(
+      (r) =>
+        r.status === 'COMPLETED' &&
+        new Date(r.startedAt) > new Date(Date.now() - 24 * 60 * 60 * 1000),
+    )
+    .reduce((sum, r) => sum + (r.cardsCreated || 0), 0);
   const completedRuns = marketingRuns.filter((r) => r.status === 'COMPLETED').length;
   const totalRuns = marketingRuns.length;
   const successRate = totalRuns > 0 ? Math.round((completedRuns / totalRuns) * 100) : 0;
 
-  const getLatestRun = (agentType: string) =>
-    marketingRuns.find((r) => r.agentType === agentType);
+  const getLatestRun = (agentType: string) => marketingRuns.find((r) => r.agentType === agentType);
 
   const getConfigForType = (agentType: string) =>
     marketingConfigs.find((c) => c.agentType === agentType);
 
   const filteredTypes =
-    tab === 'all'
-      ? marketingTypes
-      : marketingTypes.filter((t) => AGENT_META[t].category === tab);
+    tab === 'all' ? marketingTypes : marketingTypes.filter((t) => AGENT_META[t].category === tab);
 
   return (
     <div className="space-y-6" data-testid="marketing-agents-page">
@@ -236,10 +235,7 @@ export default function MarketingAgentsPage() {
                       )}
                     >
                       {meta.category === 'content' ? (
-                        <FileText
-                          size={18}
-                          className="text-lavender-600"
-                        />
+                        <FileText size={18} className="text-lavender-600" />
                       ) : meta.category === 'distribution' ? (
                         <Send size={18} className="text-blue-600" />
                       ) : (

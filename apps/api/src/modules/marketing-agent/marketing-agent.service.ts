@@ -103,7 +103,12 @@ export class MarketingAgentService {
     };
   }
 
-  parseAIResponse(raw: string): { title?: string; body?: string; summary?: string; recommendations?: string[] } {
+  parseAIResponse(raw: string): {
+    title?: string;
+    body?: string;
+    summary?: string;
+    recommendations?: string[];
+  } {
     try {
       return JSON.parse(raw);
     } catch {

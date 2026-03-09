@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Param,
+  Body,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { TenantGuard } from '../../common/tenant.guard';
 import { RolesGuard, Roles } from '../../common/roles.guard';
@@ -34,7 +44,11 @@ export class EmailSequenceController {
 
   @Patch(':id')
   @Roles('OWNER', 'ADMIN')
-  update(@BusinessId() businessId: string, @Param('id') id: string, @Body() dto: UpdateSequenceDto) {
+  update(
+    @BusinessId() businessId: string,
+    @Param('id') id: string,
+    @Body() dto: UpdateSequenceDto,
+  ) {
     return this.service.updateSequence(businessId, id, dto);
   }
 
@@ -46,7 +60,11 @@ export class EmailSequenceController {
 
   @Post(':id/enroll')
   @Roles('OWNER', 'ADMIN')
-  enroll(@BusinessId() businessId: string, @Param('id') id: string, @Body() dto: EnrollSequenceDto) {
+  enroll(
+    @BusinessId() businessId: string,
+    @Param('id') id: string,
+    @Body() dto: EnrollSequenceDto,
+  ) {
     return this.service.enroll(businessId, id, dto);
   }
 

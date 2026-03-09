@@ -72,9 +72,7 @@ describe('ContentSchedulerAgentService', () => {
     });
 
     it('respects maxPerRun config', async () => {
-      prisma.contentDraft.findMany.mockResolvedValue([
-        { id: 'd1', status: 'APPROVED' },
-      ] as any);
+      prisma.contentDraft.findMany.mockResolvedValue([{ id: 'd1', status: 'APPROVED' }] as any);
       prisma.contentDraft.update.mockResolvedValue({} as any);
 
       const result = await service.execute('biz1', { maxPerRun: 1 });

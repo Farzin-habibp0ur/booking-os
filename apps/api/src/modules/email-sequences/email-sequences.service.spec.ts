@@ -19,8 +19,24 @@ describe('EmailSequenceService', () => {
     type: 'WELCOME',
     isActive: true,
     steps: [
-      { step: 1, delayHours: 0, subject: 'Welcome!', headline: 'Welcome', body: 'Hello {{name}}', ctaLabel: 'Start', ctaPath: '/start' },
-      { step: 2, delayHours: 24, subject: 'Day 2', headline: 'Day 2', body: 'Next step', ctaLabel: 'Go', ctaPath: '/go' },
+      {
+        step: 1,
+        delayHours: 0,
+        subject: 'Welcome!',
+        headline: 'Welcome',
+        body: 'Hello {{name}}',
+        ctaLabel: 'Start',
+        ctaPath: '/start',
+      },
+      {
+        step: 2,
+        delayHours: 24,
+        subject: 'Day 2',
+        headline: 'Day 2',
+        body: 'Next step',
+        ctaLabel: 'Go',
+        ctaPath: '/go',
+      },
     ],
     triggerEvent: 'SIGNUP',
     stopOnEvent: 'SUBSCRIPTION_ACTIVE',
@@ -99,7 +115,9 @@ describe('EmailSequenceService', () => {
       prisma.emailSequence.create.mockResolvedValue(mockSequence as any);
 
       const result = await service.createSequence('biz1', {
-        name: 'Custom', type: 'CUSTOM', steps: [],
+        name: 'Custom',
+        type: 'CUSTOM',
+        steps: [],
       });
 
       expect(prisma.emailSequence.create).toHaveBeenCalledWith({
@@ -182,7 +200,9 @@ describe('EmailSequenceService', () => {
   describe('getStats', () => {
     it('returns stats', async () => {
       prisma.emailSequence.groupBy.mockResolvedValue([{ type: 'WELCOME', _count: 1 }] as any);
-      prisma.emailSequenceEnrollment.groupBy.mockResolvedValue([{ status: 'ACTIVE', _count: 3 }] as any);
+      prisma.emailSequenceEnrollment.groupBy.mockResolvedValue([
+        { status: 'ACTIVE', _count: 3 },
+      ] as any);
       prisma.emailSequenceEnrollment.count.mockResolvedValue(5);
 
       const result = await service.getStats('biz1');
@@ -227,7 +247,8 @@ describe('EmailSequenceService', () => {
       prisma.emailSequenceEnrollment.findFirst.mockResolvedValue(mockEnrollment as any);
       prisma.emailSequence.findUnique.mockResolvedValue(mockSequence as any);
       prisma.emailSequenceEnrollment.update.mockResolvedValue({
-        ...mockEnrollment, status: 'CANCELLED',
+        ...mockEnrollment,
+        status: 'CANCELLED',
       } as any);
 
       await service.cancelEnrollment('biz1', 'enr1');
@@ -246,7 +267,8 @@ describe('EmailSequenceService', () => {
 
     it('throws when enrollment already completed', async () => {
       prisma.emailSequenceEnrollment.findFirst.mockResolvedValue({
-        ...mockEnrollment, status: 'COMPLETED',
+        ...mockEnrollment,
+        status: 'COMPLETED',
       } as any);
 
       await expect(service.cancelEnrollment('biz1', 'enr1')).rejects.toThrow(BadRequestException);
@@ -258,7 +280,8 @@ describe('EmailSequenceService', () => {
       prisma.emailSequenceEnrollment.findFirst.mockResolvedValue(mockEnrollment as any);
       prisma.emailSequence.findUnique.mockResolvedValue(mockSequence as any);
       prisma.emailSequenceEnrollment.update.mockResolvedValue({
-        ...mockEnrollment, status: 'PAUSED',
+        ...mockEnrollment,
+        status: 'PAUSED',
       } as any);
 
       await service.pauseEnrollment('biz1', 'enr1');
@@ -271,7 +294,8 @@ describe('EmailSequenceService', () => {
 
     it('throws when not active', async () => {
       prisma.emailSequenceEnrollment.findFirst.mockResolvedValue({
-        ...mockEnrollment, status: 'PAUSED',
+        ...mockEnrollment,
+        status: 'PAUSED',
       } as any);
 
       await expect(service.pauseEnrollment('biz1', 'enr1')).rejects.toThrow(BadRequestException);
@@ -281,10 +305,13 @@ describe('EmailSequenceService', () => {
   describe('resumeEnrollment', () => {
     it('resumes a paused enrollment and reschedules remaining steps', async () => {
       prisma.emailSequenceEnrollment.findFirst.mockResolvedValue({
-        ...mockEnrollment, status: 'PAUSED', currentStep: 1,
+        ...mockEnrollment,
+        status: 'PAUSED',
+        currentStep: 1,
       } as any);
       prisma.emailSequenceEnrollment.update.mockResolvedValue({
-        ...mockEnrollment, status: 'ACTIVE',
+        ...mockEnrollment,
+        status: 'ACTIVE',
       } as any);
 
       await service.resumeEnrollment('biz1', 'enr1');
@@ -340,7 +367,8 @@ describe('EmailSequenceService', () => {
 
     it('skips cancelled enrollments', async () => {
       prisma.emailSequenceEnrollment.findUnique.mockResolvedValue({
-        ...mockEnrollment, status: 'CANCELLED',
+        ...mockEnrollment,
+        status: 'CANCELLED',
       } as any);
 
       await service.processStep('enr1', 1);
@@ -400,7 +428,8 @@ describe('EmailSequenceService', () => {
       prisma.emailSequenceEnrollment.findFirst.mockResolvedValue(mockEnrollment as any);
       prisma.emailSequence.findUnique.mockResolvedValue(mockSequence as any);
       prisma.emailSequenceEnrollment.update.mockResolvedValue({
-        ...mockEnrollment, status: 'CANCELLED',
+        ...mockEnrollment,
+        status: 'CANCELLED',
       } as any);
 
       await service.handleStopEvent('biz1', 'SUBSCRIPTION_ACTIVE');
