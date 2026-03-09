@@ -1,4 +1,10 @@
-import { Injectable, NotFoundException, BadRequestException, Logger, Optional } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  Logger,
+  Optional,
+} from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { PrismaService } from '../../common/prisma.service';
@@ -34,10 +40,7 @@ export class TestimonialsService {
     });
   }
 
-  async findAll(
-    businessId: string,
-    query: { status?: string; page?: number; pageSize?: number },
-  ) {
+  async findAll(businessId: string, query: { status?: string; page?: number; pageSize?: number }) {
     const where: any = { businessId };
     if (query.status) where.status = query.status;
 

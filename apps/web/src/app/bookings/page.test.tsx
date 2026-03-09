@@ -624,9 +624,7 @@ describe('BookingsPage', () => {
 
     // After first click, should send sortBy=customerName to API (server-side sort)
     await waitFor(() => {
-      expect(mockApi.get).toHaveBeenCalledWith(
-        expect.stringContaining('sortBy=customerName'),
-      );
+      expect(mockApi.get).toHaveBeenCalledWith(expect.stringContaining('sortBy=customerName'));
     });
   });
 
@@ -2081,9 +2079,7 @@ describe('BookingsPage', () => {
     });
 
     await waitFor(() => {
-      expect(mockApi.get).toHaveBeenCalledWith(
-        expect.stringContaining('status=COMPLETED'),
-      );
+      expect(mockApi.get).toHaveBeenCalledWith(expect.stringContaining('status=COMPLETED'));
     });
   });
 
@@ -2103,9 +2099,7 @@ describe('BookingsPage', () => {
     });
 
     await waitFor(() => {
-      expect(mockApi.get).toHaveBeenCalledWith(
-        expect.stringContaining('status=PENDING'),
-      );
+      expect(mockApi.get).toHaveBeenCalledWith(expect.stringContaining('status=PENDING'));
     });
 
     // Now click All
@@ -2151,9 +2145,7 @@ describe('BookingsPage', () => {
     });
 
     await waitFor(() => {
-      expect(mockApi.get).toHaveBeenCalledWith(
-        expect.stringContaining('sortBy=customerName'),
-      );
+      expect(mockApi.get).toHaveBeenCalledWith(expect.stringContaining('sortBy=customerName'));
     });
   });
 
@@ -2231,7 +2223,11 @@ describe('BookingsPage', () => {
     mockApi.get.mockResolvedValue({
       data: [
         createBooking({ id: '1', service: { name: 'Haircut', price: 50 } }),
-        createBooking({ id: '2', service: { name: 'Massage', price: 120.5 }, customer: { name: 'Jane' } }),
+        createBooking({
+          id: '2',
+          service: { name: 'Massage', price: 120.5 },
+          customer: { name: 'Jane' },
+        }),
       ],
       total: 2,
     });

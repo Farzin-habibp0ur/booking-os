@@ -3,7 +3,13 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { TrendingUp, X, AlertTriangle } from 'lucide-react';
-import { isNearLimit, isAtLimit, getUpgradePlan, getUsagePercent, getLimitValue } from '@/lib/plan-limits';
+import {
+  isNearLimit,
+  isAtLimit,
+  getUpgradePlan,
+  getUsagePercent,
+  getLimitValue,
+} from '@/lib/plan-limits';
 import type { PlanLimits } from '@/lib/plan-limits';
 
 interface UpgradeNudgeProps {
@@ -57,20 +63,12 @@ export function UpgradeNudge({ current, plan, resource, resourceLabel }: Upgrade
           <TrendingUp size={20} className="text-lavender-600 shrink-0" />
         )}
         <div className="min-w-0">
-          <p
-            className={`text-sm font-medium ${
-              atLimit ? 'text-amber-900' : 'text-lavender-900'
-            }`}
-          >
+          <p className={`text-sm font-medium ${atLimit ? 'text-amber-900' : 'text-lavender-900'}`}>
             {atLimit
               ? `You've reached your ${resourceLabel} limit (${current}/${limit})`
               : `You're using ${percent}% of your ${resourceLabel} limit (${current}/${limit})`}
           </p>
-          <p
-            className={`text-xs mt-0.5 ${
-              atLimit ? 'text-amber-700' : 'text-lavender-700'
-            }`}
-          >
+          <p className={`text-xs mt-0.5 ${atLimit ? 'text-amber-700' : 'text-lavender-700'}`}>
             Upgrade to {upgrade.label} for higher limits.
           </p>
         </div>

@@ -52,10 +52,12 @@ export class BusinessReviewService {
         );
       } catch (err) {
         this.logger.error(`AI summary generation failed: ${(err as Error).message}`);
-        aiSummary = 'AI summary is temporarily unavailable. Please check your metrics below for this month\'s performance overview.';
+        aiSummary =
+          "AI summary is temporarily unavailable. Please check your metrics below for this month's performance overview.";
       }
     } else {
-      aiSummary = 'AI summary is not available. Configure ANTHROPIC_API_KEY to enable AI-generated business reviews.';
+      aiSummary =
+        'AI summary is not available. Configure ANTHROPIC_API_KEY to enable AI-generated business reviews.';
     }
 
     return this.prisma.businessReview.create({
@@ -91,7 +93,8 @@ export class BusinessReviewService {
     ]);
 
     const finishedBookings = completedBookings + noShowCount;
-    const noShowRate = finishedBookings > 0 ? Math.round((noShowCount / finishedBookings) * 100) : 0;
+    const noShowRate =
+      finishedBookings > 0 ? Math.round((noShowCount / finishedBookings) * 100) : 0;
 
     // Revenue
     const revenueBookings = await this.prisma.booking.findMany({
@@ -99,7 +102,8 @@ export class BusinessReviewService {
       include: { service: { select: { price: true } } },
     });
     const totalRevenue = revenueBookings.reduce((sum, b) => sum + b.service.price, 0);
-    const avgBookingValue = completedBookings > 0 ? Math.round((totalRevenue / completedBookings) * 100) / 100 : 0;
+    const avgBookingValue =
+      completedBookings > 0 ? Math.round((totalRevenue / completedBookings) * 100) / 100 : 0;
 
     // Previous month revenue for comparison
     const prevRevenueBookings = await this.prisma.booking.findMany({
@@ -107,13 +111,15 @@ export class BusinessReviewService {
       include: { service: { select: { price: true } } },
     });
     const prevRevenue = prevRevenueBookings.reduce((sum, b) => sum + b.service.price, 0);
-    const revenueChange = prevRevenue > 0 ? Math.round(((totalRevenue - prevRevenue) / prevRevenue) * 100) : 0;
+    const revenueChange =
+      prevRevenue > 0 ? Math.round(((totalRevenue - prevRevenue) / prevRevenue) * 100) : 0;
 
     // Previous month bookings for comparison
     const prevBookings = await this.prisma.booking.count({
       where: { businessId, createdAt: { gte: prevStart, lt: prevEnd } },
     });
-    const bookingsChange = prevBookings > 0 ? Math.round(((totalBookings - prevBookings) / prevBookings) * 100) : 0;
+    const bookingsChange =
+      prevBookings > 0 ? Math.round(((totalBookings - prevBookings) / prevBookings) * 100) : 0;
 
     // Customers
     const newCustomers = await this.prisma.customer.count({
@@ -135,9 +141,10 @@ export class BusinessReviewService {
       },
     });
     const returningCount = returningCustomers.length;
-    const retentionRate = totalCustomersThisMonth > 0
-      ? Math.round((returningCount / totalCustomersThisMonth) * 100)
-      : 0;
+    const retentionRate =
+      totalCustomersThisMonth > 0
+        ? Math.round((returningCount / totalCustomersThisMonth) * 100)
+        : 0;
 
     // Top 5 services
     const serviceBookings = await this.prisma.booking.findMany({
@@ -149,11 +156,18 @@ export class BusinessReviewService {
       if (!serviceMap[b.service.id]) serviceMap[b.service.id] = { name: b.service.name, count: 0 };
       serviceMap[b.service.id].count++;
     }
-    const topServices = Object.values(serviceMap).sort((a, b) => b.count - a.count).slice(0, 5);
+    const topServices = Object.values(serviceMap)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
 
     // Top 3 staff
     const staffBookings = await this.prisma.booking.findMany({
-      where: { businessId, createdAt: { gte: startDate, lt: endDate }, staffId: { not: null }, status: 'COMPLETED' },
+      where: {
+        businessId,
+        createdAt: { gte: startDate, lt: endDate },
+        staffId: { not: null },
+        status: 'COMPLETED',
+      },
       include: { staff: { select: { id: true, name: true } } },
     });
     const staffMap: Record<string, { name: string; completed: number }> = {};
@@ -162,7 +176,9 @@ export class BusinessReviewService {
       if (!staffMap[b.staff.id]) staffMap[b.staff.id] = { name: b.staff.name, completed: 0 };
       staffMap[b.staff.id].completed++;
     }
-    const topStaff = Object.values(staffMap).sort((a, b) => b.completed - a.completed).slice(0, 3);
+    const topStaff = Object.values(staffMap)
+      .sort((a, b) => b.completed - a.completed)
+      .slice(0, 3);
 
     // Busiest days and hours
     const allBookings = await this.prisma.booking.findMany({
@@ -187,25 +203,35 @@ export class BusinessReviewService {
 
     // Action card stats
     const [actionCardsCreated, actionCardsApproved, actionCardsDismissed] = await Promise.all([
-      this.prisma.actionCard.count({
-        where: { businessId, createdAt: { gte: startDate, lt: endDate } },
-      }).catch(() => 0),
-      this.prisma.actionCard.count({
-        where: { businessId, createdAt: { gte: startDate, lt: endDate }, status: 'APPROVED' },
-      }).catch(() => 0),
-      this.prisma.actionCard.count({
-        where: { businessId, createdAt: { gte: startDate, lt: endDate }, status: 'DISMISSED' },
-      }).catch(() => 0),
+      this.prisma.actionCard
+        .count({
+          where: { businessId, createdAt: { gte: startDate, lt: endDate } },
+        })
+        .catch(() => 0),
+      this.prisma.actionCard
+        .count({
+          where: { businessId, createdAt: { gte: startDate, lt: endDate }, status: 'APPROVED' },
+        })
+        .catch(() => 0),
+      this.prisma.actionCard
+        .count({
+          where: { businessId, createdAt: { gte: startDate, lt: endDate }, status: 'DISMISSED' },
+        })
+        .catch(() => 0),
     ]);
 
     // Content queue stats
     const [contentPublished, contentPending] = await Promise.all([
-      this.prisma.contentDraft.count({
-        where: { businessId, createdAt: { gte: startDate, lt: endDate }, status: 'PUBLISHED' },
-      }).catch(() => 0),
-      this.prisma.contentDraft.count({
-        where: { businessId, status: { in: ['DRAFT', 'PENDING_REVIEW'] } },
-      }).catch(() => 0),
+      this.prisma.contentDraft
+        .count({
+          where: { businessId, createdAt: { gte: startDate, lt: endDate }, status: 'PUBLISHED' },
+        })
+        .catch(() => 0),
+      this.prisma.contentDraft
+        .count({
+          where: { businessId, status: { in: ['DRAFT', 'PENDING_REVIEW'] } },
+        })
+        .catch(() => 0),
     ]);
 
     return {

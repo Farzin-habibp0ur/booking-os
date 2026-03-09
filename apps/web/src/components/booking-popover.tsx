@@ -3,7 +3,17 @@
 import { useEffect, useRef } from 'react';
 import { cn } from '@/lib/cn';
 import { BOOKING_STATUS_STYLES, ELEVATION } from '@/lib/design-tokens';
-import { Calendar, Clock, DollarSign, Play, Check, RefreshCw, ExternalLink, X, Phone } from 'lucide-react';
+import {
+  Calendar,
+  Clock,
+  DollarSign,
+  Play,
+  Check,
+  RefreshCw,
+  ExternalLink,
+  X,
+  Phone,
+} from 'lucide-react';
 
 interface BookingPopoverProps {
   booking: any;

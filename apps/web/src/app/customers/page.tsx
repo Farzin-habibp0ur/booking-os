@@ -45,7 +45,9 @@ export default function CustomersPage() {
   const [activeViewId, setActiveViewId] = useState<string | null>(null);
   const [showExport, setShowExport] = useState(false);
   const [duplicateCount, setDuplicateCount] = useState(0);
-  const [sortBy, setSortBy] = useState<'name' | 'phone' | 'email' | 'date' | 'lastVisit' | 'totalSpent' | 'bookingsCount' | null>(null);
+  const [sortBy, setSortBy] = useState<
+    'name' | 'phone' | 'email' | 'date' | 'lastVisit' | 'totalSpent' | 'bookingsCount' | null
+  >(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const retryCountRef = useRef(0);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);

@@ -15,7 +15,12 @@ describe('PortalAuthService', () => {
   let mockQueue: { add: jest.Mock };
 
   const mockBusiness = { id: 'biz1', name: 'Test Clinic', slug: 'test-clinic' };
-  const mockCustomer = { id: 'cust1', businessId: 'biz1', phone: '+1234567890', email: 'cust@test.com' };
+  const mockCustomer = {
+    id: 'cust1',
+    businessId: 'biz1',
+    phone: '+1234567890',
+    email: 'cust@test.com',
+  };
 
   beforeEach(async () => {
     prisma = createMockPrisma();
@@ -114,9 +119,9 @@ describe('PortalAuthService', () => {
       (prisma.customer.findFirst as jest.Mock).mockResolvedValue(mockCustomer);
       await service.requestOtp('test-clinic', '+1234567890');
 
-      await expect(
-        service.verifyOtp('test-clinic', '+1234567890', '000000'),
-      ).rejects.toThrow(UnauthorizedException);
+      await expect(service.verifyOtp('test-clinic', '+1234567890', '000000')).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('rejects expired OTP', async () => {
@@ -129,9 +134,9 @@ describe('PortalAuthService', () => {
       const entry = store.get(key)!;
       entry.expiresAt = Date.now() - 1000;
 
-      await expect(
-        service.verifyOtp('test-clinic', '+1234567890', entry.otp),
-      ).rejects.toThrow(UnauthorizedException);
+      await expect(service.verifyOtp('test-clinic', '+1234567890', entry.otp)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('rejects after max attempts', async () => {
@@ -147,15 +152,15 @@ describe('PortalAuthService', () => {
         }
       }
 
-      await expect(
-        service.verifyOtp('test-clinic', '+1234567890', '000000'),
-      ).rejects.toThrow(/request a new code|No verification/);
+      await expect(service.verifyOtp('test-clinic', '+1234567890', '000000')).rejects.toThrow(
+        /request a new code|No verification/,
+      );
     });
 
     it('rejects when no OTP exists', async () => {
-      await expect(
-        service.verifyOtp('test-clinic', '+9999999999', '123456'),
-      ).rejects.toThrow(UnauthorizedException);
+      await expect(service.verifyOtp('test-clinic', '+9999999999', '123456')).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
   });
 
@@ -179,9 +184,9 @@ describe('PortalAuthService', () => {
       (prisma.business.findFirst as jest.Mock).mockResolvedValue(mockBusiness);
       (prisma.customer.findFirst as jest.Mock).mockResolvedValue(null);
 
-      await expect(
-        service.requestMagicLink('test-clinic', 'no@test.com'),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.requestMagicLink('test-clinic', 'no@test.com')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -211,9 +216,7 @@ describe('PortalAuthService', () => {
         throw new Error('jwt expired');
       });
 
-      await expect(service.verifyMagicLink('expired-token')).rejects.toThrow(
-        UnauthorizedException,
-      );
+      await expect(service.verifyMagicLink('expired-token')).rejects.toThrow(UnauthorizedException);
     });
   });
 });

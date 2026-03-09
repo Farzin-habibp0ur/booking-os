@@ -44,9 +44,7 @@ export default function TestimonialsPage() {
     setLoading(true);
     try {
       const params = activeTab !== 'All' ? `?status=${activeTab}` : '';
-      const res = await api.get<{ data: Testimonial[]; total: number }>(
-        `/testimonials${params}`,
-      );
+      const res = await api.get<{ data: Testimonial[]; total: number }>(`/testimonials${params}`);
       setTestimonials(res.data);
       setTotal(res.total);
     } catch {
@@ -140,9 +138,7 @@ export default function TestimonialsPage() {
         <div className="flex items-center gap-3">
           <MessageSquareQuote size={24} className="text-sage-600" />
           <h1 className="text-2xl font-serif font-semibold text-slate-900">Testimonials</h1>
-          {!loading && (
-            <span className="text-sm text-slate-400">({total})</span>
-          )}
+          {!loading && <span className="text-sm text-slate-400">({total})</span>}
         </div>
         <button
           onClick={openRequestModal}
@@ -189,7 +185,10 @@ export default function TestimonialsPage() {
           description="Request testimonials from your customers to showcase their experience."
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" data-testid="testimonials-grid">
+        <div
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+          data-testid="testimonials-grid"
+        >
           {testimonials.map((t) => (
             <TestimonialCard
               key={t.id}
@@ -206,13 +205,19 @@ export default function TestimonialsPage() {
 
       {/* Request Modal */}
       {showRequestModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" data-testid="request-modal">
+        <div
+          className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+          data-testid="request-modal"
+        >
           <div className="bg-white rounded-2xl shadow-soft p-6 w-full max-w-md mx-4">
             <h2 className="text-lg font-semibold text-slate-900 mb-4">Request Testimonial</h2>
 
             {/* Customer search */}
             <div className="relative mb-3">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Search
+                size={14}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+              />
               <input
                 value={customerSearch}
                 onChange={(e) => setCustomerSearch(e.target.value)}

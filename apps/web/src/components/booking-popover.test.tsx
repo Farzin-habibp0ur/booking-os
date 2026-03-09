@@ -3,8 +3,18 @@ jest.mock('@/lib/design-tokens', () => ({
   ELEVATION: { dropdown: '' },
   BOOKING_STATUS_STYLES: {
     CONFIRMED: { bg: 'bg-sage-50', text: 'text-sage-900', dot: 'dot-sage', label: 'Confirmed' },
-    IN_PROGRESS: { bg: 'bg-amber-50', text: 'text-amber-700', dot: 'dot-amber', label: 'In Progress' },
-    PENDING: { bg: 'bg-lavender-50', text: 'text-lavender-900', dot: 'dot-lavender', label: 'Pending' },
+    IN_PROGRESS: {
+      bg: 'bg-amber-50',
+      text: 'text-amber-700',
+      dot: 'dot-amber',
+      label: 'In Progress',
+    },
+    PENDING: {
+      bg: 'bg-lavender-50',
+      text: 'text-lavender-900',
+      dot: 'dot-lavender',
+      label: 'Pending',
+    },
     CANCELLED: { bg: 'bg-red-50', text: 'text-red-700', dot: 'dot-red', label: 'Cancelled' },
   },
 }));
@@ -85,18 +95,14 @@ describe('BookingPopover', () => {
 
   it('calls onClose on Escape key', () => {
     const onClose = jest.fn();
-    render(
-      <BookingPopover booking={mockBooking} anchorRect={mockAnchorRect} onClose={onClose} />,
-    );
+    render(<BookingPopover booking={mockBooking} anchorRect={mockAnchorRect} onClose={onClose} />);
     fireEvent.keyDown(document, { key: 'Escape' });
     expect(onClose).toHaveBeenCalled();
   });
 
   it('calls onClose on click outside', () => {
     const onClose = jest.fn();
-    render(
-      <BookingPopover booking={mockBooking} anchorRect={mockAnchorRect} onClose={onClose} />,
-    );
+    render(<BookingPopover booking={mockBooking} anchorRect={mockAnchorRect} onClose={onClose} />);
     fireEvent.mouseDown(document);
     expect(onClose).toHaveBeenCalled();
   });

@@ -150,7 +150,9 @@ export class MessageService {
         const job = await this.messagingQueue.getJob(message.scheduledJobId);
         if (job) await job.remove();
       } catch (err) {
-        this.logger.warn(`Failed to remove scheduled job ${message.scheduledJobId}: ${(err as Error).message}`);
+        this.logger.warn(
+          `Failed to remove scheduled job ${message.scheduledJobId}: ${(err as Error).message}`,
+        );
       }
     }
 

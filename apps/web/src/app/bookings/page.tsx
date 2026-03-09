@@ -169,7 +169,17 @@ function BookingsContent() {
       const qs = params.toString();
       router.replace(`/bookings${qs ? `?${qs}` : ''}`, { scroll: false });
     },
-    [statusFilter, debouncedSearch, dateFrom, dateTo, staffFilter, datePreset, sortBy, sortOrder, router],
+    [
+      statusFilter,
+      debouncedSearch,
+      dateFrom,
+      dateTo,
+      staffFilter,
+      datePreset,
+      sortBy,
+      sortOrder,
+      router,
+    ],
   );
 
   // Debounce search input
@@ -653,22 +663,37 @@ function BookingsContent() {
                           className="rounded text-sage-600"
                         />
                       </td>
-                      <td className="p-3 text-sm font-medium print:border print:border-slate-300 print:text-black print:text-xs" onClick={() => handleRowClick(b)}>
+                      <td
+                        className="p-3 text-sm font-medium print:border print:border-slate-300 print:text-black print:text-xs"
+                        onClick={() => handleRowClick(b)}
+                      >
                         {b.customer?.name}
                       </td>
-                      <td className="p-3 text-sm print:border print:border-slate-300 print:text-black print:text-xs" onClick={() => handleRowClick(b)}>
+                      <td
+                        className="p-3 text-sm print:border print:border-slate-300 print:text-black print:text-xs"
+                        onClick={() => handleRowClick(b)}
+                      >
                         {b.service?.name}
                       </td>
-                      <td className="p-3 text-sm text-slate-600 print:border print:border-slate-300 print:text-black print:text-xs" onClick={() => handleRowClick(b)}>
+                      <td
+                        className="p-3 text-sm text-slate-600 print:border print:border-slate-300 print:text-black print:text-xs"
+                        onClick={() => handleRowClick(b)}
+                      >
                         {b.staff?.name || t('common.unassigned')}
                       </td>
-                      <td className="p-3 text-sm text-slate-600 print:border print:border-slate-300 print:text-black print:text-xs" onClick={() => handleRowClick(b)}>
+                      <td
+                        className="p-3 text-sm text-slate-600 print:border print:border-slate-300 print:text-black print:text-xs"
+                        onClick={() => handleRowClick(b)}
+                      >
                         {new Date(b.startTime).toLocaleString('en-US', {
                           dateStyle: 'medium',
                           timeStyle: 'short',
                         })}
                       </td>
-                      <td className="p-3 print:border print:border-slate-300 print:text-black print:text-xs" onClick={() => handleRowClick(b)}>
+                      <td
+                        className="p-3 print:border print:border-slate-300 print:text-black print:text-xs"
+                        onClick={() => handleRowClick(b)}
+                      >
                         <span
                           className={cn(
                             'text-xs px-2 py-0.5 rounded-full',
@@ -678,7 +703,10 @@ function BookingsContent() {
                           {t(`status.${b.status.toLowerCase()}`)}
                         </span>
                       </td>
-                      <td className="p-3 text-sm text-slate-600 print:border print:border-slate-300 print:text-black print:text-xs" onClick={() => handleRowClick(b)}>
+                      <td
+                        className="p-3 text-sm text-slate-600 print:border print:border-slate-300 print:text-black print:text-xs"
+                        onClick={() => handleRowClick(b)}
+                      >
                         {b.service?.price != null ? `$${Number(b.service.price).toFixed(2)}` : '-'}
                       </td>
                     </tr>

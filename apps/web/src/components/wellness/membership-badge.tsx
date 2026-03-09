@@ -14,7 +14,12 @@ const MEMBERSHIP_CONFIG: Record<
 > = {
   VIP: { icon: Crown, bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
   Annual: { icon: Star, bg: 'bg-sage-50', text: 'text-sage-700', border: 'border-sage-200' },
-  Monthly: { icon: Zap, bg: 'bg-lavender-50', text: 'text-lavender-700', border: 'border-lavender-200' },
+  Monthly: {
+    icon: Zap,
+    bg: 'bg-lavender-50',
+    text: 'text-lavender-700',
+    border: 'border-lavender-200',
+  },
   'Drop-in': { icon: User, bg: 'bg-slate-50', text: 'text-slate-600', border: 'border-slate-200' },
 };
 

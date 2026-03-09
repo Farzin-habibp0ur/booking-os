@@ -1106,14 +1106,25 @@ export default function CalendarPage() {
 
       {/* Keyboard shortcuts help */}
       {showShortcuts && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20" onClick={() => setShowShortcuts(false)}>
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-5 w-80" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/20"
+          onClick={() => setShowShortcuts(false)}
+        >
+          <div
+            className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-5 w-80"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Keyboard size={16} className="text-slate-400" />
-                <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Keyboard Shortcuts</h3>
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
+                  Keyboard Shortcuts
+                </h3>
               </div>
-              <button onClick={() => setShowShortcuts(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
+              <button
+                onClick={() => setShowShortcuts(false)}
+                className="text-slate-400 hover:text-slate-600 transition-colors"
+              >
                 <X size={14} />
               </button>
             </div>
@@ -1131,7 +1142,9 @@ export default function CalendarPage() {
               ].map(([key, desc]) => (
                 <div key={key} className="flex items-center justify-between">
                   <span className="text-slate-600 dark:text-slate-400">{desc}</span>
-                  <kbd className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-[11px] font-mono text-slate-500">{key}</kbd>
+                  <kbd className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-[11px] font-mono text-slate-500">
+                    {key}
+                  </kbd>
                 </div>
               ))}
             </div>

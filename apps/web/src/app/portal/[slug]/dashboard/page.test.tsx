@@ -17,8 +17,12 @@ beforeAll(() => {
   Object.defineProperty(window, 'sessionStorage', {
     value: {
       getItem: (key: string) => mockSessionStorage[key] ?? null,
-      setItem: (key: string, val: string) => { mockSessionStorage[key] = val; },
-      removeItem: (key: string) => { delete mockSessionStorage[key]; },
+      setItem: (key: string, val: string) => {
+        mockSessionStorage[key] = val;
+      },
+      removeItem: (key: string) => {
+        delete mockSessionStorage[key];
+      },
     },
     writable: true,
   });
@@ -44,7 +48,12 @@ const mockUpcoming = [
 
 const mockBookings = {
   data: [
-    { id: 'b2', startTime: '2025-12-15T14:00:00.000Z', status: 'COMPLETED', service: { name: 'Botox' } },
+    {
+      id: 'b2',
+      startTime: '2025-12-15T14:00:00.000Z',
+      status: 'COMPLETED',
+      service: { name: 'Botox' },
+    },
   ],
   total: 1,
   page: 1,

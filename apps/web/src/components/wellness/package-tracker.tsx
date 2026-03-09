@@ -52,10 +52,7 @@ export default function PackageTracker({ sessions }: PackageTrackerProps) {
           {sessions.used} of {sessions.total} sessions used
         </span>
         <span
-          className={cn(
-            'text-xs font-medium',
-            remaining <= 2 ? 'text-amber-600' : 'text-sage-600',
-          )}
+          className={cn('text-xs font-medium', remaining <= 2 ? 'text-amber-600' : 'text-sage-600')}
         >
           {remaining} remaining
         </span>

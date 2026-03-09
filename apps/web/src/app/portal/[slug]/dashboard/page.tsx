@@ -2,14 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import {
-  Calendar,
-  Clock,
-  User,
-  MessageSquare,
-  Star,
-  ChevronRight,
-} from 'lucide-react';
+import { Calendar, Clock, User, MessageSquare, Star, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { statusBadgeClasses } from '@/lib/design-tokens';
 
@@ -81,7 +74,10 @@ export default function PortalDashboardPage() {
         <p className="text-sm text-slate-500 mt-1">
           Member since{' '}
           {profile?.memberSince
-            ? new Date(profile.memberSince).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+            ? new Date(profile.memberSince).toLocaleDateString('en-US', {
+                month: 'long',
+                year: 'numeric',
+              })
             : '—'}
         </p>
       </div>
@@ -89,7 +85,9 @@ export default function PortalDashboardPage() {
       {/* Upcoming bookings */}
       {upcoming.length > 0 && (
         <section>
-          <h2 className="text-lg font-serif font-semibold text-slate-900 mb-3">Upcoming Bookings</h2>
+          <h2 className="text-lg font-serif font-semibold text-slate-900 mb-3">
+            Upcoming Bookings
+          </h2>
           <div className="space-y-3" data-testid="upcoming-bookings">
             {upcoming.slice(0, 3).map((b: any) => (
               <div
@@ -162,7 +160,10 @@ export default function PortalDashboardPage() {
 
       {/* Testimonial CTA */}
       <section>
-        <div className="bg-lavender-50 border border-lavender-200 rounded-2xl p-5 flex items-center justify-between" data-testid="testimonial-cta">
+        <div
+          className="bg-lavender-50 border border-lavender-200 rounded-2xl p-5 flex items-center justify-between"
+          data-testid="testimonial-cta"
+        >
           <div className="flex items-center gap-3">
             <Star size={20} className="text-lavender-600" />
             <div>
@@ -188,7 +189,10 @@ export default function PortalDashboardPage() {
               View All
             </button>
           </div>
-          <div className="bg-white rounded-2xl shadow-soft overflow-hidden divide-y" data-testid="recent-bookings">
+          <div
+            className="bg-white rounded-2xl shadow-soft overflow-hidden divide-y"
+            data-testid="recent-bookings"
+          >
             {recentBookings.map((b: any) => (
               <div key={b.id} className="p-4 flex items-center justify-between">
                 <div>

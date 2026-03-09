@@ -321,7 +321,9 @@ export default function AutomationsPage() {
                                 )}
                               </button>
                               <button
-                                onClick={() => router.push(`/automations/builder?ruleId=${rule.id}`)}
+                                onClick={() =>
+                                  router.push(`/automations/builder?ruleId=${rule.id}`)
+                                }
                                 className="text-slate-400 hover:text-sage-600 p-1"
                                 title="Edit in Builder"
                                 data-testid={`edit-builder-${rule.id}`}

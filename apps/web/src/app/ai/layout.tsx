@@ -36,7 +36,10 @@ export default function AILayout({ children }: { children: React.ReactNode }) {
             </div>
 
             {/* Tab Bar */}
-            <div className="border-b border-slate-200 dark:border-slate-800 mb-8" data-testid="ai-tab-bar">
+            <div
+              className="border-b border-slate-200 dark:border-slate-800 mb-8"
+              data-testid="ai-tab-bar"
+            >
               <div className="flex gap-6 px-0">
                 {TABS.map((tab) => {
                   const Icon = tab.icon;

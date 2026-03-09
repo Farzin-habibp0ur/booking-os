@@ -34,10 +34,7 @@ export class MessageController {
   }
 
   @Get(':id/messages/scheduled')
-  getScheduledMessages(
-    @BusinessId() businessId: string,
-    @Param('id') conversationId: string,
-  ) {
+  getScheduledMessages(@BusinessId() businessId: string, @Param('id') conversationId: string) {
     return this.messageService.getScheduledMessages(businessId, conversationId);
   }
 

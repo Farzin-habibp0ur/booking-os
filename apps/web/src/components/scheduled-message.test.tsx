@@ -10,9 +10,7 @@ describe('ScheduledMessage', () => {
   });
 
   it('renders schedule button when no scheduled time', () => {
-    render(
-      <ScheduledMessage onSchedule={onSchedule} onClear={onClear} scheduledAt={null} />,
-    );
+    render(<ScheduledMessage onSchedule={onSchedule} onClear={onClear} scheduledAt={null} />);
 
     expect(screen.getByTestId('schedule-toggle')).toHaveTextContent('Schedule');
   });
@@ -31,9 +29,7 @@ describe('ScheduledMessage', () => {
   });
 
   it('opens popover on toggle click', () => {
-    render(
-      <ScheduledMessage onSchedule={onSchedule} onClear={onClear} scheduledAt={null} />,
-    );
+    render(<ScheduledMessage onSchedule={onSchedule} onClear={onClear} scheduledAt={null} />);
 
     fireEvent.click(screen.getByTestId('schedule-toggle'));
     expect(screen.getByTestId('schedule-popover')).toBeInTheDocument();
@@ -41,9 +37,7 @@ describe('ScheduledMessage', () => {
   });
 
   it('renders 5 quick presets', () => {
-    render(
-      <ScheduledMessage onSchedule={onSchedule} onClear={onClear} scheduledAt={null} />,
-    );
+    render(<ScheduledMessage onSchedule={onSchedule} onClear={onClear} scheduledAt={null} />);
 
     fireEvent.click(screen.getByTestId('schedule-toggle'));
     expect(screen.getByTestId('preset-in-1-hour')).toBeInTheDocument();
@@ -54,9 +48,7 @@ describe('ScheduledMessage', () => {
   });
 
   it('calls onSchedule when a preset is clicked', () => {
-    render(
-      <ScheduledMessage onSchedule={onSchedule} onClear={onClear} scheduledAt={null} />,
-    );
+    render(<ScheduledMessage onSchedule={onSchedule} onClear={onClear} scheduledAt={null} />);
 
     fireEvent.click(screen.getByTestId('schedule-toggle'));
     fireEvent.click(screen.getByTestId('preset-in-1-hour'));
@@ -78,9 +70,7 @@ describe('ScheduledMessage', () => {
   });
 
   it('shows date and time inputs in popover', () => {
-    render(
-      <ScheduledMessage onSchedule={onSchedule} onClear={onClear} scheduledAt={null} />,
-    );
+    render(<ScheduledMessage onSchedule={onSchedule} onClear={onClear} scheduledAt={null} />);
 
     fireEvent.click(screen.getByTestId('schedule-toggle'));
     expect(screen.getByText('Date')).toBeInTheDocument();
@@ -88,9 +78,7 @@ describe('ScheduledMessage', () => {
   });
 
   it('disables Schedule button when no date selected', () => {
-    render(
-      <ScheduledMessage onSchedule={onSchedule} onClear={onClear} scheduledAt={null} />,
-    );
+    render(<ScheduledMessage onSchedule={onSchedule} onClear={onClear} scheduledAt={null} />);
 
     fireEvent.click(screen.getByTestId('schedule-toggle'));
     const buttons = screen.getAllByRole('button');
@@ -101,9 +89,7 @@ describe('ScheduledMessage', () => {
   });
 
   it('closes popover on Cancel click', () => {
-    render(
-      <ScheduledMessage onSchedule={onSchedule} onClear={onClear} scheduledAt={null} />,
-    );
+    render(<ScheduledMessage onSchedule={onSchedule} onClear={onClear} scheduledAt={null} />);
 
     fireEvent.click(screen.getByTestId('schedule-toggle'));
     expect(screen.getByTestId('schedule-popover')).toBeInTheDocument();
@@ -113,9 +99,7 @@ describe('ScheduledMessage', () => {
   });
 
   it('shows time picker with 15-minute intervals', () => {
-    render(
-      <ScheduledMessage onSchedule={onSchedule} onClear={onClear} scheduledAt={null} />,
-    );
+    render(<ScheduledMessage onSchedule={onSchedule} onClear={onClear} scheduledAt={null} />);
 
     fireEvent.click(screen.getByTestId('schedule-toggle'));
     const timeSelect = screen.getByRole('combobox') as HTMLSelectElement;

@@ -609,9 +609,7 @@ describe('BillingService', () => {
     it('throws when no subscription found', async () => {
       prisma.subscription.findUnique.mockResolvedValue(null);
 
-      await expect(service.switchToAnnual('biz1')).rejects.toThrow(
-        'No active subscription found',
-      );
+      await expect(service.switchToAnnual('biz1')).rejects.toThrow('No active subscription found');
     });
   });
 
@@ -636,9 +634,7 @@ describe('BillingService', () => {
     it('throws when no subscription found', async () => {
       prisma.subscription.findUnique.mockResolvedValue(null);
 
-      await expect(service.switchToMonthly('biz1')).rejects.toThrow(
-        'No active subscription found',
-      );
+      await expect(service.switchToMonthly('biz1')).rejects.toThrow('No active subscription found');
     });
   });
 

@@ -39,7 +39,12 @@ describe('TestimonialsService', () => {
   describe('create', () => {
     it('creates a testimonial with MANUAL source', async () => {
       const dto = { name: 'Alice', content: 'Great service!' };
-      prisma.testimonial.create.mockResolvedValue({ id: 't1', ...dto, source: 'MANUAL', status: 'PENDING' });
+      prisma.testimonial.create.mockResolvedValue({
+        id: 't1',
+        ...dto,
+        source: 'MANUAL',
+        status: 'PENDING',
+      });
 
       const result = await service.create('b1', dto);
 

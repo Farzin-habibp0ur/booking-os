@@ -121,13 +121,16 @@ describe('ReportsPage', () => {
     });
 
     await waitFor(() => {
-      expect(api.post).toHaveBeenCalledWith('/reports/schedules', expect.objectContaining({
-        reportType: 'bookings-over-time',
-        frequency: 'WEEKLY',
-        recipients: ['test@test.com'],
-        dayOfWeek: 1,
-        hour: 9,
-      }));
+      expect(api.post).toHaveBeenCalledWith(
+        '/reports/schedules',
+        expect.objectContaining({
+          reportType: 'bookings-over-time',
+          frequency: 'WEEKLY',
+          recipients: ['test@test.com'],
+          dayOfWeek: 1,
+          hour: 9,
+        }),
+      );
     });
   });
 

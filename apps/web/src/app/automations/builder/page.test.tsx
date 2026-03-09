@@ -2,7 +2,11 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import WorkflowBuilderPage, { serializeWorkflow } from './page';
 
 jest.mock('@/lib/api', () => ({
-  api: { get: jest.fn().mockResolvedValue([]), post: jest.fn().mockResolvedValue({}), patch: jest.fn().mockResolvedValue({}) },
+  api: {
+    get: jest.fn().mockResolvedValue([]),
+    post: jest.fn().mockResolvedValue({}),
+    patch: jest.fn().mockResolvedValue({}),
+  },
 }));
 jest.mock('next/navigation', () => ({
   useRouter: () => ({ push: jest.fn() }),
@@ -39,8 +43,24 @@ describe('WorkflowBuilderPage', () => {
     // so we test the serialization function directly
     const result = serializeWorkflow({
       nodes: [
-        { id: '1', type: 'TRIGGER', subtype: 'BOOKING_CREATED', label: 'New Booking', config: {}, x: 0, y: 0 },
-        { id: '2', type: 'ACTION', subtype: 'ADD_TAG', label: 'Add Tag', config: { tag: 'vip' }, x: 0, y: 100 },
+        {
+          id: '1',
+          type: 'TRIGGER',
+          subtype: 'BOOKING_CREATED',
+          label: 'New Booking',
+          config: {},
+          x: 0,
+          y: 0,
+        },
+        {
+          id: '2',
+          type: 'ACTION',
+          subtype: 'ADD_TAG',
+          label: 'Add Tag',
+          config: { tag: 'vip' },
+          x: 0,
+          y: 100,
+        },
       ],
       connections: [],
       selectedNodeId: null,
@@ -59,7 +79,15 @@ describe('WorkflowBuilderPage', () => {
   it('shows error when saving with no action', () => {
     const result = serializeWorkflow({
       nodes: [
-        { id: '1', type: 'TRIGGER', subtype: 'BOOKING_CREATED', label: 'New Booking', config: {}, x: 0, y: 0 },
+        {
+          id: '1',
+          type: 'TRIGGER',
+          subtype: 'BOOKING_CREATED',
+          label: 'New Booking',
+          config: {},
+          x: 0,
+          y: 0,
+        },
       ],
       connections: [],
       selectedNodeId: null,
@@ -94,8 +122,24 @@ describe('serializeWorkflow', () => {
       ...baseState,
       name: 'My Workflow',
       nodes: [
-        { id: '1', type: 'TRIGGER', subtype: 'BOOKING_CREATED', label: 'New Booking', config: {}, x: 0, y: 0 },
-        { id: '2', type: 'ACTION', subtype: 'ADD_TAG', label: 'Add Tag', config: { tag: 'vip' }, x: 0, y: 100 },
+        {
+          id: '1',
+          type: 'TRIGGER',
+          subtype: 'BOOKING_CREATED',
+          label: 'New Booking',
+          config: {},
+          x: 0,
+          y: 0,
+        },
+        {
+          id: '2',
+          type: 'ACTION',
+          subtype: 'ADD_TAG',
+          label: 'Add Tag',
+          config: { tag: 'vip' },
+          x: 0,
+          y: 100,
+        },
       ],
     });
     expect(result.error).toBeUndefined();
@@ -115,9 +159,33 @@ describe('serializeWorkflow', () => {
       ...baseState,
       name: 'Status Workflow',
       nodes: [
-        { id: '1', type: 'TRIGGER', subtype: 'STATUS_CHANGED', label: 'Status Changed', config: { newStatus: 'COMPLETED' }, x: 0, y: 0 },
-        { id: '2', type: 'CONDITION', subtype: 'IF_AMOUNT', label: 'If Amount', config: { amount: 100 }, x: 0, y: 100 },
-        { id: '3', type: 'ACTION', subtype: 'SEND_TEMPLATE', label: 'Send', config: { category: 'FOLLOW_UP', channel: 'EMAIL' }, x: 0, y: 200 },
+        {
+          id: '1',
+          type: 'TRIGGER',
+          subtype: 'STATUS_CHANGED',
+          label: 'Status Changed',
+          config: { newStatus: 'COMPLETED' },
+          x: 0,
+          y: 0,
+        },
+        {
+          id: '2',
+          type: 'CONDITION',
+          subtype: 'IF_AMOUNT',
+          label: 'If Amount',
+          config: { amount: 100 },
+          x: 0,
+          y: 100,
+        },
+        {
+          id: '3',
+          type: 'ACTION',
+          subtype: 'SEND_TEMPLATE',
+          label: 'Send',
+          config: { category: 'FOLLOW_UP', channel: 'EMAIL' },
+          x: 0,
+          y: 200,
+        },
       ],
     });
     expect(result.error).toBeUndefined();
@@ -133,9 +201,33 @@ describe('serializeWorkflow', () => {
       ...baseState,
       name: 'Delay Workflow',
       nodes: [
-        { id: '1', type: 'TRIGGER', subtype: 'BOOKING_CREATED', label: 'New Booking', config: {}, x: 0, y: 0 },
-        { id: '2', type: 'DELAY', subtype: 'WAIT_HOURS', label: 'Wait 2h', config: { duration: 2, unit: 'hours' }, x: 0, y: 100 },
-        { id: '3', type: 'ACTION', subtype: 'SEND_TEMPLATE', label: 'Send', config: { category: 'REMINDER' }, x: 0, y: 200 },
+        {
+          id: '1',
+          type: 'TRIGGER',
+          subtype: 'BOOKING_CREATED',
+          label: 'New Booking',
+          config: {},
+          x: 0,
+          y: 0,
+        },
+        {
+          id: '2',
+          type: 'DELAY',
+          subtype: 'WAIT_HOURS',
+          label: 'Wait 2h',
+          config: { duration: 2, unit: 'hours' },
+          x: 0,
+          y: 100,
+        },
+        {
+          id: '3',
+          type: 'ACTION',
+          subtype: 'SEND_TEMPLATE',
+          label: 'Send',
+          config: { category: 'REMINDER' },
+          x: 0,
+          y: 200,
+        },
       ],
     });
     expect(result.error).toBeUndefined();
@@ -147,9 +239,33 @@ describe('serializeWorkflow', () => {
       ...baseState,
       name: 'Minute Delay',
       nodes: [
-        { id: '1', type: 'TRIGGER', subtype: 'BOOKING_CREATED', label: 'Trigger', config: {}, x: 0, y: 0 },
-        { id: '2', type: 'DELAY', subtype: 'WAIT_MINUTES', label: 'Wait', config: { duration: 30, unit: 'minutes' }, x: 0, y: 100 },
-        { id: '3', type: 'ACTION', subtype: 'UPDATE_STATUS', label: 'Update', config: { status: 'CONFIRMED' }, x: 0, y: 200 },
+        {
+          id: '1',
+          type: 'TRIGGER',
+          subtype: 'BOOKING_CREATED',
+          label: 'Trigger',
+          config: {},
+          x: 0,
+          y: 0,
+        },
+        {
+          id: '2',
+          type: 'DELAY',
+          subtype: 'WAIT_MINUTES',
+          label: 'Wait',
+          config: { duration: 30, unit: 'minutes' },
+          x: 0,
+          y: 100,
+        },
+        {
+          id: '3',
+          type: 'ACTION',
+          subtype: 'UPDATE_STATUS',
+          label: 'Update',
+          config: { status: 'CONFIRMED' },
+          x: 0,
+          y: 200,
+        },
       ],
     });
     expect(result.data!.actions[0].delayHours).toBe(0.5);
@@ -161,9 +277,33 @@ describe('serializeWorkflow', () => {
       ...baseState,
       name: 'Bad',
       nodes: [
-        { id: '1', type: 'TRIGGER', subtype: 'BOOKING_CREATED', label: 'T1', config: {}, x: 0, y: 0 },
-        { id: '2', type: 'TRIGGER', subtype: 'STATUS_CHANGED', label: 'T2', config: {}, x: 200, y: 0 },
-        { id: '3', type: 'ACTION', subtype: 'ADD_TAG', label: 'Tag', config: { tag: 'x' }, x: 0, y: 100 },
+        {
+          id: '1',
+          type: 'TRIGGER',
+          subtype: 'BOOKING_CREATED',
+          label: 'T1',
+          config: {},
+          x: 0,
+          y: 0,
+        },
+        {
+          id: '2',
+          type: 'TRIGGER',
+          subtype: 'STATUS_CHANGED',
+          label: 'T2',
+          config: {},
+          x: 200,
+          y: 0,
+        },
+        {
+          id: '3',
+          type: 'ACTION',
+          subtype: 'ADD_TAG',
+          label: 'Tag',
+          config: { tag: 'x' },
+          x: 0,
+          y: 100,
+        },
       ],
     });
     expect(result.error).toBe('Workflow must have exactly 1 trigger');
@@ -174,8 +314,24 @@ describe('serializeWorkflow', () => {
       ...baseState,
       name: 'Upcoming',
       nodes: [
-        { id: '1', type: 'TRIGGER', subtype: 'BOOKING_UPCOMING', label: 'Time-Based', config: { hoursBefore: 24 }, x: 0, y: 0 },
-        { id: '2', type: 'ACTION', subtype: 'SEND_TEMPLATE', label: 'Send', config: { category: 'REMINDER' }, x: 0, y: 100 },
+        {
+          id: '1',
+          type: 'TRIGGER',
+          subtype: 'BOOKING_UPCOMING',
+          label: 'Time-Based',
+          config: { hoursBefore: 24 },
+          x: 0,
+          y: 0,
+        },
+        {
+          id: '2',
+          type: 'ACTION',
+          subtype: 'SEND_TEMPLATE',
+          label: 'Send',
+          config: { category: 'REMINDER' },
+          x: 0,
+          y: 100,
+        },
       ],
     });
     expect(result.data!.trigger).toBe('BOOKING_UPCOMING');

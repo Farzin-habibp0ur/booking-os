@@ -41,14 +41,45 @@ const mockCoreAgents = [
 ];
 
 const mockMarketingAgents = [
-  { id: 'ma-1', type: 'BLOG_WRITER', name: 'Blog Writer', enabled: true, lastRunAt: '2026-03-09T08:00:00Z', runCount: 10, runIntervalMinutes: 60 },
-  { id: 'ma-2', type: 'SOCIAL_CREATOR', name: 'Social Creator', enabled: false, lastRunAt: null, runCount: 0, runIntervalMinutes: 120 },
+  {
+    id: 'ma-1',
+    type: 'BLOG_WRITER',
+    name: 'Blog Writer',
+    enabled: true,
+    lastRunAt: '2026-03-09T08:00:00Z',
+    runCount: 10,
+    runIntervalMinutes: 60,
+  },
+  {
+    id: 'ma-2',
+    type: 'SOCIAL_CREATOR',
+    name: 'Social Creator',
+    enabled: false,
+    lastRunAt: null,
+    runCount: 0,
+    runIntervalMinutes: 120,
+  },
 ];
 
 const mockRuns = {
   data: [
-    { id: 'run-1', agentType: 'WAITLIST', status: 'SUCCESS', startedAt: '2026-03-09T10:00:00Z', completedAt: '2026-03-09T10:00:05Z', cardsCreated: 3 },
-    { id: 'run-2', agentType: 'WAITLIST', status: 'FAILURE', startedAt: '2026-03-09T09:00:00Z', completedAt: '2026-03-09T09:00:02Z', cardsCreated: 0, error: 'Timeout' },
+    {
+      id: 'run-1',
+      agentType: 'WAITLIST',
+      status: 'SUCCESS',
+      startedAt: '2026-03-09T10:00:00Z',
+      completedAt: '2026-03-09T10:00:05Z',
+      cardsCreated: 3,
+    },
+    {
+      id: 'run-2',
+      agentType: 'WAITLIST',
+      status: 'FAILURE',
+      startedAt: '2026-03-09T09:00:00Z',
+      completedAt: '2026-03-09T09:00:02Z',
+      cardsCreated: 0,
+      error: 'Timeout',
+    },
   ],
 };
 

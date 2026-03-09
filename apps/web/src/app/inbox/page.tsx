@@ -488,7 +488,10 @@ function InboxPage() {
         payload.scheduledFor = scheduledFor.toISOString();
       }
       await api.post(`/conversations/${selected.id}/messages`, payload);
-      captureEvent('message_sent', { channel: selected.channel || 'WHATSAPP', scheduled: !!scheduledFor });
+      captureEvent('message_sent', {
+        channel: selected.channel || 'WHATSAPP',
+        scheduled: !!scheduledFor,
+      });
       setNewMessage('');
       setAiDraftText('');
       setAiIntent(undefined);
@@ -1256,18 +1259,29 @@ function InboxPage() {
                 </div>
                 {/* Scheduled messages indicator */}
                 {scheduledMessages.length > 0 && (
-                  <div className="bg-amber-50 border border-amber-100 rounded-lg p-2 space-y-1" data-testid="scheduled-messages-list">
+                  <div
+                    className="bg-amber-50 border border-amber-100 rounded-lg p-2 space-y-1"
+                    data-testid="scheduled-messages-list"
+                  >
                     <p className="text-xs font-medium text-amber-700 flex items-center gap-1">
                       <Clock size={12} />
-                      {scheduledMessages.length} scheduled message{scheduledMessages.length !== 1 ? 's' : ''}
+                      {scheduledMessages.length} scheduled message
+                      {scheduledMessages.length !== 1 ? 's' : ''}
                     </p>
                     {scheduledMessages.map((msg: any) => (
-                      <div key={msg.id} className="flex items-center justify-between text-xs text-amber-600">
+                      <div
+                        key={msg.id}
+                        className="flex items-center justify-between text-xs text-amber-600"
+                      >
                         <span className="truncate flex-1 mr-2">{msg.content}</span>
                         <div className="flex items-center gap-2 flex-shrink-0">
                           <span>
                             {new Date(msg.scheduledFor).toLocaleString('en-US', {
-                              month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true,
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              hour12: true,
                             })}
                           </span>
                           <button
@@ -1730,7 +1744,10 @@ function InboxPage() {
                       onChange={(e) => setBulkTagInput(e.target.value)}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') handleBulkTagConvos(bulkTagInput);
-                        if (e.key === 'Escape') { setShowBulkTagInput(false); setBulkTagInput(''); }
+                        if (e.key === 'Escape') {
+                          setShowBulkTagInput(false);
+                          setBulkTagInput('');
+                        }
                       }}
                       placeholder="Tag name"
                       className="w-24 px-2 py-1.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500"
@@ -1764,7 +1781,11 @@ function InboxPage() {
                 Close Selected
               </button>
               <button
-                onClick={() => { setSelectedConvoIds(new Set()); setShowBulkTagInput(false); setBulkTagInput(''); }}
+                onClick={() => {
+                  setSelectedConvoIds(new Set());
+                  setShowBulkTagInput(false);
+                  setBulkTagInput('');
+                }}
                 className="px-3 py-2 text-sm border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
               >
                 Cancel

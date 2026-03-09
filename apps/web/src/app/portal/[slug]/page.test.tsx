@@ -16,8 +16,12 @@ beforeAll(() => {
   Object.defineProperty(window, 'sessionStorage', {
     value: {
       getItem: (key: string) => mockSessionStorage[key] ?? null,
-      setItem: (key: string, val: string) => { mockSessionStorage[key] = val; },
-      removeItem: (key: string) => { delete mockSessionStorage[key]; },
+      setItem: (key: string, val: string) => {
+        mockSessionStorage[key] = val;
+      },
+      removeItem: (key: string) => {
+        delete mockSessionStorage[key];
+      },
     },
     writable: true,
   });
@@ -61,7 +65,10 @@ describe('PortalLoginPage', () => {
   it('OTP flow: sends code and shows OTP inputs', async () => {
     (global.fetch as jest.Mock)
       .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ name: 'Test Clinic' }) })
-      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ message: 'Verification code sent' }) });
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ message: 'Verification code sent' }),
+      });
 
     render(<PortalLoginPage />);
 
@@ -77,7 +84,10 @@ describe('PortalLoginPage', () => {
   it('OTP flow: verifies code and redirects to dashboard', async () => {
     (global.fetch as jest.Mock)
       .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ name: 'Test Clinic' }) })
-      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ message: 'Verification code sent' }) });
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ message: 'Verification code sent' }),
+      });
 
     render(<PortalLoginPage />);
 
@@ -110,7 +120,10 @@ describe('PortalLoginPage', () => {
   it('magic link flow: sends email and shows confirmation', async () => {
     (global.fetch as jest.Mock)
       .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ name: 'Test Clinic' }) })
-      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ message: 'Magic link sent' }) });
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ message: 'Magic link sent' }),
+      });
 
     render(<PortalLoginPage />);
 
@@ -127,7 +140,10 @@ describe('PortalLoginPage', () => {
   it('shows error message on failed OTP request', async () => {
     (global.fetch as jest.Mock)
       .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ name: 'Test Clinic' }) })
-      .mockResolvedValueOnce({ ok: false, json: () => Promise.resolve({ message: 'Customer not found' }) });
+      .mockResolvedValueOnce({
+        ok: false,
+        json: () => Promise.resolve({ message: 'Customer not found' }),
+      });
 
     render(<PortalLoginPage />);
 

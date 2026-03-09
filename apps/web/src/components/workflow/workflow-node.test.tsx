@@ -34,18 +34,35 @@ describe('WorkflowNode', () => {
   });
 
   it('renders action node type', () => {
-    render(<WorkflowNode {...defaultProps} node={makeNode({ type: 'ACTION', subtype: 'SEND_TEMPLATE', label: 'Send Message' })} />);
+    render(
+      <WorkflowNode
+        {...defaultProps}
+        node={makeNode({ type: 'ACTION', subtype: 'SEND_TEMPLATE', label: 'Send Message' })}
+      />,
+    );
     expect(screen.getByText('Send Message')).toBeInTheDocument();
-    expect(screen.getByTestId('workflow-node-test-1').getAttribute('data-node-type')).toBe('ACTION');
+    expect(screen.getByTestId('workflow-node-test-1').getAttribute('data-node-type')).toBe(
+      'ACTION',
+    );
   });
 
   it('renders condition node type', () => {
-    render(<WorkflowNode {...defaultProps} node={makeNode({ type: 'CONDITION', subtype: 'IF_STATUS', label: 'If Status Is' })} />);
+    render(
+      <WorkflowNode
+        {...defaultProps}
+        node={makeNode({ type: 'CONDITION', subtype: 'IF_STATUS', label: 'If Status Is' })}
+      />,
+    );
     expect(screen.getByText('If Status Is')).toBeInTheDocument();
   });
 
   it('renders delay node type', () => {
-    render(<WorkflowNode {...defaultProps} node={makeNode({ type: 'DELAY', subtype: 'WAIT_HOURS', label: 'Wait Hours' })} />);
+    render(
+      <WorkflowNode
+        {...defaultProps}
+        node={makeNode({ type: 'DELAY', subtype: 'WAIT_HOURS', label: 'Wait Hours' })}
+      />,
+    );
     expect(screen.getByText('Wait Hours')).toBeInTheDocument();
   });
 
@@ -78,7 +95,9 @@ describe('WorkflowNode', () => {
   });
 
   it('shows selected ring when isSelected', () => {
-    const { container } = render(<WorkflowNode {...defaultProps} node={makeNode()} isSelected={true} />);
+    const { container } = render(
+      <WorkflowNode {...defaultProps} node={makeNode()} isSelected={true} />,
+    );
     const nodeBody = container.querySelector('.ring-2');
     expect(nodeBody).toBeInTheDocument();
   });
@@ -94,7 +113,9 @@ describe('WorkflowNode', () => {
   });
 
   it('non-trigger node has input connection point', () => {
-    render(<WorkflowNode {...defaultProps} node={makeNode({ type: 'ACTION', subtype: 'ADD_TAG' })} />);
+    render(
+      <WorkflowNode {...defaultProps} node={makeNode({ type: 'ACTION', subtype: 'ADD_TAG' })} />,
+    );
     expect(screen.getByTestId('node-input-test-1')).toBeInTheDocument();
   });
 });

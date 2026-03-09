@@ -26,10 +26,25 @@ interface WorkflowNodeProps {
 }
 
 const NODE_STYLES: Record<string, { bg: string; border: string; icon: any; accent: string }> = {
-  TRIGGER: { bg: 'bg-sage-100', border: 'border-sage-300', icon: Play, accent: 'border-l-sage-600' },
-  CONDITION: { bg: 'bg-amber-50', border: 'border-amber-300', icon: GitBranch, accent: 'border-l-amber-500' },
+  TRIGGER: {
+    bg: 'bg-sage-100',
+    border: 'border-sage-300',
+    icon: Play,
+    accent: 'border-l-sage-600',
+  },
+  CONDITION: {
+    bg: 'bg-amber-50',
+    border: 'border-amber-300',
+    icon: GitBranch,
+    accent: 'border-l-amber-500',
+  },
   ACTION: { bg: 'bg-blue-50', border: 'border-blue-300', icon: Zap, accent: 'border-l-blue-500' },
-  DELAY: { bg: 'bg-slate-100', border: 'border-slate-300', icon: Clock, accent: 'border-l-slate-500' },
+  DELAY: {
+    bg: 'bg-slate-100',
+    border: 'border-slate-300',
+    icon: Clock,
+    accent: 'border-l-slate-500',
+  },
 };
 
 function getConfigSummary(node: WorkflowNodeData): string {
@@ -80,10 +95,7 @@ export function WorkflowNode({
 
   return (
     <div
-      className={cn(
-        'absolute select-none',
-        node.type === 'CONDITION' && 'pt-2',
-      )}
+      className={cn('absolute select-none', node.type === 'CONDITION' && 'pt-2')}
       style={{
         left: node.x * zoom,
         top: node.y * zoom,

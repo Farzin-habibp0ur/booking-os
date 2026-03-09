@@ -146,7 +146,10 @@ export default function PortalLoginPage() {
         {/* Tabs */}
         <div className="flex gap-1 bg-slate-100 rounded-xl p-1 mb-6">
           <button
-            onClick={() => { setTab('phone'); setError(''); }}
+            onClick={() => {
+              setTab('phone');
+              setError('');
+            }}
             className={cn(
               'flex-1 flex items-center justify-center gap-2 py-2 text-sm rounded-lg transition-colors',
               tab === 'phone'
@@ -158,7 +161,10 @@ export default function PortalLoginPage() {
             <Phone size={14} /> Phone
           </button>
           <button
-            onClick={() => { setTab('email'); setError(''); }}
+            onClick={() => {
+              setTab('email');
+              setError('');
+            }}
             className={cn(
               'flex-1 flex items-center justify-center gap-2 py-2 text-sm rounded-lg transition-colors',
               tab === 'email'
@@ -172,7 +178,10 @@ export default function PortalLoginPage() {
         </div>
 
         {error && (
-          <div className="mb-4 bg-red-50 text-red-700 text-sm rounded-xl p-3" data-testid="error-message">
+          <div
+            className="mb-4 bg-red-50 text-red-700 text-sm rounded-xl p-3"
+            data-testid="error-message"
+          >
             {error}
           </div>
         )}
@@ -234,7 +243,10 @@ export default function PortalLoginPage() {
                   Verify
                 </button>
                 <button
-                  onClick={() => { setOtpSent(false); setOtp(['', '', '', '', '', '']); }}
+                  onClick={() => {
+                    setOtpSent(false);
+                    setOtp(['', '', '', '', '', '']);
+                  }}
                   className="w-full text-sm text-slate-500 hover:text-slate-700"
                 >
                   Use a different number
@@ -279,10 +291,14 @@ export default function PortalLoginPage() {
                 </div>
                 <p className="text-sm text-slate-700 font-medium">Check your email</p>
                 <p className="text-xs text-slate-500">
-                  We sent a sign-in link to <strong>{email}</strong>. Click the link to access your portal.
+                  We sent a sign-in link to <strong>{email}</strong>. Click the link to access your
+                  portal.
                 </p>
                 <button
-                  onClick={() => { setEmailSent(false); setEmail(''); }}
+                  onClick={() => {
+                    setEmailSent(false);
+                    setEmail('');
+                  }}
                   className="text-sm text-sage-600 hover:text-sage-700"
                 >
                   Use a different email

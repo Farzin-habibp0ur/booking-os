@@ -12,7 +12,7 @@ interface ScheduledMessageProps {
 
 function getNextMonday9AM(): Date {
   const d = new Date();
-  const daysUntilMonday = ((8 - d.getDay()) % 7) || 7;
+  const daysUntilMonday = (8 - d.getDay()) % 7 || 7;
   d.setDate(d.getDate() + daysUntilMonday);
   d.setHours(9, 0, 0, 0);
   return d;

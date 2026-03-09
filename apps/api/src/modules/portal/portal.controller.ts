@@ -1,13 +1,4 @@
-import {
-  Controller,
-  Post,
-  Get,
-  Patch,
-  Body,
-  Query,
-  UseGuards,
-  Req,
-} from '@nestjs/common';
+import { Controller, Post, Get, Patch, Body, Query, UseGuards, Req } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { PortalAuthService } from './portal-auth.service';
 import { PortalService } from './portal.service';
@@ -60,11 +51,7 @@ export class PortalController {
 
   @Get('bookings')
   @UseGuards(PortalGuard)
-  getBookings(
-    @Req() req: any,
-    @Query('page') page?: string,
-    @Query('status') status?: string,
-  ) {
+  getBookings(@Req() req: any, @Query('page') page?: string, @Query('status') status?: string) {
     const { customerId, businessId } = req.portalUser;
     return this.portalService.getBookings(customerId, businessId, {
       page: page ? parseInt(page, 10) : 1,

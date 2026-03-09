@@ -65,33 +65,21 @@ export function getUpgradePlan(plan: string): { tier: PlanTier; label: string } 
   return { tier: next, label: PLAN_LABELS[next] };
 }
 
-export function isNearLimit(
-  current: number,
-  plan: string,
-  resource: keyof PlanLimits,
-): boolean {
+export function isNearLimit(current: number, plan: string, resource: keyof PlanLimits): boolean {
   const limits = getPlanLimits(plan);
   const limit = limits[resource];
   if (limit === Infinity) return false;
   return current >= limit * 0.8;
 }
 
-export function isAtLimit(
-  current: number,
-  plan: string,
-  resource: keyof PlanLimits,
-): boolean {
+export function isAtLimit(current: number, plan: string, resource: keyof PlanLimits): boolean {
   const limits = getPlanLimits(plan);
   const limit = limits[resource];
   if (limit === Infinity) return false;
   return current >= limit;
 }
 
-export function getUsagePercent(
-  current: number,
-  plan: string,
-  resource: keyof PlanLimits,
-): number {
+export function getUsagePercent(current: number, plan: string, resource: keyof PlanLimits): number {
   const limits = getPlanLimits(plan);
   const limit = limits[resource];
   if (limit === Infinity) return 0;

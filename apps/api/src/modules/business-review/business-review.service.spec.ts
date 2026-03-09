@@ -40,9 +40,11 @@ describe('BusinessReviewService', () => {
 
     claude = {
       isAvailable: jest.fn().mockReturnValue(true),
-      complete: jest.fn().mockResolvedValue(
-        'Great month overall.\n\nBookings were strong.\n\nRECOMMENDATIONS_JSON:\n[{"title":"Boost marketing","description":"Run a campaign","link":"/campaigns"},{"title":"Reduce no-shows","description":"Send reminders","link":"/settings"},{"title":"Add services","description":"Expand offerings","link":"/services"}]',
-      ),
+      complete: jest
+        .fn()
+        .mockResolvedValue(
+          'Great month overall.\n\nBookings were strong.\n\nRECOMMENDATIONS_JSON:\n[{"title":"Boost marketing","description":"Run a campaign","link":"/campaigns"},{"title":"Reduce no-shows","description":"Send reminders","link":"/settings"},{"title":"Add services","description":"Expand offerings","link":"/services"}]',
+        ),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -78,7 +80,10 @@ describe('BusinessReviewService', () => {
 
   describe('listReviews', () => {
     it('returns reviews ordered by month desc', async () => {
-      prisma.businessReview.findMany.mockResolvedValue([{ month: '2027-02' }, { month: '2027-01' }]);
+      prisma.businessReview.findMany.mockResolvedValue([
+        { month: '2027-02' },
+        { month: '2027-01' },
+      ]);
 
       const result = await service.listReviews(BID);
       expect(prisma.businessReview.findMany).toHaveBeenCalledWith({
@@ -101,9 +106,7 @@ describe('BusinessReviewService', () => {
       expect(claude.complete).toHaveBeenCalledWith(
         'sonnet',
         expect.stringContaining('business analytics assistant'),
-        expect.arrayContaining([
-          expect.objectContaining({ role: 'user' }),
-        ]),
+        expect.arrayContaining([expect.objectContaining({ role: 'user' })]),
         1500,
       );
       expect(prisma.businessReview.create).toHaveBeenCalledWith({
@@ -144,9 +147,9 @@ describe('BusinessReviewService', () => {
   describe('aggregateMetrics', () => {
     it('returns correct metric structure', async () => {
       prisma.booking.count
-        .mockResolvedValueOnce(50)  // total
-        .mockResolvedValueOnce(40)  // completed
-        .mockResolvedValueOnce(3);  // no-shows
+        .mockResolvedValueOnce(50) // total
+        .mockResolvedValueOnce(40) // completed
+        .mockResolvedValueOnce(3); // no-shows
 
       prisma.booking.findMany.mockResolvedValue([]);
       prisma.booking.groupBy.mockResolvedValue([]);
@@ -204,9 +207,7 @@ describe('BusinessReviewService', () => {
     });
 
     it('skips businesses that already have a review', async () => {
-      prisma.business.findMany.mockResolvedValue([
-        { id: 'biz-1', name: 'Already Reviewed' },
-      ]);
+      prisma.business.findMany.mockResolvedValue([{ id: 'biz-1', name: 'Already Reviewed' }]);
       prisma.businessReview.findUnique.mockResolvedValue({ id: 'existing' });
 
       await service.generateMonthlyReviews();

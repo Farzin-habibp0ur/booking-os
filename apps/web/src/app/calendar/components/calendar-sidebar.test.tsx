@@ -36,14 +36,36 @@ const mockSummary = {
 
 const mockWaitlist = {
   data: [
-    { id: 'w1', customerName: 'Alice', serviceName: 'Botox', preferredDate: '2027-01-16', status: 'pending' },
-    { id: 'w2', customerName: 'Bob', serviceName: 'Facial', preferredDate: '2027-01-17', status: 'pending' },
+    {
+      id: 'w1',
+      customerName: 'Alice',
+      serviceName: 'Botox',
+      preferredDate: '2027-01-16',
+      status: 'pending',
+    },
+    {
+      id: 'w2',
+      customerName: 'Bob',
+      serviceName: 'Facial',
+      preferredDate: '2027-01-17',
+      status: 'pending',
+    },
   ],
 };
 
 const mockActions = [
-  { id: 'a1', title: 'Fill gap at 2pm', description: 'Contact waitlisted clients', type: 'gap_fill' },
-  { id: 'a2', title: 'Follow up no-show', description: 'Reach out to missed appointment', type: 'follow_up' },
+  {
+    id: 'a1',
+    title: 'Fill gap at 2pm',
+    description: 'Contact waitlisted clients',
+    type: 'gap_fill',
+  },
+  {
+    id: 'a2',
+    title: 'Follow up no-show',
+    description: 'Reach out to missed appointment',
+    type: 'follow_up',
+  },
 ];
 
 function setupMocks({
@@ -130,9 +152,7 @@ describe('CalendarSidebar', () => {
 
   it('handles API errors gracefully', async () => {
     setupMocks({ rejectAll: true });
-    const { container } = render(
-      <CalendarSidebar currentDate={mockDate} onClose={jest.fn()} />,
-    );
+    const { container } = render(<CalendarSidebar currentDate={mockDate} onClose={jest.fn()} />);
 
     // Should still render the header without crashing
     await waitFor(() => {

@@ -149,9 +149,12 @@ export default function BillingPage() {
         setLoaded(true);
         // Fetch savings and current interval
         api
-          .get<{ monthlyTotal: number; annualPrice: number; savingsAmount: number; savingsPercent: number }>(
-            '/billing/annual-savings',
-          )
+          .get<{
+            monthlyTotal: number;
+            annualPrice: number;
+            savingsAmount: number;
+            savingsPercent: number;
+          }>('/billing/annual-savings')
           .then(setSavings)
           .catch(() => {});
         api
@@ -165,7 +168,11 @@ export default function BillingPage() {
   }, []);
 
   const handleCheckout = async (plan: PlanTier) => {
-    captureEvent('upgrade_clicked', { fromPlan: billing?.plan, toPlan: plan, billing: billingInterval });
+    captureEvent('upgrade_clicked', {
+      fromPlan: billing?.plan,
+      toPlan: plan,
+      billing: billingInterval,
+    });
     setActionLoading(`checkout-${plan}`);
     setError(null);
     try {
@@ -347,58 +354,67 @@ export default function BillingPage() {
       )}
 
       {/* Annual savings banner */}
-      {subscription && subscription.status === 'active' && savings && currentInterval === 'monthly' && (
-        <div
-          className="bg-lavender-50 border border-lavender-200 rounded-xl p-4 mb-6 flex items-center justify-between"
-          data-testid="savings-banner"
-        >
-          <div className="flex items-center gap-3">
-            <TrendingDown size={20} className="text-lavender-600 shrink-0" />
-            <div>
-              <p className="text-sm font-medium text-lavender-800">
-                Switch to annual billing and save ${savings.savingsAmount}/year
-              </p>
-              <p className="text-xs text-lavender-600 mt-0.5">
-                Pay ${savings.annualPrice}/yr instead of ${savings.monthlyTotal}/yr
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={() => setShowSwitchModal('annual')}
-            className="bg-lavender-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-lavender-700 transition-colors shrink-0"
-            data-testid="btn-switch-annual"
+      {subscription &&
+        subscription.status === 'active' &&
+        savings &&
+        currentInterval === 'monthly' && (
+          <div
+            className="bg-lavender-50 border border-lavender-200 rounded-xl p-4 mb-6 flex items-center justify-between"
+            data-testid="savings-banner"
           >
-            Switch to Annual
-          </button>
-        </div>
-      )}
+            <div className="flex items-center gap-3">
+              <TrendingDown size={20} className="text-lavender-600 shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-lavender-800">
+                  Switch to annual billing and save ${savings.savingsAmount}/year
+                </p>
+                <p className="text-xs text-lavender-600 mt-0.5">
+                  Pay ${savings.annualPrice}/yr instead of ${savings.monthlyTotal}/yr
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowSwitchModal('annual')}
+              className="bg-lavender-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-lavender-700 transition-colors shrink-0"
+              data-testid="btn-switch-annual"
+            >
+              Switch to Annual
+            </button>
+          </div>
+        )}
 
       {/* Annual savings success card */}
-      {subscription && subscription.status === 'active' && savings && currentInterval === 'annual' && (
-        <div
-          className="bg-sage-50 border border-sage-200 rounded-xl p-4 mb-6 flex items-center justify-between"
-          data-testid="annual-savings-card"
-        >
-          <div className="flex items-center gap-3">
-            <Check size={20} className="text-sage-600 shrink-0" />
-            <p className="text-sm font-medium text-sage-800">
-              You&apos;re saving ${savings.savingsAmount}/year with annual billing
-            </p>
-          </div>
-          <button
-            onClick={() => setShowSwitchModal('monthly')}
-            className="text-xs text-slate-500 hover:text-slate-700 underline transition-colors"
-            data-testid="btn-switch-monthly"
+      {subscription &&
+        subscription.status === 'active' &&
+        savings &&
+        currentInterval === 'annual' && (
+          <div
+            className="bg-sage-50 border border-sage-200 rounded-xl p-4 mb-6 flex items-center justify-between"
+            data-testid="annual-savings-card"
           >
-            Switch to monthly
-          </button>
-        </div>
-      )}
+            <div className="flex items-center gap-3">
+              <Check size={20} className="text-sage-600 shrink-0" />
+              <p className="text-sm font-medium text-sage-800">
+                You&apos;re saving ${savings.savingsAmount}/year with annual billing
+              </p>
+            </div>
+            <button
+              onClick={() => setShowSwitchModal('monthly')}
+              className="text-xs text-slate-500 hover:text-slate-700 underline transition-colors"
+              data-testid="btn-switch-monthly"
+            >
+              Switch to monthly
+            </button>
+          </div>
+        )}
 
       {/* Billing interval toggle */}
       <div className="flex items-center justify-center gap-3 mb-6">
         <button
-          onClick={() => { captureEvent('plans_compared'); setBillingInterval('monthly'); }}
+          onClick={() => {
+            captureEvent('plans_compared');
+            setBillingInterval('monthly');
+          }}
           className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
             billingInterval === 'monthly'
               ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
@@ -408,7 +424,10 @@ export default function BillingPage() {
           Monthly
         </button>
         <button
-          onClick={() => { captureEvent('plans_compared'); setBillingInterval('annual'); }}
+          onClick={() => {
+            captureEvent('plans_compared');
+            setBillingInterval('annual');
+          }}
           className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors flex items-center gap-1.5 ${
             billingInterval === 'annual'
               ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'

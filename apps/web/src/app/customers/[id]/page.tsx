@@ -366,11 +366,13 @@ export default function CustomerDetailPage() {
 
         {/* Unified Activity Feed */}
         <div className={cn(ELEVATION.card, 'bg-white p-5 mb-6')}>
-          <h2 className="text-sm font-semibold text-slate-900 uppercase mb-4">
-            Activity
-          </h2>
+          <h2 className="text-sm font-semibold text-slate-900 uppercase mb-4">Activity</h2>
           {(() => {
-            const feedItems: Array<{ type: 'booking' | 'conversation' | 'note'; date: Date; data: any }> = [
+            const feedItems: Array<{
+              type: 'booking' | 'conversation' | 'note';
+              date: Date;
+              data: any;
+            }> = [
               ...pastBookings.map((b) => ({
                 type: 'booking' as const,
                 date: new Date(b.startTime),
@@ -389,11 +391,7 @@ export default function CustomerDetailPage() {
             ].sort((a, b) => b.date.getTime() - a.date.getTime());
 
             if (feedItems.length === 0) {
-              return (
-                <p className="text-sm text-slate-400 text-center py-6">
-                  No activity yet.
-                </p>
-              );
+              return <p className="text-sm text-slate-400 text-center py-6">No activity yet.</p>;
             }
 
             return (
@@ -403,12 +401,16 @@ export default function CustomerDetailPage() {
                     key={`${item.type}-${item.data.id || idx}`}
                     className="flex items-start gap-3 p-3 rounded-lg bg-slate-50/60 hover:bg-slate-50 transition-colors"
                   >
-                    <div className={cn(
-                      'w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5',
-                      item.type === 'booking' ? 'bg-sage-50 text-sage-600' :
-                      item.type === 'conversation' ? 'bg-lavender-50 text-lavender-600' :
-                      'bg-amber-50 text-amber-600',
-                    )}>
+                    <div
+                      className={cn(
+                        'w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5',
+                        item.type === 'booking'
+                          ? 'bg-sage-50 text-sage-600'
+                          : item.type === 'conversation'
+                            ? 'bg-lavender-50 text-lavender-600'
+                            : 'bg-amber-50 text-amber-600',
+                      )}
+                    >
                       {item.type === 'booking' && <Calendar size={14} />}
                       {item.type === 'conversation' && <MessageSquare size={14} />}
                       {item.type === 'note' && <StickyNote size={14} />}
@@ -475,7 +477,9 @@ export default function CustomerDetailPage() {
                               </p>
                               <div className="flex items-center justify-between mt-1">
                                 {item.data.staff?.name && (
-                                  <p className="text-xs text-slate-500">by {item.data.staff.name}</p>
+                                  <p className="text-xs text-slate-500">
+                                    by {item.data.staff.name}
+                                  </p>
                                 )}
                                 <div className="flex items-center gap-1 ml-auto">
                                   <button
@@ -502,7 +506,8 @@ export default function CustomerDetailPage() {
                         </>
                       )}
                       <p className="text-[10px] text-slate-400 mt-1">
-                        {item.date.toLocaleDateString()} · {item.date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+                        {item.date.toLocaleDateString()} ·{' '}
+                        {item.date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
                       </p>
                     </div>
                   </div>
@@ -514,9 +519,7 @@ export default function CustomerDetailPage() {
 
         {/* Add Note Input */}
         <div className={cn(ELEVATION.card, 'bg-white p-5 mb-6')}>
-          <h2 className="text-sm font-semibold text-slate-900 uppercase mb-3">
-            Add a Note
-          </h2>
+          <h2 className="text-sm font-semibold text-slate-900 uppercase mb-3">Add a Note</h2>
           <textarea
             ref={noteInputRef}
             value={newNoteContent}
@@ -531,7 +534,11 @@ export default function CustomerDetailPage() {
               disabled={!newNoteContent.trim() || noteSaving}
               className="flex items-center gap-1.5 bg-sage-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-sage-700 transition-colors disabled:opacity-50 active:scale-95 btn-press"
             >
-              {noteSaving ? <Loader2 size={14} className="animate-spin" /> : <StickyNote size={14} />}
+              {noteSaving ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : (
+                <StickyNote size={14} />
+              )}
               Save Note
             </button>
           </div>
@@ -609,7 +616,6 @@ export default function CustomerDetailPage() {
             </div>
           </div>
         )}
-
 
         {/* Vertical Modules */}
         {(pack.slug === 'aesthetic' || pack.slug === 'dealership') && (

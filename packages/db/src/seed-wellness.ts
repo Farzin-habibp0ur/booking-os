@@ -82,12 +82,48 @@ async function main() {
   // ── Services (6) ──
   const services = [];
   const serviceData = [
-    { name: 'Initial Wellness Consultation', durationMins: 30, price: 0, category: 'Consultation', kind: 'CONSULT' },
-    { name: 'Swedish Massage', durationMins: 60, price: 90, category: 'Massage', kind: 'TREATMENT' },
-    { name: 'Deep Tissue Massage', durationMins: 60, price: 110, category: 'Massage', kind: 'TREATMENT' },
-    { name: 'Yoga Private Session', durationMins: 60, price: 75, category: 'Yoga', kind: 'TREATMENT' },
-    { name: 'Personal Training', durationMins: 60, price: 80, category: 'Training', kind: 'TREATMENT' },
-    { name: 'Nutrition Coaching', durationMins: 45, price: 65, category: 'Coaching', kind: 'CONSULT' },
+    {
+      name: 'Initial Wellness Consultation',
+      durationMins: 30,
+      price: 0,
+      category: 'Consultation',
+      kind: 'CONSULT',
+    },
+    {
+      name: 'Swedish Massage',
+      durationMins: 60,
+      price: 90,
+      category: 'Massage',
+      kind: 'TREATMENT',
+    },
+    {
+      name: 'Deep Tissue Massage',
+      durationMins: 60,
+      price: 110,
+      category: 'Massage',
+      kind: 'TREATMENT',
+    },
+    {
+      name: 'Yoga Private Session',
+      durationMins: 60,
+      price: 75,
+      category: 'Yoga',
+      kind: 'TREATMENT',
+    },
+    {
+      name: 'Personal Training',
+      durationMins: 60,
+      price: 80,
+      category: 'Training',
+      kind: 'TREATMENT',
+    },
+    {
+      name: 'Nutrition Coaching',
+      durationMins: 45,
+      price: 65,
+      category: 'Coaching',
+      kind: 'CONSULT',
+    },
   ];
   for (const svc of serviceData) {
     const service = await prisma.service.create({

@@ -56,7 +56,10 @@ export default function AiSettingsPage() {
 
   const handleSave = async () => {
     await api.patch('/ai/settings', settings);
-    captureEvent('ai_enabled', { enabled: settings.enabled, autoReply: settings.autoReply.enabled });
+    captureEvent('ai_enabled', {
+      enabled: settings.enabled,
+      autoReply: settings.autoReply.enabled,
+    });
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };

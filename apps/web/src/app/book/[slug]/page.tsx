@@ -134,7 +134,15 @@ export default function BookingPortalPage() {
 
   // Testimonials
   const [publicTestimonials, setPublicTestimonials] = useState<
-    { id: string; name: string; role?: string; company?: string; content: string; rating?: number; status: string }[]
+    {
+      id: string;
+      name: string;
+      role?: string;
+      company?: string;
+      content: string;
+      rating?: number;
+      status: string;
+    }[]
   >([]);
 
   // Waitlist state
@@ -961,7 +969,11 @@ export default function BookingPortalPage() {
           </h3>
           <div className="space-y-3">
             {publicTestimonials.map((t) => (
-              <div key={t.id} className="bg-white rounded-2xl shadow-soft p-4" data-testid={`public-testimonial-${t.id}`}>
+              <div
+                key={t.id}
+                className="bg-white rounded-2xl shadow-soft p-4"
+                data-testid={`public-testimonial-${t.id}`}
+              >
                 <Quote size={18} className="text-sage-200 mb-2" />
                 <p className="text-sm text-slate-700 mb-2">
                   {t.content.length > 150 ? t.content.slice(0, 150) + '...' : t.content}
@@ -972,7 +984,9 @@ export default function BookingPortalPage() {
                       <Star
                         key={i}
                         size={12}
-                        className={i < t.rating! ? 'text-amber-400 fill-amber-400' : 'text-slate-200'}
+                        className={
+                          i < t.rating! ? 'text-amber-400 fill-amber-400' : 'text-slate-200'
+                        }
                       />
                     ))}
                   </div>

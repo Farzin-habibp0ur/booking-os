@@ -80,11 +80,7 @@ describe('TestimonialCard', () => {
 
   it('hides action buttons when showActions=false', () => {
     render(
-      <TestimonialCard
-        testimonial={baseTestimonial}
-        onApprove={jest.fn()}
-        showActions={false}
-      />,
+      <TestimonialCard testimonial={baseTestimonial} onApprove={jest.fn()} showActions={false} />,
     );
 
     expect(screen.queryByTestId('btn-approve')).not.toBeInTheDocument();
@@ -93,9 +89,7 @@ describe('TestimonialCard', () => {
 
   it('shows approve button for PENDING status', () => {
     const pending = { ...baseTestimonial, status: 'PENDING' };
-    render(
-      <TestimonialCard testimonial={pending} onApprove={jest.fn()} showActions />,
-    );
+    render(<TestimonialCard testimonial={pending} onApprove={jest.fn()} showActions />);
 
     expect(screen.getByTestId('btn-approve')).toBeInTheDocument();
   });
@@ -103,9 +97,7 @@ describe('TestimonialCard', () => {
   it('calls onApprove when approve button is clicked', () => {
     const onApprove = jest.fn();
     const pending = { ...baseTestimonial, status: 'PENDING' };
-    render(
-      <TestimonialCard testimonial={pending} onApprove={onApprove} showActions />,
-    );
+    render(<TestimonialCard testimonial={pending} onApprove={onApprove} showActions />);
 
     fireEvent.click(screen.getByTestId('btn-approve'));
     expect(onApprove).toHaveBeenCalledWith('t1');
@@ -113,9 +105,7 @@ describe('TestimonialCard', () => {
 
   it('calls onReject when reject button is clicked', () => {
     const onReject = jest.fn();
-    render(
-      <TestimonialCard testimonial={baseTestimonial} onReject={onReject} showActions />,
-    );
+    render(<TestimonialCard testimonial={baseTestimonial} onReject={onReject} showActions />);
 
     fireEvent.click(screen.getByTestId('btn-reject'));
     expect(onReject).toHaveBeenCalledWith('t1');

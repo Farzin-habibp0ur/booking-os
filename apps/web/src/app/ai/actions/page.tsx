@@ -32,18 +32,46 @@ interface ActionCard {
 
 type Category = 'urgent' | 'needs_approval' | 'opportunity' | 'hygiene';
 
-const CATEGORY_CONFIG: Record<Category, { label: string; icon: any; borderColor: string; bgColor: string; textColor: string }> = {
-  urgent: { label: 'Urgent', icon: AlertTriangle, borderColor: 'border-red-400', bgColor: 'bg-red-50', textColor: 'text-red-700' },
-  needs_approval: { label: 'Needs Approval', icon: AlertCircle, borderColor: 'border-amber-400', bgColor: 'bg-amber-50', textColor: 'text-amber-700' },
-  opportunity: { label: 'Opportunity', icon: Lightbulb, borderColor: 'border-sage-400', bgColor: 'bg-sage-50', textColor: 'text-sage-700' },
-  hygiene: { label: 'Hygiene', icon: Shield, borderColor: 'border-slate-400', bgColor: 'bg-slate-50', textColor: 'text-slate-700' },
+const CATEGORY_CONFIG: Record<
+  Category,
+  { label: string; icon: any; borderColor: string; bgColor: string; textColor: string }
+> = {
+  urgent: {
+    label: 'Urgent',
+    icon: AlertTriangle,
+    borderColor: 'border-red-400',
+    bgColor: 'bg-red-50',
+    textColor: 'text-red-700',
+  },
+  needs_approval: {
+    label: 'Needs Approval',
+    icon: AlertCircle,
+    borderColor: 'border-amber-400',
+    bgColor: 'bg-amber-50',
+    textColor: 'text-amber-700',
+  },
+  opportunity: {
+    label: 'Opportunity',
+    icon: Lightbulb,
+    borderColor: 'border-sage-400',
+    bgColor: 'bg-sage-50',
+    textColor: 'text-sage-700',
+  },
+  hygiene: {
+    label: 'Hygiene',
+    icon: Shield,
+    borderColor: 'border-slate-400',
+    bgColor: 'bg-slate-50',
+    textColor: 'text-slate-700',
+  },
 };
 
 function categorizeCard(card: ActionCard): Category {
   const cat = (card.category || '').toLowerCase();
   if (cat.includes('urgent') || cat.includes('critical')) return 'urgent';
   if (cat.includes('approval') || cat.includes('review')) return 'needs_approval';
-  if (cat.includes('opportunity') || cat.includes('growth') || cat.includes('revenue')) return 'opportunity';
+  if (cat.includes('opportunity') || cat.includes('growth') || cat.includes('revenue'))
+    return 'opportunity';
   return 'hygiene';
 }
 
@@ -59,7 +87,9 @@ export default function AIActionsPage() {
   const loadCards = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await api.get<any>(`/action-cards?status=PENDING&page=${page}&pageSize=${pageSize}`);
+      const data = await api.get<any>(
+        `/action-cards?status=PENDING&page=${page}&pageSize=${pageSize}`,
+      );
       const items = data?.data || data || [];
       setCards(Array.isArray(items) ? items : []);
       setTotal(data?.total || items.length || 0);
@@ -78,7 +108,11 @@ export default function AIActionsPage() {
     try {
       await api.patch(`/action-cards/${id}/approve`, {});
       setCards((prev) => prev.filter((c) => c.id !== id));
-      setSelectedIds((prev) => { const n = new Set(prev); n.delete(id); return n; });
+      setSelectedIds((prev) => {
+        const n = new Set(prev);
+        n.delete(id);
+        return n;
+      });
       toast('Action approved');
     } catch {
       toast('Failed to approve', 'error');
@@ -89,7 +123,11 @@ export default function AIActionsPage() {
     try {
       await api.patch(`/action-cards/${id}/dismiss`, {});
       setCards((prev) => prev.filter((c) => c.id !== id));
-      setSelectedIds((prev) => { const n = new Set(prev); n.delete(id); return n; });
+      setSelectedIds((prev) => {
+        const n = new Set(prev);
+        n.delete(id);
+        return n;
+      });
       toast('Action dismissed');
     } catch {
       toast('Failed to dismiss', 'error');
@@ -101,7 +139,11 @@ export default function AIActionsPage() {
       const until = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
       await api.patch(`/action-cards/${id}/snooze`, { until });
       setCards((prev) => prev.filter((c) => c.id !== id));
-      setSelectedIds((prev) => { const n = new Set(prev); n.delete(id); return n; });
+      setSelectedIds((prev) => {
+        const n = new Set(prev);
+        n.delete(id);
+        return n;
+      });
       toast('Action snoozed for 24 hours');
     } catch {
       toast('Failed to snooze', 'error');
@@ -152,7 +194,10 @@ export default function AIActionsPage() {
     return (
       <div className="space-y-4" data-testid="actions-loading">
         {[...Array(3)].map((_, i) => (
-          <div key={i} className="rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-soft animate-pulse">
+          <div
+            key={i}
+            className="rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-soft animate-pulse"
+          >
             <div className="h-5 bg-slate-200 dark:bg-slate-700 rounded w-1/3 mb-3" />
             <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-full" />
           </div>
@@ -163,7 +208,10 @@ export default function AIActionsPage() {
 
   if (cards.length === 0) {
     return (
-      <div className="rounded-2xl bg-lavender-50 dark:bg-slate-900/50 border border-lavender-100 dark:border-slate-800 p-12 shadow-soft text-center" data-testid="actions-empty">
+      <div
+        className="rounded-2xl bg-lavender-50 dark:bg-slate-900/50 border border-lavender-100 dark:border-slate-800 p-12 shadow-soft text-center"
+        data-testid="actions-empty"
+      >
         <Sparkles className="mx-auto mb-4 text-lavender-400" size={48} />
         <h3 className="font-serif text-lg text-slate-900 dark:text-white mb-2">All caught up!</h3>
         <p className="text-slate-600 dark:text-slate-400">No pending actions.</p>
@@ -290,11 +338,12 @@ export default function AIActionsPage() {
 
       {/* Bulk Action Bar */}
       {selectedIds.size > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-white rounded-2xl shadow-soft border border-slate-200 p-4 z-40" data-testid="bulk-bar">
+        <div
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-white rounded-2xl shadow-soft border border-slate-200 p-4 z-40"
+          data-testid="bulk-bar"
+        >
           <div className="flex items-center gap-4">
-            <span className="text-sm font-medium text-slate-700">
-              {selectedIds.size} selected
-            </span>
+            <span className="text-sm font-medium text-slate-700">{selectedIds.size} selected</span>
             <button
               onClick={bulkApprove}
               className="px-3 py-2 text-sm bg-sage-600 text-white rounded-lg hover:bg-sage-700 transition-colors"

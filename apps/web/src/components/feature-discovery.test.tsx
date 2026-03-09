@@ -13,13 +13,7 @@ describe('FeatureDiscovery', () => {
   });
 
   it('renders when not yet seen', () => {
-    render(
-      <FeatureDiscovery
-        id="test-tip"
-        title="Test Title"
-        description="Test description"
-      />,
-    );
+    render(<FeatureDiscovery id="test-tip" title="Test Title" description="Test description" />);
     expect(screen.getByTestId('feature-discovery')).toBeInTheDocument();
     expect(screen.getByText('Test Title')).toBeInTheDocument();
     expect(screen.getByText('Test description')).toBeInTheDocument();
@@ -29,23 +23,13 @@ describe('FeatureDiscovery', () => {
     localStorage.setItem('feature-discovery-test-tip', '1');
 
     const { container } = render(
-      <FeatureDiscovery
-        id="test-tip"
-        title="Test Title"
-        description="Test description"
-      />,
+      <FeatureDiscovery id="test-tip" title="Test Title" description="Test description" />,
     );
     expect(container.firstChild).toBeNull();
   });
 
   it('dismisses and saves to localStorage', async () => {
-    render(
-      <FeatureDiscovery
-        id="test-tip"
-        title="Test Title"
-        description="Test description"
-      />,
-    );
+    render(<FeatureDiscovery id="test-tip" title="Test Title" description="Test description" />);
     expect(screen.getByTestId('feature-discovery')).toBeInTheDocument();
 
     await userEvent.click(screen.getByTestId('feature-discovery-dismiss'));
@@ -55,24 +39,12 @@ describe('FeatureDiscovery', () => {
   });
 
   it('shows lightbulb icon', () => {
-    render(
-      <FeatureDiscovery
-        id="test-tip"
-        title="Test"
-        description="Desc"
-      />,
-    );
+    render(<FeatureDiscovery id="test-tip" title="Test" description="Desc" />);
     expect(screen.getByTestId('lightbulb-icon')).toBeInTheDocument();
   });
 
   it('uses sage styling', () => {
-    render(
-      <FeatureDiscovery
-        id="test-tip"
-        title="Test"
-        description="Desc"
-      />,
-    );
+    render(<FeatureDiscovery id="test-tip" title="Test" description="Desc" />);
     const el = screen.getByTestId('feature-discovery');
     expect(el.className).toContain('sage');
   });

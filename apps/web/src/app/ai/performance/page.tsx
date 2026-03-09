@@ -101,7 +101,10 @@ export default function AIPerformancePage() {
     return (
       <div className="space-y-6" data-testid="performance-loading">
         {[...Array(3)].map((_, i) => (
-          <div key={i} className="rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-soft animate-pulse">
+          <div
+            key={i}
+            className="rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-soft animate-pulse"
+          >
             <div className="h-6 bg-slate-200 dark:bg-slate-700 rounded w-1/4 mb-4" />
             <div className="h-48 bg-slate-100 dark:bg-slate-800 rounded" />
           </div>
@@ -137,13 +140,20 @@ export default function AIPerformancePage() {
           <KPICard label="Total Runs" value={performance.totalRuns} />
           <KPICard label="Successful" value={performance.successfulRuns} color="text-green-600" />
           <KPICard label="Failed" value={performance.failedRuns} color="text-red-600" />
-          <KPICard label="Success Rate" value={`${Math.round(performance.successRate)}%`} color="text-sage-600" />
+          <KPICard
+            label="Success Rate"
+            value={`${Math.round(performance.successRate)}%`}
+            color="text-sage-600"
+          />
         </div>
       )}
 
       {/* Success Rate Over Time */}
       {performance?.dailyStats && performance.dailyStats.length > 0 && (
-        <div className="rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-soft border border-slate-100 dark:border-slate-800" data-testid="success-rate-chart">
+        <div
+          className="rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-soft border border-slate-100 dark:border-slate-800"
+          data-testid="success-rate-chart"
+        >
           <h3 className="font-serif text-base font-semibold text-slate-900 dark:text-white mb-4">
             Success Rate Over Time
           </h3>
@@ -168,7 +178,10 @@ export default function AIPerformancePage() {
 
       {/* Cards Created vs Approved vs Dismissed */}
       {performance?.dailyStats && performance.dailyStats.length > 0 && (
-        <div className="rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-soft border border-slate-100 dark:border-slate-800" data-testid="cards-chart">
+        <div
+          className="rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-soft border border-slate-100 dark:border-slate-800"
+          data-testid="cards-chart"
+        >
           <h3 className="font-serif text-base font-semibold text-slate-900 dark:text-white mb-4">
             Cards Created vs Approved vs Dismissed
           </h3>
@@ -210,7 +223,10 @@ export default function AIPerformancePage() {
 
       {/* Agent Comparison */}
       {performance?.agentComparison && performance.agentComparison.length > 0 && (
-        <div className="rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-soft border border-slate-100 dark:border-slate-800" data-testid="agent-comparison-chart">
+        <div
+          className="rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-soft border border-slate-100 dark:border-slate-800"
+          data-testid="agent-comparison-chart"
+        >
           <h3 className="font-serif text-base font-semibold text-slate-900 dark:text-white mb-4">
             Agent Comparison
           </h3>
@@ -236,7 +252,10 @@ export default function AIPerformancePage() {
       )}
 
       {/* Staff Feedback Summary */}
-      <div className="rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-soft border border-slate-100 dark:border-slate-800" data-testid="feedback-table">
+      <div
+        className="rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-soft border border-slate-100 dark:border-slate-800"
+        data-testid="feedback-table"
+      >
         <h3 className="font-serif text-base font-semibold text-slate-900 dark:text-white mb-4">
           Staff Feedback Summary
         </h3>
@@ -249,17 +268,22 @@ export default function AIPerformancePage() {
                 <tr className="border-b border-slate-100 dark:border-slate-800">
                   <th className="text-left py-2 font-medium text-slate-600">Agent</th>
                   <th className="text-center py-2 font-medium text-slate-600">
-                    <ThumbsUp size={14} className="inline mr-1" />Helpful
+                    <ThumbsUp size={14} className="inline mr-1" />
+                    Helpful
                   </th>
                   <th className="text-center py-2 font-medium text-slate-600">
-                    <ThumbsDown size={14} className="inline mr-1" />Not Helpful
+                    <ThumbsDown size={14} className="inline mr-1" />
+                    Not Helpful
                   </th>
                   <th className="text-center py-2 font-medium text-slate-600">Helpful %</th>
                 </tr>
               </thead>
               <tbody>
                 {feedback.map((fb) => (
-                  <tr key={fb.agentType} className="border-b border-slate-50 dark:border-slate-800 last:border-0">
+                  <tr
+                    key={fb.agentType}
+                    className="border-b border-slate-50 dark:border-slate-800 last:border-0"
+                  >
                     <td className="py-2.5 text-slate-900 dark:text-white font-medium">
                       {fb.agentType.replace(/_/g, ' ')}
                     </td>
@@ -305,7 +329,15 @@ export default function AIPerformancePage() {
   );
 }
 
-function KPICard({ label, value, color }: { label: string; value: string | number; color?: string }) {
+function KPICard({
+  label,
+  value,
+  color,
+}: {
+  label: string;
+  value: string | number;
+  color?: string;
+}) {
   return (
     <div className="rounded-2xl bg-white dark:bg-slate-900 p-5 shadow-soft border border-slate-100 dark:border-slate-800">
       <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">{label}</p>
@@ -329,7 +361,13 @@ function generateMockPerformance(days: number): PerformanceData {
     };
   });
 
-  const agents = ['WAITLIST', 'RETENTION', 'DATA_HYGIENE', 'SCHEDULING_OPTIMIZER', 'QUOTE_FOLLOWUP'];
+  const agents = [
+    'WAITLIST',
+    'RETENTION',
+    'DATA_HYGIENE',
+    'SCHEDULING_OPTIMIZER',
+    'QUOTE_FOLLOWUP',
+  ];
   const agentComparison = agents.map((agentType) => ({
     agentType,
     runs: Math.floor(Math.random() * 100) + 10,
@@ -352,7 +390,13 @@ function generateMockPerformance(days: number): PerformanceData {
 }
 
 function generateMockFeedback(): FeedbackStats[] {
-  const agents = ['WAITLIST', 'RETENTION', 'DATA_HYGIENE', 'SCHEDULING_OPTIMIZER', 'QUOTE_FOLLOWUP'];
+  const agents = [
+    'WAITLIST',
+    'RETENTION',
+    'DATA_HYGIENE',
+    'SCHEDULING_OPTIMIZER',
+    'QUOTE_FOLLOWUP',
+  ];
   return agents.map((agentType) => {
     const helpful = Math.floor(Math.random() * 30) + 5;
     const notHelpful = Math.floor(Math.random() * 10);

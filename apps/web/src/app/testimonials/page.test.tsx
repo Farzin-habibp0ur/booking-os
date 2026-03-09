@@ -78,9 +78,7 @@ describe('TestimonialsPage', () => {
       }
       if (url.startsWith('/customers')) {
         return Promise.resolve({
-          data: [
-            { id: 'c1', name: 'Carol', email: 'carol@test.com', phone: '+1234' },
-          ],
+          data: [{ id: 'c1', name: 'Carol', email: 'carol@test.com', phone: '+1234' }],
         });
       }
       return Promise.resolve({});

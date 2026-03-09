@@ -702,9 +702,7 @@ describe('ConversationService', () => {
     });
 
     it('skips conversations that already have the tag', async () => {
-      prisma.conversation.findMany.mockResolvedValue([
-        { id: 'c1', tags: ['vip'] },
-      ] as any);
+      prisma.conversation.findMany.mockResolvedValue([{ id: 'c1', tags: ['vip'] }] as any);
       prisma.conversation.update.mockResolvedValue({} as any);
 
       const result = await service.bulkTag('biz1', ['c1'], 'vip');
@@ -718,10 +716,7 @@ describe('ConversationService', () => {
 
   describe('bulkMarkRead', () => {
     it('marks inbound messages as read', async () => {
-      prisma.conversation.findMany.mockResolvedValue([
-        { id: 'c1' },
-        { id: 'c2' },
-      ] as any);
+      prisma.conversation.findMany.mockResolvedValue([{ id: 'c1' }, { id: 'c2' }] as any);
       prisma.message.updateMany.mockResolvedValue({ count: 5 } as any);
 
       const result = await service.bulkMarkRead('biz1', ['c1', 'c2']);

@@ -56,7 +56,8 @@ const mockReview = {
     aiStats: { actionCardsCreated: 10, actionCardsApproved: 8, actionCardsDismissed: 2 },
     contentStats: { published: 5, pending: 3 },
   },
-  aiSummary: 'This was a strong month for the business.\n\nBookings grew by 8%.\n\nRECOMMENDATIONS_JSON:\n[{"title":"Boost marketing","description":"Run a campaign","link":"/campaigns"},{"title":"Reduce no-shows","description":"Send reminders","link":"/settings"},{"title":"Add services","description":"Expand offerings","link":"/services"}]',
+  aiSummary:
+    'This was a strong month for the business.\n\nBookings grew by 8%.\n\nRECOMMENDATIONS_JSON:\n[{"title":"Boost marketing","description":"Run a campaign","link":"/campaigns"},{"title":"Reduce no-shows","description":"Send reminders","link":"/settings"},{"title":"Add services","description":"Expand offerings","link":"/services"}]',
 };
 
 describe('MonthlyReviewPage', () => {

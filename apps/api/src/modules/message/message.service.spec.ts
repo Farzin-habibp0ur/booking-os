@@ -171,7 +171,14 @@ describe('MessageService', () => {
 
     it('creates scheduled message with BullMQ delayed job', async () => {
       const futureDate = new Date(Date.now() + 3600000); // 1 hour from now
-      const result = await service.sendMessage('biz1', 'conv1', 'staff1', 'Scheduled!', mockProvider, futureDate);
+      const result = await service.sendMessage(
+        'biz1',
+        'conv1',
+        'staff1',
+        'Scheduled!',
+        mockProvider,
+        futureDate,
+      );
 
       expect(prisma.message.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
@@ -190,7 +197,10 @@ describe('MessageService', () => {
     });
 
     it('sends immediately when no scheduledFor provided', async () => {
-      prisma.conversation.update.mockResolvedValue({ ...mockConversation, status: 'WAITING' } as any);
+      prisma.conversation.update.mockResolvedValue({
+        ...mockConversation,
+        status: 'WAITING',
+      } as any);
 
       await service.sendMessage('biz1', 'conv1', 'staff1', 'Now!', mockProvider);
 
@@ -199,7 +209,10 @@ describe('MessageService', () => {
     });
 
     it('sends immediately when scheduledFor is in the past', async () => {
-      prisma.conversation.update.mockResolvedValue({ ...mockConversation, status: 'WAITING' } as any);
+      prisma.conversation.update.mockResolvedValue({
+        ...mockConversation,
+        status: 'WAITING',
+      } as any);
       const pastDate = new Date(Date.now() - 1000);
 
       await service.sendMessage('biz1', 'conv1', 'staff1', 'Past!', mockProvider, pastDate);

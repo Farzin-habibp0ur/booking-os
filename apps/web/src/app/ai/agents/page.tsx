@@ -134,7 +134,10 @@ export default function AIAgentsPage() {
     return (
       <div className="space-y-6" data-testid="agents-loading">
         {[...Array(3)].map((_, i) => (
-          <div key={i} className="rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-soft animate-pulse">
+          <div
+            key={i}
+            className="rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-soft animate-pulse"
+          >
             <div className="h-6 bg-slate-200 dark:bg-slate-700 rounded w-1/4 mb-3" />
             <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4" />
           </div>
@@ -244,7 +247,10 @@ export default function AIAgentsPage() {
 
                   {/* Expanded: Run History */}
                   {isExpanded && (
-                    <div className="border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 px-5 py-3" data-testid={`history-${agent.agentType}`}>
+                    <div
+                      className="border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 px-5 py-3"
+                      data-testid={`history-${agent.agentType}`}
+                    >
                       {agentRuns.length === 0 ? (
                         <p className="text-xs text-slate-500 text-center py-2">No run history</p>
                       ) : (
@@ -261,7 +267,10 @@ export default function AIAgentsPage() {
                                 )}
                                 <span className="text-slate-600 dark:text-slate-300">
                                   {new Date(run.startedAt).toLocaleString('en-US', {
-                                    month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+                                    month: 'short',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
                                   })}
                                 </span>
                               </div>
@@ -275,7 +284,8 @@ export default function AIAgentsPage() {
                                       (new Date(run.completedAt).getTime() -
                                         new Date(run.startedAt).getTime()) /
                                         1000,
-                                    )}s
+                                    )}
+                                    s
                                   </span>
                                 )}
                               </div>
@@ -337,9 +347,7 @@ export default function AIAgentsPage() {
                   <span
                     className={cn(
                       'text-[10px] px-2 py-0.5 rounded-full font-medium',
-                      agent.enabled
-                        ? 'bg-sage-50 text-sage-700'
-                        : 'bg-slate-100 text-slate-500',
+                      agent.enabled ? 'bg-sage-50 text-sage-700' : 'bg-slate-100 text-slate-500',
                     )}
                   >
                     {agent.enabled ? 'Active' : 'Inactive'}
@@ -350,9 +358,7 @@ export default function AIAgentsPage() {
                 </p>
                 <div className="flex items-center justify-between text-[11px] text-slate-400">
                   <span>
-                    {agent.lastRunAt
-                      ? `Last: ${formatRelative(agent.lastRunAt)}`
-                      : 'Never run'}
+                    {agent.lastRunAt ? `Last: ${formatRelative(agent.lastRunAt)}` : 'Never run'}
                   </span>
                   <span>Every {agent.runIntervalMinutes || 60}min</span>
                 </div>

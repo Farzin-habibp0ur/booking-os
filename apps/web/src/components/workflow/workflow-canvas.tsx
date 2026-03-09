@@ -2,7 +2,12 @@
 
 import { useRef, useCallback, useState } from 'react';
 import { WorkflowNode, type WorkflowNodeData } from './workflow-node';
-import { WorkflowConnector, DragConnector, ConnectorDefs, type Connection } from './workflow-connector';
+import {
+  WorkflowConnector,
+  DragConnector,
+  ConnectorDefs,
+  type Connection,
+} from './workflow-connector';
 
 interface WorkflowCanvasProps {
   nodes: WorkflowNodeData[];
@@ -58,14 +63,11 @@ export function WorkflowCanvas({
     [zoom, pan],
   );
 
-  const getScreenCoords = useCallback(
-    (clientX: number, clientY: number) => {
-      if (!canvasRef.current) return { x: 0, y: 0 };
-      const rect = canvasRef.current.getBoundingClientRect();
-      return { x: clientX - rect.left, y: clientY - rect.top };
-    },
-    [],
-  );
+  const getScreenCoords = useCallback((clientX: number, clientY: number) => {
+    if (!canvasRef.current) return { x: 0, y: 0 };
+    const rect = canvasRef.current.getBoundingClientRect();
+    return { x: clientX - rect.left, y: clientY - rect.top };
+  }, []);
 
   // Node center positions for connectors
   const getNodeOutputPos = useCallback(
@@ -191,8 +193,7 @@ export function WorkflowCanvas({
       ref={canvasRef}
       className="flex-1 relative overflow-hidden cursor-crosshair"
       style={{
-        backgroundImage:
-          'radial-gradient(circle, #cbd5e1 1px, transparent 1px)',
+        backgroundImage: 'radial-gradient(circle, #cbd5e1 1px, transparent 1px)',
         backgroundSize: `${20 * zoom}px ${20 * zoom}px`,
         backgroundPosition: `${pan.x}px ${pan.y}px`,
         backgroundColor: '#f8fafc',
@@ -229,7 +230,10 @@ export function WorkflowCanvas({
       </svg>
 
       {/* Nodes layer */}
-      <div className="absolute inset-0" style={{ transform: `translate(${pan.x}px, ${pan.y}px)`, zIndex: 2 }}>
+      <div
+        className="absolute inset-0"
+        style={{ transform: `translate(${pan.x}px, ${pan.y}px)`, zIndex: 2 }}
+      >
         {nodes.map((node) => (
           <WorkflowNode
             key={node.id}
@@ -246,7 +250,10 @@ export function WorkflowCanvas({
       </div>
 
       {/* Zoom indicator */}
-      <div className="absolute bottom-3 right-3 text-[10px] text-slate-400 bg-white/80 px-2 py-1 rounded-lg" style={{ zIndex: 3 }}>
+      <div
+        className="absolute bottom-3 right-3 text-[10px] text-slate-400 bg-white/80 px-2 py-1 rounded-lg"
+        style={{ zIndex: 3 }}
+      >
         {Math.round(zoom * 100)}%
       </div>
     </div>

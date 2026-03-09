@@ -108,7 +108,10 @@ export function WorkflowSidebar() {
   ];
 
   return (
-    <div className="w-64 border-r border-slate-200 bg-white flex flex-col h-full overflow-y-auto" data-testid="workflow-sidebar">
+    <div
+      className="w-64 border-r border-slate-200 bg-white flex flex-col h-full overflow-y-auto"
+      data-testid="workflow-sidebar"
+    >
       <div className="p-3 border-b border-slate-100">
         <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Blocks</p>
       </div>

@@ -12,7 +12,14 @@ interface NodeConfigModalProps {
   onSave: (nodeId: string, config: Record<string, any>) => void;
 }
 
-const BOOKING_STATUSES = ['PENDING', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'NO_SHOW'];
+const BOOKING_STATUSES = [
+  'PENDING',
+  'CONFIRMED',
+  'IN_PROGRESS',
+  'COMPLETED',
+  'CANCELLED',
+  'NO_SHOW',
+];
 
 export function NodeConfigModal({ node, isOpen, onClose, onSave }: NodeConfigModalProps) {
   const [config, setConfig] = useState<Record<string, any>>({});
@@ -31,7 +38,10 @@ export function NodeConfigModal({ node, isOpen, onClose, onSave }: NodeConfigMod
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/20"
+      onClick={onClose}
+    >
       <div
         className="bg-white dark:bg-slate-900 rounded-2xl shadow-lg w-96 max-h-[80vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
@@ -42,7 +52,10 @@ export function NodeConfigModal({ node, isOpen, onClose, onSave }: NodeConfigMod
             <Settings size={16} className="text-slate-400" />
             <h3 className="text-sm font-semibold text-slate-900">Configure: {node.label}</h3>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
+          <button
+            onClick={onClose}
+            className="text-slate-400 hover:text-slate-600 transition-colors"
+          >
             <X size={16} />
           </button>
         </div>
@@ -84,7 +97,9 @@ export function NodeConfigModal({ node, isOpen, onClose, onSave }: NodeConfigMod
               >
                 <option value="">Any status</option>
                 {BOOKING_STATUSES.map((s) => (
-                  <option key={s} value={s}>{s}</option>
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
                 ))}
               </select>
             </div>
@@ -101,7 +116,9 @@ export function NodeConfigModal({ node, isOpen, onClose, onSave }: NodeConfigMod
               >
                 <option value="">Select status</option>
                 {BOOKING_STATUSES.map((s) => (
-                  <option key={s} value={s}>{s}</option>
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
                 ))}
               </select>
             </div>
@@ -122,7 +139,9 @@ export function NodeConfigModal({ node, isOpen, onClose, onSave }: NodeConfigMod
 
           {node.type === 'CONDITION' && node.subtype === 'IF_AMOUNT' && (
             <div>
-              <label className="text-xs font-medium text-slate-600 mb-1 block">Amount greater than ($)</label>
+              <label className="text-xs font-medium text-slate-600 mb-1 block">
+                Amount greater than ($)
+              </label>
               <input
                 type="number"
                 min={0}
@@ -136,7 +155,9 @@ export function NodeConfigModal({ node, isOpen, onClose, onSave }: NodeConfigMod
 
           {node.type === 'CONDITION' && node.subtype === 'IF_TIME_SINCE' && (
             <div>
-              <label className="text-xs font-medium text-slate-600 mb-1 block">Hours since last activity</label>
+              <label className="text-xs font-medium text-slate-600 mb-1 block">
+                Hours since last activity
+              </label>
               <input
                 type="number"
                 min={1}
@@ -150,7 +171,9 @@ export function NodeConfigModal({ node, isOpen, onClose, onSave }: NodeConfigMod
 
           {node.type === 'CONDITION' && node.subtype === 'IF_SERVICE' && (
             <div>
-              <label className="text-xs font-medium text-slate-600 mb-1 block">Service name contains</label>
+              <label className="text-xs font-medium text-slate-600 mb-1 block">
+                Service name contains
+              </label>
               <input
                 type="text"
                 value={config.service || ''}
@@ -175,35 +198,40 @@ export function NodeConfigModal({ node, isOpen, onClose, onSave }: NodeConfigMod
           )}
 
           {/* Action-specific fields */}
-          {node.type === 'ACTION' && (node.subtype === 'SEND_TEMPLATE' || node.subtype === 'SEND_NOTIFICATION') && (
-            <>
-              <div>
-                <label className="text-xs font-medium text-slate-600 mb-1 block">Template / Message</label>
-                <input
-                  type="text"
-                  value={config.category || ''}
-                  onChange={(e) => update('category', e.target.value)}
-                  placeholder="e.g. BOOKING_CONFIRMATION"
-                  className="w-full px-3 py-2 text-sm rounded-xl bg-slate-50 border-transparent focus:bg-white focus:ring-2 focus:ring-sage-500 outline-none"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-medium text-slate-600 mb-1 block">Channel</label>
-                <select
-                  value={config.channel || 'WHATSAPP'}
-                  onChange={(e) => update('channel', e.target.value)}
-                  className="w-full px-3 py-2 text-sm rounded-xl bg-slate-50 border-transparent focus:bg-white focus:ring-2 focus:ring-sage-500 outline-none"
-                >
-                  <option value="WHATSAPP">WhatsApp</option>
-                  <option value="EMAIL">Email</option>
-                </select>
-              </div>
-            </>
-          )}
+          {node.type === 'ACTION' &&
+            (node.subtype === 'SEND_TEMPLATE' || node.subtype === 'SEND_NOTIFICATION') && (
+              <>
+                <div>
+                  <label className="text-xs font-medium text-slate-600 mb-1 block">
+                    Template / Message
+                  </label>
+                  <input
+                    type="text"
+                    value={config.category || ''}
+                    onChange={(e) => update('category', e.target.value)}
+                    placeholder="e.g. BOOKING_CONFIRMATION"
+                    className="w-full px-3 py-2 text-sm rounded-xl bg-slate-50 border-transparent focus:bg-white focus:ring-2 focus:ring-sage-500 outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-slate-600 mb-1 block">Channel</label>
+                  <select
+                    value={config.channel || 'WHATSAPP'}
+                    onChange={(e) => update('channel', e.target.value)}
+                    className="w-full px-3 py-2 text-sm rounded-xl bg-slate-50 border-transparent focus:bg-white focus:ring-2 focus:ring-sage-500 outline-none"
+                  >
+                    <option value="WHATSAPP">WhatsApp</option>
+                    <option value="EMAIL">Email</option>
+                  </select>
+                </div>
+              </>
+            )}
 
           {node.type === 'ACTION' && node.subtype === 'SEND_EMAIL' && (
             <div>
-              <label className="text-xs font-medium text-slate-600 mb-1 block">Email template</label>
+              <label className="text-xs font-medium text-slate-600 mb-1 block">
+                Email template
+              </label>
               <input
                 type="text"
                 value={config.category || ''}
@@ -224,7 +252,9 @@ export function NodeConfigModal({ node, isOpen, onClose, onSave }: NodeConfigMod
               >
                 <option value="">Select status</option>
                 {BOOKING_STATUSES.map((s) => (
-                  <option key={s} value={s}>{s}</option>
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
                 ))}
               </select>
             </div>
@@ -282,28 +312,31 @@ export function NodeConfigModal({ node, isOpen, onClose, onSave }: NodeConfigMod
           )}
 
           {/* Delay-specific fields */}
-          {node.type === 'DELAY' && (node.subtype === 'WAIT_MINUTES' || node.subtype === 'WAIT_HOURS') && (
-            <div>
-              <label className="text-xs font-medium text-slate-600 mb-1 block">
-                Duration ({node.subtype === 'WAIT_MINUTES' ? 'minutes' : 'hours'})
-              </label>
-              <input
-                type="number"
-                min={1}
-                value={config.duration || ''}
-                onChange={(e) => {
-                  update('duration', parseInt(e.target.value) || 1);
-                  update('unit', node.subtype === 'WAIT_MINUTES' ? 'minutes' : 'hours');
-                }}
-                placeholder={node.subtype === 'WAIT_MINUTES' ? '30' : '2'}
-                className="w-full px-3 py-2 text-sm rounded-xl bg-slate-50 border-transparent focus:bg-white focus:ring-2 focus:ring-sage-500 outline-none"
-              />
-            </div>
-          )}
+          {node.type === 'DELAY' &&
+            (node.subtype === 'WAIT_MINUTES' || node.subtype === 'WAIT_HOURS') && (
+              <div>
+                <label className="text-xs font-medium text-slate-600 mb-1 block">
+                  Duration ({node.subtype === 'WAIT_MINUTES' ? 'minutes' : 'hours'})
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  value={config.duration || ''}
+                  onChange={(e) => {
+                    update('duration', parseInt(e.target.value) || 1);
+                    update('unit', node.subtype === 'WAIT_MINUTES' ? 'minutes' : 'hours');
+                  }}
+                  placeholder={node.subtype === 'WAIT_MINUTES' ? '30' : '2'}
+                  className="w-full px-3 py-2 text-sm rounded-xl bg-slate-50 border-transparent focus:bg-white focus:ring-2 focus:ring-sage-500 outline-none"
+                />
+              </div>
+            )}
 
           {node.type === 'DELAY' && node.subtype === 'WAIT_UNTIL' && (
             <div>
-              <label className="text-xs font-medium text-slate-600 mb-1 block">Wait until time (HH:mm)</label>
+              <label className="text-xs font-medium text-slate-600 mb-1 block">
+                Wait until time (HH:mm)
+              </label>
               <input
                 type="time"
                 value={config.until || '09:00'}

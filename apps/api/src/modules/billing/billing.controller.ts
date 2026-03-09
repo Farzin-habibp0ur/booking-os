@@ -90,9 +90,9 @@ export class BillingController {
   @Get('annual-savings')
   @UseGuards(AuthGuard('jwt'), TenantGuard)
   getAnnualSavings(@BusinessId() businessId: string) {
-    return this.billingService.getBillingStatus(businessId).then((status) =>
-      this.billingService.calculateAnnualSavings(status.plan),
-    );
+    return this.billingService
+      .getBillingStatus(businessId)
+      .then((status) => this.billingService.calculateAnnualSavings(status.plan));
   }
 
   @Get('billing-interval')

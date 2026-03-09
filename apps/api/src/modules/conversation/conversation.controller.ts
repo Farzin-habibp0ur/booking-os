@@ -126,10 +126,7 @@ export class ConversationController {
   // --- Bulk Operations ---
 
   @Post('bulk-close')
-  bulkClose(
-    @BusinessId() businessId: string,
-    @Body() body: { ids: string[] },
-  ) {
+  bulkClose(@BusinessId() businessId: string, @Body() body: { ids: string[] }) {
     if (!body.ids?.length || body.ids.length > 50) {
       throw new BadRequestException('ids must be an array of 1-50 items');
     }
@@ -137,10 +134,7 @@ export class ConversationController {
   }
 
   @Post('bulk-assign')
-  bulkAssign(
-    @BusinessId() businessId: string,
-    @Body() body: { ids: string[]; staffId: string },
-  ) {
+  bulkAssign(@BusinessId() businessId: string, @Body() body: { ids: string[]; staffId: string }) {
     if (!body.ids?.length || body.ids.length > 50) {
       throw new BadRequestException('ids must be an array of 1-50 items');
     }
@@ -151,10 +145,7 @@ export class ConversationController {
   }
 
   @Post('bulk-tag')
-  bulkTag(
-    @BusinessId() businessId: string,
-    @Body() body: { ids: string[]; tag: string },
-  ) {
+  bulkTag(@BusinessId() businessId: string, @Body() body: { ids: string[]; tag: string }) {
     if (!body.ids?.length || body.ids.length > 50) {
       throw new BadRequestException('ids must be an array of 1-50 items');
     }
@@ -165,10 +156,7 @@ export class ConversationController {
   }
 
   @Post('bulk-read')
-  bulkRead(
-    @BusinessId() businessId: string,
-    @Body() body: { ids: string[] },
-  ) {
+  bulkRead(@BusinessId() businessId: string, @Body() body: { ids: string[] }) {
     if (!body.ids?.length || body.ids.length > 50) {
       throw new BadRequestException('ids must be an array of 1-50 items');
     }

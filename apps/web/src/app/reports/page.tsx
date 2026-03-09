@@ -160,7 +160,10 @@ function ScheduleModal({
     e.preventDefault();
     setSaving(true);
     try {
-      const emails = recipients.split(',').map((e) => e.trim()).filter(Boolean);
+      const emails = recipients
+        .split(',')
+        .map((e) => e.trim())
+        .filter(Boolean);
       await api.post('/reports/schedules', {
         reportType,
         frequency,
@@ -198,7 +201,9 @@ function ScheduleModal({
               className="w-full bg-slate-50 border-transparent rounded-xl px-3 py-2 text-sm focus:bg-white focus:ring-2 focus:ring-sage-500"
             >
               {REPORT_TYPES.map((r) => (
-                <option key={r.value} value={r.value}>{r.label}</option>
+                <option key={r.value} value={r.value}>
+                  {r.label}
+                </option>
               ))}
             </select>
           </div>
@@ -210,7 +215,9 @@ function ScheduleModal({
               className="w-full bg-slate-50 border-transparent rounded-xl px-3 py-2 text-sm focus:bg-white focus:ring-2 focus:ring-sage-500"
             >
               {FREQUENCIES.map((f) => (
-                <option key={f.value} value={f.value}>{f.label}</option>
+                <option key={f.value} value={f.value}>
+                  {f.label}
+                </option>
               ))}
             </select>
           </div>
@@ -223,7 +230,9 @@ function ScheduleModal({
                 className="w-full bg-slate-50 border-transparent rounded-xl px-3 py-2 text-sm focus:bg-white focus:ring-2 focus:ring-sage-500"
               >
                 {DAYS_OF_WEEK.map((d, i) => (
-                  <option key={i} value={i}>{d}</option>
+                  <option key={i} value={i}>
+                    {d}
+                  </option>
                 ))}
               </select>
             </div>
@@ -237,7 +246,9 @@ function ScheduleModal({
                 className="w-full bg-slate-50 border-transparent rounded-xl px-3 py-2 text-sm focus:bg-white focus:ring-2 focus:ring-sage-500"
               >
                 {Array.from({ length: 28 }, (_, i) => (
-                  <option key={i + 1} value={i + 1}>{i + 1}</option>
+                  <option key={i + 1} value={i + 1}>
+                    {i + 1}
+                  </option>
                 ))}
               </select>
             </div>
@@ -252,7 +263,9 @@ function ScheduleModal({
               className="w-full bg-slate-50 border-transparent rounded-xl px-3 py-2 text-sm focus:bg-white focus:ring-2 focus:ring-sage-500"
             >
               {Array.from({ length: 24 }, (_, i) => (
-                <option key={i} value={i}>{String(i).padStart(2, '0')}:00 UTC</option>
+                <option key={i} value={i}>
+                  {String(i).padStart(2, '0')}:00 UTC
+                </option>
               ))}
             </select>
           </div>
@@ -291,13 +304,7 @@ function ScheduleModal({
   );
 }
 
-function ScheduleManager({
-  isOpen,
-  onClose,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-}) {
+function ScheduleManager({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const [schedules, setSchedules] = useState<ReportSchedule[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -329,8 +336,7 @@ function ScheduleManager({
 
   if (!isOpen) return null;
 
-  const reportLabel = (type: string) =>
-    REPORT_TYPES.find((r) => r.value === type)?.label ?? type;
+  const reportLabel = (type: string) => REPORT_TYPES.find((r) => r.value === type)?.label ?? type;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
@@ -356,13 +362,16 @@ function ScheduleManager({
                 key={s.id}
                 className={cn(
                   'p-3 rounded-xl border flex items-center justify-between',
-                  s.isActive ? 'bg-sage-50/50 border-sage-100' : 'bg-slate-50 border-slate-100 opacity-60',
+                  s.isActive
+                    ? 'bg-sage-50/50 border-sage-100'
+                    : 'bg-slate-50 border-slate-100 opacity-60',
                 )}
               >
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium truncate">{reportLabel(s.reportType)}</p>
                   <p className="text-xs text-slate-500">
-                    {s.frequency} · {String(s.hour).padStart(2, '0')}:00 UTC · {s.recipients.length} recipient{s.recipients.length !== 1 ? 's' : ''}
+                    {s.frequency} · {String(s.hour).padStart(2, '0')}:00 UTC · {s.recipients.length}{' '}
+                    recipient{s.recipients.length !== 1 ? 's' : ''}
                   </p>
                 </div>
                 <div className="flex items-center gap-2 ml-3">
@@ -418,7 +427,10 @@ export default function ReportsPage() {
   const [conversionData, setConversionData] = useState<any>(null);
 
   const loadScheduleCount = () => {
-    api.get<any[]>('/reports/schedules').then((s) => setScheduleCount(s.length)).catch(() => {});
+    api
+      .get<any[]>('/reports/schedules')
+      .then((s) => setScheduleCount(s.length))
+      .catch(() => {});
   };
 
   const loadAll = (period: number) => {
@@ -531,10 +543,14 @@ export default function ReportsPage() {
             <Sparkles size={18} className="text-lavender-600" />
             <div>
               <p className="font-medium text-lavender-700">Monthly Business Review</p>
-              <p className="text-xs text-lavender-500">AI-powered performance summary and recommendations</p>
+              <p className="text-xs text-lavender-500">
+                AI-powered performance summary and recommendations
+              </p>
             </div>
           </div>
-          <span className="text-sm text-lavender-500 group-hover:text-lavender-700 transition-colors">View →</span>
+          <span className="text-sm text-lavender-500 group-hover:text-lavender-700 transition-colors">
+            View →
+          </span>
         </div>
       </Link>
 

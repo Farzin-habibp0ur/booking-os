@@ -43,7 +43,11 @@ interface ReviewData {
     topStaff: { name: string; completed: number }[];
     busiestDays: { day: string; count: number }[];
     busiestHours: { hour: number; count: number }[];
-    aiStats: { actionCardsCreated: number; actionCardsApproved: number; actionCardsDismissed: number };
+    aiStats: {
+      actionCardsCreated: number;
+      actionCardsApproved: number;
+      actionCardsDismissed: number;
+    };
     contentStats: { published: number; pending: number };
   };
   aiSummary: string;
@@ -55,7 +59,10 @@ interface Recommendation {
   link: string;
 }
 
-function parseRecommendations(summary: string): { text: string; recommendations: Recommendation[] } {
+function parseRecommendations(summary: string): {
+  text: string;
+  recommendations: Recommendation[];
+} {
   const marker = 'RECOMMENDATIONS_JSON:';
   const idx = summary.indexOf(marker);
   if (idx === -1) return { text: summary, recommendations: [] };
@@ -64,7 +71,10 @@ function parseRecommendations(summary: string): { text: string; recommendations:
   const jsonStr = summary.substring(idx + marker.length).trim();
   try {
     const recommendations = JSON.parse(jsonStr);
-    return { text, recommendations: Array.isArray(recommendations) ? recommendations.slice(0, 3) : [] };
+    return {
+      text,
+      recommendations: Array.isArray(recommendations) ? recommendations.slice(0, 3) : [],
+    };
   } catch {
     return { text: summary, recommendations: [] };
   }
@@ -143,7 +153,10 @@ export default function MonthlyReviewPage() {
             >
               <ChevronLeft size={18} />
             </button>
-            <span className="text-sm font-medium min-w-[140px] text-center" data-testid="month-display">
+            <span
+              className="text-sm font-medium min-w-[140px] text-center"
+              data-testid="month-display"
+            >
               {formatMonth(month)}
             </span>
             <button
@@ -179,15 +192,8 @@ export default function MonthlyReviewPage() {
               value={`$${Math.round(m.totalRevenue).toLocaleString()}`}
               change={m.revenueChange}
             />
-            <KpiCard
-              label="Bookings"
-              value={m.totalBookings}
-              change={m.bookingsChange}
-            />
-            <KpiCard
-              label="New Customers"
-              value={m.newCustomers}
-            />
+            <KpiCard label="Bookings" value={m.totalBookings} change={m.bookingsChange} />
+            <KpiCard label="New Customers" value={m.newCustomers} />
             <KpiCard
               label="No-Show Rate"
               value={`${m.noShowRate}%`}
@@ -203,9 +209,12 @@ export default function MonthlyReviewPage() {
               <h2 className="text-lg font-semibold text-lavender-700">AI Business Review</h2>
             </div>
             <div className="text-sm text-slate-700 leading-relaxed space-y-3">
-              {summaryText.split('\n\n').filter(Boolean).map((para, i) => (
-                <p key={i}>{para}</p>
-              ))}
+              {summaryText
+                .split('\n\n')
+                .filter(Boolean)
+                .map((para, i) => (
+                  <p key={i}>{para}</p>
+                ))}
             </div>
           </div>
 
@@ -220,7 +229,14 @@ export default function MonthlyReviewPage() {
                   <XAxis dataKey="day" tick={{ fontSize: 10 }} />
                   <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `$${v}`} />
                   <Tooltip formatter={(v: number) => [`$${v}`, 'Revenue']} />
-                  <Area type="monotone" dataKey="revenue" stroke="#8AA694" fill="#8AA694" fillOpacity={0.1} strokeWidth={2} />
+                  <Area
+                    type="monotone"
+                    dataKey="revenue"
+                    stroke="#8AA694"
+                    fill="#8AA694"
+                    fillOpacity={0.1}
+                    strokeWidth={2}
+                  />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -248,7 +264,13 @@ export default function MonthlyReviewPage() {
           <div className="bg-white rounded-2xl shadow-soft p-4">
             <h3 className="font-semibold mb-4">Bookings by Day of Week</h3>
             <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={m.busiestDays.length > 0 ? m.busiestDays : dayNames.map((d) => ({ day: d, count: 0 }))}>
+              <BarChart
+                data={
+                  m.busiestDays.length > 0
+                    ? m.busiestDays
+                    : dayNames.map((d) => ({ day: d, count: 0 }))
+                }
+              >
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="day" tick={{ fontSize: 10 }} />
                 <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
@@ -319,9 +341,15 @@ function KpiCard({
       <p className="text-xs text-slate-500">{label}</p>
       <p className="text-2xl font-serif font-bold mt-1">{value}</p>
       {change !== undefined && change !== 0 && (
-        <div className={cn('flex items-center gap-1 mt-1 text-xs font-medium', isPositive ? 'text-sage-600' : isNegative ? 'text-red-500' : 'text-slate-400')}>
+        <div
+          className={cn(
+            'flex items-center gap-1 mt-1 text-xs font-medium',
+            isPositive ? 'text-sage-600' : isNegative ? 'text-red-500' : 'text-slate-400',
+          )}
+        >
           {change > 0 ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
-          {change > 0 ? '+' : ''}{change}% vs last month
+          {change > 0 ? '+' : ''}
+          {change}% vs last month
         </div>
       )}
     </div>

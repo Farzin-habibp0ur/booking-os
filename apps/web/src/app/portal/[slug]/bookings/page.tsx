@@ -75,7 +75,10 @@ export default function PortalBookingsPage() {
         {STATUS_FILTERS.map((f) => (
           <button
             key={f.value}
-            onClick={() => { setStatusFilter(f.value); setPage(1); }}
+            onClick={() => {
+              setStatusFilter(f.value);
+              setPage(1);
+            }}
             className={cn(
               'px-3 py-1.5 text-xs rounded-full transition-colors',
               statusFilter === f.value
@@ -124,9 +127,7 @@ export default function PortalBookingsPage() {
                         minute: '2-digit',
                       })}
                     </span>
-                    {b.service?.durationMins && (
-                      <span>{b.service.durationMins} min</span>
-                    )}
+                    {b.service?.durationMins && <span>{b.service.durationMins} min</span>}
                   </div>
                   {b.staff?.name && (
                     <p className="flex items-center gap-1 text-xs text-slate-400 mt-1">

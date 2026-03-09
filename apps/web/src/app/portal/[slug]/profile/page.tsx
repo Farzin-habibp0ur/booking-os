@@ -135,7 +135,9 @@ export default function PortalProfilePage() {
 
       {/* Editable form */}
       <div className="bg-white rounded-2xl shadow-soft p-6">
-        <h2 className="text-lg font-serif font-semibold text-slate-900 mb-4">Personal Information</h2>
+        <h2 className="text-lg font-serif font-semibold text-slate-900 mb-4">
+          Personal Information
+        </h2>
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Name</label>

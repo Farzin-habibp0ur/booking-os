@@ -42,7 +42,11 @@ describe('PortalController', () => {
   });
 
   it('POST /portal/auth/verify-otp calls authService.verifyOtp', async () => {
-    const result = await controller.verifyOtp({ slug: 'test', phone: '+1234567890', otp: '123456' });
+    const result = await controller.verifyOtp({
+      slug: 'test',
+      phone: '+1234567890',
+      otp: '123456',
+    });
     expect(authService.verifyOtp).toHaveBeenCalledWith('test', '+1234567890', '123456');
     expect(result.token).toBe('jwt-token');
   });

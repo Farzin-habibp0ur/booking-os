@@ -84,7 +84,9 @@ function reducer(state: WorkflowState, action: Action): WorkflowState {
     case 'ADD_CONNECTION': {
       // Prevent duplicates
       const exists = state.connections.some(
-        (c) => c.fromNodeId === action.connection.fromNodeId && c.toNodeId === action.connection.toNodeId,
+        (c) =>
+          c.fromNodeId === action.connection.fromNodeId &&
+          c.toNodeId === action.connection.toNodeId,
       );
       if (exists) return state;
       return { ...state, connections: [...state.connections, action.connection] };
@@ -172,7 +174,8 @@ export function serializeWorkflow(state: WorkflowState) {
     if (cond.subtype === 'IF_AMOUNT' && c.amount) filters.minAmount = c.amount;
     if (cond.subtype === 'IF_SERVICE' && c.service) filters.serviceKind = c.service;
     if (cond.subtype === 'IF_STAFF' && c.staff) filters.staffName = c.staff;
-    if (cond.subtype === 'IF_TIME_SINCE' && c.timeSince) filters.daysSinceLastBooking = Math.round(c.timeSince / 24);
+    if (cond.subtype === 'IF_TIME_SINCE' && c.timeSince)
+      filters.daysSinceLastBooking = Math.round(c.timeSince / 24);
   }
 
   // Build actions array
@@ -197,7 +200,8 @@ export function serializeWorkflow(state: WorkflowState) {
     if (c.status) action.value = c.status;
     if (c.staffId) action.value = c.staffId;
     if (c.channel) action.params = { channel: c.channel };
-    if (c.title) action.params = { ...action.params, title: c.title, description: c.description || '' };
+    if (c.title)
+      action.params = { ...action.params, title: c.title, description: c.description || '' };
 
     if (delayHours > 0) {
       action.delayHours = Math.round(delayHours * 100) / 100;
@@ -222,7 +226,11 @@ export function serializeWorkflow(state: WorkflowState) {
 
 // --- Deserialization ---
 
-function deserializeRule(rule: any): { nodes: WorkflowNodeData[]; connections: Connection[]; name: string } {
+function deserializeRule(rule: any): {
+  nodes: WorkflowNodeData[];
+  connections: Connection[];
+  name: string;
+} {
   const nodes: WorkflowNodeData[] = [];
   const connections: Connection[] = [];
   let y = 40;
@@ -538,13 +546,19 @@ export default function WorkflowBuilderPage() {
 
       {/* Error / Toast */}
       {state.error && (
-        <div className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-700 text-sm border-b border-red-100" data-testid="workflow-error">
+        <div
+          className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-700 text-sm border-b border-red-100"
+          data-testid="workflow-error"
+        >
           <AlertTriangle size={14} />
           {state.error}
         </div>
       )}
       {state.toast && (
-        <div className="flex items-center gap-2 px-4 py-2 bg-sage-50 text-sage-700 text-sm border-b border-sage-100" data-testid="workflow-toast">
+        <div
+          className="flex items-center gap-2 px-4 py-2 bg-sage-50 text-sage-700 text-sm border-b border-sage-100"
+          data-testid="workflow-toast"
+        >
           {state.toast}
         </div>
       )}

@@ -50,7 +50,11 @@ describe('WorkflowCanvas', () => {
   it('accepts drop events and creates nodes', () => {
     render(<WorkflowCanvas {...defaultProps} />);
     const canvas = screen.getByTestId('workflow-canvas');
-    const blockData = JSON.stringify({ type: 'TRIGGER', subtype: 'BOOKING_CREATED', label: 'New Booking' });
+    const blockData = JSON.stringify({
+      type: 'TRIGGER',
+      subtype: 'BOOKING_CREATED',
+      label: 'New Booking',
+    });
 
     // Use dataTransfer mock that supports both get and set
     const dataTransfer = {
@@ -71,7 +75,15 @@ describe('WorkflowCanvas', () => {
 
   it('renders nodes when provided', () => {
     const nodes = [
-      { id: 'n1', type: 'TRIGGER' as const, subtype: 'BOOKING_CREATED', label: 'New Booking', config: {}, x: 100, y: 50 },
+      {
+        id: 'n1',
+        type: 'TRIGGER' as const,
+        subtype: 'BOOKING_CREATED',
+        label: 'New Booking',
+        config: {},
+        x: 100,
+        y: 50,
+      },
     ];
     render(<WorkflowCanvas {...defaultProps} nodes={nodes} />);
     expect(screen.getByTestId('workflow-node-n1')).toBeInTheDocument();

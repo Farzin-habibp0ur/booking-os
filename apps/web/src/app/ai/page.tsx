@@ -78,7 +78,10 @@ export default function AIOverviewPage() {
       </div>
 
       {/* Marketing Agents Summary */}
-      <div className="rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-soft border border-slate-100 dark:border-slate-800" data-testid="marketing-agents-summary">
+      <div
+        className="rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-soft border border-slate-100 dark:border-slate-800"
+        data-testid="marketing-agents-summary"
+      >
         <div className="flex items-center gap-2 mb-4">
           <Megaphone size={20} className="text-lavender-500" />
           <h2 className="font-serif text-lg font-semibold text-slate-900 dark:text-white">
@@ -92,7 +95,10 @@ export default function AIOverviewPage() {
         {marketingLoading ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-16 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse" />
+              <div
+                key={i}
+                className="h-16 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse"
+              />
             ))}
           </div>
         ) : (

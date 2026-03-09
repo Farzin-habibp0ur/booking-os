@@ -26,39 +26,25 @@ describe('PackageTracker', () => {
   });
 
   it('shows session count', () => {
-    render(
-      <PackageTracker
-        sessions={{ total: 10, used: 3, packageName: 'Package' }}
-      />,
-    );
+    render(<PackageTracker sessions={{ total: 10, used: 3, packageName: 'Package' }} />);
     expect(screen.getByText('3 of 10 sessions used')).toBeInTheDocument();
     expect(screen.getByText('7 remaining')).toBeInTheDocument();
   });
 
   it('shows progress percentage', () => {
-    render(
-      <PackageTracker
-        sessions={{ total: 10, used: 5, packageName: 'Package' }}
-      />,
-    );
+    render(<PackageTracker sessions={{ total: 10, used: 5, packageName: 'Package' }} />);
     expect(screen.getByText('50%')).toBeInTheDocument();
   });
 
   it('shows 0% for zero total', () => {
-    render(
-      <PackageTracker
-        sessions={{ total: 0, used: 0, packageName: 'Package' }}
-      />,
-    );
+    render(<PackageTracker sessions={{ total: 0, used: 0, packageName: 'Package' }} />);
     expect(screen.getByText('0%')).toBeInTheDocument();
   });
 
   it('shows expiry warning when expiring soon', () => {
     const soon = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
     render(
-      <PackageTracker
-        sessions={{ total: 10, used: 8, packageName: 'Package', expiresAt: soon }}
-      />,
+      <PackageTracker sessions={{ total: 10, used: 8, packageName: 'Package', expiresAt: soon }} />,
     );
     expect(screen.getByText(/Expires/)).toBeInTheDocument();
   });
@@ -74,11 +60,7 @@ describe('PackageTracker', () => {
   });
 
   it('shows high usage at 80%+', () => {
-    render(
-      <PackageTracker
-        sessions={{ total: 10, used: 9, packageName: 'Package' }}
-      />,
-    );
+    render(<PackageTracker sessions={{ total: 10, used: 9, packageName: 'Package' }} />);
     expect(screen.getByText('90%')).toBeInTheDocument();
     expect(screen.getByText('1 remaining')).toBeInTheDocument();
   });

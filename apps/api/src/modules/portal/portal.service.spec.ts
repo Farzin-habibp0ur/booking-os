@@ -22,10 +22,7 @@ describe('PortalService', () => {
     prisma = createMockPrisma();
 
     const module = await Test.createTestingModule({
-      providers: [
-        PortalService,
-        { provide: PrismaService, useValue: prisma },
-      ],
+      providers: [PortalService, { provide: PrismaService, useValue: prisma }],
     }).compile();
 
     service = module.get(PortalService);
@@ -104,9 +101,9 @@ describe('PortalService', () => {
     it('throws if customer not found', async () => {
       (prisma.customer.findFirst as jest.Mock).mockResolvedValue(null);
 
-      await expect(
-        service.updateProfile('bad-id', 'biz1', { name: 'Test' }),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.updateProfile('bad-id', 'biz1', { name: 'Test' })).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -147,9 +144,7 @@ describe('PortalService', () => {
 
   describe('getUpcoming', () => {
     it('returns only future bookings with correct statuses', async () => {
-      const futureBookings = [
-        { id: 'b1', startTime: new Date('2027-01-15'), status: 'CONFIRMED' },
-      ];
+      const futureBookings = [{ id: 'b1', startTime: new Date('2027-01-15'), status: 'CONFIRMED' }];
       (prisma.booking.findMany as jest.Mock).mockResolvedValue(futureBookings);
 
       const result = await service.getUpcoming('cust1', 'biz1');

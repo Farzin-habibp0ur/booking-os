@@ -80,8 +80,7 @@ export class ReportScheduleService {
     return schedules.filter((s) => {
       // Skip if already sent this hour
       if (s.lastSentAt) {
-        const hoursSince =
-          (now.getTime() - s.lastSentAt.getTime()) / (1000 * 60 * 60);
+        const hoursSince = (now.getTime() - s.lastSentAt.getTime()) / (1000 * 60 * 60);
         if (hoursSince < 1) return false;
       }
 
@@ -119,9 +118,7 @@ export class ReportScheduleService {
           await this.sendReportEmail(schedule);
         }
       } catch (err) {
-        this.logger.error(
-          `Failed to enqueue report ${schedule.id}: ${(err as Error).message}`,
-        );
+        this.logger.error(`Failed to enqueue report ${schedule.id}: ${(err as Error).message}`);
       }
     }
   }
@@ -133,15 +130,8 @@ export class ReportScheduleService {
     recipients: string[];
     business: { name: string };
   }) {
-    const reportData = await this.getReportData(
-      schedule.businessId,
-      schedule.reportType,
-    );
-    const html = this.buildReportHtml(
-      schedule.reportType,
-      schedule.business.name,
-      reportData,
-    );
+    const reportData = await this.getReportData(schedule.businessId, schedule.reportType);
+    const html = this.buildReportHtml(schedule.reportType, schedule.business.name, reportData);
 
     for (const recipient of schedule.recipients) {
       await this.emailService.send({
@@ -157,10 +147,7 @@ export class ReportScheduleService {
     });
   }
 
-  private async getReportData(
-    businessId: string,
-    reportType: string,
-  ): Promise<any> {
+  private async getReportData(businessId: string, reportType: string): Promise<any> {
     const methodMap: Record<string, (bid: string, days?: number) => Promise<any>> = {
       'bookings-over-time': (bid, d) => this.reportsService.bookingsOverTime(bid, d),
       'revenue-over-time': (bid, d) => this.reportsService.revenueOverTime(bid, d),
@@ -169,8 +156,7 @@ export class ReportScheduleService {
       'staff-performance': (bid, d) => this.reportsService.staffPerformance(bid, d),
       'status-breakdown': (bid, d) => this.reportsService.statusBreakdown(bid, d),
       'peak-hours': (bid, d) => this.reportsService.peakHours(bid, d),
-      'consult-conversion': (bid, d) =>
-        this.reportsService.consultToTreatmentConversion(bid, d),
+      'consult-conversion': (bid, d) => this.reportsService.consultToTreatmentConversion(bid, d),
     };
 
     const method = methodMap[reportType];
@@ -185,11 +171,7 @@ export class ReportScheduleService {
       .join(' ');
   }
 
-  private buildReportHtml(
-    reportType: string,
-    businessName: string,
-    data: any,
-  ): string {
+  private buildReportHtml(reportType: string, businessName: string, data: any): string {
     const reportName = this.formatReportName(reportType);
     const date = new Date().toLocaleDateString('en-US', {
       weekday: 'long',
@@ -222,9 +204,7 @@ ${data
       }
     } else if (data && typeof data === 'object') {
       // Key-value data (no-show-rate, consult-conversion, response-times, peak-hours)
-      const entries = Object.entries(data).filter(
-        ([k]) => !k.startsWith('_'),
-      );
+      const entries = Object.entries(data).filter(([k]) => !k.startsWith('_'));
       dataRows = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:16px;">
 ${entries.map(([k, v]) => `<tr><td style="padding:8px 12px;font-size:14px;color:#64748B;">${this.formatReportName(k)}</td><td style="padding:8px 12px;font-size:14px;font-weight:600;text-align:right;">${typeof v === 'object' ? JSON.stringify(v) : v}</td></tr>`).join('')}
 </table>`;

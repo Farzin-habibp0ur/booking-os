@@ -39,9 +39,7 @@ export function PostHogIdentityProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   return (
-    <PostHogContext.Provider value={{ isEnabled: isEnabled() }}>
-      {children}
-    </PostHogContext.Provider>
+    <PostHogContext.Provider value={{ isEnabled: isEnabled() }}>{children}</PostHogContext.Provider>
   );
 }
 
