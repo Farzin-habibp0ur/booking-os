@@ -17,13 +17,13 @@ booking-os/
 ├── apps/
 │   ├── api/                    # NestJS REST API (port 3001)
 │   │   ├── src/
-│   │   │   ├── modules/        # 57 feature modules (one dir per domain)
+│   │   │   ├── modules/        # 58 feature modules (one dir per domain)
 │   │   │   ├── common/         # Guards, decorators, filters, DTOs, PrismaService
 │   │   │   └── main.ts         # Bootstrap, Swagger, CORS, cookies, validation
 │   │   └── Dockerfile          # Multi-stage production build
 │   ├── web/                    # Next.js 15 admin dashboard (port 3000)
 │   │   ├── src/
-│   │   │   ├── app/            # 77 pages (App Router)
+│   │   │   ├── app/            # 78 pages (App Router)
 │   │   │   ├── components/     # Shared components
 │   │   │   ├── lib/            # API client, auth, i18n, socket, theme
 │   │   │   ├── locales/        # en.json, es.json (600+ keys each)
@@ -31,7 +31,7 @@ booking-os/
 │   │   └── Dockerfile          # Multi-stage production build
 │   └── whatsapp-simulator/     # WhatsApp testing tool (port 3002)
 ├── packages/
-│   ├── db/                     # Prisma schema (58 models), migrations, seed scripts
+│   ├── db/                     # Prisma schema (60 models), migrations, seed scripts
 │   │   ├── prisma/schema.prisma
 │   │   ├── src/seed.ts         # Base seed (idempotent)
 │   │   ├── src/seed-demo.ts    # Rich demo data (idempotent)
@@ -114,7 +114,7 @@ modules/
 
 ### Database (Prisma)
 
-- Schema at `packages/db/prisma/schema.prisma` — **58 models**, 41 migrations
+- Schema at `packages/db/prisma/schema.prisma` — **60 models**, 43 migrations
 - Generate client: `npx prisma generate --schema=packages/db/prisma/schema.prisma`
 - Create migration: `npx prisma migrate dev --name your_name --schema=packages/db/prisma/schema.prisma`
 - `PrismaService` is a global NestJS provider — inject it in constructors
@@ -253,7 +253,7 @@ All AI-related UI elements use the **lavender** palette: `bg-lavender-50 border 
 ## Testing Conventions
 
 ### Test Counts
-- **~4,687 total tests** across 294 test files (157 API + 137 web)
+- **~4,759 total tests** across 303 test files (159 API + 144 web)
 - API: ~93% statement coverage, ~81% branch coverage
 - Web: ~78% statement coverage, ~73% branch coverage
 

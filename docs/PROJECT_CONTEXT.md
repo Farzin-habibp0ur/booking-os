@@ -2,7 +2,7 @@
 
 > **Purpose:** This document gives full context on the Booking OS platform — what it is, what's been built, how it's structured, and what's left to build. Share this with an AI assistant or new developer to get productive immediately.
 >
-> **Last updated:** March 9, 2026 (Phase C/D/E — Phase C ALL COMPLETE — ~4,687 total tests across 294 test files, 58 Prisma models, 41 migrations)
+> **Last updated:** March 9, 2026 (Phase C/D/E — Phase C ALL COMPLETE, D2+D3+D4+E2 done — ~4,759 total tests across 303 test files, 60 Prisma models, 43 migrations)
 
 ---
 
@@ -28,7 +28,7 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 
 ### Core Capabilities (All Built & Working)
 
-- **Appointment scheduling** — Calendar views (day/week/month), conflict detection, recurring bookings, automated reminders, force-book with reason, drag-and-drop reschedule with recommended slots
+- **Appointment scheduling** — Calendar views (day/week/month), conflict detection, recurring bookings, automated reminders, force-book with reason, drag-and-drop reschedule with recommended slots, calendar command center (sidebar summary, keyboard shortcuts, booking popover)
 - **WhatsApp messaging inbox** — Real-time via Socket.io, AI auto-replies, conversation management (assign, snooze, tag, close), media attachments (images/docs/audio), delivery/read receipts, presence indicators
 - **AI booking assistant** — Guides customers through booking/cancellation/rescheduling via chat (powered by Claude API)
 - **AI features** — Intent detection, reply suggestions, conversation summaries, customer profile collection, per-customer AI chat
@@ -39,7 +39,7 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 - **Resource management** — Equipment/bays/rooms per location with metadata, resource-level booking
 - **Service kanban** — Dealership workflow board (CHECKED_IN → DIAGNOSING → AWAITING_APPROVAL → IN_PROGRESS → READY_FOR_PICKUP)
 - **Quotes** — Create quotes for bookings, customer self-serve approval via token link with IP audit
-- **Analytics & reports** — Bookings over time, revenue, service breakdown, staff performance, no-show rates, peak hours, consult conversion, CSV/PDF export for all reports
+- **Analytics & reports** — Bookings over time, revenue, service breakdown, staff performance, no-show rates, peak hours, consult conversion, CSV/PDF export for all reports, automated scheduled report emails (daily/weekly/monthly via BullMQ)
 - **ROI dashboard** — Baseline vs current metrics, recovered revenue estimate, weekly review with email
 - **Multi-language** — English & Spanish (600+ translation keys), per-business overrides, language picker
 - **Billing** — Stripe integration (Starter/Professional/Enterprise plans), checkout, customer portal, webhooks, deposit collection, dunning email flow, referral credits
@@ -395,7 +395,7 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 | **Messages** | `/conversations/:id/messages` | Send message |
 | **Templates** | `/templates` | Full CRUD |
 | **Dashboard** | `/dashboard` | Stats, AI usage, dismiss nudge |
-| **Reports** | `/reports` | 9 report types (bookings, revenue, no-shows, staff perf, peak hours, etc.), CSV/PDF export |
+| **Reports** | `/reports` | 9 report types (bookings, revenue, no-shows, staff perf, peak hours, etc.), CSV/PDF export, automated scheduled report emails (ReportSchedule CRUD, @Cron hourly, BullMQ NOTIFICATIONS queue) |
 | **ROI** | `/roi` | Go-live, baseline, dashboard, weekly review |
 | **AI** | `/ai` | Settings, conversation summary, booking/cancel/reschedule confirm, customer chat |
 | **Availability** | `/availability` | Available slots (by date, service, staff, location, resource), calendar context (working hours + time off), recommended slots (top 5 scored) |
@@ -790,6 +790,10 @@ Key groups (full list in `.env.example`):
 - **C2: Customer Self-Service Portal** — COMPLETE. New portal API module (57th module) with 8 endpoints: request-otp, verify-otp, magic-link, verify-magic-link (auth), me GET/PATCH, bookings, upcoming (data). PortalAuthService with in-memory OTP store (5-min TTL, max 5 attempts), WhatsApp OTP via MESSAGING queue, email magic links via EmailService. PortalGuard validates portal JWT (type: 'portal', 24h expiry). PortalService: getProfile (with stats), updateProfile, getBookings (paginated), getUpcoming. Frontend: portal layout, login page (phone/email tabs, 6-digit OTP auto-advance), dashboard (upcoming, quick actions, testimonial CTA), bookings (status filters, pagination, Book Again), profile (editable fields, read-only stats, notification prefs). 51 new tests (36 API + 15 web).
 
 ### Phase D/E: Intelligence & Polish — IN PROGRESS
+- **D3: Monthly Business Reviews** — COMPLETE. New `BusinessReview` Prisma model (60th model, migration 43) with businessId, month (YYYY-MM @@unique), metrics (JSON), aiSummary (Text). `BusinessReviewService` with `aggregateMetrics()` (bookings/revenue with % change vs prev month, customers/retention, top 5 services, top 3 staff, busiest days/hours, AI action card stats, content stats), `generateReview()` (calls Claude sonnet for 3-4 paragraph AI summary with RECOMMENDATIONS_JSON), `getReview()` (cached or generate), `listReviews()`, `@Cron('0 8 2 * *')` monthly auto-generation for businesses with ACTIVE/TRIALING subscriptions. Controller: GET `/business-review` (list), GET `/business-review/:month` (get/generate). 58th API module registered in app.module.ts. Frontend: `/reports/monthly-review` page with month selector arrows, 4 KPI cards (Revenue/Bookings/New Customers/No-Show Rate with % change and trend arrows), AI Executive Summary card (lavender-50 with Sparkles icon), 3 Recharts (revenue trend AreaChart, top services horizontal BarChart, bookings by day BarChart), 3 recommendation cards with numbered circles and "Take Action →" links, print button, extra stat cards (avg booking value, retention rate, returning customers). Monthly Review link card added to reports page (lavender). Added `/reports/monthly-review` to admin insights nav in mode-config.ts. 19 new tests (9 API + 10 web).
+- **D2: Automated Report Emails** — COMPLETE. New `ReportSchedule` Prisma model (59th model, migration 42) with reportType, frequency (DAILY/WEEKLY/MONTHLY), recipients, dayOfWeek/dayOfMonth, hour, timezone, isActive, lastSentAt. `ReportScheduleService` with CRUD, `findDueSchedules()` (filters by hour, frequency, dayOfWeek/dayOfMonth, skips recently sent), `@Cron(EVERY_HOUR)` enqueues due schedules to NOTIFICATIONS BullMQ queue, `sendReportEmail()` generates report data via ReportsService and sends branded HTML emails via EmailService. 4 new controller endpoints (POST/GET/PATCH/DELETE `/reports/schedules`). DTOs with class-validator. Frontend: "Schedule Email" button + ScheduleModal (report type, frequency, day picker, hour, recipients), ScheduleManager (list/toggle/delete), "N Scheduled" badge. 25 new tests (16 API + 9 web).
+- **D4: Calendar Command Center** — COMPLETE. Enhanced existing calendar-sidebar.tsx (responsive w-72 lg:w-80) and booking-popover.tsx (customer phone display, onComplete handler for IN_PROGRESS bookings). Calendar page enhancements: localStorage-backed sidebar toggle with SSR-safe init, booking clicks open popover with anchor positioning (not full modal), keyboard shortcuts (T=today, N=new booking, S=sidebar, 1/2/3=views, ?=help, Esc=cascading close, ←/→=navigate), keyboard shortcuts help modal with `?` button, mobile slide-over overlay for sidebar (<lg breakpoint), onComplete handler patches booking status via API. 37 new tests (11 popover + 7 sidebar + 19 calendar page).
+- **E2: PostHog Analytics Funnels** — COMPLETE. Enhanced `posthog.tsx` with `initPostHog()`, `isEnabled()`, `resetUser()`, `captureEvent()`. Created `PostHogIdentityProvider` component (identifies user on session with userId, email, businessId, role, verticalPack). Integrated `identifyUser`/`resetUser` in auth.tsx (login, signup, session restore, logout). Added milestone events across 5 funnels: Signup (`signup_started`, `signup_completed`, `onboarding_completed`), Booking (`calendar_viewed`, `new_booking_clicked`, `booking_confirmed`), Messaging (`inbox_opened`, `conversation_selected`, `message_sent`), AI Adoption (`ai_settings_viewed`, `ai_enabled`), Upgrade (`billing_page_viewed`, `plans_compared`, `upgrade_clicked`). 12 tests (8 posthog lib + 4 provider).
 
 ### Code Quality
 - **Error Handling Remediation** — COMPLETE (commit 1cf6f99). Replaced ~20 silent `.catch(() => {})` with logged warnings, queue processors throw on failure, NestJS proper exceptions, frontend toast wiring, waitlist loop resilience, WebSocket disconnect logging. +58 tests.
@@ -854,7 +858,7 @@ npm run dev                    # Starts all apps via Turborepo
 | `npm run dev` | Start all apps |
 | `npm run build` | Build all |
 | `npm run lint` | Lint all (ESLint + TypeScript) |
-| `npm test` | Run all tests (~4,687+ tests) |
+| `npm test` | Run all tests (~4,759+ tests) |
 | `npm run test:coverage` | Tests with coverage thresholds |
 | `npm run db:generate` | Generate Prisma client |
 | `npm run db:migrate` | Run migrations |

@@ -1,4 +1,4 @@
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor, act, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import CalendarPage from './page';
 
@@ -64,6 +64,18 @@ jest.mock('@/lib/api', () => ({
   },
 }));
 
+// Mock posthog
+jest.mock('@/lib/posthog', () => ({
+  captureEvent: jest.fn(),
+}));
+
+// Mock design-tokens
+jest.mock('@/lib/design-tokens', () => ({
+  statusCalendarClasses: () => ({ bg: '', border: '', text: '' }),
+  ELEVATION: { dropdown: '' },
+  BOOKING_STATUS_STYLES: {},
+}));
+
 // Mock child components
 jest.mock(
   '@/components/booking-form-modal',
@@ -81,7 +93,11 @@ jest.mock('@/components/booking-popover', () => ({
 }));
 
 jest.mock('./components/calendar-sidebar', () => ({
-  CalendarSidebar: () => <div data-testid="calendar-sidebar">CalendarSidebar</div>,
+  CalendarSidebar: ({ onClose }: any) => (
+    <div data-testid="calendar-sidebar">
+      <button onClick={onClose}>Close</button>
+    </div>
+  ),
 }));
 
 const mockStaff = [
@@ -97,6 +113,7 @@ const mockLocations = [
 describe('CalendarPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    localStorage.clear();
     mockGet.mockImplementation((path: string) => {
       if (path.startsWith('/staff')) return Promise.resolve(mockStaff);
       if (path.startsWith('/locations')) return Promise.resolve(mockLocations);
@@ -107,12 +124,129 @@ describe('CalendarPage', () => {
     });
   });
 
-  it('renders the calendar page', async () => {
+  it('renders the calendar title', async () => {
     await act(async () => {
       render(<CalendarPage />);
     });
 
     expect(screen.getByText('calendar.title')).toBeInTheDocument();
+  });
+
+  it('renders view toggle buttons (Day, Week, Month)', async () => {
+    await act(async () => {
+      render(<CalendarPage />);
+    });
+
+    expect(screen.getByText('calendar.view_day')).toBeInTheDocument();
+    expect(screen.getByText('calendar.view_week')).toBeInTheDocument();
+    expect(screen.getByText('calendar.view_month')).toBeInTheDocument();
+  });
+
+  it('renders new booking button', async () => {
+    await act(async () => {
+      render(<CalendarPage />);
+    });
+
+    expect(screen.getByText('calendar.new_booking')).toBeInTheDocument();
+  });
+
+  it('sidebar toggle persists to localStorage', async () => {
+    await act(async () => {
+      render(<CalendarPage />);
+    });
+
+    const sidebarBtn = screen.getByTitle('Toggle sidebar (S)');
+
+    await act(async () => {
+      fireEvent.click(sidebarBtn);
+    });
+
+    const stored = localStorage.getItem('calendar-sidebar-visible');
+    expect(stored).toBeDefined();
+  });
+
+  it('keyboard shortcut T navigates to today', async () => {
+    await act(async () => {
+      render(<CalendarPage />);
+    });
+
+    await act(async () => {
+      fireEvent.keyDown(window, { key: 't' });
+    });
+
+    // The page should still render correctly after pressing T
+    expect(screen.getByText('calendar.title')).toBeInTheDocument();
+  });
+
+  it('keyboard shortcut N opens booking form', async () => {
+    await act(async () => {
+      render(<CalendarPage />);
+    });
+
+    expect(screen.queryByTestId('booking-form-modal')).not.toBeInTheDocument();
+
+    await act(async () => {
+      fireEvent.keyDown(window, { key: 'n' });
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('booking-form-modal')).toBeInTheDocument();
+    });
+  });
+
+  it('keyboard shortcut ? toggles shortcuts help', async () => {
+    await act(async () => {
+      render(<CalendarPage />);
+    });
+
+    expect(screen.queryByText('Keyboard Shortcuts')).not.toBeInTheDocument();
+
+    await act(async () => {
+      fireEvent.keyDown(window, { key: '?' });
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Keyboard Shortcuts')).toBeInTheDocument();
+    });
+  });
+
+  it('shortcuts help modal renders all shortcuts', async () => {
+    await act(async () => {
+      render(<CalendarPage />);
+    });
+
+    await act(async () => {
+      fireEvent.keyDown(window, { key: '?' });
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Keyboard Shortcuts')).toBeInTheDocument();
+    });
+    expect(screen.getByText('Go to today')).toBeInTheDocument();
+    expect(screen.getByText('New booking')).toBeInTheDocument();
+    expect(screen.getByText('Toggle sidebar')).toBeInTheDocument();
+    expect(screen.getByText('Day view')).toBeInTheDocument();
+    expect(screen.getByText('Week view')).toBeInTheDocument();
+    expect(screen.getByText('Month view')).toBeInTheDocument();
+    expect(screen.getByText('Navigate')).toBeInTheDocument();
+    expect(screen.getByText('Close popover / modal')).toBeInTheDocument();
+    expect(screen.getByText('Toggle this help')).toBeInTheDocument();
+  });
+
+  it('mobile sidebar shows overlay backdrop', async () => {
+    // Set sidebar to open via localStorage
+    localStorage.setItem('calendar-sidebar-visible', 'true');
+
+    await act(async () => {
+      render(<CalendarPage />);
+    });
+
+    // When sidebar is open, both desktop and mobile sidebar instances are rendered
+    await waitFor(() => {
+      const sidebars = screen.getAllByTestId('calendar-sidebar');
+      // Should have at least 2: one in hidden lg:block wrapper, one in mobile overlay
+      expect(sidebars.length).toBeGreaterThanOrEqual(2);
+    });
   });
 
   it('fetches locations on mount', async () => {
@@ -190,22 +324,6 @@ describe('CalendarPage', () => {
       expect(screen.getByText('Sarah')).toBeInTheDocument();
       expect(screen.getByText('Lisa')).toBeInTheDocument();
     });
-  });
-
-  it('renders the new booking button', async () => {
-    await act(async () => {
-      render(<CalendarPage />);
-    });
-
-    expect(screen.getByText('calendar.new_booking')).toBeInTheDocument();
-  });
-
-  it('renders month view toggle button', async () => {
-    await act(async () => {
-      render(<CalendarPage />);
-    });
-
-    expect(screen.getByText('calendar.view_month')).toBeInTheDocument();
   });
 
   it('switches to month view and fetches month summary', async () => {

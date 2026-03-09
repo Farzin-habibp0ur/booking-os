@@ -3,13 +3,14 @@
 import { useEffect, useRef } from 'react';
 import { cn } from '@/lib/cn';
 import { BOOKING_STATUS_STYLES, ELEVATION } from '@/lib/design-tokens';
-import { Calendar, Clock, DollarSign, Play, RefreshCw, ExternalLink, X } from 'lucide-react';
+import { Calendar, Clock, DollarSign, Play, Check, RefreshCw, ExternalLink, X, Phone } from 'lucide-react';
 
 interface BookingPopoverProps {
   booking: any;
   anchorRect: DOMRect | null;
   onClose: () => void;
   onStart?: (booking: any) => void;
+  onComplete?: (booking: any) => void;
   onReschedule?: (booking: any) => void;
   onViewDetails?: (booking: any) => void;
 }
@@ -19,6 +20,7 @@ export function BookingPopover({
   anchorRect,
   onClose,
   onStart,
+  onComplete,
   onReschedule,
   onViewDetails,
 }: BookingPopoverProps) {
@@ -84,11 +86,17 @@ export function BookingPopover({
         <X size={14} />
       </button>
 
-      {/* Client name + status */}
+      {/* Client name + phone + status */}
       <div className="mb-3">
         <h4 className="text-sm font-semibold text-slate-900 dark:text-white pr-6">
           {booking.customer?.name || 'Walk-in'}
         </h4>
+        {booking.customer?.phone && (
+          <div className="flex items-center gap-1 text-[11px] text-slate-400 mt-0.5">
+            <Phone size={10} />
+            {booking.customer.phone}
+          </div>
+        )}
         <span
           className={cn(
             'inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full mt-1',
@@ -130,6 +138,15 @@ export function BookingPopover({
           >
             <Play size={12} />
             Start
+          </button>
+        )}
+        {booking.status === 'IN_PROGRESS' && onComplete && (
+          <button
+            onClick={() => onComplete(booking)}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-sage-600 text-white hover:bg-sage-700 transition-colors btn-press"
+          >
+            <Check size={12} />
+            Complete
           </button>
         )}
         {onReschedule && (

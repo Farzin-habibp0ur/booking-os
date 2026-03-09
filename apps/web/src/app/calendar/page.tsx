@@ -10,6 +10,8 @@ import {
   MapPin,
   AlertTriangle,
   PanelRight,
+  Keyboard,
+  X,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useI18n } from '@/lib/i18n';
@@ -69,7 +71,13 @@ export default function CalendarPage() {
   >({});
 
   // Sidebar & popover
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const saved = localStorage.getItem('calendar-sidebar-visible');
+    if (saved !== null) return saved === 'true';
+    return window.innerWidth >= 1024; // default open on desktop
+  });
+  const [showShortcuts, setShowShortcuts] = useState(false);
   const [popoverBooking, setPopoverBooking] = useState<any>(null);
   const [popoverAnchor, setPopoverAnchor] = useState<DOMRect | null>(null);
 
@@ -120,10 +128,18 @@ export default function CalendarPage() {
     }
   }, [staff]);
 
-  // Keyboard shortcuts: t=today, n=new booking, arrows=nav, s=sidebar toggle
+  const toggleSidebar = useCallback(() => {
+    setSidebarOpen((prev) => {
+      const next = !prev;
+      localStorage.setItem('calendar-sidebar-visible', String(next));
+      return next;
+    });
+  }, []);
+
+  // Keyboard shortcuts
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      // Don't fire when typing in inputs
+      // Don't fire when typing in inputs or modals are open
       if (
         e.target instanceof HTMLInputElement ||
         e.target instanceof HTMLTextAreaElement ||
@@ -139,7 +155,31 @@ export default function CalendarPage() {
           setBookingFormOpen(true);
           break;
         case 's':
-          setSidebarOpen((prev) => !prev);
+          toggleSidebar();
+          break;
+        case '1':
+          setView('day');
+          break;
+        case '2':
+          setView('week');
+          break;
+        case '3':
+          setView('month');
+          break;
+        case '?':
+          setShowShortcuts((prev) => !prev);
+          break;
+        case 'Escape':
+          if (popoverBooking) {
+            setPopoverBooking(null);
+            setPopoverAnchor(null);
+          } else if (showShortcuts) {
+            setShowShortcuts(false);
+          } else if (bookingDetailOpen) {
+            setBookingDetailOpen(false);
+          } else if (bookingFormOpen) {
+            setBookingFormOpen(false);
+          }
           break;
         case 'ArrowLeft':
           navigate(-1);
@@ -151,7 +191,7 @@ export default function CalendarPage() {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [view]);
+  }, [view, popoverBooking, showShortcuts, bookingDetailOpen, bookingFormOpen, toggleSidebar]);
 
   const loadBookings = () => {
     const dateFrom = new Date(currentDate);
@@ -283,9 +323,12 @@ export default function CalendarPage() {
     setBookingFormOpen(true);
   };
 
-  const handleBookingClick = (booking: any) => {
-    setSelectedBooking(booking);
-    setBookingDetailOpen(true);
+  const handleBookingClick = (booking: any, e?: React.MouseEvent) => {
+    if (e) {
+      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+      setPopoverAnchor(rect);
+    }
+    setPopoverBooking(booking);
   };
 
   const handleReschedule = (booking: any) => {
@@ -543,7 +586,7 @@ export default function CalendarPage() {
             <Plus size={14} /> {t('calendar.new_booking')}
           </button>
           <button
-            onClick={() => setSidebarOpen((prev) => !prev)}
+            onClick={toggleSidebar}
             className={cn(
               'hidden lg:flex items-center gap-1 px-3 py-1.5 rounded-xl text-sm border transition-colors',
               sidebarOpen
@@ -553,6 +596,13 @@ export default function CalendarPage() {
             title="Toggle sidebar (S)"
           >
             <PanelRight size={14} />
+          </button>
+          <button
+            onClick={() => setShowShortcuts(true)}
+            className="hidden lg:flex items-center justify-center w-7 h-7 rounded-lg text-xs font-medium border border-slate-200 text-slate-400 hover:bg-slate-50 transition-colors"
+            title="Keyboard shortcuts (?)"
+          >
+            ?
           </button>
         </div>
       </div>
@@ -730,7 +780,7 @@ export default function CalendarPage() {
                             }}
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleBookingClick(b);
+                              handleBookingClick(b, e);
                             }}
                             onMouseEnter={() => setHoveredBooking(b.id)}
                             onMouseLeave={() => setHoveredBooking(null)}
@@ -908,7 +958,7 @@ export default function CalendarPage() {
                               key={b.id}
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleBookingClick(b);
+                                handleBookingClick(b, e);
                               }}
                               className={cn(
                                 'absolute left-0.5 right-0.5 rounded border-l-2 px-1 py-0.5 cursor-pointer hover:shadow-md',
@@ -998,8 +1048,21 @@ export default function CalendarPage() {
           )}
         </div>
         {/* end calendar card */}
+        {/* Desktop sidebar */}
         {sidebarOpen && (
-          <CalendarSidebar currentDate={currentDate} onClose={() => setSidebarOpen(false)} />
+          <div className="hidden lg:block">
+            <CalendarSidebar currentDate={currentDate} onClose={toggleSidebar} />
+          </div>
+        )}
+
+        {/* Mobile sidebar overlay */}
+        {sidebarOpen && (
+          <div className="lg:hidden fixed inset-0 z-40">
+            <div className="absolute inset-0 bg-black/30" onClick={toggleSidebar} />
+            <div className="absolute right-0 top-0 h-full">
+              <CalendarSidebar currentDate={currentDate} onClose={toggleSidebar} />
+            </div>
+          </div>
         )}
       </div>
       {/* end flex wrapper */}
@@ -1016,8 +1079,16 @@ export default function CalendarPage() {
           onStart={(b) => {
             setPopoverBooking(null);
             setSelectedBooking(b);
-            // Trigger start action through detail modal
             setBookingDetailOpen(true);
+          }}
+          onComplete={async (b) => {
+            setPopoverBooking(null);
+            try {
+              await api.patch(`/bookings/${b.id}`, { status: 'COMPLETED' });
+              loadBookings();
+            } catch (err) {
+              console.error('Failed to complete booking:', err);
+            }
           }}
           onReschedule={(b) => {
             setPopoverBooking(null);
@@ -1031,6 +1102,41 @@ export default function CalendarPage() {
             setBookingDetailOpen(true);
           }}
         />
+      )}
+
+      {/* Keyboard shortcuts help */}
+      {showShortcuts && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20" onClick={() => setShowShortcuts(false)}>
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-5 w-80" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Keyboard size={16} className="text-slate-400" />
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Keyboard Shortcuts</h3>
+              </div>
+              <button onClick={() => setShowShortcuts(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
+                <X size={14} />
+              </button>
+            </div>
+            <div className="space-y-2 text-xs">
+              {[
+                ['T', 'Go to today'],
+                ['N', 'New booking'],
+                ['S', 'Toggle sidebar'],
+                ['1', 'Day view'],
+                ['2', 'Week view'],
+                ['3', 'Month view'],
+                ['\u2190 / \u2192', 'Navigate'],
+                ['Esc', 'Close popover / modal'],
+                ['?', 'Toggle this help'],
+              ].map(([key, desc]) => (
+                <div key={key} className="flex items-center justify-between">
+                  <span className="text-slate-600 dark:text-slate-400">{desc}</span>
+                  <kbd className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-[11px] font-mono text-slate-500">{key}</kbd>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Booking form modal */}
