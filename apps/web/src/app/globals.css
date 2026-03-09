@@ -129,6 +129,39 @@ html.dark body {
   border-radius: 1px;
 }
 
+/* Celebration confetti (CSS-only, no library) */
+@keyframes confetti-fall {
+  0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(120px) rotate(720deg); opacity: 0; }
+}
+
+.celebration-confetti {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.celebration-confetti::before,
+.celebration-confetti::after {
+  content: '🎊 ✨ 🎉 ⭐ 💫';
+  position: absolute;
+  top: -20px;
+  font-size: 16px;
+  letter-spacing: 24px;
+  animation: confetti-fall 2.5s ease-out forwards;
+}
+
+.celebration-confetti::before {
+  left: 10%;
+  animation-delay: 0.1s;
+}
+
+.celebration-confetti::after {
+  left: 45%;
+  animation-delay: 0.4s;
+}
+
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *,

@@ -90,9 +90,14 @@ export function OnboardingChecklist() {
     }
   };
 
-  const handleDismiss = () => {
+  const handleDismiss = async () => {
     localStorage.setItem('onboarding-checklist-dismissed', 'true');
     setIsDismissed(true);
+    try {
+      await api.patch('/business', { onboardingComplete: true });
+    } catch {
+      // Best-effort — localStorage already hides widget
+    }
   };
 
   if (isDismissed || !status) {
@@ -173,8 +178,16 @@ export function OnboardingChecklist() {
             })}
           </div>
 
-          {/* Dismiss button */}
-          <div className="px-4 py-2 border-t border-slate-100 dark:border-slate-700">
+          {/* Complete Setup CTA + Dismiss */}
+          <div className="px-4 py-3 border-t border-slate-100 dark:border-slate-700 space-y-2">
+            {completedCount < totalCount && (
+              <Link
+                href="/setup"
+                className="block w-full text-center bg-lavender-600 hover:bg-lavender-700 text-white text-sm font-medium py-2 rounded-xl transition-colors"
+              >
+                Complete Setup
+              </Link>
+            )}
             <button
               onClick={handleDismiss}
               className="w-full flex items-center justify-center gap-1 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 py-1.5 transition-colors"

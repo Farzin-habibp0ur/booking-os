@@ -1262,6 +1262,37 @@ function SetupPage() {
                     )}
                   </div>
 
+                  {/* Celebration + First-Week Checklist */}
+                  <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4 relative overflow-hidden">
+                    <div className="celebration-confetti" aria-hidden="true" />
+                    <div className="text-center">
+                      <h3 className="text-xl font-serif font-bold text-slate-900">
+                        You&apos;re all set! 🎉
+                      </h3>
+                      <p className="text-sm text-slate-500 mt-1">
+                        Here&apos;s what to tackle in your first week
+                      </p>
+                    </div>
+                    <div className="space-y-2" data-testid="first-week-checklist">
+                      {[
+                        { label: 'Send your first message', href: '/inbox' },
+                        { label: 'Create a test booking', href: '/bookings' },
+                        { label: 'Invite a team member', href: '/staff' },
+                        { label: 'Customize a template', href: '/settings?tab=templates' },
+                        { label: 'Enable AI auto-replies', href: '/settings?tab=ai' },
+                      ].map((item) => (
+                        <a
+                          key={item.label}
+                          href={item.href}
+                          className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-sage-50 transition-colors text-sm text-slate-700"
+                        >
+                          <div className="w-5 h-5 rounded-full border border-slate-300 flex-shrink-0" />
+                          {item.label}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+
                   {/* Actions */}
                   <div className="bg-white rounded-2xl shadow-soft p-6 space-y-2">
                     <button
