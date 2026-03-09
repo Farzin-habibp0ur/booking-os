@@ -1,0 +1,216 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import {
+  Calendar,
+  Clock,
+  User,
+  MessageSquare,
+  Star,
+  ChevronRight,
+} from 'lucide-react';
+import { cn } from '@/lib/cn';
+import { statusBadgeClasses } from '@/lib/design-tokens';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+
+function portalFetch(path: string) {
+  const token = typeof window !== 'undefined' ? sessionStorage.getItem('portal-token') : null;
+  return fetch(`${API_URL}${path}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  }).then((r) => {
+    if (r.status === 401) {
+      sessionStorage.removeItem('portal-token');
+      window.location.href = `/portal/${window.location.pathname.split('/')[2]}`;
+      throw new Error('Unauthorized');
+    }
+    return r.json();
+  });
+}
+
+export default function PortalDashboardPage() {
+  const { slug } = useParams<{ slug: string }>();
+  const router = useRouter();
+  const [profile, setProfile] = useState<any>(null);
+  const [upcoming, setUpcoming] = useState<any[]>([]);
+  const [recentBookings, setRecentBookings] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const token = sessionStorage.getItem('portal-token');
+    if (!token) {
+      router.replace(`/portal/${slug}`);
+      return;
+    }
+
+    Promise.all([
+      portalFetch('/portal/me'),
+      portalFetch('/portal/upcoming'),
+      portalFetch('/portal/bookings?page=1'),
+    ])
+      .then(([prof, up, bookings]) => {
+        setProfile(prof);
+        setUpcoming(up);
+        setRecentBookings(bookings.data?.slice(0, 5) || []);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [slug, router]);
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="bg-white rounded-2xl shadow-soft p-6 animate-pulse">
+            <div className="h-4 bg-slate-200 rounded w-1/3 mb-2" />
+            <div className="h-3 bg-slate-100 rounded w-2/3" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Welcome header */}
+      <div>
+        <h1 className="text-2xl font-serif font-semibold text-slate-900">
+          Welcome back, {profile?.name?.split(' ')[0] || 'there'}
+        </h1>
+        <p className="text-sm text-slate-500 mt-1">
+          Member since{' '}
+          {profile?.memberSince
+            ? new Date(profile.memberSince).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+            : '—'}
+        </p>
+      </div>
+
+      {/* Upcoming bookings */}
+      {upcoming.length > 0 && (
+        <section>
+          <h2 className="text-lg font-serif font-semibold text-slate-900 mb-3">Upcoming Bookings</h2>
+          <div className="space-y-3" data-testid="upcoming-bookings">
+            {upcoming.slice(0, 3).map((b: any) => (
+              <div
+                key={b.id}
+                className="bg-white rounded-2xl shadow-soft p-4 flex items-center justify-between"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-sage-50 rounded-xl flex items-center justify-center">
+                    <Calendar size={18} className="text-sage-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-slate-900">{b.service?.name}</p>
+                    <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
+                      <Clock size={12} />
+                      {new Date(b.startTime).toLocaleDateString('en-US', {
+                        weekday: 'short',
+                        month: 'short',
+                        day: 'numeric',
+                      })}{' '}
+                      at{' '}
+                      {new Date(b.startTime).toLocaleTimeString('en-US', {
+                        hour: 'numeric',
+                        minute: '2-digit',
+                      })}
+                      {b.staff?.name && <span>with {b.staff.name}</span>}
+                    </div>
+                  </div>
+                </div>
+                <span
+                  className={cn('text-xs px-2 py-0.5 rounded-full', statusBadgeClasses(b.status))}
+                >
+                  {b.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Quick actions */}
+      <section>
+        <h2 className="text-lg font-serif font-semibold text-slate-900 mb-3">Quick Actions</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3" data-testid="quick-actions">
+          <button
+            onClick={() => router.push(`/book/${slug}`)}
+            className="bg-white rounded-2xl shadow-soft p-4 text-left hover:bg-slate-50 transition-colors group"
+          >
+            <Calendar size={20} className="text-sage-600 mb-2" />
+            <p className="text-sm font-medium text-slate-900">Book Again</p>
+            <p className="text-xs text-slate-500 mt-0.5">Schedule a new appointment</p>
+          </button>
+          <button
+            onClick={() => router.push(`/portal/${slug}/bookings`)}
+            className="bg-white rounded-2xl shadow-soft p-4 text-left hover:bg-slate-50 transition-colors"
+          >
+            <Clock size={20} className="text-lavender-600 mb-2" />
+            <p className="text-sm font-medium text-slate-900">My Bookings</p>
+            <p className="text-xs text-slate-500 mt-0.5">View booking history</p>
+          </button>
+          <button
+            onClick={() => router.push(`/portal/${slug}/profile`)}
+            className="bg-white rounded-2xl shadow-soft p-4 text-left hover:bg-slate-50 transition-colors"
+          >
+            <User size={20} className="text-slate-600 mb-2" />
+            <p className="text-sm font-medium text-slate-900">My Profile</p>
+            <p className="text-xs text-slate-500 mt-0.5">Update your details</p>
+          </button>
+        </div>
+      </section>
+
+      {/* Testimonial CTA */}
+      <section>
+        <div className="bg-lavender-50 border border-lavender-200 rounded-2xl p-5 flex items-center justify-between" data-testid="testimonial-cta">
+          <div className="flex items-center gap-3">
+            <Star size={20} className="text-lavender-600" />
+            <div>
+              <p className="text-sm font-medium text-lavender-900">Share Your Experience</p>
+              <p className="text-xs text-lavender-700 mt-0.5">
+                Help others discover this business by leaving a testimonial.
+              </p>
+            </div>
+          </div>
+          <ChevronRight size={16} className="text-lavender-400" />
+        </div>
+      </section>
+
+      {/* Recent bookings */}
+      {recentBookings.length > 0 && (
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-serif font-semibold text-slate-900">Recent Bookings</h2>
+            <button
+              onClick={() => router.push(`/portal/${slug}/bookings`)}
+              className="text-xs text-sage-600 hover:text-sage-700"
+            >
+              View All
+            </button>
+          </div>
+          <div className="bg-white rounded-2xl shadow-soft overflow-hidden divide-y" data-testid="recent-bookings">
+            {recentBookings.map((b: any) => (
+              <div key={b.id} className="p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-slate-900">{b.service?.name}</p>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    {new Date(b.startTime).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                    })}
+                  </p>
+                </div>
+                <span
+                  className={cn('text-xs px-2 py-0.5 rounded-full', statusBadgeClasses(b.status))}
+                >
+                  {b.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+    </div>
+  );
+}
