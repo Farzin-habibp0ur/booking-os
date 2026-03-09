@@ -44,6 +44,7 @@ import { MediaComposer } from '@/components/inbox/media-composer';
 import { MediaMessage } from '@/components/inbox/media-message';
 import { DeliveryStatus } from '@/components/inbox/delivery-status';
 import { FeatureDiscovery } from '@/components/feature-discovery';
+import ScheduledMessage from '@/components/scheduled-message';
 import { captureEvent } from '@/lib/posthog';
 
 type Filter = 'all' | 'unassigned' | 'mine' | 'overdue' | 'waiting' | 'snoozed' | 'closed';
@@ -136,6 +137,10 @@ function InboxPage() {
   const [showOutboundCompose, setShowOutboundCompose] = useState(false);
   const [viewers, setViewers] = useState<Array<{ staffId: string; staffName: string }>>([]);
   const [selectedConvoIds, setSelectedConvoIds] = useState<Set<string>>(new Set());
+  const [scheduledFor, setScheduledFor] = useState<Date | null>(null);
+  const [scheduledMessages, setScheduledMessages] = useState<any[]>([]);
+  const [bulkTagInput, setBulkTagInput] = useState('');
+  const [showBulkTagInput, setShowBulkTagInput] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const currentFilters = {
@@ -306,6 +311,7 @@ function InboxPage() {
       loadCustomer(selected.customerId);
       loadCustomerBookings(selected.customerId);
       loadNotes(selected.id);
+      loadScheduledMessages(selected.id);
       setConvTags(selected.tags || []);
       setSidebarTab('info');
       setViewers([]);
@@ -476,13 +482,22 @@ function InboxPage() {
     if (!text || !selected) return;
     setSending(true);
     try {
-      await api.post(`/conversations/${selected.id}/messages`, { content: text });
-      captureEvent('message_sent', { channel: selected.channel || 'WHATSAPP' });
+      const payload: any = { content: text };
+      if (scheduledFor) {
+        payload.scheduledFor = scheduledFor.toISOString();
+      }
+      await api.post(`/conversations/${selected.id}/messages`, payload);
+      captureEvent('message_sent', { channel: selected.channel || 'WHATSAPP', scheduled: !!scheduledFor });
       setNewMessage('');
       setAiDraftText('');
       setAiIntent(undefined);
       setAiConfidence(undefined);
       setShowQuickReplies(false);
+      if (scheduledFor) {
+        setScheduledFor(null);
+        toast('Message scheduled successfully');
+        await loadScheduledMessages(selected.id);
+      }
       await loadMessages(selected.id);
       await loadConversations();
       await loadFilterCounts();
@@ -491,6 +506,26 @@ function InboxPage() {
       console.error(e);
     }
     setSending(false);
+  };
+
+  const loadScheduledMessages = async (conversationId: string) => {
+    try {
+      const msgs = await api.get<any[]>(`/conversations/${conversationId}/messages/scheduled`);
+      setScheduledMessages(msgs || []);
+    } catch {
+      setScheduledMessages([]);
+    }
+  };
+
+  const cancelScheduledMessage = async (messageId: string) => {
+    if (!selected) return;
+    try {
+      await api.del(`/conversations/${selected.id}/messages/scheduled/${messageId}`);
+      toast('Scheduled message cancelled');
+      await loadScheduledMessages(selected.id);
+    } catch {
+      toast('Failed to cancel message', 'error');
+    }
   };
 
   const assignConversation = async (staffId: string | null) => {
@@ -648,9 +683,7 @@ function InboxPage() {
   const handleBulkCloseConvos = async () => {
     try {
       const ids = Array.from(selectedConvoIds);
-      for (const id of ids) {
-        await api.patch(`/conversations/${id}/status`, { status: 'RESOLVED' });
-      }
+      await api.post('/conversations/bulk-close', { ids });
       setSelectedConvoIds(new Set());
       toast(t('inbox.bulk_closed_success'));
       await loadConversations();
@@ -664,9 +697,7 @@ function InboxPage() {
   const handleBulkAssignConvos = async (staffId: string) => {
     try {
       const ids = Array.from(selectedConvoIds);
-      for (const id of ids) {
-        await api.patch(`/conversations/${id}/assign`, { staffId });
-      }
+      await api.post('/conversations/bulk-assign', { ids, staffId });
       setSelectedConvoIds(new Set());
       toast(t('inbox.bulk_assigned_success'));
       await loadConversations();
@@ -680,13 +711,27 @@ function InboxPage() {
   const handleBulkMarkRead = async () => {
     try {
       const ids = Array.from(selectedConvoIds);
-      for (const id of ids) {
-        await api.patch(`/conversations/${id}`, { isNew: false });
-      }
+      await api.post('/conversations/bulk-read', { ids });
       setSelectedConvoIds(new Set());
       toast(t('inbox.bulk_marked_read'));
       await loadConversations();
       await loadFilterCounts();
+    } catch (e) {
+      toast(t('inbox.bulk_action_failed'));
+      console.error(e);
+    }
+  };
+
+  const handleBulkTagConvos = async (tag: string) => {
+    if (!tag.trim()) return;
+    try {
+      const ids = Array.from(selectedConvoIds);
+      await api.post('/conversations/bulk-tag', { ids, tag: tag.trim() });
+      setSelectedConvoIds(new Set());
+      setBulkTagInput('');
+      setShowBulkTagInput(false);
+      toast('Tag applied to selected conversations');
+      await loadConversations();
     } catch (e) {
       toast(t('inbox.bulk_action_failed'));
       console.error(e);
@@ -1190,14 +1235,48 @@ function InboxPage() {
                       el.style.height = Math.min(el.scrollHeight, 96) + 'px';
                     }}
                   />
+                  <ScheduledMessage
+                    onSchedule={(date) => setScheduledFor(date)}
+                    onClear={() => setScheduledFor(null)}
+                    scheduledAt={scheduledFor}
+                  />
                   <button
                     onClick={() => sendMessage()}
                     disabled={sending || !newMessage.trim()}
                     className="bg-sage-600 text-white p-2 rounded-md hover:bg-sage-700 disabled:opacity-50 flex-shrink-0"
                   >
-                    <Send size={18} />
+                    {scheduledFor ? <Clock size={18} /> : <Send size={18} />}
                   </button>
                 </div>
+                {/* Scheduled messages indicator */}
+                {scheduledMessages.length > 0 && (
+                  <div className="bg-amber-50 border border-amber-100 rounded-lg p-2 space-y-1" data-testid="scheduled-messages-list">
+                    <p className="text-xs font-medium text-amber-700 flex items-center gap-1">
+                      <Clock size={12} />
+                      {scheduledMessages.length} scheduled message{scheduledMessages.length !== 1 ? 's' : ''}
+                    </p>
+                    {scheduledMessages.map((msg: any) => (
+                      <div key={msg.id} className="flex items-center justify-between text-xs text-amber-600">
+                        <span className="truncate flex-1 mr-2">{msg.content}</span>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <span>
+                            {new Date(msg.scheduledFor).toLocaleString('en-US', {
+                              month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true,
+                            })}
+                          </span>
+                          <button
+                            onClick={() => cancelScheduledMessage(msg.id)}
+                            className="text-amber-500 hover:text-red-600"
+                            aria-label="Cancel scheduled message"
+                            data-testid={`cancel-scheduled-${msg.id}`}
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </>
           ) : (
@@ -1637,14 +1716,49 @@ function InboxPage() {
                   ))}
                 </div>
               </div>
+              <div className="relative">
+                {showBulkTagInput ? (
+                  <div className="flex items-center gap-1">
+                    <input
+                      value={bulkTagInput}
+                      onChange={(e) => setBulkTagInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleBulkTagConvos(bulkTagInput);
+                        if (e.key === 'Escape') { setShowBulkTagInput(false); setBulkTagInput(''); }
+                      }}
+                      placeholder="Tag name"
+                      className="w-24 px-2 py-1.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-sage-500"
+                      autoFocus
+                      data-testid="bulk-tag-input"
+                    />
+                    <button
+                      onClick={() => handleBulkTagConvos(bulkTagInput)}
+                      disabled={!bulkTagInput.trim()}
+                      className="px-2 py-1.5 text-sm bg-sage-600 text-white rounded-lg hover:bg-sage-700 disabled:opacity-50"
+                    >
+                      Apply
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setShowBulkTagInput(true)}
+                    className="px-3 py-2 text-sm border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-1"
+                    data-testid="bulk-tag-btn"
+                  >
+                    <Tag size={14} />
+                    Tag
+                  </button>
+                )}
+              </div>
               <button
                 onClick={handleBulkCloseConvos}
                 className="px-3 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                data-testid="bulk-close-btn"
               >
                 Close Selected
               </button>
               <button
-                onClick={() => setSelectedConvoIds(new Set())}
+                onClick={() => { setSelectedConvoIds(new Set()); setShowBulkTagInput(false); setBulkTagInput(''); }}
                 className="px-3 py-2 text-sm border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
               >
                 Cancel

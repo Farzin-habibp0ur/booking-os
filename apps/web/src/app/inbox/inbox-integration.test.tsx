@@ -81,6 +81,26 @@ jest.mock('@/components/outbound', () => ({
   ),
 }));
 
+jest.mock('@/components/inbox/media-composer', () => ({
+  MediaComposer: () => null,
+}));
+jest.mock('@/components/inbox/media-message', () => ({
+  MediaMessage: () => null,
+}));
+jest.mock('@/components/inbox/delivery-status', () => ({
+  DeliveryStatus: () => null,
+}));
+jest.mock('@/components/feature-discovery', () => ({
+  FeatureDiscovery: () => null,
+}));
+jest.mock('@/lib/posthog', () => ({
+  captureEvent: jest.fn(),
+}));
+jest.mock('@/components/scheduled-message', () => ({
+  __esModule: true,
+  default: () => <div data-testid="scheduled-message-mock" />,
+}));
+
 // Needed by jsdom
 Element.prototype.scrollIntoView = jest.fn();
 
@@ -363,12 +383,11 @@ describe('Inbox Agentic Integration', () => {
       fireEvent.click(screen.getByText('Close Selected'));
     });
 
-    // Verify API call was made (page now patches each conversation's status individually)
+    // Verify bulk close API was called
     await waitFor(() => {
-      expect(mockApi.patch).toHaveBeenCalledWith(
-        expect.stringContaining('/conversations/conv-1/status'),
-        expect.objectContaining({ status: 'RESOLVED' }),
-      );
+      expect(mockApi.post).toHaveBeenCalledWith('/conversations/bulk-close', {
+        ids: expect.arrayContaining(['conv-1']),
+      });
     });
   });
 

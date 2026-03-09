@@ -378,6 +378,69 @@ export class ConversationService {
     return result;
   }
 
+  // --- Bulk Operations ---
+
+  async bulkClose(businessId: string, ids: string[]) {
+    const result = await this.prisma.conversation.updateMany({
+      where: { id: { in: ids }, businessId },
+      data: { status: 'RESOLVED' },
+    });
+    return { count: result.count };
+  }
+
+  async bulkAssign(businessId: string, ids: string[], staffId: string) {
+    // Verify staff exists
+    const staff = await this.prisma.staff.findFirst({
+      where: { id: staffId, businessId },
+    });
+    if (!staff) throw new NotFoundException('Staff not found');
+
+    const result = await this.prisma.conversation.updateMany({
+      where: { id: { in: ids }, businessId },
+      data: { assignedToId: staffId },
+    });
+    return { count: result.count };
+  }
+
+  async bulkTag(businessId: string, ids: string[], tag: string) {
+    // Get current conversations to append tag
+    const conversations = await this.prisma.conversation.findMany({
+      where: { id: { in: ids }, businessId },
+      select: { id: true, tags: true },
+    });
+
+    let count = 0;
+    for (const conv of conversations) {
+      if (!conv.tags.includes(tag)) {
+        await this.prisma.conversation.update({
+          where: { id: conv.id },
+          data: { tags: [...conv.tags, tag] },
+        });
+        count++;
+      }
+    }
+    return { count };
+  }
+
+  async bulkMarkRead(businessId: string, ids: string[]) {
+    // Verify conversations belong to business
+    const conversations = await this.prisma.conversation.findMany({
+      where: { id: { in: ids }, businessId },
+      select: { id: true },
+    });
+    const validIds = conversations.map((c) => c.id);
+
+    const result = await this.prisma.message.updateMany({
+      where: {
+        conversationId: { in: validIds },
+        direction: 'INBOUND',
+        readAt: null,
+      },
+      data: { readAt: new Date() },
+    });
+    return { count: result.count };
+  }
+
   async getMessages(businessId: string, conversationId: string) {
     const conversation = await this.prisma.conversation.findFirst({
       where: { id: conversationId, businessId },

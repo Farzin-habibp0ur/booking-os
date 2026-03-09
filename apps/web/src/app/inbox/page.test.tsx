@@ -67,6 +67,35 @@ jest.mock('@/components/intake-card', () => ({
 jest.mock('@/components/saved-views', () => ({
   ViewPicker: () => null,
 }));
+jest.mock('@/components/action-card', () => ({
+  ActionCardBadge: () => null,
+}));
+jest.mock('@/components/outbound', () => ({
+  OutboundCompose: () => null,
+}));
+jest.mock('@/components/inbox/media-composer', () => ({
+  MediaComposer: () => null,
+}));
+jest.mock('@/components/inbox/media-message', () => ({
+  MediaMessage: () => null,
+}));
+jest.mock('@/components/inbox/delivery-status', () => ({
+  DeliveryStatus: () => null,
+}));
+jest.mock('@/components/feature-discovery', () => ({
+  FeatureDiscovery: () => null,
+}));
+jest.mock('@/lib/posthog', () => ({
+  captureEvent: jest.fn(),
+}));
+jest.mock('@/components/scheduled-message', () => ({
+  __esModule: true,
+  default: (props: any) => (
+    <div data-testid="scheduled-message-mock">
+      {props.scheduledAt && <span data-testid="scheduled-badge">Scheduled</span>}
+    </div>
+  ),
+}));
 
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import InboxPage from './page';
@@ -120,6 +149,7 @@ function setupMocks() {
         },
       ]);
     if (path === '/conversations/conv-1/notes') return Promise.resolve([]);
+    if (path === '/conversations/conv-1/messages/scheduled') return Promise.resolve([]);
     if (path === '/customers/cust-1')
       return Promise.resolve({
         id: 'cust-1',
@@ -314,7 +344,7 @@ describe('InboxPage', () => {
 
   it('calls bulk mark read API when Mark as Read button clicked', async () => {
     setupMocks();
-    mockApi.patch.mockResolvedValue({});
+    mockApi.post.mockResolvedValue({ count: 1 });
     render(<InboxPage />);
     await waitFor(() => screen.getByText('Emma Wilson'));
 
@@ -330,12 +360,56 @@ describe('InboxPage', () => {
       fireEvent.click(markReadBtn);
     });
 
-    // Verify API call was made (page now patches each conversation individually)
+    // Verify bulk API endpoint was called
     await waitFor(() => {
-      expect(mockApi.patch).toHaveBeenCalledWith(
-        expect.stringContaining('/conversations/conv-1'),
-        expect.objectContaining({ isNew: false }),
-      );
+      expect(mockApi.post).toHaveBeenCalledWith('/conversations/bulk-read', {
+        ids: expect.arrayContaining(['conv-1']),
+      });
+    });
+  });
+
+  it('calls bulk close API when Close Selected button clicked', async () => {
+    setupMocks();
+    mockApi.post.mockResolvedValue({ count: 1 });
+    render(<InboxPage />);
+    await waitFor(() => screen.getByText('Emma Wilson'));
+
+    const checkboxes = screen.getAllByRole('checkbox');
+    const emmaCheckbox = checkboxes[checkboxes.length - 2];
+    fireEvent.click(emmaCheckbox);
+
+    await waitFor(() => screen.getByTestId('bulk-close-btn'));
+    fireEvent.click(screen.getByTestId('bulk-close-btn'));
+
+    await waitFor(() => {
+      expect(mockApi.post).toHaveBeenCalledWith('/conversations/bulk-close', {
+        ids: expect.arrayContaining(['conv-1']),
+      });
+    });
+  });
+
+  it('shows bulk tag input and calls bulk tag API', async () => {
+    setupMocks();
+    mockApi.post.mockResolvedValue({ count: 1 });
+    render(<InboxPage />);
+    await waitFor(() => screen.getByText('Emma Wilson'));
+
+    const checkboxes = screen.getAllByRole('checkbox');
+    const emmaCheckbox = checkboxes[checkboxes.length - 2];
+    fireEvent.click(emmaCheckbox);
+
+    await waitFor(() => screen.getByTestId('bulk-tag-btn'));
+    fireEvent.click(screen.getByTestId('bulk-tag-btn'));
+
+    await waitFor(() => screen.getByTestId('bulk-tag-input'));
+    fireEvent.change(screen.getByTestId('bulk-tag-input'), { target: { value: 'urgent' } });
+    fireEvent.keyDown(screen.getByTestId('bulk-tag-input'), { key: 'Enter' });
+
+    await waitFor(() => {
+      expect(mockApi.post).toHaveBeenCalledWith('/conversations/bulk-tag', {
+        ids: expect.arrayContaining(['conv-1']),
+        tag: 'urgent',
+      });
     });
   });
 

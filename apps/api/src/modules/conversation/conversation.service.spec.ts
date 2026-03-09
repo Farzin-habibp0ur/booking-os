@@ -643,6 +643,101 @@ describe('ConversationService', () => {
     });
   });
 
+  // ─── bulkClose ──────────────────────────────────────────────────────
+
+  describe('bulkClose', () => {
+    it('resolves multiple conversations', async () => {
+      prisma.conversation.updateMany.mockResolvedValue({ count: 3 } as any);
+
+      const result = await service.bulkClose('biz1', ['c1', 'c2', 'c3']);
+
+      expect(result).toEqual({ count: 3 });
+      expect(prisma.conversation.updateMany).toHaveBeenCalledWith({
+        where: { id: { in: ['c1', 'c2', 'c3'] }, businessId: 'biz1' },
+        data: { status: 'RESOLVED' },
+      });
+    });
+  });
+
+  // ─── bulkAssign ─────────────────────────────────────────────────────
+
+  describe('bulkAssign', () => {
+    it('assigns conversations to staff', async () => {
+      prisma.staff.findFirst.mockResolvedValue({ id: 'staff1', businessId: 'biz1' } as any);
+      prisma.conversation.updateMany.mockResolvedValue({ count: 2 } as any);
+
+      const result = await service.bulkAssign('biz1', ['c1', 'c2'], 'staff1');
+
+      expect(result).toEqual({ count: 2 });
+      expect(prisma.conversation.updateMany).toHaveBeenCalledWith({
+        where: { id: { in: ['c1', 'c2'] }, businessId: 'biz1' },
+        data: { assignedToId: 'staff1' },
+      });
+    });
+
+    it('throws NotFoundException when staff not found', async () => {
+      prisma.staff.findFirst.mockResolvedValue(null);
+
+      await expect(service.bulkAssign('biz1', ['c1'], 'bad-staff')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+  });
+
+  // ─── bulkTag ────────────────────────────────────────────────────────
+
+  describe('bulkTag', () => {
+    it('appends tag to conversations that do not already have it', async () => {
+      prisma.conversation.findMany.mockResolvedValue([
+        { id: 'c1', tags: ['existing'] },
+        { id: 'c2', tags: [] },
+        { id: 'c3', tags: ['vip'] },
+      ] as any);
+      prisma.conversation.update.mockResolvedValue({} as any);
+
+      const result = await service.bulkTag('biz1', ['c1', 'c2', 'c3'], 'vip');
+
+      expect(result).toEqual({ count: 2 }); // c1 and c2 get tag, c3 already has it
+      expect(prisma.conversation.update).toHaveBeenCalledTimes(2);
+    });
+
+    it('skips conversations that already have the tag', async () => {
+      prisma.conversation.findMany.mockResolvedValue([
+        { id: 'c1', tags: ['vip'] },
+      ] as any);
+      prisma.conversation.update.mockResolvedValue({} as any);
+
+      const result = await service.bulkTag('biz1', ['c1'], 'vip');
+
+      expect(result).toEqual({ count: 0 });
+      expect(prisma.conversation.update).not.toHaveBeenCalled();
+    });
+  });
+
+  // ─── bulkMarkRead ──────────────────────────────────────────────────
+
+  describe('bulkMarkRead', () => {
+    it('marks inbound messages as read', async () => {
+      prisma.conversation.findMany.mockResolvedValue([
+        { id: 'c1' },
+        { id: 'c2' },
+      ] as any);
+      prisma.message.updateMany.mockResolvedValue({ count: 5 } as any);
+
+      const result = await service.bulkMarkRead('biz1', ['c1', 'c2']);
+
+      expect(result).toEqual({ count: 5 });
+      expect(prisma.message.updateMany).toHaveBeenCalledWith({
+        where: {
+          conversationId: { in: ['c1', 'c2'] },
+          direction: 'INBOUND',
+          readAt: null,
+        },
+        data: { readAt: expect.any(Date) },
+      });
+    });
+  });
+
   // ─── getMessages ──────────────────────────────────────────────────────
 
   describe('getMessages', () => {

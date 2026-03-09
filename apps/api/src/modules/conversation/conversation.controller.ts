@@ -23,6 +23,7 @@ import {
   UpdateTagsDto,
   AddNoteDto,
 } from '../../common/dto';
+import { BadRequestException } from '@nestjs/common';
 
 @ApiTags('Conversations')
 @Controller('conversations')
@@ -120,6 +121,58 @@ export class ConversationController {
     @Param('noteId') noteId: string,
   ) {
     return this.conversationService.deleteNote(businessId, id, noteId);
+  }
+
+  // --- Bulk Operations ---
+
+  @Post('bulk-close')
+  bulkClose(
+    @BusinessId() businessId: string,
+    @Body() body: { ids: string[] },
+  ) {
+    if (!body.ids?.length || body.ids.length > 50) {
+      throw new BadRequestException('ids must be an array of 1-50 items');
+    }
+    return this.conversationService.bulkClose(businessId, body.ids);
+  }
+
+  @Post('bulk-assign')
+  bulkAssign(
+    @BusinessId() businessId: string,
+    @Body() body: { ids: string[]; staffId: string },
+  ) {
+    if (!body.ids?.length || body.ids.length > 50) {
+      throw new BadRequestException('ids must be an array of 1-50 items');
+    }
+    if (!body.staffId) {
+      throw new BadRequestException('staffId is required');
+    }
+    return this.conversationService.bulkAssign(businessId, body.ids, body.staffId);
+  }
+
+  @Post('bulk-tag')
+  bulkTag(
+    @BusinessId() businessId: string,
+    @Body() body: { ids: string[]; tag: string },
+  ) {
+    if (!body.ids?.length || body.ids.length > 50) {
+      throw new BadRequestException('ids must be an array of 1-50 items');
+    }
+    if (!body.tag?.trim()) {
+      throw new BadRequestException('tag is required');
+    }
+    return this.conversationService.bulkTag(businessId, body.ids, body.tag.trim());
+  }
+
+  @Post('bulk-read')
+  bulkRead(
+    @BusinessId() businessId: string,
+    @Body() body: { ids: string[] },
+  ) {
+    if (!body.ids?.length || body.ids.length > 50) {
+      throw new BadRequestException('ids must be an array of 1-50 items');
+    }
+    return this.conversationService.bulkMarkRead(businessId, body.ids);
   }
 
   @Post(':id/booking')

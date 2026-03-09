@@ -1,4 +1,6 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 import { PrismaService } from '../../common/prisma.service';
 import { InboxGateway } from '../../common/inbox.gateway';
 
@@ -9,6 +11,7 @@ export class MessageService {
   constructor(
     private prisma: PrismaService,
     private inboxGateway: InboxGateway,
+    @InjectQueue('messaging') private messagingQueue: Queue,
   ) {}
 
   async sendMessage(
@@ -17,6 +20,7 @@ export class MessageService {
     staffId: string,
     content: string,
     provider: { sendMessage: (msg: any) => Promise<{ externalId: string }> },
+    scheduledFor?: Date,
   ) {
     const conversation = await this.prisma.conversation.findFirst({
       where: { id: conversationId, businessId },
@@ -24,7 +28,42 @@ export class MessageService {
     });
     if (!conversation) throw new Error('Conversation not found');
 
-    // Send via provider
+    // If scheduling for the future
+    if (scheduledFor && scheduledFor.getTime() > Date.now()) {
+      const message = await this.prisma.message.create({
+        data: {
+          conversationId,
+          direction: 'OUTBOUND',
+          senderStaffId: staffId,
+          content,
+          contentType: 'TEXT',
+          deliveryStatus: 'SCHEDULED',
+          scheduledFor,
+        },
+        include: {
+          senderStaff: { select: { id: true, name: true } },
+          attachments: true,
+        },
+      });
+
+      // Create delayed BullMQ job
+      const delay = scheduledFor.getTime() - Date.now();
+      const job = await this.messagingQueue.add(
+        'scheduled-message',
+        { messageId: message.id, businessId },
+        { delay },
+      );
+
+      // Store job ID for cancellation
+      await this.prisma.message.update({
+        where: { id: message.id },
+        data: { scheduledJobId: job.id },
+      });
+
+      return { ...message, scheduledJobId: job.id };
+    }
+
+    // Send immediately via provider
     const { externalId } = await provider.sendMessage({
       to: conversation.customer.phone,
       body: content,
@@ -73,6 +112,53 @@ export class MessageService {
     this.inboxGateway.notifyConversationUpdate(businessId, updated);
 
     return message;
+  }
+
+  async getScheduledMessages(businessId: string, conversationId: string) {
+    const conversation = await this.prisma.conversation.findFirst({
+      where: { id: conversationId, businessId },
+    });
+    if (!conversation) return [];
+
+    return this.prisma.message.findMany({
+      where: {
+        conversationId,
+        deliveryStatus: 'SCHEDULED',
+        scheduledFor: { not: null },
+      },
+      include: {
+        senderStaff: { select: { id: true, name: true } },
+      },
+      orderBy: { scheduledFor: 'asc' },
+    });
+  }
+
+  async cancelScheduledMessage(businessId: string, conversationId: string, messageId: string) {
+    const message = await this.prisma.message.findFirst({
+      where: {
+        id: messageId,
+        conversationId,
+        deliveryStatus: 'SCHEDULED',
+        conversation: { businessId },
+      },
+    });
+    if (!message) throw new NotFoundException('Scheduled message not found');
+
+    // Remove BullMQ job if exists
+    if (message.scheduledJobId) {
+      try {
+        const job = await this.messagingQueue.getJob(message.scheduledJobId);
+        if (job) await job.remove();
+      } catch (err) {
+        this.logger.warn(`Failed to remove scheduled job ${message.scheduledJobId}: ${(err as Error).message}`);
+      }
+    }
+
+    // Mark as cancelled
+    return this.prisma.message.update({
+      where: { id: messageId },
+      data: { deliveryStatus: 'CANCELLED' },
+    });
   }
 
   async receiveInbound(

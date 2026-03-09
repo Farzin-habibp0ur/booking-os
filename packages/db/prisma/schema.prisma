@@ -281,10 +281,12 @@ model Message {
   content        String
   contentType    String    @default("TEXT")
   externalId     String?   @unique
-  deliveryStatus String    @default("SENT") // SENT, DELIVERED, READ, FAILED
+  deliveryStatus String    @default("SENT") // SENT, DELIVERED, READ, FAILED, SCHEDULED, CANCELLED
   deliveredAt    DateTime?
   readAt         DateTime?
   failureReason  String?
+  scheduledFor   DateTime?
+  scheduledJobId String?
   metadata       Json      @default("{}")
   createdAt      DateTime  @default(now())
 

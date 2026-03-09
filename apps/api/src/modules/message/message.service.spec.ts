@@ -1,4 +1,6 @@
 import { Test } from '@nestjs/testing';
+import { NotFoundException } from '@nestjs/common';
+import { getQueueToken } from '@nestjs/bullmq';
 import { MessageService } from './message.service';
 import { PrismaService } from '../../common/prisma.service';
 import { InboxGateway } from '../../common/inbox.gateway';
@@ -12,6 +14,10 @@ describe('MessageService', () => {
     notifyConversationUpdate: jest.Mock;
     emitToBusinessRoom: jest.Mock;
   };
+  let mockQueue: {
+    add: jest.Mock;
+    getJob: jest.Mock;
+  };
 
   beforeEach(async () => {
     prisma = createMockPrisma();
@@ -20,12 +26,17 @@ describe('MessageService', () => {
       notifyConversationUpdate: jest.fn(),
       emitToBusinessRoom: jest.fn(),
     };
+    mockQueue = {
+      add: jest.fn().mockResolvedValue({ id: 'job-123' }),
+      getJob: jest.fn(),
+    };
 
     const module = await Test.createTestingModule({
       providers: [
         MessageService,
         { provide: PrismaService, useValue: prisma },
         { provide: InboxGateway, useValue: mockGateway },
+        { provide: getQueueToken('messaging'), useValue: mockQueue },
       ],
     }).compile();
 
@@ -130,6 +141,144 @@ describe('MessageService', () => {
       await expect(
         service.sendMessage('biz1', 'conv1', 'staff1', 'Hello!', mockProvider),
       ).rejects.toThrow('Conversation not found');
+    });
+  });
+
+  describe('sendMessage (scheduled)', () => {
+    const mockProvider = {
+      sendMessage: jest.fn().mockResolvedValue({ externalId: 'ext-123' }),
+    };
+
+    const mockConversation = {
+      id: 'conv1',
+      businessId: 'biz1',
+      customerId: 'cust1',
+      assignedToId: null,
+      customer: { id: 'cust1', phone: '+1234567890', name: 'Emma' },
+    };
+
+    beforeEach(() => {
+      prisma.conversation.findFirst.mockResolvedValue(mockConversation as any);
+      prisma.message.create.mockResolvedValue({
+        id: 'msg-sched',
+        direction: 'OUTBOUND',
+        content: 'Scheduled!',
+        deliveryStatus: 'SCHEDULED',
+        senderStaff: { id: 'staff1', name: 'Dr. Chen' },
+      } as any);
+      prisma.message.update.mockResolvedValue({} as any);
+    });
+
+    it('creates scheduled message with BullMQ delayed job', async () => {
+      const futureDate = new Date(Date.now() + 3600000); // 1 hour from now
+      const result = await service.sendMessage('biz1', 'conv1', 'staff1', 'Scheduled!', mockProvider, futureDate);
+
+      expect(prisma.message.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          deliveryStatus: 'SCHEDULED',
+          scheduledFor: futureDate,
+        }),
+        include: expect.any(Object),
+      });
+      expect(mockQueue.add).toHaveBeenCalledWith(
+        'scheduled-message',
+        { messageId: 'msg-sched', businessId: 'biz1' },
+        { delay: expect.any(Number) },
+      );
+      expect(mockProvider.sendMessage).not.toHaveBeenCalled();
+      expect(result.scheduledJobId).toBe('job-123');
+    });
+
+    it('sends immediately when no scheduledFor provided', async () => {
+      prisma.conversation.update.mockResolvedValue({ ...mockConversation, status: 'WAITING' } as any);
+
+      await service.sendMessage('biz1', 'conv1', 'staff1', 'Now!', mockProvider);
+
+      expect(mockProvider.sendMessage).toHaveBeenCalled();
+      expect(mockQueue.add).not.toHaveBeenCalled();
+    });
+
+    it('sends immediately when scheduledFor is in the past', async () => {
+      prisma.conversation.update.mockResolvedValue({ ...mockConversation, status: 'WAITING' } as any);
+      const pastDate = new Date(Date.now() - 1000);
+
+      await service.sendMessage('biz1', 'conv1', 'staff1', 'Past!', mockProvider, pastDate);
+
+      expect(mockProvider.sendMessage).toHaveBeenCalled();
+      expect(mockQueue.add).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('getScheduledMessages', () => {
+    it('returns scheduled messages for conversation', async () => {
+      prisma.conversation.findFirst.mockResolvedValue({ id: 'conv1' } as any);
+      const msgs = [{ id: 'm1', deliveryStatus: 'SCHEDULED' }];
+      prisma.message.findMany.mockResolvedValue(msgs as any);
+
+      const result = await service.getScheduledMessages('biz1', 'conv1');
+
+      expect(result).toEqual(msgs);
+      expect(prisma.message.findMany).toHaveBeenCalledWith({
+        where: {
+          conversationId: 'conv1',
+          deliveryStatus: 'SCHEDULED',
+          scheduledFor: { not: null },
+        },
+        include: { senderStaff: { select: { id: true, name: true } } },
+        orderBy: { scheduledFor: 'asc' },
+      });
+    });
+
+    it('returns empty array when conversation not found', async () => {
+      prisma.conversation.findFirst.mockResolvedValue(null);
+
+      const result = await service.getScheduledMessages('biz1', 'conv1');
+
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe('cancelScheduledMessage', () => {
+    it('cancels message and removes BullMQ job', async () => {
+      const mockJob = { remove: jest.fn() };
+      prisma.message.findFirst.mockResolvedValue({
+        id: 'msg1',
+        deliveryStatus: 'SCHEDULED',
+        scheduledJobId: 'job-123',
+      } as any);
+      mockQueue.getJob.mockResolvedValue(mockJob);
+      prisma.message.update.mockResolvedValue({ id: 'msg1', deliveryStatus: 'CANCELLED' } as any);
+
+      const result = await service.cancelScheduledMessage('biz1', 'conv1', 'msg1');
+
+      expect(mockJob.remove).toHaveBeenCalled();
+      expect(prisma.message.update).toHaveBeenCalledWith({
+        where: { id: 'msg1' },
+        data: { deliveryStatus: 'CANCELLED' },
+      });
+      expect(result.deliveryStatus).toBe('CANCELLED');
+    });
+
+    it('throws NotFoundException when message not found', async () => {
+      prisma.message.findFirst.mockResolvedValue(null);
+
+      await expect(service.cancelScheduledMessage('biz1', 'conv1', 'msg1')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('handles missing BullMQ job gracefully', async () => {
+      prisma.message.findFirst.mockResolvedValue({
+        id: 'msg1',
+        deliveryStatus: 'SCHEDULED',
+        scheduledJobId: 'job-gone',
+      } as any);
+      mockQueue.getJob.mockResolvedValue(null);
+      prisma.message.update.mockResolvedValue({ id: 'msg1', deliveryStatus: 'CANCELLED' } as any);
+
+      const result = await service.cancelScheduledMessage('biz1', 'conv1', 'msg1');
+
+      expect(result.deliveryStatus).toBe('CANCELLED');
     });
   });
 
