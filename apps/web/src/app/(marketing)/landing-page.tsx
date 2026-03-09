@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import {
   Calendar,
@@ -9,12 +8,10 @@ import {
   Sparkles,
   BarChart3,
   CreditCard,
-  ChevronDown,
-  Menu,
-  X,
   ArrowRight,
   Check,
 } from 'lucide-react';
+import FaqItem from '@/components/faq-item';
 
 /* ------------------------------------------------------------------ */
 /*  FAQ data                                                           */
@@ -147,157 +144,12 @@ function scrollTo(id: string) {
   }
 }
 
-/* ------------------------------------------------------------------ */
-/*  FAQ Accordion Item                                                 */
-/* ------------------------------------------------------------------ */
-function FaqItem({ q, a }: { q: string; a: string }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className="border-b border-slate-100 last:border-0">
-      <button
-        onClick={() => setOpen(!open)}
-        className="flex w-full items-center justify-between gap-4 py-5 text-left transition-colors hover:text-sage-700"
-        aria-expanded={open}
-      >
-        <span className="text-base font-medium text-slate-800 sm:text-lg">{q}</span>
-        <ChevronDown
-          className={`h-5 w-5 shrink-0 text-slate-400 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
-        />
-      </button>
-      <div
-        className={`grid transition-all duration-200 ease-in-out ${open ? 'grid-rows-[1fr] pb-5 opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
-      >
-        <div className="overflow-hidden">
-          <p className="text-slate-500 leading-relaxed">{a}</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 /* ================================================================== */
 /*  Landing Page                                                       */
 /* ================================================================== */
 export default function LandingPage() {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-
-  /* Sticky header background on scroll */
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 10);
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
-
-  const handleNavClick = useCallback((id: string) => {
-    setMenuOpen(false);
-    scrollTo(id);
-  }, []);
-
   return (
-    <div className="min-h-screen bg-[#FCFCFD] text-slate-800">
-      {/* -------------------------------------------------------- */}
-      {/*  HEADER                                                   */}
-      {/* -------------------------------------------------------- */}
-      <header
-        className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
-          scrolled ? 'bg-white/80 shadow-soft-sm backdrop-blur-lg' : 'bg-transparent'
-        }`}
-      >
-        <nav className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-8">
-          {/* Logo */}
-          <Link href="/" className="font-serif text-xl font-bold tracking-tight text-slate-900">
-            Booking OS
-          </Link>
-
-          {/* Desktop nav */}
-          <div className="hidden items-center gap-8 md:flex">
-            <button
-              onClick={() => scrollTo('features')}
-              className="text-sm font-medium text-slate-600 transition-colors hover:text-sage-700"
-            >
-              Features
-            </button>
-            <button
-              onClick={() => scrollTo('pricing')}
-              className="text-sm font-medium text-slate-600 transition-colors hover:text-sage-700"
-            >
-              Pricing
-            </button>
-            <button
-              onClick={() => scrollTo('faq')}
-              className="text-sm font-medium text-slate-600 transition-colors hover:text-sage-700"
-            >
-              FAQ
-            </button>
-          </div>
-
-          {/* Desktop CTA */}
-          <div className="hidden items-center gap-4 md:flex">
-            <Link
-              href="/login"
-              className="text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
-            >
-              Sign In
-            </Link>
-            <Link
-              href="/signup"
-              className="btn-press rounded-xl bg-sage-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-sage-700"
-            >
-              Start Free Trial
-            </Link>
-          </div>
-
-          {/* Mobile menu toggle */}
-          <button
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="rounded-lg p-2 text-slate-600 transition-colors hover:bg-slate-100 md:hidden"
-            aria-label="Toggle menu"
-          >
-            {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
-        </nav>
-
-        {/* Mobile menu */}
-        {menuOpen && (
-          <div className="animate-fade-in border-t border-slate-100 bg-white px-5 pb-6 pt-2 md:hidden">
-            <div className="flex flex-col gap-1">
-              <button
-                onClick={() => handleNavClick('features')}
-                className="rounded-lg px-3 py-2.5 text-left text-sm font-medium text-slate-600 hover:bg-slate-50"
-              >
-                Features
-              </button>
-              <button
-                onClick={() => handleNavClick('pricing')}
-                className="rounded-lg px-3 py-2.5 text-left text-sm font-medium text-slate-600 hover:bg-slate-50"
-              >
-                Pricing
-              </button>
-              <button
-                onClick={() => handleNavClick('faq')}
-                className="rounded-lg px-3 py-2.5 text-left text-sm font-medium text-slate-600 hover:bg-slate-50"
-              >
-                FAQ
-              </button>
-              <hr className="my-2 border-slate-100" />
-              <Link
-                href="/login"
-                className="rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
-              >
-                Sign In
-              </Link>
-              <Link
-                href="/signup"
-                className="btn-press mt-1 rounded-xl bg-sage-600 px-5 py-2.5 text-center text-sm font-semibold text-white hover:bg-sage-700"
-              >
-                Start Free Trial
-              </Link>
-            </div>
-          </div>
-        )}
-      </header>
-
+    <>
       {/* -------------------------------------------------------- */}
       {/*  HERO                                                     */}
       {/* -------------------------------------------------------- */}
@@ -571,60 +423,6 @@ export default function LandingPage() {
           </Link>
         </div>
       </section>
-
-      {/* -------------------------------------------------------- */}
-      {/*  FOOTER                                                   */}
-      {/* -------------------------------------------------------- */}
-      <footer className="border-t border-slate-100 bg-white py-12">
-        <div className="mx-auto max-w-6xl px-5 sm:px-8">
-          <div className="flex flex-col items-center justify-between gap-8 sm:flex-row sm:items-start">
-            {/* Logo + tagline */}
-            <div>
-              <Link href="/" className="font-serif text-lg font-bold text-slate-900">
-                Booking OS
-              </Link>
-              <p className="mt-1 text-sm text-slate-400">
-                The operating system for service businesses.
-              </p>
-            </div>
-
-            {/* Links */}
-            <div className="flex gap-12 text-sm">
-              <div className="flex flex-col gap-2.5">
-                <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">
-                  Product
-                </span>
-                <button
-                  onClick={() => scrollTo('features')}
-                  className="text-left text-slate-500 hover:text-slate-700"
-                >
-                  Features
-                </button>
-                <button
-                  onClick={() => scrollTo('pricing')}
-                  className="text-left text-slate-500 hover:text-slate-700"
-                >
-                  Pricing
-                </button>
-                <Link href="/login" className="text-slate-500 hover:text-slate-700">
-                  Login
-                </Link>
-              </div>
-              <div className="flex flex-col gap-2.5">
-                <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">
-                  Legal
-                </span>
-                <span className="cursor-default text-slate-400">Privacy Policy</span>
-                <span className="cursor-default text-slate-400">Terms of Service</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-10 border-t border-slate-100 pt-6 text-center text-xs text-slate-400">
-            &copy; {new Date().getFullYear()} Booking OS. All rights reserved.
-          </div>
-        </div>
-      </footer>
-    </div>
+    </>
   );
 }

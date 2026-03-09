@@ -253,32 +253,9 @@ export default function PricingPage() {
   const [annual, setAnnual] = useState(false);
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#FCFCFD' }}>
-      {/* ---- Header ---- */}
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <Link href="/" className="font-serif text-xl font-semibold text-slate-900">
-            Booking OS
-          </Link>
-          <div className="flex items-center gap-3">
-            <Link
-              href="/login"
-              className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
-            >
-              Sign In
-            </Link>
-            <Link
-              href="/signup"
-              className="text-sm font-medium text-white bg-sage-600 hover:bg-sage-700 px-4 py-2 rounded-xl transition-colors"
-            >
-              Start Free Trial
-            </Link>
-          </div>
-        </div>
-      </header>
-
+    <>
       {/* ---- Hero ---- */}
-      <section className="pt-20 pb-12 text-center px-4">
+      <section className="pt-28 pb-12 text-center px-4">
         <h1 className="font-serif text-4xl sm:text-5xl font-semibold text-slate-900 mb-4">
           Simple, transparent pricing
         </h1>
@@ -464,31 +441,6 @@ export default function PricingPage() {
           Contact us
         </a>
       </section>
-
-      {/* ---- Footer ---- */}
-      <footer className="border-t border-slate-100 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <Link href="/" className="font-serif text-lg font-semibold text-slate-900">
-              Booking OS
-            </Link>
-            <div className="flex items-center gap-6 text-sm text-slate-500">
-              <Link href="/pricing" className="hover:text-slate-700 transition-colors">
-                Pricing
-              </Link>
-              <Link href="/login" className="hover:text-slate-700 transition-colors">
-                Sign In
-              </Link>
-              <Link href="/signup" className="hover:text-slate-700 transition-colors">
-                Sign Up
-              </Link>
-            </div>
-            <p className="text-xs text-slate-400">
-              &copy; {new Date().getFullYear()} Booking OS. All rights reserved.
-            </p>
-          </div>
-        </div>
-      </footer>
-    </div>
+    </>
   );
 }
