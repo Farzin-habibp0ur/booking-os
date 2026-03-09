@@ -8,7 +8,16 @@ import { usePack } from '@/lib/vertical-pack';
 import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/lib/toast';
 import { TableRowSkeleton, EmptyState } from '@/components/skeleton';
-import { BookOpen, Download, Search, ChevronUp, ChevronDown, Filter, X, Calendar } from 'lucide-react';
+import {
+  BookOpen,
+  Download,
+  Search,
+  ChevronUp,
+  ChevronDown,
+  Filter,
+  X,
+  Calendar,
+} from 'lucide-react';
 import BookingDetailModal from '@/components/booking-detail-modal';
 import BookingFormModal from '@/components/booking-form-modal';
 import BulkActionBar from '@/components/bulk-action-bar';
@@ -89,7 +98,12 @@ export default function BookingsPage() {
   const [sortCol, setSortCol] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [showFilters, setShowFilters] = useState(
-    !!(searchParams.get('dateFrom') || searchParams.get('dateTo') || searchParams.get('staffId') || searchParams.get('datePreset')),
+    !!(
+      searchParams.get('dateFrom') ||
+      searchParams.get('dateTo') ||
+      searchParams.get('staffId') ||
+      searchParams.get('datePreset')
+    ),
   );
   const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
   const pack = usePack();
@@ -397,19 +411,22 @@ export default function BookingsPage() {
       </div>
 
       {showFilters && (
-        <div className="mb-4 p-4 border border-slate-200 rounded-xl bg-white" data-testid="filters-panel">
+        <div
+          className="mb-4 p-4 border border-slate-200 rounded-xl bg-white"
+          data-testid="filters-panel"
+        >
           {/* Date preset buttons */}
           <div className="mb-3">
-            <label className="block text-xs font-medium text-slate-700 mb-2">
-              Date Range
-            </label>
+            <label className="block text-xs font-medium text-slate-700 mb-2">Date Range</label>
             <div className="flex flex-wrap gap-2">
-              {([
-                { value: 'today', label: 'Today' },
-                { value: 'this_week', label: 'This Week' },
-                { value: 'this_month', label: 'This Month' },
-                { value: 'custom', label: 'Custom' },
-              ] as { value: DatePreset; label: string }[]).map((preset) => (
+              {(
+                [
+                  { value: 'today', label: 'Today' },
+                  { value: 'this_week', label: 'This Week' },
+                  { value: 'this_month', label: 'This Month' },
+                  { value: 'custom', label: 'Custom' },
+                ] as { value: DatePreset; label: string }[]
+              ).map((preset) => (
                 <button
                   key={preset.value}
                   onClick={() => handleDatePreset(preset.value)}

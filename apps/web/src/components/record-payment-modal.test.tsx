@@ -20,16 +20,18 @@ jest.mock('@/lib/i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }));
 
-jest.mock('lucide-react', () =>
-  new Proxy(
-    {},
-    {
-      get: (_, name) => {
-        if (name === '__esModule') return true;
-        return (props: any) => <span data-icon={name as string} {...props} />;
+jest.mock(
+  'lucide-react',
+  () =>
+    new Proxy(
+      {},
+      {
+        get: (_, name) => {
+          if (name === '__esModule') return true;
+          return (props: any) => <span data-icon={name as string} {...props} />;
+        },
       },
-    },
-  ),
+    ),
 );
 
 import RecordPaymentModal from './record-payment-modal';
@@ -82,12 +84,15 @@ describe('RecordPaymentModal', () => {
     fireEvent.click(submitBtn);
 
     await waitFor(() => {
-      expect(mockPost).toHaveBeenCalledWith('/payments', expect.objectContaining({
-        amount: 75,
-        method: 'CASH',
-        bookingId: 'b1',
-        customerId: 'c1',
-      }));
+      expect(mockPost).toHaveBeenCalledWith(
+        '/payments',
+        expect.objectContaining({
+          amount: 75,
+          method: 'CASH',
+          bookingId: 'b1',
+          customerId: 'c1',
+        }),
+      );
     });
   });
 

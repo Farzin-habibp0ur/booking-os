@@ -20,16 +20,18 @@ jest.mock('@/lib/i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }));
 
-jest.mock('lucide-react', () =>
-  new Proxy(
-    {},
-    {
-      get: (_, name) => {
-        if (name === '__esModule') return true;
-        return (props: any) => <span data-icon={name as string} {...props} />;
+jest.mock(
+  'lucide-react',
+  () =>
+    new Proxy(
+      {},
+      {
+        get: (_, name) => {
+          if (name === '__esModule') return true;
+          return (props: any) => <span data-icon={name as string} {...props} />;
+        },
       },
-    },
-  ),
+    ),
 );
 
 import RefundModal from './refund-modal';

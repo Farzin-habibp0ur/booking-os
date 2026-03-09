@@ -67,7 +67,10 @@ export default function SettingsPage() {
       setGoogleReviewUrl(b.packConfig?.googleReviewUrl || '');
     });
     if (role === 'ADMIN') {
-      api.get<any>('/referral/stats').then(setReferralStats).catch(() => {});
+      api
+        .get<any>('/referral/stats')
+        .then(setReferralStats)
+        .catch(() => {});
     }
   }, [role]);
 
@@ -278,7 +281,8 @@ export default function SettingsPage() {
             <h3 className="font-semibold text-slate-800">Referral Program</h3>
           </div>
           <p className="text-sm text-slate-500 mt-1">
-            Give $50, Get $50 — Share your referral link with other businesses. When they subscribe, you both get $50 credit.
+            Give $50, Get $50 — Share your referral link with other businesses. When they subscribe,
+            you both get $50 credit.
           </p>
 
           {/* Referral link */}

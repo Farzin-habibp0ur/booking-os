@@ -19,12 +19,7 @@ interface RefundModalProps {
   };
 }
 
-export default function RefundModal({
-  isOpen,
-  onClose,
-  onSuccess,
-  payment,
-}: RefundModalProps) {
+export default function RefundModal({ isOpen, onClose, onSuccess, payment }: RefundModalProps) {
   const maxRefundable = payment.amount - (payment.refundedAmount || 0);
   const [amount, setAmount] = useState(maxRefundable.toFixed(2));
   const [reason, setReason] = useState('');
@@ -62,13 +57,21 @@ export default function RefundModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center" role="dialog" aria-modal="true">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      role="dialog"
+      aria-modal="true"
+    >
       <div className="absolute inset-0 bg-black/30 animate-fade-in" onClick={onClose} />
       <div className="relative w-[440px] bg-white rounded-2xl shadow-soft animate-scale-in">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-slate-100">
           <h2 className="text-lg font-serif font-semibold text-slate-900">Issue Refund</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600" aria-label="Close">
+          <button
+            onClick={onClose}
+            className="text-slate-400 hover:text-slate-600"
+            aria-label="Close"
+          >
             <X size={20} />
           </button>
         </div>
@@ -101,7 +104,9 @@ export default function RefundModal({
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Refund Amount</label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">$</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">
+                  $
+                </span>
                 <input
                   type="number"
                   step="0.01"
@@ -159,11 +164,10 @@ export default function RefundModal({
             <div>
               <p className="font-semibold text-slate-900">Confirm Refund</p>
               <p className="text-sm text-slate-500 mt-1">
-                Are you sure you want to refund <span className="font-semibold text-red-600">${parsedAmount.toFixed(2)}</span>?
+                Are you sure you want to refund{' '}
+                <span className="font-semibold text-red-600">${parsedAmount.toFixed(2)}</span>?
               </p>
-              {reason && (
-                <p className="text-xs text-slate-400 mt-2 italic">Reason: {reason}</p>
-              )}
+              {reason && <p className="text-xs text-slate-400 mt-2 italic">Reason: {reason}</p>}
             </div>
             <p className="text-xs text-red-600 bg-red-50 rounded-xl px-3 py-2">
               This action cannot be undone.

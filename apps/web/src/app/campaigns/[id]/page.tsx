@@ -92,7 +92,11 @@ export default function CampaignDetailPage() {
             {campaign.recurrenceRule && campaign.recurrenceRule !== 'NONE' && (
               <span className="inline-flex items-center gap-0.5 px-2 py-0.5 bg-lavender-50 text-lavender-700 text-xs rounded-full font-medium">
                 <Repeat size={12} />
-                {{ DAILY: 'Daily', WEEKLY: 'Weekly', BIWEEKLY: 'Bi-weekly', MONTHLY: 'Monthly' }[campaign.recurrenceRule]}
+                {
+                  { DAILY: 'Daily', WEEKLY: 'Weekly', BIWEEKLY: 'Bi-weekly', MONTHLY: 'Monthly' }[
+                    campaign.recurrenceRule
+                  ]
+                }
               </span>
             )}
           </div>
@@ -186,13 +190,24 @@ export default function CampaignDetailPage() {
           {campaign.recurrenceRule && campaign.recurrenceRule !== 'NONE' && (
             <div className="flex justify-between">
               <dt className="text-slate-500">Recurrence</dt>
-              <dd>{{ DAILY: 'Daily', WEEKLY: 'Weekly', BIWEEKLY: 'Bi-weekly', MONTHLY: 'Monthly' }[campaign.recurrenceRule]}</dd>
+              <dd>
+                {
+                  { DAILY: 'Daily', WEEKLY: 'Weekly', BIWEEKLY: 'Bi-weekly', MONTHLY: 'Monthly' }[
+                    campaign.recurrenceRule
+                  ]
+                }
+              </dd>
             </div>
           )}
           {campaign.nextRunAt && (
             <div className="flex justify-between">
               <dt className="text-slate-500">Next Run</dt>
-              <dd>{new Date(campaign.nextRunAt).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}</dd>
+              <dd>
+                {new Date(campaign.nextRunAt).toLocaleString('en-US', {
+                  dateStyle: 'medium',
+                  timeStyle: 'short',
+                })}
+              </dd>
             </div>
           )}
           {campaign.parentCampaignId && (

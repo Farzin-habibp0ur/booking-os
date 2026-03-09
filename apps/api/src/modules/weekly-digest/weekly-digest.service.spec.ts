@@ -123,9 +123,7 @@ describe('WeeklyDigestService', () => {
     });
 
     test('limits top services to 5', async () => {
-      prisma.booking.count
-        .mockResolvedValueOnce(12)
-        .mockResolvedValueOnce(10);
+      prisma.booking.count.mockResolvedValueOnce(12).mockResolvedValueOnce(10);
 
       const manyServices = [
         { service: { name: 'Svc1', price: 100 } },
@@ -182,9 +180,7 @@ describe('WeeklyDigestService', () => {
           { name: 'Botox', count: 5, revenue: 1250 },
           { name: 'Facial', count: 3, revenue: 450 },
         ],
-        upcomingToday: [
-          { serviceName: 'Botox', customerName: 'Emma', time: '10:00 AM' },
-        ],
+        upcomingToday: [{ serviceName: 'Botox', customerName: 'Emma', time: '10:00 AM' }],
       });
 
       expect(html).toContain('Weekly Digest');

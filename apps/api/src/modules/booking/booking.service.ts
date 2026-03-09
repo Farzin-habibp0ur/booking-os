@@ -194,9 +194,7 @@ export class BookingService {
     const mergedCustomFields = {
       ...(data.customFields || {}),
       ...(overrideLog ? { overrideLog } : {}),
-      ...(effectivePrice !== service.price
-        ? { effectivePrice, basePrice: service.price }
-        : {}),
+      ...(effectivePrice !== service.price ? { effectivePrice, basePrice: service.price } : {}),
     };
 
     // C1 fix: Wrap conflict check + create in transaction with row lock to prevent double-booking

@@ -44,9 +44,7 @@ describe('ReferralController', () => {
 
   describe('getLink', () => {
     it('returns referral link wrapped in object', async () => {
-      referralService.getReferralLink.mockResolvedValue(
-        'http://localhost:3000/signup?ref=CODE1',
-      );
+      referralService.getReferralLink.mockResolvedValue('http://localhost:3000/signup?ref=CODE1');
 
       const result = await controller.getLink('biz1');
       expect(result).toEqual({ link: 'http://localhost:3000/signup?ref=CODE1' });

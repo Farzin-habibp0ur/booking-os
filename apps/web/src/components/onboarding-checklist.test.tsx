@@ -25,16 +25,18 @@ jest.mock('@/lib/api', () => ({
   },
 }));
 
-jest.mock('lucide-react', () =>
-  new Proxy(
-    {},
-    {
-      get: (_, name) => {
-        if (name === '__esModule') return true;
-        return (props: any) => <span data-icon={name as string} {...props} />;
+jest.mock(
+  'lucide-react',
+  () =>
+    new Proxy(
+      {},
+      {
+        get: (_, name) => {
+          if (name === '__esModule') return true;
+          return (props: any) => <span data-icon={name as string} {...props} />;
+        },
       },
-    },
-  ),
+    ),
 );
 
 import { OnboardingChecklist } from './onboarding-checklist';

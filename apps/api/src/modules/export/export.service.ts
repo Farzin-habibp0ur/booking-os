@@ -308,9 +308,7 @@ export class ExportService {
       rows = [data];
     }
 
-    const headerCells = columns
-      .map((c) => `<th>${escapeHtml(c.header)}</th>`)
-      .join('');
+    const headerCells = columns.map((c) => `<th>${escapeHtml(c.header)}</th>`).join('');
 
     const bodyRows = rows
       .map((row) => {

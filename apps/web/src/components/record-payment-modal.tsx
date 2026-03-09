@@ -71,7 +71,11 @@ export default function RecordPaymentModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center" role="dialog" aria-modal="true">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      role="dialog"
+      aria-modal="true"
+    >
       <div className="absolute inset-0 bg-black/30 animate-fade-in" onClick={onClose} />
       <div className="relative w-[440px] bg-white rounded-2xl shadow-soft animate-scale-in">
         {/* Header */}
@@ -80,7 +84,11 @@ export default function RecordPaymentModal({
             <DollarSign size={18} className="text-sage-600" />
             <h2 className="text-lg font-serif font-semibold text-slate-900">Record Payment</h2>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600" aria-label="Close">
+          <button
+            onClick={onClose}
+            className="text-slate-400 hover:text-slate-600"
+            aria-label="Close"
+          >
             <X size={20} />
           </button>
         </div>
@@ -92,7 +100,8 @@ export default function RecordPaymentModal({
               {customerName && <p className="text-slate-700 font-medium">{customerName}</p>}
               {serviceName && (
                 <p className="text-slate-500 text-xs">
-                  {serviceName}{servicePrice ? ` · $${servicePrice}` : ''}
+                  {serviceName}
+                  {servicePrice ? ` · $${servicePrice}` : ''}
                 </p>
               )}
             </div>
@@ -105,7 +114,9 @@ export default function RecordPaymentModal({
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Amount</label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">$</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">
+                $
+              </span>
               <input
                 type="number"
                 step="0.01"

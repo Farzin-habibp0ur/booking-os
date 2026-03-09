@@ -462,9 +462,7 @@ describe('ExportService', () => {
     });
 
     it('uses RFC 4180 line endings (CRLF)', () => {
-      const csv = service.exportReportCsv('bookings-over-time', [
-        { date: '2026-03-01', count: 1 },
-      ]);
+      const csv = service.exportReportCsv('bookings-over-time', [{ date: '2026-03-01', count: 1 }]);
 
       expect(csv).toContain('\r\n');
       expect(csv.endsWith('\r\n')).toBe(true);

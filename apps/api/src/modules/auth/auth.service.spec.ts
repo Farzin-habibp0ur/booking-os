@@ -71,7 +71,9 @@ describe('AuthService', () => {
           useValue: {
             trackReferral: jest.fn().mockResolvedValue(undefined),
             getOrCreateReferralCode: jest.fn().mockResolvedValue('TESTCODE'),
-            getReferralLink: jest.fn().mockResolvedValue('http://localhost:3000/signup?ref=TESTCODE'),
+            getReferralLink: jest
+              .fn()
+              .mockResolvedValue('http://localhost:3000/signup?ref=TESTCODE'),
             getReferralStats: jest.fn().mockResolvedValue({}),
             convertReferral: jest.fn().mockResolvedValue(undefined),
           },

@@ -63,16 +63,18 @@ jest.mock('@/lib/api', () => ({
   },
 }));
 
-jest.mock('lucide-react', () =>
-  new Proxy(
-    {},
-    {
-      get: (_, name) => {
-        if (name === '__esModule') return true;
-        return (props: any) => <span data-icon={name as string} {...props} />;
+jest.mock(
+  'lucide-react',
+  () =>
+    new Proxy(
+      {},
+      {
+        get: (_, name) => {
+          if (name === '__esModule') return true;
+          return (props: any) => <span data-icon={name as string} {...props} />;
+        },
       },
-    },
-  ),
+    ),
 );
 
 import SetupPageWrapper from './page';
@@ -82,7 +84,15 @@ describe('SetupPage', () => {
     jest.clearAllMocks();
     // Default API responses
     mockGet.mockImplementation((url: string) => {
-      if (url === '/business') return Promise.resolve({ id: 'b1', name: 'Test Clinic', verticalPack: 'general', timezone: 'America/Los_Angeles', currency: 'USD', packConfig: {} });
+      if (url === '/business')
+        return Promise.resolve({
+          id: 'b1',
+          name: 'Test Clinic',
+          verticalPack: 'general',
+          timezone: 'America/Los_Angeles',
+          currency: 'USD',
+          packConfig: {},
+        });
       if (url === '/staff') return Promise.resolve([{ id: 's1', name: 'Sarah', role: 'ADMIN' }]);
       if (url === '/services') return Promise.resolve([]);
       if (url === '/templates') return Promise.resolve([]);

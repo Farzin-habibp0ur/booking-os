@@ -205,7 +205,12 @@ describe('CampaignService', () => {
 
   describe('create with recurrence', () => {
     it('creates campaign with recurrence rule', async () => {
-      const campaign = { id: 'camp1', name: 'Weekly Promo', status: 'DRAFT', recurrenceRule: 'WEEKLY' };
+      const campaign = {
+        id: 'camp1',
+        name: 'Weekly Promo',
+        status: 'DRAFT',
+        recurrenceRule: 'WEEKLY',
+      };
       prisma.campaign.create.mockResolvedValue(campaign as any);
 
       const result = await campaignService.create('biz1', {

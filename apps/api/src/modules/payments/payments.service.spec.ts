@@ -12,10 +12,7 @@ describe('PaymentsService', () => {
     prisma = createMockPrisma();
 
     const module = await Test.createTestingModule({
-      providers: [
-        PaymentsService,
-        { provide: PrismaService, useValue: prisma },
-      ],
+      providers: [PaymentsService, { provide: PrismaService, useValue: prisma }],
     }).compile();
 
     service = module.get(PaymentsService);
@@ -32,11 +29,7 @@ describe('PaymentsService', () => {
       };
       prisma.payment.create.mockResolvedValue(payment as any);
 
-      const result = await service.create(
-        'biz1',
-        { amount: 100, method: 'CASH' },
-        'staff1',
-      );
+      const result = await service.create('biz1', { amount: 100, method: 'CASH' }, 'staff1');
 
       expect(result).toEqual(payment);
       expect(prisma.payment.create).toHaveBeenCalledWith({
@@ -204,9 +197,7 @@ describe('PaymentsService', () => {
     it('throws NotFoundException when payment not found', async () => {
       prisma.payment.findFirst.mockResolvedValue(null);
 
-      await expect(service.findOne('biz1', 'p1')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.findOne('biz1', 'p1')).rejects.toThrow(NotFoundException);
     });
 
     it('filters by businessId for tenant isolation', async () => {
@@ -340,9 +331,7 @@ describe('PaymentsService', () => {
     it('throws NotFoundException when payment not found', async () => {
       prisma.payment.findFirst.mockResolvedValue(null);
 
-      await expect(
-        service.update('biz1', 'p1', { notes: 'x' }),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.update('biz1', 'p1', { notes: 'x' })).rejects.toThrow(NotFoundException);
     });
 
     it('verifies tenant isolation before updating', async () => {

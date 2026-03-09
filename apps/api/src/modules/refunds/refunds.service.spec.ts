@@ -42,7 +42,11 @@ describe('RefundsService', () => {
       prisma.payment.update.mockResolvedValue({} as any);
       prisma.actionHistory.create.mockResolvedValue({} as any);
 
-      const result = await service.create('biz1', { paymentId: 'pay1', amount: 50, reason: 'test' } as any, 'staff1');
+      const result = await service.create(
+        'biz1',
+        { paymentId: 'pay1', amount: 50, reason: 'test' } as any,
+        'staff1',
+      );
 
       expect(result).toEqual({ id: 'r1', status: 'COMPLETED' });
       expect(prisma.refund.create).toHaveBeenCalledWith({
@@ -65,7 +69,11 @@ describe('RefundsService', () => {
       prisma.payment.update.mockResolvedValue({} as any);
       prisma.actionHistory.create.mockResolvedValue({} as any);
 
-      await service.create('biz1', { paymentId: 'pay1', amount: 50, reason: 'partial' } as any, 'staff1');
+      await service.create(
+        'biz1',
+        { paymentId: 'pay1', amount: 50, reason: 'partial' } as any,
+        'staff1',
+      );
 
       expect(prisma.payment.update).toHaveBeenCalledWith({
         where: { id: 'pay1' },
@@ -79,7 +87,11 @@ describe('RefundsService', () => {
       prisma.payment.update.mockResolvedValue({} as any);
       prisma.actionHistory.create.mockResolvedValue({} as any);
 
-      await service.create('biz1', { paymentId: 'pay1', amount: 100, reason: 'full' } as any, 'staff1');
+      await service.create(
+        'biz1',
+        { paymentId: 'pay1', amount: 100, reason: 'full' } as any,
+        'staff1',
+      );
 
       expect(prisma.payment.update).toHaveBeenCalledWith({
         where: { id: 'pay1' },
@@ -95,7 +107,11 @@ describe('RefundsService', () => {
       prisma.payment.findFirst.mockResolvedValue(paymentWithRefunds as any);
 
       await expect(
-        service.create('biz1', { paymentId: 'pay1', amount: 30, reason: 'too much' } as any, 'staff1'),
+        service.create(
+          'biz1',
+          { paymentId: 'pay1', amount: 30, reason: 'too much' } as any,
+          'staff1',
+        ),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -111,7 +127,11 @@ describe('RefundsService', () => {
       prisma.payment.findFirst.mockResolvedValue(null);
 
       try {
-        await service.create('biz1', { paymentId: 'pay1', amount: 50, reason: 'test' } as any, 'staff1');
+        await service.create(
+          'biz1',
+          { paymentId: 'pay1', amount: 50, reason: 'test' } as any,
+          'staff1',
+        );
       } catch {}
 
       expect(prisma.payment.findFirst).toHaveBeenCalledWith({
@@ -126,7 +146,11 @@ describe('RefundsService', () => {
       prisma.payment.update.mockResolvedValue({} as any);
       prisma.actionHistory.create.mockResolvedValue({} as any);
 
-      await service.create('biz1', { paymentId: 'pay1', amount: 50, reason: 'test' } as any, 'staff1');
+      await service.create(
+        'biz1',
+        { paymentId: 'pay1', amount: 50, reason: 'test' } as any,
+        'staff1',
+      );
 
       expect(prisma.actionHistory.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
@@ -164,7 +188,11 @@ describe('RefundsService', () => {
       };
       (stripeService as any).stripe = mockStripe;
 
-      await stripeService.create('biz1', { paymentId: 'pay1', amount: 50, reason: 'stripe test' } as any, 'staff1');
+      await stripeService.create(
+        'biz1',
+        { paymentId: 'pay1', amount: 50, reason: 'stripe test' } as any,
+        'staff1',
+      );
 
       expect(mockStripe.refunds.create).toHaveBeenCalledWith({
         payment_intent: 'pi_123',
@@ -192,7 +220,11 @@ describe('RefundsService', () => {
       };
       (service as any).stripe = mockStripe;
 
-      const result = await service.create('biz1', { paymentId: 'pay1', amount: 50, reason: 'fail test' } as any, 'staff1');
+      const result = await service.create(
+        'biz1',
+        { paymentId: 'pay1', amount: 50, reason: 'fail test' } as any,
+        'staff1',
+      );
 
       expect(result).toEqual({ id: 'r1', status: 'FAILED' });
       expect(prisma.refund.create).toHaveBeenCalledWith({

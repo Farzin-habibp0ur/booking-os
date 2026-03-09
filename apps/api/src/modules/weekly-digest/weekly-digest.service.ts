@@ -235,31 +235,33 @@ export class WeeklyDigestService {
     const revenueArrow = data.revenueDelta >= 0 ? '&#9650;' : '&#9660;';
     const revenueColor = data.revenueDelta >= 0 ? '#71907C' : '#EF4444';
 
-    const topServicesRows = data.topServices.length > 0
-      ? data.topServices
-          .map(
-            (s) =>
-              `<tr>
+    const topServicesRows =
+      data.topServices.length > 0
+        ? data.topServices
+            .map(
+              (s) =>
+                `<tr>
               <td style="padding:8px 0;font-size:14px;color:#1E293B;border-bottom:1px solid #F1F5F9;">${s.name}</td>
               <td style="padding:8px 0;font-size:14px;color:#64748B;text-align:center;border-bottom:1px solid #F1F5F9;">${s.count}</td>
               <td style="padding:8px 0;font-size:14px;font-weight:600;color:#1E293B;text-align:right;border-bottom:1px solid #F1F5F9;">$${s.revenue.toFixed(2)}</td>
             </tr>`,
-          )
-          .join('')
-      : `<tr><td colspan="3" style="padding:12px 0;font-size:14px;color:#94A3B8;text-align:center;">No bookings this week</td></tr>`;
+            )
+            .join('')
+        : `<tr><td colspan="3" style="padding:12px 0;font-size:14px;color:#94A3B8;text-align:center;">No bookings this week</td></tr>`;
 
-    const upcomingRows = data.upcomingToday.length > 0
-      ? data.upcomingToday
-          .map(
-            (b) =>
-              `<tr>
+    const upcomingRows =
+      data.upcomingToday.length > 0
+        ? data.upcomingToday
+            .map(
+              (b) =>
+                `<tr>
               <td style="padding:8px 0;font-size:14px;color:#1E293B;border-bottom:1px solid #F1F5F9;">${b.time}</td>
               <td style="padding:8px 0;font-size:14px;color:#1E293B;border-bottom:1px solid #F1F5F9;">${b.serviceName}</td>
               <td style="padding:8px 0;font-size:14px;color:#64748B;text-align:right;border-bottom:1px solid #F1F5F9;">${b.customerName}</td>
             </tr>`,
-          )
-          .join('')
-      : `<tr><td colspan="3" style="padding:12px 0;font-size:14px;color:#94A3B8;text-align:center;">No upcoming bookings today</td></tr>`;
+            )
+            .join('')
+        : `<tr><td colspan="3" style="padding:12px 0;font-size:14px;color:#94A3B8;text-align:center;">No upcoming bookings today</td></tr>`;
 
     return `
 <h2 style="margin:0 0 8px 0;font-size:22px;color:#1E293B;">Weekly Digest</h2>

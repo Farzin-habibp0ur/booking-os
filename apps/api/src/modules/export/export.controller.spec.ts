@@ -14,27 +14,21 @@ describe('ExportController', () => {
       exportCustomersCsv: jest.fn().mockResolvedValue('id,name\r\nc1,Jane\r\n'),
       exportBookingsCsv: jest.fn().mockResolvedValue('id,status\r\nb1,CONFIRMED\r\n'),
       exportReportCsv: jest.fn().mockReturnValue('Date,Count\r\n2026-03-01,5\r\n'),
-      exportReportPdf: jest
-        .fn()
-        .mockReturnValue('<!DOCTYPE html><html><body>report</body></html>'),
+      exportReportPdf: jest.fn().mockReturnValue('<!DOCTYPE html><html><body>report</body></html>'),
     };
     mockReportsService = {
       bookingsOverTime: jest.fn().mockResolvedValue([{ date: '2026-03-01', count: 5 }]),
       revenueOverTime: jest.fn().mockResolvedValue([{ date: '2026-03-01', revenue: 500 }]),
       noShowRate: jest.fn().mockResolvedValue({ total: 10, noShows: 2, rate: 20 }),
       responseTimes: jest.fn().mockResolvedValue({ avgMinutes: 5, sampleSize: 10 }),
-      serviceBreakdown: jest
-        .fn()
-        .mockResolvedValue([{ name: 'Botox', count: 3, revenue: 600 }]),
+      serviceBreakdown: jest.fn().mockResolvedValue([{ name: 'Botox', count: 3, revenue: 600 }]),
       staffPerformance: jest.fn().mockResolvedValue([]),
       statusBreakdown: jest.fn().mockResolvedValue([{ status: 'COMPLETED', count: 5 }]),
       peakHours: jest.fn().mockResolvedValue({ byHour: [], byDay: [] }),
       consultToTreatmentConversion: jest
         .fn()
         .mockResolvedValue({ consultCustomers: 10, converted: 5, rate: 50 }),
-      depositComplianceRate: jest
-        .fn()
-        .mockResolvedValue({ totalRequired: 8, paid: 6, rate: 75 }),
+      depositComplianceRate: jest.fn().mockResolvedValue({ totalRequired: 8, paid: 6, rate: 75 }),
     };
     mockRes = {
       setHeader: jest.fn(),
@@ -162,86 +156,44 @@ describe('ExportController', () => {
     });
 
     it('defaults to CSV format when format is not pdf', async () => {
-      await controller.exportReport(
-        'biz1',
-        'no-show-rate',
-        '30',
-        undefined,
-        mockRes as any,
-      );
+      await controller.exportReport('biz1', 'no-show-rate', '30', undefined, mockRes as any);
 
       expect(mockService.exportReportCsv).toHaveBeenCalled();
       expect(mockService.exportReportPdf).not.toHaveBeenCalled();
     });
 
     it('routes response-times to correct service method', async () => {
-      await controller.exportReport(
-        'biz1',
-        'response-times',
-        '30',
-        undefined,
-        mockRes as any,
-      );
+      await controller.exportReport('biz1', 'response-times', '30', undefined, mockRes as any);
 
       expect(mockReportsService.responseTimes).toHaveBeenCalledWith('biz1');
     });
 
     it('routes staff-performance to correct service method', async () => {
-      await controller.exportReport(
-        'biz1',
-        'staff-performance',
-        '60',
-        undefined,
-        mockRes as any,
-      );
+      await controller.exportReport('biz1', 'staff-performance', '60', undefined, mockRes as any);
 
       expect(mockReportsService.staffPerformance).toHaveBeenCalledWith('biz1', 60);
     });
 
     it('routes status-breakdown to correct service method', async () => {
-      await controller.exportReport(
-        'biz1',
-        'status-breakdown',
-        '7',
-        undefined,
-        mockRes as any,
-      );
+      await controller.exportReport('biz1', 'status-breakdown', '7', undefined, mockRes as any);
 
       expect(mockReportsService.statusBreakdown).toHaveBeenCalledWith('biz1', 7);
     });
 
     it('routes peak-hours to correct service method', async () => {
-      await controller.exportReport(
-        'biz1',
-        'peak-hours',
-        '30',
-        undefined,
-        mockRes as any,
-      );
+      await controller.exportReport('biz1', 'peak-hours', '30', undefined, mockRes as any);
 
       expect(mockReportsService.peakHours).toHaveBeenCalledWith('biz1', 30);
     });
 
     it('routes consult-conversion to correct service method', async () => {
-      await controller.exportReport(
-        'biz1',
-        'consult-conversion',
-        '90',
-        undefined,
-        mockRes as any,
-      );
+      await controller.exportReport('biz1', 'consult-conversion', '90', undefined, mockRes as any);
 
       expect(mockReportsService.consultToTreatmentConversion).toHaveBeenCalledWith('biz1', 90);
     });
 
     it('routes deposit-compliance to correct service method', async () => {
-      await controller.exportReport(
-        'biz1',
-        'deposit-compliance',
-        '30',
-        undefined,
-        mockRes as any,
-      );
+      await controller.exportReport('biz1', 'deposit-compliance', '30', undefined, mockRes as any);
 
       expect(mockReportsService.depositComplianceRate).toHaveBeenCalledWith('biz1');
     });

@@ -228,10 +228,7 @@ export class StaffService {
     return this.getServicePricing(businessId, staffId);
   }
 
-  async getStaffPriceForService(
-    staffId: string,
-    serviceId: string,
-  ): Promise<number | null> {
+  async getStaffPriceForService(staffId: string, serviceId: string): Promise<number | null> {
     const override = await this.prisma.staffServicePrice.findUnique({
       where: {
         staffId_serviceId: { staffId, serviceId },

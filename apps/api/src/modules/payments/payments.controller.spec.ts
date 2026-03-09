@@ -13,9 +13,7 @@ describe('PaymentsController', () => {
       summary: jest.fn(),
       update: jest.fn(),
     };
-    controller = new PaymentsController(
-      mockService as unknown as PaymentsService,
-    );
+    controller = new PaymentsController(mockService as unknown as PaymentsService);
   });
 
   it('create delegates to service with businessId and user id', async () => {
@@ -53,11 +51,7 @@ describe('PaymentsController', () => {
 
     const result = await controller.summary('biz1', '2026-01-01', '2026-01-31');
 
-    expect(mockService.summary).toHaveBeenCalledWith(
-      'biz1',
-      '2026-01-01',
-      '2026-01-31',
-    );
+    expect(mockService.summary).toHaveBeenCalledWith('biz1', '2026-01-01', '2026-01-31');
     expect(result).toEqual({ totalAmount: 500, count: 3 });
   });
 
@@ -66,11 +60,7 @@ describe('PaymentsController', () => {
 
     const result = await controller.summary('biz1', undefined, undefined);
 
-    expect(mockService.summary).toHaveBeenCalledWith(
-      'biz1',
-      undefined,
-      undefined,
-    );
+    expect(mockService.summary).toHaveBeenCalledWith('biz1', undefined, undefined);
     expect(result).toEqual({ totalAmount: 0, count: 0 });
   });
 

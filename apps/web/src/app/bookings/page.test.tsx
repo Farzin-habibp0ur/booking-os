@@ -534,9 +534,7 @@ describe('BookingsPage', () => {
     // After debounce, should call API with search param
     await waitFor(
       () => {
-        expect(mockApi.get).toHaveBeenCalledWith(
-          expect.stringContaining('search=Jane'),
-        );
+        expect(mockApi.get).toHaveBeenCalledWith(expect.stringContaining('search=Jane'));
       },
       { timeout: 500 },
     );
@@ -746,12 +744,8 @@ describe('BookingsPage', () => {
 
     await waitFor(
       () => {
-        expect(mockApi.get).toHaveBeenCalledWith(
-          expect.stringContaining('dateFrom=2026-01-16'),
-        );
-        expect(mockApi.get).toHaveBeenCalledWith(
-          expect.stringContaining('dateTo=2026-01-19'),
-        );
+        expect(mockApi.get).toHaveBeenCalledWith(expect.stringContaining('dateFrom=2026-01-16'));
+        expect(mockApi.get).toHaveBeenCalledWith(expect.stringContaining('dateTo=2026-01-19'));
       },
       { timeout: 500 },
     );
@@ -766,9 +760,7 @@ describe('BookingsPage', () => {
           { id: 's2', name: 'Mike' },
         ]);
       return Promise.resolve({
-        data: [
-          createBooking({ id: 'b1', staff: { name: 'Sarah' }, staffId: 's1' }),
-        ],
+        data: [createBooking({ id: 'b1', staff: { name: 'Sarah' }, staffId: 's1' })],
         total: 1,
       });
     });
@@ -800,9 +792,7 @@ describe('BookingsPage', () => {
 
     await waitFor(
       () => {
-        expect(mockApi.get).toHaveBeenCalledWith(
-          expect.stringContaining('staffId=s1'),
-        );
+        expect(mockApi.get).toHaveBeenCalledWith(expect.stringContaining('staffId=s1'));
       },
       { timeout: 500 },
     );
@@ -1959,9 +1949,7 @@ describe('BookingsPage', () => {
     });
 
     await waitFor(() => {
-      expect(mockApi.get).toHaveBeenCalledWith(
-        expect.stringContaining('dateFrom='),
-      );
+      expect(mockApi.get).toHaveBeenCalledWith(expect.stringContaining('dateFrom='));
     });
   });
 

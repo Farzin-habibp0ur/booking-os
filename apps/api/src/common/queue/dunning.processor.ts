@@ -21,7 +21,9 @@ export class DunningProcessor extends WorkerHost {
 
     try {
       if (job.name === 'dunning-downgrade') {
-        this.logger.log(`Processing dunning downgrade for business ${(job.data as DunningDowngradeJobData).businessId}`);
+        this.logger.log(
+          `Processing dunning downgrade for business ${(job.data as DunningDowngradeJobData).businessId}`,
+        );
         await dunningService.processDowngrade(job.data as DunningDowngradeJobData);
       } else {
         const data = job.data as DunningJobData;

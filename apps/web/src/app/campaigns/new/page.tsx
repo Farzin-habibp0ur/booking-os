@@ -355,7 +355,14 @@ export default function NewCampaignPage() {
                 <div className="flex justify-between">
                   <dt className="text-slate-500">Recurrence</dt>
                   <dd className="font-medium">
-                    {{ DAILY: 'Daily', WEEKLY: 'Weekly', BIWEEKLY: 'Bi-weekly', MONTHLY: 'Monthly' }[recurrenceRule]}
+                    {
+                      {
+                        DAILY: 'Daily',
+                        WEEKLY: 'Weekly',
+                        BIWEEKLY: 'Bi-weekly',
+                        MONTHLY: 'Monthly',
+                      }[recurrenceRule]
+                    }
                   </dd>
                 </div>
               )}

@@ -135,14 +135,16 @@ export class DashboardService {
         orderBy: { lastMessageAt: 'asc' },
         take: 10,
       }),
-      this.prisma.payment.aggregate({
-        where: {
-          businessId,
-          status: { in: ['COMPLETED', 'succeeded'] },
-          createdAt: { gte: today },
-        },
-        _sum: { amount: true },
-      }).then((r) => r._sum.amount || 0),
+      this.prisma.payment
+        .aggregate({
+          where: {
+            businessId,
+            status: { in: ['COMPLETED', 'succeeded'] },
+            createdAt: { gte: today },
+          },
+          _sum: { amount: true },
+        })
+        .then((r) => r._sum.amount || 0),
     ]);
 
     // Batch 2b: Staff-scoped queries for Mission Control

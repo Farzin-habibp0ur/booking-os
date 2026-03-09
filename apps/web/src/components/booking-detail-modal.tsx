@@ -106,7 +106,8 @@ export default function BookingDetailModal({
 
   useEffect(() => {
     if (!isOpen || !booking) return;
-    api.get<any>(`/payments?bookingId=${booking.id}`)
+    api
+      .get<any>(`/payments?bookingId=${booking.id}`)
       .then((res) => setPayments(res.data || []))
       .catch(() => setPayments([]));
   }, [isOpen, booking?.id]);
@@ -114,7 +115,8 @@ export default function BookingDetailModal({
   if (!isOpen || !booking) return null;
 
   const loadPayments = () => {
-    api.get<any>(`/payments?bookingId=${booking.id}`)
+    api
+      .get<any>(`/payments?bookingId=${booking.id}`)
       .then((res) => setPayments(res.data || []))
       .catch(() => {});
   };
@@ -636,18 +638,25 @@ export default function BookingDetailModal({
             {payments.length > 0 ? (
               <div className="space-y-2">
                 {payments.map((p: any) => {
-                  const isRefundable = (p.status === 'COMPLETED' || p.status === 'PARTIAL_REFUND') && isAdmin;
+                  const isRefundable =
+                    (p.status === 'COMPLETED' || p.status === 'PARTIAL_REFUND') && isAdmin;
                   return (
                     <div key={p.id} className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2">
                         <DollarSign size={14} className="text-sage-500" />
                         <span className="font-medium">${p.amount.toFixed(2)}</span>
-                        <span className="text-xs text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">{p.method}</span>
+                        <span className="text-xs text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
+                          {p.method}
+                        </span>
                         {p.status === 'REFUNDED' && (
-                          <span className="text-xs text-red-600 bg-red-50 px-1.5 py-0.5 rounded">Refunded</span>
+                          <span className="text-xs text-red-600 bg-red-50 px-1.5 py-0.5 rounded">
+                            Refunded
+                          </span>
                         )}
                         {p.status === 'PARTIAL_REFUND' && (
-                          <span className="text-xs text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">Partial Refund</span>
+                          <span className="text-xs text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">
+                            Partial Refund
+                          </span>
                         )}
                       </div>
                       <div className="flex items-center gap-2">

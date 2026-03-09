@@ -53,13 +53,7 @@ function triggerDownload(content: string, filename: string, mimeType: string) {
   URL.revokeObjectURL(url);
 }
 
-function ExportButtons({
-  reportType,
-  days,
-}: {
-  reportType: string;
-  days: number;
-}) {
+function ExportButtons({ reportType, days }: { reportType: string; days: number }) {
   const [exporting, setExporting] = useState<ExportFormat | null>(null);
 
   const handleExport = async (format: ExportFormat) => {
@@ -70,7 +64,11 @@ function ExportButtons({
       );
       const ext = format === 'pdf' ? 'html' : 'csv';
       const mime = format === 'pdf' ? 'text/html;charset=utf-8;' : 'text/csv;charset=utf-8;';
-      triggerDownload(content, `${reportType}-${new Date().toISOString().split('T')[0]}.${ext}`, mime);
+      triggerDownload(
+        content,
+        `${reportType}-${new Date().toISOString().split('T')[0]}.${ext}`,
+        mime,
+      );
     } catch {
       // silently fail — the api client handles auth errors
     } finally {
@@ -86,7 +84,11 @@ function ExportButtons({
         className="p-1.5 rounded-lg text-slate-400 hover:text-sage-600 hover:bg-sage-50 transition-colors disabled:opacity-50"
         title="Export CSV"
       >
-        {exporting === 'csv' ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+        {exporting === 'csv' ? (
+          <Loader2 size={14} className="animate-spin" />
+        ) : (
+          <Download size={14} />
+        )}
       </button>
       <button
         onClick={() => handleExport('pdf')}
@@ -94,7 +96,11 @@ function ExportButtons({
         className="p-1.5 rounded-lg text-slate-400 hover:text-lavender-600 hover:bg-lavender-50 transition-colors disabled:opacity-50"
         title="Export PDF"
       >
-        {exporting === 'pdf' ? <Loader2 size={14} className="animate-spin" /> : <FileText size={14} />}
+        {exporting === 'pdf' ? (
+          <Loader2 size={14} className="animate-spin" />
+        ) : (
+          <FileText size={14} />
+        )}
       </button>
     </div>
   );

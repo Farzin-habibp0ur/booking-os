@@ -88,9 +88,7 @@ describe('NpsSurvey', () => {
   });
 
   it('does not render when business is less than 30 days old', () => {
-    mockUser.business.createdAt = new Date(
-      Date.now() - 10 * 24 * 60 * 60 * 1000,
-    ).toISOString();
+    mockUser.business.createdAt = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString();
 
     render(<NpsSurvey />);
 
@@ -131,9 +129,12 @@ describe('NpsSurvey', () => {
 
     expect(screen.queryByTestId('nps-survey')).not.toBeInTheDocument();
     expect(localStorageMock.setItem).toHaveBeenCalledWith('nps-survey-completed', 'dismissed');
-    expect(mockTrackEvent).toHaveBeenCalledWith('nps_dismissed', expect.objectContaining({
-      businessId: 'biz1',
-    }));
+    expect(mockTrackEvent).toHaveBeenCalledWith(
+      'nps_dismissed',
+      expect.objectContaining({
+        businessId: 'biz1',
+      }),
+    );
   });
 
   it('dismisses when clicking backdrop', async () => {

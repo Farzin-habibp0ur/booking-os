@@ -9,10 +9,18 @@ function createMockCampaignService() {
     computeNextRun: jest.fn((date: Date, rule: string) => {
       const next = new Date(date);
       switch (rule) {
-        case 'DAILY': next.setDate(next.getDate() + 1); break;
-        case 'WEEKLY': next.setDate(next.getDate() + 7); break;
-        case 'BIWEEKLY': next.setDate(next.getDate() + 14); break;
-        case 'MONTHLY': next.setMonth(next.getMonth() + 1); break;
+        case 'DAILY':
+          next.setDate(next.getDate() + 1);
+          break;
+        case 'WEEKLY':
+          next.setDate(next.getDate() + 7);
+          break;
+        case 'BIWEEKLY':
+          next.setDate(next.getDate() + 14);
+          break;
+        case 'MONTHLY':
+          next.setMonth(next.getMonth() + 1);
+          break;
       }
       return next;
     }),
@@ -152,11 +160,13 @@ describe('CampaignDispatchService', () => {
     });
 
     it('does not schedule next recurrence for NONE rule', async () => {
-      prisma.campaign.findMany.mockResolvedValue([{
-        id: 'camp1',
-        throttlePerMinute: 10,
-        recurrenceRule: 'NONE',
-      }] as any);
+      prisma.campaign.findMany.mockResolvedValue([
+        {
+          id: 'camp1',
+          throttlePerMinute: 10,
+          recurrenceRule: 'NONE',
+        },
+      ] as any);
       prisma.campaignSend.findMany.mockResolvedValue([]);
       prisma.campaignSend.groupBy.mockResolvedValue([{ status: 'SENT', _count: 5 }] as any);
       prisma.campaignSend.count.mockResolvedValue(0);

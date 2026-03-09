@@ -118,9 +118,7 @@ export class DunningService {
       },
     );
 
-    this.logger.log(
-      `Scheduled dunning sequence (3 emails + downgrade) for business ${businessId}`,
-    );
+    this.logger.log(`Scheduled dunning sequence (3 emails + downgrade) for business ${businessId}`);
   }
 
   /**
@@ -142,9 +140,7 @@ export class DunningService {
 
     // If payment has been recovered, skip
     if (subscription.status === 'active') {
-      this.logger.log(
-        `Skipping dunning step ${step} — business ${businessId} payment recovered`,
-      );
+      this.logger.log(`Skipping dunning step ${step} — business ${businessId} payment recovered`);
       return;
     }
 
