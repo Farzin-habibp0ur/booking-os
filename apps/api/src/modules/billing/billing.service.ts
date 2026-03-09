@@ -405,9 +405,11 @@ export class BillingService implements OnModuleInit {
 
       await tx.payment.create({
         data: {
+          businessId,
           bookingId,
           stripePaymentIntentId: paymentIntent.id,
           amount,
+          currency: 'usd',
           status: 'pending',
         },
       });

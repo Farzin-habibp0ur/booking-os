@@ -804,6 +804,7 @@ async function main() {
       botoxBookingsWithDeposit.map((bk, i) =>
         prisma.payment.create({
           data: {
+            businessId: bizId,
             bookingId: bk.id,
             stripePaymentIntentId: `pi_demo_${bk.id.slice(-8)}_${i}`,
             amount: 100,
@@ -2584,6 +2585,7 @@ async function main() {
   // ── D10. Payments ──────────────────────────────────────────────────────────
   await prisma.payment.create({
     data: {
+      businessId: dBizId,
       bookingId: db8.id,
       stripePaymentIntentId: `pi_demo_dealer_${db8.id.slice(-8)}`,
       amount: 300,
