@@ -60,6 +60,7 @@ jest.mock('@/lib/posthog', () => ({
   trackEvent: jest.fn(),
 }));
 jest.mock('@/components/settings-hub', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { useRouter } = require('next/navigation');
   const categories = [
     {
