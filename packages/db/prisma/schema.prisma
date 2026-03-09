@@ -71,6 +71,7 @@ model Business {
   emailSequenceEnrollments   EmailSequenceEnrollment[]
   testimonials               Testimonial[]
   reportSchedules            ReportSchedule[]
+  businessReviews            BusinessReview[]
 
   @@map("businesses")
 }
@@ -1309,4 +1310,19 @@ model ReportSchedule {
   @@index([businessId])
   @@index([isActive, frequency])
   @@map("report_schedules")
+}
+
+model BusinessReview {
+  id          String   @id @default(uuid())
+  businessId  String
+  month       String   // YYYY-MM
+  metrics     Json
+  aiSummary   String   @db.Text
+  createdAt   DateTime @default(now())
+
+  business Business @relation(fields: [businessId], references: [id])
+
+  @@unique([businessId, month])
+  @@index([businessId])
+  @@map("business_reviews")
 }

@@ -62,6 +62,7 @@ import { MarketingAgentModule } from './modules/marketing-agent/marketing-agent.
 import { EmailSequenceModule } from './modules/email-sequences/email-sequences.module';
 import { TestimonialsModule } from './modules/testimonials/testimonials.module';
 import { PortalModule } from './modules/portal/portal.module';
+import { BusinessReviewModule } from './modules/business-review/business-review.module';
 
 @Module({
   imports: [
@@ -140,6 +141,7 @@ import { PortalModule } from './modules/portal/portal.module';
     EmailSequenceModule,
     TestimonialsModule,
     PortalModule,
+    BusinessReviewModule,
     process.env.REDIS_URL ? QueueModule.forRootWithRedis() : QueueModule.forRoot(),
   ],
 })

@@ -1,10 +1,11 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import Link from 'next/link';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { useI18n } from '@/lib/i18n';
-import { Download, FileText, Loader2, Mail, Clock, X, Trash2 } from 'lucide-react';
+import { Download, FileText, Loader2, Mail, Clock, X, Trash2, Sparkles } from 'lucide-react';
 import {
   BarChart,
   Bar,
@@ -519,6 +520,23 @@ export default function ReportsPage() {
           }
         />
       </div>
+
+      {/* Monthly Review Link */}
+      <Link
+        href="/reports/monthly-review"
+        className="block bg-lavender-50 border border-lavender-100 rounded-2xl p-4 hover:border-lavender-200 transition-colors group"
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Sparkles size={18} className="text-lavender-600" />
+            <div>
+              <p className="font-medium text-lavender-700">Monthly Business Review</p>
+              <p className="text-xs text-lavender-500">AI-powered performance summary and recommendations</p>
+            </div>
+          </div>
+          <span className="text-sm text-lavender-500 group-hover:text-lavender-700 transition-colors">View →</span>
+        </div>
+      </Link>
 
       {/* Row 1: Bookings Over Time + Revenue */}
       <div className="grid grid-cols-2 gap-6">

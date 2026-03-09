@@ -38,7 +38,7 @@ const adminSections: NavSections = {
     '/marketing/sequences',
     '/testimonials',
   ],
-  insights: ['/dashboard', '/reports', '/roi', '/ai'],
+  insights: ['/dashboard', '/reports', '/reports/monthly-review', '/roi', '/ai'],
 };
 
 const agentSections: NavSections = {
