@@ -78,6 +78,9 @@ describe('DashboardService', () => {
       .mockResolvedValueOnce([]) // unassignedConversations
       .mockResolvedValueOnce(o.overdueConversations ?? []); // overdueConversationsRaw
 
+    // payment.aggregate for revenueToday (Batch 2)
+    (prisma.payment.aggregate as jest.Mock).mockResolvedValueOnce({ _sum: { amount: 0 } });
+
     // booking.count is called 5 times:
     // 1: thisWeekBookings, 2: lastWeekBookings, 3: anyBookingCount, 4: completedBookingsCount
     // Wait — let me count:
@@ -132,6 +135,7 @@ describe('DashboardService', () => {
       prisma.conversation.findMany
         .mockResolvedValueOnce([unassignedConv] as any) // unassignedConversations
         .mockResolvedValueOnce([] as any); // overdueConversationsRaw
+      (prisma.payment.aggregate as jest.Mock).mockResolvedValueOnce({ _sum: { amount: 0 } });
       prisma.booking.count
         .mockResolvedValueOnce(15) // thisWeekBookings
         .mockResolvedValueOnce(10) // lastWeekBookings
@@ -187,6 +191,7 @@ describe('DashboardService', () => {
       prisma.conversation.findMany
         .mockResolvedValueOnce([]) // unassigned
         .mockResolvedValueOnce([]); // overdue
+      (prisma.payment.aggregate as jest.Mock).mockResolvedValueOnce({ _sum: { amount: 0 } });
       prisma.booking.count.mockResolvedValue(0);
       prisma.customer.count.mockResolvedValue(0);
       prisma.conversation.count.mockResolvedValue(0);
@@ -420,6 +425,7 @@ describe('DashboardService', () => {
         .mockResolvedValueOnce([]) // unassigned
         .mockResolvedValueOnce([]) // overdue
         .mockResolvedValueOnce([myConv] as any); // myAssignedConversations (staff-scoped)
+      (prisma.payment.aggregate as jest.Mock).mockResolvedValueOnce({ _sum: { amount: 0 } });
       // booking.count: thisWeek, lastWeek, then completedTodayByStaff (staff-scoped), then anyBooking, completed
       prisma.booking.count
         .mockResolvedValueOnce(0) // thisWeekBookings
@@ -459,6 +465,7 @@ describe('DashboardService', () => {
       // Set up mocks accounting for staff-scoped calls between batch 2 and 3
       prisma.booking.findMany.mockResolvedValue([]);
       prisma.conversation.findMany.mockResolvedValue([]);
+      (prisma.payment.aggregate as jest.Mock).mockResolvedValueOnce({ _sum: { amount: 0 } });
       prisma.booking.count
         .mockResolvedValueOnce(0) // thisWeekBookings
         .mockResolvedValueOnce(0) // lastWeekBookings

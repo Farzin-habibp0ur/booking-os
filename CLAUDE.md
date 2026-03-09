@@ -242,6 +242,7 @@ Key events: `message:new`, `conversation:updated`, `ai:suggestion`, `ai:auto-rep
 - `.status-dot` — small colored dot indicator (1.5×1.5 rounded-full)
 - `.btn-press` — subtle press feedback (scale 0.98 on :active)
 - `.nav-section-label` — sidebar nav section headings (10px uppercase tracking-wider)
+- `.celebration-confetti` — CSS-only confetti animation for setup wizard completion (respects `prefers-reduced-motion`)
 
 ### AI Feature Styling
 All AI-related UI elements use the **lavender** palette: `bg-lavender-50 border border-lavender-100 text-lavender-900 rounded-xl`
@@ -251,7 +252,7 @@ All AI-related UI elements use the **lavender** palette: `bg-lavender-50 border 
 ## Testing Conventions
 
 ### Test Counts
-- **~4,600+ total tests** across 242 test files (128 API + 114 web)
+- **~4,200+ total tests** across 254 test files (128 API + 126 web)
 - API: ~93% statement coverage, ~81% branch coverage
 - Web: ~78% statement coverage, ~73% branch coverage
 

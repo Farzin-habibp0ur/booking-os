@@ -20,6 +20,7 @@ interface KpiStripProps {
     totalBookingsThisWeek: number;
     totalBookingsLastWeek: number;
     revenueThisMonth: number;
+    revenueToday?: number;
     avgResponseTimeMins: number;
     openConversationCount: number;
     totalCustomers: number;
@@ -125,11 +126,12 @@ export function KpiStrip({
     // Admin mode (default)
     return [
       {
-        label: t('dashboard.kpi_revenue'),
-        value: `$${metrics.revenueThisMonth.toLocaleString()}`,
+        label: t('dashboard.kpi_revenue_today'),
+        value: `$${(metrics.revenueToday || 0).toLocaleString()}`,
         icon: DollarSign,
         color: 'text-sage-700 bg-sage-50',
-        href: '/reports',
+        href: '/payments',
+        subtitle: `$${metrics.revenueThisMonth.toLocaleString()} ${t('dashboard.kpi_this_month')}`,
       },
       {
         label: t('dashboard.kpi_bookings_week'),

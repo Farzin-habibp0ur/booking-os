@@ -55,6 +55,7 @@ import { OnboardingDripModule } from './modules/onboarding-drip/onboarding-drip.
 import { DunningModule } from './modules/dunning/dunning.module';
 import { ReferralModule } from './modules/referral/referral.module';
 import { WeeklyDigestModule } from './modules/weekly-digest/weekly-digest.module';
+import { PaymentsModule } from './modules/payments/payments.module';
 
 @Module({
   imports: [
@@ -126,6 +127,7 @@ import { WeeklyDigestModule } from './modules/weekly-digest/weekly-digest.module
     DunningModule,
     ReferralModule,
     WeeklyDigestModule,
+    PaymentsModule,
     process.env.REDIS_URL ? QueueModule.forRootWithRedis() : QueueModule.forRoot(),
   ],
 })

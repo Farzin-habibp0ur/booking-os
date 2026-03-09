@@ -64,6 +64,7 @@ model Business {
   referralsGiven       Referral[] @relation("ReferrerBusiness")
   referralsReceived    Referral[] @relation("ReferredBusiness")
   staffServicePrices   StaffServicePrice[]
+  payments             Payment[]
 
   @@map("businesses")
 }
@@ -132,6 +133,7 @@ model Customer {
   outboundDrafts        OutboundDraft[]
   duplicatesAsCustomer1 DuplicateCandidate[] @relation("DuplicateCustomer1")
   duplicatesAsCustomer2 DuplicateCandidate[] @relation("DuplicateCustomer2")
+  payments              Payment[]
 
   @@unique([businessId, phone])
   @@index([businessId])
@@ -423,16 +425,25 @@ model BillingCredit {
 
 model Payment {
   id                    String   @id @default(cuid())
-  bookingId             String
-  stripePaymentIntentId String   @unique
+  businessId            String
+  bookingId             String?
+  customerId            String?
   amount                Float
   currency              String   @default("usd")
-  status                String   @default("pending") // pending, succeeded, failed, refunded
+  method                String   @default("STRIPE") // CASH, CARD, BANK_TRANSFER, STRIPE, OTHER
+  status                String   @default("COMPLETED") // COMPLETED, REFUNDED, PARTIAL_REFUND, pending, succeeded, failed
+  reference             String?  // receipt number or external ref
+  notes                 String?
+  recordedById          String?  // staffId who recorded it
+  stripePaymentIntentId String?  @unique
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 
-  booking Booking @relation(fields: [bookingId], references: [id])
+  business Business  @relation(fields: [businessId], references: [id])
+  booking  Booking?  @relation(fields: [bookingId], references: [id])
+  customer Customer? @relation(fields: [customerId], references: [id])
 
+  @@index([businessId])
   @@index([bookingId])
   @@map("payments")
 }

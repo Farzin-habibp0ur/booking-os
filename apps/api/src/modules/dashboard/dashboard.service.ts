@@ -95,6 +95,7 @@ export class DashboardService {
       depositPendingBookings,
       tomorrowBookings,
       overdueConversationsRaw,
+      revenueToday,
     ] = await Promise.all([
       this.reportsService.noShowRate(businessId, 30),
       this.reportsService.responseTimes(businessId),
@@ -134,6 +135,14 @@ export class DashboardService {
         orderBy: { lastMessageAt: 'asc' },
         take: 10,
       }),
+      this.prisma.payment.aggregate({
+        where: {
+          businessId,
+          status: { in: ['COMPLETED', 'succeeded'] },
+          createdAt: { gte: today },
+        },
+        _sum: { amount: true },
+      }).then((r) => r._sum.amount || 0),
     ]);
 
     // Batch 2b: Staff-scoped queries for Mission Control
@@ -296,6 +305,7 @@ export class DashboardService {
         newCustomersThisWeek,
         openConversationCount,
         revenueThisMonth: Math.round(revenueThisMonth * 100) / 100,
+        revenueToday: Math.round(revenueToday * 100) / 100,
       },
       statusBreakdown,
       consultConversion,

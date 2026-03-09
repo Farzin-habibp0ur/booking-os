@@ -14,7 +14,9 @@ import {
   Send,
   ShieldCheck,
   Link2,
+  DollarSign,
 } from 'lucide-react';
+import RecordPaymentModal from './record-payment-modal';
 import { cn } from '@/lib/cn';
 import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/lib/toast';
@@ -72,6 +74,8 @@ export default function BookingDetailModal({
     null,
   );
   const [overrideReason, setOverrideReason] = useState('');
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [payments, setPayments] = useState<any[]>([]);
   const { t } = useI18n();
   const { toast } = useToast();
   const modalRef = useRef<HTMLDivElement>(null);
@@ -97,7 +101,20 @@ export default function BookingDetailModal({
     }
   }, [isOpen, booking?.id, booking?.status]);
 
+  useEffect(() => {
+    if (!isOpen || !booking) return;
+    api.get<any>(`/payments?bookingId=${booking.id}`)
+      .then((res) => setPayments(res.data || []))
+      .catch(() => setPayments([]));
+  }, [isOpen, booking?.id]);
+
   if (!isOpen || !booking) return null;
+
+  const loadPayments = () => {
+    api.get<any>(`/payments?bookingId=${booking.id}`)
+      .then((res) => setPayments(res.data || []))
+      .catch(() => {});
+  };
 
   const isRecurring = !!(booking.recurringSeriesId || booking.recurringSeries?.id);
 
@@ -609,6 +626,29 @@ export default function BookingDetailModal({
                 )}
             </div>
           </div>
+
+          {/* Payments */}
+          <div className="border-t pt-3">
+            <p className="text-xs font-semibold text-slate-500 uppercase mb-2">Payments</p>
+            {payments.length > 0 ? (
+              <div className="space-y-2">
+                {payments.map((p: any) => (
+                  <div key={p.id} className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2">
+                      <DollarSign size={14} className="text-sage-500" />
+                      <span className="font-medium">${p.amount.toFixed(2)}</span>
+                      <span className="text-xs text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">{p.method}</span>
+                    </div>
+                    <span className="text-xs text-slate-400">
+                      {new Date(p.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-400">No payments recorded</p>
+            )}
+          </div>
         </div>
 
         {/* Actions */}
@@ -706,6 +746,17 @@ export default function BookingDetailModal({
             </button>
           )}
 
+          {/* Record Payment */}
+          {booking.status !== 'CANCELLED' && (
+            <button
+              onClick={() => setShowPaymentModal(true)}
+              className="w-full py-2 border border-sage-200 text-sage-700 rounded-xl text-sm font-medium hover:bg-sage-50 transition-colors flex items-center justify-center gap-2"
+            >
+              <DollarSign size={14} />
+              Record Payment
+            </button>
+          )}
+
           {/* Reschedule button (available for PENDING, CONFIRMED) */}
           {['PENDING', 'PENDING_DEPOSIT', 'CONFIRMED'].includes(booking.status) && (
             <button
@@ -757,6 +808,19 @@ export default function BookingDetailModal({
               </div>
             )}
         </div>
+
+        {showPaymentModal && (
+          <RecordPaymentModal
+            isOpen={showPaymentModal}
+            onClose={() => setShowPaymentModal(false)}
+            onSuccess={loadPayments}
+            bookingId={booking.id}
+            customerId={booking.customerId}
+            customerName={booking.customer?.name}
+            serviceName={booking.service?.name}
+            servicePrice={booking.service?.price}
+          />
+        )}
       </div>
     </div>
   );

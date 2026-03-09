@@ -32,6 +32,7 @@ const baseMetrics = {
   totalBookingsThisWeek: 12,
   totalBookingsLastWeek: 8,
   revenueThisMonth: 1500,
+  revenueToday: 250,
   avgResponseTimeMins: 5,
   openConversationCount: 3,
   totalCustomers: 100,
@@ -43,7 +44,7 @@ describe('KpiStrip', () => {
     render(<KpiStrip mode="admin" metrics={baseMetrics} />);
 
     expect(screen.getByTestId('kpi-strip')).toBeInTheDocument();
-    expect(screen.getByText('dashboard.kpi_revenue')).toBeInTheDocument();
+    expect(screen.getByText('dashboard.kpi_revenue_today')).toBeInTheDocument();
     expect(screen.getByText('dashboard.kpi_bookings_week')).toBeInTheDocument();
     expect(screen.getByText('dashboard.kpi_customers')).toBeInTheDocument();
   });
@@ -110,7 +111,7 @@ describe('KpiStrip', () => {
     const cards = screen.getAllByTestId('kpi-card');
     fireEvent.click(cards[0]); // Revenue card
 
-    expect(mockPush).toHaveBeenCalledWith('/reports');
+    expect(mockPush).toHaveBeenCalledWith('/payments');
   });
 
   it('navigates to bookings when admin bookings KPI is clicked', () => {

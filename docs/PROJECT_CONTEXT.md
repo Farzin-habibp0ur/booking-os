@@ -2,7 +2,7 @@
 
 > **Purpose:** This document gives full context on the Booking OS platform — what it is, what's been built, how it's structured, and what's left to build. Share this with an AI assistant or new developer to get productive immediately.
 >
-> **Last updated:** March 8, 2026 (PLG Phase 4 Retention & Growth COMPLETE — ~4,600+ total tests across 242 test files, 53 Prisma models, 37 migrations)
+> **Last updated:** March 8, 2026 (Phase A Product Polish A1-A3 COMPLETE — ~4,200+ total tests across 254 test files, 53 Prisma models, 37 migrations)
 
 ---
 
@@ -741,6 +741,7 @@ Key groups (full list in `.env.example`):
 ### Phase A: Product Polish — IN PROGRESS
 - **A1: Design Tokens & Visual Consistency** — COMPLETE. Centralized `design-tokens.ts` with `BOOKING_STATUS_STYLES` (7 statuses), `CONVERSATION_STATUS_STYLES` (4 statuses), `ELEVATION` constants, helper functions (`statusBadgeClasses`, `statusCalendarClasses`, `statusHex`). CSS utilities (`.status-dot`, `.btn-press`, `.nav-section-label`). Booking form modal inputs updated to design system pattern. 17 tests.
 - **A2: Navigation Simplification** — COMPLETE. 3-section sidebar nav (Workspace/Tools/Insights) per role mode via `mode-config.ts` sections. Settings in footer area. Mobile bottom tab bar + "More" sheet for overflow. 8 new section tests in mode-config, 4 new shell tests. 55 total tests across design-tokens, mode-config, and shell.
+- **A3: Onboarding Overhaul** — COMPLETE. Setup wizard consolidated to 6 steps with skip options and time estimates. Celebration UI with CSS confetti animation on final step. First-week checklist (5 items: send message, create booking, invite team, customize template, enable AI). Persistent sidebar onboarding checklist widget with "Complete Setup" CTA and server-side dismiss via API. 18 tests (8 setup wizard + 10 checklist widget).
 
 ### Code Quality
 - **Error Handling Remediation** — COMPLETE (commit 1cf6f99). Replaced ~20 silent `.catch(() => {})` with logged warnings, queue processors throw on failure, NestJS proper exceptions, frontend toast wiring, waitlist loop resilience, WebSocket disconnect logging. +58 tests.
