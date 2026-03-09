@@ -66,7 +66,9 @@ model Business {
   staffServicePrices   StaffServicePrice[]
   payments             Payment[]
   refunds              Refund[]
-  contentDrafts        ContentDraft[]
+  contentDrafts              ContentDraft[]
+  emailSequences             EmailSequence[]
+  emailSequenceEnrollments   EmailSequenceEnrollment[]
 
   @@map("businesses")
 }
@@ -1214,4 +1216,47 @@ model ContentDraft {
   @@index([businessId])
   @@index([businessId, status])
   @@map("content_drafts")
+}
+
+model EmailSequence {
+  id           String   @id @default(cuid())
+  businessId   String?
+  name         String
+  type         String
+  isActive     Boolean  @default(true)
+  steps        Json     @default("[]")
+  triggerEvent String?
+  stopOnEvent  String?
+  metadata     Json     @default("{}")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  business    Business?                @relation(fields: [businessId], references: [id])
+  enrollments EmailSequenceEnrollment[]
+
+  @@index([businessId])
+  @@index([type])
+  @@map("email_sequences")
+}
+
+model EmailSequenceEnrollment {
+  id          String    @id @default(cuid())
+  sequenceId  String
+  businessId  String
+  email       String
+  name        String
+  currentStep Int       @default(0)
+  status      String    @default("ACTIVE")
+  enrolledAt  DateTime  @default(now())
+  completedAt DateTime?
+  cancelledAt DateTime?
+  metadata    Json      @default("{}")
+
+  sequence EmailSequence @relation(fields: [sequenceId], references: [id])
+  business Business      @relation(fields: [businessId], references: [id])
+
+  @@unique([sequenceId, businessId, email])
+  @@index([sequenceId, status])
+  @@index([businessId])
+  @@map("email_sequence_enrollments")
 }

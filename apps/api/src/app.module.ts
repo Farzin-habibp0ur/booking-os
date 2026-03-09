@@ -59,6 +59,7 @@ import { PaymentsModule } from './modules/payments/payments.module';
 import { RefundsModule } from './modules/refunds/refunds.module';
 import { ContentQueueModule } from './modules/content-queue/content-queue.module';
 import { MarketingAgentModule } from './modules/marketing-agent/marketing-agent.module';
+import { EmailSequenceModule } from './modules/email-sequences/email-sequences.module';
 
 @Module({
   imports: [
@@ -134,6 +135,7 @@ import { MarketingAgentModule } from './modules/marketing-agent/marketing-agent.
     RefundsModule,
     ContentQueueModule,
     MarketingAgentModule,
+    EmailSequenceModule,
     process.env.REDIS_URL ? QueueModule.forRootWithRedis() : QueueModule.forRoot(),
   ],
 })
