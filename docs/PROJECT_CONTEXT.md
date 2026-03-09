@@ -2,7 +2,7 @@
 
 > **Purpose:** This document gives full context on the Booking OS platform — what it is, what's been built, how it's structured, and what's left to build. Share this with an AI assistant or new developer to get productive immediately.
 >
-> **Last updated:** March 9, 2026 (Phase C/D/E — C4 Annual Plan Engine COMPLETE — ~4,598 total tests across 285 test files, 58 Prisma models, 41 migrations)
+> **Last updated:** March 9, 2026 (Phase C/D/E — Phase C ALL COMPLETE — ~4,687 total tests across 294 test files, 58 Prisma models, 41 migrations)
 
 ---
 
@@ -45,6 +45,7 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 - **Billing** — Stripe integration (Starter/Professional/Enterprise plans), checkout, customer portal, webhooks, deposit collection, dunning email flow, referral credits
 - **Calendar sync** — Google Calendar + Outlook OAuth integration, iCal feed generation
 - **Public booking portal** — Customer-facing booking page at `/book/{slug}` with service selection, availability, booking, waitlist join
+- **Customer self-service portal** — Phone OTP (WhatsApp) and email magic link auth, customer dashboard with upcoming bookings, booking history with pagination/filters, profile management with notification preferences
 - **Self-serve links** — Token-based reschedule, cancel, waitlist claim, and quote approval pages
 - **Waitlist** — Auto-offers on cancellation, token-based 1-tap claim, configurable offer count/expiry/quiet hours
 - **Campaigns** — Audience segmentation, template-based bulk messaging, throttled dispatch, delivery tracking, recurring schedules (daily/weekly/biweekly/monthly)
@@ -227,13 +228,13 @@ booking-os/
 ├── apps/
 │   ├── api/                    # NestJS REST API (port 3001)
 │   │   ├── src/
-│   │   │   ├── modules/        # 56 feature modules
+│   │   │   ├── modules/        # 57 feature modules
 │   │   │   ├── common/         # Guards, decorators, filters, DTOs, Prisma service
 │   │   │   └── main.ts         # Bootstrap, Swagger, CORS, cookies, validation
 │   │   └── Dockerfile          # Multi-stage production build
 │   ├── web/                    # Next.js admin dashboard (port 3000)
 │   │   ├── src/
-│   │   │   ├── app/            # 73 pages
+│   │   │   ├── app/            # 77 pages
 │   │   │   ├── components/     # Shared components (shell, modals, tour, etc.)
 │   │   │   ├── lib/            # Utility modules (API client, auth, i18n, socket, theme)
 │   │   │   ├── locales/        # en.json, es.json (600+ keys each)
@@ -376,7 +377,7 @@ The Message model now includes delivery receipt fields:
 
 ---
 
-## 6. API Modules (50 Modules)
+## 6. API Modules (51 Modules)
 
 All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 
@@ -440,6 +441,7 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 | **Content Queue** | `/content-queue` | Content draft approval queue: create, list, get, update, approve, reject, bulk-approve, bulk-reject, stats (9 endpoints) |
 | **Marketing Agent** | — (internal) | 12 autonomous marketing agents (6 content, 2 distribution, 4 analytics) registered with AgentFrameworkService |
 | **Email Sequences** | `/email-sequences` | Email drip campaigns: CRUD, stats, enroll, enrollments, cancel/pause/resume, seed (12 endpoints). 7 default sequences |
+| **Portal** | `/portal` | Customer self-service portal: OTP auth (WhatsApp), magic link auth (email), profile, bookings (paginated), upcoming. PortalGuard with portal JWT (24h, type: 'portal') |
 | **Export** | `/customers/export`, `/bookings/export`, `/reports/:type/export` | CSV/PDF export for customers, bookings, and all 10 report types |
 
 ### Auth & Multi-tenancy
@@ -454,7 +456,7 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 
 ---
 
-## 7. Frontend Pages (62 Pages)
+## 7. Frontend Pages (66 Pages)
 
 ### Public Pages
 | Page | Route | Description |
@@ -470,6 +472,10 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 | Cancel | `/manage/cancel/[token]` | Customer cancel page |
 | Claim | `/manage/claim/[token]` | Waitlist claim page |
 | Quote | `/manage/quote/[token]` | Quote approval page |
+| Portal Login | `/portal/[slug]` | Customer portal login (phone OTP + email magic link) |
+| Portal Dashboard | `/portal/[slug]/dashboard` | Customer welcome page, upcoming bookings, quick actions |
+| Portal Bookings | `/portal/[slug]/bookings` | Customer booking history with status filters, pagination |
+| Portal Profile | `/portal/[slug]/profile` | Customer profile editor with stats and notification prefs |
 
 ### Protected Pages
 | Page | Route | Description |
@@ -759,7 +765,7 @@ Key groups (full list in `.env.example`):
 - **Dunning email flow** — 3-email BullMQ sequence (immediate/3-day/7-day), auto-downgrade after 14 days, cancellation on payment recovery. New DUNNING queue.
 - **NPS survey** — In-app modal at day 30, 0-10 scale + feedback, PostHog tracking, stored in packConfig.
 - **Weekly digest email** — Monday 9am cron, bookings/revenue week-over-week deltas, top services, opt-out via packConfig.
-- **Final counts:** ~4,600+ tests across 242 test files, 53 Prisma models, 37 migrations, 50 API modules, 66 pages
+- **Final counts (at end of PLG Phase 4):** ~4,600+ tests across 242 test files, 53 Prisma models, 37 migrations, 50 API modules, 66 pages
 
 ### Phase A: Product Polish — COMPLETE
 - **A1: Design Tokens & Visual Consistency** — COMPLETE. Centralized `design-tokens.ts` with `BOOKING_STATUS_STYLES` (7 statuses), `CONVERSATION_STATUS_STYLES` (4 statuses), `ELEVATION` constants, helper functions (`statusBadgeClasses`, `statusCalendarClasses`, `statusHex`). CSS utilities (`.status-dot`, `.btn-press`, `.nav-section-label`). Booking form modal inputs updated to design system pattern. 17 tests.
@@ -775,11 +781,15 @@ Key groups (full list in `.env.example`):
 - **B4: Landing Page & SEO/AEO Foundation** — COMPLETE. `(marketing)` route group with public layout, MarketingNav, MarketingFooter. Landing page with hero/features/pricing/CTA sections. Blog infrastructure: `blog.ts` library (getAllPosts, getPostBySlug, getAllSlugs), blog index page, `[slug]` detail page with remark markdown rendering. JSON-LD BlogPosting schema, OpenGraph metadata, `generateStaticParams()`. Sitemap with dynamic blog slugs, robots.txt. Pricing page, FAQ page. 10 tests.
 - **B5: Content Pillar Seeding** — COMPLETE. 12 markdown blog posts across 5 pillars: Industry Insights (3), Product Education (3), Customer Success (2), Thought Leadership (2), Technical (2). `seed-content.ts` script creates APPROVED ContentDraft records per business (idempotent).
 
-### Phase C/D/E: Growth, Intelligence & Polish — IN PROGRESS
+### Phase C: Growth & Self-Service — ALL COMPLETE
 - **D5: Bookings Search, Sort & Filters** — COMPLETE. Server-side sorting on 6 fields (startTime, createdAt, customerName, serviceName, status, amount) with nested Prisma orderBy for relations. BookingQueryDto with @IsIn validators. Frontend: status chip bar (7 chips), inline staff filter dropdown, sortable column headers with server-side sort, Amount column, print button + print styles, Last 30 Days date preset. 20 new tests (8 service + 2 controller + 10 web).
 - **C5: Settings Consolidation** — COMPLETE. Settings hub promoted to primary position on settings page (above business info). 7 categorized cards (Account & Security, Operations, Communication, AI & Automation, Growth, Billing, Appearance) with role-based filtering. All 13 sub-pages already had back navigation. Page widened to max-w-4xl for grid. 22 new tests (14 config + 8 hub).
 - **C1: Testimonial Collection System** — COMPLETE. New Prisma model `Testimonial` (58th model) with status (PENDING/APPROVED/REJECTED/FEATURED), source (MANUAL/REQUESTED/IMPORTED). API module: CRUD + approve/reject/feature (max 6 with auto-demotion), sendRequest (NOTIFICATIONS queue email), findPublic (no auth, by slug). Frontend: `/testimonials` admin page with status tabs, grid cards, request modal with customer search + email preview. Reusable `TestimonialCard` component with star ratings, quote marks, action buttons, showActions prop. Public booking page `book/[slug]` "What Our Clients Say" section (up to 3 featured). Added to admin tools nav. 49 new tests (27 API + 22 web).
 - **C4: Annual Plan & Discount Engine** — COMPLETE. Added switchToAnnual/switchToMonthly (Stripe proration), calculateAnnualSavings (20% discount per plan), getCurrentBillingInterval to billing service. 4 new controller endpoints (switch-annual, switch-monthly, annual-savings, billing-interval). Frontend: savings banner for monthly subscribers, annual savings card for annual subscribers, switch confirmation modal with proration warning. BillingLifecycleService with @Cron daily jobs: annual renewal reminders (30 days before) and account anniversary celebration emails. 21 new tests (15 API + 6 web).
+- **C3: Upgrade Campaign System** — COMPLETE. `plan-limits.ts` with per-tier limits (FREE/STARTER/PROFESSIONAL/ENTERPRISE) for bookings, staff, automations, sequences, services. `getPlanLimits()`, `getUpgradePlan()`, `isNearLimit()`, `isAtLimit()`, `getUsagePercent()`. `upgrade-nudge.tsx` (lavender at 80%, amber at limit, session-dismissable). `feature-discovery.tsx` (one-time localStorage tips, sage bg, Lightbulb icon). Nudges on bookings/staff/automations/services pages. Discovery tips on bookings/inbox/dashboard. Extended email-sequences: `checkUpgradeSignals()` weekly cron for 80%+ usage. 38 new tests (21 plan-limits + 8 nudge + 5 discovery + 4 email-sequences).
+- **C2: Customer Self-Service Portal** — COMPLETE. New portal API module (57th module) with 8 endpoints: request-otp, verify-otp, magic-link, verify-magic-link (auth), me GET/PATCH, bookings, upcoming (data). PortalAuthService with in-memory OTP store (5-min TTL, max 5 attempts), WhatsApp OTP via MESSAGING queue, email magic links via EmailService. PortalGuard validates portal JWT (type: 'portal', 24h expiry). PortalService: getProfile (with stats), updateProfile, getBookings (paginated), getUpcoming. Frontend: portal layout, login page (phone/email tabs, 6-digit OTP auto-advance), dashboard (upcoming, quick actions, testimonial CTA), bookings (status filters, pagination, Book Again), profile (editable fields, read-only stats, notification prefs). 51 new tests (36 API + 15 web).
+
+### Phase D/E: Intelligence & Polish — IN PROGRESS
 
 ### Code Quality
 - **Error Handling Remediation** — COMPLETE (commit 1cf6f99). Replaced ~20 silent `.catch(() => {})` with logged warnings, queue processors throw on failure, NestJS proper exceptions, frontend toast wiring, waitlist loop resilience, WebSocket disconnect logging. +58 tests.
@@ -844,7 +854,7 @@ npm run dev                    # Starts all apps via Turborepo
 | `npm run dev` | Start all apps |
 | `npm run build` | Build all |
 | `npm run lint` | Lint all (ESLint + TypeScript) |
-| `npm test` | Run all tests (~4,600+ tests) |
+| `npm test` | Run all tests (~4,687+ tests) |
 | `npm run test:coverage` | Tests with coverage thresholds |
 | `npm run db:generate` | Generate Prisma client |
 | `npm run db:migrate` | Run migrations |

@@ -16,6 +16,7 @@ import {
   Clock,
   TrendingDown,
 } from 'lucide-react';
+import { captureEvent } from '@/lib/posthog';
 
 type PlanTier = 'starter' | 'professional' | 'enterprise';
 type BillingInterval = 'monthly' | 'annual';
@@ -140,6 +141,7 @@ export default function BillingPage() {
       router.replace('/settings');
       return;
     }
+    captureEvent('billing_page_viewed', { currentPlan: billing?.plan });
     api
       .get<BillingStatus>('/billing/status')
       .then((status) => {
@@ -163,6 +165,7 @@ export default function BillingPage() {
   }, []);
 
   const handleCheckout = async (plan: PlanTier) => {
+    captureEvent('upgrade_clicked', { fromPlan: billing?.plan, toPlan: plan, billing: billingInterval });
     setActionLoading(`checkout-${plan}`);
     setError(null);
     try {
@@ -395,7 +398,7 @@ export default function BillingPage() {
       {/* Billing interval toggle */}
       <div className="flex items-center justify-center gap-3 mb-6">
         <button
-          onClick={() => setBillingInterval('monthly')}
+          onClick={() => { captureEvent('plans_compared'); setBillingInterval('monthly'); }}
           className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
             billingInterval === 'monthly'
               ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
@@ -405,7 +408,7 @@ export default function BillingPage() {
           Monthly
         </button>
         <button
-          onClick={() => setBillingInterval('annual')}
+          onClick={() => { captureEvent('plans_compared'); setBillingInterval('annual'); }}
           className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors flex items-center gap-1.5 ${
             billingInterval === 'annual'
               ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'

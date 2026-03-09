@@ -44,6 +44,7 @@ import { MediaComposer } from '@/components/inbox/media-composer';
 import { MediaMessage } from '@/components/inbox/media-message';
 import { DeliveryStatus } from '@/components/inbox/delivery-status';
 import { FeatureDiscovery } from '@/components/feature-discovery';
+import { captureEvent } from '@/lib/posthog';
 
 type Filter = 'all' | 'unassigned' | 'mine' | 'overdue' | 'waiting' | 'snoozed' | 'closed';
 
@@ -282,6 +283,7 @@ function InboxPage() {
   }, [conversationIdParam, conversations]);
 
   useEffect(() => {
+    captureEvent('inbox_opened');
     loadFilterCounts();
     loadStaff();
     loadTemplates();
@@ -475,6 +477,7 @@ function InboxPage() {
     setSending(true);
     try {
       await api.post(`/conversations/${selected.id}/messages`, { content: text });
+      captureEvent('message_sent', { channel: selected.channel || 'WHATSAPP' });
       setNewMessage('');
       setAiDraftText('');
       setAiIntent(undefined);
@@ -802,6 +805,7 @@ function InboxPage() {
                   />
                   <div
                     onClick={() => {
+                      captureEvent('conversation_selected');
                       setSelected(c);
                       setMobileView('thread');
                     }}

@@ -18,6 +18,7 @@ import BookingDetailModal from '@/components/booking-detail-modal';
 import { BookingPopover } from '@/components/booking-popover';
 import { CalendarSidebar } from './components/calendar-sidebar';
 import { statusCalendarClasses } from '@/lib/design-tokens';
+import { captureEvent } from '@/lib/posthog';
 
 const HOURS = Array.from({ length: 12 }, (_, i) => i + 8); // 8am - 7pm
 const SLOT_HEIGHT = 60; // pixels per hour
@@ -93,6 +94,7 @@ export default function CalendarPage() {
   const [dropConflict, setDropConflict] = useState(false);
 
   useEffect(() => {
+    captureEvent('calendar_viewed');
     api.get<any[]>('/staff').then((s) => {
       setStaff(s);
       setSelectedStaff(s.map((st: any) => st.id));
@@ -297,6 +299,7 @@ export default function CalendarPage() {
   };
 
   const handleBookingUpdated = () => {
+    captureEvent('booking_confirmed');
     setBookingDetailOpen(false);
     setBookingFormOpen(false);
     setRescheduleMode(false);
@@ -527,6 +530,7 @@ export default function CalendarPage() {
 
           <button
             onClick={() => {
+              captureEvent('new_booking_clicked');
               setRescheduleMode(false);
               setSelectedBooking(null);
               setPrefillDate(currentDate.toISOString().split('T')[0]);

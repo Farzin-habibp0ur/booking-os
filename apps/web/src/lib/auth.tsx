@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { api } from './api';
+import { identifyUser, resetUser } from './posthog';
 
 interface User {
   id: string;
@@ -65,7 +66,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     api
       .get<User>('/auth/me')
-      .then(setUser)
+      .then((me) => {
+        setUser(me);
+        identifyUser(me.id, { email: me.email, businessId: me.businessId, role: me.role });
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
@@ -80,6 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     api.setToken(accessToken);
     const me = await api.get<User>('/auth/me');
     setUser(me);
+    identifyUser(me.id, { email: me.email, businessId: me.businessId, role: me.role });
     return me;
   };
 
@@ -100,6 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     const me = await api.get<User>('/auth/me');
     setUser(me);
+    identifyUser(me.id, { email: me.email, businessId: me.businessId, role: me.role });
   };
 
   const logout = async () => {
@@ -111,6 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     api.setToken(null);
     setUser(null);
+    resetUser();
     window.location.href = '/login';
   };
 

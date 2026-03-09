@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { api } from '@/lib/api';
 import { useI18n } from '@/lib/i18n';
 import { Sparkles, ArrowLeft } from 'lucide-react';
+import { captureEvent } from '@/lib/posthog';
 
 interface AiSettings {
   enabled: boolean;
@@ -43,6 +44,7 @@ export default function AiSettingsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    captureEvent('ai_settings_viewed');
     api
       .get<AiSettings>('/ai/settings')
       .then((s) => {
@@ -54,6 +56,7 @@ export default function AiSettingsPage() {
 
   const handleSave = async () => {
     await api.patch('/ai/settings', settings);
+    captureEvent('ai_enabled', { enabled: settings.enabled, autoReply: settings.autoReply.enabled });
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };

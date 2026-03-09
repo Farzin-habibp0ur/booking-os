@@ -6,6 +6,7 @@ import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { useI18n, I18nProvider } from '@/lib/i18n';
 import { useToast, ToastProvider } from '@/lib/toast';
+import { captureEvent } from '@/lib/posthog';
 import {
   Check,
   ChevronLeft,
@@ -1308,6 +1309,7 @@ function SetupPage() {
                         } catch (e) {
                           console.error(e);
                         }
+                        captureEvent('onboarding_completed', { stepsCompleted: step + 1 });
                         router.push('/dashboard');
                       }}
                       className="w-full bg-sage-600 text-white rounded-xl py-2.5 text-sm hover:bg-sage-700 font-medium"
@@ -1347,6 +1349,7 @@ function SetupPage() {
                 } catch (e) {
                   console.error(e);
                 }
+                captureEvent('onboarding_completed', { stepsCompleted: step + 1 });
                 router.push('/dashboard');
               }}
               className="flex items-center gap-1 bg-sage-600 text-white px-6 py-2 rounded-xl text-sm hover:bg-sage-700 transition-colors"

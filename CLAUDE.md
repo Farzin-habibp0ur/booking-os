@@ -17,13 +17,13 @@ booking-os/
 ├── apps/
 │   ├── api/                    # NestJS REST API (port 3001)
 │   │   ├── src/
-│   │   │   ├── modules/        # 56 feature modules (one dir per domain)
+│   │   │   ├── modules/        # 57 feature modules (one dir per domain)
 │   │   │   ├── common/         # Guards, decorators, filters, DTOs, PrismaService
 │   │   │   └── main.ts         # Bootstrap, Swagger, CORS, cookies, validation
 │   │   └── Dockerfile          # Multi-stage production build
 │   ├── web/                    # Next.js 15 admin dashboard (port 3000)
 │   │   ├── src/
-│   │   │   ├── app/            # 73 pages (App Router)
+│   │   │   ├── app/            # 77 pages (App Router)
 │   │   │   ├── components/     # Shared components
 │   │   │   ├── lib/            # API client, auth, i18n, socket, theme
 │   │   │   ├── locales/        # en.json, es.json (600+ keys each)
@@ -157,7 +157,7 @@ Key events: `message:new`, `conversation:updated`, `ai:suggestion`, `ai:auto-rep
 
 - Pages are in `apps/web/src/app/` using Next.js App Router (not Pages Router)
 - Protected pages check `access_token` cookie in `middleware.ts`
-- **73 pages** total (17 public, ~40 protected, ~16 console)
+- **77 pages** total (17 public, ~40 protected, ~16 console, 4 portal)
 - Client components use `'use client'` directive
 
 ### API Client
@@ -253,7 +253,7 @@ All AI-related UI elements use the **lavender** palette: `bg-lavender-50 border 
 ## Testing Conventions
 
 ### Test Counts
-- **~4,598 total tests** across 285 test files (152 API + 133 web)
+- **~4,687 total tests** across 294 test files (157 API + 137 web)
 - API: ~93% statement coverage, ~81% branch coverage
 - Web: ~78% statement coverage, ~73% branch coverage
 
