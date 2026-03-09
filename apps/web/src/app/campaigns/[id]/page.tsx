@@ -93,9 +93,14 @@ export default function CampaignDetailPage() {
               <span className="inline-flex items-center gap-0.5 px-2 py-0.5 bg-lavender-50 text-lavender-700 text-xs rounded-full font-medium">
                 <Repeat size={12} />
                 {
-                  { DAILY: 'Daily', WEEKLY: 'Weekly', BIWEEKLY: 'Bi-weekly', MONTHLY: 'Monthly' }[
-                    campaign.recurrenceRule
-                  ]
+                  (
+                    {
+                      DAILY: 'Daily',
+                      WEEKLY: 'Weekly',
+                      BIWEEKLY: 'Bi-weekly',
+                      MONTHLY: 'Monthly',
+                    } as Record<string, string>
+                  )[campaign.recurrenceRule]
                 }
               </span>
             )}
@@ -192,9 +197,14 @@ export default function CampaignDetailPage() {
               <dt className="text-slate-500">Recurrence</dt>
               <dd>
                 {
-                  { DAILY: 'Daily', WEEKLY: 'Weekly', BIWEEKLY: 'Bi-weekly', MONTHLY: 'Monthly' }[
-                    campaign.recurrenceRule
-                  ]
+                  (
+                    {
+                      DAILY: 'Daily',
+                      WEEKLY: 'Weekly',
+                      BIWEEKLY: 'Bi-weekly',
+                      MONTHLY: 'Monthly',
+                    } as Record<string, string>
+                  )[campaign.recurrenceRule]
                 }
               </dd>
             </div>
