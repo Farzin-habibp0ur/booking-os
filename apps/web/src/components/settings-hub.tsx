@@ -48,6 +48,7 @@ function SettingsCategoryCard({
   return (
     <button
       onClick={onClick}
+      data-testid={`settings-card-${category.key}`}
       className={cn(
         'flex items-start gap-4 p-5 bg-white dark:bg-slate-900 text-left',
         ELEVATION.card,

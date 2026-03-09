@@ -103,11 +103,17 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="p-6 max-w-2xl" data-tour-target="settings-nav">
+    <div className="p-6 max-w-4xl" data-tour-target="settings-nav">
       <h1 className="text-2xl font-serif font-semibold text-slate-900 mb-6">
         {t('settings.title')}
       </h1>
 
+      {/* Settings Hub — category cards */}
+      <div className="mb-8" data-testid="settings-hub-section">
+        <SettingsHub />
+      </div>
+
+      <div className="max-w-2xl">
       <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
         <h2 className="font-semibold">{t('settings.business_info')}</h2>
 
@@ -375,11 +381,6 @@ export default function SettingsPage() {
           )}
         </div>
       )}
-
-      {/* Settings Hub — category cards */}
-      <div className="mt-6">
-        <h2 className="font-semibold mb-4">{t('settings.more_settings')}</h2>
-        <SettingsHub />
       </div>
     </div>
   );

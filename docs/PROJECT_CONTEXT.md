@@ -777,6 +777,7 @@ Key groups (full list in `.env.example`):
 
 ### Phase C/D/E: Growth, Intelligence & Polish — IN PROGRESS
 - **D5: Bookings Search, Sort & Filters** — COMPLETE. Server-side sorting on 6 fields (startTime, createdAt, customerName, serviceName, status, amount) with nested Prisma orderBy for relations. BookingQueryDto with @IsIn validators. Frontend: status chip bar (7 chips), inline staff filter dropdown, sortable column headers with server-side sort, Amount column, print button + print styles, Last 30 Days date preset. 20 new tests (8 service + 2 controller + 10 web).
+- **C5: Settings Consolidation** — COMPLETE. Settings hub promoted to primary position on settings page (above business info). 7 categorized cards (Account & Security, Operations, Communication, AI & Automation, Growth, Billing, Appearance) with role-based filtering. All 13 sub-pages already had back navigation. Page widened to max-w-4xl for grid. 22 new tests (14 config + 8 hub).
 
 ### Code Quality
 - **Error Handling Remediation** — COMPLETE (commit 1cf6f99). Replaced ~20 silent `.catch(() => {})` with logged warnings, queue processors throw on failure, NestJS proper exceptions, frontend toast wiring, waitlist loop resilience, WebSocket disconnect logging. +58 tests.

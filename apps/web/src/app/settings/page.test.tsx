@@ -298,10 +298,10 @@ describe('SettingsPage', () => {
 
   // ─── Settings Hub Categories ──────────────────────────────────────────
 
-  test('shows settings hub section heading', async () => {
+  test('shows settings hub section', async () => {
     render(<SettingsPage />);
     await waitFor(() => {
-      expect(screen.getByText('settings.more_settings')).toBeInTheDocument();
+      expect(screen.getByTestId('settings-hub-section')).toBeInTheDocument();
     });
   });
 
