@@ -132,7 +132,9 @@ describe('RefundsService', () => {
           { paymentId: 'pay1', amount: 50, reason: 'test' } as any,
           'staff1',
         );
-      } catch {}
+      } catch {
+        // expected
+      }
 
       expect(prisma.payment.findFirst).toHaveBeenCalledWith({
         where: { id: 'pay1', businessId: 'biz1' },

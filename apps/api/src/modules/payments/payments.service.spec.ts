@@ -205,7 +205,9 @@ describe('PaymentsService', () => {
 
       try {
         await service.findOne('biz1', 'p1');
-      } catch {}
+      } catch {
+        // expected
+      }
 
       expect(prisma.payment.findFirst).toHaveBeenCalledWith({
         where: { id: 'p1', businessId: 'biz1' },
@@ -339,7 +341,9 @@ describe('PaymentsService', () => {
 
       try {
         await service.update('biz1', 'p1', { notes: 'x' });
-      } catch {}
+      } catch {
+        // expected
+      }
 
       expect(prisma.payment.findFirst).toHaveBeenCalledWith({
         where: { id: 'p1', businessId: 'biz1' },
