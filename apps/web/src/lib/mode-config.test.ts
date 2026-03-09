@@ -110,4 +110,87 @@ describe('mode-config', () => {
       expect(admin?.sections.insights).toContain('/ai');
     });
   });
+
+  describe('sections', () => {
+    const modes = getModeDefinitions();
+
+    it('each mode has sections with workspace, tools, and insights arrays', () => {
+      for (const mode of modes) {
+        expect(mode.sections).toBeDefined();
+        expect(Array.isArray(mode.sections.workspace)).toBe(true);
+        expect(Array.isArray(mode.sections.tools)).toBe(true);
+        expect(Array.isArray(mode.sections.insights)).toBe(true);
+      }
+    });
+
+    it('all section paths start with /', () => {
+      for (const mode of modes) {
+        const allPaths = [
+          ...mode.sections.workspace,
+          ...mode.sections.tools,
+          ...mode.sections.insights,
+        ];
+        for (const path of allPaths) {
+          expect(path).toMatch(/^\//);
+        }
+      }
+    });
+
+    it('admin sections include expected paths', () => {
+      const admin = modes.find((m) => m.key === 'admin')!;
+      expect(admin.sections.workspace).toContain('/inbox');
+      expect(admin.sections.workspace).toContain('/calendar');
+      expect(admin.sections.workspace).toContain('/customers');
+      expect(admin.sections.workspace).toContain('/bookings');
+      expect(admin.sections.tools).toContain('/services');
+      expect(admin.sections.tools).toContain('/staff');
+      expect(admin.sections.tools).toContain('/campaigns');
+      expect(admin.sections.tools).toContain('/automations');
+      expect(admin.sections.insights).toContain('/dashboard');
+      expect(admin.sections.insights).toContain('/reports');
+      expect(admin.sections.insights).toContain('/roi');
+    });
+
+    it('agent sections include expected paths', () => {
+      const agent = modes.find((m) => m.key === 'agent')!;
+      expect(agent.sections.workspace).toContain('/inbox');
+      expect(agent.sections.workspace).toContain('/waitlist');
+      expect(agent.sections.tools).toContain('/services');
+      expect(agent.sections.insights).toContain('/dashboard');
+      expect(agent.sections.insights).toContain('/reports');
+    });
+
+    it('provider sections include expected paths', () => {
+      const provider = modes.find((m) => m.key === 'provider')!;
+      expect(provider.sections.workspace).toContain('/calendar');
+      expect(provider.sections.workspace).toContain('/bookings');
+      expect(provider.sections.tools).toContain('/services');
+      expect(provider.sections.insights).toContain('/dashboard');
+    });
+
+    it('no path appears in multiple sections within the same mode', () => {
+      for (const mode of modes) {
+        const allPaths = [
+          ...mode.sections.workspace,
+          ...mode.sections.tools,
+          ...mode.sections.insights,
+        ];
+        const unique = new Set(allPaths);
+        expect(unique.size).toBe(allPaths.length);
+      }
+    });
+
+    it('primaryNavPaths contains all paths from sections (backwards compat)', () => {
+      for (const mode of modes) {
+        const allSectionPaths = [
+          ...mode.sections.workspace,
+          ...mode.sections.tools,
+          ...mode.sections.insights,
+        ];
+        for (const path of allSectionPaths) {
+          expect(mode.primaryNavPaths).toContain(path);
+        }
+      }
+    });
+  });
 });

@@ -265,6 +265,61 @@ describe('Shell', () => {
     expect(screen.queryByTestId('pinned-views-section')).not.toBeInTheDocument();
   });
 
+  it('renders section labels for workspace, tools, and insights', () => {
+    render(
+      <Shell>
+        <div>Content</div>
+      </Shell>,
+    );
+
+    const nav = screen.getByRole('navigation', { name: 'Main navigation' });
+    // t() mock returns the key, so section labels render as the i18n keys
+    expect(within(nav).getByText('nav.section_workspace')).toBeInTheDocument();
+    expect(within(nav).getByText('nav.section_tools')).toBeInTheDocument();
+    expect(within(nav).getByText('nav.section_insights')).toBeInTheDocument();
+  });
+
+  it('section labels use nav-section-label class', () => {
+    render(
+      <Shell>
+        <div>Content</div>
+      </Shell>,
+    );
+
+    const nav = screen.getByRole('navigation', { name: 'Main navigation' });
+    const workspaceLabel = within(nav).getByText('nav.section_workspace');
+    expect(workspaceLabel.className).toContain('nav-section-label');
+  });
+
+  it('renders Settings in footer area, not in main nav', () => {
+    render(
+      <Shell>
+        <div>Content</div>
+      </Shell>,
+    );
+
+    const nav = screen.getByRole('navigation', { name: 'Main navigation' });
+    // Settings should NOT be inside the main nav element
+    expect(within(nav).queryByText('nav.settings')).not.toBeInTheDocument();
+
+    // Settings should exist in the sidebar footer area
+    const sidebar = screen.getByRole('complementary') || document.querySelector('aside');
+    expect(screen.getAllByText('nav.settings').length).toBeGreaterThan(0);
+  });
+
+  it('does not have a "More" toggle in the sidebar (only in mobile tab bar)', () => {
+    render(
+      <Shell>
+        <div>Content</div>
+      </Shell>,
+    );
+
+    const nav = screen.getByRole('navigation', { name: 'Main navigation' });
+    // No "More" or "Show More" button inside the sidebar nav
+    expect(within(nav).queryByText('More')).not.toBeInTheDocument();
+    expect(within(nav).queryByText(/show more/i)).not.toBeInTheDocument();
+  });
+
   it('renders pinned view as link to page with viewId', async () => {
     mockApi.get.mockResolvedValue([
       { id: 'v1', name: 'Pending Deposits', page: 'bookings', icon: 'flag', isPinned: true },

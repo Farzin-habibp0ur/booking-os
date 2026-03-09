@@ -184,6 +184,22 @@ Key events: `message:new`, `conversation:updated`, `ai:suggestion`, `ai:auto-rep
 - Empty states: `EmptyState` component
 - Bulk actions: `BulkActionBar` component
 
+### Design Tokens
+
+- **Centralized in `apps/web/src/lib/design-tokens.ts`** — all status colors, elevation constants, and shared style maps
+- `BOOKING_STATUS_STYLES` — map of all 7 booking statuses to `{ bg, text, border, dot, label, hex }`
+- `CONVERSATION_STATUS_STYLES` — map of 4 conversation statuses (OPEN, WAITING, RESOLVED, SNOOZED)
+- `ELEVATION` — shadow + radius tokens: `card`, `modal`, `dropdown`, `cardSm`, `fab`
+- Helper functions: `statusBadgeClasses(status)`, `statusCalendarClasses(status)`, `statusHex(status)`
+- **Always import from design-tokens.ts** — never define inline status color objects
+
+### Navigation Structure
+
+- Sidebar uses 3 sections: **Workspace** / **Tools** / **Insights** (defined per mode in `apps/web/src/lib/mode-config.ts`)
+- Section labels use `.nav-section-label` CSS class from `globals.css`
+- Settings link is in the sidebar footer area, not in the main nav
+- Mobile uses bottom tab bar (Calendar, Inbox, Clients, Home) + "More" sheet for overflow items
+
 ---
 
 ## Design System & UI Guidelines
@@ -216,11 +232,16 @@ Key events: `message:new`, `conversation:updated`, `ai:suggestion`, `ai:auto-rep
 5. **Inputs:** `bg-slate-50 border-transparent focus:bg-white focus:ring-2 focus:ring-sage-500 rounded-xl`
 6. **No external component libraries.** Strictly Tailwind CSS utility classes
 
-### Status Badge Colors
+### Status Badge Colors (use `BOOKING_STATUS_STYLES` from `design-tokens.ts`)
 - Confirmed / Completed → `bg-sage-50 text-sage-900`
 - Pending → `bg-lavender-50 text-lavender-900`
 - Cancelled / No-show → `bg-red-50 text-red-700`
 - In Progress → `bg-amber-50 text-amber-700`
+
+### CSS Utilities (`globals.css`)
+- `.status-dot` — small colored dot indicator (1.5×1.5 rounded-full)
+- `.btn-press` — subtle press feedback (scale 0.98 on :active)
+- `.nav-section-label` — sidebar nav section headings (10px uppercase tracking-wider)
 
 ### AI Feature Styling
 All AI-related UI elements use the **lavender** palette: `bg-lavender-50 border border-lavender-100 text-lavender-900 rounded-xl`

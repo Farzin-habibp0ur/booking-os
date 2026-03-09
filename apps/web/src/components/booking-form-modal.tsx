@@ -291,7 +291,7 @@ export default function BookingFormModal({
                 value={selectedCustomerId}
                 onChange={(e) => setSelectedCustomerId(e.target.value)}
                 required
-                className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sage-500"
+                className="w-full bg-slate-50 border border-transparent rounded-xl px-3 py-2 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-sage-500"
               >
                 <option value="">Select customer...</option>
                 {customers.map((c) => (
@@ -313,7 +313,7 @@ export default function BookingFormModal({
                 setSelectedSlot(null);
               }}
               required
-              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sage-500"
+              className="w-full bg-slate-50 border border-transparent rounded-xl px-3 py-2 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-sage-500"
             >
               <option value="">Select service...</option>
               {services.map((s: any) => (
@@ -354,7 +354,7 @@ export default function BookingFormModal({
                   setSelectedLocationId(e.target.value);
                   setSelectedSlot(null);
                 }}
-                className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sage-500"
+                className="w-full bg-slate-50 border border-transparent rounded-xl px-3 py-2 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-sage-500"
               >
                 <option value="">Any location</option>
                 {locations.map((loc: any) => (
@@ -376,7 +376,7 @@ export default function BookingFormModal({
                   setSelectedResourceId(e.target.value);
                   setSelectedSlot(null);
                 }}
-                className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sage-500"
+                className="w-full bg-slate-50 border border-transparent rounded-xl px-3 py-2 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-sage-500"
               >
                 <option value="">Any resource</option>
                 {resources.map((r: any) => (
@@ -399,7 +399,7 @@ export default function BookingFormModal({
                 setSelectedStaffId(e.target.value);
                 setSelectedSlot(null);
               }}
-              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sage-500"
+              className="w-full bg-slate-50 border border-transparent rounded-xl px-3 py-2 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-sage-500"
             >
               <option value="">Any available staff</option>
               {staff.map((s) => (
@@ -422,7 +422,7 @@ export default function BookingFormModal({
               }}
               min={new Date().toISOString().split('T')[0]}
               required
-              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sage-500"
+              className="w-full bg-slate-50 border border-transparent rounded-xl px-3 py-2 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-sage-500"
             />
           </div>
 
@@ -494,7 +494,7 @@ export default function BookingFormModal({
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Optional notes..."
               rows={2}
-              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sage-500 resize-none"
+              className="w-full bg-slate-50 border border-transparent rounded-xl px-3 py-2 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-sage-500 resize-none"
             />
           </div>
 

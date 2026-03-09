@@ -136,6 +136,44 @@ export const SUBSCRIPTION_STATUS_STYLES: Record<string, string> = {
 };
 
 // ---------------------------------------------------------------------------
+// Conversation status styles
+// ---------------------------------------------------------------------------
+
+export interface ConversationStatusStyle {
+  bg: string;
+  text: string;
+  dot: string;
+  label: string;
+}
+
+export const CONVERSATION_STATUS_STYLES: Record<string, ConversationStatusStyle> = {
+  OPEN: {
+    bg: 'bg-sage-50',
+    text: 'text-sage-900',
+    dot: 'bg-sage-500',
+    label: 'Open',
+  },
+  WAITING: {
+    bg: 'bg-amber-50',
+    text: 'text-amber-700',
+    dot: 'bg-amber-500',
+    label: 'Waiting',
+  },
+  RESOLVED: {
+    bg: 'bg-slate-100',
+    text: 'text-slate-600',
+    dot: 'bg-slate-400',
+    label: 'Resolved',
+  },
+  SNOOZED: {
+    bg: 'bg-lavender-50',
+    text: 'text-lavender-900',
+    dot: 'bg-lavender-500',
+    label: 'Snoozed',
+  },
+};
+
+// ---------------------------------------------------------------------------
 // Elevation (shadow) tokens
 // ---------------------------------------------------------------------------
 
