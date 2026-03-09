@@ -133,6 +133,10 @@ jest.mock('@/components/skeleton', () => ({
   EmptyState: ({ title }: any) => <div data-testid="empty-state">{title}</div>,
 }));
 
+jest.mock('@/components/feature-discovery', () => ({
+  FeatureDiscovery: () => null,
+}));
+
 // Mock lucide-react icons
 jest.mock('lucide-react', () => ({
   Calendar: (props: any) => <div data-testid="calendar-icon" {...props} />,

@@ -34,6 +34,12 @@ jest.mock('@/lib/toast', () => ({
   useToast: () => ({ toast: mockToast }),
 }));
 jest.mock('@/lib/cn', () => ({ cn: (...args: any[]) => args.filter(Boolean).join(' ') }));
+jest.mock('@/components/upgrade-nudge', () => ({
+  UpgradeNudge: () => null,
+}));
+jest.mock('@/lib/use-plan', () => ({
+  usePlan: () => 'free',
+}));
 jest.mock('@/lib/api', () => ({
   api: { get: jest.fn(), post: jest.fn(), patch: jest.fn(), del: jest.fn(), upload: jest.fn() },
 }));

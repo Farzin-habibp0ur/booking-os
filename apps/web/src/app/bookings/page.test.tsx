@@ -86,6 +86,13 @@ jest.mock('@/components/skeleton', () => ({
   ),
 }));
 
+jest.mock('@/components/feature-discovery', () => ({
+  FeatureDiscovery: () => null,
+}));
+jest.mock('@/components/upgrade-nudge', () => ({
+  UpgradeNudge: () => null,
+}));
+
 // Mock lucide-react icons
 jest.mock('lucide-react', () => ({
   BookOpen: () => <div data-testid="book-open-icon" />,

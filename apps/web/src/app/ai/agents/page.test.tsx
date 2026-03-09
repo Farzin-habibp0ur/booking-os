@@ -13,7 +13,7 @@ jest.mock('@/lib/cn', () => ({
 }));
 const mockToast = jest.fn();
 jest.mock('@/lib/toast', () => ({
-  useToast: () => mockToast,
+  useToast: () => ({ toast: mockToast }),
 }));
 
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';

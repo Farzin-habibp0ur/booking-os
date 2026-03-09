@@ -121,6 +121,10 @@ jest.mock('./components/dry-run-modal', () => ({
   ),
 }));
 
+jest.mock('@/components/upgrade-nudge', () => ({
+  UpgradeNudge: () => null,
+}));
+
 // Mock lucide-react icons
 jest.mock('lucide-react', () => ({
   Zap: () => <div data-testid="zap-icon" />,
@@ -134,6 +138,8 @@ jest.mock('lucide-react', () => ({
   ShieldCheck: () => <div data-testid="shield-check-icon" />,
   Clock: () => <div data-testid="clock-icon" />,
   Users: () => <div data-testid="users-icon" />,
+  Workflow: () => <div data-testid="workflow-icon" />,
+  Pencil: () => <div data-testid="pencil-icon" />,
 }));
 
 import { api } from '@/lib/api';
