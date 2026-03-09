@@ -56,6 +56,52 @@ jest.mock('@/lib/use-theme', () => ({
 jest.mock('@/lib/api', () => ({
   api: { get: jest.fn(), post: jest.fn(), patch: jest.fn(), del: jest.fn(), upload: jest.fn() },
 }));
+jest.mock('@/lib/posthog', () => ({
+  trackEvent: jest.fn(),
+}));
+jest.mock('@/components/settings-hub', () => {
+  const { useRouter } = require('next/navigation');
+  const categories = [
+    {
+      label: 'Account & Security',
+      desc: 'Team accounts, login methods, and custom profile fields',
+      href: '/settings/account',
+    },
+    {
+      label: 'Operations',
+      desc: 'Calendar rules, message templates, and booking policies',
+      href: '/settings/calendar',
+    },
+    {
+      label: 'Communication',
+      desc: 'Notification preferences and language translations',
+      href: '/settings/notifications',
+    },
+    {
+      label: 'AI & Automation',
+      desc: 'AI assistant, autonomy levels, and background agents',
+      href: '/settings/ai',
+    },
+    { label: 'Growth', desc: 'Referrals and waitlist management', href: '/settings/waitlist' },
+    { label: 'Billing', desc: 'Subscription and invoices', href: '/settings/billing' },
+    { label: 'Appearance', desc: 'Theme and display preferences', href: '/settings' },
+  ];
+  return {
+    SettingsHub: () => {
+      const router = useRouter();
+      return (
+        <div>
+          {categories.map((c) => (
+            <div key={c.label} onClick={() => router.push(c.href)}>
+              <span>{c.label}</span>
+              <span>{c.desc}</span>
+            </div>
+          ))}
+        </div>
+      );
+    },
+  };
+});
 import { api } from '@/lib/api';
 const mockApi = api as jest.Mocked<typeof api>;
 
@@ -70,7 +116,18 @@ const mockBusiness = {
 describe('SettingsPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockApi.get.mockResolvedValue(mockBusiness);
+    mockApi.get.mockImplementation((url: string) => {
+      if (url === '/referral/stats') {
+        return Promise.resolve({
+          referralLink: 'https://example.com/ref/abc',
+          totalInvites: 0,
+          successfulReferrals: 0,
+          totalCreditsEarned: 0,
+          referrals: [],
+        });
+      }
+      return Promise.resolve(mockBusiness);
+    });
   });
 
   test('renders settings page with title', async () => {
@@ -221,7 +278,18 @@ describe('SettingsPage', () => {
   });
 
   test('does not show booking link when slug is missing', async () => {
-    mockApi.get.mockResolvedValue({ ...mockBusiness, slug: undefined });
+    mockApi.get.mockImplementation((url: string) => {
+      if (url === '/referral/stats') {
+        return Promise.resolve({
+          referralLink: '',
+          totalInvites: 0,
+          successfulReferrals: 0,
+          totalCreditsEarned: 0,
+          referrals: [],
+        });
+      }
+      return Promise.resolve({ ...mockBusiness, slug: undefined });
+    });
     render(<SettingsPage />);
     await waitFor(() => screen.getByText('settings.title'));
     expect(screen.queryByText('settings.booking_link')).not.toBeInTheDocument();
