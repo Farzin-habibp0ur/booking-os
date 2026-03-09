@@ -2,7 +2,7 @@
 
 > **Purpose:** This document gives full context on the Booking OS platform — what it is, what's been built, how it's structured, and what's left to build. Share this with an AI assistant or new developer to get productive immediately.
 >
-> **Last updated:** March 9, 2026 (Phase A Product Polish A1-A5 COMPLETE — ~4,280+ total tests across 262 test files, 54 Prisma models, 39 migrations)
+> **Last updated:** March 9, 2026 (Phase B AI Marketing System B1-B5 COMPLETE — ~4,486 total tests across 278 test files, 57 Prisma models, 41 migrations)
 
 ---
 
@@ -57,6 +57,7 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 - **Interactive demo tour** — 9-step guided walkthrough with spotlight overlays, tooltips, keyboard navigation, localStorage persistence
 - **Notifications** — Email via Resend, WhatsApp, SMS via Twilio, automated booking reminders, notification timeline, weekly digest email, NPS survey
 - **Security** — Helmet CSP, rate limiting, JWT blacklisting, brute force protection, httpOnly cookies, automatic token refresh, tenant isolation
+- **AI marketing system** — Content approval queue (9 endpoints), 12 autonomous marketing agents (6 content, 2 distribution, 4 analytics), email sequences (7 default drip campaigns with enrollment lifecycle), landing page with SEO/AEO (blog, sitemap, robots, JSON-LD), 12 blog posts across 5 content pillars
 
 ---
 
@@ -226,13 +227,13 @@ booking-os/
 ├── apps/
 │   ├── api/                    # NestJS REST API (port 3001)
 │   │   ├── src/
-│   │   │   ├── modules/        # 50 feature modules
+│   │   │   ├── modules/        # 55 feature modules
 │   │   │   ├── common/         # Guards, decorators, filters, DTOs, Prisma service
 │   │   │   └── main.ts         # Bootstrap, Swagger, CORS, cookies, validation
 │   │   └── Dockerfile          # Multi-stage production build
 │   ├── web/                    # Next.js admin dashboard (port 3000)
 │   │   ├── src/
-│   │   │   ├── app/            # 66 pages
+│   │   │   ├── app/            # 72 pages
 │   │   │   ├── components/     # Shared components (shell, modals, tour, etc.)
 │   │   │   ├── lib/            # Utility modules (API client, auth, i18n, socket, theme)
 │   │   │   ├── locales/        # en.json, es.json (600+ keys each)
@@ -240,11 +241,12 @@ booking-os/
 │   │   └── Dockerfile          # Multi-stage production build
 │   └── whatsapp-simulator/     # WhatsApp testing tool (port 3002)
 ├── packages/
-│   ├── db/                     # Prisma schema (53 models), migrations, seed scripts
+│   ├── db/                     # Prisma schema (57 models), migrations, seed scripts
 │   │   ├── prisma/schema.prisma
 │   │   ├── src/seed.ts         # Base seed (idempotent)
 │   │   ├── src/seed-demo.ts    # Rich demo data (idempotent)
-│   │   └── src/seed-agentic.ts # One-time agentic data fill (production)
+│   │   ├── src/seed-agentic.ts # One-time agentic data fill (production)
+│   │   └── src/seed-content.ts # Content pillar seeding (12 blog posts → ContentDraft)
 │   ├── messaging-provider/     # WhatsApp Cloud API abstraction
 │   └── shared/                 # Shared types, DTOs, enums, profile field definitions
 ├── docs/
@@ -435,6 +437,9 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 | **Dunning** | — (internal) | 3-email dunning sequence via BullMQ, auto-downgrade after 14 days |
 | **Weekly Digest** | — (cron) | Weekly digest email (Monday 9am), opt-out via packConfig |
 | **Onboarding Drip** | — (internal) | 13-email onboarding sequence via BullMQ delayed jobs |
+| **Content Queue** | `/content-queue` | Content draft approval queue: create, list, get, update, approve, reject, bulk-approve, bulk-reject, stats (9 endpoints) |
+| **Marketing Agent** | — (internal) | 12 autonomous marketing agents (6 content, 2 distribution, 4 analytics) registered with AgentFrameworkService |
+| **Email Sequences** | `/email-sequences` | Email drip campaigns: CRUD, stats, enroll, enrollments, cancel/pause/resume, seed (12 endpoints). 7 default sequences |
 | **Export** | `/customers/export`, `/bookings/export`, `/reports/:type/export` | CSV/PDF export for customers, bookings, and all 10 report types |
 
 ### Auth & Multi-tenancy
@@ -488,6 +493,18 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 | ROI Dashboard | `/roi` | Baseline vs current metrics |
 | Service Board | `/service-board` | Kanban board (dealership) |
 | Settings | `/settings/*` | 13 settings sub-pages (account, AI, AI Autonomy, Agent Skills, agents, templates, translations, calendar, billing, notifications, offers, policies, waitlist, profile fields); hub page links to all sub-pages |
+| Marketing Queue | `/marketing/queue` | Content approval queue with card-based review, filter tabs, stats strip |
+| Marketing Agents | `/marketing/agents` | 12 marketing agents dashboard with tab filters (Content/Distribution/Analytics), toggle, Run Now |
+| Marketing Sequences | `/marketing/sequences` | Email sequence management with stats, toggle, expand timeline |
+
+### Public Marketing Pages
+| Page | Route | Description |
+|------|-------|-------------|
+| Landing Page | `/` | Hero, features, pricing, CTA sections |
+| Blog | `/blog` | Blog index with category badges, 12 posts across 5 pillars |
+| Blog Post | `/blog/[slug]` | Individual post with JSON-LD, OpenGraph, markdown rendering |
+| Pricing | `/pricing` | Detailed plan comparison |
+| FAQ | `/faq` | Frequently asked questions |
 
 ### Console Pages (Super Admin Only)
 | Page | Route | Description |
@@ -639,6 +656,12 @@ Two scripts, both idempotent:
 - Each business gets staff, customers, services, bookings, conversations, subscriptions
 - Used to populate the Business Directory with realistic data for demos
 
+**`packages/db/src/seed-content.ts`** — Content pillar seed data:
+- Creates 12 APPROVED ContentDraft records per business (one per blog post)
+- Covers 5 pillars: Industry Insights, Product Education, Customer Success, Thought Leadership, Technical
+- Idempotent (checks title+businessId before inserting)
+- Run: `npx tsx packages/db/src/seed-content.ts`
+
 ---
 
 ## 12. Environment Variables
@@ -738,12 +761,19 @@ Key groups (full list in `.env.example`):
 - **Weekly digest email** — Monday 9am cron, bookings/revenue week-over-week deltas, top services, opt-out via packConfig.
 - **Final counts:** ~4,600+ tests across 242 test files, 53 Prisma models, 37 migrations, 50 API modules, 66 pages
 
-### Phase A: Product Polish — IN PROGRESS
+### Phase A: Product Polish — COMPLETE
 - **A1: Design Tokens & Visual Consistency** — COMPLETE. Centralized `design-tokens.ts` with `BOOKING_STATUS_STYLES` (7 statuses), `CONVERSATION_STATUS_STYLES` (4 statuses), `ELEVATION` constants, helper functions (`statusBadgeClasses`, `statusCalendarClasses`, `statusHex`). CSS utilities (`.status-dot`, `.btn-press`, `.nav-section-label`). Booking form modal inputs updated to design system pattern. 17 tests.
 - **A2: Navigation Simplification** — COMPLETE. 3-section sidebar nav (Workspace/Tools/Insights) per role mode via `mode-config.ts` sections. Settings in footer area. Mobile bottom tab bar + "More" sheet for overflow. 8 new section tests in mode-config, 4 new shell tests. 55 total tests across design-tokens, mode-config, and shell.
 - **A3: Onboarding Overhaul** — COMPLETE. Setup wizard consolidated to 6 steps with skip options and time estimates. Celebration UI with CSS confetti animation on final step. First-week checklist (5 items: send message, create booking, invite team, customize template, enable AI). Persistent sidebar onboarding checklist widget with "Complete Setup" CTA and server-side dismiss via API. 18 tests (8 setup wizard + 10 checklist widget).
 - **A4: Payment Recording & POS** — COMPLETE. Extended Payment model with manual payment fields (method, reference, notes, recordedById, businessId, customerId). New `payments` API module (51st module) with 5 endpoints: record, list, get, summary, update. RecordPaymentModal component with amount/method/reference/notes. Booking detail modal shows payment history and "Record Payment" button. Dashboard KPI strip shows "Revenue Today" with monthly subtitle. Migration `20260309004612_add_manual_payment_fields`. 40 tests (26 API + 14 web).
 - **A5: In-App Refunds** — COMPLETE. New Refund model with Stripe integration. Refunds API module (52nd module) with 3 endpoints: create refund, list refunds by payment, get refund. Stripe refund processing when payment has stripePaymentIntentId, graceful fallback for manual payments. Validates refund amount against remaining refundable balance. Updates payment status to REFUNDED or PARTIAL_REFUND. ActionHistory audit logging. RefundModal component with two-step confirmation flow (form → red-themed warning). Booking detail shows refund status badges and per-payment "Refund" button for admins. Migration `20260309_add_refund_model`. 30 tests (18 API + 12 web).
+
+### Phase B: AI Marketing System — COMPLETE
+- **B1: Content Approval Queue & Infrastructure** — COMPLETE. New ContentDraft model with 6 content types, 6 channels, 5 pillars, 4 statuses. ContentQueue API module (53rd module) with 9 endpoints: create, list, get, update, approve, reject, bulk-approve, bulk-reject, stats. Marketing queue dashboard (`/marketing/queue`) with card-based review UI, filter tabs, stats strip. Migration `20260309_add_content_draft`. 42 tests (30 API + 12 web).
+- **B2: Deploy 12 Autonomous Marketing Agents** — COMPLETE. New MarketingAgent module (54th module) with MarketingAgentService (shared utilities: getBusinessContext, pickNextPillar, parseAIResponse, getContentGaps). 12 agent services following BackgroundAgent pattern: 6 content agents (BlogWriter, SocialCreator, EmailComposer, CaseStudy, VideoScript, Newsletter), 2 distribution agents (ContentScheduler, ContentPublisher), 4 analytics agents (PerformanceTracker, TrendAnalyzer, ContentCalendar, ContentROI). 9 prompt templates. Per-agent `runIntervalMinutes` in AgentSchedulerService. Marketing agents dashboard (`/marketing/agents`) with tab filters, toggle, Run Now. ClaudeClient exported from AiModule. 84 tests (70 API + 14 web).
+- **B3: Email Sequences & Drip Campaigns** — COMPLETE. New EmailSequence and EmailSequenceEnrollment models (56 Prisma models). EmailSequences API module (55th module) with 12 endpoints: CRUD, stats, enroll, enrollments list, cancel/pause/resume enrollment, seed. 7 default sequences (Welcome, FeatureEducation, SocialProof, TrialExpiry, WinBack, Upgrade, Referral). BullMQ ONBOARDING_DRIP processor extended for `seq-step-*` jobs. Trigger/stop event handling for auto-enrollment. Marketing sequences dashboard (`/marketing/sequences`) with stats, toggle, expand timeline. Migration `20260309_add_email_sequences`. 55 tests (44 API + 11 web).
+- **B4: Landing Page & SEO/AEO Foundation** — COMPLETE. `(marketing)` route group with public layout, MarketingNav, MarketingFooter. Landing page with hero/features/pricing/CTA sections. Blog infrastructure: `blog.ts` library (getAllPosts, getPostBySlug, getAllSlugs), blog index page, `[slug]` detail page with remark markdown rendering. JSON-LD BlogPosting schema, OpenGraph metadata, `generateStaticParams()`. Sitemap with dynamic blog slugs, robots.txt. Pricing page, FAQ page. 10 tests.
+- **B5: Content Pillar Seeding** — COMPLETE. 12 markdown blog posts across 5 pillars: Industry Insights (3), Product Education (3), Customer Success (2), Thought Leadership (2), Technical (2). `seed-content.ts` script creates APPROVED ContentDraft records per business (idempotent).
 
 ### Code Quality
 - **Error Handling Remediation** — COMPLETE (commit 1cf6f99). Replaced ~20 silent `.catch(() => {})` with logged warnings, queue processors throw on failure, NestJS proper exceptions, frontend toast wiring, waitlist loop resilience, WebSocket disconnect logging. +58 tests.
