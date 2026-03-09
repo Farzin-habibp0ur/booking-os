@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { useI18n } from '@/lib/i18n';
-import { Download, FileText, Loader2 } from 'lucide-react';
+import { Download, FileText, Loader2, Mail, Clock, X, Trash2 } from 'lucide-react';
 import {
   BarChart,
   Bar,
@@ -106,9 +106,306 @@ function ExportButtons({ reportType, days }: { reportType: string; days: number 
   );
 }
 
+interface ReportSchedule {
+  id: string;
+  reportType: string;
+  frequency: string;
+  recipients: string[];
+  dayOfWeek?: number;
+  dayOfMonth?: number;
+  hour: number;
+  timezone: string;
+  isActive: boolean;
+  lastSentAt?: string;
+}
+
+const REPORT_TYPES = [
+  { value: 'bookings-over-time', label: 'Bookings Over Time' },
+  { value: 'revenue-over-time', label: 'Revenue Over Time' },
+  { value: 'no-show-rate', label: 'No-Show Rate' },
+  { value: 'service-breakdown', label: 'Service Breakdown' },
+  { value: 'staff-performance', label: 'Staff Performance' },
+  { value: 'status-breakdown', label: 'Status Breakdown' },
+  { value: 'peak-hours', label: 'Peak Hours' },
+  { value: 'consult-conversion', label: 'Consult Conversion' },
+];
+
+const FREQUENCIES = [
+  { value: 'DAILY', label: 'Daily' },
+  { value: 'WEEKLY', label: 'Weekly' },
+  { value: 'MONTHLY', label: 'Monthly' },
+];
+
+const DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+function ScheduleModal({
+  isOpen,
+  onClose,
+  onSaved,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [reportType, setReportType] = useState('bookings-over-time');
+  const [frequency, setFrequency] = useState('WEEKLY');
+  const [recipients, setRecipients] = useState('');
+  const [dayOfWeek, setDayOfWeek] = useState(1);
+  const [dayOfMonth, setDayOfMonth] = useState(1);
+  const [hour, setHour] = useState(9);
+  const [saving, setSaving] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const emails = recipients.split(',').map((e) => e.trim()).filter(Boolean);
+      await api.post('/reports/schedules', {
+        reportType,
+        frequency,
+        recipients: emails,
+        ...(frequency === 'WEEKLY' ? { dayOfWeek } : {}),
+        ...(frequency === 'MONTHLY' ? { dayOfMonth } : {}),
+        hour,
+      });
+      onSaved();
+      onClose();
+    } catch {
+      // handled by api client
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6">
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-lg font-semibold">Schedule Report Email</h2>
+          <button onClick={onClose} className="p-1 rounded-lg hover:bg-slate-100">
+            <X size={18} />
+          </button>
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Report</label>
+            <select
+              value={reportType}
+              onChange={(e) => setReportType(e.target.value)}
+              className="w-full bg-slate-50 border-transparent rounded-xl px-3 py-2 text-sm focus:bg-white focus:ring-2 focus:ring-sage-500"
+            >
+              {REPORT_TYPES.map((r) => (
+                <option key={r.value} value={r.value}>{r.label}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Frequency</label>
+            <select
+              value={frequency}
+              onChange={(e) => setFrequency(e.target.value)}
+              className="w-full bg-slate-50 border-transparent rounded-xl px-3 py-2 text-sm focus:bg-white focus:ring-2 focus:ring-sage-500"
+            >
+              {FREQUENCIES.map((f) => (
+                <option key={f.value} value={f.value}>{f.label}</option>
+              ))}
+            </select>
+          </div>
+          {frequency === 'WEEKLY' && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Day of Week</label>
+              <select
+                value={dayOfWeek}
+                onChange={(e) => setDayOfWeek(Number(e.target.value))}
+                className="w-full bg-slate-50 border-transparent rounded-xl px-3 py-2 text-sm focus:bg-white focus:ring-2 focus:ring-sage-500"
+              >
+                {DAYS_OF_WEEK.map((d, i) => (
+                  <option key={i} value={i}>{d}</option>
+                ))}
+              </select>
+            </div>
+          )}
+          {frequency === 'MONTHLY' && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Day of Month</label>
+              <select
+                value={dayOfMonth}
+                onChange={(e) => setDayOfMonth(Number(e.target.value))}
+                className="w-full bg-slate-50 border-transparent rounded-xl px-3 py-2 text-sm focus:bg-white focus:ring-2 focus:ring-sage-500"
+              >
+                {Array.from({ length: 28 }, (_, i) => (
+                  <option key={i + 1} value={i + 1}>{i + 1}</option>
+                ))}
+              </select>
+            </div>
+          )}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              Send at (UTC hour)
+            </label>
+            <select
+              value={hour}
+              onChange={(e) => setHour(Number(e.target.value))}
+              className="w-full bg-slate-50 border-transparent rounded-xl px-3 py-2 text-sm focus:bg-white focus:ring-2 focus:ring-sage-500"
+            >
+              {Array.from({ length: 24 }, (_, i) => (
+                <option key={i} value={i}>{String(i).padStart(2, '0')}:00 UTC</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              Recipients (comma-separated emails)
+            </label>
+            <input
+              type="text"
+              value={recipients}
+              onChange={(e) => setRecipients(e.target.value)}
+              placeholder="admin@clinic.com, manager@clinic.com"
+              className="w-full bg-slate-50 border-transparent rounded-xl px-3 py-2 text-sm focus:bg-white focus:ring-2 focus:ring-sage-500"
+              required
+            />
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-sm rounded-xl text-slate-600 hover:bg-slate-100 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={saving || !recipients.trim()}
+              className="px-4 py-2 text-sm rounded-xl bg-sage-600 hover:bg-sage-700 text-white font-medium transition-colors disabled:opacity-50"
+            >
+              {saving ? 'Saving...' : 'Create Schedule'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function ScheduleManager({
+  isOpen,
+  onClose,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+}) {
+  const [schedules, setSchedules] = useState<ReportSchedule[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const loadSchedules = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await api.get<ReportSchedule[]>('/reports/schedules');
+      setSchedules(data);
+    } catch {
+      // handled
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) loadSchedules();
+  }, [isOpen, loadSchedules]);
+
+  const toggleActive = async (id: string, isActive: boolean) => {
+    await api.patch(`/reports/schedules/${id}`, { isActive: !isActive });
+    loadSchedules();
+  };
+
+  const deleteSchedule = async (id: string) => {
+    await api.del(`/reports/schedules/${id}`);
+    loadSchedules();
+  };
+
+  if (!isOpen) return null;
+
+  const reportLabel = (type: string) =>
+    REPORT_TYPES.find((r) => r.value === type)?.label ?? type;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4 p-6">
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-lg font-semibold">Manage Scheduled Reports</h2>
+          <button onClick={onClose} className="p-1 rounded-lg hover:bg-slate-100">
+            <X size={18} />
+          </button>
+        </div>
+        {loading ? (
+          <div className="flex justify-center py-8">
+            <Loader2 className="animate-spin text-slate-400" size={24} />
+          </div>
+        ) : schedules.length === 0 ? (
+          <p className="text-slate-400 text-sm py-8 text-center">
+            No scheduled reports yet. Create one using the Schedule Email button.
+          </p>
+        ) : (
+          <div className="space-y-3 max-h-80 overflow-y-auto">
+            {schedules.map((s) => (
+              <div
+                key={s.id}
+                className={cn(
+                  'p-3 rounded-xl border flex items-center justify-between',
+                  s.isActive ? 'bg-sage-50/50 border-sage-100' : 'bg-slate-50 border-slate-100 opacity-60',
+                )}
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium truncate">{reportLabel(s.reportType)}</p>
+                  <p className="text-xs text-slate-500">
+                    {s.frequency} · {String(s.hour).padStart(2, '0')}:00 UTC · {s.recipients.length} recipient{s.recipients.length !== 1 ? 's' : ''}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 ml-3">
+                  <button
+                    onClick={() => toggleActive(s.id, s.isActive)}
+                    className={cn(
+                      'text-xs px-2 py-1 rounded-lg font-medium transition-colors',
+                      s.isActive
+                        ? 'bg-sage-100 text-sage-700 hover:bg-sage-200'
+                        : 'bg-slate-200 text-slate-600 hover:bg-slate-300',
+                    )}
+                  >
+                    {s.isActive ? 'Active' : 'Paused'}
+                  </button>
+                  <button
+                    onClick={() => deleteSchedule(s.id)}
+                    className="p-1 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        <div className="flex justify-end mt-4">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-sm rounded-xl text-slate-600 hover:bg-slate-100 transition-colors"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ReportsPage() {
   const { t } = useI18n();
   const [days, setDays] = useState(30);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [showManageModal, setShowManageModal] = useState(false);
+  const [scheduleCount, setScheduleCount] = useState(0);
   const [bookingsData, setBookingsData] = useState<any[]>([]);
   const [revenueData, setRevenueData] = useState<any[]>([]);
   const [noShowData, setNoShowData] = useState<any>(null);
@@ -118,6 +415,10 @@ export default function ReportsPage() {
   const [statusData, setStatusData] = useState<any[]>([]);
   const [peakData, setPeakData] = useState<any>(null);
   const [conversionData, setConversionData] = useState<any>(null);
+
+  const loadScheduleCount = () => {
+    api.get<any[]>('/reports/schedules').then((s) => setScheduleCount(s.length)).catch(() => {});
+  };
 
   const loadAll = (period: number) => {
     api.get<any[]>(`/reports/bookings-over-time?days=${period}`).then(setBookingsData);
@@ -133,6 +434,7 @@ export default function ReportsPage() {
 
   useEffect(() => {
     loadAll(days);
+    loadScheduleCount();
   }, [days]);
 
   const totalBookings = statusData.reduce((sum, s) => sum + s.count, 0);
@@ -140,23 +442,50 @@ export default function ReportsPage() {
 
   return (
     <div className="p-6 space-y-6">
+      <ScheduleModal
+        isOpen={showScheduleModal}
+        onClose={() => setShowScheduleModal(false)}
+        onSaved={loadScheduleCount}
+      />
+      <ScheduleManager isOpen={showManageModal} onClose={() => setShowManageModal(false)} />
+
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-serif font-semibold text-slate-900">{t('reports.title')}</h1>
-        <div className="flex gap-1 bg-slate-100 rounded-xl p-0.5">
-          {PERIOD_OPTIONS.map((p) => (
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-serif font-semibold text-slate-900">{t('reports.title')}</h1>
+          {scheduleCount > 0 && (
             <button
-              key={p.value}
-              onClick={() => setDays(p.value)}
-              className={cn(
-                'px-3 py-1.5 rounded-xl text-sm transition-colors',
-                days === p.value
-                  ? 'bg-white shadow-sm font-medium'
-                  : 'text-slate-500 hover:text-slate-700',
-              )}
+              onClick={() => setShowManageModal(true)}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-sage-50 text-sage-700 text-xs font-medium hover:bg-sage-100 transition-colors"
             >
-              {t(`reports.${p.key}`)}
+              <Clock size={12} />
+              {scheduleCount} Scheduled
             </button>
-          ))}
+          )}
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowScheduleModal(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium transition-colors"
+          >
+            <Mail size={14} />
+            Schedule Email
+          </button>
+          <div className="flex gap-1 bg-slate-100 rounded-xl p-0.5">
+            {PERIOD_OPTIONS.map((p) => (
+              <button
+                key={p.value}
+                onClick={() => setDays(p.value)}
+                className={cn(
+                  'px-3 py-1.5 rounded-xl text-sm transition-colors',
+                  days === p.value
+                    ? 'bg-white shadow-sm font-medium'
+                    : 'text-slate-500 hover:text-slate-700',
+                )}
+              >
+                {t(`reports.${p.key}`)}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 

@@ -70,6 +70,7 @@ model Business {
   emailSequences             EmailSequence[]
   emailSequenceEnrollments   EmailSequenceEnrollment[]
   testimonials               Testimonial[]
+  reportSchedules            ReportSchedule[]
 
   @@map("businesses")
 }
@@ -1286,4 +1287,26 @@ model Testimonial {
   @@index([businessId])
   @@index([businessId, status])
   @@map("testimonials")
+}
+
+model ReportSchedule {
+  id          String    @id @default(cuid())
+  businessId  String
+  reportType  String    // bookings-over-time, revenue-over-time, no-show-rate, etc.
+  frequency   String    // DAILY, WEEKLY, MONTHLY
+  recipients  String[]  // email addresses
+  dayOfWeek   Int?      // 0-6 (Sun-Sat) for WEEKLY
+  dayOfMonth  Int?      // 1-28 for MONTHLY
+  hour        Int       @default(9) // 0-23 UTC
+  timezone    String    @default("UTC")
+  isActive    Boolean   @default(true)
+  lastSentAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id])
+
+  @@index([businessId])
+  @@index([isActive, frequency])
+  @@map("report_schedules")
 }
