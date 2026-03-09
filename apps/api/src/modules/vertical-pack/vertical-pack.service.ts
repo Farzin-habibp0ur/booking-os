@@ -3,11 +3,13 @@ import { VerticalPackDefinition } from '@booking-os/shared';
 import { aestheticPack } from './packs/aesthetic.pack';
 import { generalPack } from './packs/general.pack';
 import { dealershipPack } from './packs/dealership.pack';
+import { wellnessPack } from './packs/wellness.pack';
 
 const PACKS: Record<string, VerticalPackDefinition> = {
   aesthetic: aestheticPack,
   general: generalPack,
   dealership: dealershipPack,
+  wellness: wellnessPack,
 };
 
 @Injectable()

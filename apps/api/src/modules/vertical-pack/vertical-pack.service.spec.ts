@@ -142,12 +142,129 @@ describe('VerticalPackService', () => {
     ]);
   });
 
+  // ─── Wellness pack ──────────────────────────────────────────────────
+
+  it('returns the wellness pack', () => {
+    const pack = service.getPack('wellness');
+    expect(pack.name).toBe('wellness');
+  });
+
+  it('wellness pack has correct labels', () => {
+    const pack = service.getPack('wellness');
+    expect(pack.labels).toEqual({
+      customer: 'Client',
+      booking: 'Session',
+      service: 'Service',
+    });
+  });
+
+  it('wellness pack has 7 customer intake fields', () => {
+    const pack = service.getPack('wellness');
+    expect(pack.customerFields).toHaveLength(7);
+  });
+
+  it('wellness pack contains all expected intake fields', () => {
+    const pack = service.getPack('wellness');
+    const keys = pack.customerFields.map((f) => f.key);
+    expect(keys).toEqual([
+      'healthGoals',
+      'fitnessLevel',
+      'injuries',
+      'medications',
+      'allergies',
+      'preferredModality',
+      'membershipType',
+    ]);
+  });
+
+  it('wellness healthGoals field is required', () => {
+    const pack = service.getPack('wellness');
+    const healthGoals = pack.customerFields.find((f) => f.key === 'healthGoals');
+    expect(healthGoals?.required).toBe(true);
+  });
+
+  it('wellness fitnessLevel field has select type with 4 options', () => {
+    const pack = service.getPack('wellness');
+    const fitnessLevel = pack.customerFields.find((f) => f.key === 'fitnessLevel');
+    expect(fitnessLevel?.type).toBe('select');
+    expect(fitnessLevel?.options).toEqual(['Beginner', 'Intermediate', 'Advanced', 'Elite']);
+  });
+
+  it('wellness preferredModality field has 6 options', () => {
+    const pack = service.getPack('wellness');
+    const modality = pack.customerFields.find((f) => f.key === 'preferredModality');
+    expect(modality?.type).toBe('select');
+    expect(modality?.options).toHaveLength(6);
+    expect(modality?.options).toContain('Massage');
+    expect(modality?.options).toContain('Yoga');
+  });
+
+  it('wellness membershipType field has 4 tiers', () => {
+    const pack = service.getPack('wellness');
+    const membership = pack.customerFields.find((f) => f.key === 'membershipType');
+    expect(membership?.type).toBe('select');
+    expect(membership?.options).toEqual(['Drop-in', 'Monthly', 'Annual', 'VIP']);
+  });
+
+  it('wellness pack has 2 booking fields', () => {
+    const pack = service.getPack('wellness');
+    expect(pack.bookingFields).toHaveLength(2);
+    expect(pack.bookingFields[0].key).toBe('sessionNotes');
+    expect(pack.bookingFields[1].key).toBe('pressureLevel');
+  });
+
+  it('wellness pack has 6 default services', () => {
+    const pack = service.getPack('wellness');
+    expect(pack.defaultServices).toHaveLength(6);
+  });
+
+  it('wellness default services include all expected services', () => {
+    const pack = service.getPack('wellness');
+    const names = pack.defaultServices?.map((s) => s.name);
+    expect(names).toContain('Initial Wellness Consultation');
+    expect(names).toContain('Swedish Massage');
+    expect(names).toContain('Deep Tissue Massage');
+    expect(names).toContain('Yoga Private Session');
+    expect(names).toContain('Personal Training');
+    expect(names).toContain('Nutrition Coaching');
+  });
+
+  it('wellness Initial Wellness Consultation is CONSULT type and free', () => {
+    const pack = service.getPack('wellness');
+    const consult = pack.defaultServices?.find((s) => s.name === 'Initial Wellness Consultation');
+    expect(consult?.kind).toBe('CONSULT');
+    expect(consult?.price).toBe(0);
+    expect(consult?.durationMins).toBe(30);
+  });
+
+  it('wellness pack has 9 default templates', () => {
+    const pack = service.getPack('wellness');
+    expect(pack.defaultTemplates).toHaveLength(9);
+  });
+
+  it('wellness templates include wellness-specific ones', () => {
+    const pack = service.getPack('wellness');
+    const names = pack.defaultTemplates.map((t) => t.name);
+    expect(names).toContain('Post-Session Follow-up');
+    expect(names).toContain('Progress Check-in');
+    expect(names).toContain('Wellness Tip');
+    expect(names).toContain('Membership Renewal');
+  });
+
+  it('wellness pack config has tracking and membership enabled', () => {
+    const pack = service.getPack('wellness');
+    expect(pack.defaultPackConfig?.trackProgress).toBe(true);
+    expect(pack.defaultPackConfig?.membershipEnabled).toBe(true);
+    expect(pack.defaultPackConfig?.intakeFormRequired).toBe(true);
+  });
+
   // ─── getAllPacks ──────────────────────────────────────────────────────
 
-  it('getAllPacks includes dealership', () => {
+  it('getAllPacks includes all packs', () => {
     const packs = service.getAllPacks();
     expect(packs).toContain('aesthetic');
     expect(packs).toContain('general');
     expect(packs).toContain('dealership');
+    expect(packs).toContain('wellness');
   });
 });

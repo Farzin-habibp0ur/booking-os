@@ -525,6 +525,34 @@ function SetupPage() {
 
                 <button
                   onClick={() => {
+                    setSelectedPack('wellness');
+                    installPack('wellness');
+                  }}
+                  disabled={packInstalling}
+                  className={cn(
+                    'w-full bg-white rounded-2xl shadow-soft p-6 text-left transition-all',
+                    selectedPack === 'wellness'
+                      ? 'ring-2 ring-sage-500 bg-sage-50'
+                      : 'hover:ring-2 hover:ring-sage-500',
+                  )}
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-sage-50 flex items-center justify-center flex-shrink-0">
+                      <Stethoscope size={20} className="text-sage-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-sm text-slate-900">
+                        {t('setup.clinic_type_wellness')}
+                      </p>
+                      <p className="text-xs text-slate-500 mt-1">
+                        {t('setup.clinic_type_wellness_desc')}
+                      </p>
+                    </div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => {
                     setSelectedPack('general');
                     installPack('general');
                   }}

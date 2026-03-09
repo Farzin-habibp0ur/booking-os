@@ -73,6 +73,7 @@ export enum VerticalPack {
   TUTORING = 'tutoring',
   GENERAL = 'general',
   DEALERSHIP = 'dealership',
+  WELLNESS = 'wellness',
 }
 
 export enum KanbanStatus {

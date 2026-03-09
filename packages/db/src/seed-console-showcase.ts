@@ -56,7 +56,7 @@ async function main() {
       name: 'Zen Wellness Spa',
       phone: '+14155550201',
       timezone: 'America/New_York',
-      verticalPack: 'general',
+      verticalPack: 'wellness',
       plan: 'pro',
       billingStatus: 'active',
       staffCount: 4,
