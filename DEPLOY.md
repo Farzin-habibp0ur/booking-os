@@ -560,8 +560,11 @@ Find the public database URL in Railway → postgres service → Variables → `
 # Seed base data (Glow Aesthetic Clinic)
 DATABASE_URL="<public-db-url>" npx tsx packages/db/src/seed.ts
 
-# Seed rich demo data (both verticals)
+# Seed rich demo data (aesthetic + dealership verticals)
 DATABASE_URL="<public-db-url>" npx tsx packages/db/src/seed-demo.ts
+
+# Seed wellness vertical demo data
+DATABASE_URL="<public-db-url>" npx tsx packages/db/src/seed-wellness.ts
 ```
 
 Both scripts are idempotent — they check for existing data before inserting.

@@ -2,7 +2,7 @@
 
 > **Purpose:** This document gives full context on the Booking OS platform — what it is, what's been built, how it's structured, and what's left to build. Share this with an AI assistant or new developer to get productive immediately.
 >
-> **Last updated:** March 9, 2026 (Phase C/D/E — Phase C ALL COMPLETE, Phase D ALL COMPLETE, E2+E5+E3+E4 done — ~4,941 total tests across 316 test files, 60 Prisma models, 44 migrations)
+> **Last updated:** March 9, 2026 (All phases COMPLETE — A through E, all 15 prompts done — ~5,003 total tests across 319 test files, 60 Prisma models, 44 migrations)
 
 ---
 
@@ -19,10 +19,12 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 |----------|-------|----------|----------|
 | Glow Aesthetic Clinic | sarah@glowclinic.com | password123 | Aesthetic |
 | Metro Auto Group | mike@metroauto.com | password123 | Dealership |
+| Serenity Wellness Spa | maya@serenitywellness.com | password123 | Wellness |
 
 ### Supported Verticals
 - **Aesthetic clinics** — consult → treatment → aftercare workflows, medical intake, before/after tracking
 - **Car dealerships** — service kanban board (CHECKED_IN → DIAGNOSING → IN_PROGRESS → READY), quote approval, resource/bay scheduling
+- **Wellness & spa** — 7-field wellness intake (health goals, fitness level, injuries, medications, allergies, modality, membership), session packages with progress tracking, membership tiers (Drop-in/Monthly/Annual/VIP), 6 default services (massage, yoga, training, coaching)
 - **General** — base vertical with standard booking features
 - **Extensible** — Vertical Pack system customizes fields, templates, automations, and workflows per industry
 
@@ -100,7 +102,7 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 - **Web:** 77.76% statements / 72.84% branches
 
 ### Demo Strategy — COMPLETE
-- **Rich demo data** — Realistic seed data for both aesthetic clinic and dealership verticals
+- **Rich demo data** — Realistic seed data for aesthetic clinic, dealership, and wellness verticals
 - **Interactive demo tour** — 9-step guided walkthrough with spotlight + tooltip overlays
 - **Deployment docs** — Comprehensive DEPLOY.md with Railway, Docker, and troubleshooting
 
@@ -115,7 +117,7 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 - **Customer Hub** — Redesigned `/customers/{id}` with sticky header, context row (last booking, last conversation, waitlist count), notes tab, message deep link, vertical modules
 - **Customer Notes** — New `CustomerNote` model with full CRUD, staff ownership validation
 - **Unified Timeline** — Timeline API endpoint (6 data sources: bookings, conversations, notes, waitlist, quotes, campaigns), `CustomerTimeline` component with type filtering, pagination, deep linking
-- **Vertical Modules** — IntakeCard for aesthetic pack, quotes summary for dealership pack, collapsible sections
+- **Vertical Modules** — IntakeCard for aesthetic pack, WellnessIntakeCard/PackageTracker/MembershipBadge for wellness pack, quotes summary for dealership pack, collapsible sections
 - **Enhanced Search** — Search API with offset, types filter, totals; Cmd+K fixed hrefs to detail pages, grouped results, vertical-aware labels, "View all results" link
 - **Search Page** — New `/search` page with URL param sync, type filter chips with counts, grouped results, load more per section
 - **Inbox Deep Linking** — `?conversationId=` URL param auto-selects conversation, customer name links to profile
@@ -322,7 +324,7 @@ BookingStatus:      PENDING, PENDING_DEPOSIT, CONFIRMED, IN_PROGRESS, COMPLETED,
 KanbanStatus:       CHECKED_IN, DIAGNOSING, AWAITING_APPROVAL, IN_PROGRESS, READY_FOR_PICKUP
 ConversationStatus: OPEN, WAITING, RESOLVED, SNOOZED
 ServiceKind:        CONSULT, TREATMENT, OTHER
-VerticalPack:       AESTHETIC, SALON, TUTORING, GENERAL, DEALERSHIP
+VerticalPack:       AESTHETIC, SALON, TUTORING, GENERAL, DEALERSHIP, WELLNESS
 ```
 
 ### Key Models
@@ -658,9 +660,18 @@ Two scripts, both idempotent:
 - Idempotent (checks before inserting)
 
 **`packages/db/src/seed-console-showcase.ts`** — Console showcase data:
-- Creates 6 diverse businesses with varied health states (green/yellow/red), plans (basic/pro), billing statuses (active/past_due/canceled), verticals, and timezones
+- Creates 6 diverse businesses with varied health states (green/yellow/red), plans (basic/pro), billing statuses (active/past_due/canceled), verticals (general/aesthetic/wellness), and timezones
 - Each business gets staff, customers, services, bookings, conversations, subscriptions
+- Zen Wellness Spa uses `wellness` vertical pack
 - Used to populate the Business Directory with realistic data for demos
+
+**`packages/db/src/seed-wellness.ts`** — Wellness pack showcase data:
+- Serenity Wellness Spa (verticalPack: `wellness`, plan: `pro`)
+- 3 staff (Maya Chen ADMIN, Jordan Rivera + Aisha Patel SERVICE_PROVIDER)
+- 6 services matching wellness pack defaults
+- 5 customers with full wellness intake data (health goals, fitness levels, injuries, allergies, memberships)
+- 15 bookings spread across recent weeks
+- Run: `npx tsx packages/db/src/seed-wellness.ts`
 
 **`packages/db/src/seed-content.ts`** — Content pillar seed data:
 - Creates 12 APPROVED ContentDraft records per business (one per blog post)
@@ -795,11 +806,12 @@ Key groups (full list in `.env.example`):
 - **D4: Calendar Command Center** — COMPLETE. Enhanced existing calendar-sidebar.tsx (responsive w-72 lg:w-80) and booking-popover.tsx (customer phone display, onComplete handler for IN_PROGRESS bookings). Calendar page enhancements: localStorage-backed sidebar toggle with SSR-safe init, booking clicks open popover with anchor positioning (not full modal), keyboard shortcuts (T=today, N=new booking, S=sidebar, 1/2/3=views, ?=help, Esc=cascading close, ←/→=navigate), keyboard shortcuts help modal with `?` button, mobile slide-over overlay for sidebar (<lg breakpoint), onComplete handler patches booking status via API. 37 new tests (11 popover + 7 sidebar + 19 calendar page).
 - **D1: Workflow Automation Builder** — COMPLETE. Frontend-only visual drag-and-drop builder that serializes to existing AutomationRule JSON format — no backend changes. 5 new components in `components/workflow/`: `workflow-canvas.tsx` (CSS grid dotted bg, ctrl+scroll zoom 50-200%, click+drag pan, HTML5 DnD drop zone, SVG connector layer), `workflow-node.tsx` (4 types: TRIGGER sage, CONDITION amber, ACTION blue, DELAY slate — each with icon, label, config summary, connection points, delete/configure), `workflow-sidebar.tsx` (draggable block palette: 6 triggers, 6 conditions, 7 actions, 3 delays), `workflow-connector.tsx` (SVG cubic bezier paths with arrowheads, animated drag connector), `node-config-modal.tsx` (dynamic forms per node type: status dropdowns, text inputs, time pickers, channel selectors). Builder page (`/automations/builder`) with useReducer state, toolbar (name, Save, Test, Back), serialization (trigger→rule.trigger+filters, conditions→rule.filters AND, actions→rule.actions[], delays→delayHours), deserialization (?ruleId= loads existing rule into visual nodes), validation (1 trigger, 1+ action, name required). "Visual Builder" button + "Edit in Builder" pencil icon on automations page. 38 new tests (7 canvas + 13 node + 7 sidebar + 11 builder page).
 
-### Phase E: Polish & Expansion — IN PROGRESS
+### Phase E: Polish & Expansion — ALL COMPLETE
 - **E2: PostHog Analytics Funnels** — COMPLETE. Enhanced `posthog.tsx` with `initPostHog()`, `isEnabled()`, `resetUser()`, `captureEvent()`. Created `PostHogIdentityProvider` component (identifies user on session with userId, email, businessId, role, verticalPack). Integrated `identifyUser`/`resetUser` in auth.tsx (login, signup, session restore, logout). Added milestone events across 5 funnels: Signup (`signup_started`, `signup_completed`, `onboarding_completed`), Booking (`calendar_viewed`, `new_booking_clicked`, `booking_confirmed`), Messaging (`inbox_opened`, `conversation_selected`, `message_sent`), AI Adoption (`ai_settings_viewed`, `ai_enabled`), Upgrade (`billing_page_viewed`, `plans_compared`, `upgrade_clicked`). 12 tests (8 posthog lib + 4 provider).
 - **E3: AI Command Center** — COMPLETE. Expanded existing AI page into full command center with 4 route-based tab sub-pages. Layout (`layout.tsx`): horizontal tab navigation (Overview/Agents/Actions/Performance) using Next.js `Link` + `usePathname` for active state. Overview (`/ai`): core agent dashboard, AI activity feed, autonomy levels, marketing agents summary grid (12 agents with status indicators). Agents page (`/ai/agents`): core agents grid with status toggles (calls `/agents/config/:type`), "Run Now" trigger, expandable run history (last 10 runs with status/duration/cards); marketing agents grid with status badges and schedule info. Actions page (`/ai/actions`): pending action cards from `/action-cards` API grouped by 4 categories (Urgent/red, Needs Approval/amber, Opportunity/sage, Hygiene/slate), each with approve/dismiss/snooze buttons, confidence scores, checkbox selection, bulk action bar ("Approve All"/"Dismiss All"), empty state with lavender Sparkles, pagination. Performance page (`/ai/performance`): Recharts visualizations — success rate LineChart (30 days, sage line), cards created/approved/dismissed stacked AreaChart, agent comparison horizontal BarChart; staff feedback summary table (helpful/not helpful/percent); KPI cards (total runs, successful, failed, success rate); date range selector (7/30/90 days); graceful mock data fallback. 31 tests (6 layout + 8 agents + 11 actions + 7 performance). Navigation already configured in mode-config.ts and shell.tsx.
 - **E4: UX Polish Batches** — COMPLETE. Three UX improvement batches: Batch 5 (Client Profile Redesign): enlarged avatar (w-16 h-16), unified activity feed interleaving bookings/conversations/notes chronologically with typed icons (Calendar/MessageSquare/StickyNote), "Add Note" quick action button, narrowed layout to max-w-3xl, inline note input card, removed tab-based layout. Batch 6 (Inbox Simplification): restyled filter chips (active: sage-100/sage-800, inactive: white border), chip bar with gap-2 px-4 py-3 border-slate-100, info sidebar collapse toggle with `infoSidebarOpen` state. Batch 8 (Mobile): modal-content bottom sheet CSS for mobile modals. Customer list: search input restyled (bg-slate-50 border-0), ChevronUp/ChevronDown sort icons replacing text arrows, 3 new sortable columns (Last Visit, Total Spent, Bookings), improved empty state with "Import CSV" + "Add Manually" dual CTAs. 207 tests pass across 11 suites.
 - **E5: Scheduled Messages & Bulk Inbox Actions** — COMPLETE. Prisma schema: `scheduledFor DateTime?` and `scheduledJobId String?` on Message model (migration 44). Message scheduling via BullMQ delayed jobs: `message.service.ts` creates message with `deliveryStatus: 'SCHEDULED'`, adds delayed job to MESSAGING queue, stores jobId for cancellation. 3 message endpoints: POST (send with optional `scheduledFor`), GET scheduled, DELETE cancel (removes BullMQ job + sets CANCELLED). 4 bulk conversation endpoints: POST `bulk-close` (updateMany to RESOLVED), POST `bulk-assign` (validates staff, updateMany assignedToId), POST `bulk-tag` (appends tag if not present), POST `bulk-read` (marks inbound messages readAt). All bulk ops validate max 50 items. Frontend: enhanced `scheduled-message.tsx` with 5 quick presets (1h, 3h, tomorrow 9AM/12PM, Monday 9AM) and 15-min interval time picker (96 options). Inbox page: ScheduledMessage component integrated in composer area, `scheduledFor` state flows through sendMessage API call, amber scheduled messages indicator panel with cancel buttons, bulk action bar updated to use efficient single-request API endpoints, inline tag input for bulk tagging. 113 tests (25 message service + 52 conversation service + 10 scheduled-message component + 15 inbox page + 11 inbox integration).
+- **E1: Wellness Vertical Pack** — COMPLETE. New `wellness.pack.ts` definition with 7 customer intake fields (healthGoals [required], fitnessLevel [select/4], injuries, medications, allergies, preferredModality [select/6], membershipType [select/4]), 2 booking fields (sessionNotes, pressureLevel), 6 default services (Initial Wellness Consultation [free CONSULT], Swedish Massage [$90], Deep Tissue Massage [$110], Yoga Private Session [$75], Personal Training [$80], Nutrition Coaching [$65 CONSULT]), 9 default templates (24h Reminder, Session Confirmation, Post-Session Follow-up, Progress Check-in, Wellness Tip, Membership Renewal, Cancellation, Reschedule Link, Cancel Link), packConfig (trackProgress, membershipEnabled, intakeFormRequired). `WELLNESS` added to VerticalPack enum. 3 frontend components: `WellnessIntakeCard` (7-field intake form with medical alert indicator, edit/save mode, completion badge), `PackageTracker` (session package progress bar with expiry warning, percentage display), `MembershipBadge` (4 tier styles: VIP/amber Crown, Annual/sage Star, Monthly/lavender Zap, Drop-in/slate User). Setup page updated with "Wellness & Spa" option (Stethoscope icon). Mode-config labels added (Studio Manager/Front Desk/Practitioner). Seed data: `seed-wellness.ts` (Serenity Wellness Spa with 3 staff, 6 services, 5 customers with intake data, 15 bookings), console showcase Zen Wellness Spa updated to wellness pack. en.json + es.json locale strings. 62 new tests (34 backend pack + 13 intake card + 8 package tracker + 7 membership badge).
 
 ### Code Quality
 - **Error Handling Remediation** — COMPLETE (commit 1cf6f99). Replaced ~20 silent `.catch(() => {})` with logged warnings, queue processors throw on failure, NestJS proper exceptions, frontend toast wiring, waitlist loop resilience, WebSocket disconnect logging. +58 tests.
@@ -818,7 +830,7 @@ Key groups (full list in `.env.example`):
   - Full report: `test-results/manual-testing-report.md`
 
 ### Do Not Build (Yet)
-- Don't chase 5 verticals before aesthetics ROI is repeatable
+- Don't chase additional verticals beyond the current 4 (aesthetic, dealership, wellness, general) before ROI is repeatable
 - Don't overinvest in generic AI chatbot; keep AI tied to structured flows
 - Don't build deep enterprise features before pack-led implementation is nailed
 

@@ -6,7 +6,7 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses (aes
 
 - **Live production:** https://businesscommandcentre.com
 - **API:** https://api.businesscommandcentre.com/api/v1
-- **Verticals:** Aesthetic, Dealership, General (extensible via Vertical Pack system)
+- **Verticals:** Aesthetic, Dealership, Wellness, General (extensible via Vertical Pack system)
 
 ---
 
@@ -129,7 +129,7 @@ BookingStatus:      PENDING, PENDING_DEPOSIT, CONFIRMED, IN_PROGRESS, COMPLETED,
 KanbanStatus:       CHECKED_IN, DIAGNOSING, AWAITING_APPROVAL, IN_PROGRESS, READY_FOR_PICKUP
 ConversationStatus: OPEN, WAITING, RESOLVED, SNOOZED
 ServiceKind:        CONSULT, TREATMENT, OTHER
-VerticalPack:       AESTHETIC, SALON, TUTORING, GENERAL, DEALERSHIP
+VerticalPack:       AESTHETIC, SALON, TUTORING, GENERAL, DEALERSHIP, WELLNESS
 ```
 
 ### BullMQ Queues (8)
@@ -253,7 +253,7 @@ All AI-related UI elements use the **lavender** palette: `bg-lavender-50 border 
 ## Testing Conventions
 
 ### Test Counts
-- **~4,941 total tests** across 316 test files
+- **~5,003 total tests** across 319 test files
 - API: ~93% statement coverage, ~81% branch coverage
 - Web: ~78% statement coverage, ~73% branch coverage
 
@@ -448,6 +448,6 @@ Agents run via `AgentSchedulerService` cron → `AGENT_PROCESSING` BullMQ queue 
 ---
 
 ## Do Not Build (Yet)
-- Don't chase 5 verticals before aesthetics ROI is repeatable
+- Don't chase additional verticals beyond the current 4 (aesthetic, dealership, wellness, general) before ROI is repeatable
 - Don't overinvest in generic AI chatbot; keep AI tied to structured flows
 - Don't build deep enterprise features before pack-led implementation is nailed

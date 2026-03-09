@@ -60,7 +60,7 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 
 | #    | Story                                                      | Persona | Notes                                                          |
 | ---- | ---------------------------------------------------------- | ------- | -------------------------------------------------------------- |
-| 2.1  | Choose vertical pack (Aesthetic or General) during setup   | Admin   | Installs default services, templates, profile fields           |
+| 2.1  | Choose vertical pack (Aesthetic, Wellness, or General) during setup   | Admin   | Installs default services, templates, profile fields           |
 | 2.2  | Set business name, timezone, and currency                  | Admin   | —                                                              |
 | 2.3  | Connect WhatsApp (placeholder)                             | Admin   | UI exists but actual connection requires Meta portal setup     |
 | 2.4  | Invite staff members by email during setup                 | Admin   | Sends invitation link                                          |
