@@ -17,6 +17,8 @@ import {
   ShieldCheck,
   Clock,
   Users,
+  Workflow,
+  Pencil,
 } from 'lucide-react';
 import { TableRowSkeleton, EmptyState } from '@/components/skeleton';
 import TooltipNudge from '@/components/tooltip-nudge';
@@ -150,13 +152,23 @@ export default function AutomationsPage() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
         <h1 className="text-2xl font-serif font-semibold text-slate-900">Automations</h1>
         {tab === 'rules' && (
-          <button
-            onClick={() => router.push('/automations/new')}
-            className="flex items-center gap-2 px-4 py-2 bg-sage-600 text-white rounded-xl text-sm hover:bg-sage-700 transition-colors"
-          >
-            <Plus size={16} />
-            Create Rule
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => router.push('/automations/builder')}
+              className="flex items-center gap-2 px-4 py-2 border border-slate-200 text-slate-700 rounded-xl text-sm hover:bg-slate-50 transition-colors"
+              data-testid="visual-builder-link"
+            >
+              <Workflow size={16} />
+              Visual Builder
+            </button>
+            <button
+              onClick={() => router.push('/automations/new')}
+              className="flex items-center gap-2 px-4 py-2 bg-sage-600 text-white rounded-xl text-sm hover:bg-sage-700 transition-colors"
+            >
+              <Plus size={16} />
+              Create Rule
+            </button>
+          </div>
         )}
       </div>
 
@@ -307,6 +319,14 @@ export default function AutomationsPage() {
                                 ) : (
                                   <ToggleLeft size={16} />
                                 )}
+                              </button>
+                              <button
+                                onClick={() => router.push(`/automations/builder?ruleId=${rule.id}`)}
+                                className="text-slate-400 hover:text-sage-600 p-1"
+                                title="Edit in Builder"
+                                data-testid={`edit-builder-${rule.id}`}
+                              >
+                                <Pencil size={14} />
                               </button>
                               <button
                                 onClick={() => handleTestRule(rule.id)}
