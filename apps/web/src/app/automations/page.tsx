@@ -22,6 +22,8 @@ import { TableRowSkeleton, EmptyState } from '@/components/skeleton';
 import TooltipNudge from '@/components/tooltip-nudge';
 import { PlaybookCard } from './components/playbook-card';
 import { DryRunModal } from './components/dry-run-modal';
+import { UpgradeNudge } from '@/components/upgrade-nudge';
+import { usePlan } from '@/lib/use-plan';
 
 type Tab = 'playbooks' | 'rules' | 'logs';
 
@@ -41,6 +43,7 @@ export default function AutomationsPage() {
   const [dryRunLoading, setDryRunLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
+  const plan = usePlan();
 
   const loadPlaybooks = () =>
     api
@@ -174,6 +177,13 @@ export default function AutomationsPage() {
           </button>
         ))}
       </div>
+
+      <UpgradeNudge
+        current={rules.length + playbooks.filter((p: any) => p.isActive).length}
+        plan={plan}
+        resource="automations"
+        resourceLabel="automations"
+      />
 
       {/* Safety Controls Summary */}
       {(tab === 'playbooks' || tab === 'rules') && (

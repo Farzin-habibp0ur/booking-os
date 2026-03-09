@@ -489,4 +489,75 @@ describe('EmailSequenceService', () => {
       );
     });
   });
+
+  describe('checkUpgradeSignals', () => {
+    it('triggers PLAN_LIMIT_HIT for businesses near limit', async () => {
+      (prisma.business.findMany as jest.Mock).mockResolvedValue([
+        {
+          id: 'biz1',
+          subscription: { plan: 'starter', status: 'active' },
+          staff: [{ id: 's1' }, { id: 's2' }, { id: 's3' }], // 3 of 3 = 100%
+          _count: { bookings: 100, services: 2 },
+        },
+      ] as any);
+      (prisma.staff.findFirst as jest.Mock).mockResolvedValue({
+        email: 'admin@test.com',
+        name: 'Admin',
+      } as any);
+      // handleTriggerEvent will look for sequences
+      prisma.emailSequence.findMany.mockResolvedValue([]);
+
+      await service.checkUpgradeSignals();
+
+      expect(prisma.staff.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { businessId: 'biz1', role: 'ADMIN' },
+        }),
+      );
+    });
+
+    it('skips businesses below 80% threshold', async () => {
+      (prisma.business.findMany as jest.Mock).mockResolvedValue([
+        {
+          id: 'biz1',
+          subscription: { plan: 'starter', status: 'active' },
+          staff: [{ id: 's1' }], // 1 of 3 = 33%
+          _count: { bookings: 100, services: 2 },
+        },
+      ] as any);
+
+      await service.checkUpgradeSignals();
+
+      expect(prisma.staff.findFirst).not.toHaveBeenCalled();
+    });
+
+    it('skips enterprise businesses', async () => {
+      (prisma.business.findMany as jest.Mock).mockResolvedValue([
+        {
+          id: 'biz1',
+          subscription: { plan: 'enterprise', status: 'active' },
+          staff: [{ id: 's1' }],
+          _count: { bookings: 999999, services: 999 },
+        },
+      ] as any);
+
+      await service.checkUpgradeSignals();
+
+      expect(prisma.staff.findFirst).not.toHaveBeenCalled();
+    });
+
+    it('handles errors gracefully', async () => {
+      (prisma.business.findMany as jest.Mock).mockResolvedValue([
+        {
+          id: 'biz1',
+          subscription: { plan: 'starter', status: 'active' },
+          staff: [{ id: 's1' }, { id: 's2' }, { id: 's3' }],
+          _count: { bookings: 450, services: 2 },
+        },
+      ] as any);
+      (prisma.staff.findFirst as jest.Mock).mockRejectedValue(new Error('DB error'));
+
+      await expect(service.checkUpgradeSignals()).resolves.not.toThrow();
+    });
+  });
 });

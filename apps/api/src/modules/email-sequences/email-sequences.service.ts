@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../../common/prisma.service';
 import { EmailService } from '../email/email.service';
 import { ConfigService } from '@nestjs/config';
@@ -695,6 +696,64 @@ export class EmailSequenceService {
       }
     }
     return created;
+  }
+
+  // ─── Upgrade Signal ──────────────────────────────────────────────────
+
+  private static readonly RESOURCE_LIMITS: Record<string, Record<string, number>> = {
+    starter: { bookings: 500, staff: 3, services: 10 },
+    professional: { bookings: 5000, staff: 10, services: 50 },
+    enterprise: { bookings: Infinity, staff: Infinity, services: Infinity },
+  };
+
+  @Cron(CronExpression.EVERY_WEEK)
+  async checkUpgradeSignals(): Promise<void> {
+    this.logger.log('Checking upgrade signals for all businesses...');
+
+    const businesses = await this.prisma.business.findMany({
+      where: {
+        subscription: { status: 'active' },
+      },
+      include: {
+        subscription: true,
+        staff: { where: { isActive: true }, select: { id: true } },
+        _count: { select: { bookings: true, services: true } },
+      },
+    });
+
+    for (const biz of businesses) {
+      try {
+        const plan = (biz.subscription?.plan || 'starter').toLowerCase();
+        const limits = EmailSequenceService.RESOURCE_LIMITS[plan];
+        if (!limits) continue;
+
+        const bookingCount = biz._count.bookings;
+        const staffCount = biz.staff.length;
+        const serviceCount = biz._count.services;
+
+        const isNear =
+          (limits.bookings !== Infinity && bookingCount >= limits.bookings * 0.8) ||
+          (limits.staff !== Infinity && staffCount >= limits.staff * 0.8) ||
+          (limits.services !== Infinity && serviceCount >= limits.services * 0.8);
+
+        if (!isNear) continue;
+
+        const admin = await this.prisma.staff.findFirst({
+          where: { businessId: biz.id, role: 'ADMIN' },
+          select: { email: true, name: true },
+        });
+        if (!admin?.email) continue;
+
+        await this.handleTriggerEvent(biz.id, 'PLAN_LIMIT_HIT', {
+          email: admin.email,
+          name: admin.name,
+        });
+      } catch (err) {
+        this.logger.warn(
+          `Failed to check upgrade signal for business ${biz.id}: ${(err as Error).message}`,
+        );
+      }
+    }
   }
 
   // ─── Helpers ───────────────────────────────────────────────────────────

@@ -25,6 +25,9 @@ import BulkActionBar from '@/components/bulk-action-bar';
 import ExportModal from '@/components/export-modal';
 import { ViewPicker } from '@/components/saved-views';
 import { statusBadgeClasses } from '@/lib/design-tokens';
+import { UpgradeNudge } from '@/components/upgrade-nudge';
+import { FeatureDiscovery } from '@/components/feature-discovery';
+import { usePlan } from '@/lib/use-plan';
 
 const BOOKING_STATUSES = [
   'PENDING',
@@ -141,6 +144,7 @@ function BookingsContent() {
   const pack = usePack();
   const { t } = useI18n();
   const { toast } = useToast();
+  const plan = usePlan();
 
   const currentFilters = { status: statusFilter };
 
@@ -374,6 +378,18 @@ function BookingsContent() {
           </select>
         </div>
       </div>
+
+      <UpgradeNudge
+        current={bookings.total || 0}
+        plan={plan}
+        resource="bookings"
+        resourceLabel="bookings"
+      />
+      <FeatureDiscovery
+        id="bookings-search"
+        title="Search & filter bookings"
+        description="Use the search bar and filters to quickly find bookings by customer name, status, date range, or staff member."
+      />
 
       {/* Status Chip Bar */}
       <div className="flex flex-wrap gap-2 mb-4 print:hidden" data-testid="status-chips">

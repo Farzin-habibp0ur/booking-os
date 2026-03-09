@@ -7,6 +7,8 @@ import { cn } from '@/lib/cn';
 import { usePack } from '@/lib/vertical-pack';
 import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/lib/toast';
+import { UpgradeNudge } from '@/components/upgrade-nudge';
+import { usePlan } from '@/lib/use-plan';
 
 export default function ServicesPage() {
   const [services, setServices] = useState<any[]>([]);
@@ -16,6 +18,7 @@ export default function ServicesPage() {
   const pack = usePack();
   const { t } = useI18n();
   const { toast } = useToast();
+  const plan = usePlan();
 
   const load = () =>
     api
@@ -74,6 +77,13 @@ export default function ServicesPage() {
           </button>
         </div>
       </div>
+
+      <UpgradeNudge
+        current={services.filter((s) => s.isActive !== false).length}
+        plan={plan}
+        resource="services"
+        resourceLabel="services"
+      />
 
       {categories.map((cat) => {
         const catServices = filtered.filter((s) => s.category === cat);

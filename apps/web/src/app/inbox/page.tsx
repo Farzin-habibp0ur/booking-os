@@ -43,6 +43,7 @@ import { OutboundCompose } from '@/components/outbound';
 import { MediaComposer } from '@/components/inbox/media-composer';
 import { MediaMessage } from '@/components/inbox/media-message';
 import { DeliveryStatus } from '@/components/inbox/delivery-status';
+import { FeatureDiscovery } from '@/components/feature-discovery';
 
 type Filter = 'all' | 'unassigned' | 'mine' | 'overdue' | 'waiting' | 'snoozed' | 'closed';
 
@@ -691,6 +692,13 @@ function InboxPage() {
 
   return (
     <div className="flex flex-col h-full" data-tour-target="inbox-panel">
+      <div className="px-3 pt-2">
+        <FeatureDiscovery
+          id="inbox-ai-replies"
+          title="AI-powered inbox"
+          description="AI can auto-detect customer intent and suggest replies. Enable AI auto-replies in Settings to handle routine inquiries automatically."
+        />
+      </div>
       {/* Horizontal filter chip bar — replaces sidebar */}
       <div className="border-b bg-white px-3 py-2.5 overflow-x-auto">
         <div className="flex items-center gap-2 min-w-max">

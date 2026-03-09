@@ -13,11 +13,14 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useI18n } from '@/lib/i18n';
+import { UpgradeNudge } from '@/components/upgrade-nudge';
+import { usePlan } from '@/lib/use-plan';
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 export default function StaffPage() {
   const { t } = useI18n();
+  const plan = usePlan();
   const [staffList, setStaffList] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -138,6 +141,13 @@ export default function StaffPage() {
           <Plus size={16} /> {t('staff.add_button')}
         </button>
       </div>
+
+      <UpgradeNudge
+        current={staffList.length}
+        plan={plan}
+        resource="staff"
+        resourceLabel="staff members"
+      />
 
       <div className="bg-white rounded-2xl shadow-soft overflow-hidden">
         <div className="overflow-x-auto">

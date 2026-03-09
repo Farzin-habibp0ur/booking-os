@@ -15,6 +15,7 @@ import { MyWork } from './components/my-work';
 import { AttentionCards } from './components/attention-card';
 import { BriefingFeed } from '@/components/briefing';
 import { TodayTimeline } from './components/today-timeline';
+import { FeatureDiscovery } from '@/components/feature-discovery';
 import {
   Calendar,
   MessageSquare,
@@ -203,6 +204,12 @@ export default function DashboardPage() {
           </p>
         </div>
       </div>
+
+      <FeatureDiscovery
+        id="dashboard-insights"
+        title="Your dashboard at a glance"
+        description="Track KPIs, upcoming bookings, and attention cards all in one place. Pin saved views to customize your dashboard."
+      />
 
       {/* M16: Email verification banner */}
       {user && !user.emailVerified && (
