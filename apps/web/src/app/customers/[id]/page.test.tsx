@@ -76,12 +76,7 @@ jest.mock('@/components/booking-form-modal', () => ({
   __esModule: true,
   default: ({ isOpen }: any) => (isOpen ? <div data-testid="booking-form-modal" /> : null),
 }));
-jest.mock('@/components/customer-timeline', () => ({
-  __esModule: true,
-  default: ({ customerId }: any) => (
-    <div data-testid="customer-timeline">Timeline for {customerId}</div>
-  ),
-}));
+// CustomerTimeline was replaced by inline unified activity feed
 jest.mock('@/components/intake-card', () => ({
   __esModule: true,
   default: ({ customer, fields, onUpdated }: any) => (
@@ -94,6 +89,9 @@ jest.mock('@/components/action-history', () => ({
   RecentChangesPanel: ({ entries }: any) => (
     <div data-testid="recent-changes-panel">{entries?.length} recent changes</div>
   ),
+}));
+jest.mock('@/components/outbound', () => ({
+  OutboundCompose: () => null,
 }));
 
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
@@ -274,12 +272,15 @@ describe('CustomerDetailPage', () => {
 
   // ─── Content Sections (single-scroll layout) ────────────────────────
 
-  it('shows activity timeline section', async () => {
+  it('shows unified activity feed section', async () => {
     setupMocks();
     render(<CustomerDetailPage />);
     await waitFor(() => {
-      expect(screen.getByText('customer_detail.timeline_tab')).toBeInTheDocument();
-      expect(screen.getByTestId('customer-timeline')).toBeInTheDocument();
+      expect(screen.getByText('Activity')).toBeInTheDocument();
+      // Past bookings appear in the feed (text may include staff name)
+      expect(screen.getByText(/Botox/)).toBeInTheDocument();
+      // Notes appear in the feed
+      expect(screen.getByText('Prefers morning appointments')).toBeInTheDocument();
     });
   });
 
@@ -560,8 +561,9 @@ describe('CustomerDetailPage', () => {
 
     fireEvent.click(screen.getAllByTestId('delete-note-btn')[0]);
 
+    // Feed is sorted newest-first, so n2 (Jan 12) comes before n1 (Jan 10)
     await waitFor(() => {
-      expect(mockApi.del).toHaveBeenCalledWith('/customers/cust-1/notes/n1');
+      expect(mockApi.del).toHaveBeenCalledWith('/customers/cust-1/notes/n2');
     });
   });
 
@@ -577,14 +579,13 @@ describe('CustomerDetailPage', () => {
     });
   });
 
-  it('shows note count badge', async () => {
+  it('shows notes in unified activity feed', async () => {
     setupMocks();
     render(<CustomerDetailPage />);
-    await waitFor(() => screen.getAllByText('Emma Wilson'));
-
-    // The notes count badge shows "2" for 2 notes
     await waitFor(() => {
-      expect(screen.getByText('2')).toBeInTheDocument();
+      // Notes appear as activity feed items
+      expect(screen.getByText('Prefers morning appointments')).toBeInTheDocument();
+      expect(screen.getByText('Allergic to latex')).toBeInTheDocument();
     });
   });
 

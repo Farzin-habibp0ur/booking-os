@@ -608,9 +608,10 @@ describe('CustomersPage', () => {
       const nameHeader = screen.getByText('common.name').closest('th');
       await user.click(nameHeader!);
 
-      // Sort indicator (arrow) should appear
+      // Sort indicator (ChevronUp/Down SVG icon) should appear in the Name header
       await waitFor(() => {
-        expect(screen.getByText('↑')).toBeInTheDocument();
+        const nameCol = screen.getByText('common.name').closest('th');
+        expect(nameCol?.querySelector('svg')).toBeTruthy();
       });
     });
 
@@ -626,17 +627,19 @@ describe('CustomersPage', () => {
       const nameHeader = screen.getByText('common.name').closest('th');
       await user.click(nameHeader!);
 
-      // Should show ascending indicator
+      // Should show sort indicator SVG (ascending)
       await waitFor(() => {
-        expect(screen.getByText('↑')).toBeInTheDocument();
+        const nameCol = screen.getByText('common.name').closest('th');
+        expect(nameCol?.querySelector('svg')).toBeTruthy();
       });
 
       // Click again to toggle to descending
       await user.click(nameHeader!);
 
-      // Should show descending indicator
+      // Should still show sort indicator SVG (descending now)
       await waitFor(() => {
-        expect(screen.getByText('↓')).toBeInTheDocument();
+        const nameCol = screen.getByText('common.name').closest('th');
+        expect(nameCol?.querySelector('svg')).toBeTruthy();
       });
     });
 
@@ -652,10 +655,10 @@ describe('CustomersPage', () => {
       const nameHeader = screen.getByText('common.name').closest('th');
       await user.click(nameHeader!);
 
-      // Verify name is sorted
+      // Verify name column has sort indicator
       await waitFor(() => {
-        const indicators = screen.getAllByText('↑');
-        expect(indicators.length).toBe(1);
+        const nameCol = screen.getByText('common.name').closest('th');
+        expect(nameCol?.querySelector('svg')).toBeTruthy();
       });
 
       const phoneHeader = screen.getByText('common.phone').closest('th');
@@ -663,9 +666,11 @@ describe('CustomersPage', () => {
 
       // Name indicator should be gone, phone indicator should be present
       await waitFor(() => {
-        expect(screen.getByText('↑')).toBeInTheDocument();
+        const phoneCol = screen.getByText('common.phone').closest('th');
+        expect(phoneCol?.querySelector('svg')).toBeTruthy();
       });
-      expect(screen.getByText('common.name').closest('th')).not.toHaveTextContent('↑');
+      const nameCol = screen.getByText('common.name').closest('th');
+      expect(nameCol?.querySelector('.lucide-chevron-up, .lucide-chevron-down')).toBeFalsy();
     });
   });
 

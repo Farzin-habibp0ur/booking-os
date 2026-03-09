@@ -232,6 +232,13 @@ html.dark body {
   color: #0f172a;
 }
 
+/* Mobile modal bottom sheet */
+@media (max-width: 768px) {
+  .modal-content {
+    @apply rounded-t-2xl rounded-b-none w-full max-w-full fixed bottom-0 left-0;
+  }
+}
+
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *,

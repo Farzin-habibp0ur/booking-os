@@ -26,12 +26,10 @@ import {
   MapPin,
   StickyNote,
   Trash2,
-  Activity,
   ChevronDown,
   DollarSign,
 } from 'lucide-react';
 import BookingFormModal from '@/components/booking-form-modal';
-import CustomerTimeline from '@/components/customer-timeline';
 import IntakeCard from '@/components/intake-card';
 import { RecentChangesPanel } from '@/components/action-history';
 import { OutboundCompose } from '@/components/outbound';
@@ -53,7 +51,6 @@ export default function CustomerDetailPage() {
   const [newTag, setNewTag] = useState('');
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [showSendMessage, setShowSendMessage] = useState(false);
-  const [tab, setTab] = useState<'chat' | 'timeline' | 'bookings' | 'notes' | 'info'>('chat');
   const { toast } = useToast();
 
   // Notes state
@@ -82,6 +79,7 @@ export default function CustomerDetailPage() {
   const [chatInput, setChatInput] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const noteInputRef = useRef<HTMLTextAreaElement>(null);
 
   const loadCustomer = async () => {
     try {
@@ -282,7 +280,7 @@ export default function CustomerDetailPage() {
             >
               <ArrowLeft size={18} />
             </button>
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-lavender-400 to-lavender-600 flex items-center justify-center text-white font-semibold text-sm shrink-0">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-lavender-400 to-lavender-600 flex items-center justify-center text-white font-semibold text-xl shrink-0">
               {customer.name.charAt(0).toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
@@ -328,6 +326,15 @@ export default function CustomerDetailPage() {
             <MessageSquare size={14} /> {t('customer_detail.message')}
           </button>
           <button
+            onClick={() => {
+              noteInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              setTimeout(() => noteInputRef.current?.focus(), 400);
+            }}
+            className="flex items-center gap-1.5 border border-slate-200 text-slate-700 px-4 py-2 rounded-xl text-sm hover:bg-slate-50 transition-colors active:scale-95 btn-press"
+          >
+            <StickyNote size={14} /> Add Note
+          </button>
+          <button
             onClick={() => setEditing(true)}
             className="flex items-center gap-1.5 border border-slate-200 text-slate-700 px-4 py-2 rounded-xl text-sm hover:bg-slate-50 transition-colors active:scale-95 btn-press"
           >
@@ -337,7 +344,7 @@ export default function CustomerDetailPage() {
       </div>
 
       {/* Main Scrollable Content */}
-      <div className={cn('max-w-6xl mx-auto', SPACING.page)}>
+      <div className={cn('max-w-3xl mx-auto', SPACING.page)}>
         {/* Upcoming Bookings Card */}
         {upcomingBookings.length > 0 && (
           <div className={cn(ELEVATION.card, 'bg-white p-5 mb-6')}>
@@ -357,12 +364,177 @@ export default function CustomerDetailPage() {
           </div>
         )}
 
-        {/* Activity Timeline */}
+        {/* Unified Activity Feed */}
         <div className={cn(ELEVATION.card, 'bg-white p-5 mb-6')}>
           <h2 className="text-sm font-semibold text-slate-900 uppercase mb-4">
-            {t('customer_detail.timeline_tab')}
+            Activity
           </h2>
-          <CustomerTimeline customerId={id as string} />
+          {(() => {
+            const feedItems: Array<{ type: 'booking' | 'conversation' | 'note'; date: Date; data: any }> = [
+              ...pastBookings.map((b) => ({
+                type: 'booking' as const,
+                date: new Date(b.startTime),
+                data: b,
+              })),
+              ...conversations.map((c) => ({
+                type: 'conversation' as const,
+                date: new Date(c.updatedAt || c.createdAt),
+                data: c,
+              })),
+              ...customerNotes.map((n) => ({
+                type: 'note' as const,
+                date: new Date(n.createdAt),
+                data: n,
+              })),
+            ].sort((a, b) => b.date.getTime() - a.date.getTime());
+
+            if (feedItems.length === 0) {
+              return (
+                <p className="text-sm text-slate-400 text-center py-6">
+                  No activity yet.
+                </p>
+              );
+            }
+
+            return (
+              <div className="space-y-3">
+                {feedItems.map((item, idx) => (
+                  <div
+                    key={`${item.type}-${item.data.id || idx}`}
+                    className="flex items-start gap-3 p-3 rounded-lg bg-slate-50/60 hover:bg-slate-50 transition-colors"
+                  >
+                    <div className={cn(
+                      'w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5',
+                      item.type === 'booking' ? 'bg-sage-50 text-sage-600' :
+                      item.type === 'conversation' ? 'bg-lavender-50 text-lavender-600' :
+                      'bg-amber-50 text-amber-600',
+                    )}>
+                      {item.type === 'booking' && <Calendar size={14} />}
+                      {item.type === 'conversation' && <MessageSquare size={14} />}
+                      {item.type === 'note' && <StickyNote size={14} />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      {item.type === 'booking' && (
+                        <>
+                          <p className="text-sm font-medium text-slate-900">
+                            {item.data.service?.name || 'Booking'}
+                            {item.data.staff?.name ? ` with ${item.data.staff.name}` : ''}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {item.data.status}
+                            {item.data.service?.price > 0 ? ` · $${item.data.service.price}` : ''}
+                          </p>
+                        </>
+                      )}
+                      {item.type === 'conversation' && (
+                        <>
+                          <p className="text-sm font-medium text-slate-900">
+                            Conversation — {item.data.status?.toLowerCase() || 'open'}
+                          </p>
+                          {item.data.lastMessage && (
+                            <p className="text-xs text-slate-500 truncate">
+                              {item.data.lastMessage}
+                            </p>
+                          )}
+                        </>
+                      )}
+                      {item.type === 'note' && (
+                        <>
+                          {editingNoteId === item.data.id ? (
+                            <div data-testid="note-card">
+                              <textarea
+                                value={editingNoteContent}
+                                onChange={(e) => setEditingNoteContent(e.target.value)}
+                                rows={3}
+                                className="w-full border border-amber-300 rounded-lg px-3 py-2 text-sm resize-none"
+                                data-testid="note-edit-textarea"
+                              />
+                              <div className="flex gap-2 mt-2">
+                                <button
+                                  onClick={() => updateNote(item.data.id)}
+                                  disabled={noteSaving}
+                                  className="text-xs bg-amber-500 text-white px-3 py-1 rounded-lg hover:bg-amber-600 disabled:opacity-50"
+                                >
+                                  {t('common.save')}
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setEditingNoteId(null);
+                                    setEditingNoteContent('');
+                                  }}
+                                  className="text-xs text-slate-500 px-3 py-1 rounded-lg hover:bg-slate-100"
+                                >
+                                  {t('common.cancel')}
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div data-testid="note-card">
+                              <p className="text-sm text-slate-900 whitespace-pre-wrap line-clamp-2">
+                                {item.data.content}
+                              </p>
+                              <div className="flex items-center justify-between mt-1">
+                                {item.data.staff?.name && (
+                                  <p className="text-xs text-slate-500">by {item.data.staff.name}</p>
+                                )}
+                                <div className="flex items-center gap-1 ml-auto">
+                                  <button
+                                    onClick={() => {
+                                      setEditingNoteId(item.data.id);
+                                      setEditingNoteContent(item.data.content);
+                                    }}
+                                    className="text-slate-400 hover:text-amber-600 transition-colors"
+                                    data-testid="edit-note-btn"
+                                  >
+                                    <Pencil size={12} />
+                                  </button>
+                                  <button
+                                    onClick={() => deleteNote(item.data.id)}
+                                    className="text-slate-400 hover:text-red-500 transition-colors"
+                                    data-testid="delete-note-btn"
+                                  >
+                                    <Trash2 size={12} />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      )}
+                      <p className="text-[10px] text-slate-400 mt-1">
+                        {item.date.toLocaleDateString()} · {item.date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
+        </div>
+
+        {/* Add Note Input */}
+        <div className={cn(ELEVATION.card, 'bg-white p-5 mb-6')}>
+          <h2 className="text-sm font-semibold text-slate-900 uppercase mb-3">
+            Add a Note
+          </h2>
+          <textarea
+            ref={noteInputRef}
+            value={newNoteContent}
+            onChange={(e) => setNewNoteContent(e.target.value)}
+            placeholder="Write a note..."
+            rows={3}
+            className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm resize-none focus:ring-2 focus:ring-sage-500 focus:border-transparent"
+          />
+          <div className="flex justify-end mt-2">
+            <button
+              onClick={createNote}
+              disabled={!newNoteContent.trim() || noteSaving}
+              className="flex items-center gap-1.5 bg-sage-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-sage-700 transition-colors disabled:opacity-50 active:scale-95 btn-press"
+            >
+              {noteSaving ? <Loader2 size={14} className="animate-spin" /> : <StickyNote size={14} />}
+              Save Note
+            </button>
+          </div>
         </div>
 
         {/* Profile Details Card */}
@@ -438,86 +610,6 @@ export default function CustomerDetailPage() {
           </div>
         )}
 
-        {/* Notes Section */}
-        {customerNotes.length > 0 && (
-          <div className={cn(ELEVATION.card, 'bg-white p-5 mb-6')}>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-semibold text-slate-900 uppercase">
-                {t('customer_detail.notes_tab')}
-              </h2>
-              <span className="text-xs bg-amber-50 text-amber-700 px-2 py-1 rounded-full font-medium">
-                {customerNotes.length}
-              </span>
-            </div>
-            <div className="space-y-3">
-              {customerNotes.slice(0, 5).map((note) => (
-                <div
-                  key={note.id}
-                  className="bg-amber-50 border border-amber-200 rounded-lg p-3"
-                  data-testid="note-card"
-                >
-                  {editingNoteId === note.id ? (
-                    <div>
-                      <textarea
-                        value={editingNoteContent}
-                        onChange={(e) => setEditingNoteContent(e.target.value)}
-                        rows={3}
-                        className="w-full border border-amber-300 rounded-lg px-3 py-2 text-sm resize-none"
-                        data-testid="note-edit-textarea"
-                      />
-                      <div className="flex gap-2 mt-2">
-                        <button
-                          onClick={() => updateNote(note.id)}
-                          disabled={noteSaving}
-                          className="text-xs bg-amber-500 text-white px-3 py-1 rounded-lg hover:bg-amber-600 disabled:opacity-50"
-                        >
-                          {t('common.save')}
-                        </button>
-                        <button
-                          onClick={() => {
-                            setEditingNoteId(null);
-                            setEditingNoteContent('');
-                          }}
-                          className="text-xs text-slate-500 px-3 py-1 rounded-lg hover:bg-slate-100"
-                        >
-                          {t('common.cancel')}
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      <p className="text-sm whitespace-pre-wrap">{note.content}</p>
-                      <div className="flex items-center justify-between mt-2">
-                        <p className="text-[10px] text-slate-400">
-                          {note.staff?.name} · {new Date(note.createdAt).toLocaleString()}
-                        </p>
-                        <div className="flex items-center gap-1">
-                          <button
-                            onClick={() => {
-                              setEditingNoteId(note.id);
-                              setEditingNoteContent(note.content);
-                            }}
-                            className="text-slate-400 hover:text-amber-600 transition-colors"
-                            data-testid="edit-note-btn"
-                          >
-                            <Pencil size={12} />
-                          </button>
-                          <button
-                            onClick={() => deleteNote(note.id)}
-                            className="text-slate-400 hover:text-red-500 transition-colors"
-                            data-testid="delete-note-btn"
-                          >
-                            <Trash2 size={12} />
-                          </button>
-                        </div>
-                      </div>
-                    </>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* Vertical Modules */}
         {(pack.slug === 'aesthetic' || pack.slug === 'dealership') && (

@@ -141,6 +141,7 @@ function InboxPage() {
   const [scheduledMessages, setScheduledMessages] = useState<any[]>([]);
   const [bulkTagInput, setBulkTagInput] = useState('');
   const [showBulkTagInput, setShowBulkTagInput] = useState(false);
+  const [infoSidebarOpen, setInfoSidebarOpen] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const currentFilters = {
@@ -748,7 +749,7 @@ function InboxPage() {
         />
       </div>
       {/* Horizontal filter chip bar — replaces sidebar */}
-      <div className="border-b bg-white px-3 py-2.5 overflow-x-auto">
+      <div className="flex gap-2 px-4 py-3 border-b border-slate-100 overflow-x-auto">
         <div className="flex items-center gap-2 min-w-max">
           {FILTER_KEYS.map((key) => {
             const count = filterCounts[key] || 0;
@@ -761,10 +762,10 @@ function InboxPage() {
                   setMobileView('list');
                 }}
                 className={cn(
-                  'flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors',
+                  'flex items-center gap-1.5 px-3 py-1 rounded-full text-xs whitespace-nowrap transition-colors',
                   activeFilter === key
-                    ? 'bg-sage-100 text-sage-700 dark:bg-sage-900/30 dark:text-sage-400'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700',
+                    ? 'bg-sage-100 text-sage-800 font-medium dark:bg-sage-900/30 dark:text-sage-400'
+                    : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700',
                 )}
               >
                 {FILTER_LABELS[key]}
@@ -999,8 +1000,13 @@ function InboxPage() {
                 </div>
                 <div className="flex items-center gap-2 flex-wrap justify-end">
                   <button
-                    onClick={() => setMobileView(mobileView === 'info' ? 'thread' : 'info')}
-                    className="hidden md:block text-slate-400 hover:text-slate-600 border px-2 py-1 rounded transition-colors"
+                    onClick={() => setInfoSidebarOpen(!infoSidebarOpen)}
+                    className={cn(
+                      'hidden md:block border px-2 py-1 rounded transition-colors',
+                      infoSidebarOpen
+                        ? 'text-sage-600 bg-sage-50 border-sage-200 hover:bg-sage-100'
+                        : 'text-slate-400 hover:text-slate-600',
+                    )}
                     aria-label="Toggle info sidebar"
                     title="Toggle customer info"
                   >
@@ -1295,7 +1301,7 @@ function InboxPage() {
           className={cn(
             'border-l bg-white overflow-auto',
             'w-full md:w-72',
-            mobileView !== 'info' && 'hidden md:block',
+            mobileView === 'info' ? '' : !infoSidebarOpen ? 'hidden' : 'hidden md:block',
           )}
         >
           <div className="flex border-b">

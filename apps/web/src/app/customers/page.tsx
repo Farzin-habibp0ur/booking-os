@@ -8,6 +8,8 @@ import {
   Search,
   Plus,
   ChevronRight,
+  ChevronUp,
+  ChevronDown,
   Users,
   Upload,
   X,
@@ -43,7 +45,7 @@ export default function CustomersPage() {
   const [activeViewId, setActiveViewId] = useState<string | null>(null);
   const [showExport, setShowExport] = useState(false);
   const [duplicateCount, setDuplicateCount] = useState(0);
-  const [sortBy, setSortBy] = useState<'name' | 'phone' | 'email' | 'date' | null>(null);
+  const [sortBy, setSortBy] = useState<'name' | 'phone' | 'email' | 'date' | 'lastVisit' | 'totalSpent' | 'bookingsCount' | null>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const retryCountRef = useRef(0);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -144,7 +146,7 @@ export default function CustomersPage() {
     }
   };
 
-  const handleSort = (column: 'name' | 'phone' | 'email' | 'date') => {
+  const handleSort = (column: typeof sortBy) => {
     if (sortBy === column) {
       setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
     } else {
@@ -159,12 +161,24 @@ export default function CustomersPage() {
     const dir = sortDir === 'asc' ? 1 : -1;
 
     return data.sort((a: any, b: any) => {
-      let aVal = a[sortBy];
-      let bVal = b[sortBy];
+      let aVal: any;
+      let bVal: any;
 
       if (sortBy === 'date') {
         aVal = new Date(a.createdAt);
         bVal = new Date(b.createdAt);
+      } else if (sortBy === 'lastVisit') {
+        aVal = a.bookings?.[0]?.startTime ? new Date(a.bookings[0].startTime) : new Date(0);
+        bVal = b.bookings?.[0]?.startTime ? new Date(b.bookings[0].startTime) : new Date(0);
+      } else if (sortBy === 'totalSpent') {
+        aVal = a.totalSpent ?? 0;
+        bVal = b.totalSpent ?? 0;
+      } else if (sortBy === 'bookingsCount') {
+        aVal = a.bookingsCount ?? a._count?.bookings ?? 0;
+        bVal = b.bookingsCount ?? b._count?.bookings ?? 0;
+      } else {
+        aVal = a[sortBy];
+        bVal = b[sortBy];
       }
 
       if (typeof aVal === 'string') {
@@ -172,6 +186,15 @@ export default function CustomersPage() {
       }
       return ((aVal || 0) > (bVal || 0) ? 1 : -1) * dir;
     });
+  };
+
+  const SortIcon = ({ column }: { column: typeof sortBy }) => {
+    if (sortBy !== column) return null;
+    return sortDir === 'asc' ? (
+      <ChevronUp size={14} className="text-sage-600" />
+    ) : (
+      <ChevronDown size={14} className="text-sage-600" />
+    );
   };
 
   return (
@@ -230,14 +253,23 @@ export default function CustomersPage() {
       />
 
       <div className="mb-4 flex gap-2">
-        <div className="relative flex-1">
+        <div className="relative w-full md:w-96">
           <Search size={16} className="absolute left-3 top-2.5 text-slate-400" />
           <input
             value={search}
             onChange={(e) => handleSearchChange(e.target.value)}
             placeholder={t('customers.search_placeholder')}
-            className="w-full border border-slate-200 rounded-xl pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sage-500"
+            className="w-full rounded-xl bg-slate-50 border-0 focus:ring-2 focus:ring-sage-500 pl-9 pr-9 py-2 text-sm focus:outline-none focus:bg-white transition-colors"
           />
+          {search && (
+            <button
+              onClick={() => handleSearchChange('')}
+              className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 transition-colors"
+              aria-label="Clear search"
+            >
+              <X size={16} />
+            </button>
+          )}
         </div>
       </div>
 
@@ -263,9 +295,7 @@ export default function CustomersPage() {
                 >
                   <div className="flex items-center gap-1">
                     {t('common.name')}
-                    {sortBy === 'name' && (
-                      <span className="text-sage-600">{sortDir === 'asc' ? '↑' : '↓'}</span>
-                    )}
+                    <SortIcon column="name" />
                   </div>
                 </th>
                 <th
@@ -274,9 +304,7 @@ export default function CustomersPage() {
                 >
                   <div className="flex items-center gap-1">
                     {t('common.phone')}
-                    {sortBy === 'phone' && (
-                      <span className="text-sage-600">{sortDir === 'asc' ? '↑' : '↓'}</span>
-                    )}
+                    <SortIcon column="phone" />
                   </div>
                 </th>
                 <th
@@ -285,9 +313,7 @@ export default function CustomersPage() {
                 >
                   <div className="flex items-center gap-1">
                     {t('common.email')}
-                    {sortBy === 'email' && (
-                      <span className="text-sage-600">{sortDir === 'asc' ? '↑' : '↓'}</span>
-                    )}
+                    <SortIcon column="email" />
                   </div>
                 </th>
                 <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
@@ -295,13 +321,38 @@ export default function CustomersPage() {
                 </th>
                 <th
                   className="text-left p-3 text-xs font-medium text-slate-500 uppercase cursor-pointer hover:text-slate-700 transition-colors"
+                  onClick={() => handleSort('lastVisit')}
+                >
+                  <div className="flex items-center gap-1">
+                    Last Visit
+                    <SortIcon column="lastVisit" />
+                  </div>
+                </th>
+                <th
+                  className="text-left p-3 text-xs font-medium text-slate-500 uppercase cursor-pointer hover:text-slate-700 transition-colors"
+                  onClick={() => handleSort('totalSpent')}
+                >
+                  <div className="flex items-center gap-1">
+                    Total Spent
+                    <SortIcon column="totalSpent" />
+                  </div>
+                </th>
+                <th
+                  className="text-left p-3 text-xs font-medium text-slate-500 uppercase cursor-pointer hover:text-slate-700 transition-colors"
+                  onClick={() => handleSort('bookingsCount')}
+                >
+                  <div className="flex items-center gap-1">
+                    Bookings
+                    <SortIcon column="bookingsCount" />
+                  </div>
+                </th>
+                <th
+                  className="text-left p-3 text-xs font-medium text-slate-500 uppercase cursor-pointer hover:text-slate-700 transition-colors"
                   onClick={() => handleSort('date')}
                 >
                   <div className="flex items-center gap-1">
                     {t('common.date')}
-                    {sortBy === 'date' && (
-                      <span className="text-sage-600">{sortDir === 'asc' ? '↑' : '↓'}</span>
-                    )}
+                    <SortIcon column="date" />
                   </div>
                 </th>
                 <th className="w-8"></th>
@@ -309,7 +360,7 @@ export default function CustomersPage() {
             </thead>
             <tbody className="divide-y">
               {loading
-                ? Array.from({ length: 5 }).map((_, i) => <TableRowSkeleton key={i} cols={7} />)
+                ? Array.from({ length: 5 }).map((_, i) => <TableRowSkeleton key={i} cols={10} />)
                 : getSortedCustomers().map((c: any) => (
                     <tr
                       key={c.id}
@@ -355,6 +406,26 @@ export default function CustomersPage() {
                             </span>
                           ))}
                         </div>
+                      </td>
+                      <td
+                        className="p-3 text-sm text-slate-500"
+                        onClick={() => router.push(`/customers/${c.id}`)}
+                      >
+                        {c.bookings?.[0]?.startTime
+                          ? new Date(c.bookings[0].startTime).toLocaleDateString()
+                          : '—'}
+                      </td>
+                      <td
+                        className="p-3 text-sm text-slate-500"
+                        onClick={() => router.push(`/customers/${c.id}`)}
+                      >
+                        {c.totalSpent != null ? `$${Number(c.totalSpent).toFixed(2)}` : '—'}
+                      </td>
+                      <td
+                        className="p-3 text-sm text-slate-500"
+                        onClick={() => router.push(`/customers/${c.id}`)}
+                      >
+                        {c.bookingsCount ?? c._count?.bookings ?? '—'}
                       </td>
                       <td
                         className="p-3 text-sm text-slate-500"
@@ -408,13 +479,22 @@ export default function CustomersPage() {
                 : t('customers.add_first', { entity: pack.labels.customer.toLowerCase() })}
             </p>
             {!search && (
-              <button
-                onClick={() => setShowForm(true)}
-                className="flex items-center gap-2 bg-sage-600 text-white px-6 py-3 rounded-xl text-sm font-medium hover:bg-sage-700 transition-colors active:scale-95"
-              >
-                <Plus size={16} />
-                {t('customers.add_button', { entity: pack.labels.customer })}
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setShowImport(true)}
+                  className="flex items-center gap-2 border border-slate-200 text-slate-700 px-6 py-3 rounded-xl text-sm font-medium hover:bg-slate-50 transition-colors active:scale-95"
+                >
+                  <Upload size={16} />
+                  Import CSV
+                </button>
+                <button
+                  onClick={() => setShowForm(true)}
+                  className="flex items-center gap-2 bg-sage-600 text-white px-6 py-3 rounded-xl text-sm font-medium hover:bg-sage-700 transition-colors active:scale-95"
+                >
+                  <Plus size={16} />
+                  Add Manually
+                </button>
+              </div>
             )}
           </div>
         )}
