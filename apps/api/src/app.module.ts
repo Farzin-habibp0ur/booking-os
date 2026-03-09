@@ -56,6 +56,7 @@ import { DunningModule } from './modules/dunning/dunning.module';
 import { ReferralModule } from './modules/referral/referral.module';
 import { WeeklyDigestModule } from './modules/weekly-digest/weekly-digest.module';
 import { PaymentsModule } from './modules/payments/payments.module';
+import { RefundsModule } from './modules/refunds/refunds.module';
 
 @Module({
   imports: [
@@ -128,6 +129,7 @@ import { PaymentsModule } from './modules/payments/payments.module';
     ReferralModule,
     WeeklyDigestModule,
     PaymentsModule,
+    RefundsModule,
     process.env.REDIS_URL ? QueueModule.forRootWithRedis() : QueueModule.forRoot(),
   ],
 })

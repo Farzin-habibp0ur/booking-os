@@ -17,6 +17,7 @@ import {
   DollarSign,
 } from 'lucide-react';
 import RecordPaymentModal from './record-payment-modal';
+import RefundModal from './refund-modal';
 import { cn } from '@/lib/cn';
 import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/lib/toast';
@@ -75,6 +76,8 @@ export default function BookingDetailModal({
   );
   const [overrideReason, setOverrideReason] = useState('');
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showRefundModal, setShowRefundModal] = useState(false);
+  const [selectedPaymentForRefund, setSelectedPaymentForRefund] = useState<any>(null);
   const [payments, setPayments] = useState<any[]>([]);
   const { t } = useI18n();
   const { toast } = useToast();
@@ -632,18 +635,40 @@ export default function BookingDetailModal({
             <p className="text-xs font-semibold text-slate-500 uppercase mb-2">Payments</p>
             {payments.length > 0 ? (
               <div className="space-y-2">
-                {payments.map((p: any) => (
-                  <div key={p.id} className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2">
-                      <DollarSign size={14} className="text-sage-500" />
-                      <span className="font-medium">${p.amount.toFixed(2)}</span>
-                      <span className="text-xs text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">{p.method}</span>
+                {payments.map((p: any) => {
+                  const isRefundable = (p.status === 'COMPLETED' || p.status === 'PARTIAL_REFUND') && isAdmin;
+                  return (
+                    <div key={p.id} className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2">
+                        <DollarSign size={14} className="text-sage-500" />
+                        <span className="font-medium">${p.amount.toFixed(2)}</span>
+                        <span className="text-xs text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">{p.method}</span>
+                        {p.status === 'REFUNDED' && (
+                          <span className="text-xs text-red-600 bg-red-50 px-1.5 py-0.5 rounded">Refunded</span>
+                        )}
+                        {p.status === 'PARTIAL_REFUND' && (
+                          <span className="text-xs text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">Partial Refund</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {isRefundable && (
+                          <button
+                            onClick={() => {
+                              setSelectedPaymentForRefund(p);
+                              setShowRefundModal(true);
+                            }}
+                            className="text-xs text-red-600 hover:text-red-700 font-medium"
+                          >
+                            Refund
+                          </button>
+                        )}
+                        <span className="text-xs text-slate-400">
+                          {new Date(p.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
                     </div>
-                    <span className="text-xs text-slate-400">
-                      {new Date(p.createdAt).toLocaleDateString()}
-                    </span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <p className="text-sm text-slate-400">No payments recorded</p>
@@ -819,6 +844,23 @@ export default function BookingDetailModal({
             customerName={booking.customer?.name}
             serviceName={booking.service?.name}
             servicePrice={booking.service?.price}
+          />
+        )}
+
+        {showRefundModal && selectedPaymentForRefund && (
+          <RefundModal
+            isOpen={showRefundModal}
+            onClose={() => {
+              setShowRefundModal(false);
+              setSelectedPaymentForRefund(null);
+            }}
+            onSuccess={loadPayments}
+            payment={{
+              id: selectedPaymentForRefund.id,
+              amount: selectedPaymentForRefund.amount,
+              method: selectedPaymentForRefund.method,
+              refundedAmount: selectedPaymentForRefund.refundedAmount || 0,
+            }}
           />
         )}
       </div>

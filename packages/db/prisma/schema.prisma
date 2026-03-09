@@ -65,6 +65,7 @@ model Business {
   referralsReceived    Referral[] @relation("ReferredBusiness")
   staffServicePrices   StaffServicePrice[]
   payments             Payment[]
+  refunds              Refund[]
 
   @@map("businesses")
 }
@@ -442,10 +443,31 @@ model Payment {
   business Business  @relation(fields: [businessId], references: [id])
   booking  Booking?  @relation(fields: [bookingId], references: [id])
   customer Customer? @relation(fields: [customerId], references: [id])
+  refunds  Refund[]
 
   @@index([businessId])
   @@index([bookingId])
   @@map("payments")
+}
+
+model Refund {
+  id             String    @id @default(cuid())
+  businessId     String
+  paymentId      String
+  amount         Float
+  reason         String?
+  status         String    @default("PENDING") // PENDING, COMPLETED, FAILED
+  stripeRefundId String?
+  processedById  String
+  processedAt    DateTime?
+  createdAt      DateTime  @default(now())
+
+  business Business @relation(fields: [businessId], references: [id])
+  payment  Payment  @relation(fields: [paymentId], references: [id])
+
+  @@index([businessId])
+  @@index([paymentId])
+  @@map("refunds")
 }
 
 model AiUsage {
