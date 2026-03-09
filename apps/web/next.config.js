@@ -5,6 +5,9 @@ const nextConfig = {
   transpilePackages: ['@booking-os/shared'],
   output: 'standalone',
   poweredByHeader: false,
+  experimental: {
+    missingSuspenseWithCSRBailout: false,
+  },
   async headers() {
     return [
       {
