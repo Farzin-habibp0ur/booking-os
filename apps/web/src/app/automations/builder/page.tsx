@@ -1,6 +1,6 @@
 'use client';
 
-import { useReducer, useCallback, useEffect, useState } from 'react';
+import { Suspense, useReducer, useCallback, useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
@@ -302,6 +302,14 @@ const BLOCK_LABELS: Record<string, string> = {
 let nodeIdCounter = 0;
 
 export default function WorkflowBuilderPage() {
+  return (
+    <Suspense fallback={<div className="p-6 text-center text-slate-400">Loading builder...</div>}>
+      <WorkflowBuilderContent />
+    </Suspense>
+  );
+}
+
+function WorkflowBuilderContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const ruleId = searchParams.get('ruleId');
