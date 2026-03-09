@@ -181,6 +181,7 @@ export default function TestimonialsPage() {
         </div>
       ) : testimonials.length === 0 ? (
         <EmptyState
+          icon={MessageSquareQuote}
           title="No testimonials yet"
           description="Request testimonials from your customers to showcase their experience."
         />

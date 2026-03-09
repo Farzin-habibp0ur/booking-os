@@ -76,7 +76,7 @@ function categorizeCard(card: ActionCard): Category {
 }
 
 export default function AIActionsPage() {
-  const toast = useToast();
+  const { toast } = useToast();
   const [cards, setCards] = useState<ActionCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());

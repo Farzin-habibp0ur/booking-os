@@ -71,7 +71,7 @@ const MARKETING_AGENT_DESCRIPTIONS: Record<string, string> = {
 };
 
 export default function AIAgentsPage() {
-  const toast = useToast();
+  const { toast } = useToast();
   const [coreAgents, setCoreAgents] = useState<AgentConfig[]>([]);
   const [marketingAgents, setMarketingAgents] = useState<MarketingAgent[]>([]);
   const [runs, setRuns] = useState<AgentRun[]>([]);
