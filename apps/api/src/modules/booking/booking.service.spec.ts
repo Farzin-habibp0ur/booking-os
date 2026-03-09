@@ -290,6 +290,102 @@ describe('BookingService', () => {
         }),
       );
     });
+
+    it('sorts by customerName using nested orderBy', async () => {
+      prisma.booking.findMany.mockResolvedValue([]);
+      prisma.booking.count.mockResolvedValue(0);
+
+      await bookingService.findAll('biz1', { sortBy: 'customerName', sortOrder: 'asc' });
+
+      expect(prisma.booking.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: { customer: { name: 'asc' } },
+        }),
+      );
+    });
+
+    it('sorts by serviceName using nested orderBy', async () => {
+      prisma.booking.findMany.mockResolvedValue([]);
+      prisma.booking.count.mockResolvedValue(0);
+
+      await bookingService.findAll('biz1', { sortBy: 'serviceName', sortOrder: 'desc' });
+
+      expect(prisma.booking.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: { service: { name: 'desc' } },
+        }),
+      );
+    });
+
+    it('sorts by amount desc', async () => {
+      prisma.booking.findMany.mockResolvedValue([]);
+      prisma.booking.count.mockResolvedValue(0);
+
+      await bookingService.findAll('biz1', { sortBy: 'amount', sortOrder: 'desc' });
+
+      expect(prisma.booking.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: { amount: 'desc' },
+        }),
+      );
+    });
+
+    it('sorts by startTime asc', async () => {
+      prisma.booking.findMany.mockResolvedValue([]);
+      prisma.booking.count.mockResolvedValue(0);
+
+      await bookingService.findAll('biz1', { sortBy: 'startTime', sortOrder: 'asc' });
+
+      expect(prisma.booking.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: { startTime: 'asc' },
+        }),
+      );
+    });
+
+    it('defaults sortOrder to desc when not specified', async () => {
+      prisma.booking.findMany.mockResolvedValue([]);
+      prisma.booking.count.mockResolvedValue(0);
+
+      await bookingService.findAll('biz1', { sortBy: 'status' });
+
+      expect(prisma.booking.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: { status: 'desc' },
+        }),
+      );
+    });
+
+    it('ignores invalid sortBy and uses default startTime asc', async () => {
+      prisma.booking.findMany.mockResolvedValue([]);
+      prisma.booking.count.mockResolvedValue(0);
+
+      await bookingService.findAll('biz1', { sortBy: 'invalidField' });
+
+      expect(prisma.booking.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: { startTime: 'asc' },
+        }),
+      );
+    });
+
+    it('combines sortBy with status filter', async () => {
+      prisma.booking.findMany.mockResolvedValue([]);
+      prisma.booking.count.mockResolvedValue(0);
+
+      await bookingService.findAll('biz1', {
+        status: 'CONFIRMED',
+        sortBy: 'amount',
+        sortOrder: 'desc',
+      });
+
+      expect(prisma.booking.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { businessId: 'biz1', status: 'CONFIRMED' },
+          orderBy: { amount: 'desc' },
+        }),
+      );
+    });
   });
 
   describe('findById', () => {

@@ -2,7 +2,7 @@
 
 > **Purpose:** This document gives full context on the Booking OS platform — what it is, what's been built, how it's structured, and what's left to build. Share this with an AI assistant or new developer to get productive immediately.
 >
-> **Last updated:** March 9, 2026 (Phase B AI Marketing System B1-B5 COMPLETE — ~4,486 total tests across 278 test files, 57 Prisma models, 41 migrations)
+> **Last updated:** March 9, 2026 (Phase C/D/E started — D5 Bookings Search/Sort/Filters COMPLETE — ~4,506 total tests across 278 test files, 57 Prisma models, 41 migrations)
 
 ---
 
@@ -774,6 +774,9 @@ Key groups (full list in `.env.example`):
 - **B3: Email Sequences & Drip Campaigns** — COMPLETE. New EmailSequence and EmailSequenceEnrollment models (56 Prisma models). EmailSequences API module (55th module) with 12 endpoints: CRUD, stats, enroll, enrollments list, cancel/pause/resume enrollment, seed. 7 default sequences (Welcome, FeatureEducation, SocialProof, TrialExpiry, WinBack, Upgrade, Referral). BullMQ ONBOARDING_DRIP processor extended for `seq-step-*` jobs. Trigger/stop event handling for auto-enrollment. Marketing sequences dashboard (`/marketing/sequences`) with stats, toggle, expand timeline. Migration `20260309_add_email_sequences`. 55 tests (44 API + 11 web).
 - **B4: Landing Page & SEO/AEO Foundation** — COMPLETE. `(marketing)` route group with public layout, MarketingNav, MarketingFooter. Landing page with hero/features/pricing/CTA sections. Blog infrastructure: `blog.ts` library (getAllPosts, getPostBySlug, getAllSlugs), blog index page, `[slug]` detail page with remark markdown rendering. JSON-LD BlogPosting schema, OpenGraph metadata, `generateStaticParams()`. Sitemap with dynamic blog slugs, robots.txt. Pricing page, FAQ page. 10 tests.
 - **B5: Content Pillar Seeding** — COMPLETE. 12 markdown blog posts across 5 pillars: Industry Insights (3), Product Education (3), Customer Success (2), Thought Leadership (2), Technical (2). `seed-content.ts` script creates APPROVED ContentDraft records per business (idempotent).
+
+### Phase C/D/E: Growth, Intelligence & Polish — IN PROGRESS
+- **D5: Bookings Search, Sort & Filters** — COMPLETE. Server-side sorting on 6 fields (startTime, createdAt, customerName, serviceName, status, amount) with nested Prisma orderBy for relations. BookingQueryDto with @IsIn validators. Frontend: status chip bar (7 chips), inline staff filter dropdown, sortable column headers with server-side sort, Amount column, print button + print styles, Last 30 Days date preset. 20 new tests (8 service + 2 controller + 10 web).
 
 ### Code Quality
 - **Error Handling Remediation** — COMPLETE (commit 1cf6f99). Replaced ~20 silent `.catch(() => {})` with logged warnings, queue processors throw on failure, NestJS proper exceptions, frontend toast wiring, waitlist loop resilience, WebSocket disconnect logging. +58 tests.

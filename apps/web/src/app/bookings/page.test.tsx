@@ -92,10 +92,11 @@ jest.mock('lucide-react', () => ({
   X: () => <div data-testid="x-icon" />,
   Download: () => <div data-testid="download-icon" />,
   Search: () => <div data-testid="search-icon" />,
-  ChevronUp: () => <div data-testid="chevron-up-icon" />,
-  ChevronDown: () => <div data-testid="chevron-down-icon" />,
+  ChevronUp: (props: any) => <div data-testid={props['data-testid'] || 'chevron-up-icon'} />,
+  ChevronDown: (props: any) => <div data-testid={props['data-testid'] || 'chevron-down-icon'} />,
   Filter: () => <div data-testid="filter-icon" />,
   Calendar: () => <div data-testid="calendar-icon" />,
+  Printer: () => <div data-testid="printer-icon" />,
 }));
 
 // Mock ExportModal
@@ -360,7 +361,7 @@ describe('BookingsPage', () => {
       expect(screen.getByText('bookings.title')).toBeInTheDocument();
     });
 
-    const select = screen.getByRole('combobox');
+    const select = screen.getByTestId('status-filter');
 
     await act(async () => {
       await user.selectOptions(select, 'CANCELLED');
@@ -395,7 +396,7 @@ describe('BookingsPage', () => {
       expect(screen.getByText('bookings.title')).toBeInTheDocument();
     });
 
-    const select = screen.getByRole('combobox');
+    const select = screen.getByTestId('status-filter');
     expect(select).toBeInTheDocument();
 
     // Check for "All statuses" option
@@ -419,7 +420,7 @@ describe('BookingsPage', () => {
 
     expect(mockApi.get).toHaveBeenCalledWith('/bookings?pageSize=50');
 
-    const select = screen.getByRole('combobox');
+    const select = screen.getByTestId('status-filter');
 
     await act(async () => {
       await user.selectOptions(select, 'CONFIRMED');
@@ -440,7 +441,7 @@ describe('BookingsPage', () => {
       expect(screen.getByText('bookings.title')).toBeInTheDocument();
     });
 
-    const select = screen.getByRole('combobox');
+    const select = screen.getByTestId('status-filter');
 
     await act(async () => {
       await user.selectOptions(select, 'PENDING');
@@ -461,7 +462,7 @@ describe('BookingsPage', () => {
       expect(screen.getByText('bookings.title')).toBeInTheDocument();
     });
 
-    const select = screen.getByRole('combobox');
+    const select = screen.getByTestId('status-filter');
 
     await act(async () => {
       await user.selectOptions(select, 'RESCHEDULED');
@@ -482,7 +483,7 @@ describe('BookingsPage', () => {
       expect(screen.getByText('bookings.title')).toBeInTheDocument();
     });
 
-    const select = screen.getByRole('combobox');
+    const select = screen.getByTestId('status-filter');
 
     // Set filter to CONFIRMED
     await act(async () => {
@@ -617,17 +618,16 @@ describe('BookingsPage', () => {
       expect(screen.getByText('John')).toBeInTheDocument();
     });
 
-    const customerHeader = screen.getAllByText('Customer')[0].closest('th')!;
-
     await act(async () => {
-      await user.click(customerHeader);
+      await user.click(screen.getByTestId('sort-header-customer'));
     });
 
-    // After first click, should sort ascending (Alice before John)
-    const rows = screen.getAllByRole('row');
-    // Row 0 is header, Row 1 should have Alice, Row 2 should have John
-    expect(rows[1].textContent).toContain('Alice');
-    expect(rows[2].textContent).toContain('John');
+    // After first click, should send sortBy=customerName to API (server-side sort)
+    await waitFor(() => {
+      expect(mockApi.get).toHaveBeenCalledWith(
+        expect.stringContaining('sortBy=customerName'),
+      );
+    });
   });
 
   it('displays sort indicator on sorted column', async () => {
@@ -1478,10 +1478,11 @@ describe('BookingsPage', () => {
     });
 
     await waitFor(() => {
-      // Staff names from the mock
+      // Staff names from the mock — may appear in chip dropdown too
       const sarahElements = screen.getAllByText('Sarah');
       expect(sarahElements.length).toBeGreaterThanOrEqual(1);
-      expect(screen.getByText('Mike')).toBeInTheDocument();
+      const mikeElements = screen.getAllByText('Mike');
+      expect(mikeElements.length).toBeGreaterThanOrEqual(1);
     });
   });
 
@@ -1509,12 +1510,13 @@ describe('BookingsPage', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('Mike')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Assign Staff' })).toBeInTheDocument();
     });
 
-    // Click the Mike staff button
+    // Click the Mike button inside the modal (not the <option> in the chip filter)
+    const mikeButtons = screen.getAllByText('Mike').filter((el) => el.tagName === 'BUTTON');
     await act(async () => {
-      await user.click(screen.getByText('Mike'));
+      await user.click(mikeButtons[0]);
     });
 
     await waitFor(() => {
@@ -1550,11 +1552,12 @@ describe('BookingsPage', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('Mike')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Assign Staff' })).toBeInTheDocument();
     });
 
+    const mikeButtons = screen.getAllByText('Mike').filter((el) => el.tagName === 'BUTTON');
     await act(async () => {
-      await user.click(screen.getByText('Mike'));
+      await user.click(mikeButtons[0]);
     });
 
     await waitFor(() => {
@@ -1659,7 +1662,8 @@ describe('BookingsPage', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('Mike')).toBeInTheDocument();
+      const mikeElements = screen.getAllByText('Mike');
+      expect(mikeElements.length).toBeGreaterThanOrEqual(1);
     });
   });
 
@@ -1765,11 +1769,12 @@ describe('BookingsPage', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('Mike')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Assign Staff' })).toBeInTheDocument();
     });
 
+    const mikeButtons = screen.getAllByText('Mike').filter((el) => el.tagName === 'BUTTON');
     await act(async () => {
-      await user.click(screen.getByText('Mike'));
+      await user.click(mikeButtons[0]);
     });
 
     await waitFor(() => {
@@ -1876,7 +1881,7 @@ describe('BookingsPage', () => {
       expect(screen.getByText('bookings.title')).toBeInTheDocument();
     });
 
-    const select = screen.getByRole('combobox');
+    const select = screen.getByTestId('status-filter');
 
     // Change to COMPLETED
     await act(async () => {
@@ -1965,7 +1970,7 @@ describe('BookingsPage', () => {
       expect(screen.getByText('bookings.title')).toBeInTheDocument();
     });
 
-    const select = screen.getByRole('combobox');
+    const select = screen.getByTestId('status-filter');
 
     await act(async () => {
       await user.selectOptions(select, 'CONFIRMED');
@@ -2029,7 +2034,7 @@ describe('BookingsPage', () => {
     });
 
     // Set status filter to add one active filter
-    const select = screen.getByRole('combobox');
+    const select = screen.getByTestId('status-filter');
     await act(async () => {
       await user.selectOptions(select, 'CONFIRMED');
     });
@@ -2038,6 +2043,204 @@ describe('BookingsPage', () => {
       // The filter count badge should show "1"
       const filtersButton = screen.getByTestId('filters-toggle');
       expect(filtersButton.textContent).toContain('1');
+    });
+  });
+
+  // ─── Status Chip Bar ──────────────────────────────────────
+
+  it('renders status chip bar with all status options', async () => {
+    mockApi.get.mockResolvedValue({ data: [], total: 0 });
+
+    render(<BookingsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('status-chips')).toBeInTheDocument();
+    });
+
+    expect(screen.getByTestId('status-chip-all')).toBeInTheDocument();
+    expect(screen.getByTestId('status-chip-PENDING')).toBeInTheDocument();
+    expect(screen.getByTestId('status-chip-CONFIRMED')).toBeInTheDocument();
+    expect(screen.getByTestId('status-chip-IN_PROGRESS')).toBeInTheDocument();
+    expect(screen.getByTestId('status-chip-COMPLETED')).toBeInTheDocument();
+    expect(screen.getByTestId('status-chip-CANCELLED')).toBeInTheDocument();
+    expect(screen.getByTestId('status-chip-NO_SHOW')).toBeInTheDocument();
+  });
+
+  it('clicking a status chip updates the API call with status param', async () => {
+    const user = userEvent.setup();
+    mockApi.get.mockResolvedValue({ data: [], total: 0 });
+
+    render(<BookingsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('status-chips')).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      await user.click(screen.getByTestId('status-chip-COMPLETED'));
+    });
+
+    await waitFor(() => {
+      expect(mockApi.get).toHaveBeenCalledWith(
+        expect.stringContaining('status=COMPLETED'),
+      );
+    });
+  });
+
+  it('clicking "All" chip clears status filter', async () => {
+    const user = userEvent.setup();
+    mockApi.get.mockResolvedValue({ data: [], total: 0 });
+
+    render(<BookingsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('status-chips')).toBeInTheDocument();
+    });
+
+    // First set a filter
+    await act(async () => {
+      await user.click(screen.getByTestId('status-chip-PENDING'));
+    });
+
+    await waitFor(() => {
+      expect(mockApi.get).toHaveBeenCalledWith(
+        expect.stringContaining('status=PENDING'),
+      );
+    });
+
+    // Now click All
+    await act(async () => {
+      await user.click(screen.getByTestId('status-chip-all'));
+    });
+
+    await waitFor(() => {
+      const calls = mockApi.get.mock.calls;
+      const lastBookingCall = calls.filter((c: any) => c[0].startsWith('/bookings')).pop();
+      expect(lastBookingCall?.[0]).not.toContain('status=');
+    });
+  });
+
+  // ─── Sortable Column Headers ──────────────────────────────
+
+  it('renders sortable column headers with data-testids', async () => {
+    mockApi.get.mockResolvedValue({ data: [], total: 0 });
+
+    render(<BookingsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('sort-header-customer')).toBeInTheDocument();
+      expect(screen.getByTestId('sort-header-service')).toBeInTheDocument();
+      expect(screen.getByTestId('sort-header-date')).toBeInTheDocument();
+      expect(screen.getByTestId('sort-header-status')).toBeInTheDocument();
+      expect(screen.getByTestId('sort-header-amount')).toBeInTheDocument();
+    });
+  });
+
+  it('clicking a sort header sends sortBy param to API', async () => {
+    const user = userEvent.setup();
+    mockApi.get.mockResolvedValue({ data: [], total: 0 });
+
+    render(<BookingsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('sort-header-customer')).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      await user.click(screen.getByTestId('sort-header-customer'));
+    });
+
+    await waitFor(() => {
+      expect(mockApi.get).toHaveBeenCalledWith(
+        expect.stringContaining('sortBy=customerName'),
+      );
+    });
+  });
+
+  it('shows sort direction icon on active sort column', async () => {
+    const user = userEvent.setup();
+    mockApi.get.mockResolvedValue({ data: [], total: 0 });
+
+    render(<BookingsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('sort-header-amount')).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      await user.click(screen.getByTestId('sort-header-amount'));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('sort-desc')).toBeInTheDocument();
+    });
+  });
+
+  // ─── Staff Chip Filter ────────────────────────────────────
+
+  it('renders staff filter dropdown in chip bar', async () => {
+    mockApi.get.mockImplementation((url: string) => {
+      if (url.startsWith('/bookings')) return Promise.resolve({ data: [], total: 0 });
+      if (url === '/staff') return Promise.resolve(mockStaff);
+      return Promise.resolve({});
+    });
+
+    render(<BookingsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('staff-chip-filter')).toBeInTheDocument();
+    });
+  });
+
+  // ─── Print Button ─────────────────────────────────────────
+
+  it('renders print button', async () => {
+    mockApi.get.mockResolvedValue({ data: [], total: 0 });
+
+    render(<BookingsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('print-btn')).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('Print')).toBeInTheDocument();
+  });
+
+  it('print button calls window.print', async () => {
+    const user = userEvent.setup();
+    mockApi.get.mockResolvedValue({ data: [], total: 0 });
+    const printSpy = jest.spyOn(window, 'print').mockImplementation(() => {});
+
+    render(<BookingsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('print-btn')).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      await user.click(screen.getByTestId('print-btn'));
+    });
+
+    expect(printSpy).toHaveBeenCalled();
+    printSpy.mockRestore();
+  });
+
+  // ─── Amount Column ────────────────────────────────────────
+
+  it('renders amount column with service price', async () => {
+    mockApi.get.mockResolvedValue({
+      data: [
+        createBooking({ id: '1', service: { name: 'Haircut', price: 50 } }),
+        createBooking({ id: '2', service: { name: 'Massage', price: 120.5 }, customer: { name: 'Jane' } }),
+      ],
+      total: 2,
+    });
+
+    render(<BookingsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('$50.00')).toBeInTheDocument();
+      expect(screen.getByText('$120.50')).toBeInTheDocument();
     });
   });
 });

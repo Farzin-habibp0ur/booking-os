@@ -155,6 +155,53 @@ export class UpdateKanbanStatusDto {
   kanbanStatus!: string;
 }
 
+export class BookingQueryDto {
+  @IsOptional()
+  @IsString()
+  status?: string;
+
+  @IsOptional()
+  @IsString()
+  staffId?: string;
+
+  @IsOptional()
+  @IsString()
+  customerId?: string;
+
+  @IsOptional()
+  @IsString()
+  locationId?: string;
+
+  @IsOptional()
+  @IsString()
+  dateFrom?: string;
+
+  @IsOptional()
+  @IsString()
+  dateTo?: string;
+
+  @IsOptional()
+  @IsString()
+  search?: string;
+
+  @IsOptional()
+  page?: number;
+
+  @IsOptional()
+  pageSize?: number;
+
+  @IsOptional()
+  @IsIn(['startTime', 'createdAt', 'customerName', 'serviceName', 'status', 'amount'], {
+    message:
+      'sortBy must be one of: startTime, createdAt, customerName, serviceName, status, amount',
+  })
+  sortBy?: string;
+
+  @IsOptional()
+  @IsIn(['asc', 'desc'], { message: 'sortOrder must be asc or desc' })
+  sortOrder?: string;
+}
+
 // ---- Customer DTOs ----
 
 export class CreateCustomerDto {

@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useState, useMemo, useCallback } from 'react';
+import { Suspense, useEffect, useState, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
@@ -17,6 +17,7 @@ import {
   Filter,
   X,
   Calendar,
+  Printer,
 } from 'lucide-react';
 import BookingDetailModal from '@/components/booking-detail-modal';
 import BookingFormModal from '@/components/booking-form-modal';
@@ -35,7 +36,19 @@ const BOOKING_STATUSES = [
   'RESCHEDULED',
 ];
 
-type DatePreset = 'today' | 'this_week' | 'this_month' | 'custom' | '';
+type DatePreset = 'today' | 'this_week' | 'this_month' | 'last_30_days' | 'custom' | '';
+
+const STATUS_CHIPS = [
+  { value: '', label: 'All' },
+  { value: 'PENDING', label: 'Pending' },
+  { value: 'CONFIRMED', label: 'Confirmed' },
+  { value: 'IN_PROGRESS', label: 'In Progress' },
+  { value: 'COMPLETED', label: 'Completed' },
+  { value: 'CANCELLED', label: 'Cancelled' },
+  { value: 'NO_SHOW', label: 'No-Show' },
+] as const;
+
+type SortableColumn = 'startTime' | 'customerName' | 'serviceName' | 'status' | 'amount';
 
 function getDatePresetRange(preset: DatePreset): { from: string; to: string } {
   const now = new Date();
@@ -63,6 +76,13 @@ function getDatePresetRange(preset: DatePreset): { from: string; to: string } {
         from: `${yyyy}-${mm}-01`,
         to: `${yyyy}-${mm}-${String(lastDay).padStart(2, '0')}`,
       };
+    }
+    case 'last_30_days': {
+      const thirtyAgo = new Date(now);
+      thirtyAgo.setDate(now.getDate() - 30);
+      const fmt30 = (d: Date) =>
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      return { from: fmt30(thirtyAgo), to: today };
     }
     default:
       return { from: '', to: '' };
@@ -103,8 +123,12 @@ function BookingsContent() {
   const [staff, setStaff] = useState<any[]>([]);
   const [activeViewId, setActiveViewId] = useState<string | null>(null);
   const [showExport, setShowExport] = useState(false);
-  const [sortCol, setSortCol] = useState<string | null>(null);
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  const [sortBy, setSortBy] = useState<SortableColumn | null>(
+    (searchParams.get('sortBy') as SortableColumn) || null,
+  );
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(
+    (searchParams.get('sortOrder') as 'asc' | 'desc') || 'desc',
+  );
   const [showFilters, setShowFilters] = useState(
     !!(
       searchParams.get('dateFrom') ||
@@ -131,6 +155,8 @@ function BookingsContent() {
         dateTo,
         staffId: staffFilter,
         datePreset,
+        sortBy: sortBy || '',
+        sortOrder: sortBy ? sortOrder : '',
         ...overrides,
       };
       Object.entries(values).forEach(([key, value]) => {
@@ -139,7 +165,7 @@ function BookingsContent() {
       const qs = params.toString();
       router.replace(`/bookings${qs ? `?${qs}` : ''}`, { scroll: false });
     },
-    [statusFilter, debouncedSearch, dateFrom, dateTo, staffFilter, datePreset, router],
+    [statusFilter, debouncedSearch, dateFrom, dateTo, staffFilter, datePreset, sortBy, sortOrder, router],
   );
 
   // Debounce search input
@@ -153,7 +179,7 @@ function BookingsContent() {
   // Update URL whenever filters change
   useEffect(() => {
     updateUrlParams();
-  }, [statusFilter, debouncedSearch, dateFrom, dateTo, staffFilter, datePreset]);
+  }, [statusFilter, debouncedSearch, dateFrom, dateTo, staffFilter, datePreset, sortBy, sortOrder]);
 
   const handleApplyView = (filters: Record<string, unknown>, viewId: string) => {
     setStatusFilter((filters.status as string) || '');
@@ -173,6 +199,8 @@ function BookingsContent() {
     if (dateFrom) params.set('dateFrom', dateFrom);
     if (dateTo) params.set('dateTo', `${dateTo}T23:59:59`);
     if (staffFilter) params.set('staffId', staffFilter);
+    if (sortBy) params.set('sortBy', sortBy);
+    if (sortBy) params.set('sortOrder', sortOrder);
 
     setLoading(true);
     api
@@ -180,7 +208,7 @@ function BookingsContent() {
       .then(setBookings)
       .catch((err) => toast(err.message || 'Failed to load bookings', 'error'))
       .finally(() => setLoading(false));
-  }, [statusFilter, debouncedSearch, dateFrom, dateTo, staffFilter, toast]);
+  }, [statusFilter, debouncedSearch, dateFrom, dateTo, staffFilter, sortBy, sortOrder, toast]);
 
   useEffect(() => {
     load();
@@ -286,63 +314,45 @@ function BookingsContent() {
     (staffFilter ? 1 : 0) +
     (debouncedSearch ? 1 : 0);
 
-  // Sort bookings client-side (data is already filtered server-side)
-  const sortedBookings = useMemo(() => {
-    const data = bookings.data || [];
-    if (!sortCol) return data;
+  const sortedBookings = bookings.data || [];
 
-    return [...data].sort((a: any, b: any) => {
-      let aVal: any = a;
-      let bVal: any = b;
-
-      if (sortCol === 'customer') {
-        aVal = a.customer?.name || '';
-        bVal = b.customer?.name || '';
-      } else if (sortCol === 'service') {
-        aVal = a.service?.name || '';
-        bVal = b.service?.name || '';
-      } else if (sortCol === 'staff') {
-        aVal = a.staff?.name || '';
-        bVal = b.staff?.name || '';
-      } else if (sortCol === 'startTime') {
-        aVal = new Date(a.startTime).getTime();
-        bVal = new Date(b.startTime).getTime();
-      } else if (sortCol === 'status') {
-        aVal = a.status;
-        bVal = b.status;
+  const handleColumnSort = (col: SortableColumn) => {
+    if (sortBy === col) {
+      if (sortOrder === 'desc') {
+        setSortOrder('asc');
+      } else {
+        // Third click clears sort
+        setSortBy(null);
       }
-
-      if (aVal < bVal) return sortDir === 'asc' ? -1 : 1;
-      if (aVal > bVal) return sortDir === 'asc' ? 1 : -1;
-      return 0;
-    });
-  }, [bookings.data, sortCol, sortDir]);
-
-  const handleColumnSort = (col: string) => {
-    if (sortCol === col) {
-      setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
     } else {
-      setSortCol(col);
-      setSortDir('asc');
+      setSortBy(col);
+      setSortOrder('desc');
     }
   };
 
   const SortIndicator = ({ col }: { col: string }) => {
-    if (sortCol !== col) return null;
-    return sortDir === 'asc' ? (
-      <ChevronUp size={14} className="inline ml-1" />
+    if (sortBy !== col) return null;
+    return sortOrder === 'asc' ? (
+      <ChevronUp size={14} className="inline ml-1" data-testid="sort-asc" />
     ) : (
-      <ChevronDown size={14} className="inline ml-1" />
+      <ChevronDown size={14} className="inline ml-1" data-testid="sort-desc" />
     );
   };
 
   return (
     <div className="p-6" data-tour-target="bookings-table">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 print:hidden">
         <h1 className="text-2xl font-serif font-semibold text-slate-900">
           {t('bookings.title', { entity: pack.labels.booking })}
         </h1>
         <div className="flex items-center gap-2 w-full sm:w-auto">
+          <button
+            onClick={() => window.print()}
+            className="flex items-center justify-center gap-1 border px-3 py-2 rounded-xl text-sm hover:bg-slate-50 transition-colors"
+            data-testid="print-btn"
+          >
+            <Printer size={16} /> Print
+          </button>
           <button
             onClick={() => setShowExport(true)}
             className="flex items-center justify-center gap-1 border px-3 py-2 rounded-xl text-sm hover:bg-slate-50 transition-colors"
@@ -363,6 +373,38 @@ function BookingsContent() {
             ))}
           </select>
         </div>
+      </div>
+
+      {/* Status Chip Bar */}
+      <div className="flex flex-wrap gap-2 mb-4 print:hidden" data-testid="status-chips">
+        {STATUS_CHIPS.map((chip) => (
+          <button
+            key={chip.value}
+            onClick={() => setStatusFilter(chip.value)}
+            className={cn(
+              'rounded-full px-3 py-1.5 text-xs cursor-pointer transition-colors',
+              statusFilter === chip.value
+                ? 'bg-sage-100 text-sage-800 font-medium'
+                : 'bg-slate-50 text-slate-600 hover:bg-slate-100',
+            )}
+            data-testid={`status-chip-${chip.value || 'all'}`}
+          >
+            {chip.label}
+          </button>
+        ))}
+        <select
+          value={staffFilter}
+          onChange={(e) => setStaffFilter(e.target.value)}
+          className="rounded-xl border-slate-200 border text-sm px-3 py-1.5 ml-2"
+          data-testid="staff-chip-filter"
+        >
+          <option value="">All Staff</option>
+          {staff.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.name}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Search bar */}
@@ -432,6 +474,7 @@ function BookingsContent() {
                   { value: 'today', label: 'Today' },
                   { value: 'this_week', label: 'This Week' },
                   { value: 'this_month', label: 'This Month' },
+                  { value: 'last_30_days', label: 'Last 30 Days' },
                   { value: 'custom', label: 'Custom' },
                 ] as { value: DatePreset; label: string }[]
               ).map((preset) => (
@@ -519,7 +562,7 @@ function BookingsContent() {
           <table className="w-full min-w-[640px]">
             <thead className="bg-slate-50 border-b">
               <tr>
-                <th className="w-10 p-3">
+                <th className="w-10 p-3 print:hidden">
                   <input
                     type="checkbox"
                     checked={
@@ -536,49 +579,57 @@ function BookingsContent() {
                   />
                 </th>
                 <th
-                  className="text-left p-3 text-xs font-medium text-slate-500 uppercase cursor-pointer hover:text-slate-700 select-none"
-                  onClick={() => handleColumnSort('customer')}
+                  className="text-left p-3 text-xs font-medium text-slate-500 uppercase cursor-pointer hover:text-slate-700 select-none print:border print:border-slate-300 print:text-black print:text-xs"
+                  onClick={() => handleColumnSort('customerName')}
+                  data-testid="sort-header-customer"
                 >
-                  {pack.labels.customer} <SortIndicator col="customer" />
+                  {pack.labels.customer} <SortIndicator col="customerName" />
                 </th>
                 <th
-                  className="text-left p-3 text-xs font-medium text-slate-500 uppercase cursor-pointer hover:text-slate-700 select-none"
-                  onClick={() => handleColumnSort('service')}
+                  className="text-left p-3 text-xs font-medium text-slate-500 uppercase cursor-pointer hover:text-slate-700 select-none print:border print:border-slate-300 print:text-black print:text-xs"
+                  onClick={() => handleColumnSort('serviceName')}
+                  data-testid="sort-header-service"
                 >
-                  {pack.labels.service} <SortIndicator col="service" />
+                  {pack.labels.service} <SortIndicator col="serviceName" />
+                </th>
+                <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase select-none print:border print:border-slate-300 print:text-black print:text-xs">
+                  {t('common.provider')}
                 </th>
                 <th
-                  className="text-left p-3 text-xs font-medium text-slate-500 uppercase cursor-pointer hover:text-slate-700 select-none"
-                  onClick={() => handleColumnSort('staff')}
-                >
-                  {t('common.provider')} <SortIndicator col="staff" />
-                </th>
-                <th
-                  className="text-left p-3 text-xs font-medium text-slate-500 uppercase cursor-pointer hover:text-slate-700 select-none"
+                  className="text-left p-3 text-xs font-medium text-slate-500 uppercase cursor-pointer hover:text-slate-700 select-none print:border print:border-slate-300 print:text-black print:text-xs"
                   onClick={() => handleColumnSort('startTime')}
+                  data-testid="sort-header-date"
                 >
                   {t('bookings.date_time')} <SortIndicator col="startTime" />
                 </th>
                 <th
-                  className="text-left p-3 text-xs font-medium text-slate-500 uppercase cursor-pointer hover:text-slate-700 select-none"
+                  className="text-left p-3 text-xs font-medium text-slate-500 uppercase cursor-pointer hover:text-slate-700 select-none print:border print:border-slate-300 print:text-black print:text-xs"
                   onClick={() => handleColumnSort('status')}
+                  data-testid="sort-header-status"
                 >
                   {t('common.status')} <SortIndicator col="status" />
+                </th>
+                <th
+                  className="text-left p-3 text-xs font-medium text-slate-500 uppercase cursor-pointer hover:text-slate-700 select-none print:border print:border-slate-300 print:text-black print:text-xs"
+                  onClick={() => handleColumnSort('amount')}
+                  data-testid="sort-header-amount"
+                >
+                  Amount <SortIndicator col="amount" />
                 </th>
               </tr>
             </thead>
             <tbody className="divide-y">
               {loading
-                ? Array.from({ length: 5 }).map((_, i) => <TableRowSkeleton key={i} cols={6} />)
+                ? Array.from({ length: 5 }).map((_, i) => <TableRowSkeleton key={i} cols={7} />)
                 : sortedBookings.map((b: any) => (
                     <tr
                       key={b.id}
                       className={cn(
-                        'hover:bg-slate-50 cursor-pointer',
+                        'hover:bg-slate-50 cursor-pointer print:break-inside-avoid',
                         selectedIds.has(b.id) && 'bg-sage-50/50',
                       )}
                     >
-                      <td className="w-10 p-3" onClick={(e) => e.stopPropagation()}>
+                      <td className="w-10 p-3 print:hidden" onClick={(e) => e.stopPropagation()}>
                         <input
                           type="checkbox"
                           checked={selectedIds.has(b.id)}
@@ -586,22 +637,22 @@ function BookingsContent() {
                           className="rounded text-sage-600"
                         />
                       </td>
-                      <td className="p-3 text-sm font-medium" onClick={() => handleRowClick(b)}>
+                      <td className="p-3 text-sm font-medium print:border print:border-slate-300 print:text-black print:text-xs" onClick={() => handleRowClick(b)}>
                         {b.customer?.name}
                       </td>
-                      <td className="p-3 text-sm" onClick={() => handleRowClick(b)}>
+                      <td className="p-3 text-sm print:border print:border-slate-300 print:text-black print:text-xs" onClick={() => handleRowClick(b)}>
                         {b.service?.name}
                       </td>
-                      <td className="p-3 text-sm text-slate-600" onClick={() => handleRowClick(b)}>
+                      <td className="p-3 text-sm text-slate-600 print:border print:border-slate-300 print:text-black print:text-xs" onClick={() => handleRowClick(b)}>
                         {b.staff?.name || t('common.unassigned')}
                       </td>
-                      <td className="p-3 text-sm text-slate-600" onClick={() => handleRowClick(b)}>
+                      <td className="p-3 text-sm text-slate-600 print:border print:border-slate-300 print:text-black print:text-xs" onClick={() => handleRowClick(b)}>
                         {new Date(b.startTime).toLocaleString('en-US', {
                           dateStyle: 'medium',
                           timeStyle: 'short',
                         })}
                       </td>
-                      <td className="p-3" onClick={() => handleRowClick(b)}>
+                      <td className="p-3 print:border print:border-slate-300 print:text-black print:text-xs" onClick={() => handleRowClick(b)}>
                         <span
                           className={cn(
                             'text-xs px-2 py-0.5 rounded-full',
@@ -610,6 +661,9 @@ function BookingsContent() {
                         >
                           {t(`status.${b.status.toLowerCase()}`)}
                         </span>
+                      </td>
+                      <td className="p-3 text-sm text-slate-600 print:border print:border-slate-300 print:text-black print:text-xs" onClick={() => handleRowClick(b)}>
+                        {b.service?.price != null ? `$${Number(b.service.price).toFixed(2)}` : '-'}
                       </td>
                     </tr>
                   ))}

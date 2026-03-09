@@ -269,4 +269,22 @@ describe('BookingController', () => {
     expect(mockService.getMonthSummary).toHaveBeenCalledWith('biz1', '2026-03', undefined);
     expect(result).toEqual({ days: {} });
   });
+
+  it('list passes sortBy and sortOrder query params to service', async () => {
+    mockService.findAll.mockResolvedValue({ data: [], total: 0 });
+    const query = { sortBy: 'customerName', sortOrder: 'asc' };
+
+    await controller.list('biz1', query as any);
+
+    expect(mockService.findAll).toHaveBeenCalledWith('biz1', query);
+  });
+
+  it('list passes combined filters with sort params to service', async () => {
+    mockService.findAll.mockResolvedValue({ data: [], total: 0 });
+    const query = { status: 'CONFIRMED', sortBy: 'amount', sortOrder: 'desc' };
+
+    await controller.list('biz1', query as any);
+
+    expect(mockService.findAll).toHaveBeenCalledWith('biz1', query);
+  });
 });

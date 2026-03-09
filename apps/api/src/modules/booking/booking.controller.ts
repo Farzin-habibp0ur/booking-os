@@ -21,6 +21,7 @@ import {
   UpdateBookingDto,
   UpdateBookingStatusDto,
   UpdateKanbanStatusDto,
+  BookingQueryDto,
 } from '../../common/dto';
 
 @ApiTags('Bookings')
@@ -30,7 +31,7 @@ export class BookingController {
   constructor(private bookingService: BookingService) {}
 
   @Get()
-  list(@BusinessId() businessId: string, @Query() query: any) {
+  list(@BusinessId() businessId: string, @Query() query: BookingQueryDto) {
     return this.bookingService.findAll(businessId, query);
   }
 

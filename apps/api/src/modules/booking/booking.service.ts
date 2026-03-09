@@ -35,6 +35,15 @@ export class BookingService {
     private actionHistoryService?: ActionHistoryService,
   ) {}
 
+  private static readonly VALID_SORT_FIELDS = [
+    'startTime',
+    'createdAt',
+    'customerName',
+    'serviceName',
+    'status',
+    'amount',
+  ];
+
   async findAll(
     businessId: string,
     query: {
@@ -47,6 +56,8 @@ export class BookingService {
       search?: string;
       page?: number;
       pageSize?: number;
+      sortBy?: string;
+      sortOrder?: string;
     },
   ) {
     const page = Math.max(1, Number(query.page) || 1);
@@ -80,6 +91,19 @@ export class BookingService {
       }
     }
 
+    // Build orderBy
+    let orderBy: any = { startTime: 'asc' };
+    if (query.sortBy && BookingService.VALID_SORT_FIELDS.includes(query.sortBy)) {
+      const sortOrder = query.sortOrder === 'asc' ? 'asc' : 'desc';
+      if (query.sortBy === 'customerName') {
+        orderBy = { customer: { name: sortOrder } };
+      } else if (query.sortBy === 'serviceName') {
+        orderBy = { service: { name: sortOrder } };
+      } else {
+        orderBy = { [query.sortBy]: sortOrder };
+      }
+    }
+
     const [data, total] = await Promise.all([
       this.prisma.booking.findMany({
         where,
@@ -91,7 +115,7 @@ export class BookingService {
         },
         skip: (page - 1) * pageSize,
         take: pageSize,
-        orderBy: { startTime: 'asc' },
+        orderBy,
       }),
       this.prisma.booking.count({ where }),
     ]);
