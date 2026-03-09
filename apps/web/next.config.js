@@ -5,9 +5,6 @@ const nextConfig = {
   transpilePackages: ['@booking-os/shared'],
   output: 'standalone',
   poweredByHeader: false,
-  experimental: {
-    missingSuspenseWithCSRBailout: false,
-  },
   async headers() {
     return [
       {
@@ -39,7 +36,7 @@ const nextConfig = {
                 "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
                 "font-src 'self' https://fonts.gstatic.com",
                 "img-src 'self' data: https:",
-                "connect-src 'self' " + apiOrigin + " https://us.i.posthog.com",
+                "connect-src 'self' " + apiOrigin + ' https://us.i.posthog.com',
                 "frame-ancestors 'none'",
                 "object-src 'none'",
                 "base-uri 'self'",

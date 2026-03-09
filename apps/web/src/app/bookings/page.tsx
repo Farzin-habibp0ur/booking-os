@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo, useCallback } from 'react';
+import { Suspense, useEffect, useState, useMemo, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
@@ -70,6 +70,14 @@ function getDatePresetRange(preset: DatePreset): { from: string; to: string } {
 }
 
 export default function BookingsPage() {
+  return (
+    <Suspense>
+      <BookingsContent />
+    </Suspense>
+  );
+}
+
+function BookingsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
