@@ -36,6 +36,7 @@ const adminSections: NavSections = {
     '/marketing/queue',
     '/marketing/agents',
     '/marketing/sequences',
+    '/testimonials',
   ],
   insights: ['/dashboard', '/reports', '/roi', '/ai'],
 };

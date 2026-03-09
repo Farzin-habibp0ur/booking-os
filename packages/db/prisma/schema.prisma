@@ -69,6 +69,7 @@ model Business {
   contentDrafts              ContentDraft[]
   emailSequences             EmailSequence[]
   emailSequenceEnrollments   EmailSequenceEnrollment[]
+  testimonials               Testimonial[]
 
   @@map("businesses")
 }
@@ -138,6 +139,7 @@ model Customer {
   duplicatesAsCustomer1 DuplicateCandidate[] @relation("DuplicateCustomer1")
   duplicatesAsCustomer2 DuplicateCandidate[] @relation("DuplicateCustomer2")
   payments              Payment[]
+  testimonials          Testimonial[]
 
   @@unique([businessId, phone])
   @@index([businessId])
@@ -1259,4 +1261,29 @@ model EmailSequenceEnrollment {
   @@index([sequenceId, status])
   @@index([businessId])
   @@map("email_sequence_enrollments")
+}
+
+model Testimonial {
+  id          String    @id @default(cuid())
+  businessId  String
+  customerId  String?
+  name        String
+  role        String?
+  company     String?
+  content     String    @db.Text
+  rating      Int?
+  status      String    @default("PENDING")
+  source      String    @default("MANUAL")
+  requestedAt DateTime?
+  submittedAt DateTime?
+  avatarUrl   String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  business Business  @relation(fields: [businessId], references: [id])
+  customer Customer? @relation(fields: [customerId], references: [id])
+
+  @@index([businessId])
+  @@index([businessId, status])
+  @@map("testimonials")
 }

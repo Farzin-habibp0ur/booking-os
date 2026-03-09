@@ -2,7 +2,7 @@
 
 > **Purpose:** This document gives full context on the Booking OS platform — what it is, what's been built, how it's structured, and what's left to build. Share this with an AI assistant or new developer to get productive immediately.
 >
-> **Last updated:** March 9, 2026 (Phase C/D/E started — D5 Bookings Search/Sort/Filters COMPLETE — ~4,506 total tests across 278 test files, 57 Prisma models, 41 migrations)
+> **Last updated:** March 9, 2026 (Phase C/D/E — C1 Testimonial System COMPLETE — ~4,577 total tests across 284 test files, 58 Prisma models, 41 migrations)
 
 ---
 
@@ -227,13 +227,13 @@ booking-os/
 ├── apps/
 │   ├── api/                    # NestJS REST API (port 3001)
 │   │   ├── src/
-│   │   │   ├── modules/        # 55 feature modules
+│   │   │   ├── modules/        # 56 feature modules
 │   │   │   ├── common/         # Guards, decorators, filters, DTOs, Prisma service
 │   │   │   └── main.ts         # Bootstrap, Swagger, CORS, cookies, validation
 │   │   └── Dockerfile          # Multi-stage production build
 │   ├── web/                    # Next.js admin dashboard (port 3000)
 │   │   ├── src/
-│   │   │   ├── app/            # 72 pages
+│   │   │   ├── app/            # 73 pages
 │   │   │   ├── components/     # Shared components (shell, modals, tour, etc.)
 │   │   │   ├── lib/            # Utility modules (API client, auth, i18n, socket, theme)
 │   │   │   ├── locales/        # en.json, es.json (600+ keys each)
@@ -778,6 +778,7 @@ Key groups (full list in `.env.example`):
 ### Phase C/D/E: Growth, Intelligence & Polish — IN PROGRESS
 - **D5: Bookings Search, Sort & Filters** — COMPLETE. Server-side sorting on 6 fields (startTime, createdAt, customerName, serviceName, status, amount) with nested Prisma orderBy for relations. BookingQueryDto with @IsIn validators. Frontend: status chip bar (7 chips), inline staff filter dropdown, sortable column headers with server-side sort, Amount column, print button + print styles, Last 30 Days date preset. 20 new tests (8 service + 2 controller + 10 web).
 - **C5: Settings Consolidation** — COMPLETE. Settings hub promoted to primary position on settings page (above business info). 7 categorized cards (Account & Security, Operations, Communication, AI & Automation, Growth, Billing, Appearance) with role-based filtering. All 13 sub-pages already had back navigation. Page widened to max-w-4xl for grid. 22 new tests (14 config + 8 hub).
+- **C1: Testimonial Collection System** — COMPLETE. New Prisma model `Testimonial` (58th model) with status (PENDING/APPROVED/REJECTED/FEATURED), source (MANUAL/REQUESTED/IMPORTED). API module: CRUD + approve/reject/feature (max 6 with auto-demotion), sendRequest (NOTIFICATIONS queue email), findPublic (no auth, by slug). Frontend: `/testimonials` admin page with status tabs, grid cards, request modal with customer search + email preview. Reusable `TestimonialCard` component with star ratings, quote marks, action buttons, showActions prop. Public booking page `book/[slug]` "What Our Clients Say" section (up to 3 featured). Added to admin tools nav. 49 new tests (27 API + 22 web).
 
 ### Code Quality
 - **Error Handling Remediation** — COMPLETE (commit 1cf6f99). Replaced ~20 silent `.catch(() => {})` with logged warnings, queue processors throw on failure, NestJS proper exceptions, frontend toast wiring, waitlist loop resilience, WebSocket disconnect logging. +58 tests.
