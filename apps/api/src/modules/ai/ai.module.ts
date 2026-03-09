@@ -55,6 +55,7 @@ import { ActionCardModule } from '../action-card/action-card.module';
   ],
   exports: [
     AiService,
+    ClaudeClient,
     ProfileExtractor,
     DepositCardHandler,
     PolicyComplianceService,

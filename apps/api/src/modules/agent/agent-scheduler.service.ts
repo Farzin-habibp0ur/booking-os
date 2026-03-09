@@ -36,12 +36,14 @@ export class AgentSchedulerService {
         const agent = this.agentFramework.getAgent(config.agentType);
         if (!agent) continue;
 
-        // Check if agent ran recently (within last 4 minutes to avoid overlap)
+        // Check if agent ran recently (uses per-agent interval or default 4 minutes)
+        const intervalMinutes = (config.config as any)?.runIntervalMinutes || 4;
+        const intervalMs = intervalMinutes * 60 * 1000;
         const recentRun = await this.prisma.agentRun.findFirst({
           where: {
             businessId: config.businessId,
             agentType: config.agentType,
-            startedAt: { gte: new Date(Date.now() - 4 * 60 * 1000) },
+            startedAt: { gte: new Date(Date.now() - intervalMs) },
           },
           orderBy: { startedAt: 'desc' },
         });
