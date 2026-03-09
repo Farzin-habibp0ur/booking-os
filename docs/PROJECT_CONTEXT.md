@@ -2,7 +2,7 @@
 
 > **Purpose:** This document gives full context on the Booking OS platform — what it is, what's been built, how it's structured, and what's left to build. Share this with an AI assistant or new developer to get productive immediately.
 >
-> **Last updated:** March 9, 2026 (Phase C/D/E — Phase C ALL COMPLETE, Phase D ALL COMPLETE, E2 done — ~4,797 total tests across 307 test files, 60 Prisma models, 43 migrations)
+> **Last updated:** March 9, 2026 (Phase C/D/E — Phase C ALL COMPLETE, Phase D ALL COMPLETE, E2+E5 done — ~4,910 total tests across 312 test files, 60 Prisma models, 44 migrations)
 
 ---
 
@@ -29,7 +29,7 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 ### Core Capabilities (All Built & Working)
 
 - **Appointment scheduling** — Calendar views (day/week/month), conflict detection, recurring bookings, automated reminders, force-book with reason, drag-and-drop reschedule with recommended slots, calendar command center (sidebar summary, keyboard shortcuts, booking popover)
-- **WhatsApp messaging inbox** — Real-time via Socket.io, AI auto-replies, conversation management (assign, snooze, tag, close), media attachments (images/docs/audio), delivery/read receipts, presence indicators
+- **WhatsApp messaging inbox** — Real-time via Socket.io, AI auto-replies, conversation management (assign, snooze, tag, close), media attachments (images/docs/audio), delivery/read receipts, presence indicators, scheduled messages (BullMQ delayed jobs with cancel), bulk actions (close/assign/tag/mark-read up to 50 at once)
 - **AI booking assistant** — Guides customers through booking/cancellation/rescheduling via chat (powered by Claude API)
 - **AI features** — Intent detection, reply suggestions, conversation summaries, customer profile collection, per-customer AI chat
 - **Customer management** — Profiles with custom fields, tags, CSV import, AI-powered profile extraction from conversations
@@ -797,6 +797,7 @@ Key groups (full list in `.env.example`):
 
 ### Phase E: Polish & Expansion — IN PROGRESS
 - **E2: PostHog Analytics Funnels** — COMPLETE. Enhanced `posthog.tsx` with `initPostHog()`, `isEnabled()`, `resetUser()`, `captureEvent()`. Created `PostHogIdentityProvider` component (identifies user on session with userId, email, businessId, role, verticalPack). Integrated `identifyUser`/`resetUser` in auth.tsx (login, signup, session restore, logout). Added milestone events across 5 funnels: Signup (`signup_started`, `signup_completed`, `onboarding_completed`), Booking (`calendar_viewed`, `new_booking_clicked`, `booking_confirmed`), Messaging (`inbox_opened`, `conversation_selected`, `message_sent`), AI Adoption (`ai_settings_viewed`, `ai_enabled`), Upgrade (`billing_page_viewed`, `plans_compared`, `upgrade_clicked`). 12 tests (8 posthog lib + 4 provider).
+- **E5: Scheduled Messages & Bulk Inbox Actions** — COMPLETE. Prisma schema: `scheduledFor DateTime?` and `scheduledJobId String?` on Message model (migration 44). Message scheduling via BullMQ delayed jobs: `message.service.ts` creates message with `deliveryStatus: 'SCHEDULED'`, adds delayed job to MESSAGING queue, stores jobId for cancellation. 3 message endpoints: POST (send with optional `scheduledFor`), GET scheduled, DELETE cancel (removes BullMQ job + sets CANCELLED). 4 bulk conversation endpoints: POST `bulk-close` (updateMany to RESOLVED), POST `bulk-assign` (validates staff, updateMany assignedToId), POST `bulk-tag` (appends tag if not present), POST `bulk-read` (marks inbound messages readAt). All bulk ops validate max 50 items. Frontend: enhanced `scheduled-message.tsx` with 5 quick presets (1h, 3h, tomorrow 9AM/12PM, Monday 9AM) and 15-min interval time picker (96 options). Inbox page: ScheduledMessage component integrated in composer area, `scheduledFor` state flows through sendMessage API call, amber scheduled messages indicator panel with cancel buttons, bulk action bar updated to use efficient single-request API endpoints, inline tag input for bulk tagging. 113 tests (25 message service + 52 conversation service + 10 scheduled-message component + 15 inbox page + 11 inbox integration).
 
 ### Code Quality
 - **Error Handling Remediation** — COMPLETE (commit 1cf6f99). Replaced ~20 silent `.catch(() => {})` with logged warnings, queue processors throw on failure, NestJS proper exceptions, frontend toast wiring, waitlist loop resilience, WebSocket disconnect logging. +58 tests.

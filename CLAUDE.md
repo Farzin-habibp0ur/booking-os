@@ -114,7 +114,7 @@ modules/
 
 ### Database (Prisma)
 
-- Schema at `packages/db/prisma/schema.prisma` — **60 models**, 43 migrations
+- Schema at `packages/db/prisma/schema.prisma` — **60 models**, 44 migrations
 - Generate client: `npx prisma generate --schema=packages/db/prisma/schema.prisma`
 - Create migration: `npx prisma migrate dev --name your_name --schema=packages/db/prisma/schema.prisma`
 - `PrismaService` is a global NestJS provider — inject it in constructors
@@ -253,7 +253,7 @@ All AI-related UI elements use the **lavender** palette: `bg-lavender-50 border 
 ## Testing Conventions
 
 ### Test Counts
-- **~4,797 total tests** across 307 test files (159 API + 148 web)
+- **~4,910 total tests** across 312 test files
 - API: ~93% statement coverage, ~81% branch coverage
 - Web: ~78% statement coverage, ~73% branch coverage
 
