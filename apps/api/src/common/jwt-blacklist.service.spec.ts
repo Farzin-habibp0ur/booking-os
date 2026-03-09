@@ -13,48 +13,48 @@ describe('JwtBlacklistService', () => {
   });
 
   describe('blacklistToken', () => {
-    it('adds a token to the blacklist', () => {
-      service.blacklistToken('test-token');
-      expect(service.isBlacklisted('test-token')).toBe(true);
+    it('adds a token to the blacklist', async () => {
+      await service.blacklistToken('test-token');
+      expect(await service.isBlacklisted('test-token')).toBe(true);
     });
 
-    it('accepts custom TTL', () => {
-      service.blacklistToken('short-token', 1000);
-      expect(service.isBlacklisted('short-token')).toBe(true);
+    it('accepts custom TTL', async () => {
+      await service.blacklistToken('short-token', 1000);
+      expect(await service.isBlacklisted('short-token')).toBe(true);
     });
   });
 
   describe('isBlacklisted', () => {
-    it('returns false for non-blacklisted tokens', () => {
-      expect(service.isBlacklisted('unknown-token')).toBe(false);
+    it('returns false for non-blacklisted tokens', async () => {
+      expect(await service.isBlacklisted('unknown-token')).toBe(false);
     });
 
-    it('returns true for blacklisted tokens within TTL', () => {
-      service.blacklistToken('my-token', 60000);
+    it('returns true for blacklisted tokens within TTL', async () => {
+      await service.blacklistToken('my-token', 60000);
       jest.advanceTimersByTime(30000);
-      expect(service.isBlacklisted('my-token')).toBe(true);
+      expect(await service.isBlacklisted('my-token')).toBe(true);
     });
 
-    it('returns false and cleans up expired tokens', () => {
-      service.blacklistToken('expired-token', 5000);
+    it('returns false and cleans up expired tokens', async () => {
+      await service.blacklistToken('expired-token', 5000);
       jest.advanceTimersByTime(6000);
-      expect(service.isBlacklisted('expired-token')).toBe(false);
+      expect(await service.isBlacklisted('expired-token')).toBe(false);
     });
 
-    it('uses default TTL of 15 minutes', () => {
-      service.blacklistToken('default-ttl');
+    it('uses default TTL of 15 minutes', async () => {
+      await service.blacklistToken('default-ttl');
       jest.advanceTimersByTime(14 * 60 * 1000);
-      expect(service.isBlacklisted('default-ttl')).toBe(true);
+      expect(await service.isBlacklisted('default-ttl')).toBe(true);
 
       jest.advanceTimersByTime(2 * 60 * 1000);
-      expect(service.isBlacklisted('default-ttl')).toBe(false);
+      expect(await service.isBlacklisted('default-ttl')).toBe(false);
     });
   });
 
   describe('cleanup', () => {
-    it('removes expired entries on timer tick', () => {
-      service.blacklistToken('token-a', 60000);
-      service.blacklistToken('token-b', 120000);
+    it('removes expired entries on timer tick', async () => {
+      await service.blacklistToken('token-a', 60000);
+      await service.blacklistToken('token-b', 120000);
 
       // Advance past first token's expiry but before second
       jest.advanceTimersByTime(90000);
@@ -63,9 +63,9 @@ describe('JwtBlacklistService', () => {
       jest.advanceTimersByTime(5 * 60 * 1000);
 
       // token-a should be cleaned up, token-b should remain
-      expect(service.isBlacklisted('token-a')).toBe(false);
+      expect(await service.isBlacklisted('token-a')).toBe(false);
       // token-b will also be expired by now (90s + 5min > 120s)
-      expect(service.isBlacklisted('token-b')).toBe(false);
+      expect(await service.isBlacklisted('token-b')).toBe(false);
     });
 
     it('handles empty blacklist gracefully', () => {
@@ -75,12 +75,31 @@ describe('JwtBlacklistService', () => {
   });
 
   describe('hashing', () => {
-    it('stores hashed tokens not raw tokens', () => {
-      service.blacklistToken('raw-token');
+    it('stores hashed tokens not raw tokens', async () => {
+      await service.blacklistToken('raw-token');
       // The same raw token should be found via hash
-      expect(service.isBlacklisted('raw-token')).toBe(true);
+      expect(await service.isBlacklisted('raw-token')).toBe(true);
       // A different token should not be found
-      expect(service.isBlacklisted('different-token')).toBe(false);
+      expect(await service.isBlacklisted('different-token')).toBe(false);
+    });
+  });
+
+  describe('with PortalRedisService', () => {
+    it('uses redis store when available', async () => {
+      const mockRedis = {
+        set: jest.fn().mockResolvedValue(undefined),
+        exists: jest.fn().mockResolvedValue(true),
+      };
+      const redisService = new JwtBlacklistService(mockRedis as any);
+
+      await redisService.blacklistToken('redis-token', 5000);
+      expect(mockRedis.set).toHaveBeenCalledWith(
+        expect.stringContaining('jwt-blacklist:'),
+        '1',
+        5000,
+      );
+
+      expect(await redisService.isBlacklisted('redis-token')).toBe(true);
     });
   });
 });

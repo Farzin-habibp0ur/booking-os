@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Calendar, Clock, User, MessageSquare, Star, ChevronRight } from 'lucide-react';
+import { Calendar, Clock, User, MessageSquare, Star, ChevronRight, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { statusBadgeClasses } from '@/lib/design-tokens';
 
@@ -22,6 +22,24 @@ function portalFetch(path: string) {
   });
 }
 
+function portalPost(path: string, body: any) {
+  const token = typeof window !== 'undefined' ? sessionStorage.getItem('portal-token') : null;
+  return fetch(`${API_URL}${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify(body),
+  }).then(async (r) => {
+    if (r.status === 401) {
+      sessionStorage.removeItem('portal-token');
+      window.location.href = `/portal/${window.location.pathname.split('/')[2]}`;
+      throw new Error('Unauthorized');
+    }
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.message || 'Request failed');
+    return data;
+  });
+}
+
 export default function PortalDashboardPage() {
   const { slug } = useParams<{ slug: string }>();
   const router = useRouter();
@@ -30,14 +48,14 @@ export default function PortalDashboardPage() {
   const [recentBookings, setRecentBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const token = sessionStorage.getItem('portal-token');
-    if (!token) {
-      router.replace(`/portal/${slug}`);
-      return;
-    }
+  const [cancelModal, setCancelModal] = useState<any>(null);
+  const [rescheduleModal, setRescheduleModal] = useState<any>(null);
+  const [rescheduleDate, setRescheduleDate] = useState('');
+  const [actionLoading, setActionLoading] = useState(false);
+  const [actionError, setActionError] = useState('');
 
-    Promise.all([
+  const loadData = useCallback(() => {
+    return Promise.all([
       portalFetch('/portal/me'),
       portalFetch('/portal/upcoming'),
       portalFetch('/portal/bookings?page=1'),
@@ -47,9 +65,51 @@ export default function PortalDashboardPage() {
         setUpcoming(up);
         setRecentBookings(bookings.data?.slice(0, 5) || []);
       })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [slug, router]);
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const token = sessionStorage.getItem('portal-token');
+    if (!token) {
+      router.replace(`/portal/${slug}`);
+      return;
+    }
+
+    loadData().finally(() => setLoading(false));
+  }, [slug, router, loadData]);
+
+  const handleCancel = async () => {
+    if (!cancelModal) return;
+    setActionLoading(true);
+    setActionError('');
+    try {
+      await portalPost(`/portal/bookings/${cancelModal.id}/cancel`, {});
+      setCancelModal(null);
+      await loadData();
+    } catch (err: any) {
+      setActionError(err.message || 'Failed to cancel');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleReschedule = async () => {
+    if (!rescheduleModal || !rescheduleDate) return;
+    setActionLoading(true);
+    setActionError('');
+    try {
+      await portalPost(`/portal/bookings/${rescheduleModal.id}/reschedule`, {
+        newStartTime: new Date(rescheduleDate).toISOString(),
+      });
+      setRescheduleModal(null);
+      setRescheduleDate('');
+      await loadData();
+    } catch (err: any) {
+      setActionError(err.message || 'Failed to reschedule');
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -92,35 +152,62 @@ export default function PortalDashboardPage() {
             {upcoming.slice(0, 3).map((b: any) => (
               <div
                 key={b.id}
-                className="bg-white rounded-2xl shadow-soft p-4 flex items-center justify-between"
+                className="bg-white rounded-2xl shadow-soft p-4"
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-sage-50 rounded-xl flex items-center justify-center">
-                    <Calendar size={18} className="text-sage-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-slate-900">{b.service?.name}</p>
-                    <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
-                      <Clock size={12} />
-                      {new Date(b.startTime).toLocaleDateString('en-US', {
-                        weekday: 'short',
-                        month: 'short',
-                        day: 'numeric',
-                      })}{' '}
-                      at{' '}
-                      {new Date(b.startTime).toLocaleTimeString('en-US', {
-                        hour: 'numeric',
-                        minute: '2-digit',
-                      })}
-                      {b.staff?.name && <span>with {b.staff.name}</span>}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-sage-50 rounded-xl flex items-center justify-center">
+                      <Calendar size={18} className="text-sage-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-slate-900">{b.service?.name}</p>
+                      <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
+                        <Clock size={12} />
+                        {new Date(b.startTime).toLocaleDateString('en-US', {
+                          weekday: 'short',
+                          month: 'short',
+                          day: 'numeric',
+                        })}{' '}
+                        at{' '}
+                        {new Date(b.startTime).toLocaleTimeString('en-US', {
+                          hour: 'numeric',
+                          minute: '2-digit',
+                        })}
+                        {b.staff?.name && <span>with {b.staff.name}</span>}
+                      </div>
                     </div>
                   </div>
+                  <span
+                    className={cn('text-xs px-2 py-0.5 rounded-full', statusBadgeClasses(b.status))}
+                  >
+                    {b.status}
+                  </span>
                 </div>
-                <span
-                  className={cn('text-xs px-2 py-0.5 rounded-full', statusBadgeClasses(b.status))}
-                >
-                  {b.status}
-                </span>
+                <div className="flex items-center gap-3 mt-2 ml-13">
+                  <button
+                    onClick={() => {
+                      setCancelModal(b);
+                      setActionError('');
+                    }}
+                    className="text-xs text-red-600 hover:text-red-700 font-medium"
+                    data-testid="dashboard-cancel-btn"
+                  >
+                    Cancel
+                  </button>
+                  {b.status === 'CONFIRMED' && (
+                    <button
+                      onClick={() => {
+                        setRescheduleModal(b);
+                        setRescheduleDate('');
+                        setActionError('');
+                      }}
+                      className="text-xs text-sage-600 hover:text-sage-700 font-medium"
+                      data-testid="dashboard-reschedule-btn"
+                    >
+                      Reschedule
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
           </div>
@@ -214,6 +301,110 @@ export default function PortalDashboardPage() {
             ))}
           </div>
         </section>
+      )}
+
+      {/* Cancel modal */}
+      {cancelModal && (
+        <div
+          className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"
+          data-testid="cancel-modal"
+        >
+          <div className="bg-white rounded-2xl shadow-lg max-w-sm w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-serif font-semibold text-slate-900">Cancel Booking</h3>
+              <button
+                onClick={() => setCancelModal(null)}
+                className="p-1 hover:bg-slate-100 rounded-lg"
+              >
+                <X size={18} className="text-slate-500" />
+              </button>
+            </div>
+            <p className="text-sm text-slate-600 mb-1">
+              Are you sure you want to cancel your booking for{' '}
+              <span className="font-medium">{cancelModal.service?.name}</span>?
+            </p>
+            <p className="text-xs text-slate-400 mb-4">
+              {new Date(cancelModal.startTime).toLocaleDateString('en-US', {
+                weekday: 'long',
+                month: 'long',
+                day: 'numeric',
+              })}{' '}
+              at{' '}
+              {new Date(cancelModal.startTime).toLocaleTimeString('en-US', {
+                hour: 'numeric',
+                minute: '2-digit',
+              })}
+            </p>
+            {actionError && (
+              <p className="text-xs text-red-600 mb-3">{actionError}</p>
+            )}
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCancelModal(null)}
+                className="flex-1 px-4 py-2 text-sm border rounded-xl hover:bg-slate-50 transition-colors"
+              >
+                Keep Booking
+              </button>
+              <button
+                onClick={handleCancel}
+                disabled={actionLoading}
+                className="flex-1 px-4 py-2 text-sm bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors disabled:opacity-50"
+              >
+                {actionLoading ? 'Cancelling...' : 'Yes, Cancel'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reschedule modal */}
+      {rescheduleModal && (
+        <div
+          className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"
+          data-testid="reschedule-modal"
+        >
+          <div className="bg-white rounded-2xl shadow-lg max-w-sm w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-serif font-semibold text-slate-900">
+                Reschedule Booking
+              </h3>
+              <button
+                onClick={() => setRescheduleModal(null)}
+                className="p-1 hover:bg-slate-100 rounded-lg"
+              >
+                <X size={18} className="text-slate-500" />
+              </button>
+            </div>
+            <p className="text-sm text-slate-600 mb-3">
+              Select a new date and time for{' '}
+              <span className="font-medium">{rescheduleModal.service?.name}</span>
+            </p>
+            <input
+              type="datetime-local"
+              value={rescheduleDate}
+              onChange={(e) => setRescheduleDate(e.target.value)}
+              className="w-full px-3 py-2 text-sm bg-slate-50 border-transparent focus:bg-white focus:ring-2 focus:ring-sage-500 rounded-xl mb-3"
+            />
+            {actionError && (
+              <p className="text-xs text-red-600 mb-3">{actionError}</p>
+            )}
+            <div className="flex gap-2">
+              <button
+                onClick={() => setRescheduleModal(null)}
+                className="flex-1 px-4 py-2 text-sm border rounded-xl hover:bg-slate-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleReschedule}
+                disabled={actionLoading || !rescheduleDate}
+                className="flex-1 px-4 py-2 text-sm bg-sage-600 text-white rounded-xl hover:bg-sage-700 transition-colors disabled:opacity-50"
+              >
+                {actionLoading ? 'Rescheduling...' : 'Confirm'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

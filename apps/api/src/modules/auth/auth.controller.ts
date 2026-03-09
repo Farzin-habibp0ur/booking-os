@@ -99,7 +99,7 @@ export class AuthController {
       return { message: 'No refresh token provided' };
     }
     // H5 fix: Reject blacklisted refresh tokens
-    if (this.blacklist.isBlacklisted(token)) {
+    if (await this.blacklist.isBlacklisted(token)) {
       this.clearTokenCookies(res);
       return { message: 'Refresh token has been revoked' };
     }
@@ -110,16 +110,16 @@ export class AuthController {
 
   @Post('logout')
   @UseGuards(AuthGuard('jwt'))
-  logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+  async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     // H1 fix: Blacklist current access token so it can't be reused
     const token = req.cookies?.access_token as string;
     if (token) {
-      this.blacklist.blacklistToken(token);
+      await this.blacklist.blacklistToken(token);
     }
     // H5 fix: Also blacklist refresh token on logout (7-day TTL to match cookie maxAge)
     const refreshToken = req.cookies?.refresh_token as string;
     if (refreshToken) {
-      this.blacklist.blacklistToken(refreshToken, 7 * 24 * 60 * 60 * 1000);
+      await this.blacklist.blacklistToken(refreshToken, 7 * 24 * 60 * 60 * 1000);
     }
     this.clearTokenCookies(res);
     return { ok: true };
@@ -179,12 +179,12 @@ export class AuthController {
     // H1 fix: Blacklist old access token after password change
     const oldToken = req.cookies?.access_token as string;
     if (oldToken) {
-      this.blacklist.blacklistToken(oldToken);
+      await this.blacklist.blacklistToken(oldToken);
     }
     // H5 fix: Also blacklist old refresh token
     const oldRefresh = req.cookies?.refresh_token as string;
     if (oldRefresh) {
-      this.blacklist.blacklistToken(oldRefresh, 7 * 24 * 60 * 60 * 1000);
+      await this.blacklist.blacklistToken(oldRefresh, 7 * 24 * 60 * 60 * 1000);
     }
     // Set new token cookies
     if (result.accessToken && result.refreshToken) {

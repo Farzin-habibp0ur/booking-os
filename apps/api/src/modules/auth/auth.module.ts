@@ -7,6 +7,7 @@ import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
 import { TokenService } from '../../common/token.service';
 import { JwtBlacklistService } from '../../common/jwt-blacklist.service';
+import { PortalRedisService } from '../../common/portal-redis.service';
 import { ReferralModule } from '../referral/referral.module';
 
 @Module({
@@ -44,7 +45,7 @@ import { ReferralModule } from '../referral/referral.module';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, TokenService, JwtBlacklistService],
-  exports: [AuthService, JwtModule, TokenService, JwtBlacklistService],
+  providers: [AuthService, JwtStrategy, TokenService, JwtBlacklistService, PortalRedisService],
+  exports: [AuthService, JwtModule, TokenService, JwtBlacklistService, PortalRedisService],
 })
 export class AuthModule {}

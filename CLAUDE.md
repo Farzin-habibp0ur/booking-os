@@ -253,7 +253,7 @@ All AI-related UI elements use the **lavender** palette: `bg-lavender-50 border 
 ## Testing Conventions
 
 ### Test Counts
-- **~5,003 total tests** across 319 test files
+- **~4,900+ total tests** across 321 test files
 - API: ~93% statement coverage, ~81% branch coverage
 - Web: ~78% statement coverage, ~73% branch coverage
 
@@ -337,6 +337,9 @@ docker compose -f docker-compose.prod.yml build
 
 # Manual CI trigger
 gh workflow run ci.yml
+
+# Production smoke test
+./scripts/smoke-test.sh [BASE_URL]
 ```
 
 ---

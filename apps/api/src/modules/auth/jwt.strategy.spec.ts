@@ -27,7 +27,7 @@ describe('JwtStrategy', () => {
     };
 
     blacklist = {
-      isBlacklisted: jest.fn().mockReturnValue(false),
+      isBlacklisted: jest.fn().mockResolvedValue(false),
     };
 
     const config = {
@@ -71,7 +71,7 @@ describe('JwtStrategy', () => {
   });
 
   it('throws UnauthorizedException when token is blacklisted', async () => {
-    blacklist.isBlacklisted.mockReturnValue(true);
+    blacklist.isBlacklisted.mockResolvedValue(true);
 
     const mockReq = {
       cookies: { access_token: 'some-blacklisted-token' },

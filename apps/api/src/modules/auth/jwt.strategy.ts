@@ -47,7 +47,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   ) {
     // H1: Check if token is blacklisted
     const token = extractJwtFromCookieOrHeader(req);
-    if (token && this.blacklist.isBlacklisted(token)) {
+    if (token && (await this.blacklist.isBlacklisted(token))) {
       throw new UnauthorizedException('Token has been revoked');
     }
 

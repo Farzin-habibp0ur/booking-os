@@ -2,6 +2,7 @@ import { Test } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { PortalService } from './portal.service';
 import { PrismaService } from '../../common/prisma.service';
+import { BookingService } from '../booking/booking.service';
 import { createMockPrisma } from '../../test/mocks';
 
 describe('PortalService', () => {
@@ -22,7 +23,17 @@ describe('PortalService', () => {
     prisma = createMockPrisma();
 
     const module = await Test.createTestingModule({
-      providers: [PortalService, { provide: PrismaService, useValue: prisma }],
+      providers: [
+        PortalService,
+        { provide: PrismaService, useValue: prisma },
+        {
+          provide: BookingService,
+          useValue: {
+            checkPolicyAllowed: jest.fn().mockResolvedValue({ allowed: true }),
+            updateStatus: jest.fn().mockResolvedValue({ id: 'b1', status: 'CANCELLED' }),
+          },
+        },
+      ],
     }).compile();
 
     service = module.get(PortalService);

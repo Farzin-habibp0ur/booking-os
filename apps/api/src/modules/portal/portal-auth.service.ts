@@ -12,6 +12,7 @@ import { ConfigService } from '@nestjs/config';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { PrismaService } from '../../common/prisma.service';
+import { PortalRedisService } from '../../common/portal-redis.service';
 import { EmailService } from '../email/email.service';
 import { QUEUE_NAMES } from '../../common/queue/queue.module';
 
@@ -19,7 +20,6 @@ interface OtpEntry {
   otp: string;
   customerId: string;
   businessId: string;
-  expiresAt: number;
   attempts: number;
 }
 
@@ -31,27 +31,18 @@ const MAGIC_LINK_EXPIRY = '1h';
 @Injectable()
 export class PortalAuthService {
   private readonly logger = new Logger(PortalAuthService.name);
-  private otpStore = new Map<string, OtpEntry>();
 
   constructor(
     private prisma: PrismaService,
     private jwt: JwtService,
     private config: ConfigService,
     private emailService: EmailService,
+    private redisStore: PortalRedisService,
     @Inject('QUEUE_AVAILABLE') private queueAvailable: boolean,
     @Optional()
     @InjectQueue(QUEUE_NAMES.MESSAGING)
     private messagingQueue?: Queue,
-  ) {
-    // Periodic cleanup of expired OTPs
-    const timer = setInterval(() => {
-      const now = Date.now();
-      for (const [key, entry] of this.otpStore) {
-        if (entry.expiresAt < now) this.otpStore.delete(key);
-      }
-    }, 60 * 1000);
-    timer.unref();
-  }
+  ) {}
 
   private otpKey(businessId: string, phone: string): string {
     return `portal-otp:${businessId}:${phone}`;
@@ -80,13 +71,13 @@ export class PortalAuthService {
     const otp = this.generateOtp();
     const key = this.otpKey(business.id, phone);
 
-    this.otpStore.set(key, {
+    const entry: OtpEntry = {
       otp,
       customerId: customer.id,
       businessId: business.id,
-      expiresAt: Date.now() + OTP_TTL_MS,
       attempts: 0,
-    });
+    };
+    await this.redisStore.set(key, JSON.stringify(entry), OTP_TTL_MS);
 
     // Enqueue WhatsApp message
     if (this.queueAvailable && this.messagingQueue) {
@@ -104,29 +95,27 @@ export class PortalAuthService {
   async verifyOtp(slug: string, phone: string, otp: string): Promise<{ token: string }> {
     const business = await this.resolveBusiness(slug);
     const key = this.otpKey(business.id, phone);
-    const entry = this.otpStore.get(key);
+    const raw = await this.redisStore.get(key);
 
-    if (!entry) {
+    if (!raw) {
       throw new UnauthorizedException('No verification code found. Please request a new one.');
     }
 
-    if (entry.expiresAt < Date.now()) {
-      this.otpStore.delete(key);
-      throw new UnauthorizedException('Verification code has expired. Please request a new one.');
-    }
+    const entry: OtpEntry = JSON.parse(raw);
 
     if (entry.attempts >= MAX_OTP_ATTEMPTS) {
-      this.otpStore.delete(key);
+      await this.redisStore.del(key);
       throw new UnauthorizedException('Too many failed attempts. Please request a new code.');
     }
 
     if (entry.otp !== otp) {
       entry.attempts++;
+      await this.redisStore.set(key, JSON.stringify(entry), OTP_TTL_MS);
       throw new UnauthorizedException('Invalid verification code');
     }
 
     // OTP valid — delete and issue token
-    this.otpStore.delete(key);
+    await this.redisStore.del(key);
 
     const token = this.jwt.sign(
       {
@@ -212,7 +201,7 @@ export class PortalAuthService {
   }
 
   // Expose for testing
-  getOtpStore() {
-    return this.otpStore;
+  getRedisStore() {
+    return this.redisStore;
   }
 }

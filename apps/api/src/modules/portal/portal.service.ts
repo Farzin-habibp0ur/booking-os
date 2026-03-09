@@ -1,10 +1,14 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma.service';
+import { BookingService } from '../booking/booking.service';
 import { UpdatePortalProfileDto } from './dto';
 
 @Injectable()
 export class PortalService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private bookingService: BookingService,
+  ) {}
 
   async getProfile(customerId: string, businessId: string) {
     const customer = await this.prisma.customer.findFirst({
@@ -100,6 +104,65 @@ export class PortalService {
       },
       orderBy: { startTime: 'asc' },
       take: 5,
+    });
+  }
+
+  async cancelBooking(customerId: string, businessId: string, bookingId: string, reason?: string) {
+    // Verify booking belongs to this customer AND business (tenant isolation)
+    const booking = await this.prisma.booking.findFirst({
+      where: { id: bookingId, customerId, businessId },
+    });
+    if (!booking) throw new NotFoundException('Booking not found');
+
+    // Check cancellable status
+    if (!['PENDING', 'CONFIRMED'].includes(booking.status)) {
+      throw new ConflictException(`Cannot cancel a booking with status ${booking.status}`);
+    }
+
+    // Check cancellation policy
+    const policy = await this.bookingService.checkPolicyAllowed(businessId, bookingId, 'cancel');
+    if (!policy.allowed) {
+      throw new ForbiddenException(policy.reason || 'Cancellation not allowed');
+    }
+
+    return this.bookingService.updateStatus(businessId, bookingId, 'CANCELLED', {
+      reason: reason || 'Cancelled by customer via portal',
+    });
+  }
+
+  async rescheduleBooking(customerId: string, businessId: string, bookingId: string, newStartTime: string) {
+    // Verify booking belongs to this customer AND business (tenant isolation)
+    const booking = await this.prisma.booking.findFirst({
+      where: { id: bookingId, customerId, businessId },
+      include: { service: { select: { durationMins: true } } },
+    });
+    if (!booking) throw new NotFoundException('Booking not found');
+
+    // Check reschedulable status
+    if (!['PENDING', 'CONFIRMED'].includes(booking.status)) {
+      throw new ConflictException(`Cannot reschedule a booking with status ${booking.status}`);
+    }
+
+    // Check reschedule policy
+    const policy = await this.bookingService.checkPolicyAllowed(businessId, bookingId, 'reschedule');
+    if (!policy.allowed) {
+      throw new ForbiddenException(policy.reason || 'Rescheduling not allowed');
+    }
+
+    const newStart = new Date(newStartTime);
+    const durationMins = (booking as any).service?.durationMins || 30;
+    const newEnd = new Date(newStart.getTime() + durationMins * 60000);
+
+    return this.prisma.booking.update({
+      where: { id: bookingId },
+      data: {
+        startTime: newStart,
+        endTime: newEnd,
+      },
+      include: {
+        service: { select: { name: true, durationMins: true, price: true } },
+        staff: { select: { name: true } },
+      },
     });
   }
 }

@@ -2,7 +2,7 @@
 
 > **Purpose:** This document gives full context on the Booking OS platform — what it is, what's been built, how it's structured, and what's left to build. Share this with an AI assistant or new developer to get productive immediately.
 >
-> **Last updated:** March 9, 2026 (All phases COMPLETE — A through E, all 15 prompts done — ~5,003 total tests across 319 test files, 60 Prisma models, 44 migrations)
+> **Last updated:** March 9, 2026 (All phases COMPLETE — A through E, all 15 prompts done + Final Fixes — ~4,900+ total tests across 321 test files, 60 Prisma models, 44 migrations)
 
 ---
 
@@ -47,7 +47,7 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 - **Billing** — Stripe integration (Starter/Professional/Enterprise plans), checkout, customer portal, webhooks, deposit collection, dunning email flow, referral credits
 - **Calendar sync** — Google Calendar + Outlook OAuth integration, iCal feed generation
 - **Public booking portal** — Customer-facing booking page at `/book/{slug}` with service selection, availability, booking, waitlist join
-- **Customer self-service portal** — Phone OTP (WhatsApp) and email magic link auth, customer dashboard with upcoming bookings, booking history with pagination/filters, profile management with notification preferences
+- **Customer self-service portal** — Phone OTP (WhatsApp) and email magic link auth, customer dashboard with upcoming bookings, booking history with pagination/filters, profile management with notification preferences, self-service cancel & reschedule with policy enforcement
 - **Self-serve links** — Token-based reschedule, cancel, waitlist claim, and quote approval pages
 - **Waitlist** — Auto-offers on cancellation, token-based 1-tap claim, configurable offer count/expiry/quiet hours
 - **Campaigns** — Audience segmentation, template-based bulk messaging, throttled dispatch, delivery tracking, recurring schedules (daily/weekly/biweekly/monthly)
@@ -443,7 +443,7 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 | **Content Queue** | `/content-queue` | Content draft approval queue: create, list, get, update, approve, reject, bulk-approve, bulk-reject, stats (9 endpoints) |
 | **Marketing Agent** | — (internal) | 12 autonomous marketing agents (6 content, 2 distribution, 4 analytics) registered with AgentFrameworkService |
 | **Email Sequences** | `/email-sequences` | Email drip campaigns: CRUD, stats, enroll, enrollments, cancel/pause/resume, seed (12 endpoints). 7 default sequences |
-| **Portal** | `/portal` | Customer self-service portal: OTP auth (WhatsApp), magic link auth (email), profile, bookings (paginated), upcoming. PortalGuard with portal JWT (24h, type: 'portal') |
+| **Portal** | `/portal` | Customer self-service portal: OTP auth (WhatsApp), magic link auth (email), profile, bookings (paginated), upcoming, cancel & reschedule with policy checks. OTP/blacklist backed by Redis with in-memory fallback. PortalGuard with portal JWT (24h, type: 'portal') |
 | **Export** | `/customers/export`, `/bookings/export`, `/reports/:type/export` | CSV/PDF export for customers, bookings, and all 10 report types |
 
 ### Auth & Multi-tenancy
@@ -476,7 +476,7 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 | Quote | `/manage/quote/[token]` | Quote approval page |
 | Portal Login | `/portal/[slug]` | Customer portal login (phone OTP + email magic link) |
 | Portal Dashboard | `/portal/[slug]/dashboard` | Customer welcome page, upcoming bookings, quick actions |
-| Portal Bookings | `/portal/[slug]/bookings` | Customer booking history with status filters, pagination |
+| Portal Bookings | `/portal/[slug]/bookings` | Customer booking history with status filters, pagination, cancel & reschedule modals |
 | Portal Profile | `/portal/[slug]/profile` | Customer profile editor with stats and notification prefs |
 
 ### Protected Pages

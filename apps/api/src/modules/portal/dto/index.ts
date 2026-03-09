@@ -1,4 +1,12 @@
-import { IsString, IsNotEmpty, Length, IsEmail, IsOptional, IsBoolean } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  Length,
+  IsEmail,
+  IsOptional,
+  IsBoolean,
+  IsISO8601,
+} from 'class-validator';
 
 export class RequestOtpDto {
   @IsString()
@@ -53,4 +61,16 @@ export class UpdatePortalProfileDto {
   @IsOptional()
   @IsBoolean()
   notifyEmail?: boolean;
+}
+
+export class CancelBookingDto {
+  @IsOptional()
+  @IsString()
+  reason?: string;
+}
+
+export class RescheduleBookingDto {
+  @IsISO8601()
+  @IsNotEmpty()
+  newStartTime!: string;
 }

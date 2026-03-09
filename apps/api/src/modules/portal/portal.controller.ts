@@ -1,9 +1,16 @@
-import { Controller, Post, Get, Patch, Body, Query, UseGuards, Req } from '@nestjs/common';
+import { Controller, Post, Get, Patch, Body, Query, Param, UseGuards, Req } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { PortalAuthService } from './portal-auth.service';
 import { PortalService } from './portal.service';
 import { PortalGuard } from './portal-auth.guard';
-import { RequestOtpDto, VerifyOtpDto, RequestMagicLinkDto, UpdatePortalProfileDto } from './dto';
+import {
+  RequestOtpDto,
+  VerifyOtpDto,
+  RequestMagicLinkDto,
+  UpdatePortalProfileDto,
+  CancelBookingDto,
+  RescheduleBookingDto,
+} from './dto';
 
 @Controller('portal')
 export class PortalController {
@@ -64,5 +71,19 @@ export class PortalController {
   getUpcoming(@Req() req: any) {
     const { customerId, businessId } = req.portalUser;
     return this.portalService.getUpcoming(customerId, businessId);
+  }
+
+  @Post('bookings/:id/cancel')
+  @UseGuards(PortalGuard)
+  cancelBooking(@Req() req: any, @Param('id') id: string, @Body() dto: CancelBookingDto) {
+    const { customerId, businessId } = req.portalUser;
+    return this.portalService.cancelBooking(customerId, businessId, id, dto.reason);
+  }
+
+  @Post('bookings/:id/reschedule')
+  @UseGuards(PortalGuard)
+  rescheduleBooking(@Req() req: any, @Param('id') id: string, @Body() dto: RescheduleBookingDto) {
+    const { customerId, businessId } = req.portalUser;
+    return this.portalService.rescheduleBooking(customerId, businessId, id, dto.newStartTime);
   }
 }

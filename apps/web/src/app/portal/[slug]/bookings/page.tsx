@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Calendar, Clock, DollarSign, User } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, DollarSign, User, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { statusBadgeClasses } from '@/lib/design-tokens';
 
@@ -22,6 +22,24 @@ function portalFetch(path: string) {
   });
 }
 
+function portalPost(path: string, body: any) {
+  const token = typeof window !== 'undefined' ? sessionStorage.getItem('portal-token') : null;
+  return fetch(`${API_URL}${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify(body),
+  }).then(async (r) => {
+    if (r.status === 401) {
+      sessionStorage.removeItem('portal-token');
+      window.location.href = `/portal/${window.location.pathname.split('/')[2]}`;
+      throw new Error('Unauthorized');
+    }
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.message || 'Request failed');
+    return data;
+  });
+}
+
 type StatusFilter = '' | 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED';
 
 const STATUS_FILTERS: { value: StatusFilter; label: string }[] = [
@@ -38,6 +56,11 @@ export default function PortalBookingsPage() {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('');
   const [page, setPage] = useState(1);
+  const [cancelModal, setCancelModal] = useState<any>(null);
+  const [rescheduleModal, setRescheduleModal] = useState<any>(null);
+  const [rescheduleDate, setRescheduleDate] = useState('');
+  const [actionLoading, setActionLoading] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   useEffect(() => {
     const token = sessionStorage.getItem('portal-token');
@@ -56,6 +79,39 @@ export default function PortalBookingsPage() {
       .then(setBookings)
       .catch(() => {})
       .finally(() => setLoading(false));
+  };
+
+  const handleCancel = async (reason?: string) => {
+    if (!cancelModal) return;
+    setActionLoading(true);
+    setActionError(null);
+    try {
+      await portalPost(`/portal/bookings/${cancelModal.id}/cancel`, { reason });
+      setCancelModal(null);
+      loadBookings();
+    } catch (err: any) {
+      setActionError(err.message || 'Failed to cancel booking');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleReschedule = async () => {
+    if (!rescheduleModal || !rescheduleDate) return;
+    setActionLoading(true);
+    setActionError(null);
+    try {
+      await portalPost(`/portal/bookings/${rescheduleModal.id}/reschedule`, {
+        newStartTime: rescheduleDate,
+      });
+      setRescheduleModal(null);
+      setRescheduleDate('');
+      loadBookings();
+    } catch (err: any) {
+      setActionError(err.message || 'Failed to reschedule booking');
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   return (
@@ -149,6 +205,33 @@ export default function PortalBookingsPage() {
                   )}
                 </div>
               </div>
+              {(b.status === 'PENDING' || b.status === 'CONFIRMED') && (
+                <div className="flex items-center gap-3 mt-3">
+                  <button
+                    onClick={() => {
+                      setCancelModal(b);
+                      setActionError(null);
+                    }}
+                    className="text-xs text-red-600 hover:text-red-700 font-medium"
+                    data-testid="cancel-btn"
+                  >
+                    Cancel
+                  </button>
+                  {b.status === 'CONFIRMED' && (
+                    <button
+                      onClick={() => {
+                        setRescheduleModal(b);
+                        setRescheduleDate('');
+                        setActionError(null);
+                      }}
+                      className="text-xs text-sage-600 hover:text-sage-700 font-medium"
+                      data-testid="reschedule-btn"
+                    >
+                      Reschedule
+                    </button>
+                  )}
+                </div>
+              )}
               {b.status === 'COMPLETED' && (
                 <button
                   onClick={() => router.push(`/book/${slug}?service=${b.service?.name}`)}
@@ -183,6 +266,86 @@ export default function PortalBookingsPage() {
           >
             Next
           </button>
+        </div>
+      )}
+      {/* Cancel Modal */}
+      {cancelModal && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center" data-testid="cancel-modal">
+          <div className="bg-white rounded-2xl shadow-soft p-6 w-full max-w-sm mx-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold text-slate-900">Cancel Booking</h3>
+              <button onClick={() => setCancelModal(null)} className="p-1 hover:bg-slate-100 rounded-lg">
+                <X size={16} className="text-slate-400" />
+              </button>
+            </div>
+            <p className="text-xs text-slate-500 mb-3">
+              Are you sure you want to cancel your booking for <span className="font-medium text-slate-700">{cancelModal.service?.name}</span>?
+            </p>
+            <textarea
+              id="cancel-reason"
+              placeholder="Reason (optional)"
+              className="w-full bg-slate-50 border-transparent focus:bg-white focus:ring-2 focus:ring-sage-500 rounded-xl text-xs p-3 resize-none"
+              rows={3}
+            />
+            {actionError && <p className="text-red-600 text-xs mt-2">{actionError}</p>}
+            <div className="flex justify-end gap-2 mt-4">
+              <button
+                onClick={() => setCancelModal(null)}
+                className="px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  const reason = (document.getElementById('cancel-reason') as HTMLTextAreaElement)?.value;
+                  handleCancel(reason || undefined);
+                }}
+                disabled={actionLoading}
+                className="px-3 py-1.5 text-xs bg-red-600 hover:bg-red-700 text-white rounded-xl transition-colors disabled:opacity-50"
+              >
+                {actionLoading ? 'Cancelling...' : 'Confirm Cancel'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reschedule Modal */}
+      {rescheduleModal && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center" data-testid="reschedule-modal">
+          <div className="bg-white rounded-2xl shadow-soft p-6 w-full max-w-sm mx-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold text-slate-900">Reschedule Booking</h3>
+              <button onClick={() => setRescheduleModal(null)} className="p-1 hover:bg-slate-100 rounded-lg">
+                <X size={16} className="text-slate-400" />
+              </button>
+            </div>
+            <p className="text-xs text-slate-500 mb-3">
+              Select a new date and time for <span className="font-medium text-slate-700">{rescheduleModal.service?.name}</span>
+            </p>
+            <input
+              type="datetime-local"
+              value={rescheduleDate}
+              onChange={(e) => setRescheduleDate(e.target.value)}
+              className="w-full bg-slate-50 border-transparent focus:bg-white focus:ring-2 focus:ring-sage-500 rounded-xl text-xs p-3"
+            />
+            {actionError && <p className="text-red-600 text-xs mt-2">{actionError}</p>}
+            <div className="flex justify-end gap-2 mt-4">
+              <button
+                onClick={() => setRescheduleModal(null)}
+                className="px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleReschedule}
+                disabled={actionLoading || !rescheduleDate}
+                className="px-3 py-1.5 text-xs bg-sage-600 hover:bg-sage-700 text-white rounded-xl transition-colors disabled:opacity-50"
+              >
+                {actionLoading ? 'Rescheduling...' : 'Confirm Reschedule'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
