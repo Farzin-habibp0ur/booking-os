@@ -117,7 +117,7 @@ describe('WellnessIntakeCard', () => {
   });
 
   it('saves intake form', async () => {
-    const { api } = require('@/lib/api');
+    const { api } = jest.requireMock<typeof import('@/lib/api')>('@/lib/api');
     const onUpdated = jest.fn();
     render(<WellnessIntakeCard customer={emptyCustomer} onUpdated={onUpdated} />);
     fireEvent.click(screen.getByLabelText('Edit intake'));

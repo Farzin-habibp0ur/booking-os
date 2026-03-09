@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 const mockInit = jest.fn();
 const mockCapture = jest.fn();
 const mockIdentify = jest.fn();
