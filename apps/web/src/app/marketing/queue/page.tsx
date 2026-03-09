@@ -78,7 +78,7 @@ const CHANNEL_LABELS: Record<string, string> = {
 
 export default function ContentQueuePage() {
   const { t } = useI18n();
-  const { addToast } = useToast();
+  const { toast } = useToast();
   const [drafts, setDrafts] = useState<ContentDraft[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [total, setTotal] = useState(0);
@@ -101,8 +101,8 @@ export default function ContentQueuePage() {
       params.set('take', '50');
 
       const [draftsRes, statsRes] = await Promise.all([
-        api.get(`/content-queue?${params.toString()}`),
-        api.get('/content-queue/stats'),
+        api.get<{ data: ContentDraft[]; total: number }>(`/content-queue?${params.toString()}`),
+        api.get<Stats>('/content-queue/stats'),
       ]);
       setDrafts(draftsRes.data);
       setTotal(draftsRes.total);
@@ -121,10 +121,10 @@ export default function ContentQueuePage() {
   const handleApprove = async (id: string) => {
     try {
       await api.post(`/content-queue/${id}/approve`, {});
-      addToast('Content approved', 'success');
+      toast('Content approved', 'success');
       fetchDrafts();
     } catch {
-      addToast('Failed to approve', 'error');
+      toast('Failed to approve', 'error');
     }
   };
 
@@ -132,23 +132,23 @@ export default function ContentQueuePage() {
     if (!rejectNote.trim()) return;
     try {
       await api.post(`/content-queue/${id}/reject`, { reviewNote: rejectNote });
-      addToast('Content rejected', 'success');
+      toast('Content rejected', 'success');
       setRejectNoteId(null);
       setRejectNote('');
       fetchDrafts();
     } catch {
-      addToast('Failed to reject', 'error');
+      toast('Failed to reject', 'error');
     }
   };
 
   const handleBulkApprove = async () => {
     try {
       await api.post('/content-queue/bulk-approve', { ids: Array.from(selectedIds) });
-      addToast(`${selectedIds.size} items approved`, 'success');
+      toast(`${selectedIds.size} items approved`, 'success');
       setSelectedIds(new Set());
       fetchDrafts();
     } catch {
-      addToast('Failed to bulk approve', 'error');
+      toast('Failed to bulk approve', 'error');
     }
   };
 
@@ -160,11 +160,11 @@ export default function ContentQueuePage() {
         ids: Array.from(selectedIds),
         reviewNote: note,
       });
-      addToast(`${selectedIds.size} items rejected`, 'success');
+      toast(`${selectedIds.size} items rejected`, 'success');
       setSelectedIds(new Set());
       fetchDrafts();
     } catch {
-      addToast('Failed to bulk reject', 'error');
+      toast('Failed to bulk reject', 'error');
     }
   };
 

@@ -66,7 +66,7 @@ const CATEGORY_STYLES: Record<string, string> = {
 type TabFilter = 'all' | 'content' | 'distribution' | 'analytics';
 
 export default function MarketingAgentsPage() {
-  const { addToast } = useToast();
+  const { toast } = useToast();
   const [configs, setConfigs] = useState<AgentConfig[]>([]);
   const [runs, setRuns] = useState<AgentRun[]>([]);
   const [loading, setLoading] = useState(true);
@@ -77,11 +77,15 @@ export default function MarketingAgentsPage() {
     try {
       setLoading(true);
       const [configsRes, runsRes] = await Promise.all([
-        api.get('/agents/config'),
-        api.get('/agents/runs?pageSize=100'),
+        api.get<AgentConfig[] | { items: AgentConfig[] }>('/agents/config'),
+        api.get<AgentRun[] | { items: AgentRun[] }>('/agents/runs?pageSize=100'),
       ]);
-      setConfigs(Array.isArray(configsRes) ? configsRes : configsRes.items || []);
-      setRuns(Array.isArray(runsRes) ? runsRes : runsRes.items || []);
+      setConfigs(
+        Array.isArray(configsRes)
+          ? configsRes
+          : (configsRes as { items: AgentConfig[] }).items || [],
+      );
+      setRuns(Array.isArray(runsRes) ? runsRes : (runsRes as { items: AgentRun[] }).items || []);
     } catch {
       // handled by api client
     } finally {
@@ -96,10 +100,10 @@ export default function MarketingAgentsPage() {
   const handleToggle = async (agentType: string, isEnabled: boolean) => {
     try {
       await api.patch(`/agents/config/${agentType}`, { isEnabled: !isEnabled });
-      addToast(`Agent ${!isEnabled ? 'enabled' : 'disabled'}`, 'success');
+      toast(`Agent ${!isEnabled ? 'enabled' : 'disabled'}`, 'success');
       fetchData();
     } catch {
-      addToast('Failed to update agent', 'error');
+      toast('Failed to update agent', 'error');
     }
   };
 
@@ -107,10 +111,10 @@ export default function MarketingAgentsPage() {
     try {
       setTriggeringAgent(agentType);
       await api.post(`/agents/${agentType}/trigger`, {});
-      addToast('Agent triggered successfully', 'success');
+      toast('Agent triggered successfully', 'success');
       fetchData();
     } catch {
-      addToast('Failed to trigger agent', 'error');
+      toast('Failed to trigger agent', 'error');
     } finally {
       setTriggeringAgent(null);
     }

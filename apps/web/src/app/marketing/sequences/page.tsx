@@ -65,7 +65,7 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 export default function EmailSequencesPage() {
-  const { addToast } = useToast();
+  const { toast } = useToast();
   const [sequences, setSequences] = useState<EmailSequence[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -75,8 +75,8 @@ export default function EmailSequencesPage() {
     try {
       setLoading(true);
       const [seqRes, statsRes] = await Promise.all([
-        api.get('/email-sequences'),
-        api.get('/email-sequences/stats'),
+        api.get<EmailSequence[]>('/email-sequences'),
+        api.get<Stats>('/email-sequences/stats'),
       ]);
       setSequences(Array.isArray(seqRes) ? seqRes : []);
       setStats(statsRes);
@@ -94,10 +94,10 @@ export default function EmailSequencesPage() {
   const handleToggle = async (id: string, isActive: boolean) => {
     try {
       await api.patch(`/email-sequences/${id}`, { isActive: !isActive });
-      addToast(`Sequence ${!isActive ? 'activated' : 'deactivated'}`, 'success');
+      toast(`Sequence ${!isActive ? 'activated' : 'deactivated'}`, 'success');
       fetchData();
     } catch {
-      addToast('Failed to update sequence', 'error');
+      toast('Failed to update sequence', 'error');
     }
   };
 
