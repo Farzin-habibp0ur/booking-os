@@ -32,6 +32,12 @@ const mockStripeInstance = {
       id: 'sub_test123',
       status: 'active',
       current_period_end: Math.floor(Date.now() / 1000) + 86400 * 30,
+      items: { data: [{ id: 'si_item1', price: { recurring: { interval: 'month' } } }] },
+    }),
+    update: jest.fn().mockResolvedValue({
+      id: 'sub_test123',
+      status: 'active',
+      current_period_end: Math.floor(Date.now() / 1000) + 86400 * 365,
     }),
   },
   paymentIntents: {
@@ -577,6 +583,119 @@ describe('BillingService', () => {
 
       // Should not throw even in production — Stripe is not enabled
       expect(() => service2.onModuleInit()).not.toThrow();
+    });
+  });
+
+  describe('switchToAnnual', () => {
+    it('calls Stripe subscription update with annual price', async () => {
+      prisma.subscription.findUnique.mockResolvedValue({
+        id: 'sub1',
+        businessId: 'biz1',
+        stripeSubscriptionId: 'sub_test123',
+        plan: 'professional',
+      } as any);
+      prisma.subscription.update.mockResolvedValue({} as any);
+
+      const result = await service.switchToAnnual('biz1');
+
+      expect(mockStripeInstance.subscriptions.update).toHaveBeenCalledWith('sub_test123', {
+        items: [{ id: 'si_item1', price: 'price_pro_a' }],
+        proration_behavior: 'create_prorations',
+      });
+      expect(result.savings).toBeDefined();
+      expect(result.savings.savingsPercent).toBeGreaterThan(0);
+    });
+
+    it('throws when no subscription found', async () => {
+      prisma.subscription.findUnique.mockResolvedValue(null);
+
+      await expect(service.switchToAnnual('biz1')).rejects.toThrow(
+        'No active subscription found',
+      );
+    });
+  });
+
+  describe('switchToMonthly', () => {
+    it('calls Stripe subscription update with monthly price', async () => {
+      prisma.subscription.findUnique.mockResolvedValue({
+        id: 'sub1',
+        businessId: 'biz1',
+        stripeSubscriptionId: 'sub_test123',
+        plan: 'professional',
+      } as any);
+      prisma.subscription.update.mockResolvedValue({} as any);
+
+      await service.switchToMonthly('biz1');
+
+      expect(mockStripeInstance.subscriptions.update).toHaveBeenCalledWith('sub_test123', {
+        items: [{ id: 'si_item1', price: 'price_pro_m' }],
+        proration_behavior: 'create_prorations',
+      });
+    });
+
+    it('throws when no subscription found', async () => {
+      prisma.subscription.findUnique.mockResolvedValue(null);
+
+      await expect(service.switchToMonthly('biz1')).rejects.toThrow(
+        'No active subscription found',
+      );
+    });
+  });
+
+  describe('calculateAnnualSavings', () => {
+    it('returns correct savings for starter plan', () => {
+      const result = service.calculateAnnualSavings('starter');
+      expect(result.monthlyTotal).toBe(588); // 49 * 12
+      expect(result.annualPrice).toBe(468); // 39 * 12
+      expect(result.savingsAmount).toBe(120);
+      expect(result.savingsPercent).toBe(20);
+    });
+
+    it('returns correct savings for professional plan', () => {
+      const result = service.calculateAnnualSavings('professional');
+      expect(result.monthlyTotal).toBe(1188); // 99 * 12
+      expect(result.annualPrice).toBe(948); // 79 * 12
+      expect(result.savingsAmount).toBe(240);
+      expect(result.savingsPercent).toBe(20);
+    });
+
+    it('returns correct savings for enterprise plan', () => {
+      const result = service.calculateAnnualSavings('enterprise');
+      expect(result.monthlyTotal).toBe(2388); // 199 * 12
+      expect(result.annualPrice).toBe(1908); // 159 * 12
+      expect(result.savingsAmount).toBe(480);
+      expect(result.savingsPercent).toBe(20);
+    });
+  });
+
+  describe('getCurrentBillingInterval', () => {
+    it('returns monthly for monthly interval', async () => {
+      prisma.subscription.findUnique.mockResolvedValue({
+        stripeSubscriptionId: 'sub_test123',
+      } as any);
+
+      const result = await service.getCurrentBillingInterval('biz1');
+      expect(result).toBe('monthly');
+    });
+
+    it('returns annual for yearly interval', async () => {
+      prisma.subscription.findUnique.mockResolvedValue({
+        stripeSubscriptionId: 'sub_test123',
+      } as any);
+      mockStripeInstance.subscriptions.retrieve.mockResolvedValueOnce({
+        id: 'sub_test123',
+        items: { data: [{ id: 'si_item1', price: { recurring: { interval: 'year' } } }] },
+      });
+
+      const result = await service.getCurrentBillingInterval('biz1');
+      expect(result).toBe('annual');
+    });
+
+    it('returns monthly when no subscription', async () => {
+      prisma.subscription.findUnique.mockResolvedValue(null);
+
+      const result = await service.getCurrentBillingInterval('biz1');
+      expect(result).toBe('monthly');
     });
   });
 

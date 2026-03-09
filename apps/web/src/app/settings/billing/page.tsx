@@ -6,7 +6,16 @@ import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { useI18n } from '@/lib/i18n';
-import { CreditCard, Loader2, Check, ExternalLink, ArrowLeft, Sparkles, Clock } from 'lucide-react';
+import {
+  CreditCard,
+  Loader2,
+  Check,
+  ExternalLink,
+  ArrowLeft,
+  Sparkles,
+  Clock,
+  TrendingDown,
+} from 'lucide-react';
 
 type PlanTier = 'starter' | 'professional' | 'enterprise';
 type BillingInterval = 'monthly' | 'annual';
@@ -116,6 +125,15 @@ export default function BillingPage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [billingInterval, setBillingInterval] = useState<BillingInterval>('monthly');
+  const [currentInterval, setCurrentInterval] = useState<BillingInterval>('monthly');
+  const [savings, setSavings] = useState<{
+    monthlyTotal: number;
+    annualPrice: number;
+    savingsAmount: number;
+    savingsPercent: number;
+  } | null>(null);
+  const [showSwitchModal, setShowSwitchModal] = useState<'annual' | 'monthly' | null>(null);
+  const [switching, setSwitching] = useState(false);
 
   useEffect(() => {
     if (user && user.role !== 'ADMIN') {
@@ -127,6 +145,17 @@ export default function BillingPage() {
       .then((status) => {
         setBilling(status);
         setLoaded(true);
+        // Fetch savings and current interval
+        api
+          .get<{ monthlyTotal: number; annualPrice: number; savingsAmount: number; savingsPercent: number }>(
+            '/billing/annual-savings',
+          )
+          .then(setSavings)
+          .catch(() => {});
+        api
+          .get<{ interval: BillingInterval }>('/billing/billing-interval')
+          .then((r) => setCurrentInterval(r.interval))
+          .catch(() => {});
       })
       .catch(() => {
         setLoaded(true);
@@ -167,6 +196,22 @@ export default function BillingPage() {
     } catch {
       setError(t('billing.portal_error'));
       setActionLoading(null);
+    }
+  };
+
+  const handleSwitch = async (target: 'annual' | 'monthly') => {
+    setSwitching(true);
+    try {
+      await api.post(`/billing/switch-${target}`, {});
+      setCurrentInterval(target);
+      setShowSwitchModal(null);
+      // Reload billing status
+      const status = await api.get<BillingStatus>('/billing/status');
+      setBilling(status);
+    } catch {
+      setError(`Failed to switch to ${target} billing`);
+    } finally {
+      setSwitching(false);
     }
   };
 
@@ -298,6 +343,55 @@ export default function BillingPage() {
         </div>
       )}
 
+      {/* Annual savings banner */}
+      {subscription && subscription.status === 'active' && savings && currentInterval === 'monthly' && (
+        <div
+          className="bg-lavender-50 border border-lavender-200 rounded-xl p-4 mb-6 flex items-center justify-between"
+          data-testid="savings-banner"
+        >
+          <div className="flex items-center gap-3">
+            <TrendingDown size={20} className="text-lavender-600 shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-lavender-800">
+                Switch to annual billing and save ${savings.savingsAmount}/year
+              </p>
+              <p className="text-xs text-lavender-600 mt-0.5">
+                Pay ${savings.annualPrice}/yr instead of ${savings.monthlyTotal}/yr
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setShowSwitchModal('annual')}
+            className="bg-lavender-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-lavender-700 transition-colors shrink-0"
+            data-testid="btn-switch-annual"
+          >
+            Switch to Annual
+          </button>
+        </div>
+      )}
+
+      {/* Annual savings success card */}
+      {subscription && subscription.status === 'active' && savings && currentInterval === 'annual' && (
+        <div
+          className="bg-sage-50 border border-sage-200 rounded-xl p-4 mb-6 flex items-center justify-between"
+          data-testid="annual-savings-card"
+        >
+          <div className="flex items-center gap-3">
+            <Check size={20} className="text-sage-600 shrink-0" />
+            <p className="text-sm font-medium text-sage-800">
+              You&apos;re saving ${savings.savingsAmount}/year with annual billing
+            </p>
+          </div>
+          <button
+            onClick={() => setShowSwitchModal('monthly')}
+            className="text-xs text-slate-500 hover:text-slate-700 underline transition-colors"
+            data-testid="btn-switch-monthly"
+          >
+            Switch to monthly
+          </button>
+        </div>
+      )}
+
       {/* Billing interval toggle */}
       <div className="flex items-center justify-center gap-3 mb-6">
         <button
@@ -394,6 +488,47 @@ export default function BillingPage() {
           );
         })}
       </div>
+
+      {/* Switch confirmation modal */}
+      {showSwitchModal && (
+        <div
+          className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+          data-testid="switch-modal"
+        >
+          <div className="bg-white rounded-2xl shadow-soft p-6 w-full max-w-sm mx-4">
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">
+              {showSwitchModal === 'annual'
+                ? 'Switch to Annual Billing'
+                : 'Switch to Monthly Billing'}
+            </h3>
+            <p className="text-sm text-slate-600 mb-4">
+              {showSwitchModal === 'annual'
+                ? `You'll save $${savings?.savingsAmount || 0}/year. Your card will be prorated for the remaining billing period.`
+                : 'Your subscription will switch to monthly billing. This will increase your annual cost.'}
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowSwitchModal(null)}
+                className="flex-1 border border-slate-200 text-slate-600 py-2 rounded-xl text-sm hover:bg-slate-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleSwitch(showSwitchModal)}
+                disabled={switching}
+                className={`flex-1 py-2 rounded-xl text-sm font-medium transition-colors disabled:opacity-50 ${
+                  showSwitchModal === 'annual'
+                    ? 'bg-lavender-600 text-white hover:bg-lavender-700'
+                    : 'bg-slate-900 text-white hover:bg-slate-800'
+                }`}
+                data-testid="btn-confirm-switch"
+              >
+                {switching ? 'Switching...' : 'Confirm'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

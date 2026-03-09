@@ -46,6 +46,7 @@ jest.mock('lucide-react', () => ({
   ArrowLeft: () => <span data-testid="arrow-left-icon" />,
   Sparkles: () => <span data-testid="sparkles-icon" />,
   Clock: () => <span data-testid="clock-icon" />,
+  TrendingDown: () => <span data-testid="trending-down-icon" />,
 }));
 
 import { api } from '@/lib/api';
@@ -311,6 +312,124 @@ describe('BillingPage', () => {
       writable: true,
       value: originalLocation,
     });
+  });
+
+  test('shows savings banner for monthly subscribers', async () => {
+    mockApi.get.mockImplementation((url: string) => {
+      if (url === '/billing/status') return Promise.resolve(ACTIVE_SUB_BILLING);
+      if (url === '/billing/annual-savings')
+        return Promise.resolve({
+          monthlyTotal: 1188,
+          annualPrice: 948,
+          savingsAmount: 240,
+          savingsPercent: 20,
+        });
+      if (url === '/billing/billing-interval') return Promise.resolve({ interval: 'monthly' });
+      return Promise.resolve({});
+    });
+
+    render(<BillingPage />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('savings-banner')).toBeInTheDocument();
+      expect(screen.getByText(/save \$240\/year/)).toBeInTheDocument();
+    });
+  });
+
+  test('shows annual savings card for annual subscribers', async () => {
+    mockApi.get.mockImplementation((url: string) => {
+      if (url === '/billing/status') return Promise.resolve(ACTIVE_SUB_BILLING);
+      if (url === '/billing/annual-savings')
+        return Promise.resolve({
+          monthlyTotal: 1188,
+          annualPrice: 948,
+          savingsAmount: 240,
+          savingsPercent: 20,
+        });
+      if (url === '/billing/billing-interval') return Promise.resolve({ interval: 'annual' });
+      return Promise.resolve({});
+    });
+
+    render(<BillingPage />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('annual-savings-card')).toBeInTheDocument();
+      expect(screen.getByText(/saving \$240\/year/)).toBeInTheDocument();
+    });
+  });
+
+  test('opens switch confirmation modal when Switch to Annual is clicked', async () => {
+    mockApi.get.mockImplementation((url: string) => {
+      if (url === '/billing/status') return Promise.resolve(ACTIVE_SUB_BILLING);
+      if (url === '/billing/annual-savings')
+        return Promise.resolve({
+          monthlyTotal: 1188,
+          annualPrice: 948,
+          savingsAmount: 240,
+          savingsPercent: 20,
+        });
+      if (url === '/billing/billing-interval') return Promise.resolve({ interval: 'monthly' });
+      return Promise.resolve({});
+    });
+
+    render(<BillingPage />);
+
+    await waitFor(() => screen.getByTestId('btn-switch-annual'));
+
+    await userEvent.click(screen.getByTestId('btn-switch-annual'));
+
+    expect(screen.getByTestId('switch-modal')).toBeInTheDocument();
+    expect(screen.getByText('Switch to Annual Billing')).toBeInTheDocument();
+  });
+
+  test('calls switch-annual API on confirmation', async () => {
+    mockApi.get.mockImplementation((url: string) => {
+      if (url === '/billing/status') return Promise.resolve(ACTIVE_SUB_BILLING);
+      if (url === '/billing/annual-savings')
+        return Promise.resolve({
+          monthlyTotal: 1188,
+          annualPrice: 948,
+          savingsAmount: 240,
+          savingsPercent: 20,
+        });
+      if (url === '/billing/billing-interval') return Promise.resolve({ interval: 'monthly' });
+      return Promise.resolve({});
+    });
+    mockApi.post.mockResolvedValue({});
+
+    render(<BillingPage />);
+
+    await waitFor(() => screen.getByTestId('btn-switch-annual'));
+    await userEvent.click(screen.getByTestId('btn-switch-annual'));
+    await userEvent.click(screen.getByTestId('btn-confirm-switch'));
+
+    await waitFor(() => {
+      expect(mockApi.post).toHaveBeenCalledWith('/billing/switch-annual', {});
+    });
+  });
+
+  test('opens switch to monthly modal when link is clicked', async () => {
+    mockApi.get.mockImplementation((url: string) => {
+      if (url === '/billing/status') return Promise.resolve(ACTIVE_SUB_BILLING);
+      if (url === '/billing/annual-savings')
+        return Promise.resolve({
+          monthlyTotal: 1188,
+          annualPrice: 948,
+          savingsAmount: 240,
+          savingsPercent: 20,
+        });
+      if (url === '/billing/billing-interval') return Promise.resolve({ interval: 'annual' });
+      return Promise.resolve({});
+    });
+
+    render(<BillingPage />);
+
+    await waitFor(() => screen.getByTestId('btn-switch-monthly'));
+
+    await userEvent.click(screen.getByTestId('btn-switch-monthly'));
+
+    expect(screen.getByTestId('switch-modal')).toBeInTheDocument();
+    expect(screen.getByText('Switch to Monthly Billing')).toBeInTheDocument();
   });
 
   test('calls portal API on manage billing click', async () => {

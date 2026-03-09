@@ -477,6 +477,105 @@ export class BillingService implements OnModuleInit {
     };
   }
 
+  /** Switch current subscription from monthly to annual billing */
+  async switchToAnnual(businessId: string) {
+    const stripe = this.requireStripe();
+
+    const subscription = await this.prisma.subscription.findUnique({
+      where: { businessId },
+    });
+    if (!subscription?.stripeSubscriptionId) {
+      throw new BadRequestException('No active subscription found');
+    }
+
+    const plan = normalizePlanTier(subscription.plan);
+    const planConfig = PLAN_CONFIGS[plan];
+    const annualPriceId = this.configService.get<string>(planConfig.stripePriceEnvAnnual);
+    if (!annualPriceId) throw new BadRequestException('Annual price not configured');
+
+    const stripeSub = await stripe.subscriptions.retrieve(subscription.stripeSubscriptionId);
+    const itemId = (stripeSub as any).items?.data?.[0]?.id;
+    if (!itemId) throw new BadRequestException('Subscription has no items');
+
+    const updated = await stripe.subscriptions.update(subscription.stripeSubscriptionId, {
+      items: [{ id: itemId, price: annualPriceId }],
+      proration_behavior: 'create_prorations',
+    });
+
+    await this.prisma.subscription.update({
+      where: { id: subscription.id },
+      data: {
+        currentPeriodEnd: new Date((updated as any).current_period_end * 1000),
+      },
+    });
+
+    const savings = this.calculateAnnualSavings(plan);
+    return { subscription: updated, savings };
+  }
+
+  /** Switch current subscription from annual to monthly billing */
+  async switchToMonthly(businessId: string) {
+    const stripe = this.requireStripe();
+
+    const subscription = await this.prisma.subscription.findUnique({
+      where: { businessId },
+    });
+    if (!subscription?.stripeSubscriptionId) {
+      throw new BadRequestException('No active subscription found');
+    }
+
+    const plan = normalizePlanTier(subscription.plan);
+    const planConfig = PLAN_CONFIGS[plan];
+    const monthlyPriceId = this.configService.get<string>(planConfig.stripePriceEnvMonthly);
+    if (!monthlyPriceId) throw new BadRequestException('Monthly price not configured');
+
+    const stripeSub = await stripe.subscriptions.retrieve(subscription.stripeSubscriptionId);
+    const itemId = (stripeSub as any).items?.data?.[0]?.id;
+    if (!itemId) throw new BadRequestException('Subscription has no items');
+
+    const updated = await stripe.subscriptions.update(subscription.stripeSubscriptionId, {
+      items: [{ id: itemId, price: monthlyPriceId }],
+      proration_behavior: 'create_prorations',
+    });
+
+    await this.prisma.subscription.update({
+      where: { id: subscription.id },
+      data: {
+        currentPeriodEnd: new Date((updated as any).current_period_end * 1000),
+      },
+    });
+
+    return { subscription: updated };
+  }
+
+  /** Calculate annual savings for a plan */
+  calculateAnnualSavings(plan: string) {
+    const tier = normalizePlanTier(plan);
+    const config = PLAN_CONFIGS[tier];
+    const monthlyTotal = config.monthlyPrice * 12;
+    const annualPrice = config.annualPrice * 12;
+    const savingsAmount = monthlyTotal - annualPrice;
+    const savingsPercent = Math.round((savingsAmount / monthlyTotal) * 100);
+
+    return { monthlyTotal, annualPrice, savingsAmount, savingsPercent };
+  }
+
+  /** Get current billing interval from Stripe subscription */
+  async getCurrentBillingInterval(businessId: string): Promise<'monthly' | 'annual'> {
+    const stripe = this.requireStripe();
+
+    const subscription = await this.prisma.subscription.findUnique({
+      where: { businessId },
+    });
+    if (!subscription?.stripeSubscriptionId) {
+      return 'monthly';
+    }
+
+    const stripeSub = await stripe.subscriptions.retrieve(subscription.stripeSubscriptionId);
+    const interval = (stripeSub as any).items?.data?.[0]?.price?.recurring?.interval;
+    return interval === 'year' ? 'annual' : 'monthly';
+  }
+
   /** Start a free trial for a business */
   async startTrial(businessId: string) {
     const trialEndsAt = new Date(Date.now() + TRIAL_DAYS * 24 * 60 * 60 * 1000);

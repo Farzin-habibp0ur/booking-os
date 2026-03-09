@@ -72,4 +72,34 @@ export class BillingController {
   createDeposit(@BusinessId() businessId: string, @Body() body: { bookingId: string }) {
     return this.billingService.createDepositPaymentIntent(businessId, body.bookingId);
   }
+
+  @Post('switch-annual')
+  @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+  @Roles('ADMIN')
+  switchToAnnual(@BusinessId() businessId: string) {
+    return this.billingService.switchToAnnual(businessId);
+  }
+
+  @Post('switch-monthly')
+  @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+  @Roles('ADMIN')
+  switchToMonthly(@BusinessId() businessId: string) {
+    return this.billingService.switchToMonthly(businessId);
+  }
+
+  @Get('annual-savings')
+  @UseGuards(AuthGuard('jwt'), TenantGuard)
+  getAnnualSavings(@BusinessId() businessId: string) {
+    return this.billingService.getBillingStatus(businessId).then((status) =>
+      this.billingService.calculateAnnualSavings(status.plan),
+    );
+  }
+
+  @Get('billing-interval')
+  @UseGuards(AuthGuard('jwt'), TenantGuard)
+  getBillingInterval(@BusinessId() businessId: string) {
+    return this.billingService.getCurrentBillingInterval(businessId).then((interval) => ({
+      interval,
+    }));
+  }
 }

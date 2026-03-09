@@ -2,7 +2,7 @@
 
 > **Purpose:** This document gives full context on the Booking OS platform — what it is, what's been built, how it's structured, and what's left to build. Share this with an AI assistant or new developer to get productive immediately.
 >
-> **Last updated:** March 9, 2026 (Phase C/D/E — C1 Testimonial System COMPLETE — ~4,577 total tests across 284 test files, 58 Prisma models, 41 migrations)
+> **Last updated:** March 9, 2026 (Phase C/D/E — C4 Annual Plan Engine COMPLETE — ~4,598 total tests across 285 test files, 58 Prisma models, 41 migrations)
 
 ---
 
@@ -779,6 +779,7 @@ Key groups (full list in `.env.example`):
 - **D5: Bookings Search, Sort & Filters** — COMPLETE. Server-side sorting on 6 fields (startTime, createdAt, customerName, serviceName, status, amount) with nested Prisma orderBy for relations. BookingQueryDto with @IsIn validators. Frontend: status chip bar (7 chips), inline staff filter dropdown, sortable column headers with server-side sort, Amount column, print button + print styles, Last 30 Days date preset. 20 new tests (8 service + 2 controller + 10 web).
 - **C5: Settings Consolidation** — COMPLETE. Settings hub promoted to primary position on settings page (above business info). 7 categorized cards (Account & Security, Operations, Communication, AI & Automation, Growth, Billing, Appearance) with role-based filtering. All 13 sub-pages already had back navigation. Page widened to max-w-4xl for grid. 22 new tests (14 config + 8 hub).
 - **C1: Testimonial Collection System** — COMPLETE. New Prisma model `Testimonial` (58th model) with status (PENDING/APPROVED/REJECTED/FEATURED), source (MANUAL/REQUESTED/IMPORTED). API module: CRUD + approve/reject/feature (max 6 with auto-demotion), sendRequest (NOTIFICATIONS queue email), findPublic (no auth, by slug). Frontend: `/testimonials` admin page with status tabs, grid cards, request modal with customer search + email preview. Reusable `TestimonialCard` component with star ratings, quote marks, action buttons, showActions prop. Public booking page `book/[slug]` "What Our Clients Say" section (up to 3 featured). Added to admin tools nav. 49 new tests (27 API + 22 web).
+- **C4: Annual Plan & Discount Engine** — COMPLETE. Added switchToAnnual/switchToMonthly (Stripe proration), calculateAnnualSavings (20% discount per plan), getCurrentBillingInterval to billing service. 4 new controller endpoints (switch-annual, switch-monthly, annual-savings, billing-interval). Frontend: savings banner for monthly subscribers, annual savings card for annual subscribers, switch confirmation modal with proration warning. BillingLifecycleService with @Cron daily jobs: annual renewal reminders (30 days before) and account anniversary celebration emails. 21 new tests (15 API + 6 web).
 
 ### Code Quality
 - **Error Handling Remediation** — COMPLETE (commit 1cf6f99). Replaced ~20 silent `.catch(() => {})` with logged warnings, queue processors throw on failure, NestJS proper exceptions, frontend toast wiring, waitlist loop resilience, WebSocket disconnect logging. +58 tests.
