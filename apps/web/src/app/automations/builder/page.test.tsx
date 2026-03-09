@@ -1,5 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import WorkflowBuilderPage, { serializeWorkflow } from './page';
+import WorkflowBuilderPage from './page';
+import { serializeWorkflow } from './serialize-workflow';
 
 jest.mock('@/lib/api', () => ({
   api: {
