@@ -2,7 +2,7 @@
 
 > **Purpose:** This document gives full context on the Booking OS platform — what it is, what's been built, how it's structured, and what's left to build. Share this with an AI assistant or new developer to get productive immediately.
 >
-> **Last updated:** March 9, 2026 (Phase A Product Polish A1-A4 COMPLETE — ~4,250+ total tests across 258 test files, 53 Prisma models, 38 migrations)
+> **Last updated:** March 9, 2026 (Phase A Product Polish A1-A5 COMPLETE — ~4,280+ total tests across 262 test files, 54 Prisma models, 39 migrations)
 
 ---
 
@@ -743,6 +743,7 @@ Key groups (full list in `.env.example`):
 - **A2: Navigation Simplification** — COMPLETE. 3-section sidebar nav (Workspace/Tools/Insights) per role mode via `mode-config.ts` sections. Settings in footer area. Mobile bottom tab bar + "More" sheet for overflow. 8 new section tests in mode-config, 4 new shell tests. 55 total tests across design-tokens, mode-config, and shell.
 - **A3: Onboarding Overhaul** — COMPLETE. Setup wizard consolidated to 6 steps with skip options and time estimates. Celebration UI with CSS confetti animation on final step. First-week checklist (5 items: send message, create booking, invite team, customize template, enable AI). Persistent sidebar onboarding checklist widget with "Complete Setup" CTA and server-side dismiss via API. 18 tests (8 setup wizard + 10 checklist widget).
 - **A4: Payment Recording & POS** — COMPLETE. Extended Payment model with manual payment fields (method, reference, notes, recordedById, businessId, customerId). New `payments` API module (51st module) with 5 endpoints: record, list, get, summary, update. RecordPaymentModal component with amount/method/reference/notes. Booking detail modal shows payment history and "Record Payment" button. Dashboard KPI strip shows "Revenue Today" with monthly subtitle. Migration `20260309004612_add_manual_payment_fields`. 40 tests (26 API + 14 web).
+- **A5: In-App Refunds** — COMPLETE. New Refund model with Stripe integration. Refunds API module (52nd module) with 3 endpoints: create refund, list refunds by payment, get refund. Stripe refund processing when payment has stripePaymentIntentId, graceful fallback for manual payments. Validates refund amount against remaining refundable balance. Updates payment status to REFUNDED or PARTIAL_REFUND. ActionHistory audit logging. RefundModal component with two-step confirmation flow (form → red-themed warning). Booking detail shows refund status badges and per-payment "Refund" button for admins. Migration `20260309_add_refund_model`. 30 tests (18 API + 12 web).
 
 ### Code Quality
 - **Error Handling Remediation** — COMPLETE (commit 1cf6f99). Replaced ~20 silent `.catch(() => {})` with logged warnings, queue processors throw on failure, NestJS proper exceptions, frontend toast wiring, waitlist loop resilience, WebSocket disconnect logging. +58 tests.
