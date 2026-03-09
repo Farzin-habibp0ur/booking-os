@@ -34,6 +34,7 @@ import {
   Package,
   Kanban,
   Compass,
+  FileText,
   Pin,
   Bookmark,
   Star,
@@ -172,6 +173,7 @@ function ShellInner({ children }: { children: ReactNode }) {
     { href: '/staff', label: t('nav.staff'), icon: UserCog, roles: ['ADMIN'] },
     { href: '/campaigns', label: 'Campaigns', icon: Megaphone, roles: ['ADMIN'] },
     { href: '/automations', label: 'Automations', icon: Zap, roles: ['ADMIN'] },
+    { href: '/marketing/queue', label: 'Content Queue', icon: FileText, roles: ['ADMIN'] },
     ...((user?.business?.packConfig as any)?.kanbanEnabled
       ? [
           {

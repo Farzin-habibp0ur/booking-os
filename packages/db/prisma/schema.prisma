@@ -66,6 +66,7 @@ model Business {
   staffServicePrices   StaffServicePrice[]
   payments             Payment[]
   refunds              Refund[]
+  contentDrafts        ContentDraft[]
 
   @@map("businesses")
 }
@@ -1188,4 +1189,29 @@ model StaffServicePrice {
   @@index([businessId])
   @@index([staffId])
   @@map("staff_service_prices")
+}
+
+model ContentDraft {
+  id            String    @id @default(uuid())
+  businessId    String
+  title         String
+  body          String    @db.Text
+  contentType   String
+  channel       String
+  pillar        String?
+  status        String    @default("PENDING_REVIEW")
+  agentId       String?
+  scheduledFor  DateTime?
+  publishedAt   DateTime?
+  reviewedById  String?
+  reviewNote    String?
+  metadata      Json?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id])
+
+  @@index([businessId])
+  @@index([businessId, status])
+  @@map("content_drafts")
 }
