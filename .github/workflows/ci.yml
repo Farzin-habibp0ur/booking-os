@@ -98,3 +98,23 @@ jobs:
         run: railway up --service api -p 37eeca20-7dfe-45d9-8d29-e902a545f475 -e production --detach
       - name: Deploy Web
         run: railway up --service web -p 37eeca20-7dfe-45d9-8d29-e902a545f475 -e production --detach
+
+  smoke-test:
+    name: Production Smoke Test
+    needs: deploy
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install jq
+        run: sudo apt-get install -y jq
+
+      - name: Wait for Railway deploy to go live
+        run: sleep 120
+
+      - name: Run smoke tests
+        run: |
+          chmod +x scripts/smoke-test.sh
+          ./scripts/smoke-test.sh https://businesscommandcentre.com

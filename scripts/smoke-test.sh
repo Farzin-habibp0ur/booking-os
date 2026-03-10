@@ -1,131 +1,174 @@
 #!/usr/bin/env bash
 # Booking OS — Production Smoke Test
 # Usage: ./scripts/smoke-test.sh [BASE_URL]
-# Example: ./scripts/smoke-test.sh https://api.businesscommandcentre.com/api/v1
+# Example: ./scripts/smoke-test.sh https://businesscommandcentre.com
 set -euo pipefail
 
-API="${1:-https://api.businesscommandcentre.com/api/v1}"
-WEB="${API%%/api/v1*}"
-# Derive web URL (strip api. prefix if present)
-WEB_URL="${WEB/api./}"
-if [[ "$WEB_URL" == "$WEB" ]]; then
-  # No api. prefix found — assume web is on root domain
-  WEB_URL="${WEB%%:*//}://${WEB#*://}"
+BASE="${1:-https://businesscommandcentre.com}"
+# Strip trailing slash
+BASE="${BASE%/}"
+
+# Derive API URL
+if [[ "$BASE" == */api/v1 ]]; then
+  API_URL="$BASE"
+  BASE="${BASE%%/api/v1*}"
+elif [[ "$BASE" == *api.* ]]; then
+  API_URL="$BASE/api/v1"
+  WEB_URL="${BASE/api./}"
+else
+  API_URL="${BASE/https:\/\//https://api.}/api/v1"
+  WEB_URL="$BASE"
 fi
-# For Railway: web is on businesscommandcentre.com, api is on api.businesscommandcentre.com
-WEB_URL="${WEB_URL:-https://businesscommandcentre.com}"
+WEB_URL="${WEB_URL:-$BASE}"
 
 PASS=0
 FAIL=0
 TOTAL=0
 
-pass() { ((PASS++)); ((TOTAL++)); printf "  ✅ %s\n" "$1"; }
-fail() { ((FAIL++)); ((TOTAL++)); printf "  ❌ %s\n" "$1"; }
+pass() { ((PASS++)) || true; ((TOTAL++)) || true; printf "  ✓ %s\n" "$1"; }
+fail() { ((FAIL++)) || true; ((TOTAL++)) || true; printf "  ✗ %s\n" "$1"; }
+
+check() {
+  local desc="$1" url="$2" expected="$3"
+  local code
+  code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$url" 2>/dev/null || echo "000")
+  if [[ "$code" == "$expected" ]]; then
+    pass "$desc → $code"
+  else
+    fail "$desc → $code (expected $expected)"
+  fi
+}
+
+check_post() {
+  local desc="$1" url="$2" body="$3" expected="$4"
+  local code
+  code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 -X POST "$url" \
+    -H "Content-Type: application/json" -d "$body" 2>/dev/null || echo "000")
+  if [[ "$code" == "$expected" ]]; then
+    pass "$desc → $code"
+  else
+    fail "$desc → $code (expected $expected)"
+  fi
+}
+
+check_json() {
+  local desc="$1" url="$2" key="$3" expected="$4"
+  local value
+  value=$(curl -s --max-time 10 "$url" 2>/dev/null | jq -r ".$key" 2>/dev/null || echo "null")
+  if [[ "$value" == "$expected" ]]; then
+    pass "$desc ($key=$value)"
+  else
+    fail "$desc ($key=$value, expected $expected)"
+  fi
+}
 
 echo "╔════════════════════════════════════════════╗"
 echo "║     Booking OS — Production Smoke Test     ║"
 echo "╚════════════════════════════════════════════╝"
 echo ""
-echo "API: $API"
+echo "API: $API_URL"
 echo "WEB: $WEB_URL"
 echo ""
 
 # ──────────────────────────────────────────────
-# 1. API Health Check
+# 1. Health & Infrastructure
 # ──────────────────────────────────────────────
-echo "── 1. API Health ──"
-HEALTH=$(curl -s -o /dev/null -w "%{http_code}" "$API/health" 2>/dev/null || echo "000")
-if [[ "$HEALTH" == "200" ]]; then
-  pass "GET /health → 200"
-else
-  fail "GET /health → $HEALTH (expected 200)"
-fi
+echo "── 1. Health & Infrastructure ──"
+check "GET /health" "$API_URL/health" "200"
+check_json "Health status" "$API_URL/health" "status" "healthy"
+check_json "Database connected" "$API_URL/health" "checks.database.status" "ok"
 
-HEALTH_BODY=$(curl -s "$API/health" 2>/dev/null || echo "{}")
-if echo "$HEALTH_BODY" | grep -qi "ok\|healthy\|status"; then
-  pass "Health response contains status indicator"
+# Redis may not be exposed in health check on all environments
+REDIS_STATUS=$(curl -s --max-time 10 "$API_URL/health" 2>/dev/null | jq -r '.checks.redis.status // .checks.redis // empty' 2>/dev/null || echo "")
+if [[ -n "$REDIS_STATUS" ]]; then
+  if [[ "$REDIS_STATUS" == "ok" ]]; then
+    pass "Redis connected (status=$REDIS_STATUS)"
+  else
+    fail "Redis unhealthy (status=$REDIS_STATUS)"
+  fi
 else
-  fail "Health response missing status indicator"
-fi
-
-# ──────────────────────────────────────────────
-# 2. Web Health Check
-# ──────────────────────────────────────────────
-echo ""
-echo "── 2. Web Health ──"
-WEB_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" "$WEB_URL" 2>/dev/null || echo "000")
-if [[ "$WEB_HEALTH" == "200" || "$WEB_HEALTH" == "301" || "$WEB_HEALTH" == "302" || "$WEB_HEALTH" == "308" ]]; then
-  pass "GET $WEB_URL → $WEB_HEALTH"
-else
-  fail "GET $WEB_URL → $WEB_HEALTH (expected 200/30x)"
-fi
-
-WEB_API_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" "$WEB_URL/api/v1/health" 2>/dev/null || echo "000")
-if [[ "$WEB_API_HEALTH" == "200" ]]; then
-  pass "GET $WEB_URL/api/v1/health (Next.js route) → 200"
-else
-  fail "GET $WEB_URL/api/v1/health → $WEB_API_HEALTH (expected 200)"
+  pass "Redis check not exposed in /health (uses in-memory fallback)"
 fi
 
 # ──────────────────────────────────────────────
-# 3. Core API Endpoints
+# 2. Web Application
 # ──────────────────────────────────────────────
 echo ""
-echo "── 3. Core API Endpoints ──"
-
-# Auth login should return 400 for empty body (not 500)
-AUTH_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$API/auth/login" \
-  -H "Content-Type: application/json" -d '{}' 2>/dev/null || echo "000")
-if [[ "$AUTH_CODE" == "400" || "$AUTH_CODE" == "401" ]]; then
-  pass "POST /auth/login (empty) → $AUTH_CODE (expected 400/401)"
+echo "── 2. Web Application ──"
+WEB_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$WEB_URL" 2>/dev/null || echo "000")
+if [[ "$WEB_CODE" == "200" || "$WEB_CODE" == "301" || "$WEB_CODE" == "302" || "$WEB_CODE" == "308" ]]; then
+  pass "Homepage → $WEB_CODE"
 else
-  fail "POST /auth/login (empty) → $AUTH_CODE (expected 400/401)"
+  fail "Homepage → $WEB_CODE (expected 200/30x)"
 fi
-
-# Unauthenticated endpoints should return 401
-UNAUTH_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$API/auth/me" 2>/dev/null || echo "000")
-if [[ "$UNAUTH_CODE" == "401" ]]; then
-  pass "GET /auth/me (no token) → 401"
-else
-  fail "GET /auth/me (no token) → $UNAUTH_CODE (expected 401)"
-fi
-
-# Portal OTP endpoint should exist (returns 400 for empty body)
-PORTAL_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$API/portal/auth/request-otp" \
-  -H "Content-Type: application/json" -d '{}' 2>/dev/null || echo "000")
-if [[ "$PORTAL_CODE" == "400" ]]; then
-  pass "POST /portal/auth/request-otp (empty) → 400"
-else
-  fail "POST /portal/auth/request-otp (empty) → $PORTAL_CODE (expected 400)"
-fi
+check "Next.js health route" "$WEB_URL/api/v1/health" "200"
 
 # ──────────────────────────────────────────────
-# 4. Security Headers
+# 3. API Auth — expect 401 without token
 # ──────────────────────────────────────────────
 echo ""
-echo "── 4. Security Headers ──"
-HEADERS=$(curl -s -D - -o /dev/null "$API/health" 2>/dev/null || echo "")
+echo "── 3. API Auth — expect 401 without token ──"
+check "GET /auth/me requires auth" "$API_URL/auth/me" "401"
+check "GET /bookings requires auth" "$API_URL/bookings" "401"
+check "GET /customers requires auth" "$API_URL/customers" "401"
+check "GET /services requires auth" "$API_URL/services" "401"
+check "GET /portal/me requires auth" "$API_URL/portal/me" "401"
 
-# Check CORS
-if echo "$HEADERS" | grep -qi "access-control"; then
-  pass "CORS headers present"
+# ──────────────────────────────────────────────
+# 4. Core API Endpoints
+# ──────────────────────────────────────────────
+echo ""
+echo "── 4. Core API Endpoints ──"
+check_post "POST /auth/login (empty body)" "$API_URL/auth/login" '{}' "400"
+check_post "POST /portal/auth/request-otp (empty)" "$API_URL/portal/auth/request-otp" '{}' "400"
+
+# ──────────────────────────────────────────────
+# 5. Public Endpoints
+# ──────────────────────────────────────────────
+echo ""
+echo "── 5. Public Endpoints ──"
+# Testimonials public endpoint returns 200 for valid slugs, 404 for unknown — both prove the route exists
+TESTIMONIAL_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$API_URL/testimonials/public/smoke-test" 2>/dev/null || echo "000")
+if [[ "$TESTIMONIAL_CODE" == "200" || "$TESTIMONIAL_CODE" == "404" ]]; then
+  pass "GET /testimonials/public/:slug route exists → $TESTIMONIAL_CODE"
 else
-  fail "CORS headers missing"
+  fail "GET /testimonials/public/:slug → $TESTIMONIAL_CODE (expected 200 or 404)"
 fi
 
-# Check no server leak
+# ──────────────────────────────────────────────
+# 6. Security Headers
+# ──────────────────────────────────────────────
+echo ""
+echo "── 6. Security Headers ──"
+HEADERS=$(curl -s -I --max-time 10 "$API_URL/health" 2>/dev/null || echo "")
+
+if echo "$HEADERS" | grep -qi "strict-transport-security"; then
+  pass "HSTS header present"
+else
+  fail "HSTS header missing"
+fi
+
+if echo "$HEADERS" | grep -qi "x-frame-options"; then
+  pass "X-Frame-Options header present"
+else
+  fail "X-Frame-Options header missing"
+fi
+
 if echo "$HEADERS" | grep -qi "^server: express"; then
   fail "Server header leaks Express (should be hidden)"
 else
   pass "Server header not leaking framework"
 fi
 
-# Check cookie security on login endpoint
-LOGIN_HEADERS=$(curl -s -D - -o /dev/null -X POST "$API/auth/login" \
+# ──────────────────────────────────────────────
+# 7. Cookie Security
+# ──────────────────────────────────────────────
+echo ""
+echo "── 7. Cookie Security ──"
+LOGIN_HEADERS=$(curl -s -D - -o /dev/null --max-time 10 -X POST "$API_URL/auth/login" \
   -H "Content-Type: application/json" \
   -d '{"email":"smoke@test.invalid","password":"wrong"}' 2>/dev/null || echo "")
 
-# If there are Set-Cookie headers, verify security attributes
 if echo "$LOGIN_HEADERS" | grep -qi "set-cookie"; then
   if echo "$LOGIN_HEADERS" | grep -qi "httponly"; then
     pass "Cookies have HttpOnly flag"
@@ -142,14 +185,20 @@ else
 fi
 
 # ──────────────────────────────────────────────
-# 5. Rate Limiting
+# 8. CORS
 # ──────────────────────────────────────────────
 echo ""
-echo "── 5. Rate Limiting ──"
-if echo "$HEADERS" | grep -qi "x-ratelimit\|retry-after\|ratelimit"; then
+echo "── 8. CORS ──"
+CORS_HEADERS=$(curl -s -D - -o /dev/null --max-time 10 "$API_URL/health" 2>/dev/null || echo "")
+if echo "$CORS_HEADERS" | grep -qi "access-control"; then
+  pass "CORS headers present"
+else
+  fail "CORS headers missing"
+fi
+
+if echo "$CORS_HEADERS" | grep -qi "x-ratelimit\|retry-after\|ratelimit"; then
   pass "Rate limit headers present"
 else
-  # Rate limit headers may only appear when limits are hit — not a hard failure
   pass "Rate limit headers not visible (may appear under load)"
 fi
 
