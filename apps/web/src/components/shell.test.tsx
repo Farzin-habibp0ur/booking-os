@@ -114,7 +114,14 @@ jest.mock('@/lib/use-mode', () => ({
       key: 'admin',
       sections: {
         workspace: ['/dashboard', '/inbox', '/calendar', '/customers', '/bookings'],
-        tools: ['/services', '/campaigns', '/automations', '/waitlist', '/service-board'],
+        tools: [
+          '/services',
+          '/campaigns',
+          '/automations',
+          '/marketing/queue',
+          '/waitlist',
+          '/service-board',
+        ],
         insights: ['/reports', '/roi', '/ai'],
       },
       defaultLandingPath: '/dashboard',
@@ -318,6 +325,18 @@ describe('Shell', () => {
     // No "More" or "Show More" button inside the sidebar nav
     expect(within(nav).queryByText('More')).not.toBeInTheDocument();
     expect(within(nav).queryByText(/show more/i)).not.toBeInTheDocument();
+  });
+
+  it('renders Content Queue nav link pointing to /marketing/queue', () => {
+    render(
+      <Shell>
+        <div>Content</div>
+      </Shell>,
+    );
+
+    const nav = screen.getByRole('navigation', { name: 'Main navigation' });
+    const link = within(nav).getByText('Content Queue');
+    expect(link.closest('a')).toHaveAttribute('href', '/marketing/queue');
   });
 
   it('renders pinned view as link to page with viewId', async () => {

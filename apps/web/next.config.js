@@ -5,6 +5,15 @@ const nextConfig = {
   transpilePackages: ['@booking-os/shared'],
   output: 'standalone',
   poweredByHeader: false,
+  async redirects() {
+    return [
+      {
+        source: '/content-queue',
+        destination: '/marketing/queue',
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {
