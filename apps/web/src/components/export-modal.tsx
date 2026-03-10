@@ -77,9 +77,9 @@ export default function ExportModal({ isOpen, onClose, entity, allFields }: Expo
   };
 
   return (
-    <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/30 animate-backdrop flex items-center justify-center z-50">
       <div
-        className="bg-white rounded-2xl shadow-soft-lg w-full max-w-md"
+        className="bg-white rounded-2xl shadow-soft-lg w-full max-w-md animate-modal-enter"
         role="dialog"
         aria-modal="true"
         aria-label="Export data"

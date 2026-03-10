@@ -52,7 +52,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 role="alert"
                 aria-live="assertive"
                 className={cn(
-                  'pointer-events-auto flex items-center gap-2 px-4 py-3 rounded-lg shadow-lg text-sm font-medium transition-all animate-in slide-in-from-right fade-in duration-200 min-w-[280px]',
+                  'pointer-events-auto flex items-center gap-2 px-4 py-3 rounded-lg shadow-lg text-sm font-medium transition-all animate-in slide-in-from-right fade-in duration-200 min-w-[280px] animate-toast-enter',
                   t.type === 'success' && 'bg-green-600 text-white',
                   t.type === 'error' && 'bg-red-600 text-white',
                   t.type === 'info' && 'bg-blue-600 text-white',

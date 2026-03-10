@@ -245,6 +245,111 @@ html.dark body {
   outline-offset: 2px;
 }
 
+/* --- Micro-interaction animations (DS V2 §10) --- */
+
+/* Badge status flash — brief white pulse when status text changes */
+@keyframes badgeFlash {
+  0% { background-color: rgba(255, 255, 255, 0); }
+  30% { background-color: rgba(255, 255, 255, 0.6); }
+  100% { background-color: rgba(255, 255, 255, 0); }
+}
+.animate-badge-flash {
+  animation: badgeFlash 400ms ease-out;
+}
+
+/* Card hover lift — subtle raise on hover */
+.animate-card-hover {
+  transition: transform 200ms ease-out, box-shadow 200ms ease-out;
+}
+.animate-card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px -8px rgba(0, 0, 0, 0.1);
+}
+
+/* Sidebar nav active — left border slides in */
+@keyframes borderSlideIn {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+.animate-sidebar-active {
+  transform-origin: top;
+  animation: borderSlideIn 200ms ease-out;
+}
+
+/* Toggle switch spring — overshoot animation on thumb */
+@keyframes toggleSpring {
+  0% { transform: translateX(0); }
+  60% { transform: translateX(calc(100% + 2px)); }
+  80% { transform: translateX(calc(100% - 1px)); }
+  100% { transform: translateX(100%); }
+}
+@keyframes toggleSpringOff {
+  0% { transform: translateX(100%); }
+  60% { transform: translateX(-2px); }
+  80% { transform: translateX(1px); }
+  100% { transform: translateX(0); }
+}
+
+/* Dropdown open — scale from top origin */
+@keyframes dropdownOpen {
+  from {
+    opacity: 0;
+    transform: scaleY(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+}
+.animate-dropdown-open {
+  transform-origin: top;
+  animation: dropdownOpen 150ms ease-out;
+}
+
+/* Page content fade in */
+@keyframes pageFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-page-fade {
+  animation: pageFade 150ms ease-out;
+}
+
+/* Toast slide up entrance */
+@keyframes toastSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-toast-enter {
+  animation: toastSlideUp 200ms ease-out;
+}
+
+/* Modal backdrop fade */
+.animate-backdrop {
+  animation: fadeIn 150ms ease-out;
+}
+
+/* Modal content entrance */
+@keyframes modalEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.animate-modal-enter {
+  animation: modalEnter 200ms ease-out;
+}
+
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *,

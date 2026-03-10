@@ -195,8 +195,8 @@ function ScheduleModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-backdrop">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6 animate-modal-enter">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-lg font-semibold">Schedule Report Email</h2>
           <button onClick={onClose} className="p-1 rounded-lg hover:bg-slate-100">
@@ -350,8 +350,8 @@ function ScheduleManager({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
   const reportLabel = (type: string) => REPORT_TYPES.find((r) => r.value === type)?.label ?? type;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4 p-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-backdrop">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4 p-6 animate-modal-enter">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-lg font-semibold">Manage Scheduled Reports</h2>
           <button onClick={onClose} className="p-1 rounded-lg hover:bg-slate-100">
@@ -831,7 +831,7 @@ function SummaryCard({
   subtitle?: string;
 }) {
   return (
-    <div className="bg-white rounded-2xl shadow-soft p-4">
+    <div className="bg-white rounded-2xl shadow-soft p-4 animate-card-hover">
       <p className="text-xs text-slate-500">{label}</p>
       <p
         className={cn(

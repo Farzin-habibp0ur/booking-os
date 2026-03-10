@@ -76,8 +76,8 @@ export default function RecordPaymentModal({
       role="dialog"
       aria-modal="true"
     >
-      <div className="absolute inset-0 bg-black/30 animate-fade-in" onClick={onClose} />
-      <div className="relative w-[440px] bg-white rounded-2xl shadow-soft animate-scale-in">
+      <div className="absolute inset-0 bg-black/30 animate-backdrop" onClick={onClose} />
+      <div className="relative w-[440px] bg-white rounded-2xl shadow-soft animate-modal-enter">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-slate-100">
           <div className="flex items-center gap-2">

@@ -806,7 +806,7 @@ function MetricCard({
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-soft p-6">
+    <div className="bg-white rounded-2xl shadow-soft p-6 animate-card-hover">
       <div className="flex items-start justify-between">
         <div className={cn('p-2.5 rounded-xl', colorMap[color])}>
           <Icon size={18} />

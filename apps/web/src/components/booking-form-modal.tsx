@@ -251,8 +251,8 @@ export default function BookingFormModal({
       aria-labelledby="booking-form-title"
       ref={modalRef}
     >
-      <div className="absolute inset-0 bg-black/30" onClick={onClose} />
-      <div className="relative w-[480px] h-full bg-white shadow-soft-lg flex flex-col">
+      <div className="absolute inset-0 bg-black/30 animate-backdrop" onClick={onClose} />
+      <div className="relative w-[480px] h-full bg-white shadow-soft-lg flex flex-col animate-modal-enter">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-slate-100">
           <h2 id="booking-form-title" className="text-lg font-serif font-semibold text-slate-900">

@@ -429,7 +429,7 @@ function ShellInner({ children }: { children: ReactNode }) {
 
       <main
         id="main-content"
-        className="flex-1 overflow-auto md:pt-0 pb-16 md:pb-0 dark:bg-slate-950"
+        className="flex-1 overflow-auto md:pt-0 pb-16 md:pb-0 dark:bg-slate-950 animate-page-fade"
       >
         <ViewAsBanner />
         <TrialBanner />

@@ -62,8 +62,8 @@ export default function RefundModal({ isOpen, onClose, onSuccess, payment }: Ref
       role="dialog"
       aria-modal="true"
     >
-      <div className="absolute inset-0 bg-black/30 animate-fade-in" onClick={onClose} />
-      <div className="relative w-[440px] bg-white rounded-2xl shadow-soft animate-scale-in">
+      <div className="absolute inset-0 bg-black/30 animate-backdrop" onClick={onClose} />
+      <div className="relative w-[440px] bg-white rounded-2xl shadow-soft animate-modal-enter">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-slate-100">
           <h2 className="text-lg font-serif font-semibold text-slate-900">Issue Refund</h2>

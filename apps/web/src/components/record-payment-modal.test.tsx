@@ -137,7 +137,7 @@ describe('RecordPaymentModal', () => {
     render(<RecordPaymentModal {...defaultProps} />);
     const dialog = screen.getByRole('dialog');
     // The backdrop is the first child div of the dialog
-    const backdrop = dialog.querySelector('.animate-fade-in');
+    const backdrop = dialog.querySelector('.animate-backdrop');
     expect(backdrop).toBeTruthy();
     fireEvent.click(backdrop!);
     expect(defaultProps.onClose).toHaveBeenCalled();

@@ -219,7 +219,7 @@ export default function NotificationBell() {
       {/* Dropdown panel */}
       {open && (
         <div
-          className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white dark:bg-slate-900 rounded-2xl shadow-soft border border-slate-100 dark:border-slate-800 z-50 overflow-hidden"
+          className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white dark:bg-slate-900 rounded-2xl shadow-soft border border-slate-100 dark:border-slate-800 z-50 overflow-hidden animate-dropdown-open"
           data-testid="notification-dropdown"
         >
           {/* Header */}

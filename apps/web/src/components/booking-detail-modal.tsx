@@ -306,8 +306,8 @@ export default function BookingDetailModal({
       aria-labelledby="booking-detail-title"
       ref={modalRef}
     >
-      <div className="absolute inset-0 bg-black/30 animate-fade-in" onClick={onClose} />
-      <div className="relative w-[520px] max-h-[80vh] bg-white rounded-2xl shadow-soft-lg flex flex-col animate-slide-in-right">
+      <div className="absolute inset-0 bg-black/30 animate-backdrop" onClick={onClose} />
+      <div className="relative w-[520px] max-h-[80vh] bg-white rounded-2xl shadow-soft-lg flex flex-col animate-modal-enter">
         {/* Override reason overlay */}
         {overrideOverlay && (
           <div className="absolute inset-0 z-10 bg-white/95 rounded-2xl flex items-center justify-center">
@@ -448,8 +448,9 @@ export default function BookingDetailModal({
               {booking.customer?.name}
             </h2>
             <span
+              key={booking.status}
               className={cn(
-                'text-xs px-2 py-0.5 rounded-full font-medium',
+                'text-xs px-2 py-0.5 rounded-full font-medium animate-badge-flash',
                 statusConfig.bg,
                 statusConfig.color,
               )}
