@@ -61,12 +61,10 @@ describe('AuthService', () => {
     tokenService = createMockTokenService();
     emailService = createMockEmailService();
     twoFactorService = {
-      generateSetup: jest
-        .fn()
-        .mockReturnValue({
-          secret: 'TESTSECRET',
-          otpauthUrl: 'otpauth://totp/BookingOS:test@test.com?secret=TESTSECRET',
-        }),
+      generateSetup: jest.fn().mockReturnValue({
+        secret: 'TESTSECRET',
+        otpauthUrl: 'otpauth://totp/BookingOS:test@test.com?secret=TESTSECRET',
+      }),
       verifyCode: jest.fn().mockReturnValue(true),
       generateBackupCodes: jest
         .fn()
