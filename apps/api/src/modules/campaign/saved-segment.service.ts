@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../common/prisma.service';
 
 @Injectable()
@@ -12,17 +13,21 @@ export class SavedSegmentService {
     });
   }
 
-  async create(businessId: string, data: { name: string; filters: any }) {
+  async create(businessId: string, data: { name: string; filters?: Record<string, unknown> }) {
     return this.prisma.savedSegment.create({
       data: {
         businessId,
         name: data.name,
-        filters: data.filters || {},
+        filters: (data.filters || {}) as Prisma.InputJsonValue,
       },
     });
   }
 
-  async update(businessId: string, id: string, data: { name?: string; filters?: any }) {
+  async update(
+    businessId: string,
+    id: string,
+    data: { name?: string; filters?: Record<string, unknown> },
+  ) {
     const segment = await this.prisma.savedSegment.findFirst({
       where: { id, businessId },
     });
@@ -32,7 +37,7 @@ export class SavedSegmentService {
       where: { id },
       data: {
         ...(data.name !== undefined && { name: data.name }),
-        ...(data.filters !== undefined && { filters: data.filters }),
+        ...(data.filters !== undefined && { filters: data.filters as Prisma.InputJsonValue }),
       },
     });
   }
