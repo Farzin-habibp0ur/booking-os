@@ -13,6 +13,7 @@ import {
   Gift,
   CreditCard,
   Palette,
+  Puzzle,
 } from 'lucide-react';
 
 export interface SettingsCategory {
@@ -35,7 +36,7 @@ export const SETTINGS_CATEGORIES: SettingsCategory[] = [
     description: 'Team accounts, login methods, and custom profile fields',
     icon: ShieldCheck,
     accent: 'sage',
-    pages: ['account', 'profile-fields'],
+    pages: ['account', 'profile-fields', 'audit-log'],
     roles: ['ADMIN', 'AGENT', 'SERVICE_PROVIDER'],
   },
   {
@@ -72,6 +73,15 @@ export const SETTINGS_CATEGORIES: SettingsCategory[] = [
     icon: Gift,
     accent: 'lavender',
     pages: ['waitlist', 'offers'],
+    roles: ['ADMIN'],
+  },
+  {
+    key: 'integrations',
+    label: 'Integrations',
+    description: 'Connect calendars, payments, and messaging services',
+    icon: Puzzle,
+    accent: 'sage',
+    pages: ['integrations'],
     roles: ['ADMIN'],
   },
   {

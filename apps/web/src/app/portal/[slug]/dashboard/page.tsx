@@ -2,7 +2,16 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Calendar, Clock, User, MessageSquare, Star, ChevronRight, X } from 'lucide-react';
+import {
+  Calendar,
+  Clock,
+  User,
+  MessageSquare,
+  Star,
+  ChevronRight,
+  X,
+  ClipboardList,
+} from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { statusBadgeClasses } from '@/lib/design-tokens';
 
@@ -214,7 +223,10 @@ export default function PortalDashboardPage() {
       {/* Quick actions */}
       <section>
         <h2 className="text-lg font-serif font-semibold text-slate-900 mb-3">Quick Actions</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3" data-testid="quick-actions">
+        <div
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3"
+          data-testid="quick-actions"
+        >
           <button
             onClick={() => router.push(`/book/${slug}`)}
             className="bg-white rounded-2xl shadow-soft p-4 text-left hover:bg-slate-50 transition-colors group"
@@ -230,6 +242,26 @@ export default function PortalDashboardPage() {
             <Clock size={20} className="text-lavender-600 mb-2" />
             <p className="text-sm font-medium text-slate-900">My Bookings</p>
             <p className="text-xs text-slate-500 mt-0.5">View booking history</p>
+          </button>
+          <button
+            onClick={() => router.push(`/portal/${slug}/intake`)}
+            className="bg-white rounded-2xl shadow-soft p-4 text-left hover:bg-slate-50 transition-colors"
+            data-testid="intake-form-action"
+          >
+            <ClipboardList
+              size={20}
+              className={
+                profile?.preferences?.intakeComplete ? 'text-sage-600 mb-2' : 'text-amber-600 mb-2'
+              }
+            />
+            <p className="text-sm font-medium text-slate-900">
+              {profile?.preferences?.intakeComplete ? 'View Intake Form' : 'Complete Intake Form'}
+            </p>
+            <p className="text-xs text-slate-500 mt-0.5">
+              {profile?.preferences?.intakeComplete
+                ? 'Review or update your info'
+                : 'Required before your first visit'}
+            </p>
           </button>
           <button
             onClick={() => router.push(`/portal/${slug}/profile`)}

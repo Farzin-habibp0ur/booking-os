@@ -6,6 +6,7 @@ import {
   IsOptional,
   IsBoolean,
   IsISO8601,
+  IsObject,
 } from 'class-validator';
 
 export class RequestOtpDto {
@@ -61,6 +62,10 @@ export class UpdatePortalProfileDto {
   @IsOptional()
   @IsBoolean()
   notifyEmail?: boolean;
+
+  @IsOptional()
+  @IsObject()
+  customFields?: Record<string, any>;
 }
 
 export class CancelBookingDto {

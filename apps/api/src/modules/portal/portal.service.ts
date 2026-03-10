@@ -53,10 +53,17 @@ export class PortalService {
     if (dto.name !== undefined) data.name = dto.name;
     if (dto.email !== undefined) data.email = dto.email;
     if (dto.phone !== undefined) data.phone = dto.phone;
-    if (dto.notifyWhatsApp !== undefined || dto.notifyEmail !== undefined) {
+    if (
+      dto.notifyWhatsApp !== undefined ||
+      dto.notifyEmail !== undefined ||
+      dto.customFields !== undefined
+    ) {
       const prefs = ((customer as any).customFields as any) || {};
       if (dto.notifyWhatsApp !== undefined) prefs.notifyWhatsApp = dto.notifyWhatsApp;
       if (dto.notifyEmail !== undefined) prefs.notifyEmail = dto.notifyEmail;
+      if (dto.customFields !== undefined) {
+        Object.assign(prefs, dto.customFields);
+      }
       data.customFields = prefs;
     }
 
