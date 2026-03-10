@@ -40,7 +40,10 @@ describe('ExportService', () => {
 
       const csv = await service.exportCustomersCsv('biz1');
 
-      const lines = csv.trim().split('\r\n');
+      const lines = csv
+        .replace(/^\uFEFF/, '')
+        .trim()
+        .split('\r\n');
       expect(lines[0]).toBe('id,name,phone,email,tags,createdAt,updatedAt');
       expect(lines[1]).toContain('Jane Doe');
       expect(lines[1]).toContain('VIP; Regular');
@@ -96,7 +99,10 @@ describe('ExportService', () => {
         fields: ['name', 'email'],
       });
 
-      const lines = csv.trim().split('\r\n');
+      const lines = csv
+        .replace(/^\uFEFF/, '')
+        .trim()
+        .split('\r\n');
       expect(lines[0]).toBe('name,email');
       expect(lines[1]).toBe('Jane,jane@test.com');
     });
@@ -126,7 +132,10 @@ describe('ExportService', () => {
 
       const csv = await service.exportCustomersCsv('biz1');
 
-      const lines = csv.trim().split('\r\n');
+      const lines = csv
+        .replace(/^\uFEFF/, '')
+        .trim()
+        .split('\r\n');
       // Name should be escaped with double quotes
       expect(lines[1]).toContain('"Doe, Jane ""JD"""');
     });
@@ -146,9 +155,20 @@ describe('ExportService', () => {
 
       const csv = await service.exportCustomersCsv('biz1');
 
-      const lines = csv.trim().split('\r\n');
+      const lines = csv
+        .replace(/^\uFEFF/, '')
+        .trim()
+        .split('\r\n');
       // tags field should be empty
       expect(lines[1]).toContain('c1,Jane,+1,,');
+    });
+
+    it('prepends UTF-8 BOM to CSV output', async () => {
+      prisma.customer.findMany.mockResolvedValue([]);
+
+      const csv = await service.exportCustomersCsv('biz1');
+
+      expect(csv.charCodeAt(0)).toBe(0xfeff);
     });
 
     it('returns header-only CSV when no customers exist', async () => {
@@ -156,7 +176,10 @@ describe('ExportService', () => {
 
       const csv = await service.exportCustomersCsv('biz1');
 
-      const lines = csv.trim().split('\r\n');
+      const lines = csv
+        .replace(/^\uFEFF/, '')
+        .trim()
+        .split('\r\n');
       expect(lines).toHaveLength(1);
       expect(lines[0]).toBe('id,name,phone,email,tags,createdAt,updatedAt');
     });
@@ -180,7 +203,10 @@ describe('ExportService', () => {
 
       const csv = await service.exportBookingsCsv('biz1');
 
-      const lines = csv.trim().split('\r\n');
+      const lines = csv
+        .replace(/^\uFEFF/, '')
+        .trim()
+        .split('\r\n');
       expect(lines[0]).toBe(
         'id,customerName,customerPhone,customerEmail,serviceName,staffName,status,startTime,endTime,notes,createdAt',
       );
@@ -241,7 +267,10 @@ describe('ExportService', () => {
         fields: ['customerName', 'status'],
       });
 
-      const lines = csv.trim().split('\r\n');
+      const lines = csv
+        .replace(/^\uFEFF/, '')
+        .trim()
+        .split('\r\n');
       expect(lines[0]).toBe('customerName,status');
       expect(lines[1]).toBe('Jane,CONFIRMED');
     });
@@ -263,7 +292,10 @@ describe('ExportService', () => {
 
       const csv = await service.exportBookingsCsv('biz1');
 
-      const lines = csv.trim().split('\r\n');
+      const lines = csv
+        .replace(/^\uFEFF/, '')
+        .trim()
+        .split('\r\n');
       expect(lines[1]).toContain('b1');
       // staff name should be empty
       expect(lines[1]).toContain(',,PENDING');
@@ -279,12 +311,23 @@ describe('ExportService', () => {
       );
     });
 
+    it('should include UTF-8 BOM', async () => {
+      prisma.booking.findMany.mockResolvedValue([]);
+
+      const csv = await service.exportBookingsCsv('biz1');
+
+      expect(csv.charCodeAt(0)).toBe(0xfeff);
+    });
+
     it('returns header-only CSV when no bookings exist', async () => {
       prisma.booking.findMany.mockResolvedValue([]);
 
       const csv = await service.exportBookingsCsv('biz1');
 
-      const lines = csv.trim().split('\r\n');
+      const lines = csv
+        .replace(/^\uFEFF/, '')
+        .trim()
+        .split('\r\n');
       expect(lines).toHaveLength(1);
       expect(lines[0]).toBe(
         'id,customerName,customerPhone,customerEmail,serviceName,staffName,status,startTime,endTime,notes,createdAt',
@@ -330,7 +373,10 @@ describe('ExportService', () => {
 
       const csv = await service.exportStaffCsv('biz1');
 
-      const lines = csv.trim().split('\r\n');
+      const lines = csv
+        .replace(/^\uFEFF/, '')
+        .trim()
+        .split('\r\n');
       expect(lines[0]).toBe('id,name,email,role,isActive,createdAt');
       expect(lines[1]).toContain('Sarah Johnson');
       expect(lines[1]).toContain('sarah@test.com');
@@ -386,7 +432,10 @@ describe('ExportService', () => {
         fields: ['name', 'role'],
       });
 
-      const lines = csv.trim().split('\r\n');
+      const lines = csv
+        .replace(/^\uFEFF/, '')
+        .trim()
+        .split('\r\n');
       expect(lines[0]).toBe('name,role');
       expect(lines[1]).toBe('Sarah,ADMIN');
     });
@@ -399,12 +448,23 @@ describe('ExportService', () => {
       expect(prisma.staff.findMany).toHaveBeenCalledWith(expect.objectContaining({ take: 10000 }));
     });
 
+    it('should include UTF-8 BOM', async () => {
+      prisma.staff.findMany.mockResolvedValue([]);
+
+      const csv = await service.exportStaffCsv('biz1');
+
+      expect(csv.charCodeAt(0)).toBe(0xfeff);
+    });
+
     it('returns header-only CSV when no staff exist', async () => {
       prisma.staff.findMany.mockResolvedValue([]);
 
       const csv = await service.exportStaffCsv('biz1');
 
-      const lines = csv.trim().split('\r\n');
+      const lines = csv
+        .replace(/^\uFEFF/, '')
+        .trim()
+        .split('\r\n');
       expect(lines).toHaveLength(1);
       expect(lines[0]).toBe('id,name,email,role,isActive,createdAt');
     });
@@ -431,7 +491,10 @@ describe('ExportService', () => {
 
       const csv = await service.exportStaffCsv('biz1');
 
-      const lines = csv.trim().split('\r\n');
+      const lines = csv
+        .replace(/^\uFEFF/, '')
+        .trim()
+        .split('\r\n');
       expect(lines[1]).toContain('true');
       expect(lines[2]).toContain('false');
     });
@@ -470,7 +533,10 @@ describe('ExportService', () => {
 
       const csv = service.exportReportCsv('bookings-over-time', data);
 
-      const lines = csv.trim().split('\r\n');
+      const lines = csv
+        .replace(/^\uFEFF/, '')
+        .trim()
+        .split('\r\n');
       expect(lines[0]).toBe('Date,Count');
       expect(lines[1]).toBe('2026-03-01,5');
       expect(lines[2]).toBe('2026-03-02,10');
@@ -481,7 +547,10 @@ describe('ExportService', () => {
 
       const csv = service.exportReportCsv('no-show-rate', data);
 
-      const lines = csv.trim().split('\r\n');
+      const lines = csv
+        .replace(/^\uFEFF/, '')
+        .trim()
+        .split('\r\n');
       expect(lines[0]).toBe('Total Bookings,No-Shows,Rate (%)');
       expect(lines[1]).toBe('20,5,25');
     });
@@ -497,7 +566,10 @@ describe('ExportService', () => {
 
       const csv = service.exportReportCsv('peak-hours', data);
 
-      const lines = csv.trim().split('\r\n');
+      const lines = csv
+        .replace(/^\uFEFF/, '')
+        .trim()
+        .split('\r\n');
       expect(lines[0]).toBe('Hour,Count');
       expect(lines[1]).toBe('9,3');
       expect(lines[2]).toBe('10,7');
@@ -510,7 +582,10 @@ describe('ExportService', () => {
 
       const csv = service.exportReportCsv('staff-performance', data);
 
-      const lines = csv.trim().split('\r\n');
+      const lines = csv
+        .replace(/^\uFEFF/, '')
+        .trim()
+        .split('\r\n');
       expect(lines[0]).toBe('Staff,Total Bookings,Completed,No-Shows,No-Show Rate (%),Revenue');
       expect(lines[1]).toBe('Dr. Chen,10,8,1,10,2000');
     });
@@ -523,7 +598,10 @@ describe('ExportService', () => {
 
       const csv = service.exportReportCsv('service-breakdown', data);
 
-      const lines = csv.trim().split('\r\n');
+      const lines = csv
+        .replace(/^\uFEFF/, '')
+        .trim()
+        .split('\r\n');
       expect(lines[0]).toBe('Service,Bookings,Revenue');
       expect(lines[1]).toBe('Botox,5,1000');
       expect(lines[2]).toBe('Filler,3,900');
@@ -534,7 +612,10 @@ describe('ExportService', () => {
 
       const csv = service.exportReportCsv('response-times', data);
 
-      const lines = csv.trim().split('\r\n');
+      const lines = csv
+        .replace(/^\uFEFF/, '')
+        .trim()
+        .split('\r\n');
       expect(lines[0]).toBe('Avg Response (min),Sample Size');
       expect(lines[1]).toBe('12,50');
     });
@@ -547,7 +628,10 @@ describe('ExportService', () => {
 
       const csv = service.exportReportCsv('revenue-over-time', data);
 
-      const lines = csv.trim().split('\r\n');
+      const lines = csv
+        .replace(/^\uFEFF/, '')
+        .trim()
+        .split('\r\n');
       expect(lines[0]).toBe('Date,Revenue');
       expect(lines[1]).toBe('2026-03-01,500');
     });
@@ -560,7 +644,10 @@ describe('ExportService', () => {
 
       const csv = service.exportReportCsv('status-breakdown', data);
 
-      const lines = csv.trim().split('\r\n');
+      const lines = csv
+        .replace(/^\uFEFF/, '')
+        .trim()
+        .split('\r\n');
       expect(lines[0]).toBe('Status,Count');
       expect(lines[1]).toBe('COMPLETED,10');
     });
@@ -570,7 +657,10 @@ describe('ExportService', () => {
 
       const csv = service.exportReportCsv('consult-conversion', data);
 
-      const lines = csv.trim().split('\r\n');
+      const lines = csv
+        .replace(/^\uFEFF/, '')
+        .trim()
+        .split('\r\n');
       expect(lines[0]).toBe('Consult Customers,Converted,Rate (%)');
       expect(lines[1]).toBe('20,12,60');
     });
@@ -580,7 +670,10 @@ describe('ExportService', () => {
 
       const csv = service.exportReportCsv('deposit-compliance', data);
 
-      const lines = csv.trim().split('\r\n');
+      const lines = csv
+        .replace(/^\uFEFF/, '')
+        .trim()
+        .split('\r\n');
       expect(lines[0]).toBe('Total Required,Paid,Rate (%)');
       expect(lines[1]).toBe('15,12,80');
     });
@@ -594,7 +687,10 @@ describe('ExportService', () => {
     it('returns header-only CSV when data is empty array', () => {
       const csv = service.exportReportCsv('bookings-over-time', []);
 
-      const lines = csv.trim().split('\r\n');
+      const lines = csv
+        .replace(/^\uFEFF/, '')
+        .trim()
+        .split('\r\n');
       expect(lines).toHaveLength(1);
       expect(lines[0]).toBe('Date,Count');
     });
@@ -602,7 +698,10 @@ describe('ExportService', () => {
     it('handles peak-hours with empty byHour array', () => {
       const csv = service.exportReportCsv('peak-hours', { byHour: [], byDay: [] });
 
-      const lines = csv.trim().split('\r\n');
+      const lines = csv
+        .replace(/^\uFEFF/, '')
+        .trim()
+        .split('\r\n');
       expect(lines).toHaveLength(1);
       expect(lines[0]).toBe('Hour,Count');
     });
@@ -612,6 +711,12 @@ describe('ExportService', () => {
 
       expect(csv).toContain('\r\n');
       expect(csv.endsWith('\r\n')).toBe(true);
+    });
+
+    it('prepends UTF-8 BOM to CSV output', () => {
+      const csv = service.exportReportCsv('bookings-over-time', []);
+
+      expect(csv.charCodeAt(0)).toBe(0xfeff);
     });
   });
 
@@ -711,6 +816,103 @@ describe('ExportService', () => {
       });
 
       expect(html).toContain('<title>Deposit Compliance</title>');
+    });
+  });
+
+  describe('CSV escaping', () => {
+    it('should escape CSV fields with commas', async () => {
+      prisma.customer.findMany.mockResolvedValue([
+        {
+          id: 'c1',
+          name: 'Doe, Jane',
+          phone: '+1234567890',
+          email: 'jane@test.com',
+          tags: [],
+          createdAt: new Date('2026-01-15'),
+          updatedAt: new Date('2026-01-20'),
+        },
+      ] as any);
+
+      const csv = await service.exportCustomersCsv('biz1');
+
+      const lines = csv
+        .replace(/^\uFEFF/, '')
+        .trim()
+        .split('\r\n');
+      expect(lines[1]).toContain('"Doe, Jane"');
+    });
+
+    it('should escape CSV fields with quotes', async () => {
+      prisma.customer.findMany.mockResolvedValue([
+        {
+          id: 'c1',
+          name: 'Jane "JD" Doe',
+          phone: '+1234567890',
+          email: 'jane@test.com',
+          tags: [],
+          createdAt: new Date('2026-01-15'),
+          updatedAt: new Date('2026-01-20'),
+        },
+      ] as any);
+
+      const csv = await service.exportCustomersCsv('biz1');
+
+      const lines = csv
+        .replace(/^\uFEFF/, '')
+        .trim()
+        .split('\r\n');
+      expect(lines[1]).toContain('"Jane ""JD"" Doe"');
+    });
+  });
+
+  describe('field selection', () => {
+    it('exportCustomersCsv should only include selected fields', async () => {
+      prisma.customer.findMany.mockResolvedValue([
+        {
+          id: 'c1',
+          name: 'Jane',
+          phone: '+1234567890',
+          email: 'jane@test.com',
+          tags: ['VIP'],
+          createdAt: new Date('2026-01-15'),
+          updatedAt: new Date('2026-01-20'),
+        },
+      ] as any);
+
+      const csv = await service.exportCustomersCsv('biz1', {
+        fields: ['name', 'phone'],
+      });
+
+      const lines = csv
+        .replace(/^\uFEFF/, '')
+        .trim()
+        .split('\r\n');
+      expect(lines[0]).toBe('name,phone');
+      expect(lines[1]).toBe('Jane,+1234567890');
+      // Should NOT include other fields
+      expect(lines[0]).not.toContain('email');
+      expect(lines[0]).not.toContain('id');
+      expect(lines[0]).not.toContain('tags');
+    });
+
+    it('exportBookingsCsv should filter by date range', async () => {
+      prisma.booking.findMany.mockResolvedValue([]);
+
+      await service.exportBookingsCsv('biz1', {
+        dateFrom: '2026-06-01',
+        dateTo: '2026-06-30',
+      });
+
+      expect(prisma.booking.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            startTime: {
+              gte: new Date('2026-06-01'),
+              lte: new Date('2026-06-30'),
+            },
+          }),
+        }),
+      );
     });
   });
 

@@ -178,7 +178,7 @@ export class ExportService {
       this.logger.warn(`Failed to log customer export action: ${err.message}`);
     }
 
-    return rows.join('\r\n') + '\r\n';
+    return '\uFEFF' + rows.join('\r\n') + '\r\n';
   }
 
   async exportBookingsCsv(businessId: string, opts: ExportOptions = {}): Promise<string> {
@@ -254,7 +254,7 @@ export class ExportService {
       this.logger.warn(`Failed to log booking export action: ${err.message}`);
     }
 
-    return rows.join('\r\n') + '\r\n';
+    return '\uFEFF' + rows.join('\r\n') + '\r\n';
   }
 
   async exportStaffCsv(businessId: string, opts: ExportOptions = {}): Promise<string> {
@@ -310,7 +310,7 @@ export class ExportService {
       this.logger.warn(`Failed to log staff export action: ${err.message}`);
     }
 
-    return rows.join('\r\n') + '\r\n';
+    return '\uFEFF' + rows.join('\r\n') + '\r\n';
   }
 
   /**
@@ -340,7 +340,7 @@ export class ExportService {
 
     this.logger.log(`Exported report ${reportType}: ${rows.length} rows`);
 
-    return csvRows.join('\r\n') + '\r\n';
+    return '\uFEFF' + csvRows.join('\r\n') + '\r\n';
   }
 
   /**

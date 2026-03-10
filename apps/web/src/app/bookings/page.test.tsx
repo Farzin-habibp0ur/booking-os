@@ -2246,4 +2246,72 @@ describe('BookingsPage', () => {
       expect(screen.getByText('$120.50')).toBeInTheDocument();
     });
   });
+
+  // ─── Service Filter ─────────────────────────────────────────
+
+  it('should render service filter dropdown', async () => {
+    mockApi.get.mockImplementation((url: string) => {
+      if (url.startsWith('/bookings')) return Promise.resolve({ data: [], total: 0 });
+      if (url === '/staff') return Promise.resolve([]);
+      if (url === '/services')
+        return Promise.resolve([
+          { id: 'svc1', name: 'Haircut' },
+          { id: 'svc2', name: 'Massage' },
+        ]);
+      return Promise.resolve([]);
+    });
+
+    render(<BookingsPage />);
+
+    await waitFor(() => {
+      const serviceSelect = screen.getByTestId('service-chip-filter');
+      expect(serviceSelect).toBeInTheDocument();
+      const options = within(serviceSelect).getAllByRole('option');
+      expect(options).toHaveLength(3);
+      expect(options[0]).toHaveTextContent('All Services');
+      expect(options[1]).toHaveTextContent('Haircut');
+      expect(options[2]).toHaveTextContent('Massage');
+    });
+  });
+
+  it('should include serviceId in API call when service filter is selected', async () => {
+    mockApi.get.mockImplementation((url: string) => {
+      if (url.startsWith('/bookings')) return Promise.resolve({ data: [], total: 0 });
+      if (url === '/staff') return Promise.resolve([]);
+      if (url === '/services')
+        return Promise.resolve([
+          { id: 'svc1', name: 'Haircut' },
+          { id: 'svc2', name: 'Massage' },
+        ]);
+      return Promise.resolve([]);
+    });
+
+    const user = userEvent.setup();
+    render(<BookingsPage />);
+
+    // Wait for services to load
+    await waitFor(() => {
+      const serviceSelect = screen.getByTestId('service-chip-filter');
+      const options = within(serviceSelect).getAllByRole('option');
+      expect(options).toHaveLength(3);
+    });
+
+    // Clear mock calls from initial load
+    mockApi.get.mockClear();
+    mockApi.get.mockImplementation((url: string) => {
+      if (url.startsWith('/bookings')) return Promise.resolve({ data: [], total: 0 });
+      return Promise.resolve([]);
+    });
+
+    await user.selectOptions(screen.getByTestId('service-chip-filter'), 'svc1');
+
+    await waitFor(() => {
+      const bookingCalls = mockApi.get.mock.calls.filter(
+        (call: any) => typeof call[0] === 'string' && call[0].startsWith('/bookings'),
+      );
+      expect(bookingCalls.length).toBeGreaterThan(0);
+      const lastCall = bookingCalls[bookingCalls.length - 1][0] as string;
+      expect(lastCall).toContain('serviceId=svc1');
+    });
+  });
 });

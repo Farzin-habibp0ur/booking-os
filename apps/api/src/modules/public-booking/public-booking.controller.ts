@@ -71,6 +71,9 @@ export class PublicBookingController {
       reschedulePolicyText: policySettings.reschedulePolicyText || '',
       whiteLabel: isWhiteLabel,
       paymentEnabled: !!this.stripe,
+      logoUrl: business.logoUrl || null,
+      brandPrimaryColor: business.brandPrimaryColor || '#71907C',
+      brandTagline: business.brandTagline || '',
     };
   }
 

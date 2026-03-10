@@ -153,6 +153,47 @@ class ApiClient {
     return this.request<T>(path, { method: 'DELETE' });
   }
 
+  async patchFormData<T>(path: string, formData: FormData): Promise<T> {
+    const token = this.getToken();
+    const headers: Record<string, string> = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const res = await this.fetchWithRetry(`${API_URL}${path}`, {
+      method: 'PATCH',
+      headers,
+      body: formData,
+      credentials: 'include',
+    });
+
+    if (!res.ok) {
+      if (res.status === 401) {
+        const refreshed = await this.tryRefresh();
+        if (refreshed) {
+          const retryHeaders: Record<string, string> = {};
+          const newToken = this.getToken();
+          if (newToken) retryHeaders['Authorization'] = `Bearer ${newToken}`;
+          const retryRes = await this.fetchWithRetry(`${API_URL}${path}`, {
+            method: 'PATCH',
+            headers: retryHeaders,
+            body: formData,
+            credentials: 'include',
+          });
+          if (retryRes.ok) return retryRes.json();
+        }
+        this.setToken(null);
+        if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
+          window.location.href = '/login';
+        }
+      }
+      const error = await res
+        .json()
+        .catch(() => ({ message: res.status === 401 ? 'Unauthorized' : 'Update failed' }));
+      throw new Error(error.message || `HTTP ${res.status}`);
+    }
+
+    return res.json();
+  }
+
   async upload<T>(path: string, formData: FormData): Promise<T> {
     const token = this.getToken();
     const headers: Record<string, string> = {};

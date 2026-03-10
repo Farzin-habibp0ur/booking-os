@@ -108,9 +108,9 @@ describe('settings-config', () => {
       expect(getFirstPageForCategory(account)).toBe('/settings/account');
     });
 
-    it('returns /settings for category with no pages', () => {
+    it('returns /settings/branding for appearance category', () => {
       const appearance = SETTINGS_CATEGORIES.find((c) => c.key === 'appearance')!;
-      expect(getFirstPageForCategory(appearance)).toBe('/settings');
+      expect(getFirstPageForCategory(appearance)).toBe('/settings/branding');
     });
 
     it('returns correct first page for each multi-page category', () => {

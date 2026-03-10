@@ -75,6 +75,9 @@ describe('PublicBookingController', () => {
         reschedulePolicyText: '',
         whiteLabel: false,
         paymentEnabled: false,
+        logoUrl: null,
+        brandPrimaryColor: '#71907C',
+        brandTagline: '',
       });
     });
 

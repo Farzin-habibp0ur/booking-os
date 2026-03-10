@@ -38,6 +38,9 @@ interface Business {
   reschedulePolicyText: string;
   whiteLabel?: boolean;
   paymentEnabled?: boolean;
+  logoUrl?: string | null;
+  brandPrimaryColor?: string;
+  brandTagline?: string;
 }
 interface Service {
   id: string;
@@ -465,8 +468,26 @@ export default function BookingPortalPage() {
     <div>
       {/* Header */}
       <div className="text-center mb-6">
-        <h1 className="text-2xl font-serif font-semibold text-slate-900">{business.name}</h1>
-        {step !== 'success' && <p className="text-sm text-slate-500 mt-1">Book an appointment</p>}
+        {business.logoUrl ? (
+          <img
+            src={`/api/v1/uploads/${business.logoUrl}`}
+            alt={business.name}
+            className="mx-auto h-12 object-contain mb-2"
+            data-testid="business-logo"
+          />
+        ) : (
+          <h1
+            className={`text-2xl font-serif font-semibold ${business.brandPrimaryColor ? '' : 'text-slate-900'}`}
+            style={business.brandPrimaryColor ? { color: business.brandPrimaryColor } : undefined}
+          >
+            {business.name}
+          </h1>
+        )}
+        {step !== 'success' && (
+          <p className="text-sm text-slate-500 mt-1">
+            {business.brandTagline || 'Book an appointment'}
+          </p>
+        )}
       </div>
 
       {/* Progress dots */}
@@ -476,11 +497,27 @@ export default function BookingPortalPage() {
             <div key={s} className="flex items-center gap-2">
               <div
                 className={`w-2.5 h-2.5 rounded-full transition-colors ${
-                  i <= stepIndex ? 'bg-sage-600' : 'bg-slate-200'
+                  i <= stepIndex
+                    ? business.brandPrimaryColor
+                      ? ''
+                      : 'bg-sage-600'
+                    : 'bg-slate-200'
                 }`}
+                style={
+                  i <= stepIndex && business.brandPrimaryColor
+                    ? { backgroundColor: business.brandPrimaryColor }
+                    : undefined
+                }
               />
               {i < STEPS.length - 1 && (
-                <div className={`w-6 h-0.5 ${i < stepIndex ? 'bg-sage-600' : 'bg-slate-200'}`} />
+                <div
+                  className={`w-6 h-0.5 ${i < stepIndex ? (business.brandPrimaryColor ? '' : 'bg-sage-600') : 'bg-slate-200'}`}
+                  style={
+                    i < stepIndex && business.brandPrimaryColor
+                      ? { backgroundColor: business.brandPrimaryColor }
+                      : undefined
+                  }
+                />
               )}
             </div>
           ))}
@@ -587,9 +624,16 @@ export default function BookingPortalPage() {
                     }}
                     className={`flex-shrink-0 w-14 sm:w-16 py-2.5 sm:py-2 rounded-xl text-center transition-colors ${
                       selectedDate === d
-                        ? 'bg-sage-600 text-white'
+                        ? business.brandPrimaryColor
+                          ? 'text-white'
+                          : 'bg-sage-600 text-white'
                         : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
                     }`}
+                    style={
+                      selectedDate === d && business.brandPrimaryColor
+                        ? { backgroundColor: business.brandPrimaryColor }
+                        : undefined
+                    }
                   >
                     <p className="text-xs">{dayName}</p>
                     <p className="text-lg font-semibold">{dayNum}</p>
@@ -734,9 +778,18 @@ export default function BookingPortalPage() {
                             className={`px-3 py-2.5 sm:py-2 min-h-[44px] rounded-xl text-sm transition-colors ${
                               selectedSlot?.time === slot.time &&
                               selectedSlot?.staffId === slot.staffId
-                                ? 'bg-sage-600 text-white'
+                                ? business.brandPrimaryColor
+                                  ? 'text-white'
+                                  : 'bg-sage-600 text-white'
                                 : 'bg-slate-50 text-slate-700 hover:bg-sage-50 hover:text-sage-700'
                             }`}
+                            style={
+                              selectedSlot?.time === slot.time &&
+                              selectedSlot?.staffId === slot.staffId &&
+                              business.brandPrimaryColor
+                                ? { backgroundColor: business.brandPrimaryColor }
+                                : undefined
+                            }
                           >
                             {formatSlotTime(slot.display)}
                           </button>
@@ -873,7 +926,12 @@ export default function BookingPortalPage() {
           <button
             onClick={validateAndContinue}
             disabled={!customerName.trim() || !customerPhone.trim()}
-            className="w-full bg-sage-600 hover:bg-sage-700 text-white py-3 rounded-xl text-sm font-medium transition-colors disabled:opacity-50"
+            className={`w-full text-white py-3 rounded-xl text-sm font-medium transition-colors disabled:opacity-50 ${business.brandPrimaryColor ? '' : 'bg-sage-600 hover:bg-sage-700'}`}
+            style={
+              business.brandPrimaryColor
+                ? { backgroundColor: business.brandPrimaryColor }
+                : undefined
+            }
           >
             Continue
           </button>
@@ -1098,7 +1156,12 @@ export default function BookingPortalPage() {
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="w-full bg-sage-600 hover:bg-sage-700 text-white py-3 rounded-xl text-sm font-medium transition-colors disabled:opacity-50"
+            className={`w-full text-white py-3 rounded-xl text-sm font-medium transition-colors disabled:opacity-50 ${business.brandPrimaryColor ? '' : 'bg-sage-600 hover:bg-sage-700'}`}
+            style={
+              business.brandPrimaryColor
+                ? { backgroundColor: business.brandPrimaryColor }
+                : undefined
+            }
           >
             {submitting ? 'Booking...' : 'Confirm Booking'}
           </button>

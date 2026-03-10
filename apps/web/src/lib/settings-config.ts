@@ -95,11 +95,11 @@ export const SETTINGS_CATEGORIES: SettingsCategory[] = [
   },
   {
     key: 'appearance',
-    label: 'Appearance',
-    description: 'Theme, language, and display preferences',
+    label: 'Appearance & Branding',
+    description: 'Theme, branding, colors, and display preferences',
     icon: Palette,
     accent: 'slate',
-    pages: [],
+    pages: ['branding'],
     roles: ['ADMIN', 'AGENT', 'SERVICE_PROVIDER'],
   },
 ];

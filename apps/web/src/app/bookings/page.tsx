@@ -124,6 +124,8 @@ function BookingsContent() {
   const [bulkStatusModal, setBulkStatusModal] = useState(false);
   const [bulkAssignModal, setBulkAssignModal] = useState(false);
   const [staff, setStaff] = useState<any[]>([]);
+  const [services, setServices] = useState<any[]>([]);
+  const [serviceFilter, setServiceFilter] = useState(searchParams.get('serviceId') || '');
   const [activeViewId, setActiveViewId] = useState<string | null>(null);
   const [showExport, setShowExport] = useState(false);
   const [sortBy, setSortBy] = useState<SortableColumn | null>(
@@ -137,6 +139,7 @@ function BookingsContent() {
       searchParams.get('dateFrom') ||
       searchParams.get('dateTo') ||
       searchParams.get('staffId') ||
+      searchParams.get('serviceId') ||
       searchParams.get('datePreset')
     ),
   );
@@ -158,6 +161,7 @@ function BookingsContent() {
         dateFrom,
         dateTo,
         staffId: staffFilter,
+        serviceId: serviceFilter,
         datePreset,
         sortBy: sortBy || '',
         sortOrder: sortBy ? sortOrder : '',
@@ -175,6 +179,7 @@ function BookingsContent() {
       dateFrom,
       dateTo,
       staffFilter,
+      serviceFilter,
       datePreset,
       sortBy,
       sortOrder,
@@ -193,7 +198,17 @@ function BookingsContent() {
   // Update URL whenever filters change
   useEffect(() => {
     updateUrlParams();
-  }, [statusFilter, debouncedSearch, dateFrom, dateTo, staffFilter, datePreset, sortBy, sortOrder]);
+  }, [
+    statusFilter,
+    debouncedSearch,
+    dateFrom,
+    dateTo,
+    staffFilter,
+    serviceFilter,
+    datePreset,
+    sortBy,
+    sortOrder,
+  ]);
 
   const handleApplyView = (filters: Record<string, unknown>, viewId: string) => {
     setStatusFilter((filters.status as string) || '');
@@ -213,6 +228,7 @@ function BookingsContent() {
     if (dateFrom) params.set('dateFrom', dateFrom);
     if (dateTo) params.set('dateTo', `${dateTo}T23:59:59`);
     if (staffFilter) params.set('staffId', staffFilter);
+    if (serviceFilter) params.set('serviceId', serviceFilter);
     if (sortBy) params.set('sortBy', sortBy);
     if (sortBy) params.set('sortOrder', sortOrder);
 
@@ -222,7 +238,17 @@ function BookingsContent() {
       .then(setBookings)
       .catch((err) => toast(err.message || 'Failed to load bookings', 'error'))
       .finally(() => setLoading(false));
-  }, [statusFilter, debouncedSearch, dateFrom, dateTo, staffFilter, sortBy, sortOrder, toast]);
+  }, [
+    statusFilter,
+    debouncedSearch,
+    dateFrom,
+    dateTo,
+    staffFilter,
+    serviceFilter,
+    sortBy,
+    sortOrder,
+    toast,
+  ]);
 
   useEffect(() => {
     load();
@@ -243,6 +269,10 @@ function BookingsContent() {
     api
       .get<any>('/staff')
       .then((s) => setStaff(Array.isArray(s) ? s : s.data || []))
+      .catch(() => {});
+    api
+      .get<any>('/services')
+      .then((s) => setServices(Array.isArray(s) ? s : s.data || []))
       .catch(() => {});
   }, []);
 
@@ -317,15 +347,17 @@ function BookingsContent() {
     setDateFrom('');
     setDateTo('');
     setStaffFilter('');
+    setServiceFilter('');
     setDatePreset('');
     setShowFilters(false);
   };
 
-  const hasActiveFilters = !!(dateFrom || dateTo || staffFilter || datePreset);
+  const hasActiveFilters = !!(dateFrom || dateTo || staffFilter || serviceFilter || datePreset);
   const activeFilterCount =
     (statusFilter ? 1 : 0) +
     (dateFrom || dateTo ? 1 : 0) +
     (staffFilter ? 1 : 0) +
+    (serviceFilter ? 1 : 0) +
     (debouncedSearch ? 1 : 0);
 
   const sortedBookings = bookings.data || [];
@@ -426,6 +458,19 @@ function BookingsContent() {
         >
           <option value="">All Staff</option>
           {staff.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.name}
+            </option>
+          ))}
+        </select>
+        <select
+          value={serviceFilter}
+          onChange={(e) => setServiceFilter(e.target.value)}
+          className="rounded-xl border-slate-200 border text-sm px-3 py-1.5 ml-2"
+          data-testid="service-chip-filter"
+        >
+          <option value="">All Services</option>
+          {services.map((s: any) => (
             <option key={s.id} value={s.id}>
               {s.name}
             </option>
@@ -719,12 +764,12 @@ function BookingsContent() {
             icon={BookOpen}
             title={t('bookings.no_bookings', { entity: pack.labels.booking.toLowerCase() })}
             description={
-              searchQuery || statusFilter || dateFrom || dateTo || staffFilter
+              searchQuery || statusFilter || dateFrom || dateTo || staffFilter || serviceFilter
                 ? `No ${pack.labels.booking.toLowerCase()} match your filters`
                 : t('bookings.create_first', { entity: pack.labels.booking.toLowerCase() })
             }
             action={
-              !(searchQuery || statusFilter || dateFrom || dateTo || staffFilter)
+              !(searchQuery || statusFilter || dateFrom || dateTo || staffFilter || serviceFilter)
                 ? { label: 'Create New Booking', onClick: () => setNewBookingOpen(true) }
                 : undefined
             }

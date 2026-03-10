@@ -369,6 +369,19 @@ describe('BookingService', () => {
       );
     });
 
+    it('should filter by serviceId when provided', async () => {
+      prisma.booking.findMany.mockResolvedValue([]);
+      prisma.booking.count.mockResolvedValue(0);
+
+      await bookingService.findAll('biz1', { serviceId: 'svc1' });
+
+      expect(prisma.booking.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { businessId: 'biz1', serviceId: 'svc1' },
+        }),
+      );
+    });
+
     it('combines sortBy with status filter', async () => {
       prisma.booking.findMany.mockResolvedValue([]);
       prisma.booking.count.mockResolvedValue(0);

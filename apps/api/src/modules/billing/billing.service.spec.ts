@@ -458,6 +458,144 @@ describe('BillingService', () => {
     });
   });
 
+  describe('payment_intent webhooks', () => {
+    const mockSignature = 'test-signature';
+    const mockRawBody = Buffer.from('test-body');
+
+    it('handlePaymentIntentSucceeded should mark payment as COMPLETED', async () => {
+      mockStripeInstance.webhooks.constructEvent.mockReturnValue({
+        type: 'payment_intent.succeeded',
+        data: {
+          object: { id: 'pi_test_success' },
+        },
+      });
+      prisma.payment.findFirst.mockResolvedValue({
+        id: 'pay1',
+        status: 'pending',
+        bookingId: null,
+        stripePaymentIntentId: 'pi_test_success',
+      } as any);
+      prisma.payment.update.mockResolvedValue({} as any);
+
+      const result = await service.handleWebhookEvent(mockRawBody, mockSignature);
+
+      expect(result).toEqual({ received: true });
+      expect(prisma.payment.update).toHaveBeenCalledWith({
+        where: { id: 'pay1' },
+        data: { status: 'COMPLETED' },
+      });
+    });
+
+    it('handlePaymentIntentSucceeded should confirm PENDING_DEPOSIT booking', async () => {
+      mockStripeInstance.webhooks.constructEvent.mockReturnValue({
+        type: 'payment_intent.succeeded',
+        data: {
+          object: { id: 'pi_test_deposit' },
+        },
+      });
+      prisma.payment.findFirst.mockResolvedValue({
+        id: 'pay2',
+        status: 'pending',
+        bookingId: 'booking1',
+        stripePaymentIntentId: 'pi_test_deposit',
+      } as any);
+      prisma.payment.update.mockResolvedValue({} as any);
+      prisma.booking.findUnique.mockResolvedValue({
+        id: 'booking1',
+        status: 'PENDING_DEPOSIT',
+      } as any);
+      prisma.booking.update.mockResolvedValue({} as any);
+
+      const result = await service.handleWebhookEvent(mockRawBody, mockSignature);
+
+      expect(result).toEqual({ received: true });
+      expect(prisma.payment.update).toHaveBeenCalledWith({
+        where: { id: 'pay2' },
+        data: { status: 'COMPLETED' },
+      });
+      expect(prisma.booking.update).toHaveBeenCalledWith({
+        where: { id: 'booking1' },
+        data: { status: 'CONFIRMED' },
+      });
+    });
+
+    it('handlePaymentIntentSucceeded should be idempotent for already-completed payments', async () => {
+      mockStripeInstance.webhooks.constructEvent.mockReturnValue({
+        type: 'payment_intent.succeeded',
+        data: {
+          object: { id: 'pi_test_idempotent' },
+        },
+      });
+      prisma.payment.findFirst.mockResolvedValue({
+        id: 'pay3',
+        status: 'COMPLETED',
+        bookingId: 'booking1',
+        stripePaymentIntentId: 'pi_test_idempotent',
+      } as any);
+
+      const result = await service.handleWebhookEvent(mockRawBody, mockSignature);
+
+      expect(result).toEqual({ received: true });
+      // Should NOT update payment again
+      expect(prisma.payment.update).not.toHaveBeenCalled();
+      // Should NOT touch the booking
+      expect(prisma.booking.findUnique).not.toHaveBeenCalled();
+    });
+
+    it('handlePaymentIntentSucceeded should handle missing payment gracefully', async () => {
+      mockStripeInstance.webhooks.constructEvent.mockReturnValue({
+        type: 'payment_intent.succeeded',
+        data: {
+          object: { id: 'pi_test_missing' },
+        },
+      });
+      prisma.payment.findFirst.mockResolvedValue(null);
+
+      const result = await service.handleWebhookEvent(mockRawBody, mockSignature);
+
+      expect(result).toEqual({ received: true });
+      expect(prisma.payment.update).not.toHaveBeenCalled();
+    });
+
+    it('handlePaymentIntentFailed should mark payment as FAILED', async () => {
+      mockStripeInstance.webhooks.constructEvent.mockReturnValue({
+        type: 'payment_intent.payment_failed',
+        data: {
+          object: { id: 'pi_test_failed' },
+        },
+      });
+      prisma.payment.findFirst.mockResolvedValue({
+        id: 'pay4',
+        status: 'pending',
+        stripePaymentIntentId: 'pi_test_failed',
+      } as any);
+      prisma.payment.update.mockResolvedValue({} as any);
+
+      const result = await service.handleWebhookEvent(mockRawBody, mockSignature);
+
+      expect(result).toEqual({ received: true });
+      expect(prisma.payment.update).toHaveBeenCalledWith({
+        where: { id: 'pay4' },
+        data: { status: 'FAILED' },
+      });
+    });
+
+    it('handlePaymentIntentFailed should handle missing payment gracefully', async () => {
+      mockStripeInstance.webhooks.constructEvent.mockReturnValue({
+        type: 'payment_intent.payment_failed',
+        data: {
+          object: { id: 'pi_test_missing_fail' },
+        },
+      });
+      prisma.payment.findFirst.mockResolvedValue(null);
+
+      const result = await service.handleWebhookEvent(mockRawBody, mockSignature);
+
+      expect(result).toEqual({ received: true });
+      expect(prisma.payment.update).not.toHaveBeenCalled();
+    });
+  });
+
   // M12 fix: Webhook secret startup validation
   describe('onModuleInit webhook secret validation', () => {
     it('does not throw when webhook secret is configured', () => {

@@ -1,4 +1,5 @@
 import { BadRequestException, Controller, Get, Param, Query, Res, UseGuards } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { Response } from 'express';
@@ -30,6 +31,7 @@ export class ExportController {
     private reportsService: ReportsService,
   ) {}
 
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
   @Get('customers/export')
   async exportCustomers(
     @BusinessId() businessId: string,
@@ -50,6 +52,7 @@ export class ExportController {
     res!.send(csv);
   }
 
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
   @Get('bookings/export')
   async exportBookings(
     @BusinessId() businessId: string,
@@ -70,6 +73,7 @@ export class ExportController {
     res!.send(csv);
   }
 
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
   @Get('staff/export')
   async exportStaff(
     @BusinessId() businessId: string,
@@ -90,6 +94,7 @@ export class ExportController {
     res!.send(csv);
   }
 
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
   @Get('reports/:reportType/export')
   async exportReport(
     @BusinessId() businessId: string,

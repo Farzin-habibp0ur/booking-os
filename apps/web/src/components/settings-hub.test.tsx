@@ -88,12 +88,12 @@ describe('SettingsHub', () => {
     expect(mockPush).toHaveBeenCalledWith('/settings/calendar');
   });
 
-  it('navigates to /settings for appearance card (no sub-pages)', async () => {
+  it('navigates to /settings/branding for appearance card', async () => {
     const user = userEvent.setup();
     render(<SettingsHub />);
 
     await user.click(screen.getByTestId('settings-card-appearance'));
-    expect(mockPush).toHaveBeenCalledWith('/settings');
+    expect(mockPush).toHaveBeenCalledWith('/settings/branding');
   });
 
   it('filters cards by AGENT role — shows only account and appearance', () => {

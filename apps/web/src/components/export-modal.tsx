@@ -45,6 +45,7 @@ export default function ExportModal({ isOpen, onClose, entity, allFields }: Expo
 
   const handleExport = async () => {
     setExporting(true);
+    toast('Preparing your export...');
     try {
       const params = new URLSearchParams();
       if (dateFrom) params.set('dateFrom', dateFrom);
@@ -66,9 +67,7 @@ export default function ExportModal({ isOpen, onClose, entity, allFields }: Expo
       document.body.removeChild(link);
       URL.revokeObjectURL(downloadUrl);
 
-      const entityLabel =
-        entity === 'customers' ? 'Customer' : entity === 'staff' ? 'Staff' : 'Booking';
-      toast(`${entityLabel} data exported successfully`);
+      toast('Export ready. Check your downloads.');
       onClose();
     } catch (err: any) {
       toast(err.message || 'Export failed', 'error');

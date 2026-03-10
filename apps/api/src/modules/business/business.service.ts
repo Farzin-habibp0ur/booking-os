@@ -176,6 +176,29 @@ export class BusinessService {
     });
   }
 
+  async getBranding(id: string) {
+    const business = await this.prisma.business.findUnique({ where: { id } });
+    if (!business) return null;
+    return {
+      logoUrl: business.logoUrl || null,
+      brandPrimaryColor: business.brandPrimaryColor || '#71907C',
+      brandTagline: business.brandTagline || '',
+      brandFaviconUrl: business.brandFaviconUrl || null,
+    };
+  }
+
+  async updateBranding(
+    id: string,
+    data: { brandPrimaryColor?: string; brandTagline?: string },
+    logoKey?: string,
+  ) {
+    const updateData: any = {};
+    if (data.brandPrimaryColor !== undefined) updateData.brandPrimaryColor = data.brandPrimaryColor;
+    if (data.brandTagline !== undefined) updateData.brandTagline = data.brandTagline;
+    if (logoKey !== undefined) updateData.logoUrl = logoKey;
+    return this.prisma.business.update({ where: { id }, data: updateData });
+  }
+
   async installPack(businessId: string, packName: string) {
     let pack;
     try {

@@ -2,6 +2,7 @@ import { ExportController } from './export.controller';
 import { ExportService } from './export.service';
 import { ReportsService } from '../reports/reports.service';
 import { BadRequestException } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 
 describe('ExportController', () => {
   let controller: ExportController;
@@ -105,6 +106,56 @@ describe('ExportController', () => {
         dateTo: '2026-03-31',
         fields: ['customerName', 'status'],
       });
+    });
+  });
+
+  describe('exportStaff', () => {
+    it('sets CSV content-type and disposition headers', async () => {
+      mockService.exportStaffCsv = jest.fn().mockResolvedValue('id,name\r\ns1,Sarah\r\n');
+
+      await (controller as any).exportStaff(
+        'biz1',
+        undefined,
+        undefined,
+        undefined,
+        mockRes as any,
+      );
+
+      expect(mockRes.setHeader).toHaveBeenCalledWith('Content-Type', 'text/csv; charset=utf-8');
+      expect(mockRes.setHeader).toHaveBeenCalledWith(
+        'Content-Disposition',
+        expect.stringContaining('staff-'),
+      );
+    });
+  });
+
+  describe('Throttle decorator', () => {
+    it('endpoints should have Throttle decorator', () => {
+      // NestJS Throttler sets metadata with key "THROTTLER:LIMIT" + throttle name
+      // For @Throttle({ default: { ... } }) the key is "THROTTLER:LIMITdefault"
+      const throttleKey = 'THROTTLER:LIMITdefault';
+
+      const customersThrottle = Reflect.getMetadata(
+        throttleKey,
+        ExportController.prototype.exportCustomers,
+      );
+      const bookingsThrottle = Reflect.getMetadata(
+        throttleKey,
+        ExportController.prototype.exportBookings,
+      );
+      const reportThrottle = Reflect.getMetadata(
+        throttleKey,
+        ExportController.prototype.exportReport,
+      );
+      const staffThrottle = Reflect.getMetadata(
+        throttleKey,
+        ExportController.prototype.exportStaff,
+      );
+
+      expect(customersThrottle).toBeDefined();
+      expect(bookingsThrottle).toBeDefined();
+      expect(reportThrottle).toBeDefined();
+      expect(staffThrottle).toBeDefined();
     });
   });
 

@@ -163,6 +163,16 @@ export class BillingService implements OnModuleInit {
         await this.handleTrialWillEnd(sub);
         break;
       }
+      case 'payment_intent.succeeded': {
+        const paymentIntent = event.data.object as Stripe.PaymentIntent;
+        await this.handlePaymentIntentSucceeded(paymentIntent);
+        break;
+      }
+      case 'payment_intent.payment_failed': {
+        const paymentIntent = event.data.object as Stripe.PaymentIntent;
+        await this.handlePaymentIntentFailed(paymentIntent);
+        break;
+      }
       default:
         this.logger.log(`Unhandled Stripe event: ${event.type}`);
     }
@@ -371,6 +381,55 @@ export class BillingService implements OnModuleInit {
         err,
       );
     }
+  }
+
+  private async handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent) {
+    const payment = await this.prisma.payment.findFirst({
+      where: { stripePaymentIntentId: paymentIntent.id },
+    });
+    if (!payment) {
+      this.logger.log(`No payment found for PaymentIntent ${paymentIntent.id}`);
+      return;
+    }
+    if (payment.status === 'COMPLETED') {
+      this.logger.log(`Payment ${payment.id} already completed (idempotent)`);
+      return;
+    }
+
+    await this.prisma.payment.update({
+      where: { id: payment.id },
+      data: { status: 'COMPLETED' },
+    });
+
+    // Safety net: confirm booking if still PENDING_DEPOSIT
+    if (payment.bookingId) {
+      const booking = await this.prisma.booking.findUnique({
+        where: { id: payment.bookingId },
+      });
+      if (booking && booking.status === 'PENDING_DEPOSIT') {
+        await this.prisma.booking.update({
+          where: { id: booking.id },
+          data: { status: 'CONFIRMED' },
+        });
+        this.logger.log(`Booking ${booking.id} confirmed via webhook safety net`);
+      }
+    }
+  }
+
+  private async handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
+    const payment = await this.prisma.payment.findFirst({
+      where: { stripePaymentIntentId: paymentIntent.id },
+    });
+    if (!payment) {
+      this.logger.warn(`No payment found for failed PaymentIntent ${paymentIntent.id}`);
+      return;
+    }
+
+    await this.prisma.payment.update({
+      where: { id: payment.id },
+      data: { status: 'FAILED' },
+    });
+    this.logger.warn(`Payment ${payment.id} marked as failed`);
   }
 
   // Deposit payment for a booking

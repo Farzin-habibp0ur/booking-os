@@ -166,6 +166,10 @@ export class BookingQueryDto {
 
   @IsOptional()
   @IsString()
+  serviceId?: string;
+
+  @IsOptional()
+  @IsString()
   customerId?: string;
 
   @IsOptional()
@@ -1649,4 +1653,20 @@ export class ConsoleSettingsBulkUpdateDto {
   @ValidateNested({ each: true })
   @Type(() => ConsoleSettingBulkItem)
   settings!: ConsoleSettingBulkItem[];
+}
+
+// ---- Branding DTO ----
+
+export class UpdateBrandingDto {
+  @IsString()
+  @IsOptional()
+  @Matches(/^#[0-9A-Fa-f]{6}$/, {
+    message: 'brandPrimaryColor must be a valid hex color (e.g. #71907C)',
+  })
+  brandPrimaryColor?: string;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(120)
+  brandTagline?: string;
 }

@@ -19,6 +19,10 @@ model Business {
   aiSettings           Json     @default("{}")
   notificationSettings Json     @default("{}")
   policySettings       Json     @default("{}")
+  logoUrl              String?
+  brandPrimaryColor    String?  @default("#71907C")
+  brandTagline         String?
+  brandFaviconUrl      String?
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 
@@ -212,6 +216,7 @@ model Booking {
   @@index([businessId])
   @@index([businessId, startTime])
   @@index([businessId, status])
+  @@index([businessId, startTime, status])
   @@index([locationId])
   @@index([resourceId])
   @@map("bookings")

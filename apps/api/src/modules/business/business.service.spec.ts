@@ -1702,4 +1702,130 @@ describe('BusinessService', () => {
       });
     });
   });
+
+  // ────────────────────────────────────────────────────────────
+  // getBranding
+  // ────────────────────────────────────────────────────────────
+  describe('getBranding', () => {
+    it('should return branding with defaults when fields are null', async () => {
+      prisma.business.findUnique.mockResolvedValue({
+        id: 'biz1',
+        logoUrl: null,
+        brandPrimaryColor: null,
+        brandTagline: null,
+        brandFaviconUrl: null,
+      } as any);
+
+      const result = await service.getBranding('biz1');
+
+      expect(result).toEqual({
+        logoUrl: null,
+        brandPrimaryColor: '#71907C',
+        brandTagline: '',
+        brandFaviconUrl: null,
+      });
+      expect(prisma.business.findUnique).toHaveBeenCalledWith({ where: { id: 'biz1' } });
+    });
+
+    it('should return stored branding values', async () => {
+      prisma.business.findUnique.mockResolvedValue({
+        id: 'biz1',
+        logoUrl: 'brand-abc.png',
+        brandPrimaryColor: '#FF5733',
+        brandTagline: 'Your beauty, our passion',
+        brandFaviconUrl: 'favicon-xyz.png',
+      } as any);
+
+      const result = await service.getBranding('biz1');
+
+      expect(result).toEqual({
+        logoUrl: 'brand-abc.png',
+        brandPrimaryColor: '#FF5733',
+        brandTagline: 'Your beauty, our passion',
+        brandFaviconUrl: 'favicon-xyz.png',
+      });
+    });
+
+    it('returns null when business is not found', async () => {
+      prisma.business.findUnique.mockResolvedValue(null);
+
+      const result = await service.getBranding('nonexistent');
+
+      expect(result).toBeNull();
+    });
+  });
+
+  // ────────────────────────────────────────────────────────────
+  // updateBranding
+  // ────────────────────────────────────────────────────────────
+  describe('updateBranding', () => {
+    it('should update brandPrimaryColor', async () => {
+      prisma.business.update.mockResolvedValue({ id: 'biz1', brandPrimaryColor: '#FF0000' } as any);
+
+      const result = await service.updateBranding('biz1', { brandPrimaryColor: '#FF0000' });
+
+      expect(result).toEqual({ id: 'biz1', brandPrimaryColor: '#FF0000' });
+      expect(prisma.business.update).toHaveBeenCalledWith({
+        where: { id: 'biz1' },
+        data: { brandPrimaryColor: '#FF0000' },
+      });
+    });
+
+    it('should update brandTagline', async () => {
+      prisma.business.update.mockResolvedValue({ id: 'biz1', brandTagline: 'New tagline' } as any);
+
+      const result = await service.updateBranding('biz1', { brandTagline: 'New tagline' });
+
+      expect(result).toEqual({ id: 'biz1', brandTagline: 'New tagline' });
+      expect(prisma.business.update).toHaveBeenCalledWith({
+        where: { id: 'biz1' },
+        data: { brandTagline: 'New tagline' },
+      });
+    });
+
+    it('should update logoUrl when logoKey is provided', async () => {
+      prisma.business.update.mockResolvedValue({
+        id: 'biz1',
+        logoUrl: 'brand-logo-123.png',
+      } as any);
+
+      const result = await service.updateBranding('biz1', {}, 'brand-logo-123.png');
+
+      expect(result).toEqual({ id: 'biz1', logoUrl: 'brand-logo-123.png' });
+      expect(prisma.business.update).toHaveBeenCalledWith({
+        where: { id: 'biz1' },
+        data: { logoUrl: 'brand-logo-123.png' },
+      });
+    });
+
+    it('should not set fields that are undefined', async () => {
+      prisma.business.update.mockResolvedValue({ id: 'biz1' } as any);
+
+      await service.updateBranding('biz1', {});
+
+      expect(prisma.business.update).toHaveBeenCalledWith({
+        where: { id: 'biz1' },
+        data: {},
+      });
+    });
+
+    it('should update all fields together', async () => {
+      prisma.business.update.mockResolvedValue({ id: 'biz1' } as any);
+
+      await service.updateBranding(
+        'biz1',
+        { brandPrimaryColor: '#123456', brandTagline: 'Best clinic' },
+        'logo-key.svg',
+      );
+
+      expect(prisma.business.update).toHaveBeenCalledWith({
+        where: { id: 'biz1' },
+        data: {
+          brandPrimaryColor: '#123456',
+          brandTagline: 'Best clinic',
+          logoUrl: 'logo-key.svg',
+        },
+      });
+    });
+  });
 });

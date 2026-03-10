@@ -49,6 +49,7 @@ export class BookingService {
     query: {
       status?: string;
       staffId?: string;
+      serviceId?: string;
       customerId?: string;
       locationId?: string;
       dateFrom?: string;
@@ -66,6 +67,7 @@ export class BookingService {
     if (query.status) where.status = query.status;
     if (query.staffId) where.staffId = query.staffId;
     if (query.customerId) where.customerId = query.customerId;
+    if (query.serviceId) where.serviceId = query.serviceId;
     if (query.locationId) where.locationId = query.locationId;
     if (query.dateFrom || query.dateTo) {
       where.startTime = {};
