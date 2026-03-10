@@ -910,13 +910,13 @@ Key groups (full list in `.env.example`):
 - P-19: Booking Color Labels (colorLabel field, 5 colors, selector, calendar borders)
 - P-20: Booking Audit Log (BookingAuditLog model, timeline component, 5 action types)
 
-### Sprint 4: UX Polish & Platform Depth — IN PROGRESS
+### Sprint 4: UX Polish & Platform Depth — COMPLETE
 - P-21: Illustrated Empty States — COMPLETE (all 8 target pages verified)
 - P-22: Skeleton Loading States — COMPLETE (5 new compositions, 37 pages standardized)
 - P-25: Micro-Animations — COMPLETE (8 new keyframes, applied to cards/toasts/modals/dropdowns/shell)
 - P-23: Keyboard Navigation — COMPLETE (useKeyboardShortcut/useChordShortcut/useListNavigation hooks, global shortcuts in shell, J/K list nav on bookings+customers, categorized shortcuts modal, 19 tests)
 - P-24: Mobile Layouts (Inbox & Calendar) — COMPLETE (useSwipeGesture hook, inbox swipe-to-resolve/snooze with reveal UI, DateScroller component, forced day view on mobile, stacked booking cards, FAB for new booking, 14 new tests)
-- P-26: Source Attribution — COMPLETE
+- P-26: Source Attribution — COMPLETE (Booking.source field with 6 values: MANUAL/PORTAL/WHATSAPP/AI/REFERRAL/WALK_IN, auto-populate across 4 entry points, BOOKING_SOURCE_STYLES design tokens, source badge in booking detail modal, dashboard source breakdown card, sourceBreakdown analytics in ReportsService, source filter on bookings list, 12 new tests)
 
 ### Code Quality
 
