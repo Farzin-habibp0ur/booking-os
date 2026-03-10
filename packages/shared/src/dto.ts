@@ -90,6 +90,8 @@ export interface UpdateServiceDto {
 
 // ---- Booking DTOs ----
 
+export type BookingSource = 'MANUAL' | 'PORTAL' | 'WHATSAPP' | 'AI' | 'REFERRAL' | 'WALK_IN';
+
 export interface CreateBookingDto {
   customerId: string;
   serviceId: string;
@@ -98,6 +100,7 @@ export interface CreateBookingDto {
   startTime: string; // ISO date
   notes?: string;
   customFields?: Record<string, unknown>;
+  source?: BookingSource;
 }
 
 export interface UpdateBookingDto {

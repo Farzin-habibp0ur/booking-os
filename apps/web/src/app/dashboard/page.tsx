@@ -8,7 +8,7 @@ import { PageSkeleton } from '@/components/skeleton';
 import { useI18n } from '@/lib/i18n';
 import { useAuth } from '@/lib/auth';
 import { useMode } from '@/lib/use-mode';
-import { BOOKING_STATUS_STYLES } from '@/lib/design-tokens';
+import { BOOKING_STATUS_STYLES, BOOKING_SOURCE_STYLES } from '@/lib/design-tokens';
 import { trackEvent } from '@/lib/posthog';
 import { KpiStrip } from './components/kpi-strip';
 import { MyWork } from './components/my-work';
@@ -539,6 +539,40 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
+
+          {/* Bookings by Source */}
+          {data.sourceBreakdown && data.sourceBreakdown.length > 0 && (
+            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6" data-testid="source-breakdown">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="font-semibold text-slate-900 dark:text-slate-100">
+                  Bookings by Source
+                </h2>
+                <span className="text-xs text-slate-400">Last 30 days</span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                {data.sourceBreakdown.map((s: any) => {
+                  const style = BOOKING_SOURCE_STYLES[s.source] || BOOKING_SOURCE_STYLES.MANUAL;
+                  return (
+                    <div
+                      key={s.source}
+                      className="rounded-xl p-3 text-center"
+                      style={{ backgroundColor: `${style.hex}10` }}
+                    >
+                      <p className="text-2xl font-serif font-bold" style={{ color: style.hex }}>
+                        {s.count}
+                      </p>
+                      <p className="text-xs text-slate-600 mt-0.5">{style.label}</p>
+                      {s.completed > 0 && (
+                        <p className="text-[10px] text-slate-400 mt-0.5">
+                          {s.completed} completed
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* P1-20: Go-Live Checklist (ADMIN only, hidden when all complete) */}
           {isAdmin && checklist && !checklist.allComplete && (

@@ -203,6 +203,7 @@ model Booking {
   externalCalendarEventId String?
   customFields            Json     @default("{}")
   colorLabel              String?
+  source                  String   @default("MANUAL")
   createdAt               DateTime @default(now())
   updatedAt               DateTime @updatedAt
 
@@ -223,6 +224,7 @@ model Booking {
   @@index([businessId, startTime])
   @@index([businessId, status])
   @@index([businessId, startTime, status])
+  @@index([businessId, source])
   @@index([locationId])
   @@index([resourceId])
   @@map("bookings")

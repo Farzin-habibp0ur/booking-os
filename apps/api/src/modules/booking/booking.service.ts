@@ -55,6 +55,7 @@ export class BookingService {
       dateFrom?: string;
       dateTo?: string;
       search?: string;
+      source?: string;
       page?: number;
       pageSize?: number;
       sortBy?: string;
@@ -69,6 +70,7 @@ export class BookingService {
     if (query.customerId) where.customerId = query.customerId;
     if (query.serviceId) where.serviceId = query.serviceId;
     if (query.locationId) where.locationId = query.locationId;
+    if (query.source) where.source = query.source;
     if (query.dateFrom || query.dateTo) {
       where.startTime = {};
       if (query.dateFrom) {
@@ -161,6 +163,7 @@ export class BookingService {
       forceBook?: boolean;
       forceBookReason?: string;
       colorLabel?: string;
+      source?: string;
     },
     currentUser?: { staffId: string; staffName: string; role: string },
   ) {
@@ -282,6 +285,7 @@ export class BookingService {
           notes: data.notes,
           customFields: mergedCustomFields,
           colorLabel: data.colorLabel,
+          source: data.source || 'MANUAL',
           status: isDepositRequired ? 'PENDING_DEPOSIT' : 'CONFIRMED',
         },
         include: { customer: true, service: true, staff: true },
@@ -1125,13 +1129,20 @@ export class BookingService {
         bookingId: null,
       },
       orderBy: { sentAt: 'desc' },
+      include: { campaign: { select: { id: true, name: true } } },
     });
 
     if (recentSend) {
-      await this.prisma.campaignSend.update({
-        where: { id: recentSend.id },
-        data: { bookingId },
-      });
+      await this.prisma.$transaction([
+        this.prisma.campaignSend.update({
+          where: { id: recentSend.id },
+          data: { bookingId },
+        }),
+        this.prisma.booking.update({
+          where: { id: bookingId },
+          data: { source: 'REFERRAL' },
+        }),
+      ]);
     }
   }
 }

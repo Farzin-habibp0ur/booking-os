@@ -96,6 +96,7 @@ export class DashboardService {
       tomorrowBookings,
       overdueConversationsRaw,
       revenueToday,
+      sourceBreakdown,
     ] = await Promise.all([
       this.reportsService.noShowRate(businessId, 30),
       this.reportsService.responseTimes(businessId),
@@ -145,6 +146,7 @@ export class DashboardService {
           _sum: { amount: true },
         })
         .then((r) => r._sum.amount || 0),
+      this.reportsService.sourceBreakdown(businessId, 30),
     ]);
 
     // Batch 2b: Staff-scoped queries for Mission Control
@@ -310,6 +312,7 @@ export class DashboardService {
         revenueToday: Math.round(revenueToday * 100) / 100,
       },
       statusBreakdown,
+      sourceBreakdown,
       consultConversion,
       attentionNeeded: {
         depositPendingBookings,

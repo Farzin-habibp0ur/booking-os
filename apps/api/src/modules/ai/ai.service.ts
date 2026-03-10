@@ -1088,6 +1088,7 @@ export class AiService {
       staffId: bookingState.staffId,
       conversationId,
       startTime: bookingState.slotIso,
+      source: 'AI',
     });
 
     await this.prisma.conversation.update({

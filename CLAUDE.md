@@ -126,6 +126,7 @@ modules/
 ```
 StaffRole:          OWNER, ADMIN, AGENT, SERVICE_PROVIDER, SUPER_ADMIN
 BookingStatus:      PENDING, PENDING_DEPOSIT, CONFIRMED, IN_PROGRESS, COMPLETED, CANCELLED, NO_SHOW
+BookingSource:      MANUAL, PORTAL, WHATSAPP, AI, REFERRAL, WALK_IN
 KanbanStatus:       CHECKED_IN, DIAGNOSING, AWAITING_APPROVAL, IN_PROGRESS, READY_FOR_PICKUP
 ConversationStatus: OPEN, WAITING, RESOLVED, SNOOZED
 ServiceKind:        CONSULT, TREATMENT, OTHER
@@ -194,6 +195,7 @@ Key events: `message:new`, `conversation:updated`, `ai:suggestion`, `ai:auto-rep
 
 - **Centralized in `apps/web/src/lib/design-tokens.ts`** — all status colors, elevation constants, and shared style maps
 - `BOOKING_STATUS_STYLES` — map of all 7 booking statuses to `{ bg, text, border, dot, label, hex }`
+- `BOOKING_SOURCE_STYLES` — map of 6 booking sources (MANUAL, PORTAL, WHATSAPP, AI, REFERRAL, WALK_IN) to `{ bg, text, label, hex }`
 - `CONVERSATION_STATUS_STYLES` — map of 4 conversation statuses (OPEN, WAITING, RESOLVED, SNOOZED)
 - `ELEVATION` — shadow + radius tokens: `card`, `modal`, `dropdown`, `cardSm`, `fab`
 - Helper functions: `statusBadgeClasses(status)`, `statusCalendarClasses(status)`, `statusHex(status)`

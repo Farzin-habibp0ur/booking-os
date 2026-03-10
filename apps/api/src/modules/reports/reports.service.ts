@@ -303,4 +303,26 @@ export class ReportsService {
       byDay: dayCounts.map((count, day) => ({ day, count })),
     };
   }
+
+  async sourceBreakdown(businessId: string, days: number = 30) {
+    const since = new Date();
+    since.setDate(since.getDate() - days);
+
+    const bookings = await this.prisma.booking.findMany({
+      where: { businessId, createdAt: { gte: since } },
+      select: { source: true, status: true },
+    });
+
+    const map: Record<string, { source: string; count: number; completed: number }> = {};
+    for (const b of bookings) {
+      const src = b.source || 'MANUAL';
+      if (!map[src]) {
+        map[src] = { source: src, count: 0, completed: 0 };
+      }
+      map[src].count++;
+      if (b.status === 'COMPLETED') map[src].completed++;
+    }
+
+    return Object.values(map).sort((a, b) => b.count - a.count);
+  }
 }

@@ -395,6 +395,7 @@ describe('AiService', () => {
         staffId: 'staff1',
         conversationId: 'conv1',
         startTime: '2026-03-01T14:00:00Z',
+        source: 'AI',
       });
       expect(prisma.conversation.update).toHaveBeenCalledWith({
         where: { id: 'conv1' },

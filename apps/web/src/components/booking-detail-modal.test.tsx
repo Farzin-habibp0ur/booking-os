@@ -356,4 +356,52 @@ describe('BookingDetailModal', () => {
       expect(mockPatch).toHaveBeenCalledWith('/bookings/b1', { colorLabel: null });
     });
   });
+
+  // ─── Source Badge ──────────────────────────────────────────────────
+
+  test('shows source badge for portal bookings', () => {
+    render(
+      <BookingDetailModal
+        {...defaultProps}
+        booking={{ ...mockBooking, source: 'PORTAL' }}
+      />,
+    );
+    expect(screen.getByTestId('source-badge')).toBeInTheDocument();
+    expect(screen.getByTestId('source-badge')).toHaveTextContent('Portal');
+  });
+
+  test('shows source badge for WhatsApp bookings', () => {
+    render(
+      <BookingDetailModal
+        {...defaultProps}
+        booking={{ ...mockBooking, source: 'WHATSAPP' }}
+      />,
+    );
+    expect(screen.getByTestId('source-badge')).toHaveTextContent('WhatsApp');
+  });
+
+  test('shows source badge for AI bookings', () => {
+    render(
+      <BookingDetailModal
+        {...defaultProps}
+        booking={{ ...mockBooking, source: 'AI' }}
+      />,
+    );
+    expect(screen.getByTestId('source-badge')).toHaveTextContent('AI');
+  });
+
+  test('does not show source badge for manual bookings', () => {
+    render(
+      <BookingDetailModal
+        {...defaultProps}
+        booking={{ ...mockBooking, source: 'MANUAL' }}
+      />,
+    );
+    expect(screen.queryByTestId('source-badge')).not.toBeInTheDocument();
+  });
+
+  test('does not show source badge when source is undefined', () => {
+    render(<BookingDetailModal {...defaultProps} />);
+    expect(screen.queryByTestId('source-badge')).not.toBeInTheDocument();
+  });
 });

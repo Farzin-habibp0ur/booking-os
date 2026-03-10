@@ -97,6 +97,26 @@ export const BOOKING_COLOR_LABELS: Record<string, { bg: string; border: string; 
   rose: { bg: 'bg-rose-50', border: 'border-rose-400', dot: 'bg-rose-500', label: 'Rose' },
 };
 
+// ---------------------------------------------------------------------------
+// Booking source styles (for source attribution badges)
+// ---------------------------------------------------------------------------
+
+export interface SourceStyle {
+  bg: string;
+  text: string;
+  label: string;
+  hex: string;
+}
+
+export const BOOKING_SOURCE_STYLES: Record<string, SourceStyle> = {
+  MANUAL: { bg: 'bg-slate-100', text: 'text-slate-600', label: 'Manual', hex: '#64748b' },
+  PORTAL: { bg: 'bg-sage-50', text: 'text-sage-900', label: 'Portal', hex: '#8AA694' },
+  WHATSAPP: { bg: 'bg-emerald-50', text: 'text-emerald-700', label: 'WhatsApp', hex: '#10b981' },
+  AI: { bg: 'bg-lavender-50', text: 'text-lavender-900', label: 'AI', hex: '#9F8ECB' },
+  REFERRAL: { bg: 'bg-sky-50', text: 'text-sky-700', label: 'Referral', hex: '#0ea5e9' },
+  WALK_IN: { bg: 'bg-amber-50', text: 'text-amber-700', label: 'Walk-in', hex: '#f59e0b' },
+};
+
 // Convenience helpers -------------------------------------------------------
 
 /** Badge-style classes (bg + text combined) — used in bookings table, badges */

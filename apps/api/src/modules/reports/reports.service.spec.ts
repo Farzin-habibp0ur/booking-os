@@ -1161,4 +1161,61 @@ describe('ReportsService', () => {
       expect(hourBucket?.count).toBe(3);
     });
   });
+
+  // ─── sourceBreakdown ─────────────────────────────────────────────
+
+  describe('sourceBreakdown', () => {
+    it('groups bookings by source and counts completions', async () => {
+      prisma.booking.findMany.mockResolvedValue([
+        { source: 'MANUAL', status: 'COMPLETED' },
+        { source: 'MANUAL', status: 'CONFIRMED' },
+        { source: 'PORTAL', status: 'COMPLETED' },
+        { source: 'WHATSAPP', status: 'COMPLETED' },
+        { source: 'WHATSAPP', status: 'CANCELLED' },
+        { source: 'AI', status: 'CONFIRMED' },
+      ] as any);
+
+      const result = await reportsService.sourceBreakdown('biz1', 30);
+
+      expect(result).toHaveLength(4);
+      const manual = result.find((r) => r.source === 'MANUAL');
+      expect(manual).toEqual({ source: 'MANUAL', count: 2, completed: 1 });
+      const whatsapp = result.find((r) => r.source === 'WHATSAPP');
+      expect(whatsapp).toEqual({ source: 'WHATSAPP', count: 2, completed: 1 });
+      const portal = result.find((r) => r.source === 'PORTAL');
+      expect(portal).toEqual({ source: 'PORTAL', count: 1, completed: 1 });
+      const ai = result.find((r) => r.source === 'AI');
+      expect(ai).toEqual({ source: 'AI', count: 1, completed: 0 });
+    });
+
+    it('returns empty array when no bookings', async () => {
+      prisma.booking.findMany.mockResolvedValue([]);
+      const result = await reportsService.sourceBreakdown('biz1');
+      expect(result).toEqual([]);
+    });
+
+    it('defaults null source to MANUAL', async () => {
+      prisma.booking.findMany.mockResolvedValue([
+        { source: null, status: 'CONFIRMED' },
+        { source: null, status: 'COMPLETED' },
+      ] as any);
+
+      const result = await reportsService.sourceBreakdown('biz1');
+      expect(result).toEqual([{ source: 'MANUAL', count: 2, completed: 1 }]);
+    });
+
+    it('sorts by count descending', async () => {
+      prisma.booking.findMany.mockResolvedValue([
+        { source: 'AI', status: 'CONFIRMED' },
+        { source: 'PORTAL', status: 'CONFIRMED' },
+        { source: 'PORTAL', status: 'COMPLETED' },
+        { source: 'PORTAL', status: 'COMPLETED' },
+      ] as any);
+
+      const result = await reportsService.sourceBreakdown('biz1');
+      expect(result[0].source).toBe('PORTAL');
+      expect(result[0].count).toBe(3);
+      expect(result[1].source).toBe('AI');
+    });
+  });
 });

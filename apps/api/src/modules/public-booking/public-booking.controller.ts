@@ -206,6 +206,7 @@ export class PublicBookingController {
       staffId: body.staffId,
       startTime: body.startTime,
       customFields: Object.keys(customFields).length > 0 ? customFields : undefined,
+      source: body.ref ? 'REFERRAL' : 'PORTAL',
     });
 
     // Link payment to booking if paymentIntentId was provided

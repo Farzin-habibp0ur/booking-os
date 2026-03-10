@@ -109,6 +109,11 @@ export class CreateBookingDto {
   @IsOptional()
   @IsIn(['sage', 'lavender', 'amber', 'sky', 'rose'])
   colorLabel?: string;
+
+  @IsString()
+  @IsOptional()
+  @IsIn(['MANUAL', 'PORTAL', 'WHATSAPP', 'AI', 'REFERRAL', 'WALK_IN'])
+  source?: string;
 }
 
 export class UpdateBookingDto {
@@ -197,6 +202,11 @@ export class BookingQueryDto {
   @IsOptional()
   @IsString()
   search?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(['MANUAL', 'PORTAL', 'WHATSAPP', 'AI', 'REFERRAL', 'WALK_IN'])
+  source?: string;
 
   @IsOptional()
   page?: number;

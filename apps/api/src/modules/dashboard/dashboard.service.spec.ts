@@ -13,6 +13,7 @@ describe('DashboardService', () => {
     responseTimes: jest.Mock;
     statusBreakdown: jest.Mock;
     consultToTreatmentConversion: jest.Mock;
+    sourceBreakdown: jest.Mock;
   };
 
   beforeEach(async () => {
@@ -29,6 +30,10 @@ describe('DashboardService', () => {
         converted: 6,
         rate: 60,
       }),
+      sourceBreakdown: jest.fn().mockResolvedValue([
+        { source: 'MANUAL', count: 8, completed: 5 },
+        { source: 'PORTAL', count: 3, completed: 2 },
+      ]),
     };
 
     const module = await Test.createTestingModule({

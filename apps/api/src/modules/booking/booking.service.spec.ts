@@ -778,10 +778,12 @@ describe('BookingService', () => {
           }),
         }),
       );
-      expect(prisma.campaignSend.update).toHaveBeenCalledWith({
-        where: { id: 'cs1' },
-        data: { bookingId: 'b1' },
-      });
+      expect(prisma.campaignSend.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'cs1' },
+          data: { bookingId: 'b1' },
+        }),
+      );
     });
 
     it('does not update campaignSend when no recent send found', async () => {
@@ -803,6 +805,56 @@ describe('BookingService', () => {
       await jest.advanceTimersByTimeAsync(50);
 
       expect(prisma.campaignSend.update).not.toHaveBeenCalled();
+    });
+
+    it('stores source field when provided', async () => {
+      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', durationMins: 60 } as any);
+      prisma.booking.findFirst.mockResolvedValue(null);
+      prisma.booking.create.mockResolvedValue({ id: 'b1' } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+
+      await bookingService.create('biz1', { ...createData, source: 'PORTAL' });
+
+      expect(prisma.booking.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ source: 'PORTAL' }),
+        }),
+      );
+    });
+
+    it('defaults source to MANUAL when not provided', async () => {
+      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', durationMins: 60 } as any);
+      prisma.booking.findFirst.mockResolvedValue(null);
+      prisma.booking.create.mockResolvedValue({ id: 'b1' } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+
+      await bookingService.create('biz1', createData);
+
+      expect(prisma.booking.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ source: 'MANUAL' }),
+        }),
+      );
+    });
+
+    it('stores AI source when booking created from AI', async () => {
+      prisma.service.findFirst.mockResolvedValue({ id: 'svc1', durationMins: 60 } as any);
+      prisma.booking.findFirst.mockResolvedValue(null);
+      prisma.booking.create.mockResolvedValue({ id: 'b1' } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+
+      await bookingService.create('biz1', {
+        ...createData,
+        source: 'AI',
+        conversationId: 'conv1',
+        staffId: undefined,
+      });
+
+      expect(prisma.booking.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ source: 'AI' }),
+        }),
+      );
     });
   });
 
