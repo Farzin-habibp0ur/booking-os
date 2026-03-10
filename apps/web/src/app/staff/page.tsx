@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useI18n } from '@/lib/i18n';
+import { useToast } from '@/lib/toast';
 import { UpgradeNudge } from '@/components/upgrade-nudge';
 import { EmptyState } from '@/components/skeleton';
 import { usePlan } from '@/lib/use-plan';
@@ -24,6 +25,7 @@ const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 
 
 export default function StaffPage() {
   const { t } = useI18n();
+  const { toast } = useToast();
   const plan = usePlan();
   const [staffList, setStaffList] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);

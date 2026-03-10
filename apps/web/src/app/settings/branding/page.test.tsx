@@ -52,9 +52,7 @@ describe('BrandingPage', () => {
 
     render(<BrandingPage />);
 
-    expect(
-      screen.getByClassName?.('animate-pulse') ?? document.querySelector('.animate-pulse'),
-    ).toBeInTheDocument();
+    expect(document.querySelector('.animate-pulse')).toBeInTheDocument();
     expect(screen.queryByText('Branding')).not.toBeInTheDocument();
   });
 

@@ -59,7 +59,7 @@ export function useChordShortcut(
   const chordsRef = useRef(chords);
   chordsRef.current = chords;
   const pendingRef = useRef(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
     const listener = (e: KeyboardEvent) => {
