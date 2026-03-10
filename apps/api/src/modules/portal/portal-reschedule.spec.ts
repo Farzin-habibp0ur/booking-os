@@ -91,7 +91,11 @@ describe('PortalService – rescheduleBooking', () => {
       where: { id: bookingId, customerId, businessId },
       include: { service: { select: { durationMins: true } } },
     });
-    expect(bookingService.checkPolicyAllowed).toHaveBeenCalledWith(businessId, bookingId, 'reschedule');
+    expect(bookingService.checkPolicyAllowed).toHaveBeenCalledWith(
+      businessId,
+      bookingId,
+      'reschedule',
+    );
     expect(prisma.booking.update).toHaveBeenCalledWith({
       where: { id: bookingId },
       data: {

@@ -81,17 +81,10 @@ describe('PortalService — cancelBooking', () => {
     expect(prisma.booking.findFirst).toHaveBeenCalledWith({
       where: { id: bookingId, customerId, businessId },
     });
-    expect(bookingService.checkPolicyAllowed).toHaveBeenCalledWith(
-      businessId,
-      bookingId,
-      'cancel',
-    );
-    expect(bookingService.updateStatus).toHaveBeenCalledWith(
-      businessId,
-      bookingId,
-      'CANCELLED',
-      { reason: 'Cancelled by customer via portal' },
-    );
+    expect(bookingService.checkPolicyAllowed).toHaveBeenCalledWith(businessId, bookingId, 'cancel');
+    expect(bookingService.updateStatus).toHaveBeenCalledWith(businessId, bookingId, 'CANCELLED', {
+      reason: 'Cancelled by customer via portal',
+    });
     expect(result.status).toBe('CANCELLED');
   });
 
@@ -103,21 +96,18 @@ describe('PortalService — cancelBooking', () => {
 
     const result = await service.cancelBooking(customerId, businessId, bookingId);
 
-    expect(bookingService.updateStatus).toHaveBeenCalledWith(
-      businessId,
-      bookingId,
-      'CANCELLED',
-      { reason: 'Cancelled by customer via portal' },
-    );
+    expect(bookingService.updateStatus).toHaveBeenCalledWith(businessId, bookingId, 'CANCELLED', {
+      reason: 'Cancelled by customer via portal',
+    });
     expect(result.status).toBe('CANCELLED');
   });
 
   it('should throw NotFoundException when booking not found', async () => {
     prisma.booking.findFirst.mockResolvedValue(null);
 
-    await expect(
-      service.cancelBooking(customerId, businessId, bookingId),
-    ).rejects.toThrow(NotFoundException);
+    await expect(service.cancelBooking(customerId, businessId, bookingId)).rejects.toThrow(
+      NotFoundException,
+    );
   });
 
   it('should throw ConflictException when booking status is COMPLETED', async () => {
@@ -126,9 +116,9 @@ describe('PortalService — cancelBooking', () => {
       status: 'COMPLETED',
     });
 
-    await expect(
-      service.cancelBooking(customerId, businessId, bookingId),
-    ).rejects.toThrow(ConflictException);
+    await expect(service.cancelBooking(customerId, businessId, bookingId)).rejects.toThrow(
+      ConflictException,
+    );
   });
 
   it('should throw ConflictException when booking status is CANCELLED', async () => {
@@ -137,9 +127,9 @@ describe('PortalService — cancelBooking', () => {
       status: 'CANCELLED',
     });
 
-    await expect(
-      service.cancelBooking(customerId, businessId, bookingId),
-    ).rejects.toThrow(ConflictException);
+    await expect(service.cancelBooking(customerId, businessId, bookingId)).rejects.toThrow(
+      ConflictException,
+    );
   });
 
   it('should throw ForbiddenException when cancellation policy disallows', async () => {
@@ -148,9 +138,9 @@ describe('PortalService — cancelBooking', () => {
       reason: 'Too close to appointment time',
     });
 
-    await expect(
-      service.cancelBooking(customerId, businessId, bookingId),
-    ).rejects.toThrow(ForbiddenException);
+    await expect(service.cancelBooking(customerId, businessId, bookingId)).rejects.toThrow(
+      ForbiddenException,
+    );
   });
 
   it('should pass reason to updateStatus when provided', async () => {
@@ -158,22 +148,16 @@ describe('PortalService — cancelBooking', () => {
 
     await service.cancelBooking(customerId, businessId, bookingId, reason);
 
-    expect(bookingService.updateStatus).toHaveBeenCalledWith(
-      businessId,
-      bookingId,
-      'CANCELLED',
-      { reason: 'Schedule conflict' },
-    );
+    expect(bookingService.updateStatus).toHaveBeenCalledWith(businessId, bookingId, 'CANCELLED', {
+      reason: 'Schedule conflict',
+    });
   });
 
   it('should use default reason when no reason is provided', async () => {
     await service.cancelBooking(customerId, businessId, bookingId);
 
-    expect(bookingService.updateStatus).toHaveBeenCalledWith(
-      businessId,
-      bookingId,
-      'CANCELLED',
-      { reason: 'Cancelled by customer via portal' },
-    );
+    expect(bookingService.updateStatus).toHaveBeenCalledWith(businessId, bookingId, 'CANCELLED', {
+      reason: 'Cancelled by customer via portal',
+    });
   });
 });

@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, ForbiddenException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  ConflictException,
+} from '@nestjs/common';
 import { PrismaService } from '../../common/prisma.service';
 import { BookingService } from '../booking/booking.service';
 import { UpdatePortalProfileDto } from './dto';
@@ -130,7 +135,12 @@ export class PortalService {
     });
   }
 
-  async rescheduleBooking(customerId: string, businessId: string, bookingId: string, newStartTime: string) {
+  async rescheduleBooking(
+    customerId: string,
+    businessId: string,
+    bookingId: string,
+    newStartTime: string,
+  ) {
     // Verify booking belongs to this customer AND business (tenant isolation)
     const booking = await this.prisma.booking.findFirst({
       where: { id: bookingId, customerId, businessId },
@@ -144,7 +154,11 @@ export class PortalService {
     }
 
     // Check reschedule policy
-    const policy = await this.bookingService.checkPolicyAllowed(businessId, bookingId, 'reschedule');
+    const policy = await this.bookingService.checkPolicyAllowed(
+      businessId,
+      bookingId,
+      'reschedule',
+    );
     if (!policy.allowed) {
       throw new ForbiddenException(policy.reason || 'Rescheduling not allowed');
     }

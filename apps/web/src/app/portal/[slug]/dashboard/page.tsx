@@ -150,10 +150,7 @@ export default function PortalDashboardPage() {
           </h2>
           <div className="space-y-3" data-testid="upcoming-bookings">
             {upcoming.slice(0, 3).map((b: any) => (
-              <div
-                key={b.id}
-                className="bg-white rounded-2xl shadow-soft p-4"
-              >
+              <div key={b.id} className="bg-white rounded-2xl shadow-soft p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-sage-50 rounded-xl flex items-center justify-center">
@@ -335,9 +332,7 @@ export default function PortalDashboardPage() {
                 minute: '2-digit',
               })}
             </p>
-            {actionError && (
-              <p className="text-xs text-red-600 mb-3">{actionError}</p>
-            )}
+            {actionError && <p className="text-xs text-red-600 mb-3">{actionError}</p>}
             <div className="flex gap-2">
               <button
                 onClick={() => setCancelModal(null)}
@@ -385,9 +380,7 @@ export default function PortalDashboardPage() {
               onChange={(e) => setRescheduleDate(e.target.value)}
               className="w-full px-3 py-2 text-sm bg-slate-50 border-transparent focus:bg-white focus:ring-2 focus:ring-sage-500 rounded-xl mb-3"
             />
-            {actionError && (
-              <p className="text-xs text-red-600 mb-3">{actionError}</p>
-            )}
+            {actionError && <p className="text-xs text-red-600 mb-3">{actionError}</p>}
             <div className="flex gap-2">
               <button
                 onClick={() => setRescheduleModal(null)}
