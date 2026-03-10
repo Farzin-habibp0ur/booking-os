@@ -1,4 +1,14 @@
-import { Controller, Get, Patch, Delete, Param, Body, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Param,
+  Body,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { WaitlistService } from './waitlist.service';
@@ -19,6 +29,14 @@ export class WaitlistController {
     @Query('staffId') staffId?: string,
   ) {
     return this.waitlistService.getEntries(businessId, { status, serviceId, staffId });
+  }
+
+  @Post('bulk')
+  bulkAction(
+    @BusinessId() businessId: string,
+    @Body() body: { ids: string[]; action: 'remove' | 'resolve' },
+  ) {
+    return this.waitlistService.bulkAction(businessId, body.ids, body.action);
   }
 
   @Patch(':id')

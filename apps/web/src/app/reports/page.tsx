@@ -5,7 +5,17 @@ import Link from 'next/link';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { useI18n } from '@/lib/i18n';
-import { Download, FileText, Loader2, Mail, Clock, X, Trash2, Sparkles } from 'lucide-react';
+import {
+  Download,
+  FileText,
+  Loader2,
+  Mail,
+  Clock,
+  X,
+  Trash2,
+  Sparkles,
+  BarChart3,
+} from 'lucide-react';
 import {
   BarChart,
   Bar,
@@ -28,6 +38,7 @@ const PERIOD_OPTIONS = [
 ];
 
 import { statusHex } from '@/lib/design-tokens';
+import { EmptyState } from '@/components/skeleton';
 
 const PIE_COLORS = ['#8AA694', '#71907C', '#f59e0b', '#ef4444', '#9F8ECB', '#64748b'];
 
@@ -611,9 +622,11 @@ export default function ReportsPage() {
             <ExportButtons reportType="service-breakdown" days={days} />
           </div>
           {serviceData.length === 0 ? (
-            <p className="text-slate-400 text-sm py-8 text-center">
-              Not enough data yet. Reports will populate after your first week of bookings.
-            </p>
+            <EmptyState
+              icon={BarChart3}
+              title="Not enough data for reports"
+              description="Reports will populate once you have bookings and customer activity."
+            />
           ) : (
             <div className="space-y-3">
               {serviceData.map((s, i) => {
@@ -648,9 +661,11 @@ export default function ReportsPage() {
             <ExportButtons reportType="status-breakdown" days={days} />
           </div>
           {statusData.length === 0 ? (
-            <p className="text-slate-400 text-sm py-8 text-center">
-              Not enough data yet. Reports will populate after your first week of bookings.
-            </p>
+            <EmptyState
+              icon={BarChart3}
+              title="Not enough data for reports"
+              description="Reports will populate once you have bookings and customer activity."
+            />
           ) : (
             <div className="flex items-center gap-6">
               <ResponsiveContainer width={160} height={160}>

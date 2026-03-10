@@ -78,6 +78,51 @@ describe('WaitlistService', () => {
     });
   });
 
+  describe('bulkAction', () => {
+    it('should delete entries when action is remove', async () => {
+      prisma.waitlistEntry.deleteMany.mockResolvedValue({ count: 2 } as any);
+
+      const result = await service.bulkAction('biz1', ['w1', 'w2'], 'remove');
+
+      expect(result).toEqual({ count: 2 });
+      expect(prisma.waitlistEntry.deleteMany).toHaveBeenCalledWith({
+        where: { id: { in: ['w1', 'w2'] }, businessId: 'biz1' },
+      });
+    });
+
+    it('should update entries to RESOLVED when action is resolve', async () => {
+      prisma.waitlistEntry.updateMany.mockResolvedValue({ count: 3 } as any);
+
+      const result = await service.bulkAction('biz1', ['w1', 'w2', 'w3'], 'resolve');
+
+      expect(result).toEqual({ count: 3 });
+      expect(prisma.waitlistEntry.updateMany).toHaveBeenCalledWith({
+        where: { id: { in: ['w1', 'w2', 'w3'] }, businessId: 'biz1' },
+        data: { status: 'RESOLVED' },
+      });
+    });
+
+    it('should filter by businessId for tenant isolation', async () => {
+      prisma.waitlistEntry.deleteMany.mockResolvedValue({ count: 1 } as any);
+
+      await service.bulkAction('biz-other', ['w1'], 'remove');
+
+      expect(prisma.waitlistEntry.deleteMany).toHaveBeenCalledWith({
+        where: { id: { in: ['w1'] }, businessId: 'biz-other' },
+      });
+    });
+
+    it('should cap ids at 50', async () => {
+      const ids = Array.from({ length: 60 }, (_, i) => `w${i}`);
+      prisma.waitlistEntry.deleteMany.mockResolvedValue({ count: 50 } as any);
+
+      await service.bulkAction('biz1', ids, 'remove');
+
+      const call = prisma.waitlistEntry.deleteMany.mock.calls[0]?.[0] as any;
+      expect(call.where.id.in).toHaveLength(50);
+    });
+  });
+
   describe('getEntries', () => {
     it('should return entries with filters', async () => {
       prisma.waitlistEntry.findMany.mockResolvedValue([{ id: 'wl1', status: 'ACTIVE' }] as any);

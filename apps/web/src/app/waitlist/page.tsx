@@ -5,7 +5,16 @@ import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { useToast } from '@/lib/toast';
 import { TableRowSkeleton, EmptyState } from '@/components/skeleton';
-import { ClipboardList, X, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
+import {
+  ClipboardList,
+  X,
+  CheckCircle2,
+  Clock,
+  AlertCircle,
+  Trash2,
+  CheckCheck,
+} from 'lucide-react';
+import BulkActionBar from '@/components/bulk-action-bar';
 import TooltipNudge from '@/components/tooltip-nudge';
 import { ViewPicker } from '@/components/saved-views';
 
@@ -30,6 +39,7 @@ export default function WaitlistPage() {
   const [serviceFilter, setServiceFilter] = useState('');
   const [services, setServices] = useState<any[]>([]);
   const [activeViewId, setActiveViewId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const { toast } = useToast();
 
   const currentFilters = { status: statusFilter, serviceId: serviceFilter };
@@ -90,6 +100,50 @@ export default function WaitlistPage() {
     }
   };
 
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === entries.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(entries.map((e: any) => e.id)));
+    }
+  };
+
+  const handleBulkRemove = async () => {
+    if (!confirm(`Remove ${selectedIds.size} waitlist entries?`)) return;
+    try {
+      await api.post('/waitlist/bulk', {
+        ids: Array.from(selectedIds),
+        action: 'remove',
+      });
+      setSelectedIds(new Set());
+      load();
+    } catch (err: any) {
+      toast(err.message || 'Failed to remove entries', 'error');
+    }
+  };
+
+  const handleBulkResolve = async () => {
+    try {
+      await api.post('/waitlist/bulk', {
+        ids: Array.from(selectedIds),
+        action: 'resolve',
+      });
+      setSelectedIds(new Set());
+      load();
+    } catch (err: any) {
+      toast(err.message || 'Failed to resolve entries', 'error');
+    }
+  };
+
   return (
     <div className="p-6" data-tour-target="waitlist-table">
       <TooltipNudge
@@ -140,6 +194,14 @@ export default function WaitlistPage() {
           <table className="w-full min-w-[700px]">
             <thead className="bg-slate-50 border-b">
               <tr>
+                <th className="w-10 p-3">
+                  <input
+                    type="checkbox"
+                    checked={entries.length > 0 && selectedIds.size === entries.length}
+                    onChange={toggleSelectAll}
+                    className="rounded text-sage-600"
+                  />
+                </th>
                 <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
                   Customer
                 </th>
@@ -165,11 +227,25 @@ export default function WaitlistPage() {
             </thead>
             <tbody className="divide-y">
               {loading
-                ? Array.from({ length: 5 }).map((_, i) => <TableRowSkeleton key={i} cols={7} />)
+                ? Array.from({ length: 5 }).map((_, i) => <TableRowSkeleton key={i} cols={8} />)
                 : entries.map((entry) => {
                     const StatusIcon = statusIcons[entry.status];
                     return (
-                      <tr key={entry.id} className="hover:bg-slate-50">
+                      <tr
+                        key={entry.id}
+                        className={cn(
+                          'hover:bg-slate-50',
+                          selectedIds.has(entry.id) && 'bg-sage-50/50',
+                        )}
+                      >
+                        <td className="w-10 p-3" onClick={(e) => e.stopPropagation()}>
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.has(entry.id)}
+                            onChange={() => toggleSelect(entry.id)}
+                            className="rounded text-sage-600"
+                          />
+                        </td>
                         <td className="p-3 text-sm">
                           <p className="font-medium">{entry.customer?.name}</p>
                           <p className="text-xs text-slate-500">{entry.customer?.phone}</p>
@@ -244,6 +320,15 @@ export default function WaitlistPage() {
           />
         )}
       </div>
+
+      <BulkActionBar
+        count={selectedIds.size}
+        onClear={() => setSelectedIds(new Set())}
+        actions={[
+          { label: 'Mark Resolved', onClick: handleBulkResolve },
+          { label: 'Remove Selected', onClick: handleBulkRemove, variant: 'danger' },
+        ]}
+      />
     </div>
   );
 }

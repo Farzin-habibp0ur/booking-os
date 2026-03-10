@@ -51,6 +51,23 @@ export class WaitlistService {
     });
   }
 
+  async bulkAction(businessId: string, ids: string[], action: 'remove' | 'resolve') {
+    const safeIds = ids.slice(0, 50);
+
+    if (action === 'remove') {
+      return this.prisma.waitlistEntry.deleteMany({
+        where: { id: { in: safeIds }, businessId },
+      });
+    }
+
+    if (action === 'resolve') {
+      return this.prisma.waitlistEntry.updateMany({
+        where: { id: { in: safeIds }, businessId },
+        data: { status: 'RESOLVED' },
+      });
+    }
+  }
+
   async getEntries(
     businessId: string,
     filters?: { status?: string; serviceId?: string; staffId?: string },

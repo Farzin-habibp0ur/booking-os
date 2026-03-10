@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
-import { Plus, Pencil, Clock, DollarSign, Shield, Timer } from 'lucide-react';
+import { Plus, Pencil, Clock, DollarSign, Shield, Timer, Scissors } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { usePack } from '@/lib/vertical-pack';
 import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/lib/toast';
 import { UpgradeNudge } from '@/components/upgrade-nudge';
+import { EmptyState } from '@/components/skeleton';
 import { usePlan } from '@/lib/use-plan';
 
 export default function ServicesPage() {
@@ -169,9 +170,18 @@ export default function ServicesPage() {
       })}
 
       {filtered.length === 0 && (
-        <div className="text-center py-12 text-slate-400">
-          <p>{t('services.no_services')}</p>
-        </div>
+        <EmptyState
+          icon={Scissors}
+          title="No services configured"
+          description="Add services so customers can book appointments with your team."
+          action={{
+            label: 'Add Your First Service',
+            onClick: () => {
+              setEditing(null);
+              setShowForm(true);
+            },
+          }}
+        />
       )}
 
       {showForm && (

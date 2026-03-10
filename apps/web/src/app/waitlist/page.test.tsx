@@ -105,10 +105,31 @@ jest.mock('@/components/tooltip-nudge', () => ({
 // Mock lucide-react icons
 jest.mock('lucide-react', () => ({
   ClipboardList: () => <div data-testid="clipboard-list-icon" />,
-  X: () => <div data-testid="x-icon" />,
+  X: (props: any) => <div data-testid="x-icon" {...props} />,
   CheckCircle2: (props: any) => <div data-testid="check-circle2-icon" {...props} />,
   Clock: (props: any) => <div data-testid="clock-icon" {...props} />,
   AlertCircle: (props: any) => <div data-testid="alert-circle-icon" {...props} />,
+  Trash2: (props: any) => <div data-testid="trash2-icon" {...props} />,
+  CheckCheck: (props: any) => <div data-testid="check-check-icon" {...props} />,
+}));
+
+// Mock bulk-action-bar
+jest.mock('@/components/bulk-action-bar', () => ({
+  __esModule: true,
+  default: ({ count, onClear, actions }: any) =>
+    count > 0 ? (
+      <div data-testid="bulk-action-bar">
+        <span>{count} selected</span>
+        {actions.map((a: any) => (
+          <button key={a.label} onClick={a.onClick}>
+            {a.label}
+          </button>
+        ))}
+        <button onClick={onClear} data-testid="bulk-clear">
+          Clear
+        </button>
+      </div>
+    ) : null,
 }));
 
 import { api } from '@/lib/api';
@@ -427,6 +448,135 @@ describe('WaitlistPage', () => {
 
     await waitFor(() => {
       expect(mockToast).toHaveBeenCalledWith(expect.any(String), 'error');
+    });
+  });
+
+  // ─── Bulk Actions ──────────────────────────────────────────
+
+  it('renders checkboxes for each entry', async () => {
+    setupMocks([
+      createEntry({ id: 'w1', customer: { name: 'Alice', phone: '+1' } }),
+      createEntry({ id: 'w2', customer: { name: 'Bob', phone: '+2' } }),
+    ]);
+
+    render(<WaitlistPage />);
+
+    await waitFor(() => {
+      const checkboxes = screen.getAllByRole('checkbox');
+      // 1 header checkbox + 2 row checkboxes
+      expect(checkboxes.length).toBe(3);
+    });
+  });
+
+  it('shows BulkActionBar when items are selected', async () => {
+    const user = userEvent.setup();
+    setupMocks([
+      createEntry({ id: 'w1', customer: { name: 'Alice', phone: '+1' } }),
+      createEntry({ id: 'w2', customer: { name: 'Bob', phone: '+2' } }),
+    ]);
+
+    render(<WaitlistPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Alice')).toBeInTheDocument();
+    });
+
+    // BulkActionBar should not be visible initially
+    expect(screen.queryByTestId('bulk-action-bar')).not.toBeInTheDocument();
+
+    // Click the first row checkbox
+    const checkboxes = screen.getAllByRole('checkbox');
+    await act(async () => {
+      await user.click(checkboxes[1]); // first row checkbox
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('bulk-action-bar')).toBeInTheDocument();
+      expect(screen.getByText('1 selected')).toBeInTheDocument();
+    });
+  });
+
+  it('calls bulk remove API when Remove Selected is clicked', async () => {
+    const user = userEvent.setup();
+    setupMocks([createEntry({ id: 'w1', customer: { name: 'Alice', phone: '+1' } })]);
+    mockApi.post.mockResolvedValue({ count: 1 });
+
+    render(<WaitlistPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Alice')).toBeInTheDocument();
+    });
+
+    const checkboxes = screen.getAllByRole('checkbox');
+    await act(async () => {
+      await user.click(checkboxes[1]);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Remove Selected')).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      await user.click(screen.getByText('Remove Selected'));
+    });
+
+    await waitFor(() => {
+      expect(mockApi.post).toHaveBeenCalledWith('/waitlist/bulk', {
+        ids: ['w1'],
+        action: 'remove',
+      });
+    });
+  });
+
+  it('calls bulk resolve API when Mark Resolved is clicked', async () => {
+    const user = userEvent.setup();
+    setupMocks([createEntry({ id: 'w1', customer: { name: 'Alice', phone: '+1' } })]);
+    mockApi.post.mockResolvedValue({ count: 1 });
+
+    render(<WaitlistPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Alice')).toBeInTheDocument();
+    });
+
+    const checkboxes = screen.getAllByRole('checkbox');
+    await act(async () => {
+      await user.click(checkboxes[1]);
+    });
+
+    await act(async () => {
+      await user.click(screen.getByText('Mark Resolved'));
+    });
+
+    await waitFor(() => {
+      expect(mockApi.post).toHaveBeenCalledWith('/waitlist/bulk', {
+        ids: ['w1'],
+        action: 'resolve',
+      });
+    });
+  });
+
+  it('selects all entries when header checkbox is clicked', async () => {
+    const user = userEvent.setup();
+    setupMocks([
+      createEntry({ id: 'w1', customer: { name: 'Alice', phone: '+1' } }),
+      createEntry({ id: 'w2', customer: { name: 'Bob', phone: '+2' } }),
+    ]);
+
+    render(<WaitlistPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Alice')).toBeInTheDocument();
+    });
+
+    // Click header checkbox (first checkbox)
+    const checkboxes = screen.getAllByRole('checkbox');
+    await act(async () => {
+      await user.click(checkboxes[0]);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('2 selected')).toBeInTheDocument();
     });
   });
 });

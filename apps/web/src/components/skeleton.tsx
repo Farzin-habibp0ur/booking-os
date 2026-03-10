@@ -53,11 +53,13 @@ export function EmptyState({
   title,
   description,
   action,
+  secondaryAction,
 }: {
   icon: React.ComponentType<{ size?: number; className?: string }>;
   title: string;
   description: string;
   action?: { label: string; onClick: () => void };
+  secondaryAction?: { label: string; onClick: () => void };
 }) {
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -70,6 +72,14 @@ export function EmptyState({
           className="bg-sage-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-sage-700 transition-colors"
         >
           {action.label}
+        </button>
+      )}
+      {secondaryAction && (
+        <button
+          onClick={secondaryAction.onClick}
+          className="mt-2 text-sm text-slate-500 hover:text-slate-700 transition-colors"
+        >
+          {secondaryAction.label}
         </button>
       )}
     </div>

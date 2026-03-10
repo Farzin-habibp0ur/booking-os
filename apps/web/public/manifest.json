@@ -1,0 +1,11 @@
+{
+  "name": "Booking OS",
+  "short_name": "BookingOS",
+  "description": "The All-in-One Command Center for Your Clinic",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#71907C",
+  "orientation": "any",
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}

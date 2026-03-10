@@ -56,6 +56,8 @@ import { TrialBanner } from '@/components/trial-banner';
 import { OnboardingChecklist } from '@/components/onboarding-checklist';
 import { ActivationWidget } from '@/components/activation-widget';
 import { NpsSurvey } from '@/components/nps-survey';
+import { HelpButton } from '@/components/help-button';
+import { InstallPrompt } from '@/components/install-prompt';
 
 const SAVED_VIEW_ICONS: Record<string, any> = {
   filter: Search,
@@ -649,6 +651,8 @@ function ShellInner({ children }: { children: ReactNode }) {
         </div>
       )}
 
+      <InstallPrompt />
+      <HelpButton />
       <NpsSurvey />
       <CommandPalette isOpen={cmdkOpen} onClose={() => setCmdkOpen(false)} />
       {tourState === 'running' && (
