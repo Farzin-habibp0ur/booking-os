@@ -271,6 +271,9 @@ export default function CommandPalette({
       <div
         className="relative bg-white rounded-2xl shadow-soft w-full max-w-lg mx-4 overflow-hidden animate-scale-in"
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Command palette"
       >
         {/* Search input */}
         <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-100">
@@ -295,7 +298,7 @@ export default function CommandPalette({
         </div>
 
         {/* Results */}
-        <div ref={listRef} className="max-h-80 overflow-y-auto">
+        <div ref={listRef} className="max-h-80 overflow-y-auto" aria-live="polite">
           {loading && (
             <div className="px-4 py-8 text-center text-sm text-slate-400">Searching...</div>
           )}

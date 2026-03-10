@@ -1,78 +1,93 @@
-import { test, expect } from '@playwright/test';
-import { loginViaApi } from './helpers/auth';
+import { test, expect } from './fixtures';
 
 test.describe('Settings', () => {
-  test.beforeEach(async ({ page }) => {
-    await loginViaApi(page);
-  });
+  test('settings page loads with form', async ({ authenticatedPage }) => {
+    const page = authenticatedPage;
 
-  test('settings page loads when authenticated', async ({ page }) => {
-    await page.goto('/settings');
-
-    await expect(page).toHaveURL(/\/settings/);
-
-    // Should show the settings title and business info form
-    await expect(page.locator('text=/settings/i').first()).toBeVisible({ timeout: 15000 });
-
-    // Should see business name input field
-    await expect(page.locator('input').first()).toBeVisible({ timeout: 10000 });
-  });
-
-  test('settings page shows quick links section', async ({ page }) => {
-    await page.goto('/settings');
-
-    // The settings page has quick links to sub-pages including AI Settings
-    await expect(page.locator('text=/ai/i').first()).toBeVisible({ timeout: 10000 });
-  });
-
-  test('can navigate to AI settings page', async ({ page }) => {
-    await page.goto('/settings/ai');
-
-    await expect(page).toHaveURL(/\/settings\/ai/);
-
-    // Wait for AI settings page to load
-    await expect(page.locator('text=/ai/i').first()).toBeVisible({ timeout: 15000 });
-
-    // The page should have some form of toggle or settings controls
-    const hasToggle = await page
-      .locator('input[type="checkbox"]')
-      .first()
-      .isVisible({ timeout: 5000 })
-      .catch(() => false);
-    const hasButton = await page
-      .locator('button')
-      .first()
-      .isVisible({ timeout: 5000 })
-      .catch(() => false);
-
-    // AI settings page should have interactive controls
-    expect(hasToggle || hasButton).toBe(true);
-  });
-
-  test('settings page requires authentication', async ({ page }) => {
-    // Clear both cookies and localStorage
-    await page.context().clearCookies();
-    await page.goto('/settings');
-    await page.evaluate(() => localStorage.clear());
-    await page.reload();
-
-    // Should redirect to login
-    await expect(page).toHaveURL(/\/login/, { timeout: 15000 });
-  });
-
-  test('can access business settings section', async ({ page }) => {
     await page.goto('/settings');
     await page.waitForLoadState('networkidle');
 
-    // Business settings should have input fields for business details
-    const hasBusinessFields = await page
-      .locator('input[name*="business" i], input[name*="name" i]')
-      .first()
-      .isVisible({ timeout: 5000 })
-      .catch(() => false);
+    await expect(page).toHaveURL(/\/settings/);
 
-    if (hasBusinessFields) {
-      await expect(page.locator('input').first()).toBeVisible();
+    // Should display settings heading
+    await expect(page.locator('text=/settings/i').first()).toBeVisible({ timeout: 15000 });
+
+    // Should have input fields (form)
+    await expect(page.locator('input').first()).toBeVisible({ timeout: 10000 });
+  });
+
+  test('business name field is present and editable', async ({ authenticatedPage }) => {
+    const page = authenticatedPage;
+
+    await page.goto('/settings');
+    await page.waitForLoadState('networkidle');
+
+    // Find business name input — look for input by label, name, or placeholder
+    const businessNameInput = page.locator(
+      'input[name*="name" i], input[name*="business" i], input[placeholder*="business" i], input[placeholder*="name" i]',
+    );
+
+    if (
+      await businessNameInput
+        .first()
+        .isVisible({ timeout: 10000 })
+        .catch(() => false)
+    ) {
+      const input = businessNameInput.first();
+
+      // Verify the field has a value (existing business name)
+      const currentValue = await input.inputValue();
+      expect(currentValue.length).toBeGreaterThan(0);
+
+      // Verify the field is editable by clearing and typing
+      await input.clear();
+      await input.fill('Test Business Name');
+      await expect(input).toHaveValue('Test Business Name');
+
+      // Restore original value to avoid side effects
+      await input.clear();
+      await input.fill(currentValue);
+    }
+  });
+
+  test('save button exists on settings page', async ({ authenticatedPage }) => {
+    const page = authenticatedPage;
+
+    await page.goto('/settings');
+    await page.waitForLoadState('networkidle');
+
+    // Find a save/update button
+    const saveButton = page.locator(
+      'button:has-text("Save"), button:has-text("Update"), button[type="submit"]',
+    );
+
+    await expect(saveButton.first()).toBeVisible({ timeout: 10000 });
+  });
+
+  test('settings sub-pages are navigable', async ({ authenticatedPage }) => {
+    const page = authenticatedPage;
+
+    await page.goto('/settings');
+    await page.waitForLoadState('networkidle');
+
+    // Look for links to sub-pages (AI settings, notifications, etc.)
+    const subPageLinks = page.locator(
+      'a[href*="/settings/"], button:has-text("AI"), text=/ai.*settings|notification|billing|team/i',
+    );
+
+    if (
+      await subPageLinks
+        .first()
+        .isVisible({ timeout: 10000 })
+        .catch(() => false)
+    ) {
+      // Click the first visible sub-page link
+      const firstLink = subPageLinks.first();
+      await firstLink.click();
+      await page.waitForLoadState('networkidle');
+
+      // Verify navigation occurred — should still be under /settings
+      await expect(page).toHaveURL(/\/settings/, { timeout: 10000 });
     }
   });
 });

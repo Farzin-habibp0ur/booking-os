@@ -79,7 +79,12 @@ export default function ExportModal({ isOpen, onClose, entity, allFields }: Expo
 
   return (
     <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl shadow-soft-lg w-full max-w-md">
+      <div
+        className="bg-white rounded-2xl shadow-soft-lg w-full max-w-md"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Export data"
+      >
         <div className="flex items-center justify-between p-4 border-b">
           <h2 className="text-lg font-serif font-semibold text-slate-900">
             Export{' '}

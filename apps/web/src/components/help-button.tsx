@@ -50,6 +50,7 @@ function KeyboardShortcutsModal({ isOpen, onClose }: { isOpen: boolean; onClose:
       <div
         className="relative bg-white dark:bg-slate-900 rounded-2xl shadow-soft w-full max-w-md mx-4 p-6"
         role="dialog"
+        aria-modal="true"
         aria-label="Keyboard Shortcuts"
       >
         <div className="flex items-center justify-between mb-4">

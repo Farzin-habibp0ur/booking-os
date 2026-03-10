@@ -264,6 +264,7 @@ function ShellInner({ children }: { children: ReactNode }) {
         <button
           onClick={() => setCmdkOpen(true)}
           className="flex-1 flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-slate-500 hover:bg-slate-50 transition-colors"
+          aria-label="Search (⌘K)"
         >
           <Search size={16} />
           <span className="flex-1 text-left">Search...</span>
@@ -375,6 +376,7 @@ function ShellInner({ children }: { children: ReactNode }) {
         <button
           onClick={toggleTheme}
           className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 w-full transition-colors"
+          aria-label="Toggle theme"
         >
           {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
           {theme === 'dark' ? 'Light mode' : 'Dark mode'}

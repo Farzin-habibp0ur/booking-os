@@ -73,6 +73,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="apple-touch-icon" href="/icon.svg" />
       </head>
       <body className="font-sans antialiased">
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-2 focus:left-2 focus:px-4 focus:py-2 focus:bg-sage-600 focus:text-white focus:rounded-xl focus:text-sm focus:font-medium"
+        >
+          Skip to content
+        </a>
         <PostHogProvider>{children}</PostHogProvider>
         <script
           dangerouslySetInnerHTML={{
