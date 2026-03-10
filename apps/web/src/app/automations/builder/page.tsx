@@ -11,7 +11,10 @@ import { NodeConfigModal } from '@/components/workflow/node-config-modal';
 import type { WorkflowNodeData } from '@/components/workflow/workflow-node';
 import type { Connection } from '@/components/workflow/workflow-connector';
 import { serializeWorkflow } from './serialize-workflow';
-import { AutomationStepBuilder, type AutomationStepData } from '@/components/automation-step-builder';
+import {
+  AutomationStepBuilder,
+  type AutomationStepData,
+} from '@/components/automation-step-builder';
 
 // --- State ---
 
@@ -555,25 +558,25 @@ function WorkflowBuilderContent() {
           </div>
         </div>
       ) : (
-      <div className="flex-1 flex overflow-hidden">
-        <WorkflowSidebar />
-        <WorkflowCanvas
-          nodes={state.nodes}
-          connections={state.connections}
-          selectedNodeId={state.selectedNodeId}
-          selectedConnectionId={state.selectedConnectionId}
-          zoom={state.zoom}
-          pan={state.pan}
-          onSelectNode={(id) => dispatch({ type: 'SELECT_NODE', id })}
-          onSelectConnection={(id) => dispatch({ type: 'SELECT_CONNECTION', id })}
-          onDeleteNode={(id) => dispatch({ type: 'DELETE_NODE', id })}
-          onConfigureNode={(id) => setConfigNodeId(id)}
-          onAddNode={handleAddNode}
-          onAddConnection={handleAddConnection}
-          onZoom={(delta) => dispatch({ type: 'SET_ZOOM', delta })}
-          onPan={(x, y) => dispatch({ type: 'SET_PAN', x, y })}
-        />
-      </div>
+        <div className="flex-1 flex overflow-hidden">
+          <WorkflowSidebar />
+          <WorkflowCanvas
+            nodes={state.nodes}
+            connections={state.connections}
+            selectedNodeId={state.selectedNodeId}
+            selectedConnectionId={state.selectedConnectionId}
+            zoom={state.zoom}
+            pan={state.pan}
+            onSelectNode={(id) => dispatch({ type: 'SELECT_NODE', id })}
+            onSelectConnection={(id) => dispatch({ type: 'SELECT_CONNECTION', id })}
+            onDeleteNode={(id) => dispatch({ type: 'DELETE_NODE', id })}
+            onConfigureNode={(id) => setConfigNodeId(id)}
+            onAddNode={handleAddNode}
+            onAddConnection={handleAddConnection}
+            onZoom={(delta) => dispatch({ type: 'SET_ZOOM', delta })}
+            onPan={(x, y) => dispatch({ type: 'SET_PAN', x, y })}
+          />
+        </div>
       )}
 
       {/* Node config modal */}

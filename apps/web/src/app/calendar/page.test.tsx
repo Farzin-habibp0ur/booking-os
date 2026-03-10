@@ -76,7 +76,12 @@ jest.mock('@/lib/design-tokens', () => ({
   BOOKING_STATUS_STYLES: {},
   BOOKING_COLOR_LABELS: {
     sage: { bg: 'bg-sage-50', border: 'border-sage-400', dot: 'bg-sage-500', label: 'Sage' },
-    lavender: { bg: 'bg-lavender-50', border: 'border-lavender-400', dot: 'bg-lavender-500', label: 'Lavender' },
+    lavender: {
+      bg: 'bg-lavender-50',
+      border: 'border-lavender-400',
+      dot: 'bg-lavender-500',
+      label: 'Lavender',
+    },
     amber: { bg: 'bg-amber-50', border: 'border-amber-400', dot: 'bg-amber-500', label: 'Amber' },
     sky: { bg: 'bg-sky-50', border: 'border-sky-400', dot: 'bg-sky-500', label: 'Sky' },
     rose: { bg: 'bg-rose-50', border: 'border-rose-400', dot: 'bg-rose-500', label: 'Rose' },
@@ -100,9 +105,7 @@ jest.mock('@/components/booking-popover', () => ({
 }));
 
 jest.mock('@/components/date-scroller', () => ({
-  DateScroller: ({ onDateSelect }: any) => (
-    <div data-testid="date-scroller">DateScroller</div>
-  ),
+  DateScroller: ({ onDateSelect }: any) => <div data-testid="date-scroller">DateScroller</div>,
 }));
 
 jest.mock('./components/calendar-sidebar', () => ({

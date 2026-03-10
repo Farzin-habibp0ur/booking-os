@@ -80,7 +80,16 @@ describe('SecuritySettingsPage', () => {
       otpauthUrl: 'otpauth://totp/...',
     });
     mockPost.mockResolvedValueOnce({
-      backupCodes: ['CODE1111', 'CODE2222', 'CODE3333', 'CODE4444', 'CODE5555', 'CODE6666', 'CODE7777', 'CODE8888'],
+      backupCodes: [
+        'CODE1111',
+        'CODE2222',
+        'CODE3333',
+        'CODE4444',
+        'CODE5555',
+        'CODE6666',
+        'CODE7777',
+        'CODE8888',
+      ],
     });
 
     render(<SecuritySettingsPage />);

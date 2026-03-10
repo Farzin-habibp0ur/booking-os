@@ -306,10 +306,7 @@ describe('BookingDetailModal', () => {
 
   test('shows selected ring on active color label', () => {
     render(
-      <BookingDetailModal
-        {...defaultProps}
-        booking={{ ...mockBooking, colorLabel: 'sage' }}
-      />,
+      <BookingDetailModal {...defaultProps} booking={{ ...mockBooking, colorLabel: 'sage' }} />,
     );
     const sageBtn = screen.getByTestId('color-label-sage');
     expect(sageBtn.className).toContain('ring-2');
@@ -317,10 +314,7 @@ describe('BookingDetailModal', () => {
 
   test('shows clear button when color label is set', () => {
     render(
-      <BookingDetailModal
-        {...defaultProps}
-        booking={{ ...mockBooking, colorLabel: 'rose' }}
-      />,
+      <BookingDetailModal {...defaultProps} booking={{ ...mockBooking, colorLabel: 'rose' }} />,
     );
     expect(screen.getByTestId('color-label-clear')).toBeInTheDocument();
   });
@@ -344,10 +338,7 @@ describe('BookingDetailModal', () => {
   test('clicking active color label clears it', async () => {
     mockPatch.mockResolvedValue({ ...mockBooking, colorLabel: null });
     render(
-      <BookingDetailModal
-        {...defaultProps}
-        booking={{ ...mockBooking, colorLabel: 'sky' }}
-      />,
+      <BookingDetailModal {...defaultProps} booking={{ ...mockBooking, colorLabel: 'sky' }} />,
     );
 
     fireEvent.click(screen.getByTestId('color-label-sky'));
@@ -360,43 +351,25 @@ describe('BookingDetailModal', () => {
   // ─── Source Badge ──────────────────────────────────────────────────
 
   test('shows source badge for portal bookings', () => {
-    render(
-      <BookingDetailModal
-        {...defaultProps}
-        booking={{ ...mockBooking, source: 'PORTAL' }}
-      />,
-    );
+    render(<BookingDetailModal {...defaultProps} booking={{ ...mockBooking, source: 'PORTAL' }} />);
     expect(screen.getByTestId('source-badge')).toBeInTheDocument();
     expect(screen.getByTestId('source-badge')).toHaveTextContent('Portal');
   });
 
   test('shows source badge for WhatsApp bookings', () => {
     render(
-      <BookingDetailModal
-        {...defaultProps}
-        booking={{ ...mockBooking, source: 'WHATSAPP' }}
-      />,
+      <BookingDetailModal {...defaultProps} booking={{ ...mockBooking, source: 'WHATSAPP' }} />,
     );
     expect(screen.getByTestId('source-badge')).toHaveTextContent('WhatsApp');
   });
 
   test('shows source badge for AI bookings', () => {
-    render(
-      <BookingDetailModal
-        {...defaultProps}
-        booking={{ ...mockBooking, source: 'AI' }}
-      />,
-    );
+    render(<BookingDetailModal {...defaultProps} booking={{ ...mockBooking, source: 'AI' }} />);
     expect(screen.getByTestId('source-badge')).toHaveTextContent('AI');
   });
 
   test('does not show source badge for manual bookings', () => {
-    render(
-      <BookingDetailModal
-        {...defaultProps}
-        booking={{ ...mockBooking, source: 'MANUAL' }}
-      />,
-    );
+    render(<BookingDetailModal {...defaultProps} booking={{ ...mockBooking, source: 'MANUAL' }} />);
     expect(screen.queryByTestId('source-badge')).not.toBeInTheDocument();
   });
 

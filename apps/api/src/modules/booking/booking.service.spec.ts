@@ -4118,12 +4118,16 @@ describe('BookingService', () => {
       prisma.reminder.create.mockResolvedValue({} as any);
       prisma.bookingAuditLog.create.mockResolvedValue({} as any);
 
-      await bookingService.create('biz1', {
-        customerId: 'cust1',
-        serviceId: 'svc1',
-        staffId: 'staff1',
-        startTime: '2026-03-01T10:00:00Z',
-      }, { staffId: 'admin1', staffName: 'Admin', role: 'ADMIN' });
+      await bookingService.create(
+        'biz1',
+        {
+          customerId: 'cust1',
+          serviceId: 'svc1',
+          staffId: 'staff1',
+          startTime: '2026-03-01T10:00:00Z',
+        },
+        { staffId: 'admin1', staffName: 'Admin', role: 'ADMIN' },
+      );
 
       expect(prisma.bookingAuditLog.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
@@ -4183,9 +4187,7 @@ describe('BookingService', () => {
       expect(prisma.bookingAuditLog.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           action: 'RESCHEDULED',
-          changes: expect.arrayContaining([
-            expect.objectContaining({ field: 'startTime' }),
-          ]),
+          changes: expect.arrayContaining([expect.objectContaining({ field: 'startTime' })]),
         }),
       });
     });

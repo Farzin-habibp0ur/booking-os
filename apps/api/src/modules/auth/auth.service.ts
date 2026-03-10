@@ -229,10 +229,7 @@ export class AuthService {
 
     // P-17: If 2FA is enabled, return a short-lived temp token instead of full tokens
     if (staff.twoFactorEnabled) {
-      const tempToken = this.jwt.sign(
-        { sub: staff.id, type: '2fa_pending' },
-        { expiresIn: '5m' },
-      );
+      const tempToken = this.jwt.sign({ sub: staff.id, type: '2fa_pending' }, { expiresIn: '5m' });
       return { requires2FA: true, tempToken } as any;
     }
 

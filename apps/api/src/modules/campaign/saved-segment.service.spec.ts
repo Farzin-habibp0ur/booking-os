@@ -12,10 +12,7 @@ describe('SavedSegmentService', () => {
     prisma = createMockPrisma();
 
     const module = await Test.createTestingModule({
-      providers: [
-        SavedSegmentService,
-        { provide: PrismaService, useValue: prisma },
-      ],
+      providers: [SavedSegmentService, { provide: PrismaService, useValue: prisma }],
     }).compile();
 
     service = module.get(SavedSegmentService);

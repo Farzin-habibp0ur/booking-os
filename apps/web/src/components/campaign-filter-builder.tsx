@@ -94,25 +94,22 @@ export default function CampaignFilterBuilder({ filters, onChange }: CampaignFil
   }
 
   // Debounced preview fetch
-  const fetchPreview = useCallback(
-    (currentFilters: Record<string, any>) => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-      debounceRef.current = setTimeout(async () => {
-        setPreviewLoading(true);
-        try {
-          const res = await api.post<{ count: number }>('/campaigns/audience-preview', {
-            filters: currentFilters,
-          });
-          setPreviewCount(res.count);
-        } catch {
-          setPreviewCount(null);
-        } finally {
-          setPreviewLoading(false);
-        }
-      }, 500);
-    },
-    [],
-  );
+  const fetchPreview = useCallback((currentFilters: Record<string, any>) => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      setPreviewLoading(true);
+      try {
+        const res = await api.post<{ count: number }>('/campaigns/audience-preview', {
+          filters: currentFilters,
+        });
+        setPreviewCount(res.count);
+      } catch {
+        setPreviewCount(null);
+      } finally {
+        setPreviewLoading(false);
+      }
+    }, 500);
+  }, []);
 
   // Sync rules -> filters -> preview
   useEffect(() => {
@@ -174,9 +171,7 @@ export default function CampaignFilterBuilder({ filters, onChange }: CampaignFil
           <div
             className={cn(
               'flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium',
-              previewLoading
-                ? 'bg-slate-100 text-slate-400'
-                : 'bg-sage-50 text-sage-700',
+              previewLoading ? 'bg-slate-100 text-slate-400' : 'bg-sage-50 text-sage-700',
             )}
             data-testid="preview-badge"
           >
@@ -216,7 +211,13 @@ export default function CampaignFilterBuilder({ filters, onChange }: CampaignFil
               </select>
             ) : (
               <input
-                type={getFieldType(rule.field) === 'number' ? 'number' : getFieldType(rule.field) === 'date' ? 'date' : 'text'}
+                type={
+                  getFieldType(rule.field) === 'number'
+                    ? 'number'
+                    : getFieldType(rule.field) === 'date'
+                      ? 'date'
+                      : 'text'
+                }
                 value={rule.value}
                 onChange={(e) => updateRule(rule.id, rule.field, e.target.value)}
                 placeholder={
@@ -273,7 +274,10 @@ export default function CampaignFilterBuilder({ filters, onChange }: CampaignFil
           </button>
 
           {showLoadDropdown && (
-            <div className="absolute z-10 mt-1 w-56 bg-white rounded-xl shadow-lg border border-slate-100 py-1" data-testid="segment-dropdown">
+            <div
+              className="absolute z-10 mt-1 w-56 bg-white rounded-xl shadow-lg border border-slate-100 py-1"
+              data-testid="segment-dropdown"
+            >
               {segments.length === 0 ? (
                 <p className="px-3 py-2 text-xs text-slate-400">No saved segments</p>
               ) : (
@@ -294,7 +298,10 @@ export default function CampaignFilterBuilder({ filters, onChange }: CampaignFil
 
       {/* Save segment modal */}
       {showSaveModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" data-testid="save-segment-modal">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30"
+          data-testid="save-segment-modal"
+        >
           <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm mx-4">
             <h3 className="text-sm font-semibold text-slate-900 mb-3">Save as Segment</h3>
             <input

@@ -175,12 +175,15 @@ describe('PublicBookingController', () => {
         '+1234567890',
         'Jane',
       );
-      expect(bookingService.create).toHaveBeenCalledWith('biz1', expect.objectContaining({
-        customerId: 'cust1',
-        serviceId: 'svc1',
-        startTime: '2026-03-01T10:00:00Z',
-        source: 'PORTAL',
-      }));
+      expect(bookingService.create).toHaveBeenCalledWith(
+        'biz1',
+        expect.objectContaining({
+          customerId: 'cust1',
+          serviceId: 'svc1',
+          startTime: '2026-03-01T10:00:00Z',
+          source: 'PORTAL',
+        }),
+      );
       expect(result.id).toBe('book1');
       expect(result.businessName).toBe('Glow Clinic');
     });

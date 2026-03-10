@@ -77,9 +77,22 @@ export class AutomationExecutorService {
         });
         for (const booking of bookings) {
           if (hasSteps) {
-            await this.startStepExecution(rule, steps, booking.businessId, booking.id, booking.customerId, booking);
+            await this.startStepExecution(
+              rule,
+              steps,
+              booking.businessId,
+              booking.id,
+              booking.customerId,
+              booking,
+            );
           } else {
-            await this.executeActions(rule, actions, booking.businessId, booking.id, booking.customerId);
+            await this.executeActions(
+              rule,
+              actions,
+              booking.businessId,
+              booking.id,
+              booking.customerId,
+            );
           }
         }
         break;
@@ -98,9 +111,22 @@ export class AutomationExecutorService {
         });
         for (const booking of bookings) {
           if (hasSteps) {
-            await this.startStepExecution(rule, steps, booking.businessId, booking.id, booking.customerId, booking);
+            await this.startStepExecution(
+              rule,
+              steps,
+              booking.businessId,
+              booking.id,
+              booking.customerId,
+              booking,
+            );
           } else {
-            await this.executeActions(rule, actions, booking.businessId, booking.id, booking.customerId);
+            await this.executeActions(
+              rule,
+              actions,
+              booking.businessId,
+              booking.id,
+              booking.customerId,
+            );
           }
         }
         break;
@@ -117,9 +143,22 @@ export class AutomationExecutorService {
         for (const booking of bookings) {
           if (filters.serviceKind && booking.service?.kind !== filters.serviceKind) continue;
           if (hasSteps) {
-            await this.startStepExecution(rule, steps, booking.businessId, booking.id, booking.customerId, booking);
+            await this.startStepExecution(
+              rule,
+              steps,
+              booking.businessId,
+              booking.id,
+              booking.customerId,
+              booking,
+            );
           } else {
-            await this.executeActions(rule, actions, booking.businessId, booking.id, booking.customerId);
+            await this.executeActions(
+              rule,
+              actions,
+              booking.businessId,
+              booking.id,
+              booking.customerId,
+            );
           }
         }
         break;
@@ -135,9 +174,22 @@ export class AutomationExecutorService {
         });
         for (const booking of bookings) {
           if (hasSteps) {
-            await this.startStepExecution(rule, steps, booking.businessId, booking.id, booking.customerId, booking);
+            await this.startStepExecution(
+              rule,
+              steps,
+              booking.businessId,
+              booking.id,
+              booking.customerId,
+              booking,
+            );
           } else {
-            await this.executeActions(rule, actions, booking.businessId, booking.id, booking.customerId);
+            await this.executeActions(
+              rule,
+              actions,
+              booking.businessId,
+              booking.id,
+              booking.customerId,
+            );
           }
         }
         break;
@@ -314,9 +366,7 @@ export class AutomationExecutorService {
 
   // P-13: Find the next sequential step (by order, same parent level)
   private findNextStep(allSteps: any[], currentStep: any): any | null {
-    const sameLevelSteps = allSteps.filter(
-      (s: any) => s.parentStepId === currentStep.parentStepId,
-    );
+    const sameLevelSteps = allSteps.filter((s: any) => s.parentStepId === currentStep.parentStepId);
     const currentIndex = sameLevelSteps.findIndex((s: any) => s.id === currentStep.id);
     return currentIndex >= 0 && currentIndex < sameLevelSteps.length - 1
       ? sameLevelSteps[currentIndex + 1]

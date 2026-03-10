@@ -38,8 +38,7 @@ export function DateScroller({ currentDate, onDateSelect }: DateScrollerProps) {
     if (centerRef.current && scrollRef.current) {
       const container = scrollRef.current;
       const el = centerRef.current;
-      const scrollLeft =
-        el.offsetLeft - container.offsetWidth / 2 + el.offsetWidth / 2;
+      const scrollLeft = el.offsetLeft - container.offsetWidth / 2 + el.offsetWidth / 2;
       container.scrollTo({ left: scrollLeft, behavior: 'instant' });
     }
   }, []);
@@ -64,15 +63,10 @@ export function DateScroller({ currentDate, onDateSelect }: DateScrollerProps) {
               'flex-shrink-0 w-12 h-16 rounded-xl flex flex-col items-center justify-center snap-center transition-colors',
               isToday && 'bg-sage-600 text-white',
               isSelected && !isToday && 'bg-sage-50 ring-2 ring-sage-600',
-              !isToday && !isSelected && 'hover:bg-slate-50'
+              !isToday && !isSelected && 'hover:bg-slate-50',
             )}
           >
-            <span
-              className={cn(
-                'text-xs',
-                isToday ? 'text-white/80' : 'text-slate-500'
-              )}
-            >
+            <span className={cn('text-xs', isToday ? 'text-white/80' : 'text-slate-500')}>
               {DAY_ABBREVS[day.getDay()]}
             </span>
             <span className="text-sm font-semibold">{day.getDate()}</span>

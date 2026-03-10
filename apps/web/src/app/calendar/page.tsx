@@ -790,101 +790,206 @@ export default function CalendarPage() {
             ) : isStaffColumns ? (
               /* DAY VIEW: columns = staff */
               <>
-              <div className="hidden md:flex min-h-full">
-                {/* Time gutter */}
-                <div className="w-16 flex-shrink-0 border-r">
-                  <div className="h-12 border-b" /> {/* header spacer */}
-                  {HOURS.map((hour) => (
-                    <div key={hour} className="relative" style={{ height: SLOT_HEIGHT }}>
-                      <span className="absolute -top-2 right-2 text-xs text-slate-400">
-                        {hour % 12 || 12}
-                        {hour < 12 ? 'am' : 'pm'}
-                      </span>
+                <div className="hidden md:flex min-h-full">
+                  {/* Time gutter */}
+                  <div className="w-16 flex-shrink-0 border-r">
+                    <div className="h-12 border-b" /> {/* header spacer */}
+                    {HOURS.map((hour) => (
+                      <div key={hour} className="relative" style={{ height: SLOT_HEIGHT }}>
+                        <span className="absolute -top-2 right-2 text-xs text-slate-400">
+                          {hour % 12 || 12}
+                          {hour < 12 ? 'am' : 'pm'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Staff columns */}
+                  {displayStaff.map((s) => (
+                    <div key={s.id} className="flex-1 min-w-[180px] border-r last:border-r-0">
+                      {/* Staff header */}
+                      <div className="h-12 border-b flex items-center justify-center sticky top-0 bg-white z-10">
+                        <div className="text-center">
+                          <p className="text-sm font-serif font-medium">{s.name}</p>
+                          <p className="text-[10px] text-slate-400">{friendlyRole(s.role)}</p>
+                        </div>
+                      </div>
+
+                      {/* Time-off banner */}
+                      {isTimeOff(s.id, currentDate) && (
+                        <div className="text-center text-[10px] text-red-500 bg-red-50/50 py-0.5 font-medium">
+                          Time Off
+                        </div>
+                      )}
+
+                      {/* Time slots */}
+                      <div className="relative">
+                        {HOURS.map((hour) => {
+                          const nonWorking = isNonWorkingHour(s.id, currentDate, hour);
+                          const offDay = isTimeOff(s.id, currentDate);
+                          return (
+                            <div
+                              key={hour}
+                              onClick={() => !offDay && handleSlotClick(s.id, currentDate, hour)}
+                              onDragOver={(e) =>
+                                !offDay && handleDragOver(e, s.id, currentDate, hour)
+                              }
+                              onDrop={(e) => !offDay && handleDrop(e, s.id, currentDate, hour)}
+                              className={cn(
+                                'border-b border-dashed border-slate-100 transition-colors',
+                                offDay
+                                  ? 'bg-red-50/50 cursor-not-allowed'
+                                  : nonWorking
+                                    ? 'bg-slate-100/60 cursor-pointer'
+                                    : 'cursor-pointer hover:bg-sage-50/30',
+                                dropTarget?.staffId === s.id &&
+                                  dropTarget?.hour === hour &&
+                                  (dropConflict
+                                    ? 'bg-red-50/50 ring-1 ring-red-300'
+                                    : 'bg-sage-100/50 ring-1 ring-sage-300'),
+                              )}
+                              style={{ height: SLOT_HEIGHT }}
+                            />
+                          );
+                        })}
+
+                        {/* Booking cards */}
+                        {getBookingsForStaffDay(s.id, currentDate).map((b) => {
+                          const { top, height } = getBookingPosition(b);
+                          const colors = STATUS_COLORS[b.status] || STATUS_COLORS.CONFIRMED;
+                          return (
+                            <div
+                              key={b.id}
+                              draggable
+                              onDragStart={(e) => handleDragStart(e, b)}
+                              onDragEnd={handleDragEnd}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleBookingClick(b, e);
+                              }}
+                              onMouseEnter={() => setHoveredBooking(b.id)}
+                              onMouseLeave={() => setHoveredBooking(null)}
+                              className={cn(
+                                'absolute left-1 right-1 rounded-xl px-2 py-1 cursor-pointer transition-shadow shadow-soft-sm',
+                                colors.bg,
+                                b.colorLabel && BOOKING_COLOR_LABELS[b.colorLabel]
+                                  ? BOOKING_COLOR_LABELS[b.colorLabel].border
+                                  : colors.border,
+                                hoveredBooking === b.id && 'shadow-md ring-1 ring-sage-200',
+                              )}
+                              data-color-label={b.colorLabel || undefined}
+                              style={{ top, height, borderLeftWidth: b.colorLabel ? 4 : 3 }}
+                            >
+                              <p
+                                className={cn(
+                                  'text-xs font-medium truncate flex items-center gap-1',
+                                  colors.text,
+                                )}
+                              >
+                                {b.recurringSeriesId && (
+                                  <Repeat size={9} className="flex-shrink-0" />
+                                )}
+                                {new Date(b.startTime).toLocaleTimeString([], {
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })}
+                                {' – '}
+                                {new Date(b.endTime).toLocaleTimeString([], {
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })}
+                              </p>
+                              <p className="text-xs font-medium truncate">{b.customer?.name}</p>
+                              {height > 35 && (
+                                <p className="text-[10px] text-slate-500 truncate">
+                                  {b.service?.name}
+                                  {b.service?.kind === 'CONSULT' && (
+                                    <span className="ml-1 text-[9px] bg-lavender-50 text-lavender-900 px-1 py-0 rounded-full">
+                                      C
+                                    </span>
+                                  )}
+                                  {b.service?.kind === 'TREATMENT' && (
+                                    <span className="ml-1 text-[9px] bg-sage-50 text-sage-900 px-1 py-0 rounded-full">
+                                      T
+                                    </span>
+                                  )}
+                                </p>
+                              )}
+
+                              {/* Hover tooltip */}
+                              {hoveredBooking === b.id && (
+                                <div className="absolute z-20 left-full top-0 ml-2 bg-white shadow-soft rounded-xl p-2.5 w-48 pointer-events-none">
+                                  <p className="text-sm font-medium">{b.customer?.name}</p>
+                                  <p className="text-xs text-slate-500">
+                                    {b.service?.name} · {b.service?.durationMins}min
+                                    {b.service?.kind === 'CONSULT' && (
+                                      <span className="ml-1 text-[9px] bg-lavender-50 text-lavender-900 px-1 py-0 rounded-full">
+                                        Consult
+                                      </span>
+                                    )}
+                                    {b.service?.kind === 'TREATMENT' && (
+                                      <span className="ml-1 text-[9px] bg-sage-50 text-sage-900 px-1 py-0 rounded-full">
+                                        Treatment
+                                      </span>
+                                    )}
+                                  </p>
+                                  <p className="text-xs text-slate-500 mt-1">
+                                    {new Date(b.startTime).toLocaleTimeString([], {
+                                      hour: '2-digit',
+                                      minute: '2-digit',
+                                    })}
+                                    {' – '}
+                                    {new Date(b.endTime).toLocaleTimeString([], {
+                                      hour: '2-digit',
+                                      minute: '2-digit',
+                                    })}
+                                  </p>
+                                  <p className="text-xs text-slate-400 mt-1">
+                                    {t('calendar.with_staff', { name: b.staff?.name })}
+                                  </p>
+                                  <span
+                                    className={cn(
+                                      'inline-block text-[10px] px-1.5 py-0.5 rounded-full mt-1',
+                                      STATUS_COLORS[b.status]?.bg,
+                                      STATUS_COLORS[b.status]?.text?.replace('line-through', ''),
+                                    )}
+                                  >
+                                    {t(`status.${b.status.toLowerCase()}`)}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                   ))}
                 </div>
-
-                {/* Staff columns */}
-                {displayStaff.map((s) => (
-                  <div key={s.id} className="flex-1 min-w-[180px] border-r last:border-r-0">
-                    {/* Staff header */}
-                    <div className="h-12 border-b flex items-center justify-center sticky top-0 bg-white z-10">
-                      <div className="text-center">
-                        <p className="text-sm font-serif font-medium">{s.name}</p>
-                        <p className="text-[10px] text-slate-400">{friendlyRole(s.role)}</p>
-                      </div>
-                    </div>
-
-                    {/* Time-off banner */}
-                    {isTimeOff(s.id, currentDate) && (
-                      <div className="text-center text-[10px] text-red-500 bg-red-50/50 py-0.5 font-medium">
-                        Time Off
-                      </div>
-                    )}
-
-                    {/* Time slots */}
-                    <div className="relative">
-                      {HOURS.map((hour) => {
-                        const nonWorking = isNonWorkingHour(s.id, currentDate, hour);
-                        const offDay = isTimeOff(s.id, currentDate);
-                        return (
-                          <div
-                            key={hour}
-                            onClick={() => !offDay && handleSlotClick(s.id, currentDate, hour)}
-                            onDragOver={(e) =>
-                              !offDay && handleDragOver(e, s.id, currentDate, hour)
-                            }
-                            onDrop={(e) => !offDay && handleDrop(e, s.id, currentDate, hour)}
-                            className={cn(
-                              'border-b border-dashed border-slate-100 transition-colors',
-                              offDay
-                                ? 'bg-red-50/50 cursor-not-allowed'
-                                : nonWorking
-                                  ? 'bg-slate-100/60 cursor-pointer'
-                                  : 'cursor-pointer hover:bg-sage-50/30',
-                              dropTarget?.staffId === s.id &&
-                                dropTarget?.hour === hour &&
-                                (dropConflict
-                                  ? 'bg-red-50/50 ring-1 ring-red-300'
-                                  : 'bg-sage-100/50 ring-1 ring-sage-300'),
-                            )}
-                            style={{ height: SLOT_HEIGHT }}
-                          />
-                        );
-                      })}
-
-                      {/* Booking cards */}
-                      {getBookingsForStaffDay(s.id, currentDate).map((b) => {
-                        const { top, height } = getBookingPosition(b);
-                        const colors = STATUS_COLORS[b.status] || STATUS_COLORS.CONFIRMED;
-                        return (
-                          <div
-                            key={b.id}
-                            draggable
-                            onDragStart={(e) => handleDragStart(e, b)}
-                            onDragEnd={handleDragEnd}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleBookingClick(b, e);
-                            }}
-                            onMouseEnter={() => setHoveredBooking(b.id)}
-                            onMouseLeave={() => setHoveredBooking(null)}
-                            className={cn(
-                              'absolute left-1 right-1 rounded-xl px-2 py-1 cursor-pointer transition-shadow shadow-soft-sm',
-                              colors.bg,
-                              b.colorLabel && BOOKING_COLOR_LABELS[b.colorLabel] ? BOOKING_COLOR_LABELS[b.colorLabel].border : colors.border,
-                              hoveredBooking === b.id && 'shadow-md ring-1 ring-sage-200',
-                            )}
-                            data-color-label={b.colorLabel || undefined}
-                            style={{ top, height, borderLeftWidth: b.colorLabel ? 4 : 3 }}
-                          >
-                            <p
-                              className={cn(
-                                'text-xs font-medium truncate flex items-center gap-1',
-                                colors.text,
-                              )}
-                            >
-                              {b.recurringSeriesId && <Repeat size={9} className="flex-shrink-0" />}
+                {/* Mobile stacked cards */}
+                <div className="md:hidden p-4 space-y-3">
+                  {bookings
+                    .filter((b) => selectedStaff.includes(b.staffId))
+                    .sort(
+                      (a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime(),
+                    )
+                    .map((b) => {
+                      const colors = STATUS_COLORS[b.status] || STATUS_COLORS.CONFIRMED;
+                      return (
+                        <button
+                          key={b.id}
+                          type="button"
+                          onClick={(e) => handleBookingClick(b, e)}
+                          className={cn(
+                            'w-full text-left rounded-xl p-3 shadow-soft-sm transition-shadow hover:shadow-md',
+                            colors.bg,
+                            b.colorLabel && BOOKING_COLOR_LABELS[b.colorLabel]
+                              ? BOOKING_COLOR_LABELS[b.colorLabel].border
+                              : colors.border,
+                          )}
+                          style={{ borderLeftWidth: 4 }}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className={cn('text-sm font-medium', colors.text)}>
                               {new Date(b.startTime).toLocaleTimeString([], {
                                 hour: '2-digit',
                                 minute: '2-digit',
@@ -894,113 +999,30 @@ export default function CalendarPage() {
                                 hour: '2-digit',
                                 minute: '2-digit',
                               })}
-                            </p>
-                            <p className="text-xs font-medium truncate">{b.customer?.name}</p>
-                            {height > 35 && (
-                              <p className="text-[10px] text-slate-500 truncate">
-                                {b.service?.name}
-                                {b.service?.kind === 'CONSULT' && (
-                                  <span className="ml-1 text-[9px] bg-lavender-50 text-lavender-900 px-1 py-0 rounded-full">
-                                    C
-                                  </span>
-                                )}
-                                {b.service?.kind === 'TREATMENT' && (
-                                  <span className="ml-1 text-[9px] bg-sage-50 text-sage-900 px-1 py-0 rounded-full">
-                                    T
-                                  </span>
-                                )}
-                              </p>
-                            )}
-
-                            {/* Hover tooltip */}
-                            {hoveredBooking === b.id && (
-                              <div className="absolute z-20 left-full top-0 ml-2 bg-white shadow-soft rounded-xl p-2.5 w-48 pointer-events-none">
-                                <p className="text-sm font-medium">{b.customer?.name}</p>
-                                <p className="text-xs text-slate-500">
-                                  {b.service?.name} · {b.service?.durationMins}min
-                                  {b.service?.kind === 'CONSULT' && (
-                                    <span className="ml-1 text-[9px] bg-lavender-50 text-lavender-900 px-1 py-0 rounded-full">
-                                      Consult
-                                    </span>
-                                  )}
-                                  {b.service?.kind === 'TREATMENT' && (
-                                    <span className="ml-1 text-[9px] bg-sage-50 text-sage-900 px-1 py-0 rounded-full">
-                                      Treatment
-                                    </span>
-                                  )}
-                                </p>
-                                <p className="text-xs text-slate-500 mt-1">
-                                  {new Date(b.startTime).toLocaleTimeString([], {
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                  })}
-                                  {' – '}
-                                  {new Date(b.endTime).toLocaleTimeString([], {
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                  })}
-                                </p>
-                                <p className="text-xs text-slate-400 mt-1">
-                                  {t('calendar.with_staff', { name: b.staff?.name })}
-                                </p>
-                                <span
-                                  className={cn(
-                                    'inline-block text-[10px] px-1.5 py-0.5 rounded-full mt-1',
-                                    STATUS_COLORS[b.status]?.bg,
-                                    STATUS_COLORS[b.status]?.text?.replace('line-through', ''),
-                                  )}
-                                >
-                                  {t(`status.${b.status.toLowerCase()}`)}
-                                </span>
-                              </div>
-                            )}
+                            </span>
+                            <span
+                              className={cn(
+                                'text-[10px] px-1.5 py-0.5 rounded-full',
+                                colors.bg,
+                                colors.text,
+                              )}
+                            >
+                              {t(`status.${b.status.toLowerCase()}`)}
+                            </span>
                           </div>
-                        );
-                      })}
+                          <p className="text-sm font-medium mt-1">{b.customer?.name}</p>
+                          <p className="text-xs text-slate-500">
+                            {b.service?.name} · {b.staff?.name}
+                          </p>
+                        </button>
+                      );
+                    })}
+                  {bookings.filter((b) => selectedStaff.includes(b.staffId)).length === 0 && (
+                    <div className="text-center py-8 text-sm text-slate-400">
+                      No bookings for this day
                     </div>
-                  </div>
-                ))}
-              </div>
-              {/* Mobile stacked cards */}
-              <div className="md:hidden p-4 space-y-3">
-                {bookings
-                  .filter((b) => selectedStaff.includes(b.staffId))
-                  .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
-                  .map((b) => {
-                    const colors = STATUS_COLORS[b.status] || STATUS_COLORS.CONFIRMED;
-                    return (
-                      <button
-                        key={b.id}
-                        type="button"
-                        onClick={(e) => handleBookingClick(b, e)}
-                        className={cn(
-                          'w-full text-left rounded-xl p-3 shadow-soft-sm transition-shadow hover:shadow-md',
-                          colors.bg,
-                          b.colorLabel && BOOKING_COLOR_LABELS[b.colorLabel] ? BOOKING_COLOR_LABELS[b.colorLabel].border : colors.border,
-                        )}
-                        style={{ borderLeftWidth: 4 }}
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className={cn('text-sm font-medium', colors.text)}>
-                            {new Date(b.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            {' – '}
-                            {new Date(b.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </span>
-                          <span className={cn('text-[10px] px-1.5 py-0.5 rounded-full', colors.bg, colors.text)}>
-                            {t(`status.${b.status.toLowerCase()}`)}
-                          </span>
-                        </div>
-                        <p className="text-sm font-medium mt-1">{b.customer?.name}</p>
-                        <p className="text-xs text-slate-500">{b.service?.name} · {b.staff?.name}</p>
-                      </button>
-                    );
-                  })}
-                {bookings.filter((b) => selectedStaff.includes(b.staffId)).length === 0 && (
-                  <div className="text-center py-8 text-sm text-slate-400">
-                    No bookings for this day
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
               </>
             ) : (
               /* WEEK VIEW: columns = days */
@@ -1068,8 +1090,7 @@ export default function CalendarPage() {
                                 handleDragOver(e, displayStaff[0]?.id || '', day, hour)
                               }
                               onDrop={(e) =>
-                                !anyTimeOff &&
-                                handleDrop(e, displayStaff[0]?.id || '', day, hour)
+                                !anyTimeOff && handleDrop(e, displayStaff[0]?.id || '', day, hour)
                               }
                               className={cn(
                                 'border-b border-dashed border-slate-100',
@@ -1101,7 +1122,9 @@ export default function CalendarPage() {
                               className={cn(
                                 'absolute left-0.5 right-0.5 rounded border-l-2 px-1 py-0.5 cursor-pointer hover:shadow-md',
                                 colors.bg,
-                                b.colorLabel && BOOKING_COLOR_LABELS[b.colorLabel] ? BOOKING_COLOR_LABELS[b.colorLabel].border : colors.border,
+                                b.colorLabel && BOOKING_COLOR_LABELS[b.colorLabel]
+                                  ? BOOKING_COLOR_LABELS[b.colorLabel].border
+                                  : colors.border,
                               )}
                               data-color-label={b.colorLabel || undefined}
                               style={{ top, height, borderLeftWidth: b.colorLabel ? 4 : 2 }}

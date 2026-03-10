@@ -131,17 +131,13 @@ export default function SecuritySettingsPage() {
           )}
         </div>
         <p className="text-sm text-slate-500 mb-4">
-          Add an extra layer of security to your account by requiring a code from your
-          authenticator app when you sign in.
+          Add an extra layer of security to your account by requiring a code from your authenticator
+          app when you sign in.
         </p>
 
-        {loading && (
-          <FormSkeleton rows={3} />
-        )}
+        {loading && <FormSkeleton rows={3} />}
 
-        {error && (
-          <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm mb-4">{error}</div>
-        )}
+        {error && <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm mb-4">{error}</div>}
 
         {/* Idle state — not enabled */}
         {!loading && step === 'idle' && !status?.enabled && (
@@ -163,8 +159,9 @@ export default function SecuritySettingsPage() {
               <div className="flex items-start gap-2 bg-amber-50 border border-amber-100 rounded-xl p-3">
                 <AlertTriangle size={16} className="text-amber-600 mt-0.5 shrink-0" />
                 <p className="text-sm text-amber-700">
-                  You only have {status.backupCodesRemaining} backup code{status.backupCodesRemaining !== 1 ? 's' : ''} remaining.
-                  Consider disabling and re-enabling 2FA to generate new codes.
+                  You only have {status.backupCodesRemaining} backup code
+                  {status.backupCodesRemaining !== 1 ? 's' : ''} remaining. Consider disabling and
+                  re-enabling 2FA to generate new codes.
                 </p>
               </div>
             )}
@@ -258,8 +255,8 @@ export default function SecuritySettingsPage() {
                 <p className="font-medium text-sage-800">Two-factor authentication enabled</p>
               </div>
               <p className="text-sm text-sage-700">
-                Save these backup codes in a safe place. Each code can only be used once to sign
-                in if you lose access to your authenticator app.
+                Save these backup codes in a safe place. Each code can only be used once to sign in
+                if you lose access to your authenticator app.
               </p>
             </div>
             <div className="grid grid-cols-2 gap-2">

@@ -290,9 +290,7 @@ describe('CampaignService', () => {
         createdAfter: '2026-01-01',
       });
 
-      expect(where.createdAt).toEqual(
-        expect.objectContaining({ gte: expect.any(Date) }),
-      );
+      expect(where.createdAt).toEqual(expect.objectContaining({ gte: expect.any(Date) }));
     });
 
     it('applies createdBefore filter', () => {
@@ -300,9 +298,7 @@ describe('CampaignService', () => {
         createdBefore: '2026-06-01',
       });
 
-      expect(where.createdAt).toEqual(
-        expect.objectContaining({ lte: expect.any(Date) }),
-      );
+      expect(where.createdAt).toEqual(expect.objectContaining({ lte: expect.any(Date) }));
     });
 
     it('applies createdAfter and createdBefore together', () => {
@@ -361,10 +357,7 @@ describe('CampaignService', () => {
     });
 
     it('filters by spentMoreThan', async () => {
-      prisma.customer.findMany.mockResolvedValue([
-        { id: 'c1' },
-        { id: 'c2' },
-      ] as any);
+      prisma.customer.findMany.mockResolvedValue([{ id: 'c1' }, { id: 'c2' }] as any);
       prisma.payment.groupBy.mockResolvedValue([
         { customerId: 'c1', _sum: { amount: 500 } },
         { customerId: 'c2', _sum: { amount: 100 } },
@@ -378,10 +371,7 @@ describe('CampaignService', () => {
     });
 
     it('filters by spentLessThan', async () => {
-      prisma.customer.findMany.mockResolvedValue([
-        { id: 'c1' },
-        { id: 'c2' },
-      ] as any);
+      prisma.customer.findMany.mockResolvedValue([{ id: 'c1' }, { id: 'c2' }] as any);
       prisma.payment.groupBy.mockResolvedValue([
         { customerId: 'c1', _sum: { amount: 500 } },
         { customerId: 'c2', _sum: { amount: 100 } },
@@ -445,9 +435,9 @@ describe('CampaignService', () => {
 
   describe('validateVariants', () => {
     it('throws if less than 2 variants', () => {
-      expect(() => campaignService.validateVariants([{ id: 'a', name: 'A', content: 'hi', percentage: 100 }])).toThrow(
-        BadRequestException,
-      );
+      expect(() =>
+        campaignService.validateVariants([{ id: 'a', name: 'A', content: 'hi', percentage: 100 }]),
+      ).toThrow(BadRequestException);
     });
 
     it('throws if variants is undefined', () => {
@@ -644,9 +634,9 @@ describe('CampaignService', () => {
         variants: [{ id: 'a' }, { id: 'b' }],
       } as any);
 
-      await expect(
-        campaignService.selectWinner('biz1', 'camp-ab', 'nonexistent'),
-      ).rejects.toThrow('Variant not found in campaign');
+      await expect(campaignService.selectWinner('biz1', 'camp-ab', 'nonexistent')).rejects.toThrow(
+        'Variant not found in campaign',
+      );
     });
   });
 });

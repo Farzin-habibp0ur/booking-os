@@ -21,7 +21,13 @@ describe('AutomationService — Step Management (P-13)', () => {
     it('returns steps ordered by order with child steps', async () => {
       prisma.automationRule.findFirst.mockResolvedValue({ id: 'r1' } as any);
       prisma.automationStep.findMany.mockResolvedValue([
-        { id: 's1', order: 0, type: 'ACTION', config: { actionType: 'SEND_MESSAGE' }, childSteps: [] },
+        {
+          id: 's1',
+          order: 0,
+          type: 'ACTION',
+          config: { actionType: 'SEND_MESSAGE' },
+          childSteps: [],
+        },
         { id: 's2', order: 1, type: 'DELAY', config: { delayMinutes: 30 }, childSteps: [] },
       ] as any);
 
@@ -72,8 +78,18 @@ describe('AutomationService — Step Management (P-13)', () => {
       prisma.automationStep.create.mockResolvedValue({ id: 's1' } as any);
 
       await service.setSteps('biz1', 'r1', [
-        { order: 0, type: 'BRANCH', config: { field: 'status', operator: 'is', value: 'CONFIRMED' } },
-        { order: 1, type: 'ACTION', config: { actionType: 'SEND_MESSAGE' }, parentStepId: 'parent1', branchLabel: 'true' },
+        {
+          order: 0,
+          type: 'BRANCH',
+          config: { field: 'status', operator: 'is', value: 'CONFIRMED' },
+        },
+        {
+          order: 1,
+          type: 'ACTION',
+          config: { actionType: 'SEND_MESSAGE' },
+          parentStepId: 'parent1',
+          branchLabel: 'true',
+        },
       ]);
 
       expect(prisma.automationStep.create).toHaveBeenCalledWith({
@@ -121,39 +137,42 @@ describe('AutomationExecutorService — Step Execution (P-13)', () => {
 
   describe('evaluateBranch', () => {
     it('evaluates "is" operator correctly', () => {
-      expect(executor.evaluateBranch(
-        { field: 'status', operator: 'is', value: 'CONFIRMED' },
-        { status: 'CONFIRMED' },
-      )).toBe('true');
-      expect(executor.evaluateBranch(
-        { field: 'status', operator: 'is', value: 'CONFIRMED' },
-        { status: 'CANCELLED' },
-      )).toBe('false');
+      expect(
+        executor.evaluateBranch(
+          { field: 'status', operator: 'is', value: 'CONFIRMED' },
+          { status: 'CONFIRMED' },
+        ),
+      ).toBe('true');
+      expect(
+        executor.evaluateBranch(
+          { field: 'status', operator: 'is', value: 'CONFIRMED' },
+          { status: 'CANCELLED' },
+        ),
+      ).toBe('false');
     });
 
     it('evaluates "isNot" operator correctly', () => {
-      expect(executor.evaluateBranch(
-        { field: 'status', operator: 'isNot', value: 'CANCELLED' },
-        { status: 'CONFIRMED' },
-      )).toBe('true');
+      expect(
+        executor.evaluateBranch(
+          { field: 'status', operator: 'isNot', value: 'CANCELLED' },
+          { status: 'CONFIRMED' },
+        ),
+      ).toBe('true');
     });
 
     it('evaluates "gt" operator correctly', () => {
-      expect(executor.evaluateBranch(
-        { field: 'amount', operator: 'gt', value: 100 },
-        { amount: 150 },
-      )).toBe('true');
-      expect(executor.evaluateBranch(
-        { field: 'amount', operator: 'gt', value: 100 },
-        { amount: 50 },
-      )).toBe('false');
+      expect(
+        executor.evaluateBranch({ field: 'amount', operator: 'gt', value: 100 }, { amount: 150 }),
+      ).toBe('true');
+      expect(
+        executor.evaluateBranch({ field: 'amount', operator: 'gt', value: 100 }, { amount: 50 }),
+      ).toBe('false');
     });
 
     it('evaluates "lt" operator correctly', () => {
-      expect(executor.evaluateBranch(
-        { field: 'amount', operator: 'lt', value: 100 },
-        { amount: 50 },
-      )).toBe('true');
+      expect(
+        executor.evaluateBranch({ field: 'amount', operator: 'lt', value: 100 }, { amount: 50 }),
+      ).toBe('true');
     });
 
     it('returns false for missing field or operator', () => {
@@ -162,10 +181,12 @@ describe('AutomationExecutorService — Step Execution (P-13)', () => {
     });
 
     it('returns false for unknown operator', () => {
-      expect(executor.evaluateBranch(
-        { field: 'status', operator: 'contains', value: 'X' },
-        { status: 'CONFIRMED' },
-      )).toBe('false');
+      expect(
+        executor.evaluateBranch(
+          { field: 'status', operator: 'contains', value: 'X' },
+          { status: 'CONFIRMED' },
+        ),
+      ).toBe('false');
     });
   });
 
@@ -179,10 +200,22 @@ describe('AutomationExecutorService — Step Execution (P-13)', () => {
         customerId: 'c1',
         status: 'PENDING',
         context: { status: 'CONFIRMED' },
-        step: { id: 's1', type: 'ACTION', config: { actionType: 'SEND_MESSAGE' }, order: 0, parentStepId: null },
+        step: {
+          id: 's1',
+          type: 'ACTION',
+          config: { actionType: 'SEND_MESSAGE' },
+          order: 0,
+          parentStepId: null,
+        },
         automationRule: {
           steps: [
-            { id: 's1', type: 'ACTION', config: { actionType: 'SEND_MESSAGE' }, order: 0, parentStepId: null },
+            {
+              id: 's1',
+              type: 'ACTION',
+              config: { actionType: 'SEND_MESSAGE' },
+              order: 0,
+              parentStepId: null,
+            },
           ],
         },
       };
@@ -213,11 +246,23 @@ describe('AutomationExecutorService — Step Execution (P-13)', () => {
         customerId: null,
         status: 'PENDING',
         context: {},
-        step: { id: 's1', type: 'DELAY', config: { delayMinutes: 30 }, order: 0, parentStepId: null },
+        step: {
+          id: 's1',
+          type: 'DELAY',
+          config: { delayMinutes: 30 },
+          order: 0,
+          parentStepId: null,
+        },
         automationRule: {
           steps: [
             { id: 's1', type: 'DELAY', config: { delayMinutes: 30 }, order: 0, parentStepId: null },
-            { id: 's2', type: 'ACTION', config: { actionType: 'SEND_MESSAGE' }, order: 1, parentStepId: null },
+            {
+              id: 's2',
+              type: 'ACTION',
+              config: { actionType: 'SEND_MESSAGE' },
+              order: 1,
+              parentStepId: null,
+            },
           ],
         },
       };
@@ -245,12 +290,38 @@ describe('AutomationExecutorService — Step Execution (P-13)', () => {
         customerId: null,
         status: 'PENDING',
         context: { status: 'CONFIRMED' },
-        step: { id: 's1', type: 'BRANCH', config: { field: 'status', operator: 'is', value: 'CONFIRMED' }, order: 0, parentStepId: null },
+        step: {
+          id: 's1',
+          type: 'BRANCH',
+          config: { field: 'status', operator: 'is', value: 'CONFIRMED' },
+          order: 0,
+          parentStepId: null,
+        },
         automationRule: {
           steps: [
-            { id: 's1', type: 'BRANCH', config: { field: 'status', operator: 'is', value: 'CONFIRMED' }, order: 0, parentStepId: null },
-            { id: 's2', type: 'ACTION', config: { actionType: 'SEND_MESSAGE' }, order: 0, parentStepId: 's1', branchLabel: 'true' },
-            { id: 's3', type: 'ACTION', config: { actionType: 'ADD_TAG', tag: 'lost' }, order: 0, parentStepId: 's1', branchLabel: 'false' },
+            {
+              id: 's1',
+              type: 'BRANCH',
+              config: { field: 'status', operator: 'is', value: 'CONFIRMED' },
+              order: 0,
+              parentStepId: null,
+            },
+            {
+              id: 's2',
+              type: 'ACTION',
+              config: { actionType: 'SEND_MESSAGE' },
+              order: 0,
+              parentStepId: 's1',
+              branchLabel: 'true',
+            },
+            {
+              id: 's3',
+              type: 'ACTION',
+              config: { actionType: 'ADD_TAG', tag: 'lost' },
+              order: 0,
+              parentStepId: 's1',
+              branchLabel: 'false',
+            },
           ],
         },
       };
@@ -276,9 +347,23 @@ describe('AutomationExecutorService — Step Execution (P-13)', () => {
         customerId: 'c1',
         status: 'PENDING',
         context: {},
-        step: { id: 's1', type: 'ACTION', config: { actionType: 'UPDATE_STATUS', newStatus: 'CONFIRMED' }, order: 0, parentStepId: null },
+        step: {
+          id: 's1',
+          type: 'ACTION',
+          config: { actionType: 'UPDATE_STATUS', newStatus: 'CONFIRMED' },
+          order: 0,
+          parentStepId: null,
+        },
         automationRule: {
-          steps: [{ id: 's1', type: 'ACTION', config: { actionType: 'UPDATE_STATUS', newStatus: 'CONFIRMED' }, order: 0, parentStepId: null }],
+          steps: [
+            {
+              id: 's1',
+              type: 'ACTION',
+              config: { actionType: 'UPDATE_STATUS', newStatus: 'CONFIRMED' },
+              order: 0,
+              parentStepId: null,
+            },
+          ],
         },
       };
       prisma.automationExecution.findUnique.mockResolvedValue(execution as any);
@@ -322,9 +407,23 @@ describe('AutomationExecutorService — Step Execution (P-13)', () => {
         id: 'e1',
         status: 'PENDING',
         context: {},
-        step: { id: 's2', type: 'ACTION', config: { actionType: 'SEND_MESSAGE' }, order: 1, parentStepId: null },
+        step: {
+          id: 's2',
+          type: 'ACTION',
+          config: { actionType: 'SEND_MESSAGE' },
+          order: 1,
+          parentStepId: null,
+        },
         automationRule: {
-          steps: [{ id: 's2', type: 'ACTION', config: { actionType: 'SEND_MESSAGE' }, order: 1, parentStepId: null }],
+          steps: [
+            {
+              id: 's2',
+              type: 'ACTION',
+              config: { actionType: 'SEND_MESSAGE' },
+              order: 1,
+              parentStepId: null,
+            },
+          ],
         },
       } as any);
       prisma.automationLog.create.mockResolvedValue({} as any);
@@ -387,7 +486,13 @@ describe('AutomationExecutorService — Step Execution (P-13)', () => {
           filters: {},
           actions: [],
           steps: [
-            { id: 's1', order: 0, type: 'ACTION', config: { actionType: 'SEND_MESSAGE' }, parentStepId: null },
+            {
+              id: 's1',
+              order: 0,
+              type: 'ACTION',
+              config: { actionType: 'SEND_MESSAGE' },
+              parentStepId: null,
+            },
           ],
           isActive: true,
           quietStart: null,
@@ -396,7 +501,14 @@ describe('AutomationExecutorService — Step Execution (P-13)', () => {
         },
       ] as any);
       prisma.booking.findMany.mockResolvedValue([
-        { id: 'b1', businessId: 'biz1', customerId: 'c1', customer: { name: 'Alice' }, service: { name: 'Facial' }, status: 'CONFIRMED' },
+        {
+          id: 'b1',
+          businessId: 'biz1',
+          customerId: 'c1',
+          customer: { name: 'Alice' },
+          service: { name: 'Facial' },
+          status: 'CONFIRMED',
+        },
       ] as any);
       prisma.automationExecution.findMany.mockResolvedValue([]);
       prisma.automationExecution.create.mockResolvedValue({ id: 'e1' } as any);
@@ -408,9 +520,23 @@ describe('AutomationExecutorService — Step Execution (P-13)', () => {
         customerId: 'c1',
         status: 'PENDING',
         context: {},
-        step: { id: 's1', type: 'ACTION', config: { actionType: 'SEND_MESSAGE' }, order: 0, parentStepId: null },
+        step: {
+          id: 's1',
+          type: 'ACTION',
+          config: { actionType: 'SEND_MESSAGE' },
+          order: 0,
+          parentStepId: null,
+        },
         automationRule: {
-          steps: [{ id: 's1', type: 'ACTION', config: { actionType: 'SEND_MESSAGE' }, order: 0, parentStepId: null }],
+          steps: [
+            {
+              id: 's1',
+              type: 'ACTION',
+              config: { actionType: 'SEND_MESSAGE' },
+              order: 0,
+              parentStepId: null,
+            },
+          ],
         },
       } as any);
       prisma.automationExecution.update.mockResolvedValue({} as any);
@@ -438,9 +564,23 @@ describe('AutomationExecutorService — Step Execution (P-13)', () => {
         customerId: null,
         status: 'PENDING',
         context: {},
-        step: { id: 's1', type: 'ACTION', config: { actionType: 'UPDATE_STATUS', newStatus: 'CONFIRMED' }, order: 0, parentStepId: null },
+        step: {
+          id: 's1',
+          type: 'ACTION',
+          config: { actionType: 'UPDATE_STATUS', newStatus: 'CONFIRMED' },
+          order: 0,
+          parentStepId: null,
+        },
         automationRule: {
-          steps: [{ id: 's1', type: 'ACTION', config: { actionType: 'UPDATE_STATUS', newStatus: 'CONFIRMED' }, order: 0, parentStepId: null }],
+          steps: [
+            {
+              id: 's1',
+              type: 'ACTION',
+              config: { actionType: 'UPDATE_STATUS', newStatus: 'CONFIRMED' },
+              order: 0,
+              parentStepId: null,
+            },
+          ],
         },
       };
       prisma.automationExecution.findUnique.mockResolvedValue(execution as any);
@@ -465,9 +605,23 @@ describe('AutomationExecutorService — Step Execution (P-13)', () => {
         customerId: 'c1',
         status: 'PENDING',
         context: {},
-        step: { id: 's1', type: 'ACTION', config: { actionType: 'ADD_TAG', tag: 'VIP' }, order: 0, parentStepId: null },
+        step: {
+          id: 's1',
+          type: 'ACTION',
+          config: { actionType: 'ADD_TAG', tag: 'VIP' },
+          order: 0,
+          parentStepId: null,
+        },
         automationRule: {
-          steps: [{ id: 's1', type: 'ACTION', config: { actionType: 'ADD_TAG', tag: 'VIP' }, order: 0, parentStepId: null }],
+          steps: [
+            {
+              id: 's1',
+              type: 'ACTION',
+              config: { actionType: 'ADD_TAG', tag: 'VIP' },
+              order: 0,
+              parentStepId: null,
+            },
+          ],
         },
       };
       prisma.automationExecution.findUnique.mockResolvedValue(execution as any);
@@ -493,9 +647,23 @@ describe('AutomationExecutorService — Step Execution (P-13)', () => {
         customerId: 'c1',
         status: 'PENDING',
         context: {},
-        step: { id: 's1', type: 'ACTION', config: { actionType: 'ADD_TAG', tag: 'VIP' }, order: 0, parentStepId: null },
+        step: {
+          id: 's1',
+          type: 'ACTION',
+          config: { actionType: 'ADD_TAG', tag: 'VIP' },
+          order: 0,
+          parentStepId: null,
+        },
         automationRule: {
-          steps: [{ id: 's1', type: 'ACTION', config: { actionType: 'ADD_TAG', tag: 'VIP' }, order: 0, parentStepId: null }],
+          steps: [
+            {
+              id: 's1',
+              type: 'ACTION',
+              config: { actionType: 'ADD_TAG', tag: 'VIP' },
+              order: 0,
+              parentStepId: null,
+            },
+          ],
         },
       };
       prisma.automationExecution.findUnique.mockResolvedValue(execution as any);

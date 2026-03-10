@@ -226,10 +226,8 @@ export class CampaignService {
     const baseWhere = this.buildAudienceWhere(businessId, filters);
 
     // If no advanced filters, use simple query
-    const hasBookingCount =
-      filters?.bookingCountGte != null || filters?.bookingCountLte != null;
-    const hasSpent =
-      filters?.spentMoreThan != null || filters?.spentLessThan != null;
+    const hasBookingCount = filters?.bookingCountGte != null || filters?.bookingCountLte != null;
+    const hasSpent = filters?.spentMoreThan != null || filters?.spentLessThan != null;
 
     if (!hasBookingCount && !hasSpent) {
       return { where: baseWhere, customerIds: null };
@@ -294,10 +292,8 @@ export class CampaignService {
 
       customerIds = candidates.filter((id) => {
         const spent = paymentMap.get(id) || 0;
-        if (filters.spentMoreThan != null && spent <= Number(filters.spentMoreThan))
-          return false;
-        if (filters.spentLessThan != null && spent >= Number(filters.spentLessThan))
-          return false;
+        if (filters.spentMoreThan != null && spent <= Number(filters.spentMoreThan)) return false;
+        if (filters.spentLessThan != null && spent >= Number(filters.spentLessThan)) return false;
         return true;
       });
     }
@@ -353,9 +349,7 @@ export class CampaignService {
     }
     for (const v of variants) {
       if (!v.id || !v.name || v.content === undefined || v.percentage === undefined) {
-        throw new BadRequestException(
-          'Each variant must have id, name, content, and percentage',
-        );
+        throw new BadRequestException('Each variant must have id, name, content, and percentage');
       }
     }
     const totalPct = variants.reduce((sum: number, v: any) => sum + Number(v.percentage), 0);

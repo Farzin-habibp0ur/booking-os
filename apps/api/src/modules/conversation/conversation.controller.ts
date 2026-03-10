@@ -169,6 +169,10 @@ export class ConversationController {
     @Param('id') id: string,
     @Body() body: CreateBookingFromConversationDto,
   ) {
-    return this.bookingService.create(businessId, { ...body, conversationId: id, source: 'WHATSAPP' });
+    return this.bookingService.create(businessId, {
+      ...body,
+      conversationId: id,
+      source: 'WHATSAPP',
+    });
   }
 }

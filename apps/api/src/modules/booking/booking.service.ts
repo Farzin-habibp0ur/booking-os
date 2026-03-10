@@ -372,14 +372,9 @@ export class BookingService {
       );
 
     // Booking audit log
-    this.logAudit(
-      businessId,
-      booking.id,
-      currentUser?.staffId,
-      currentUser?.staffName,
-      'CREATED',
-      [{ field: 'status', to: booking.status }],
-    );
+    this.logAudit(businessId, booking.id, currentUser?.staffId, currentUser?.staffName, 'CREATED', [
+      { field: 'status', to: booking.status },
+    ]);
 
     return booking;
   }
@@ -394,7 +389,9 @@ export class BookingService {
     if (data.startTime) {
       if (existingBooking) {
         data.startTime = new Date(data.startTime);
-        data.endTime = new Date(data.startTime.getTime() + existingBooking.service.durationMins * 60000);
+        data.endTime = new Date(
+          data.startTime.getTime() + existingBooking.service.durationMins * 60000,
+        );
 
         // M12 fix: Check for conflicts when rescheduling
         const staffId = data.staffId || existingBooking.staffId;
@@ -447,9 +444,24 @@ export class BookingService {
 
     // Booking audit log — compute field-level diffs
     const auditChanges: Array<{ field: string; from?: any; to?: any }> = [];
-    const trackFields = ['startTime', 'endTime', 'staffId', 'notes', 'status', 'colorLabel', 'serviceId', 'customerId', 'locationId', 'resourceId'];
+    const trackFields = [
+      'startTime',
+      'endTime',
+      'staffId',
+      'notes',
+      'status',
+      'colorLabel',
+      'serviceId',
+      'customerId',
+      'locationId',
+      'resourceId',
+    ];
     for (const field of trackFields) {
-      if (data[field] !== undefined && existingBooking && data[field] !== (existingBooking as any)[field]) {
+      if (
+        data[field] !== undefined &&
+        existingBooking &&
+        data[field] !== (existingBooking as any)[field]
+      ) {
         const fromVal = (existingBooking as any)[field];
         const toVal = data[field];
         auditChanges.push({

@@ -1,9 +1,5 @@
 import { renderHook, act } from '@testing-library/react';
-import {
-  useKeyboardShortcut,
-  useChordShortcut,
-  useListNavigation,
-} from './use-keyboard-shortcut';
+import { useKeyboardShortcut, useChordShortcut, useListNavigation } from './use-keyboard-shortcut';
 
 function fireKey(key: string, opts: Partial<KeyboardEventInit> = {}) {
   const event = new KeyboardEvent('keydown', { key, bubbles: true, ...opts });

@@ -97,9 +97,7 @@ function LoginPage() {
               : 'Enter the 6-digit code from your authenticator app'}
           </p>
           <form onSubmit={handle2FASubmit} className="space-y-4">
-            {error && (
-              <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm">{error}</div>
-            )}
+            {error && <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm">{error}</div>}
             <div>
               <label className="block text-sm font-medium mb-1">
                 {useBackupCode ? 'Backup Code' : 'Verification Code'}

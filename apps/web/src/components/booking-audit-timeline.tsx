@@ -3,13 +3,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
-import {
-  CalendarCheck,
-  Pencil,
-  RefreshCw,
-  XCircle,
-  ArrowRight,
-} from 'lucide-react';
+import { CalendarCheck, Pencil, RefreshCw, XCircle, ArrowRight } from 'lucide-react';
 
 interface AuditEntry {
   id: string;

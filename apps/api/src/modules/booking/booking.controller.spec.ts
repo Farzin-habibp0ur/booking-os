@@ -290,9 +290,7 @@ describe('BookingController', () => {
   });
 
   it('auditLog delegates to service.getAuditLog', async () => {
-    const entries = [
-      { id: 'a1', action: 'CREATED', createdAt: '2026-03-01T10:00:00Z' },
-    ];
+    const entries = [{ id: 'a1', action: 'CREATED', createdAt: '2026-03-01T10:00:00Z' }];
     mockService.getAuditLog.mockResolvedValue(entries);
 
     const result = await controller.auditLog('biz1', 'b1');

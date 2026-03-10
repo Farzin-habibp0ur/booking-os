@@ -28,7 +28,10 @@ export default function CampaignDetailPage() {
       .then((c) => {
         setCampaign(c);
         if (c.isABTest) {
-          api.get<any>(`/campaigns/${id}/variant-stats`).then(setVariantStats).catch(() => {});
+          api
+            .get<any>(`/campaigns/${id}/variant-stats`)
+            .then(setVariantStats)
+            .catch(() => {});
         }
       })
       .catch(() => router.push('/campaigns'))
@@ -77,9 +80,10 @@ export default function CampaignDetailPage() {
 
   const getBestVariant = () => {
     if (!variantStats?.variants?.length) return null;
-    return variantStats.variants.reduce((best: any, v: any) =>
-      (v.bookings > (best?.bookings || 0)) ? v : best,
-    null);
+    return variantStats.variants.reduce(
+      (best: any, v: any) => (v.bookings > (best?.bookings || 0) ? v : best),
+      null,
+    );
   };
 
   if (loading) {
@@ -186,7 +190,12 @@ export default function CampaignDetailPage() {
       {campaign.isABTest && variantStats?.variants?.length > 0 && (
         <div className="mb-6" data-testid="ab-results">
           <h2 className="text-sm font-semibold text-slate-900 mb-3">A/B Test Results</h2>
-          <div className={cn('grid gap-4', variantStats.variants.length === 2 ? 'grid-cols-2' : 'grid-cols-3')}>
+          <div
+            className={cn(
+              'grid gap-4',
+              variantStats.variants.length === 2 ? 'grid-cols-2' : 'grid-cols-3',
+            )}
+          >
             {variantStats.variants.map((v: any) => {
               const best = getBestVariant();
               const isWinner = variantStats.winnerVariantId === v.variantId;
@@ -205,7 +214,10 @@ export default function CampaignDetailPage() {
                     </div>
                   )}
                   {isBest && (
-                    <div className="absolute -top-2 -right-2 bg-sage-50 text-sage-900 rounded-full p-1.5" data-testid="best-badge">
+                    <div
+                      className="absolute -top-2 -right-2 bg-sage-50 text-sage-900 rounded-full p-1.5"
+                      data-testid="best-badge"
+                    >
                       <Trophy size={14} />
                     </div>
                   )}

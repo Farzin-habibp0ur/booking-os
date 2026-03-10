@@ -46,7 +46,21 @@ import { ReferralModule } from '../referral/referral.module';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, TwoFactorService, JwtStrategy, TokenService, JwtBlacklistService, PortalRedisService],
-  exports: [AuthService, TwoFactorService, JwtModule, TokenService, JwtBlacklistService, PortalRedisService],
+  providers: [
+    AuthService,
+    TwoFactorService,
+    JwtStrategy,
+    TokenService,
+    JwtBlacklistService,
+    PortalRedisService,
+  ],
+  exports: [
+    AuthService,
+    TwoFactorService,
+    JwtModule,
+    TokenService,
+    JwtBlacklistService,
+    PortalRedisService,
+  ],
 })
 export class AuthModule {}

@@ -4,7 +4,17 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
-import { ArrowLeft, ArrowRight, Users, MessageSquare, Clock, CheckCircle, FlaskConical, Plus, Trash2 } from 'lucide-react';
+import {
+  ArrowLeft,
+  ArrowRight,
+  Users,
+  MessageSquare,
+  Clock,
+  CheckCircle,
+  FlaskConical,
+  Plus,
+  Trash2,
+} from 'lucide-react';
 import CampaignFilterBuilder from '@/components/campaign-filter-builder';
 
 const STEPS = ['Audience', 'Message', 'Schedule', 'Review'];
@@ -103,7 +113,8 @@ export default function NewCampaignPage() {
   const canProceed = () => {
     if (step === 0) return preview?.count > 0;
     if (step === 1) {
-      if (isABTest) return variantPercentageSum === 100 && variants.every((v) => v.name && v.content);
+      if (isABTest)
+        return variantPercentageSum === 100 && variants.every((v) => v.name && v.content);
       return !!templateId;
     }
     if (step === 2) return scheduleType === 'now' || !!scheduledAt;
@@ -282,9 +293,7 @@ export default function NewCampaignPage() {
                     className="w-full text-sm bg-slate-50 border-transparent rounded-xl px-3 py-2 focus:bg-white focus:ring-2 focus:ring-lavender-500 resize-none"
                   />
                   <div>
-                    <label className="text-xs text-slate-500 mb-1 block">
-                      Audience percentage
-                    </label>
+                    <label className="text-xs text-slate-500 mb-1 block">Audience percentage</label>
                     <input
                       type="number"
                       min={1}

@@ -286,8 +286,24 @@ describe('CampaignDetailPage', () => {
       if (path === '/campaigns/c1/variant-stats') {
         return Promise.resolve({
           variants: [
-            { variantId: 'a', name: 'Variant A', sent: 50, delivered: 48, read: 30, failed: 2, bookings: 5 },
-            { variantId: 'b', name: 'Variant B', sent: 50, delivered: 45, read: 25, failed: 5, bookings: 3 },
+            {
+              variantId: 'a',
+              name: 'Variant A',
+              sent: 50,
+              delivered: 48,
+              read: 30,
+              failed: 2,
+              bookings: 5,
+            },
+            {
+              variantId: 'b',
+              name: 'Variant B',
+              sent: 50,
+              delivered: 45,
+              read: 25,
+              failed: 5,
+              bookings: 3,
+            },
           ],
           winnerVariantId: null,
           winnerSelectedAt: null,
@@ -328,8 +344,24 @@ describe('CampaignDetailPage', () => {
       if (path === '/campaigns/c1/variant-stats') {
         return Promise.resolve({
           variants: [
-            { variantId: 'a', name: 'Variant A', sent: 50, delivered: 48, read: 30, failed: 2, bookings: 5 },
-            { variantId: 'b', name: 'Variant B', sent: 50, delivered: 45, read: 25, failed: 5, bookings: 3 },
+            {
+              variantId: 'a',
+              name: 'Variant A',
+              sent: 50,
+              delivered: 48,
+              read: 30,
+              failed: 2,
+              bookings: 5,
+            },
+            {
+              variantId: 'b',
+              name: 'Variant B',
+              sent: 50,
+              delivered: 45,
+              read: 25,
+              failed: 5,
+              bookings: 3,
+            },
           ],
           winnerVariantId: 'a',
           winnerSelectedAt: '2026-03-10T12:00:00Z',
@@ -377,8 +409,24 @@ describe('CampaignDetailPage', () => {
       if (path === '/campaigns/c1/variant-stats') {
         return Promise.resolve({
           variants: [
-            { variantId: 'a', name: 'Variant A', sent: 50, delivered: 48, read: 30, failed: 2, bookings: 5 },
-            { variantId: 'b', name: 'Variant B', sent: 50, delivered: 45, read: 25, failed: 5, bookings: 3 },
+            {
+              variantId: 'a',
+              name: 'Variant A',
+              sent: 50,
+              delivered: 48,
+              read: 30,
+              failed: 2,
+              bookings: 5,
+            },
+            {
+              variantId: 'b',
+              name: 'Variant B',
+              sent: 50,
+              delivered: 45,
+              read: 25,
+              failed: 5,
+              bookings: 3,
+            },
           ],
           winnerVariantId: null,
           winnerSelectedAt: null,

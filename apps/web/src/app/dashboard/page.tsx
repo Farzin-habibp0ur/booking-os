@@ -542,7 +542,10 @@ export default function DashboardPage() {
 
           {/* Bookings by Source */}
           {data.sourceBreakdown && data.sourceBreakdown.length > 0 && (
-            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6" data-testid="source-breakdown">
+            <div
+              className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6"
+              data-testid="source-breakdown"
+            >
               <div className="flex items-center justify-between mb-3">
                 <h2 className="font-semibold text-slate-900 dark:text-slate-100">
                   Bookings by Source
@@ -563,9 +566,7 @@ export default function DashboardPage() {
                       </p>
                       <p className="text-xs text-slate-600 mt-0.5">{style.label}</p>
                       {s.completed > 0 && (
-                        <p className="text-[10px] text-slate-400 mt-0.5">
-                          {s.completed} completed
-                        </p>
+                        <p className="text-[10px] text-slate-400 mt-0.5">{s.completed} completed</p>
                       )}
                     </div>
                   );

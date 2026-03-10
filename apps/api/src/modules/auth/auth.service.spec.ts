@@ -25,7 +25,12 @@ describe('AuthService', () => {
   let jwtService: { sign: jest.Mock; verify: jest.Mock };
   let tokenService: ReturnType<typeof createMockTokenService>;
   let emailService: ReturnType<typeof createMockEmailService>;
-  let twoFactorService: { generateSetup: jest.Mock; verifyCode: jest.Mock; generateBackupCodes: jest.Mock; verifyBackupCode: jest.Mock };
+  let twoFactorService: {
+    generateSetup: jest.Mock;
+    verifyCode: jest.Mock;
+    generateBackupCodes: jest.Mock;
+    verifyBackupCode: jest.Mock;
+  };
 
   const mockStaff = {
     id: 'staff1',
@@ -56,9 +61,16 @@ describe('AuthService', () => {
     tokenService = createMockTokenService();
     emailService = createMockEmailService();
     twoFactorService = {
-      generateSetup: jest.fn().mockReturnValue({ secret: 'TESTSECRET', otpauthUrl: 'otpauth://totp/BookingOS:test@test.com?secret=TESTSECRET' }),
+      generateSetup: jest
+        .fn()
+        .mockReturnValue({
+          secret: 'TESTSECRET',
+          otpauthUrl: 'otpauth://totp/BookingOS:test@test.com?secret=TESTSECRET',
+        }),
       verifyCode: jest.fn().mockReturnValue(true),
-      generateBackupCodes: jest.fn().mockResolvedValue({ plaintext: ['CODE1111', 'CODE2222'], hashed: ['$hash1', '$hash2'] }),
+      generateBackupCodes: jest
+        .fn()
+        .mockResolvedValue({ plaintext: ['CODE1111', 'CODE2222'], hashed: ['$hash1', '$hash2'] }),
       verifyBackupCode: jest.fn().mockResolvedValue({ valid: true, remainingCodes: ['$hash2'] }),
     };
 
@@ -779,7 +791,10 @@ describe('AuthService', () => {
 
     it('issues full tokens on valid backup code', async () => {
       twoFactorService.verifyCode.mockReturnValue(false); // TOTP fails
-      twoFactorService.verifyBackupCode.mockResolvedValue({ valid: true, remainingCodes: ['$hash2'] });
+      twoFactorService.verifyBackupCode.mockResolvedValue({
+        valid: true,
+        remainingCodes: ['$hash2'],
+      });
       jwtService.verify.mockReturnValue({ sub: 'staff1', type: '2fa_pending' });
       prisma.staff.findUnique.mockResolvedValue({
         ...mockStaff,

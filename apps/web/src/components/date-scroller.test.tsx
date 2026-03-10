@@ -39,9 +39,7 @@ describe('DateScroller', () => {
 
     // Today is Jan 15 — find the button containing "15" as a date number
     const buttons = screen.getAllByRole('button');
-    const todayButton = buttons.find((btn) =>
-      btn.className.includes('bg-sage-600'),
-    );
+    const todayButton = buttons.find((btn) => btn.className.includes('bg-sage-600'));
     expect(todayButton).toBeTruthy();
     expect(todayButton!.className).toContain('text-white');
   });
@@ -54,9 +52,7 @@ describe('DateScroller', () => {
     );
 
     const buttons = screen.getAllByRole('button');
-    const selectedButton = buttons.find((btn) =>
-      btn.className.includes('ring-sage-600'),
-    );
+    const selectedButton = buttons.find((btn) => btn.className.includes('ring-sage-600'));
     expect(selectedButton).toBeTruthy();
     expect(selectedButton!.className).toContain('bg-sage-50');
   });

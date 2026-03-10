@@ -128,11 +128,20 @@ function ShellInner({ children }: { children: ReactNode }) {
   }, [loadPinnedViews]);
 
   // Global keyboard shortcuts
-  useKeyboardShortcut('k', () => setCmdkOpen((prev) => !prev), { meta: true, preventDefault: true });
-  useKeyboardShortcut('/', () => {
-    const searchInput = document.querySelector<HTMLInputElement>('[data-search-input]');
-    if (searchInput) { searchInput.focus(); }
-  }, { preventDefault: true });
+  useKeyboardShortcut('k', () => setCmdkOpen((prev) => !prev), {
+    meta: true,
+    preventDefault: true,
+  });
+  useKeyboardShortcut(
+    '/',
+    () => {
+      const searchInput = document.querySelector<HTMLInputElement>('[data-search-input]');
+      if (searchInput) {
+        searchInput.focus();
+      }
+    },
+    { preventDefault: true },
+  );
   useKeyboardShortcut('n', () => router.push('/bookings?new=1'));
   useChordShortcut('g', {
     b: () => router.push('/bookings'),

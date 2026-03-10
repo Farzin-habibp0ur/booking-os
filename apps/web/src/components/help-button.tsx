@@ -97,7 +97,10 @@ function KeyboardShortcutsModal({ isOpen, onClose }: { isOpen: boolean; onClose:
               </h3>
               <div className="space-y-1.5">
                 {category.shortcuts.map((shortcut) => (
-                  <div key={shortcut.description} className="flex items-center justify-between py-1">
+                  <div
+                    key={shortcut.description}
+                    className="flex items-center justify-between py-1"
+                  >
                     <span className="text-sm text-slate-600 dark:text-slate-400">
                       {shortcut.description}
                     </span>

@@ -84,7 +84,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string): Promise<User | TwoFactorRequired> => {
     // Use Bearer token from login response for the immediate /auth/me call
     // to avoid stale cookie/cache issues when switching accounts
-    const result = await api.post<{ accessToken?: string; staff?: any; requires2FA?: boolean; tempToken?: string }>('/auth/login', {
+    const result = await api.post<{
+      accessToken?: string;
+      staff?: any;
+      requires2FA?: boolean;
+      tempToken?: string;
+    }>('/auth/login', {
       email,
       password,
     });
@@ -151,7 +156,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token: api.getToken(), loading, login, complete2FA, signup, logout }}>
+    <AuthContext.Provider
+      value={{ user, token: api.getToken(), loading, login, complete2FA, signup, logout }}
+    >
       {children}
     </AuthContext.Provider>
   );

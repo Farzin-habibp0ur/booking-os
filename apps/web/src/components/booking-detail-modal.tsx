@@ -23,7 +23,11 @@ import { cn } from '@/lib/cn';
 import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/lib/toast';
 import { useFocusTrap } from '@/lib/use-focus-trap';
-import { BOOKING_STATUS_STYLES, BOOKING_COLOR_LABELS, BOOKING_SOURCE_STYLES } from '@/lib/design-tokens';
+import {
+  BOOKING_STATUS_STYLES,
+  BOOKING_COLOR_LABELS,
+  BOOKING_SOURCE_STYLES,
+} from '@/lib/design-tokens';
 
 interface BookingDetailModalProps {
   booking: any;
@@ -463,17 +467,23 @@ export default function BookingDetailModal({
                 {t('recurring.recurring_badge')}
               </span>
             )}
-            {booking.source && booking.source !== 'MANUAL' && (() => {
-              const srcStyle = BOOKING_SOURCE_STYLES[booking.source];
-              return srcStyle ? (
-                <span
-                  className={cn('text-xs px-2 py-0.5 rounded-full font-medium', srcStyle.bg, srcStyle.text)}
-                  data-testid="source-badge"
-                >
-                  {srcStyle.label}
-                </span>
-              ) : null;
-            })()}
+            {booking.source &&
+              booking.source !== 'MANUAL' &&
+              (() => {
+                const srcStyle = BOOKING_SOURCE_STYLES[booking.source];
+                return srcStyle ? (
+                  <span
+                    className={cn(
+                      'text-xs px-2 py-0.5 rounded-full font-medium',
+                      srcStyle.bg,
+                      srcStyle.text,
+                    )}
+                    data-testid="source-badge"
+                  >
+                    {srcStyle.label}
+                  </span>
+                ) : null;
+              })()}
           </div>
           <button
             onClick={onClose}

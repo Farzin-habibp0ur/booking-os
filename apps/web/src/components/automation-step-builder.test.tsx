@@ -64,9 +64,7 @@ describe('AutomationStepBuilder', () => {
     render(<AutomationStepBuilder steps={steps} onChange={onChange} />);
     fireEvent.click(screen.getByTestId('remove-step-s1'));
 
-    expect(onChange).toHaveBeenCalledWith([
-      expect.objectContaining({ id: 's2', order: 0 }),
-    ]);
+    expect(onChange).toHaveBeenCalledWith([expect.objectContaining({ id: 's2', order: 0 })]);
   });
 
   it('expands step config when clicking step card', () => {
@@ -94,7 +92,14 @@ describe('AutomationStepBuilder', () => {
   });
 
   it('shows branch config fields for BRANCH type', () => {
-    const steps = [makeStep({ id: 's1', order: 0, type: 'BRANCH', config: { field: 'status', operator: 'is', value: 'CONFIRMED' } })];
+    const steps = [
+      makeStep({
+        id: 's1',
+        order: 0,
+        type: 'BRANCH',
+        config: { field: 'status', operator: 'is', value: 'CONFIRMED' },
+      }),
+    ];
     render(<AutomationStepBuilder steps={steps} onChange={onChange} />);
 
     fireEvent.click(screen.getByText('If status is CONFIRMED'));
@@ -123,9 +128,17 @@ describe('AutomationStepBuilder', () => {
 
   it('shows correct label for each step type', () => {
     const steps = [
-      makeStep({ id: 's1', order: 0, config: { actionType: 'SEND_MESSAGE', template: 'Hello there!' } }),
+      makeStep({
+        id: 's1',
+        order: 0,
+        config: { actionType: 'SEND_MESSAGE', template: 'Hello there!' },
+      }),
       makeStep({ id: 's2', order: 1, type: 'DELAY', config: { delayMinutes: 120 } }),
-      makeStep({ id: 's3', order: 2, config: { actionType: 'UPDATE_STATUS', newStatus: 'COMPLETED' } }),
+      makeStep({
+        id: 's3',
+        order: 2,
+        config: { actionType: 'UPDATE_STATUS', newStatus: 'COMPLETED' },
+      }),
       makeStep({ id: 's4', order: 3, config: { actionType: 'ADD_TAG', tag: 'VIP' } }),
     ];
     render(<AutomationStepBuilder steps={steps} onChange={onChange} />);

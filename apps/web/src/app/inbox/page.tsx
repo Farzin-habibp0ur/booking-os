@@ -872,10 +872,14 @@ function InboxPage() {
               >
                 {/* Swipe reveal backgrounds - mobile only */}
                 {swipingConvoId === c.id && swipeDelta !== 0 && (
-                  <div className={cn(
-                    'absolute inset-0 flex items-center md:hidden',
-                    swipeDelta > 0 ? 'bg-emerald-500 justify-start pl-6' : 'bg-amber-500 justify-end pr-6',
-                  )}>
+                  <div
+                    className={cn(
+                      'absolute inset-0 flex items-center md:hidden',
+                      swipeDelta > 0
+                        ? 'bg-emerald-500 justify-start pl-6'
+                        : 'bg-amber-500 justify-end pr-6',
+                    )}
+                  >
                     {swipeDelta > 0 ? (
                       <Archive size={20} className="text-white" />
                     ) : (

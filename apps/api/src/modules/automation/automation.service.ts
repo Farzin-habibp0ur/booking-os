@@ -243,7 +243,13 @@ export class AutomationService {
   async setSteps(
     businessId: string,
     ruleId: string,
-    steps: { order: number; type: string; config?: any; parentStepId?: string; branchLabel?: string }[],
+    steps: {
+      order: number;
+      type: string;
+      config?: any;
+      parentStepId?: string;
+      branchLabel?: string;
+    }[],
   ) {
     const rule = await this.prisma.automationRule.findFirst({ where: { id: ruleId, businessId } });
     if (!rule) throw new NotFoundException('Rule not found');

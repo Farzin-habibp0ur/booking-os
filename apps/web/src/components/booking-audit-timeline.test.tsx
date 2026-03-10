@@ -108,9 +108,7 @@ describe('BookingAuditTimeline', () => {
         userId: null,
         userName: 'System',
         action: 'RESCHEDULED',
-        changes: [
-          { field: 'startTime', from: '2026-03-01T10:00:00Z', to: '2026-03-02T14:00:00Z' },
-        ],
+        changes: [{ field: 'startTime', from: '2026-03-01T10:00:00Z', to: '2026-03-02T14:00:00Z' }],
         ipAddress: null,
         createdAt: new Date().toISOString(),
       },

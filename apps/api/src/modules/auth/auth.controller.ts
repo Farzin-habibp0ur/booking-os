@@ -245,20 +245,14 @@ export class AuthController {
   @Post('2fa/verify-setup')
   @UseGuards(AuthGuard('jwt'))
   @Throttle({ default: { ttl: 60000, limit: 10 } })
-  twoFactorVerifySetup(
-    @CurrentUser('sub') staffId: string,
-    @Body() body: TwoFactorVerifyDto,
-  ) {
+  twoFactorVerifySetup(@CurrentUser('sub') staffId: string, @Body() body: TwoFactorVerifyDto) {
     return this.authService.twoFactorVerifySetup(staffId, body.code);
   }
 
   @Post('2fa/disable')
   @UseGuards(AuthGuard('jwt'))
   @Throttle({ default: { ttl: 60000, limit: 5 } })
-  twoFactorDisable(
-    @CurrentUser('sub') staffId: string,
-    @Body() body: TwoFactorVerifyDto,
-  ) {
+  twoFactorDisable(@CurrentUser('sub') staffId: string, @Body() body: TwoFactorVerifyDto) {
     return this.authService.twoFactorDisable(staffId, body.code);
   }
 

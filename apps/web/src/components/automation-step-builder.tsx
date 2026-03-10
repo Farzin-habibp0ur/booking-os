@@ -27,10 +27,20 @@ interface AutomationStepBuilderProps {
 }
 
 const STEP_TYPE_OPTIONS = [
-  { type: 'ACTION' as const, actionType: 'SEND_MESSAGE', label: 'Send Message', icon: MessageSquare },
+  {
+    type: 'ACTION' as const,
+    actionType: 'SEND_MESSAGE',
+    label: 'Send Message',
+    icon: MessageSquare,
+  },
   { type: 'DELAY' as const, actionType: undefined, label: 'Wait', icon: Clock },
   { type: 'BRANCH' as const, actionType: undefined, label: 'Condition', icon: GitBranch },
-  { type: 'ACTION' as const, actionType: 'UPDATE_STATUS', label: 'Update Status', icon: ArrowRight },
+  {
+    type: 'ACTION' as const,
+    actionType: 'UPDATE_STATUS',
+    label: 'Update Status',
+    icon: ArrowRight,
+  },
   { type: 'ACTION' as const, actionType: 'ADD_TAG', label: 'Add Tag', icon: Tag },
 ];
 
@@ -223,9 +233,7 @@ export function AutomationStepBuilder({ steps, onChange }: AutomationStepBuilder
 
   const removeStep = useCallback(
     (stepId: string) => {
-      const newSteps = steps
-        .filter((s) => s.id !== stepId)
-        .map((s, i) => ({ ...s, order: i }));
+      const newSteps = steps.filter((s) => s.id !== stepId).map((s, i) => ({ ...s, order: i }));
       onChange(newSteps);
       if (expandedStepId === stepId) setExpandedStepId(null);
     },
@@ -316,7 +324,10 @@ export function AutomationStepBuilder({ steps, onChange }: AutomationStepBuilder
                   <div className="flex-1 min-w-0">
                     <span className="text-sm font-medium text-slate-800">{label}</span>
                     {step.type === 'DELAY' && (
-                      <span className="ml-2 bg-amber-50 text-amber-700 text-xs rounded-full px-2 py-0.5" data-testid="delay-badge">
+                      <span
+                        className="ml-2 bg-amber-50 text-amber-700 text-xs rounded-full px-2 py-0.5"
+                        data-testid="delay-badge"
+                      >
                         {step.config?.delayMinutes || 0}m delay
                       </span>
                     )}

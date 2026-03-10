@@ -734,7 +734,10 @@ function BookingsContent() {
                         <span className="flex items-center gap-1.5">
                           {b.colorLabel && BOOKING_COLOR_LABELS[b.colorLabel] && (
                             <span
-                              className={cn('w-2 h-2 rounded-full flex-shrink-0', BOOKING_COLOR_LABELS[b.colorLabel].dot)}
+                              className={cn(
+                                'w-2 h-2 rounded-full flex-shrink-0',
+                                BOOKING_COLOR_LABELS[b.colorLabel].dot,
+                              )}
                               data-testid="color-label-dot"
                             />
                           )}
