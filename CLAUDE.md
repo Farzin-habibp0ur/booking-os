@@ -205,6 +205,8 @@ Key events: `message:new`, `conversation:updated`, `ai:suggestion`, `ai:auto-rep
 - Section labels use `.nav-section-label` CSS class from `globals.css`
 - Settings link is in the sidebar footer area, not in the main nav
 - Mobile uses bottom tab bar (Calendar, Inbox, Clients, Home) + "More" sheet for overflow items
+- Mobile swipe gestures: `useSwipeGesture` hook in `apps/web/src/lib/use-swipe-gesture.ts` for touch swipe detection with threshold, vertical rejection, and `onSwiping` callback
+- Mobile calendar: `DateScroller` component (`apps/web/src/components/date-scroller.tsx`) for horizontal scrollable date picker, forced day view on mobile, stacked booking cards, FAB for new booking
 
 ---
 

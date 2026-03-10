@@ -99,6 +99,12 @@ jest.mock('@/components/booking-popover', () => ({
   BookingPopover: () => <div data-testid="booking-popover">BookingPopover</div>,
 }));
 
+jest.mock('@/components/date-scroller', () => ({
+  DateScroller: ({ onDateSelect }: any) => (
+    <div data-testid="date-scroller">DateScroller</div>
+  ),
+}));
+
 jest.mock('./components/calendar-sidebar', () => ({
   CalendarSidebar: ({ onClose }: any) => (
     <div data-testid="calendar-sidebar">
@@ -121,6 +127,8 @@ describe('CalendarPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     localStorage.clear();
+    // Set desktop width so mobile detection doesn't hide the grid
+    Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true });
     mockGet.mockImplementation((path: string) => {
       if (path.startsWith('/staff')) return Promise.resolve(mockStaff);
       if (path.startsWith('/locations')) return Promise.resolve(mockLocations);
@@ -544,10 +552,10 @@ describe('CalendarPage', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('Alice')).toBeInTheDocument();
+      expect(screen.getAllByText('Alice').length).toBeGreaterThan(0);
     });
 
-    const bookingCard = screen.getByText('Alice').closest('[draggable]');
+    const bookingCard = screen.getAllByText('Alice')[0].closest('[draggable]');
     expect(bookingCard).not.toBeNull();
     expect(bookingCard?.getAttribute('draggable')).toBe('true');
   });
@@ -629,10 +637,10 @@ describe('CalendarPage', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('Alice')).toBeInTheDocument();
+      expect(screen.getAllByText('Alice').length).toBeGreaterThan(0);
     });
 
-    const bookingCard = screen.getByText('Alice').closest('[draggable]') as HTMLElement;
+    const bookingCard = screen.getAllByText('Alice')[0].closest('[draggable]') as HTMLElement;
     expect(bookingCard).not.toBeNull();
 
     await act(async () => {

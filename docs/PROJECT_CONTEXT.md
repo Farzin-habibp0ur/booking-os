@@ -915,7 +915,7 @@ Key groups (full list in `.env.example`):
 - P-22: Skeleton Loading States — COMPLETE (5 new compositions, 37 pages standardized)
 - P-25: Micro-Animations — COMPLETE (8 new keyframes, applied to cards/toasts/modals/dropdowns/shell)
 - P-23: Keyboard Navigation — COMPLETE (useKeyboardShortcut/useChordShortcut/useListNavigation hooks, global shortcuts in shell, J/K list nav on bookings+customers, categorized shortcuts modal, 19 tests)
-- P-24: Mobile Layouts (Inbox & Calendar) — in progress
+- P-24: Mobile Layouts (Inbox & Calendar) — COMPLETE (useSwipeGesture hook, inbox swipe-to-resolve/snooze with reveal UI, DateScroller component, forced day view on mobile, stacked booking cards, FAB for new booking, 14 new tests)
 - P-26: Source Attribution — in progress
 
 ### Code Quality

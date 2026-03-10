@@ -22,6 +22,7 @@ import { BookingPopover } from '@/components/booking-popover';
 import { CalendarSidebar } from './components/calendar-sidebar';
 import { statusCalendarClasses, BOOKING_COLOR_LABELS } from '@/lib/design-tokens';
 import { captureEvent } from '@/lib/posthog';
+import { DateScroller } from '@/components/date-scroller';
 
 const DEFAULT_START_HOUR = 8;
 const DEFAULT_END_HOUR = 19;
@@ -92,6 +93,7 @@ export default function CalendarPage() {
   const [prefillTime, setPrefillTime] = useState('');
   const [prefillStaffId, setPrefillStaffId] = useState('');
   const [rescheduleMode, setRescheduleMode] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   // Business hours
   const [calendarHours, setCalendarHours] = useState({
@@ -213,6 +215,18 @@ export default function CalendarPage() {
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [view, popoverBooking, showShortcuts, bookingDetailOpen, bookingFormOpen, toggleSidebar]);
+
+  // Force day view on mobile
+  useEffect(() => {
+    const check = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (mobile && view !== 'day') setView('day');
+    };
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
   const loadBookings = () => {
     const dateFrom = new Date(currentDate);
@@ -607,7 +621,7 @@ export default function CalendarPage() {
           </div>
 
           {/* View toggle */}
-          <div className="flex gap-0.5 bg-slate-100 rounded-xl p-0.5">
+          <div className="hidden md:flex gap-0.5 bg-slate-100 rounded-xl p-0.5">
             <button
               onClick={() => setView('day')}
               className={cn(
@@ -647,7 +661,7 @@ export default function CalendarPage() {
               setPrefillStaffId('');
               setBookingFormOpen(true);
             }}
-            className="flex items-center gap-1 bg-sage-600 text-white px-3 py-1.5 rounded-xl text-sm hover:bg-sage-700 transition-colors"
+            className="hidden md:flex items-center gap-1 bg-sage-600 text-white px-3 py-1.5 rounded-xl text-sm hover:bg-sage-700 transition-colors"
           >
             <Plus size={14} /> {t('calendar.new_booking')}
           </button>
@@ -672,6 +686,13 @@ export default function CalendarPage() {
           </button>
         </div>
       </div>
+
+      {/* Mobile date scroller */}
+      {isMobile && (
+        <div className="md:hidden mb-2">
+          <DateScroller currentDate={currentDate} onDateSelect={(d) => setCurrentDate(d)} />
+        </div>
+      )}
 
       {/* Calendar grid + optional sidebar */}
       <div className="flex-1 flex overflow-hidden">
@@ -768,7 +789,8 @@ export default function CalendarPage() {
               </div>
             ) : isStaffColumns ? (
               /* DAY VIEW: columns = staff */
-              <div className="flex min-h-full">
+              <>
+              <div className="hidden md:flex min-h-full">
                 {/* Time gutter */}
                 <div className="w-16 flex-shrink-0 border-r">
                   <div className="h-12 border-b" /> {/* header spacer */}
@@ -939,6 +961,47 @@ export default function CalendarPage() {
                   </div>
                 ))}
               </div>
+              {/* Mobile stacked cards */}
+              <div className="md:hidden p-4 space-y-3">
+                {bookings
+                  .filter((b) => selectedStaff.includes(b.staffId))
+                  .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
+                  .map((b) => {
+                    const colors = STATUS_COLORS[b.status] || STATUS_COLORS.CONFIRMED;
+                    return (
+                      <button
+                        key={b.id}
+                        type="button"
+                        onClick={(e) => handleBookingClick(b, e)}
+                        className={cn(
+                          'w-full text-left rounded-xl p-3 shadow-soft-sm transition-shadow hover:shadow-md',
+                          colors.bg,
+                          b.colorLabel && BOOKING_COLOR_LABELS[b.colorLabel] ? BOOKING_COLOR_LABELS[b.colorLabel].border : colors.border,
+                        )}
+                        style={{ borderLeftWidth: 4 }}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className={cn('text-sm font-medium', colors.text)}>
+                            {new Date(b.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            {' – '}
+                            {new Date(b.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                          <span className={cn('text-[10px] px-1.5 py-0.5 rounded-full', colors.bg, colors.text)}>
+                            {t(`status.${b.status.toLowerCase()}`)}
+                          </span>
+                        </div>
+                        <p className="text-sm font-medium mt-1">{b.customer?.name}</p>
+                        <p className="text-xs text-slate-500">{b.service?.name} · {b.staff?.name}</p>
+                      </button>
+                    );
+                  })}
+                {bookings.filter((b) => selectedStaff.includes(b.staffId)).length === 0 && (
+                  <div className="text-center py-8 text-sm text-slate-400">
+                    No bookings for this day
+                  </div>
+                )}
+              </div>
+              </>
             ) : (
               /* WEEK VIEW: columns = days */
               <div className="flex min-h-full">
@@ -1251,6 +1314,22 @@ export default function CalendarPage() {
         onUpdated={handleBookingUpdated}
         onReschedule={handleReschedule}
       />
+
+      {/* Mobile FAB */}
+      <button
+        onClick={() => {
+          setRescheduleMode(false);
+          setSelectedBooking(null);
+          setPrefillDate(currentDate.toISOString().split('T')[0]);
+          setPrefillTime('');
+          setPrefillStaffId('');
+          setBookingFormOpen(true);
+        }}
+        className="md:hidden fixed bottom-20 right-4 w-14 h-14 rounded-full bg-sage-600 text-white shadow-xl flex items-center justify-center hover:bg-sage-700 transition-colors z-30"
+        aria-label="New booking"
+      >
+        <Plus size={24} />
+      </button>
     </div>
   );
 }

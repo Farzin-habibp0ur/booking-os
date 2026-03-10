@@ -142,6 +142,8 @@ function InboxPage() {
   const [bulkTagInput, setBulkTagInput] = useState('');
   const [showBulkTagInput, setShowBulkTagInput] = useState(false);
   const [infoSidebarOpen, setInfoSidebarOpen] = useState(true);
+  const [swipingConvoId, setSwipingConvoId] = useState<string | null>(null);
+  const [swipeDelta, setSwipeDelta] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const currentFilters = {
@@ -588,6 +590,31 @@ function InboxPage() {
     }
   };
 
+  const resolveConversation = async (conversationId: string) => {
+    try {
+      await api.patch(`/conversations/${conversationId}/status`, { status: 'RESOLVED' });
+      toast(t('inbox.conversation_closed'));
+      if (selected?.id === conversationId) setSelected(null);
+      await loadConversations();
+      await loadFilterCounts();
+    } catch (e) {
+      toast(t('inbox.failed_to_close'), 'error');
+    }
+  };
+
+  const snoozeConversationById = async (conversationId: string) => {
+    const until = new Date(Date.now() + 3 * 60 * 60 * 1000); // default 3h snooze
+    try {
+      await api.patch(`/conversations/${conversationId}/snooze`, { until: until.toISOString() });
+      toast(t('inbox.conversation_snoozed'));
+      if (selected?.id === conversationId) setSelected(null);
+      await loadConversations();
+      await loadFilterCounts();
+    } catch (e) {
+      toast(t('inbox.failed_to_snooze'), 'error');
+    }
+  };
+
   const addNote = async () => {
     if (!newNote.trim() || !selected) return;
     try {
@@ -838,99 +865,151 @@ function InboxPage() {
               <div
                 key={c.id}
                 className={cn(
-                  'p-3 border-b hover:bg-slate-50 transition-colors',
+                  'relative overflow-hidden border-b',
                   selected?.id === c.id && 'bg-sage-50',
                   selectedConvoIds.has(c.id) && 'bg-sage-100',
                 )}
               >
-                <div className="flex items-start gap-2">
-                  <input
-                    type="checkbox"
-                    checked={selectedConvoIds.has(c.id)}
-                    onChange={(e) => {
-                      e.stopPropagation();
-                      toggleSelectConvo(c.id);
-                    }}
-                    className="rounded text-sage-600 mt-1 flex-shrink-0"
-                  />
-                  <div
-                    onClick={() => {
-                      captureEvent('conversation_selected');
-                      setSelected(c);
-                      setMobileView('thread');
-                    }}
-                    className="flex-1 cursor-pointer min-w-0"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5 min-w-0">
-                        {c.isOverdue && (
-                          <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" />
-                        )}
-                        <p className="text-sm font-medium truncate">
-                          {c.customer?.name || t('common.unknown')}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-1 flex-shrink-0">
-                        {c.isNew && (
-                          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-sage-100 text-sage-700 font-medium">
-                            {t('inbox.new_badge')}
-                          </span>
-                        )}
-                        {c.status === 'SNOOZED' && (
-                          <AlarmClock size={12} className="text-lavender-500" />
-                        )}
-                      </div>
-                    </div>
-                    <p className="text-xs text-slate-500 truncate mt-0.5">
-                      {c.messages?.[0]?.content || t('dashboard.no_messages')}
-                    </p>
-                    <div className="flex items-center justify-between mt-1">
-                      <div className="flex items-center gap-1.5 min-w-0">
-                        <span
-                          className={cn(
-                            'text-[9px] px-1.5 py-0.5 rounded-full flex-shrink-0',
-                            c.status === 'OPEN'
-                              ? 'bg-sage-50 text-sage-700'
-                              : c.status === 'WAITING'
-                                ? 'bg-amber-50 text-amber-700'
-                                : c.status === 'SNOOZED'
-                                  ? 'bg-lavender-100 text-lavender-700'
-                                  : c.status === 'RESOLVED'
-                                    ? 'bg-slate-100 text-slate-500'
-                                    : 'bg-slate-100 text-slate-600',
+                {/* Swipe reveal backgrounds - mobile only */}
+                {swipingConvoId === c.id && swipeDelta !== 0 && (
+                  <div className={cn(
+                    'absolute inset-0 flex items-center md:hidden',
+                    swipeDelta > 0 ? 'bg-emerald-500 justify-start pl-6' : 'bg-amber-500 justify-end pr-6',
+                  )}>
+                    {swipeDelta > 0 ? (
+                      <Archive size={20} className="text-white" />
+                    ) : (
+                      <AlarmClock size={20} className="text-white" />
+                    )}
+                  </div>
+                )}
+                <div
+                  className={cn(
+                    'p-3 bg-white hover:bg-slate-50 transition-colors relative z-10',
+                    selected?.id === c.id && 'bg-sage-50',
+                  )}
+                  style={{
+                    transform: swipingConvoId === c.id ? `translateX(${swipeDelta}px)` : undefined,
+                    transition: swipingConvoId === c.id ? 'none' : 'transform 0.2s ease-out',
+                  }}
+                  onTouchStart={(e) => {
+                    const touch = e.touches[0];
+                    (e.currentTarget as any)._touchStartX = touch.clientX;
+                    (e.currentTarget as any)._touchStartY = touch.clientY;
+                    (e.currentTarget as any)._isVertical = false;
+                    setSwipingConvoId(c.id);
+                  }}
+                  onTouchMove={(e) => {
+                    const touch = e.touches[0];
+                    const target = e.currentTarget as any;
+                    const dx = touch.clientX - (target._touchStartX || 0);
+                    const dy = touch.clientY - (target._touchStartY || 0);
+                    if (target._isVertical) return;
+                    if (Math.abs(dy) > Math.abs(dx)) {
+                      target._isVertical = true;
+                      setSwipeDelta(0);
+                      return;
+                    }
+                    setSwipeDelta(dx);
+                  }}
+                  onTouchEnd={() => {
+                    if (Math.abs(swipeDelta) > 80) {
+                      if (swipeDelta > 0) resolveConversation(c.id);
+                      else snoozeConversationById(c.id);
+                    }
+                    setSwipeDelta(0);
+                    setSwipingConvoId(null);
+                  }}
+                >
+                  <div className="flex items-start gap-2">
+                    <input
+                      type="checkbox"
+                      checked={selectedConvoIds.has(c.id)}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        toggleSelectConvo(c.id);
+                      }}
+                      className="rounded text-sage-600 mt-1 flex-shrink-0"
+                    />
+                    <div
+                      onClick={() => {
+                        captureEvent('conversation_selected');
+                        setSelected(c);
+                        setMobileView('thread');
+                      }}
+                      className="flex-1 cursor-pointer min-w-0"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          {c.isOverdue && (
+                            <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" />
                           )}
-                        >
-                          {t(`status.${c.status.toLowerCase()}`)}
-                        </span>
-                        {c.assignedTo && (
-                          <span className="text-[9px] text-slate-400 truncate">
-                            {c.assignedTo.name}
+                          <p className="text-sm font-medium truncate">
+                            {c.customer?.name || t('common.unknown')}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          {c.isNew && (
+                            <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-sage-100 text-sage-700 font-medium">
+                              {t('inbox.new_badge')}
+                            </span>
+                          )}
+                          {c.status === 'SNOOZED' && (
+                            <AlarmClock size={12} className="text-lavender-500" />
+                          )}
+                        </div>
+                      </div>
+                      <p className="text-xs text-slate-500 truncate mt-0.5">
+                        {c.messages?.[0]?.content || t('dashboard.no_messages')}
+                      </p>
+                      <div className="flex items-center justify-between mt-1">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <span
+                            className={cn(
+                              'text-[9px] px-1.5 py-0.5 rounded-full flex-shrink-0',
+                              c.status === 'OPEN'
+                                ? 'bg-sage-50 text-sage-700'
+                                : c.status === 'WAITING'
+                                  ? 'bg-amber-50 text-amber-700'
+                                  : c.status === 'SNOOZED'
+                                    ? 'bg-lavender-100 text-lavender-700'
+                                    : c.status === 'RESOLVED'
+                                      ? 'bg-slate-100 text-slate-500'
+                                      : 'bg-slate-100 text-slate-600',
+                            )}
+                          >
+                            {t(`status.${c.status.toLowerCase()}`)}
                           </span>
-                        )}
-                        {c.location && (
-                          <span className="text-[9px] text-slate-400 flex items-center gap-0.5 flex-shrink-0">
-                            <MapPin size={8} /> {c.location.name}
+                          {c.assignedTo && (
+                            <span className="text-[9px] text-slate-400 truncate">
+                              {c.assignedTo.name}
+                            </span>
+                          )}
+                          {c.location && (
+                            <span className="text-[9px] text-slate-400 flex items-center gap-0.5 flex-shrink-0">
+                              <MapPin size={8} /> {c.location.name}
+                            </span>
+                          )}
+                        </div>
+                        {c.lastMessageAt && (
+                          <span className="text-[9px] text-slate-400 flex-shrink-0">
+                            {formatRelativeTime(c.lastMessageAt)}
                           </span>
                         )}
                       </div>
-                      {c.lastMessageAt && (
-                        <span className="text-[9px] text-slate-400 flex-shrink-0">
-                          {formatRelativeTime(c.lastMessageAt)}
-                        </span>
+                      {c.tags?.length > 0 && (
+                        <div className="flex gap-1 mt-1">
+                          {c.tags.slice(0, 3).map((tg: string) => (
+                            <span
+                              key={tg}
+                              className="text-[8px] bg-sage-50 text-sage-600 px-1 py-0.5 rounded"
+                            >
+                              {tg}
+                            </span>
+                          ))}
+                        </div>
                       )}
                     </div>
-                    {c.tags?.length > 0 && (
-                      <div className="flex gap-1 mt-1">
-                        {c.tags.slice(0, 3).map((tg: string) => (
-                          <span
-                            key={tg}
-                            className="text-[8px] bg-sage-50 text-sage-600 px-1 py-0.5 rounded"
-                          >
-                            {tg}
-                          </span>
-                        ))}
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>
