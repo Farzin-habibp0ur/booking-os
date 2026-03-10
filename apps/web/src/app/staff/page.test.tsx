@@ -64,6 +64,7 @@ jest.mock('lucide-react', () => ({
   Trash2: () => <div data-testid="trash-icon" />,
   DollarSign: () => <div data-testid="dollar-icon" />,
   Download: () => <div data-testid="download-icon" />,
+  UserCog: () => <div data-testid="user-cog-icon" />,
 }));
 
 // Mock UpgradeNudge

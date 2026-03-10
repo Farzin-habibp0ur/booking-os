@@ -37,6 +37,7 @@ jest.mock('lucide-react', () => ({
   Gift: () => <div data-testid="icon-gift" />,
   CreditCard: () => <div data-testid="icon-credit" />,
   Palette: () => <div data-testid="icon-palette" />,
+  Puzzle: () => <div data-testid="icon-puzzle" />,
   ChevronRight: () => <div data-testid="icon-chevron" />,
 }));
 
@@ -46,7 +47,7 @@ describe('SettingsHub', () => {
     mockRole = 'ADMIN';
   });
 
-  it('renders all 7 category cards for ADMIN role', () => {
+  it('renders all 8 category cards for ADMIN role', () => {
     render(<SettingsHub />);
 
     expect(screen.getByTestId('settings-card-account')).toBeInTheDocument();
@@ -54,6 +55,7 @@ describe('SettingsHub', () => {
     expect(screen.getByTestId('settings-card-communication')).toBeInTheDocument();
     expect(screen.getByTestId('settings-card-ai')).toBeInTheDocument();
     expect(screen.getByTestId('settings-card-growth')).toBeInTheDocument();
+    expect(screen.getByTestId('settings-card-integrations')).toBeInTheDocument();
     expect(screen.getByTestId('settings-card-billing')).toBeInTheDocument();
     expect(screen.getByTestId('settings-card-appearance')).toBeInTheDocument();
   });
@@ -123,6 +125,6 @@ describe('SettingsHub', () => {
     render(<SettingsHub />);
 
     const chevrons = screen.getAllByTestId('icon-chevron');
-    expect(chevrons).toHaveLength(7); // 7 cards for ADMIN
+    expect(chevrons).toHaveLength(8); // 8 cards for ADMIN
   });
 });

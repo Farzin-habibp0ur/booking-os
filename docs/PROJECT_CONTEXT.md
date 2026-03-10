@@ -2,7 +2,7 @@
 
 > **Purpose:** This document gives full context on the Booking OS platform — what it is, what's been built, how it's structured, and what's left to build. Share this with an AI assistant or new developer to get productive immediately.
 >
-> **Last updated:** March 9, 2026 (All phases COMPLETE — A through E, all 15 prompts done + Final Fixes — ~4,900+ total tests across 321 test files, 60 Prisma models, 44 migrations)
+> **Last updated:** March 10, 2026 (All phases COMPLETE — A through E + Phases 1-4 & 6 polish — ~5,000+ total tests across 330+ test files, 60 Prisma models, 44 migrations)
 
 ---
 
@@ -56,9 +56,14 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 - **Vertical packs** — Pack builder with versioning, publish flow, business-level overrides
 - **Setup wizard** — 10-step onboarding flow for new businesses
 - **Dark mode** — System preference detection, manual toggle, full UI coverage
-- **Global search** — Cmd+K command palette searching across customers, bookings, services, conversations
+- **Global search** — Cmd+K command palette searching across customers, bookings, services, staff, conversations with quick actions (New Booking, New Customer)
 - **Interactive demo tour** — 9-step guided walkthrough with spotlight overlays, tooltips, keyboard navigation, localStorage persistence
 - **Notifications** — Email via Resend, WhatsApp, SMS via Twilio, automated booking reminders, notification timeline, weekly digest email, NPS survey
+- **Notification center** — Real-time notification bell with unread count, socket-driven events (bookings, messages, AI actions), localStorage persistence, full notifications page with filter tabs
+- **Help center** — Floating help button with keyboard shortcuts modal (`?` key), `/help` FAQ page with accordion sections
+- **PWA support** — Web app manifest, service worker for app shell caching, install prompt with iOS instructions
+- **Accessibility** — WCAG 2.1 AA compliance, skip-to-content link, aria-live regions, focus-visible outlines, modal ARIA attributes, icon button labels
+- **E2E testing** — Playwright test suites for auth, booking, customer, portal, and settings flows; axe-core accessibility scanning for 11 pages
 - **Security** — Helmet CSP, rate limiting, JWT blacklisting, brute force protection, httpOnly cookies, automatic token refresh, tenant isolation
 - **AI marketing system** — Content approval queue (9 endpoints), 12 autonomous marketing agents (6 content, 2 distribution, 4 analytics), email sequences (7 default drip campaigns with enrollment lifecycle), landing page with SEO/AEO (blog, sitemap, robots, JSON-LD), 12 blog posts across 5 content pillars
 
@@ -406,7 +411,7 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 | **Campaigns** | `/campaigns` | CRUD, audience preview, send, recurring schedules, stop recurrence |
 | **Offers** | `/offers` | CRUD, redeem |
 | **Quotes** | `/quotes` | Create, view, per-booking |
-| **Waitlist** | `/waitlist` | List, update, cancel, resolve |
+| **Waitlist** | `/waitlist` | List, update, cancel, resolve, bulk (remove/resolve) |
 | **Billing** | `/billing` | Checkout, portal, subscription, webhook, deposit, dunning trigger |
 | **Calendar Sync** | `/calendar-sync` | OAuth connect/disconnect (Google/Outlook), iCal feed, manual sync |
 | **iCal Feed** | `/ical` | Token-based iCal feed |
@@ -444,7 +449,7 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 | **Marketing Agent** | — (internal) | 12 autonomous marketing agents (6 content, 2 distribution, 4 analytics) registered with AgentFrameworkService |
 | **Email Sequences** | `/email-sequences` | Email drip campaigns: CRUD, stats, enroll, enrollments, cancel/pause/resume, seed (12 endpoints). 7 default sequences |
 | **Portal** | `/portal` | Customer self-service portal: OTP auth (WhatsApp), magic link auth (email), profile, bookings (paginated), upcoming, cancel & reschedule with policy checks. OTP/blacklist backed by Redis with in-memory fallback. PortalGuard with portal JWT (24h, type: 'portal') |
-| **Export** | `/customers/export`, `/bookings/export`, `/reports/:type/export` | CSV/PDF export for customers, bookings, and all 10 report types |
+| **Export** | `/customers/export`, `/bookings/export`, `/staff/export`, `/reports/:type/export` | CSV/PDF export for customers, bookings, staff, and all 10 report types |
 
 ### Auth & Multi-tenancy
 - JWT in httpOnly cookies (access: 15 min, refresh: 7 days), automatic client-side refresh on 401
@@ -458,7 +463,7 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 
 ---
 
-## 7. Frontend Pages (66 Pages)
+## 7. Frontend Pages (81+ Pages)
 
 ### Public Pages
 | Page | Route | Description |
@@ -478,6 +483,7 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 | Portal Dashboard | `/portal/[slug]/dashboard` | Customer welcome page, upcoming bookings, quick actions |
 | Portal Bookings | `/portal/[slug]/bookings` | Customer booking history with status filters, pagination, cancel & reschedule modals |
 | Portal Profile | `/portal/[slug]/profile` | Customer profile editor with stats and notification prefs |
+| Portal Intake | `/portal/[slug]/intake` | Digital intake form with 4 sections (personal, medical, consent, emergency) |
 
 ### Protected Pages
 | Page | Route | Description |
@@ -504,6 +510,10 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 | Marketing Queue | `/marketing/queue` | Content approval queue with card-based review, filter tabs, stats strip |
 | Marketing Agents | `/marketing/agents` | 12 marketing agents dashboard with tab filters (Content/Distribution/Analytics), toggle, Run Now |
 | Marketing Sequences | `/marketing/sequences` | Email sequence management with stats, toggle, expand timeline |
+| Notifications | `/notifications` | Notification list with filter tabs (All/Unread/Bookings/Messages/AI) |
+| Help | `/help` | FAQ page with 6 accordion sections |
+| Audit Log | `/settings/audit-log` | Paginated audit table with filters, expandable diff viewer, CSV export |
+| Integrations | `/settings/integrations` | Grid of 9 integration cards (Google Calendar, Stripe, WhatsApp, etc.) |
 
 ### Public Marketing Pages
 | Page | Route | Description |
@@ -569,7 +579,11 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 - `MediaMessage` — Media attachment display (images, docs, audio) in inbox messages (UX Upgrade Pack R1)
 - `MediaComposer` — Media file attachment composer for outbound messages (UX Upgrade Pack R1)
 - `RecommendedSlots` — Top 5 recommended reschedule slots scored by proximity + staff balance (UX Upgrade Pack R1)
-- `ExportModal` — CSV export modal with date range + field selection (UX Upgrade Pack R2)
+- `ExportModal` — CSV export modal with date range + field selection, supports customers/bookings/staff entities (UX Upgrade Pack R2)
+- `NotificationBell` — Bell icon with unread count badge, socket event listeners, localStorage persistence
+- `HelpButton` — Floating help button with keyboard shortcuts modal, `?` key handler
+- `InstallPrompt` — PWA install banner with beforeinstallprompt + iOS instructions
+- `OnboardingWizard` — 5-step overlay wizard with progress bar
 - `TodayTimeline` — Vertical chronological timeline of today's bookings with quick actions (UX Upgrade Pack R2)
 - `AttentionCard` — Enhanced attention card with primary action buttons, expand/collapse, resolve-next navigation (UX Upgrade Pack R2)
 - `KpiStrip` — Clickable KPI cards with action subtitles and role-based metrics (UX Upgrade Pack R2)
@@ -814,6 +828,13 @@ Key groups (full list in `.env.example`):
 - **E5: Scheduled Messages & Bulk Inbox Actions** — COMPLETE. Prisma schema: `scheduledFor DateTime?` and `scheduledJobId String?` on Message model (migration 44). Message scheduling via BullMQ delayed jobs: `message.service.ts` creates message with `deliveryStatus: 'SCHEDULED'`, adds delayed job to MESSAGING queue, stores jobId for cancellation. 3 message endpoints: POST (send with optional `scheduledFor`), GET scheduled, DELETE cancel (removes BullMQ job + sets CANCELLED). 4 bulk conversation endpoints: POST `bulk-close` (updateMany to RESOLVED), POST `bulk-assign` (validates staff, updateMany assignedToId), POST `bulk-tag` (appends tag if not present), POST `bulk-read` (marks inbound messages readAt). All bulk ops validate max 50 items. Frontend: enhanced `scheduled-message.tsx` with 5 quick presets (1h, 3h, tomorrow 9AM/12PM, Monday 9AM) and 15-min interval time picker (96 options). Inbox page: ScheduledMessage component integrated in composer area, `scheduledFor` state flows through sendMessage API call, amber scheduled messages indicator panel with cancel buttons, bulk action bar updated to use efficient single-request API endpoints, inline tag input for bulk tagging. 113 tests (25 message service + 52 conversation service + 10 scheduled-message component + 15 inbox page + 11 inbox integration).
 - **E1: Wellness Vertical Pack** — COMPLETE. New `wellness.pack.ts` definition with 7 customer intake fields (healthGoals [required], fitnessLevel [select/4], injuries, medications, allergies, preferredModality [select/6], membershipType [select/4]), 2 booking fields (sessionNotes, pressureLevel), 6 default services (Initial Wellness Consultation [free CONSULT], Swedish Massage [$90], Deep Tissue Massage [$110], Yoga Private Session [$75], Personal Training [$80], Nutrition Coaching [$65 CONSULT]), 9 default templates (24h Reminder, Session Confirmation, Post-Session Follow-up, Progress Check-in, Wellness Tip, Membership Renewal, Cancellation, Reschedule Link, Cancel Link), packConfig (trackProgress, membershipEnabled, intakeFormRequired). `WELLNESS` added to VerticalPack enum. 3 frontend components: `WellnessIntakeCard` (7-field intake form with medical alert indicator, edit/save mode, completion badge), `PackageTracker` (session package progress bar with expiry warning, percentage display), `MembershipBadge` (4 tier styles: VIP/amber Crown, Annual/sage Star, Monthly/lavender Zap, Drop-in/slate User). Setup page updated with "Wellness & Spa" option (Stethoscope icon). Mode-config labels added (Studio Manager/Front Desk/Practitioner). Seed data: `seed-wellness.ts` (Serenity Wellness Spa with 3 staff, 6 services, 5 customers with intake data, 15 bookings), console showcase Zen Wellness Spa updated to wellness pack. en.json + es.json locale strings. 62 new tests (34 backend pack + 13 intake card + 8 package tracker + 7 membership badge).
 
+### Polish Sprint: Critical Bug Fixes, Feature Activation, Missing Pages, New Features — ALL COMPLETE
+- **Phase 1: Critical Bug Fixes** — Forgot-password redirect (PUBLIC_PATHS fix), referral link localhost bug (CORS_ORIGINS fallback chain), content queue navigation (/content-queue → /marketing/queue redirect), API health endpoint enhancement (frontend flag + timestamp)
+- **Phase 2: Activate Existing Features** — Global search wired up with staff search + quick actions (New Booking/Customer), notification center (bell icon + socket events + /notifications page), staff CSV export (export service + modal + button), onboarding wizard overlay (5-step dismissible wizard)
+- **Phase 3: Missing UI Pages** — Audit log page (paginated table, DiffViewer, CSV export), portal intake forms (4-section digital form, customFields merge), integrations hub (9 integration cards, settings category)
+- **Phase 4: New Features** — Waitlist bulk actions (remove/resolve API + selection UI), empty states (services/staff/reports with EmptyState + secondaryAction), help center (floating button + keyboard shortcuts + FAQ), PWA support (manifest + service worker + install prompt)
+- **Phase 6: Testing & Polish** — 5 Playwright E2E test suites (auth, booking-flow, customer-flow, portal-booking, settings) with shared auth fixture, axe-core accessibility E2E test (WCAG 2.1 AA on 11 pages), skip-to-content link, modal ARIA attributes (role="dialog", aria-modal, aria-label), aria-live regions on search results, icon button aria-labels, focus-visible CSS utility, CI e2e-test job on pull requests
+
 ### Code Quality
 - **Error Handling Remediation** — COMPLETE (commit 1cf6f99). Replaced ~20 silent `.catch(() => {})` with logged warnings, queue processors throw on failure, NestJS proper exceptions, frontend toast wiring, waitlist loop resilience, WebSocket disconnect logging. +58 tests.
 - **Security Remediation Round 1** — COMPLETE (5 batches, 22 fixes). CSP/HSTS/security headers, cross-tenant CampaignSend fix, DTO input validation with MaxLength, pagination caps, booking status state machine, per-customer offer redemption with OfferRedemption model, refresh token blacklisting on logout, JWT_REFRESH_SECRET production enforcement, Stripe redirect URL validation, LoginDto for empty body handling. ~80 tests added.
@@ -877,7 +898,7 @@ npm run dev                    # Starts all apps via Turborepo
 | `npm run dev` | Start all apps |
 | `npm run build` | Build all |
 | `npm run lint` | Lint all (ESLint + TypeScript) |
-| `npm test` | Run all tests (~4,797+ tests) |
+| `npm test` | Run all tests (~5,000+ tests) |
 | `npm run test:coverage` | Tests with coverage thresholds |
 | `npm run db:generate` | Generate Prisma client |
 | `npm run db:migrate` | Run migrations |

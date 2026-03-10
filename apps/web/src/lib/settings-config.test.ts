@@ -8,7 +8,7 @@ import {
 describe('settings-config', () => {
   describe('SETTINGS_CATEGORIES', () => {
     it('defines exactly 7 categories', () => {
-      expect(SETTINGS_CATEGORIES).toHaveLength(7);
+      expect(SETTINGS_CATEGORIES).toHaveLength(8);
     });
 
     it('has the expected category keys', () => {
@@ -19,6 +19,7 @@ describe('settings-config', () => {
         'communication',
         'ai',
         'growth',
+        'integrations',
         'billing',
         'appearance',
       ]);
@@ -65,13 +66,13 @@ describe('settings-config', () => {
   describe('getSettingsCategoriesForRole', () => {
     it('returns all 7 categories for ADMIN', () => {
       const categories = getSettingsCategoriesForRole('ADMIN');
-      expect(categories).toHaveLength(7);
+      expect(categories).toHaveLength(8);
     });
 
     it('returns only categories with AGENT in roles for AGENT', () => {
       const categories = getSettingsCategoriesForRole('AGENT');
       expect(categories.length).toBeGreaterThan(0);
-      expect(categories.length).toBeLessThan(7);
+      expect(categories.length).toBeLessThan(8);
       for (const cat of categories) {
         expect(cat.roles).toContain('AGENT');
       }
@@ -80,7 +81,7 @@ describe('settings-config', () => {
     it('returns only categories with SERVICE_PROVIDER in roles', () => {
       const categories = getSettingsCategoriesForRole('SERVICE_PROVIDER');
       expect(categories.length).toBeGreaterThan(0);
-      expect(categories.length).toBeLessThan(7);
+      expect(categories.length).toBeLessThan(8);
       for (const cat of categories) {
         expect(cat.roles).toContain('SERVICE_PROVIDER');
       }

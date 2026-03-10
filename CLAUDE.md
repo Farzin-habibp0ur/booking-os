@@ -23,7 +23,7 @@ booking-os/
 │   │   └── Dockerfile          # Multi-stage production build
 │   ├── web/                    # Next.js 15 admin dashboard (port 3000)
 │   │   ├── src/
-│   │   │   ├── app/            # 78 pages (App Router)
+│   │   │   ├── app/            # 81+ pages (App Router)
 │   │   │   ├── components/     # Shared components
 │   │   │   ├── lib/            # API client, auth, i18n, socket, theme
 │   │   │   ├── locales/        # en.json, es.json (600+ keys each)
@@ -253,7 +253,7 @@ All AI-related UI elements use the **lavender** palette: `bg-lavender-50 border 
 ## Testing Conventions
 
 ### Test Counts
-- **~4,900+ total tests** across 321 test files
+- **~5,000+ total tests** across 330+ test files
 - API: ~93% statement coverage, ~81% branch coverage
 - Web: ~78% statement coverage, ~73% branch coverage
 
@@ -290,6 +290,14 @@ npm test -- --coverage
 - Mock the API client (`lib/api.ts`) for all network calls
 - Mock `next/navigation` for router-dependent components
 - Test user interactions, loading states, error states, and empty states
+
+### E2E Tests (Playwright)
+- Test files in `apps/web/e2e/`
+- Config at `apps/web/playwright.config.ts` (Chromium only, starts API + web dev servers)
+- Shared auth fixture at `apps/web/e2e/fixtures.ts` (reuses `helpers/auth.ts`)
+- Accessibility scanning via `@axe-core/playwright` for WCAG 2.1 AA
+- Run: `cd apps/web && npm run test:e2e`
+- CI: runs on pull requests only (not on push to main)
 
 ### Every deploy must include tests for new/changed features. Never push code without tests.
 
@@ -348,7 +356,7 @@ gh workflow run ci.yml
 
 ```
 Push to main → lint-and-test → docker-build → deploy (Railway) → smoke-test
-Pull request → lint-and-test → docker-build (no deploy, no smoke test)
+Pull request → lint-and-test → docker-build + e2e-test (Playwright)
 ```
 
 - **lint-and-test:** PostgreSQL 16 service container, `npm ci`, Prisma generate + migrate, format check, lint, test

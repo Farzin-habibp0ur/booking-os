@@ -8,7 +8,7 @@ Booking OS uses GitHub Actions for continuous integration and Railway for produc
 Push to main ──► lint-and-test ──► docker-build ──► deploy ──► smoke-test
                                                    (main only)
 Pull request ──► lint-and-test ──► docker-build
-                                   (no deploy)
+                               └──► e2e-test (Playwright)
 ```
 
 The workflow is defined in [`.github/workflows/ci.yml`](../.github/workflows/ci.yml).
@@ -18,7 +18,7 @@ The workflow is defined in [`.github/workflows/ci.yml`](../.github/workflows/ci.
 | Trigger              | Runs                            |
 | -------------------- | ------------------------------- |
 | Push to `main`       | lint-and-test → docker-build → deploy → smoke-test |
-| Pull request to `main` | lint-and-test → docker-build  |
+| Pull request to `main` | lint-and-test → docker-build + e2e-test  |
 | Manual (`workflow_dispatch`) | lint-and-test → docker-build → deploy → smoke-test |
 
 ---
@@ -58,7 +58,44 @@ Spins up a PostgreSQL 16 service container and runs the full quality gate.
 
 ---
 
-## Job 2: docker-build
+## Job 2: e2e-test (Pull Requests Only)
+
+**Runner:** `ubuntu-latest`
+**Depends on:** `lint-and-test`
+**Condition:** Only runs on pull requests
+**Duration:** ~3-5 minutes
+
+Runs Playwright E2E tests against a local development server with seeded test data.
+
+### What it does
+
+1. Sets up PostgreSQL 16, installs dependencies, generates Prisma client
+2. Runs database migrations and seeds test data
+3. Installs Playwright Chromium browser
+4. Runs `npm run test:e2e` in `apps/web` (starts API + web dev servers, runs Playwright)
+5. Uploads Playwright HTML report as artifact (7-day retention)
+
+### Test suites
+
+| Suite | Tests | Coverage |
+|-------|-------|----------|
+| `auth.spec.ts` | Login, invalid credentials, forgot password, logout | Auth flows |
+| `booking-flow.spec.ts` | Page load, new booking modal, status filters, table structure | Booking CRUD |
+| `customer-flow.spec.ts` | Page load, new customer form, search, column rendering | Customer CRUD |
+| `portal-booking.spec.ts` | Portal load, business info, no-auth access, sub-pages | Public portal |
+| `settings.spec.ts` | Page load, business name edit, save button, sub-page nav | Settings |
+| `accessibility.spec.ts` | WCAG 2.1 AA compliance via axe-core on 11 pages | Accessibility |
+
+### Environment variables
+
+| Variable | Value |
+|----------|-------|
+| `E2E_EMAIL` | `sarah@glowclinic.com` |
+| `E2E_PASSWORD` | `password123` |
+
+---
+
+## Job 3: docker-build
 
 **Runner:** `ubuntu-latest`
 **Depends on:** `lint-and-test`
@@ -94,7 +131,7 @@ The build step passes dummy values for required env vars (JWT secrets, API keys,
 
 ---
 
-## Job 3: deploy
+## Job 4: deploy
 
 **Runner:** `ubuntu-latest`
 **Depends on:** `docker-build`
@@ -139,7 +176,7 @@ exec node dist/apps/api/src/main
 
 ---
 
-## Job 4: smoke-test
+## Job 5: smoke-test
 
 **Runner:** `ubuntu-latest`
 **Depends on:** `deploy`
@@ -240,6 +277,11 @@ npm run lint
 ### Tests
 ```bash
 npm test
+```
+
+### E2E tests (Playwright)
+```bash
+cd apps/web && npm run test:e2e
 ```
 
 ### Docker build

@@ -114,7 +114,7 @@ describe('ServicesPage', () => {
     mockApi.get.mockResolvedValue([]);
     render(<ServicesPage />);
     await waitFor(() => {
-      expect(screen.getByText('services.no_services')).toBeInTheDocument();
+      expect(screen.getByText('No services configured')).toBeInTheDocument();
     });
   });
 
