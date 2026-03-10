@@ -3,6 +3,17 @@ import userEvent from '@testing-library/user-event';
 import BookingPortalPage from './page';
 import { validateName, validatePhone, validateEmail } from './validators';
 
+// Mock Stripe
+jest.mock('@stripe/stripe-js', () => ({
+  loadStripe: jest.fn().mockResolvedValue(null),
+}));
+jest.mock('@stripe/react-stripe-js', () => ({
+  Elements: ({ children }: any) => <div data-testid="stripe-elements">{children}</div>,
+  PaymentElement: () => <div data-testid="stripe-payment-element" />,
+  useStripe: () => null,
+  useElements: () => null,
+}));
+
 // Mock next/navigation
 jest.mock('next/navigation', () => ({
   useRouter: () => ({ push: jest.fn() }),
@@ -41,6 +52,9 @@ jest.mock('lucide-react', () => ({
   ShieldCheck: (props: any) => <svg data-testid="shield-check-icon" {...props} />,
   FileText: (props: any) => <svg data-testid="file-text-icon" {...props} />,
   ClipboardList: (props: any) => <svg data-testid="clipboard-list-icon" {...props} />,
+  CreditCard: (props: any) => <svg data-testid="credit-card-icon" {...props} />,
+  Loader2: (props: any) => <svg data-testid="loader-icon" {...props} />,
+  AlertCircle: (props: any) => <svg data-testid="alert-circle-icon" {...props} />,
 }));
 
 import { publicApi } from '@/lib/public-api';
@@ -1659,6 +1673,93 @@ describe('BookingPortalPage', () => {
       });
 
       expect(screen.queryByText('Booking Policies')).not.toBeInTheDocument();
+    });
+  });
+
+  // ─── Payment Step ──────────────────────────────────────────────────────
+
+  describe('Payment Step', () => {
+    it('skips payment step for free services', async () => {
+      const user = userEvent.setup();
+      setupSuccessfulLoad();
+
+      render(<BookingPortalPage />);
+
+      // Select free service
+      await waitFor(() => {
+        expect(screen.getByText('Free Consultation')).toBeInTheDocument();
+      });
+      await act(async () => {
+        await user.click(screen.getByText('Free Consultation'));
+      });
+
+      // Date & Time
+      const dateButtons = screen.getAllByRole('radio');
+      await act(async () => {
+        await user.click(dateButtons[0]);
+      });
+      await waitFor(() => {
+        expect(screen.getByText(SLOT_10AM)).toBeInTheDocument();
+      });
+      await act(async () => {
+        await user.click(screen.getByText(SLOT_10AM));
+      });
+
+      // Details
+      await act(async () => {
+        await user.type(screen.getByLabelText(/Name \*/), 'Jane');
+        await user.type(screen.getByLabelText(/Phone \*/), '5551234567');
+      });
+      await act(async () => {
+        await user.click(screen.getByRole('button', { name: 'Continue' }));
+      });
+
+      // Should go straight to Confirm (no Payment step)
+      await waitFor(() => {
+        expect(screen.getByText('Booking Summary')).toBeInTheDocument();
+      });
+      expect(screen.queryByText('Payment Details')).not.toBeInTheDocument();
+    });
+
+    it('skips payment step when stripe is not configured (no NEXT_PUBLIC_STRIPE_KEY)', async () => {
+      const user = userEvent.setup();
+      setupSuccessfulLoad();
+
+      render(<BookingPortalPage />);
+
+      // Select paid service
+      await waitFor(() => {
+        expect(screen.getByText('Botox Treatment')).toBeInTheDocument();
+      });
+      await act(async () => {
+        await user.click(screen.getByText('Botox Treatment'));
+      });
+
+      // Date & Time
+      const dateButtons = screen.getAllByRole('radio');
+      await act(async () => {
+        await user.click(dateButtons[0]);
+      });
+      await waitFor(() => {
+        expect(screen.getByText(SLOT_10AM)).toBeInTheDocument();
+      });
+      await act(async () => {
+        await user.click(screen.getByText(SLOT_10AM));
+      });
+
+      // Details
+      await act(async () => {
+        await user.type(screen.getByLabelText(/Name \*/), 'Jane');
+        await user.type(screen.getByLabelText(/Phone \*/), '5551234567');
+      });
+      await act(async () => {
+        await user.click(screen.getByRole('button', { name: 'Continue' }));
+      });
+
+      // Should skip payment (stripePromise is null in test) and go to confirm
+      await waitFor(() => {
+        expect(screen.getByText('Booking Summary')).toBeInTheDocument();
+      });
     });
   });
 

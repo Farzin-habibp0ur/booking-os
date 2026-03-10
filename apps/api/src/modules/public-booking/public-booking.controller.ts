@@ -7,25 +7,37 @@ import {
   Body,
   NotFoundException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../common/prisma.service';
 import { AvailabilityService } from '../availability/availability.service';
 import { CustomerService } from '../customer/customer.service';
 import { BookingService } from '../booking/booking.service';
 import { WaitlistService } from '../waitlist/waitlist.service';
+import Stripe from 'stripe';
 
 @ApiTags('Public Booking')
 @Controller('public')
 export class PublicBookingController {
+  private readonly logger = new Logger(PublicBookingController.name);
+  private stripe: Stripe | null = null;
+
   constructor(
     private prisma: PrismaService,
     private availabilityService: AvailabilityService,
     private customerService: CustomerService,
     private bookingService: BookingService,
     private waitlistService: WaitlistService,
-  ) {}
+    private configService: ConfigService,
+  ) {
+    const secretKey = this.configService.get<string>('STRIPE_SECRET_KEY');
+    if (secretKey) {
+      this.stripe = new Stripe(secretKey);
+    }
+  }
 
   private async resolveBusiness(slug: string) {
     const business = await this.prisma.business.findFirst({ where: { slug } });
@@ -58,6 +70,7 @@ export class PublicBookingController {
       cancellationPolicyText: policySettings.cancellationPolicyText || '',
       reschedulePolicyText: policySettings.reschedulePolicyText || '',
       whiteLabel: isWhiteLabel,
+      paymentEnabled: !!this.stripe,
     };
   }
 
@@ -103,6 +116,44 @@ export class PublicBookingController {
     return slots.filter((s) => s.available);
   }
 
+  @Post(':slug/create-payment-intent')
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
+  async createPaymentIntent(@Param('slug') slug: string, @Body() body: { serviceId: string }) {
+    if (!this.stripe) {
+      throw new BadRequestException('Payment processing is not configured');
+    }
+    if (!body.serviceId) {
+      throw new BadRequestException('serviceId is required');
+    }
+
+    const business = await this.resolveBusiness(slug);
+    const service = await this.prisma.service.findFirst({
+      where: { id: body.serviceId, businessId: business.id, isActive: true },
+    });
+    if (!service) throw new NotFoundException('Service not found');
+
+    const amount =
+      service.depositRequired && service.depositAmount ? service.depositAmount : service.price;
+    if (!amount || amount <= 0) {
+      throw new BadRequestException('Service has no payable amount');
+    }
+
+    const paymentIntent = await this.stripe.paymentIntents.create(
+      {
+        amount: Math.round(amount * 100),
+        currency: 'usd',
+        metadata: { businessId: business.id, serviceId: service.id, slug },
+      },
+      { idempotencyKey: `public-${business.id}-${service.id}-${Date.now()}` },
+    );
+
+    return {
+      clientSecret: paymentIntent.client_secret,
+      paymentIntentId: paymentIntent.id,
+      amount,
+    };
+  }
+
   @Post(':slug/book')
   @Throttle({ default: { ttl: 60000, limit: 10 } })
   async createBooking(
@@ -116,6 +167,7 @@ export class PublicBookingController {
       customerPhone: string;
       customerEmail?: string;
       ref?: string;
+      paymentIntentId?: string;
     },
   ) {
     if (!body.serviceId || !body.startTime || !body.customerName || !body.customerPhone) {
@@ -153,14 +205,38 @@ export class PublicBookingController {
       customFields: Object.keys(customFields).length > 0 ? customFields : undefined,
     });
 
+    // Link payment to booking if paymentIntentId was provided
+    if (body.paymentIntentId) {
+      await this.prisma.payment.create({
+        data: {
+          businessId: business.id,
+          bookingId: booking.id,
+          customerId: customer.id,
+          stripePaymentIntentId: body.paymentIntentId,
+          amount: booking.service.depositAmount || booking.service.price,
+          currency: 'usd',
+          method: 'STRIPE',
+          status: 'COMPLETED',
+        },
+      });
+
+      // Mark booking as confirmed since payment is done
+      if (booking.status === 'PENDING_DEPOSIT') {
+        await this.prisma.booking.update({
+          where: { id: booking.id },
+          data: { status: 'CONFIRMED' },
+        });
+      }
+    }
+
     return {
       id: booking.id,
-      status: booking.status,
+      status: body.paymentIntentId ? 'CONFIRMED' : booking.status,
       serviceName: booking.service.name,
       startTime: booking.startTime,
       staffName: booking.staff?.name || null,
       businessName: business.name,
-      depositRequired: booking.service.depositRequired || false,
+      depositRequired: !body.paymentIntentId && (booking.service.depositRequired || false),
       depositAmount: booking.service.depositAmount || null,
     };
   }

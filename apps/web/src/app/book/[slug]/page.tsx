@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { publicApi } from '@/lib/public-api';
 import { Skeleton } from '@/components/skeleton';
@@ -19,7 +19,16 @@ import {
   ClipboardList,
   Star,
   Quote,
+  CreditCard,
+  Loader2,
+  AlertCircle,
 } from 'lucide-react';
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
+
+const stripePromise = process.env.NEXT_PUBLIC_STRIPE_KEY
+  ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_KEY)
+  : null;
 
 interface Business {
   name: string;
@@ -28,6 +37,7 @@ interface Business {
   cancellationPolicyText: string;
   reschedulePolicyText: string;
   whiteLabel?: boolean;
+  paymentEnabled?: boolean;
 }
 interface Service {
   id: string;
@@ -57,14 +67,15 @@ interface BookingResult {
   depositAmount: number | null;
 }
 
-type Step = 'service' | 'datetime' | 'details' | 'confirm' | 'success';
+type Step = 'service' | 'datetime' | 'details' | 'payment' | 'confirm' | 'success';
 
-const STEPS: Step[] = ['service', 'datetime', 'details', 'confirm'];
+const ALL_STEPS: Step[] = ['service', 'datetime', 'details', 'payment', 'confirm'];
 
 const STEP_LABELS: Record<Step, string> = {
   service: 'Service',
   datetime: 'Date & Time',
   details: 'Your Details',
+  payment: 'Payment',
   confirm: 'Confirm',
   success: 'Done',
 };
@@ -106,6 +117,60 @@ function formatTime(dateStr: string) {
   return new Date(dateStr).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 }
 
+function PaymentForm({
+  onSuccess,
+  onError,
+}: {
+  onSuccess: () => void;
+  onError: (msg: string) => void;
+}) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [processing, setProcessing] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!stripe || !elements) return;
+
+    setProcessing(true);
+    const { error } = await stripe.confirmPayment({
+      elements,
+      redirect: 'if_required',
+    });
+
+    if (error) {
+      onError(error.message || 'Payment failed. Please try again.');
+      setProcessing(false);
+    } else {
+      onSuccess();
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} data-testid="stripe-payment-form">
+      <PaymentElement />
+      <button
+        type="submit"
+        disabled={!stripe || processing}
+        className="w-full mt-4 bg-sage-600 hover:bg-sage-700 text-white py-3 rounded-xl text-sm font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+        data-testid="pay-now-btn"
+      >
+        {processing ? (
+          <>
+            <Loader2 size={16} className="animate-spin" />
+            Processing...
+          </>
+        ) : (
+          <>
+            <CreditCard size={16} />
+            Pay Now
+          </>
+        )}
+      </button>
+    </form>
+  );
+}
+
 export default function BookingPortalPage() {
   const params = useParams();
   const slug = params.slug as string;
@@ -132,6 +197,12 @@ export default function BookingPortalPage() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string | null>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
+  // Payment state
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
+  const [paymentError, setPaymentError] = useState('');
+  const [payAtVisit, setPayAtVisit] = useState(false);
+
   // Testimonials
   const [publicTestimonials, setPublicTestimonials] = useState<
     {
@@ -156,6 +227,17 @@ export default function BookingPortalPage() {
   const [waitlistSuccess, setWaitlistSuccess] = useState(false);
   const [waitlistError, setWaitlistError] = useState('');
   const [staffList, setStaffList] = useState<{ id: string; name: string }[]>([]);
+
+  // Determine if payment step is needed
+  const needsPayment =
+    !!business?.paymentEnabled &&
+    !!stripePromise &&
+    !!selectedService &&
+    selectedService.price > 0 &&
+    !payAtVisit;
+
+  // Build dynamic steps list (skip payment step if not needed)
+  const STEPS: Step[] = needsPayment ? ALL_STEPS : ALL_STEPS.filter((s) => s !== 'payment');
 
   // Load business + services
   useEffect(() => {
@@ -211,9 +293,35 @@ export default function BookingPortalPage() {
     setFieldErrors({ name: nameErr, phone: phoneErr, email: emailErr });
     setTouched({ name: true, phone: true, email: true });
     if (!nameErr && !phoneErr && !emailErr) {
-      setStep('confirm');
+      const detailsIdx = STEPS.indexOf('details');
+      setStep(STEPS[detailsIdx + 1]);
     }
   };
+
+  // Create PaymentIntent when entering payment step
+  const initPaymentIntent = useCallback(async () => {
+    if (!selectedService || clientSecret) return;
+    setPaymentError('');
+    try {
+      const result = await publicApi.post<{
+        clientSecret: string;
+        paymentIntentId: string;
+        amount: number;
+      }>(`/public/${slug}/create-payment-intent`, {
+        serviceId: selectedService.id,
+      });
+      setClientSecret(result.clientSecret);
+      setPaymentIntentId(result.paymentIntentId);
+    } catch (err: any) {
+      setPaymentError(err.message || 'Failed to initialize payment');
+    }
+  }, [selectedService, slug, clientSecret]);
+
+  useEffect(() => {
+    if (step === 'payment') {
+      initPaymentIntent();
+    }
+  }, [step, initPaymentIntent]);
 
   const handleBlur = (field: string) => {
     setTouched((prev) => ({ ...prev, [field]: true }));
@@ -236,6 +344,7 @@ export default function BookingPortalPage() {
         customerPhone,
         customerEmail: customerEmail || undefined,
         notes: customerNotes || undefined,
+        ...(paymentIntentId && { paymentIntentId }),
       });
       setBookingResult(result);
       trackEvent('booking_completed', {
@@ -771,7 +880,120 @@ export default function BookingPortalPage() {
         </div>
       )}
 
-      {/* Step 4: Confirmation */}
+      {/* Step 4: Payment (conditional) */}
+      {step === 'payment' && selectedService && selectedSlot && (
+        <div className="space-y-4">
+          {/* Order summary */}
+          <div className="bg-white rounded-2xl shadow-soft p-4 sm:p-6 space-y-3">
+            <h3 className="font-semibold text-slate-800">Order Summary</h3>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-slate-500">Service</span>
+                <span className="font-medium text-slate-800">{selectedService.name}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Practitioner</span>
+                <span className="font-medium text-slate-800">{selectedSlot.staffName}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Date & Time</span>
+                <span className="font-medium text-slate-800">
+                  {formatDate(selectedSlot.time)} at {formatSlotTime(selectedSlot.display)}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Duration</span>
+                <span className="font-medium text-slate-800">
+                  {selectedService.durationMins} min
+                </span>
+              </div>
+              <div className="border-t border-slate-100 pt-2">
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Service price</span>
+                  <span className="text-slate-800">${selectedService.price}</span>
+                </div>
+                {selectedService.depositRequired && selectedService.depositAmount ? (
+                  <div className="flex justify-between mt-1">
+                    <span className="font-medium text-slate-700">Due now (deposit)</span>
+                    <span className="font-semibold text-slate-900">
+                      ${selectedService.depositAmount}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex justify-between mt-1">
+                    <span className="font-medium text-slate-700">Total due</span>
+                    <span className="font-semibold text-slate-900">${selectedService.price}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Stripe payment form */}
+          <div className="bg-white rounded-2xl shadow-soft p-4 sm:p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <CreditCard size={16} className="text-sage-600" />
+              <h3 className="font-semibold text-slate-800">Payment Details</h3>
+            </div>
+
+            {paymentError && (
+              <div
+                className="mb-4 bg-red-50 text-red-700 text-sm rounded-xl p-3 flex items-start gap-2"
+                data-testid="payment-error"
+              >
+                <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
+                <span>{paymentError}</span>
+              </div>
+            )}
+
+            {clientSecret && stripePromise ? (
+              <Elements
+                stripe={stripePromise}
+                options={{ clientSecret, appearance: { theme: 'stripe' } }}
+              >
+                <PaymentForm
+                  onSuccess={() => {
+                    trackEvent('payment_completed', {
+                      service_name: selectedService.name,
+                      amount: selectedService.depositRequired
+                        ? selectedService.depositAmount
+                        : selectedService.price,
+                    });
+                    setStep('confirm');
+                  }}
+                  onError={(msg) => setPaymentError(msg)}
+                />
+              </Elements>
+            ) : !paymentError ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 size={24} className="animate-spin text-sage-500" />
+              </div>
+            ) : null}
+          </div>
+
+          {/* Pay at visit option */}
+          {!selectedService.depositRequired && (
+            <button
+              onClick={() => {
+                setPayAtVisit(true);
+                setStep('confirm');
+              }}
+              className="w-full text-sm text-slate-500 hover:text-slate-700 py-2 transition-colors"
+              data-testid="pay-at-visit-btn"
+            >
+              Skip — I&apos;ll pay at my visit
+            </button>
+          )}
+
+          {/* Trust badge */}
+          <div className="flex items-center justify-center gap-1.5 text-xs text-slate-400">
+            <ShieldCheck size={14} />
+            <span>Payments are processed securely via Stripe</span>
+          </div>
+        </div>
+      )}
+
+      {/* Step 5: Confirmation */}
       {step === 'confirm' && selectedService && selectedSlot && (
         <div className="space-y-4">
           <div className="bg-white rounded-2xl shadow-soft p-4 sm:p-6 space-y-3">
@@ -822,8 +1044,25 @@ export default function BookingPortalPage() {
             </div>
           </div>
 
-          {/* Deposit warning */}
-          {selectedService.depositRequired && selectedService.depositAmount && (
+          {/* Payment confirmation */}
+          {paymentIntentId && (
+            <div className="bg-sage-50 rounded-2xl p-4 flex items-start gap-3">
+              <CheckCircle2 size={20} className="text-sage-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-sage-800">Payment Received</p>
+                <p className="text-xs text-sage-700 mt-0.5">
+                  Your payment of $
+                  {selectedService.depositRequired && selectedService.depositAmount
+                    ? selectedService.depositAmount
+                    : selectedService.price}{' '}
+                  has been processed successfully.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Deposit warning — only show if no payment was made and deposit is required */}
+          {!paymentIntentId && selectedService.depositRequired && selectedService.depositAmount && (
             <div className="bg-amber-50 rounded-2xl p-4 flex items-start gap-3">
               <DollarSign size={20} className="text-amber-600 flex-shrink-0 mt-0.5" />
               <div>

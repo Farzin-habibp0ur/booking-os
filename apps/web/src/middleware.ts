@@ -21,6 +21,7 @@ const PUBLIC_PATHS = [
   '/blog',
   '/faq',
   '/upgrade',
+  '/portal',
   '/og-image.png',
 ];
 

@@ -8,6 +8,7 @@ describe('PublicBookingController', () => {
   let availabilityService: any;
   let customerService: any;
   let bookingService: any;
+  let configService: any;
 
   const mockBusiness = {
     id: 'biz1',
@@ -22,6 +23,9 @@ describe('PublicBookingController', () => {
     durationMins: 30,
     price: 200,
     category: 'Aesthetic',
+    depositRequired: false,
+    depositAmount: null,
+    isActive: true,
   };
   const mockCustomer = {
     id: 'cust1',
@@ -32,8 +36,9 @@ describe('PublicBookingController', () => {
   };
   const mockBooking = {
     id: 'book1',
+    status: 'CONFIRMED',
     startTime: new Date('2026-03-01T10:00:00Z'),
-    service: { name: 'Botox' },
+    service: { name: 'Botox', depositRequired: false, depositAmount: null, price: 200 },
     staff: { name: 'Dr. Sarah' },
   };
 
@@ -45,6 +50,7 @@ describe('PublicBookingController', () => {
     customerService = { findOrCreateByPhone: jest.fn() };
     bookingService = { create: jest.fn() };
     waitlistService = { joinWaitlist: jest.fn() };
+    configService = { get: jest.fn().mockReturnValue(undefined) };
 
     controller = new PublicBookingController(
       prisma as any,
@@ -52,6 +58,7 @@ describe('PublicBookingController', () => {
       customerService,
       bookingService,
       waitlistService,
+      configService,
     );
   });
 
@@ -67,6 +74,7 @@ describe('PublicBookingController', () => {
         cancellationPolicyText: '',
         reschedulePolicyText: '',
         whiteLabel: false,
+        paymentEnabled: false,
       });
     });
 
@@ -211,6 +219,36 @@ describe('PublicBookingController', () => {
       });
     });
 
+    it('creates payment record when paymentIntentId is provided', async () => {
+      prisma.business.findFirst.mockResolvedValue(mockBusiness as any);
+      customerService.findOrCreateByPhone.mockResolvedValue(mockCustomer);
+      bookingService.create.mockResolvedValue({
+        ...mockBooking,
+        status: 'PENDING_DEPOSIT',
+        service: { ...mockBooking.service, depositRequired: true, depositAmount: 50 },
+      });
+
+      const result = await controller.createBooking('glow-clinic', {
+        serviceId: 'svc1',
+        startTime: '2026-03-01T10:00:00Z',
+        customerName: 'Jane',
+        customerPhone: '+1234567890',
+        paymentIntentId: 'pi_test_123',
+      });
+
+      expect(prisma.payment.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          businessId: 'biz1',
+          bookingId: 'book1',
+          stripePaymentIntentId: 'pi_test_123',
+          method: 'STRIPE',
+          status: 'COMPLETED',
+        }),
+      });
+      expect(result.status).toBe('CONFIRMED');
+      expect(result.depositRequired).toBe(false);
+    });
+
     it('rejects booking with missing required fields', async () => {
       await expect(
         controller.createBooking('glow-clinic', {
@@ -228,6 +266,31 @@ describe('PublicBookingController', () => {
           customerName: '',
           customerPhone: '+1234567890',
         }),
+      ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('createPaymentIntent', () => {
+    it('throws when Stripe is not configured', async () => {
+      await expect(
+        controller.createPaymentIntent('glow-clinic', { serviceId: 'svc1' }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('throws when serviceId is missing', async () => {
+      // Create controller with Stripe configured
+      configService.get.mockReturnValue('sk_test_123');
+      const stripeController = new PublicBookingController(
+        prisma as any,
+        availabilityService,
+        customerService,
+        bookingService,
+        waitlistService,
+        configService,
+      );
+
+      await expect(
+        stripeController.createPaymentIntent('glow-clinic', { serviceId: '' }),
       ).rejects.toThrow(BadRequestException);
     });
   });

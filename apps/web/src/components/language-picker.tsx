@@ -12,6 +12,7 @@ export function LanguagePicker() {
       <select
         value={locale}
         onChange={(e) => setLocale(e.target.value)}
+        aria-label="Select language"
         className="text-sm bg-transparent border-none text-gray-600 cursor-pointer focus:outline-none py-0"
       >
         {SUPPORTED_LOCALES.map((l) => (

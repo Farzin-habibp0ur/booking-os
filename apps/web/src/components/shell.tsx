@@ -241,9 +241,12 @@ function ShellInner({ children }: { children: ReactNode }) {
 
   const sidebarContent = (
     <>
-      <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+      <header
+        className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between"
+        role="banner"
+      >
         <div>
-          <h1 className="text-lg font-serif font-bold text-slate-900">{t('app.title')}</h1>
+          <p className="text-lg font-serif font-bold text-slate-900">{t('app.title')}</p>
           <p className="text-xs text-slate-500 truncate">{user?.business?.name}</p>
           {pack.name !== 'general' && (
             <p className="text-[10px] text-sage-500 mt-0.5 capitalize">{pack.name} Pack</p>
@@ -256,7 +259,7 @@ function ShellInner({ children }: { children: ReactNode }) {
         >
           <X size={20} />
         </button>
-      </div>
+      </header>
       <div className="px-2 pt-2">
         <ModeSwitcher />
       </div>
