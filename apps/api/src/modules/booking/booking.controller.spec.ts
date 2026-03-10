@@ -16,6 +16,7 @@ describe('BookingController', () => {
       getCalendar: jest.fn(),
       getMonthSummary: jest.fn(),
       checkPolicyAllowed: jest.fn(),
+      getAuditLog: jest.fn(),
       getKanbanBoard: jest.fn(),
       updateKanbanStatus: jest.fn(),
       bulkUpdate: jest.fn(),
@@ -286,5 +287,17 @@ describe('BookingController', () => {
     await controller.list('biz1', query as any);
 
     expect(mockService.findAll).toHaveBeenCalledWith('biz1', query);
+  });
+
+  it('auditLog delegates to service.getAuditLog', async () => {
+    const entries = [
+      { id: 'a1', action: 'CREATED', createdAt: '2026-03-01T10:00:00Z' },
+    ];
+    mockService.getAuditLog.mockResolvedValue(entries);
+
+    const result = await controller.auditLog('biz1', 'b1');
+
+    expect(mockService.getAuditLog).toHaveBeenCalledWith('biz1', 'b1');
+    expect(result).toEqual(entries);
   });
 });

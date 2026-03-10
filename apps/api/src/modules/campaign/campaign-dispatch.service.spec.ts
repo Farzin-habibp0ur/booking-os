@@ -24,6 +24,10 @@ function createMockCampaignService() {
       }
       return next;
     }),
+    queryAdvancedAudience: jest.fn().mockResolvedValue({
+      where: { businessId: 'biz1' },
+      customerIds: null,
+    }),
   };
 }
 

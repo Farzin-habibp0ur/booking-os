@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma.service';
 
 const BUILT_IN_PLAYBOOKS = [
@@ -33,6 +33,8 @@ const BUILT_IN_PLAYBOOKS = [
 
 @Injectable()
 export class AutomationService {
+  private readonly logger = new Logger(AutomationService.name);
+
   constructor(private prisma: PrismaService) {}
 
   getPlaybooks() {
@@ -223,6 +225,76 @@ export class AutomationService {
     }
 
     return stats;
+  }
+
+  // ---- Step Management (P-13) ----
+
+  async getSteps(businessId: string, ruleId: string) {
+    const rule = await this.prisma.automationRule.findFirst({ where: { id: ruleId, businessId } });
+    if (!rule) throw new NotFoundException('Rule not found');
+
+    return this.prisma.automationStep.findMany({
+      where: { automationRuleId: ruleId },
+      orderBy: { order: 'asc' },
+      include: { childSteps: { orderBy: { order: 'asc' } } },
+    });
+  }
+
+  async setSteps(
+    businessId: string,
+    ruleId: string,
+    steps: { order: number; type: string; config?: any; parentStepId?: string; branchLabel?: string }[],
+  ) {
+    const rule = await this.prisma.automationRule.findFirst({ where: { id: ruleId, businessId } });
+    if (!rule) throw new NotFoundException('Rule not found');
+
+    return this.prisma.$transaction(async (tx) => {
+      // Delete existing steps
+      await tx.automationStep.deleteMany({ where: { automationRuleId: ruleId } });
+
+      // Create new steps
+      const created = [];
+      for (const step of steps) {
+        const s = await tx.automationStep.create({
+          data: {
+            automationRuleId: ruleId,
+            order: step.order,
+            type: step.type,
+            config: step.config || {},
+            parentStepId: step.parentStepId || null,
+            branchLabel: step.branchLabel || null,
+          },
+        });
+        created.push(s);
+      }
+      return created;
+    });
+  }
+
+  async getExecutions(
+    businessId: string,
+    ruleId: string,
+    query: { page?: number; pageSize?: number },
+  ) {
+    const rule = await this.prisma.automationRule.findFirst({ where: { id: ruleId, businessId } });
+    if (!rule) throw new NotFoundException('Rule not found');
+
+    const page = Math.max(1, Number(query.page) || 1);
+    const pageSize = Math.min(100, Math.max(1, Number(query.pageSize) || 20));
+
+    const where = { automationRuleId: ruleId, businessId };
+    const [data, total] = await Promise.all([
+      this.prisma.automationExecution.findMany({
+        where,
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        orderBy: { createdAt: 'desc' },
+        include: { step: true },
+      }),
+      this.prisma.automationExecution.count({ where }),
+    ]);
+
+    return { data, total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
   }
 
   async testRule(businessId: string, ruleId: string) {

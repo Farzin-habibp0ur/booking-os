@@ -25,30 +25,137 @@ function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, complete2FA } = useAuth();
   const router = useRouter();
   const { t } = useI18n();
+
+  // P-17: 2FA challenge state
+  const [show2FA, setShow2FA] = useState(false);
+  const [tempToken, setTempToken] = useState('');
+  const [twoFactorCode, setTwoFactorCode] = useState('');
+  const [useBackupCode, setUseBackupCode] = useState(false);
+
+  const handleLoginSuccess = (me: any) => {
+    identifyUser(me.id, { email: me.email, role: me.role });
+    trackEvent('login_completed', { role: me.role });
+    sessionStorage.setItem('booking-os-login-redirect', '1');
+    if (me.role === 'SUPER_ADMIN') {
+      router.push('/console');
+      return;
+    }
+    router.push('/dashboard');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
     try {
-      const me = await login(email, password);
-      identifyUser(me.id, { email: me.email, role: me.role });
-      trackEvent('login_completed', { role: me.role });
-      sessionStorage.setItem('booking-os-login-redirect', '1');
-      if (me.role === 'SUPER_ADMIN') {
-        router.push('/console');
+      const result = await login(email, password);
+      if ('requires2FA' in result && result.requires2FA) {
+        setTempToken(result.tempToken);
+        setShow2FA(true);
+        setLoading(false);
         return;
       }
-      router.push('/dashboard');
+      handleLoginSuccess(result);
     } catch (err: any) {
       setError(err.message || t('errors.login_failed'));
     } finally {
       setLoading(false);
     }
   };
+
+  const handle2FASubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    try {
+      const me = await complete2FA(tempToken, twoFactorCode);
+      handleLoginSuccess(me);
+    } catch (err: any) {
+      setError(err.message || 'Invalid 2FA code');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // P-17: 2FA challenge screen
+  if (show2FA) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ backgroundColor: '#FCFCFD' }}
+      >
+        <div className="bg-white p-8 rounded-3xl shadow-soft w-full max-w-md">
+          <h1 className="text-2xl font-serif font-semibold text-slate-900 text-center mb-2">
+            Two-Factor Authentication
+          </h1>
+          <p className="text-slate-500 text-center mb-6">
+            {useBackupCode
+              ? 'Enter one of your backup codes'
+              : 'Enter the 6-digit code from your authenticator app'}
+          </p>
+          <form onSubmit={handle2FASubmit} className="space-y-4">
+            {error && (
+              <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm">{error}</div>
+            )}
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                {useBackupCode ? 'Backup Code' : 'Verification Code'}
+              </label>
+              <input
+                type="text"
+                value={twoFactorCode}
+                onChange={(e) => setTwoFactorCode(e.target.value)}
+                className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm text-center tracking-widest font-mono focus:outline-none focus:ring-2 focus:ring-sage-500"
+                placeholder={useBackupCode ? 'ABCD1234' : '000000'}
+                maxLength={useBackupCode ? 8 : 6}
+                autoFocus
+                autoComplete="one-time-code"
+                required
+                data-testid="2fa-code-input"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-slate-900 text-white py-2 rounded-xl text-sm font-medium hover:bg-slate-800 disabled:opacity-50 transition-colors"
+              data-testid="2fa-submit"
+            >
+              {loading ? 'Verifying...' : 'Verify'}
+            </button>
+          </form>
+          <div className="text-center mt-4">
+            <button
+              onClick={() => {
+                setUseBackupCode(!useBackupCode);
+                setTwoFactorCode('');
+                setError('');
+              }}
+              className="text-sm text-sage-600 hover:underline"
+              data-testid="toggle-backup-code"
+            >
+              {useBackupCode ? 'Use authenticator app instead' : 'Use a backup code'}
+            </button>
+          </div>
+          <div className="text-center mt-2">
+            <button
+              onClick={() => {
+                setShow2FA(false);
+                setTempToken('');
+                setTwoFactorCode('');
+                setError('');
+              }}
+              className="text-sm text-slate-400 hover:underline"
+            >
+              Back to login
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   Patch,
   Delete,
   Param,
@@ -14,7 +15,7 @@ import { TenantGuard } from '../../common/tenant.guard';
 import { RolesGuard, Roles } from '../../common/roles.guard';
 import { BusinessId } from '../../common/decorators';
 import { AutomationService } from './automation.service';
-import { CreateAutomationRuleDto, UpdateAutomationRuleDto } from '../../common/dto';
+import { CreateAutomationRuleDto, UpdateAutomationRuleDto, SetAutomationStepsDto } from '../../common/dto';
 
 @Controller('automations')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
@@ -68,6 +69,31 @@ export class AutomationController {
   @Roles('ADMIN')
   testRule(@BusinessId() businessId: string, @Param('id') id: string) {
     return this.automationService.testRule(businessId, id);
+  }
+
+  // P-13: Step management endpoints
+  @Get('rules/:id/steps')
+  getSteps(@BusinessId() businessId: string, @Param('id') id: string) {
+    return this.automationService.getSteps(businessId, id);
+  }
+
+  @Put('rules/:id/steps')
+  @Roles('ADMIN')
+  setSteps(
+    @BusinessId() businessId: string,
+    @Param('id') id: string,
+    @Body() body: SetAutomationStepsDto,
+  ) {
+    return this.automationService.setSteps(businessId, id, body.steps);
+  }
+
+  @Get('rules/:id/executions')
+  getExecutions(
+    @BusinessId() businessId: string,
+    @Param('id') id: string,
+    @Query() query: any,
+  ) {
+    return this.automationService.getExecutions(businessId, id, query);
   }
 
   @Get('logs')

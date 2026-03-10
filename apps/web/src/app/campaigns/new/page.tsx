@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
-import { ArrowLeft, ArrowRight, Users, MessageSquare, Clock, CheckCircle } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Users, MessageSquare, Clock, CheckCircle, FlaskConical, Plus, Trash2 } from 'lucide-react';
+import CampaignFilterBuilder from '@/components/campaign-filter-builder';
 
 const STEPS = ['Audience', 'Message', 'Schedule', 'Review'];
 const stepIcons = [Users, MessageSquare, Clock, CheckCircle];
@@ -13,8 +14,6 @@ export default function NewCampaignPage() {
   const [step, setStep] = useState(0);
   const [name, setName] = useState('');
   const [filters, setFilters] = useState<any>({
-    tags: [],
-    noUpcomingBooking: false,
     excludeDoNotMessage: true,
   });
   const [templateId, setTemplateId] = useState('');
@@ -24,9 +23,46 @@ export default function NewCampaignPage() {
   const [recurrenceRule, setRecurrenceRule] = useState('NONE');
   const [preview, setPreview] = useState<any>(null);
   const [templates, setTemplates] = useState<any[]>([]);
-  const [tagInput, setTagInput] = useState('');
   const [saving, setSaving] = useState(false);
+  const [isABTest, setIsABTest] = useState(false);
+  const [variants, setVariants] = useState<any[]>([
+    { id: crypto.randomUUID(), name: 'Variant A', content: '', percentage: 50 },
+    { id: crypto.randomUUID(), name: 'Variant B', content: '', percentage: 50 },
+  ]);
+  const [activeVariant, setActiveVariant] = useState(0);
   const router = useRouter();
+
+  const variantPercentageSum = variants.reduce((s, v) => s + Number(v.percentage || 0), 0);
+
+  const addVariant = () => {
+    if (variants.length >= 3) return;
+    const newPct = Math.floor(100 / (variants.length + 1));
+    const updated = variants.map((v) => ({ ...v, percentage: newPct }));
+    updated.push({
+      id: crypto.randomUUID(),
+      name: `Variant ${String.fromCharCode(65 + variants.length)}`,
+      content: '',
+      percentage: 100 - newPct * variants.length,
+    });
+    setVariants(updated);
+    setActiveVariant(updated.length - 1);
+  };
+
+  const removeVariant = (index: number) => {
+    if (variants.length <= 2) return;
+    const updated = variants.filter((_, i) => i !== index);
+    const newPct = Math.floor(100 / updated.length);
+    const rebalanced = updated.map((v, i) => ({
+      ...v,
+      percentage: i === updated.length - 1 ? 100 - newPct * (updated.length - 1) : newPct,
+    }));
+    setVariants(rebalanced);
+    setActiveVariant(Math.min(activeVariant, rebalanced.length - 1));
+  };
+
+  const updateVariant = (index: number, field: string, value: any) => {
+    setVariants((prev) => prev.map((v, i) => (i === index ? { ...v, [field]: value } : v)));
+  };
 
   useEffect(() => {
     api
@@ -35,27 +71,15 @@ export default function NewCampaignPage() {
       .catch(() => {});
   }, []);
 
-  const loadPreview = () => {
-    api
-      .post<any>('/campaigns/0/preview', { filters })
-      .then(setPreview)
-      .catch(() => {});
-  };
-
+  // Load preview on mount and when filters change
   useEffect(() => {
-    if (step === 0) loadPreview();
-  }, [step, filters]);
-
-  const addTag = () => {
-    if (tagInput.trim() && !filters.tags.includes(tagInput.trim())) {
-      setFilters({ ...filters, tags: [...filters.tags, tagInput.trim()] });
-      setTagInput('');
+    if (step === 0) {
+      api
+        .post<any>('/campaigns/audience-preview', { filters })
+        .then(setPreview)
+        .catch(() => {});
     }
-  };
-
-  const removeTag = (tag: string) => {
-    setFilters({ ...filters, tags: filters.tags.filter((t: string) => t !== tag) });
-  };
+  }, [step]);
 
   const handleCreate = async () => {
     setSaving(true);
@@ -67,6 +91,7 @@ export default function NewCampaignPage() {
         scheduledAt: scheduleType === 'later' ? scheduledAt : undefined,
         throttlePerMinute: throttle,
         recurrenceRule: recurrenceRule !== 'NONE' ? recurrenceRule : undefined,
+        ...(isABTest && { isABTest: true, variants }),
       });
       router.push(`/campaigns/${campaign.id}`);
     } catch (err) {
@@ -77,7 +102,10 @@ export default function NewCampaignPage() {
 
   const canProceed = () => {
     if (step === 0) return preview?.count > 0;
-    if (step === 1) return !!templateId;
+    if (step === 1) {
+      if (isABTest) return variantPercentageSum === 100 && variants.every((v) => v.name && v.content);
+      return !!templateId;
+    }
     if (step === 2) return scheduleType === 'now' || !!scheduledAt;
     if (step === 3) return !!name;
     return true;
@@ -125,68 +153,17 @@ export default function NewCampaignPage() {
       {step === 0 && (
         <div className="space-y-4">
           <div className="bg-white rounded-2xl shadow-soft p-5">
-            <h2 className="text-sm font-semibold text-slate-900 mb-3">Audience Filters</h2>
-
-            <div className="space-y-3">
-              <div>
-                <label className="text-xs text-slate-500 mb-1 block">Customer tags</label>
-                <div className="flex gap-2">
-                  <input
-                    value={tagInput}
-                    onChange={(e) => setTagInput(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
-                    placeholder="e.g. vip, returning"
-                    className="flex-1 text-sm bg-slate-50 border-transparent rounded-xl px-3 py-2 focus:bg-white focus:ring-2 focus:ring-sage-500"
-                  />
-                  <button
-                    onClick={addTag}
-                    className="px-3 py-2 text-sm bg-slate-100 rounded-xl hover:bg-slate-200 transition-colors"
-                  >
-                    Add
-                  </button>
-                </div>
-                {filters.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 mt-2">
-                    {filters.tags.map((t: string) => (
-                      <span
-                        key={t}
-                        className="inline-flex items-center gap-1 px-2 py-0.5 bg-sage-50 text-sage-700 text-xs rounded-full"
-                      >
-                        {t}
-                        <button
-                          onClick={() => removeTag(t)}
-                          className="text-sage-400 hover:text-sage-600"
-                        >
-                          &times;
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <label className="flex items-center gap-2 text-sm text-slate-700">
-                <input
-                  type="checkbox"
-                  checked={filters.noUpcomingBooking}
-                  onChange={(e) => setFilters({ ...filters, noUpcomingBooking: e.target.checked })}
-                  className="rounded text-sage-600"
-                />
-                No upcoming bookings
-              </label>
-
-              <label className="flex items-center gap-2 text-sm text-slate-700">
-                <input
-                  type="checkbox"
-                  checked={filters.excludeDoNotMessage}
-                  onChange={(e) =>
-                    setFilters({ ...filters, excludeDoNotMessage: e.target.checked })
-                  }
-                  className="rounded text-sage-600"
-                />
-                Exclude "do-not-message" tagged customers
-              </label>
-            </div>
+            <CampaignFilterBuilder
+              filters={filters}
+              onChange={(newFilters) => {
+                setFilters(newFilters);
+                // Also update preview count for the step gate
+                api
+                  .post<any>('/campaigns/audience-preview', { filters: newFilters })
+                  .then(setPreview)
+                  .catch(() => {});
+              }}
+            />
           </div>
 
           {preview && (
@@ -213,31 +190,158 @@ export default function NewCampaignPage() {
 
       {/* Step 1: Message */}
       {step === 1 && (
-        <div className="bg-white rounded-2xl shadow-soft p-5">
-          <h2 className="text-sm font-semibold text-slate-900 mb-3">Select Template</h2>
-          {templates.length === 0 ? (
-            <p className="text-sm text-slate-400">
-              No templates found. Create one in Settings → Templates first.
-            </p>
-          ) : (
-            <div className="space-y-2">
-              {templates.map((t: any) => (
-                <button
-                  key={t.id}
-                  onClick={() => setTemplateId(t.id)}
+        <div className="space-y-4">
+          {/* A/B Test Toggle */}
+          <div className="bg-white rounded-2xl shadow-soft p-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FlaskConical size={16} className="text-lavender-600" />
+                <span className="text-sm font-semibold text-slate-900">A/B Test</span>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={isABTest}
+                data-testid="ab-test-toggle"
+                onClick={() => setIsABTest(!isABTest)}
+                className={cn(
+                  'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors',
+                  isABTest ? 'bg-lavender-500' : 'bg-slate-200',
+                )}
+              >
+                <span
                   className={cn(
-                    'w-full text-left px-4 py-3 rounded-xl text-sm border transition-colors',
-                    templateId === t.id
-                      ? 'border-sage-400 bg-sage-50 text-sage-900'
-                      : 'border-slate-100 hover:bg-slate-50',
+                    'pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-sm transform transition-transform mt-0.5',
+                    isABTest ? 'translate-x-5.5' : 'translate-x-0.5',
                   )}
+                />
+              </button>
+            </div>
+            {isABTest && (
+              <p className="text-xs text-slate-500 mt-2">
+                Test different messages to find what works best.
+              </p>
+            )}
+          </div>
+
+          {/* A/B Test Variant Editor */}
+          {isABTest && (
+            <div className="bg-white rounded-2xl shadow-soft p-5">
+              <div className="flex items-center gap-2 mb-4">
+                {variants.map((v, i) => (
+                  <button
+                    key={v.id}
+                    onClick={() => setActiveVariant(i)}
+                    className={cn(
+                      'px-3 py-1.5 rounded-lg text-xs font-medium transition-colors',
+                      activeVariant === i
+                        ? 'bg-lavender-100 text-lavender-700'
+                        : 'bg-slate-100 text-slate-500 hover:bg-slate-200',
+                    )}
+                  >
+                    {v.name}
+                  </button>
+                ))}
+                {variants.length < 3 && (
+                  <button
+                    onClick={addVariant}
+                    data-testid="add-variant-btn"
+                    className="flex items-center gap-1 px-2 py-1.5 text-xs text-slate-400 hover:text-slate-600 transition-colors"
+                  >
+                    <Plus size={12} />
+                    Add
+                  </button>
+                )}
+              </div>
+
+              {/* Active variant editor */}
+              {variants[activeVariant] && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <input
+                      value={variants[activeVariant].name}
+                      onChange={(e) => updateVariant(activeVariant, 'name', e.target.value)}
+                      placeholder="Variant name"
+                      className="flex-1 text-sm bg-slate-50 border-transparent rounded-xl px-3 py-2 focus:bg-white focus:ring-2 focus:ring-lavender-500"
+                    />
+                    {variants.length > 2 && (
+                      <button
+                        onClick={() => removeVariant(activeVariant)}
+                        className="p-2 text-slate-400 hover:text-red-500 transition-colors"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    )}
+                  </div>
+                  <textarea
+                    value={variants[activeVariant].content}
+                    onChange={(e) => updateVariant(activeVariant, 'content', e.target.value)}
+                    placeholder="Message content for this variant..."
+                    rows={4}
+                    data-testid="variant-content"
+                    className="w-full text-sm bg-slate-50 border-transparent rounded-xl px-3 py-2 focus:bg-white focus:ring-2 focus:ring-lavender-500 resize-none"
+                  />
+                  <div>
+                    <label className="text-xs text-slate-500 mb-1 block">
+                      Audience percentage
+                    </label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={99}
+                      value={variants[activeVariant].percentage}
+                      onChange={(e) =>
+                        updateVariant(activeVariant, 'percentage', Number(e.target.value))
+                      }
+                      data-testid="variant-percentage"
+                      className="w-20 text-sm bg-slate-50 border-transparent rounded-xl px-3 py-2 focus:bg-white focus:ring-2 focus:ring-lavender-500"
+                    />
+                    <span className="text-xs text-slate-400 ml-1">%</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Percentage sum validation */}
+              {variantPercentageSum !== 100 && (
+                <div
+                  data-testid="percentage-error"
+                  className="mt-3 text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2"
                 >
-                  <p className="font-medium">{t.name}</p>
-                  <p className="text-xs text-slate-500 mt-0.5 truncate">
-                    {t.body?.substring(0, 80)}
-                  </p>
-                </button>
-              ))}
+                  Percentages must sum to 100% (currently {variantPercentageSum}%)
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Template selection (used when NOT A/B testing, or for non-AB campaigns) */}
+          {!isABTest && (
+            <div className="bg-white rounded-2xl shadow-soft p-5">
+              <h2 className="text-sm font-semibold text-slate-900 mb-3">Select Template</h2>
+              {templates.length === 0 ? (
+                <p className="text-sm text-slate-400">
+                  No templates found. Create one in Settings → Templates first.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {templates.map((t: any) => (
+                    <button
+                      key={t.id}
+                      onClick={() => setTemplateId(t.id)}
+                      className={cn(
+                        'w-full text-left px-4 py-3 rounded-xl text-sm border transition-colors',
+                        templateId === t.id
+                          ? 'border-sage-400 bg-sage-50 text-sage-900'
+                          : 'border-slate-100 hover:bg-slate-50',
+                      )}
+                    >
+                      <p className="font-medium">{t.name}</p>
+                      <p className="text-xs text-slate-500 mt-0.5 truncate">
+                        {t.body?.substring(0, 80)}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>

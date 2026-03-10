@@ -76,6 +76,7 @@ model Business {
   testimonials               Testimonial[]
   reportSchedules            ReportSchedule[]
   businessReviews            BusinessReview[]
+  savedSegments              SavedSegment[]
 
   @@map("businesses")
 }
@@ -93,7 +94,10 @@ model Staff {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  preferences Json @default("{}")
+  preferences      Json    @default("{}")
+  twoFactorSecret  String?
+  twoFactorEnabled Boolean @default(false)
+  backupCodes      Json    @default("[]")
 
   business            Business             @relation(fields: [businessId], references: [id])
   bookings            Booking[]
@@ -198,6 +202,7 @@ model Booking {
   notes                   String?
   externalCalendarEventId String?
   customFields            Json     @default("{}")
+  colorLabel              String?
   createdAt               DateTime @default(now())
   updatedAt               DateTime @updatedAt
 
@@ -600,8 +605,10 @@ model AutomationRule {
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 
-  business Business        @relation(fields: [businessId], references: [id])
-  logs     AutomationLog[]
+  business   Business              @relation(fields: [businessId], references: [id])
+  logs       AutomationLog[]
+  steps      AutomationStep[]
+  executions AutomationExecution[]
 
   @@index([businessId, isActive])
   @@map("automation_rules")
@@ -641,6 +648,10 @@ model Campaign {
   recurrenceRule    String    @default("NONE") // NONE, DAILY, WEEKLY, BIWEEKLY, MONTHLY
   nextRunAt         DateTime?
   parentCampaignId  String?
+  isABTest          Boolean   @default(false)
+  variants          Json      @default("[]")
+  winnerVariantId   String?
+  winnerSelectedAt  DateTime?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
@@ -661,6 +672,7 @@ model CampaignSend {
   status     String    @default("PENDING") // PENDING, SENT, DELIVERED, READ, FAILED
   sentAt     DateTime?
   bookingId  String?
+  variantId  String?
   createdAt  DateTime  @default(now())
 
   campaign Campaign @relation(fields: [campaignId], references: [id])
@@ -1333,4 +1345,76 @@ model BusinessReview {
   @@unique([businessId, month])
   @@index([businessId])
   @@map("business_reviews")
+}
+
+model AutomationStep {
+  id               String   @id @default(cuid())
+  automationRuleId String
+  order            Int
+  type             String // ACTION, DELAY, BRANCH
+  config           Json     @default("{}")
+  parentStepId     String?
+  branchLabel      String?
+  createdAt        DateTime @default(now())
+
+  automationRule AutomationRule   @relation(fields: [automationRuleId], references: [id], onDelete: Cascade)
+  parentStep     AutomationStep?  @relation("StepBranch", fields: [parentStepId], references: [id])
+  childSteps     AutomationStep[] @relation("StepBranch")
+  executions     AutomationExecution[]
+
+  @@index([automationRuleId, order])
+  @@map("automation_steps")
+}
+
+model AutomationExecution {
+  id               String    @id @default(cuid())
+  automationRuleId String
+  stepId           String?
+  businessId       String
+  customerId       String?
+  bookingId        String?
+  status           String    @default("PENDING") // PENDING, RUNNING, WAITING, COMPLETED, FAILED, SKIPPED
+  scheduledAt      DateTime?
+  startedAt        DateTime?
+  completedAt      DateTime?
+  error            String?
+  context          Json      @default("{}")
+  createdAt        DateTime  @default(now())
+
+  automationRule AutomationRule  @relation(fields: [automationRuleId], references: [id])
+  step           AutomationStep? @relation(fields: [stepId], references: [id])
+
+  @@index([automationRuleId, status])
+  @@index([status, scheduledAt])
+  @@map("automation_executions")
+}
+
+model SavedSegment {
+  id         String   @id @default(cuid())
+  businessId String
+  name       String
+  filters    Json     @default("{}")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id])
+
+  @@index([businessId])
+  @@map("saved_segments")
+}
+
+model BookingAuditLog {
+  id        String   @id @default(cuid())
+  bookingId String
+  businessId String
+  userId    String?
+  userName  String?
+  action    String // CREATED, UPDATED, RESCHEDULED, CANCELLED, STATUS_CHANGED, PAYMENT_RECEIVED, NOTE_ADDED
+  changes   Json     @default("[]")
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  @@index([bookingId])
+  @@index([businessId, createdAt])
+  @@map("booking_audit_logs")
 }

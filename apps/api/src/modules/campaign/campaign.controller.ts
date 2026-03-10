@@ -16,13 +16,24 @@ import { RolesGuard, Roles } from '../../common/roles.guard';
 import { PlanGuard, RequiresFeature } from '../../common/plan.guard';
 import { BusinessId } from '../../common/decorators';
 import { CampaignService } from './campaign.service';
-import { CreateCampaignDto, UpdateCampaignDto, PreviewAudienceDto } from '../../common/dto';
+import { SavedSegmentService } from './saved-segment.service';
+import {
+  CreateCampaignDto,
+  UpdateCampaignDto,
+  PreviewAudienceDto,
+  CreateSavedSegmentDto,
+  UpdateSavedSegmentDto,
+  SelectWinnerDto,
+} from '../../common/dto';
 
 @Controller('campaigns')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard, PlanGuard)
 @RequiresFeature('campaigns')
 export class CampaignController {
-  constructor(private campaignService: CampaignService) {}
+  constructor(
+    private campaignService: CampaignService,
+    private savedSegmentService: SavedSegmentService,
+  ) {}
 
   @Post()
   @Roles('ADMIN')
@@ -35,6 +46,41 @@ export class CampaignController {
     return this.campaignService.findAll(businessId, query);
   }
 
+  // P-16: Standalone audience preview (no campaign ID required)
+  @Post('audience-preview')
+  audiencePreview(@BusinessId() businessId: string, @Body() body: PreviewAudienceDto) {
+    return this.campaignService.previewAudience(businessId, body.filters);
+  }
+
+  // P-16: SavedSegment CRUD — static routes before :id
+  @Get('segments')
+  listSegments(@BusinessId() businessId: string) {
+    return this.savedSegmentService.findAll(businessId);
+  }
+
+  @Post('segments')
+  @Roles('ADMIN')
+  createSegment(@BusinessId() businessId: string, @Body() body: CreateSavedSegmentDto) {
+    return this.savedSegmentService.create(businessId, body);
+  }
+
+  @Patch('segments/:segmentId')
+  @Roles('ADMIN')
+  updateSegment(
+    @BusinessId() businessId: string,
+    @Param('segmentId') segmentId: string,
+    @Body() body: UpdateSavedSegmentDto,
+  ) {
+    return this.savedSegmentService.update(businessId, segmentId, body);
+  }
+
+  @Delete('segments/:segmentId')
+  @Roles('ADMIN')
+  deleteSegment(@BusinessId() businessId: string, @Param('segmentId') segmentId: string) {
+    return this.savedSegmentService.delete(businessId, segmentId);
+  }
+
+  // Parameterized routes below
   @Get(':id')
   findById(@BusinessId() businessId: string, @Param('id') id: string) {
     return this.campaignService.findById(businessId, id);
@@ -72,5 +118,20 @@ export class CampaignController {
   @Roles('ADMIN')
   stopRecurrence(@BusinessId() businessId: string, @Param('id') id: string) {
     return this.campaignService.stopRecurrence(businessId, id);
+  }
+
+  @Get(':id/variant-stats')
+  variantStats(@BusinessId() businessId: string, @Param('id') id: string) {
+    return this.campaignService.getVariantStats(businessId, id);
+  }
+
+  @Post(':id/select-winner')
+  @Roles('ADMIN')
+  selectWinner(
+    @BusinessId() businessId: string,
+    @Param('id') id: string,
+    @Body() body: SelectWinnerDto,
+  ) {
+    return this.campaignService.selectWinner(businessId, id, body.variantId);
   }
 }

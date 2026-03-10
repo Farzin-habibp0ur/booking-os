@@ -85,6 +85,18 @@ export const BOOKING_STATUS_STYLES: Record<string, StatusStyle> = {
   },
 };
 
+// ---------------------------------------------------------------------------
+// Booking color labels (user-applied color coding)
+// ---------------------------------------------------------------------------
+
+export const BOOKING_COLOR_LABELS: Record<string, { bg: string; border: string; dot: string; label: string }> = {
+  sage: { bg: 'bg-sage-50', border: 'border-sage-400', dot: 'bg-sage-500', label: 'Sage' },
+  lavender: { bg: 'bg-lavender-50', border: 'border-lavender-400', dot: 'bg-lavender-500', label: 'Lavender' },
+  amber: { bg: 'bg-amber-50', border: 'border-amber-400', dot: 'bg-amber-500', label: 'Amber' },
+  sky: { bg: 'bg-sky-50', border: 'border-sky-400', dot: 'bg-sky-500', label: 'Sky' },
+  rose: { bg: 'bg-rose-50', border: 'border-rose-400', dot: 'bg-rose-500', label: 'Rose' },
+};
+
 // Convenience helpers -------------------------------------------------------
 
 /** Badge-style classes (bg + text combined) — used in bookings table, badges */

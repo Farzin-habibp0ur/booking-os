@@ -11,6 +11,7 @@ import { NodeConfigModal } from '@/components/workflow/node-config-modal';
 import type { WorkflowNodeData } from '@/components/workflow/workflow-node';
 import type { Connection } from '@/components/workflow/workflow-connector';
 import { serializeWorkflow } from './serialize-workflow';
+import { AutomationStepBuilder, type AutomationStepData } from '@/components/automation-step-builder';
 
 // --- State ---
 
@@ -315,6 +316,8 @@ function WorkflowBuilderContent() {
   const ruleId = searchParams.get('ruleId');
   const [state, dispatch] = useReducer(reducer, initialState);
   const [configNodeId, setConfigNodeId] = useState<string | null>(null);
+  const [builderMode, setBuilderMode] = useState<'visual' | 'steps'>('visual');
+  const [automationSteps, setAutomationSteps] = useState<AutomationStepData[]>([]);
 
   // Load existing rule
   useEffect(() => {
@@ -329,6 +332,26 @@ function WorkflowBuilderContent() {
           }
         })
         .catch(() => dispatch({ type: 'SET_ERROR', error: 'Failed to load rule' }));
+
+      // P-13: Load steps
+      api
+        .get<any[]>(`/automations/rules/${ruleId}/steps`)
+        .then((steps: any[]) => {
+          if (steps && steps.length > 0) {
+            setAutomationSteps(
+              steps.map((s: any) => ({
+                id: s.id,
+                order: s.order,
+                type: s.type,
+                config: s.config || {},
+                parentStepId: s.parentStepId || undefined,
+                branchLabel: s.branchLabel || undefined,
+              })),
+            );
+            setBuilderMode('steps');
+          }
+        })
+        .catch(() => {});
     }
   }, [ruleId]);
 
@@ -361,6 +384,28 @@ function WorkflowBuilderContent() {
 
   const handleSave = useCallback(async () => {
     dispatch({ type: 'SET_ERROR', error: null });
+
+    // P-13: If in steps mode, save steps
+    if (builderMode === 'steps' && ruleId) {
+      dispatch({ type: 'SET_SAVING', value: true });
+      try {
+        await api.put(`/automations/rules/${ruleId}/steps`, {
+          steps: automationSteps.map((s) => ({
+            order: s.order,
+            type: s.type,
+            config: s.config,
+            parentStepId: s.parentStepId,
+            branchLabel: s.branchLabel,
+          })),
+        });
+        dispatch({ type: 'SET_TOAST', toast: 'Steps saved successfully' });
+      } catch (err) {
+        dispatch({ type: 'SET_ERROR', error: 'Failed to save steps' });
+      }
+      dispatch({ type: 'SET_SAVING', value: false });
+      return;
+    }
+
     const result = serializeWorkflow(state);
 
     if (result.error) {
@@ -380,7 +425,7 @@ function WorkflowBuilderContent() {
       dispatch({ type: 'SET_ERROR', error: 'Failed to save workflow' });
     }
     dispatch({ type: 'SET_SAVING', value: false });
-  }, [state, ruleId]);
+  }, [state, ruleId, builderMode, automationSteps]);
 
   const handleTest = useCallback(async () => {
     dispatch({ type: 'SET_ERROR', error: null });
@@ -473,7 +518,43 @@ function WorkflowBuilderContent() {
         </div>
       )}
 
-      {/* Main content: sidebar + canvas */}
+      {/* P-13: Builder mode toggle */}
+      <div className="flex items-center gap-1 px-4 py-1.5 border-b border-slate-200 bg-slate-50">
+        <button
+          onClick={() => setBuilderMode('visual')}
+          className={cn(
+            'px-3 py-1 text-xs font-medium rounded-lg transition-colors',
+            builderMode === 'visual'
+              ? 'bg-white text-slate-800 shadow-sm'
+              : 'text-slate-500 hover:text-slate-700',
+          )}
+          data-testid="mode-visual"
+        >
+          Visual Builder
+        </button>
+        <button
+          onClick={() => setBuilderMode('steps')}
+          className={cn(
+            'px-3 py-1 text-xs font-medium rounded-lg transition-colors',
+            builderMode === 'steps'
+              ? 'bg-white text-slate-800 shadow-sm'
+              : 'text-slate-500 hover:text-slate-700',
+          )}
+          data-testid="mode-steps"
+        >
+          Step Sequence
+        </button>
+      </div>
+
+      {/* Main content: sidebar + canvas or step builder */}
+      {builderMode === 'steps' ? (
+        <div className="flex-1 overflow-auto p-6 bg-slate-50/50" data-testid="step-builder-panel">
+          <div className="max-w-lg mx-auto">
+            <h3 className="text-sm font-medium text-slate-600 mb-4">Automation Steps</h3>
+            <AutomationStepBuilder steps={automationSteps} onChange={setAutomationSteps} />
+          </div>
+        </div>
+      ) : (
       <div className="flex-1 flex overflow-hidden">
         <WorkflowSidebar />
         <WorkflowCanvas
@@ -493,6 +574,7 @@ function WorkflowBuilderContent() {
           onPan={(x, y) => dispatch({ type: 'SET_PAN', x, y })}
         />
       </div>
+      )}
 
       {/* Node config modal */}
       <NodeConfigModal

@@ -291,4 +291,69 @@ describe('BookingDetailModal', () => {
       expect(mockToast).toHaveBeenCalledWith(expect.any(String), 'error');
     });
   });
+
+  // ─── Color Label Picker ──────────────────────────────────────────
+
+  test('renders color label picker with 5 color options', () => {
+    render(<BookingDetailModal {...defaultProps} />);
+    expect(screen.getByTestId('color-label-picker')).toBeInTheDocument();
+    expect(screen.getByTestId('color-label-sage')).toBeInTheDocument();
+    expect(screen.getByTestId('color-label-lavender')).toBeInTheDocument();
+    expect(screen.getByTestId('color-label-amber')).toBeInTheDocument();
+    expect(screen.getByTestId('color-label-sky')).toBeInTheDocument();
+    expect(screen.getByTestId('color-label-rose')).toBeInTheDocument();
+  });
+
+  test('shows selected ring on active color label', () => {
+    render(
+      <BookingDetailModal
+        {...defaultProps}
+        booking={{ ...mockBooking, colorLabel: 'sage' }}
+      />,
+    );
+    const sageBtn = screen.getByTestId('color-label-sage');
+    expect(sageBtn.className).toContain('ring-2');
+  });
+
+  test('shows clear button when color label is set', () => {
+    render(
+      <BookingDetailModal
+        {...defaultProps}
+        booking={{ ...mockBooking, colorLabel: 'rose' }}
+      />,
+    );
+    expect(screen.getByTestId('color-label-clear')).toBeInTheDocument();
+  });
+
+  test('does not show clear button when no color label', () => {
+    render(<BookingDetailModal {...defaultProps} />);
+    expect(screen.queryByTestId('color-label-clear')).not.toBeInTheDocument();
+  });
+
+  test('clicking color label calls PATCH to update booking', async () => {
+    mockPatch.mockResolvedValue({ ...mockBooking, colorLabel: 'amber' });
+    render(<BookingDetailModal {...defaultProps} />);
+
+    fireEvent.click(screen.getByTestId('color-label-amber'));
+
+    await waitFor(() => {
+      expect(mockPatch).toHaveBeenCalledWith('/bookings/b1', { colorLabel: 'amber' });
+    });
+  });
+
+  test('clicking active color label clears it', async () => {
+    mockPatch.mockResolvedValue({ ...mockBooking, colorLabel: null });
+    render(
+      <BookingDetailModal
+        {...defaultProps}
+        booking={{ ...mockBooking, colorLabel: 'sky' }}
+      />,
+    );
+
+    fireEvent.click(screen.getByTestId('color-label-sky'));
+
+    await waitFor(() => {
+      expect(mockPatch).toHaveBeenCalledWith('/bookings/b1', { colorLabel: null });
+    });
+  });
 });

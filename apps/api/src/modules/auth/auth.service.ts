@@ -13,6 +13,7 @@ import { TokenService } from '../../common/token.service';
 import { EmailService } from '../email/email.service';
 import { OnboardingDripService } from '../onboarding-drip/onboarding-drip.service';
 import { ReferralService } from '../referral/referral.service';
+import { TwoFactorService } from './two-factor.service';
 import { TRIAL_DAYS, GRACE_PERIOD_DAYS } from '../../common/plan-config';
 
 const MAX_FAILED_ATTEMPTS = 5;
@@ -32,6 +33,7 @@ export class AuthService {
     private emailService: EmailService,
     private onboardingDrip: OnboardingDripService,
     private referralService: ReferralService,
+    private twoFactor: TwoFactorService,
   ) {
     // M2 fix: Clean up expired brute force entries every 5 minutes
     const timer = setInterval(
@@ -223,6 +225,15 @@ export class AuthService {
     // H6 fix: Warn if staff's email is not verified (soft enforcement — don't block login)
     if (staff.emailVerified === false) {
       this.logger.warn(`Login by unverified email: staffId=${staff.id}, email=${staff.email}`);
+    }
+
+    // P-17: If 2FA is enabled, return a short-lived temp token instead of full tokens
+    if (staff.twoFactorEnabled) {
+      const tempToken = this.jwt.sign(
+        { sub: staff.id, type: '2fa_pending' },
+        { expiresIn: '5m' },
+      );
+      return { requires2FA: true, tempToken } as any;
     }
 
     const tokens = this.issueTokens(staff);
@@ -445,6 +456,133 @@ export class AuthService {
     await this.sendVerificationEmail(staff.id, staff.email, staff.name, staff.businessId);
 
     return { ok: true };
+  }
+
+  // ---- P-17: Two-Factor Authentication ----
+
+  async twoFactorSetup(staffId: string) {
+    const staff = await this.prisma.staff.findUnique({ where: { id: staffId } });
+    if (!staff) throw new BadRequestException('Staff not found');
+    if (staff.twoFactorEnabled) throw new BadRequestException('2FA is already enabled');
+
+    const { secret, otpauthUrl } = this.twoFactor.generateSetup(staff.email);
+
+    // Store secret but don't enable yet — user must verify a code first
+    await this.prisma.staff.update({
+      where: { id: staffId },
+      data: { twoFactorSecret: secret },
+    });
+
+    return { secret, otpauthUrl };
+  }
+
+  async twoFactorVerifySetup(staffId: string, code: string) {
+    const staff = await this.prisma.staff.findUnique({ where: { id: staffId } });
+    if (!staff) throw new BadRequestException('Staff not found');
+    if (!staff.twoFactorSecret) throw new BadRequestException('2FA setup not initiated');
+    if (staff.twoFactorEnabled) throw new BadRequestException('2FA is already enabled');
+
+    const valid = this.twoFactor.verifyCode(staff.twoFactorSecret, code);
+    if (!valid) throw new UnauthorizedException('Invalid verification code');
+
+    // Generate backup codes
+    const { plaintext, hashed } = await this.twoFactor.generateBackupCodes();
+
+    await this.prisma.staff.update({
+      where: { id: staffId },
+      data: {
+        twoFactorEnabled: true,
+        backupCodes: hashed,
+      },
+    });
+
+    return { backupCodes: plaintext };
+  }
+
+  async twoFactorDisable(staffId: string, code: string) {
+    const staff = await this.prisma.staff.findUnique({ where: { id: staffId } });
+    if (!staff) throw new BadRequestException('Staff not found');
+    if (!staff.twoFactorEnabled) throw new BadRequestException('2FA is not enabled');
+
+    const valid = this.twoFactor.verifyCode(staff.twoFactorSecret!, code);
+    if (!valid) throw new UnauthorizedException('Invalid verification code');
+
+    await this.prisma.staff.update({
+      where: { id: staffId },
+      data: {
+        twoFactorEnabled: false,
+        twoFactorSecret: null,
+        backupCodes: [],
+      },
+    });
+
+    return { ok: true };
+  }
+
+  async twoFactorChallenge(tempToken: string, code: string) {
+    let payload: { sub: string; type: string };
+    try {
+      payload = this.jwt.verify(tempToken);
+    } catch {
+      throw new UnauthorizedException('Invalid or expired 2FA token');
+    }
+
+    if (payload.type !== '2fa_pending') {
+      throw new UnauthorizedException('Invalid token type');
+    }
+
+    const staff = await this.prisma.staff.findUnique({
+      where: { id: payload.sub },
+    });
+
+    if (!staff || !staff.isActive || !staff.twoFactorEnabled) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    // Try TOTP first
+    const totpValid = this.twoFactor.verifyCode(staff.twoFactorSecret!, code);
+
+    if (!totpValid) {
+      // Try backup code
+      const storedCodes = (staff.backupCodes || []) as string[];
+      const { valid: backupValid, remainingCodes } = await this.twoFactor.verifyBackupCode(
+        storedCodes,
+        code,
+      );
+
+      if (!backupValid) {
+        throw new UnauthorizedException('Invalid 2FA code');
+      }
+
+      // Consume the backup code
+      await this.prisma.staff.update({
+        where: { id: staff.id },
+        data: { backupCodes: remainingCodes },
+      });
+    }
+
+    // Issue full tokens
+    const tokens = this.issueTokens(staff);
+
+    return {
+      ...tokens,
+      staff: {
+        id: staff.id,
+        name: staff.name,
+        email: staff.email,
+        role: staff.role,
+        businessId: staff.businessId,
+      },
+    };
+  }
+
+  async getTwoFactorStatus(staffId: string) {
+    const staff = await this.prisma.staff.findUnique({ where: { id: staffId } });
+    if (!staff) throw new BadRequestException('Staff not found');
+    const backupCodesCount = Array.isArray(staff.backupCodes)
+      ? (staff.backupCodes as string[]).length
+      : 0;
+    return { enabled: staff.twoFactorEnabled, backupCodesRemaining: backupCodesCount };
   }
 
   private async sendVerificationEmail(

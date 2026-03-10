@@ -78,8 +78,8 @@ export class CampaignDispatchService {
   }
 
   async prepareSends(campaignId: string, businessId: string, filters: any) {
-    // Build audience and create CampaignSend rows
-    const where = this.buildAudienceWhere(businessId, filters);
+    // P-16: Use advanced audience query from CampaignService for full filter support
+    const { where } = await this.campaignService.queryAdvancedAudience(businessId, filters);
     const customers = await this.prisma.customer.findMany({
       where,
       select: { id: true },
@@ -98,18 +98,60 @@ export class CampaignDispatchService {
     return { total: sends.length };
   }
 
-  private buildAudienceWhere(businessId: string, filters: any) {
-    const where: any = { businessId };
-    if (filters?.tags?.length) {
-      where.tags = { hasSome: filters.tags };
+  async prepareSendsWithVariants(
+    campaignId: string,
+    businessId: string,
+    filters: any,
+    variants: any[],
+  ) {
+    const { where } = await this.campaignService.queryAdvancedAudience(businessId, filters);
+    const customers = await this.prisma.customer.findMany({
+      where,
+      select: { id: true },
+    });
+
+    // Shuffle audience randomly (Fisher-Yates)
+    const shuffled = [...customers];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
-    if (filters?.noUpcomingBooking) {
-      where.NOT = { bookings: { some: { startTime: { gte: new Date() } } } };
+
+    // Split by variant percentages
+    const sends: any[] = [];
+    let offset = 0;
+    for (const variant of variants) {
+      const count = Math.round((Number(variant.percentage) / 100) * shuffled.length);
+      const slice = shuffled.slice(offset, offset + count);
+      for (const c of slice) {
+        sends.push({
+          campaignId,
+          customerId: c.id,
+          status: 'PENDING',
+          variantId: variant.id,
+        });
+      }
+      offset += count;
     }
-    if (filters?.excludeDoNotMessage) {
-      where.NOT = { ...where.NOT, tags: { has: 'do-not-message' } };
+
+    // Handle any rounding remainder — assign to last variant
+    if (offset < shuffled.length) {
+      const lastVariant = variants[variants.length - 1];
+      for (let i = offset; i < shuffled.length; i++) {
+        sends.push({
+          campaignId,
+          customerId: shuffled[i].id,
+          status: 'PENDING',
+          variantId: lastVariant.id,
+        });
+      }
     }
-    return where;
+
+    if (sends.length > 0) {
+      await this.prisma.campaignSend.createMany({ data: sends });
+    }
+
+    return { total: sends.length };
   }
 
   private async computeStats(campaignId: string) {

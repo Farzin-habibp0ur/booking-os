@@ -124,6 +124,14 @@ export class BookingService {
     return { data, total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
   }
 
+  async getAuditLog(businessId: string, bookingId: string) {
+    return this.prisma.bookingAuditLog.findMany({
+      where: { bookingId, businessId },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    });
+  }
+
   async findById(businessId: string, id: string) {
     return this.prisma.booking.findFirst({
       where: { id, businessId },
@@ -152,6 +160,7 @@ export class BookingService {
       resourceId?: string;
       forceBook?: boolean;
       forceBookReason?: string;
+      colorLabel?: string;
     },
     currentUser?: { staffId: string; staffName: string; role: string },
   ) {
@@ -272,6 +281,7 @@ export class BookingService {
           endTime,
           notes: data.notes,
           customFields: mergedCustomFields,
+          colorLabel: data.colorLabel,
           status: isDepositRequired ? 'PENDING_DEPOSIT' : 'CONFIRMED',
         },
         include: { customer: true, service: true, staff: true },
@@ -357,21 +367,33 @@ export class BookingService {
         }),
       );
 
+    // Booking audit log
+    this.logAudit(
+      businessId,
+      booking.id,
+      currentUser?.staffId,
+      currentUser?.staffName,
+      'CREATED',
+      [{ field: 'status', to: booking.status }],
+    );
+
     return booking;
   }
 
   async update(businessId: string, id: string, data: any) {
+    // Fetch existing booking for diff computation
+    const existingBooking = await this.prisma.booking.findFirst({
+      where: { id, businessId },
+      include: { service: true },
+    });
+
     if (data.startTime) {
-      const booking = await this.prisma.booking.findFirst({
-        where: { id, businessId },
-        include: { service: true },
-      });
-      if (booking) {
+      if (existingBooking) {
         data.startTime = new Date(data.startTime);
-        data.endTime = new Date(data.startTime.getTime() + booking.service.durationMins * 60000);
+        data.endTime = new Date(data.startTime.getTime() + existingBooking.service.durationMins * 60000);
 
         // M12 fix: Check for conflicts when rescheduling
-        const staffId = data.staffId || booking.staffId;
+        const staffId = data.staffId || existingBooking.staffId;
         if (staffId) {
           const conflict = await this.prisma.booking.findFirst({
             where: {
@@ -418,6 +440,32 @@ export class BookingService {
           error: err?.message,
         }),
       );
+
+    // Booking audit log — compute field-level diffs
+    const auditChanges: Array<{ field: string; from?: any; to?: any }> = [];
+    const trackFields = ['startTime', 'endTime', 'staffId', 'notes', 'status', 'colorLabel', 'serviceId', 'customerId', 'locationId', 'resourceId'];
+    for (const field of trackFields) {
+      if (data[field] !== undefined && existingBooking && data[field] !== (existingBooking as any)[field]) {
+        const fromVal = (existingBooking as any)[field];
+        const toVal = data[field];
+        auditChanges.push({
+          field,
+          from: fromVal instanceof Date ? fromVal.toISOString() : fromVal,
+          to: toVal instanceof Date ? toVal.toISOString() : toVal,
+        });
+      }
+    }
+    if (auditChanges.length > 0) {
+      const isReschedule = auditChanges.some((c) => c.field === 'startTime');
+      this.logAudit(
+        businessId,
+        result.id,
+        undefined,
+        undefined,
+        isReschedule ? 'RESCHEDULED' : 'UPDATED',
+        auditChanges,
+      );
+    }
 
     return result;
   }
@@ -706,6 +754,16 @@ export class BookingService {
           error: err?.message,
         }),
       );
+
+    // Booking audit log
+    this.logAudit(
+      businessId,
+      id,
+      actor?.staffId,
+      actor?.staffName,
+      status === 'CANCELLED' ? 'CANCELLED' : 'STATUS_CHANGED',
+      [{ field: 'status', from: previousStatus, to: status }],
+    );
 
     return booking;
   }
@@ -1027,6 +1085,34 @@ export class BookingService {
     }
 
     return { days };
+  }
+
+  private async logAudit(
+    businessId: string,
+    bookingId: string,
+    userId: string | undefined,
+    userName: string | undefined,
+    action: string,
+    changes: Array<{ field: string; from?: any; to?: any }>,
+  ) {
+    try {
+      await this.prisma.bookingAuditLog.create({
+        data: {
+          businessId,
+          bookingId,
+          userId: userId || null,
+          userName: userName || 'System',
+          action,
+          changes,
+        },
+      });
+    } catch (err) {
+      this.logger.warn(`Failed to write booking audit log for ${bookingId}`, {
+        bookingId,
+        action,
+        error: (err as any)?.message,
+      });
+    }
   }
 
   private async attributeCampaignSend(customerId: string, bookingId: string) {

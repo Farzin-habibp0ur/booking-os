@@ -18,11 +18,12 @@ import {
 } from 'lucide-react';
 import RecordPaymentModal from './record-payment-modal';
 import RefundModal from './refund-modal';
+import BookingAuditTimeline from './booking-audit-timeline';
 import { cn } from '@/lib/cn';
 import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/lib/toast';
 import { useFocusTrap } from '@/lib/use-focus-trap';
-import { BOOKING_STATUS_STYLES } from '@/lib/design-tokens';
+import { BOOKING_STATUS_STYLES, BOOKING_COLOR_LABELS } from '@/lib/design-tokens';
 
 interface BookingDetailModalProps {
   booking: any;
@@ -79,6 +80,8 @@ export default function BookingDetailModal({
   const [showRefundModal, setShowRefundModal] = useState(false);
   const [selectedPaymentForRefund, setSelectedPaymentForRefund] = useState<any>(null);
   const [payments, setPayments] = useState<any[]>([]);
+  const [colorLabel, setColorLabel] = useState<string | null>(null);
+  const [activityOpen, setActivityOpen] = useState(false);
   const { t } = useI18n();
   const { toast } = useToast();
   const modalRef = useRef<HTMLDivElement>(null);
@@ -112,6 +115,10 @@ export default function BookingDetailModal({
       .catch(() => setPayments([]));
   }, [isOpen, booking?.id]);
 
+  useEffect(() => {
+    if (booking) setColorLabel(booking.colorLabel || null);
+  }, [booking?.id, booking?.colorLabel]);
+
   if (!isOpen || !booking) return null;
 
   const loadPayments = () => {
@@ -119,6 +126,17 @@ export default function BookingDetailModal({
       .get<any>(`/payments?bookingId=${booking.id}`)
       .then((res) => setPayments(res.data || []))
       .catch(() => {});
+  };
+
+  const handleColorLabelChange = async (label: string | null) => {
+    setColorLabel(label);
+    try {
+      const updated = await api.patch<any>(`/bookings/${booking.id}`, { colorLabel: label });
+      onUpdated(updated);
+    } catch (e: any) {
+      toast(e.message || 'Failed to update color label', 'error');
+      setColorLabel(booking.colorLabel || null);
+    }
   };
 
   const isRecurring = !!(booking.recurringSeriesId || booking.recurringSeries?.id);
@@ -542,6 +560,36 @@ export default function BookingDetailModal({
             </div>
           )}
 
+          {/* Color Label */}
+          <div className="border-t pt-3">
+            <p className="text-xs font-semibold text-slate-500 uppercase mb-2">Color Label</p>
+            <div className="flex items-center gap-2" data-testid="color-label-picker">
+              {Object.entries(BOOKING_COLOR_LABELS).map(([key, val]) => (
+                <button
+                  key={key}
+                  onClick={() => handleColorLabelChange(colorLabel === key ? null : key)}
+                  className={cn(
+                    'w-6 h-6 rounded-full transition-all',
+                    val.dot,
+                    colorLabel === key ? 'ring-2 ring-offset-2 ring-slate-400' : 'hover:scale-110',
+                  )}
+                  title={val.label}
+                  data-testid={`color-label-${key}`}
+                  aria-label={`${val.label} color label`}
+                />
+              ))}
+              {colorLabel && (
+                <button
+                  onClick={() => handleColorLabelChange(null)}
+                  className="text-xs text-slate-400 hover:text-slate-600 ml-1"
+                  data-testid="color-label-clear"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+          </div>
+
           {/* Timeline */}
           <div className="border-t pt-3">
             <p className="text-xs font-semibold text-slate-500 uppercase mb-2">Timeline</p>
@@ -630,6 +678,23 @@ export default function BookingDetailModal({
                   </div>
                 )}
             </div>
+          </div>
+
+          {/* Activity (Audit Log) */}
+          <div className="border-t pt-3">
+            <button
+              onClick={() => setActivityOpen((prev) => !prev)}
+              className="flex items-center justify-between w-full text-left"
+              data-testid="activity-toggle"
+            >
+              <p className="text-xs font-semibold text-slate-500 uppercase">Activity</p>
+              <span className="text-xs text-slate-400">{activityOpen ? 'Hide' : 'Show'}</span>
+            </button>
+            {activityOpen && (
+              <div className="mt-3">
+                <BookingAuditTimeline bookingId={booking.id} />
+              </div>
+            )}
           </div>
 
           {/* Payments */}

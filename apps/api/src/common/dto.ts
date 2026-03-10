@@ -104,6 +104,11 @@ export class CreateBookingDto {
   @IsOptional()
   @MaxLength(500)
   forceBookReason?: string;
+
+  @IsString()
+  @IsOptional()
+  @IsIn(['sage', 'lavender', 'amber', 'sky', 'rose'])
+  colorLabel?: string;
 }
 
 export class UpdateBookingDto {
@@ -128,6 +133,11 @@ export class UpdateBookingDto {
   @IsOptional()
   @IsShallowJson()
   customFields?: Record<string, unknown>;
+
+  @IsString()
+  @IsOptional()
+  @IsIn(['sage', 'lavender', 'amber', 'sky', 'rose'])
+  colorLabel?: string;
 }
 
 export class UpdateBookingStatusDto {
@@ -1032,6 +1042,14 @@ export class CreateCampaignDto {
   @IsIn(['NONE', 'DAILY', 'WEEKLY', 'BIWEEKLY', 'MONTHLY'])
   @IsOptional()
   recurrenceRule?: string;
+
+  @IsBoolean()
+  @IsOptional()
+  isABTest?: boolean;
+
+  @IsArray()
+  @IsOptional()
+  variants?: any[];
 }
 
 export class UpdateCampaignDto {
@@ -1056,12 +1074,52 @@ export class UpdateCampaignDto {
   @IsIn(['NONE', 'DAILY', 'WEEKLY', 'BIWEEKLY', 'MONTHLY'])
   @IsOptional()
   recurrenceRule?: string;
+
+  @IsBoolean()
+  @IsOptional()
+  isABTest?: boolean;
+
+  @IsArray()
+  @IsOptional()
+  variants?: any[];
+}
+
+export class SelectWinnerDto {
+  @IsString()
+  @IsNotEmpty()
+  variantId!: string;
 }
 
 export class PreviewAudienceDto {
   @IsObject()
   @IsShallowJson(2, 30)
   filters!: Record<string, unknown>;
+}
+
+// ---- Saved Segment DTOs (P-16) ----
+
+export class CreateSavedSegmentDto {
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(200)
+  name!: string;
+
+  @IsObject()
+  @IsOptional()
+  @IsShallowJson(2, 30)
+  filters?: Record<string, unknown>;
+}
+
+export class UpdateSavedSegmentDto {
+  @IsString()
+  @IsOptional()
+  @MaxLength(200)
+  name?: string;
+
+  @IsObject()
+  @IsOptional()
+  @IsShallowJson(2, 30)
+  filters?: Record<string, unknown>;
 }
 
 // ---- Automation Rule DTOs (H12) ----
@@ -1179,6 +1237,39 @@ export class UpdateAutomationRuleDto {
   @Min(0)
   @Max(100)
   maxPerCustomerPerDay?: number;
+}
+
+// ---- Automation Step DTOs (P-13) ----
+
+export class AutomationStepDto {
+  @IsInt()
+  @Min(0)
+  order!: number;
+
+  @IsString()
+  @IsNotEmpty()
+  @IsIn(['ACTION', 'DELAY', 'BRANCH'])
+  type!: string;
+
+  @IsObject()
+  @IsOptional()
+  @IsShallowJson(2, 20)
+  config?: Record<string, unknown>;
+
+  @IsString()
+  @IsOptional()
+  parentStepId?: string;
+
+  @IsString()
+  @IsOptional()
+  branchLabel?: string;
+}
+
+export class SetAutomationStepsDto {
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => AutomationStepDto)
+  steps!: AutomationStepDto[];
 }
 
 // ---- Quote DTOs (Phase 3) ----
@@ -1671,6 +1762,26 @@ export class ConsoleSettingsBulkUpdateDto {
   @ValidateNested({ each: true })
   @Type(() => ConsoleSettingBulkItem)
   settings!: ConsoleSettingBulkItem[];
+}
+
+// ---- Two-Factor Auth DTOs (P-17) ----
+
+export class TwoFactorVerifyDto {
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(8)
+  code!: string;
+}
+
+export class TwoFactorChallengeDto {
+  @IsString()
+  @IsNotEmpty()
+  tempToken!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(8)
+  code!: string;
 }
 
 // ---- Branding DTO ----

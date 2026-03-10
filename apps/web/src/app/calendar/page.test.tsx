@@ -74,6 +74,13 @@ jest.mock('@/lib/design-tokens', () => ({
   statusCalendarClasses: () => ({ bg: '', border: '', text: '' }),
   ELEVATION: { dropdown: '' },
   BOOKING_STATUS_STYLES: {},
+  BOOKING_COLOR_LABELS: {
+    sage: { bg: 'bg-sage-50', border: 'border-sage-400', dot: 'bg-sage-500', label: 'Sage' },
+    lavender: { bg: 'bg-lavender-50', border: 'border-lavender-400', dot: 'bg-lavender-500', label: 'Lavender' },
+    amber: { bg: 'bg-amber-50', border: 'border-amber-400', dot: 'bg-amber-500', label: 'Amber' },
+    sky: { bg: 'bg-sky-50', border: 'border-sky-400', dot: 'bg-sky-500', label: 'Sky' },
+    rose: { bg: 'bg-rose-50', border: 'border-rose-400', dot: 'bg-rose-500', label: 'Rose' },
+  },
 }));
 
 // Mock child components
@@ -463,5 +470,177 @@ describe('CalendarPage', () => {
     await waitFor(() => {
       expect(screen.getByText('Time Off')).toBeInTheDocument();
     });
+  });
+
+  it('renders booking card with color label border class', async () => {
+    const today = new Date();
+    const startTime = new Date(today);
+    startTime.setHours(10, 0, 0, 0);
+    const endTime = new Date(today);
+    endTime.setHours(11, 0, 0, 0);
+
+    mockGet.mockImplementation((path: string) => {
+      if (path.startsWith('/staff')) return Promise.resolve(mockStaff);
+      if (path.startsWith('/locations')) return Promise.resolve([]);
+      if (path.startsWith('/bookings/calendar/month-summary')) return Promise.resolve({ days: {} });
+      if (path.startsWith('/bookings/calendar'))
+        return Promise.resolve([
+          {
+            id: 'b1',
+            staffId: 's1',
+            startTime: startTime.toISOString(),
+            endTime: endTime.toISOString(),
+            status: 'CONFIRMED',
+            colorLabel: 'sage',
+            customer: { name: 'Alice' },
+            service: { name: 'Facial', durationMins: 60, kind: 'TREATMENT' },
+            staff: { name: 'Sarah' },
+          },
+        ]);
+      if (path.startsWith('/availability/calendar-context')) return Promise.resolve({});
+      return Promise.resolve([]);
+    });
+
+    await act(async () => {
+      render(<CalendarPage />);
+    });
+
+    await waitFor(() => {
+      const colorLabelEl = document.querySelector('[data-color-label="sage"]');
+      expect(colorLabelEl).not.toBeNull();
+      expect(colorLabelEl?.className).toContain('border-sage-400');
+    });
+  });
+
+  it('booking cards are draggable in day view', async () => {
+    const startTime = new Date();
+    startTime.setHours(10, 0, 0, 0);
+    const endTime = new Date();
+    endTime.setHours(11, 0, 0, 0);
+
+    mockGet.mockImplementation((path: string) => {
+      if (path.startsWith('/staff')) return Promise.resolve(mockStaff);
+      if (path.startsWith('/locations')) return Promise.resolve([]);
+      if (path.startsWith('/bookings/calendar/month-summary')) return Promise.resolve({ days: {} });
+      if (path.startsWith('/bookings/calendar'))
+        return Promise.resolve([
+          {
+            id: 'b1',
+            staffId: 's1',
+            startTime: startTime.toISOString(),
+            endTime: endTime.toISOString(),
+            status: 'CONFIRMED',
+            customer: { name: 'Alice' },
+            service: { name: 'Facial', durationMins: 60 },
+            staff: { name: 'Sarah' },
+          },
+        ]);
+      if (path.startsWith('/availability/calendar-context')) return Promise.resolve({});
+      return Promise.resolve([]);
+    });
+
+    await act(async () => {
+      render(<CalendarPage />);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Alice')).toBeInTheDocument();
+    });
+
+    const bookingCard = screen.getByText('Alice').closest('[draggable]');
+    expect(bookingCard).not.toBeNull();
+    expect(bookingCard?.getAttribute('draggable')).toBe('true');
+  });
+
+  it('booking cards are draggable in week view', async () => {
+    const startTime = new Date();
+    startTime.setHours(10, 0, 0, 0);
+    const endTime = new Date();
+    endTime.setHours(11, 0, 0, 0);
+
+    mockGet.mockImplementation((path: string) => {
+      if (path.startsWith('/staff')) return Promise.resolve(mockStaff);
+      if (path.startsWith('/locations')) return Promise.resolve([]);
+      if (path.startsWith('/bookings/calendar/month-summary')) return Promise.resolve({ days: {} });
+      if (path.startsWith('/bookings/calendar'))
+        return Promise.resolve([
+          {
+            id: 'b1',
+            staffId: 's1',
+            startTime: startTime.toISOString(),
+            endTime: endTime.toISOString(),
+            status: 'CONFIRMED',
+            customer: { name: 'Bob' },
+            service: { name: 'Facial', durationMins: 60 },
+            staff: { name: 'Sarah' },
+          },
+        ]);
+      if (path.startsWith('/availability/calendar-context')) return Promise.resolve({});
+      return Promise.resolve([]);
+    });
+
+    await act(async () => {
+      render(<CalendarPage />);
+    });
+
+    // Switch to week view
+    await act(async () => {
+      fireEvent.click(screen.getByText('calendar.view_week'));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Bob')).toBeInTheDocument();
+    });
+
+    const bookingCard = screen.getByText('Bob').closest('[draggable]');
+    expect(bookingCard).not.toBeNull();
+    expect(bookingCard?.getAttribute('draggable')).toBe('true');
+  });
+
+  it('drag start sets opacity on booking card', async () => {
+    const startTime = new Date();
+    startTime.setHours(10, 0, 0, 0);
+    const endTime = new Date();
+    endTime.setHours(11, 0, 0, 0);
+
+    mockGet.mockImplementation((path: string) => {
+      if (path.startsWith('/staff')) return Promise.resolve(mockStaff);
+      if (path.startsWith('/locations')) return Promise.resolve([]);
+      if (path.startsWith('/bookings/calendar/month-summary')) return Promise.resolve({ days: {} });
+      if (path.startsWith('/bookings/calendar'))
+        return Promise.resolve([
+          {
+            id: 'b1',
+            staffId: 's1',
+            startTime: startTime.toISOString(),
+            endTime: endTime.toISOString(),
+            status: 'CONFIRMED',
+            customer: { name: 'Alice' },
+            service: { name: 'Facial', durationMins: 60 },
+            staff: { name: 'Sarah' },
+          },
+        ]);
+      if (path.startsWith('/availability/calendar-context')) return Promise.resolve({});
+      return Promise.resolve([]);
+    });
+
+    await act(async () => {
+      render(<CalendarPage />);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Alice')).toBeInTheDocument();
+    });
+
+    const bookingCard = screen.getByText('Alice').closest('[draggable]') as HTMLElement;
+    expect(bookingCard).not.toBeNull();
+
+    await act(async () => {
+      fireEvent.dragStart(bookingCard, {
+        dataTransfer: { effectAllowed: '', setData: jest.fn() },
+      });
+    });
+
+    expect(bookingCard.style.opacity).toBe('0.4');
   });
 });

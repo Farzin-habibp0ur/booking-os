@@ -15,11 +15,12 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useI18n } from '@/lib/i18n';
+import { useToast } from '@/lib/toast';
 import BookingFormModal from '@/components/booking-form-modal';
 import BookingDetailModal from '@/components/booking-detail-modal';
 import { BookingPopover } from '@/components/booking-popover';
 import { CalendarSidebar } from './components/calendar-sidebar';
-import { statusCalendarClasses } from '@/lib/design-tokens';
+import { statusCalendarClasses, BOOKING_COLOR_LABELS } from '@/lib/design-tokens';
 import { captureEvent } from '@/lib/posthog';
 
 const DEFAULT_START_HOUR = 8;
@@ -50,6 +51,7 @@ const STATUS_COLORS = new Proxy(
 
 export default function CalendarPage() {
   const { t } = useI18n();
+  const { toast } = useToast();
   const [bookings, setBookings] = useState<any[]>([]);
   const [staff, setStaff] = useState<any[]>([]);
   const [locations, setLocations] = useState<any[]>([]);
@@ -399,7 +401,19 @@ export default function CalendarPage() {
     setDragBooking(booking);
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', booking.id);
+    (e.currentTarget as HTMLElement).style.opacity = '0.4';
   }, []);
+
+  const handleDragEnd = useCallback(
+    (e: React.DragEvent) => {
+      (e.currentTarget as HTMLElement).style.opacity = '1';
+      if (!showDropConfirm) {
+        setDragBooking(null);
+        setDropTarget(null);
+      }
+    },
+    [showDropConfirm],
+  );
 
   const handleDragOver = useCallback(
     (e: React.DragEvent, staffId: string, day: Date, hour: number) => {
@@ -447,20 +461,53 @@ export default function CalendarPage() {
   const confirmDrop = useCallback(async () => {
     if (!dragBooking || !dropTarget) return;
 
+    const prevStartTime = dragBooking.startTime;
+    const prevEndTime = dragBooking.endTime;
+    const prevStaffId = dragBooking.staffId;
+
     const newStartTime = new Date(dropTarget.day);
     newStartTime.setHours(dropTarget.hour, dropTarget.minutes, 0, 0);
     const duration = dragBooking.service?.durationMins || 60;
     const newEndTime = new Date(newStartTime.getTime() + duration * 60000);
+    const bookingId = dragBooking.id;
 
     try {
-      await api.patch(`/bookings/${dragBooking.id}`, {
+      await api.patch(`/bookings/${bookingId}`, {
         startTime: newStartTime.toISOString(),
         endTime: newEndTime.toISOString(),
         staffId: dropTarget.staffId,
       });
+      toast(
+        `Moved ${dragBooking.service?.name || 'booking'} to ${newStartTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+        'success',
+      );
       loadBookings();
+
+      // Undo available for 5 seconds
+      const undoTimeout = setTimeout(() => {}, 5000);
+      const handleUndo = async () => {
+        clearTimeout(undoTimeout);
+        try {
+          await api.patch(`/bookings/${bookingId}`, {
+            startTime: prevStartTime,
+            endTime: prevEndTime,
+            staffId: prevStaffId,
+          });
+          toast('Booking restored to original time', 'success');
+          loadBookings();
+        } catch {
+          toast('Failed to undo move', 'error');
+        }
+      };
+      // Store undo handler for potential use
+      (window as any).__calendarUndoHandler = handleUndo;
+      setTimeout(() => {
+        if ((window as any).__calendarUndoHandler === handleUndo) {
+          delete (window as any).__calendarUndoHandler;
+        }
+      }, 5000);
     } catch (err) {
-      console.error('Failed to reschedule:', err);
+      toast('Failed to reschedule booking', 'error');
     }
 
     setShowDropConfirm(false);
@@ -775,7 +822,9 @@ export default function CalendarPage() {
                                   : 'cursor-pointer hover:bg-sage-50/30',
                               dropTarget?.staffId === s.id &&
                                 dropTarget?.hour === hour &&
-                                'bg-sage-100/50 ring-1 ring-sage-300',
+                                (dropConflict
+                                  ? 'bg-red-50/50 ring-1 ring-red-300'
+                                  : 'bg-sage-100/50 ring-1 ring-sage-300'),
                             )}
                             style={{ height: SLOT_HEIGHT }}
                           />
@@ -791,12 +840,7 @@ export default function CalendarPage() {
                             key={b.id}
                             draggable
                             onDragStart={(e) => handleDragStart(e, b)}
-                            onDragEnd={() => {
-                              if (!showDropConfirm) {
-                                setDragBooking(null);
-                                setDropTarget(null);
-                              }
-                            }}
+                            onDragEnd={handleDragEnd}
                             onClick={(e) => {
                               e.stopPropagation();
                               handleBookingClick(b, e);
@@ -806,10 +850,11 @@ export default function CalendarPage() {
                             className={cn(
                               'absolute left-1 right-1 rounded-xl px-2 py-1 cursor-pointer transition-shadow shadow-soft-sm',
                               colors.bg,
-                              colors.border,
+                              b.colorLabel && BOOKING_COLOR_LABELS[b.colorLabel] ? BOOKING_COLOR_LABELS[b.colorLabel].border : colors.border,
                               hoveredBooking === b.id && 'shadow-md ring-1 ring-sage-200',
                             )}
-                            style={{ top, height, borderLeftWidth: 3 }}
+                            data-color-label={b.colorLabel || undefined}
+                            style={{ top, height, borderLeftWidth: b.colorLabel ? 4 : 3 }}
                           >
                             <p
                               className={cn(
@@ -955,6 +1000,14 @@ export default function CalendarPage() {
                               onClick={() =>
                                 !anyTimeOff && handleSlotClick(displayStaff[0]?.id || '', day, hour)
                               }
+                              onDragOver={(e) =>
+                                !anyTimeOff &&
+                                handleDragOver(e, displayStaff[0]?.id || '', day, hour)
+                              }
+                              onDrop={(e) =>
+                                !anyTimeOff &&
+                                handleDrop(e, displayStaff[0]?.id || '', day, hour)
+                              }
                               className={cn(
                                 'border-b border-dashed border-slate-100',
                                 anyTimeOff
@@ -975,6 +1028,9 @@ export default function CalendarPage() {
                           return (
                             <div
                               key={b.id}
+                              draggable
+                              onDragStart={(e) => handleDragStart(e, b)}
+                              onDragEnd={handleDragEnd}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleBookingClick(b, e);
@@ -982,9 +1038,10 @@ export default function CalendarPage() {
                               className={cn(
                                 'absolute left-0.5 right-0.5 rounded border-l-2 px-1 py-0.5 cursor-pointer hover:shadow-md',
                                 colors.bg,
-                                colors.border,
+                                b.colorLabel && BOOKING_COLOR_LABELS[b.colorLabel] ? BOOKING_COLOR_LABELS[b.colorLabel].border : colors.border,
                               )}
-                              style={{ top, height, borderLeftWidth: 2 }}
+                              data-color-label={b.colorLabel || undefined}
+                              style={{ top, height, borderLeftWidth: b.colorLabel ? 4 : 2 }}
                             >
                               <p className="text-[10px] font-medium truncate flex items-center gap-0.5">
                                 {b.recurringSeriesId && (

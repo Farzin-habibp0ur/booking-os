@@ -69,6 +69,9 @@ jest.mock('@/lib/api', () => ({
 jest.mock('lucide-react', () => ({
   ArrowLeft: () => <div data-testid="arrow-left-icon" />,
   Send: () => <div data-testid="send-icon" />,
+  Repeat: () => <div data-testid="repeat-icon" />,
+  StopCircle: () => <div data-testid="stop-icon" />,
+  Trophy: () => <div data-testid="trophy-icon" />,
 }));
 
 import { api } from '@/lib/api';
@@ -261,6 +264,144 @@ describe('CampaignDetailPage', () => {
 
     await waitFor(() => {
       expect(mockPush).toHaveBeenCalledWith('/campaigns');
+    });
+  });
+
+  // ─── P-15: A/B Test Results ──────────────────────────────────
+
+  it('renders A/B test results section for A/B campaign', async () => {
+    mockApi.get.mockImplementation((path: string) => {
+      if (path === '/campaigns/c1') {
+        return Promise.resolve(
+          createCampaignDetail({
+            status: 'SENT',
+            isABTest: true,
+            variants: [
+              { id: 'a', name: 'Variant A' },
+              { id: 'b', name: 'Variant B' },
+            ],
+          }),
+        );
+      }
+      if (path === '/campaigns/c1/variant-stats') {
+        return Promise.resolve({
+          variants: [
+            { variantId: 'a', name: 'Variant A', sent: 50, delivered: 48, read: 30, failed: 2, bookings: 5 },
+            { variantId: 'b', name: 'Variant B', sent: 50, delivered: 45, read: 25, failed: 5, bookings: 3 },
+          ],
+          winnerVariantId: null,
+          winnerSelectedAt: null,
+        });
+      }
+      return Promise.resolve({});
+    });
+
+    render(<CampaignDetailPage />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('ab-results')).toBeInTheDocument();
+      expect(screen.getByText('A/B Test Results')).toBeInTheDocument();
+      expect(screen.getByText('Variant A')).toBeInTheDocument();
+      expect(screen.getByText('Variant B')).toBeInTheDocument();
+    });
+
+    // Check Select Winner buttons are present
+    const selectBtns = screen.getAllByText('Select Winner');
+    expect(selectBtns).toHaveLength(2);
+  });
+
+  it('shows winner badge when winner is selected', async () => {
+    mockApi.get.mockImplementation((path: string) => {
+      if (path === '/campaigns/c1') {
+        return Promise.resolve(
+          createCampaignDetail({
+            status: 'SENT',
+            isABTest: true,
+            winnerVariantId: 'a',
+            variants: [
+              { id: 'a', name: 'Variant A' },
+              { id: 'b', name: 'Variant B' },
+            ],
+          }),
+        );
+      }
+      if (path === '/campaigns/c1/variant-stats') {
+        return Promise.resolve({
+          variants: [
+            { variantId: 'a', name: 'Variant A', sent: 50, delivered: 48, read: 30, failed: 2, bookings: 5 },
+            { variantId: 'b', name: 'Variant B', sent: 50, delivered: 45, read: 25, failed: 5, bookings: 3 },
+          ],
+          winnerVariantId: 'a',
+          winnerSelectedAt: '2026-03-10T12:00:00Z',
+        });
+      }
+      return Promise.resolve({});
+    });
+
+    render(<CampaignDetailPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Winner')).toBeInTheDocument();
+    });
+
+    // Select Winner buttons should not be present since winner is already selected
+    expect(screen.queryByText('Select Winner')).not.toBeInTheDocument();
+  });
+
+  it('does not render A/B results for non-AB campaign', async () => {
+    mockApi.get.mockResolvedValue(createCampaignDetail({ status: 'SENT', isABTest: false }));
+
+    render(<CampaignDetailPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('February Promo')).toBeInTheDocument();
+    });
+
+    expect(screen.queryByTestId('ab-results')).not.toBeInTheDocument();
+  });
+
+  it('calls select-winner endpoint when button clicked', async () => {
+    mockApi.get.mockImplementation((path: string) => {
+      if (path === '/campaigns/c1') {
+        return Promise.resolve(
+          createCampaignDetail({
+            status: 'SENT',
+            isABTest: true,
+            variants: [
+              { id: 'a', name: 'Variant A' },
+              { id: 'b', name: 'Variant B' },
+            ],
+          }),
+        );
+      }
+      if (path === '/campaigns/c1/variant-stats') {
+        return Promise.resolve({
+          variants: [
+            { variantId: 'a', name: 'Variant A', sent: 50, delivered: 48, read: 30, failed: 2, bookings: 5 },
+            { variantId: 'b', name: 'Variant B', sent: 50, delivered: 45, read: 25, failed: 5, bookings: 3 },
+          ],
+          winnerVariantId: null,
+          winnerSelectedAt: null,
+        });
+      }
+      return Promise.resolve({});
+    });
+    mockApi.post.mockResolvedValue({});
+
+    const user = userEvent.setup();
+    render(<CampaignDetailPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('A/B Test Results')).toBeInTheDocument();
+    });
+
+    const selectBtns = screen.getAllByText('Select Winner');
+    await act(async () => {
+      await user.click(selectBtns[0]);
+    });
+
+    await waitFor(() => {
+      expect(mockApi.post).toHaveBeenCalledWith('/campaigns/c1/select-winner', { variantId: 'a' });
     });
   });
 });

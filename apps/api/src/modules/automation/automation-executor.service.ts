@@ -19,6 +19,9 @@ export class AutomationExecutorService {
     this.processing = true;
     const startTime = Date.now();
     try {
+      // P-13: Process waiting step executions first
+      await this.processWaitingExecutions();
+
       let skip = 0;
       while (true) {
         if (Date.now() - startTime > AutomationExecutorService.MAX_EXECUTION_MS) {
@@ -31,6 +34,7 @@ export class AutomationExecutorService {
           take: AutomationExecutorService.PAGE_SIZE,
           skip,
           orderBy: { id: 'asc' },
+          include: { steps: { orderBy: { order: 'asc' } } },
         });
         if (rules.length === 0) break;
 
@@ -59,6 +63,8 @@ export class AutomationExecutorService {
     const twoMinutesAgo = new Date(now.getTime() - 2 * 60 * 1000);
     const filters = rule.filters || {};
     const actions = (rule.actions || []) as any[];
+    const steps = (rule.steps || []) as any[];
+    const hasSteps = steps.length > 0;
 
     switch (rule.trigger) {
       case 'BOOKING_CREATED': {
@@ -70,13 +76,11 @@ export class AutomationExecutorService {
           include: { customer: true, service: true },
         });
         for (const booking of bookings) {
-          await this.executeActions(
-            rule,
-            actions,
-            booking.businessId,
-            booking.id,
-            booking.customerId,
-          );
+          if (hasSteps) {
+            await this.startStepExecution(rule, steps, booking.businessId, booking.id, booking.customerId, booking);
+          } else {
+            await this.executeActions(rule, actions, booking.businessId, booking.id, booking.customerId);
+          }
         }
         break;
       }
@@ -90,15 +94,14 @@ export class AutomationExecutorService {
             startTime: { gte: windowStart, lt: windowEnd },
             status: { in: ['CONFIRMED', 'PENDING_DEPOSIT'] },
           },
+          include: { customer: true },
         });
         for (const booking of bookings) {
-          await this.executeActions(
-            rule,
-            actions,
-            booking.businessId,
-            booking.id,
-            booking.customerId,
-          );
+          if (hasSteps) {
+            await this.startStepExecution(rule, steps, booking.businessId, booking.id, booking.customerId, booking);
+          } else {
+            await this.executeActions(rule, actions, booking.businessId, booking.id, booking.customerId);
+          }
         }
         break;
       }
@@ -109,17 +112,15 @@ export class AutomationExecutorService {
             updatedAt: { gte: twoMinutesAgo },
             ...(filters.newStatus && { status: filters.newStatus }),
           },
-          include: { service: true },
+          include: { service: true, customer: true },
         });
         for (const booking of bookings) {
           if (filters.serviceKind && booking.service?.kind !== filters.serviceKind) continue;
-          await this.executeActions(
-            rule,
-            actions,
-            booking.businessId,
-            booking.id,
-            booking.customerId,
-          );
+          if (hasSteps) {
+            await this.startStepExecution(rule, steps, booking.businessId, booking.id, booking.customerId, booking);
+          } else {
+            await this.executeActions(rule, actions, booking.businessId, booking.id, booking.customerId);
+          }
         }
         break;
       }
@@ -130,20 +131,239 @@ export class AutomationExecutorService {
             status: 'CANCELLED',
             updatedAt: { gte: twoMinutesAgo },
           },
+          include: { customer: true },
         });
         for (const booking of bookings) {
-          await this.executeActions(
-            rule,
-            actions,
-            booking.businessId,
-            booking.id,
-            booking.customerId,
-          );
+          if (hasSteps) {
+            await this.startStepExecution(rule, steps, booking.businessId, booking.id, booking.customerId, booking);
+          } else {
+            await this.executeActions(rule, actions, booking.businessId, booking.id, booking.customerId);
+          }
         }
         break;
       }
       default:
         break;
+    }
+  }
+
+  // P-13: Start a step-based execution sequence
+  private async startStepExecution(
+    rule: any,
+    steps: any[],
+    businessId: string,
+    bookingId?: string,
+    customerId?: string,
+    bookingData?: any,
+  ) {
+    const firstStep = steps.find((s: any) => s.order === 0 && !s.parentStepId) || steps[0];
+    if (!firstStep) return;
+
+    const context = {
+      bookingId,
+      customerId,
+      status: bookingData?.status,
+      serviceName: bookingData?.service?.name,
+      customerName: bookingData?.customer?.name,
+    };
+
+    const execution = await this.prisma.automationExecution.create({
+      data: {
+        automationRuleId: rule.id,
+        stepId: firstStep.id,
+        businessId,
+        customerId: customerId || null,
+        bookingId: bookingId || null,
+        status: 'PENDING',
+        context,
+      },
+    });
+
+    await this.advanceExecution(execution.id);
+  }
+
+  // P-13: Advance an execution to the next step
+  async advanceExecution(executionId: string) {
+    const execution = await this.prisma.automationExecution.findUnique({
+      where: { id: executionId },
+      include: {
+        step: true,
+        automationRule: { include: { steps: { orderBy: { order: 'asc' } } } },
+      },
+    });
+
+    if (!execution || !execution.step) return;
+    if (execution.status === 'COMPLETED' || execution.status === 'FAILED') return;
+
+    const step = execution.step;
+    const allSteps = execution.automationRule.steps;
+    const context = (execution.context || {}) as Record<string, any>;
+
+    try {
+      await this.prisma.automationExecution.update({
+        where: { id: executionId },
+        data: { status: 'RUNNING', startedAt: new Date() },
+      });
+
+      const stepConfig = (step.config || {}) as Record<string, any>;
+
+      if (step.type === 'ACTION') {
+        await this.executeStepAction(execution, stepConfig);
+        const nextStep = this.findNextStep(allSteps, step);
+        if (nextStep) {
+          await this.prisma.automationExecution.update({
+            where: { id: executionId },
+            data: { stepId: nextStep.id, status: 'PENDING' },
+          });
+          await this.advanceExecution(executionId);
+        } else {
+          await this.prisma.automationExecution.update({
+            where: { id: executionId },
+            data: { status: 'COMPLETED', completedAt: new Date() },
+          });
+        }
+      } else if (step.type === 'DELAY') {
+        const delayMinutes = stepConfig.delayMinutes || 0;
+        const scheduledAt = new Date(Date.now() + delayMinutes * 60 * 1000);
+        const nextStep = this.findNextStep(allSteps, step);
+        await this.prisma.automationExecution.update({
+          where: { id: executionId },
+          data: {
+            status: 'WAITING',
+            scheduledAt,
+            stepId: nextStep?.id || step.id,
+          },
+        });
+      } else if (step.type === 'BRANCH') {
+        const branchResult = this.evaluateBranch(stepConfig, context);
+        const childSteps = allSteps.filter(
+          (s: any) => s.parentStepId === step.id && s.branchLabel === branchResult,
+        );
+        const nextChild = childSteps[0];
+        if (nextChild) {
+          await this.prisma.automationExecution.update({
+            where: { id: executionId },
+            data: { stepId: nextChild.id, status: 'PENDING' },
+          });
+          await this.advanceExecution(executionId);
+        } else {
+          // No matching branch child — find next sibling step
+          const nextStep = this.findNextStep(allSteps, step);
+          if (nextStep) {
+            await this.prisma.automationExecution.update({
+              where: { id: executionId },
+              data: { stepId: nextStep.id, status: 'PENDING' },
+            });
+            await this.advanceExecution(executionId);
+          } else {
+            await this.prisma.automationExecution.update({
+              where: { id: executionId },
+              data: { status: 'COMPLETED', completedAt: new Date() },
+            });
+          }
+        }
+      }
+    } catch (err: any) {
+      this.logger.error(`Execution ${executionId} step ${step.id} failed: ${err.message}`);
+      await this.prisma.automationExecution.update({
+        where: { id: executionId },
+        data: { status: 'FAILED', error: err.message, completedAt: new Date() },
+      });
+    }
+  }
+
+  // P-13: Execute an ACTION type step
+  private async executeStepAction(execution: any, config: Record<string, any>) {
+    const actionType = config.actionType || 'SEND_MESSAGE';
+
+    if (actionType === 'UPDATE_STATUS' && config.newStatus && execution.bookingId) {
+      await this.prisma.booking.update({
+        where: { id: execution.bookingId },
+        data: { status: config.newStatus },
+      });
+    }
+
+    if (actionType === 'ADD_TAG' && config.tag && execution.customerId) {
+      const customer = await this.prisma.customer.findUnique({
+        where: { id: execution.customerId },
+        select: { tags: true },
+      });
+      if (customer) {
+        const tags = (customer.tags || []) as string[];
+        if (!tags.includes(config.tag)) {
+          await this.prisma.customer.update({
+            where: { id: execution.customerId },
+            data: { tags: [...tags, config.tag] },
+          });
+        }
+      }
+    }
+
+    // Log all actions to AutomationLog
+    await this.prisma.automationLog.create({
+      data: {
+        automationRuleId: execution.automationRuleId,
+        businessId: execution.businessId,
+        bookingId: execution.bookingId || null,
+        customerId: execution.customerId || null,
+        action: actionType,
+        outcome: 'SENT',
+      },
+    });
+  }
+
+  // P-13: Find the next sequential step (by order, same parent level)
+  private findNextStep(allSteps: any[], currentStep: any): any | null {
+    const sameLevelSteps = allSteps.filter(
+      (s: any) => s.parentStepId === currentStep.parentStepId,
+    );
+    const currentIndex = sameLevelSteps.findIndex((s: any) => s.id === currentStep.id);
+    return currentIndex >= 0 && currentIndex < sameLevelSteps.length - 1
+      ? sameLevelSteps[currentIndex + 1]
+      : null;
+  }
+
+  // P-13: Evaluate a branch condition against execution context
+  evaluateBranch(config: Record<string, any>, context: Record<string, any>): string {
+    const { field, operator, value } = config;
+    if (!field || !operator) return 'false';
+    const actual = context[field];
+
+    switch (operator) {
+      case 'is':
+        return String(actual) === String(value) ? 'true' : 'false';
+      case 'isNot':
+        return String(actual) !== String(value) ? 'true' : 'false';
+      case 'gt':
+        return Number(actual) > Number(value) ? 'true' : 'false';
+      case 'lt':
+        return Number(actual) < Number(value) ? 'true' : 'false';
+      default:
+        return 'false';
+    }
+  }
+
+  // P-13: Process executions waiting for delay to elapse
+  async processWaitingExecutions() {
+    const now = new Date();
+    const waiting = await this.prisma.automationExecution.findMany({
+      where: {
+        status: 'WAITING',
+        scheduledAt: { lte: now },
+      },
+      take: AutomationExecutorService.PAGE_SIZE,
+    });
+
+    for (const execution of waiting) {
+      try {
+        await this.prisma.automationExecution.update({
+          where: { id: execution.id },
+          data: { status: 'PENDING' },
+        });
+        await this.advanceExecution(execution.id);
+      } catch (err: any) {
+        this.logger.error(`Waiting execution ${execution.id} failed: ${err.message}`);
+      }
     }
   }
 

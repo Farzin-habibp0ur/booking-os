@@ -2314,4 +2314,53 @@ describe('BookingsPage', () => {
       expect(lastCall).toContain('serviceId=svc1');
     });
   });
+
+  // ─── Color Label Dot ─────────────────────────────────────────
+
+  it('shows color dot when booking has colorLabel', async () => {
+    mockApi.get.mockImplementation((url: string) => {
+      if (url.startsWith('/bookings'))
+        return Promise.resolve({
+          data: [
+            createBooking({ colorLabel: 'sage' }),
+            createBooking({ id: 'b2', colorLabel: undefined }),
+          ],
+          total: 2,
+        });
+      if (url.startsWith('/staff')) return Promise.resolve(mockStaff);
+      if (url.startsWith('/services')) return Promise.resolve([]);
+      return Promise.resolve([]);
+    });
+
+    await act(async () => {
+      render(<BookingsPage />);
+    });
+
+    await waitFor(() => {
+      const dots = screen.getAllByTestId('color-label-dot');
+      expect(dots).toHaveLength(1);
+      expect(dots[0].className).toContain('bg-sage-500');
+    });
+  });
+
+  it('does not show color dot when booking has no colorLabel', async () => {
+    mockApi.get.mockImplementation((url: string) => {
+      if (url.startsWith('/bookings'))
+        return Promise.resolve({
+          data: [createBooking()],
+          total: 1,
+        });
+      if (url.startsWith('/staff')) return Promise.resolve(mockStaff);
+      if (url.startsWith('/services')) return Promise.resolve([]);
+      return Promise.resolve([]);
+    });
+
+    await act(async () => {
+      render(<BookingsPage />);
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('color-label-dot')).not.toBeInTheDocument();
+    });
+  });
 });

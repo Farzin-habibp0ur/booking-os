@@ -73,7 +73,25 @@ jest.mock('lucide-react', () => ({
   MessageSquare: (props: any) => <div data-testid="message-square-icon" {...props} />,
   Clock: (props: any) => <div data-testid="clock-icon" {...props} />,
   CheckCircle: (props: any) => <div data-testid="check-circle-icon" {...props} />,
+  FlaskConical: (props: any) => <div data-testid="flask-icon" {...props} />,
+  Plus: (props: any) => <div data-testid="plus-icon" {...props} />,
+  Trash2: (props: any) => <div data-testid="trash-icon" {...props} />,
 }));
+
+// Mock crypto.randomUUID
+let uuidCounter = 0;
+Object.defineProperty(globalThis, 'crypto', {
+  value: {
+    randomUUID: () => `uuid-${++uuidCounter}`,
+  },
+});
+
+// Mock CampaignFilterBuilder — renders a simple stub
+jest.mock('@/components/campaign-filter-builder', () => {
+  return function MockCampaignFilterBuilder({ filters, onChange }: any) {
+    return <div data-testid="campaign-filter-builder">Audience Filters (mock)</div>;
+  };
+});
 
 import { api } from '@/lib/api';
 const mockApi = api as jest.Mocked<typeof api>;
@@ -92,7 +110,8 @@ describe('NewCampaignPage', () => {
       return Promise.resolve({});
     });
     mockApi.post.mockImplementation((path: string) => {
-      if (path.includes('/preview')) return Promise.resolve({ count: 25, samples: [] });
+      if (path.includes('preview') || path.includes('audience'))
+        return Promise.resolve({ count: 25, samples: [] });
       return Promise.resolve({ id: 'new-campaign-id' });
     });
   });
@@ -144,13 +163,11 @@ describe('NewCampaignPage', () => {
 
   // ─── Step 0: Audience ───────────────────────────────────────
 
-  it('renders audience filters on first step', async () => {
+  it('renders audience filter builder on first step', async () => {
     render(<NewCampaignPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('Audience Filters')).toBeInTheDocument();
-      expect(screen.getByText('No upcoming bookings')).toBeInTheDocument();
-      expect(screen.getByText(/Exclude.*do-not-message/)).toBeInTheDocument();
+      expect(screen.getByTestId('campaign-filter-builder')).toBeInTheDocument();
     });
   });
 
@@ -163,22 +180,12 @@ describe('NewCampaignPage', () => {
     });
   });
 
-  it('adds tags via tag input', async () => {
-    const user = userEvent.setup();
-
+  it('renders filter builder component', async () => {
     render(<NewCampaignPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('Audience Filters')).toBeInTheDocument();
+      expect(screen.getByTestId('campaign-filter-builder')).toBeInTheDocument();
     });
-
-    const tagInput = screen.getByPlaceholderText('e.g. vip, returning');
-    await act(async () => {
-      await user.type(tagInput, 'vip');
-      await user.click(screen.getByText('Add'));
-    });
-
-    expect(screen.getByText('vip')).toBeInTheDocument();
   });
 
   it('disables Next button when audience count is 0', async () => {
@@ -187,7 +194,7 @@ describe('NewCampaignPage', () => {
     render(<NewCampaignPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('Audience Filters')).toBeInTheDocument();
+      expect(screen.getByTestId('campaign-filter-builder')).toBeInTheDocument();
     });
 
     // Wait for preview to load with count 0
@@ -246,7 +253,7 @@ describe('NewCampaignPage', () => {
     render(<NewCampaignPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('Audience Filters')).toBeInTheDocument();
+      expect(screen.getByTestId('campaign-filter-builder')).toBeInTheDocument();
     });
 
     // Need to enable Next - provide preview with count > 0
@@ -474,7 +481,7 @@ describe('NewCampaignPage', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('Audience Filters')).toBeInTheDocument();
+      expect(screen.getByTestId('campaign-filter-builder')).toBeInTheDocument();
     });
   });
 
@@ -492,5 +499,130 @@ describe('NewCampaignPage', () => {
     });
 
     expect(mockPush).toHaveBeenCalledWith('/campaigns');
+  });
+
+  // ─── P-15: A/B Test UI ───────────────────────────────────────
+
+  it('renders A/B Test toggle on message step', async () => {
+    const user = userEvent.setup();
+
+    render(<NewCampaignPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('25')).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      await user.click(screen.getByText('Next'));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('A/B Test')).toBeInTheDocument();
+      expect(screen.getByTestId('ab-test-toggle')).toBeInTheDocument();
+    });
+  });
+
+  it('shows variant tabs when A/B toggle is enabled', async () => {
+    const user = userEvent.setup();
+
+    render(<NewCampaignPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('25')).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      await user.click(screen.getByText('Next'));
+    });
+
+    await act(async () => {
+      await user.click(screen.getByTestId('ab-test-toggle'));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Variant A')).toBeInTheDocument();
+      expect(screen.getByText('Variant B')).toBeInTheDocument();
+      expect(screen.getByTestId('variant-content')).toBeInTheDocument();
+      expect(screen.getByTestId('variant-percentage')).toBeInTheDocument();
+    });
+  });
+
+  it('hides template list when A/B test is enabled', async () => {
+    const user = userEvent.setup();
+
+    render(<NewCampaignPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('25')).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      await user.click(screen.getByText('Next'));
+    });
+
+    // Templates visible before toggle
+    expect(screen.getByText('Select Template')).toBeInTheDocument();
+
+    await act(async () => {
+      await user.click(screen.getByTestId('ab-test-toggle'));
+    });
+
+    // Templates hidden after toggle
+    expect(screen.queryByText('Select Template')).not.toBeInTheDocument();
+  });
+
+  it('shows percentage error when sum is not 100', async () => {
+    const user = userEvent.setup();
+
+    render(<NewCampaignPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('25')).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      await user.click(screen.getByText('Next'));
+    });
+
+    await act(async () => {
+      await user.click(screen.getByTestId('ab-test-toggle'));
+    });
+
+    // Change percentage to create invalid sum
+    const pctInput = screen.getByTestId('variant-percentage');
+    await act(async () => {
+      await user.clear(pctInput);
+      await user.type(pctInput, '30');
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('percentage-error')).toBeInTheDocument();
+    });
+  });
+
+  it('can add a third variant', async () => {
+    const user = userEvent.setup();
+
+    render(<NewCampaignPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('25')).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      await user.click(screen.getByText('Next'));
+    });
+
+    await act(async () => {
+      await user.click(screen.getByTestId('ab-test-toggle'));
+    });
+
+    await act(async () => {
+      await user.click(screen.getByTestId('add-variant-btn'));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Variant C')).toBeInTheDocument();
+    });
   });
 });

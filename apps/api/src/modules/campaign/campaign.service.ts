@@ -17,8 +17,15 @@ export class CampaignService {
       filters?: any;
       scheduledAt?: string;
       recurrenceRule?: string;
+      isABTest?: boolean;
+      variants?: any[];
     },
   ) {
+    // Validate A/B test variants
+    if (data.isABTest) {
+      this.validateVariants(data.variants);
+    }
+
     const recurrenceRule = data.recurrenceRule || 'NONE';
     const scheduledAt = data.scheduledAt ? new Date(data.scheduledAt) : null;
     return this.prisma.campaign.create({
@@ -34,6 +41,8 @@ export class CampaignService {
           recurrenceRule !== 'NONE' && scheduledAt
             ? this.computeNextRun(scheduledAt, recurrenceRule)
             : null,
+        isABTest: data.isABTest || false,
+        variants: data.isABTest && data.variants ? data.variants : [],
       },
     });
   }
@@ -73,12 +82,22 @@ export class CampaignService {
       scheduledAt?: string;
       throttlePerMinute?: number;
       recurrenceRule?: string;
+      isABTest?: boolean;
+      variants?: any[];
     },
   ) {
     const campaign = await this.findById(businessId, id);
     if (campaign.status !== 'DRAFT') {
       throw new BadRequestException('Only draft campaigns can be edited');
     }
+    // Validate A/B test variants if updating
+    if (data.isABTest !== undefined || data.variants !== undefined) {
+      const isAB = data.isABTest ?? (campaign as any).isABTest;
+      if (isAB) {
+        this.validateVariants(data.variants ?? (campaign as any).variants);
+      }
+    }
+
     const updateData: any = {
       ...(data.name !== undefined && { name: data.name }),
       ...(data.templateId !== undefined && { templateId: data.templateId }),
@@ -86,6 +105,8 @@ export class CampaignService {
       ...(data.scheduledAt !== undefined && { scheduledAt: new Date(data.scheduledAt) }),
       ...(data.throttlePerMinute !== undefined && { throttlePerMinute: data.throttlePerMinute }),
       ...(data.recurrenceRule !== undefined && { recurrenceRule: data.recurrenceRule }),
+      ...(data.isABTest !== undefined && { isABTest: data.isABTest }),
+      ...(data.variants !== undefined && { variants: data.variants }),
     };
 
     // Recompute nextRunAt if recurrence or schedule changed
@@ -119,7 +140,7 @@ export class CampaignService {
   }
 
   async previewAudience(businessId: string, filters: any) {
-    const where = this.buildAudienceWhere(businessId, filters);
+    const { where } = await this.queryAdvancedAudience(businessId, filters);
     const [count, samples] = await Promise.all([
       this.prisma.customer.count({ where }),
       this.prisma.customer.findMany({
@@ -171,13 +192,143 @@ export class CampaignService {
       };
     }
 
+    // P-16: createdAfter — customer created after date
+    if (filters?.createdAfter) {
+      where.createdAt = { ...(where.createdAt || {}), gte: new Date(filters.createdAfter) };
+    }
+
+    // P-16: createdBefore — customer created before date
+    if (filters?.createdBefore) {
+      where.createdAt = { ...(where.createdAt || {}), lte: new Date(filters.createdBefore) };
+    }
+
+    // P-16: lastVisitDaysAgo — customers whose last booking was N+ days ago
+    if (filters?.lastVisitDaysAgo != null) {
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - Number(filters.lastVisitDaysAgo));
+      where.bookings = {
+        ...where.bookings,
+        every: {
+          ...(where.bookings?.every || {}),
+          startTime: { lt: cutoff },
+        },
+      };
+    }
+
     return where;
+  }
+
+  /**
+   * P-16: Advanced audience query that supports bookingCount and spent filters.
+   * These require subqueries since Prisma can't filter by relation counts in where clause directly.
+   */
+  async queryAdvancedAudience(businessId: string, filters: any) {
+    const baseWhere = this.buildAudienceWhere(businessId, filters);
+
+    // If no advanced filters, use simple query
+    const hasBookingCount =
+      filters?.bookingCountGte != null || filters?.bookingCountLte != null;
+    const hasSpent =
+      filters?.spentMoreThan != null || filters?.spentLessThan != null;
+
+    if (!hasBookingCount && !hasSpent) {
+      return { where: baseWhere, customerIds: null };
+    }
+
+    // Get candidate customers from base filters first
+    let customerIds: string[] | null = null;
+
+    if (hasBookingCount) {
+      const customers = await this.prisma.customer.findMany({
+        where: baseWhere,
+        select: {
+          id: true,
+          _count: { select: { bookings: true } },
+        },
+      });
+
+      customerIds = customers
+        .filter((c) => {
+          if (
+            filters.bookingCountGte != null &&
+            c._count.bookings < Number(filters.bookingCountGte)
+          )
+            return false;
+          if (
+            filters.bookingCountLte != null &&
+            c._count.bookings > Number(filters.bookingCountLte)
+          )
+            return false;
+          return true;
+        })
+        .map((c) => c.id);
+    }
+
+    if (hasSpent) {
+      const spentWhere: any = { businessId };
+      if (customerIds) {
+        spentWhere.customerId = { in: customerIds };
+      }
+      const payments = await this.prisma.payment.groupBy({
+        by: ['customerId'],
+        where: spentWhere,
+        _sum: { amount: true },
+      });
+
+      const paymentMap = new Map<string, number>();
+      for (const p of payments) {
+        if (p.customerId) {
+          paymentMap.set(p.customerId, p._sum.amount || 0);
+        }
+      }
+
+      // If we already have customerIds from booking filter, narrow down
+      const candidates = customerIds
+        ? customerIds
+        : (
+            await this.prisma.customer.findMany({
+              where: baseWhere,
+              select: { id: true },
+            })
+          ).map((c) => c.id);
+
+      customerIds = candidates.filter((id) => {
+        const spent = paymentMap.get(id) || 0;
+        if (filters.spentMoreThan != null && spent <= Number(filters.spentMoreThan))
+          return false;
+        if (filters.spentLessThan != null && spent >= Number(filters.spentLessThan))
+          return false;
+        return true;
+      });
+    }
+
+    return {
+      where: { ...baseWhere, id: { in: customerIds! } },
+      customerIds,
+    };
   }
 
   async sendCampaign(businessId: string, id: string) {
     const campaign = await this.findById(businessId, id);
     if (campaign.status !== 'DRAFT') {
       throw new BadRequestException('Only draft campaigns can be sent');
+    }
+
+    if ((campaign as any).isABTest) {
+      // A/B test: prepare sends with variant assignment
+      const { total } = await this.dispatchService.prepareSendsWithVariants(
+        id,
+        businessId,
+        campaign.filters as any,
+        (campaign as any).variants as any[],
+      );
+
+      await this.prisma.campaign.update({
+        where: { id },
+        data: { status: 'SENDING', stats: { total, sent: 0, failed: 0, pending: total } },
+      });
+
+      return { status: 'SENDING', audienceSize: total };
     }
 
     // Prepare send rows from audience
@@ -194,6 +345,98 @@ export class CampaignService {
     });
 
     return { status: 'SENDING', audienceSize: total };
+  }
+
+  validateVariants(variants: any[] | undefined) {
+    if (!variants || !Array.isArray(variants) || variants.length < 2) {
+      throw new BadRequestException('A/B test requires at least 2 variants');
+    }
+    for (const v of variants) {
+      if (!v.id || !v.name || v.content === undefined || v.percentage === undefined) {
+        throw new BadRequestException(
+          'Each variant must have id, name, content, and percentage',
+        );
+      }
+    }
+    const totalPct = variants.reduce((sum: number, v: any) => sum + Number(v.percentage), 0);
+    if (totalPct !== 100) {
+      throw new BadRequestException('Variant percentages must sum to 100');
+    }
+  }
+
+  async getVariantStats(businessId: string, id: string) {
+    const campaign = await this.findById(businessId, id);
+    if (!(campaign as any).isABTest) {
+      throw new BadRequestException('Campaign is not an A/B test');
+    }
+
+    const variants = (campaign as any).variants as any[];
+    const sends = await this.prisma.campaignSend.groupBy({
+      by: ['variantId', 'status'],
+      where: { campaignId: id },
+      _count: true,
+    });
+
+    const bookingCounts = await this.prisma.campaignSend.groupBy({
+      by: ['variantId'],
+      where: { campaignId: id, bookingId: { not: null } },
+      _count: true,
+    });
+
+    const bookingMap = new Map<string, number>();
+    for (const b of bookingCounts) {
+      bookingMap.set(b.variantId || '', b._count);
+    }
+
+    const statsMap = new Map<string, any>();
+    for (const v of variants) {
+      statsMap.set(v.id, {
+        variantId: v.id,
+        name: v.name,
+        sent: 0,
+        delivered: 0,
+        read: 0,
+        failed: 0,
+        bookings: bookingMap.get(v.id) || 0,
+      });
+    }
+
+    for (const s of sends) {
+      const stat = statsMap.get(s.variantId || '');
+      if (stat) {
+        const key = s.status.toLowerCase();
+        if (key in stat) {
+          stat[key] = s._count;
+        }
+      }
+    }
+
+    return {
+      variants: Array.from(statsMap.values()),
+      winnerVariantId: (campaign as any).winnerVariantId,
+      winnerSelectedAt: (campaign as any).winnerSelectedAt,
+    };
+  }
+
+  async selectWinner(businessId: string, id: string, variantId: string) {
+    const campaign = await this.findById(businessId, id);
+    if (!(campaign as any).isABTest) {
+      throw new BadRequestException('Campaign is not an A/B test');
+    }
+
+    const variants = (campaign as any).variants as any[];
+    const variantExists = variants.some((v: any) => v.id === variantId);
+    if (!variantExists) {
+      throw new BadRequestException('Variant not found in campaign');
+    }
+
+    return this.prisma.campaign.update({
+      where: { id },
+      data: {
+        winnerVariantId: variantId,
+        winnerSelectedAt: new Date(),
+      },
+    });
   }
 
   computeNextRun(fromDate: Date, rule: string): Date {

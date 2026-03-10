@@ -1267,11 +1267,16 @@ describe('BookingService', () => {
     });
 
     it('does not recalculate endTime when startTime is not provided', async () => {
+      prisma.booking.findFirst.mockResolvedValue({
+        id: 'b1',
+        businessId: 'biz1',
+        notes: 'Old notes',
+        service: { durationMins: 60 },
+      } as any);
       prisma.booking.update.mockResolvedValue({ id: 'b1', notes: 'Updated notes' } as any);
 
       await bookingService.update('biz1', 'b1', { notes: 'Updated notes' });
 
-      expect(prisma.booking.findFirst).not.toHaveBeenCalled();
       expect(prisma.booking.update).toHaveBeenCalledWith({
         where: { id: 'b1', businessId: 'biz1' },
         data: { notes: 'Updated notes' },
@@ -3960,6 +3965,290 @@ describe('BookingService', () => {
       });
 
       expect(prisma.staffServicePrice.findUnique).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('colorLabel', () => {
+    it('includes colorLabel in create data when provided', async () => {
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        durationMins: 60,
+        depositRequired: false,
+      } as any);
+      prisma.booking.findFirst.mockResolvedValue(null);
+      prisma.booking.create.mockResolvedValue({ id: 'b1' } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+
+      await bookingService.create('biz1', {
+        customerId: 'cust1',
+        serviceId: 'svc1',
+        staffId: 'staff1',
+        startTime: '2026-03-01T10:00:00Z',
+        colorLabel: 'sage',
+      });
+
+      expect(prisma.booking.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            colorLabel: 'sage',
+          }),
+        }),
+      );
+    });
+
+    it('creates booking without colorLabel when not provided', async () => {
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        durationMins: 60,
+        depositRequired: false,
+      } as any);
+      prisma.booking.findFirst.mockResolvedValue(null);
+      prisma.booking.create.mockResolvedValue({ id: 'b1' } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+
+      await bookingService.create('biz1', {
+        customerId: 'cust1',
+        serviceId: 'svc1',
+        staffId: 'staff1',
+        startTime: '2026-03-01T10:00:00Z',
+      });
+
+      expect(prisma.booking.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            colorLabel: undefined,
+          }),
+        }),
+      );
+    });
+
+    it('updates colorLabel via update method', async () => {
+      prisma.booking.update.mockResolvedValue({ id: 'b1', colorLabel: 'rose' } as any);
+
+      await bookingService.update('biz1', 'b1', { colorLabel: 'rose' });
+
+      expect(prisma.booking.update).toHaveBeenCalledWith({
+        where: { id: 'b1', businessId: 'biz1' },
+        data: { colorLabel: 'rose' },
+        include: { customer: true, service: true, staff: true },
+      });
+    });
+
+    it('clears colorLabel by setting to null', async () => {
+      prisma.booking.update.mockResolvedValue({ id: 'b1', colorLabel: null } as any);
+
+      await bookingService.update('biz1', 'b1', { colorLabel: null });
+
+      expect(prisma.booking.update).toHaveBeenCalledWith({
+        where: { id: 'b1', businessId: 'biz1' },
+        data: { colorLabel: null },
+        include: { customer: true, service: true, staff: true },
+      });
+    });
+  });
+
+  describe('booking audit log', () => {
+    it('logs audit entry when booking is created', async () => {
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        durationMins: 60,
+        depositRequired: false,
+      } as any);
+      prisma.booking.findFirst.mockResolvedValue(null);
+      prisma.booking.create.mockResolvedValue({
+        id: 'b1',
+        status: 'CONFIRMED',
+        startTime: new Date('2026-03-01T10:00:00Z'),
+        staffId: 'staff1',
+        customer: { name: 'John' },
+        service: { name: 'Haircut' },
+      } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+      prisma.bookingAuditLog.create.mockResolvedValue({} as any);
+
+      await bookingService.create('biz1', {
+        customerId: 'cust1',
+        serviceId: 'svc1',
+        staffId: 'staff1',
+        startTime: '2026-03-01T10:00:00Z',
+      }, { staffId: 'admin1', staffName: 'Admin', role: 'ADMIN' });
+
+      expect(prisma.bookingAuditLog.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          businessId: 'biz1',
+          bookingId: 'b1',
+          userId: 'admin1',
+          userName: 'Admin',
+          action: 'CREATED',
+          changes: [{ field: 'status', to: 'CONFIRMED' }],
+        }),
+      });
+    });
+
+    it('logs audit entry when booking is updated with field changes', async () => {
+      prisma.booking.findFirst.mockResolvedValue({
+        id: 'b1',
+        businessId: 'biz1',
+        notes: 'Old notes',
+        staffId: 'staff1',
+        service: { durationMins: 60 },
+      } as any);
+      prisma.booking.update.mockResolvedValue({
+        id: 'b1',
+        notes: 'New notes',
+      } as any);
+      prisma.bookingAuditLog.create.mockResolvedValue({} as any);
+
+      await bookingService.update('biz1', 'b1', { notes: 'New notes' });
+
+      expect(prisma.bookingAuditLog.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          businessId: 'biz1',
+          bookingId: 'b1',
+          action: 'UPDATED',
+          changes: [{ field: 'notes', from: 'Old notes', to: 'New notes' }],
+        }),
+      });
+    });
+
+    it('logs RESCHEDULED action when startTime changes', async () => {
+      const oldStart = new Date('2026-03-01T10:00:00Z');
+      prisma.booking.findFirst
+        .mockResolvedValueOnce({
+          id: 'b1',
+          businessId: 'biz1',
+          staffId: 'staff1',
+          startTime: oldStart,
+          endTime: new Date(oldStart.getTime() + 60 * 60000),
+          service: { durationMins: 60 },
+        } as any)
+        .mockResolvedValueOnce(null); // no conflict
+      prisma.booking.update.mockResolvedValue({ id: 'b1' } as any);
+      prisma.bookingAuditLog.create.mockResolvedValue({} as any);
+
+      await bookingService.update('biz1', 'b1', { startTime: '2026-03-02T14:00:00Z' });
+
+      expect(prisma.bookingAuditLog.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          action: 'RESCHEDULED',
+          changes: expect.arrayContaining([
+            expect.objectContaining({ field: 'startTime' }),
+          ]),
+        }),
+      });
+    });
+
+    it('logs audit entry when status is changed', async () => {
+      prisma.booking.findFirst.mockResolvedValue({
+        id: 'b1',
+        status: 'CONFIRMED',
+        startTime: new Date('2026-03-01T10:00:00Z'),
+        customFields: {},
+      } as any);
+      prisma.booking.update.mockResolvedValue({
+        id: 'b1',
+        status: 'IN_PROGRESS',
+        customer: {},
+        service: {},
+        staff: {},
+      } as any);
+      prisma.reminder.updateMany.mockResolvedValue({} as any);
+      prisma.bookingAuditLog.create.mockResolvedValue({} as any);
+      mockBusinessService.getNotificationSettings.mockResolvedValue({});
+
+      await bookingService.updateStatus('biz1', 'b1', 'IN_PROGRESS', {
+        staffId: 'staff1',
+        staffName: 'Sarah',
+      });
+
+      expect(prisma.bookingAuditLog.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          businessId: 'biz1',
+          bookingId: 'b1',
+          userId: 'staff1',
+          userName: 'Sarah',
+          action: 'STATUS_CHANGED',
+          changes: [{ field: 'status', from: 'CONFIRMED', to: 'IN_PROGRESS' }],
+        }),
+      });
+    });
+
+    it('logs CANCELLED action when booking is cancelled', async () => {
+      prisma.booking.findFirst.mockResolvedValue({
+        id: 'b1',
+        status: 'CONFIRMED',
+        startTime: new Date('2026-03-01T10:00:00Z'),
+        customFields: {},
+      } as any);
+      prisma.booking.update.mockResolvedValue({
+        id: 'b1',
+        status: 'CANCELLED',
+        customer: {},
+        service: {},
+        staff: {},
+      } as any);
+      prisma.reminder.updateMany.mockResolvedValue({} as any);
+      prisma.bookingAuditLog.create.mockResolvedValue({} as any);
+      mockBusinessService.getPolicySettings.mockResolvedValue(null);
+
+      await bookingService.updateStatus('biz1', 'b1', 'CANCELLED', {
+        staffId: 'staff1',
+        staffName: 'Sarah',
+        role: 'ADMIN',
+      });
+
+      expect(prisma.bookingAuditLog.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          action: 'CANCELLED',
+          changes: [{ field: 'status', from: 'CONFIRMED', to: 'CANCELLED' }],
+        }),
+      });
+    });
+
+    it('audit log failure does not throw from create', async () => {
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        durationMins: 60,
+        depositRequired: false,
+      } as any);
+      prisma.booking.findFirst.mockResolvedValue(null);
+      prisma.booking.create.mockResolvedValue({
+        id: 'b1',
+        status: 'CONFIRMED',
+        customer: { name: 'John' },
+        service: { name: 'Cut' },
+      } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+      prisma.bookingAuditLog.create.mockRejectedValue(new Error('DB error'));
+
+      // Should not throw
+      const result = await bookingService.create('biz1', {
+        customerId: 'cust1',
+        serviceId: 'svc1',
+        staffId: 'staff1',
+        startTime: '2026-03-01T10:00:00Z',
+      });
+
+      expect(result).toBeDefined();
+    });
+  });
+
+  describe('getAuditLog', () => {
+    it('returns audit entries ordered by createdAt desc', async () => {
+      const entries = [
+        { id: 'a1', action: 'STATUS_CHANGED', createdAt: new Date() },
+        { id: 'a2', action: 'CREATED', createdAt: new Date() },
+      ];
+      prisma.bookingAuditLog.findMany.mockResolvedValue(entries as any);
+
+      const result = await bookingService.getAuditLog('biz1', 'b1');
+
+      expect(prisma.bookingAuditLog.findMany).toHaveBeenCalledWith({
+        where: { bookingId: 'b1', businessId: 'biz1' },
+        orderBy: { createdAt: 'desc' },
+        take: 50,
+      });
+      expect(result).toEqual(entries);
     });
   });
 });

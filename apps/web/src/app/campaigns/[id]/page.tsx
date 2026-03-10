@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
-import { ArrowLeft, Send, Repeat, StopCircle } from 'lucide-react';
+import { ArrowLeft, Send, Repeat, StopCircle, Trophy } from 'lucide-react';
 
 const statusColors: Record<string, string> = {
   DRAFT: 'bg-slate-100 text-slate-600',
@@ -18,12 +18,19 @@ export default function CampaignDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [campaign, setCampaign] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [variantStats, setVariantStats] = useState<any>(null);
+  const [selectingWinner, setSelectingWinner] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     api
       .get<any>(`/campaigns/${id}`)
-      .then(setCampaign)
+      .then((c) => {
+        setCampaign(c);
+        if (c.isABTest) {
+          api.get<any>(`/campaigns/${id}/variant-stats`).then(setVariantStats).catch(() => {});
+        }
+      })
       .catch(() => router.push('/campaigns'))
       .finally(() => setLoading(false));
   }, [id]);
@@ -51,6 +58,28 @@ export default function CampaignDetailPage() {
     } catch (err) {
       console.error(err);
     }
+  };
+
+  const handleSelectWinner = async (variantId: string) => {
+    setSelectingWinner(true);
+    try {
+      await api.post(`/campaigns/${id}/select-winner`, { variantId });
+      const updated = await api.get<any>(`/campaigns/${id}`);
+      setCampaign(updated);
+      const stats = await api.get<any>(`/campaigns/${id}/variant-stats`);
+      setVariantStats(stats);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSelectingWinner(false);
+    }
+  };
+
+  const getBestVariant = () => {
+    if (!variantStats?.variants?.length) return null;
+    return variantStats.variants.reduce((best: any, v: any) =>
+      (v.bookings > (best?.bookings || 0)) ? v : best,
+    null);
   };
 
   if (loading) {
@@ -152,6 +181,71 @@ export default function CampaignDetailPage() {
           ))}
         </div>
       ) : null}
+
+      {/* A/B Test Results */}
+      {campaign.isABTest && variantStats?.variants?.length > 0 && (
+        <div className="mb-6" data-testid="ab-results">
+          <h2 className="text-sm font-semibold text-slate-900 mb-3">A/B Test Results</h2>
+          <div className={cn('grid gap-4', variantStats.variants.length === 2 ? 'grid-cols-2' : 'grid-cols-3')}>
+            {variantStats.variants.map((v: any) => {
+              const best = getBestVariant();
+              const isWinner = variantStats.winnerVariantId === v.variantId;
+              const isBest = best?.variantId === v.variantId && !variantStats.winnerVariantId;
+              return (
+                <div
+                  key={v.variantId}
+                  className={cn(
+                    'bg-white rounded-2xl shadow-soft p-4 relative',
+                    isWinner && 'ring-2 ring-sage-400',
+                  )}
+                >
+                  {isWinner && (
+                    <div className="absolute -top-2 -right-2 bg-sage-50 text-sage-900 rounded-full p-1.5">
+                      <Trophy size={14} />
+                    </div>
+                  )}
+                  {isBest && (
+                    <div className="absolute -top-2 -right-2 bg-sage-50 text-sage-900 rounded-full p-1.5" data-testid="best-badge">
+                      <Trophy size={14} />
+                    </div>
+                  )}
+                  <h3 className="text-sm font-semibold text-slate-900 mb-3">{v.name}</h3>
+                  <dl className="space-y-1.5 text-xs">
+                    <div className="flex justify-between">
+                      <dt className="text-slate-500">Sent</dt>
+                      <dd className="font-medium">{v.sent}</dd>
+                    </div>
+                    <div className="flex justify-between">
+                      <dt className="text-slate-500">Delivered</dt>
+                      <dd className="font-medium">{v.delivered}</dd>
+                    </div>
+                    <div className="flex justify-between">
+                      <dt className="text-slate-500">Read</dt>
+                      <dd className="font-medium">{v.read}</dd>
+                    </div>
+                    <div className="flex justify-between">
+                      <dt className="text-slate-500">Bookings</dt>
+                      <dd className="font-medium text-sage-700">{v.bookings}</dd>
+                    </div>
+                  </dl>
+                  {!variantStats.winnerVariantId && campaign.status === 'SENT' && (
+                    <button
+                      onClick={() => handleSelectWinner(v.variantId)}
+                      disabled={selectingWinner}
+                      className="mt-3 w-full text-xs px-3 py-1.5 bg-sage-600 text-white rounded-lg hover:bg-sage-700 transition-colors disabled:opacity-50"
+                    >
+                      Select Winner
+                    </button>
+                  )}
+                  {isWinner && (
+                    <p className="mt-2 text-xs text-sage-700 font-medium text-center">Winner</p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Campaign details */}
       <div className="bg-white rounded-2xl shadow-soft p-5">

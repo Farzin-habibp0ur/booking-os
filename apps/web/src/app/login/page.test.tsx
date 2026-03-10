@@ -21,8 +21,9 @@ jest.mock('next/link', () => {
 
 // Mock auth
 const mockLogin = jest.fn();
+const mockComplete2FA = jest.fn();
 jest.mock('@/lib/auth', () => ({
-  useAuth: () => ({ login: mockLogin, user: null, loading: false }),
+  useAuth: () => ({ login: mockLogin, complete2FA: mockComplete2FA, user: null, loading: false }),
   AuthProvider: ({ children }: any) => children,
 }));
 
@@ -35,6 +36,12 @@ jest.mock('@/lib/i18n', () => ({
 // Mock LanguagePicker
 jest.mock('@/components/language-picker', () => ({
   LanguagePicker: () => <div data-testid="language-picker">LanguagePicker</div>,
+}));
+
+// Mock posthog
+jest.mock('@/lib/posthog', () => ({
+  trackEvent: jest.fn(),
+  identifyUser: jest.fn(),
 }));
 
 describe('LoginPage', () => {
@@ -178,5 +185,108 @@ describe('LoginPage', () => {
     render(<LoginPageWrapper />);
 
     expect(screen.getByTestId('language-picker')).toBeInTheDocument();
+  });
+
+  // P-17: Two-Factor Authentication tests
+  describe('2FA flow', () => {
+    it('shows 2FA screen when login returns requires2FA', async () => {
+      const user = userEvent.setup();
+      mockLogin.mockResolvedValue({ requires2FA: true, tempToken: 'temp-abc' });
+
+      render(<LoginPageWrapper />);
+
+      const emailInput = screen.getByRole('textbox');
+      const passwordInput = document.querySelector('input[type="password"]') as HTMLInputElement;
+      const submitButton = screen.getByRole('button', { name: 'login.sign_in' });
+
+      await user.type(emailInput, 'test@example.com');
+      await user.type(passwordInput, 'password123');
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        expect(screen.getByText('Two-Factor Authentication')).toBeInTheDocument();
+      });
+
+      expect(screen.getByTestId('2fa-code-input')).toBeInTheDocument();
+      expect(screen.getByTestId('toggle-backup-code')).toBeInTheDocument();
+    });
+
+    it('calls complete2FA and redirects on valid 2FA code', async () => {
+      const user = userEvent.setup();
+      mockLogin.mockResolvedValue({ requires2FA: true, tempToken: 'temp-abc' });
+      mockComplete2FA.mockResolvedValue({ id: 'u1', email: 'test@test.com', role: 'ADMIN' });
+
+      render(<LoginPageWrapper />);
+
+      // Submit login form
+      const emailInput = screen.getByRole('textbox');
+      const passwordInput = document.querySelector('input[type="password"]') as HTMLInputElement;
+      await user.type(emailInput, 'test@example.com');
+      await user.type(passwordInput, 'password123');
+      await user.click(screen.getByRole('button', { name: 'login.sign_in' }));
+
+      await waitFor(() => {
+        expect(screen.getByTestId('2fa-code-input')).toBeInTheDocument();
+      });
+
+      // Enter 2FA code
+      await user.type(screen.getByTestId('2fa-code-input'), '123456');
+      await user.click(screen.getByTestId('2fa-submit'));
+
+      await waitFor(() => {
+        expect(mockComplete2FA).toHaveBeenCalledWith('temp-abc', '123456');
+      });
+
+      await waitFor(() => {
+        expect(mockPush).toHaveBeenCalledWith('/dashboard');
+      });
+    });
+
+    it('toggles between TOTP and backup code mode', async () => {
+      const user = userEvent.setup();
+      mockLogin.mockResolvedValue({ requires2FA: true, tempToken: 'temp-abc' });
+
+      render(<LoginPageWrapper />);
+
+      const emailInput = screen.getByRole('textbox');
+      const passwordInput = document.querySelector('input[type="password"]') as HTMLInputElement;
+      await user.type(emailInput, 'test@example.com');
+      await user.type(passwordInput, 'password123');
+      await user.click(screen.getByRole('button', { name: 'login.sign_in' }));
+
+      await waitFor(() => {
+        expect(screen.getByTestId('toggle-backup-code')).toBeInTheDocument();
+      });
+
+      // Toggle to backup code mode
+      await user.click(screen.getByTestId('toggle-backup-code'));
+
+      expect(screen.getByText('Enter one of your backup codes')).toBeInTheDocument();
+    });
+
+    it('shows error on failed 2FA verification', async () => {
+      const user = userEvent.setup();
+      mockLogin.mockResolvedValue({ requires2FA: true, tempToken: 'temp-abc' });
+      mockComplete2FA.mockRejectedValue(new Error('Invalid 2FA code'));
+
+      render(<LoginPageWrapper />);
+
+      const emailInput = screen.getByRole('textbox');
+      const passwordInput = document.querySelector('input[type="password"]') as HTMLInputElement;
+      await user.type(emailInput, 'test@example.com');
+      await user.type(passwordInput, 'password123');
+      await user.click(screen.getByRole('button', { name: 'login.sign_in' }));
+
+      await waitFor(() => {
+        expect(screen.getByTestId('2fa-code-input')).toBeInTheDocument();
+      });
+
+      await user.type(screen.getByTestId('2fa-code-input'), '000000');
+      await user.click(screen.getByTestId('2fa-submit'));
+
+      await waitFor(() => {
+        expect(screen.getByText('Invalid 2FA code')).toBeInTheDocument();
+      });
+    });
   });
 });

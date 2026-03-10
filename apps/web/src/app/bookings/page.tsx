@@ -24,7 +24,7 @@ import BookingFormModal from '@/components/booking-form-modal';
 import BulkActionBar from '@/components/bulk-action-bar';
 import ExportModal from '@/components/export-modal';
 import { ViewPicker } from '@/components/saved-views';
-import { statusBadgeClasses } from '@/lib/design-tokens';
+import { statusBadgeClasses, BOOKING_COLOR_LABELS } from '@/lib/design-tokens';
 import { UpgradeNudge } from '@/components/upgrade-nudge';
 import { FeatureDiscovery } from '@/components/feature-discovery';
 import { usePlan } from '@/lib/use-plan';
@@ -718,7 +718,15 @@ function BookingsContent() {
                         className="p-3 text-sm print:border print:border-slate-300 print:text-black print:text-xs"
                         onClick={() => handleRowClick(b)}
                       >
-                        {b.service?.name}
+                        <span className="flex items-center gap-1.5">
+                          {b.colorLabel && BOOKING_COLOR_LABELS[b.colorLabel] && (
+                            <span
+                              className={cn('w-2 h-2 rounded-full flex-shrink-0', BOOKING_COLOR_LABELS[b.colorLabel].dot)}
+                              data-testid="color-label-dot"
+                            />
+                          )}
+                          {b.service?.name}
+                        </span>
                       </td>
                       <td
                         className="p-3 text-sm text-slate-600 print:border print:border-slate-300 print:text-black print:text-xs"

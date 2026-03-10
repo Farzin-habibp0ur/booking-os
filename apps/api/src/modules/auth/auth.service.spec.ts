@@ -4,6 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
 import { AuthService } from './auth.service';
+import { TwoFactorService } from './two-factor.service';
 import { PrismaService } from '../../common/prisma.service';
 import { TokenService } from '../../common/token.service';
 import { EmailService } from '../email/email.service';
@@ -24,6 +25,7 @@ describe('AuthService', () => {
   let jwtService: { sign: jest.Mock; verify: jest.Mock };
   let tokenService: ReturnType<typeof createMockTokenService>;
   let emailService: ReturnType<typeof createMockEmailService>;
+  let twoFactorService: { generateSetup: jest.Mock; verifyCode: jest.Mock; generateBackupCodes: jest.Mock; verifyBackupCode: jest.Mock };
 
   const mockStaff = {
     id: 'staff1',
@@ -53,6 +55,12 @@ describe('AuthService', () => {
     };
     tokenService = createMockTokenService();
     emailService = createMockEmailService();
+    twoFactorService = {
+      generateSetup: jest.fn().mockReturnValue({ secret: 'TESTSECRET', otpauthUrl: 'otpauth://totp/BookingOS:test@test.com?secret=TESTSECRET' }),
+      verifyCode: jest.fn().mockReturnValue(true),
+      generateBackupCodes: jest.fn().mockResolvedValue({ plaintext: ['CODE1111', 'CODE2222'], hashed: ['$hash1', '$hash2'] }),
+      verifyBackupCode: jest.fn().mockResolvedValue({ valid: true, remainingCodes: ['$hash2'] }),
+    };
 
     const module = await Test.createTestingModule({
       providers: [
@@ -62,6 +70,7 @@ describe('AuthService', () => {
         { provide: ConfigService, useValue: createMockConfigService() },
         { provide: TokenService, useValue: tokenService },
         { provide: EmailService, useValue: emailService },
+        { provide: TwoFactorService, useValue: twoFactorService },
         {
           provide: OnboardingDripService,
           useValue: { scheduleDrip: jest.fn(), cancelDrip: jest.fn() },
@@ -436,6 +445,7 @@ describe('AuthService', () => {
           { provide: ConfigService, useValue: prodConfig },
           { provide: TokenService, useValue: tokenService },
           { provide: EmailService, useValue: emailService },
+          { provide: TwoFactorService, useValue: twoFactorService },
           {
             provide: OnboardingDripService,
             useValue: { scheduleDrip: jest.fn(), cancelDrip: jest.fn() },
@@ -627,6 +637,228 @@ describe('AuthService', () => {
       await expect(authService.resendVerification('nonexistent')).rejects.toThrow(
         BadRequestException,
       );
+    });
+  });
+
+  // P-17: Two-Factor Authentication tests
+  describe('login with 2FA enabled', () => {
+    it('returns requires2FA and tempToken when 2FA is enabled', async () => {
+      prisma.staff.findUnique.mockResolvedValue({
+        ...mockStaff,
+        twoFactorEnabled: true,
+        twoFactorSecret: 'TESTSECRET',
+      } as any);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+
+      const result = await authService.login('sarah@glowclinic.com', 'password123');
+
+      expect(result.requires2FA).toBe(true);
+      expect(result.tempToken).toBe('mock-token');
+      // Should sign with 2fa_pending type
+      expect(jwtService.sign).toHaveBeenCalledWith(
+        { sub: 'staff1', type: '2fa_pending' },
+        { expiresIn: '5m' },
+      );
+    });
+
+    it('returns normal tokens when 2FA is not enabled', async () => {
+      prisma.staff.findUnique.mockResolvedValue({
+        ...mockStaff,
+        twoFactorEnabled: false,
+      } as any);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+
+      const result = await authService.login('sarah@glowclinic.com', 'password123');
+
+      expect(result.requires2FA).toBeUndefined();
+      expect(result.accessToken).toBeDefined();
+    });
+  });
+
+  describe('twoFactorSetup', () => {
+    it('generates secret and stores it', async () => {
+      prisma.staff.findUnique.mockResolvedValue({ ...mockStaff, twoFactorEnabled: false } as any);
+      prisma.staff.update.mockResolvedValue({} as any);
+
+      const result = await authService.twoFactorSetup('staff1');
+
+      expect(result.secret).toBe('TESTSECRET');
+      expect(result.otpauthUrl).toContain('otpauth://');
+      expect(prisma.staff.update).toHaveBeenCalledWith({
+        where: { id: 'staff1' },
+        data: { twoFactorSecret: 'TESTSECRET' },
+      });
+    });
+
+    it('throws if 2FA is already enabled', async () => {
+      prisma.staff.findUnique.mockResolvedValue({ ...mockStaff, twoFactorEnabled: true } as any);
+
+      await expect(authService.twoFactorSetup('staff1')).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('twoFactorVerifySetup', () => {
+    it('enables 2FA and returns backup codes on valid code', async () => {
+      prisma.staff.findUnique.mockResolvedValue({
+        ...mockStaff,
+        twoFactorEnabled: false,
+        twoFactorSecret: 'TESTSECRET',
+      } as any);
+      prisma.staff.update.mockResolvedValue({} as any);
+
+      const result = await authService.twoFactorVerifySetup('staff1', '123456');
+
+      expect(result.backupCodes).toEqual(['CODE1111', 'CODE2222']);
+      expect(prisma.staff.update).toHaveBeenCalledWith({
+        where: { id: 'staff1' },
+        data: { twoFactorEnabled: true, backupCodes: ['$hash1', '$hash2'] },
+      });
+    });
+
+    it('throws on invalid code', async () => {
+      prisma.staff.findUnique.mockResolvedValue({
+        ...mockStaff,
+        twoFactorEnabled: false,
+        twoFactorSecret: 'TESTSECRET',
+      } as any);
+      twoFactorService.verifyCode.mockReturnValue(false);
+
+      await expect(authService.twoFactorVerifySetup('staff1', '000000')).rejects.toThrow(
+        UnauthorizedException,
+      );
+    });
+  });
+
+  describe('twoFactorDisable', () => {
+    it('disables 2FA on valid code', async () => {
+      prisma.staff.findUnique.mockResolvedValue({
+        ...mockStaff,
+        twoFactorEnabled: true,
+        twoFactorSecret: 'TESTSECRET',
+      } as any);
+      prisma.staff.update.mockResolvedValue({} as any);
+
+      const result = await authService.twoFactorDisable('staff1', '123456');
+
+      expect(result.ok).toBe(true);
+      expect(prisma.staff.update).toHaveBeenCalledWith({
+        where: { id: 'staff1' },
+        data: { twoFactorEnabled: false, twoFactorSecret: null, backupCodes: [] },
+      });
+    });
+
+    it('throws on invalid code', async () => {
+      prisma.staff.findUnique.mockResolvedValue({
+        ...mockStaff,
+        twoFactorEnabled: true,
+        twoFactorSecret: 'TESTSECRET',
+      } as any);
+      twoFactorService.verifyCode.mockReturnValue(false);
+
+      await expect(authService.twoFactorDisable('staff1', '000000')).rejects.toThrow(
+        UnauthorizedException,
+      );
+    });
+  });
+
+  describe('twoFactorChallenge', () => {
+    it('issues full tokens on valid TOTP code', async () => {
+      jwtService.verify.mockReturnValue({ sub: 'staff1', type: '2fa_pending' });
+      prisma.staff.findUnique.mockResolvedValue({
+        ...mockStaff,
+        twoFactorEnabled: true,
+        twoFactorSecret: 'TESTSECRET',
+        backupCodes: [],
+      } as any);
+
+      const result = await authService.twoFactorChallenge('temp-token', '123456');
+
+      expect(result.accessToken).toBeDefined();
+      expect(result.staff.id).toBe('staff1');
+    });
+
+    it('issues full tokens on valid backup code', async () => {
+      twoFactorService.verifyCode.mockReturnValue(false); // TOTP fails
+      twoFactorService.verifyBackupCode.mockResolvedValue({ valid: true, remainingCodes: ['$hash2'] });
+      jwtService.verify.mockReturnValue({ sub: 'staff1', type: '2fa_pending' });
+      prisma.staff.findUnique.mockResolvedValue({
+        ...mockStaff,
+        twoFactorEnabled: true,
+        twoFactorSecret: 'TESTSECRET',
+        backupCodes: ['$hash1', '$hash2'],
+      } as any);
+      prisma.staff.update.mockResolvedValue({} as any);
+
+      const result = await authService.twoFactorChallenge('temp-token', 'CODE1111');
+
+      expect(result.accessToken).toBeDefined();
+      // Backup code consumed — remaining codes updated
+      expect(prisma.staff.update).toHaveBeenCalledWith({
+        where: { id: 'staff1' },
+        data: { backupCodes: ['$hash2'] },
+      });
+    });
+
+    it('throws on invalid temp token', async () => {
+      jwtService.verify.mockImplementation(() => {
+        throw new Error('invalid');
+      });
+
+      await expect(authService.twoFactorChallenge('bad-token', '123456')).rejects.toThrow(
+        UnauthorizedException,
+      );
+    });
+
+    it('throws on wrong token type', async () => {
+      jwtService.verify.mockReturnValue({ sub: 'staff1', type: 'access' });
+
+      await expect(authService.twoFactorChallenge('wrong-type', '123456')).rejects.toThrow(
+        UnauthorizedException,
+      );
+    });
+
+    it('throws on invalid 2FA code', async () => {
+      twoFactorService.verifyCode.mockReturnValue(false);
+      twoFactorService.verifyBackupCode.mockResolvedValue({ valid: false, remainingCodes: [] });
+      jwtService.verify.mockReturnValue({ sub: 'staff1', type: '2fa_pending' });
+      prisma.staff.findUnique.mockResolvedValue({
+        ...mockStaff,
+        twoFactorEnabled: true,
+        twoFactorSecret: 'TESTSECRET',
+        backupCodes: [],
+      } as any);
+
+      await expect(authService.twoFactorChallenge('temp-token', '000000')).rejects.toThrow(
+        UnauthorizedException,
+      );
+    });
+  });
+
+  describe('getTwoFactorStatus', () => {
+    it('returns status when enabled', async () => {
+      prisma.staff.findUnique.mockResolvedValue({
+        ...mockStaff,
+        twoFactorEnabled: true,
+        backupCodes: ['$h1', '$h2', '$h3'],
+      } as any);
+
+      const result = await authService.getTwoFactorStatus('staff1');
+
+      expect(result.enabled).toBe(true);
+      expect(result.backupCodesRemaining).toBe(3);
+    });
+
+    it('returns status when disabled', async () => {
+      prisma.staff.findUnique.mockResolvedValue({
+        ...mockStaff,
+        twoFactorEnabled: false,
+        backupCodes: [],
+      } as any);
+
+      const result = await authService.getTwoFactorStatus('staff1');
+
+      expect(result.enabled).toBe(false);
+      expect(result.backupCodesRemaining).toBe(0);
     });
   });
 });

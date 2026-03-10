@@ -55,6 +55,11 @@ export class BookingController {
     return this.bookingService.getCalendar(businessId, dateFrom, dateTo, staffId, locationId);
   }
 
+  @Get(':id/audit-log')
+  auditLog(@BusinessId() businessId: string, @Param('id') id: string) {
+    return this.bookingService.getAuditLog(businessId, id);
+  }
+
   @Get(':id/policy-check')
   policyCheck(
     @BusinessId() businessId: string,

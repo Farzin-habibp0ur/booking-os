@@ -4,6 +4,7 @@ import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { TwoFactorService } from './two-factor.service';
 import { JwtStrategy } from './jwt.strategy';
 import { TokenService } from '../../common/token.service';
 import { JwtBlacklistService } from '../../common/jwt-blacklist.service';
@@ -45,7 +46,7 @@ import { ReferralModule } from '../referral/referral.module';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, TokenService, JwtBlacklistService, PortalRedisService],
-  exports: [AuthService, JwtModule, TokenService, JwtBlacklistService, PortalRedisService],
+  providers: [AuthService, TwoFactorService, JwtStrategy, TokenService, JwtBlacklistService, PortalRedisService],
+  exports: [AuthService, TwoFactorService, JwtModule, TokenService, JwtBlacklistService, PortalRedisService],
 })
 export class AuthModule {}

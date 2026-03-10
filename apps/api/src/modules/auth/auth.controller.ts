@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, Res, Req, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get, Body, Res, Req, UseGuards, HttpCode } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { Throttle } from '@nestjs/throttler';
@@ -15,6 +15,8 @@ import {
   ChangePasswordDto,
   AcceptInviteDto,
   VerifyEmailDto,
+  TwoFactorVerifyDto,
+  TwoFactorChallengeDto,
 } from '../../common/dto';
 
 @ApiTags('Auth')
@@ -86,6 +88,12 @@ export class AuthController {
   @Throttle({ default: { ttl: 60000, limit: 10 } })
   async login(@Body() body: LoginDto, @Res({ passthrough: true }) res: Response) {
     const result = await this.authService.login(body.email, body.password);
+
+    // P-17: If 2FA required, don't set cookies — return temp token only
+    if (result.requires2FA) {
+      return { requires2FA: true, tempToken: result.tempToken };
+    }
+
     this.setTokenCookies(res, result);
     return result;
   }
@@ -217,5 +225,52 @@ export class AuthController {
   @Throttle({ default: { ttl: 60000, limit: 3 } })
   resendVerification(@CurrentUser('sub') staffId: string) {
     return this.authService.resendVerification(staffId);
+  }
+
+  // P-17: Two-Factor Authentication endpoints
+
+  @Get('2fa/status')
+  @UseGuards(AuthGuard('jwt'))
+  getTwoFactorStatus(@CurrentUser('sub') staffId: string) {
+    return this.authService.getTwoFactorStatus(staffId);
+  }
+
+  @Post('2fa/setup')
+  @UseGuards(AuthGuard('jwt'))
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
+  twoFactorSetup(@CurrentUser('sub') staffId: string) {
+    return this.authService.twoFactorSetup(staffId);
+  }
+
+  @Post('2fa/verify-setup')
+  @UseGuards(AuthGuard('jwt'))
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
+  twoFactorVerifySetup(
+    @CurrentUser('sub') staffId: string,
+    @Body() body: TwoFactorVerifyDto,
+  ) {
+    return this.authService.twoFactorVerifySetup(staffId, body.code);
+  }
+
+  @Post('2fa/disable')
+  @UseGuards(AuthGuard('jwt'))
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
+  twoFactorDisable(
+    @CurrentUser('sub') staffId: string,
+    @Body() body: TwoFactorVerifyDto,
+  ) {
+    return this.authService.twoFactorDisable(staffId, body.code);
+  }
+
+  @Post('2fa/challenge')
+  @HttpCode(200)
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
+  async twoFactorChallenge(
+    @Body() body: TwoFactorChallengeDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const result = await this.authService.twoFactorChallenge(body.tempToken, body.code);
+    this.setTokenCookies(res, result);
+    return result;
   }
 }
