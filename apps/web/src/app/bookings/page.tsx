@@ -7,6 +7,7 @@ import { cn } from '@/lib/cn';
 import { usePack } from '@/lib/vertical-pack';
 import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/lib/toast';
+import { useListNavigation, useKeyboardShortcut } from '@/lib/use-keyboard-shortcut';
 import { TableRowSkeleton, EmptyState } from '@/components/skeleton';
 import {
   BookOpen,
@@ -254,6 +255,8 @@ function BookingsContent() {
     load();
   }, [load]);
 
+  const [keyboardIdx, setKeyboardIdx] = useState(-1);
+
   const handleRowClick = (booking: any) => {
     setSelectedBooking(booking);
     setDetailOpen(true);
@@ -361,6 +364,14 @@ function BookingsContent() {
     (debouncedSearch ? 1 : 0);
 
   const sortedBookings = bookings.data || [];
+
+  // J/K list navigation
+  useListNavigation(sortedBookings.length, setKeyboardIdx);
+  useKeyboardShortcut('Enter', () => {
+    if (keyboardIdx >= 0 && keyboardIdx < sortedBookings.length) {
+      handleRowClick(sortedBookings[keyboardIdx]);
+    }
+  });
 
   const handleColumnSort = (col: SortableColumn) => {
     if (sortBy === col) {
@@ -488,6 +499,7 @@ function BookingsContent() {
           onChange={(e) => setSearchQuery(e.target.value)}
           className="w-full border border-slate-200 rounded-xl px-10 py-2 text-sm transition-colors focus:outline-none focus:border-sage-500 focus:ring-1 focus:ring-sage-500"
           data-testid="search-input"
+          data-search-input
         />
         {searchQuery && (
           <button
@@ -692,12 +704,13 @@ function BookingsContent() {
             <tbody className="divide-y">
               {loading
                 ? Array.from({ length: 5 }).map((_, i) => <TableRowSkeleton key={i} cols={7} />)
-                : sortedBookings.map((b: any) => (
+                : sortedBookings.map((b: any, idx: number) => (
                     <tr
                       key={b.id}
                       className={cn(
                         'hover:bg-slate-50 cursor-pointer print:break-inside-avoid',
                         selectedIds.has(b.id) && 'bg-sage-50/50',
+                        keyboardIdx === idx && 'bg-sage-50 border-l-2 border-sage-600',
                       )}
                     >
                       <td className="w-10 p-3 print:hidden" onClick={(e) => e.stopPropagation()}>

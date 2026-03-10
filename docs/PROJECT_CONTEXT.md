@@ -608,7 +608,7 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 - `RecommendedSlots` — Top 5 recommended reschedule slots scored by proximity + staff balance (UX Upgrade Pack R1)
 - `ExportModal` — CSV export modal with date range + field selection, supports customers/bookings/staff entities (UX Upgrade Pack R2)
 - `NotificationBell` — Bell icon with unread count badge, socket event listeners, localStorage persistence
-- `HelpButton` — Floating help button with keyboard shortcuts modal, `?` key handler
+- `HelpButton` — Floating help button with categorized keyboard shortcuts modal (General/Navigation/Lists), `?` key handler, chord sequence display
 - `InstallPrompt` — PWA install banner with beforeinstallprompt + iOS instructions
 - `OnboardingWizard` — 5-step overlay wizard with progress bar
 - `TodayTimeline` — Vertical chronological timeline of today's bookings with quick actions (UX Upgrade Pack R2)
@@ -914,7 +914,7 @@ Key groups (full list in `.env.example`):
 - P-21: Illustrated Empty States — COMPLETE (all 8 target pages verified)
 - P-22: Skeleton Loading States — COMPLETE (5 new compositions, 37 pages standardized)
 - P-25: Micro-Animations — COMPLETE (8 new keyframes, applied to cards/toasts/modals/dropdowns/shell)
-- P-23: Keyboard Navigation — in progress
+- P-23: Keyboard Navigation — COMPLETE (useKeyboardShortcut/useChordShortcut/useListNavigation hooks, global shortcuts in shell, J/K list nav on bookings+customers, categorized shortcuts modal, 19 tests)
 - P-24: Mobile Layouts (Inbox & Calendar) — in progress
 - P-26: Source Attribution — in progress
 

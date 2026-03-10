@@ -16,13 +16,37 @@ import {
 import { useDemoTour } from '@/components/demo-tour';
 import { cn } from '@/lib/cn';
 
-const SHORTCUTS = [
-  { keys: ['⌘', 'K'], description: 'Search' },
-  { keys: ['?'], description: 'Help' },
-  { keys: ['⌘', '/'], description: 'Keyboard Shortcuts' },
-  { keys: ['Esc'], description: 'Close modal/panel' },
-  { keys: ['↑', '↓'], description: 'Navigate search results' },
-  { keys: ['Enter'], description: 'Open selected result' },
+const SHORTCUT_CATEGORIES = [
+  {
+    label: 'General',
+    shortcuts: [
+      { keys: ['⌘', 'K'], description: 'Search' },
+      { keys: ['N'], description: 'New booking' },
+      { keys: ['/'], description: 'Focus search input' },
+      { keys: ['?'], description: 'Help' },
+      { keys: ['⌘', '/'], description: 'Keyboard shortcuts' },
+      { keys: ['Esc'], description: 'Close modal/panel' },
+    ],
+  },
+  {
+    label: 'Navigation',
+    shortcuts: [
+      { keys: ['G', 'then', 'D'], description: 'Go to Dashboard' },
+      { keys: ['G', 'then', 'B'], description: 'Go to Bookings' },
+      { keys: ['G', 'then', 'C'], description: 'Go to Customers' },
+      { keys: ['G', 'then', 'I'], description: 'Go to Inbox' },
+      { keys: ['G', 'then', 'S'], description: 'Go to Services' },
+      { keys: ['G', 'then', 'A'], description: 'Go to Automations' },
+    ],
+  },
+  {
+    label: 'Lists',
+    shortcuts: [
+      { keys: ['J'], description: 'Move down in list' },
+      { keys: ['K'], description: 'Move up in list' },
+      { keys: ['Enter'], description: 'Open selected item' },
+    ],
+  },
 ];
 
 function KeyboardShortcutsModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
@@ -65,20 +89,35 @@ function KeyboardShortcutsModal({ isOpen, onClose }: { isOpen: boolean; onClose:
             <X size={18} />
           </button>
         </div>
-        <div className="space-y-3">
-          {SHORTCUTS.map((shortcut) => (
-            <div key={shortcut.description} className="flex items-center justify-between py-1.5">
-              <span className="text-sm text-slate-600 dark:text-slate-400">
-                {shortcut.description}
-              </span>
-              <div className="flex items-center gap-1">
-                {shortcut.keys.map((key) => (
-                  <kbd
-                    key={key}
-                    className="inline-flex items-center justify-center min-w-[28px] h-7 px-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg"
-                  >
-                    {key}
-                  </kbd>
+        <div className="space-y-5">
+          {SHORTCUT_CATEGORIES.map((category) => (
+            <div key={category.label}>
+              <h3 className="text-xs uppercase tracking-wide text-slate-400 dark:text-slate-500 mb-2">
+                {category.label}
+              </h3>
+              <div className="space-y-1.5">
+                {category.shortcuts.map((shortcut) => (
+                  <div key={shortcut.description} className="flex items-center justify-between py-1">
+                    <span className="text-sm text-slate-600 dark:text-slate-400">
+                      {shortcut.description}
+                    </span>
+                    <div className="flex items-center gap-1">
+                      {shortcut.keys.map((key, i) =>
+                        key === 'then' ? (
+                          <span key={i} className="text-xs text-slate-400">
+                            then
+                          </span>
+                        ) : (
+                          <kbd
+                            key={i}
+                            className="inline-flex items-center justify-center min-w-[28px] h-7 px-1.5 text-xs font-mono font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg"
+                          >
+                            {key}
+                          </kbd>
+                        ),
+                      )}
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>

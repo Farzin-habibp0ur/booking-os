@@ -811,6 +811,7 @@ function InboxPage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t('inbox.search_placeholder')}
                 aria-label="Search conversations"
+                data-search-input
                 className="w-full pl-8 pr-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-sage-500"
               />
               {searchQuery && (

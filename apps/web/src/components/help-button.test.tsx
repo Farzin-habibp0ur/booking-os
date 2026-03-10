@@ -133,8 +133,8 @@ describe('HelpButton', () => {
     expect(within(modal).getByText('Search')).toBeInTheDocument();
     expect(within(modal).getByText('Help')).toBeInTheDocument();
     expect(within(modal).getByText('Close modal/panel')).toBeInTheDocument();
-    expect(within(modal).getByText('Navigate search results')).toBeInTheDocument();
-    expect(within(modal).getByText('Open selected result')).toBeInTheDocument();
+    expect(within(modal).getByText('Move down in list')).toBeInTheDocument();
+    expect(within(modal).getByText('Open selected item')).toBeInTheDocument();
   });
 
   it('? key opens help panel when not in an input', async () => {

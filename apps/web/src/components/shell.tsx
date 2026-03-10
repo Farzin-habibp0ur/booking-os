@@ -3,6 +3,7 @@
 import { ReactNode, useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useKeyboardShortcut, useChordShortcut } from '@/lib/use-keyboard-shortcut';
 import { useAuth } from '@/lib/auth';
 import { usePack, VerticalPackProvider } from '@/lib/vertical-pack';
 import { I18nProvider, useI18n } from '@/lib/i18n';
@@ -126,17 +127,21 @@ function ShellInner({ children }: { children: ReactNode }) {
     loadPinnedViews();
   }, [loadPinnedViews]);
 
-  // Cmd+K / Ctrl+K listener
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        setCmdkOpen((prev) => !prev);
-      }
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, []);
+  // Global keyboard shortcuts
+  useKeyboardShortcut('k', () => setCmdkOpen((prev) => !prev), { meta: true, preventDefault: true });
+  useKeyboardShortcut('/', () => {
+    const searchInput = document.querySelector<HTMLInputElement>('[data-search-input]');
+    if (searchInput) { searchInput.focus(); }
+  }, { preventDefault: true });
+  useKeyboardShortcut('n', () => router.push('/bookings?new=1'));
+  useChordShortcut('g', {
+    b: () => router.push('/bookings'),
+    c: () => router.push('/customers'),
+    i: () => router.push('/inbox'),
+    d: () => router.push('/dashboard'),
+    s: () => router.push('/services'),
+    a: () => router.push('/automations'),
+  });
 
   const role = user?.role;
 

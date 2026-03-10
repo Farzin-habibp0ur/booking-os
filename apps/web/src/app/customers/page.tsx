@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useToast } from '@/lib/toast';
+import { useListNavigation, useKeyboardShortcut } from '@/lib/use-keyboard-shortcut';
 import {
   Search,
   Plus,
@@ -51,6 +52,7 @@ export default function CustomersPage() {
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const retryCountRef = useRef(0);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [keyboardIdx, setKeyboardIdx] = useState(-1);
 
   const currentFilters = { search };
 
@@ -190,6 +192,14 @@ export default function CustomersPage() {
     });
   };
 
+  const sortedCustomerList = getSortedCustomers();
+  useListNavigation(sortedCustomerList.length, setKeyboardIdx);
+  useKeyboardShortcut('Enter', () => {
+    if (keyboardIdx >= 0 && keyboardIdx < sortedCustomerList.length) {
+      router.push(`/customers/${sortedCustomerList[keyboardIdx].id}`);
+    }
+  });
+
   const SortIcon = ({ column }: { column: typeof sortBy }) => {
     if (sortBy !== column) return null;
     return sortDir === 'asc' ? (
@@ -261,6 +271,7 @@ export default function CustomersPage() {
             value={search}
             onChange={(e) => handleSearchChange(e.target.value)}
             placeholder={t('customers.search_placeholder')}
+            data-search-input
             className="w-full rounded-xl bg-slate-50 border-0 focus:ring-2 focus:ring-sage-500 pl-9 pr-9 py-2 text-sm focus:outline-none focus:bg-white transition-colors"
           />
           {search && (
@@ -363,12 +374,13 @@ export default function CustomersPage() {
             <tbody className="divide-y">
               {loading
                 ? Array.from({ length: 5 }).map((_, i) => <TableRowSkeleton key={i} cols={10} />)
-                : getSortedCustomers().map((c: any) => (
+                : sortedCustomerList.map((c: any, idx: number) => (
                     <tr
                       key={c.id}
                       className={cn(
                         'hover:bg-slate-50 cursor-pointer',
                         selectedIds.has(c.id) && 'bg-sage-50/50',
+                        keyboardIdx === idx && 'bg-sage-50 border-l-2 border-sage-600',
                       )}
                     >
                       <td className="w-10 p-3" onClick={(e) => e.stopPropagation()}>

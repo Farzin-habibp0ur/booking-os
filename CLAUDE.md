@@ -184,6 +184,11 @@ Key events: `message:new`, `conversation:updated`, `ai:suggestion`, `ai:auto-rep
 - Loading states: `Skeleton` component + compositions (`PageSkeleton`, `DetailSkeleton`, `FormSkeleton`, `ListSkeleton`, `InboxSkeleton`, `CalendarSkeleton`) — always use these instead of raw `animate-pulse` divs or "Loading..." text
 - Empty states: `EmptyState` component
 - Bulk actions: `BulkActionBar` component
+- Keyboard shortcuts: Use hooks from `apps/web/src/lib/use-keyboard-shortcut.ts`:
+  - `useKeyboardShortcut(key, handler, opts)` — single key with `meta`/`shift`/`allowInInputs`/`preventDefault` options
+  - `useChordShortcut(firstKey, chords, timeout)` — chord sequences (e.g., G then B) with configurable timeout
+  - `useListNavigation(count, onSelect)` — J/K/Arrow list navigation with wrapping
+  - Search inputs should include `data-search-input` attribute for `/` key focus
 
 ### Design Tokens
 
