@@ -68,14 +68,28 @@ export class WaitlistService {
     }
   }
 
+  private static readonly VALID_SORT_FIELDS = ['createdAt', 'status'];
+
   async getEntries(
     businessId: string,
-    filters?: { status?: string; serviceId?: string; staffId?: string },
+    filters?: {
+      status?: string;
+      serviceId?: string;
+      staffId?: string;
+      sortBy?: string;
+      sortOrder?: string;
+    },
   ) {
     const where: any = { businessId };
     if (filters?.status) where.status = filters.status;
     if (filters?.serviceId) where.serviceId = filters.serviceId;
     if (filters?.staffId) where.staffId = filters.staffId;
+
+    let orderBy: any = { createdAt: 'desc' };
+    if (filters?.sortBy && WaitlistService.VALID_SORT_FIELDS.includes(filters.sortBy)) {
+      const dir = filters.sortOrder === 'asc' ? 'asc' : 'desc';
+      orderBy = { [filters.sortBy]: dir };
+    }
 
     return this.prisma.waitlistEntry.findMany({
       where,
@@ -84,7 +98,7 @@ export class WaitlistService {
         service: { select: { id: true, name: true, durationMins: true, price: true } },
         staff: { select: { id: true, name: true } },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy,
     });
   }
 

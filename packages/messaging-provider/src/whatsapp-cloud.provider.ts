@@ -30,13 +30,31 @@ export class WhatsAppCloudProvider implements MessagingProvider {
   }
 
   async sendMessage(msg: OutboundMessage): Promise<{ externalId: string }> {
-    const response = await this.makeRequest('/messages', {
-      messaging_product: 'whatsapp',
-      to: msg.to,
-      type: 'text',
-      text: { body: msg.body },
-    });
+    let payload: any;
 
+    if (msg.mediaUrl && msg.mediaType) {
+      // Send media message
+      const mediaPayload: any = { link: msg.mediaUrl };
+      if (msg.body) mediaPayload.caption = msg.body;
+      if (msg.fileName && msg.mediaType === 'document') mediaPayload.filename = msg.fileName;
+
+      payload = {
+        messaging_product: 'whatsapp',
+        to: msg.to,
+        type: msg.mediaType,
+        [msg.mediaType]: mediaPayload,
+      };
+    } else {
+      // Send text message
+      payload = {
+        messaging_product: 'whatsapp',
+        to: msg.to,
+        type: 'text',
+        text: { body: msg.body },
+      };
+    }
+
+    const response = await this.makeRequest('/messages', payload);
     return { externalId: response.messages?.[0]?.id || '' };
   }
 
@@ -99,6 +117,30 @@ export class WhatsAppCloudProvider implements MessagingProvider {
   }
 
   /**
+   * Download media from WhatsApp by media ID.
+   * Returns the media buffer and content type.
+   */
+  async downloadMedia(mediaId: string): Promise<{ buffer: Buffer; contentType: string }> {
+    const version = this.config.apiVersion || 'v21.0';
+    // Step 1: Get media URL
+    const urlRes = await fetch(`https://graph.facebook.com/${version}/${mediaId}`, {
+      headers: { Authorization: `Bearer ${this.config.accessToken}` },
+    });
+    if (!urlRes.ok) throw new Error(`Failed to get media URL: ${urlRes.status}`);
+    const { url } = (await urlRes.json()) as { url: string };
+
+    // Step 2: Download media from URL
+    const mediaRes = await fetch(url, {
+      headers: { Authorization: `Bearer ${this.config.accessToken}` },
+    });
+    if (!mediaRes.ok) throw new Error(`Failed to download media: ${mediaRes.status}`);
+    const buffer = Buffer.from(await mediaRes.arrayBuffer());
+    const contentType = mediaRes.headers.get('content-type') || 'application/octet-stream';
+
+    return { buffer, contentType };
+  }
+
+  /**
    * Parse Meta's inbound webhook payload into a normalized format.
    * Returns an array of inbound messages extracted from the payload.
    */
@@ -108,6 +150,10 @@ export class WhatsAppCloudProvider implements MessagingProvider {
     externalId: string;
     timestamp: string;
     businessPhoneNumberId: string;
+    mediaType?: 'image' | 'document' | 'audio' | 'video';
+    mediaId?: string;
+    mimeType?: string;
+    fileName?: string;
   }> {
     const messages: Array<{
       from: string;
@@ -115,9 +161,15 @@ export class WhatsAppCloudProvider implements MessagingProvider {
       externalId: string;
       timestamp: string;
       businessPhoneNumberId: string;
+      mediaType?: 'image' | 'document' | 'audio' | 'video';
+      mediaId?: string;
+      mimeType?: string;
+      fileName?: string;
     }> = [];
 
     if (!payload?.entry) return messages;
+
+    const MEDIA_TYPES = ['image', 'document', 'audio', 'video'] as const;
 
     for (const entry of payload.entry) {
       for (const change of entry.changes || []) {
@@ -134,6 +186,19 @@ export class WhatsAppCloudProvider implements MessagingProvider {
               externalId: msg.id,
               timestamp: msg.timestamp,
               businessPhoneNumberId: phoneNumberId,
+            });
+          } else if (MEDIA_TYPES.includes(msg.type)) {
+            const mediaData = msg[msg.type] || {};
+            messages.push({
+              from: msg.from,
+              body: mediaData.caption || `[${msg.type}]`,
+              externalId: msg.id,
+              timestamp: msg.timestamp,
+              businessPhoneNumberId: phoneNumberId,
+              mediaType: msg.type,
+              mediaId: mediaData.id,
+              mimeType: mediaData.mime_type,
+              fileName: mediaData.filename,
             });
           }
         }

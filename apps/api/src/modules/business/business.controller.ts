@@ -63,6 +63,20 @@ export class BusinessController {
     return this.businessService.updatePolicySettings(businessId, body);
   }
 
+  @Get('calendar-hours')
+  async getCalendarHours(@BusinessId() businessId: string) {
+    return this.businessService.getCalendarHours(businessId);
+  }
+
+  @Patch('calendar-hours')
+  @Roles('ADMIN')
+  async updateCalendarHours(
+    @BusinessId() businessId: string,
+    @Body() body: { startHour?: number; endHour?: number },
+  ) {
+    return this.businessService.updateCalendarHours(businessId, body);
+  }
+
   @Get('branding')
   async getBranding(@BusinessId() businessId: string) {
     return this.businessService.getBranding(businessId);

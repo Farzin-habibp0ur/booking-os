@@ -142,7 +142,7 @@ describe('WhatsAppCloudProvider', () => {
       });
     });
 
-    it('should return empty for non-text messages', () => {
+    it('should parse inbound image messages', () => {
       const payload = {
         entry: [
           {
@@ -150,7 +150,15 @@ describe('WhatsAppCloudProvider', () => {
               {
                 value: {
                   metadata: { phone_number_id: 'pn123' },
-                  messages: [{ id: 'wamid.img1', from: '+1234567890', type: 'image', image: {} }],
+                  messages: [
+                    {
+                      id: 'wamid.img1',
+                      from: '+1234567890',
+                      timestamp: '1234567890',
+                      type: 'image',
+                      image: { id: 'media-123', mime_type: 'image/jpeg', caption: 'My photo' },
+                    },
+                  ],
                 },
               },
             ],
@@ -159,12 +167,101 @@ describe('WhatsAppCloudProvider', () => {
       };
 
       const messages = WhatsAppCloudProvider.parseInboundWebhook(payload);
-      expect(messages).toHaveLength(0);
+      expect(messages).toHaveLength(1);
+      expect(messages[0]).toEqual({
+        from: '+1234567890',
+        body: 'My photo',
+        externalId: 'wamid.img1',
+        timestamp: '1234567890',
+        businessPhoneNumberId: 'pn123',
+        mediaType: 'image',
+        mediaId: 'media-123',
+        mimeType: 'image/jpeg',
+        fileName: undefined,
+      });
+    });
+
+    it('should parse inbound document with filename', () => {
+      const payload = {
+        entry: [
+          {
+            changes: [
+              {
+                value: {
+                  metadata: { phone_number_id: 'pn123' },
+                  messages: [
+                    {
+                      id: 'wamid.doc1',
+                      from: '+1234567890',
+                      timestamp: '1234567890',
+                      type: 'document',
+                      document: {
+                        id: 'media-doc',
+                        mime_type: 'application/pdf',
+                        filename: 'report.pdf',
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+      };
+
+      const messages = WhatsAppCloudProvider.parseInboundWebhook(payload);
+      expect(messages).toHaveLength(1);
+      expect(messages[0].mediaType).toBe('document');
+      expect(messages[0].fileName).toBe('report.pdf');
     });
 
     it('should handle empty or missing payload', () => {
       expect(WhatsAppCloudProvider.parseInboundWebhook({})).toEqual([]);
       expect(WhatsAppCloudProvider.parseInboundWebhook(null)).toEqual([]);
+    });
+  });
+
+  describe('sendMessage with media', () => {
+    it('should send an image message via WhatsApp Cloud API', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ messages: [{ id: 'wamid.media1' }] }),
+      });
+
+      const result = await provider.sendMessage({
+        to: '+1234567890',
+        body: 'Check this out',
+        businessId: 'biz1',
+        mediaUrl: 'https://example.com/image.jpg',
+        mediaType: 'image',
+      });
+
+      expect(result.externalId).toBe('wamid.media1');
+      const sentBody = JSON.parse(mockFetch.mock.calls[0][1].body);
+      expect(sentBody.type).toBe('image');
+      expect(sentBody.image.link).toBe('https://example.com/image.jpg');
+      expect(sentBody.image.caption).toBe('Check this out');
+    });
+
+    it('should send a document with filename', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ messages: [{ id: 'wamid.doc1' }] }),
+      });
+
+      const result = await provider.sendMessage({
+        to: '+1234567890',
+        body: '',
+        businessId: 'biz1',
+        mediaUrl: 'https://example.com/report.pdf',
+        mediaType: 'document',
+        fileName: 'report.pdf',
+      });
+
+      expect(result.externalId).toBe('wamid.doc1');
+      const sentBody = JSON.parse(mockFetch.mock.calls[0][1].body);
+      expect(sentBody.type).toBe('document');
+      expect(sentBody.document.filename).toBe('report.pdf');
     });
   });
 });

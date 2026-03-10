@@ -222,6 +222,9 @@ export interface OutboundMessage {
   body: string;
   businessId: string;
   conversationId?: string;
+  mediaUrl?: string;
+  mediaType?: 'image' | 'document' | 'audio' | 'video';
+  fileName?: string;
 }
 
 export interface InboundMessage {

@@ -102,6 +102,15 @@ jest.mock('@/components/tooltip-nudge', () => ({
   ),
 }));
 
+// Mock sortable-header
+jest.mock('@/components/sortable-header', () => ({
+  SortableHeader: ({ label, column, onSort }: any) => (
+    <button data-testid={`sort-${column}`} onClick={() => onSort(column)}>
+      {label}
+    </button>
+  ),
+}));
+
 // Mock lucide-react icons
 jest.mock('lucide-react', () => ({
   ClipboardList: () => <div data-testid="clipboard-list-icon" />,

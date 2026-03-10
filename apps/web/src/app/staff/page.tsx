@@ -31,7 +31,9 @@ export default function StaffPage() {
   const [workingHours, setWorkingHours] = useState<Record<string, any[]>>({});
   const [timeOff, setTimeOff] = useState<Record<string, any[]>>({});
   const [pricing, setPricing] = useState<Record<string, any[]>>({});
-  const [tab, setTab] = useState<'hours' | 'timeoff' | 'pricing'>('hours');
+  const [assignedServices, setAssignedServices] = useState<Record<string, Set<string>>>({});
+  const [allServices, setAllServices] = useState<any[]>([]);
+  const [tab, setTab] = useState<'hours' | 'timeoff' | 'pricing' | 'services'>('hours');
   const [saving, setSaving] = useState(false);
   const [showExport, setShowExport] = useState(false);
 
@@ -44,6 +46,10 @@ export default function StaffPage() {
 
   useEffect(() => {
     load();
+    api
+      .get<any[]>('/services')
+      .then(setAllServices)
+      .catch(() => {});
   }, []);
 
   const toggleExpand = async (id: string) => {
@@ -67,6 +73,37 @@ export default function StaffPage() {
     if (!pricing[staffId]) {
       const p = await api.get<any[]>(`/staff/${staffId}/pricing`);
       setPricing((prev) => ({ ...prev, [staffId]: p }));
+    }
+  };
+
+  const loadAssignedServices = async (staffId: string) => {
+    const assigned = await api.get<any[]>(`/staff/${staffId}/services`);
+    setAssignedServices((prev) => ({
+      ...prev,
+      [staffId]: new Set(assigned.map((a: any) => a.serviceId)),
+    }));
+  };
+
+  const toggleServiceAssignment = (staffId: string, serviceId: string) => {
+    setAssignedServices((prev) => {
+      const current = new Set(prev[staffId] || []);
+      if (current.has(serviceId)) current.delete(serviceId);
+      else current.add(serviceId);
+      return { ...prev, [staffId]: current };
+    });
+  };
+
+  const saveServiceAssignments = async (staffId: string) => {
+    setSaving(true);
+    try {
+      await api.put(`/staff/${staffId}/services`, {
+        serviceIds: Array.from(assignedServices[staffId] || []),
+      });
+      toast(t('common.saved'));
+    } catch (err: any) {
+      toast(err.message || 'Failed to save', 'error');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -282,6 +319,21 @@ export default function StaffPage() {
                                 )}
                               >
                                 <DollarSign size={14} /> {t('staff.pricing')}
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setTab('services');
+                                  loadAssignedServices(s.id);
+                                }}
+                                className={cn(
+                                  'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm transition-colors',
+                                  tab === 'services'
+                                    ? 'bg-white border shadow-sm font-medium'
+                                    : 'text-slate-500 hover:bg-white/50',
+                                )}
+                              >
+                                Services
                               </button>
                             </div>
 
@@ -507,6 +559,47 @@ export default function StaffPage() {
                                       className="bg-sage-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-sage-700 disabled:opacity-50 transition-colors"
                                     >
                                       {saving ? t('common.saving') : t('staff.save_pricing')}
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Services Tab */}
+                            {tab === 'services' && (
+                              <div>
+                                <p className="text-sm text-slate-500 mb-3">
+                                  Select which services this staff member can perform.
+                                </p>
+                                <div className="space-y-2">
+                                  {allServices
+                                    .filter((svc: any) => svc.isActive)
+                                    .map((svc: any) => (
+                                      <label
+                                        key={svc.id}
+                                        className="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-50 cursor-pointer"
+                                      >
+                                        <input
+                                          type="checkbox"
+                                          checked={assignedServices[s.id]?.has(svc.id) || false}
+                                          onChange={() => toggleServiceAssignment(s.id, svc.id)}
+                                          className="rounded text-sage-600"
+                                        />
+                                        <span className="text-sm">{svc.name}</span>
+                                        <span className="text-xs text-slate-400">
+                                          {svc.category} · ${svc.price}
+                                        </span>
+                                      </label>
+                                    ))}
+                                </div>
+                                {allServices.filter((svc: any) => svc.isActive).length > 0 && (
+                                  <div className="mt-3 flex justify-end">
+                                    <button
+                                      onClick={() => saveServiceAssignments(s.id)}
+                                      disabled={saving}
+                                      className="bg-sage-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-sage-700 disabled:opacity-50 transition-colors"
+                                    >
+                                      {saving ? t('common.saving') : 'Save Services'}
                                     </button>
                                   </div>
                                 )}

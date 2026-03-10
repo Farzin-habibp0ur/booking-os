@@ -22,7 +22,8 @@ import { CalendarSidebar } from './components/calendar-sidebar';
 import { statusCalendarClasses } from '@/lib/design-tokens';
 import { captureEvent } from '@/lib/posthog';
 
-const HOURS = Array.from({ length: 12 }, (_, i) => i + 8); // 8am - 7pm
+const DEFAULT_START_HOUR = 8;
+const DEFAULT_END_HOUR = 19;
 const SLOT_HEIGHT = 60; // pixels per hour
 
 const ROLE_LABELS: Record<string, string> = {
@@ -90,6 +91,20 @@ export default function CalendarPage() {
   const [prefillStaffId, setPrefillStaffId] = useState('');
   const [rescheduleMode, setRescheduleMode] = useState(false);
 
+  // Business hours
+  const [calendarHours, setCalendarHours] = useState({
+    startHour: DEFAULT_START_HOUR,
+    endHour: DEFAULT_END_HOUR,
+  });
+  const HOURS = useMemo(
+    () =>
+      Array.from(
+        { length: calendarHours.endHour - calendarHours.startHour + 1 },
+        (_, i) => i + calendarHours.startHour,
+      ),
+    [calendarHours],
+  );
+
   // Drag-and-drop state
   const [dragBooking, setDragBooking] = useState<any>(null);
   const [dropTarget, setDropTarget] = useState<{
@@ -111,6 +126,10 @@ export default function CalendarPage() {
       .get<any[]>('/locations')
       .then(setLocations)
       .catch(() => setLocations([]));
+    api
+      .get<{ startHour: number; endHour: number }>('/business/calendar-hours')
+      .then(setCalendarHours)
+      .catch(() => {});
   }, []);
 
   useEffect(() => {

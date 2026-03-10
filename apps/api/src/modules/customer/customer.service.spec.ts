@@ -68,6 +68,69 @@ describe('CustomerService', () => {
         expect.objectContaining({ skip: 10, take: 5 }),
       );
     });
+
+    it('applies sortBy and sortOrder params', async () => {
+      await service.findAll('biz1', { sortBy: 'name', sortOrder: 'asc' });
+
+      expect(prisma.customer.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ orderBy: { name: 'asc' } }),
+      );
+    });
+
+    it('ignores invalid sortBy fields', async () => {
+      await service.findAll('biz1', { sortBy: 'invalid', sortOrder: 'asc' });
+
+      expect(prisma.customer.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ orderBy: { createdAt: 'desc' } }),
+      );
+    });
+
+    it('defaults to desc when no sortOrder', async () => {
+      await service.findAll('biz1', { sortBy: 'email' });
+
+      expect(prisma.customer.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ orderBy: { email: 'desc' } }),
+      );
+    });
+
+    it('excludes soft-deleted customers', async () => {
+      await service.findAll('biz1', {});
+
+      expect(prisma.customer.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ deletedAt: null }),
+        }),
+      );
+    });
+  });
+
+  // ─── softDelete ─────────────────────────────────────────────────────
+
+  describe('softDelete', () => {
+    it('sets deletedAt on customer', async () => {
+      prisma.customer.findFirst.mockResolvedValue({ id: 'c1', deletedAt: null } as any);
+      prisma.customer.update.mockResolvedValue({ id: 'c1', deletedAt: new Date() } as any);
+
+      const result = await service.softDelete('biz1', 'c1');
+
+      expect(result.deletedAt).toBeTruthy();
+      expect(prisma.customer.update).toHaveBeenCalledWith({
+        where: { id: 'c1' },
+        data: { deletedAt: expect.any(Date) },
+      });
+    });
+
+    it('throws NotFoundException for non-existent customer', async () => {
+      prisma.customer.findFirst.mockResolvedValue(null);
+
+      await expect(service.softDelete('biz1', 'c99')).rejects.toThrow('Customer not found');
+    });
+
+    it('throws for already deleted customer', async () => {
+      prisma.customer.findFirst.mockResolvedValue(null);
+
+      await expect(service.softDelete('biz1', 'c1')).rejects.toThrow('Customer not found');
+    });
   });
 
   // ─── findById ─────────────────────────────────────────────────────────

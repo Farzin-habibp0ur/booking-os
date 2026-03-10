@@ -116,6 +116,7 @@ describe('Tenant Isolation', () => {
         customFields: {},
         createdAt: new Date(),
         updatedAt: new Date(),
+        deletedAt: null,
       });
 
       await request(ctx.app.getHttpServer())

@@ -44,6 +44,9 @@ function CalendarSyncPage() {
   const [toast, setToast] = useState<string | null>(null);
   const [regenerating, setRegenerating] = useState(false);
   const [syncing, setSyncing] = useState<string | null>(null);
+  const [startHour, setStartHour] = useState(8);
+  const [endHour, setEndHour] = useState(19);
+  const [savingHours, setSavingHours] = useState(false);
 
   const fetchData = async () => {
     try {
@@ -64,6 +67,13 @@ function CalendarSyncPage() {
 
   useEffect(() => {
     fetchData();
+    api
+      .get<{ startHour: number; endHour: number }>('/business/calendar-hours')
+      .then((h) => {
+        setStartHour(h.startHour);
+        setEndHour(h.endHour);
+      })
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -148,6 +158,33 @@ function CalendarSyncPage() {
     } finally {
       setSyncing(null);
     }
+  };
+
+  const handleSaveHours = async () => {
+    if (startHour >= endHour) {
+      setToast('Start hour must be before end hour');
+      setTimeout(() => setToast(null), 3000);
+      return;
+    }
+    setSavingHours(true);
+    try {
+      await api.patch('/business/calendar-hours', { startHour, endHour });
+      setToast('Business hours updated');
+      setTimeout(() => setToast(null), 3000);
+    } catch {
+      setToast('Failed to save business hours');
+      setTimeout(() => setToast(null), 3000);
+    } finally {
+      setSavingHours(false);
+    }
+  };
+
+  const hourOptions = Array.from({ length: 24 }, (_, i) => i);
+  const formatHour = (h: number) => {
+    if (h === 0) return '12:00 AM';
+    if (h < 12) return `${h}:00 AM`;
+    if (h === 12) return '12:00 PM';
+    return `${h - 12}:00 PM`;
   };
 
   const isConnected = (provider: string) => connections.some((c) => c.provider === provider);
@@ -257,6 +294,55 @@ function CalendarSyncPage() {
               </div>
             );
           })}
+        </div>
+      </div>
+
+      {/* Business Hours */}
+      <div className="bg-white rounded-2xl shadow-soft p-6 mt-6 space-y-4">
+        <div>
+          <h2 className="font-semibold">Business Hours</h2>
+          <p className="text-sm text-slate-500 mt-1">
+            Set the hours your business operates. The calendar will only show this range.
+          </p>
+        </div>
+        <div className="flex items-end gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">Start Hour</label>
+            <select
+              value={startHour}
+              onChange={(e) => setStartHour(Number(e.target.value))}
+              className="border border-slate-200 rounded-xl px-3 py-2 text-sm"
+              aria-label="Start hour"
+            >
+              {hourOptions.map((h) => (
+                <option key={h} value={h}>
+                  {formatHour(h)}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">End Hour</label>
+            <select
+              value={endHour}
+              onChange={(e) => setEndHour(Number(e.target.value))}
+              className="border border-slate-200 rounded-xl px-3 py-2 text-sm"
+              aria-label="End hour"
+            >
+              {hourOptions.map((h) => (
+                <option key={h} value={h}>
+                  {formatHour(h)}
+                </option>
+              ))}
+            </select>
+          </div>
+          <button
+            onClick={handleSaveHours}
+            disabled={savingHours}
+            className="bg-sage-600 hover:bg-sage-700 text-white px-4 py-2 rounded-xl text-sm transition-colors disabled:opacity-50"
+          >
+            {savingHours ? 'Saving...' : 'Save Hours'}
+          </button>
         </div>
       </div>
 

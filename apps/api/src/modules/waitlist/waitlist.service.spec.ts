@@ -136,6 +136,26 @@ describe('WaitlistService', () => {
         }),
       );
     });
+
+    it('applies sortBy and sortOrder', async () => {
+      prisma.waitlistEntry.findMany.mockResolvedValue([]);
+
+      await service.getEntries('biz1', { sortBy: 'status', sortOrder: 'asc' });
+
+      expect(prisma.waitlistEntry.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ orderBy: { status: 'asc' } }),
+      );
+    });
+
+    it('ignores invalid sortBy fields', async () => {
+      prisma.waitlistEntry.findMany.mockResolvedValue([]);
+
+      await service.getEntries('biz1', { sortBy: 'invalid' });
+
+      expect(prisma.waitlistEntry.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ orderBy: { createdAt: 'desc' } }),
+      );
+    });
   });
 
   describe('cancelEntry', () => {

@@ -42,6 +42,21 @@ export class AvailabilityService {
       select: { id: true, name: true },
     });
 
+    // Filter staff by service capability (StaffServicePrice records)
+    if (staffList.length > 0) {
+      const capabilities =
+        (await this.prisma.staffServicePrice.findMany({
+          where: { businessId, serviceId },
+          select: { staffId: true },
+        })) || [];
+      if (capabilities.length > 0) {
+        const capableStaffIds = new Set(capabilities.map((c) => c.staffId));
+        staffList = staffList.filter((s) => capableStaffIds.has(s.id));
+      }
+      // If no StaffServicePrice records exist for this service at all,
+      // assume all staff can perform it (backward compatibility)
+    }
+
     // Filter staff by location assignment when locationId is provided
     if (locationId && staffList.length > 0) {
       const assignments = await this.prisma.staffLocation.findMany({

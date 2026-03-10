@@ -2,12 +2,14 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   Patch,
   Delete,
   Param,
   Body,
   UseGuards,
   Req,
+  Query,
   ForbiddenException,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
@@ -43,8 +45,12 @@ export class StaffController {
 
   @Get()
   @Roles('ADMIN')
-  list(@BusinessId() businessId: string) {
-    return this.staffService.findAll(businessId);
+  list(
+    @BusinessId() businessId: string,
+    @Query('sortBy') sortBy?: string,
+    @Query('sortOrder') sortOrder?: string,
+  ) {
+    return this.staffService.findAll(businessId, { sortBy, sortOrder });
   }
 
   @Post()
@@ -96,6 +102,21 @@ export class StaffController {
     @Body() body: SetStaffServicePricingDto,
   ) {
     return this.staffService.setServicePricing(businessId, id, body.overrides);
+  }
+
+  @Put(':id/services')
+  @Roles('ADMIN')
+  assignServices(
+    @BusinessId() businessId: string,
+    @Param('id') id: string,
+    @Body() body: { serviceIds: string[] },
+  ) {
+    return this.staffService.assignServices(businessId, id, body.serviceIds || []);
+  }
+
+  @Get(':id/services')
+  getAssignedServices(@BusinessId() businessId: string, @Param('id') id: string) {
+    return this.staffService.getAssignedServices(businessId, id);
   }
 
   @Get(':id/working-hours')

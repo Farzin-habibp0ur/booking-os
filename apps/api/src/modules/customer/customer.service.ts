@@ -17,10 +17,21 @@ export class CustomerService {
     private profileExtractor: ProfileExtractor,
   ) {}
 
-  async findAll(businessId: string, query: { search?: string; page?: number; pageSize?: number }) {
+  private static readonly VALID_SORT_FIELDS = ['name', 'email', 'phone', 'createdAt'];
+
+  async findAll(
+    businessId: string,
+    query: {
+      search?: string;
+      page?: number;
+      pageSize?: number;
+      sortBy?: string;
+      sortOrder?: string;
+    },
+  ) {
     const page = Math.max(1, Number(query.page) || 1);
     const pageSize = Math.min(100, Math.max(1, Number(query.pageSize) || 20));
-    const where: any = { businessId };
+    const where: any = { businessId, deletedAt: null };
     if (query.search) {
       where.OR = [
         { name: { contains: query.search, mode: 'insensitive' } },
@@ -28,12 +39,17 @@ export class CustomerService {
         { email: { contains: query.search, mode: 'insensitive' } },
       ];
     }
+    let orderBy: any = { createdAt: 'desc' };
+    if (query.sortBy && CustomerService.VALID_SORT_FIELDS.includes(query.sortBy)) {
+      const dir = query.sortOrder === 'asc' ? 'asc' : 'desc';
+      orderBy = { [query.sortBy]: dir };
+    }
     const [data, total] = await Promise.all([
       this.prisma.customer.findMany({
         where,
         skip: (page - 1) * pageSize,
         take: pageSize,
-        orderBy: { createdAt: 'desc' },
+        orderBy,
       }),
       this.prisma.customer.count({ where }),
     ]);
@@ -41,7 +57,18 @@ export class CustomerService {
   }
 
   async findById(businessId: string, id: string) {
-    return this.prisma.customer.findFirst({ where: { id, businessId } });
+    return this.prisma.customer.findFirst({ where: { id, businessId, deletedAt: null } });
+  }
+
+  async softDelete(businessId: string, id: string) {
+    const customer = await this.prisma.customer.findFirst({
+      where: { id, businessId, deletedAt: null },
+    });
+    if (!customer) throw new NotFoundException('Customer not found');
+    return this.prisma.customer.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    });
   }
 
   async findOrCreateByPhone(businessId: string, phone: string, name?: string) {

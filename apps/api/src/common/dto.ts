@@ -292,6 +292,15 @@ export class CreateServiceDto {
   @IsIn(['CONSULT', 'TREATMENT', 'OTHER'])
   kind?: string;
 
+  @IsBoolean()
+  @IsOptional()
+  depositRequired?: boolean;
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  depositAmount?: number;
+
   @IsObject()
   @IsOptional()
   @IsShallowJson()
@@ -327,6 +336,15 @@ export class UpdateServiceDto {
   @IsOptional()
   @IsIn(['CONSULT', 'TREATMENT', 'OTHER'])
   kind?: string;
+
+  @IsBoolean()
+  @IsOptional()
+  depositRequired?: boolean;
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  depositAmount?: number;
 
   @IsObject()
   @IsOptional()

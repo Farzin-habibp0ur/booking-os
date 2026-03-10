@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import CalendarSyncPageWrapper from './page';
 
 const mockPush = jest.fn();
@@ -60,6 +60,7 @@ function setupMockApi(opts?: {
     if (url === '/calendar-sync/connections') return Promise.resolve(connections);
     if (url === '/calendar-sync/providers') return Promise.resolve(providers);
     if (url === '/calendar-sync/ical-feed-url') return Promise.resolve({ url: icalUrl });
+    if (url === '/business/calendar-hours') return Promise.resolve({ startHour: 8, endHour: 19 });
     return Promise.resolve(null);
   });
 }
@@ -105,6 +106,52 @@ describe('CalendarSyncPageWrapper', () => {
     await waitFor(() => {
       expect(screen.getByText('calendar_sync.ical_feed')).toBeInTheDocument();
       expect(screen.getByDisplayValue('https://example.com/ical/feed123')).toBeInTheDocument();
+    });
+  });
+
+  test('shows business hours section with dropdowns', async () => {
+    setupMockApi();
+    render(<CalendarSyncPageWrapper />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Business Hours')).toBeInTheDocument();
+      expect(screen.getByLabelText('Start hour')).toBeInTheDocument();
+      expect(screen.getByLabelText('End hour')).toBeInTheDocument();
+      expect(screen.getByText('Save Hours')).toBeInTheDocument();
+    });
+  });
+
+  test('saves business hours on click', async () => {
+    setupMockApi();
+    mockApi.patch.mockResolvedValue({});
+    render(<CalendarSyncPageWrapper />);
+
+    await waitFor(() => screen.getByText('Business Hours'));
+
+    fireEvent.change(screen.getByLabelText('Start hour'), { target: { value: '7' } });
+    fireEvent.change(screen.getByLabelText('End hour'), { target: { value: '21' } });
+    fireEvent.click(screen.getByText('Save Hours'));
+
+    await waitFor(() => {
+      expect(mockApi.patch).toHaveBeenCalledWith('/business/calendar-hours', {
+        startHour: 7,
+        endHour: 21,
+      });
+    });
+  });
+
+  test('shows error when start hour >= end hour', async () => {
+    setupMockApi();
+    render(<CalendarSyncPageWrapper />);
+
+    await waitFor(() => screen.getByText('Business Hours'));
+
+    fireEvent.change(screen.getByLabelText('Start hour'), { target: { value: '20' } });
+    fireEvent.change(screen.getByLabelText('End hour'), { target: { value: '8' } });
+    fireEvent.click(screen.getByText('Save Hours'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Start hour must be before end hour')).toBeInTheDocument();
     });
   });
 

@@ -1828,4 +1828,56 @@ describe('BusinessService', () => {
       });
     });
   });
+
+  // ────────────────────────────────────────────────────────────
+  // Calendar Hours
+  // ────────────────────────────────────────────────────────────
+  describe('getCalendarHours', () => {
+    it('returns defaults when no config set', async () => {
+      prisma.business.findUnique.mockResolvedValue({ id: 'biz1', packConfig: {} } as any);
+
+      const result = await service.getCalendarHours('biz1');
+
+      expect(result).toEqual({ startHour: 8, endHour: 19 });
+    });
+
+    it('returns saved calendar hours from packConfig', async () => {
+      prisma.business.findUnique.mockResolvedValue({
+        id: 'biz1',
+        packConfig: { calendarHours: { startHour: 6, endHour: 22 } },
+      } as any);
+
+      const result = await service.getCalendarHours('biz1');
+
+      expect(result).toEqual({ startHour: 6, endHour: 22 });
+    });
+  });
+
+  describe('updateCalendarHours', () => {
+    it('saves calendar hours to packConfig', async () => {
+      prisma.business.findUnique.mockResolvedValue({ id: 'biz1', packConfig: {} } as any);
+      prisma.business.update.mockResolvedValue({ id: 'biz1' } as any);
+
+      await service.updateCalendarHours('biz1', { startHour: 7, endHour: 20 });
+
+      expect(prisma.business.update).toHaveBeenCalledWith({
+        where: { id: 'biz1' },
+        data: { packConfig: { calendarHours: { startHour: 7, endHour: 20 } } },
+      });
+    });
+
+    it('throws when start hour >= end hour', async () => {
+      prisma.business.findUnique.mockResolvedValue({ id: 'biz1', packConfig: {} } as any);
+
+      await expect(
+        service.updateCalendarHours('biz1', { startHour: 20, endHour: 8 }),
+      ).rejects.toThrow('Start hour must be before end hour');
+    });
+
+    it('throws when hour is out of range', async () => {
+      await expect(service.updateCalendarHours('biz1', { startHour: 25 })).rejects.toThrow(
+        'Start hour must be between 0 and 23',
+      );
+    });
+  });
 });

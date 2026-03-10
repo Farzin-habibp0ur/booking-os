@@ -85,6 +85,50 @@ describe('AvailabilityService', () => {
       });
     });
 
+    it('filters staff by service capability when StaffServicePrice records exist', async () => {
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        businessId: 'biz1',
+        durationMins: 30,
+      } as any);
+      prisma.staff.findMany.mockResolvedValue([
+        { id: 'staff1', name: 'Alice' },
+        { id: 'staff2', name: 'Bob' },
+      ] as any);
+      // Only staff1 is assigned to svc1
+      prisma.staffServicePrice.findMany.mockResolvedValue([{ staffId: 'staff1' }] as any);
+      prisma.workingHours.findUnique.mockResolvedValue(null);
+
+      await service.getAvailableSlots('biz1', FUTURE_DATE, 'svc1');
+
+      // workingHours should only be queried for staff1 (the one with the capability)
+      expect(prisma.workingHours.findUnique).toHaveBeenCalledTimes(1);
+      expect(prisma.workingHours.findUnique).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { staffId_dayOfWeek: { staffId: 'staff1', dayOfWeek: FUTURE_DATE_DOW } },
+        }),
+      );
+    });
+
+    it('allows all staff when no StaffServicePrice records exist for service', async () => {
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        businessId: 'biz1',
+        durationMins: 30,
+      } as any);
+      prisma.staff.findMany.mockResolvedValue([
+        { id: 'staff1', name: 'Alice' },
+        { id: 'staff2', name: 'Bob' },
+      ] as any);
+      prisma.staffServicePrice.findMany.mockResolvedValue([]);
+      prisma.workingHours.findUnique.mockResolvedValue(null);
+
+      await service.getAvailableSlots('biz1', FUTURE_DATE, 'svc1');
+
+      // Both staff should be processed (backward compatibility)
+      expect(prisma.workingHours.findUnique).toHaveBeenCalledTimes(2);
+    });
+
     it('skips staff with no working hours for the target day', async () => {
       prisma.service.findFirst.mockResolvedValue({
         id: 'svc1',

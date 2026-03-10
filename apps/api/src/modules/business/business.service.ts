@@ -176,6 +176,35 @@ export class BusinessService {
     });
   }
 
+  async getCalendarHours(id: string) {
+    const business = await this.prisma.business.findUnique({ where: { id } });
+    if (!business) return null;
+    const packConfig = (business.packConfig as any) || {};
+    const defaults = { startHour: 8, endHour: 19 };
+    return { ...defaults, ...(packConfig.calendarHours || {}) };
+  }
+
+  async updateCalendarHours(id: string, data: { startHour?: number; endHour?: number }) {
+    if (data.startHour !== undefined && (data.startHour < 0 || data.startHour > 23)) {
+      throw new BadRequestException('Start hour must be between 0 and 23');
+    }
+    if (data.endHour !== undefined && (data.endHour < 0 || data.endHour > 23)) {
+      throw new BadRequestException('End hour must be between 0 and 23');
+    }
+    const business = await this.prisma.business.findUnique({ where: { id } });
+    if (!business) return null;
+    const packConfig = (business.packConfig as any) || {};
+    const current = packConfig.calendarHours || { startHour: 8, endHour: 19 };
+    const merged = { ...current, ...data };
+    if (merged.startHour >= merged.endHour) {
+      throw new BadRequestException('Start hour must be before end hour');
+    }
+    return this.prisma.business.update({
+      where: { id },
+      data: { packConfig: { ...packConfig, calendarHours: merged } },
+    });
+  }
+
   async getBranding(id: string) {
     const business = await this.prisma.business.findUnique({ where: { id } });
     if (!business) return null;

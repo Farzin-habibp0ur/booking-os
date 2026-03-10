@@ -41,12 +41,21 @@ export class CustomerController {
   @Get()
   list(
     @BusinessId() businessId: string,
-    @Query() query: { search?: string; page?: string; pageSize?: string },
+    @Query()
+    query: {
+      search?: string;
+      page?: string;
+      pageSize?: string;
+      sortBy?: string;
+      sortOrder?: string;
+    },
   ) {
     return this.customerService.findAll(businessId, {
       search: query.search,
       page: query.page ? parseInt(query.page) : undefined,
       pageSize: query.pageSize ? parseInt(query.pageSize) : undefined,
+      sortBy: query.sortBy,
+      sortOrder: query.sortOrder,
     });
   }
 
@@ -271,5 +280,10 @@ export class CustomerController {
     @Body() body: { includeMessages?: boolean },
   ) {
     return this.customerService.createFromConversations(businessId, body.includeMessages !== false);
+  }
+
+  @Delete(':id')
+  async deleteCustomer(@BusinessId() businessId: string, @Param('id') id: string) {
+    return this.customerService.softDelete(businessId, id);
   }
 }

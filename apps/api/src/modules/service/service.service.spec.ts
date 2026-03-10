@@ -77,6 +77,61 @@ describe('ServiceService', () => {
     });
   });
 
+  describe('deposit validation', () => {
+    it('creates service with deposit', async () => {
+      const data = {
+        name: 'Facial',
+        durationMins: 60,
+        price: 200,
+        depositRequired: true,
+        depositAmount: 50,
+      };
+      prisma.service.create.mockResolvedValue({ id: 's1', ...data } as any);
+
+      const result = await serviceService.create('biz1', data);
+
+      expect(result.id).toBe('s1');
+      expect(prisma.service.create).toHaveBeenCalledWith({
+        data: { businessId: 'biz1', ...data },
+      });
+    });
+
+    it('throws if deposit required but no amount', async () => {
+      const data = { name: 'Facial', durationMins: 60, price: 200, depositRequired: true };
+
+      await expect(serviceService.create('biz1', data)).rejects.toThrow(
+        'Deposit amount is required',
+      );
+    });
+
+    it('throws if deposit amount exceeds price on update', async () => {
+      prisma.service.findUniqueOrThrow.mockResolvedValue({
+        id: 's1',
+        price: 100,
+        depositRequired: true,
+        depositAmount: 50,
+      } as any);
+
+      await expect(serviceService.update('biz1', 's1', { depositAmount: 150 })).rejects.toThrow(
+        'Deposit amount cannot exceed service price',
+      );
+    });
+
+    it('allows update when deposit amount is valid', async () => {
+      prisma.service.findUniqueOrThrow.mockResolvedValue({
+        id: 's1',
+        price: 200,
+        depositRequired: true,
+        depositAmount: 50,
+      } as any);
+      prisma.service.update.mockResolvedValue({ id: 's1', depositAmount: 75 } as any);
+
+      const result = await serviceService.update('biz1', 's1', { depositAmount: 75 });
+
+      expect(result.depositAmount).toBe(75);
+    });
+  });
+
   describe('ServiceKind', () => {
     it('creates service with kind CONSULT', async () => {
       const data = { name: 'Initial Consult', durationMins: 20, price: 0, kind: 'CONSULT' };

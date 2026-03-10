@@ -28,12 +28,18 @@ export class StaffService {
     createdAt: true,
   } as const;
 
-  async findAll(businessId: string) {
-    // Two queries: one safe (no passwordHash), one to check invite status
+  private static readonly VALID_SORT_FIELDS = ['name', 'email', 'role', 'createdAt'];
+
+  async findAll(businessId: string, query?: { sortBy?: string; sortOrder?: string }) {
+    let orderBy: any = { createdAt: 'asc' };
+    if (query?.sortBy && StaffService.VALID_SORT_FIELDS.includes(query.sortBy)) {
+      const dir = query.sortOrder === 'asc' ? 'asc' : 'desc';
+      orderBy = { [query.sortBy]: dir };
+    }
     const staff = await this.prisma.staff.findMany({
       where: { businessId },
       select: { ...StaffService.SAFE_SELECT, passwordHash: true },
-      orderBy: { createdAt: 'asc' },
+      orderBy,
     });
     return staff.map(({ passwordHash, ...s }) => ({
       ...s,
@@ -226,6 +232,39 @@ export class StaffService {
 
     // Return the updated pricing
     return this.getServicePricing(businessId, staffId);
+  }
+
+  async assignServices(businessId: string, staffId: string, serviceIds: string[]) {
+    const staff = await this.prisma.staff.findFirst({
+      where: { id: staffId, businessId },
+      select: { id: true },
+    });
+    if (!staff) throw new NotFoundException('Staff member not found');
+
+    await this.prisma.$transaction(async (tx) => {
+      // Remove services not in the new list (but preserve price overrides for kept services)
+      await tx.staffServicePrice.deleteMany({
+        where: { staffId, businessId, serviceId: { notIn: serviceIds } },
+      });
+
+      // Upsert records for each assigned service (price=null means use default)
+      for (const serviceId of serviceIds) {
+        await tx.staffServicePrice.upsert({
+          where: { staffId_serviceId: { staffId, serviceId } },
+          create: { staffId, serviceId, businessId },
+          update: {}, // don't change existing price
+        });
+      }
+    });
+
+    return this.getServicePricing(businessId, staffId);
+  }
+
+  async getAssignedServices(businessId: string, staffId: string) {
+    return this.prisma.staffServicePrice.findMany({
+      where: { staffId, businessId },
+      select: { serviceId: true, price: true },
+    });
   }
 
   async getStaffPriceForService(staffId: string, serviceId: string): Promise<number | null> {

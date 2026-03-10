@@ -17,6 +17,7 @@ import {
 import BulkActionBar from '@/components/bulk-action-bar';
 import TooltipNudge from '@/components/tooltip-nudge';
 import { ViewPicker } from '@/components/saved-views';
+import { SortableHeader } from '@/components/sortable-header';
 
 const statusColors: Record<string, string> = {
   ACTIVE: 'bg-sage-100 text-sage-700',
@@ -40,7 +41,22 @@ export default function WaitlistPage() {
   const [services, setServices] = useState<any[]>([]);
   const [activeViewId, setActiveViewId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [sortBy, setSortBy] = useState<string | null>(null);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const { toast } = useToast();
+
+  const handleSort = (column: string) => {
+    if (sortBy === column) {
+      if (sortOrder === 'desc') {
+        setSortOrder('asc');
+      } else {
+        setSortBy(null);
+      }
+    } else {
+      setSortBy(column);
+      setSortOrder('desc');
+    }
+  };
 
   const currentFilters = { status: statusFilter, serviceId: serviceFilter };
 
@@ -60,6 +76,10 @@ export default function WaitlistPage() {
     const params = new URLSearchParams();
     if (statusFilter) params.set('status', statusFilter);
     if (serviceFilter) params.set('serviceId', serviceFilter);
+    if (sortBy) {
+      params.set('sortBy', sortBy);
+      params.set('sortOrder', sortOrder);
+    }
     const qs = params.toString() ? `?${params.toString()}` : '';
     api
       .get<any[]>(`/waitlist${qs}`)
@@ -70,7 +90,7 @@ export default function WaitlistPage() {
 
   useEffect(() => {
     load();
-  }, [statusFilter, serviceFilter]);
+  }, [statusFilter, serviceFilter, sortBy, sortOrder]);
 
   useEffect(() => {
     api
@@ -202,26 +222,40 @@ export default function WaitlistPage() {
                     className="rounded text-sage-600"
                   />
                 </th>
-                <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
-                  Customer
+                <th className="text-left p-3">
+                  <span className="text-xs font-medium text-slate-500 uppercase">Customer</span>
                 </th>
-                <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
-                  Service
+                <th className="text-left p-3">
+                  <span className="text-xs font-medium text-slate-500 uppercase">Service</span>
                 </th>
-                <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
-                  Preferred Staff
+                <th className="text-left p-3">
+                  <span className="text-xs font-medium text-slate-500 uppercase">
+                    Preferred Staff
+                  </span>
                 </th>
-                <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
-                  Time Window
+                <th className="text-left p-3">
+                  <span className="text-xs font-medium text-slate-500 uppercase">Time Window</span>
                 </th>
-                <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
-                  Status
+                <th className="text-left p-3">
+                  <SortableHeader
+                    label="Status"
+                    column="status"
+                    currentSort={sortBy}
+                    currentOrder={sortOrder}
+                    onSort={handleSort}
+                  />
                 </th>
-                <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
-                  Added
+                <th className="text-left p-3">
+                  <SortableHeader
+                    label="Added"
+                    column="createdAt"
+                    currentSort={sortBy}
+                    currentOrder={sortOrder}
+                    onSort={handleSort}
+                  />
                 </th>
-                <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
-                  Actions
+                <th className="text-left p-3">
+                  <span className="text-xs font-medium text-slate-500 uppercase">Actions</span>
                 </th>
               </tr>
             </thead>

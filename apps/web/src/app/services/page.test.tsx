@@ -286,6 +286,66 @@ describe('ServicesPage', () => {
     });
   });
 
+  // ─── Deposit Amount Tests ────────────────────────────────────────────────
+
+  test('shows deposit amount input when deposit toggle is checked', async () => {
+    mockApi.get.mockResolvedValue([]);
+    render(<ServicesPage />);
+    await waitFor(() => screen.getByText('services.add_button'));
+
+    fireEvent.click(screen.getByText('services.add_button'));
+    await waitFor(() => screen.getByText('services.form_title_add'));
+
+    // Toggle deposit required
+    const depositCheckbox = screen
+      .getByText('services.deposit_required')
+      .closest('label')!
+      .querySelector('input')!;
+    await userEvent.click(depositCheckbox);
+
+    await waitFor(() => {
+      expect(screen.getByText('Deposit Amount ($)')).toBeInTheDocument();
+      expect(screen.getByPlaceholderText('0.00')).toBeInTheDocument();
+    });
+  });
+
+  test('includes deposit amount in save payload', async () => {
+    mockApi.get.mockResolvedValue([]);
+    mockApi.post.mockResolvedValue({});
+    render(<ServicesPage />);
+    await waitFor(() => screen.getByText('services.add_button'));
+
+    fireEvent.click(screen.getByText('services.add_button'));
+    await waitFor(() => screen.getByText('services.form_title_add'));
+
+    const nameInput = screen.getByPlaceholderText('services.name_placeholder');
+    await userEvent.clear(nameInput);
+    await userEvent.type(nameInput, 'Deposit Service');
+
+    // Toggle deposit and set amount
+    const depositCheckbox = screen
+      .getByText('services.deposit_required')
+      .closest('label')!
+      .querySelector('input')!;
+    await userEvent.click(depositCheckbox);
+
+    await waitFor(() => screen.getByPlaceholderText('0.00'));
+    const amountInput = screen.getByPlaceholderText('0.00');
+    await userEvent.type(amountInput, '50');
+
+    fireEvent.click(screen.getByText('common.create'));
+
+    await waitFor(() => {
+      expect(mockApi.post).toHaveBeenCalledWith(
+        '/services',
+        expect.objectContaining({
+          depositRequired: true,
+          depositAmount: 50,
+        }),
+      );
+    });
+  });
+
   // ─── Error Toast Tests ─────────────────────────────────────────────────
 
   test('shows error toast when services API fails on load', async () => {

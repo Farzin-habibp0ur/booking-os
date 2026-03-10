@@ -51,6 +51,9 @@ export default function CustomerDetailPage() {
   const [newTag, setNewTag] = useState('');
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [showSendMessage, setShowSendMessage] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteConfirmName, setDeleteConfirmName] = useState('');
+  const [deleting, setDeleting] = useState(false);
   const { toast } = useToast();
 
   // Notes state
@@ -229,6 +232,21 @@ export default function CustomerDetailPage() {
     }
   };
 
+  const handleDeleteCustomer = async () => {
+    if (deleteConfirmName !== customer?.name) return;
+    setDeleting(true);
+    try {
+      await api.del(`/customers/${id}`);
+      toast('Customer deleted');
+      router.push('/customers');
+    } catch (err: any) {
+      toast(err.message || 'Failed to delete customer', 'error');
+    } finally {
+      setDeleting(false);
+      setShowDeleteConfirm(false);
+    }
+  };
+
   if (loading)
     return (
       <div className="p-6 flex items-center justify-center h-64">
@@ -340,8 +358,52 @@ export default function CustomerDetailPage() {
           >
             <Pencil size={14} /> {t('customer_detail.edit_profile')}
           </button>
+          <button
+            onClick={() => {
+              setShowDeleteConfirm(true);
+              setDeleteConfirmName('');
+            }}
+            className="flex items-center gap-1.5 border border-red-200 text-red-600 px-4 py-2 rounded-xl text-sm hover:bg-red-50 transition-colors active:scale-95 btn-press"
+          >
+            <Trash2 size={14} /> Delete
+          </button>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-soft-lg p-6 w-full max-w-sm">
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">Delete Customer</h3>
+            <p className="text-sm text-slate-600 mb-4">
+              This will permanently remove this customer record. Type{' '}
+              <strong>{customer?.name}</strong> to confirm.
+            </p>
+            <input
+              value={deleteConfirmName}
+              onChange={(e) => setDeleteConfirmName(e.target.value)}
+              placeholder="Type customer name to confirm"
+              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm mb-4"
+              data-testid="delete-confirm-input"
+            />
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="px-4 py-2 border rounded-xl text-sm transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteCustomer}
+                disabled={deleteConfirmName !== customer?.name || deleting}
+                className="px-4 py-2 bg-red-600 text-white rounded-xl text-sm hover:bg-red-700 transition-colors disabled:opacity-50"
+              >
+                {deleting ? 'Deleting...' : 'Delete Customer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Scrollable Content */}
       <div className={cn('max-w-3xl mx-auto', SPACING.page)}>

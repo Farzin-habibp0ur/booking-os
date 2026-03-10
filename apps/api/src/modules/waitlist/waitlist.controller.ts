@@ -27,8 +27,16 @@ export class WaitlistController {
     @Query('status') status?: string,
     @Query('serviceId') serviceId?: string,
     @Query('staffId') staffId?: string,
+    @Query('sortBy') sortBy?: string,
+    @Query('sortOrder') sortOrder?: string,
   ) {
-    return this.waitlistService.getEntries(businessId, { status, serviceId, staffId });
+    return this.waitlistService.getEntries(businessId, {
+      status,
+      serviceId,
+      staffId,
+      sortBy,
+      sortOrder,
+    });
   }
 
   @Post('bulk')

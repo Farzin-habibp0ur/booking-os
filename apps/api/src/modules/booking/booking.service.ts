@@ -177,7 +177,7 @@ export class BookingService {
           staffId_serviceId: { staffId: data.staffId, serviceId: data.serviceId },
         },
       });
-      if (staffOverride) {
+      if (staffOverride && staffOverride.price !== null) {
         effectivePrice = staffOverride.price;
       }
     }

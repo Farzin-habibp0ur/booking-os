@@ -225,6 +225,7 @@ function ServiceForm({
   const [price, setPrice] = useState(initial?.price || 0);
   const [category, setCategory] = useState(initial?.category || 'General');
   const [depositRequired, setDepositRequired] = useState(initial?.depositRequired || false);
+  const [depositAmount, setDepositAmount] = useState(initial?.depositAmount || '');
   const [kind, setKind] = useState(initial?.kind || 'OTHER');
   const [bufferBefore, setBufferBefore] = useState(initial?.bufferBefore || 0);
   const [bufferAfter, setBufferAfter] = useState(initial?.bufferAfter || 0);
@@ -239,6 +240,7 @@ function ServiceForm({
       category,
       kind,
       depositRequired,
+      depositAmount: depositRequired && depositAmount ? Number(depositAmount) : null,
       bufferBefore: Number(bufferBefore),
       bufferAfter: Number(bufferAfter),
     };
@@ -380,15 +382,44 @@ function ServiceForm({
             </div>
           </div>
 
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={depositRequired}
-              onChange={(e) => setDepositRequired(e.target.checked)}
-              className="rounded"
-            />
-            <span className="text-sm">{t('services.deposit_required')}</span>
-          </label>
+          <div className="space-y-2">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={depositRequired}
+                onChange={(e) => setDepositRequired(e.target.checked)}
+                className="rounded"
+              />
+              <span className="text-sm">{t('services.deposit_required')}</span>
+            </label>
+            {depositRequired && (
+              <div>
+                <label className="block text-sm font-medium mb-1">Deposit Amount ($)</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">
+                    $
+                  </span>
+                  <input
+                    value={depositAmount}
+                    onChange={(e) => setDepositAmount(e.target.value)}
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    max={price || undefined}
+                    required
+                    placeholder="0.00"
+                    className="w-full border border-slate-200 rounded-xl px-3 py-2 pl-7 text-sm"
+                  />
+                </div>
+                {Number(price) > 0 && Number(depositAmount) > 0 && (
+                  <p className="text-[11px] text-slate-500 mt-1">
+                    Customers will pay ${Number(depositAmount).toFixed(2)} of $
+                    {Number(price).toFixed(2)} when booking online
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
 
           <div className="flex items-center justify-between pt-2 border-t">
             <div>
