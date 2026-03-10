@@ -14,6 +14,20 @@ export class ReferralService {
     private config: ConfigService,
   ) {}
 
+  private getWebUrl(): string {
+    const webUrl = this.config.get<string>('WEB_URL');
+    if (webUrl) return webUrl;
+
+    // Fallback: derive from CORS_ORIGINS (first origin is the web app)
+    const corsOrigins = this.config.get<string>('CORS_ORIGINS');
+    if (corsOrigins) {
+      const firstOrigin = corsOrigins.split(',')[0].trim();
+      if (firstOrigin && !firstOrigin.includes('localhost')) return firstOrigin;
+    }
+
+    return 'http://localhost:3000';
+  }
+
   /**
    * Generate a unique referral code for a business.
    * Called lazily on first access or on business creation.
@@ -43,8 +57,7 @@ export class ReferralService {
    */
   async getReferralLink(businessId: string): Promise<string> {
     const code = await this.getOrCreateReferralCode(businessId);
-    const webUrl = this.config.get<string>('WEB_URL') || 'http://localhost:3000';
-    return `${webUrl}/signup?ref=${code}`;
+    return `${this.getWebUrl()}/signup?ref=${code}`;
   }
 
   /**
@@ -196,8 +209,7 @@ export class ReferralService {
       .filter((r) => r.status === 'CREDITED')
       .reduce((sum, r) => sum + r.creditAmount, 0);
 
-    const webUrl = this.config.get<string>('WEB_URL') || 'http://localhost:3000';
-    const referralLink = `${webUrl}/signup?ref=${code}`;
+    const referralLink = `${this.getWebUrl()}/signup?ref=${code}`;
 
     return {
       referralCode: code,

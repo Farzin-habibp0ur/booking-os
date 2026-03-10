@@ -196,6 +196,60 @@ describe('ReferralService', () => {
     });
   });
 
+  describe('getWebUrl fallback logic', () => {
+    it('uses CORS_ORIGINS when WEB_URL is not set', async () => {
+      // Create a service instance without WEB_URL but with CORS_ORIGINS
+      const customConfig = {
+        get: jest.fn((key: string) => {
+          if (key === 'CORS_ORIGINS')
+            return 'https://businesscommandcentre.com,https://www.businesscommandcentre.com';
+          if (key === 'WEB_URL') return undefined;
+          return undefined;
+        }),
+      };
+
+      const module = await Test.createTestingModule({
+        providers: [
+          ReferralService,
+          { provide: PrismaService, useValue: prisma },
+          { provide: ConfigService, useValue: customConfig },
+        ],
+      }).compile();
+
+      const svcWithCors = module.get(ReferralService);
+
+      prisma.business.findUnique.mockResolvedValue({
+        referralCode: 'TESTCODE',
+      } as any);
+
+      const link = await svcWithCors.getReferralLink('biz1');
+      expect(link).toBe('https://businesscommandcentre.com/signup?ref=TESTCODE');
+    });
+
+    it('falls back to localhost when neither WEB_URL nor CORS_ORIGINS is set', async () => {
+      const customConfig = {
+        get: jest.fn(() => undefined),
+      };
+
+      const module = await Test.createTestingModule({
+        providers: [
+          ReferralService,
+          { provide: PrismaService, useValue: prisma },
+          { provide: ConfigService, useValue: customConfig },
+        ],
+      }).compile();
+
+      const svcNoUrl = module.get(ReferralService);
+
+      prisma.business.findUnique.mockResolvedValue({
+        referralCode: 'FALLBACK',
+      } as any);
+
+      const link = await svcNoUrl.getReferralLink('biz1');
+      expect(link).toBe('http://localhost:3000/signup?ref=FALLBACK');
+    });
+  });
+
   describe('getReferralStats', () => {
     it('returns stats with code, link, and referral list', async () => {
       prisma.business.findUnique.mockResolvedValue({
