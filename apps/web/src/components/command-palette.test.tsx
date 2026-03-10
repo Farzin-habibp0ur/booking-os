@@ -34,6 +34,7 @@ const mockSearchResults = {
     },
   ],
   services: [{ id: 's1', name: 'Hydra Facial', durationMins: 60, price: 150 }],
+  staff: [{ id: 'st1', name: 'Dr. Sarah', email: 'sarah@clinic.com', role: 'ADMIN' }],
   conversations: [
     {
       id: 'conv1',
@@ -42,7 +43,7 @@ const mockSearchResults = {
       status: 'OPEN',
     },
   ],
-  totals: { customers: 1, bookings: 1, services: 1, conversations: 1 },
+  totals: { customers: 1, bookings: 1, services: 1, staff: 1, conversations: 1 },
 };
 
 const defaultProps = {
@@ -87,7 +88,7 @@ describe('CommandPalette', () => {
     expect(mockGet).not.toHaveBeenCalled();
 
     act(() => {
-      jest.advanceTimersByTime(250);
+      jest.advanceTimersByTime(300);
     });
 
     await waitFor(() => {
@@ -105,7 +106,7 @@ describe('CommandPalette', () => {
     fireEvent.change(input, { target: { value: 'Alice' } });
 
     act(() => {
-      jest.advanceTimersByTime(250);
+      jest.advanceTimersByTime(300);
     });
 
     await waitFor(() => {
@@ -126,7 +127,7 @@ describe('CommandPalette', () => {
     fireEvent.change(input, { target: { value: 'Alice' } });
 
     act(() => {
-      jest.advanceTimersByTime(250);
+      jest.advanceTimersByTime(300);
     });
 
     await waitFor(() => {
@@ -147,7 +148,7 @@ describe('CommandPalette', () => {
     fireEvent.change(input, { target: { value: 'Alice' } });
 
     act(() => {
-      jest.advanceTimersByTime(250);
+      jest.advanceTimersByTime(300);
     });
 
     await waitFor(() => {
@@ -181,7 +182,7 @@ describe('CommandPalette', () => {
     fireEvent.change(input, { target: { value: 'Alice' } });
 
     act(() => {
-      jest.advanceTimersByTime(250);
+      jest.advanceTimersByTime(300);
     });
 
     await waitFor(() => {
@@ -213,7 +214,7 @@ describe('CommandPalette', () => {
     fireEvent.change(input, { target: { value: 'Alice' } });
 
     act(() => {
-      jest.advanceTimersByTime(250);
+      jest.advanceTimersByTime(300);
     });
 
     await waitFor(() => {
@@ -236,7 +237,7 @@ describe('CommandPalette', () => {
     fireEvent.change(input, { target: { value: 'Alice' } });
 
     act(() => {
-      jest.advanceTimersByTime(250);
+      jest.advanceTimersByTime(300);
     });
 
     await waitFor(() => {
@@ -265,7 +266,7 @@ describe('CommandPalette', () => {
     fireEvent.change(input, { target: { value: 'zzzzz' } });
 
     act(() => {
-      jest.advanceTimersByTime(250);
+      jest.advanceTimersByTime(300);
     });
 
     await waitFor(() => {
@@ -303,7 +304,7 @@ describe('CommandPalette', () => {
     fireEvent.change(input, { target: { value: 'Alice' } });
 
     act(() => {
-      jest.advanceTimersByTime(250);
+      jest.advanceTimersByTime(300);
     });
 
     await waitFor(() => {
@@ -326,7 +327,7 @@ describe('CommandPalette', () => {
     fireEvent.change(input, { target: { value: 'Alice' } });
 
     act(() => {
-      jest.advanceTimersByTime(250);
+      jest.advanceTimersByTime(300);
     });
 
     await waitFor(() => {
@@ -342,7 +343,7 @@ describe('CommandPalette', () => {
     fireEvent.change(input, { target: { value: 'Alice' } });
 
     act(() => {
-      jest.advanceTimersByTime(250);
+      jest.advanceTimersByTime(300);
     });
 
     await waitFor(() => {
@@ -369,7 +370,7 @@ describe('CommandPalette', () => {
     fireEvent.change(input, { target: { value: 'zzzzz' } });
 
     act(() => {
-      jest.advanceTimersByTime(250);
+      jest.advanceTimersByTime(300);
     });
 
     await waitFor(() => {
@@ -377,5 +378,74 @@ describe('CommandPalette', () => {
     });
 
     expect(screen.queryByTestId('view-all-results')).not.toBeInTheDocument();
+  });
+
+  // ─── Quick actions ─────────────────────────────────────────────────
+
+  test('shows quick actions when query is empty', () => {
+    render(<CommandPalette {...defaultProps} />);
+
+    expect(screen.getByText('Quick Actions')).toBeInTheDocument();
+    expect(screen.getByText('New Booking')).toBeInTheDocument();
+    expect(screen.getByText('New Customer')).toBeInTheDocument();
+  });
+
+  test('clicking New Booking navigates and closes', () => {
+    const onClose = jest.fn();
+    render(<CommandPalette isOpen={true} onClose={onClose} />);
+
+    fireEvent.click(screen.getByText('New Booking'));
+
+    expect(mockPush).toHaveBeenCalledWith('/bookings?new=true');
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  test('clicking New Customer navigates and closes', () => {
+    const onClose = jest.fn();
+    render(<CommandPalette isOpen={true} onClose={onClose} />);
+
+    fireEvent.click(screen.getByText('New Customer'));
+
+    expect(mockPush).toHaveBeenCalledWith('/customers?new=true');
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  test('quick actions are hidden when searching', async () => {
+    mockGet.mockResolvedValue(mockSearchResults);
+    render(<CommandPalette {...defaultProps} />);
+
+    const input = screen.getByPlaceholderText('Search customers, bookings, services...');
+    fireEvent.change(input, { target: { value: 'Alice' } });
+
+    act(() => {
+      jest.advanceTimersByTime(300);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Alice Smith')).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText('Quick Actions')).not.toBeInTheDocument();
+  });
+
+  // ─── Staff results ─────────────────────────────────────────────────
+
+  test('displays staff results in search', async () => {
+    mockGet.mockResolvedValue(mockSearchResults);
+    render(<CommandPalette {...defaultProps} />);
+
+    const input = screen.getByPlaceholderText('Search customers, bookings, services...');
+    fireEvent.change(input, { target: { value: 'Sarah' } });
+
+    act(() => {
+      jest.advanceTimersByTime(300);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Dr. Sarah')).toBeInTheDocument();
+    });
+
+    expect(screen.getByTestId('group-staff')).toBeInTheDocument();
+    expect(screen.getByText('Staff')).toBeInTheDocument();
   });
 });

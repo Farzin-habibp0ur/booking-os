@@ -21,10 +21,12 @@ describe('SearchService', () => {
     prisma.customer.findMany.mockResolvedValue([]);
     prisma.booking.findMany.mockResolvedValue([]);
     prisma.service.findMany.mockResolvedValue([]);
+    prisma.staff.findMany.mockResolvedValue([]);
     prisma.conversation.findMany.mockResolvedValue([]);
     prisma.customer.count.mockResolvedValue(0);
     prisma.booking.count.mockResolvedValue(0);
     prisma.service.count.mockResolvedValue(0);
+    prisma.staff.count.mockResolvedValue(0);
     prisma.conversation.count.mockResolvedValue(0);
   }
 
@@ -35,8 +37,9 @@ describe('SearchService', () => {
       customers: [],
       bookings: [],
       services: [],
+      staff: [],
       conversations: [],
-      totals: { customers: 0, bookings: 0, services: 0, conversations: 0 },
+      totals: { customers: 0, bookings: 0, services: 0, staff: 0, conversations: 0 },
     });
     expect(prisma.customer.findMany).not.toHaveBeenCalled();
   });
@@ -48,8 +51,9 @@ describe('SearchService', () => {
       customers: [],
       bookings: [],
       services: [],
+      staff: [],
       conversations: [],
-      totals: { customers: 0, bookings: 0, services: 0, conversations: 0 },
+      totals: { customers: 0, bookings: 0, services: 0, staff: 0, conversations: 0 },
     });
   });
 
@@ -65,6 +69,7 @@ describe('SearchService', () => {
       },
     ];
     const services = [{ id: 's1', name: 'Botox', durationMins: 30, price: 200 }];
+    const staffMembers = [{ id: 'st1', name: 'Alice', email: 'alice@test.com', role: 'ADMIN' }];
     const conversations = [
       { id: 'conv1', customer: { name: 'Alice' }, lastMessageAt: new Date(), status: 'OPEN' },
     ];
@@ -72,10 +77,12 @@ describe('SearchService', () => {
     prisma.customer.findMany.mockResolvedValue(customers as any);
     prisma.booking.findMany.mockResolvedValue(bookings as any);
     prisma.service.findMany.mockResolvedValue(services as any);
+    prisma.staff.findMany.mockResolvedValue(staffMembers as any);
     prisma.conversation.findMany.mockResolvedValue(conversations as any);
     prisma.customer.count.mockResolvedValue(1);
     prisma.booking.count.mockResolvedValue(1);
     prisma.service.count.mockResolvedValue(1);
+    prisma.staff.count.mockResolvedValue(1);
     prisma.conversation.count.mockResolvedValue(1);
 
     const result = await searchService.globalSearch('biz1', 'Alice');
@@ -83,11 +90,13 @@ describe('SearchService', () => {
     expect(result.customers).toEqual(customers);
     expect(result.bookings).toEqual(bookings);
     expect(result.services).toEqual(services);
+    expect(result.staff).toEqual(staffMembers);
     expect(result.conversations).toEqual(conversations);
     expect(result.totals).toEqual({
       customers: 1,
       bookings: 1,
       services: 1,
+      staff: 1,
       conversations: 1,
     });
   });
@@ -151,6 +160,7 @@ describe('SearchService', () => {
     expect(prisma.customer.count).toHaveBeenCalled();
     expect(prisma.booking.findMany).not.toHaveBeenCalled();
     expect(prisma.service.findMany).not.toHaveBeenCalled();
+    expect(prisma.staff.findMany).not.toHaveBeenCalled();
     expect(prisma.conversation.findMany).not.toHaveBeenCalled();
   });
 
@@ -162,6 +172,7 @@ describe('SearchService', () => {
     expect(prisma.customer.findMany).toHaveBeenCalled();
     expect(prisma.service.findMany).toHaveBeenCalled();
     expect(prisma.booking.findMany).not.toHaveBeenCalled();
+    expect(prisma.staff.findMany).not.toHaveBeenCalled();
     expect(prisma.conversation.findMany).not.toHaveBeenCalled();
   });
 
@@ -173,6 +184,7 @@ describe('SearchService', () => {
     expect(prisma.customer.findMany).toHaveBeenCalled();
     expect(prisma.booking.findMany).toHaveBeenCalled();
     expect(prisma.service.findMany).toHaveBeenCalled();
+    expect(prisma.staff.findMany).toHaveBeenCalled();
     expect(prisma.conversation.findMany).toHaveBeenCalled();
   });
 
@@ -182,10 +194,12 @@ describe('SearchService', () => {
     prisma.customer.findMany.mockResolvedValue([]);
     prisma.booking.findMany.mockResolvedValue([]);
     prisma.service.findMany.mockResolvedValue([]);
+    prisma.staff.findMany.mockResolvedValue([]);
     prisma.conversation.findMany.mockResolvedValue([]);
     prisma.customer.count.mockResolvedValue(15);
     prisma.booking.count.mockResolvedValue(8);
     prisma.service.count.mockResolvedValue(3);
+    prisma.staff.count.mockResolvedValue(4);
     prisma.conversation.count.mockResolvedValue(2);
 
     const result = await searchService.globalSearch('biz1', 'test');
@@ -194,6 +208,7 @@ describe('SearchService', () => {
       customers: 15,
       bookings: 8,
       services: 3,
+      staff: 4,
       conversations: 2,
     });
   });
@@ -207,7 +222,31 @@ describe('SearchService', () => {
     expect(result.totals.customers).toBe(5);
     expect(result.totals.bookings).toBe(0);
     expect(result.totals.services).toBe(0);
+    expect(result.totals.staff).toBe(0);
     expect(result.totals.conversations).toBe(0);
+  });
+
+  it('searches staff by name and email', async () => {
+    setupEmptyMocks();
+    prisma.staff.findMany.mockResolvedValue([
+      { id: 'st1', name: 'Sarah', email: 'sarah@test.com', role: 'ADMIN' },
+    ] as any);
+    prisma.staff.count.mockResolvedValue(1);
+
+    const result = await searchService.globalSearch('biz1', 'Sarah');
+
+    expect(result.staff).toHaveLength(1);
+    expect(result.staff[0]).toEqual(
+      expect.objectContaining({ name: 'Sarah', email: 'sarah@test.com' }),
+    );
+    expect(prisma.staff.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          businessId: 'biz1',
+          isActive: true,
+        }),
+      }),
+    );
   });
 
   // ─── Security: Input Validation ─────────────────────────────────────

@@ -11,8 +11,9 @@ export class SearchService {
         customers: [],
         bookings: [],
         services: [],
+        staff: [],
         conversations: [],
-        totals: { customers: 0, bookings: 0, services: 0, conversations: 0 },
+        totals: { customers: 0, bookings: 0, services: 0, staff: 0, conversations: 0 },
       };
     }
 
@@ -42,6 +43,15 @@ export class SearchService {
       name: { contains: q, mode: 'insensitive' as const },
     };
 
+    const staffWhere = {
+      businessId,
+      isActive: true,
+      OR: [
+        { name: { contains: q, mode: 'insensitive' as const } },
+        { email: { contains: q, mode: 'insensitive' as const } },
+      ],
+    };
+
     const conversationWhere = {
       businessId,
       customer: { name: { contains: q, mode: 'insensitive' as const } },
@@ -51,10 +61,12 @@ export class SearchService {
       customers,
       bookings,
       services,
+      staff,
       conversations,
       customerCount,
       bookingCount,
       serviceCount,
+      staffCount,
       conversationCount,
     ] = await Promise.all([
       searchAll || types!.includes('customer')
@@ -90,6 +102,15 @@ export class SearchService {
             orderBy: { name: 'asc' },
           })
         : Promise.resolve([]),
+      searchAll || types!.includes('staff')
+        ? this.prisma.staff.findMany({
+            where: staffWhere,
+            select: { id: true, name: true, email: true, role: true },
+            take: safeLim,
+            skip: offset,
+            orderBy: { name: 'asc' },
+          })
+        : Promise.resolve([]),
       searchAll || types!.includes('conversation')
         ? this.prisma.conversation.findMany({
             where: conversationWhere,
@@ -113,6 +134,9 @@ export class SearchService {
       searchAll || types!.includes('service')
         ? this.prisma.service.count({ where: serviceWhere })
         : Promise.resolve(0),
+      searchAll || types!.includes('staff')
+        ? this.prisma.staff.count({ where: staffWhere })
+        : Promise.resolve(0),
       searchAll || types!.includes('conversation')
         ? this.prisma.conversation.count({ where: conversationWhere })
         : Promise.resolve(0),
@@ -122,11 +146,13 @@ export class SearchService {
       customers,
       bookings,
       services,
+      staff,
       conversations,
       totals: {
         customers: customerCount,
         bookings: bookingCount,
         services: serviceCount,
+        staff: staffCount,
         conversations: conversationCount,
       },
     };

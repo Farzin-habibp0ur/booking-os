@@ -5,7 +5,19 @@ import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { usePack } from '@/lib/vertical-pack';
-import { Search, Users, BookOpen, Scissors, MessageSquare, X, ArrowRight } from 'lucide-react';
+import {
+  Search,
+  Users,
+  BookOpen,
+  Scissors,
+  MessageSquare,
+  UserCog,
+  X,
+  ArrowRight,
+  Plus,
+  CalendarPlus,
+  UserPlus,
+} from 'lucide-react';
 
 interface SearchResults {
   customers: Array<{ id: string; name: string; phone: string; email: string | null }>;
@@ -17,17 +29,31 @@ interface SearchResults {
     service: { name: string };
   }>;
   services: Array<{ id: string; name: string; durationMins: number; price: number }>;
+  staff: Array<{ id: string; name: string; email: string; role: string }>;
   conversations: Array<{
     id: string;
     customer: { name: string };
     lastMessageAt: string;
     status: string;
   }>;
-  totals?: { customers: number; bookings: number; services: number; conversations: number };
+  totals?: {
+    customers: number;
+    bookings: number;
+    services: number;
+    staff: number;
+    conversations: number;
+  };
+}
+
+interface QuickAction {
+  id: string;
+  label: string;
+  href: string;
+  icon: typeof Plus;
 }
 
 interface ResultItem {
-  type: 'customer' | 'booking' | 'service' | 'conversation';
+  type: 'customer' | 'booking' | 'service' | 'staff' | 'conversation';
   id: string;
   label: string;
   sublabel: string;
@@ -70,6 +96,16 @@ function flattenResults(results: SearchResults): ResultItem[] {
     });
   }
 
+  for (const st of results.staff || []) {
+    items.push({
+      type: 'staff',
+      id: `staff-${st.id}`,
+      label: st.name,
+      sublabel: `${st.role} · ${st.email}`,
+      href: `/staff`,
+    });
+  }
+
   for (const conv of results.conversations) {
     items.push({
       type: 'conversation',
@@ -92,6 +128,7 @@ const typeIcons: Record<string, typeof Users> = {
   customer: Users,
   booking: BookOpen,
   service: Scissors,
+  staff: UserCog,
   conversation: MessageSquare,
 };
 
@@ -99,8 +136,14 @@ const defaultTypeLabels: Record<string, string> = {
   customer: 'Customers',
   booking: 'Bookings',
   service: 'Services',
+  staff: 'Staff',
   conversation: 'Conversations',
 };
+
+const QUICK_ACTIONS: QuickAction[] = [
+  { id: 'qa-new-booking', label: 'New Booking', href: '/bookings?new=true', icon: CalendarPlus },
+  { id: 'qa-new-customer', label: 'New Customer', href: '/customers?new=true', icon: UserPlus },
+];
 
 export default function CommandPalette({
   isOpen,
@@ -122,6 +165,7 @@ export default function CommandPalette({
     customer: pack.labels?.customer ? `${pack.labels.customer}s` : defaultTypeLabels.customer,
     booking: pack.labels?.booking ? `${pack.labels.booking}s` : defaultTypeLabels.booking,
     service: pack.labels?.service ? `${pack.labels.service}s` : defaultTypeLabels.service,
+    staff: defaultTypeLabels.staff,
     conversation: defaultTypeLabels.conversation,
   };
 
@@ -150,7 +194,7 @@ export default function CommandPalette({
         })
         .catch(() => setResults([]))
         .finally(() => setLoading(false));
-    }, 200);
+    }, 300);
 
     return () => clearTimeout(timeout);
   }, [query]);
@@ -209,11 +253,12 @@ export default function CommandPalette({
 
   const displayItems = query.length >= 2 ? results : recentItems;
   const showRecent = query.length < 2 && recentItems.length > 0;
+  const showQuickActions = query.length < 2;
 
   // Group results by type for section headers
   const groupedTypes =
     query.length >= 2
-      ? (['customer', 'booking', 'service', 'conversation'] as const).filter((type) =>
+      ? (['customer', 'booking', 'service', 'staff', 'conversation'] as const).filter((type) =>
           displayItems.some((item) => item.type === type),
         )
       : [];
@@ -338,6 +383,34 @@ export default function CommandPalette({
                 </button>
               );
             })}
+
+          {/* Quick actions */}
+          {showQuickActions && (
+            <>
+              <div className="px-4 pt-3 pb-1">
+                <p className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">
+                  Quick Actions
+                </p>
+              </div>
+              {QUICK_ACTIONS.map((action) => {
+                const Icon = action.icon;
+                return (
+                  <button
+                    key={action.id}
+                    onClick={() => {
+                      onClose();
+                      router.push(action.href);
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm hover:bg-slate-50 text-slate-700 transition-colors"
+                    data-testid={action.id}
+                  >
+                    <Icon size={16} className="text-sage-500 flex-shrink-0" />
+                    <span className="font-medium">{action.label}</span>
+                  </button>
+                );
+              })}
+            </>
+          )}
         </div>
 
         {/* View all results link */}
