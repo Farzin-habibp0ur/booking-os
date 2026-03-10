@@ -617,11 +617,12 @@ AI state persisted in `conversation.metadata` JSON for stateful multi-turn flows
 ## 10. CI/CD Pipeline
 
 ```
-Push to main → lint-and-test → docker-build → deploy (Railway)
-Pull request → lint-and-test → docker-build (no deploy)
+Push to main → lint-and-test → docker-build → deploy (Railway) → smoke-test
+Pull request → lint-and-test → docker-build (no deploy, no smoke test)
 ```
 
 - **lint-and-test:** PostgreSQL 16 service, Prisma generate + migrate, format check, lint, test
+- **smoke-test:** Post-deploy production verification (20 checks: health, DB, auth, security headers, CORS, public endpoints)
 - **docker-build:** Multi-stage Docker builds for API and web
 - **deploy:** `railway up --service api/web --detach` (async — takes 2-5 min after CI)
 - **Migrations:** Auto-run via `scripts/docker-entrypoint.sh` on container startup

@@ -347,13 +347,14 @@ gh workflow run ci.yml
 ## CI/CD Pipeline
 
 ```
-Push to main → lint-and-test → docker-build → deploy (Railway)
-Pull request → lint-and-test → docker-build (no deploy)
+Push to main → lint-and-test → docker-build → deploy (Railway) → smoke-test
+Pull request → lint-and-test → docker-build (no deploy, no smoke test)
 ```
 
 - **lint-and-test:** PostgreSQL 16 service container, `npm ci`, Prisma generate + migrate, format check, lint, test
 - **docker-build:** Multi-stage Docker builds for API and web images
 - **deploy:** `railway up --service api/web --detach` (async — Railway build takes 2-5 min after CI passes)
+- **smoke-test:** Runs `scripts/smoke-test.sh` against production after deploy (20 checks: health, DB, auth, security headers, CORS)
 - **Migrations:** Auto-run via `scripts/docker-entrypoint.sh` on container startup
 
 ### Railway Production

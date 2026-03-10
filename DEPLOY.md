@@ -490,8 +490,8 @@ Defined in `.github/workflows/ci.yml`.
 ### Pipeline Flow
 
 ```
-Push to main ──► lint-and-test ──► docker-build ──► deploy
-                                                    (main only)
+Push to main ──► lint-and-test ──► docker-build ──► deploy ──► smoke-test
+                                                   (main only)
 Pull request ──► lint-and-test ──► docker-build
                                    (no deploy)
 ```

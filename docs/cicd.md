@@ -5,8 +5,8 @@ Booking OS uses GitHub Actions for continuous integration and Railway for produc
 ## Pipeline Overview
 
 ```
-Push to main ──► lint-and-test ──► docker-build ──► deploy
-                                                    (main only)
+Push to main ──► lint-and-test ──► docker-build ──► deploy ──► smoke-test
+                                                   (main only)
 Pull request ──► lint-and-test ──► docker-build
                                    (no deploy)
 ```
@@ -17,9 +17,9 @@ The workflow is defined in [`.github/workflows/ci.yml`](../.github/workflows/ci.
 
 | Trigger              | Runs                            |
 | -------------------- | ------------------------------- |
-| Push to `main`       | lint-and-test → docker-build → deploy |
+| Push to `main`       | lint-and-test → docker-build → deploy → smoke-test |
 | Pull request to `main` | lint-and-test → docker-build  |
-| Manual (`workflow_dispatch`) | lint-and-test → docker-build → deploy |
+| Manual (`workflow_dispatch`) | lint-and-test → docker-build → deploy → smoke-test |
 
 ---
 
@@ -139,6 +139,36 @@ exec node dist/apps/api/src/main
 
 ---
 
+## Job 4: smoke-test
+
+**Runner:** `ubuntu-latest`
+**Depends on:** `deploy`
+**Condition:** Only runs on pushes to `main` (not on pull requests)
+**Duration:** ~2 minutes (includes 120s wait for Railway deploy)
+
+### What it does
+
+Runs `scripts/smoke-test.sh` against production to verify the deploy is healthy. The script performs 20 checks across 8 categories:
+
+1. **Health & Infrastructure** — API health endpoint, database connectivity, Redis status
+2. **Web Application** — Homepage, Next.js health route
+3. **API Auth** — Verifies `/auth/me`, `/bookings`, `/customers`, `/services`, `/portal/me` return 401 without token
+4. **Core API Endpoints** — Login and portal OTP endpoints accept/reject requests correctly
+5. **Public Endpoints** — Testimonials public route exists
+6. **Security Headers** — HSTS, X-Frame-Options, no server framework leak
+7. **Cookie Security** — HttpOnly, SameSite=Lax on auth cookies
+8. **CORS** — Access-Control headers present
+
+The job waits 120 seconds after deploy to allow Railway's async build to go live before running checks.
+
+```bash
+./scripts/smoke-test.sh https://businesscommandcentre.com
+```
+
+If any check fails, the job exits with code 1 and the pipeline is marked as failed.
+
+---
+
 ## GitHub Secrets
 
 | Secret          | Purpose                           | How to update                     |
@@ -215,6 +245,11 @@ npm test
 ### Docker build
 ```bash
 docker compose -f docker-compose.prod.yml build
+```
+
+### Production smoke test
+```bash
+./scripts/smoke-test.sh https://businesscommandcentre.com
 ```
 
 ### Manual deploy trigger
