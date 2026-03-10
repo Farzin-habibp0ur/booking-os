@@ -70,6 +70,26 @@ export class ExportController {
     res!.send(csv);
   }
 
+  @Get('staff/export')
+  async exportStaff(
+    @BusinessId() businessId: string,
+    @Query('dateFrom') dateFrom?: string,
+    @Query('dateTo') dateTo?: string,
+    @Query('fields') fields?: string,
+    @Res() res?: Response,
+  ) {
+    const csv = await this.exportService.exportStaffCsv(businessId, {
+      dateFrom,
+      dateTo,
+      fields: fields ? fields.split(',').map((f) => f.trim()) : undefined,
+    });
+
+    const filename = `staff-${new Date().toISOString().split('T')[0]}.csv`;
+    res!.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res!.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res!.send(csv);
+  }
+
   @Get('reports/:reportType/export')
   async exportReport(
     @BusinessId() businessId: string,

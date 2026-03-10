@@ -10,11 +10,13 @@ import {
   CalendarOff,
   Trash2,
   DollarSign,
+  Download,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useI18n } from '@/lib/i18n';
 import { UpgradeNudge } from '@/components/upgrade-nudge';
 import { usePlan } from '@/lib/use-plan';
+import ExportModal from '@/components/export-modal';
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -29,6 +31,7 @@ export default function StaffPage() {
   const [pricing, setPricing] = useState<Record<string, any[]>>({});
   const [tab, setTab] = useState<'hours' | 'timeoff' | 'pricing'>('hours');
   const [saving, setSaving] = useState(false);
+  const [showExport, setShowExport] = useState(false);
 
   // Time off form
   const [toStart, setToStart] = useState('');
@@ -134,12 +137,20 @@ export default function StaffPage() {
     <div className="p-6">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-serif font-semibold text-slate-900">{t('staff.title')}</h1>
-        <button
-          onClick={() => setShowForm(true)}
-          className="flex items-center gap-1 bg-sage-600 text-white px-3 py-2 rounded-xl text-sm hover:bg-sage-700 transition-colors"
-        >
-          <Plus size={16} /> {t('staff.add_button')}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowExport(true)}
+            className="flex items-center gap-1 border px-3 py-2 rounded-xl text-sm hover:bg-slate-50 transition-colors"
+          >
+            <Download size={16} /> Export CSV
+          </button>
+          <button
+            onClick={() => setShowForm(true)}
+            className="flex items-center gap-1 bg-sage-600 text-white px-3 py-2 rounded-xl text-sm hover:bg-sage-700 transition-colors"
+          >
+            <Plus size={16} /> {t('staff.add_button')}
+          </button>
+        </div>
       </div>
 
       <UpgradeNudge
@@ -504,6 +515,19 @@ export default function StaffPage() {
           }}
         />
       )}
+      <ExportModal
+        isOpen={showExport}
+        onClose={() => setShowExport(false)}
+        entity="staff"
+        allFields={[
+          { key: 'id', label: 'ID' },
+          { key: 'name', label: 'Name' },
+          { key: 'email', label: 'Email' },
+          { key: 'role', label: 'Role' },
+          { key: 'isActive', label: 'Active' },
+          { key: 'createdAt', label: 'Created At' },
+        ]}
+      />
     </div>
   );
 }

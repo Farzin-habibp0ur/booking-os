@@ -16,6 +16,7 @@ import { AttentionCards } from './components/attention-card';
 import { BriefingFeed } from '@/components/briefing';
 import { TodayTimeline } from './components/today-timeline';
 import { FeatureDiscovery } from '@/components/feature-discovery';
+import { OnboardingWizard } from '@/components/onboarding-wizard';
 import {
   Calendar,
   MessageSquare,
@@ -84,6 +85,9 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [resending, setResending] = useState(false);
   const [dashboardViews, setDashboardViews] = useState<any[]>([]);
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const [bannerDismissed, setBannerDismissed] = useState(true);
+  const [onboardingIncomplete, setOnboardingIncomplete] = useState(false);
   const { t } = useI18n();
   const { user } = useAuth();
   const { mode } = useMode();
@@ -93,6 +97,22 @@ export default function DashboardPage() {
   useEffect(() => {
     sessionStorage.removeItem('booking-os-login-redirect');
     trackEvent('dashboard_viewed');
+
+    // Check if onboarding wizard banner was dismissed
+    const dismissed = localStorage.getItem('onboarding-wizard-dismissed') === 'true';
+    setBannerDismissed(dismissed);
+
+    // Check onboarding completion status for the banner
+    if (!dismissed) {
+      api
+        .get<{ steps: Record<string, boolean> }>('/business/onboarding-status')
+        .then((data) => {
+          const steps = data.steps;
+          const hasIncomplete = Object.values(steps).some((v) => !v);
+          setOnboardingIncomplete(hasIncomplete);
+        })
+        .catch(() => {});
+    }
   }, []);
 
   const routerRef = useRef(router);
@@ -210,6 +230,41 @@ export default function DashboardPage() {
         title="Your dashboard at a glance"
         description="Track KPIs, upcoming bookings, and attention cards all in one place. Pin saved views to customize your dashboard."
       />
+
+      {/* Onboarding wizard banner */}
+      {!bannerDismissed && onboardingIncomplete && (
+        <div
+          className="bg-sage-50 dark:bg-sage-900/20 border border-sage-200 dark:border-sage-800 rounded-2xl p-4 flex items-center justify-between"
+          data-testid="onboarding-banner"
+        >
+          <div className="flex items-center gap-3">
+            <Zap size={18} className="text-sage-600 shrink-0" />
+            <p className="text-sm text-sage-900 dark:text-sage-200">
+              Complete your setup to get the most out of Booking OS
+            </p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => setWizardOpen(true)}
+              className="text-xs font-medium text-white bg-sage-600 hover:bg-sage-700 px-3 py-1.5 rounded-xl transition-colors"
+            >
+              Continue Setup
+            </button>
+            <button
+              onClick={() => {
+                localStorage.setItem('onboarding-wizard-dismissed', 'true');
+                setBannerDismissed(true);
+              }}
+              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors p-1"
+              aria-label="Dismiss banner"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      <OnboardingWizard isOpen={wizardOpen} onClose={() => setWizardOpen(false)} />
 
       {/* M16: Email verification banner */}
       {user && !user.emailVerified && (

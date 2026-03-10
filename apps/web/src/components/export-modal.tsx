@@ -8,7 +8,7 @@ import { useToast } from '@/lib/toast';
 interface ExportModalProps {
   isOpen: boolean;
   onClose: () => void;
-  entity: 'customers' | 'bookings';
+  entity: 'customers' | 'bookings' | 'staff';
   allFields: { key: string; label: string }[];
 }
 
@@ -66,7 +66,9 @@ export default function ExportModal({ isOpen, onClose, entity, allFields }: Expo
       document.body.removeChild(link);
       URL.revokeObjectURL(downloadUrl);
 
-      toast(`${entity === 'customers' ? 'Customer' : 'Booking'} data exported successfully`);
+      const entityLabel =
+        entity === 'customers' ? 'Customer' : entity === 'staff' ? 'Staff' : 'Booking';
+      toast(`${entityLabel} data exported successfully`);
       onClose();
     } catch (err: any) {
       toast(err.message || 'Export failed', 'error');
@@ -80,7 +82,8 @@ export default function ExportModal({ isOpen, onClose, entity, allFields }: Expo
       <div className="bg-white rounded-2xl shadow-soft-lg w-full max-w-md">
         <div className="flex items-center justify-between p-4 border-b">
           <h2 className="text-lg font-serif font-semibold text-slate-900">
-            Export {entity === 'customers' ? 'Customers' : 'Bookings'}
+            Export{' '}
+            {entity === 'customers' ? 'Customers' : entity === 'staff' ? 'Staff' : 'Bookings'}
           </h2>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
             <X size={18} />

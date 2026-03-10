@@ -7,7 +7,7 @@ export interface CreateActionHistoryDto {
   actorId?: string;
   actorName?: string;
   action: string;
-  entityType: 'BOOKING' | 'CONVERSATION' | 'CUSTOMER' | 'ACTION_CARD' | 'SETTING';
+  entityType: 'BOOKING' | 'CONVERSATION' | 'CUSTOMER' | 'ACTION_CARD' | 'SETTING' | 'STAFF';
   entityId: string;
   description?: string;
   diff?: { before?: any; after?: any };

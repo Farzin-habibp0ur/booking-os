@@ -315,6 +315,152 @@ describe('ExportService', () => {
     });
   });
 
+  describe('exportStaffCsv', () => {
+    it('generates CSV with header row and staff data', async () => {
+      prisma.staff.findMany.mockResolvedValue([
+        {
+          id: 's1',
+          name: 'Sarah Johnson',
+          email: 'sarah@test.com',
+          role: 'ADMIN',
+          isActive: true,
+          createdAt: new Date('2026-01-15T10:00:00Z'),
+        },
+      ] as any);
+
+      const csv = await service.exportStaffCsv('biz1');
+
+      const lines = csv.trim().split('\r\n');
+      expect(lines[0]).toBe('id,name,email,role,isActive,createdAt');
+      expect(lines[1]).toContain('Sarah Johnson');
+      expect(lines[1]).toContain('sarah@test.com');
+      expect(lines[1]).toContain('ADMIN');
+      expect(lines[1]).toContain('true');
+    });
+
+    it('filters by businessId', async () => {
+      prisma.staff.findMany.mockResolvedValue([]);
+
+      await service.exportStaffCsv('biz1');
+
+      expect(prisma.staff.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { businessId: 'biz1' },
+        }),
+      );
+    });
+
+    it('applies date range filter', async () => {
+      prisma.staff.findMany.mockResolvedValue([]);
+
+      await service.exportStaffCsv('biz1', {
+        dateFrom: '2026-01-01',
+        dateTo: '2026-01-31',
+      });
+
+      expect(prisma.staff.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            createdAt: {
+              gte: new Date('2026-01-01'),
+              lte: new Date('2026-01-31'),
+            },
+          }),
+        }),
+      );
+    });
+
+    it('respects field selection', async () => {
+      prisma.staff.findMany.mockResolvedValue([
+        {
+          id: 's1',
+          name: 'Sarah',
+          email: 'sarah@test.com',
+          role: 'ADMIN',
+          isActive: true,
+          createdAt: new Date('2026-01-15'),
+        },
+      ] as any);
+
+      const csv = await service.exportStaffCsv('biz1', {
+        fields: ['name', 'role'],
+      });
+
+      const lines = csv.trim().split('\r\n');
+      expect(lines[0]).toBe('name,role');
+      expect(lines[1]).toBe('Sarah,ADMIN');
+    });
+
+    it('limits to 10000 rows', async () => {
+      prisma.staff.findMany.mockResolvedValue([]);
+
+      await service.exportStaffCsv('biz1');
+
+      expect(prisma.staff.findMany).toHaveBeenCalledWith(expect.objectContaining({ take: 10000 }));
+    });
+
+    it('returns header-only CSV when no staff exist', async () => {
+      prisma.staff.findMany.mockResolvedValue([]);
+
+      const csv = await service.exportStaffCsv('biz1');
+
+      const lines = csv.trim().split('\r\n');
+      expect(lines).toHaveLength(1);
+      expect(lines[0]).toBe('id,name,email,role,isActive,createdAt');
+    });
+
+    it('handles boolean isActive field correctly', async () => {
+      prisma.staff.findMany.mockResolvedValue([
+        {
+          id: 's1',
+          name: 'Active Staff',
+          email: 'a@test.com',
+          role: 'AGENT',
+          isActive: true,
+          createdAt: new Date('2026-01-15'),
+        },
+        {
+          id: 's2',
+          name: 'Inactive Staff',
+          email: 'b@test.com',
+          role: 'AGENT',
+          isActive: false,
+          createdAt: new Date('2026-01-15'),
+        },
+      ] as any);
+
+      const csv = await service.exportStaffCsv('biz1');
+
+      const lines = csv.trim().split('\r\n');
+      expect(lines[1]).toContain('true');
+      expect(lines[2]).toContain('false');
+    });
+
+    it('logs staff export to ActionHistory', async () => {
+      prisma.staff.findMany.mockResolvedValue([
+        {
+          id: 's1',
+          name: 'Sarah',
+          email: 'sarah@test.com',
+          role: 'ADMIN',
+          isActive: true,
+          createdAt: new Date(),
+        },
+      ] as any);
+
+      await service.exportStaffCsv('biz1');
+
+      expect(actionHistoryService.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          businessId: 'biz1',
+          action: 'CSV_EXPORT',
+          entityType: 'STAFF',
+          description: expect.stringContaining('1 staff'),
+        }),
+      );
+    });
+  });
+
   describe('exportReportCsv', () => {
     it('generates CSV for array-based report data', () => {
       const data = [

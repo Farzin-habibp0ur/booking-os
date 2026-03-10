@@ -257,6 +257,62 @@ export class ExportService {
     return rows.join('\r\n') + '\r\n';
   }
 
+  async exportStaffCsv(businessId: string, opts: ExportOptions = {}): Promise<string> {
+    const where: any = { businessId };
+
+    if (opts.dateFrom || opts.dateTo) {
+      where.createdAt = {};
+      if (opts.dateFrom) where.createdAt.gte = new Date(opts.dateFrom);
+      if (opts.dateTo) where.createdAt.lte = new Date(opts.dateTo);
+    }
+
+    const staff = await this.prisma.staff.findMany({
+      where,
+      take: MAX_EXPORT_ROWS,
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const allFields = ['id', 'name', 'email', 'role', 'isActive', 'createdAt'];
+    const fields = opts.fields?.length
+      ? allFields.filter((f) => opts.fields!.includes(f))
+      : allFields;
+
+    const rows: string[] = [toCsvRow(fields)];
+
+    for (const s of staff) {
+      const row = fields.map((f) => {
+        const val = (s as any)[f];
+        if (typeof val === 'boolean') return val ? 'true' : 'false';
+        if (val instanceof Date) return val.toISOString();
+        return val != null ? String(val) : '';
+      });
+      rows.push(toCsvRow(row));
+    }
+
+    this.logger.log(`Exported ${staff.length} staff for business ${businessId}`);
+
+    try {
+      await this.actionHistoryService.create({
+        businessId,
+        actorType: 'STAFF',
+        action: 'CSV_EXPORT',
+        entityType: 'STAFF',
+        entityId: businessId,
+        description: `Exported ${staff.length} staff to CSV`,
+        metadata: {
+          rowCount: staff.length,
+          fields,
+          dateFrom: opts.dateFrom,
+          dateTo: opts.dateTo,
+        },
+      });
+    } catch (err: any) {
+      this.logger.warn(`Failed to log staff export action: ${err.message}`);
+    }
+
+    return rows.join('\r\n') + '\r\n';
+  }
+
   /**
    * Convert report data to CSV. Normalizes single-object responses into an array.
    */

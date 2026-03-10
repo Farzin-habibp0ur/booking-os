@@ -46,6 +46,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import CommandPalette from '@/components/command-palette';
+import NotificationBell from '@/components/notification-bell';
 import { useTheme } from '@/lib/use-theme';
 import { DemoTourProvider, useDemoTour, TourSpotlight, TourTooltip } from '@/components/demo-tour';
 import { ModeProvider, useMode } from '@/lib/use-mode';
@@ -257,16 +258,19 @@ function ShellInner({ children }: { children: ReactNode }) {
       <div className="px-2 pt-2">
         <ModeSwitcher />
       </div>
-      <button
-        onClick={() => setCmdkOpen(true)}
-        className="mx-2 mt-2 flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-slate-500 hover:bg-slate-50 transition-colors w-[calc(100%-1rem)]"
-      >
-        <Search size={16} />
-        <span className="flex-1 text-left">Search...</span>
-        <kbd className="hidden sm:inline text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
-          ⌘K
-        </kbd>
-      </button>
+      <div className="mx-2 mt-2 flex items-center gap-1">
+        <button
+          onClick={() => setCmdkOpen(true)}
+          className="flex-1 flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-slate-500 hover:bg-slate-50 transition-colors"
+        >
+          <Search size={16} />
+          <span className="flex-1 text-left">Search...</span>
+          <kbd className="hidden sm:inline text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+            ⌘K
+          </kbd>
+        </button>
+        <NotificationBell />
+      </div>
       <nav
         role="navigation"
         aria-label="Main navigation"
