@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useToast } from '@/lib/toast';
 import { api } from '@/lib/api';
+import { ListSkeleton } from '@/components/skeleton';
 import { SkillCard } from '@/components/agent-skills/skill-card';
 import { Bot, ArrowLeft } from 'lucide-react';
 
@@ -73,15 +74,7 @@ export default function AgentSkillsPage() {
   };
 
   if (loading) {
-    return (
-      <div className="p-6">
-        <div className="animate-pulse space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-24 bg-slate-100 rounded-2xl" />
-          ))}
-        </div>
-      </div>
-    );
+    return <ListSkeleton rows={4} />;
   }
 
   const proactive = skills.filter((s) => s.category === 'proactive');

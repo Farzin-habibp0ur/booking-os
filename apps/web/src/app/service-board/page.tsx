@@ -6,6 +6,7 @@ import { cn } from '@/lib/cn';
 import { useAuth } from '@/lib/auth';
 import { usePack } from '@/lib/vertical-pack';
 import { Kanban, RefreshCw, User, Clock, Wrench, Car, Filter } from 'lucide-react';
+import { PageSkeleton } from '@/components/skeleton';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -228,15 +229,7 @@ export default function ServiceBoardPage() {
                 {/* Cards */}
                 <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-2">
                   {loading ? (
-                    Array.from({ length: 2 }).map((_, i) => (
-                      <div
-                        key={i}
-                        className="bg-white dark:bg-slate-900 rounded-xl p-3 animate-pulse"
-                      >
-                        <div className="h-3 bg-slate-200 rounded w-3/4 mb-2" />
-                        <div className="h-2 bg-slate-100 rounded w-1/2" />
-                      </div>
-                    ))
+                    <PageSkeleton />
                   ) : colBookings.length === 0 ? (
                     <div className="text-center py-8 text-slate-300 text-xs">No jobs</div>
                   ) : (

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
+import { ListSkeleton } from '@/components/skeleton';
 import { api } from '@/lib/api';
 import Link from 'next/link';
 import {
@@ -157,14 +158,7 @@ export default function ConsoleMessagingPage() {
   if (loading) {
     return (
       <div className="p-6 md:p-8 max-w-6xl" data-testid="messaging-loading">
-        <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-slate-200 dark:bg-slate-800 rounded w-40" />
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-24 bg-slate-200 dark:bg-slate-800 rounded-2xl" />
-            ))}
-          </div>
-        </div>
+        <ListSkeleton rows={5} />
       </div>
     );
   }

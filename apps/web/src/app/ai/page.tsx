@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { Bot, Megaphone } from 'lucide-react';
+import { PageSkeleton } from '@/components/skeleton';
 import { AgentDashboard } from './components/agent-dashboard';
 import { AutonomyOverview } from './components/autonomy-overview';
 import { AIActivityFeed } from './components/ai-activity-feed';
@@ -93,14 +94,7 @@ export default function AIOverviewPage() {
         </div>
 
         {marketingLoading ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-            {[...Array(4)].map((_, i) => (
-              <div
-                key={i}
-                className="h-16 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse"
-              />
-            ))}
-          </div>
+          <PageSkeleton />
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {marketingAgents.map((agent) => (

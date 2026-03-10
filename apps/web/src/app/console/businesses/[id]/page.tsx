@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { DetailSkeleton, Skeleton } from '@/components/skeleton';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import {
@@ -230,7 +231,7 @@ export default function Business360Page() {
   if (loading) {
     return (
       <div className="p-6 md:p-8" data-testid="loading">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sage-600 mx-auto mt-20" />
+        <DetailSkeleton />
       </div>
     );
   }
@@ -524,7 +525,7 @@ export default function Business360Page() {
         <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft overflow-hidden">
           {!staff ? (
             <div className="p-12 text-center" data-testid="staff-loading">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sage-600 mx-auto" />
+              <Skeleton className="h-8 w-8 rounded-full mx-auto" />
             </div>
           ) : staff.length === 0 ? (
             <div className="p-12 text-center">
@@ -590,7 +591,7 @@ export default function Business360Page() {
         <div className="space-y-6" data-testid="billing-tab">
           {billingLoading ? (
             <div className="p-12 text-center" data-testid="billing-loading">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sage-600 mx-auto" />
+              <Skeleton className="h-8 w-8 rounded-full mx-auto" />
             </div>
           ) : !sub ? (
             <div

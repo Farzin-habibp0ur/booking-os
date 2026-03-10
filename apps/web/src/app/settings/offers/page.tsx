@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
+import { ListSkeleton } from '@/components/skeleton';
 import { ArrowLeft, Plus, Trash2, Tag } from 'lucide-react';
 
 export default function OffersSettingsPage() {
@@ -135,7 +136,7 @@ export default function OffersSettingsPage() {
       )}
 
       <div className="space-y-2">
-        {loading && <div className="text-sm text-slate-400 py-4 text-center">Loading...</div>}
+        {loading && <ListSkeleton rows={3} />}
         {!loading && offers.length === 0 && !showForm && (
           <div className="text-center py-8">
             <Tag size={32} className="mx-auto text-slate-300 mb-2" />

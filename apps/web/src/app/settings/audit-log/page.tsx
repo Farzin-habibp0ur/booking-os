@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Shield, Download, ChevronDown, ChevronRight, ArrowLeft, Search } from 'lucide-react';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
+import { ListSkeleton } from '@/components/skeleton';
 import { DiffViewer } from '@/components/action-history';
 
 interface ActionHistoryItem {
@@ -248,10 +249,8 @@ export default function AuditLogPage() {
       {/* Table */}
       <div className="bg-white rounded-2xl shadow-soft overflow-hidden">
         {loading ? (
-          <div className="p-8 space-y-3 animate-pulse" data-testid="loading-skeleton">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="h-12 bg-slate-100 rounded-xl" />
-            ))}
+          <div data-testid="loading-skeleton">
+            <ListSkeleton rows={8} />
           </div>
         ) : filteredItems.length === 0 ? (
           <div className="p-12 text-center" data-testid="empty-state">

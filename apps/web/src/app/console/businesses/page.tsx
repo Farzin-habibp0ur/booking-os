@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { ListSkeleton } from '@/components/skeleton';
 import { api } from '@/lib/api';
 import { Search, Building2 } from 'lucide-react';
 import { cn } from '@/lib/cn';
@@ -173,8 +174,8 @@ export default function BusinessDirectoryPage() {
       {/* Table */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft overflow-hidden">
         {loading ? (
-          <div className="p-12 text-center" data-testid="loading">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sage-600 mx-auto" />
+          <div className="p-4" data-testid="loading">
+            <ListSkeleton rows={6} />
           </div>
         ) : data && data.items.length === 0 ? (
           <div className="p-12 text-center" data-testid="empty-state">

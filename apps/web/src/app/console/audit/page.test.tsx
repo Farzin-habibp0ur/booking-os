@@ -80,7 +80,7 @@ describe('ConsoleAuditPage', () => {
     render(<ConsoleAuditPage />);
 
     expect(screen.getByText('Security & Audit')).toBeInTheDocument();
-    expect(document.querySelector('.animate-spin')).toBeInTheDocument();
+    expect(document.querySelector('.animate-pulse')).toBeInTheDocument();
   });
 
   it('renders audit log entries after loading', async () => {

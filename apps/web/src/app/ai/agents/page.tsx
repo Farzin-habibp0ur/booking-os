@@ -16,6 +16,7 @@ import {
   Clock,
   AlertTriangle,
 } from 'lucide-react';
+import { ListSkeleton } from '@/components/skeleton';
 
 interface AgentConfig {
   id: string;
@@ -133,15 +134,7 @@ export default function AIAgentsPage() {
   if (loading) {
     return (
       <div className="space-y-6" data-testid="agents-loading">
-        {[...Array(3)].map((_, i) => (
-          <div
-            key={i}
-            className="rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-soft animate-pulse"
-          >
-            <div className="h-6 bg-slate-200 dark:bg-slate-700 rounded w-1/4 mb-3" />
-            <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4" />
-          </div>
-        ))}
+        <ListSkeleton rows={4} />
       </div>
     );
   }

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { PageSkeleton } from '@/components/skeleton';
 import { api } from '@/lib/api';
 import Link from 'next/link';
 import {
@@ -64,19 +65,7 @@ export default function ConsoleBillingPage() {
   if (loading) {
     return (
       <div className="p-6 md:p-8 max-w-6xl" data-testid="billing-loading">
-        <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-slate-200 dark:bg-slate-800 rounded w-32" />
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-24 bg-slate-200 dark:bg-slate-800 rounded-2xl" />
-            ))}
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-32 bg-slate-200 dark:bg-slate-800 rounded-2xl" />
-            ))}
-          </div>
-        </div>
+        <PageSkeleton />
       </div>
     );
   }

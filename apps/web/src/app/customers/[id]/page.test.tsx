@@ -65,6 +65,7 @@ import { api } from '@/lib/api';
 const mockApi = api as jest.Mocked<typeof api>;
 jest.mock('@/components/skeleton', () => ({
   PageSkeleton: () => <div data-testid="page-skeleton" />,
+  DetailSkeleton: () => <div data-testid="detail-skeleton" className="animate-pulse" />,
   TableRowSkeleton: () => (
     <tr data-testid="table-skeleton">
       <td />
@@ -198,7 +199,7 @@ describe('CustomerDetailPage', () => {
   it('shows loading state initially', async () => {
     mockApi.get.mockImplementation(() => new Promise(() => {}));
     render(<CustomerDetailPage />);
-    expect(screen.getByText('common.loading')).toBeInTheDocument();
+    expect(document.querySelector('.animate-pulse')).toBeInTheDocument();
   });
 
   it('renders customer details after loading', async () => {

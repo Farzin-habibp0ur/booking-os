@@ -60,7 +60,7 @@ describe('OffersSettingsPage', () => {
     render(<OffersSettingsPage />);
 
     // Loading state shown first
-    expect(screen.getByText('Loading...')).toBeInTheDocument();
+    expect(document.querySelector('.animate-pulse')).toBeInTheDocument();
 
     await waitFor(() => {
       expect(screen.getByText('Offers')).toBeInTheDocument();

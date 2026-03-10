@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
+import { ListSkeleton } from '@/components/skeleton';
 import { api } from '@/lib/api';
 import Link from 'next/link';
 import { ChevronRight, ChevronDown, ToggleLeft, ToggleRight, Users } from 'lucide-react';
@@ -108,12 +109,7 @@ export default function SkillsCatalogPage() {
   if (loading) {
     return (
       <div className="p-6 md:p-8 max-w-6xl" data-testid="skills-loading">
-        <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-slate-200 dark:bg-slate-800 rounded w-40" />
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="h-40 bg-slate-200 dark:bg-slate-800 rounded-2xl" />
-          ))}
-        </div>
+        <ListSkeleton rows={3} />
       </div>
     );
   }

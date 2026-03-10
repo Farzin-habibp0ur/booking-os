@@ -14,6 +14,7 @@ import {
   Lightbulb,
   Shield,
 } from 'lucide-react';
+import { ListSkeleton } from '@/components/skeleton';
 
 interface ActionCard {
   id: string;
@@ -193,15 +194,7 @@ export default function AIActionsPage() {
   if (loading) {
     return (
       <div className="space-y-4" data-testid="actions-loading">
-        {[...Array(3)].map((_, i) => (
-          <div
-            key={i}
-            className="rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-soft animate-pulse"
-          >
-            <div className="h-5 bg-slate-200 dark:bg-slate-700 rounded w-1/3 mb-3" />
-            <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-full" />
-          </div>
-        ))}
+        <ListSkeleton rows={4} />
       </div>
     );
   }

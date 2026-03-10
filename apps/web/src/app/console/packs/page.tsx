@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { ListSkeleton } from '@/components/skeleton';
 import { api } from '@/lib/api';
 import Link from 'next/link';
 import { Package, Layers, ArrowRight, ToggleLeft, Users } from 'lucide-react';
@@ -59,14 +60,7 @@ export default function ConsolePacksPage() {
   if (loading) {
     return (
       <div className="p-6 md:p-8 max-w-6xl" data-testid="packs-loading">
-        <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-slate-200 dark:bg-slate-800 rounded w-40" />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-48 bg-slate-200 dark:bg-slate-800 rounded-2xl" />
-            ))}
-          </div>
-        </div>
+        <ListSkeleton rows={3} />
       </div>
     );
   }

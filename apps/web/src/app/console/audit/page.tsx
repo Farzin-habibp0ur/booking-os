@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { ListSkeleton } from '@/components/skeleton';
 import { api } from '@/lib/api';
 import { Shield, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -132,8 +133,8 @@ export default function ConsoleAuditPage() {
       {/* Table */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft overflow-hidden">
         {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sage-600" />
+          <div className="p-4">
+            <ListSkeleton rows={8} />
           </div>
         ) : !data || data.items.length === 0 ? (
           <div className="text-center py-16">

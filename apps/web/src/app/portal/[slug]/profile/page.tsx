@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Calendar, BookOpen, DollarSign, Loader2 } from 'lucide-react';
+import { FormSkeleton } from '@/components/skeleton';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
@@ -79,16 +80,7 @@ export default function PortalProfilePage() {
   };
 
   if (loading) {
-    return (
-      <div className="bg-white rounded-2xl shadow-soft p-6 animate-pulse">
-        <div className="h-6 bg-slate-200 rounded w-1/3 mb-4" />
-        <div className="space-y-3">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-10 bg-slate-100 rounded" />
-          ))}
-        </div>
-      </div>
-    );
+    return <FormSkeleton rows={5} />;
   }
 
   return (

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { ListSkeleton } from '@/components/skeleton';
 import { api } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { ChevronRight, CheckCircle, AlertTriangle } from 'lucide-react';
@@ -48,14 +49,7 @@ export default function PastDuePage() {
   if (loading) {
     return (
       <div className="p-6 md:p-8 max-w-5xl" data-testid="past-due-loading">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-slate-200 dark:bg-slate-800 rounded w-48" />
-          <div className="space-y-3">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-16 bg-slate-200 dark:bg-slate-800 rounded-2xl" />
-            ))}
-          </div>
-        </div>
+        <ListSkeleton rows={4} />
       </div>
     );
   }

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { FormSkeleton } from '@/components/skeleton';
 import { api } from '@/lib/api';
 import { Shield, Bell, Globe, Settings, AlertTriangle } from 'lucide-react';
 
@@ -143,12 +144,7 @@ export default function ConsoleSettingsPage() {
   if (loading) {
     return (
       <div className="p-6 md:p-8 max-w-5xl" data-testid="settings-loading">
-        <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-slate-200 dark:bg-slate-800 rounded w-32" />
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-48 bg-slate-200 dark:bg-slate-800 rounded-2xl" />
-          ))}
-        </div>
+        <FormSkeleton rows={4} />
       </div>
     );
   }

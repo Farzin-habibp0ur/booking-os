@@ -19,6 +19,7 @@ import {
   Calendar,
   Send,
 } from 'lucide-react';
+import { ListSkeleton } from '@/components/skeleton';
 
 interface ContentDraft {
   id: string;
@@ -277,11 +278,7 @@ export default function ContentQueuePage() {
 
       {/* Content Cards */}
       {loading ? (
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-32 rounded-2xl bg-slate-100 animate-pulse" />
-          ))}
-        </div>
+        <ListSkeleton rows={4} />
       ) : drafts.length === 0 ? (
         <div className="text-center py-16 text-slate-400">
           <FileText size={48} className="mx-auto mb-4 opacity-50" />

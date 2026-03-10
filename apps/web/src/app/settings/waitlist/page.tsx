@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { api } from '@/lib/api';
+import { FormSkeleton } from '@/components/skeleton';
 import { ClipboardList, ArrowLeft } from 'lucide-react';
 
 interface WaitlistSettings {
@@ -38,12 +39,7 @@ export default function WaitlistSettingsPage() {
     setTimeout(() => setSaved(false), 2000);
   };
 
-  if (loading)
-    return (
-      <div className="p-6">
-        <p className="text-slate-400">Loading...</p>
-      </div>
-    );
+  if (loading) return <FormSkeleton rows={4} />;
 
   return (
     <div className="p-6 max-w-2xl">

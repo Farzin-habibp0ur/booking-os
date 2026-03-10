@@ -15,6 +15,7 @@ import {
   Send,
   FileText,
 } from 'lucide-react';
+import { ListSkeleton } from '@/components/skeleton';
 
 interface AgentConfig {
   id: string;
@@ -202,11 +203,7 @@ export default function MarketingAgentsPage() {
 
       {/* Agent Cards */}
       {loading ? (
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-24 rounded-2xl bg-slate-100 animate-pulse" />
-          ))}
-        </div>
+        <ListSkeleton rows={4} />
       ) : filteredTypes.length === 0 ? (
         <div className="text-center py-16 text-slate-400" data-testid="empty-state">
           <Bot size={48} className="mx-auto mb-4 opacity-50" />

@@ -66,7 +66,7 @@ describe('ConsoleHealthPage', () => {
     render(<ConsoleHealthPage />);
 
     expect(screen.getByText('System Health')).toBeInTheDocument();
-    expect(document.querySelector('.animate-spin')).toBeInTheDocument();
+    expect(document.querySelector('.animate-pulse')).toBeInTheDocument();
   });
 
   it('renders healthy status banner', async () => {

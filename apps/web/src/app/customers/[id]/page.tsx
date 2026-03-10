@@ -34,6 +34,7 @@ import IntakeCard from '@/components/intake-card';
 import { RecentChangesPanel } from '@/components/action-history';
 import { OutboundCompose } from '@/components/outbound';
 import { BOOKING_STATUS_STYLES as STATUS_COLORS, ELEVATION, SPACING } from '@/lib/design-tokens';
+import { DetailSkeleton } from '@/components/skeleton';
 
 export default function CustomerDetailPage() {
   const { id } = useParams();
@@ -249,8 +250,8 @@ export default function CustomerDetailPage() {
 
   if (loading)
     return (
-      <div className="p-6 flex items-center justify-center h-64">
-        <p className="text-slate-400">{t('common.loading')}</p>
+      <div className="p-6">
+        <DetailSkeleton />
       </div>
     );
   if (!customer)

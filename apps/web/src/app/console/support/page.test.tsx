@@ -81,7 +81,7 @@ describe('ConsoleSupportPage', () => {
     render(<ConsoleSupportPage />);
 
     expect(screen.getByText('Support Cases')).toBeInTheDocument();
-    expect(document.querySelector('.animate-spin')).toBeInTheDocument();
+    expect(document.querySelector('.animate-pulse')).toBeInTheDocument();
   });
 
   it('renders support cases after loading', async () => {

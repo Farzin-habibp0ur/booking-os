@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useI18n } from '@/lib/i18n';
+import { FormSkeleton } from '@/components/skeleton';
 import { CalendarDays, RefreshCw, Copy, Check, ExternalLink, ArrowLeft } from 'lucide-react';
 
 interface Connection {
@@ -192,11 +193,7 @@ function CalendarSyncPage() {
   const getConnection = (provider: string) => connections.find((c) => c.provider === provider);
 
   if (loading) {
-    return (
-      <div className="p-6">
-        <p className="text-slate-400">{t('common.loading')}</p>
-      </div>
-    );
+    return <FormSkeleton rows={4} />;
   }
 
   return (

@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth';
 import { useToast } from '@/lib/toast';
 import { AutonomySettings } from '@/components/autonomy';
 import { api } from '@/lib/api';
+import { FormSkeleton } from '@/components/skeleton';
 import { ArrowLeft } from 'lucide-react';
 
 export default function AutonomySettingsPage() {
@@ -52,15 +53,7 @@ export default function AutonomySettingsPage() {
   };
 
   if (loading) {
-    return (
-      <div className="p-6">
-        <div className="animate-pulse space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-20 bg-slate-100 rounded-2xl" />
-          ))}
-        </div>
-      </div>
-    );
+    return <FormSkeleton rows={3} />;
   }
 
   return (

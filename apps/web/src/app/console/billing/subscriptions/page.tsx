@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
+import { ListSkeleton } from '@/components/skeleton';
 import { api } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { Search, ChevronLeft, ChevronRight, CreditCard } from 'lucide-react';
@@ -160,10 +161,8 @@ export default function SubscriptionsPage() {
 
       {/* Table */}
       {loading && !data ? (
-        <div className="animate-pulse space-y-3" data-testid="subscriptions-loading">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-14 bg-slate-200 dark:bg-slate-800 rounded-xl" />
-          ))}
+        <div data-testid="subscriptions-loading">
+          <ListSkeleton rows={5} />
         </div>
       ) : !data || data.items.length === 0 ? (
         <div

@@ -181,7 +181,7 @@ Key events: `message:new`, `conversation:updated`, `ai:suggestion`, `ai:auto-rep
 - Shared components in `apps/web/src/components/`
 - Feature-specific components co-located with their page or in named subdirectories
 - Modals use a consistent pattern: `XxxModal` with `isOpen` + `onClose` props
-- Loading states: `Skeleton` component
+- Loading states: `Skeleton` component + compositions (`PageSkeleton`, `DetailSkeleton`, `FormSkeleton`, `ListSkeleton`, `InboxSkeleton`, `CalendarSkeleton`) — always use these instead of raw `animate-pulse` divs or "Loading..." text
 - Empty states: `EmptyState` component
 - Bulk actions: `BulkActionBar` component
 

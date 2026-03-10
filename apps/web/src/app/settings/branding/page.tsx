@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { api } from '@/lib/api';
 import { useToast } from '@/lib/toast';
+import { FormSkeleton } from '@/components/skeleton';
 import { Upload, Palette, Type, Eye, Loader2, Check } from 'lucide-react';
 
 interface Branding {
@@ -69,14 +70,7 @@ export default function BrandingPage() {
   };
 
   if (!branding) {
-    return (
-      <div className="p-6 max-w-4xl">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-slate-100 rounded w-48" />
-          <div className="h-64 bg-slate-100 rounded-2xl" />
-        </div>
-      </div>
-    );
+    return <FormSkeleton rows={4} />;
   }
 
   return (

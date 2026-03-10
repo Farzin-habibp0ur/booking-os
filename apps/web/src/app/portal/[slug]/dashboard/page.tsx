@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { statusBadgeClasses } from '@/lib/design-tokens';
+import { PageSkeleton } from '@/components/skeleton';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
@@ -121,16 +122,7 @@ export default function PortalDashboardPage() {
   };
 
   if (loading) {
-    return (
-      <div className="space-y-4">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="bg-white rounded-2xl shadow-soft p-6 animate-pulse">
-            <div className="h-4 bg-slate-200 rounded w-1/3 mb-2" />
-            <div className="h-3 bg-slate-100 rounded w-2/3" />
-          </div>
-        ))}
-      </div>
-    );
+    return <PageSkeleton />;
   }
 
   return (

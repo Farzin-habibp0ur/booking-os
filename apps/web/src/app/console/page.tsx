@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { PageSkeleton } from '@/components/skeleton';
 import { api } from '@/lib/api';
 import {
   Building2,
@@ -184,9 +185,7 @@ export default function ConsoleOverviewPage() {
         <h1 className="text-2xl font-serif font-bold text-slate-900 dark:text-white mb-6">
           Overview
         </h1>
-        <div className="flex items-center justify-center py-20">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sage-600" />
-        </div>
+        <PageSkeleton />
       </div>
     );
   }

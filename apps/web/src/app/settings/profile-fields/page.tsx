@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/lib/toast';
+import { FormSkeleton } from '@/components/skeleton';
 import { ArrowLeft } from 'lucide-react';
 import { PROFILE_FIELDS } from '@booking-os/shared';
 
@@ -35,11 +36,7 @@ export default function ProfileFieldsPage() {
   };
 
   if (loading) {
-    return (
-      <div className="p-6 flex items-center justify-center h-64">
-        <p className="text-slate-400">{t('common.loading')}</p>
-      </div>
-    );
+    return <FormSkeleton rows={4} />;
   }
 
   return (

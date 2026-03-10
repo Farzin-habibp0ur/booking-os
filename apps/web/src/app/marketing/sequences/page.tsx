@@ -14,6 +14,7 @@ import {
   Play,
   XCircle,
 } from 'lucide-react';
+import { ListSkeleton } from '@/components/skeleton';
 
 interface SequenceStep {
   step: number;
@@ -152,11 +153,7 @@ export default function EmailSequencesPage() {
 
       {/* Sequence Cards */}
       {loading ? (
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-24 rounded-2xl bg-slate-100 animate-pulse" />
-          ))}
-        </div>
+        <ListSkeleton rows={4} />
       ) : sequences.length === 0 ? (
         <div className="text-center py-16 text-slate-400" data-testid="empty-state">
           <Mail size={48} className="mx-auto mb-4 opacity-50" />

@@ -98,7 +98,7 @@ describe('ConsoleOverviewPage', () => {
     render(<ConsoleOverviewPage />);
 
     expect(screen.getByText('Overview')).toBeInTheDocument();
-    expect(document.querySelector('.animate-spin')).toBeInTheDocument();
+    expect(document.querySelector('.animate-pulse')).toBeInTheDocument();
   });
 
   it('renders overview data after loading', async () => {

@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Calendar, Clock, DollarSign, User, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { statusBadgeClasses } from '@/lib/design-tokens';
+import { ListSkeleton } from '@/components/skeleton';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
@@ -150,12 +151,7 @@ export default function PortalBookingsPage() {
       {/* Booking cards */}
       <div className="space-y-3" data-testid="booking-list">
         {loading ? (
-          Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="bg-white rounded-2xl shadow-soft p-4 animate-pulse">
-              <div className="h-4 bg-slate-200 rounded w-1/3 mb-2" />
-              <div className="h-3 bg-slate-100 rounded w-2/3" />
-            </div>
-          ))
+          <ListSkeleton rows={4} />
         ) : bookings.data.length === 0 ? (
           <div className="text-center py-12 text-slate-400">
             <Calendar size={32} className="mx-auto mb-3 opacity-50" />

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { TrendingUp, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { PageSkeleton } from '@/components/skeleton';
 import {
   LineChart,
   Line,
@@ -100,15 +101,7 @@ export default function AIPerformancePage() {
   if (loading) {
     return (
       <div className="space-y-6" data-testid="performance-loading">
-        {[...Array(3)].map((_, i) => (
-          <div
-            key={i}
-            className="rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-soft animate-pulse"
-          >
-            <div className="h-6 bg-slate-200 dark:bg-slate-700 rounded w-1/4 mb-4" />
-            <div className="h-48 bg-slate-100 dark:bg-slate-800 rounded" />
-          </div>
-        ))}
+        <PageSkeleton />
       </div>
     );
   }

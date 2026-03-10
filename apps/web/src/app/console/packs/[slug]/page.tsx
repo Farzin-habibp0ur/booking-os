@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
+import { DetailSkeleton } from '@/components/skeleton';
 import { api } from '@/lib/api';
 import Link from 'next/link';
 import { ChevronRight, Play, Pause, RotateCcw, FastForward, Pin, X, Users } from 'lucide-react';
@@ -144,11 +145,7 @@ export default function PackDetailPage() {
   if (loading) {
     return (
       <div className="p-6 md:p-8 max-w-5xl" data-testid="pack-detail-loading">
-        <div className="animate-pulse space-y-6">
-          <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-48" />
-          <div className="h-8 bg-slate-200 dark:bg-slate-800 rounded w-32" />
-          <div className="h-64 bg-slate-200 dark:bg-slate-800 rounded-2xl" />
-        </div>
+        <DetailSkeleton />
       </div>
     );
   }
