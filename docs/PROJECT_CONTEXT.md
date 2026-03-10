@@ -2,7 +2,7 @@
 
 > **Purpose:** This document gives full context on the Booking OS platform — what it is, what's been built, how it's structured, and what's left to build. Share this with an AI assistant or new developer to get productive immediately.
 >
-> **Last updated:** March 10, 2026 (All phases COMPLETE — A through E + Phases 1-4 & 6 polish + QA Fixes Sprint — ~5,000+ total tests across 330+ test files, 60 Prisma models, 44 migrations)
+> **Last updated:** March 10, 2026 (All phases COMPLETE — A through E + Phases 1-4 & 6 polish + QA Fixes + Sprints 1-3 + Sprint 4 in progress — ~5,165+ total tests across 340+ test files, 60 Prisma models, 44 migrations)
 
 ---
 
@@ -580,7 +580,8 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 - `DemoTourProvider` / `TourSpotlight` / `TourTooltip` — Interactive demo tour
 - `LanguagePicker` — Locale selector
 - `TooltipNudge` — Dismissible coaching tooltips
-- `Skeleton` / `EmptyState` — Loading and empty states
+- `Skeleton` / `CardSkeleton` / `TableRowSkeleton` / `PageSkeleton` / `DetailSkeleton` / `FormSkeleton` / `ListSkeleton` / `InboxSkeleton` / `CalendarSkeleton` — Layout-matching skeleton loaders
+- `EmptyState` — Empty states with icon, title, description, and CTA
 - `ModeSwitcher` — Role-based mode pill/tab selector (admin/agent/provider)
 - `ViewPicker` / `SaveViewModal` — Saved filter views on list pages
 - `KpiStrip` / `MyWork` / `AttentionCards` — Mission Control dashboard components
@@ -760,7 +761,7 @@ Key groups (full list in `.env.example`):
 - **Status badges:** Sage=confirmed, Lavender=pending, Red-50=cancelled, Amber-50=in-progress
 - **AI elements:** Lavender palette
 - **Dark mode:** Full coverage, system preference detection
-- **Animations:** slideUp, fadeIn, scaleIn (respects prefers-reduced-motion)
+- **Animations:** 13 utility classes (slideUp, fadeIn, scaleIn, slideInRight, slideInFromBottom, badgeFlash, cardHover, dropdownOpen, pageFade, toastEnter, modalEnter, backdrop, sidebarActive) — all respect prefers-reduced-motion
 
 ---
 
@@ -888,6 +889,34 @@ Key groups (full list in `.env.example`):
 - **Fix 3: Stripe Checkout in Booking Flow** — Public payment endpoint `POST /public/:slug/create-payment-intent`, Stripe PaymentElement integration on `/book/[slug]`, dynamic payment step (skip when Stripe not configured or pay-at-visit selected), Payment record creation on booking with paymentIntentId, order summary UI (15 new tests)
 - **Fix 4: PWA Support Completion** — Proper PNG icons (192x192 + 512x512) with `any maskable` purpose, enhanced manifest.json with scope/orientation, rewritten service worker with cache-first for static assets + network-first for navigation, apple-touch-icon linked to PNG
 - **Fix 5: Accessibility Fixes (WCAG 2.1 AA)** — Resolved duplicate `<h1>` (sidebar brand h1→p), added `aria-label` to language picker select, added `<header role="banner">` landmark to sidebar branding section; verified html lang="en" and all icon-only buttons already compliant
+
+### Sprint 1: Critical Blockers — COMPLETE
+- P-01: Business Branding (logoUrl, brandPrimaryColor, brandTagline, brandFaviconUrl, /settings/branding, portal rendering)
+- P-02: Booking Search (serviceId filter, compound index)
+- P-03: CSV Export (UTF-8 BOM, rate limiting)
+- P-04: Portal Payments (webhook handlers for payment_intent.succeeded/failed)
+
+### Sprint 2: High Priority — COMPLETE
+- P-05: Staff-Service Mapping, P-07: Customer Merge & Delete, P-08: Inbox Media, P-09: Column Sorting, P-10: Calendar Hours, P-11: Deposit Config
+- P-06 & P-12 skipped (already implemented)
+
+### Sprint 3: Usability Improvements — COMPLETE
+- P-13: Multi-Step Automation Sequences (AutomationStep/AutomationExecution models, ACTION/DELAY/BRANCH types, cron executor)
+- P-14: Visual Automation Builder (WorkflowCanvas/Node/Connector/Sidebar, 22 drag-drop blocks, serialize/deserialize)
+- P-15: Campaign A/B Testing (isABTest + variants, Fisher-Yates split, variant-stats, winner selection)
+- P-16: Advanced Campaign Audience Filters (10+ filter fields, audience-preview, SavedSegment CRUD, filter builder)
+- P-17: Two-Factor Authentication (TOTP HMAC-SHA1, temp token login, bcrypt backup codes, settings/security page)
+- P-18: Drag-and-Drop Calendar (HTML5 DnD, conflict detection, 5s undo toast)
+- P-19: Booking Color Labels (colorLabel field, 5 colors, selector, calendar borders)
+- P-20: Booking Audit Log (BookingAuditLog model, timeline component, 5 action types)
+
+### Sprint 4: UX Polish & Platform Depth — IN PROGRESS
+- P-21: Illustrated Empty States — COMPLETE (all 8 target pages verified)
+- P-22: Skeleton Loading States — COMPLETE (5 new compositions, 37 pages standardized)
+- P-25: Micro-Animations — COMPLETE (8 new keyframes, applied to cards/toasts/modals/dropdowns/shell)
+- P-23: Keyboard Navigation — in progress
+- P-24: Mobile Layouts (Inbox & Calendar) — in progress
+- P-26: Source Attribution — in progress
 
 ### Code Quality
 

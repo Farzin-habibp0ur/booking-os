@@ -245,6 +245,18 @@ Key events: `message:new`, `conversation:updated`, `ai:suggestion`, `ai:auto-rep
 - `.nav-section-label` — sidebar nav section headings (10px uppercase tracking-wider)
 - `.celebration-confetti` — CSS-only confetti animation for setup wizard completion (respects `prefers-reduced-motion`)
 
+### Micro-Animation Utilities (`globals.css` — DS V2 §10)
+- `.animate-slide-up`, `.animate-fade-in`, `.animate-scale-in`, `.animate-slide-in-right`, `.animate-slide-in-from-bottom` — entrance animations (200–300ms)
+- `.animate-badge-flash` — brief white pulse on status badge change (400ms, use with `key={status}` to re-trigger)
+- `.animate-card-hover` — translateY(-2px) + shadow lift on hover (200ms)
+- `.animate-dropdown-open` — scaleY from top origin (150ms)
+- `.animate-page-fade` — content fadeIn on page transition (150ms)
+- `.animate-toast-enter` — slideUp entrance for toasts (200ms)
+- `.animate-modal-enter` — scale+opacity entrance for modal content (200ms)
+- `.animate-backdrop` — fade entrance for modal overlays (150ms)
+- `.animate-sidebar-active` — border scaleY slide-in for active nav (200ms)
+- All animations respect `prefers-reduced-motion` via blanket media query rule
+
 ### AI Feature Styling
 All AI-related UI elements use the **lavender** palette: `bg-lavender-50 border border-lavender-100 text-lavender-900 rounded-xl`
 
