@@ -366,7 +366,8 @@
     "pending_quotes": "Pending",
     "approved_quotes": "Approved",
     "total_quoted": "Total Quoted",
-    "no_quotes": "No quotes yet"
+    "no_quotes": "No quotes yet",
+    "last_visit": "Last Visit"
   },
 
   "services": {

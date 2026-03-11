@@ -332,7 +332,8 @@
     "pending_quotes": "Pendientes",
     "approved_quotes": "Aprobadas",
     "total_quoted": "Total cotizado",
-    "no_quotes": "Sin cotizaciones aún"
+    "no_quotes": "Sin cotizaciones aún",
+    "last_visit": "Última visita"
   },
 
   "services": {
