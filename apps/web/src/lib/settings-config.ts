@@ -41,8 +41,8 @@ export const SETTINGS_CATEGORIES: SettingsCategory[] = [
   },
   {
     key: 'operations',
-    label: 'Operations',
-    description: 'Calendar rules, message templates, and booking policies',
+    label: 'Calendar & Templates',
+    description: 'Calendar sync, message templates, and booking policies',
     icon: Calendar,
     accent: 'sage',
     pages: ['calendar', 'templates', 'policies'],
@@ -50,7 +50,7 @@ export const SETTINGS_CATEGORIES: SettingsCategory[] = [
   },
   {
     key: 'communication',
-    label: 'Communication',
+    label: 'Notifications',
     description: 'Notification preferences and language translations',
     icon: Bell,
     accent: 'sage',
@@ -68,7 +68,7 @@ export const SETTINGS_CATEGORIES: SettingsCategory[] = [
   },
   {
     key: 'growth',
-    label: 'Growth',
+    label: 'Waitlist & Offers',
     description: 'Waitlist settings and promotional offers',
     icon: Gift,
     accent: 'lavender',
@@ -95,7 +95,7 @@ export const SETTINGS_CATEGORIES: SettingsCategory[] = [
   },
   {
     key: 'appearance',
-    label: 'Appearance & Branding',
+    label: 'Branding',
     description: 'Theme, branding, colors, and display preferences',
     icon: Palette,
     accent: 'slate',
