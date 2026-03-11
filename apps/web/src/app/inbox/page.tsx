@@ -1391,366 +1391,371 @@ function InboxPage() {
             </div>
           )}
         </div>
-      </div>
 
-      {/* Customer sidebar */}
-      {selected && customer && (
-        <div
-          className={cn(
-            'border-l bg-white overflow-auto',
-            'w-full md:w-72',
-            mobileView === 'info' ? '' : !infoSidebarOpen ? 'hidden' : 'hidden md:block',
-          )}
-        >
-          <div className="flex border-b">
-            <button
-              onClick={() => setSidebarTab('info')}
-              className={cn(
-                'flex-1 py-2.5 text-xs font-medium text-center',
-                sidebarTab === 'info'
-                  ? 'text-sage-600 border-b-2 border-sage-600'
-                  : 'text-slate-500',
-              )}
-            >
-              {t('inbox.info_tab')}
-            </button>
-            <button
-              onClick={() => setSidebarTab('notes')}
-              className={cn(
-                'flex-1 py-2.5 text-xs font-medium text-center relative',
-                sidebarTab === 'notes'
-                  ? 'text-sage-600 border-b-2 border-sage-600'
-                  : 'text-slate-500',
-              )}
-            >
-              {t('inbox.notes_tab')}{' '}
-              {notes.length > 0 && (
-                <span className="ml-1 text-[9px] bg-amber-50 text-amber-700 px-1 py-0.5 rounded-full">
-                  {notes.length}
-                </span>
-              )}
-            </button>
-          </div>
-
-          {sidebarTab === 'info' && (
-            <>
-              <div className="p-4 border-b">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-full bg-sage-100 flex items-center justify-center text-sage-600 font-semibold text-sm">
-                    {(customer.name || '?')[0].toUpperCase()}
-                  </div>
-                  <div>
-                    <button
-                      onClick={() => router.push(`/customers/${customer.id}`)}
-                      className="font-semibold text-sm hover:text-sage-600 transition-colors text-left"
-                      data-testid="customer-name-link"
-                    >
-                      {customer.name}
-                    </button>
-                    <p className="text-xs text-slate-500">{customer.phone}</p>
-                  </div>
-                </div>
-                {customer.email && <p className="text-xs text-slate-500 mb-2">{customer.email}</p>}
-                {customer.tags?.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mb-2">
-                    {customer.tags.map((tg: string) => (
-                      <span
-                        key={tg}
-                        className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full"
-                      >
-                        {tg}
-                      </span>
-                    ))}
-                  </div>
+        {/* Customer sidebar */}
+        {selected && customer && (
+          <div
+            className={cn(
+              'border-l bg-white overflow-auto flex-shrink-0',
+              'w-full md:w-72',
+              mobileView === 'info' ? '' : !infoSidebarOpen ? 'hidden' : 'hidden md:block',
+            )}
+          >
+            <div className="flex border-b">
+              <button
+                onClick={() => setSidebarTab('info')}
+                className={cn(
+                  'flex-1 py-2.5 text-xs font-medium text-center',
+                  sidebarTab === 'info'
+                    ? 'text-sage-600 border-b-2 border-sage-600'
+                    : 'text-slate-500',
                 )}
-              </div>
+              >
+                {t('inbox.info_tab')}
+              </button>
+              <button
+                onClick={() => setSidebarTab('notes')}
+                className={cn(
+                  'flex-1 py-2.5 text-xs font-medium text-center relative',
+                  sidebarTab === 'notes'
+                    ? 'text-sage-600 border-b-2 border-sage-600'
+                    : 'text-slate-500',
+                )}
+              >
+                {t('inbox.notes_tab')}{' '}
+                {notes.length > 0 && (
+                  <span className="ml-1 text-[9px] bg-amber-50 text-amber-700 px-1 py-0.5 rounded-full">
+                    {notes.length}
+                  </span>
+                )}
+              </button>
+            </div>
 
-              {/* Action Card Badge */}
-              {actionCardCount > 0 && (
-                <div className="px-4 py-2 border-b" data-testid="inbox-action-card-badge">
-                  <ActionCardBadge count={actionCardCount} />
-                </div>
-              )}
-
-              {/* AI Summary */}
-              <AiSummary
-                conversationId={selected.id}
-                summary={aiSummary}
-                onSummaryUpdated={(s) => setAiSummary(s)}
-              />
-
-              {/* AI Booking Assistant */}
-              {aiBookingState && (
-                <AiBookingPanel
-                  conversationId={selected.id}
-                  mode="book"
-                  bookingState={aiBookingState}
-                  onConfirmed={() => {
-                    setAiBookingState(null);
-                    if (customer) loadCustomerBookings(customer.id);
-                  }}
-                  onDismissed={() => setAiBookingState(null)}
-                />
-              )}
-
-              {/* AI Cancel Assistant */}
-              {aiCancelState && (
-                <AiBookingPanel
-                  conversationId={selected.id}
-                  mode="cancel"
-                  cancelState={aiCancelState}
-                  onConfirmed={() => {
-                    setAiCancelState(null);
-                    if (customer) loadCustomerBookings(customer.id);
-                  }}
-                  onDismissed={() => setAiCancelState(null)}
-                />
-              )}
-
-              {/* AI Reschedule Assistant */}
-              {aiRescheduleState && (
-                <AiBookingPanel
-                  conversationId={selected.id}
-                  mode="reschedule"
-                  rescheduleState={aiRescheduleState}
-                  onConfirmed={() => {
-                    setAiRescheduleState(null);
-                    if (customer) loadCustomerBookings(customer.id);
-                  }}
-                  onDismissed={() => setAiRescheduleState(null)}
-                />
-              )}
-
-              <div className="p-4 border-b">
-                <span className="text-xs font-semibold text-slate-500 uppercase">
-                  {t('inbox.conversation_tags')}
-                </span>
-                <div className="flex flex-wrap gap-1 mt-2">
-                  {convTags.map((tg) => (
-                    <span
-                      key={tg}
-                      className="inline-flex items-center gap-0.5 text-[10px] bg-sage-50 text-sage-700 px-2 py-0.5 rounded-full"
-                    >
-                      {tg}{' '}
-                      <button onClick={() => removeConvTag(tg)} className="hover:text-red-500">
-                        <X size={8} />
-                      </button>
-                    </span>
-                  ))}
-                  <input
-                    value={newTag}
-                    onChange={(e) => setNewTag(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        addConvTag(newTag);
-                      }
-                    }}
-                    placeholder={t('inbox.add_tag_placeholder')}
-                    className="text-[10px] border rounded px-1.5 py-0.5 w-14 focus:w-24 transition-all"
-                  />
-                </div>
-              </div>
-
-              <div className="p-4 border-b">
-                <span className="text-xs font-semibold text-slate-500 uppercase">
-                  {t('inbox.assigned_to')}
-                </span>
-                <div className="relative mt-1">
-                  <button
-                    onClick={() => setShowAssignDropdown(!showAssignDropdown)}
-                    aria-expanded={showAssignDropdown}
-                    className="w-full flex items-center justify-between border rounded-md px-2.5 py-1.5 text-sm hover:bg-slate-50"
-                  >
-                    <span>{selected.assignedTo?.name || t('common.unassigned')}</span>
-                    <ChevronDown size={14} className="text-slate-400" />
-                  </button>
-                  {showAssignDropdown && (
-                    <div
-                      className="absolute z-10 mt-1 w-full bg-white border rounded-md shadow-lg"
-                      role="listbox"
-                    >
+            {sidebarTab === 'info' && (
+              <>
+                <div className="p-4 border-b">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-full bg-sage-100 flex items-center justify-center text-sage-600 font-semibold text-sm">
+                      {(customer.name || '?')[0].toUpperCase()}
+                    </div>
+                    <div>
                       <button
-                        role="option"
-                        aria-selected={!selected.assignedTo}
-                        onClick={() => assignConversation(null)}
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50 border-b"
+                        onClick={() => router.push(`/customers/${customer.id}`)}
+                        className="font-semibold text-sm hover:text-sage-600 transition-colors text-left"
+                        data-testid="customer-name-link"
                       >
-                        {t('inbox.unassign')}
+                        {customer.name}
                       </button>
-                      {staffList.map((s) => (
-                        <button
-                          key={s.id}
-                          role="option"
-                          aria-selected={selected.assignedTo?.id === s.id}
-                          onClick={() => assignConversation(s.id)}
-                          className={cn(
-                            'w-full text-left px-3 py-2 text-sm hover:bg-slate-50',
-                            selected.assignedTo?.id === s.id && 'bg-sage-50 text-sage-700',
-                          )}
+                      <p className="text-xs text-slate-500">{customer.phone}</p>
+                    </div>
+                  </div>
+                  {customer.email && (
+                    <p className="text-xs text-slate-500 mb-2">{customer.email}</p>
+                  )}
+                  {customer.tags?.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mb-2">
+                      {customer.tags.map((tg: string) => (
+                        <span
+                          key={tg}
+                          className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full"
                         >
-                          {s.name}
-                        </button>
+                          {tg}
+                        </span>
                       ))}
                     </div>
                   )}
                 </div>
-                {!selected.assignedTo && (
-                  <button
-                    onClick={() => assignConversation(staffList[0]?.id)}
-                    className="mt-2 text-xs text-sage-600 hover:text-sage-700 font-medium"
-                  >
-                    {t('inbox.assign_to_me')}
-                  </button>
-                )}
-              </div>
 
-              {selected.status === 'SNOOZED' && selected.snoozedUntil && (
-                <div className="p-4 border-b bg-lavender-50">
-                  <div className="flex items-center gap-1.5 text-lavender-700 text-xs">
-                    <AlarmClock size={12} />
-                    <span>
-                      {t('inbox.snoozed_until', {
-                        datetime: new Date(selected.snoozedUntil).toLocaleString(),
-                      })}
-                    </span>
+                {/* Action Card Badge */}
+                {actionCardCount > 0 && (
+                  <div className="px-4 py-2 border-b" data-testid="inbox-action-card-badge">
+                    <ActionCardBadge count={actionCardCount} />
+                  </div>
+                )}
+
+                {/* AI Summary */}
+                <AiSummary
+                  conversationId={selected.id}
+                  summary={aiSummary}
+                  onSummaryUpdated={(s) => setAiSummary(s)}
+                />
+
+                {/* AI Booking Assistant */}
+                {aiBookingState && (
+                  <AiBookingPanel
+                    conversationId={selected.id}
+                    mode="book"
+                    bookingState={aiBookingState}
+                    onConfirmed={() => {
+                      setAiBookingState(null);
+                      if (customer) loadCustomerBookings(customer.id);
+                    }}
+                    onDismissed={() => setAiBookingState(null)}
+                  />
+                )}
+
+                {/* AI Cancel Assistant */}
+                {aiCancelState && (
+                  <AiBookingPanel
+                    conversationId={selected.id}
+                    mode="cancel"
+                    cancelState={aiCancelState}
+                    onConfirmed={() => {
+                      setAiCancelState(null);
+                      if (customer) loadCustomerBookings(customer.id);
+                    }}
+                    onDismissed={() => setAiCancelState(null)}
+                  />
+                )}
+
+                {/* AI Reschedule Assistant */}
+                {aiRescheduleState && (
+                  <AiBookingPanel
+                    conversationId={selected.id}
+                    mode="reschedule"
+                    rescheduleState={aiRescheduleState}
+                    onConfirmed={() => {
+                      setAiRescheduleState(null);
+                      if (customer) loadCustomerBookings(customer.id);
+                    }}
+                    onDismissed={() => setAiRescheduleState(null)}
+                  />
+                )}
+
+                <div className="p-4 border-b">
+                  <span className="text-xs font-semibold text-slate-500 uppercase">
+                    {t('inbox.conversation_tags')}
+                  </span>
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {convTags.map((tg) => (
+                      <span
+                        key={tg}
+                        className="inline-flex items-center gap-0.5 text-[10px] bg-sage-50 text-sage-700 px-2 py-0.5 rounded-full"
+                      >
+                        {tg}{' '}
+                        <button onClick={() => removeConvTag(tg)} className="hover:text-red-500">
+                          <X size={8} />
+                        </button>
+                      </span>
+                    ))}
+                    <input
+                      value={newTag}
+                      onChange={(e) => setNewTag(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          addConvTag(newTag);
+                        }
+                      }}
+                      placeholder={t('inbox.add_tag_placeholder')}
+                      className="text-[10px] border rounded px-1.5 py-0.5 w-14 focus:w-24 transition-all"
+                    />
                   </div>
                 </div>
-              )}
 
-              {customer && pack.customerFields.length > 0 && (
-                <IntakeCard
-                  customer={customer}
-                  fields={pack.customerFields}
-                  onUpdated={(updated) => setCustomer(updated)}
-                />
-              )}
-
-              <div className="p-4 border-b">
-                <div className="flex items-center justify-between mb-2">
+                <div className="p-4 border-b">
                   <span className="text-xs font-semibold text-slate-500 uppercase">
-                    {t('inbox.bookings_section')}
+                    {t('inbox.assigned_to')}
                   </span>
+                  <div className="relative mt-1">
+                    <button
+                      onClick={() => setShowAssignDropdown(!showAssignDropdown)}
+                      aria-expanded={showAssignDropdown}
+                      className="w-full flex items-center justify-between border rounded-md px-2.5 py-1.5 text-sm hover:bg-slate-50"
+                    >
+                      <span>{selected.assignedTo?.name || t('common.unassigned')}</span>
+                      <ChevronDown size={14} className="text-slate-400" />
+                    </button>
+                    {showAssignDropdown && (
+                      <div
+                        className="absolute z-10 mt-1 w-full bg-white border rounded-md shadow-lg"
+                        role="listbox"
+                      >
+                        <button
+                          role="option"
+                          aria-selected={!selected.assignedTo}
+                          onClick={() => assignConversation(null)}
+                          className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50 border-b"
+                        >
+                          {t('inbox.unassign')}
+                        </button>
+                        {staffList.map((s) => (
+                          <button
+                            key={s.id}
+                            role="option"
+                            aria-selected={selected.assignedTo?.id === s.id}
+                            onClick={() => assignConversation(s.id)}
+                            className={cn(
+                              'w-full text-left px-3 py-2 text-sm hover:bg-slate-50',
+                              selected.assignedTo?.id === s.id && 'bg-sage-50 text-sage-700',
+                            )}
+                          >
+                            {s.name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  {!selected.assignedTo && (
+                    <button
+                      onClick={() => assignConversation(staffList[0]?.id)}
+                      className="mt-2 text-xs text-sage-600 hover:text-sage-700 font-medium"
+                    >
+                      {t('inbox.assign_to_me')}
+                    </button>
+                  )}
+                </div>
+
+                {selected.status === 'SNOOZED' && selected.snoozedUntil && (
+                  <div className="p-4 border-b bg-lavender-50">
+                    <div className="flex items-center gap-1.5 text-lavender-700 text-xs">
+                      <AlarmClock size={12} />
+                      <span>
+                        {t('inbox.snoozed_until', {
+                          datetime: new Date(selected.snoozedUntil).toLocaleString(),
+                        })}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {customer && pack.customerFields.length > 0 && (
+                  <IntakeCard
+                    customer={customer}
+                    fields={pack.customerFields}
+                    onUpdated={(updated) => setCustomer(updated)}
+                  />
+                )}
+
+                <div className="p-4 border-b">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-semibold text-slate-500 uppercase">
+                      {t('inbox.bookings_section')}
+                    </span>
+                    <button
+                      onClick={() => setShowBookingForm(true)}
+                      className="text-xs text-sage-600 hover:text-sage-700"
+                    >
+                      {t('inbox.bookings_new')}
+                    </button>
+                  </div>
+                  {customerBookings
+                    .filter((b: any) =>
+                      ['PENDING', 'PENDING_DEPOSIT', 'CONFIRMED'].includes(b.status),
+                    )
+                    .slice(0, 3)
+                    .map((b: any) => (
+                      <div key={b.id} className="border rounded p-2 mb-1.5">
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm font-medium">
+                            {b.service?.name}
+                            {b.service?.kind === 'CONSULT' && (
+                              <span className="ml-1 text-[9px] bg-lavender-50 text-lavender-900 px-1 py-0 rounded-full">
+                                C
+                              </span>
+                            )}
+                            {b.service?.kind === 'TREATMENT' && (
+                              <span className="ml-1 text-[9px] bg-sage-50 text-sage-900 px-1 py-0 rounded-full">
+                                T
+                              </span>
+                            )}
+                          </p>
+                          <span
+                            className={cn(
+                              'text-[9px] px-1.5 py-0.5 rounded-full',
+                              b.status === 'CONFIRMED'
+                                ? 'bg-sage-50 text-sage-700'
+                                : b.status === 'PENDING_DEPOSIT'
+                                  ? 'bg-amber-50 text-amber-700'
+                                  : 'bg-lavender-50 text-lavender-700',
+                            )}
+                          >
+                            {t(`status.${b.status.toLowerCase()}`)}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-500 mt-0.5">
+                          {new Date(b.startTime).toLocaleDateString()} at{' '}
+                          {new Date(b.startTime).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </p>
+                        {b.status === 'PENDING_DEPOSIT' && (
+                          <button
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              try {
+                                await api.post(`/bookings/${b.id}/send-deposit-request`);
+                                toast(t('booking.deposit_request_sent'));
+                                if (customer) loadCustomerBookings(customer.id);
+                              } catch (err) {
+                                console.error(err);
+                              }
+                            }}
+                            className="mt-1 text-[10px] text-amber-700 hover:text-amber-800 font-medium flex items-center gap-1"
+                          >
+                            <Send size={10} /> {t('booking.send_deposit_request')}
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  {customerBookings.filter((b: any) =>
+                    ['PENDING', 'PENDING_DEPOSIT', 'CONFIRMED'].includes(b.status),
+                  ).length === 0 && (
+                    <p className="text-xs text-slate-400">{t('inbox.no_upcoming_bookings')}</p>
+                  )}
+                </div>
+              </>
+            )}
+
+            {sidebarTab === 'notes' && (
+              <div className="p-4">
+                <div className="mb-4">
+                  <textarea
+                    value={newNote}
+                    onChange={(e) => setNewNote(e.target.value)}
+                    placeholder={t('inbox.add_note_placeholder')}
+                    rows={3}
+                    className="w-full border rounded-md px-3 py-2 text-sm resize-none"
+                  />
                   <button
-                    onClick={() => setShowBookingForm(true)}
-                    className="text-xs text-sage-600 hover:text-sage-700"
+                    onClick={addNote}
+                    disabled={!newNote.trim()}
+                    className="mt-1 bg-yellow-500 text-white px-3 py-1.5 rounded-md text-xs hover:bg-yellow-600 disabled:opacity-50 w-full"
                   >
-                    {t('inbox.bookings_new')}
+                    <StickyNote size={12} className="inline mr-1" /> {t('inbox.add_note')}
                   </button>
                 </div>
-                {customerBookings
-                  .filter((b: any) =>
-                    ['PENDING', 'PENDING_DEPOSIT', 'CONFIRMED'].includes(b.status),
-                  )
-                  .slice(0, 3)
-                  .map((b: any) => (
-                    <div key={b.id} className="border rounded p-2 mb-1.5">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-medium">
-                          {b.service?.name}
-                          {b.service?.kind === 'CONSULT' && (
-                            <span className="ml-1 text-[9px] bg-lavender-50 text-lavender-900 px-1 py-0 rounded-full">
-                              C
-                            </span>
-                          )}
-                          {b.service?.kind === 'TREATMENT' && (
-                            <span className="ml-1 text-[9px] bg-sage-50 text-sage-900 px-1 py-0 rounded-full">
-                              T
-                            </span>
-                          )}
+
+                <div className="space-y-3">
+                  {notes.map((n) => (
+                    <div
+                      key={n.id}
+                      className="bg-yellow-50 border border-yellow-200 rounded-lg p-3"
+                    >
+                      <p className="text-sm whitespace-pre-wrap">{n.content}</p>
+                      <div className="flex items-center justify-between mt-2">
+                        <p className="text-[10px] text-slate-400">
+                          {n.staff?.name} · {new Date(n.createdAt).toLocaleString()}
                         </p>
-                        <span
-                          className={cn(
-                            'text-[9px] px-1.5 py-0.5 rounded-full',
-                            b.status === 'CONFIRMED'
-                              ? 'bg-sage-50 text-sage-700'
-                              : b.status === 'PENDING_DEPOSIT'
-                                ? 'bg-amber-50 text-amber-700'
-                                : 'bg-lavender-50 text-lavender-700',
-                          )}
-                        >
-                          {t(`status.${b.status.toLowerCase()}`)}
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-500 mt-0.5">
-                        {new Date(b.startTime).toLocaleDateString()} at{' '}
-                        {new Date(b.startTime).toLocaleTimeString([], {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </p>
-                      {b.status === 'PENDING_DEPOSIT' && (
                         <button
-                          onClick={async (e) => {
-                            e.stopPropagation();
-                            try {
-                              await api.post(`/bookings/${b.id}/send-deposit-request`);
-                              toast(t('booking.deposit_request_sent'));
-                              if (customer) loadCustomerBookings(customer.id);
-                            } catch (err) {
-                              console.error(err);
-                            }
-                          }}
-                          className="mt-1 text-[10px] text-amber-700 hover:text-amber-800 font-medium flex items-center gap-1"
+                          onClick={() => deleteNote(n.id)}
+                          className="text-slate-400 hover:text-red-500"
                         >
-                          <Send size={10} /> {t('booking.send_deposit_request')}
+                          <Trash2 size={12} />
                         </button>
-                      )}
+                      </div>
                     </div>
                   ))}
-                {customerBookings.filter((b: any) =>
-                  ['PENDING', 'PENDING_DEPOSIT', 'CONFIRMED'].includes(b.status),
-                ).length === 0 && (
-                  <p className="text-xs text-slate-400">{t('inbox.no_upcoming_bookings')}</p>
-                )}
+                  {notes.length === 0 && (
+                    <p className="text-xs text-slate-400 text-center py-4">{t('inbox.no_notes')}</p>
+                  )}
+                </div>
               </div>
-            </>
-          )}
-
-          {sidebarTab === 'notes' && (
-            <div className="p-4">
-              <div className="mb-4">
-                <textarea
-                  value={newNote}
-                  onChange={(e) => setNewNote(e.target.value)}
-                  placeholder={t('inbox.add_note_placeholder')}
-                  rows={3}
-                  className="w-full border rounded-md px-3 py-2 text-sm resize-none"
-                />
-                <button
-                  onClick={addNote}
-                  disabled={!newNote.trim()}
-                  className="mt-1 bg-yellow-500 text-white px-3 py-1.5 rounded-md text-xs hover:bg-yellow-600 disabled:opacity-50 w-full"
-                >
-                  <StickyNote size={12} className="inline mr-1" /> {t('inbox.add_note')}
-                </button>
-              </div>
-
-              <div className="space-y-3">
-                {notes.map((n) => (
-                  <div key={n.id} className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                    <p className="text-sm whitespace-pre-wrap">{n.content}</p>
-                    <div className="flex items-center justify-between mt-2">
-                      <p className="text-[10px] text-slate-400">
-                        {n.staff?.name} · {new Date(n.createdAt).toLocaleString()}
-                      </p>
-                      <button
-                        onClick={() => deleteNote(n.id)}
-                        className="text-slate-400 hover:text-red-500"
-                      >
-                        <Trash2 size={12} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-                {notes.length === 0 && (
-                  <p className="text-xs text-slate-400 text-center py-4">{t('inbox.no_notes')}</p>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
+            )}
+          </div>
+        )}
+      </div>
 
       <BookingFormModal
         isOpen={showBookingForm}
