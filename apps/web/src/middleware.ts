@@ -33,9 +33,13 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Check for access_token cookie (httpOnly cookie set by API)
-  const token = request.cookies.get('access_token');
-  if (!token) {
+  // Check for auth cookies (httpOnly cookies set by API).
+  // Allow the request if either access_token or refresh_token exists —
+  // the API client will automatically refresh an expired access_token
+  // using the refresh_token cookie, so we must not redirect prematurely.
+  const accessToken = request.cookies.get('access_token');
+  const refreshToken = request.cookies.get('refresh_token');
+  if (!accessToken && !refreshToken) {
     const loginUrl = new URL('/login', request.url);
     return NextResponse.redirect(loginUrl);
   }
