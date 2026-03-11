@@ -933,6 +933,7 @@ Key groups (full list in `.env.example`):
   - 1 HIGH (business logic): `forceBook` flag restricted to ADMIN role only (was accessible to all staff)
   - Tenant isolation: verified STRONG (zero critical vulns, all 40+ services filter by businessId)
 - **BUG-001: P2010 Raw Query Fix** — COMPLETE (March 2026). Raw SQL `FOR UPDATE` lock queries used Prisma model names instead of `@@map` PostgreSQL table names, causing P2010 on every public portal booking. Fixed 4 raw queries across booking/billing/self-serve services. Hardened global exception filter to never expose Prisma error codes to users.
+- **BUG-002: /patients → /customers Redirect** — COMPLETE (March 2026). Added permanent 301 redirects in next.config.js for `/patients` and `/patients/:path*` to `/customers` equivalents. Preserves bookmarked/external links after the rename.
 - **Deployment Resilience** — COMPLETE (Feb 19, 2026). Zero-downtime deploys via `railway.toml` health checks, NestJS `enableShutdownHooks()` for graceful shutdown, frontend `fetchWithRetry()` auto-retries once on network errors during deployment rollovers.
 - **Manual End-to-End Testing** — COMPLETE (Feb 19, 2026). 72 tests across 7 sessions (Security, Agentic, Inbox/Calendar, Exports/Dashboard, Automations, Self-Serve, Cross-Cutting) + 26 frontend verifications. **72/72 pass rate.** 4 defects found and fixed during testing:
   - D1 (Critical): Circular dependency in MessageModule ↔ MessagingModule preventing API startup — fixed with `forwardRef()`
