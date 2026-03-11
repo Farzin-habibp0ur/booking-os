@@ -32,8 +32,8 @@ export interface SettingsCategory {
 export const SETTINGS_CATEGORIES: SettingsCategory[] = [
   {
     key: 'account',
-    label: 'Account & Security',
-    description: 'Team accounts, login methods, and custom profile fields',
+    label: 'Account & Import',
+    description: 'Import customers via CSV, export data, and manage profile fields',
     icon: ShieldCheck,
     accent: 'sage',
     pages: ['account', 'profile-fields', 'audit-log'],
