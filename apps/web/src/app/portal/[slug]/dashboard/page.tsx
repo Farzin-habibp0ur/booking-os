@@ -13,6 +13,7 @@ import {
   ClipboardList,
   FileText,
   Package,
+  Users,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { statusBadgeClasses } from '@/lib/design-tokens';
@@ -20,6 +21,15 @@ import { PageSkeleton } from '@/components/skeleton';
 import { AftercarePortalView } from '@/components/aesthetic/aftercare-portal-view';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+
+function getISOWeek(date: Date): string {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() + 3 - ((d.getDay() + 6) % 7));
+  const yearStart = new Date(d.getFullYear(), 0, 4);
+  const week = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + yearStart.getDay() + 1 - 1) / 7);
+  return `${d.getFullYear()}-W${String(week).padStart(2, '0')}`;
+}
 
 function portalFetch(path: string) {
   const token = typeof window !== 'undefined' ? sessionStorage.getItem('portal-token') : null;
@@ -70,6 +80,7 @@ export default function PortalDashboardPage() {
   const [acceptingPlan, setAcceptingPlan] = useState<string | null>(null);
   const [aftercareEnrollments, setAftercareEnrollments] = useState<any[]>([]);
   const [packagePurchases, setPackagePurchases] = useState<any[]>([]);
+  const [classSchedule, setClassSchedule] = useState<any[]>([]);
 
   const loadData = useCallback(() => {
     return Promise.all([
@@ -79,14 +90,16 @@ export default function PortalDashboardPage() {
       portalFetch('/portal/treatment-plans').catch(() => []),
       portalFetch('/portal/aftercare').catch(() => []),
       portalFetch('/portal/packages').catch(() => []),
+      portalFetch(`/portal/class-schedule?week=${getISOWeek(new Date())}`).catch(() => []),
     ])
-      .then(([prof, up, bookings, plans, aftercare, pkgs]) => {
+      .then(([prof, up, bookings, plans, aftercare, pkgs, schedule]) => {
         setProfile(prof);
         setUpcoming(up);
         setRecentBookings(bookings.data?.slice(0, 5) || []);
         setTreatmentPlans(Array.isArray(plans) ? plans : []);
         setAftercareEnrollments(Array.isArray(aftercare) ? aftercare : []);
         setPackagePurchases(Array.isArray(pkgs) ? pkgs : []);
+        setClassSchedule(Array.isArray(schedule) ? schedule : []);
       })
       .catch(() => {});
   }, []);
@@ -334,6 +347,36 @@ export default function PortalDashboardPage() {
                 </div>
               );
             })}
+          </div>
+        </section>
+      )}
+
+      {/* Class Schedule */}
+      {classSchedule.length > 0 && (
+        <section data-testid="portal-classes">
+          <h2 className="text-lg font-serif font-semibold text-slate-900 mb-3">
+            Upcoming Classes
+          </h2>
+          <div className="space-y-2">
+            {classSchedule.slice(0, 5).map((cls: any) => (
+              <div key={cls.id + cls.date} className="bg-white rounded-2xl shadow-soft p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-slate-900">{cls.service?.name}</p>
+                    <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
+                      <Clock size={12} />
+                      <span>{cls.date}</span>
+                      <span>{cls.startTime}</span>
+                      <span>with {cls.staff?.name}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs">
+                    <Users size={12} className="text-sage-500" />
+                    <span className="text-sage-600">{cls.spotsRemaining} spots left</span>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </section>
       )}

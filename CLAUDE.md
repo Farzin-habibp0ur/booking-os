@@ -17,7 +17,7 @@ booking-os/
 ├── apps/
 │   ├── api/                    # NestJS REST API (port 3001)
 │   │   ├── src/
-│   │   │   ├── modules/        # 67 feature modules (one dir per domain)
+│   │   │   ├── modules/        # 68 feature modules (one dir per domain)
 │   │   │   ├── common/         # Guards, decorators, filters, DTOs, PrismaService
 │   │   │   └── main.ts         # Bootstrap, Swagger, CORS, cookies, validation
 │   │   └── Dockerfile          # Multi-stage production build
@@ -31,7 +31,7 @@ booking-os/
 │   │   └── Dockerfile          # Multi-stage production build
 │   └── whatsapp-simulator/     # WhatsApp testing tool (port 3002)
 ├── packages/
-│   ├── db/                     # Prisma schema (83 models), migrations, seed scripts
+│   ├── db/                     # Prisma schema (85 models), migrations, seed scripts
 │   │   ├── prisma/schema.prisma
 │   │   ├── src/seed.ts         # Base seed (idempotent)
 │   │   ├── src/seed-demo.ts    # Rich demo data (idempotent)
@@ -79,7 +79,7 @@ booking-os/
 
 ### Module Structure
 
-Every feature is a NestJS module in `apps/api/src/modules/` (67 modules). Each module follows this pattern:
+Every feature is a NestJS module in `apps/api/src/modules/` (68 modules). Each module follows this pattern:
 
 ```
 modules/
@@ -114,7 +114,7 @@ modules/
 
 ### Database (Prisma)
 
-- Schema at `packages/db/prisma/schema.prisma` — **83 models**, 58 migrations
+- Schema at `packages/db/prisma/schema.prisma` — **85 models**, 59 migrations
 - Generate client: `npx prisma generate --schema=packages/db/prisma/schema.prisma`
 - Create migration: `npx prisma migrate dev --name your_name --schema=packages/db/prisma/schema.prisma`
 - `PrismaService` is a global NestJS provider — inject it in constructors
@@ -291,7 +291,7 @@ All AI-related UI elements use the **lavender** palette: `bg-lavender-50 border 
 
 ### Test Counts
 
-- **~5,780+ total tests** across 386 test files
+- **~5,825+ total tests** across 392 test files
 - API: ~93% statement coverage, ~81% branch coverage
 - Web: ~78% statement coverage, ~73% branch coverage
 

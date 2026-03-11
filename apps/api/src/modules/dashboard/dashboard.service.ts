@@ -375,4 +375,61 @@ export class DashboardService {
 
     return { success: true };
   }
+
+  async getCertificationAlerts(businessId: string) {
+    const biz = await this.prisma.business.findUnique({
+      where: { id: businessId },
+      select: { verticalPack: true },
+    });
+    if (!biz || biz.verticalPack !== 'wellness') return [];
+
+    const thirtyDaysFromNow = new Date();
+    thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+
+    const expiringCerts = await this.prisma.staffCertification.findMany({
+      where: {
+        staff: { businessId, isActive: true },
+        expiryDate: {
+          lte: thirtyDaysFromNow,
+          gte: new Date(),
+        },
+      },
+      include: {
+        staff: { select: { id: true, name: true } },
+      },
+      orderBy: { expiryDate: 'asc' },
+    });
+
+    const expiredCerts = await this.prisma.staffCertification.findMany({
+      where: {
+        staff: { businessId, isActive: true },
+        expiryDate: { lt: new Date() },
+      },
+      include: {
+        staff: { select: { id: true, name: true } },
+      },
+      orderBy: { expiryDate: 'desc' },
+      take: 10,
+    });
+
+    return {
+      expiringSoon: expiringCerts.map((c) => ({
+        id: c.id,
+        staffId: c.staff.id,
+        staffName: c.staff.name,
+        certName: c.name,
+        expiryDate: c.expiryDate,
+        daysUntilExpiry: Math.ceil(
+          (new Date(c.expiryDate!).getTime() - Date.now()) / (1000 * 60 * 60 * 24),
+        ),
+      })),
+      expired: expiredCerts.map((c) => ({
+        id: c.id,
+        staffId: c.staff.id,
+        staffName: c.staff.name,
+        certName: c.name,
+        expiryDate: c.expiryDate,
+      })),
+    };
+  }
 }

@@ -1360,4 +1360,119 @@ describe('AvailabilityService', () => {
       expect(lastCall?.where?.id).toEqual({ not: 'exclude-id' });
     });
   });
+
+  // ─── Certification filtering (Prompt 3C) ────────────────────────────
+
+  describe('certification filtering', () => {
+    it('filters out staff without required certification', async () => {
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        businessId: 'biz1',
+        durationMins: 60,
+        requiresCertification: 'RMT',
+        maxParticipants: 1,
+        requiredResourceType: null,
+      } as any);
+
+      prisma.staff.findMany.mockResolvedValue([
+        { id: 's1', name: 'Alice' },
+        { id: 's2', name: 'Bob' },
+      ] as any);
+
+      prisma.staffServicePrice.findMany.mockResolvedValue([]);
+
+      // Only Alice has valid RMT cert
+      prisma.staffCertification.findMany.mockResolvedValue([
+        { staffId: 's1' },
+      ] as any);
+
+      prisma.workingHours.findUnique.mockResolvedValue({
+        staffId: 's1',
+        dayOfWeek: FUTURE_DATE_DOW,
+        startTime: '09:00',
+        endTime: '10:00',
+        isOff: false,
+      } as any);
+      prisma.timeOff.findFirst.mockResolvedValue(null);
+      prisma.booking.findMany.mockResolvedValue([]);
+      mockCalendarSyncService.pullExternalEvents.mockResolvedValue([]);
+
+      const result = await service.getAvailableSlots('biz1', FUTURE_DATE, 'svc1');
+      const staffIds = new Set(result.map((s) => s.staffId));
+      expect(staffIds.has('s1')).toBe(true);
+      expect(staffIds.has('s2')).toBe(false);
+    });
+  });
+
+  // ─── Resource auto-filtering (Prompt 3C) ─────────────────────────────
+
+  describe('resource auto-filtering', () => {
+    it('auto-selects resource by type when service requires it', async () => {
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        businessId: 'biz1',
+        durationMins: 60,
+        requiresCertification: null,
+        maxParticipants: 1,
+        requiredResourceType: 'massage_room',
+      } as any);
+
+      prisma.staff.findMany.mockResolvedValue([{ id: 's1', name: 'Alice' }] as any);
+      prisma.staffServicePrice.findMany.mockResolvedValue([]);
+
+      prisma.resource.findMany.mockResolvedValue([
+        { id: 'res-1', name: 'Room A' },
+      ] as any);
+
+      prisma.workingHours.findUnique.mockResolvedValue({
+        staffId: 's1',
+        dayOfWeek: FUTURE_DATE_DOW,
+        startTime: '09:00',
+        endTime: '10:00',
+        isOff: false,
+      } as any);
+      prisma.timeOff.findFirst.mockResolvedValue(null);
+      prisma.booking.findMany.mockResolvedValue([]);
+      mockCalendarSyncService.pullExternalEvents.mockResolvedValue([]);
+
+      const result = await service.getAvailableSlots('biz1', FUTURE_DATE, 'svc1');
+      expect(result.length).toBeGreaterThan(0);
+      expect(result[0].resourceId).toBe('res-1');
+      expect(result[0].resourceName).toBe('Room A');
+    });
+  });
+
+  // ─── Group class support (Prompt 3C) ──────────────────────────────────
+
+  describe('group class support', () => {
+    it('returns spotsRemaining for group services', async () => {
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        businessId: 'biz1',
+        durationMins: 60,
+        requiresCertification: null,
+        maxParticipants: 10,
+        requiredResourceType: null,
+      } as any);
+
+      prisma.staff.findMany.mockResolvedValue([{ id: 's1', name: 'Alice' }] as any);
+      prisma.staffServicePrice.findMany.mockResolvedValue([]);
+
+      prisma.workingHours.findUnique.mockResolvedValue({
+        staffId: 's1',
+        dayOfWeek: FUTURE_DATE_DOW,
+        startTime: '09:00',
+        endTime: '10:00',
+        isOff: false,
+      } as any);
+      prisma.timeOff.findFirst.mockResolvedValue(null);
+      prisma.booking.findMany.mockResolvedValue([]);
+      mockCalendarSyncService.pullExternalEvents.mockResolvedValue([]);
+
+      const result = await service.getAvailableSlots('biz1', FUTURE_DATE, 'svc1');
+      expect(result.length).toBeGreaterThan(0);
+      expect(result[0].spotsRemaining).toBe(10);
+      expect(result[0].available).toBe(true);
+    });
+  });
 });

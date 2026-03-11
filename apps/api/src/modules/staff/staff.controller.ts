@@ -170,4 +170,29 @@ export class StaffController {
     }
     return this.availabilityService.removeTimeOff(businessId, timeOffId);
   }
+
+  @Get(':id/certifications')
+  getCertifications(@BusinessId() businessId: string, @Param('id') id: string) {
+    return this.staffService.getCertifications(businessId, id);
+  }
+
+  @Post(':id/certifications')
+  @Roles('ADMIN')
+  addCertification(
+    @BusinessId() businessId: string,
+    @Param('id') id: string,
+    @Body() body: { name: string; issuedBy?: string; issuedDate?: string; expiryDate?: string; documentUrl?: string },
+  ) {
+    return this.staffService.addCertification(businessId, id, body);
+  }
+
+  @Delete(':id/certifications/:certId')
+  @Roles('ADMIN')
+  removeCertification(
+    @BusinessId() businessId: string,
+    @Param('id') id: string,
+    @Param('certId') certId: string,
+  ) {
+    return this.staffService.removeCertification(businessId, id, certId);
+  }
 }

@@ -8,6 +8,9 @@ export interface TimeSlot {
   staffId: string;
   staffName: string;
   available: boolean;
+  resourceId?: string;
+  resourceName?: string;
+  spotsRemaining?: number;
 }
 
 @Injectable()
@@ -27,12 +30,14 @@ export class AvailabilityService {
     locationId?: string,
     resourceId?: string,
   ): Promise<TimeSlot[]> {
-    // Get service duration
+    // Get service duration and group/resource settings
     const service = await this.prisma.service.findFirst({
       where: { id: serviceId, businessId },
     });
     if (!service) return [];
     const durationMins = service.durationMins;
+    const isGroupClass = (service as any).maxParticipants > 1;
+    const maxParticipants = (service as any).maxParticipants || 1;
 
     // Get staff to check
     const staffWhere: any = { businessId, isActive: true };
@@ -57,6 +62,24 @@ export class AvailabilityService {
       // assume all staff can perform it (backward compatibility)
     }
 
+    // Filter staff by required certification
+    const requiresCert = (service as any).requiresCertification;
+    if (requiresCert && staffList.length > 0) {
+      const certifiedStaff = await this.prisma.staffCertification.findMany({
+        where: {
+          staffId: { in: staffList.map((s) => s.id) },
+          name: requiresCert,
+          OR: [
+            { expiryDate: null },
+            { expiryDate: { gt: new Date() } },
+          ],
+        },
+        select: { staffId: true },
+      });
+      const certifiedIds = new Set(certifiedStaff.map((c) => c.staffId));
+      staffList = staffList.filter((s) => certifiedIds.has(s.id));
+    }
+
     // Filter staff by location assignment when locationId is provided
     if (locationId && staffList.length > 0) {
       const assignments = await this.prisma.staffLocation.findMany({
@@ -70,15 +93,30 @@ export class AvailabilityService {
     const targetDate = new Date(date + 'T00:00:00');
     const dayOfWeek = targetDate.getDay();
 
+    // Auto-find matching resource if service requires a specific type
+    let effectiveResourceId = resourceId;
+    let effectiveResourceName: string | undefined;
+    const requiredResType = (service as any).requiredResourceType;
+    if (!effectiveResourceId && requiredResType) {
+      const matchingResources = await this.prisma.resource.findMany({
+        where: { type: requiredResType, isActive: true },
+        select: { id: true, name: true },
+      });
+      if (matchingResources.length > 0) {
+        effectiveResourceId = matchingResources[0].id;
+        effectiveResourceName = matchingResources[0].name;
+      }
+    }
+
     // Pre-fetch resource bookings for conflict detection
     let resourceBookings: { startTime: Date; endTime: Date }[] = [];
-    if (resourceId) {
+    if (effectiveResourceId) {
       const dayStart = new Date(date + 'T00:00:00');
       const dayEnd = new Date(date + 'T23:59:59');
       resourceBookings = await this.prisma.booking.findMany({
         where: {
           businessId,
-          resourceId,
+          resourceId: effectiveResourceId,
           status: { in: ['PENDING', 'PENDING_DEPOSIT', 'CONFIRMED', 'IN_PROGRESS'] },
           startTime: { gte: dayStart },
           endTime: { lte: dayEnd },
@@ -160,7 +198,7 @@ export class AvailabilityService {
         });
 
         // Check for resource booking conflicts
-        const resourceConflict = resourceId
+        const resourceConflict = effectiveResourceId
           ? resourceBookings.some((rb) => {
               const rbStart = new Date(rb.startTime).getTime();
               const rbEnd = new Date(rb.endTime).getTime();
@@ -168,7 +206,19 @@ export class AvailabilityService {
             })
           : false;
 
-        const hasConflict = internalConflict || externalConflict || resourceConflict;
+        // For group classes: check enrollment count instead of simple conflict
+        let spotsRemaining: number | undefined;
+        if (isGroupClass) {
+          const enrolledCount = existingBookings.filter((b) => {
+            const bStart = new Date(b.startTime).getTime();
+            return bStart === slotStart.getTime();
+          }).length;
+          spotsRemaining = maxParticipants - enrolledCount;
+        }
+
+        const hasConflict = isGroupClass
+          ? (spotsRemaining !== undefined && spotsRemaining <= 0) || externalConflict || resourceConflict
+          : internalConflict || externalConflict || resourceConflict;
 
         // Skip past slots
         if (slotStart.getTime() < Date.now()) continue;
@@ -183,6 +233,8 @@ export class AvailabilityService {
           staffId: staff.id,
           staffName: staff.name,
           available: !hasConflict,
+          ...(effectiveResourceId ? { resourceId: effectiveResourceId, resourceName: effectiveResourceName } : {}),
+          ...(isGroupClass ? { spotsRemaining } : {}),
         });
       }
     }

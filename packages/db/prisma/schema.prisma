@@ -87,6 +87,7 @@ model Business {
   deals                      Deal[]
   servicePackages            ServicePackage[]
   packagePurchases           PackagePurchase[]
+  recurringClasses           RecurringClass[]
 
   @@map("businesses")
 }
@@ -139,6 +140,8 @@ model Staff {
   assignedDeals       Deal[]             @relation("DealAssignedTo")
   dealStageChanges    DealStageHistory[] @relation("DealStageChangedBy")
   dealActivities      DealActivity[]     @relation("DealActivityCreatedBy")
+  certifications      StaffCertification[]
+  recurringClasses    RecurringClass[]
 
   @@index([businessId])
   @@map("staff")
@@ -194,13 +197,16 @@ model Service {
   category        String   @default("General")
   kind            String   @default("OTHER") // CONSULT, TREATMENT, OTHER
   isActive        Boolean  @default(true)
-  depositRequired Boolean  @default(false)
-  depositAmount   Float?
-  bufferBefore    Int      @default(0)
-  bufferAfter     Int      @default(0)
-  customFields    Json     @default("{}")
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  depositRequired       Boolean  @default(false)
+  depositAmount         Float?
+  bufferBefore          Int      @default(0)
+  bufferAfter           Int      @default(0)
+  requiredResourceType  String?
+  maxParticipants       Int      @default(1)
+  requiresCertification String?
+  customFields          Json     @default("{}")
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
   business           Business            @relation(fields: [businessId], references: [id])
   bookings           Booking[]
@@ -211,6 +217,7 @@ model Service {
   treatmentSessions    TreatmentSession[]
   aftercareProtocols   AftercareProtocol[]
   servicePackages      ServicePackage[]
+  recurringClasses     RecurringClass[]
 
   @@index([businessId])
   @@map("services")
@@ -775,12 +782,13 @@ model Location {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  business       Business        @relation(fields: [businessId], references: [id])
-  bookings       Booking[]
-  resources      Resource[]
-  staffLocations StaffLocation[]
-  conversations  Conversation[]
-  vehicles       Vehicle[]
+  business         Business         @relation(fields: [businessId], references: [id])
+  bookings         Booking[]
+  resources        Resource[]
+  staffLocations   StaffLocation[]
+  conversations    Conversation[]
+  vehicles         Vehicle[]
+  recurringClasses RecurringClass[]
 
   @@index([businessId])
   @@map("locations")
@@ -796,8 +804,9 @@ model Resource {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  location Location  @relation(fields: [locationId], references: [id])
-  bookings Booking[]
+  location         Location         @relation(fields: [locationId], references: [id])
+  bookings         Booking[]
+  recurringClasses RecurringClass[]
 
   @@index([locationId])
   @@index([type])
@@ -1917,4 +1926,45 @@ model PackageRedemption {
 
   @@index([purchaseId])
   @@map("package_redemptions")
+}
+
+model StaffCertification {
+  id         String    @id @default(cuid())
+  staffId    String
+  name       String
+  issuedBy   String?
+  issuedDate DateTime?
+  expiryDate DateTime?
+  documentUrl String?
+  isVerified Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+
+  staff Staff @relation(fields: [staffId], references: [id])
+
+  @@unique([staffId, name])
+  @@index([staffId])
+  @@map("staff_certifications")
+}
+
+model RecurringClass {
+  id              String   @id @default(cuid())
+  businessId      String
+  serviceId       String
+  staffId         String
+  resourceId      String?
+  locationId      String?
+  dayOfWeek       Int
+  startTime       String   // HH:mm
+  maxParticipants Int
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+
+  business Business  @relation(fields: [businessId], references: [id])
+  service  Service   @relation(fields: [serviceId], references: [id])
+  staff    Staff     @relation(fields: [staffId], references: [id])
+  resource Resource? @relation(fields: [resourceId], references: [id])
+  location Location? @relation(fields: [locationId], references: [id])
+
+  @@index([businessId])
+  @@map("recurring_classes")
 }

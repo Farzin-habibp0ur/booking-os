@@ -2,7 +2,7 @@
 
 > **Purpose:** This document gives full context on the Booking OS platform — what it is, what's been built, how it's structured, and what's left to build. Share this with an AI assistant or new developer to get productive immediately.
 >
-> **Last updated:** March 11, 2026 (All phases COMPLETE — A through E + Phases 1-4 & 6 polish + QA Fixes + Sprints 1-4 + Prompts 4A-4C + Prompt 1C + Prompt 1A + Prompt 1B + Prompt 1D + Prompt 2A + Prompt 2B + Prompt 2C + Prompt 3A COMPLETE — ~5,780+ total tests across 386 test files, 83 Prisma models, 58 migrations)
+> **Last updated:** March 11, 2026 (All phases COMPLETE — A through E + Phases 1-4 & 6 polish + QA Fixes + Sprints 1-4 + Prompts 4A-4C + Prompt 1C + Prompt 1A + Prompt 1B + Prompt 1D + Prompt 2A + Prompt 2B + Prompt 2C + Prompt 3A + Prompt 3C COMPLETE — ~5,825+ total tests across 392 test files, 85 Prisma models, 59 migrations)
 
 ---
 
@@ -130,7 +130,7 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 - **Customer Hub** — Redesigned `/customers/{id}` with sticky header, context row (last booking, last conversation, waitlist count), notes tab, message deep link, vertical modules
 - **Customer Notes** — New `CustomerNote` model with full CRUD, staff ownership validation
 - **Unified Timeline** — Timeline API endpoint (6 data sources: bookings, conversations, notes, waitlist, quotes, campaigns), `CustomerTimeline` component with type filtering, pagination, deep linking
-- **Vertical Modules** — IntakeCard for aesthetic pack, WellnessIntakeCard/PackageTracker/MembershipBadge/PackagePurchaseModal/PackageRedeemSelector for wellness pack, quotes summary for dealership pack, collapsible sections
+- **Vertical Modules** — IntakeCard for aesthetic pack, WellnessIntakeCard/PackageTracker/MembershipBadge/PackagePurchaseModal/PackageRedeemSelector/PractitionerProfile/ClassSchedule/CertificationManager for wellness pack, quotes summary for dealership pack, collapsible sections
 - **Enhanced Search** — Search API with offset, types filter, totals; Cmd+K fixed hrefs to detail pages, grouped results, vertical-aware labels, "View all results" link
 - **Search Page** — New `/search` page with URL param sync, type filter chips with counts, grouped results, load more per section
 - **Inbox Deep Linking** — `?conversationId=` URL param auto-selects conversation, customer name links to profile
@@ -1078,6 +1078,22 @@ Key groups (full list in `.env.example`):
 - Design tokens: PACKAGE_STATUS_STYLES + packageBadgeClasses()
 - Sidebar nav: /packages under Tools section
 - 66 tests (38 API + 28 web)
+
+### Prompt 3C: Enhanced Practitioner Scheduling — COMPLETE
+
+- StaffCertification + RecurringClass Prisma models (@@map: "staff_certifications", "recurring_classes"), migration 59
+- Service model additions: requiredResourceType, maxParticipants (@default(1)), requiresCertification
+- RecurringClassModule (68th API module): CRUD, GET /recurring-classes/schedule?week=YYYY-WNN, POST /:id/enroll, daily @Cron generation
+- Availability service enhancements:
+  - Certification filtering: if service.requiresCertification set, only shows staff with valid (non-expired) certification
+  - Resource auto-filtering: if service.requiredResourceType set, auto-finds matching resource, returns resourceId/resourceName in slot
+  - Group class support: services with maxParticipants > 1 return spotsRemaining instead of boolean availability
+- Staff controller: GET/POST/DELETE /:id/certifications endpoints
+- Dashboard: GET /dashboard/certification-alerts (30-day expiring + expired certs for wellness businesses)
+- Portal: GET /portal/class-schedule, GET /portal/practitioners, dashboard "Upcoming Classes" section
+- Web components: PractitionerProfile (staff card with services, certs, weekly availability), ClassSchedule (weekly timetable with enrollment counts + Book buttons), CertificationManager (add/edit/remove with expiry tracking)
+- Wellness component barrel export updated
+- 48 new tests (25 API + 23 web)
 
 ### Do Not Build (Yet)
 

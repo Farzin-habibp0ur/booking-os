@@ -442,4 +442,101 @@ export class PortalService {
       orderBy: { purchasedAt: 'desc' },
     });
   }
+
+  async getClassSchedule(businessId: string, week: string) {
+    const biz = await this.prisma.business.findUnique({
+      where: { id: businessId },
+      select: { verticalPack: true },
+    });
+    if (!biz || biz.verticalPack !== 'wellness') return [];
+
+    const classes = await this.prisma.recurringClass.findMany({
+      where: { businessId, isActive: true },
+      include: {
+        service: { select: { id: true, name: true, durationMins: true, price: true } },
+        staff: { select: { id: true, name: true } },
+        resource: { select: { id: true, name: true } },
+        location: { select: { id: true, name: true } },
+      },
+      orderBy: [{ dayOfWeek: 'asc' }, { startTime: 'asc' }],
+    });
+
+    // Parse week and generate schedule with enrollment counts
+    const match = week?.match(/^(\d{4})-W(\d{1,2})$/);
+    if (!match) return classes;
+
+    const year = parseInt(match[1]);
+    const weekNum = parseInt(match[2]);
+    const jan4 = new Date(year, 0, 4);
+    const dow = jan4.getDay() || 7;
+    const weekStart = new Date(jan4);
+    weekStart.setDate(jan4.getDate() - dow + 1 + (weekNum - 1) * 7);
+
+    return Promise.all(
+      classes.map(async (cls) => {
+        const classDate = new Date(weekStart);
+        const offset = cls.dayOfWeek === 0 ? 6 : cls.dayOfWeek - 1;
+        classDate.setDate(weekStart.getDate() + offset);
+
+        const [h, m] = cls.startTime.split(':').map(Number);
+        const classStart = new Date(classDate);
+        classStart.setHours(h, m, 0, 0);
+
+        const enrollmentCount = await this.prisma.booking.count({
+          where: {
+            businessId,
+            serviceId: cls.serviceId,
+            staffId: cls.staffId,
+            startTime: classStart,
+            status: { in: ['PENDING', 'PENDING_DEPOSIT', 'CONFIRMED', 'IN_PROGRESS'] },
+          },
+        });
+
+        return {
+          ...cls,
+          date: classDate.toISOString().split('T')[0],
+          enrollmentCount,
+          spotsRemaining: cls.maxParticipants - enrollmentCount,
+        };
+      }),
+    );
+  }
+
+  async getPractitioners(businessId: string) {
+    const staff = await this.prisma.staff.findMany({
+      where: { businessId, isActive: true, role: { in: ['SERVICE_PROVIDER', 'ADMIN'] } },
+      select: {
+        id: true,
+        name: true,
+        staffServicePrices: {
+          select: {
+            service: { select: { id: true, name: true, category: true } },
+          },
+        },
+        certifications: {
+          select: {
+            id: true,
+            name: true,
+            issuedBy: true,
+            expiryDate: true,
+            isVerified: true,
+          },
+        },
+        workingHours: {
+          select: { dayOfWeek: true, startTime: true, endTime: true, isOff: true },
+          orderBy: { dayOfWeek: 'asc' },
+        },
+      },
+    });
+
+    return staff.map((s) => ({
+      id: s.id,
+      name: s.name,
+      specialties: s.staffServicePrices.map((ssp) => ssp.service),
+      certifications: s.certifications.filter(
+        (c) => !c.expiryDate || new Date(c.expiryDate) > new Date(),
+      ),
+      workingHours: s.workingHours,
+    }));
+  }
 }
