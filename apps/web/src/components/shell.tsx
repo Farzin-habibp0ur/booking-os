@@ -443,11 +443,13 @@ function ShellInner({ children }: { children: ReactNode }) {
 
       <main
         id="main-content"
-        className="flex-1 overflow-auto md:pt-0 pb-16 md:pb-0 dark:bg-slate-950 animate-page-fade"
+        className="flex-1 flex flex-col min-h-0 md:pt-0 pb-16 md:pb-0 dark:bg-slate-950 animate-page-fade"
       >
         <ViewAsBanner />
         <TrialBanner />
-        <ErrorBoundary>{children}</ErrorBoundary>
+        <div className="flex-1 min-h-0 overflow-auto relative">
+          <ErrorBoundary>{children}</ErrorBoundary>
+        </div>
       </main>
 
       {/* Mobile bottom tab bar */}
