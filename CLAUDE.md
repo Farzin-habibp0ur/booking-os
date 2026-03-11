@@ -53,25 +53,25 @@ booking-os/
 
 ## Tech Stack
 
-| Layer | Technology | Version |
-|-------|-----------|---------|
-| Frontend | Next.js (App Router), React, TypeScript | 15.x, 19.x |
-| Styling | Tailwind CSS | 4.x |
-| Icons | lucide-react | 0.468 |
-| Charts | Recharts | 2.15 |
-| Real-time | Socket.io | 4.x |
-| Backend | NestJS, TypeScript | 11.x |
-| ORM | Prisma | 6.x |
-| Database | PostgreSQL | 16 |
-| AI | Anthropic Claude API | claude-sonnet |
-| Payments | Stripe | stripe-node |
-| Email | Resend | - |
-| Messaging | WhatsApp Business Cloud API | - |
-| Cache/Queue | Redis 7 + BullMQ | - |
-| Monorepo | Turborepo | 2.x |
-| CI/CD | GitHub Actions → Railway | - |
-| Monitoring | Sentry | - |
-| Linting | ESLint 9 + Prettier | - |
+| Layer       | Technology                              | Version       |
+| ----------- | --------------------------------------- | ------------- |
+| Frontend    | Next.js (App Router), React, TypeScript | 15.x, 19.x    |
+| Styling     | Tailwind CSS                            | 4.x           |
+| Icons       | lucide-react                            | 0.468         |
+| Charts      | Recharts                                | 2.15          |
+| Real-time   | Socket.io                               | 4.x           |
+| Backend     | NestJS, TypeScript                      | 11.x          |
+| ORM         | Prisma                                  | 6.x           |
+| Database    | PostgreSQL                              | 16            |
+| AI          | Anthropic Claude API                    | claude-sonnet |
+| Payments    | Stripe                                  | stripe-node   |
+| Email       | Resend                                  | -             |
+| Messaging   | WhatsApp Business Cloud API             | -             |
+| Cache/Queue | Redis 7 + BullMQ                        | -             |
+| Monorepo    | Turborepo                               | 2.x           |
+| CI/CD       | GitHub Actions → Railway                | -             |
+| Monitoring  | Sentry                                  | -             |
+| Linting     | ESLint 9 + Prettier                     | -             |
 
 ---
 
@@ -215,9 +215,11 @@ Key events: `message:new`, `conversation:updated`, `ai:suggestion`, `ai:auto-rep
 ## Design System & UI Guidelines
 
 ### Aesthetic
+
 **"Minimalist Premium"** — Apple Health meets Stripe. Lots of whitespace, subtle shadows, highly legible typography, deliberate use of color.
 
 ### Typography
+
 - **UI / Data font:** `Inter` (Google Fonts) — set as Tailwind's default `font-sans`
 - **Display / Header font:** `Playfair Display` (Google Fonts) — set as Tailwind's `font-serif`
 - Use `font-serif` for large metrics, page titles, and high-impact headers
@@ -226,15 +228,18 @@ Key events: `message:new`, `conversation:updated`, `ai:suggestion`, `ai:auto-rep
 ### Color Palette
 
 **Sage (primary actions, confirmations, success):**
+
 - 50: `#F4F7F5`, 100: `#E4EBE6`, 500: `#8AA694`, 600: `#71907C`, 900: `#3A4D41`
 
 **Lavender (AI features, highlights, pending states):**
+
 - 50: `#F5F3FA`, 100: `#EBE7F5`, 500: `#9F8ECB`, 600: `#8A75BD`, 900: `#4A3B69`
 
 **Backgrounds:** Warm off-white `#FCFCFD` instead of `gray-50`
 **Default text:** `slate-800` for body, `slate-500` for secondary
 
 ### Component Style Rules
+
 1. **Border radii:** `rounded-2xl` (or `rounded-3xl` for auth cards). Avoid sharp corners
 2. **Borders:** Remove where possible. Prefer soft, diffused drop shadows
 3. **Shadows:** Custom `shadow-soft` (`0 12px 40px -12px rgba(0, 0, 0, 0.05)`)
@@ -243,18 +248,21 @@ Key events: `message:new`, `conversation:updated`, `ai:suggestion`, `ai:auto-rep
 6. **No external component libraries.** Strictly Tailwind CSS utility classes
 
 ### Status Badge Colors (use `BOOKING_STATUS_STYLES` from `design-tokens.ts`)
+
 - Confirmed / Completed → `bg-sage-50 text-sage-900`
 - Pending → `bg-lavender-50 text-lavender-900`
 - Cancelled / No-show → `bg-red-50 text-red-700`
 - In Progress → `bg-amber-50 text-amber-700`
 
 ### CSS Utilities (`globals.css`)
+
 - `.status-dot` — small colored dot indicator (1.5×1.5 rounded-full)
 - `.btn-press` — subtle press feedback (scale 0.98 on :active)
 - `.nav-section-label` — sidebar nav section headings (10px uppercase tracking-wider)
 - `.celebration-confetti` — CSS-only confetti animation for setup wizard completion (respects `prefers-reduced-motion`)
 
 ### Micro-Animation Utilities (`globals.css` — DS V2 §10)
+
 - `.animate-slide-up`, `.animate-fade-in`, `.animate-scale-in`, `.animate-slide-in-right`, `.animate-slide-in-from-bottom` — entrance animations (200–300ms)
 - `.animate-badge-flash` — brief white pulse on status badge change (400ms, use with `key={status}` to re-trigger)
 - `.animate-card-hover` — translateY(-2px) + shadow lift on hover (200ms)
@@ -267,6 +275,7 @@ Key events: `message:new`, `conversation:updated`, `ai:suggestion`, `ai:auto-rep
 - All animations respect `prefers-reduced-motion` via blanket media query rule
 
 ### AI Feature Styling
+
 All AI-related UI elements use the **lavender** palette: `bg-lavender-50 border border-lavender-100 text-lavender-900 rounded-xl`
 
 ---
@@ -274,11 +283,13 @@ All AI-related UI elements use the **lavender** palette: `bg-lavender-50 border 
 ## Testing Conventions
 
 ### Test Counts
+
 - **~5,260+ total tests** across 340+ test files
 - API: ~93% statement coverage, ~81% branch coverage
 - Web: ~78% statement coverage, ~73% branch coverage
 
 ### Running Tests
+
 ```bash
 # All tests (via Turborepo)
 npm test
@@ -297,6 +308,7 @@ npm test -- --coverage
 ```
 
 ### API Test Patterns (Jest)
+
 - Test files are co-located: `feature.service.spec.ts` next to `feature.service.ts`
 - Use `Test.createTestingModule()` to set up the NestJS testing module
 - Mock `PrismaService` — never hit a real database in unit tests
@@ -306,6 +318,7 @@ npm test -- --coverage
 - Test tenant isolation — verify queries filter by businessId
 
 ### Web Test Patterns (Jest + React Testing Library)
+
 - Test files: `component-name.test.tsx` co-located with components
 - Use `@testing-library/react` for rendering and assertions
 - Mock the API client (`lib/api.ts`) for all network calls
@@ -313,6 +326,7 @@ npm test -- --coverage
 - Test user interactions, loading states, error states, and empty states
 
 ### E2E Tests (Playwright)
+
 - Test files in `apps/web/e2e/`
 - Config at `apps/web/playwright.config.ts` (Chromium only, starts API + web dev servers)
 - Shared auth fixture at `apps/web/e2e/fixtures.ts` (reuses `helpers/auth.ts`)
@@ -388,12 +402,12 @@ Pull request → lint-and-test → docker-build + e2e-test (Playwright)
 
 ### Railway Production
 
-| Property | Value |
-|----------|-------|
+| Property   | Value                                  |
+| ---------- | -------------------------------------- |
 | Project ID | `37eeca20-7dfe-45d9-8d29-e902a545f475` |
-| API domain | `api.businesscommandcentre.com` |
-| Web domain | `businesscommandcentre.com` |
-| Services | api, web, postgres, redis |
+| API domain | `api.businesscommandcentre.com`        |
+| Web domain | `businesscommandcentre.com`            |
+| Services   | api, web, postgres, redis              |
 
 ---
 
@@ -429,34 +443,39 @@ Pull request → lint-and-test → docker-build + e2e-test (Playwright)
 
 13. **Graceful shutdown is enabled — do not remove `enableShutdownHooks()` from `main.ts`.** Combined with `railway.toml` health checks, this provides zero-downtime deploys.
 
+14. **Raw SQL queries must use `@@map` table names, not Prisma model names.** Prisma's `$queryRaw` bypasses the ORM layer and talks directly to PostgreSQL. Use the actual table names from `@@map()` directives (e.g., `"staff"`, `"bookings"`, `"waitlist_entries"`), NOT the Prisma model names (`"Staff"`, `"Booking"`, `"WaitlistEntry"`). Getting this wrong causes P2010 errors. See BUG-001 fix (March 2026).
+
 ### After Any Auth or Cookie Change
 
 Verify with:
+
 ```bash
 curl -s -D - -o /dev/null -X POST https://api.businesscommandcentre.com/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"sarah@glowclinic.com","password":"password123"}' 2>&1 | grep -i set-cookie
 ```
+
 Confirm: `Domain=.businesscommandcentre.com`, `SameSite=Lax`, `Secure`, `Path=/`.
 
 ---
 
 ## AI Architecture
 
-| Component | Purpose |
-|-----------|---------|
-| `ClaudeClient` | API wrapper with error handling, graceful degradation |
-| `IntentDetector` | Classifies: GENERAL_INQUIRY, BOOK_APPOINTMENT, CANCEL_APPOINTMENT, RESCHEDULE_APPOINTMENT, TRANSFER_TO_HUMAN |
-| `ReplyGenerator` | Contextual reply drafts using conversation history + business context |
-| `BookingAssistant` | Multi-step booking: service → date → time → confirm |
-| `CancelAssistant` | Identifies and cancels bookings from conversation |
-| `RescheduleAssistant` | Identifies and reschedules bookings |
-| `ProfileCollector` | Conversationally collects missing required profile fields |
-| `AiService` | Orchestrator: routes intents, manages state, handles auto-reply |
+| Component             | Purpose                                                                                                      |
+| --------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `ClaudeClient`        | API wrapper with error handling, graceful degradation                                                        |
+| `IntentDetector`      | Classifies: GENERAL_INQUIRY, BOOK_APPOINTMENT, CANCEL_APPOINTMENT, RESCHEDULE_APPOINTMENT, TRANSFER_TO_HUMAN |
+| `ReplyGenerator`      | Contextual reply drafts using conversation history + business context                                        |
+| `BookingAssistant`    | Multi-step booking: service → date → time → confirm                                                          |
+| `CancelAssistant`     | Identifies and cancels bookings from conversation                                                            |
+| `RescheduleAssistant` | Identifies and reschedules bookings                                                                          |
+| `ProfileCollector`    | Conversationally collects missing required profile fields                                                    |
+| `AiService`           | Orchestrator: routes intents, manages state, handles auto-reply                                              |
 
 AI state persisted in `conversation.metadata` JSON for stateful multi-turn flows.
 
 ### Background Agents (5 operational + 12 marketing)
+
 - `WaitlistAgent` — Auto-match waitlist entries to cancelled slots
 - `RetentionAgent` — Detect at-risk customers, generate win-back action cards
 - `DataHygieneAgent` — Duplicate detection, incomplete profile flagging
@@ -470,17 +489,18 @@ Agents run via `AgentSchedulerService` cron → `AGENT_PROCESSING` BullMQ queue 
 
 ## Key Documentation
 
-| Document | Location | Purpose |
-|----------|----------|---------|
-| PROJECT_CONTEXT.md | `docs/PROJECT_CONTEXT.md` | Full project context — what's built, schema, modules, roadmap |
-| DEPLOY.md | `DEPLOY.md` | Deployment operations guide with critical rules |
-| cicd.md | `docs/cicd.md` | CI/CD pipeline details |
-| user-stories.md | `docs/user-stories.md` | Complete user stories (280 capabilities, 215 gaps) |
-| ux-brainstorm-brief.md | `docs/ux-brainstorm-brief.md` | UX improvement brainstorm |
+| Document               | Location                      | Purpose                                                       |
+| ---------------------- | ----------------------------- | ------------------------------------------------------------- |
+| PROJECT_CONTEXT.md     | `docs/PROJECT_CONTEXT.md`     | Full project context — what's built, schema, modules, roadmap |
+| DEPLOY.md              | `DEPLOY.md`                   | Deployment operations guide with critical rules               |
+| cicd.md                | `docs/cicd.md`                | CI/CD pipeline details                                        |
+| user-stories.md        | `docs/user-stories.md`        | Complete user stories (280 capabilities, 215 gaps)            |
+| ux-brainstorm-brief.md | `docs/ux-brainstorm-brief.md` | UX improvement brainstorm                                     |
 
 ---
 
 ## Do Not Build (Yet)
+
 - Don't chase additional verticals beyond the current 4 (aesthetic, dealership, wellness, general) before ROI is repeatable
 - Don't overinvest in generic AI chatbot; keep AI tied to structured flows
 - Don't build deep enterprise features before pack-led implementation is nailed

@@ -891,16 +891,19 @@ Key groups (full list in `.env.example`):
 - **Fix 5: Accessibility Fixes (WCAG 2.1 AA)** — Resolved duplicate `<h1>` (sidebar brand h1→p), added `aria-label` to language picker select, added `<header role="banner">` landmark to sidebar branding section; verified html lang="en" and all icon-only buttons already compliant
 
 ### Sprint 1: Critical Blockers — COMPLETE
+
 - P-01: Business Branding (logoUrl, brandPrimaryColor, brandTagline, brandFaviconUrl, /settings/branding, portal rendering)
 - P-02: Booking Search (serviceId filter, compound index)
 - P-03: CSV Export (UTF-8 BOM, rate limiting)
 - P-04: Portal Payments (webhook handlers for payment_intent.succeeded/failed)
 
 ### Sprint 2: High Priority — COMPLETE
+
 - P-05: Staff-Service Mapping, P-07: Customer Merge & Delete, P-08: Inbox Media, P-09: Column Sorting, P-10: Calendar Hours, P-11: Deposit Config
 - P-06 & P-12 skipped (already implemented)
 
 ### Sprint 3: Usability Improvements — COMPLETE
+
 - P-13: Multi-Step Automation Sequences (AutomationStep/AutomationExecution models, ACTION/DELAY/BRANCH types, cron executor)
 - P-14: Visual Automation Builder (WorkflowCanvas/Node/Connector/Sidebar, 22 drag-drop blocks, serialize/deserialize)
 - P-15: Campaign A/B Testing (isABTest + variants, Fisher-Yates split, variant-stats, winner selection)
@@ -911,6 +914,7 @@ Key groups (full list in `.env.example`):
 - P-20: Booking Audit Log (BookingAuditLog model, timeline component, 5 action types)
 
 ### Sprint 4: UX Polish & Platform Depth — COMPLETE
+
 - P-21: Illustrated Empty States — COMPLETE (all 8 target pages verified)
 - P-22: Skeleton Loading States — COMPLETE (5 new compositions, 37 pages standardized)
 - P-25: Micro-Animations — COMPLETE (8 new keyframes, applied to cards/toasts/modals/dropdowns/shell)
@@ -928,6 +932,7 @@ Key groups (full list in `.env.example`):
   - 3 MEDIUM: Content-Disposition filename sanitization, `@MaxLength` on ~20 DTO fields, `@IsShallowJson` on 8 filter/config fields
   - 1 HIGH (business logic): `forceBook` flag restricted to ADMIN role only (was accessible to all staff)
   - Tenant isolation: verified STRONG (zero critical vulns, all 40+ services filter by businessId)
+- **BUG-001: P2010 Raw Query Fix** — COMPLETE (March 2026). Raw SQL `FOR UPDATE` lock queries used Prisma model names instead of `@@map` PostgreSQL table names, causing P2010 on every public portal booking. Fixed 4 raw queries across booking/billing/self-serve services. Hardened global exception filter to never expose Prisma error codes to users.
 - **Deployment Resilience** — COMPLETE (Feb 19, 2026). Zero-downtime deploys via `railway.toml` health checks, NestJS `enableShutdownHooks()` for graceful shutdown, frontend `fetchWithRetry()` auto-retries once on network errors during deployment rollovers.
 - **Manual End-to-End Testing** — COMPLETE (Feb 19, 2026). 72 tests across 7 sessions (Security, Agentic, Inbox/Calendar, Exports/Dashboard, Automations, Self-Serve, Cross-Cutting) + 26 frontend verifications. **72/72 pass rate.** 4 defects found and fixed during testing:
   - D1 (Critical): Circular dependency in MessageModule ↔ MessagingModule preventing API startup — fixed with `forwardRef()`

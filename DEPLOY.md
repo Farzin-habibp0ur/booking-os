@@ -46,6 +46,7 @@ Complete reference for deploying, configuring, and operating Booking OS in produ
 > **Lean setup (current):** Redis is optional. Without `REDIS_URL`, the API uses fire-and-forget async processing and single-instance WebSocket — sufficient for <50 concurrent clients. See [Cost Optimization](#cost-optimization-pre-customer-phase) for details.
 
 **Monorepo structure:**
+
 - `apps/api` — NestJS REST API + WebSocket (Socket.IO)
 - `apps/web` — Next.js 15 frontend (standalone output)
 - `packages/db` — Prisma schema, migrations, seed scripts
@@ -60,46 +61,46 @@ Complete reference for deploying, configuring, and operating Booking OS in produ
 
 ### Required for Production
 
-| Variable | Service | Example | Description |
-|----------|---------|---------|-------------|
-| `NODE_ENV` | API | `production` | Enables secure cookies, disables Swagger, enables Helmet |
-| `DATABASE_URL` | API | `postgresql://user:pass@host:5432/booking_os?schema=public` | PostgreSQL connection string |
-| `JWT_SECRET` | API | _(64-char hex)_ | Access token signing key. Generate: `node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"` |
-| `JWT_REFRESH_SECRET` | API | _(64-char hex)_ | Refresh token signing key. Must differ from JWT_SECRET |
-| `CORS_ORIGINS` | API | `https://yourdomain.com,https://www.yourdomain.com` | Comma-separated allowed origins. **Also used to derive cookie Domain** (see section 6) |
-| `NEXT_PUBLIC_API_URL` | Web | `https://api.yourdomain.com/api/v1` | API URL the browser calls. Baked into the Next.js build at build time |
-| `NEXT_PUBLIC_WS_URL` | Web | `https://api.yourdomain.com` | WebSocket (Socket.IO) URL for real-time features |
+| Variable              | Service | Example                                                     | Description                                                                                                    |
+| --------------------- | ------- | ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `NODE_ENV`            | API     | `production`                                                | Enables secure cookies, disables Swagger, enables Helmet                                                       |
+| `DATABASE_URL`        | API     | `postgresql://user:pass@host:5432/booking_os?schema=public` | PostgreSQL connection string                                                                                   |
+| `JWT_SECRET`          | API     | _(64-char hex)_                                             | Access token signing key. Generate: `node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"` |
+| `JWT_REFRESH_SECRET`  | API     | _(64-char hex)_                                             | Refresh token signing key. Must differ from JWT_SECRET                                                         |
+| `CORS_ORIGINS`        | API     | `https://yourdomain.com,https://www.yourdomain.com`         | Comma-separated allowed origins. **Also used to derive cookie Domain** (see section 6)                         |
+| `NEXT_PUBLIC_API_URL` | Web     | `https://api.yourdomain.com/api/v1`                         | API URL the browser calls. Baked into the Next.js build at build time                                          |
+| `NEXT_PUBLIC_WS_URL`  | Web     | `https://api.yourdomain.com`                                | WebSocket (Socket.IO) URL for real-time features                                                               |
 
 ### Optional Services
 
-| Variable | Service | Default | Description |
-|----------|---------|---------|-------------|
-| `REDIS_URL` | API | — | Redis for BullMQ job queues, WebSocket scaling, and caching |
-| `ANTHROPIC_API_KEY` | API | — | Claude API key for AI features (intent detection, reply suggestions) |
-| `STRIPE_SECRET_KEY` | API | — | Stripe billing |
-| `STRIPE_WEBHOOK_SECRET` | API | — | Stripe webhook signature verification |
-| `STRIPE_PRICE_ID_BASIC` | API | — | Stripe price ID for Basic plan |
-| `STRIPE_PRICE_ID_PRO` | API | — | Stripe price ID for Pro plan |
-| `WHATSAPP_PHONE_NUMBER_ID` | API | — | Meta WhatsApp Cloud API |
-| `WHATSAPP_ACCESS_TOKEN` | API | — | Meta WhatsApp Cloud API |
-| `WHATSAPP_VERIFY_TOKEN` | API | — | Meta webhook verification token |
-| `MESSAGING_PROVIDER` | API | `mock` | Set to `whatsapp-cloud` for real WhatsApp messaging |
-| `WEBHOOK_SECRET` | API | — | HMAC secret for inbound webhook verification |
-| `CALENDAR_ENCRYPTION_KEY` | API | — | Encrypts OAuth tokens at rest. Generate: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` |
-| `GOOGLE_CLIENT_ID` | API | — | Google Calendar OAuth |
-| `GOOGLE_CLIENT_SECRET` | API | — | Google Calendar OAuth |
-| `MICROSOFT_CLIENT_ID` | API | — | Outlook Calendar OAuth |
-| `MICROSOFT_CLIENT_SECRET` | API | — | Outlook Calendar OAuth |
-| `SENTRY_DSN` | API + Web | — | Error tracking |
-| `LOG_LEVEL` | API | `info` | Pino log level: trace, debug, info, warn, error, fatal |
+| Variable                   | Service   | Default | Description                                                                                                         |
+| -------------------------- | --------- | ------- | ------------------------------------------------------------------------------------------------------------------- |
+| `REDIS_URL`                | API       | —       | Redis for BullMQ job queues, WebSocket scaling, and caching                                                         |
+| `ANTHROPIC_API_KEY`        | API       | —       | Claude API key for AI features (intent detection, reply suggestions)                                                |
+| `STRIPE_SECRET_KEY`        | API       | —       | Stripe billing                                                                                                      |
+| `STRIPE_WEBHOOK_SECRET`    | API       | —       | Stripe webhook signature verification                                                                               |
+| `STRIPE_PRICE_ID_BASIC`    | API       | —       | Stripe price ID for Basic plan                                                                                      |
+| `STRIPE_PRICE_ID_PRO`      | API       | —       | Stripe price ID for Pro plan                                                                                        |
+| `WHATSAPP_PHONE_NUMBER_ID` | API       | —       | Meta WhatsApp Cloud API                                                                                             |
+| `WHATSAPP_ACCESS_TOKEN`    | API       | —       | Meta WhatsApp Cloud API                                                                                             |
+| `WHATSAPP_VERIFY_TOKEN`    | API       | —       | Meta webhook verification token                                                                                     |
+| `MESSAGING_PROVIDER`       | API       | `mock`  | Set to `whatsapp-cloud` for real WhatsApp messaging                                                                 |
+| `WEBHOOK_SECRET`           | API       | —       | HMAC secret for inbound webhook verification                                                                        |
+| `CALENDAR_ENCRYPTION_KEY`  | API       | —       | Encrypts OAuth tokens at rest. Generate: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` |
+| `GOOGLE_CLIENT_ID`         | API       | —       | Google Calendar OAuth                                                                                               |
+| `GOOGLE_CLIENT_SECRET`     | API       | —       | Google Calendar OAuth                                                                                               |
+| `MICROSOFT_CLIENT_ID`      | API       | —       | Outlook Calendar OAuth                                                                                              |
+| `MICROSOFT_CLIENT_SECRET`  | API       | —       | Outlook Calendar OAuth                                                                                              |
+| `SENTRY_DSN`               | API + Web | —       | Error tracking                                                                                                      |
+| `LOG_LEVEL`                | API       | `info`  | Pino log level: trace, debug, info, warn, error, fatal                                                              |
 
 ### Build-Time vs Runtime
 
-| Variable | When Needed | Notes |
-|----------|-------------|-------|
+| Variable              | When Needed    | Notes                                                                |
+| --------------------- | -------------- | -------------------------------------------------------------------- |
 | `NEXT_PUBLIC_API_URL` | **Build time** | Baked into the Next.js static bundle. Changing it requires a rebuild |
-| `NEXT_PUBLIC_WS_URL` | **Build time** | Same as above |
-| All others | **Runtime** | Can be changed by restarting the service |
+| `NEXT_PUBLIC_WS_URL`  | **Build time** | Same as above                                                        |
+| All others            | **Runtime**    | Can be changed by restarting the service                             |
 
 ---
 
@@ -107,14 +108,14 @@ Complete reference for deploying, configuring, and operating Booking OS in produ
 
 ### Current Setup
 
-| Property | Value |
-|----------|-------|
-| Project ID | `37eeca20-7dfe-45d9-8d29-e902a545f475` |
-| Environment | `production` |
-| Services | `api`, `web`, `postgres` (Redis removed — see [Cost Optimization](#cost-optimization-pre-customer-phase)) |
-| API domain | `api.businesscommandcentre.com` |
-| Web domain | `businesscommandcentre.com` |
-| CORS_ORIGINS | `https://businesscommandcentre.com,https://www.businesscommandcentre.com` |
+| Property     | Value                                                                                                     |
+| ------------ | --------------------------------------------------------------------------------------------------------- |
+| Project ID   | `37eeca20-7dfe-45d9-8d29-e902a545f475`                                                                    |
+| Environment  | `production`                                                                                              |
+| Services     | `api`, `web`, `postgres` (Redis removed — see [Cost Optimization](#cost-optimization-pre-customer-phase)) |
+| API domain   | `api.businesscommandcentre.com`                                                                           |
+| Web domain   | `businesscommandcentre.com`                                                                               |
+| CORS_ORIGINS | `https://businesscommandcentre.com,https://www.businesscommandcentre.com`                                 |
 
 ### How Deployment Works
 
@@ -128,6 +129,7 @@ Complete reference for deploying, configuring, and operating Booking OS in produ
 ### Railway Environment Variables
 
 All env vars are set in the Railway dashboard (not via `.env` files). To update:
+
 1. Go to Railway → booking-os project → select service (api or web)
 2. Click "Variables" tab
 3. Add or update the variable
@@ -162,14 +164,14 @@ DNS is managed via **Cloudflare** (free plan) with CNAME flattening for the root
 
 **DNS Records:**
 
-| Type | Name | Target | Proxy Status |
-|------|------|--------|-------------|
-| CNAME | `@` (root) | `uqwnhuyx.up.railway.app` | DNS only |
-| CNAME | `api` | `cosm54wn.up.railway.app` | DNS only |
-| CNAME | `www` | `businesscommandcentre.com` | Proxied |
-| TXT | `_railway-verify` | `railway-verify=870b2ea...` | DNS only |
-| TXT | `_railway-verify.api` | `railway-verify=642c0135...` | DNS only |
-| TXT | `_dmarc` | `v=DMARC1; p=quarantine...` | DNS only |
+| Type  | Name                  | Target                       | Proxy Status |
+| ----- | --------------------- | ---------------------------- | ------------ |
+| CNAME | `@` (root)            | `uqwnhuyx.up.railway.app`    | DNS only     |
+| CNAME | `api`                 | `cosm54wn.up.railway.app`    | DNS only     |
+| CNAME | `www`                 | `businesscommandcentre.com`  | Proxied      |
+| TXT   | `_railway-verify`     | `railway-verify=870b2ea...`  | DNS only     |
+| TXT   | `_railway-verify.api` | `railway-verify=642c0135...` | DNS only     |
+| TXT   | `_dmarc`              | `v=DMARC1; p=quarantine...`  | DNS only     |
 
 **Cloudflare Redirect Rule:** `www` → root (301). Configured via Rules → Redirect Rules using the "Redirect from WWW to root" template.
 
@@ -179,8 +181,8 @@ DNS is managed via **Cloudflare** (free plan) with CNAME flattening for the root
 
 ### Railway GitHub Secret
 
-| Secret | Purpose | How to Refresh |
-|--------|---------|----------------|
+| Secret          | Purpose                                  | How to Refresh                                                                    |
+| --------------- | ---------------------------------------- | --------------------------------------------------------------------------------- |
 | `RAILWAY_TOKEN` | Project deploy token (NOT account token) | Railway → Project Settings → Tokens → Create → then `gh secret set RAILWAY_TOKEN` |
 
 ---
@@ -199,16 +201,17 @@ Without `REDIS_URL` set, the API automatically falls back to:
 
 ### Limitations
 
-| Feature | With Redis | Without Redis (current) |
-|---------|-----------|------------------------|
-| Background jobs | BullMQ queues with retry, backoff, concurrency control | Fire-and-forget (no retry) |
-| WebSocket scaling | Redis adapter, works across multiple API instances | Single instance only |
-| Cron jobs | Run normally | Run normally |
-| Health check | Shows `database` + `redis` checks | Shows `database` check only |
+| Feature           | With Redis                                             | Without Redis (current)     |
+| ----------------- | ------------------------------------------------------ | --------------------------- |
+| Background jobs   | BullMQ queues with retry, backoff, concurrency control | Fire-and-forget (no retry)  |
+| WebSocket scaling | Redis adapter, works across multiple API instances     | Single instance only        |
+| Cron jobs         | Run normally                                           | Run normally                |
+| Health check      | Shows `database` + `redis` checks                      | Shows `database` check only |
 
 ### When to Re-Enable Redis
 
 Add Redis back when any of these apply:
+
 - Onboarding test users or paying customers
 - Running multiple API instances (horizontal scaling)
 - Needing reliable job retry/backoff (e.g., payment webhooks, critical notifications)
@@ -221,8 +224,9 @@ Add Redis back when any of these apply:
 4. The API will automatically redeploy and switch to BullMQ queues + Redis WebSocket adapter
 
 The conditional logic is in `apps/api/src/app.module.ts` (line 121):
+
 ```typescript
-process.env.REDIS_URL ? QueueModule.forRootWithRedis() : QueueModule.forRoot()
+process.env.REDIS_URL ? QueueModule.forRootWithRedis() : QueueModule.forRoot();
 ```
 
 ---
@@ -271,6 +275,7 @@ docker compose -f docker-compose.prod.yml logs -f
 ### Nginx Configuration
 
 The included `nginx/nginx.conf` handles:
+
 - HTTP → HTTPS redirect
 - SSL termination (TLS 1.2 + 1.3)
 - Reverse proxy: `/api` → API service, `/socket.io` → API WebSocket, all else → Web
@@ -304,23 +309,26 @@ docker compose -f docker-compose.demo.yml logs -f
 ```
 
 **Demo URLs:**
+
 - Web UI: http://localhost:3000
 - API: http://localhost:3001
 
 **Demo Credentials:**
 
-| Business | Email | Password | Role |
-|----------|-------|----------|------|
+| Business              | Email                | Password    | Role  |
+| --------------------- | -------------------- | ----------- | ----- |
 | Glow Aesthetic Clinic | sarah@glowclinic.com | password123 | Admin |
-| Metro Auto Group | mike@metroauto.com | password123 | Admin |
+| Metro Auto Group      | mike@metroauto.com   | password123 | Admin |
 
 **Reseed manually:**
+
 ```bash
 docker compose -f docker-compose.demo.yml exec api npx tsx packages/db/src/seed.ts
 docker compose -f docker-compose.demo.yml exec api npx tsx packages/db/src/seed-demo.ts
 ```
 
 **Stop and clean up:**
+
 ```bash
 docker compose -f docker-compose.demo.yml down      # Stop (keep data)
 docker compose -f docker-compose.demo.yml down -v    # Stop and delete all data
@@ -353,14 +361,14 @@ This is the most critical section for production. Getting cookie configuration w
 
 ### Cookie Properties (Production)
 
-| Property | access_token | refresh_token |
-|----------|-------------|---------------|
-| `httpOnly` | true | true |
-| `secure` | true (HTTPS only) | true |
-| `sameSite` | lax | lax |
-| `path` | `/` | `/` |
-| `domain` | `.yourdomain.com` | `.yourdomain.com` |
-| `maxAge` | 15 minutes | 7 days |
+| Property   | access_token      | refresh_token     |
+| ---------- | ----------------- | ----------------- |
+| `httpOnly` | true              | true              |
+| `secure`   | true (HTTPS only) | true              |
+| `sameSite` | lax               | lax               |
+| `path`     | `/`               | `/`               |
+| `domain`   | `.yourdomain.com` | `.yourdomain.com` |
+| `maxAge`   | 15 minutes        | 7 days            |
 
 ### How Cookie Domain Is Derived
 
@@ -383,6 +391,7 @@ The leading dot means the cookie is shared across ALL subdomains — this is req
 **Rule 1: Cookie domain MUST cover both API and Web domains.**
 
 If your setup is:
+
 - API: `api.example.com`
 - Web: `example.com` or `app.example.com`
 
@@ -411,6 +420,7 @@ The web app's API client (`apps/web/src/lib/api.ts`) already does this. If you m
 ### Domain Configuration Examples
 
 **Subdomain setup (recommended):**
+
 ```
 Web:  example.com
 API:  api.example.com
@@ -420,6 +430,7 @@ NEXT_PUBLIC_API_URL=https://api.example.com/api/v1
 ```
 
 **Same domain with Nginx routing:**
+
 ```
 Web:  example.com
 API:  example.com/api  (Nginx proxies to API)
@@ -429,6 +440,7 @@ NEXT_PUBLIC_API_URL=https://example.com/api/v1
 ```
 
 **Railway with custom domains:**
+
 ```
 Web service:  example.com  (custom domain in Railway)
 API service:  api.example.com  (custom domain in Railway)
@@ -444,6 +456,7 @@ File: `apps/web/src/middleware.ts`
 The middleware runs on every request (except `_next/static`, `_next/image`, `favicon.ico`, and `/api`). It checks for the `access_token` cookie:
 
 **Public routes (no cookie required):**
+
 - `/login`, `/signup`, `/reset-password`, `/accept-invite`, `/verify-email`
 - `/book` (public booking portal)
 - `/manage` (customer self-serve)
@@ -499,14 +512,17 @@ Pull request ──► lint-and-test ──► docker-build
 ### Job Details
 
 **1. lint-and-test** (~2 min)
+
 - Spins up PostgreSQL 16 service container
 - Runs: `npm ci` → Prisma generate → Prisma migrate → format check → lint → test
 
 **2. docker-build** (~2 min)
+
 - Builds both Docker images using `docker-compose.prod.yml`
 - Uses dummy env vars (secrets not needed at build time, only at runtime)
 
 **3. deploy** (~10 sec + async Railway build)
+
 - Installs Railway CLI
 - Runs `railway up --service api --detach` and `railway up --service web --detach`
 - **Detach means CI finishes before Railway is done building.** The actual deploy takes 2-5 more minutes on Railway.
@@ -527,6 +543,7 @@ ARG NEXT_PUBLIC_WS_URL=https://api.businesscommandcentre.com
 ```
 
 If you change your API domain, you MUST either:
+
 1. Update the Dockerfile defaults and redeploy, OR
 2. Pass the new values as Railway build args
 
@@ -570,15 +587,18 @@ DATABASE_URL="<public-db-url>" npx tsx packages/db/src/seed-wellness.ts
 Both scripts are idempotent — they check for existing data before inserting.
 
 **One-time agentic data fill** (only needed if seed-demo.ts was run before agentic tables existed):
+
 ```bash
 # Compile and run via Railway SSH
 npx tsc --esModuleInterop --module commonjs --target ES2020 --outDir /tmp/seed-agentic packages/db/src/seed-agentic.ts
 B64=$(base64 -i /tmp/seed-agentic/seed-agentic.js)
 npx @railway/cli ssh --service api -e production -- "echo '$B64' | base64 -d > /app/seed-agentic.js && cd /app && node seed-agentic.js"
 ```
+
 This script fills autonomyConfig, actionHistory, outboundDraft, and agentConfig tables. It's idempotent (skips tables that already have data).
 
 **Platform Console data** (creates Super Admin + showcase businesses):
+
 ```bash
 # Super Admin account + platform business
 DATABASE_URL="<public-db-url>" npx tsx packages/db/src/seed-console.ts
@@ -586,6 +606,7 @@ DATABASE_URL="<public-db-url>" npx tsx packages/db/src/seed-console.ts
 # Showcase businesses (6 diverse tenants for demo)
 DATABASE_URL="<public-db-url>" npx tsx packages/db/src/seed-console-showcase.ts
 ```
+
 Both scripts are idempotent. Console login: `admin@businesscommandcentre.com` / `superadmin123`.
 
 ### Database Backups
@@ -617,10 +638,12 @@ DATABASE_URL="<public-db-url>" npx prisma studio --schema=packages/db/prisma/sch
 The API uses NestJS's `enableShutdownHooks()` in `main.ts` to handle `SIGTERM` gracefully — in-flight requests complete before the process exits. Railway sends `SIGTERM` during deploys, so this ensures no dropped connections.
 
 **Railway health checks** are configured in `railway.toml`:
+
 ```toml
 [deploy.healthcheckPath]
 path = "/api/v1/health"
 ```
+
 Railway waits for the new container to pass its health check before routing traffic to it, providing zero-downtime deploys.
 
 **Frontend resilience:** The web app's API client (`apps/web/src/lib/api.ts`) includes `fetchWithRetry` logic — if a fetch fails during a deploy window, it retries with exponential backoff. This prevents transient errors during the brief overlap between old and new containers.
@@ -632,6 +655,7 @@ GET /api/v1/health
 ```
 
 Returns (lean setup, no Redis):
+
 ```json
 {
   "status": "healthy",
@@ -646,6 +670,7 @@ Returns (lean setup, no Redis):
 ```
 
 When Redis is enabled (`REDIS_URL` is set), the response also includes:
+
 ```json
 {
   "checks": {
@@ -657,11 +682,11 @@ When Redis is enabled (`REDIS_URL` is set), the response also includes:
 
 ### Docker Health Checks (Self-Hosted)
 
-| Service | Check | Interval |
-|---------|-------|----------|
-| PostgreSQL | `pg_isready` | 5s |
-| Redis | `redis-cli ping` | 5s |
-| API | `wget -qO- http://localhost:3001/api/v1/health` | 30s |
+| Service    | Check                                           | Interval |
+| ---------- | ----------------------------------------------- | -------- |
+| PostgreSQL | `pg_isready`                                    | 5s       |
+| Redis      | `redis-cli ping`                                | 5s       |
+| API        | `wget -qO- http://localhost:3001/api/v1/health` | 30s      |
 
 ### Logging
 
@@ -672,12 +697,14 @@ When Redis is enabled (`REDIS_URL` is set), the response also includes:
 - Docker logging: json-file driver, max 10MB per file, 3 files retained
 
 **View Railway logs:**
+
 ```bash
 railway logs --service api --lines 100
 railway logs --service web --lines 100
 ```
 
 **View Docker logs (self-hosted):**
+
 ```bash
 docker compose -f docker-compose.prod.yml logs -f api
 docker compose -f docker-compose.prod.yml logs -f web
@@ -699,6 +726,7 @@ Set `SENTRY_DSN` (and optionally `NEXT_PUBLIC_SENTRY_DSN` for frontend) to enabl
 **Root cause:** Next.js middleware can't see the `access_token` cookie.
 
 **Check:**
+
 1. Cookie `Domain` must cover both API and Web domains (see section 6)
 2. `SameSite` must be `Lax`, not `Strict`
 3. `CORS_ORIGINS` must include the exact frontend origin (with `https://`)
@@ -732,12 +760,14 @@ railway service api
 ```
 
 **Health check:** The shared `railway.toml` at the repo root sets `healthcheckPath = "/api/v1/health"`. Both services must respond to this path:
+
 - API: NestJS `/api/v1/health` endpoint (built-in)
 - Web: Next.js route handler at `apps/web/src/app/api/v1/health/route.ts`
 
 If the web service deploy fails with no error logs, check that the health route exists. Railway kills containers that fail health checks.
 
 **Verify both deploys succeeded:**
+
 ```bash
 railway service api && railway deployment list | head -3
 railway service web && railway deployment list | head -3
@@ -749,6 +779,7 @@ railway service web && railway deployment list | head -3
 **Symptoms:** Health endpoint times out, login hangs, but Railway shows service as running.
 
 **Immediate fix:** Redeploy the API:
+
 ```bash
 railway service api && railway deployment redeploy --yes
 ```
@@ -762,6 +793,7 @@ railway service api && railway deployment redeploy --yes
 **Root cause:** `railway up --detach` returns immediately. Railway builds asynchronously.
 
 **Fix:** Wait 2-5 minutes after CI completes, then verify:
+
 ```bash
 # Check Railway deployment status in dashboard, or:
 curl -s https://api.yourdomain.com/api/v1/health | python3 -m json.tool
@@ -770,6 +802,7 @@ curl -s https://api.yourdomain.com/api/v1/health | python3 -m json.tool
 ### Railway deploy fails with "Unauthorized"
 
 **Fix:** Regenerate the Railway project token:
+
 1. Railway → Project Settings → Tokens → Create new token
 2. `gh secret set RAILWAY_TOKEN` and paste the new token
 
@@ -783,6 +816,7 @@ git add -A && git commit -m "fix: formatting"
 ### Docker build fails with Next.js prerender error
 
 A page uses client-side hooks (e.g., `useSearchParams`) without a Suspense boundary. Wrap the component:
+
 ```tsx
 <Suspense fallback={null}>
   <ComponentUsingSearchParams />
@@ -792,11 +826,13 @@ A page uses client-side hooks (e.g., `useSearchParams`) without a Suspense bound
 ### API crashes on startup
 
 Check logs for the specific error:
+
 ```bash
 railway logs --service api --lines 100
 ```
 
 Common causes:
+
 - Missing required env var (JWT_SECRET, DATABASE_URL)
 - Database unreachable (check DATABASE_URL, network)
 - Prisma migration failed (schema drift — run `npx prisma migrate deploy` manually)
@@ -806,10 +842,26 @@ Common causes:
 **Root cause:** Models were added during development via `prisma db push` instead of `prisma migrate dev`. `db push` updates the database directly but does NOT create migration files. Production runs `prisma migrate deploy`, which only applies migration files.
 
 **Fix:**
+
 1. Create a migration file manually: `packages/db/prisma/migrations/<timestamp>_<name>/migration.sql`
 2. Write the CREATE TABLE, indexes, and foreign key SQL
 3. Mark as already applied locally: `npx prisma migrate resolve --applied <timestamp>_<name>`
 4. Commit and push — production will apply the migration on next deploy
+
+### Prisma P2010 "Raw query failed" on booking creation (or similar)
+
+**Root cause:** Raw SQL queries (`$queryRaw`) used Prisma model names (`"Staff"`, `"Booking"`) instead of the actual PostgreSQL table names defined by `@@map()` (`"staff"`, `"bookings"`). Prisma's `$queryRaw` bypasses the ORM and talks directly to PostgreSQL, so it needs the real table names.
+
+**Fix (BUG-001, March 2026):** Updated all `$queryRaw` calls to use `@@map` table names:
+
+- `"Staff"` → `"staff"` (booking.service.ts)
+- `"Booking"` → `"bookings"` (booking.service.ts, billing.service.ts)
+- `"WaitlistEntry"` → `"waitlist_entries"` (self-serve.service.ts)
+- `"offers"` was already correct (offer.service.ts)
+
+**Prevention:** When writing `$queryRaw` or `$executeRaw`, always check the model's `@@map()` directive in `schema.prisma` for the actual PostgreSQL table name. Also ensure column names in raw SQL match the `@map()` directives on individual fields.
+
+**Error handling:** The global `AllExceptionsFilter` now catches P2010 and all unknown Prisma error codes without exposing the code to the client. Users see a generic "A database operation failed" message.
 
 ### "Failed to fetch" or API calls blocked by CSP
 
@@ -835,6 +887,7 @@ curl -s -b /tmp/test.txt -X POST https://api.yourdomain.com/api/v1/auth/refresh
 ### CORS errors in browser console
 
 Verify `CORS_ORIGINS` includes the exact origin the browser is on:
+
 ```bash
 # Check current value
 railway variables --service api | grep CORS
@@ -871,14 +924,14 @@ Before going live, verify:
 
 ### Rate Limits (Built-In)
 
-| Endpoint | Limit |
-|----------|-------|
-| Global | 100 requests / minute |
-| POST /auth/signup | 3 / minute |
-| POST /auth/login | 10 / minute |
-| POST /auth/forgot-password | 3 / minute |
-| POST /auth/reset-password | 5 / minute |
-| POST /auth/resend-verification | 3 / minute |
+| Endpoint                       | Limit                 |
+| ------------------------------ | --------------------- |
+| Global                         | 100 requests / minute |
+| POST /auth/signup              | 3 / minute            |
+| POST /auth/login               | 10 / minute           |
+| POST /auth/forgot-password     | 3 / minute            |
+| POST /auth/reset-password      | 5 / minute            |
+| POST /auth/resend-verification | 3 / minute            |
 
 ### Password Hashing
 
@@ -888,21 +941,21 @@ Bcrypt with 12 salt rounds. Passwords are never stored or logged in plaintext.
 
 ## Appendix: Key File Paths
 
-| File | Purpose |
-|------|---------|
-| `.github/workflows/ci.yml` | CI/CD pipeline definition |
-| `docker-compose.prod.yml` | Production Docker stack (self-hosted) |
-| `docker-compose.demo.yml` | Demo quick-start stack |
-| `apps/api/Dockerfile` | API production image (multi-stage) |
-| `apps/web/Dockerfile` | Web production image (multi-stage) |
-| `scripts/docker-entrypoint.sh` | API startup: migrations then server |
-| `nginx/nginx.conf` | Nginx reverse proxy config |
-| `apps/api/src/main.ts` | API bootstrap (CORS, cookies, Helmet, Swagger) |
-| `apps/api/src/modules/auth/auth.controller.ts` | Cookie configuration (domain, sameSite, secure) |
-| `apps/web/src/middleware.ts` | Next.js route protection (checks access_token cookie) |
-| `apps/web/src/lib/api.ts` | Frontend API client (credentials: include) |
-| `packages/db/prisma/schema.prisma` | Database schema |
-| `packages/db/src/seed.ts` | Base seed script |
-| `packages/db/src/seed-demo.ts` | Rich demo data seed |
-| `.env.example` | Environment variable template |
-| `.env.production` | Production env template |
+| File                                           | Purpose                                               |
+| ---------------------------------------------- | ----------------------------------------------------- |
+| `.github/workflows/ci.yml`                     | CI/CD pipeline definition                             |
+| `docker-compose.prod.yml`                      | Production Docker stack (self-hosted)                 |
+| `docker-compose.demo.yml`                      | Demo quick-start stack                                |
+| `apps/api/Dockerfile`                          | API production image (multi-stage)                    |
+| `apps/web/Dockerfile`                          | Web production image (multi-stage)                    |
+| `scripts/docker-entrypoint.sh`                 | API startup: migrations then server                   |
+| `nginx/nginx.conf`                             | Nginx reverse proxy config                            |
+| `apps/api/src/main.ts`                         | API bootstrap (CORS, cookies, Helmet, Swagger)        |
+| `apps/api/src/modules/auth/auth.controller.ts` | Cookie configuration (domain, sameSite, secure)       |
+| `apps/web/src/middleware.ts`                   | Next.js route protection (checks access_token cookie) |
+| `apps/web/src/lib/api.ts`                      | Frontend API client (credentials: include)            |
+| `packages/db/prisma/schema.prisma`             | Database schema                                       |
+| `packages/db/src/seed.ts`                      | Base seed script                                      |
+| `packages/db/src/seed-demo.ts`                 | Rich demo data seed                                   |
+| `.env.example`                                 | Environment variable template                         |
+| `.env.production`                              | Production env template                               |
