@@ -8,13 +8,18 @@ import { createMockPrisma } from '../../test/mocks';
 describe('AutomationService — Step Management (P-13)', () => {
   let service: AutomationService;
   let prisma: ReturnType<typeof createMockPrisma>;
+  let testModule: any;
 
   beforeEach(async () => {
     prisma = createMockPrisma();
-    const module = await Test.createTestingModule({
+    testModule = await Test.createTestingModule({
       providers: [AutomationService, { provide: PrismaService, useValue: prisma }],
     }).compile();
-    service = module.get(AutomationService);
+    service = testModule.get(AutomationService);
+  });
+
+  afterEach(async () => {
+    await testModule?.close();
   });
 
   describe('getSteps', () => {
@@ -126,13 +131,21 @@ describe('AutomationService — Step Management (P-13)', () => {
 describe('AutomationExecutorService — Step Execution (P-13)', () => {
   let executor: AutomationExecutorService;
   let prisma: ReturnType<typeof createMockPrisma>;
+  let testModule: any;
 
   beforeEach(async () => {
     prisma = createMockPrisma();
-    const module = await Test.createTestingModule({
+    testModule = await Test.createTestingModule({
       providers: [AutomationExecutorService, { provide: PrismaService, useValue: prisma }],
     }).compile();
-    executor = module.get(AutomationExecutorService);
+    executor = testModule.get(AutomationExecutorService);
+
+    // Default mock: processWaitingExecutions() iterates over this result
+    prisma.automationExecution.findMany.mockResolvedValue([]);
+  });
+
+  afterEach(async () => {
+    await testModule?.close();
   });
 
   describe('evaluateBranch', () => {
@@ -325,7 +338,14 @@ describe('AutomationExecutorService — Step Execution (P-13)', () => {
           ],
         },
       };
-      prisma.automationExecution.findUnique.mockResolvedValue(execution as any);
+      // First call returns BRANCH execution; second (recursive) call returns ACTION execution
+      const actionExecution = {
+        ...execution,
+        step: execution.automationRule.steps[1], // s2 ACTION step
+      };
+      prisma.automationExecution.findUnique
+        .mockResolvedValueOnce(execution as any)
+        .mockResolvedValueOnce(actionExecution as any);
       prisma.automationExecution.update.mockResolvedValue({} as any);
       prisma.automationLog.create.mockResolvedValue({} as any);
 
@@ -367,12 +387,9 @@ describe('AutomationExecutorService — Step Execution (P-13)', () => {
         },
       };
       prisma.automationExecution.findUnique.mockResolvedValue(execution as any);
-      prisma.automationExecution.update
-        .mockResolvedValueOnce({} as any) // RUNNING
-        .mockRejectedValueOnce(new Error('DB error')) // booking update fails
-        .mockResolvedValue({} as any); // FAILED
+      prisma.automationExecution.update.mockResolvedValue({} as any);
 
-      // Make booking.update throw
+      // Make booking.update throw so executeStepAction fails
       prisma.booking.update.mockRejectedValue(new Error('Booking not found'));
 
       await executor.advanceExecution('e1');

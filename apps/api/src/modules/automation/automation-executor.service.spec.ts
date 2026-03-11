@@ -15,6 +15,9 @@ describe('AutomationExecutorService', () => {
     }).compile();
 
     executorService = module.get(AutomationExecutorService);
+
+    // Default mock: processWaitingExecutions() iterates over this result
+    prisma.automationExecution.findMany.mockResolvedValue([]);
   });
 
   describe('isQuietHours', () => {
