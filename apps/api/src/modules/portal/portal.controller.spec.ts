@@ -21,6 +21,10 @@ describe('PortalController', () => {
       updateProfile: jest.fn().mockResolvedValue({ name: 'Jane Updated' }),
       getBookings: jest.fn().mockResolvedValue({ data: [], total: 0 }),
       getUpcoming: jest.fn().mockResolvedValue([]),
+      getServices: jest.fn().mockResolvedValue([{ id: 's1', name: 'Haircut' }]),
+      createBooking: jest.fn().mockResolvedValue({ id: 'b1', source: 'PORTAL' }),
+      getDocuments: jest.fn().mockResolvedValue({ intake: null, bookingNotes: [] }),
+      createInvoicePaymentSession: jest.fn().mockResolvedValue({ url: 'https://checkout.stripe.com/session' }),
     };
 
     const module = await Test.createTestingModule({
@@ -89,5 +93,37 @@ describe('PortalController', () => {
     const req = { portalUser: { customerId: 'c1', businessId: 'b1' } };
     await controller.getUpcoming(req);
     expect(portalService.getUpcoming).toHaveBeenCalledWith('c1', 'b1');
+  });
+
+  it('GET /portal/services calls portalService.getServices with businessId', async () => {
+    const req = { portalUser: { customerId: 'c1', businessId: 'b1' } };
+    const result = await controller.getServices(req);
+    expect(portalService.getServices).toHaveBeenCalledWith('b1');
+    expect(result).toEqual([{ id: 's1', name: 'Haircut' }]);
+  });
+
+  it('POST /portal/bookings calls portalService.createBooking with correct params', async () => {
+    const req = { portalUser: { customerId: 'c1', businessId: 'b1' } };
+    const dto = { serviceId: 's1', staffId: 'staff1', startTime: '2027-01-15T10:00:00Z' };
+    const result = await controller.createBooking(req, dto);
+    expect(portalService.createBooking).toHaveBeenCalledWith('c1', 'b1', dto);
+    expect(result.source).toBe('PORTAL');
+  });
+
+  it('GET /portal/documents calls portalService.getDocuments with correct params', async () => {
+    const req = { portalUser: { customerId: 'c1', businessId: 'b1' } };
+    const result = await controller.getDocuments(req);
+    expect(portalService.getDocuments).toHaveBeenCalledWith('c1', 'b1');
+    expect(result).toEqual({ intake: null, bookingNotes: [] });
+  });
+
+  it('POST /portal/invoices/:id/pay calls portalService.createInvoicePaymentSession', async () => {
+    const req = { portalUser: { customerId: 'c1', businessId: 'b1' } };
+    const dto = { successUrl: 'https://example.com/success', cancelUrl: 'https://example.com/cancel' };
+    const result = await controller.payInvoice(req, 'inv1', dto);
+    expect(portalService.createInvoicePaymentSession).toHaveBeenCalledWith(
+      'c1', 'b1', 'inv1', 'https://example.com/success', 'https://example.com/cancel',
+    );
+    expect(result.url).toBe('https://checkout.stripe.com/session');
   });
 });

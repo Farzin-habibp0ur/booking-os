@@ -10,6 +10,8 @@ import {
   UpdatePortalProfileDto,
   CancelBookingDto,
   RescheduleBookingDto,
+  CreatePortalBookingDto,
+  PayInvoiceDto,
 } from './dto';
 
 @Controller('portal')
@@ -92,5 +94,46 @@ export class PortalController {
   getInvoices(@Req() req: any) {
     const { customerId, businessId } = req.portalUser;
     return this.portalService.getInvoices(customerId, businessId);
+  }
+
+  @Get('services')
+  @UseGuards(PortalGuard)
+  getServices(@Req() req: any) {
+    return this.portalService.getServices(req.portalUser.businessId);
+  }
+
+  @Post('bookings')
+  @UseGuards(PortalGuard)
+  createBooking(@Req() req: any, @Body() dto: CreatePortalBookingDto) {
+    return this.portalService.createBooking(
+      req.portalUser.customerId,
+      req.portalUser.businessId,
+      dto,
+    );
+  }
+
+  @Get('documents')
+  @UseGuards(PortalGuard)
+  getDocuments(@Req() req: any) {
+    return this.portalService.getDocuments(
+      req.portalUser.customerId,
+      req.portalUser.businessId,
+    );
+  }
+
+  @Post('invoices/:id/pay')
+  @UseGuards(PortalGuard)
+  payInvoice(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Body() dto: PayInvoiceDto,
+  ) {
+    return this.portalService.createInvoicePaymentSession(
+      req.portalUser.customerId,
+      req.portalUser.businessId,
+      id,
+      dto.successUrl,
+      dto.cancelUrl,
+    );
   }
 }

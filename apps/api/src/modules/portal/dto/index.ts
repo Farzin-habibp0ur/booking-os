@@ -79,3 +79,31 @@ export class RescheduleBookingDto {
   @IsNotEmpty()
   newStartTime!: string;
 }
+
+export class CreatePortalBookingDto {
+  @IsString()
+  @IsNotEmpty()
+  serviceId!: string;
+
+  @IsOptional()
+  @IsString()
+  staffId?: string;
+
+  @IsISO8601()
+  @IsNotEmpty()
+  startTime!: string;
+
+  @IsOptional()
+  @IsString()
+  notes?: string;
+}
+
+export class PayInvoiceDto {
+  @IsOptional()
+  @IsString()
+  successUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  cancelUrl?: string;
+}

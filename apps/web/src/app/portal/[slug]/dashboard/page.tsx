@@ -220,7 +220,7 @@ export default function PortalDashboardPage() {
           data-testid="quick-actions"
         >
           <button
-            onClick={() => router.push(`/book/${slug}`)}
+            onClick={() => router.push(`/portal/${slug}/book`)}
             className="bg-white rounded-2xl shadow-soft p-4 text-left hover:bg-slate-50 transition-colors group"
           >
             <Calendar size={20} className="text-sage-600 mb-2" />

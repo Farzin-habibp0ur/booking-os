@@ -3,10 +3,11 @@ import {
   NotFoundException,
   ForbiddenException,
   ConflictException,
+  BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma.service';
 import { BookingService } from '../booking/booking.service';
-import { UpdatePortalProfileDto } from './dto';
+import { UpdatePortalProfileDto, CreatePortalBookingDto } from './dto';
 
 @Injectable()
 export class PortalService {
@@ -195,5 +196,176 @@ export class PortalService {
         lineItems: true,
       },
     });
+  }
+
+  async getServices(businessId: string) {
+    return this.prisma.service.findMany({
+      where: { businessId, isActive: true },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        durationMins: true,
+        price: true,
+        category: true,
+        depositRequired: true,
+        depositAmount: true,
+      },
+      orderBy: { name: 'asc' },
+    });
+  }
+
+  async createBooking(customerId: string, businessId: string, dto: CreatePortalBookingDto) {
+    const customer = await this.prisma.customer.findFirst({
+      where: { id: customerId, businessId },
+    });
+    if (!customer) throw new NotFoundException('Customer not found');
+
+    const service = await this.prisma.service.findFirst({
+      where: { id: dto.serviceId, businessId, isActive: true },
+    });
+    if (!service) throw new NotFoundException('Service not found');
+
+    const startTime = new Date(dto.startTime);
+    const endTime = new Date(startTime.getTime() + service.durationMins * 60000);
+
+    // If staffId provided, verify they belong to this business
+    if (dto.staffId) {
+      const staff = await this.prisma.staff.findFirst({
+        where: { id: dto.staffId, businessId, isActive: true },
+      });
+      if (!staff) throw new NotFoundException('Staff not found');
+    }
+
+    const booking = await this.prisma.booking.create({
+      data: {
+        businessId,
+        customerId,
+        serviceId: dto.serviceId,
+        staffId: dto.staffId || null,
+        startTime,
+        endTime,
+        status: 'PENDING',
+        source: 'PORTAL',
+        notes: dto.notes || null,
+      },
+      include: {
+        service: { select: { name: true, price: true, durationMins: true } },
+        staff: { select: { name: true } },
+      },
+    });
+
+    return booking;
+  }
+
+  async getDocuments(customerId: string, businessId: string) {
+    const customer = await this.prisma.customer.findFirst({
+      where: { id: customerId, businessId },
+      select: { id: true, customFields: true },
+    });
+
+    // Get booking notes (completed bookings with notes)
+    const bookingNotes = await this.prisma.booking.findMany({
+      where: {
+        customerId,
+        businessId,
+        status: 'COMPLETED',
+        notes: { not: null },
+      },
+      select: {
+        id: true,
+        notes: true,
+        startTime: true,
+        service: { select: { name: true } },
+        staff: { select: { name: true } },
+      },
+      orderBy: { startTime: 'desc' },
+      take: 20,
+    });
+
+    // Extract intake data from customFields
+    const fields = (customer?.customFields as any) || {};
+    const intakeData = fields.intakeComplete
+      ? {
+          submittedAt: fields.intakeSubmittedAt,
+          fullName: fields.intakeFullName,
+          dateOfBirth: fields.intakeDateOfBirth,
+          emergencyContactName: fields.intakeEmergencyName,
+          emergencyContactPhone: fields.intakeEmergencyPhone,
+          medicalConditions: fields.intakeMedicalConditions,
+          medications: fields.intakeMedications,
+        }
+      : null;
+
+    return {
+      intake: intakeData,
+      bookingNotes: bookingNotes.map((b) => ({
+        id: b.id,
+        date: b.startTime,
+        service: b.service.name,
+        staff: b.staff?.name || null,
+        notes: b.notes,
+      })),
+    };
+  }
+
+  async createInvoicePaymentSession(
+    customerId: string,
+    businessId: string,
+    invoiceId: string,
+    successUrl?: string,
+    cancelUrl?: string,
+  ) {
+    const invoice = await this.prisma.invoice.findFirst({
+      where: {
+        id: invoiceId,
+        customerId,
+        businessId,
+        status: { in: ['SENT', 'VIEWED', 'PARTIALLY_PAID', 'OVERDUE'] },
+      },
+      include: {
+        lineItems: true,
+        business: { select: { name: true } },
+        customer: { select: { email: true } },
+      },
+    });
+
+    if (!invoice) throw new NotFoundException('Invoice not found');
+
+    const amountDue = Number(invoice.total) - Number(invoice.paidAmount);
+    if (amountDue <= 0) throw new BadRequestException('Invoice is already paid');
+
+    // Check if Stripe is configured
+    const stripeKey = process.env.STRIPE_SECRET_KEY;
+    if (!stripeKey) throw new BadRequestException('Online payments are not configured');
+
+    const stripe = require('stripe')(stripeKey);
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      mode: 'payment',
+      customer_email: invoice.customer.email,
+      line_items: [
+        {
+          price_data: {
+            currency: (invoice.currency || 'usd').toLowerCase(),
+            product_data: {
+              name: `Invoice ${invoice.invoiceNumber}`,
+              description: invoice.lineItems.map((li: any) => li.description).join(', '),
+            },
+            unit_amount: Math.round(amountDue * 100),
+          },
+          quantity: 1,
+        },
+      ],
+      metadata: {
+        invoiceId: invoice.id,
+        businessId,
+        customerId,
+      },
+      success_url: successUrl || `${process.env.WEB_URL || 'http://localhost:3000'}/portal/payment-success`,
+      cancel_url: cancelUrl || `${process.env.WEB_URL || 'http://localhost:3000'}/portal/payment-cancelled`,
+    });
+
+    return { url: session.url, sessionId: session.id };
   }
 }
