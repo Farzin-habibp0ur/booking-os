@@ -71,6 +71,7 @@ import { AftercareModule } from './modules/aftercare/aftercare.module';
 import { VehicleModule } from './modules/vehicle/vehicle.module';
 import { TestDriveModule } from './modules/test-drive/test-drive.module';
 import { DealModule } from './modules/deal/deal.module';
+import { PackageModule } from './modules/package/package.module';
 
 @Module({
   imports: [
@@ -158,6 +159,7 @@ import { DealModule } from './modules/deal/deal.module';
     VehicleModule,
     TestDriveModule,
     DealModule,
+    PackageModule,
     process.env.REDIS_URL ? QueueModule.forRootWithRedis() : QueueModule.forRoot(),
   ],
 })

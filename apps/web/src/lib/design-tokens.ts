@@ -340,6 +340,24 @@ export function dealStageBadgeClasses(stage: string): string {
 }
 
 // ---------------------------------------------------------------------------
+// Package purchase status styles
+// ---------------------------------------------------------------------------
+
+export const PACKAGE_STATUS_STYLES: Record<string, { bg: string; text: string; label: string }> = {
+  ACTIVE: { bg: 'bg-sage-50', text: 'text-sage-900', label: 'Active' },
+  EXHAUSTED: { bg: 'bg-slate-100', text: 'text-slate-600', label: 'Exhausted' },
+  EXPIRED: { bg: 'bg-amber-50', text: 'text-amber-700', label: 'Expired' },
+  CANCELLED: { bg: 'bg-red-50', text: 'text-red-700', label: 'Cancelled' },
+  REFUNDED: { bg: 'bg-rose-50', text: 'text-rose-700', label: 'Refunded' },
+};
+
+export function packageBadgeClasses(status: string): string {
+  const s = PACKAGE_STATUS_STYLES[status];
+  if (!s) return 'bg-slate-100 text-slate-600';
+  return `${s.bg} ${s.text}`;
+}
+
+// ---------------------------------------------------------------------------
 // Elevation (shadow) tokens
 // ---------------------------------------------------------------------------
 

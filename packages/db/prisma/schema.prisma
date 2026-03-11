@@ -85,6 +85,8 @@ model Business {
   aftercareProtocols         AftercareProtocol[]
   vehicles                   Vehicle[]
   deals                      Deal[]
+  servicePackages            ServicePackage[]
+  packagePurchases           PackagePurchase[]
 
   @@map("businesses")
 }
@@ -175,6 +177,7 @@ model Customer {
   aftercareEnrollments      AftercareEnrollment[]
   testDrives                TestDrive[]
   deals                     Deal[]
+  packagePurchases          PackagePurchase[]
 
   @@unique([businessId, phone])
   @@index([businessId])
@@ -207,6 +210,7 @@ model Service {
   invoiceLineItems    InvoiceLineItem[]
   treatmentSessions    TreatmentSession[]
   aftercareProtocols   AftercareProtocol[]
+  servicePackages      ServicePackage[]
 
   @@index([businessId])
   @@map("services")
@@ -252,6 +256,7 @@ model Booking {
   sessionBooking       TreatmentSession?     @relation("SessionBooking")
   aftercareEnrollment  AftercareEnrollment?
   testDrive            TestDrive?
+  packageRedemption    PackageRedemption?
 
   @@index([businessId])
   @@index([businessId, startTime])
@@ -496,11 +501,12 @@ model Payment {
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 
-  business Business  @relation(fields: [businessId], references: [id])
-  booking  Booking?  @relation(fields: [bookingId], references: [id])
-  customer Customer? @relation(fields: [customerId], references: [id])
-  invoice  Invoice?  @relation(fields: [invoiceId], references: [id])
-  refunds  Refund[]
+  business        Business         @relation(fields: [businessId], references: [id])
+  booking         Booking?         @relation(fields: [bookingId], references: [id])
+  customer        Customer?        @relation(fields: [customerId], references: [id])
+  invoice         Invoice?         @relation(fields: [invoiceId], references: [id])
+  refunds         Refund[]
+  packagePurchase PackagePurchase?
 
   @@index([businessId])
   @@index([bookingId])
@@ -1845,4 +1851,70 @@ model DealActivity {
 
   @@index([dealId])
   @@map("deal_activities")
+}
+
+// ---------------------------------------------------------------------------
+// Service Packages (Wellness vertical)
+// ---------------------------------------------------------------------------
+
+model ServicePackage {
+  id                    String   @id @default(cuid())
+  businessId            String
+  name                  String
+  description           String?
+  serviceId             String?
+  totalSessions         Int
+  price                 Decimal  @db.Decimal(10, 2)
+  currency              String   @default("USD")
+  validityDays          Int      @default(365)
+  isActive              Boolean  @default(true)
+  memberOnly            Boolean  @default(false)
+  allowedMembershipTiers String[] @default([])
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  business  Business          @relation(fields: [businessId], references: [id])
+  service   Service?          @relation(fields: [serviceId], references: [id])
+  purchases PackagePurchase[]
+
+  @@index([businessId])
+  @@map("service_packages")
+}
+
+model PackagePurchase {
+  id            String   @id @default(cuid())
+  packageId     String
+  customerId    String
+  businessId    String
+  totalSessions Int
+  usedSessions  Int      @default(0)
+  status        String   @default("ACTIVE") // ACTIVE | EXHAUSTED | EXPIRED | CANCELLED | REFUNDED
+  purchasedAt   DateTime @default(now())
+  expiresAt     DateTime
+  paymentId     String?  @unique
+  notes         String?
+
+  package     ServicePackage      @relation(fields: [packageId], references: [id])
+  customer    Customer            @relation(fields: [customerId], references: [id])
+  business    Business            @relation(fields: [businessId], references: [id])
+  payment     Payment?            @relation(fields: [paymentId], references: [id])
+  redemptions PackageRedemption[]
+
+  @@index([customerId])
+  @@index([businessId])
+  @@index([status])
+  @@map("package_purchases")
+}
+
+model PackageRedemption {
+  id         String   @id @default(cuid())
+  purchaseId String
+  bookingId  String   @unique
+  redeemedAt DateTime @default(now())
+
+  purchase PackagePurchase @relation(fields: [purchaseId], references: [id])
+  booking  Booking         @relation(fields: [bookingId], references: [id])
+
+  @@index([purchaseId])
+  @@map("package_redemptions")
 }

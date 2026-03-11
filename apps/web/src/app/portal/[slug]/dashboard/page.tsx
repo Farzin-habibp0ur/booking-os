@@ -12,6 +12,7 @@ import {
   X,
   ClipboardList,
   FileText,
+  Package,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { statusBadgeClasses } from '@/lib/design-tokens';
@@ -68,6 +69,7 @@ export default function PortalDashboardPage() {
   const [treatmentPlans, setTreatmentPlans] = useState<any[]>([]);
   const [acceptingPlan, setAcceptingPlan] = useState<string | null>(null);
   const [aftercareEnrollments, setAftercareEnrollments] = useState<any[]>([]);
+  const [packagePurchases, setPackagePurchases] = useState<any[]>([]);
 
   const loadData = useCallback(() => {
     return Promise.all([
@@ -76,13 +78,15 @@ export default function PortalDashboardPage() {
       portalFetch('/portal/bookings?page=1'),
       portalFetch('/portal/treatment-plans').catch(() => []),
       portalFetch('/portal/aftercare').catch(() => []),
+      portalFetch('/portal/packages').catch(() => []),
     ])
-      .then(([prof, up, bookings, plans, aftercare]) => {
+      .then(([prof, up, bookings, plans, aftercare, pkgs]) => {
         setProfile(prof);
         setUpcoming(up);
         setRecentBookings(bookings.data?.slice(0, 5) || []);
         setTreatmentPlans(Array.isArray(plans) ? plans : []);
         setAftercareEnrollments(Array.isArray(aftercare) ? aftercare : []);
+        setPackagePurchases(Array.isArray(pkgs) ? pkgs : []);
       })
       .catch(() => {});
   }, []);
@@ -286,6 +290,51 @@ export default function PortalDashboardPage() {
             Active Aftercare
           </h2>
           <AftercarePortalView enrollments={aftercareEnrollments} />
+        </section>
+      )}
+
+      {/* Session Packages */}
+      {packagePurchases.length > 0 && (
+        <section data-testid="portal-packages">
+          <h2 className="text-lg font-serif font-semibold text-slate-900 mb-3">
+            Your Session Packages
+          </h2>
+          <div className="space-y-3">
+            {packagePurchases.map((p: any) => {
+              const remaining = p.totalSessions - p.usedSessions;
+              const progress = p.totalSessions > 0 ? (p.usedSessions / p.totalSessions) * 100 : 0;
+              const isExpiringSoon =
+                new Date(p.expiresAt).getTime() - Date.now() < 14 * 24 * 60 * 60 * 1000;
+              return (
+                <div key={p.id} className="bg-white rounded-2xl shadow-soft p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <Package size={16} className="text-lavender-600" />
+                      <p className="text-sm font-medium text-slate-800">{p.package?.name}</p>
+                    </div>
+                    <span className="text-xs text-sage-600 font-medium">{remaining} left</span>
+                  </div>
+                  <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mb-2">
+                    <div
+                      className={cn(
+                        'h-full rounded-full transition-all',
+                        progress >= 80 ? 'bg-amber-400' : 'bg-sage-500',
+                      )}
+                      style={{ width: `${Math.min(progress, 100)}%` }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-slate-500">
+                    <span>{p.usedSessions} of {p.totalSessions} sessions used</span>
+                    {isExpiringSoon && (
+                      <span className="text-amber-600">
+                        Expires {new Date(p.expiresAt).toLocaleDateString()}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </section>
       )}
 

@@ -2,7 +2,7 @@
 
 > **Purpose:** This document gives full context on the Booking OS platform — what it is, what's been built, how it's structured, and what's left to build. Share this with an AI assistant or new developer to get productive immediately.
 >
-> **Last updated:** March 11, 2026 (All phases COMPLETE — A through E + Phases 1-4 & 6 polish + QA Fixes + Sprints 1-4 + Prompts 4A-4C + Prompt 1C + Prompt 1A + Prompt 1B + Prompt 1D + Prompt 2A + Prompt 2B + Prompt 2C COMPLETE — ~5,714+ total tests across 380 test files, 80 Prisma models, 57 migrations)
+> **Last updated:** March 11, 2026 (All phases COMPLETE — A through E + Phases 1-4 & 6 polish + QA Fixes + Sprints 1-4 + Prompts 4A-4C + Prompt 1C + Prompt 1A + Prompt 1B + Prompt 1D + Prompt 2A + Prompt 2B + Prompt 2C + Prompt 3A COMPLETE — ~5,780+ total tests across 386 test files, 83 Prisma models, 58 migrations)
 
 ---
 
@@ -25,7 +25,7 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 
 - **Aesthetic clinics** — consult → treatment → aftercare workflows, medical intake, before/after tracking
 - **Car dealerships** — service kanban board (CHECKED_IN → DIAGNOSING → IN_PROGRESS → READY), vehicle inventory management (VIN tracking, stock numbers, test drives), sales pipeline & deal tracking (7-stage Kanban: INQUIRY → QUALIFIED → TEST_DRIVE → NEGOTIATION → FINANCE → WON/LOST), customer journey board (unified deal/test drive/vehicle timeline with engagement scoring), AI deal intelligence (stalled deal detection, deal-aware action cards), quote approval, resource/bay scheduling
-- **Wellness & spa** — 7-field wellness intake (health goals, fitness level, injuries, medications, allergies, modality, membership), session packages with progress tracking, membership tiers (Drop-in/Monthly/Annual/VIP), 6 default services (massage, yoga, training, coaching)
+- **Wellness & spa** — 7-field wellness intake (health goals, fitness level, injuries, medications, allergies, modality, membership), DB-backed session packages with purchase/redeem/expiry tracking (ServicePackage + PackagePurchase + PackageRedemption models), auto-unredeem on booking cancel, membership tiers (Drop-in/Monthly/Annual/VIP), 6 default services (massage, yoga, training, coaching)
 - **General** — base vertical with standard booking features
 - **Extensible** — Vertical Pack system customizes fields, templates, automations, and workflows per industry
 
@@ -130,7 +130,7 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 - **Customer Hub** — Redesigned `/customers/{id}` with sticky header, context row (last booking, last conversation, waitlist count), notes tab, message deep link, vertical modules
 - **Customer Notes** — New `CustomerNote` model with full CRUD, staff ownership validation
 - **Unified Timeline** — Timeline API endpoint (6 data sources: bookings, conversations, notes, waitlist, quotes, campaigns), `CustomerTimeline` component with type filtering, pagination, deep linking
-- **Vertical Modules** — IntakeCard for aesthetic pack, WellnessIntakeCard/PackageTracker/MembershipBadge for wellness pack, quotes summary for dealership pack, collapsible sections
+- **Vertical Modules** — IntakeCard for aesthetic pack, WellnessIntakeCard/PackageTracker/MembershipBadge/PackagePurchaseModal/PackageRedeemSelector for wellness pack, quotes summary for dealership pack, collapsible sections
 - **Enhanced Search** — Search API with offset, types filter, totals; Cmd+K fixed hrefs to detail pages, grouped results, vertical-aware labels, "View all results" link
 - **Search Page** — New `/search` page with URL param sync, type filter chips with counts, grouped results, load more per section
 - **Inbox Deep Linking** — `?conversationId=` URL param auto-selects conversation, customer name links to profile
@@ -1061,6 +1061,23 @@ Key groups (full list in `.env.example`):
 - Customer detail page enhanced: journey board for dealership vertical, replaced quotes section with active deals + vehicles of interest
 - AI vertical-action-handler enhanced: deal-aware SALES_INQUIRY (DEAL_UPDATE for open deals, TEST_DRIVE_FOLLOWUP for test drives without deals, SALES_LEAD fallback), checkStalledDeals (7+ day detection)
 - 34 tests (28 API + 6 web)
+
+### Prompt 3A: Treatment Package & Session Tracking System — COMPLETE
+
+- ServicePackage + PackagePurchase + PackageRedemption Prisma models (@@map: "service_packages", "package_purchases", "package_redemptions"), migration 58
+- PackageModule (67th API module): 11 endpoints (CRUD, purchase, list-purchases, purchase-detail, redeem, customer-active, stats)
+- Wellness vertical gating: all operations validate business.verticalPack === 'wellness'
+- Purchase flow: creates PackagePurchase with copied totalSessions, computed expiresAt (now + validityDays), optional Payment record
+- Redeem flow: transactional with row locking, validates status=ACTIVE + not expired + sessions available + service compatibility, auto-transitions to EXHAUSTED
+- Unredeeem on cancel: BookingService calls packageService.unredeemOnCancel() when booking is CANCELLED, restores session and reactivates EXHAUSTED packages
+- Daily @Cron: checkExpiredPackages marks ACTIVE purchases past expiresAt as EXPIRED
+- Portal: GET /portal/packages endpoint, portal dashboard "Your Session Packages" section with progress bars
+- Admin page: /packages with stats cards, packages/purchases tabs, create/edit/delete modals, sell-to-customer flow
+- Updated PackageTracker: fetches real data from API via customerId prop, falls back to static props
+- New components: PackagePurchaseModal (sell package to customer), PackageRedeemSelector (shown during booking, select session vs full price)
+- Design tokens: PACKAGE_STATUS_STYLES + packageBadgeClasses()
+- Sidebar nav: /packages under Tools section
+- 66 tests (38 API + 28 web)
 
 ### Do Not Build (Yet)
 

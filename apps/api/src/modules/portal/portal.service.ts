@@ -426,4 +426,20 @@ export class PortalService {
       take: 5,
     });
   }
+
+  async getPackages(customerId: string, businessId: string) {
+    return this.prisma.packagePurchase.findMany({
+      where: {
+        customerId,
+        businessId,
+        status: { in: ['ACTIVE', 'EXHAUSTED'] },
+      },
+      include: {
+        package: {
+          select: { id: true, name: true, serviceId: true, service: { select: { name: true } } },
+        },
+      },
+      orderBy: { purchasedAt: 'desc' },
+    });
+  }
 }

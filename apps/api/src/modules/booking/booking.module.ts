@@ -11,9 +11,10 @@ import { InvoiceModule } from '../invoice/invoice.module';
 import { TreatmentPlanModule } from '../treatment-plan/treatment-plan.module';
 import { AftercareModule } from '../aftercare/aftercare.module';
 import { DealModule } from '../deal/deal.module';
+import { PackageModule } from '../package/package.module';
 
 @Module({
-  imports: [NotificationModule, BusinessModule, AuthModule, forwardRef(() => WaitlistModule), InvoiceModule, TreatmentPlanModule, AftercareModule, DealModule],
+  imports: [NotificationModule, BusinessModule, AuthModule, forwardRef(() => WaitlistModule), InvoiceModule, TreatmentPlanModule, AftercareModule, DealModule, PackageModule],
   controllers: [RecurringController, BookingController],
   providers: [BookingService, RecurringService],
   exports: [BookingService],

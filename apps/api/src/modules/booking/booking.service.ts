@@ -20,6 +20,7 @@ import { InvoiceService } from '../invoice/invoice.service';
 import { TreatmentPlanService } from '../treatment-plan/treatment-plan.service';
 import { AftercareService } from '../aftercare/aftercare.service';
 import { DealService } from '../deal/deal.service';
+import { PackageService } from '../package/package.service';
 
 @Injectable()
 export class BookingService {
@@ -45,6 +46,8 @@ export class BookingService {
     private aftercareService?: AftercareService,
     @Optional()
     private dealService?: DealService,
+    @Optional()
+    private packageService?: PackageService,
   ) {}
 
   private static readonly VALID_SORT_FIELDS = [
@@ -708,6 +711,15 @@ export class BookingService {
             this.logger.warn(`Failed to offer waitlist slot after cancellation of booking ${id}`, {
               bookingId: id,
               error: err.message,
+            }),
+          );
+        }
+        // Unredeem package session if booking was linked to a package redemption
+        if (this.packageService) {
+          this.packageService.unredeemOnCancel(id, businessId).catch((err) =>
+            this.logger.warn(`Failed to unredeem package session for booking ${id}`, {
+              bookingId: id,
+              error: (err as Error).message,
             }),
           );
         }

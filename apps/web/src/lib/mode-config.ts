@@ -34,6 +34,7 @@ const adminSections: NavSections = {
     '/inventory',
     '/pipeline',
     '/invoices',
+    '/packages',
     '/campaigns',
     '/automations',
     '/marketing/queue',

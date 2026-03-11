@@ -164,4 +164,13 @@ export class PortalController {
       req.portalUser.businessId,
     );
   }
+
+  @Get('packages')
+  @UseGuards(PortalGuard)
+  getPackages(@Req() req: any) {
+    return this.portalService.getPackages(
+      req.portalUser.customerId,
+      req.portalUser.businessId,
+    );
+  }
 }

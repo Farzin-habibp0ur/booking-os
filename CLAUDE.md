@@ -17,13 +17,13 @@ booking-os/
 ├── apps/
 │   ├── api/                    # NestJS REST API (port 3001)
 │   │   ├── src/
-│   │   │   ├── modules/        # 66 feature modules (one dir per domain)
+│   │   │   ├── modules/        # 67 feature modules (one dir per domain)
 │   │   │   ├── common/         # Guards, decorators, filters, DTOs, PrismaService
 │   │   │   └── main.ts         # Bootstrap, Swagger, CORS, cookies, validation
 │   │   └── Dockerfile          # Multi-stage production build
 │   ├── web/                    # Next.js 15 admin dashboard (port 3000)
 │   │   ├── src/
-│   │   │   ├── app/            # 100 pages (App Router)
+│   │   │   ├── app/            # 101 pages (App Router)
 │   │   │   ├── components/     # Shared components
 │   │   │   ├── lib/            # API client, auth, i18n, socket, theme
 │   │   │   ├── locales/        # en.json, es.json (600+ keys each)
@@ -31,7 +31,7 @@ booking-os/
 │   │   └── Dockerfile          # Multi-stage production build
 │   └── whatsapp-simulator/     # WhatsApp testing tool (port 3002)
 ├── packages/
-│   ├── db/                     # Prisma schema (71 models), migrations, seed scripts
+│   ├── db/                     # Prisma schema (83 models), migrations, seed scripts
 │   │   ├── prisma/schema.prisma
 │   │   ├── src/seed.ts         # Base seed (idempotent)
 │   │   ├── src/seed-demo.ts    # Rich demo data (idempotent)
@@ -79,7 +79,7 @@ booking-os/
 
 ### Module Structure
 
-Every feature is a NestJS module in `apps/api/src/modules/` (66 modules). Each module follows this pattern:
+Every feature is a NestJS module in `apps/api/src/modules/` (67 modules). Each module follows this pattern:
 
 ```
 modules/
@@ -114,7 +114,7 @@ modules/
 
 ### Database (Prisma)
 
-- Schema at `packages/db/prisma/schema.prisma` — **80 models**, 57 migrations
+- Schema at `packages/db/prisma/schema.prisma` — **83 models**, 58 migrations
 - Generate client: `npx prisma generate --schema=packages/db/prisma/schema.prisma`
 - Create migration: `npx prisma migrate dev --name your_name --schema=packages/db/prisma/schema.prisma`
 - `PrismaService` is a global NestJS provider — inject it in constructors
@@ -165,7 +165,7 @@ Key events: `message:new`, `conversation:updated`, `ai:suggestion`, `ai:auto-rep
 
 - Pages are in `apps/web/src/app/` using Next.js App Router (not Pages Router)
 - Protected pages check `access_token` cookie in `middleware.ts`
-- **100 pages** total (17 public, ~53 protected, ~16 console, ~14 portal/marketing)
+- **101 pages** total (17 public, ~54 protected, ~16 console, ~14 portal/marketing)
 - Client components use `'use client'` directive
 
 ### API Client
@@ -291,7 +291,7 @@ All AI-related UI elements use the **lavender** palette: `bg-lavender-50 border 
 
 ### Test Counts
 
-- **~5,714+ total tests** across 380 test files
+- **~5,780+ total tests** across 386 test files
 - API: ~93% statement coverage, ~81% branch coverage
 - Web: ~78% statement coverage, ~73% branch coverage
 
