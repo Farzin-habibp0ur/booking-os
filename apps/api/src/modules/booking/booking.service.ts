@@ -240,7 +240,7 @@ export class BookingService {
       if (!data.forceBook) {
         if (data.staffId) {
           // Lock staff row to serialize concurrent booking creation for same staff
-          await tx.$queryRaw`SELECT id FROM "Staff" WHERE id = ${data.staffId} FOR UPDATE`;
+          await tx.$queryRaw`SELECT id FROM "staff" WHERE id = ${data.staffId} FOR UPDATE`;
           const conflict = await tx.booking.findFirst({
             where: {
               businessId,
@@ -541,7 +541,7 @@ export class BookingService {
     // C7 fix: Wrap status read + validation + update in transaction with row lock
     const { booking, previousStatus } = await this.prisma.$transaction(async (tx) => {
       // Lock booking row to prevent concurrent status transitions
-      await tx.$queryRaw`SELECT id FROM "Booking" WHERE id = ${id} AND "businessId" = ${businessId} FOR UPDATE`;
+      await tx.$queryRaw`SELECT id FROM "bookings" WHERE id = ${id} AND "businessId" = ${businessId} FOR UPDATE`;
 
       const currentBooking = await tx.booking.findFirst({
         where: { id, businessId },

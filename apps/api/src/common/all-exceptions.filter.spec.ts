@@ -115,7 +115,7 @@ describe('AllExceptionsFilter', () => {
     filter.catch(new PrismaClientKnownRequestError(), host);
 
     expect(json).toHaveBeenCalledWith(
-      expect.objectContaining({ message: 'Database operation failed (P2010)' }),
+      expect.objectContaining({ message: 'A database operation failed — please try again' }),
     );
   });
 

@@ -66,11 +66,16 @@ export class AllExceptionsFilter implements ExceptionFilter {
           case 'P2003':
             message = 'Referenced record not found — a related item may have been deleted';
             break;
+          case 'P2010':
+            status = HttpStatus.INTERNAL_SERVER_ERROR;
+            error = 'Internal Server Error';
+            message = 'A database operation failed — please try again';
+            break;
           case 'P2025':
             message = 'Record not found';
             break;
           default:
-            message = `Database operation failed (${code})`;
+            message = 'A database operation failed — please try again';
         }
       }
     }

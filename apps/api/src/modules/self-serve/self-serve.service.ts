@@ -229,7 +229,7 @@ export class SelfServeService {
 
     // C6 fix: Wrap waitlist entry check in transaction with row lock
     const { entry, slot } = await this.prisma.$transaction(async (tx) => {
-      await tx.$queryRaw`SELECT id FROM "WaitlistEntry" WHERE id = ${entryId} FOR UPDATE`;
+      await tx.$queryRaw`SELECT id FROM "waitlist_entries" WHERE id = ${entryId} FOR UPDATE`;
 
       const entry = await tx.waitlistEntry.findFirst({
         where: { id: entryId },

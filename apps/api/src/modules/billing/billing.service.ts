@@ -438,7 +438,7 @@ export class BillingService implements OnModuleInit {
 
     // C8 fix: Wrap in transaction with row lock to prevent deposit race condition
     const { paymentIntent, amount } = await this.prisma.$transaction(async (tx) => {
-      await tx.$queryRaw`SELECT id FROM "Booking" WHERE id = ${bookingId} AND "businessId" = ${businessId} FOR UPDATE`;
+      await tx.$queryRaw`SELECT id FROM "bookings" WHERE id = ${bookingId} AND "businessId" = ${businessId} FOR UPDATE`;
 
       const booking = await tx.booking.findFirst({
         where: { id: bookingId, businessId },
