@@ -770,7 +770,7 @@ function InboxPage() {
   };
 
   return (
-    <div className="flex flex-col h-full" data-tour-target="inbox-panel">
+    <div className="flex flex-col flex-1 min-h-0" data-tour-target="inbox-panel">
       <div className="px-3 pt-2">
         <FeatureDiscovery
           id="inbox-ai-replies"
