@@ -32,6 +32,16 @@ const nextConfig = {
         destination: '/services/:path*',
         permanent: true,
       },
+      {
+        source: '/appointments',
+        destination: '/bookings',
+        permanent: true,
+      },
+      {
+        source: '/appointments/:path*',
+        destination: '/bookings/:path*',
+        permanent: true,
+      },
     ];
   },
   async headers() {
