@@ -144,7 +144,9 @@ export class BookingService {
     // (guards against seed data being run multiple times)
     const seen = new Set<string>();
     const deduped = data.filter((b: any) => {
-      const key = `${b.customerId}|${b.serviceId}|${b.startTime?.toISOString()}`;
+      // Only deduplicate when all fields are present (real bookings, not partial data)
+      if (!b.customerId || !b.serviceId || !b.startTime) return true;
+      const key = `${b.customerId}|${b.serviceId}|${b.startTime.toISOString()}`;
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
