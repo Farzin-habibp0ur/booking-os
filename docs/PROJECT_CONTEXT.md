@@ -24,7 +24,7 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 ### Supported Verticals
 
 - **Aesthetic clinics** — consult → treatment → aftercare workflows, medical intake, before/after tracking
-- **Car dealerships** — service kanban board (CHECKED_IN → DIAGNOSING → IN_PROGRESS → READY), vehicle inventory management (VIN tracking, stock numbers, test drives), sales pipeline & deal tracking (7-stage Kanban: INQUIRY → QUALIFIED → TEST_DRIVE → NEGOTIATION → FINANCE → WON/LOST), quote approval, resource/bay scheduling
+- **Car dealerships** — service kanban board (CHECKED_IN → DIAGNOSING → IN_PROGRESS → READY), vehicle inventory management (VIN tracking, stock numbers, test drives), sales pipeline & deal tracking (7-stage Kanban: INQUIRY → QUALIFIED → TEST_DRIVE → NEGOTIATION → FINANCE → WON/LOST), customer journey board (unified deal/test drive/vehicle timeline with engagement scoring), AI deal intelligence (stalled deal detection, deal-aware action cards), quote approval, resource/bay scheduling
 - **Wellness & spa** — 7-field wellness intake (health goals, fitness level, injuries, medications, allergies, modality, membership), session packages with progress tracking, membership tiers (Drop-in/Monthly/Annual/VIP), 6 default services (massage, yoga, training, coaching)
 - **General** — base vertical with standard booking features
 - **Extensible** — Vertical Pack system customizes fields, templates, automations, and workflows per industry
