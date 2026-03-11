@@ -79,7 +79,7 @@ booking-os/
 
 ### Module Structure
 
-Every feature is a NestJS module in `apps/api/src/modules/` (65 modules). Each module follows this pattern:
+Every feature is a NestJS module in `apps/api/src/modules/` (66 modules). Each module follows this pattern:
 
 ```
 modules/
@@ -114,7 +114,7 @@ modules/
 
 ### Database (Prisma)
 
-- Schema at `packages/db/prisma/schema.prisma` — **77 models**, 56 migrations
+- Schema at `packages/db/prisma/schema.prisma` — **80 models**, 57 migrations
 - Generate client: `npx prisma generate --schema=packages/db/prisma/schema.prisma`
 - Create migration: `npx prisma migrate dev --name your_name --schema=packages/db/prisma/schema.prisma`
 - `PrismaService` is a global NestJS provider — inject it in constructors
@@ -134,6 +134,10 @@ VerticalPack:       AESTHETIC, SALON, TUTORING, GENERAL, DEALERSHIP, WELLNESS
 VehicleStatus:      IN_STOCK, RESERVED, SOLD, IN_TRANSIT, TRADE_IN, ARCHIVED
 VehicleCondition:   NEW, USED, CERTIFIED_PRE_OWNED
 TestDriveStatus:    SCHEDULED, COMPLETED, NO_SHOW, CANCELLED
+DealStage:          INQUIRY, QUALIFIED, TEST_DRIVE, NEGOTIATION, FINANCE, CLOSED_WON, CLOSED_LOST
+DealActivityType:   NOTE, CALL, EMAIL, MEETING, TEST_DRIVE, FOLLOW_UP
+DealSource:         WALK_IN, PHONE, WEBSITE, WHATSAPP, REFERRAL
+DealType:           NEW_PURCHASE, USED_PURCHASE, TRADE_IN, LEASE
 ```
 
 ### BullMQ Queues (8)
@@ -161,7 +165,7 @@ Key events: `message:new`, `conversation:updated`, `ai:suggestion`, `ai:auto-rep
 
 - Pages are in `apps/web/src/app/` using Next.js App Router (not Pages Router)
 - Protected pages check `access_token` cookie in `middleware.ts`
-- **98 pages** total (17 public, ~51 protected, ~16 console, ~14 portal/marketing)
+- **100 pages** total (17 public, ~53 protected, ~16 console, ~14 portal/marketing)
 - Client components use `'use client'` directive
 
 ### API Client

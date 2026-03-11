@@ -19,6 +19,7 @@ import { ActionHistoryService } from '../action-history/action-history.service';
 import { InvoiceService } from '../invoice/invoice.service';
 import { TreatmentPlanService } from '../treatment-plan/treatment-plan.service';
 import { AftercareService } from '../aftercare/aftercare.service';
+import { DealService } from '../deal/deal.service';
 
 @Injectable()
 export class BookingService {
@@ -42,6 +43,8 @@ export class BookingService {
     private treatmentPlanService?: TreatmentPlanService,
     @Optional()
     private aftercareService?: AftercareService,
+    @Optional()
+    private dealService?: DealService,
   ) {}
 
   private static readonly VALID_SORT_FIELDS = [
@@ -851,6 +854,16 @@ export class BookingService {
       if (this.treatmentPlanService) {
         this.treatmentPlanService.onBookingCompleted(id).catch((err) =>
           this.logger.warn(`Failed to update treatment session for booking ${id}`, {
+            bookingId: id,
+            error: err.message,
+          }),
+        );
+      }
+
+      // Auto-advance deal pipeline on test drive completion (dealership)
+      if (this.dealService && booking.service?.kind === 'CONSULT') {
+        this.dealService.advanceDealOnTestDriveCompletion(booking.customerId, id).catch((err) =>
+          this.logger.warn(`Failed to advance deal after test drive completion for booking ${id}`, {
             bookingId: id,
             error: err.message,
           }),

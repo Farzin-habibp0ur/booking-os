@@ -84,6 +84,7 @@ model Business {
   treatmentPlans             TreatmentPlan[]
   aftercareProtocols         AftercareProtocol[]
   vehicles                   Vehicle[]
+  deals                      Deal[]
 
   @@map("businesses")
 }
@@ -133,6 +134,9 @@ model Staff {
   treatmentPlans      TreatmentPlan[]  @relation("TreatmentPlanCreator")
   vehiclesAdded       Vehicle[]
   testDrives          TestDrive[]
+  assignedDeals       Deal[]             @relation("DealAssignedTo")
+  dealStageChanges    DealStageHistory[] @relation("DealStageChangedBy")
+  dealActivities      DealActivity[]     @relation("DealActivityCreatedBy")
 
   @@index([businessId])
   @@map("staff")
@@ -170,6 +174,7 @@ model Customer {
   treatmentPlans            TreatmentPlan[]
   aftercareEnrollments      AftercareEnrollment[]
   testDrives                TestDrive[]
+  deals                     Deal[]
 
   @@unique([businessId, phone])
   @@index([businessId])
@@ -1743,6 +1748,7 @@ model Vehicle {
   location   Location?   @relation(fields: [locationId], references: [id])
   addedBy    Staff?      @relation(fields: [addedById], references: [id])
   testDrives TestDrive[]
+  deals      Deal[]
 
   @@index([businessId])
   @@index([businessId, status])
@@ -1769,4 +1775,74 @@ model TestDrive {
   @@index([vehicleId])
   @@index([customerId])
   @@map("test_drives")
+}
+
+// ---------------------------------------------------------------------------
+// Deal Pipeline (Dealership vertical)
+// ---------------------------------------------------------------------------
+
+model Deal {
+  id                String    @id @default(cuid())
+  businessId        String
+  customerId        String
+  vehicleId         String?
+  assignedToId      String?
+  stage             String    @default("INQUIRY") // INQUIRY | QUALIFIED | TEST_DRIVE | NEGOTIATION | FINANCE | CLOSED_WON | CLOSED_LOST
+  source            String?   // WALK_IN | PHONE | WEBSITE | WHATSAPP | REFERRAL
+  dealType          String?   // NEW_PURCHASE | USED_PURCHASE | TRADE_IN | LEASE
+  dealValue         Decimal?  @db.Decimal(10, 2)
+  tradeInValue      Decimal?  @db.Decimal(10, 2)
+  probability       Int?      @default(0)
+  expectedCloseDate DateTime?
+  actualCloseDate   DateTime?
+  lostReason        String?
+  notes             String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  business     Business           @relation(fields: [businessId], references: [id])
+  customer     Customer           @relation(fields: [customerId], references: [id])
+  vehicle      Vehicle?           @relation(fields: [vehicleId], references: [id])
+  assignedTo   Staff?             @relation("DealAssignedTo", fields: [assignedToId], references: [id])
+  stageHistory DealStageHistory[]
+  activities   DealActivity[]
+
+  @@index([businessId])
+  @@index([businessId, stage])
+  @@index([assignedToId])
+  @@map("deals")
+}
+
+model DealStageHistory {
+  id          String   @id @default(cuid())
+  dealId      String
+  fromStage   String?
+  toStage     String
+  changedById String?
+  duration    Int?
+  notes       String?
+  createdAt   DateTime @default(now())
+
+  deal      Deal   @relation(fields: [dealId], references: [id])
+  changedBy Staff? @relation("DealStageChangedBy", fields: [changedById], references: [id])
+
+  @@index([dealId])
+  @@map("deal_stage_history")
+}
+
+model DealActivity {
+  id           String    @id @default(cuid())
+  dealId       String
+  type         String    // NOTE | CALL | EMAIL | MEETING | TEST_DRIVE | FOLLOW_UP
+  description  String
+  scheduledFor DateTime?
+  completedAt  DateTime?
+  createdById  String?
+  createdAt    DateTime  @default(now())
+
+  deal      Deal   @relation(fields: [dealId], references: [id])
+  createdBy Staff? @relation("DealActivityCreatedBy", fields: [createdById], references: [id])
+
+  @@index([dealId])
+  @@map("deal_activities")
 }

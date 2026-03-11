@@ -320,6 +320,26 @@ export function vehicleConditionBadgeClasses(condition: string): string {
 }
 
 // ---------------------------------------------------------------------------
+// Deal stage styles (dealership pipeline)
+// ---------------------------------------------------------------------------
+
+export const DEAL_STAGE_STYLES: Record<string, { bg: string; text: string; label: string; hex: string }> = {
+  INQUIRY: { bg: 'bg-slate-100', text: 'text-slate-600', label: 'Inquiry', hex: '#64748b' },
+  QUALIFIED: { bg: 'bg-lavender-50', text: 'text-lavender-900', label: 'Qualified', hex: '#9F8ECB' },
+  TEST_DRIVE: { bg: 'bg-sky-50', text: 'text-sky-700', label: 'Test Drive', hex: '#0ea5e9' },
+  NEGOTIATION: { bg: 'bg-amber-50', text: 'text-amber-700', label: 'Negotiation', hex: '#f59e0b' },
+  FINANCE: { bg: 'bg-blue-50', text: 'text-blue-700', label: 'Finance', hex: '#3b82f6' },
+  CLOSED_WON: { bg: 'bg-sage-50', text: 'text-sage-900', label: 'Won', hex: '#71907C' },
+  CLOSED_LOST: { bg: 'bg-red-50', text: 'text-red-700', label: 'Lost', hex: '#ef4444' },
+};
+
+export function dealStageBadgeClasses(stage: string): string {
+  const s = DEAL_STAGE_STYLES[stage];
+  if (!s) return 'bg-slate-100 text-slate-600';
+  return `${s.bg} ${s.text}`;
+}
+
+// ---------------------------------------------------------------------------
 // Elevation (shadow) tokens
 // ---------------------------------------------------------------------------
 

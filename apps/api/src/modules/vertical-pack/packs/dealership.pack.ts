@@ -83,6 +83,18 @@ export const dealershipPack: VerticalPackDefinition = {
       body: 'Hi {{customerName}}, need to cancel your {{serviceName}} on {{date}} at {{time}}? Use this link: {{cancelLink}}',
       variables: ['customerName', 'serviceName', 'date', 'time', 'cancelLink'],
     },
+    {
+      name: 'Deal Follow-Up',
+      category: TemplateCategory.FOLLOW_UP,
+      body: 'Hi {{customerName}}, thank you for your interest in the {{vehicleYear}} {{vehicleMake}} {{vehicleModel}} at {{businessName}}. Would you like to schedule a test drive or discuss financing options? Reply to this message or call us!',
+      variables: ['customerName', 'vehicleYear', 'vehicleMake', 'vehicleModel', 'businessName'],
+    },
+    {
+      name: 'Deal Won — Congratulations',
+      category: TemplateCategory.CUSTOM,
+      body: 'Congratulations {{customerName}}! 🎉 Your new {{vehicleYear}} {{vehicleMake}} {{vehicleModel}} is being prepared. We will contact you shortly to arrange pickup at {{businessName}}. Welcome to the family!',
+      variables: ['customerName', 'vehicleYear', 'vehicleMake', 'vehicleModel', 'businessName'],
+    },
   ],
   defaultServices: [
     { name: 'Test Drive', durationMins: 30, price: 0, category: 'Sales', kind: 'CONSULT' },

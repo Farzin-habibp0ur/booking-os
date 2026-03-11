@@ -81,7 +81,7 @@ export class DashboardService {
       }),
       this.prisma.business.findUnique({
         where: { id: businessId },
-        select: { name: true, packConfig: true },
+        select: { name: true, packConfig: true, verticalPack: true },
       }),
     ]);
 
@@ -286,6 +286,30 @@ export class DashboardService {
       dismissedNudges,
     };
 
+    // Deal pipeline metrics (dealership only)
+    let dealPipelineMetrics: any = null;
+    if ((business as any)?.verticalPack === 'dealership' || (packConfig as any)?.kanbanEnabled) {
+      try {
+        const [openDeals, recentWon] = await Promise.all([
+          this.prisma.deal.findMany({
+            where: { businessId, stage: { notIn: ['CLOSED_WON', 'CLOSED_LOST'] } },
+            select: { dealValue: true, probability: true, stage: true },
+          }),
+          this.prisma.deal.count({
+            where: { businessId, stage: 'CLOSED_WON', actualCloseDate: { gte: monthAgo } },
+          }),
+        ]);
+        const pipelineValue = openDeals.reduce((sum, d) => sum + (d.dealValue ? Number(d.dealValue) : 0), 0);
+        const weightedValue = openDeals.reduce((sum, d) => sum + (d.dealValue ? Number(d.dealValue) * ((d.probability || 0) / 100) : 0), 0);
+        dealPipelineMetrics = {
+          openDeals: openDeals.length,
+          pipelineValue: Math.round(pipelineValue * 100) / 100,
+          weightedValue: Math.round(weightedValue * 100) / 100,
+          wonThisMonth: recentWon,
+        };
+      } catch { /* deal table may not exist yet */ }
+    }
+
     // Waitlist backfill stats
     const waitlistMetrics = await this.waitlistService.getMetrics(businessId, 30).catch(() => ({
       totalEntries: 0,
@@ -321,6 +345,7 @@ export class DashboardService {
       },
       goLiveChecklist,
       milestoneProgress,
+      dealPipelineMetrics,
       // Mission Control: staff-scoped data
       myBookingsToday,
       myAssignedConversations,

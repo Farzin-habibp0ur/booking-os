@@ -10,9 +10,10 @@ import { WaitlistModule } from '../waitlist/waitlist.module';
 import { InvoiceModule } from '../invoice/invoice.module';
 import { TreatmentPlanModule } from '../treatment-plan/treatment-plan.module';
 import { AftercareModule } from '../aftercare/aftercare.module';
+import { DealModule } from '../deal/deal.module';
 
 @Module({
-  imports: [NotificationModule, BusinessModule, AuthModule, forwardRef(() => WaitlistModule), InvoiceModule, TreatmentPlanModule, AftercareModule],
+  imports: [NotificationModule, BusinessModule, AuthModule, forwardRef(() => WaitlistModule), InvoiceModule, TreatmentPlanModule, AftercareModule, DealModule],
   controllers: [RecurringController, BookingController],
   providers: [BookingService, RecurringService],
   exports: [BookingService],

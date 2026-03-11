@@ -2,7 +2,7 @@
 
 > **Purpose:** This document gives full context on the Booking OS platform — what it is, what's been built, how it's structured, and what's left to build. Share this with an AI assistant or new developer to get productive immediately.
 >
-> **Last updated:** March 11, 2026 (All phases COMPLETE — A through E + Phases 1-4 & 6 polish + QA Fixes + Sprints 1-4 + Prompts 4A-4C + Prompt 1C + Prompt 1A + Prompt 1B + Prompt 1D + Prompt 2A COMPLETE — ~5,628+ total tests across 372 test files, 77 Prisma models, 56 migrations)
+> **Last updated:** March 11, 2026 (All phases COMPLETE — A through E + Phases 1-4 & 6 polish + QA Fixes + Sprints 1-4 + Prompts 4A-4C + Prompt 1C + Prompt 1A + Prompt 1B + Prompt 1D + Prompt 2A + Prompt 2B COMPLETE — ~5,680+ total tests across 377 test files, 80 Prisma models, 57 migrations)
 
 ---
 
@@ -24,7 +24,7 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 ### Supported Verticals
 
 - **Aesthetic clinics** — consult → treatment → aftercare workflows, medical intake, before/after tracking
-- **Car dealerships** — service kanban board (CHECKED_IN → DIAGNOSING → IN_PROGRESS → READY), quote approval, resource/bay scheduling
+- **Car dealerships** — service kanban board (CHECKED_IN → DIAGNOSING → IN_PROGRESS → READY), vehicle inventory management (VIN tracking, stock numbers, test drives), sales pipeline & deal tracking (7-stage Kanban: INQUIRY → QUALIFIED → TEST_DRIVE → NEGOTIATION → FINANCE → WON/LOST), quote approval, resource/bay scheduling
 - **Wellness & spa** — 7-field wellness intake (health goals, fitness level, injuries, medications, allergies, modality, membership), session packages with progress tracking, membership tiers (Drop-in/Monthly/Annual/VIP), 6 default services (massage, yoga, training, coaching)
 - **General** — base vertical with standard booking features
 - **Extensible** — Vertical Pack system customizes fields, templates, automations, and workflows per industry

@@ -160,7 +160,7 @@ export class CustomerService {
   ) {
     const { types, showSystem = true, limit = 20, offset = 0 } = opts;
 
-    const [bookings, conversations, notes, waitlistEntries, quotes, campaignSends, invoices, clinicalPhotos] =
+    const [bookings, conversations, notes, waitlistEntries, quotes, campaignSends, invoices, clinicalPhotos, deals] =
       await Promise.all([
         !types || types.includes('booking')
           ? this.prisma.booking.findMany({
@@ -208,6 +208,12 @@ export class CustomerService {
           ? this.prisma.clinicalPhoto.findMany({
               where: { customerId, businessId, deletedAt: null },
               select: { id: true, type: true, bodyArea: true, createdAt: true },
+            })
+          : Promise.resolve([]),
+        !types || types.includes('deal')
+          ? this.prisma.deal.findMany({
+              where: { customerId, businessId },
+              include: { vehicle: { select: { year: true, make: true, model: true } }, assignedTo: { select: { name: true } } },
             })
           : Promise.resolve([]),
       ]);
@@ -333,6 +339,22 @@ export class CustomerService {
         metadata: { photoId: photo.id, photoType: photo.type, bodyArea: photo.bodyArea },
         isSystemEvent: false,
         deepLink: null,
+      });
+    }
+
+    // Deals
+    for (const d of deals as any[]) {
+      const vehicleLabel = d.vehicle ? `${d.vehicle.year} ${d.vehicle.make} ${d.vehicle.model}` : '';
+      const value = d.dealValue ? ` — $${Number(d.dealValue).toLocaleString()}` : '';
+      events.push({
+        id: `deal-${d.id}`,
+        type: 'deal',
+        timestamp: d.updatedAt.toISOString(),
+        title: `Deal — ${d.stage}${value}`,
+        description: [vehicleLabel, d.assignedTo?.name ? `Assigned to ${d.assignedTo.name}` : ''].filter(Boolean).join(' · '),
+        metadata: { dealId: d.id, stage: d.stage, vehicleId: d.vehicleId },
+        isSystemEvent: false,
+        deepLink: `/pipeline/${d.id}`,
       });
     }
 
