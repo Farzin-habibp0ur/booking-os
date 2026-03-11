@@ -11,6 +11,7 @@ import {
   ChevronRight,
   X,
   ClipboardList,
+  FileText,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { statusBadgeClasses } from '@/lib/design-tokens';
@@ -63,17 +64,21 @@ export default function PortalDashboardPage() {
   const [rescheduleDate, setRescheduleDate] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState('');
+  const [treatmentPlans, setTreatmentPlans] = useState<any[]>([]);
+  const [acceptingPlan, setAcceptingPlan] = useState<string | null>(null);
 
   const loadData = useCallback(() => {
     return Promise.all([
       portalFetch('/portal/me'),
       portalFetch('/portal/upcoming'),
       portalFetch('/portal/bookings?page=1'),
+      portalFetch('/portal/treatment-plans').catch(() => []),
     ])
-      .then(([prof, up, bookings]) => {
+      .then(([prof, up, bookings, plans]) => {
         setProfile(prof);
         setUpcoming(up);
         setRecentBookings(bookings.data?.slice(0, 5) || []);
+        setTreatmentPlans(Array.isArray(plans) ? plans : []);
       })
       .catch(() => {});
   }, []);
@@ -208,6 +213,64 @@ export default function PortalDashboardPage() {
                 </div>
               </div>
             ))}
+          </div>
+        </section>
+      )}
+
+      {/* Treatment Plan Proposals */}
+      {treatmentPlans.filter((p: any) => p.status === 'PROPOSED').length > 0 && (
+        <section data-testid="treatment-plan-proposals">
+          <h2 className="text-lg font-serif font-semibold text-slate-900 mb-3">
+            Treatment Plans Awaiting Your Approval
+          </h2>
+          <div className="space-y-3">
+            {treatmentPlans
+              .filter((p: any) => p.status === 'PROPOSED')
+              .map((plan: any) => (
+                <div key={plan.id} className="bg-white rounded-2xl shadow-soft p-4">
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <p className="text-sm font-medium text-slate-900">Treatment Plan</p>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        {plan.sessions?.length || 0} session{plan.sessions?.length !== 1 ? 's' : ''}
+                        {plan.totalEstimate && ` · $${Number(plan.totalEstimate).toFixed(2)}`}
+                      </p>
+                    </div>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-lavender-50 text-lavender-900">
+                      Awaiting Approval
+                    </span>
+                  </div>
+                  {plan.diagnosis && (
+                    <p className="text-sm text-slate-600 mb-2 line-clamp-2">{plan.diagnosis}</p>
+                  )}
+                  {plan.sessions?.length > 0 && (
+                    <div className="space-y-1 mb-3">
+                      {plan.sessions.map((s: any) => (
+                        <div key={s.id} className="flex items-center justify-between text-xs text-slate-500">
+                          <span>{s.sequenceOrder}. {s.service?.name}</span>
+                          {s.service?.price > 0 && <span>${s.service.price}</span>}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={async () => {
+                        setAcceptingPlan(plan.id);
+                        try {
+                          await portalPost(`/portal/treatment-plans/${plan.id}/accept`, {});
+                          await loadData();
+                        } catch {}
+                        setAcceptingPlan(null);
+                      }}
+                      disabled={acceptingPlan === plan.id}
+                      className="flex-1 px-3 py-2 text-sm bg-sage-600 text-white rounded-xl hover:bg-sage-700 transition-colors disabled:opacity-50"
+                    >
+                      {acceptingPlan === plan.id ? 'Accepting...' : 'Accept Plan'}
+                    </button>
+                  </div>
+                </div>
+              ))}
           </div>
         </section>
       )}

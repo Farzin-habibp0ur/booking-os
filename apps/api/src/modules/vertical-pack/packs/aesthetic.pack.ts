@@ -89,6 +89,12 @@ export const aestheticPack: VerticalPackDefinition = {
       body: 'Hi {{customerName}}, need to cancel your {{serviceName}} on {{date}} at {{time}}? Use this link: {{cancelLink}}',
       variables: ['customerName', 'serviceName', 'date', 'time', 'cancelLink'],
     },
+    {
+      name: 'Treatment Plan Proposed',
+      category: TemplateCategory.TREATMENT_PLAN_PROPOSED,
+      body: 'Hi {{customerName}}, your treatment plan from {{businessName}} is ready for review! It includes {{sessionCount}} sessions. View and accept your plan here: {{planLink}}',
+      variables: ['customerName', 'businessName', 'sessionCount', 'planLink'],
+    },
   ],
   defaultServices: [
     { name: 'Consultation', durationMins: 30, price: 0, category: 'Consultation', kind: 'CONSULT' },

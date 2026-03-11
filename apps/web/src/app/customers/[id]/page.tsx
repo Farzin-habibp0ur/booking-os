@@ -41,6 +41,8 @@ import { PhotoUploadCard } from '@/components/aesthetic/photo-upload-card';
 import { PhotoGallery } from '@/components/aesthetic/photo-gallery';
 import { PhotoComparisonViewer } from '@/components/aesthetic/photo-comparison-viewer';
 import { PhotoTimeline } from '@/components/aesthetic/photo-timeline';
+import { TreatmentPlanCard } from '@/components/aesthetic/treatment-plan-card';
+import { TreatmentPlanTimeline } from '@/components/aesthetic/treatment-plan-timeline';
 
 export default function CustomerDetailPage() {
   const { id } = useParams();
@@ -89,6 +91,9 @@ export default function CustomerDetailPage() {
   const [clinicalPhotos, setClinicalPhotos] = useState<any[]>([]);
   const [photoComparisons, setPhotoComparisons] = useState<any[]>([]);
   const [photoTab, setPhotoTab] = useState<'gallery' | 'timeline' | 'comparisons'>('gallery');
+
+  // Treatment plans state
+  const [treatmentPlans, setTreatmentPlans] = useState<any[]>([]);
 
   // AI Chat state
   const [chatMessages, setChatMessages] = useState<Array<{ role: 'user' | 'ai'; text: string }>>(
@@ -161,6 +166,9 @@ export default function CustomerDetailPage() {
       .then(setMedicalRecord)
       .catch(() => setMedicalRecord(null));
     loadPhotos();
+    if (pack.slug === 'aesthetic') {
+      api.get<any[]>(`/treatment-plans?customerId=${id}`).then(setTreatmentPlans).catch(() => setTreatmentPlans([]));
+    }
   }, [id]);
 
   useEffect(() => {
@@ -721,6 +729,29 @@ export default function CustomerDetailPage() {
                     <X size={10} />
                   </button>
                 </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Treatment Plans — Aesthetic only */}
+        {pack.slug === 'aesthetic' && treatmentPlans.length > 0 && (
+          <div className={cn(ELEVATION.card, 'bg-white p-5 mb-6')} data-testid="treatment-plans-section">
+            <h2 className="text-sm font-semibold text-slate-900 uppercase flex items-center gap-2 mb-4">
+              Treatment Plans
+              <span className="text-xs bg-lavender-50 text-lavender-700 px-2 py-0.5 rounded-full font-medium">
+                {treatmentPlans.length}
+              </span>
+            </h2>
+            <div className="space-y-3">
+              {treatmentPlans.map((plan: any) => (
+                <TreatmentPlanCard
+                  key={plan.id}
+                  plan={plan}
+                  onClick={() => {
+                    // Could navigate to detail — for now expand inline
+                  }}
+                />
               ))}
             </div>
           </div>

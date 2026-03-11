@@ -136,4 +136,23 @@ export class PortalController {
       dto.cancelUrl,
     );
   }
+
+  @Get('treatment-plans')
+  @UseGuards(PortalGuard)
+  getTreatmentPlans(@Req() req: any) {
+    return this.portalService.getTreatmentPlans(
+      req.portalUser.customerId,
+      req.portalUser.businessId,
+    );
+  }
+
+  @Post('treatment-plans/:id/accept')
+  @UseGuards(PortalGuard)
+  acceptTreatmentPlan(@Req() req: any, @Param('id') id: string) {
+    return this.portalService.acceptTreatmentPlan(
+      req.portalUser.customerId,
+      req.portalUser.businessId,
+      id,
+    );
+  }
 }

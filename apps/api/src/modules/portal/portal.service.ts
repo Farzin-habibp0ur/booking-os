@@ -368,4 +368,39 @@ export class PortalService {
 
     return { url: session.url, sessionId: session.id };
   }
+
+  async getTreatmentPlans(customerId: string, businessId: string) {
+    return this.prisma.treatmentPlan.findMany({
+      where: { customerId, businessId },
+      include: {
+        sessions: {
+          include: { service: { select: { id: true, name: true, durationMins: true, price: true } } },
+          orderBy: { sequenceOrder: 'asc' },
+        },
+        consultBooking: {
+          include: { service: { select: { name: true } } },
+        },
+        createdBy: { select: { name: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async acceptTreatmentPlan(customerId: string, businessId: string, planId: string) {
+    const plan = await this.prisma.treatmentPlan.findFirst({
+      where: { id: planId, customerId, businessId, status: 'PROPOSED' },
+    });
+    if (!plan) throw new NotFoundException('Treatment plan not found or not available for acceptance');
+
+    return this.prisma.treatmentPlan.update({
+      where: { id: planId },
+      data: { status: 'ACCEPTED', acceptedAt: new Date() },
+      include: {
+        sessions: {
+          include: { service: { select: { id: true, name: true } } },
+          orderBy: { sequenceOrder: 'asc' },
+        },
+      },
+    });
+  }
 }

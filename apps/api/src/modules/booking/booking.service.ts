@@ -17,6 +17,7 @@ import { TokenService } from '../../common/token.service';
 import { WaitlistService } from '../waitlist/waitlist.service';
 import { ActionHistoryService } from '../action-history/action-history.service';
 import { InvoiceService } from '../invoice/invoice.service';
+import { TreatmentPlanService } from '../treatment-plan/treatment-plan.service';
 
 @Injectable()
 export class BookingService {
@@ -36,6 +37,8 @@ export class BookingService {
     private actionHistoryService?: ActionHistoryService,
     @Optional()
     private invoiceService?: InvoiceService,
+    @Optional()
+    private treatmentPlanService?: TreatmentPlanService,
   ) {}
 
   private static readonly VALID_SORT_FIELDS = [
@@ -824,6 +827,16 @@ export class BookingService {
       if (this.invoiceService) {
         this.invoiceService.createFromBooking(businessId, id).catch((err) =>
           this.logger.warn(`Failed to auto-create invoice for booking ${id}`, {
+            bookingId: id,
+            error: err.message,
+          }),
+        );
+      }
+
+      // Mark linked treatment session as completed
+      if (this.treatmentPlanService) {
+        this.treatmentPlanService.onBookingCompleted(id).catch((err) =>
+          this.logger.warn(`Failed to update treatment session for booking ${id}`, {
             bookingId: id,
             error: err.message,
           }),

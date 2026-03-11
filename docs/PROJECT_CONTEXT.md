@@ -2,7 +2,7 @@
 
 > **Purpose:** This document gives full context on the Booking OS platform — what it is, what's been built, how it's structured, and what's left to build. Share this with an AI assistant or new developer to get productive immediately.
 >
-> **Last updated:** March 11, 2026 (All phases COMPLETE — A through E + Phases 1-4 & 6 polish + QA Fixes + Sprints 1-4 + Prompts 4A-4C + Prompt 1C + Prompt 1A COMPLETE — ~5,517+ total tests across 360 test files, 69 Prisma models, 53 migrations)
+> **Last updated:** March 11, 2026 (All phases COMPLETE — A through E + Phases 1-4 & 6 polish + QA Fixes + Sprints 1-4 + Prompts 4A-4C + Prompt 1C + Prompt 1A + Prompt 1B COMPLETE — ~5,573+ total tests across 365 test files, 71 Prisma models, 54 migrations)
 
 ---
 
@@ -251,7 +251,7 @@ booking-os/
 ├── apps/
 │   ├── api/                    # NestJS REST API (port 3001)
 │   │   ├── src/
-│   │   │   ├── modules/        # 61 feature modules
+│   │   │   ├── modules/        # 62 feature modules
 │   │   │   ├── common/         # Guards, decorators, filters, DTOs, Prisma service
 │   │   │   └── main.ts         # Bootstrap, Swagger, CORS, cookies, validation
 │   │   └── Dockerfile          # Multi-stage production build
@@ -621,6 +621,13 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 - `MedicalHistoryForm` — Structured medical intake form with tag inputs for arrays, Fitzpatrick scale, safety toggles, consent (Prompt 1C)
 - `MedicalAlertBanner` — Red alert banner for flagged medical records with flag reason, allergy/contraindication tags, full/compact modes (Prompt 1C)
 - `MedicalHistoryDiff` — Side-by-side version comparison for medical record changes (Prompt 1C)
+- `PhotoUploadCard` — Drag-drop clinical photo upload with type/body area selectors (Prompt 1A)
+- `PhotoGallery` — Filterable photo grid with lightbox viewer and delete action (Prompt 1A)
+- `PhotoComparisonViewer` — Split-screen before/after slider comparison (Prompt 1A)
+- `PhotoTimeline` — Chronological photo display grouped by body area (Prompt 1A)
+- `TreatmentPlanBuilder` — Form for creating treatment plans with dynamic session list and service selectors (Prompt 1B)
+- `TreatmentPlanCard` — Summary card with status badge, progress bar, and portal accept/decline actions (Prompt 1B)
+- `TreatmentPlanTimeline` — Visual session timeline with status icons and booking links (Prompt 1B)
 
 ---
 
@@ -987,6 +994,28 @@ Key groups (full list in `.env.example`):
 - Integration: MedicalAlertBanner in booking detail modal + customer page, AlertTriangle icon on kanban cards for flagged customers
 - Portal intake enhanced with bloodThinners/pregnant/breastfeeding checkboxes
 - 20 tests (14 API + 6 web)
+
+### Prompt 1A: Before/After Clinical Photo Tracking — COMPLETE
+
+- ClinicalPhoto + PhotoComparison Prisma models (68th-69th models, migration 53): soft delete, bodyArea, type (BEFORE/AFTER/PROGRESS), file upload validation (JPEG/PNG/GIF/WebP, 5MB max)
+- clinical-photo API module (61st module): 7 endpoints (upload, list, get, delete, compare, list-comparisons, file-serve)
+- 4 web components: PhotoUploadCard (drag-drop), PhotoGallery (filterable grid + lightbox), PhotoComparisonViewer (split-screen slider), PhotoTimeline (chronological by bodyArea)
+- Photos tab on customer detail page (aesthetic only) with gallery/timeline/comparisons sub-tabs
+- Design tokens: PHOTO_TYPE_STYLES + photoTypeBadgeClasses()
+- 57 tests (29 API + 28 web)
+
+### Prompt 1B: Treatment Plan & Consultation-to-Treatment Pipeline — COMPLETE
+
+- TreatmentPlan + TreatmentSession Prisma models (70th-71st models, migration 54): status flow DRAFT → PROPOSED → ACCEPTED → IN_PROGRESS → COMPLETED | CANCELLED, session sequencing with optional booking links
+- treatment-plan API module (62nd module): 8 endpoints (create, list, get, update, add-session, update-session, propose, accept)
+- Validates aesthetic vertical only, consult booking kind, status transition rules
+- sendTreatmentPlanProposal notification on propose, auto-complete plan when all sessions done
+- Portal: GET /portal/treatment-plans, POST /portal/treatment-plans/:id/accept
+- 3 web components: TreatmentPlanBuilder (form with sessions), TreatmentPlanCard (summary with progress bar), TreatmentPlanTimeline (visual session timeline)
+- Design tokens: TREATMENT_PLAN_STATUS_STYLES + treatmentPlanBadgeClasses()
+- Integration: booking detail "Create Treatment Plan" button on completed consults, customer detail treatment plans section, portal dashboard proposals
+- TREATMENT_PLAN_PROPOSED notification template added to aesthetic pack
+- 56 tests (32 API + 24 web)
 
 ### Do Not Build (Yet)
 

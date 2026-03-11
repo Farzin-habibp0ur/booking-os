@@ -81,6 +81,7 @@ model Business {
   medicalRecords             MedicalRecord[]
   clinicalPhotos             ClinicalPhoto[]
   photoComparisons           PhotoComparison[]
+  treatmentPlans             TreatmentPlan[]
 
   @@map("businesses")
 }
@@ -127,6 +128,7 @@ model Staff {
   staffServicePrices  StaffServicePrice[]
   medicalRecords      MedicalRecord[]  @relation("MedicalRecordStaff")
   clinicalPhotosTaken ClinicalPhoto[]  @relation("PhotoTakenByStaff")
+  treatmentPlans      TreatmentPlan[]  @relation("TreatmentPlanCreator")
 
   @@index([businessId])
   @@map("staff")
@@ -161,6 +163,7 @@ model Customer {
   medicalRecords        MedicalRecord[]
   clinicalPhotos        ClinicalPhoto[]
   photoComparisons      PhotoComparison[]
+  treatmentPlans        TreatmentPlan[]
 
   @@unique([businessId, phone])
   @@index([businessId])
@@ -189,8 +192,9 @@ model Service {
   bookings           Booking[]
   recurringSeries    RecurringSeries[]
   waitlistEntries    WaitlistEntry[]
-  staffServicePrices StaffServicePrice[]
-  invoiceLineItems   InvoiceLineItem[]
+  staffServicePrices  StaffServicePrice[]
+  invoiceLineItems    InvoiceLineItem[]
+  treatmentSessions   TreatmentSession[]
 
   @@index([businessId])
   @@map("services")
@@ -232,6 +236,8 @@ model Booking {
   actionCards     ActionCard[]
   invoices        Invoice[]
   clinicalPhotos  ClinicalPhoto[]
+  consultPlan     TreatmentPlan?    @relation("ConsultPlan")
+  sessionBooking  TreatmentSession? @relation("SessionBooking")
 
   @@index([businessId])
   @@index([businessId, startTime])
@@ -1573,4 +1579,53 @@ model PhotoComparison {
 
   @@index([customerId])
   @@map("photo_comparisons")
+}
+
+model TreatmentPlan {
+  id                String    @id @default(cuid())
+  businessId        String
+  customerId        String
+  consultBookingId  String    @unique
+  createdById       String
+  status            String    @default("DRAFT") // DRAFT | PROPOSED | ACCEPTED | IN_PROGRESS | COMPLETED | CANCELLED
+  diagnosis         String?
+  goals             String?
+  contraindications String?
+  totalEstimate     Decimal?  @db.Decimal(10, 2)
+  currency          String    @default("USD")
+  notes             String?
+  proposedAt        DateTime?
+  acceptedAt        DateTime?
+  completedAt       DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  business       Business           @relation(fields: [businessId], references: [id])
+  customer       Customer           @relation(fields: [customerId], references: [id])
+  consultBooking Booking            @relation("ConsultPlan", fields: [consultBookingId], references: [id])
+  createdBy      Staff              @relation("TreatmentPlanCreator", fields: [createdById], references: [id])
+  sessions       TreatmentSession[]
+
+  @@index([customerId])
+  @@index([businessId])
+  @@map("treatment_plans")
+}
+
+model TreatmentSession {
+  id              String    @id @default(cuid())
+  treatmentPlanId String
+  serviceId       String
+  bookingId       String?   @unique
+  sequenceOrder   Int
+  status          String    @default("PENDING") // PENDING | SCHEDULED | COMPLETED | SKIPPED
+  scheduledDate   DateTime?
+  notes           String?
+  completedAt     DateTime?
+
+  treatmentPlan TreatmentPlan @relation(fields: [treatmentPlanId], references: [id])
+  service       Service       @relation(fields: [serviceId], references: [id])
+  booking       Booking?      @relation("SessionBooking", fields: [bookingId], references: [id])
+
+  @@index([treatmentPlanId])
+  @@map("treatment_sessions")
 }

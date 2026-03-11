@@ -707,6 +707,33 @@ export class NotificationService {
     }
   }
 
+  async sendTreatmentPlanProposal(
+    customer: { name: string; phone: string; email?: string | null },
+    business: { id: string; name: string },
+    sessionCount: number,
+    planLink: string,
+  ): Promise<void> {
+    try {
+      const channels = await this.getChannelPreference(business.id);
+      const body = `Hi ${customer.name}, your treatment plan from ${business.name} is ready for review! It includes ${sessionCount} session(s). View your plan at: ${planLink}`;
+
+      if (channels === 'whatsapp' || channels === 'both') {
+        await this.dispatchWhatsApp(customer.phone, body, business.id);
+      }
+      if (channels === 'email' || channels === 'both') {
+        if (customer.email) {
+          const subject = `Treatment Plan Ready - ${business.name}`;
+          const html = this.wrapInEmailHtml(body, business.name);
+          await this.dispatchEmail(customer.email, subject, html);
+        }
+      }
+
+      this.logger.log(`Treatment plan proposal notification sent to ${customer.phone}`);
+    } catch (error) {
+      this.logger.error(`Failed to send treatment plan proposal notification:`, error);
+    }
+  }
+
   private async getChannelPreference(
     businessId: string,
   ): Promise<'email' | 'whatsapp' | 'sms' | 'both'> {
