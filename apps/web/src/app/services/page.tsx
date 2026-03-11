@@ -32,7 +32,20 @@ export default function ServicesPage() {
   }, []);
 
   const filtered = showInactive ? services : services.filter((s) => s.isActive !== false);
-  const categories = [...new Set(services.map((s) => s.category))];
+
+  // Normalize category names to prevent near-duplicates like "Injectable" vs "Injectables"
+  const normalizeCategory = (cat: string | null | undefined): string => {
+    if (!cat) return 'General';
+    const trimmed = cat.trim();
+    // Normalize known variants
+    if (/^injectable$/i.test(trimmed)) return 'Injectables';
+    return trimmed;
+  };
+  const normalizedServices = filtered.map((s) => ({
+    ...s,
+    category: normalizeCategory(s.category),
+  }));
+  const categories = [...new Set(normalizedServices.map((s) => s.category))];
 
   const toggleActive = async (svc: any) => {
     try {
@@ -87,7 +100,7 @@ export default function ServicesPage() {
       />
 
       {categories.map((cat) => {
-        const catServices = filtered.filter((s) => s.category === cat);
+        const catServices = normalizedServices.filter((s) => s.category === cat);
         if (catServices.length === 0) return null;
         return (
           <div key={cat} className="mb-6">
