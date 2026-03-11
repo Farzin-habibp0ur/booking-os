@@ -445,6 +445,12 @@ describe('CustomerService', () => {
           },
         ],
       );
+      prisma.invoice.findMany.mockResolvedValue(
+        overrides.invoices ?? [],
+      );
+      prisma.clinicalPhoto.findMany.mockResolvedValue(
+        overrides.clinicalPhotos ?? [],
+      );
     }
 
     it('returns events from all 6 sources', async () => {
@@ -483,6 +489,8 @@ describe('CustomerService', () => {
       prisma.waitlistEntry.findMany.mockResolvedValue([]);
       prisma.quote.findMany.mockResolvedValue([]);
       prisma.campaignSend.findMany.mockResolvedValue([]);
+      prisma.invoice.findMany.mockResolvedValue([]);
+      prisma.clinicalPhoto.findMany.mockResolvedValue([]);
 
       const result = await service.getTimeline('biz1', 'c1');
 

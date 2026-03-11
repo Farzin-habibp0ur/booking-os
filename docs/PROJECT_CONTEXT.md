@@ -2,7 +2,7 @@
 
 > **Purpose:** This document gives full context on the Booking OS platform — what it is, what's been built, how it's structured, and what's left to build. Share this with an AI assistant or new developer to get productive immediately.
 >
-> **Last updated:** March 10, 2026 (All phases COMPLETE — A through E + Phases 1-4 & 6 polish + QA Fixes + Sprints 1-4 COMPLETE — ~5,260+ total tests across 340+ test files, 60 Prisma models, 45 migrations)
+> **Last updated:** March 11, 2026 (All phases COMPLETE — A through E + Phases 1-4 & 6 polish + QA Fixes + Sprints 1-4 + Prompts 4A-4C + Prompt 1C + Prompt 1A COMPLETE — ~5,517+ total tests across 360 test files, 69 Prisma models, 53 migrations)
 
 ---
 
@@ -251,13 +251,13 @@ booking-os/
 ├── apps/
 │   ├── api/                    # NestJS REST API (port 3001)
 │   │   ├── src/
-│   │   │   ├── modules/        # 57 feature modules
+│   │   │   ├── modules/        # 61 feature modules
 │   │   │   ├── common/         # Guards, decorators, filters, DTOs, Prisma service
 │   │   │   └── main.ts         # Bootstrap, Swagger, CORS, cookies, validation
 │   │   └── Dockerfile          # Multi-stage production build
 │   ├── web/                    # Next.js admin dashboard (port 3000)
 │   │   ├── src/
-│   │   │   ├── app/            # 77 pages
+│   │   │   ├── app/            # 96 pages
 │   │   │   ├── components/     # Shared components (shell, modals, tour, etc.)
 │   │   │   ├── lib/            # Utility modules (API client, auth, i18n, socket, theme)
 │   │   │   ├── locales/        # en.json, es.json (600+ keys each)
@@ -265,7 +265,7 @@ booking-os/
 │   │   └── Dockerfile          # Multi-stage production build
 │   └── whatsapp-simulator/     # WhatsApp testing tool (port 3002)
 ├── packages/
-│   ├── db/                     # Prisma schema (57 models), migrations, seed scripts
+│   ├── db/                     # Prisma schema (67 models), migrations, seed scripts
 │   │   ├── prisma/schema.prisma
 │   │   ├── src/seed.ts         # Base seed (idempotent)
 │   │   ├── src/seed-demo.ts    # Rich demo data (idempotent)
@@ -291,7 +291,7 @@ booking-os/
 
 ---
 
-## 5. Database Schema (53 Models)
+## 5. Database Schema (67 Models)
 
 ```
 Business (1) ──┬── (*) Staff ──── (*) WorkingHours
@@ -299,12 +299,15 @@ Business (1) ──┬── (*) Staff ──── (*) WorkingHours
                │                  ├── (*) CalendarConnection
                │                  └── (*) StaffLocation ──── Location
                ├── (*) Customer ──── (*) CustomerNote
+               │                    └── (*) MedicalRecord
                ├── (*) Service
                ├── (*) Booking ──── (*) Reminder
                │    │               ├── (*) Payment
                │    │               └── (*) Quote
                │    ├── Location (optional)
                │    └── Resource (optional)
+               ├── (*) Invoice ──── (*) InvoiceLineItem
+               │    └── (*) Payment ──── (*) Refund
                ├── (*) RecurringSeries
                ├── (*) Conversation ──── (*) Message ──── (*) MessageAttachment
                │    │                    └── (*) ConversationNote
@@ -342,6 +345,7 @@ PlatformSetting (standalone — platform-wide configuration)
 ```
 StaffRole:          OWNER, ADMIN, AGENT, SERVICE_PROVIDER, SUPER_ADMIN
 BookingStatus:      PENDING, PENDING_DEPOSIT, CONFIRMED, IN_PROGRESS, COMPLETED, CANCELLED, NO_SHOW
+BookingSource:      MANUAL, PORTAL, WHATSAPP, AI, REFERRAL, WALK_IN
 KanbanStatus:       CHECKED_IN, DIAGNOSING, AWAITING_APPROVAL, IN_PROGRESS, READY_FOR_PICKUP
 ConversationStatus: OPEN, WAITING, RESOLVED, SNOOZED
 ServiceKind:        CONSULT, TREATMENT, OTHER
@@ -614,6 +618,9 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 - `TodayTimeline` — Vertical chronological timeline of today's bookings with quick actions (UX Upgrade Pack R2)
 - `AttentionCard` — Enhanced attention card with primary action buttons, expand/collapse, resolve-next navigation (UX Upgrade Pack R2)
 - `KpiStrip` — Clickable KPI cards with action subtitles and role-based metrics (UX Upgrade Pack R2)
+- `MedicalHistoryForm` — Structured medical intake form with tag inputs for arrays, Fitzpatrick scale, safety toggles, consent (Prompt 1C)
+- `MedicalAlertBanner` — Red alert banner for flagged medical records with flag reason, allergy/contraindication tags, full/compact modes (Prompt 1C)
+- `MedicalHistoryDiff` — Side-by-side version comparison for medical record changes (Prompt 1C)
 
 ---
 
@@ -940,6 +947,46 @@ Key groups (full list in `.env.example`):
   - D2 (Critical): Missing database migration for `deliveryStatus`/`deliveredAt`/`readAt` columns and `message_attachments` table — migration created and applied
   - D3-D4 (Medium): Availability endpoints returned 500 without required params — added `BadRequestException` validation guards + 7 new tests
   - Full report: `test-results/manual-testing-report.md`
+
+### Prompt 4A: Invoice System — COMPLETE
+
+- Invoice + InvoiceLineItem Prisma models (@@map: "invoices", "invoice_line_items"), Payment.invoiceId relation
+- InvoiceModule (59th API module): 8 endpoints (CRUD, send, cancel, record-payment, stats)
+- Auto-invoice number: INV-{YYYY}-{0001} per business, createFromBooking/createFromQuote convenience methods
+- Status flow: DRAFT → SENT → VIEWED → PAID/PARTIALLY_PAID/OVERDUE → CANCELLED/REFUNDED
+- Daily @Cron overdue check, auto-generate draft invoice on booking COMPLETED
+- 3 web pages: /invoices (list+stats), /invoices/[id] (detail+payment modal), /invoices/new (form)
+- Portal: /portal/[slug]/invoices + GET /portal/invoices endpoint
+- Design tokens: INVOICE_STATUS_STYLES + invoiceBadgeClasses()
+- 58 tests (35 API + 23 web)
+
+### Prompt 4B: Enhanced Reporting Dashboard — COMPLETE
+
+- Date range picker with presets (Today/7D/30D/90D/Custom) + staff filter dropdown
+- 5 tabbed report sections: Overview, Services, Staff, Revenue, Customers
+- 4 new API endpoints: /reports/services, /reports/staff, /reports/revenue, /reports/customers
+- Recharts visualizations: revenue AreaChart, services BarChart, staff comparison, customer PieChart
+- 34 tests (20 API + 14 web)
+
+### Prompt 4C: Client Portal Polish — COMPLETE
+
+- Self-service booking flow: 3-step (service selection → date/time via public availability API → confirm with notes)
+- Enhanced invoices: "Pay Now" button (Stripe checkout via POST /portal/invoices/:id/pay) + "Download PDF" (printable HTML)
+- Documents page: intake form data (from customFields) + visit notes (from completed bookings)
+- Portal navigation layout: Dashboard/Book/Invoices/Documents/Profile tab navigation, hidden on login page
+- 4 new portal API endpoints: GET /portal/services, POST /portal/bookings, GET /portal/documents, POST /portal/invoices/:id/pay
+- 41 tests (15 book + 10 documents + 16 invoices)
+
+### Prompt 1C: Structured Medical History (Aesthetic Vertical) — COMPLETE
+
+- MedicalRecord Prisma model (67th model, migration 52): versioned (isCurrent + version @@unique), 22 fields including allergies/contraindications/medications/conditions arrays, fitzpatrickScale (I-VI), safety booleans (bloodThinners, pregnant, breastfeeding), consent tracking (consentGiven, consentDate), recordedById staff relation
+- medical-record API module (60th module): create (versioned with auto-flag), getCurrent, getHistory, checkMedicalClearance
+- Auto-flag detection: triggers on allergies, contraindications, bloodThinners, pregnant, breastfeeding → flagged=true + human-readable flagReason
+- Treatment booking gating: updateStatus checks for MedicalRecord before allowing CONFIRMED on TREATMENT services (inside existing $transaction)
+- 3 aesthetic components: MedicalHistoryForm (structured form with tag inputs, Fitzpatrick select, toggle switches, consent checkbox), MedicalAlertBanner (full/compact modes with flag reason + allergy/contraindication tags), MedicalHistoryDiff (side-by-side version comparison)
+- Integration: MedicalAlertBanner in booking detail modal + customer page, AlertTriangle icon on kanban cards for flagged customers
+- Portal intake enhanced with bloodThinners/pregnant/breastfeeding checkboxes
+- 20 tests (14 API + 6 web)
 
 ### Do Not Build (Yet)
 

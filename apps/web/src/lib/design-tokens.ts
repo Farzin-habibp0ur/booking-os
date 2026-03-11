@@ -235,6 +235,22 @@ export const CONVERSATION_STATUS_STYLES: Record<string, ConversationStatusStyle>
 };
 
 // ---------------------------------------------------------------------------
+// Clinical photo type styles
+// ---------------------------------------------------------------------------
+
+export const PHOTO_TYPE_STYLES: Record<string, { bg: string; text: string; label: string }> = {
+  BEFORE: { bg: 'bg-amber-50', text: 'text-amber-700', label: 'Before' },
+  AFTER: { bg: 'bg-sage-50', text: 'text-sage-700', label: 'After' },
+  PROGRESS: { bg: 'bg-lavender-50', text: 'text-lavender-700', label: 'Progress' },
+};
+
+export function photoTypeBadgeClasses(type: string): string {
+  const s = PHOTO_TYPE_STYLES[type];
+  if (!s) return 'bg-slate-100 text-slate-600';
+  return `${s.bg} ${s.text}`;
+}
+
+// ---------------------------------------------------------------------------
 // Elevation (shadow) tokens
 // ---------------------------------------------------------------------------
 

@@ -28,6 +28,7 @@ import {
   Trash2,
   ChevronDown,
   DollarSign,
+  Camera,
 } from 'lucide-react';
 import BookingFormModal from '@/components/booking-form-modal';
 import IntakeCard from '@/components/intake-card';
@@ -36,6 +37,10 @@ import { MedicalAlertBanner } from '@/components/aesthetic/medical-alert-banner'
 import { OutboundCompose } from '@/components/outbound';
 import { BOOKING_STATUS_STYLES as STATUS_COLORS, ELEVATION, SPACING } from '@/lib/design-tokens';
 import { DetailSkeleton } from '@/components/skeleton';
+import { PhotoUploadCard } from '@/components/aesthetic/photo-upload-card';
+import { PhotoGallery } from '@/components/aesthetic/photo-gallery';
+import { PhotoComparisonViewer } from '@/components/aesthetic/photo-comparison-viewer';
+import { PhotoTimeline } from '@/components/aesthetic/photo-timeline';
 
 export default function CustomerDetailPage() {
   const { id } = useParams();
@@ -79,6 +84,11 @@ export default function CustomerDetailPage() {
 
   // Medical record state
   const [medicalRecord, setMedicalRecord] = useState<any>(null);
+
+  // Clinical photos state
+  const [clinicalPhotos, setClinicalPhotos] = useState<any[]>([]);
+  const [photoComparisons, setPhotoComparisons] = useState<any[]>([]);
+  const [photoTab, setPhotoTab] = useState<'gallery' | 'timeline' | 'comparisons'>('gallery');
 
   // AI Chat state
   const [chatMessages, setChatMessages] = useState<Array<{ role: 'user' | 'ai'; text: string }>>(
@@ -129,12 +139,28 @@ export default function CustomerDetailPage() {
     setLoading(false);
   };
 
+  const loadPhotos = async () => {
+    if (pack.slug !== 'aesthetic') return;
+    try {
+      const [photos, comparisons] = await Promise.all([
+        api.get<any[]>(`/clinical-photos?customerId=${id}`),
+        api.get<any[]>(`/clinical-photos/comparisons?customerId=${id}`),
+      ]);
+      setClinicalPhotos(photos || []);
+      setPhotoComparisons(comparisons || []);
+    } catch {
+      setClinicalPhotos([]);
+      setPhotoComparisons([]);
+    }
+  };
+
   useEffect(() => {
     loadCustomer();
     api
       .get<any>(`/medical-records?customerId=${id}`)
       .then(setMedicalRecord)
       .catch(() => setMedicalRecord(null));
+    loadPhotos();
   }, [id]);
 
   useEffect(() => {
@@ -697,6 +723,69 @@ export default function CustomerDetailPage() {
                 </span>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Clinical Photos — Aesthetic only */}
+        {pack.slug === 'aesthetic' && (
+          <div className={cn(ELEVATION.card, 'bg-white p-5 mb-6')} data-testid="photos-section">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-sm font-semibold text-slate-900 uppercase flex items-center gap-2">
+                <Camera size={14} className="text-lavender-600" />
+                Photos
+                {clinicalPhotos.length > 0 && (
+                  <span className="text-xs bg-lavender-50 text-lavender-700 px-2 py-0.5 rounded-full font-medium">
+                    {clinicalPhotos.length}
+                  </span>
+                )}
+              </h2>
+              <div className="flex gap-1">
+                {(['gallery', 'timeline', 'comparisons'] as const).map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setPhotoTab(tab)}
+                    className={cn(
+                      'text-xs px-3 py-1 rounded-lg font-medium transition-colors',
+                      photoTab === tab
+                        ? 'bg-lavender-50 text-lavender-700'
+                        : 'text-slate-500 hover:bg-slate-100',
+                    )}
+                  >
+                    {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Upload card */}
+            <div className="mb-4">
+              <PhotoUploadCard
+                customerId={id as string}
+                onUploaded={() => loadPhotos()}
+              />
+            </div>
+
+            {/* Photo content */}
+            {photoTab === 'gallery' && (
+              <PhotoGallery
+                photos={clinicalPhotos}
+                onDelete={async (photoId) => {
+                  try {
+                    await api.del(`/clinical-photos/${photoId}`);
+                    toast('Photo deleted');
+                    loadPhotos();
+                  } catch {
+                    toast('Failed to delete photo', 'error');
+                  }
+                }}
+              />
+            )}
+            {photoTab === 'timeline' && (
+              <PhotoTimeline photos={clinicalPhotos} />
+            )}
+            {photoTab === 'comparisons' && (
+              <PhotoComparisonViewer comparisons={photoComparisons} />
+            )}
           </div>
         )}
 

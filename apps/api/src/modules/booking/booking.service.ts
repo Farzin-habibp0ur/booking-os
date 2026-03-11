@@ -706,6 +706,61 @@ export class BookingService {
     }
 
     if (status === 'COMPLETED') {
+      // Check for before photos that may need an after photo
+      try {
+        const businessInfo = await this.prisma.business.findUnique({
+          where: { id: businessId },
+          select: { verticalPack: true },
+        });
+        if (businessInfo?.verticalPack === 'aesthetic' && booking.customer) {
+          const beforePhotos = await this.prisma.clinicalPhoto.findMany({
+            where: {
+              businessId,
+              customerId: booking.customerId,
+              type: 'BEFORE',
+              deletedAt: null,
+            },
+            select: { bodyArea: true },
+            distinct: ['bodyArea'],
+          });
+          if (beforePhotos.length > 0) {
+            const bodyAreas = beforePhotos.map((p) => p.bodyArea);
+            const afterPhotos = await this.prisma.clinicalPhoto.findMany({
+              where: {
+                businessId,
+                customerId: booking.customerId,
+                bookingId: id,
+                type: 'AFTER',
+                deletedAt: null,
+              },
+              select: { bodyArea: true },
+            });
+            const coveredAreas = new Set(afterPhotos.map((p) => p.bodyArea));
+            const missingAreas = bodyAreas.filter((area) => !coveredAreas.has(area));
+            if (missingAreas.length > 0) {
+              this.logger.log(
+                `Booking ${id} completed: AFTER photos suggested for body areas: ${missingAreas.join(', ')}`,
+              );
+              // Store suggestion in booking customFields for frontend to pick up
+              const existingFields = (booking.customFields as any) || {};
+              await this.prisma.booking.update({
+                where: { id },
+                data: {
+                  customFields: {
+                    ...existingFields,
+                    afterPhotoSuggested: missingAreas,
+                  },
+                },
+              });
+            }
+          }
+        }
+      } catch (err) {
+        this.logger.warn(`Failed to check after photo suggestions for booking ${id}`, {
+          error: (err as Error).message,
+        });
+      }
+
       const settings = await this.businessService.getNotificationSettings(businessId);
       const delayHours = settings?.followUpDelayHours || 2;
       await this.prisma.reminder.create({

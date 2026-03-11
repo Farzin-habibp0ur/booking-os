@@ -160,7 +160,7 @@ export class CustomerService {
   ) {
     const { types, showSystem = true, limit = 20, offset = 0 } = opts;
 
-    const [bookings, conversations, notes, waitlistEntries, quotes, campaignSends, invoices] =
+    const [bookings, conversations, notes, waitlistEntries, quotes, campaignSends, invoices, clinicalPhotos] =
       await Promise.all([
         !types || types.includes('booking')
           ? this.prisma.booking.findMany({
@@ -202,6 +202,12 @@ export class CustomerService {
           ? this.prisma.invoice.findMany({
               where: { customerId, businessId },
               include: { lineItems: true },
+            })
+          : Promise.resolve([]),
+        !types || types.includes('photo')
+          ? this.prisma.clinicalPhoto.findMany({
+              where: { customerId, businessId, deletedAt: null },
+              select: { id: true, type: true, bodyArea: true, createdAt: true },
             })
           : Promise.resolve([]),
       ]);
@@ -313,6 +319,20 @@ export class CustomerService {
         metadata: { invoiceId: inv.id, status: inv.status, total: Number(inv.total) },
         isSystemEvent: false,
         deepLink: `/invoices/${inv.id}`,
+      });
+    }
+
+    // Clinical Photos
+    for (const photo of clinicalPhotos as any[]) {
+      events.push({
+        id: `photo-${photo.id}`,
+        type: 'photo',
+        timestamp: photo.createdAt.toISOString(),
+        title: `${photo.type} photo — ${photo.bodyArea}`,
+        description: `Clinical photo uploaded`,
+        metadata: { photoId: photo.id, photoType: photo.type, bodyArea: photo.bodyArea },
+        isSystemEvent: false,
+        deepLink: null,
       });
     }
 

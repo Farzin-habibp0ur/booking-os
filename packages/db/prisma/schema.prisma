@@ -79,6 +79,8 @@ model Business {
   savedSegments              SavedSegment[]
   invoices                   Invoice[]
   medicalRecords             MedicalRecord[]
+  clinicalPhotos             ClinicalPhoto[]
+  photoComparisons           PhotoComparison[]
 
   @@map("businesses")
 }
@@ -124,6 +126,7 @@ model Staff {
   packPins            PackTenantPin[]      @relation("PackPinStaff")
   staffServicePrices  StaffServicePrice[]
   medicalRecords      MedicalRecord[]  @relation("MedicalRecordStaff")
+  clinicalPhotosTaken ClinicalPhoto[]  @relation("PhotoTakenByStaff")
 
   @@index([businessId])
   @@map("staff")
@@ -156,6 +159,8 @@ model Customer {
   testimonials          Testimonial[]
   invoices              Invoice[]
   medicalRecords        MedicalRecord[]
+  clinicalPhotos        ClinicalPhoto[]
+  photoComparisons      PhotoComparison[]
 
   @@unique([businessId, phone])
   @@index([businessId])
@@ -226,6 +231,7 @@ model Booking {
   quotes          Quote[]
   actionCards     ActionCard[]
   invoices        Invoice[]
+  clinicalPhotos  ClinicalPhoto[]
 
   @@index([businessId])
   @@index([businessId, startTime])
@@ -1519,4 +1525,52 @@ model MedicalRecord {
   @@index([customerId])
   @@index([businessId])
   @@map("medical_records")
+}
+
+model ClinicalPhoto {
+  id           String   @id @default(cuid())
+  businessId   String
+  customerId   String
+  bookingId    String?
+  type         String   // BEFORE, AFTER, PROGRESS
+  bodyArea     String
+  fileUrl      String
+  thumbnailUrl String?
+  notes        String?
+  takenAt      DateTime @default(now())
+  takenById    String?
+  deletedAt    DateTime?
+  createdAt    DateTime @default(now())
+
+  business Business  @relation(fields: [businessId], references: [id])
+  customer Customer  @relation(fields: [customerId], references: [id])
+  booking  Booking?  @relation(fields: [bookingId], references: [id])
+  takenBy  Staff?    @relation("PhotoTakenByStaff", fields: [takenById], references: [id])
+
+  beforeComparisons PhotoComparison[] @relation("BeforePhoto")
+  afterComparisons  PhotoComparison[] @relation("AfterPhoto")
+
+  @@index([customerId])
+  @@index([businessId])
+  @@index([bookingId])
+  @@map("clinical_photos")
+}
+
+model PhotoComparison {
+  id            String   @id @default(cuid())
+  businessId    String
+  customerId    String
+  beforePhotoId String
+  afterPhotoId  String
+  bodyArea      String
+  notes         String?
+  createdAt     DateTime @default(now())
+
+  business    Business      @relation(fields: [businessId], references: [id])
+  customer    Customer      @relation(fields: [customerId], references: [id])
+  beforePhoto ClinicalPhoto @relation("BeforePhoto", fields: [beforePhotoId], references: [id])
+  afterPhoto  ClinicalPhoto @relation("AfterPhoto", fields: [afterPhotoId], references: [id])
+
+  @@index([customerId])
+  @@map("photo_comparisons")
 }
