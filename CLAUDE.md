@@ -291,7 +291,7 @@ All AI-related UI elements use the **lavender** palette: `bg-lavender-50 border 
 
 ### Test Counts
 
-- **~5,626+ total tests** across 370 test files
+- **~5,714+ total tests** across 380 test files
 - API: ~93% statement coverage, ~81% branch coverage
 - Web: ~78% statement coverage, ~73% branch coverage
 

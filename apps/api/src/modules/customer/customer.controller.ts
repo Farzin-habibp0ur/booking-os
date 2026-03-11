@@ -177,6 +177,11 @@ export class CustomerController {
     });
   }
 
+  @Get(':id/journey')
+  getJourney(@BusinessId() businessId: string, @Param('id') id: string) {
+    return this.customerService.getJourney(businessId, id);
+  }
+
   @Patch('bulk')
   bulkAction(
     @BusinessId() businessId: string,

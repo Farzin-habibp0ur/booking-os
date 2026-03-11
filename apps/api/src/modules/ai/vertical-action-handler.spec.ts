@@ -1,20 +1,27 @@
 import { Test } from '@nestjs/testing';
 import { VerticalActionHandler, VerticalActionContext } from './vertical-action-handler';
 import { ActionCardService } from '../action-card/action-card.service';
+import { PrismaService } from '../../common/prisma.service';
 
 describe('VerticalActionHandler', () => {
   let handler: VerticalActionHandler;
   let actionCardService: { create: jest.Mock };
+  let prisma: any;
 
   beforeEach(async () => {
     actionCardService = {
       create: jest.fn().mockResolvedValue({ id: 'card1', status: 'PENDING' }),
+    };
+    prisma = {
+      deal: { findFirst: jest.fn().mockResolvedValue(null), findMany: jest.fn().mockResolvedValue([]), count: jest.fn().mockResolvedValue(0) },
+      testDrive: { findMany: jest.fn().mockResolvedValue([]) },
     };
 
     const module = await Test.createTestingModule({
       providers: [
         VerticalActionHandler,
         { provide: ActionCardService, useValue: actionCardService },
+        { provide: PrismaService, useValue: prisma },
       ],
     }).compile();
 
@@ -179,6 +186,125 @@ describe('VerticalActionHandler', () => {
       });
 
       expect(result).toBeNull();
+    });
+  });
+
+  describe('handleDealershipSalesInquiry', () => {
+    const salesCtx: VerticalActionContext = {
+      businessId: 'biz1',
+      conversationId: 'conv1',
+      customerId: 'cust1',
+      customerName: 'Mike',
+      verticalPack: 'dealership',
+      intent: 'SALES_INQUIRY',
+      confidence: 0.9,
+    };
+
+    it('creates DEAL_UPDATE card when customer has open deal', async () => {
+      prisma.deal.findFirst.mockResolvedValue({
+        id: 'deal-1',
+        stage: 'NEGOTIATION',
+        vehicle: { year: 2025, make: 'Toyota', model: 'Camry' },
+      });
+
+      await handler.handleVerticalAction(salesCtx);
+
+      expect(actionCardService.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'DEAL_UPDATE',
+          category: 'OPPORTUNITY',
+          priority: 85,
+          customerId: 'cust1',
+          metadata: expect.objectContaining({ dealId: 'deal-1' }),
+        }),
+      );
+    });
+
+    it('creates TEST_DRIVE_FOLLOWUP when test drives exist but no deal', async () => {
+      prisma.deal.findFirst.mockResolvedValue(null);
+      prisma.testDrive.findMany.mockResolvedValue([
+        {
+          id: 'td-1',
+          vehicleId: 'v-1',
+          vehicle: { year: 2025, make: 'Honda', model: 'Civic' },
+        },
+      ]);
+      prisma.deal.count.mockResolvedValue(0);
+
+      await handler.handleVerticalAction(salesCtx);
+
+      expect(actionCardService.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'TEST_DRIVE_FOLLOWUP',
+          category: 'OPPORTUNITY',
+          priority: 82,
+          metadata: expect.objectContaining({ testDriveId: 'td-1' }),
+        }),
+      );
+    });
+
+    it('falls back to SALES_LEAD when no deal or test drives', async () => {
+      prisma.deal.findFirst.mockResolvedValue(null);
+      prisma.testDrive.findMany.mockResolvedValue([]);
+
+      await handler.handleVerticalAction(salesCtx);
+
+      expect(actionCardService.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'SALES_LEAD',
+          priority: 80,
+        }),
+      );
+    });
+  });
+
+  describe('checkStalledDeals', () => {
+    it('creates action cards for deals stalled 7+ days', async () => {
+      const eightDaysAgo = new Date();
+      eightDaysAgo.setDate(eightDaysAgo.getDate() - 8);
+
+      prisma.deal.findMany.mockResolvedValue([
+        {
+          id: 'deal-stale',
+          stage: 'QUALIFIED',
+          updatedAt: eightDaysAgo,
+          customer: { id: 'cust1', name: 'Jane Doe' },
+          vehicle: { year: 2024, make: 'Ford', model: 'F-150' },
+          assignedTo: { name: 'Bob Sales' },
+        },
+      ]);
+
+      const result = await handler.checkStalledDeals('biz1');
+
+      expect(result).toHaveLength(1);
+      expect(actionCardService.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          businessId: 'biz1',
+          type: 'DEAL_STALLED',
+          category: 'NEEDS_APPROVAL',
+          priority: 75,
+          customerId: 'cust1',
+          metadata: expect.objectContaining({
+            dealId: 'deal-stale',
+            stage: 'QUALIFIED',
+          }),
+        }),
+      );
+    });
+
+    it('ignores closed deals', async () => {
+      prisma.deal.findMany.mockResolvedValue([]);
+
+      const result = await handler.checkStalledDeals('biz1');
+
+      expect(result).toHaveLength(0);
+      expect(prisma.deal.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            stage: { notIn: ['CLOSED_WON', 'CLOSED_LOST'] },
+          }),
+        }),
+      );
     });
   });
 

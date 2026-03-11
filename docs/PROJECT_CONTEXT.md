@@ -2,7 +2,7 @@
 
 > **Purpose:** This document gives full context on the Booking OS platform — what it is, what's been built, how it's structured, and what's left to build. Share this with an AI assistant or new developer to get productive immediately.
 >
-> **Last updated:** March 11, 2026 (All phases COMPLETE — A through E + Phases 1-4 & 6 polish + QA Fixes + Sprints 1-4 + Prompts 4A-4C + Prompt 1C + Prompt 1A + Prompt 1B + Prompt 1D + Prompt 2A + Prompt 2B COMPLETE — ~5,680+ total tests across 377 test files, 80 Prisma models, 57 migrations)
+> **Last updated:** March 11, 2026 (All phases COMPLETE — A through E + Phases 1-4 & 6 polish + QA Fixes + Sprints 1-4 + Prompts 4A-4C + Prompt 1C + Prompt 1A + Prompt 1B + Prompt 1D + Prompt 2A + Prompt 2B + Prompt 2C COMPLETE — ~5,714+ total tests across 380 test files, 80 Prisma models, 57 migrations)
 
 ---
 
@@ -631,6 +631,7 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 - `AftercareProtocolEditor` — Form for creating/editing aftercare protocols with step management (Prompt 1D)
 - `AftercareEnrollmentCard` — Enrollment summary with progress bar and message timeline (Prompt 1D)
 - `AftercarePortalView` — Customer-facing aftercare timeline with step progress (Prompt 1D)
+- `CustomerJourneyBoard` — Horizontal journey visualization with stage timeline, stats, vehicles, active deals (Prompt 2C)
 
 ---
 
@@ -1033,6 +1034,33 @@ Key groups (full list in `.env.example`):
 - Default "General Aesthetic Aftercare" protocol seeded in aesthetic pack (4 steps: 0h, 24h, 72h, 168h)
 - Integration: customer detail aftercare section, portal dashboard active aftercare
 - 53 tests (31 API + 22 web)
+
+### Prompt 2A: Vehicle Inventory Management — COMPLETE
+
+- Vehicle + TestDrive + TestDriveBooking Prisma models (76th-78th models, migration 56): VIN tracking, stock numbers, 6 vehicle statuses, test drive scheduling
+- vehicle API module (64th module): full CRUD + search/filter, test-drive scheduling (book, complete, cancel, no-show), stats endpoint
+- 4 web pages: /inventory (searchable grid with filters), /inventory/[id] (detail with photo gallery + test drives), /inventory/new (form), /inventory/[id]/edit (form)
+- TestDriveCard component, VehicleStatusBadge, design tokens: VEHICLE_STATUS_STYLES + VEHICLE_CONDITION_STYLES
+- Customer detail integration: vehicles of interest section for dealership vertical
+- 48 tests (26 API + 22 web)
+
+### Prompt 2B: Sales Pipeline & Deal Tracking — COMPLETE
+
+- Deal + DealActivity + DealStageHistory Prisma models (79th-80th models, migration 57): 7-stage pipeline (INQUIRY→QUALIFIED→TEST_DRIVE→NEGOTIATION→FINANCE→CLOSED_WON→CLOSED_LOST), activity logging, stage change tracking
+- deal API module (65th module): CRUD, stage transitions with history, activities, pipeline stats, assignment
+- 2 web pages: /pipeline (Kanban board with drag-drop, staff filter, stats), /pipeline/[id] (deal detail with stage progress, activities, stage history, sidebar)
+- PipelineStats component (weighted value, win rate, cycle time, active deals)
+- Design tokens: DEAL_STAGE_STYLES + dealStageBadgeClasses()
+- 72 tests (41 API + 31 web)
+
+### Prompt 2C: Customer Journey Enhancement — COMPLETE
+
+- Enhanced customer.service.ts getTimeline() with testDrive events (type: 'testDrive', vehicle label, status, feedback)
+- New GET /customers/:id/journey endpoint: structured journey data with deals (stageHistory + activities), testDrives, vehiclesOfInterest (deduplicated), firstContact, engagement score stats
+- CustomerJourneyBoard component: horizontal stage timeline, stats row (engagement/visits/test drives/active deals), vehicles of interest chips, active deals list with stage badges
+- Customer detail page enhanced: journey board for dealership vertical, replaced quotes section with active deals + vehicles of interest
+- AI vertical-action-handler enhanced: deal-aware SALES_INQUIRY (DEAL_UPDATE for open deals, TEST_DRIVE_FOLLOWUP for test drives without deals, SALES_LEAD fallback), checkStalledDeals (7+ day detection)
+- 34 tests (28 API + 6 web)
 
 ### Do Not Build (Yet)
 

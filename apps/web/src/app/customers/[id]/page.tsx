@@ -44,6 +44,8 @@ import { PhotoTimeline } from '@/components/aesthetic/photo-timeline';
 import { TreatmentPlanCard } from '@/components/aesthetic/treatment-plan-card';
 import { TreatmentPlanTimeline } from '@/components/aesthetic/treatment-plan-timeline';
 import { AftercareEnrollmentCard } from '@/components/aesthetic/aftercare-enrollment-card';
+import { CustomerJourneyBoard } from '@/components/dealership/customer-journey-board';
+import { DEAL_STAGE_STYLES, dealStageBadgeClasses } from '@/lib/design-tokens';
 
 export default function CustomerDetailPage() {
   const { id } = useParams();
@@ -98,6 +100,9 @@ export default function CustomerDetailPage() {
 
   // Aftercare enrollments state
   const [aftercareEnrollments, setAftercareEnrollments] = useState<any[]>([]);
+
+  // Dealership journey state
+  const [journey, setJourney] = useState<any>(null);
 
   // AI Chat state
   const [chatMessages, setChatMessages] = useState<Array<{ role: 'user' | 'ai'; text: string }>>(
@@ -173,6 +178,9 @@ export default function CustomerDetailPage() {
     if (pack.slug === 'aesthetic') {
       api.get<any[]>(`/treatment-plans?customerId=${id}`).then(setTreatmentPlans).catch(() => setTreatmentPlans([]));
       api.get<any[]>(`/aftercare-protocols/enrollments/list?customerId=${id}`).then(setAftercareEnrollments).catch(() => setAftercareEnrollments([]));
+    }
+    if (pack.slug === 'dealership') {
+      api.get<any>(`/customers/${id}/journey`).then(setJourney).catch(() => setJourney(null));
     }
   }, [id]);
 
@@ -853,6 +861,13 @@ export default function CustomerDetailPage() {
           </div>
         )}
 
+        {/* Dealership Journey Board */}
+        {pack.slug === 'dealership' && journey && (
+          <div className="mb-6" data-testid="journey-board">
+            <CustomerJourneyBoard journey={journey} />
+          </div>
+        )}
+
         {/* Vertical Modules */}
         {(pack.slug === 'aesthetic' || pack.slug === 'dealership') && (
           <div className="mb-6">
@@ -867,7 +882,7 @@ export default function CustomerDetailPage() {
               />
               {pack.slug === 'aesthetic'
                 ? t('customer_detail.clinic_intake')
-                : t('customer_detail.quotes_summary')}
+                : 'Sales Overview'}
             </button>
             {verticalOpen && (
               <div className={cn(ELEVATION.card, 'bg-white')} data-testid="vertical-content">
@@ -881,90 +896,83 @@ export default function CustomerDetailPage() {
                   />
                 )}
                 {pack.slug === 'dealership' && (
-                  <div className="p-5" data-testid="quotes-summary">
-                    {(() => {
-                      const allQuotes = bookings.flatMap((b: any) => b.quotes || []);
-                      const pending = allQuotes.filter((q: any) => q.status === 'PENDING');
-                      const approved = allQuotes.filter((q: any) => q.status === 'APPROVED');
-                      const totalAmount = allQuotes.reduce(
-                        (sum: number, q: any) => sum + (Number(q.totalAmount) || 0),
-                        0,
-                      );
-                      return (
-                        <div>
-                          <div className="grid grid-cols-3 gap-4 mb-4">
-                            <div className="bg-lavender-50 rounded-xl p-3 text-center">
-                              <p className="text-2xl font-serif font-bold text-lavender-600">
-                                {pending.length}
-                              </p>
-                              <p className="text-xs text-slate-500 mt-0.5">
-                                {t('customer_detail.pending_quotes')}
-                              </p>
-                            </div>
-                            <div className="bg-sage-50 rounded-xl p-3 text-center">
-                              <p className="text-2xl font-serif font-bold text-sage-600">
-                                {approved.length}
-                              </p>
-                              <p className="text-xs text-slate-500 mt-0.5">
-                                {t('customer_detail.approved_quotes')}
-                              </p>
-                            </div>
-                            <div className="bg-slate-50 rounded-xl p-3 text-center">
-                              <p className="text-2xl font-serif font-bold text-slate-800">
-                                ${Math.round(totalAmount).toLocaleString()}
-                              </p>
-                              <p className="text-xs text-slate-500 mt-0.5">
-                                {t('customer_detail.total_quoted')}
-                              </p>
-                            </div>
-                          </div>
-                          {allQuotes.length === 0 && (
-                            <div className="text-center py-6">
-                              <DollarSign size={28} className="mx-auto mb-2 text-slate-300" />
-                              <p className="text-sm text-slate-400">
-                                {t('customer_detail.no_quotes')}
-                              </p>
-                            </div>
-                          )}
-                          {allQuotes.length > 0 && (
-                            <div className="space-y-2">
-                              {allQuotes.slice(0, 5).map((q: any) => (
-                                <div
-                                  key={q.id}
-                                  className="flex items-center justify-between text-sm p-3 rounded-xl bg-slate-50/80 hover:bg-slate-50 transition-colors"
-                                  data-testid="quote-row"
-                                >
-                                  <div className="flex items-center gap-2">
-                                    <div className="w-7 h-7 rounded-full bg-lavender-50 flex items-center justify-center">
-                                      <DollarSign size={14} className="text-lavender-600" />
-                                    </div>
-                                    <span className="font-medium">
-                                      $
-                                      {Number(q.totalAmount).toLocaleString(undefined, {
-                                        minimumFractionDigits: 0,
-                                        maximumFractionDigits: 0,
-                                      })}
-                                    </span>
-                                  </div>
-                                  <span
-                                    className={cn(
-                                      'text-[10px] px-2.5 py-1 rounded-full font-medium',
-                                      q.status === 'APPROVED'
-                                        ? 'bg-sage-50 text-sage-700'
-                                        : q.status === 'PENDING'
-                                          ? 'bg-lavender-50 text-lavender-700'
-                                          : 'bg-slate-100 text-slate-600',
-                                    )}
-                                  >
-                                    {q.status}
+                  <div className="p-5" data-testid="dealership-summary">
+                    {/* Active Deals */}
+                    {journey?.deals?.filter((d: any) => !['CLOSED_WON', 'CLOSED_LOST'].includes(d.stage)).length > 0 ? (
+                      <div className="mb-5">
+                        <h4 className="text-xs font-semibold text-slate-500 uppercase mb-3">Active Deals</h4>
+                        <div className="space-y-2">
+                          {journey.deals
+                            .filter((d: any) => !['CLOSED_WON', 'CLOSED_LOST'].includes(d.stage))
+                            .map((deal: any) => (
+                              <a
+                                key={deal.id}
+                                href={`/pipeline/${deal.id}`}
+                                className="flex items-center justify-between p-3 rounded-xl bg-slate-50/80 hover:bg-slate-50 transition-colors"
+                                data-testid="deal-row"
+                              >
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <span className={cn('text-[10px] px-2 py-0.5 rounded-lg font-medium shrink-0', dealStageBadgeClasses(deal.stage))}>
+                                    {DEAL_STAGE_STYLES[deal.stage]?.label || deal.stage}
                                   </span>
+                                  {deal.vehicle && (
+                                    <span className="text-sm text-slate-600 truncate">
+                                      {deal.vehicle.year} {deal.vehicle.make} {deal.vehicle.model}
+                                    </span>
+                                  )}
                                 </div>
-                              ))}
-                            </div>
-                          )}
+                                <div className="flex items-center gap-3 shrink-0">
+                                  {deal.dealValue != null && (
+                                    <span className="text-sm font-semibold text-sage-700">
+                                      ${Number(deal.dealValue).toLocaleString()}
+                                    </span>
+                                  )}
+                                  {deal.assignedTo && (
+                                    <span className="text-[10px] text-slate-400">
+                                      {deal.assignedTo.name}
+                                    </span>
+                                  )}
+                                </div>
+                              </a>
+                            ))}
                         </div>
-                      );
-                    })()}
+                      </div>
+                    ) : (
+                      <div className="text-center py-4 mb-4">
+                        <DollarSign size={28} className="mx-auto mb-2 text-slate-300" />
+                        <p className="text-sm text-slate-400">No active deals</p>
+                        <a href="/pipeline" className="text-xs text-sage-600 hover:underline mt-1 inline-block">
+                          Open Pipeline →
+                        </a>
+                      </div>
+                    )}
+
+                    {/* Vehicles of Interest */}
+                    {journey?.vehiclesOfInterest?.length > 0 && (
+                      <div>
+                        <h4 className="text-xs font-semibold text-slate-500 uppercase mb-3">Vehicles of Interest</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {journey.vehiclesOfInterest.map((v: any) => (
+                            <a
+                              key={v.id}
+                              href={`/inventory/${v.id}`}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs transition-colors"
+                              data-testid="vehicle-chip"
+                            >
+                              <span className="font-medium text-slate-700">
+                                {v.year} {v.make} {v.model}
+                              </span>
+                              <span className="text-slate-400">#{v.stockNumber}</span>
+                              {v.askingPrice != null && (
+                                <span className="text-sage-600 font-semibold">
+                                  ${Number(v.askingPrice).toLocaleString()}
+                                </span>
+                              )}
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
