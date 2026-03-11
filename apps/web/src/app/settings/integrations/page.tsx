@@ -142,7 +142,7 @@ export default function IntegrationsPage() {
       description: 'Send and receive WhatsApp messages',
       icon: MessageSquare,
       status: hasWhatsApp ? 'connected' : 'not_connected',
-      actionLabel: hasWhatsApp ? 'Settings' : 'Configure',
+      actionLabel: hasWhatsApp ? 'Settings' : 'Connect',
       actionHref: '/settings/notifications',
     },
     {
