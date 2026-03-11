@@ -447,8 +447,10 @@ function ShellInner({ children }: { children: ReactNode }) {
       >
         <ViewAsBanner />
         <TrialBanner />
-        <div className="flex-1 min-h-0 flex flex-col overflow-auto">
-          <ErrorBoundary>{children}</ErrorBoundary>
+        <div className="flex-1 min-h-0 relative">
+          <div className="absolute inset-0 flex flex-col overflow-auto">
+            <ErrorBoundary>{children}</ErrorBoundary>
+          </div>
         </div>
       </main>
 
