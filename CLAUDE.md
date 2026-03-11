@@ -79,7 +79,7 @@ booking-os/
 
 ### Module Structure
 
-Every feature is a NestJS module in `apps/api/src/modules/`. Each module follows this pattern:
+Every feature is a NestJS module in `apps/api/src/modules/` (63 modules). Each module follows this pattern:
 
 ```
 modules/
@@ -114,7 +114,7 @@ modules/
 
 ### Database (Prisma)
 
-- Schema at `packages/db/prisma/schema.prisma` — **71 models**, 54 migrations
+- Schema at `packages/db/prisma/schema.prisma` — **75 models**, 55 migrations
 - Generate client: `npx prisma generate --schema=packages/db/prisma/schema.prisma`
 - Create migration: `npx prisma migrate dev --name your_name --schema=packages/db/prisma/schema.prisma`
 - `PrismaService` is a global NestJS provider — inject it in constructors
@@ -284,7 +284,7 @@ All AI-related UI elements use the **lavender** palette: `bg-lavender-50 border 
 
 ### Test Counts
 
-- **~5,573+ total tests** across 365 test files
+- **~5,626+ total tests** across 370 test files
 - API: ~93% statement coverage, ~81% branch coverage
 - Web: ~78% statement coverage, ~73% branch coverage
 

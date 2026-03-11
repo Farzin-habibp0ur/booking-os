@@ -2,7 +2,7 @@
 
 > **Purpose:** This document gives full context on the Booking OS platform — what it is, what's been built, how it's structured, and what's left to build. Share this with an AI assistant or new developer to get productive immediately.
 >
-> **Last updated:** March 11, 2026 (All phases COMPLETE — A through E + Phases 1-4 & 6 polish + QA Fixes + Sprints 1-4 + Prompts 4A-4C + Prompt 1C + Prompt 1A + Prompt 1B COMPLETE — ~5,573+ total tests across 365 test files, 71 Prisma models, 54 migrations)
+> **Last updated:** March 11, 2026 (All phases COMPLETE — A through E + Phases 1-4 & 6 polish + QA Fixes + Sprints 1-4 + Prompts 4A-4C + Prompt 1C + Prompt 1A + Prompt 1B + Prompt 1D COMPLETE — ~5,626+ total tests across 370 test files, 75 Prisma models, 55 migrations)
 
 ---
 
@@ -628,6 +628,9 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 - `TreatmentPlanBuilder` — Form for creating treatment plans with dynamic session list and service selectors (Prompt 1B)
 - `TreatmentPlanCard` — Summary card with status badge, progress bar, and portal accept/decline actions (Prompt 1B)
 - `TreatmentPlanTimeline` — Visual session timeline with status icons and booking links (Prompt 1B)
+- `AftercareProtocolEditor` — Form for creating/editing aftercare protocols with step management (Prompt 1D)
+- `AftercareEnrollmentCard` — Enrollment summary with progress bar and message timeline (Prompt 1D)
+- `AftercarePortalView` — Customer-facing aftercare timeline with step progress (Prompt 1D)
 
 ---
 
@@ -1016,6 +1019,20 @@ Key groups (full list in `.env.example`):
 - Integration: booking detail "Create Treatment Plan" button on completed consults, customer detail treatment plans section, portal dashboard proposals
 - TREATMENT_PLAN_PROPOSED notification template added to aesthetic pack
 - 56 tests (32 API + 24 web)
+
+### Prompt 1D: Aftercare Protocol System — COMPLETE
+
+- AftercareProtocol + AftercareStep + AftercareEnrollment + AftercareMessage Prisma models (72nd-75th models, migration 55): multi-step protocol system with scheduled message delivery
+- aftercare API module (63rd module): 7 endpoints (protocol CRUD, enrollment list, enrollment cancel) + @Cron every 15 minutes for message processing
+- Replaces single-shot AFTERCARE + TREATMENT_CHECK_IN reminders with protocol-based enrollment for aesthetic businesses
+- sendAftercareStepMessage notification method (WHATSAPP/EMAIL/SMS/BOTH channels)
+- Template variables: {{customerName}}, {{serviceName}}, {{businessName}}, {{bookingDate}}
+- Portal: GET /portal/aftercare endpoint, Active Aftercare section on portal dashboard
+- 3 web components: AftercareProtocolEditor (step editor), AftercareEnrollmentCard (progress + timeline), AftercarePortalView (customer-facing timeline)
+- Design tokens: AFTERCARE_STATUS_STYLES + aftercareBadgeClasses()
+- Default "General Aesthetic Aftercare" protocol seeded in aesthetic pack (4 steps: 0h, 24h, 72h, 168h)
+- Integration: customer detail aftercare section, portal dashboard active aftercare
+- 53 tests (31 API + 22 web)
 
 ### Do Not Build (Yet)
 

@@ -155,4 +155,13 @@ export class PortalController {
       id,
     );
   }
+
+  @Get('aftercare')
+  @UseGuards(PortalGuard)
+  getAftercare(@Req() req: any) {
+    return this.portalService.getAftercare(
+      req.portalUser.customerId,
+      req.portalUser.businessId,
+    );
+  }
 }

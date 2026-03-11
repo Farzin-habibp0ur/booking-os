@@ -734,6 +734,34 @@ export class NotificationService {
     }
   }
 
+  async sendAftercareStepMessage(
+    phone: string,
+    email: string | undefined,
+    body: string,
+    subject: string,
+    channel: string,
+    business: { id: string; name: string },
+  ): Promise<void> {
+    try {
+      if (channel === 'WHATSAPP' || channel === 'BOTH') {
+        await this.dispatchWhatsApp(phone, body, business.id);
+      }
+      if (channel === 'EMAIL' || channel === 'BOTH') {
+        if (email) {
+          const html = this.wrapInEmailHtml(body, business.name);
+          await this.dispatchEmail(email, subject, html);
+        }
+      }
+      if (channel === 'SMS') {
+        await this.dispatchSms(phone, body, business.id);
+      }
+      this.logger.log(`Sent aftercare step message via ${channel} to ${phone}`);
+    } catch (error) {
+      this.logger.error(`Failed to send aftercare step message to ${phone}:`, error);
+      throw error;
+    }
+  }
+
   private async getChannelPreference(
     businessId: string,
   ): Promise<'email' | 'whatsapp' | 'sms' | 'both'> {

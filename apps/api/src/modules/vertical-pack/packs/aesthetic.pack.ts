@@ -125,4 +125,38 @@ export const aestheticPack: VerticalPackDefinition = {
   },
   defaultRequiredProfileFields: ['firstName', 'email'],
   defaultPackConfig: { requireConsultation: true, medicalFormRequired: true },
+  defaultAftercareProtocol: {
+    name: 'General Aesthetic Aftercare',
+    isDefault: true,
+    steps: [
+      {
+        sequenceOrder: 1,
+        delayHours: 0,
+        channel: 'WHATSAPP',
+        subject: 'Aftercare Instructions',
+        body: 'Hi {{customerName}}, thank you for your {{serviceName}} at {{businessName}} today! Here are your aftercare instructions:\n\n• Avoid direct sun exposure for 48 hours\n• Keep the treated area clean and dry\n• Do not touch or rub the treated area\n• Contact us immediately if you experience unusual swelling or discomfort',
+      },
+      {
+        sequenceOrder: 2,
+        delayHours: 24,
+        channel: 'WHATSAPP',
+        subject: '24-Hour Check-in',
+        body: "Hi {{customerName}}, it's been 24 hours since your {{serviceName}} at {{businessName}}. How are you feeling? Let us know if you have any questions or concerns. We're here to help!",
+      },
+      {
+        sequenceOrder: 3,
+        delayHours: 72,
+        channel: 'WHATSAPP',
+        subject: '3-Day Follow-up',
+        body: 'Hi {{customerName}}, just checking in after your {{serviceName}} on {{bookingDate}}. You should start seeing initial results by now. Remember to stay hydrated and avoid strenuous exercise. Contact us with any concerns!',
+      },
+      {
+        sequenceOrder: 4,
+        delayHours: 168,
+        channel: 'WHATSAPP',
+        subject: '1-Week Review',
+        body: "Hi {{customerName}}, it's been a week since your {{serviceName}} at {{businessName}}. We hope you're loving the results! Ready to schedule your next visit? We'd love to see you again.",
+      },
+    ],
+  },
 };

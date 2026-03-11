@@ -403,4 +403,27 @@ export class PortalService {
       },
     });
   }
+
+  async getAftercare(customerId: string, businessId: string) {
+    return this.prisma.aftercareEnrollment.findMany({
+      where: {
+        customerId,
+        booking: { businessId },
+        status: { in: ['ACTIVE', 'COMPLETED'] },
+      },
+      include: {
+        protocol: {
+          include: {
+            steps: { where: { isActive: true }, orderBy: { sequenceOrder: 'asc' } },
+          },
+        },
+        booking: {
+          select: { startTime: true, service: { select: { name: true } } },
+        },
+        messages: { orderBy: { scheduledFor: 'asc' } },
+      },
+      orderBy: { enrolledAt: 'desc' },
+      take: 5,
+    });
+  }
 }

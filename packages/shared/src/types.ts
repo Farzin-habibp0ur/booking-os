@@ -213,6 +213,17 @@ export interface VerticalPackDefinition {
   };
   defaultRequiredProfileFields?: string[];
   defaultPackConfig?: Record<string, unknown>;
+  defaultAftercareProtocol?: {
+    name: string;
+    isDefault: boolean;
+    steps: Array<{
+      sequenceOrder: number;
+      delayHours: number;
+      channel: string;
+      subject: string;
+      body: string;
+    }>;
+  };
 }
 
 // ---- Messaging types ----

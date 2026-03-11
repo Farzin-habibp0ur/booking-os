@@ -270,6 +270,25 @@ export function treatmentPlanBadgeClasses(status: string): string {
 }
 
 // ---------------------------------------------------------------------------
+// Aftercare status styles
+// ---------------------------------------------------------------------------
+
+export const AFTERCARE_STATUS_STYLES: Record<string, { bg: string; text: string; label: string }> = {
+  ACTIVE: { bg: 'bg-blue-50', text: 'text-blue-700', label: 'Active' },
+  COMPLETED: { bg: 'bg-sage-50', text: 'text-sage-900', label: 'Completed' },
+  CANCELLED: { bg: 'bg-red-50', text: 'text-red-700', label: 'Cancelled' },
+  SCHEDULED: { bg: 'bg-lavender-50', text: 'text-lavender-900', label: 'Scheduled' },
+  SENT: { bg: 'bg-sage-50', text: 'text-sage-900', label: 'Sent' },
+  FAILED: { bg: 'bg-red-50', text: 'text-red-700', label: 'Failed' },
+};
+
+export function aftercareBadgeClasses(status: string): string {
+  const s = AFTERCARE_STATUS_STYLES[status];
+  if (!s) return 'bg-slate-100 text-slate-600';
+  return `${s.bg} ${s.text}`;
+}
+
+// ---------------------------------------------------------------------------
 // Elevation (shadow) tokens
 // ---------------------------------------------------------------------------
 

@@ -18,6 +18,7 @@ import { WaitlistService } from '../waitlist/waitlist.service';
 import { ActionHistoryService } from '../action-history/action-history.service';
 import { InvoiceService } from '../invoice/invoice.service';
 import { TreatmentPlanService } from '../treatment-plan/treatment-plan.service';
+import { AftercareService } from '../aftercare/aftercare.service';
 
 @Injectable()
 export class BookingService {
@@ -39,6 +40,8 @@ export class BookingService {
     private invoiceService?: InvoiceService,
     @Optional()
     private treatmentPlanService?: TreatmentPlanService,
+    @Optional()
+    private aftercareService?: AftercareService,
   ) {}
 
   private static readonly VALID_SORT_FIELDS = [
@@ -790,26 +793,37 @@ export class BookingService {
       }
 
       if (booking.service?.kind === 'TREATMENT') {
-        await this.prisma.reminder.create({
-          data: {
-            businessId,
-            bookingId: id,
-            scheduledAt: new Date(),
-            status: 'PENDING',
-            type: 'AFTERCARE',
-          },
-        });
+        // Enroll in aftercare protocol if available (replaces single-shot reminders)
+        if (this.aftercareService) {
+          this.aftercareService.enrollCustomer(id).catch((err) =>
+            this.logger.warn(`Failed to enroll booking ${id} in aftercare protocol`, {
+              bookingId: id,
+              error: err.message,
+            }),
+          );
+        } else {
+          // Fallback to single-shot reminders if aftercare module not available
+          await this.prisma.reminder.create({
+            data: {
+              businessId,
+              bookingId: id,
+              scheduledAt: new Date(),
+              status: 'PENDING',
+              type: 'AFTERCARE',
+            },
+          });
 
-        const checkInHours = settings?.treatmentCheckInHours || 24;
-        await this.prisma.reminder.create({
-          data: {
-            businessId,
-            bookingId: id,
-            scheduledAt: new Date(Date.now() + checkInHours * 3600000),
-            status: 'PENDING',
-            type: 'TREATMENT_CHECK_IN',
-          },
-        });
+          const checkInHours = settings?.treatmentCheckInHours || 24;
+          await this.prisma.reminder.create({
+            data: {
+              businessId,
+              bookingId: id,
+              scheduledAt: new Date(Date.now() + checkInHours * 3600000),
+              status: 'PENDING',
+              type: 'TREATMENT_CHECK_IN',
+            },
+          });
+        }
       }
 
       // Schedule Google Review request 2 hours after completion

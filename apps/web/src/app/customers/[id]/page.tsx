@@ -43,6 +43,7 @@ import { PhotoComparisonViewer } from '@/components/aesthetic/photo-comparison-v
 import { PhotoTimeline } from '@/components/aesthetic/photo-timeline';
 import { TreatmentPlanCard } from '@/components/aesthetic/treatment-plan-card';
 import { TreatmentPlanTimeline } from '@/components/aesthetic/treatment-plan-timeline';
+import { AftercareEnrollmentCard } from '@/components/aesthetic/aftercare-enrollment-card';
 
 export default function CustomerDetailPage() {
   const { id } = useParams();
@@ -94,6 +95,9 @@ export default function CustomerDetailPage() {
 
   // Treatment plans state
   const [treatmentPlans, setTreatmentPlans] = useState<any[]>([]);
+
+  // Aftercare enrollments state
+  const [aftercareEnrollments, setAftercareEnrollments] = useState<any[]>([]);
 
   // AI Chat state
   const [chatMessages, setChatMessages] = useState<Array<{ role: 'user' | 'ai'; text: string }>>(
@@ -168,6 +172,7 @@ export default function CustomerDetailPage() {
     loadPhotos();
     if (pack.slug === 'aesthetic') {
       api.get<any[]>(`/treatment-plans?customerId=${id}`).then(setTreatmentPlans).catch(() => setTreatmentPlans([]));
+      api.get<any[]>(`/aftercare-protocols/enrollments/list?customerId=${id}`).then(setAftercareEnrollments).catch(() => setAftercareEnrollments([]));
     }
   }, [id]);
 
@@ -750,6 +755,34 @@ export default function CustomerDetailPage() {
                   plan={plan}
                   onClick={() => {
                     // Could navigate to detail — for now expand inline
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Aftercare Enrollments — Aesthetic only */}
+        {pack.slug === 'aesthetic' && aftercareEnrollments.length > 0 && (
+          <div className={cn(ELEVATION.card, 'bg-white p-5 mb-6')} data-testid="aftercare-section">
+            <h2 className="text-sm font-semibold text-slate-900 uppercase flex items-center gap-2 mb-4">
+              Aftercare
+              <span className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full font-medium">
+                {aftercareEnrollments.length}
+              </span>
+            </h2>
+            <div className="space-y-3">
+              {aftercareEnrollments.map((enrollment: any) => (
+                <AftercareEnrollmentCard
+                  key={enrollment.id}
+                  enrollment={enrollment}
+                  onCancel={async (enrollmentId) => {
+                    try {
+                      await api.post(`/aftercare-protocols/enrollments/${enrollmentId}/cancel`, {});
+                      setAftercareEnrollments((prev) =>
+                        prev.map((e) => (e.id === enrollmentId ? { ...e, status: 'CANCELLED' } : e)),
+                      );
+                    } catch {}
                   }}
                 />
               ))}
