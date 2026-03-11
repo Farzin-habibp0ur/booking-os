@@ -78,6 +78,7 @@ model Business {
   businessReviews            BusinessReview[]
   savedSegments              SavedSegment[]
   invoices                   Invoice[]
+  medicalRecords             MedicalRecord[]
 
   @@map("businesses")
 }
@@ -122,6 +123,7 @@ model Staff {
   issuedCredits       BillingCredit[]      @relation("BillingCreditIssuer")
   packPins            PackTenantPin[]      @relation("PackPinStaff")
   staffServicePrices  StaffServicePrice[]
+  medicalRecords      MedicalRecord[]  @relation("MedicalRecordStaff")
 
   @@index([businessId])
   @@map("staff")
@@ -153,6 +155,7 @@ model Customer {
   payments              Payment[]
   testimonials          Testimonial[]
   invoices              Invoice[]
+  medicalRecords        MedicalRecord[]
 
   @@unique([businessId, phone])
   @@index([businessId])
@@ -1482,4 +1485,38 @@ model InvoiceLineItem {
 
   @@index([invoiceId])
   @@map("invoice_line_items")
+}
+
+model MedicalRecord {
+  id                 String   @id @default(cuid())
+  businessId         String
+  customerId         String
+  version            Int      @default(1)
+  isCurrent          Boolean  @default(true)
+  allergies          String[] @default([])
+  contraindications  String[] @default([])
+  medications        String[] @default([])
+  conditions         String[] @default([])
+  skinType           String?
+  fitzpatrickScale   String?
+  bloodThinners      Boolean  @default(false)
+  pregnant           Boolean  @default(false)
+  breastfeeding      Boolean  @default(false)
+  recentSurgery      String?
+  notes              String?
+  flagged            Boolean  @default(false)
+  flagReason         String?
+  consentGiven       Boolean  @default(false)
+  consentDate        DateTime?
+  recordedById       String?
+  createdAt          DateTime @default(now())
+
+  business   Business  @relation(fields: [businessId], references: [id])
+  customer   Customer  @relation(fields: [customerId], references: [id])
+  recordedBy Staff?    @relation("MedicalRecordStaff", fields: [recordedById], references: [id])
+
+  @@unique([customerId, version])
+  @@index([customerId])
+  @@index([businessId])
+  @@map("medical_records")
 }

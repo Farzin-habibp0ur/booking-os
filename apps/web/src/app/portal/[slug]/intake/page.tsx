@@ -33,8 +33,12 @@ interface IntakeFormData {
   emergencyContactPhone: string;
   medicalConditions: string;
   currentMedications: string;
+  bloodThinners: boolean;
+  pregnant: boolean;
+  breastfeeding: boolean;
   consentGiven: boolean;
   signatureName: string;
+  [key: string]: any;
 }
 
 const INITIAL_FORM: IntakeFormData = {
@@ -44,6 +48,9 @@ const INITIAL_FORM: IntakeFormData = {
   emergencyContactPhone: '',
   medicalConditions: '',
   currentMedications: '',
+  bloodThinners: false,
+  pregnant: false,
+  breastfeeding: false,
   consentGiven: false,
   signatureName: '',
 };
@@ -363,16 +370,19 @@ export default function PortalIntakePage() {
       {/* Section 3: Medical History */}
       <div className="bg-white rounded-2xl shadow-soft p-6">
         <h2 className="text-lg font-serif font-semibold text-slate-900 mb-4">Medical History</h2>
+        <p className="text-xs text-slate-500 mb-4">
+          This information helps ensure your safety during treatments. Please be thorough and accurate.
+        </p>
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
-              Medical Conditions / Allergies
+              Allergies
             </label>
             <textarea
               value={form.medicalConditions}
               onChange={(e) => handleUpdate('medicalConditions', e.target.value)}
-              placeholder="List any known medical conditions, allergies, or sensitivities..."
-              rows={3}
+              placeholder="List any known allergies (e.g., latex, lidocaine, specific medications)..."
+              rows={2}
               className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent resize-none"
               data-testid="intake-medicalConditions"
             />
@@ -384,11 +394,43 @@ export default function PortalIntakePage() {
             <textarea
               value={form.currentMedications}
               onChange={(e) => handleUpdate('currentMedications', e.target.value)}
-              placeholder="List any medications you are currently taking..."
-              rows={3}
+              placeholder="List any medications you are currently taking (including supplements)..."
+              rows={2}
               className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent resize-none"
               data-testid="intake-currentMedications"
             />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-slate-100">
+            <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.bloodThinners || false}
+                onChange={(e) => handleUpdate('bloodThinners', e.target.checked)}
+                className="rounded border-slate-300 text-sage-600 focus:ring-sage-500"
+                data-testid="intake-bloodThinners"
+              />
+              Taking blood thinners
+            </label>
+            <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.pregnant || false}
+                onChange={(e) => handleUpdate('pregnant', e.target.checked)}
+                className="rounded border-slate-300 text-sage-600 focus:ring-sage-500"
+                data-testid="intake-pregnant"
+              />
+              Pregnant
+            </label>
+            <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.breastfeeding || false}
+                onChange={(e) => handleUpdate('breastfeeding', e.target.checked)}
+                className="rounded border-slate-300 text-sage-600 focus:ring-sage-500"
+                data-testid="intake-breastfeeding"
+              />
+              Breastfeeding
+            </label>
           </div>
         </div>
       </div>

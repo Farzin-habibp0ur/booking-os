@@ -548,7 +548,7 @@ export class BookingService {
 
       const currentBooking = await tx.booking.findFirst({
         where: { id, businessId },
-        select: { status: true, startTime: true, customFields: true },
+        select: { status: true, startTime: true, customFields: true, customerId: true, service: { select: { kind: true } } },
       });
 
       if (!currentBooking) {
@@ -570,6 +570,18 @@ export class BookingService {
         throw new BadRequestException(
           `Cannot transition from ${currentBooking.status} to ${status}`,
         );
+      }
+
+      // Medical clearance check: require MedicalRecord for TREATMENT confirmations
+      if (status === 'CONFIRMED' && (currentBooking as any).service?.kind === 'TREATMENT') {
+        const medicalRecord = await tx.medicalRecord.findFirst({
+          where: { customerId: (currentBooking as any).customerId, businessId, isCurrent: true },
+        });
+        if (!medicalRecord) {
+          throw new BadRequestException(
+            'Medical intake is required before confirming a treatment booking. Please complete the medical history form first.',
+          );
+        }
       }
 
       const overrideEntries: Array<{

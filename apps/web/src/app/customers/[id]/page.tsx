@@ -32,6 +32,7 @@ import {
 import BookingFormModal from '@/components/booking-form-modal';
 import IntakeCard from '@/components/intake-card';
 import { RecentChangesPanel } from '@/components/action-history';
+import { MedicalAlertBanner } from '@/components/aesthetic/medical-alert-banner';
 import { OutboundCompose } from '@/components/outbound';
 import { BOOKING_STATUS_STYLES as STATUS_COLORS, ELEVATION, SPACING } from '@/lib/design-tokens';
 import { DetailSkeleton } from '@/components/skeleton';
@@ -75,6 +76,9 @@ export default function CustomerDetailPage() {
 
   // Action history state
   const [recentChanges, setRecentChanges] = useState<any[]>([]);
+
+  // Medical record state
+  const [medicalRecord, setMedicalRecord] = useState<any>(null);
 
   // AI Chat state
   const [chatMessages, setChatMessages] = useState<Array<{ role: 'user' | 'ai'; text: string }>>(
@@ -127,6 +131,10 @@ export default function CustomerDetailPage() {
 
   useEffect(() => {
     loadCustomer();
+    api
+      .get<any>(`/medical-records?customerId=${id}`)
+      .then(setMedicalRecord)
+      .catch(() => setMedicalRecord(null));
   }, [id]);
 
   useEffect(() => {
@@ -370,6 +378,18 @@ export default function CustomerDetailPage() {
           </button>
         </div>
       </div>
+
+      {/* Medical Alert */}
+      {medicalRecord?.flagged && (
+        <div className="px-6 pt-4">
+          <MedicalAlertBanner
+            flagged={medicalRecord.flagged}
+            flagReason={medicalRecord.flagReason}
+            allergies={medicalRecord.allergies}
+            contraindications={medicalRecord.contraindications}
+          />
+        </div>
+      )}
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (

@@ -5,7 +5,7 @@ import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { useAuth } from '@/lib/auth';
 import { usePack } from '@/lib/vertical-pack';
-import { Kanban, RefreshCw, User, Clock, Wrench, Car, Filter } from 'lucide-react';
+import { Kanban, RefreshCw, User, Clock, Wrench, Car, Filter, AlertTriangle } from 'lucide-react';
 import { PageSkeleton } from '@/components/skeleton';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -284,6 +284,9 @@ function KanbanCard({
         <span className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">
           {booking.customer.name}
         </span>
+        {dossier.isMedicalFlagged && (
+          <AlertTriangle size={14} className="text-amber-500 shrink-0" title="Medical flag" />
+        )}
       </div>
 
       {/* Vehicle Info */}

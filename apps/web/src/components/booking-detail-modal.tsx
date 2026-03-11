@@ -19,6 +19,7 @@ import {
 import RecordPaymentModal from './record-payment-modal';
 import RefundModal from './refund-modal';
 import BookingAuditTimeline from './booking-audit-timeline';
+import { MedicalAlertBanner } from './aesthetic/medical-alert-banner';
 import { cn } from '@/lib/cn';
 import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/lib/toast';
@@ -86,6 +87,7 @@ export default function BookingDetailModal({
   const [payments, setPayments] = useState<any[]>([]);
   const [colorLabel, setColorLabel] = useState<string | null>(null);
   const [activityOpen, setActivityOpen] = useState(false);
+  const [medicalRecord, setMedicalRecord] = useState<any>(null);
   const { t } = useI18n();
   const { toast } = useToast();
   const modalRef = useRef<HTMLDivElement>(null);
@@ -122,6 +124,14 @@ export default function BookingDetailModal({
   useEffect(() => {
     if (booking) setColorLabel(booking.colorLabel || null);
   }, [booking?.id, booking?.colorLabel]);
+
+  useEffect(() => {
+    if (!isOpen || !booking?.customer?.id) return;
+    api
+      .get<any>(`/medical-records?customerId=${booking.customer.id}`)
+      .then(setMedicalRecord)
+      .catch(() => setMedicalRecord(null));
+  }, [isOpen, booking?.customer?.id]);
 
   if (!isOpen || !booking) return null;
 
@@ -496,6 +506,16 @@ export default function BookingDetailModal({
 
         {/* Content */}
         <div className="flex-1 overflow-auto p-4 space-y-4">
+          {/* Medical alert */}
+          {medicalRecord?.flagged && (
+            <MedicalAlertBanner
+              flagged={medicalRecord.flagged}
+              flagReason={medicalRecord.flagReason}
+              allergies={medicalRecord.allergies}
+              contraindications={medicalRecord.contraindications}
+            />
+          )}
+
           {/* Main info */}
           <div className="grid grid-cols-2 gap-3">
             <div className="flex items-start gap-2">

@@ -64,6 +64,7 @@ import { TestimonialsModule } from './modules/testimonials/testimonials.module';
 import { PortalModule } from './modules/portal/portal.module';
 import { BusinessReviewModule } from './modules/business-review/business-review.module';
 import { InvoiceModule } from './modules/invoice/invoice.module';
+import { MedicalRecordModule } from './modules/medical-record/medical-record.module';
 
 @Module({
   imports: [
@@ -144,6 +145,7 @@ import { InvoiceModule } from './modules/invoice/invoice.module';
     PortalModule,
     BusinessReviewModule,
     InvoiceModule,
+    MedicalRecordModule,
     process.env.REDIS_URL ? QueueModule.forRootWithRedis() : QueueModule.forRoot(),
   ],
 })
