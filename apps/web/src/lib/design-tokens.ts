@@ -289,6 +289,37 @@ export function aftercareBadgeClasses(status: string): string {
 }
 
 // ---------------------------------------------------------------------------
+// Vehicle status styles (dealership inventory)
+// ---------------------------------------------------------------------------
+
+export const VEHICLE_STATUS_STYLES: Record<string, { bg: string; text: string; label: string }> = {
+  IN_STOCK: { bg: 'bg-sage-50', text: 'text-sage-900', label: 'In Stock' },
+  RESERVED: { bg: 'bg-lavender-50', text: 'text-lavender-900', label: 'Reserved' },
+  SOLD: { bg: 'bg-slate-100', text: 'text-slate-600', label: 'Sold' },
+  IN_TRANSIT: { bg: 'bg-amber-50', text: 'text-amber-700', label: 'In Transit' },
+  TRADE_IN: { bg: 'bg-sky-50', text: 'text-sky-700', label: 'Trade-In' },
+  ARCHIVED: { bg: 'bg-red-50', text: 'text-red-700', label: 'Archived' },
+};
+
+export const VEHICLE_CONDITION_STYLES: Record<string, { bg: string; text: string; label: string }> = {
+  NEW: { bg: 'bg-sage-50', text: 'text-sage-900', label: 'New' },
+  USED: { bg: 'bg-amber-50', text: 'text-amber-700', label: 'Used' },
+  CERTIFIED_PRE_OWNED: { bg: 'bg-sky-50', text: 'text-sky-700', label: 'Certified Pre-Owned' },
+};
+
+export function vehicleStatusBadgeClasses(status: string): string {
+  const s = VEHICLE_STATUS_STYLES[status];
+  if (!s) return 'bg-slate-100 text-slate-600';
+  return `${s.bg} ${s.text}`;
+}
+
+export function vehicleConditionBadgeClasses(condition: string): string {
+  const s = VEHICLE_CONDITION_STYLES[condition];
+  if (!s) return 'bg-slate-100 text-slate-600';
+  return `${s.bg} ${s.text}`;
+}
+
+// ---------------------------------------------------------------------------
 // Elevation (shadow) tokens
 // ---------------------------------------------------------------------------
 

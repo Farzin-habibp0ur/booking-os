@@ -31,6 +31,7 @@ const adminSections: NavSections = {
   tools: [
     '/services',
     '/staff',
+    '/inventory',
     '/invoices',
     '/campaigns',
     '/automations',
@@ -44,7 +45,7 @@ const adminSections: NavSections = {
 
 const agentSections: NavSections = {
   workspace: ['/inbox', '/calendar', '/customers', '/bookings', '/waitlist'],
-  tools: ['/services'],
+  tools: ['/services', '/inventory'],
   insights: ['/dashboard', '/reports'],
 };
 

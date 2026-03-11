@@ -83,6 +83,7 @@ model Business {
   photoComparisons           PhotoComparison[]
   treatmentPlans             TreatmentPlan[]
   aftercareProtocols         AftercareProtocol[]
+  vehicles                   Vehicle[]
 
   @@map("businesses")
 }
@@ -130,6 +131,8 @@ model Staff {
   medicalRecords      MedicalRecord[]  @relation("MedicalRecordStaff")
   clinicalPhotosTaken ClinicalPhoto[]  @relation("PhotoTakenByStaff")
   treatmentPlans      TreatmentPlan[]  @relation("TreatmentPlanCreator")
+  vehiclesAdded       Vehicle[]
+  testDrives          TestDrive[]
 
   @@index([businessId])
   @@map("staff")
@@ -166,6 +169,7 @@ model Customer {
   photoComparisons      PhotoComparison[]
   treatmentPlans            TreatmentPlan[]
   aftercareEnrollments      AftercareEnrollment[]
+  testDrives                TestDrive[]
 
   @@unique([businessId, phone])
   @@index([businessId])
@@ -242,6 +246,7 @@ model Booking {
   consultPlan          TreatmentPlan?        @relation("ConsultPlan")
   sessionBooking       TreatmentSession?     @relation("SessionBooking")
   aftercareEnrollment  AftercareEnrollment?
+  testDrive            TestDrive?
 
   @@index([businessId])
   @@index([businessId, startTime])
@@ -764,6 +769,7 @@ model Location {
   resources      Resource[]
   staffLocations StaffLocation[]
   conversations  Conversation[]
+  vehicles       Vehicle[]
 
   @@index([businessId])
   @@map("locations")
@@ -1703,4 +1709,64 @@ model AftercareMessage {
   @@index([enrollmentId])
   @@index([status, scheduledFor])
   @@map("aftercare_messages")
+}
+
+// ---------------------------------------------------------------------------
+// Vehicle Inventory (Dealership vertical)
+// ---------------------------------------------------------------------------
+
+model Vehicle {
+  id          String   @id @default(cuid())
+  businessId  String
+  stockNumber String
+  vin         String?  @unique
+  year        Int
+  make        String
+  model       String
+  trim        String?
+  color       String?
+  mileage     Int?
+  condition   String   @default("NEW") // NEW | USED | CERTIFIED_PRE_OWNED
+  status      String   @default("IN_STOCK") // IN_STOCK | RESERVED | SOLD | IN_TRANSIT | TRADE_IN | ARCHIVED
+  askingPrice Decimal? @db.Decimal(10, 2)
+  costPrice   Decimal? @db.Decimal(10, 2)
+  description String?
+  features    String[] @default([])
+  imageUrls   String[] @default([])
+  locationId  String?
+  addedById   String?
+  soldAt      DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  business   Business    @relation(fields: [businessId], references: [id])
+  location   Location?   @relation(fields: [locationId], references: [id])
+  addedBy    Staff?      @relation(fields: [addedById], references: [id])
+  testDrives TestDrive[]
+
+  @@index([businessId])
+  @@index([businessId, status])
+  @@unique([businessId, stockNumber])
+  @@map("vehicles")
+}
+
+model TestDrive {
+  id         String   @id @default(cuid())
+  vehicleId  String
+  customerId String
+  bookingId  String?  @unique
+  staffId    String?
+  status     String   @default("SCHEDULED") // SCHEDULED | COMPLETED | NO_SHOW | CANCELLED
+  feedback   String?
+  notes      String?
+  createdAt  DateTime @default(now())
+
+  vehicle  Vehicle  @relation(fields: [vehicleId], references: [id])
+  customer Customer @relation(fields: [customerId], references: [id])
+  booking  Booking? @relation(fields: [bookingId], references: [id])
+  staff    Staff?   @relation(fields: [staffId], references: [id])
+
+  @@index([vehicleId])
+  @@index([customerId])
+  @@map("test_drives")
 }

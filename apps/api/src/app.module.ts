@@ -68,6 +68,8 @@ import { MedicalRecordModule } from './modules/medical-record/medical-record.mod
 import { ClinicalPhotoModule } from './modules/clinical-photo/clinical-photo.module';
 import { TreatmentPlanModule } from './modules/treatment-plan/treatment-plan.module';
 import { AftercareModule } from './modules/aftercare/aftercare.module';
+import { VehicleModule } from './modules/vehicle/vehicle.module';
+import { TestDriveModule } from './modules/test-drive/test-drive.module';
 
 @Module({
   imports: [
@@ -152,6 +154,8 @@ import { AftercareModule } from './modules/aftercare/aftercare.module';
     ClinicalPhotoModule,
     TreatmentPlanModule,
     AftercareModule,
+    VehicleModule,
+    TestDriveModule,
     process.env.REDIS_URL ? QueueModule.forRootWithRedis() : QueueModule.forRoot(),
   ],
 })

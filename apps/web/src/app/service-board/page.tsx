@@ -25,6 +25,15 @@ interface KanbanBooking {
   };
   service: { id: string; name: string; durationMins: number };
   staff: { id: string; name: string } | null;
+  testDrive?: {
+    vehicle: {
+      year: number;
+      make: string;
+      model: string;
+      vin?: string | null;
+      stockNumber: string;
+    };
+  } | null;
 }
 
 const KANBAN_COLUMNS = [
@@ -267,7 +276,12 @@ function KanbanCard({
   isDragging: boolean;
 }) {
   const dossier = booking.customer.customFields || {};
-  const vehicleInfo = [dossier.year, dossier.make, dossier.model].filter(Boolean).join(' ');
+  const tv = booking.testDrive?.vehicle;
+  const vehicleInfo = tv
+    ? `${tv.year} ${tv.make} ${tv.model}`
+    : [dossier.year, dossier.make, dossier.model].filter(Boolean).join(' ');
+  const vehicleVin = tv?.vin || dossier.vin;
+  const vehicleStock = tv?.stockNumber;
 
   return (
     <div
@@ -297,10 +311,11 @@ function KanbanCard({
         </div>
       )}
 
-      {/* VIN */}
-      {dossier.vin && (
+      {/* VIN / Stock */}
+      {(vehicleVin || vehicleStock) && (
         <div className="text-[10px] text-slate-400 mb-1.5 font-mono truncate">
-          VIN: {dossier.vin}
+          {vehicleStock && <span>#{vehicleStock} </span>}
+          {vehicleVin && <span>VIN: {vehicleVin}</span>}
         </div>
       )}
 

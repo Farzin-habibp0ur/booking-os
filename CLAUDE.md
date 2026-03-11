@@ -17,13 +17,13 @@ booking-os/
 ├── apps/
 │   ├── api/                    # NestJS REST API (port 3001)
 │   │   ├── src/
-│   │   │   ├── modules/        # 62 feature modules (one dir per domain)
+│   │   │   ├── modules/        # 65 feature modules (one dir per domain)
 │   │   │   ├── common/         # Guards, decorators, filters, DTOs, PrismaService
 │   │   │   └── main.ts         # Bootstrap, Swagger, CORS, cookies, validation
 │   │   └── Dockerfile          # Multi-stage production build
 │   ├── web/                    # Next.js 15 admin dashboard (port 3000)
 │   │   ├── src/
-│   │   │   ├── app/            # 96 pages (App Router)
+│   │   │   ├── app/            # 98 pages (App Router)
 │   │   │   ├── components/     # Shared components
 │   │   │   ├── lib/            # API client, auth, i18n, socket, theme
 │   │   │   ├── locales/        # en.json, es.json (600+ keys each)
@@ -79,7 +79,7 @@ booking-os/
 
 ### Module Structure
 
-Every feature is a NestJS module in `apps/api/src/modules/` (63 modules). Each module follows this pattern:
+Every feature is a NestJS module in `apps/api/src/modules/` (65 modules). Each module follows this pattern:
 
 ```
 modules/
@@ -114,7 +114,7 @@ modules/
 
 ### Database (Prisma)
 
-- Schema at `packages/db/prisma/schema.prisma` — **75 models**, 55 migrations
+- Schema at `packages/db/prisma/schema.prisma` — **77 models**, 56 migrations
 - Generate client: `npx prisma generate --schema=packages/db/prisma/schema.prisma`
 - Create migration: `npx prisma migrate dev --name your_name --schema=packages/db/prisma/schema.prisma`
 - `PrismaService` is a global NestJS provider — inject it in constructors
@@ -131,6 +131,9 @@ KanbanStatus:       CHECKED_IN, DIAGNOSING, AWAITING_APPROVAL, IN_PROGRESS, READ
 ConversationStatus: OPEN, WAITING, RESOLVED, SNOOZED
 ServiceKind:        CONSULT, TREATMENT, OTHER
 VerticalPack:       AESTHETIC, SALON, TUTORING, GENERAL, DEALERSHIP, WELLNESS
+VehicleStatus:      IN_STOCK, RESERVED, SOLD, IN_TRANSIT, TRADE_IN, ARCHIVED
+VehicleCondition:   NEW, USED, CERTIFIED_PRE_OWNED
+TestDriveStatus:    SCHEDULED, COMPLETED, NO_SHOW, CANCELLED
 ```
 
 ### BullMQ Queues (8)
@@ -158,7 +161,7 @@ Key events: `message:new`, `conversation:updated`, `ai:suggestion`, `ai:auto-rep
 
 - Pages are in `apps/web/src/app/` using Next.js App Router (not Pages Router)
 - Protected pages check `access_token` cookie in `middleware.ts`
-- **96 pages** total (17 public, ~49 protected, ~16 console, ~14 portal/marketing)
+- **98 pages** total (17 public, ~51 protected, ~16 console, ~14 portal/marketing)
 - Client components use `'use client'` directive
 
 ### API Client
