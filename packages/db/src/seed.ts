@@ -17,6 +17,7 @@ async function main() {
   if (existing) {
     console.log('Aesthetic business already seeded. Skipping aesthetic seed.');
     await seedDealership();
+    await seedWellness();
     console.log('\n🎉 Seed complete!');
     return;
   }
@@ -573,8 +574,108 @@ async function main() {
   console.log(`✅ Sample booking and reminder created`);
 
   await seedDealership();
+  await seedWellness();
 
   console.log('\n🎉 Seed complete!');
+}
+
+async function seedWellness() {
+  const wellnessExists = await prisma.business.findFirst({
+    where: { slug: 'serenity-wellness-spa' },
+  });
+
+  if (wellnessExists) {
+    console.log('Wellness business already seeded. Skipping.');
+    return;
+  }
+
+  const business = await prisma.business.create({
+    data: {
+      name: 'Serenity Wellness Spa',
+      slug: 'serenity-wellness-spa',
+      phone: '+14155550300',
+      timezone: 'America/Los_Angeles',
+      verticalPack: 'wellness',
+      packConfig: {
+        setupComplete: true,
+        trackProgress: true,
+        membershipEnabled: true,
+        intakeFormRequired: true,
+        requiredProfileFields: ['firstName', 'email'],
+      },
+      aiSettings: { enabled: true, autoReplySuggestions: true },
+    },
+  });
+  console.log(`✅ Wellness Business: ${business.name}`);
+
+  await prisma.subscription.create({
+    data: {
+      businessId: business.id,
+      stripeCustomerId: 'cus_serenity_wellness',
+      stripeSubscriptionId: 'sub_serenity_wellness',
+      plan: 'pro',
+      status: 'active',
+      currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+    },
+  });
+  console.log('✅ Wellness subscription: pro / active');
+
+  const staffData = [
+    { name: 'Maya Chen', email: 'maya@serenitywellness.com', role: 'ADMIN' },
+    { name: 'Jordan Rivera', email: 'jordan@serenitywellness.com', role: 'SERVICE_PROVIDER' },
+    { name: 'Aisha Patel', email: 'aisha@serenitywellness.com', role: 'SERVICE_PROVIDER' },
+  ];
+  for (const s of staffData) {
+    const member = await prisma.staff.create({
+      data: {
+        name: s.name,
+        email: s.email,
+        passwordHash: await hashPassword('password123'),
+        role: s.role,
+        businessId: business.id,
+        emailVerified: true,
+        isActive: true,
+      },
+    });
+
+    // Working hours Mon-Fri 9am-6pm
+    for (const day of [0, 1, 2, 3, 4, 5, 6]) {
+      await prisma.workingHours.create({
+        data: {
+          staffId: member.id,
+          dayOfWeek: day,
+          startTime: '09:00',
+          endTime: '18:00',
+          isOff: ![1, 2, 3, 4, 5].includes(day),
+        },
+      });
+    }
+  }
+  console.log('✅ 3 wellness staff created with working hours');
+
+  const serviceData = [
+    { name: 'Initial Wellness Consultation', durationMins: 30, price: 0, category: 'Consultation' },
+    { name: 'Swedish Massage', durationMins: 60, price: 90, category: 'Massage' },
+    { name: 'Deep Tissue Massage', durationMins: 60, price: 110, category: 'Massage' },
+    { name: 'Yoga Private Session', durationMins: 60, price: 75, category: 'Yoga' },
+    { name: 'Personal Training', durationMins: 60, price: 80, category: 'Training' },
+    { name: 'Nutrition Coaching', durationMins: 45, price: 65, category: 'Coaching' },
+  ];
+  for (const svc of serviceData) {
+    await prisma.service.create({
+      data: {
+        name: svc.name,
+        durationMins: svc.durationMins,
+        price: svc.price,
+        category: svc.category,
+        businessId: business.id,
+      },
+    });
+  }
+  console.log('✅ 6 wellness services created');
+
+  console.log('✅ Serenity Wellness Spa seed complete');
+  console.log('  Login: maya@serenitywellness.com / password123');
 }
 
 async function seedDealership() {
