@@ -5,12 +5,19 @@ import { PrismaService } from '../../common/prisma.service';
 export class ReportsService {
   constructor(private prisma: PrismaService) {}
 
-  async bookingsOverTime(businessId: string, days: number = 30) {
-    const since = new Date();
-    since.setDate(since.getDate() - days);
+  async bookingsOverTime(businessId: string, days: number = 30, startDate?: Date, endDate?: Date) {
+    const dateFilter: any = {};
+    if (startDate) {
+      dateFilter.gte = startDate;
+      if (endDate) dateFilter.lte = endDate;
+    } else {
+      const since = new Date();
+      since.setDate(since.getDate() - days);
+      dateFilter.gte = since;
+    }
 
     const bookings = await this.prisma.booking.findMany({
-      where: { businessId, createdAt: { gte: since } },
+      where: { businessId, createdAt: dateFilter },
       select: { createdAt: true, status: true },
       orderBy: { createdAt: 'asc' },
     });
@@ -91,12 +98,19 @@ export class ReportsService {
     return { avgMinutes: avg, sampleSize: responseTimes.length };
   }
 
-  async serviceBreakdown(businessId: string, days: number = 30) {
-    const since = new Date();
-    since.setDate(since.getDate() - days);
+  async serviceBreakdown(businessId: string, days: number = 30, startDate?: Date, endDate?: Date) {
+    const dateFilter: any = {};
+    if (startDate) {
+      dateFilter.gte = startDate;
+      if (endDate) dateFilter.lte = endDate;
+    } else {
+      const since = new Date();
+      since.setDate(since.getDate() - days);
+      dateFilter.gte = since;
+    }
 
     const bookings = await this.prisma.booking.findMany({
-      where: { businessId, createdAt: { gte: since } },
+      where: { businessId, createdAt: dateFilter },
       include: { service: { select: { id: true, name: true, price: true } } },
     });
 
@@ -113,12 +127,19 @@ export class ReportsService {
     return Object.values(map).sort((a, b) => b.count - a.count);
   }
 
-  async staffPerformance(businessId: string, days: number = 30) {
-    const since = new Date();
-    since.setDate(since.getDate() - days);
+  async staffPerformance(businessId: string, days: number = 30, startDate?: Date, endDate?: Date) {
+    const dateFilter: any = {};
+    if (startDate) {
+      dateFilter.gte = startDate;
+      if (endDate) dateFilter.lte = endDate;
+    } else {
+      const since = new Date();
+      since.setDate(since.getDate() - days);
+      dateFilter.gte = since;
+    }
 
     const bookings = await this.prisma.booking.findMany({
-      where: { businessId, createdAt: { gte: since }, staffId: { not: null } },
+      where: { businessId, createdAt: dateFilter, staffId: { not: null } },
       include: {
         staff: { select: { id: true, name: true } },
         service: { select: { price: true } },
@@ -282,12 +303,19 @@ export class ReportsService {
     };
   }
 
-  async peakHours(businessId: string, days: number = 30) {
-    const since = new Date();
-    since.setDate(since.getDate() - days);
+  async peakHours(businessId: string, days: number = 30, startDate?: Date, endDate?: Date) {
+    const dateFilter: any = {};
+    if (startDate) {
+      dateFilter.gte = startDate;
+      if (endDate) dateFilter.lte = endDate;
+    } else {
+      const since = new Date();
+      since.setDate(since.getDate() - days);
+      dateFilter.gte = since;
+    }
 
     const bookings = await this.prisma.booking.findMany({
-      where: { businessId, startTime: { gte: since } },
+      where: { businessId, startTime: dateFilter },
       select: { startTime: true },
     });
 
@@ -304,12 +332,19 @@ export class ReportsService {
     };
   }
 
-  async sourceBreakdown(businessId: string, days: number = 30) {
-    const since = new Date();
-    since.setDate(since.getDate() - days);
+  async sourceBreakdown(businessId: string, days: number = 30, startDate?: Date, endDate?: Date) {
+    const dateFilter: any = {};
+    if (startDate) {
+      dateFilter.gte = startDate;
+      if (endDate) dateFilter.lte = endDate;
+    } else {
+      const since = new Date();
+      since.setDate(since.getDate() - days);
+      dateFilter.gte = since;
+    }
 
     const bookings = await this.prisma.booking.findMany({
-      where: { businessId, createdAt: { gte: since } },
+      where: { businessId, createdAt: dateFilter },
       select: { source: true, status: true },
     });
 
@@ -324,5 +359,281 @@ export class ReportsService {
     }
 
     return Object.values(map).sort((a, b) => b.count - a.count);
+  }
+
+  async revenueSummary(businessId: string, days: number = 30, startDate?: Date, endDate?: Date, staffId?: string) {
+    const dateFilter: any = {};
+    if (startDate) {
+      dateFilter.gte = startDate;
+      if (endDate) dateFilter.lte = endDate;
+    } else {
+      const since = new Date();
+      since.setDate(since.getDate() - days);
+      dateFilter.gte = since;
+    }
+
+    const where: any = { businessId, createdAt: dateFilter, status: 'COMPLETED' };
+    if (staffId) where.staffId = staffId;
+
+    const bookings = await this.prisma.booking.findMany({
+      where,
+      include: {
+        service: { select: { id: true, name: true, price: true } },
+        staff: { select: { id: true, name: true } },
+      },
+    });
+
+    let totalRevenue = 0;
+    const byService: Record<string, { name: string; revenue: number; count: number }> = {};
+    const byStaff: Record<string, { name: string; revenue: number; count: number }> = {};
+
+    for (const b of bookings) {
+      const price = b.service.price;
+      totalRevenue += price;
+
+      if (!byService[b.service.id]) {
+        byService[b.service.id] = { name: b.service.name, revenue: 0, count: 0 };
+      }
+      byService[b.service.id].revenue += price;
+      byService[b.service.id].count++;
+
+      if (b.staff) {
+        if (!byStaff[b.staff.id]) {
+          byStaff[b.staff.id] = { name: b.staff.name, revenue: 0, count: 0 };
+        }
+        byStaff[b.staff.id].revenue += price;
+        byStaff[b.staff.id].count++;
+      }
+    }
+
+    // Previous period comparison
+    const periodMs = (endDate || new Date()).getTime() - (startDate || dateFilter.gte).getTime();
+    const prevEnd = new Date((startDate || dateFilter.gte).getTime());
+    const prevStart = new Date(prevEnd.getTime() - periodMs);
+
+    const prevBookings = await this.prisma.booking.count({
+      where: {
+        businessId,
+        createdAt: { gte: prevStart, lte: prevEnd },
+        status: 'COMPLETED',
+        ...(staffId ? { staffId } : {}),
+      },
+    });
+
+    const prevRevenueData = await this.prisma.booking.findMany({
+      where: {
+        businessId,
+        createdAt: { gte: prevStart, lte: prevEnd },
+        status: 'COMPLETED',
+        ...(staffId ? { staffId } : {}),
+      },
+      include: { service: { select: { price: true } } },
+    });
+
+    const prevRevenue = prevRevenueData.reduce((sum, b) => sum + b.service.price, 0);
+    const revenueChange = prevRevenue > 0 ? Math.round(((totalRevenue - prevRevenue) / prevRevenue) * 100) : 0;
+
+    return {
+      totalRevenue: Math.round(totalRevenue * 100) / 100,
+      bookingCount: bookings.length,
+      avgPerBooking: bookings.length > 0 ? Math.round((totalRevenue / bookings.length) * 100) / 100 : 0,
+      revenueChange,
+      byService: Object.values(byService).sort((a, b) => b.revenue - a.revenue),
+      byStaff: Object.values(byStaff).sort((a, b) => b.revenue - a.revenue),
+    };
+  }
+
+  async staffUtilization(businessId: string, days: number = 30, startDate?: Date, endDate?: Date) {
+    const dateFilter: any = {};
+    if (startDate) {
+      dateFilter.gte = startDate;
+      if (endDate) dateFilter.lte = endDate;
+    } else {
+      const since = new Date();
+      since.setDate(since.getDate() - days);
+      dateFilter.gte = since;
+    }
+
+    const staff = await this.prisma.staff.findMany({
+      where: { businessId, isActive: true },
+      select: { id: true, name: true },
+    });
+
+    const bookings = await this.prisma.booking.findMany({
+      where: { businessId, startTime: dateFilter, staffId: { not: null } },
+      select: { staffId: true, startTime: true, endTime: true, status: true },
+    });
+
+    const periodDays = Math.max(1, Math.ceil(
+      ((endDate || new Date()).getTime() - (startDate || dateFilter.gte).getTime()) / (1000 * 60 * 60 * 24),
+    ));
+    const availableHoursPerDay = 8;
+    const totalAvailableHours = availableHoursPerDay * periodDays;
+
+    return staff.map((s) => {
+      const staffBookings = bookings.filter((b) => b.staffId === s.id);
+      const bookedMinutes = staffBookings.reduce((sum, b) => {
+        return sum + (b.endTime.getTime() - b.startTime.getTime()) / 60000;
+      }, 0);
+      const bookedHours = Math.round((bookedMinutes / 60) * 10) / 10;
+      const completed = staffBookings.filter((b) => b.status === 'COMPLETED').length;
+      const noShows = staffBookings.filter((b) => b.status === 'NO_SHOW').length;
+
+      return {
+        staffId: s.id,
+        name: s.name,
+        totalBookings: staffBookings.length,
+        completed,
+        noShows,
+        bookedHours,
+        availableHours: totalAvailableHours,
+        utilization: totalAvailableHours > 0 ? Math.round((bookedHours / totalAvailableHours) * 100) : 0,
+      };
+    }).sort((a, b) => b.utilization - a.utilization);
+  }
+
+  async clientMetrics(businessId: string, days: number = 30, startDate?: Date, endDate?: Date) {
+    const dateFilter: any = {};
+    if (startDate) {
+      dateFilter.gte = startDate;
+      if (endDate) dateFilter.lte = endDate;
+    } else {
+      const since = new Date();
+      since.setDate(since.getDate() - days);
+      dateFilter.gte = since;
+    }
+
+    // New customers in period
+    const newCustomers = await this.prisma.customer.count({
+      where: { businessId, createdAt: dateFilter },
+    });
+
+    // Returning customers: had bookings before AND during the period
+    const bookingsInPeriod = await this.prisma.booking.findMany({
+      where: { businessId, startTime: dateFilter },
+      select: { customerId: true },
+    });
+
+    const uniqueCustomerIds = [...new Set(bookingsInPeriod.map((b) => b.customerId))];
+
+    let returningCount = 0;
+    if (uniqueCustomerIds.length > 0) {
+      const customersWithPriorBookings = await this.prisma.booking.groupBy({
+        by: ['customerId'],
+        where: {
+          businessId,
+          customerId: { in: uniqueCustomerIds },
+          startTime: { lt: startDate || dateFilter.gte },
+        },
+      });
+      returningCount = customersWithPriorBookings.length;
+    }
+
+    const newBookingCustomers = uniqueCustomerIds.length - returningCount;
+
+    // Top customers by revenue
+    const completedBookings = await this.prisma.booking.findMany({
+      where: { businessId, startTime: dateFilter, status: 'COMPLETED' },
+      include: {
+        customer: { select: { id: true, name: true, email: true } },
+        service: { select: { price: true } },
+      },
+    });
+
+    const customerRevenue: Record<string, { name: string; email: string; revenue: number; visits: number }> = {};
+    for (const b of completedBookings) {
+      const c = b.customer;
+      if (!customerRevenue[c.id]) {
+        customerRevenue[c.id] = { name: c.name, email: c.email || '', revenue: 0, visits: 0 };
+      }
+      customerRevenue[c.id].revenue += b.service.price;
+      customerRevenue[c.id].visits++;
+    }
+
+    const topClients = Object.values(customerRevenue)
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 10);
+
+    // Total customers
+    const totalCustomers = await this.prisma.customer.count({ where: { businessId } });
+
+    return {
+      totalCustomers,
+      newCustomers,
+      returningCustomers: returningCount,
+      newBookingCustomers,
+      retentionRate: uniqueCustomerIds.length > 0
+        ? Math.round((returningCount / uniqueCustomerIds.length) * 100)
+        : 0,
+      topClients,
+    };
+  }
+
+  async communicationMetrics(businessId: string, days: number = 30, startDate?: Date, endDate?: Date) {
+    const dateFilter: any = {};
+    if (startDate) {
+      dateFilter.gte = startDate;
+      if (endDate) dateFilter.lte = endDate;
+    } else {
+      const since = new Date();
+      since.setDate(since.getDate() - days);
+      dateFilter.gte = since;
+    }
+
+    const conversations = await this.prisma.conversation.findMany({
+      where: { businessId, createdAt: dateFilter },
+      include: {
+        messages: { orderBy: { createdAt: 'asc' } },
+      },
+    });
+
+    let totalResponseTime = 0;
+    let responseCount = 0;
+    const dailyResponseTimes: Record<string, { total: number; count: number }> = {};
+    let withinSla = 0; // under 15 min
+
+    for (const conv of conversations) {
+      let lastInbound: Date | null = null;
+      for (const msg of conv.messages) {
+        if (msg.direction === 'INBOUND') {
+          lastInbound = msg.createdAt;
+        } else if (msg.direction === 'OUTBOUND' && lastInbound) {
+          const diffMin = (msg.createdAt.getTime() - lastInbound.getTime()) / 60000;
+          totalResponseTime += diffMin;
+          responseCount++;
+          if (diffMin <= 15) withinSla++;
+
+          const date = lastInbound.toISOString().split('T')[0];
+          if (!dailyResponseTimes[date]) {
+            dailyResponseTimes[date] = { total: 0, count: 0 };
+          }
+          dailyResponseTimes[date].total += diffMin;
+          dailyResponseTimes[date].count++;
+
+          lastInbound = null;
+        }
+      }
+    }
+
+    const avgResponseMinutes = responseCount > 0 ? Math.round(totalResponseTime / responseCount) : 0;
+    const slaRate = responseCount > 0 ? Math.round((withinSla / responseCount) * 100) : 100;
+
+    const responseTimeTrend = Object.entries(dailyResponseTimes)
+      .map(([date, d]) => ({
+        date,
+        avgMinutes: Math.round(d.total / d.count),
+      }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+
+    const totalMessages = conversations.reduce((sum, c) => sum + c.messages.length, 0);
+    const totalConversations = conversations.length;
+
+    return {
+      totalConversations,
+      totalMessages,
+      avgResponseMinutes,
+      slaRate,
+      responseTimeTrend,
+    };
   }
 }

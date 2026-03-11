@@ -28,13 +28,33 @@ export class ReportsController {
   ) {}
 
   @Get('bookings-over-time')
-  bookingsOverTime(@BusinessId() businessId: string, @Query('days') days?: string) {
-    return this.reportsService.bookingsOverTime(businessId, days ? parseInt(days) : undefined);
+  bookingsOverTime(
+    @BusinessId() businessId: string,
+    @Query('days') days?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    return this.reportsService.bookingsOverTime(
+      businessId,
+      days ? parseInt(days) : undefined,
+      from ? new Date(from) : undefined,
+      to ? new Date(to) : undefined,
+    );
   }
 
   @Get('no-show-rate')
-  noShowRate(@BusinessId() businessId: string, @Query('days') days?: string) {
-    return this.reportsService.noShowRate(businessId, days ? parseInt(days) : undefined);
+  noShowRate(
+    @BusinessId() businessId: string,
+    @Query('days') days?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    return this.reportsService.noShowRate(
+      businessId,
+      days ? parseInt(days) : undefined,
+      from ? new Date(from) : undefined,
+      to ? new Date(to) : undefined,
+    );
   }
 
   @Get('response-times')
@@ -43,35 +63,169 @@ export class ReportsController {
   }
 
   @Get('service-breakdown')
-  serviceBreakdown(@BusinessId() businessId: string, @Query('days') days?: string) {
-    return this.reportsService.serviceBreakdown(businessId, days ? parseInt(days) : undefined);
+  serviceBreakdown(
+    @BusinessId() businessId: string,
+    @Query('days') days?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    return this.reportsService.serviceBreakdown(
+      businessId,
+      days ? parseInt(days) : undefined,
+      from ? new Date(from) : undefined,
+      to ? new Date(to) : undefined,
+    );
   }
 
   @Get('staff-performance')
-  staffPerformance(@BusinessId() businessId: string, @Query('days') days?: string) {
-    return this.reportsService.staffPerformance(businessId, days ? parseInt(days) : undefined);
+  staffPerformance(
+    @BusinessId() businessId: string,
+    @Query('days') days?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    return this.reportsService.staffPerformance(
+      businessId,
+      days ? parseInt(days) : undefined,
+      from ? new Date(from) : undefined,
+      to ? new Date(to) : undefined,
+    );
   }
 
   @Get('revenue-over-time')
-  revenueOverTime(@BusinessId() businessId: string, @Query('days') days?: string) {
-    return this.reportsService.revenueOverTime(businessId, days ? parseInt(days) : undefined);
+  revenueOverTime(
+    @BusinessId() businessId: string,
+    @Query('days') days?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    return this.reportsService.revenueOverTime(
+      businessId,
+      days ? parseInt(days) : undefined,
+      from ? new Date(from) : undefined,
+      to ? new Date(to) : undefined,
+    );
   }
 
   @Get('status-breakdown')
-  statusBreakdown(@BusinessId() businessId: string, @Query('days') days?: string) {
-    return this.reportsService.statusBreakdown(businessId, days ? parseInt(days) : undefined);
+  statusBreakdown(
+    @BusinessId() businessId: string,
+    @Query('days') days?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    return this.reportsService.statusBreakdown(
+      businessId,
+      days ? parseInt(days) : undefined,
+      from ? new Date(from) : undefined,
+      to ? new Date(to) : undefined,
+    );
   }
 
   @Get('peak-hours')
-  peakHours(@BusinessId() businessId: string, @Query('days') days?: string) {
-    return this.reportsService.peakHours(businessId, days ? parseInt(days) : undefined);
+  peakHours(
+    @BusinessId() businessId: string,
+    @Query('days') days?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    return this.reportsService.peakHours(
+      businessId,
+      days ? parseInt(days) : undefined,
+      from ? new Date(from) : undefined,
+      to ? new Date(to) : undefined,
+    );
   }
 
   @Get('consult-conversion')
-  consultConversion(@BusinessId() businessId: string, @Query('days') days?: string) {
+  consultConversion(
+    @BusinessId() businessId: string,
+    @Query('days') days?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
     return this.reportsService.consultToTreatmentConversion(
       businessId,
       days ? parseInt(days) : undefined,
+      from ? new Date(from) : undefined,
+      to ? new Date(to) : undefined,
+    );
+  }
+
+  @Get('source-breakdown')
+  sourceBreakdown(
+    @BusinessId() businessId: string,
+    @Query('days') days?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    return this.reportsService.sourceBreakdown(
+      businessId,
+      days ? parseInt(days) : undefined,
+      from ? new Date(from) : undefined,
+      to ? new Date(to) : undefined,
+    );
+  }
+
+  @Get('revenue-summary')
+  revenueSummary(
+    @BusinessId() businessId: string,
+    @Query('days') days?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+    @Query('staffId') staffId?: string,
+  ) {
+    return this.reportsService.revenueSummary(
+      businessId,
+      days ? parseInt(days) : undefined,
+      from ? new Date(from) : undefined,
+      to ? new Date(to) : undefined,
+      staffId,
+    );
+  }
+
+  @Get('staff-utilization')
+  staffUtilization(
+    @BusinessId() businessId: string,
+    @Query('days') days?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    return this.reportsService.staffUtilization(
+      businessId,
+      days ? parseInt(days) : undefined,
+      from ? new Date(from) : undefined,
+      to ? new Date(to) : undefined,
+    );
+  }
+
+  @Get('client-metrics')
+  clientMetrics(
+    @BusinessId() businessId: string,
+    @Query('days') days?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    return this.reportsService.clientMetrics(
+      businessId,
+      days ? parseInt(days) : undefined,
+      from ? new Date(from) : undefined,
+      to ? new Date(to) : undefined,
+    );
+  }
+
+  @Get('communication-metrics')
+  communicationMetrics(
+    @BusinessId() businessId: string,
+    @Query('days') days?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    return this.reportsService.communicationMetrics(
+      businessId,
+      days ? parseInt(days) : undefined,
+      from ? new Date(from) : undefined,
+      to ? new Date(to) : undefined,
     );
   }
 

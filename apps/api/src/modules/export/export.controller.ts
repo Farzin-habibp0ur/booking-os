@@ -100,6 +100,8 @@ export class ExportController {
     @BusinessId() businessId: string,
     @Param('reportType') reportType: string,
     @Query('days') days?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
     @Query('format') format?: string,
     @Res() res?: Response,
   ) {
@@ -108,7 +110,9 @@ export class ExportController {
     }
 
     const parsedDays = days ? parseInt(days) : 30;
-    const data = await this.getReportData(businessId, reportType as ReportType, parsedDays);
+    const startDate = from ? new Date(from) : undefined;
+    const endDate = to ? new Date(to) : undefined;
+    const data = await this.getReportData(businessId, reportType as ReportType, parsedDays, startDate, endDate);
     const exportFormat = format === 'pdf' ? 'pdf' : 'csv';
 
     if (exportFormat === 'pdf') {
@@ -130,28 +134,30 @@ export class ExportController {
     businessId: string,
     reportType: ReportType,
     days: number,
+    startDate?: Date,
+    endDate?: Date,
   ): Promise<any> {
     switch (reportType) {
       case 'bookings-over-time':
-        return this.reportsService.bookingsOverTime(businessId, days);
+        return this.reportsService.bookingsOverTime(businessId, days, startDate, endDate);
       case 'revenue-over-time':
-        return this.reportsService.revenueOverTime(businessId, days);
+        return this.reportsService.revenueOverTime(businessId, days, startDate, endDate);
       case 'no-show-rate':
-        return this.reportsService.noShowRate(businessId, days);
+        return this.reportsService.noShowRate(businessId, days, startDate, endDate);
       case 'response-times':
         return this.reportsService.responseTimes(businessId);
       case 'service-breakdown':
-        return this.reportsService.serviceBreakdown(businessId, days);
+        return this.reportsService.serviceBreakdown(businessId, days, startDate, endDate);
       case 'staff-performance':
-        return this.reportsService.staffPerformance(businessId, days);
+        return this.reportsService.staffPerformance(businessId, days, startDate, endDate);
       case 'status-breakdown':
-        return this.reportsService.statusBreakdown(businessId, days);
+        return this.reportsService.statusBreakdown(businessId, days, startDate, endDate);
       case 'peak-hours':
-        return this.reportsService.peakHours(businessId, days);
+        return this.reportsService.peakHours(businessId, days, startDate, endDate);
       case 'consult-conversion':
-        return this.reportsService.consultToTreatmentConversion(businessId, days);
+        return this.reportsService.consultToTreatmentConversion(businessId, days, startDate, endDate);
       case 'deposit-compliance':
-        return this.reportsService.depositComplianceRate(businessId);
+        return this.reportsService.depositComplianceRate(businessId, startDate, endDate);
       default:
         throw new BadRequestException(`Invalid report type: ${reportType}`);
     }
