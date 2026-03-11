@@ -63,12 +63,12 @@ describe('SettingsHub', () => {
   it('renders category labels and descriptions', () => {
     render(<SettingsHub />);
 
-    expect(screen.getByText('Account & Security')).toBeInTheDocument();
-    expect(screen.getByText('Operations')).toBeInTheDocument();
+    expect(screen.getByText('Account & Import')).toBeInTheDocument();
+    expect(screen.getByText('Calendar & Templates')).toBeInTheDocument();
     expect(screen.getByText('Billing')).toBeInTheDocument();
 
     expect(
-      screen.getByText('Team accounts, login methods, and custom profile fields'),
+      screen.getByText('Import customers via CSV, export data, and manage profile fields'),
     ).toBeInTheDocument();
   });
 

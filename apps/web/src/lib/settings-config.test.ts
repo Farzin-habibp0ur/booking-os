@@ -38,7 +38,7 @@ describe('settings-config', () => {
       }
     });
 
-    it('Account & Security is visible to all roles', () => {
+    it('Account & Import is visible to all roles', () => {
       const account = SETTINGS_CATEGORIES.find((c) => c.key === 'account');
       expect(account?.roles).toContain('ADMIN');
       expect(account?.roles).toContain('AGENT');

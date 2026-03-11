@@ -64,17 +64,17 @@ jest.mock('@/components/settings-hub', () => {
   const { useRouter } = require('next/navigation');
   const categories = [
     {
-      label: 'Account & Security',
-      desc: 'Team accounts, login methods, and custom profile fields',
+      label: 'Account & Import',
+      desc: 'Import customers via CSV, export data, and manage profile fields',
       href: '/settings/account',
     },
     {
-      label: 'Operations',
-      desc: 'Calendar rules, message templates, and booking policies',
+      label: 'Calendar & Templates',
+      desc: 'Calendar sync, message templates, and booking policies',
       href: '/settings/calendar',
     },
     {
-      label: 'Communication',
+      label: 'Notifications',
       desc: 'Notification preferences and language translations',
       href: '/settings/notifications',
     },
@@ -308,9 +308,9 @@ describe('SettingsPage', () => {
   test('renders all settings hub category cards for ADMIN role', async () => {
     render(<SettingsPage />);
     await waitFor(() => {
-      expect(screen.getByText('Account & Security')).toBeInTheDocument();
-      expect(screen.getByText('Operations')).toBeInTheDocument();
-      expect(screen.getByText('Communication')).toBeInTheDocument();
+      expect(screen.getByText('Account & Import')).toBeInTheDocument();
+      expect(screen.getByText('Calendar & Templates')).toBeInTheDocument();
+      expect(screen.getByText('Notifications')).toBeInTheDocument();
       expect(screen.getByText('AI & Automation')).toBeInTheDocument();
       expect(screen.getByText('Growth')).toBeInTheDocument();
       expect(screen.getByText('Billing')).toBeInTheDocument();
@@ -322,10 +322,10 @@ describe('SettingsPage', () => {
     render(<SettingsPage />);
     await waitFor(() => {
       expect(
-        screen.getByText('Team accounts, login methods, and custom profile fields'),
+        screen.getByText('Import customers via CSV, export data, and manage profile fields'),
       ).toBeInTheDocument();
       expect(
-        screen.getByText('Calendar rules, message templates, and booking policies'),
+        screen.getByText('Calendar sync, message templates, and booking policies'),
       ).toBeInTheDocument();
       expect(
         screen.getByText('Notification preferences and language translations'),
@@ -336,29 +336,29 @@ describe('SettingsPage', () => {
     });
   });
 
-  test('navigates to account settings when Account & Security card is clicked', async () => {
+  test('navigates to account settings when Account & Import card is clicked', async () => {
     render(<SettingsPage />);
-    await waitFor(() => screen.getByText('Account & Security'));
+    await waitFor(() => screen.getByText('Account & Import'));
 
-    fireEvent.click(screen.getByText('Account & Security'));
+    fireEvent.click(screen.getByText('Account & Import'));
 
     expect(mockPush).toHaveBeenCalledWith('/settings/account');
   });
 
-  test('navigates to calendar settings when Operations card is clicked', async () => {
+  test('navigates to calendar settings when Calendar & Templates card is clicked', async () => {
     render(<SettingsPage />);
-    await waitFor(() => screen.getByText('Operations'));
+    await waitFor(() => screen.getByText('Calendar & Templates'));
 
-    fireEvent.click(screen.getByText('Operations'));
+    fireEvent.click(screen.getByText('Calendar & Templates'));
 
     expect(mockPush).toHaveBeenCalledWith('/settings/calendar');
   });
 
-  test('navigates to notifications settings when Communication card is clicked', async () => {
+  test('navigates to notifications settings when Notifications card is clicked', async () => {
     render(<SettingsPage />);
-    await waitFor(() => screen.getByText('Communication'));
+    await waitFor(() => screen.getByText('Notifications'));
 
-    fireEvent.click(screen.getByText('Communication'));
+    fireEvent.click(screen.getByText('Notifications'));
 
     expect(mockPush).toHaveBeenCalledWith('/settings/notifications');
   });
