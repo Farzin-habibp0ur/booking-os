@@ -6,7 +6,7 @@ import { cn } from '@/lib/cn';
 import { api } from '@/lib/api';
 import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/lib/toast';
-import type { PackField } from '@/lib/vertical-pack';
+import { usePack, type PackField } from '@/lib/vertical-pack';
 
 interface IntakeCardProps {
   customer: { id: string; customFields?: Record<string, any> };
@@ -14,9 +14,17 @@ interface IntakeCardProps {
   onUpdated: (updatedCustomer: any) => void;
 }
 
+const INTAKE_LABELS: Record<string, string> = {
+  aesthetic: 'CLINIC INTAKE',
+  dealership: 'VEHICLE INTAKE',
+  wellness: 'CLIENT INTAKE',
+  general: 'INTAKE',
+};
+
 export default function IntakeCard({ customer, fields, onUpdated }: IntakeCardProps) {
   const { t } = useI18n();
   const { toast } = useToast();
+  const pack = usePack();
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [draft, setDraft] = useState<Record<string, any>>({});
@@ -138,7 +146,7 @@ export default function IntakeCard({ customer, fields, onUpdated }: IntakeCardPr
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <span className="text-xs font-semibold text-slate-500 uppercase">
-            {t('inbox.clinic_intake')}
+            {INTAKE_LABELS[pack.name] || INTAKE_LABELS.general}
           </span>
           <span
             className={cn(
