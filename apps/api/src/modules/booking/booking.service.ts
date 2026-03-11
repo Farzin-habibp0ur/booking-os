@@ -16,6 +16,7 @@ import { CalendarSyncService } from '../calendar-sync/calendar-sync.service';
 import { TokenService } from '../../common/token.service';
 import { WaitlistService } from '../waitlist/waitlist.service';
 import { ActionHistoryService } from '../action-history/action-history.service';
+import { InvoiceService } from '../invoice/invoice.service';
 
 @Injectable()
 export class BookingService {
@@ -33,6 +34,8 @@ export class BookingService {
     private waitlistService?: WaitlistService,
     @Optional()
     private actionHistoryService?: ActionHistoryService,
+    @Optional()
+    private invoiceService?: InvoiceService,
   ) {}
 
   private static readonly VALID_SORT_FIELDS = [
@@ -749,6 +752,16 @@ export class BookingService {
           type: 'REVIEW_REQUEST',
         },
       });
+
+      // Auto-generate draft invoice for completed booking
+      if (this.invoiceService) {
+        this.invoiceService.createFromBooking(businessId, id).catch((err) =>
+          this.logger.warn(`Failed to auto-create invoice for booking ${id}`, {
+            bookingId: id,
+            error: err.message,
+          }),
+        );
+      }
     }
 
     // Audit trail for status change

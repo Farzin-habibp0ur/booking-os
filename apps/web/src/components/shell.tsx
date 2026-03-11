@@ -45,6 +45,7 @@ import {
   Bell,
   Shield,
   Sparkles,
+  Receipt,
 } from 'lucide-react';
 import CommandPalette from '@/components/command-palette';
 import NotificationBell from '@/components/notification-bell';
@@ -188,6 +189,7 @@ function ShellInner({ children }: { children: ReactNode }) {
       roles: ['ADMIN', 'AGENT', 'SERVICE_PROVIDER'],
     },
     { href: '/staff', label: t('nav.staff'), icon: UserCog, roles: ['ADMIN'] },
+    { href: '/invoices', label: 'Invoices', icon: Receipt, roles: ['ADMIN'] },
     { href: '/campaigns', label: 'Campaigns', icon: Megaphone, roles: ['ADMIN'] },
     { href: '/automations', label: 'Automations', icon: Zap, roles: ['ADMIN'] },
     { href: '/marketing/queue', label: 'Content Queue', icon: FileText, roles: ['ADMIN'] },

@@ -31,6 +31,7 @@ const adminSections: NavSections = {
   tools: [
     '/services',
     '/staff',
+    '/invoices',
     '/campaigns',
     '/automations',
     '/marketing/queue',

@@ -63,6 +63,7 @@ import { EmailSequenceModule } from './modules/email-sequences/email-sequences.m
 import { TestimonialsModule } from './modules/testimonials/testimonials.module';
 import { PortalModule } from './modules/portal/portal.module';
 import { BusinessReviewModule } from './modules/business-review/business-review.module';
+import { InvoiceModule } from './modules/invoice/invoice.module';
 
 @Module({
   imports: [
@@ -142,6 +143,7 @@ import { BusinessReviewModule } from './modules/business-review/business-review.
     TestimonialsModule,
     PortalModule,
     BusinessReviewModule,
+    InvoiceModule,
     process.env.REDIS_URL ? QueueModule.forRootWithRedis() : QueueModule.forRoot(),
   ],
 })

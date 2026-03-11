@@ -12,6 +12,7 @@ import {
   Clock,
   FileText,
   Megaphone,
+  Receipt,
   Loader2,
   ChevronDown,
 } from 'lucide-react';
@@ -40,6 +41,7 @@ const TYPE_CONFIG: Record<string, { icon: any; color: string; label: string }> =
   waitlist: { icon: Clock, color: 'bg-lavender-500', label: 'Waitlist' },
   quote: { icon: FileText, color: 'bg-emerald-500', label: 'Quotes' },
   campaign: { icon: Megaphone, color: 'bg-pink-500', label: 'Campaigns' },
+  invoice: { icon: Receipt, color: 'bg-teal-500', label: 'Invoices' },
 };
 
 export default function CustomerTimeline({ customerId }: { customerId: string }) {

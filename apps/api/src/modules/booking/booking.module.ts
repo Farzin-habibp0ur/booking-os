@@ -7,9 +7,10 @@ import { NotificationModule } from '../notification/notification.module';
 import { BusinessModule } from '../business/business.module';
 import { AuthModule } from '../auth/auth.module';
 import { WaitlistModule } from '../waitlist/waitlist.module';
+import { InvoiceModule } from '../invoice/invoice.module';
 
 @Module({
-  imports: [NotificationModule, BusinessModule, AuthModule, forwardRef(() => WaitlistModule)],
+  imports: [NotificationModule, BusinessModule, AuthModule, forwardRef(() => WaitlistModule), InvoiceModule],
   controllers: [RecurringController, BookingController],
   providers: [BookingService, RecurringService],
   exports: [BookingService],

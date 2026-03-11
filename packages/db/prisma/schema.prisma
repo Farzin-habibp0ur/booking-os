@@ -77,6 +77,7 @@ model Business {
   reportSchedules            ReportSchedule[]
   businessReviews            BusinessReview[]
   savedSegments              SavedSegment[]
+  invoices                   Invoice[]
 
   @@map("businesses")
 }
@@ -151,6 +152,7 @@ model Customer {
   duplicatesAsCustomer2 DuplicateCandidate[] @relation("DuplicateCustomer2")
   payments              Payment[]
   testimonials          Testimonial[]
+  invoices              Invoice[]
 
   @@unique([businessId, phone])
   @@index([businessId])
@@ -180,6 +182,7 @@ model Service {
   recurringSeries    RecurringSeries[]
   waitlistEntries    WaitlistEntry[]
   staffServicePrices StaffServicePrice[]
+  invoiceLineItems   InvoiceLineItem[]
 
   @@index([businessId])
   @@map("services")
@@ -219,6 +222,7 @@ model Booking {
   payments        Payment[]
   quotes          Quote[]
   actionCards     ActionCard[]
+  invoices        Invoice[]
 
   @@index([businessId])
   @@index([businessId, startTime])
@@ -451,6 +455,7 @@ model Payment {
   businessId            String
   bookingId             String?
   customerId            String?
+  invoiceId             String?
   amount                Float
   currency              String   @default("usd")
   method                String   @default("STRIPE") // CASH, CARD, BANK_TRANSFER, STRIPE, OTHER
@@ -465,10 +470,12 @@ model Payment {
   business Business  @relation(fields: [businessId], references: [id])
   booking  Booking?  @relation(fields: [bookingId], references: [id])
   customer Customer? @relation(fields: [customerId], references: [id])
+  invoice  Invoice?  @relation(fields: [invoiceId], references: [id])
   refunds  Refund[]
 
   @@index([businessId])
   @@index([bookingId])
+  @@index([invoiceId])
   @@map("payments")
 }
 
@@ -832,6 +839,7 @@ model Quote {
 
   booking  Booking  @relation(fields: [bookingId], references: [id])
   business Business @relation(fields: [businessId], references: [id])
+  invoice  Invoice?
 
   @@index([bookingId])
   @@index([businessId])
@@ -1419,4 +1427,59 @@ model BookingAuditLog {
   @@index([bookingId])
   @@index([businessId, createdAt])
   @@map("booking_audit_logs")
+}
+
+model Invoice {
+  id             String    @id @default(cuid())
+  businessId     String
+  customerId     String
+  bookingId      String?
+  quoteId        String?   @unique
+  invoiceNumber  String
+  status         String    @default("DRAFT") // DRAFT, SENT, VIEWED, PAID, PARTIALLY_PAID, OVERDUE, CANCELLED, REFUNDED
+  subtotal       Decimal   @db.Decimal(10, 2)
+  taxRate        Decimal?  @db.Decimal(5, 4)
+  taxAmount      Decimal?  @db.Decimal(10, 2)
+  discountAmount Decimal?  @db.Decimal(10, 2)
+  total          Decimal   @db.Decimal(10, 2)
+  currency       String    @default("USD")
+  dueDate        DateTime
+  paidAmount     Decimal   @default(0) @db.Decimal(10, 2)
+  notes          String?
+  terms          String?
+  pdfUrl         String?
+  sentAt         DateTime?
+  viewedAt       DateTime?
+  paidAt         DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  business  Business          @relation(fields: [businessId], references: [id])
+  customer  Customer          @relation(fields: [customerId], references: [id])
+  booking   Booking?          @relation(fields: [bookingId], references: [id])
+  quote     Quote?            @relation(fields: [quoteId], references: [id])
+  lineItems InvoiceLineItem[]
+  payments  Payment[]
+
+  @@index([businessId])
+  @@index([customerId])
+  @@index([status])
+  @@unique([businessId, invoiceNumber])
+  @@map("invoices")
+}
+
+model InvoiceLineItem {
+  id          String  @id @default(cuid())
+  invoiceId   String
+  description String
+  quantity    Int     @default(1)
+  unitPrice   Decimal @db.Decimal(10, 2)
+  total       Decimal @db.Decimal(10, 2)
+  serviceId   String?
+
+  invoice Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  service Service? @relation(fields: [serviceId], references: [id])
+
+  @@index([invoiceId])
+  @@map("invoice_line_items")
 }

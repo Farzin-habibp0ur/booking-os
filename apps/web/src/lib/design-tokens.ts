@@ -151,6 +151,27 @@ export function statusHex(status: string): string {
 }
 
 // ---------------------------------------------------------------------------
+// Invoice status styles
+// ---------------------------------------------------------------------------
+
+export const INVOICE_STATUS_STYLES: Record<string, { bg: string; text: string; label: string }> = {
+  DRAFT: { bg: 'bg-slate-100', text: 'text-slate-600', label: 'Draft' },
+  SENT: { bg: 'bg-blue-50', text: 'text-blue-700', label: 'Sent' },
+  VIEWED: { bg: 'bg-lavender-50', text: 'text-lavender-900', label: 'Viewed' },
+  PAID: { bg: 'bg-sage-50', text: 'text-sage-900', label: 'Paid' },
+  PARTIALLY_PAID: { bg: 'bg-amber-50', text: 'text-amber-700', label: 'Partially Paid' },
+  OVERDUE: { bg: 'bg-red-50', text: 'text-red-700', label: 'Overdue' },
+  CANCELLED: { bg: 'bg-slate-100', text: 'text-slate-500', label: 'Cancelled' },
+  REFUNDED: { bg: 'bg-rose-50', text: 'text-rose-700', label: 'Refunded' },
+};
+
+export function invoiceBadgeClasses(status: string): string {
+  const s = INVOICE_STATUS_STYLES[status];
+  if (!s) return 'bg-slate-100 text-slate-600';
+  return `${s.bg} ${s.text}`;
+}
+
+// ---------------------------------------------------------------------------
 // Non-booking domain statuses
 // ---------------------------------------------------------------------------
 

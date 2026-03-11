@@ -186,4 +186,14 @@ export class PortalService {
       },
     });
   }
+
+  async getInvoices(customerId: string, businessId: string) {
+    return this.prisma.invoice.findMany({
+      where: { customerId, businessId, status: { not: 'DRAFT' } },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        lineItems: true,
+      },
+    });
+  }
 }

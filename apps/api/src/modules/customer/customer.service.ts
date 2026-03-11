@@ -160,7 +160,7 @@ export class CustomerService {
   ) {
     const { types, showSystem = true, limit = 20, offset = 0 } = opts;
 
-    const [bookings, conversations, notes, waitlistEntries, quotes, campaignSends] =
+    const [bookings, conversations, notes, waitlistEntries, quotes, campaignSends, invoices] =
       await Promise.all([
         !types || types.includes('booking')
           ? this.prisma.booking.findMany({
@@ -196,6 +196,12 @@ export class CustomerService {
           ? this.prisma.campaignSend.findMany({
               where: { customerId, campaign: { businessId } },
               include: { campaign: true },
+            })
+          : Promise.resolve([]),
+        !types || types.includes('invoice')
+          ? this.prisma.invoice.findMany({
+              where: { customerId, businessId },
+              include: { lineItems: true },
             })
           : Promise.resolve([]),
       ]);
@@ -293,6 +299,20 @@ export class CustomerService {
         metadata: { campaignSendId: cs.id, campaignId: cs.campaignId, status: cs.status },
         isSystemEvent: true,
         deepLink: `/campaigns`,
+      });
+    }
+
+    // Invoices
+    for (const inv of invoices as any[]) {
+      events.push({
+        id: `invoice-${inv.id}`,
+        type: 'invoice',
+        timestamp: inv.createdAt.toISOString(),
+        title: `Invoice ${inv.invoiceNumber} — $${Number(inv.total).toFixed(2)} — ${inv.status}`,
+        description: inv.lineItems?.map((li: any) => li.description).join(', ') || '',
+        metadata: { invoiceId: inv.id, status: inv.status, total: Number(inv.total) },
+        isSystemEvent: false,
+        deepLink: `/invoices/${inv.id}`,
       });
     }
 

@@ -86,4 +86,11 @@ export class PortalController {
     const { customerId, businessId } = req.portalUser;
     return this.portalService.rescheduleBooking(customerId, businessId, id, dto.newStartTime);
   }
+
+  @Get('invoices')
+  @UseGuards(PortalGuard)
+  getInvoices(@Req() req: any) {
+    const { customerId, businessId } = req.portalUser;
+    return this.portalService.getInvoices(customerId, businessId);
+  }
 }
