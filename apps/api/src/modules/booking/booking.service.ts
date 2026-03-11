@@ -132,13 +132,31 @@ export class BookingService {
           staff: true,
           recurringSeries: { select: { id: true } },
         },
+        distinct: ['id'],
         skip: (page - 1) * pageSize,
         take: pageSize,
         orderBy,
       }),
       this.prisma.booking.count({ where }),
     ]);
-    return { data, total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
+
+    // Deduplicate bookings with same customer, service, and start time
+    // (guards against seed data being run multiple times)
+    const seen = new Set<string>();
+    const deduped = data.filter((b: any) => {
+      const key = `${b.customerId}|${b.serviceId}|${b.startTime?.toISOString()}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    return {
+      data: deduped,
+      total: total - (data.length - deduped.length),
+      page,
+      pageSize,
+      totalPages: Math.ceil(total / pageSize),
+    };
   }
 
   async getAuditLog(businessId: string, bookingId: string) {

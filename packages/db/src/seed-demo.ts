@@ -488,6 +488,17 @@ async function main() {
       durationMins: number,
       notes?: string,
     ) {
+      // Prevent duplicate bookings if seed is re-run
+      const existing = await prisma.booking.findFirst({
+        where: {
+          businessId: bizId,
+          customerId,
+          serviceId,
+          startTime: start,
+        },
+      });
+      if (existing) return existing;
+
       return prisma.booking.create({
         data: {
           businessId: bizId,
