@@ -26,9 +26,13 @@ booking-os/
 │   ├── db/                # Prisma schema, migrations, seed data
 │   ├── messaging-provider/# Messaging abstraction layer
 │   └── shared/            # Shared types and utilities
-├── docs/                  # Additional documentation
-├── nginx/                 # Reverse proxy config
-└── scripts/               # Utility scripts
+├── system/              # Growth engine config (launch phases, quality gates, budget)
+├── data/                # Founder-maintained inputs (customer signals)
+├── reports/             # Generated reports (customer validation, performance)
+├── queue/               # Content approval pipeline (pending → approved → published)
+├── docs/                # Additional documentation
+├── nginx/               # Reverse proxy config
+└── scripts/             # Utility scripts
 ```
 
 ## Prerequisites

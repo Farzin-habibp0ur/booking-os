@@ -42,7 +42,10 @@ booking-os/
 │   │   └── src/seed-content.ts # Content pillar seeding (12 blog posts → ContentDraft)
 │   ├── messaging-provider/     # WhatsApp Cloud API abstraction
 │   └── shared/                 # Shared types, DTOs, enums, profile field definitions
-├── system/                     # Growth engine config (phased launch, platform gates, agent filters)
+├── system/                     # Growth engine config (launch, gates, budget, testing, escalation)
+├── data/                       # Founder-maintained inputs (customer signals, manual tracking)
+├── reports/                    # Generated reports (customer validation, performance, weekly)
+├── queue/                      # Content approval pipeline (pending/approved/rejected/published/archive)
 ├── docs/                       # PROJECT_CONTEXT.md, cicd.md, user-stories.md, ux-brainstorm-brief.md
 ├── docker-compose.yml          # Local development
 ├── docker-compose.prod.yml     # Production (Nginx + SSL)
@@ -509,6 +512,13 @@ Agents run via `AgentSchedulerService` cron → `AGENT_PROCESSING` BullMQ queue 
 | platform-gate-checker  | `system/platform-gate-checker.md`  | Weekly gate check template for phase unlocks                  |
 | agent-platform-filter  | `system/agent-platform-filter.md`  | Pre-flight content agent filter (skip LOCKED platforms)       |
 | quality-gates          | `system/quality-gates.md`          | Pipeline quality checkpoints, rejection taxonomy, tier rules  |
+| product-content-map    | `system/product-content-map.md`    | Feature-to-content mapping, vertical features, coverage matrix |
+| budget-tracker         | `system/budget-tracker.md`         | Monthly budget, ROI tracking, CAC by channel, budget rules    |
+| rejection-tracker      | `system/rejection-tracker.md`      | Content rejection log, weekly summary, agent rejection rates  |
+| auto-escalation-rules  | `system/auto-escalation-rules.md`  | Tier promotion triggers, agent alerts, batch approval rules   |
+| ab-testing-framework   | `system/ab-testing-framework.md`   | A/B test protocol, active tests log, quarterly review cycle   |
+| queue README           | `queue/README.md`                  | Approval queue process, folder structure, daily review steps  |
+| customer-signals       | `data/customer-signals.md`         | Founder-filled weekly trial/conversion/feedback tracking      |
 
 ---
 
