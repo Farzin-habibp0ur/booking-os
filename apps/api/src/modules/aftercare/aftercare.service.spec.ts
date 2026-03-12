@@ -148,9 +148,9 @@ describe('AftercareService', () => {
     it('should throw NotFoundException if protocol not found', async () => {
       mockPrisma.aftercareProtocol.findFirst.mockResolvedValue(null);
 
-      await expect(
-        service.updateProtocol('biz-1', 'missing', { name: 'X' }),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.updateProtocol('biz-1', 'missing', { name: 'X' })).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -241,13 +241,11 @@ describe('AftercareService', () => {
     it('should fall back to default protocol if no service-specific found', async () => {
       mockPrisma.booking.findUnique.mockResolvedValue(mockBooking);
       mockPrisma.aftercareEnrollment.findUnique.mockResolvedValue(null);
-      mockPrisma.aftercareProtocol.findFirst
-        .mockResolvedValueOnce(null)
-        .mockResolvedValueOnce({
-          id: 'default-proto',
-          name: 'Default',
-          steps: [{ id: 's1', delayHours: 24, sequenceOrder: 1 }],
-        });
+      mockPrisma.aftercareProtocol.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce({
+        id: 'default-proto',
+        name: 'Default',
+        steps: [{ id: 's1', delayHours: 24, sequenceOrder: 1 }],
+      });
       mockPrisma.aftercareEnrollment.create.mockResolvedValue({ id: 'enroll-2' });
 
       const result = await service.enrollCustomer('book-1');
@@ -271,9 +269,7 @@ describe('AftercareService', () => {
     it('should throw NotFoundException if enrollment not found', async () => {
       mockPrisma.aftercareEnrollment.findFirst.mockResolvedValue(null);
 
-      await expect(service.cancelEnrollment('biz-1', 'missing')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.cancelEnrollment('biz-1', 'missing')).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -293,7 +289,12 @@ describe('AftercareService', () => {
             },
             protocol: {
               steps: [
-                { id: 'step-1', body: 'Hi {{customerName}}!', subject: 'Check-in', channel: 'WHATSAPP' },
+                {
+                  id: 'step-1',
+                  body: 'Hi {{customerName}}!',
+                  subject: 'Check-in',
+                  channel: 'WHATSAPP',
+                },
               ],
             },
           },

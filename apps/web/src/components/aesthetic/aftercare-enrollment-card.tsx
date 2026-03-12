@@ -78,7 +78,10 @@ export function AftercareEnrollmentCard({ enrollment, onCancel, compact }: Props
   const progress = totalCount > 0 ? (sentCount / totalCount) * 100 : 0;
 
   return (
-    <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-soft" data-testid="aftercare-enrollment-card">
+    <div
+      className="bg-white border border-slate-100 rounded-2xl p-5 shadow-soft"
+      data-testid="aftercare-enrollment-card"
+    >
       <div className="flex items-start justify-between mb-3">
         <div>
           <div className="flex items-center gap-2">
@@ -89,7 +92,9 @@ export function AftercareEnrollmentCard({ enrollment, onCancel, compact }: Props
             {enrollment.booking.service.name} &middot; {formatDate(enrollment.booking.startTime)}
           </p>
         </div>
-        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${aftercareBadgeClasses(enrollment.status)}`}>
+        <span
+          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${aftercareBadgeClasses(enrollment.status)}`}
+        >
           {AFTERCARE_STATUS_STYLES[enrollment.status]?.label || enrollment.status}
         </span>
       </div>
@@ -97,7 +102,9 @@ export function AftercareEnrollmentCard({ enrollment, onCancel, compact }: Props
       {/* Progress bar */}
       <div className="mb-3">
         <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
-          <span>{sentCount} of {totalCount} messages sent</span>
+          <span>
+            {sentCount} of {totalCount} messages sent
+          </span>
           <span>{Math.round(progress)}%</span>
         </div>
         <div className="w-full bg-slate-100 rounded-full h-1.5">
@@ -114,19 +121,27 @@ export function AftercareEnrollmentCard({ enrollment, onCancel, compact }: Props
           {enrollment.messages.map((msg, idx) => {
             const step = enrollment.protocol.steps.find((s) => s.id === msg.stepId);
             return (
-              <div key={msg.id} className="flex items-start gap-2.5" data-testid={`aftercare-message-${idx}`}>
+              <div
+                key={msg.id}
+                className="flex items-start gap-2.5"
+                data-testid={`aftercare-message-${idx}`}
+              >
                 <div className="mt-0.5">{statusIcon(msg.status)}</div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-medium text-slate-700">
                       {step?.subject || `Step ${idx + 1}`}
                     </span>
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${aftercareBadgeClasses(msg.status)}`}>
+                    <span
+                      className={`text-[10px] px-1.5 py-0.5 rounded-full ${aftercareBadgeClasses(msg.status)}`}
+                    >
                       {msg.status}
                     </span>
                   </div>
                   <p className="text-[11px] text-slate-400">
-                    {msg.sentAt ? `Sent ${formatDateTime(msg.sentAt)}` : `Scheduled ${formatDateTime(msg.scheduledFor)}`}
+                    {msg.sentAt
+                      ? `Sent ${formatDateTime(msg.sentAt)}`
+                      : `Scheduled ${formatDateTime(msg.scheduledFor)}`}
                   </p>
                 </div>
               </div>

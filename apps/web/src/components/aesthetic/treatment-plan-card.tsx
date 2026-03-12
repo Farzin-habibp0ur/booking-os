@@ -2,10 +2,7 @@
 
 import { Clock, CheckCircle2, AlertCircle, DollarSign } from 'lucide-react';
 import { cn } from '@/lib/cn';
-import {
-  TREATMENT_PLAN_STATUS_STYLES,
-  treatmentPlanBadgeClasses,
-} from '@/lib/design-tokens';
+import { TREATMENT_PLAN_STATUS_STYLES, treatmentPlanBadgeClasses } from '@/lib/design-tokens';
 
 interface Session {
   id: string;
@@ -67,9 +64,7 @@ export function TreatmentPlanCard({
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div>
-          {plan.customer && (
-            <p className="text-xs text-slate-500 mb-0.5">{plan.customer.name}</p>
-          )}
+          {plan.customer && <p className="text-xs text-slate-500 mb-0.5">{plan.customer.name}</p>}
           <p className="text-sm font-medium text-slate-900">
             Treatment Plan
             {plan.createdBy && (
@@ -77,7 +72,8 @@ export function TreatmentPlanCard({
             )}
           </p>
           <p className="text-xs text-slate-400 mt-0.5">
-            Created {new Date(plan.createdAt).toLocaleDateString('en-US', {
+            Created{' '}
+            {new Date(plan.createdAt).toLocaleDateString('en-US', {
               month: 'short',
               day: 'numeric',
               year: 'numeric',
@@ -119,7 +115,9 @@ export function TreatmentPlanCard({
       <div className="flex items-center gap-4 text-xs text-slate-500">
         <div className="flex items-center gap-1">
           <Clock size={12} />
-          <span>{totalSessions} session{totalSessions !== 1 ? 's' : ''}</span>
+          <span>
+            {totalSessions} session{totalSessions !== 1 ? 's' : ''}
+          </span>
         </div>
         {estimate > 0 && (
           <div className="flex items-center gap-1">

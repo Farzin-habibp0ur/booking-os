@@ -72,7 +72,15 @@ interface DealDetail {
   }>;
 }
 
-const STAGES = ['INQUIRY', 'QUALIFIED', 'TEST_DRIVE', 'NEGOTIATION', 'FINANCE', 'CLOSED_WON', 'CLOSED_LOST'];
+const STAGES = [
+  'INQUIRY',
+  'QUALIFIED',
+  'TEST_DRIVE',
+  'NEGOTIATION',
+  'FINANCE',
+  'CLOSED_WON',
+  'CLOSED_LOST',
+];
 const ACTIVE_STAGES = ['INQUIRY', 'QUALIFIED', 'TEST_DRIVE', 'NEGOTIATION', 'FINANCE'];
 
 const ACTIVITY_ICONS: Record<string, string> = {
@@ -347,9 +355,7 @@ export default function DealDetailPage() {
               <div>
                 <span className="text-slate-400 text-xs">Trade-In Value</span>
                 <p className="text-slate-700 dark:text-slate-300">
-                  {deal.tradeInValue != null
-                    ? `$${deal.tradeInValue.toLocaleString()}`
-                    : '—'}
+                  {deal.tradeInValue != null ? `$${deal.tradeInValue.toLocaleString()}` : '—'}
                 </p>
               </div>
               <div>
@@ -396,9 +402,7 @@ export default function DealDetailPage() {
           {/* Activity Timeline */}
           <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-5">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                Activity
-              </h2>
+              <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Activity</h2>
               <button
                 onClick={() => setShowActivityModal(true)}
                 className="flex items-center gap-1 text-xs text-sage-600 hover:text-sage-700"
@@ -409,9 +413,7 @@ export default function DealDetailPage() {
             </div>
 
             {deal.activities.length === 0 ? (
-              <p className="text-sm text-slate-400 text-center py-6">
-                No activities yet
-              </p>
+              <p className="text-sm text-slate-400 text-center py-6">No activities yet</p>
             ) : (
               <div className="space-y-3">
                 {deal.activities.map((activity) => (
@@ -423,14 +425,10 @@ export default function DealDetailPage() {
                       {ACTIVITY_ICONS[activity.type] || '📋'}
                     </span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-slate-700 dark:text-slate-300">
-                        {activity.description}
-                      </p>
+                      <p className="text-slate-700 dark:text-slate-300">{activity.description}</p>
                       <div className="flex items-center gap-2 text-[10px] text-slate-400 mt-0.5">
                         {activity.createdBy && <span>{activity.createdBy.name}</span>}
-                        <span>
-                          {new Date(activity.createdAt).toLocaleDateString()}
-                        </span>
+                        <span>{new Date(activity.createdAt).toLocaleDateString()}</span>
                         {activity.type && (
                           <span className="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
                             {activity.type.replace(/_/g, ' ')}
@@ -531,9 +529,7 @@ export default function DealDetailPage() {
                 <p className="font-medium text-slate-900 dark:text-slate-100">
                   {deal.vehicle.year} {deal.vehicle.make} {deal.vehicle.model}
                 </p>
-                {deal.vehicle.trim && (
-                  <p className="text-slate-500">{deal.vehicle.trim}</p>
-                )}
+                {deal.vehicle.trim && <p className="text-slate-500">{deal.vehicle.trim}</p>}
                 <div className="flex justify-between text-xs">
                   <span className="text-slate-400">Stock #</span>
                   <span className="font-mono text-slate-600">{deal.vehicle.stockNumber}</span>
@@ -541,7 +537,9 @@ export default function DealDetailPage() {
                 {deal.vehicle.askingPrice != null && (
                   <div className="flex justify-between text-xs">
                     <span className="text-slate-400">Asking Price</span>
-                    <span className="font-semibold">${deal.vehicle.askingPrice.toLocaleString()}</span>
+                    <span className="font-semibold">
+                      ${deal.vehicle.askingPrice.toLocaleString()}
+                    </span>
                   </div>
                 )}
                 <a

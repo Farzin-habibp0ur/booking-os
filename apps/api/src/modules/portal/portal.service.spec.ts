@@ -273,8 +273,20 @@ describe('PortalService', () => {
       };
       (prisma.customer.findFirst as jest.Mock).mockResolvedValue(customerWithIntake);
       (prisma.booking.findMany as jest.Mock).mockResolvedValue([
-        { id: 'b1', notes: 'Follow-up needed', startTime: new Date('2027-01-10'), service: { name: 'Consult' }, staff: { name: 'Dr. Smith' } },
-        { id: 'b2', notes: 'All clear', startTime: new Date('2027-01-12'), service: { name: 'Treatment' }, staff: null },
+        {
+          id: 'b1',
+          notes: 'Follow-up needed',
+          startTime: new Date('2027-01-10'),
+          service: { name: 'Consult' },
+          staff: { name: 'Dr. Smith' },
+        },
+        {
+          id: 'b2',
+          notes: 'All clear',
+          startTime: new Date('2027-01-12'),
+          service: { name: 'Treatment' },
+          staff: null,
+        },
       ]);
 
       const result = await service.getDocuments('cust1', 'biz1');
@@ -304,9 +316,9 @@ describe('PortalService', () => {
     it('throws NotFoundException when invoice not found', async () => {
       (prisma.invoice.findFirst as jest.Mock).mockResolvedValue(null);
 
-      await expect(
-        service.createInvoicePaymentSession('cust1', 'biz1', 'inv-bad'),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.createInvoicePaymentSession('cust1', 'biz1', 'inv-bad')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 });

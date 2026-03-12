@@ -76,7 +76,10 @@ describe('TreatmentPlanService', () => {
         TreatmentPlanService,
         { provide: PrismaService, useValue: prisma },
         { provide: NotificationService, useValue: notificationService },
-        { provide: ConfigService, useValue: { get: jest.fn().mockReturnValue('http://localhost:3000') } },
+        {
+          provide: ConfigService,
+          useValue: { get: jest.fn().mockReturnValue('http://localhost:3000') },
+        },
       ],
     }).compile();
 
@@ -188,9 +191,9 @@ describe('TreatmentPlanService', () => {
     it('validates status transitions', async () => {
       prisma.treatmentPlan.findFirst.mockResolvedValue(mockPlan);
 
-      await expect(
-        service.update(businessId, 'plan-1', { status: 'COMPLETED' }),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.update(businessId, 'plan-1', { status: 'COMPLETED' })).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('allows valid status transition DRAFT -> PROPOSED', async () => {
@@ -243,9 +246,7 @@ describe('TreatmentPlanService', () => {
         status: 'COMPLETED',
         completedAt: new Date(),
       });
-      prisma.treatmentSession.findMany.mockResolvedValue([
-        { status: 'COMPLETED' },
-      ]);
+      prisma.treatmentSession.findMany.mockResolvedValue([{ status: 'COMPLETED' }]);
       prisma.treatmentPlan.update.mockResolvedValue({ ...mockPlan, status: 'COMPLETED' });
       prisma.treatmentPlan.findUnique.mockResolvedValue(mockPlan);
 

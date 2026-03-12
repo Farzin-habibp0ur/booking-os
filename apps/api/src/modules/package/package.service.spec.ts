@@ -43,10 +43,7 @@ describe('PackageService', () => {
     };
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        PackageService,
-        { provide: PrismaService, useValue: prisma },
-      ],
+      providers: [PackageService, { provide: PrismaService, useValue: prisma }],
     }).compile();
 
     service = module.get<PackageService>(PackageService);
@@ -55,14 +52,16 @@ describe('PackageService', () => {
   describe('validateWellnessVertical', () => {
     it('should throw if business is not wellness', async () => {
       prisma.business.findUnique.mockResolvedValue({ verticalPack: 'aesthetic' });
-      await expect(service.create(businessId, { name: 'Test', totalSessions: 5, price: 100 }))
-        .rejects.toThrow(BadRequestException);
+      await expect(
+        service.create(businessId, { name: 'Test', totalSessions: 5, price: 100 }),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should throw if business not found', async () => {
       prisma.business.findUnique.mockResolvedValue(null);
-      await expect(service.create(businessId, { name: 'Test', totalSessions: 5, price: 100 }))
-        .rejects.toThrow(NotFoundException);
+      await expect(
+        service.create(businessId, { name: 'Test', totalSessions: 5, price: 100 }),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -100,7 +99,12 @@ describe('PackageService', () => {
       prisma.service.findFirst.mockResolvedValue(null);
 
       await expect(
-        service.create(businessId, { name: 'Test', totalSessions: 5, price: 100, serviceId: 'bad-id' }),
+        service.create(businessId, {
+          name: 'Test',
+          totalSessions: 5,
+          price: 100,
+          serviceId: 'bad-id',
+        }),
       ).rejects.toThrow(NotFoundException);
     });
   });
@@ -147,7 +151,9 @@ describe('PackageService', () => {
 
     it('should throw if package not found', async () => {
       prisma.servicePackage.findFirst.mockResolvedValue(null);
-      await expect(service.update(businessId, 'bad', { name: 'x' })).rejects.toThrow(NotFoundException);
+      await expect(service.update(businessId, 'bad', { name: 'x' })).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -203,9 +209,9 @@ describe('PackageService', () => {
       prisma.business.findUnique.mockResolvedValue({ verticalPack: 'wellness' });
       prisma.servicePackage.findFirst.mockResolvedValue(null);
 
-      await expect(
-        service.purchase(businessId, 'pkg-1', { customerId: 'cust-1' }),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.purchase(businessId, 'pkg-1', { customerId: 'cust-1' })).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw if customer not found', async () => {
@@ -221,9 +227,9 @@ describe('PackageService', () => {
       });
       prisma.customer.findFirst.mockResolvedValue(null);
 
-      await expect(
-        service.purchase(businessId, 'pkg-1', { customerId: 'bad' }),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.purchase(businessId, 'pkg-1', { customerId: 'bad' })).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -244,7 +250,9 @@ describe('PackageService', () => {
           update: jest.fn(),
         },
         booking: {
-          findFirst: jest.fn().mockResolvedValue({ id: 'book-1', serviceId: 'svc-1', customerId: 'cust-1' }),
+          findFirst: jest
+            .fn()
+            .mockResolvedValue({ id: 'book-1', serviceId: 'svc-1', customerId: 'cust-1' }),
         },
         packageRedemption: {
           findUnique: jest.fn().mockResolvedValue(null),
@@ -275,7 +283,9 @@ describe('PackageService', () => {
           update: jest.fn(),
         },
         booking: {
-          findFirst: jest.fn().mockResolvedValue({ id: 'book-1', serviceId: 'svc-1', customerId: 'cust-1' }),
+          findFirst: jest
+            .fn()
+            .mockResolvedValue({ id: 'book-1', serviceId: 'svc-1', customerId: 'cust-1' }),
         },
         packageRedemption: {
           findUnique: jest.fn().mockResolvedValue(null),
@@ -306,9 +316,9 @@ describe('PackageService', () => {
       };
       prisma.$transaction.mockImplementation((fn: any) => fn(txMock));
 
-      await expect(
-        service.redeem(businessId, 'pur-1', { bookingId: 'book-1' }),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.redeem(businessId, 'pur-1', { bookingId: 'book-1' })).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should reject if wrong service', async () => {
@@ -326,7 +336,9 @@ describe('PackageService', () => {
           }),
         },
         booking: {
-          findFirst: jest.fn().mockResolvedValue({ id: 'book-1', serviceId: 'svc-other', customerId: 'cust-1' }),
+          findFirst: jest
+            .fn()
+            .mockResolvedValue({ id: 'book-1', serviceId: 'svc-other', customerId: 'cust-1' }),
         },
         packageRedemption: {
           findUnique: jest.fn().mockResolvedValue(null),
@@ -334,9 +346,9 @@ describe('PackageService', () => {
       };
       prisma.$transaction.mockImplementation((fn: any) => fn(txMock));
 
-      await expect(
-        service.redeem(businessId, 'pur-1', { bookingId: 'book-1' }),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.redeem(businessId, 'pur-1', { bookingId: 'book-1' })).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should reject duplicate redemption for same booking', async () => {
@@ -354,7 +366,9 @@ describe('PackageService', () => {
           }),
         },
         booking: {
-          findFirst: jest.fn().mockResolvedValue({ id: 'book-1', serviceId: 'svc-1', customerId: 'cust-1' }),
+          findFirst: jest
+            .fn()
+            .mockResolvedValue({ id: 'book-1', serviceId: 'svc-1', customerId: 'cust-1' }),
         },
         packageRedemption: {
           findUnique: jest.fn().mockResolvedValue({ id: 'existing-red' }),
@@ -362,9 +376,9 @@ describe('PackageService', () => {
       };
       prisma.$transaction.mockImplementation((fn: any) => fn(txMock));
 
-      await expect(
-        service.redeem(businessId, 'pur-1', { bookingId: 'book-1' }),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.redeem(businessId, 'pur-1', { bookingId: 'book-1' })).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 

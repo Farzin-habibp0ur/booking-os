@@ -125,7 +125,9 @@ export class VerticalActionHandler {
     });
 
     if (openDeal) {
-      const vehicleLabel = openDeal.vehicle ? `${openDeal.vehicle.year} ${openDeal.vehicle.make} ${openDeal.vehicle.model}` : 'vehicle';
+      const vehicleLabel = openDeal.vehicle
+        ? `${openDeal.vehicle.year} ${openDeal.vehicle.make} ${openDeal.vehicle.model}`
+        : 'vehicle';
       return this.actionCardService.create({
         businessId: ctx.businessId,
         type: 'DEAL_UPDATE',
@@ -203,8 +205,12 @@ export class VerticalActionHandler {
 
     const cards = [];
     for (const deal of stalledDeals) {
-      const vehicleLabel = deal.vehicle ? `${deal.vehicle.year} ${deal.vehicle.make} ${deal.vehicle.model}` : '';
-      const daysStalled = Math.floor((Date.now() - new Date(deal.updatedAt).getTime()) / (1000 * 60 * 60 * 24));
+      const vehicleLabel = deal.vehicle
+        ? `${deal.vehicle.year} ${deal.vehicle.make} ${deal.vehicle.model}`
+        : '';
+      const daysStalled = Math.floor(
+        (Date.now() - new Date(deal.updatedAt).getTime()) / (1000 * 60 * 60 * 24),
+      );
       try {
         const card = await this.actionCardService.create({
           businessId,

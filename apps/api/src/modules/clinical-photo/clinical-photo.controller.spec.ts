@@ -32,19 +32,34 @@ describe('ClinicalPhotoController', () => {
   describe('POST /clinical-photos', () => {
     it('should throw if no file provided', async () => {
       await expect(
-        controller.upload('biz-1', null as any, { customerId: 'c1', type: 'BEFORE', bodyArea: 'face' }, { user: { staffId: 's1' } }),
+        controller.upload(
+          'biz-1',
+          null as any,
+          { customerId: 'c1', type: 'BEFORE', bodyArea: 'face' },
+          { user: { staffId: 's1' } },
+        ),
       ).rejects.toThrow(BadRequestException);
     });
 
     it('should throw if required fields missing', async () => {
-      const file = { buffer: Buffer.from(''), mimetype: 'image/jpeg', size: 1024, originalname: 'test.jpg' };
+      const file = {
+        buffer: Buffer.from(''),
+        mimetype: 'image/jpeg',
+        size: 1024,
+        originalname: 'test.jpg',
+      };
       await expect(
         controller.upload('biz-1', file as any, { customerId: 'c1' }, { user: { staffId: 's1' } }),
       ).rejects.toThrow(BadRequestException);
     });
 
     it('should call service.upload', async () => {
-      const file = { buffer: Buffer.from(''), mimetype: 'image/jpeg', size: 1024, originalname: 'test.jpg' };
+      const file = {
+        buffer: Buffer.from(''),
+        mimetype: 'image/jpeg',
+        size: 1024,
+        originalname: 'test.jpg',
+      };
       const photo = { id: 'p1' };
       mockService.upload.mockResolvedValue(photo);
 

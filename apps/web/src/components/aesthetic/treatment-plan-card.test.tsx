@@ -58,12 +58,7 @@ describe('TreatmentPlanCard', () => {
     const onAccept = jest.fn();
     const onDecline = jest.fn();
     render(
-      <TreatmentPlanCard
-        plan={mockPlan}
-        isPortal
-        onAccept={onAccept}
-        onDecline={onDecline}
-      />,
+      <TreatmentPlanCard plan={mockPlan} isPortal onAccept={onAccept} onDecline={onDecline} />,
     );
     expect(screen.getByText('Accept Plan')).toBeInTheDocument();
     expect(screen.getByText('Decline')).toBeInTheDocument();

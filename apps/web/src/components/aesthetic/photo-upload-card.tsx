@@ -54,20 +54,23 @@ export function PhotoUploadCard({
   const inputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
-  const handleFile = useCallback((f: File) => {
-    if (!f.type.startsWith('image/')) {
-      toast('Only image files are allowed', 'error');
-      return;
-    }
-    if (f.size > 5 * 1024 * 1024) {
-      toast('Image must be under 5MB', 'error');
-      return;
-    }
-    setFile(f);
-    const reader = new FileReader();
-    reader.onload = (e) => setPreview(e.target?.result as string);
-    reader.readAsDataURL(f);
-  }, [toast]);
+  const handleFile = useCallback(
+    (f: File) => {
+      if (!f.type.startsWith('image/')) {
+        toast('Only image files are allowed', 'error');
+        return;
+      }
+      if (f.size > 5 * 1024 * 1024) {
+        toast('Image must be under 5MB', 'error');
+        return;
+      }
+      setFile(f);
+      const reader = new FileReader();
+      reader.onload = (e) => setPreview(e.target?.result as string);
+      reader.readAsDataURL(f);
+    },
+    [toast],
+  );
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
@@ -232,11 +235,7 @@ export function PhotoUploadCard({
             disabled={uploading || !bodyArea}
             className="flex items-center gap-1.5 bg-sage-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-sage-700 transition-colors disabled:opacity-50 active:scale-95 btn-press"
           >
-            {uploading ? (
-              <Loader2 size={14} className="animate-spin" />
-            ) : (
-              <Upload size={14} />
-            )}
+            {uploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
             {uploading ? 'Uploading...' : 'Upload Photo'}
           </button>
         </div>

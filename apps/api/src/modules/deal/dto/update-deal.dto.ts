@@ -1,4 +1,14 @@
-import { IsString, IsOptional, IsNumber, IsInt, IsIn, IsDateString, MaxLength, Min, Max } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsNumber,
+  IsInt,
+  IsIn,
+  IsDateString,
+  MaxLength,
+  Min,
+  Max,
+} from 'class-validator';
 
 export class UpdateDealDto {
   @IsString()

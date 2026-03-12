@@ -4,13 +4,7 @@ import { ReactNode } from 'react';
 import { useParams, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { cn } from '@/lib/cn';
-import {
-  LayoutDashboard,
-  CalendarPlus,
-  Receipt,
-  FolderOpen,
-  UserCircle,
-} from 'lucide-react';
+import { LayoutDashboard, CalendarPlus, Receipt, FolderOpen, UserCircle } from 'lucide-react';
 
 const NAV_ITEMS = [
   { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -28,9 +22,8 @@ export default function PortalSlugLayout({ children }: { children: ReactNode }) 
   const isLoginPage = pathname === `/portal/${slug}`;
   if (isLoginPage) return <>{children}</>;
 
-  const activeKey = NAV_ITEMS.find((item) =>
-    pathname.includes(`/portal/${slug}/${item.key}`),
-  )?.key || 'dashboard';
+  const activeKey =
+    NAV_ITEMS.find((item) => pathname.includes(`/portal/${slug}/${item.key}`))?.key || 'dashboard';
 
   return (
     <div className="space-y-0">

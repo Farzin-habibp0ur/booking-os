@@ -1382,9 +1382,7 @@ describe('AvailabilityService', () => {
       prisma.staffServicePrice.findMany.mockResolvedValue([]);
 
       // Only Alice has valid RMT cert
-      prisma.staffCertification.findMany.mockResolvedValue([
-        { staffId: 's1' },
-      ] as any);
+      prisma.staffCertification.findMany.mockResolvedValue([{ staffId: 's1' }] as any);
 
       prisma.workingHours.findUnique.mockResolvedValue({
         staffId: 's1',
@@ -1420,9 +1418,7 @@ describe('AvailabilityService', () => {
       prisma.staff.findMany.mockResolvedValue([{ id: 's1', name: 'Alice' }] as any);
       prisma.staffServicePrice.findMany.mockResolvedValue([]);
 
-      prisma.resource.findMany.mockResolvedValue([
-        { id: 'res-1', name: 'Room A' },
-      ] as any);
+      prisma.resource.findMany.mockResolvedValue([{ id: 'res-1', name: 'Room A' }] as any);
 
       prisma.workingHours.findUnique.mockResolvedValue({
         staffId: 's1',

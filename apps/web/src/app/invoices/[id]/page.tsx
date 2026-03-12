@@ -6,16 +6,7 @@ import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { DetailSkeleton } from '@/components/skeleton';
 import { INVOICE_STATUS_STYLES, invoiceBadgeClasses } from '@/lib/design-tokens';
-import {
-  ArrowLeft,
-  Send,
-  DollarSign,
-  FileText,
-  X,
-  Plus,
-  Trash2,
-  Ban,
-} from 'lucide-react';
+import { ArrowLeft, Send, DollarSign, FileText, X, Plus, Trash2, Ban } from 'lucide-react';
 
 interface LineItem {
   id: string;
@@ -63,7 +54,12 @@ export default function InvoiceDetailPage() {
   const [invoice, setInvoice] = useState<InvoiceDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [paymentModal, setPaymentModal] = useState(false);
-  const [paymentForm, setPaymentForm] = useState({ amount: '', method: 'CASH', reference: '', notes: '' });
+  const [paymentForm, setPaymentForm] = useState({
+    amount: '',
+    method: 'CASH',
+    reference: '',
+    notes: '',
+  });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -127,7 +123,12 @@ export default function InvoiceDetailPage() {
     }
   };
 
-  if (loading) return <div className="p-6"><DetailSkeleton /></div>;
+  if (loading)
+    return (
+      <div className="p-6">
+        <DetailSkeleton />
+      </div>
+    );
   if (!invoice) return <div className="p-6 text-slate-500">Invoice not found</div>;
 
   const remaining = Number(invoice.total) - Number(invoice.paidAmount);
@@ -204,7 +205,9 @@ export default function InvoiceDetailPage() {
         {/* Invoice info grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="bg-white rounded-2xl shadow-soft p-5 space-y-3">
-            <h3 className="text-xs font-medium text-slate-500 uppercase tracking-wider">Customer</h3>
+            <h3 className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+              Customer
+            </h3>
             <div>
               <p className="text-sm font-medium text-slate-900">{invoice.customer.name}</p>
               {invoice.customer.email && (
@@ -226,7 +229,12 @@ export default function InvoiceDetailPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">Due Date</span>
-                <span className={cn('font-medium', invoice.status === 'OVERDUE' ? 'text-red-600' : 'text-slate-700')}>
+                <span
+                  className={cn(
+                    'font-medium',
+                    invoice.status === 'OVERDUE' ? 'text-red-600' : 'text-slate-700',
+                  )}
+                >
                   {new Date(invoice.dueDate).toLocaleDateString()}
                 </span>
               </div>
@@ -253,15 +261,25 @@ export default function InvoiceDetailPage() {
         {/* Line items */}
         <div className="bg-white rounded-2xl shadow-soft overflow-hidden">
           <div className="px-5 pt-4 pb-2">
-            <h3 className="text-xs font-medium text-slate-500 uppercase tracking-wider">Line Items</h3>
+            <h3 className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+              Line Items
+            </h3>
           </div>
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-100">
-                <th className="text-left px-5 py-2 text-xs font-medium text-slate-500">Description</th>
-                <th className="text-right px-5 py-2 text-xs font-medium text-slate-500 w-20">Qty</th>
-                <th className="text-right px-5 py-2 text-xs font-medium text-slate-500 w-28">Price</th>
-                <th className="text-right px-5 py-2 text-xs font-medium text-slate-500 w-28">Total</th>
+                <th className="text-left px-5 py-2 text-xs font-medium text-slate-500">
+                  Description
+                </th>
+                <th className="text-right px-5 py-2 text-xs font-medium text-slate-500 w-20">
+                  Qty
+                </th>
+                <th className="text-right px-5 py-2 text-xs font-medium text-slate-500 w-28">
+                  Price
+                </th>
+                <th className="text-right px-5 py-2 text-xs font-medium text-slate-500 w-28">
+                  Total
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -274,8 +292,12 @@ export default function InvoiceDetailPage() {
                     )}
                   </td>
                   <td className="px-5 py-3 text-right text-slate-600">{li.quantity}</td>
-                  <td className="px-5 py-3 text-right text-slate-600">${Number(li.unitPrice).toFixed(2)}</td>
-                  <td className="px-5 py-3 text-right font-medium text-slate-900">${Number(li.total).toFixed(2)}</td>
+                  <td className="px-5 py-3 text-right text-slate-600">
+                    ${Number(li.unitPrice).toFixed(2)}
+                  </td>
+                  <td className="px-5 py-3 text-right font-medium text-slate-900">
+                    ${Number(li.total).toFixed(2)}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -327,13 +349,17 @@ export default function InvoiceDetailPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {invoice.notes && (
               <div className="bg-white rounded-2xl shadow-soft p-5">
-                <h3 className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">Notes</h3>
+                <h3 className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">
+                  Notes
+                </h3>
                 <p className="text-sm text-slate-700 whitespace-pre-wrap">{invoice.notes}</p>
               </div>
             )}
             {invoice.terms && (
               <div className="bg-white rounded-2xl shadow-soft p-5">
-                <h3 className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">Terms</h3>
+                <h3 className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">
+                  Terms
+                </h3>
                 <p className="text-sm text-slate-700 whitespace-pre-wrap">{invoice.terms}</p>
               </div>
             )}
@@ -356,9 +382,7 @@ export default function InvoiceDetailPage() {
                     <p className="text-sm text-slate-700">
                       ${Number(p.amount).toFixed(2)} via {p.method}
                     </p>
-                    {p.reference && (
-                      <p className="text-xs text-slate-400">Ref: {p.reference}</p>
-                    )}
+                    {p.reference && <p className="text-xs text-slate-400">Ref: {p.reference}</p>}
                   </div>
                   <span className="text-xs text-slate-500">
                     {new Date(p.createdAt).toLocaleDateString()}

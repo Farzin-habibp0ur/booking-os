@@ -33,16 +33,13 @@ function ComparisonSlider({ comparison }: { comparison: PhotoComparison }) {
   const [sliderPos, setSliderPos] = useState(50);
   const [isDragging, setIsDragging] = useState(false);
 
-  const updateSlider = useCallback(
-    (clientX: number) => {
-      if (!containerRef.current) return;
-      const rect = containerRef.current.getBoundingClientRect();
-      const x = clientX - rect.left;
-      const pct = Math.max(0, Math.min(100, (x / rect.width) * 100));
-      setSliderPos(pct);
-    },
-    [],
-  );
+  const updateSlider = useCallback((clientX: number) => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const pct = Math.max(0, Math.min(100, (x / rect.width) * 100));
+    setSliderPos(pct);
+  }, []);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);
@@ -70,9 +67,7 @@ function ComparisonSlider({ comparison }: { comparison: PhotoComparison }) {
             {comparison.bodyArea.charAt(0).toUpperCase() + comparison.bodyArea.slice(1)}
           </span>
         </div>
-        {comparison.notes && (
-          <p className="text-xs text-slate-500 mt-1">{comparison.notes}</p>
-        )}
+        {comparison.notes && <p className="text-xs text-slate-500 mt-1">{comparison.notes}</p>}
       </div>
 
       {/* Slider */}
@@ -94,10 +89,7 @@ function ComparisonSlider({ comparison }: { comparison: PhotoComparison }) {
         />
 
         {/* Before photo (clipped) */}
-        <div
-          className="absolute inset-0 overflow-hidden"
-          style={{ width: `${sliderPos}%` }}
-        >
+        <div className="absolute inset-0 overflow-hidden" style={{ width: `${sliderPos}%` }}>
           <img
             src={comparison.beforePhoto.fileUrl}
             alt="Before"

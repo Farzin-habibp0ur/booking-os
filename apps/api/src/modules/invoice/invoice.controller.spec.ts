@@ -24,7 +24,9 @@ describe('InvoiceController', () => {
       update: jest.fn().mockResolvedValue(mockInvoice),
       send: jest.fn().mockResolvedValue({ ...mockInvoice, status: 'SENT' }),
       cancel: jest.fn().mockResolvedValue({ ...mockInvoice, status: 'CANCELLED' }),
-      recordPayment: jest.fn().mockResolvedValue({ payment: { id: 'pay1' }, invoiceStatus: 'PAID' }),
+      recordPayment: jest
+        .fn()
+        .mockResolvedValue({ payment: { id: 'pay1' }, invoiceStatus: 'PAID' }),
       stats: jest.fn().mockResolvedValue({ totalOutstanding: 500, overdueCount: 2 }),
     };
 
@@ -89,11 +91,21 @@ describe('InvoiceController', () => {
   });
 
   it('should record payment', async () => {
-    const result = await controller.recordPayment('biz1', 'inv1', {
-      amount: 100,
-      method: 'CASH',
-    }, { id: 'staff1' });
-    expect(service.recordPayment).toHaveBeenCalledWith('biz1', 'inv1', expect.any(Object), 'staff1');
+    const result = await controller.recordPayment(
+      'biz1',
+      'inv1',
+      {
+        amount: 100,
+        method: 'CASH',
+      },
+      { id: 'staff1' },
+    );
+    expect(service.recordPayment).toHaveBeenCalledWith(
+      'biz1',
+      'inv1',
+      expect.any(Object),
+      'staff1',
+    );
     expect(result.invoiceStatus).toBe('PAID');
   });
 

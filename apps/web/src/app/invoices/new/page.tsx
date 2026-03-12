@@ -107,12 +107,18 @@ export default function NewInvoicePage() {
   const total = subtotal - discount + taxAmt;
 
   const handleSubmit = async () => {
-    if (!customerId) { setError('Select a customer'); return; }
+    if (!customerId) {
+      setError('Select a customer');
+      return;
+    }
     if (lineItems.some((li) => !li.description || li.unitPrice <= 0)) {
       setError('Fill in all line items');
       return;
     }
-    if (!dueDate) { setError('Set a due date'); return; }
+    if (!dueDate) {
+      setError('Set a due date');
+      return;
+    }
 
     setSubmitting(true);
     setError(null);

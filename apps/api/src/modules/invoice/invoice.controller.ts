@@ -17,18 +17,12 @@ export class InvoiceController {
   }
 
   @Post('from-booking/:bookingId')
-  createFromBooking(
-    @BusinessId() businessId: string,
-    @Param('bookingId') bookingId: string,
-  ) {
+  createFromBooking(@BusinessId() businessId: string, @Param('bookingId') bookingId: string) {
     return this.invoiceService.createFromBooking(businessId, bookingId);
   }
 
   @Post('from-quote/:quoteId')
-  createFromQuote(
-    @BusinessId() businessId: string,
-    @Param('quoteId') quoteId: string,
-  ) {
+  createFromQuote(@BusinessId() businessId: string, @Param('quoteId') quoteId: string) {
     return this.invoiceService.createFromQuote(businessId, quoteId);
   }
 

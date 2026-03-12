@@ -361,7 +361,13 @@ export class ReportsService {
     return Object.values(map).sort((a, b) => b.count - a.count);
   }
 
-  async revenueSummary(businessId: string, days: number = 30, startDate?: Date, endDate?: Date, staffId?: string) {
+  async revenueSummary(
+    businessId: string,
+    days: number = 30,
+    startDate?: Date,
+    endDate?: Date,
+    staffId?: string,
+  ) {
     const dateFilter: any = {};
     if (startDate) {
       dateFilter.gte = startDate;
@@ -431,12 +437,14 @@ export class ReportsService {
     });
 
     const prevRevenue = prevRevenueData.reduce((sum, b) => sum + b.service.price, 0);
-    const revenueChange = prevRevenue > 0 ? Math.round(((totalRevenue - prevRevenue) / prevRevenue) * 100) : 0;
+    const revenueChange =
+      prevRevenue > 0 ? Math.round(((totalRevenue - prevRevenue) / prevRevenue) * 100) : 0;
 
     return {
       totalRevenue: Math.round(totalRevenue * 100) / 100,
       bookingCount: bookings.length,
-      avgPerBooking: bookings.length > 0 ? Math.round((totalRevenue / bookings.length) * 100) / 100 : 0,
+      avgPerBooking:
+        bookings.length > 0 ? Math.round((totalRevenue / bookings.length) * 100) / 100 : 0,
       revenueChange,
       byService: Object.values(byService).sort((a, b) => b.revenue - a.revenue),
       byStaff: Object.values(byStaff).sort((a, b) => b.revenue - a.revenue),
@@ -464,32 +472,39 @@ export class ReportsService {
       select: { staffId: true, startTime: true, endTime: true, status: true },
     });
 
-    const periodDays = Math.max(1, Math.ceil(
-      ((endDate || new Date()).getTime() - (startDate || dateFilter.gte).getTime()) / (1000 * 60 * 60 * 24),
-    ));
+    const periodDays = Math.max(
+      1,
+      Math.ceil(
+        ((endDate || new Date()).getTime() - (startDate || dateFilter.gte).getTime()) /
+          (1000 * 60 * 60 * 24),
+      ),
+    );
     const availableHoursPerDay = 8;
     const totalAvailableHours = availableHoursPerDay * periodDays;
 
-    return staff.map((s) => {
-      const staffBookings = bookings.filter((b) => b.staffId === s.id);
-      const bookedMinutes = staffBookings.reduce((sum, b) => {
-        return sum + (b.endTime.getTime() - b.startTime.getTime()) / 60000;
-      }, 0);
-      const bookedHours = Math.round((bookedMinutes / 60) * 10) / 10;
-      const completed = staffBookings.filter((b) => b.status === 'COMPLETED').length;
-      const noShows = staffBookings.filter((b) => b.status === 'NO_SHOW').length;
+    return staff
+      .map((s) => {
+        const staffBookings = bookings.filter((b) => b.staffId === s.id);
+        const bookedMinutes = staffBookings.reduce((sum, b) => {
+          return sum + (b.endTime.getTime() - b.startTime.getTime()) / 60000;
+        }, 0);
+        const bookedHours = Math.round((bookedMinutes / 60) * 10) / 10;
+        const completed = staffBookings.filter((b) => b.status === 'COMPLETED').length;
+        const noShows = staffBookings.filter((b) => b.status === 'NO_SHOW').length;
 
-      return {
-        staffId: s.id,
-        name: s.name,
-        totalBookings: staffBookings.length,
-        completed,
-        noShows,
-        bookedHours,
-        availableHours: totalAvailableHours,
-        utilization: totalAvailableHours > 0 ? Math.round((bookedHours / totalAvailableHours) * 100) : 0,
-      };
-    }).sort((a, b) => b.utilization - a.utilization);
+        return {
+          staffId: s.id,
+          name: s.name,
+          totalBookings: staffBookings.length,
+          completed,
+          noShows,
+          bookedHours,
+          availableHours: totalAvailableHours,
+          utilization:
+            totalAvailableHours > 0 ? Math.round((bookedHours / totalAvailableHours) * 100) : 0,
+        };
+      })
+      .sort((a, b) => b.utilization - a.utilization);
   }
 
   async clientMetrics(businessId: string, days: number = 30, startDate?: Date, endDate?: Date) {
@@ -540,7 +555,10 @@ export class ReportsService {
       },
     });
 
-    const customerRevenue: Record<string, { name: string; email: string; revenue: number; visits: number }> = {};
+    const customerRevenue: Record<
+      string,
+      { name: string; email: string; revenue: number; visits: number }
+    > = {};
     for (const b of completedBookings) {
       const c = b.customer;
       if (!customerRevenue[c.id]) {
@@ -562,14 +580,20 @@ export class ReportsService {
       newCustomers,
       returningCustomers: returningCount,
       newBookingCustomers,
-      retentionRate: uniqueCustomerIds.length > 0
-        ? Math.round((returningCount / uniqueCustomerIds.length) * 100)
-        : 0,
+      retentionRate:
+        uniqueCustomerIds.length > 0
+          ? Math.round((returningCount / uniqueCustomerIds.length) * 100)
+          : 0,
       topClients,
     };
   }
 
-  async communicationMetrics(businessId: string, days: number = 30, startDate?: Date, endDate?: Date) {
+  async communicationMetrics(
+    businessId: string,
+    days: number = 30,
+    startDate?: Date,
+    endDate?: Date,
+  ) {
     const dateFilter: any = {};
     if (startDate) {
       dateFilter.gte = startDate;
@@ -615,7 +639,8 @@ export class ReportsService {
       }
     }
 
-    const avgResponseMinutes = responseCount > 0 ? Math.round(totalResponseTime / responseCount) : 0;
+    const avgResponseMinutes =
+      responseCount > 0 ? Math.round(totalResponseTime / responseCount) : 0;
     const slaRate = responseCount > 0 ? Math.round((withinSla / responseCount) * 100) : 100;
 
     const responseTimeTrend = Object.entries(dailyResponseTimes)

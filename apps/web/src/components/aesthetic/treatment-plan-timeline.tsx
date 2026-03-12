@@ -42,14 +42,9 @@ const STATUS_CONFIG: Record<string, { icon: typeof Circle; color: string; lineCo
   },
 };
 
-export function TreatmentPlanTimeline({
-  sessions,
-  onSessionClick,
-}: TreatmentPlanTimelineProps) {
+export function TreatmentPlanTimeline({ sessions, onSessionClick }: TreatmentPlanTimelineProps) {
   if (sessions.length === 0) {
-    return (
-      <p className="text-sm text-slate-400 text-center py-6">No sessions in this plan.</p>
-    );
+    return <p className="text-sm text-slate-400 text-center py-6">No sessions in this plan.</p>;
   }
 
   return (
@@ -62,10 +57,7 @@ export function TreatmentPlanTimeline({
         return (
           <div
             key={session.id}
-            className={cn(
-              'relative flex gap-4 pb-6',
-              onSessionClick && 'cursor-pointer',
-            )}
+            className={cn('relative flex gap-4 pb-6', onSessionClick && 'cursor-pointer')}
             onClick={() => onSessionClick?.(session)}
             data-testid={`timeline-session-${session.sequenceOrder}`}
           >
@@ -79,20 +71,14 @@ export function TreatmentPlanTimeline({
               >
                 <Icon size={16} />
               </div>
-              {!isLast && (
-                <div className={cn('w-0.5 flex-1 mt-1', config.lineColor)} />
-              )}
+              {!isLast && <div className={cn('w-0.5 flex-1 mt-1', config.lineColor)} />}
             </div>
 
             {/* Content */}
             <div className="flex-1 pb-2 min-w-0">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-slate-900">
-                  {session.service.name}
-                </p>
-                <span className="text-xs text-slate-400">
-                  Session {session.sequenceOrder}
-                </span>
+                <p className="text-sm font-medium text-slate-900">{session.service.name}</p>
+                <span className="text-xs text-slate-400">Session {session.sequenceOrder}</span>
               </div>
 
               <div className="flex items-center gap-3 mt-1 text-xs text-slate-500">
@@ -128,9 +114,7 @@ export function TreatmentPlanTimeline({
                     })}
                   </span>
                 )}
-                {session.status === 'SKIPPED' && (
-                  <span className="text-slate-400">Skipped</span>
-                )}
+                {session.status === 'SKIPPED' && <span className="text-slate-400">Skipped</span>}
                 {session.service.price != null && session.service.price > 0 && (
                   <span>${session.service.price}</span>
                 )}

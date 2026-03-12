@@ -29,7 +29,14 @@ describe('TestDriveService', () => {
     feedback: null,
     notes: null,
     createdAt: new Date(),
-    vehicle: { id: 'veh-1', stockNumber: 'AUT-00001', year: 2024, make: 'Toyota', model: 'Camry', vin: null },
+    vehicle: {
+      id: 'veh-1',
+      stockNumber: 'AUT-00001',
+      year: 2024,
+      make: 'Toyota',
+      model: 'Camry',
+      vin: null,
+    },
     customer: { id: 'cust-1', name: 'Jane Doe', phone: '1234567890', email: null },
     staff: null,
     booking: { id: 'book-1', startTime: new Date(), endTime: new Date(), status: 'CONFIRMED' },
@@ -169,9 +176,9 @@ describe('TestDriveService', () => {
       prisma.business.findUnique.mockResolvedValue(mockBusiness);
       prisma.testDrive.findFirst.mockResolvedValue(null);
 
-      await expect(
-        service.update(businessId, 'bad', { status: 'COMPLETED' }),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.update(businessId, 'bad', { status: 'COMPLETED' })).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 

@@ -12,7 +12,10 @@ describe('MedicalRecordController', () => {
     service = {
       create: jest.fn().mockResolvedValue({ id: 'mr1', version: 1, flagged: true }),
       getCurrent: jest.fn().mockResolvedValue({ id: 'mr1', version: 1 }),
-      getHistory: jest.fn().mockResolvedValue([{ id: 'mr1', version: 2 }, { id: 'mr0', version: 1 }]),
+      getHistory: jest.fn().mockResolvedValue([
+        { id: 'mr1', version: 2 },
+        { id: 'mr0', version: 1 },
+      ]),
     };
 
     const module = await Test.createTestingModule({

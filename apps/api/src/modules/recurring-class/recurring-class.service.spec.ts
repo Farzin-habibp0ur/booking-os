@@ -27,10 +27,7 @@ describe('RecurringClassService', () => {
     jest.clearAllMocks();
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        RecurringClassService,
-        { provide: PrismaService, useValue: mockPrisma },
-      ],
+      providers: [RecurringClassService, { provide: PrismaService, useValue: mockPrisma }],
     }).compile();
 
     service = module.get(RecurringClassService);
@@ -42,8 +39,15 @@ describe('RecurringClassService', () => {
   describe('validateWellnessVertical', () => {
     it('throws if not wellness', async () => {
       prisma.business.findUnique.mockResolvedValue({ verticalPack: 'general' });
-      await expect(service.create(bizId, { serviceId: 's', staffId: 's', dayOfWeek: 1, startTime: '09:00', maxParticipants: 10 }))
-        .rejects.toThrow(ForbiddenException);
+      await expect(
+        service.create(bizId, {
+          serviceId: 's',
+          staffId: 's',
+          dayOfWeek: 1,
+          startTime: '09:00',
+          maxParticipants: 10,
+        }),
+      ).rejects.toThrow(ForbiddenException);
     });
   });
 
@@ -80,7 +84,13 @@ describe('RecurringClassService', () => {
       prisma.service.findFirst.mockResolvedValue(null);
 
       await expect(
-        service.create(bizId, { serviceId: 'x', staffId: 'y', dayOfWeek: 1, startTime: '09:00', maxParticipants: 5 }),
+        service.create(bizId, {
+          serviceId: 'x',
+          staffId: 'y',
+          dayOfWeek: 1,
+          startTime: '09:00',
+          maxParticipants: 5,
+        }),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -90,7 +100,13 @@ describe('RecurringClassService', () => {
       prisma.staff.findFirst.mockResolvedValue(null);
 
       await expect(
-        service.create(bizId, { serviceId: 'svc-1', staffId: 'x', dayOfWeek: 1, startTime: '09:00', maxParticipants: 5 }),
+        service.create(bizId, {
+          serviceId: 'svc-1',
+          staffId: 'x',
+          dayOfWeek: 1,
+          startTime: '09:00',
+          maxParticipants: 5,
+        }),
       ).rejects.toThrow(NotFoundException);
     });
   });

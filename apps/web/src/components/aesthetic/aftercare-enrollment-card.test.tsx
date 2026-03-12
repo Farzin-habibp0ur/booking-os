@@ -9,9 +9,30 @@ const mockEnrollment = {
   protocol: {
     name: 'General Aesthetic Aftercare',
     steps: [
-      { id: 'step-1', sequenceOrder: 1, delayHours: 0, channel: 'WHATSAPP', subject: 'Aftercare Instructions', body: 'Hello' },
-      { id: 'step-2', sequenceOrder: 2, delayHours: 24, channel: 'WHATSAPP', subject: '24-Hour Check-in', body: 'Check-in' },
-      { id: 'step-3', sequenceOrder: 3, delayHours: 72, channel: 'WHATSAPP', subject: '3-Day Follow-up', body: 'Follow-up' },
+      {
+        id: 'step-1',
+        sequenceOrder: 1,
+        delayHours: 0,
+        channel: 'WHATSAPP',
+        subject: 'Aftercare Instructions',
+        body: 'Hello',
+      },
+      {
+        id: 'step-2',
+        sequenceOrder: 2,
+        delayHours: 24,
+        channel: 'WHATSAPP',
+        subject: '24-Hour Check-in',
+        body: 'Check-in',
+      },
+      {
+        id: 'step-3',
+        sequenceOrder: 3,
+        delayHours: 72,
+        channel: 'WHATSAPP',
+        subject: '3-Day Follow-up',
+        body: 'Follow-up',
+      },
     ],
   },
   booking: {
@@ -19,9 +40,27 @@ const mockEnrollment = {
     service: { name: 'Botox' },
   },
   messages: [
-    { id: 'msg-1', stepId: 'step-1', scheduledFor: '2026-03-10T10:00:00Z', sentAt: '2026-03-10T10:01:00Z', status: 'SENT' },
-    { id: 'msg-2', stepId: 'step-2', scheduledFor: '2026-03-11T10:00:00Z', sentAt: null, status: 'SCHEDULED' },
-    { id: 'msg-3', stepId: 'step-3', scheduledFor: '2026-03-13T10:00:00Z', sentAt: null, status: 'SCHEDULED' },
+    {
+      id: 'msg-1',
+      stepId: 'step-1',
+      scheduledFor: '2026-03-10T10:00:00Z',
+      sentAt: '2026-03-10T10:01:00Z',
+      status: 'SENT',
+    },
+    {
+      id: 'msg-2',
+      stepId: 'step-2',
+      scheduledFor: '2026-03-11T10:00:00Z',
+      sentAt: null,
+      status: 'SCHEDULED',
+    },
+    {
+      id: 'msg-3',
+      stepId: 'step-3',
+      scheduledFor: '2026-03-13T10:00:00Z',
+      sentAt: null,
+      status: 'SCHEDULED',
+    },
   ],
 };
 

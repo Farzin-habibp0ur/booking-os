@@ -40,7 +40,7 @@ export default function PackagePurchaseModal({
   useEffect(() => {
     if (!isOpen) return;
     apiFetch('/packages')
-      .then((data) => setPackages((data || []).filter((p: any) => p.isActive)))
+      .then((data: any) => setPackages((data || []).filter((p: any) => p.isActive)))
       .catch(() => setPackages([]));
   }, [isOpen]);
 
@@ -84,9 +84,7 @@ export default function PackagePurchaseModal({
           Selling to <span className="font-medium text-slate-700">{customerName}</span>
         </p>
 
-        {error && (
-          <div className="mb-3 p-2 bg-red-50 text-red-700 rounded-lg text-xs">{error}</div>
-        )}
+        {error && <div className="mb-3 p-2 bg-red-50 text-red-700 rounded-lg text-xs">{error}</div>}
 
         <div className="space-y-3">
           <div>
@@ -109,8 +107,13 @@ export default function PackagePurchaseModal({
           {selected && (
             <div className="p-3 bg-lavender-50 rounded-xl text-xs text-slate-600">
               <p className="font-medium text-slate-700">{selected.name}</p>
-              <p>{selected.totalSessions} sessions • ${Number(selected.price).toFixed(2)} • {selected.validityDays} day validity</p>
-              {selected.service && <p className="text-lavender-600 mt-1">Service: {selected.service.name}</p>}
+              <p>
+                {selected.totalSessions} sessions • ${Number(selected.price).toFixed(2)} •{' '}
+                {selected.validityDays} day validity
+              </p>
+              {selected.service && (
+                <p className="text-lavender-600 mt-1">Service: {selected.service.name}</p>
+              )}
             </div>
           )}
 

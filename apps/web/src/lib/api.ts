@@ -153,6 +153,10 @@ class ApiClient {
     return this.request<T>(path, { method: 'DELETE' });
   }
 
+  delete<T>(path: string) {
+    return this.del<T>(path);
+  }
+
   async patchFormData<T>(path: string, formData: FormData): Promise<T> {
     const token = this.getToken();
     const headers: Record<string, string> = {};
@@ -238,3 +242,18 @@ class ApiClient {
 }
 
 export const api = new ApiClient();
+
+/**
+ * Convenience wrapper for components that use a simple fetch-style API.
+ * Delegates to the ApiClient's request method with auth + retry.
+ */
+export async function apiFetch(path: string, opts?: RequestInit): Promise<any> {
+  if (opts?.method === 'DELETE') return api.del(path);
+  if (opts?.method === 'POST')
+    return api.post(path, opts.body ? JSON.parse(opts.body as string) : undefined);
+  if (opts?.method === 'PUT')
+    return api.put(path, opts.body ? JSON.parse(opts.body as string) : undefined);
+  if (opts?.method === 'PATCH')
+    return api.patch(path, opts.body ? JSON.parse(opts.body as string) : undefined);
+  return api.get(path);
+}

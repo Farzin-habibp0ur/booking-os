@@ -371,13 +371,12 @@ export default function PortalIntakePage() {
       <div className="bg-white rounded-2xl shadow-soft p-6">
         <h2 className="text-lg font-serif font-semibold text-slate-900 mb-4">Medical History</h2>
         <p className="text-xs text-slate-500 mb-4">
-          This information helps ensure your safety during treatments. Please be thorough and accurate.
+          This information helps ensure your safety during treatments. Please be thorough and
+          accurate.
         </p>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              Allergies
-            </label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Allergies</label>
             <textarea
               value={form.medicalConditions}
               onChange={(e) => handleUpdate('medicalConditions', e.target.value)}

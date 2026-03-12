@@ -112,7 +112,13 @@ export class ExportController {
     const parsedDays = days ? parseInt(days) : 30;
     const startDate = from ? new Date(from) : undefined;
     const endDate = to ? new Date(to) : undefined;
-    const data = await this.getReportData(businessId, reportType as ReportType, parsedDays, startDate, endDate);
+    const data = await this.getReportData(
+      businessId,
+      reportType as ReportType,
+      parsedDays,
+      startDate,
+      endDate,
+    );
     const exportFormat = format === 'pdf' ? 'pdf' : 'csv';
 
     if (exportFormat === 'pdf') {
@@ -155,7 +161,12 @@ export class ExportController {
       case 'peak-hours':
         return this.reportsService.peakHours(businessId, days, startDate, endDate);
       case 'consult-conversion':
-        return this.reportsService.consultToTreatmentConversion(businessId, days, startDate, endDate);
+        return this.reportsService.consultToTreatmentConversion(
+          businessId,
+          days,
+          startDate,
+          endDate,
+        );
       case 'deposit-compliance':
         return this.reportsService.depositComplianceRate(businessId, startDate, endDate);
       default:

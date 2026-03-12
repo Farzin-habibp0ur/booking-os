@@ -51,10 +51,7 @@ export class AftercareController {
   }
 
   @Get('/enrollments/list')
-  findEnrollments(
-    @BusinessId() businessId: string,
-    @Query('customerId') customerId?: string,
-  ) {
+  findEnrollments(@BusinessId() businessId: string, @Query('customerId') customerId?: string) {
     return this.aftercareService.findEnrollments(businessId, customerId);
   }
 

@@ -1,4 +1,14 @@
-import { IsString, IsOptional, IsNumber, IsInt, IsIn, IsDateString, MaxLength, Min, Max } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsNumber,
+  IsInt,
+  IsIn,
+  IsDateString,
+  MaxLength,
+  Min,
+  Max,
+} from 'class-validator';
 
 export class CreateDealDto {
   @IsString()
@@ -14,7 +24,15 @@ export class CreateDealDto {
 
   @IsString()
   @IsOptional()
-  @IsIn(['INQUIRY', 'QUALIFIED', 'TEST_DRIVE', 'NEGOTIATION', 'FINANCE', 'CLOSED_WON', 'CLOSED_LOST'])
+  @IsIn([
+    'INQUIRY',
+    'QUALIFIED',
+    'TEST_DRIVE',
+    'NEGOTIATION',
+    'FINANCE',
+    'CLOSED_WON',
+    'CLOSED_LOST',
+  ])
   stage?: string;
 
   @IsString()

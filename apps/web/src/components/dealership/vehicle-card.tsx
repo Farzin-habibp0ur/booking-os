@@ -1,7 +1,11 @@
 'use client';
 
 import { Car, MapPin, Gauge, Calendar } from 'lucide-react';
-import { vehicleStatusBadgeClasses, vehicleConditionBadgeClasses, VEHICLE_STATUS_STYLES } from '@/lib/design-tokens';
+import {
+  vehicleStatusBadgeClasses,
+  vehicleConditionBadgeClasses,
+  VEHICLE_STATUS_STYLES,
+} from '@/lib/design-tokens';
 
 interface Vehicle {
   id: string;
@@ -22,13 +26,7 @@ interface Vehicle {
   _count?: { testDrives: number };
 }
 
-export function VehicleCard({
-  vehicle,
-  onClick,
-}: {
-  vehicle: Vehicle;
-  onClick?: () => void;
-}) {
+export function VehicleCard({ vehicle, onClick }: { vehicle: Vehicle; onClick?: () => void }) {
   const daysOnLot = Math.floor(
     (Date.now() - new Date(vehicle.createdAt).getTime()) / (1000 * 60 * 60 * 24),
   );

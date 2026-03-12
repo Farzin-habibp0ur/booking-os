@@ -27,7 +27,9 @@ function getISOWeek(date: Date): string {
   d.setHours(0, 0, 0, 0);
   d.setDate(d.getDate() + 3 - ((d.getDay() + 6) % 7));
   const yearStart = new Date(d.getFullYear(), 0, 4);
-  const week = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + yearStart.getDay() + 1 - 1) / 7);
+  const week = Math.ceil(
+    ((d.getTime() - yearStart.getTime()) / 86400000 + yearStart.getDay() + 1 - 1) / 7,
+  );
   return `${d.getFullYear()}-W${String(week).padStart(2, '0')}`;
 }
 
@@ -267,8 +269,13 @@ export default function PortalDashboardPage() {
                   {plan.sessions?.length > 0 && (
                     <div className="space-y-1 mb-3">
                       {plan.sessions.map((s: any) => (
-                        <div key={s.id} className="flex items-center justify-between text-xs text-slate-500">
-                          <span>{s.sequenceOrder}. {s.service?.name}</span>
+                        <div
+                          key={s.id}
+                          className="flex items-center justify-between text-xs text-slate-500"
+                        >
+                          <span>
+                            {s.sequenceOrder}. {s.service?.name}
+                          </span>
                           {s.service?.price > 0 && <span>${s.service.price}</span>}
                         </div>
                       ))}
@@ -281,7 +288,9 @@ export default function PortalDashboardPage() {
                         try {
                           await portalPost(`/portal/treatment-plans/${plan.id}/accept`, {});
                           await loadData();
-                        } catch {}
+                        } catch {
+                          // silently ignore
+                        }
                         setAcceptingPlan(null);
                       }}
                       disabled={acceptingPlan === plan.id}
@@ -299,9 +308,7 @@ export default function PortalDashboardPage() {
       {/* Active Aftercare */}
       {aftercareEnrollments.length > 0 && (
         <section data-testid="portal-aftercare">
-          <h2 className="text-lg font-serif font-semibold text-slate-900 mb-3">
-            Active Aftercare
-          </h2>
+          <h2 className="text-lg font-serif font-semibold text-slate-900 mb-3">Active Aftercare</h2>
           <AftercarePortalView enrollments={aftercareEnrollments} />
         </section>
       )}
@@ -337,7 +344,9 @@ export default function PortalDashboardPage() {
                     />
                   </div>
                   <div className="flex items-center justify-between text-xs text-slate-500">
-                    <span>{p.usedSessions} of {p.totalSessions} sessions used</span>
+                    <span>
+                      {p.usedSessions} of {p.totalSessions} sessions used
+                    </span>
                     {isExpiringSoon && (
                       <span className="text-amber-600">
                         Expires {new Date(p.expiresAt).toLocaleDateString()}
@@ -354,9 +363,7 @@ export default function PortalDashboardPage() {
       {/* Class Schedule */}
       {classSchedule.length > 0 && (
         <section data-testid="portal-classes">
-          <h2 className="text-lg font-serif font-semibold text-slate-900 mb-3">
-            Upcoming Classes
-          </h2>
+          <h2 className="text-lg font-serif font-semibold text-slate-900 mb-3">Upcoming Classes</h2>
           <div className="space-y-2">
             {classSchedule.slice(0, 5).map((cls: any) => (
               <div key={cls.id + cls.date} className="bg-white rounded-2xl shadow-soft p-4">

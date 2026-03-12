@@ -339,11 +339,12 @@ export class PortalService {
     const stripeKey = process.env.STRIPE_SECRET_KEY;
     if (!stripeKey) throw new BadRequestException('Online payments are not configured');
 
-    const stripe = require('stripe')(stripeKey);
+    const Stripe = (await import('stripe')).default;
+    const stripe = new Stripe(stripeKey);
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'payment',
-      customer_email: invoice.customer.email,
+      customer_email: invoice.customer.email || undefined,
       line_items: [
         {
           price_data: {
@@ -362,8 +363,10 @@ export class PortalService {
         businessId,
         customerId,
       },
-      success_url: successUrl || `${process.env.WEB_URL || 'http://localhost:3000'}/portal/payment-success`,
-      cancel_url: cancelUrl || `${process.env.WEB_URL || 'http://localhost:3000'}/portal/payment-cancelled`,
+      success_url:
+        successUrl || `${process.env.WEB_URL || 'http://localhost:3000'}/portal/payment-success`,
+      cancel_url:
+        cancelUrl || `${process.env.WEB_URL || 'http://localhost:3000'}/portal/payment-cancelled`,
     });
 
     return { url: session.url, sessionId: session.id };
@@ -374,7 +377,9 @@ export class PortalService {
       where: { customerId, businessId },
       include: {
         sessions: {
-          include: { service: { select: { id: true, name: true, durationMins: true, price: true } } },
+          include: {
+            service: { select: { id: true, name: true, durationMins: true, price: true } },
+          },
           orderBy: { sequenceOrder: 'asc' },
         },
         consultBooking: {
@@ -390,7 +395,8 @@ export class PortalService {
     const plan = await this.prisma.treatmentPlan.findFirst({
       where: { id: planId, customerId, businessId, status: 'PROPOSED' },
     });
-    if (!plan) throw new NotFoundException('Treatment plan not found or not available for acceptance');
+    if (!plan)
+      throw new NotFoundException('Treatment plan not found or not available for acceptance');
 
     return this.prisma.treatmentPlan.update({
       where: { id: planId },

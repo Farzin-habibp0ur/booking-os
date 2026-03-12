@@ -125,7 +125,9 @@ export function MedicalHistoryForm({
   // Array field states
   const [allergies, setAllergies] = useState<string[]>(existingRecord?.allergies ?? []);
   const [allergyInput, setAllergyInput] = useState('');
-  const [contraindications, setContraindications] = useState<string[]>(existingRecord?.contraindications ?? []);
+  const [contraindications, setContraindications] = useState<string[]>(
+    existingRecord?.contraindications ?? [],
+  );
   const [contraindicationInput, setContraindicationInput] = useState('');
   const [medications, setMedications] = useState<string[]>(existingRecord?.medications ?? []);
   const [medicationInput, setMedicationInput] = useState('');
@@ -184,15 +186,11 @@ export function MedicalHistoryForm({
         consentGiven,
       };
 
-      const { data } = await api.post('/medical-records', payload);
-      toast({ title: 'Medical record saved', variant: 'success' });
-      onSaved?.(data);
+      const data = await api.post('/medical-records', payload);
+      toast('Medical record saved', 'success');
+      onSaved?.(data as any);
     } catch (err: any) {
-      toast({
-        title: 'Failed to save medical record',
-        description: err?.response?.data?.message ?? 'An error occurred',
-        variant: 'error',
-      });
+      toast(err?.message ?? 'Failed to save medical record', 'error');
     } finally {
       setSaving(false);
     }
@@ -216,7 +214,14 @@ export function MedicalHistoryForm({
           <TagInput
             label="Contraindications"
             items={contraindications}
-            onAdd={() => addTag(contraindicationInput, setContraindicationInput, contraindications, setContraindications)}
+            onAdd={() =>
+              addTag(
+                contraindicationInput,
+                setContraindicationInput,
+                contraindications,
+                setContraindications,
+              )
+            }
             onRemove={(i) => removeTag(contraindications, setContraindications, i)}
             inputValue={contraindicationInput}
             onInputChange={setContraindicationInput}
@@ -288,11 +293,7 @@ export function MedicalHistoryForm({
               checked={bloodThinners}
               onChange={setBloodThinners}
             />
-            <ToggleSwitch
-              label="Pregnant"
-              checked={pregnant}
-              onChange={setPregnant}
-            />
+            <ToggleSwitch label="Pregnant" checked={pregnant} onChange={setPregnant} />
             <ToggleSwitch
               label="Breastfeeding"
               checked={breastfeeding}
@@ -338,7 +339,8 @@ export function MedicalHistoryForm({
             className="mt-1 h-4 w-4 rounded border-sage-300 text-sage-600 focus:ring-sage-500"
           />
           <span className="text-sm text-sage-700">
-            I consent to the collection and storage of my medical information for treatment purposes.
+            I consent to the collection and storage of my medical information for treatment
+            purposes.
           </span>
         </label>
         {existingRecord?.consentGiven && existingRecord.consentDate && (

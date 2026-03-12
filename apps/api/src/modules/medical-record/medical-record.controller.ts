@@ -31,10 +31,7 @@ export class MedicalRecordController {
   }
 
   @Get()
-  async getCurrent(
-    @BusinessId() businessId: string,
-    @Query('customerId') customerId: string,
-  ) {
+  async getCurrent(@BusinessId() businessId: string, @Query('customerId') customerId: string) {
     if (!customerId) {
       throw new BadRequestException('customerId query parameter is required');
     }
@@ -42,10 +39,7 @@ export class MedicalRecordController {
   }
 
   @Get(':id/history')
-  async getHistory(
-    @BusinessId() businessId: string,
-    @Param('id') id: string,
-  ) {
+  async getHistory(@BusinessId() businessId: string, @Param('id') id: string) {
     return this.medicalRecordService.getHistory(businessId, id);
   }
 }

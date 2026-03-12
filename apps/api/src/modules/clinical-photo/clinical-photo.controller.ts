@@ -80,10 +80,7 @@ export class ClinicalPhotoController {
   }
 
   @Get('comparisons')
-  async listComparisons(
-    @BusinessId() businessId: string,
-    @Query('customerId') customerId: string,
-  ) {
+  async listComparisons(@BusinessId() businessId: string, @Query('customerId') customerId: string) {
     if (!customerId) {
       throw new BadRequestException('customerId query parameter is required');
     }
@@ -112,10 +109,7 @@ export class ClinicalPhotoController {
   }
 
   @Post('compare')
-  async createComparison(
-    @BusinessId() businessId: string,
-    @Body() dto: CreateComparisonDto,
-  ) {
+  async createComparison(@BusinessId() businessId: string, @Body() dto: CreateComparisonDto) {
     return this.clinicalPhotoService.createComparison(businessId, dto);
   }
 }

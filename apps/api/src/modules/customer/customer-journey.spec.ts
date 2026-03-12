@@ -78,7 +78,12 @@ describe('CustomerService - getJourney', () => {
         vehicle: mockVehicle,
         assignedTo: { id: 's1', name: 'Mike Sales' },
         stageHistory: [
-          { fromStage: null, toStage: 'INQUIRY', createdAt: new Date('2026-01-15T10:00:00Z'), changedBy: null },
+          {
+            fromStage: null,
+            toStage: 'INQUIRY',
+            createdAt: new Date('2026-01-15T10:00:00Z'),
+            changedBy: null,
+          },
         ],
         activities: [],
         createdAt: new Date('2026-01-15T10:00:00Z'),
@@ -88,7 +93,14 @@ describe('CustomerService - getJourney', () => {
     prisma.testDrive.findMany.mockResolvedValue([
       {
         id: 'td1',
-        vehicle: { id: 'v1', stockNumber: 'AUT-001', year: 2025, make: 'Toyota', model: 'Camry', trim: 'XLE' },
+        vehicle: {
+          id: 'v1',
+          stockNumber: 'AUT-001',
+          year: 2025,
+          make: 'Toyota',
+          model: 'Camry',
+          trim: 'XLE',
+        },
         staff: { id: 's1', name: 'Mike Sales' },
         booking: null,
         createdAt: new Date('2026-01-18T10:00:00Z'),
@@ -96,7 +108,12 @@ describe('CustomerService - getJourney', () => {
     ]);
 
     prisma.conversation.findMany.mockResolvedValue([
-      { id: 'conv-1', channel: 'WALK_IN', createdAt: new Date('2026-01-12T10:00:00Z'), status: 'RESOLVED' },
+      {
+        id: 'conv-1',
+        channel: 'WALK_IN',
+        createdAt: new Date('2026-01-12T10:00:00Z'),
+        status: 'RESOLVED',
+      },
     ]);
 
     const result = await service.getJourney('biz-1', 'cust-1');
@@ -118,14 +135,16 @@ describe('CustomerService - getJourney', () => {
     });
 
     // 3 visits = 30 points, 2 test drives = 30 points, active deal = 20, no won = 0 => 80
-    prisma.booking.findMany.mockResolvedValue([
-      { id: 'b1' },
-      { id: 'b2' },
-      { id: 'b3' },
-    ]);
+    prisma.booking.findMany.mockResolvedValue([{ id: 'b1' }, { id: 'b2' }, { id: 'b3' }]);
     prisma.testDrive.findMany.mockResolvedValue([
-      { id: 'td1', vehicle: { id: 'v1', stockNumber: 'S1', year: 2025, make: 'A', model: 'B', trim: null } },
-      { id: 'td2', vehicle: { id: 'v2', stockNumber: 'S2', year: 2025, make: 'C', model: 'D', trim: null } },
+      {
+        id: 'td1',
+        vehicle: { id: 'v1', stockNumber: 'S1', year: 2025, make: 'A', model: 'B', trim: null },
+      },
+      {
+        id: 'td2',
+        vehicle: { id: 'v2', stockNumber: 'S2', year: 2025, make: 'C', model: 'D', trim: null },
+      },
     ]);
     prisma.deal.findMany.mockResolvedValue([
       {
@@ -233,7 +252,14 @@ describe('CustomerService - getJourney', () => {
     prisma.testDrive.findMany.mockResolvedValue([
       {
         id: 'td1',
-        vehicle: { id: 'v1', stockNumber: 'AUT-001', year: 2025, make: 'Toyota', model: 'Camry', trim: 'XLE' },
+        vehicle: {
+          id: 'v1',
+          stockNumber: 'AUT-001',
+          year: 2025,
+          make: 'Toyota',
+          model: 'Camry',
+          trim: 'XLE',
+        },
         staff: null,
         booking: null,
         createdAt: new Date('2026-01-18T10:00:00Z'),

@@ -638,21 +638,60 @@ export default function ReportsPage() {
   const loadAll = useCallback(() => {
     const q = dateParams + (staffFilter ? `&staffId=${staffFilter}` : '');
 
-    api.get<any[]>(`/reports/bookings-over-time?${dateParams}`).then(setBookingsData).catch(() => {});
-    api.get<any[]>(`/reports/revenue-over-time?${dateParams}`).then(setRevenueData).catch(() => {});
-    api.get<any>(`/reports/no-show-rate?${dateParams}`).then(setNoShowData).catch(() => {});
-    api.get<any[]>(`/reports/service-breakdown?${dateParams}`).then(setServiceData).catch(() => {});
-    api.get<any[]>(`/reports/staff-performance?${dateParams}`).then(setStaffData).catch(() => {});
-    api.get<any[]>(`/reports/status-breakdown?${dateParams}`).then(setStatusData).catch(() => {});
-    api.get<any>(`/reports/peak-hours?${dateParams}`).then(setPeakData).catch(() => {});
-    api.get<any>(`/reports/consult-conversion?${dateParams}`).then(setConversionData).catch(() => {});
-    api.get<any[]>(`/reports/source-breakdown?${dateParams}`).then(setSourceData).catch(() => {});
+    api
+      .get<any[]>(`/reports/bookings-over-time?${dateParams}`)
+      .then(setBookingsData)
+      .catch(() => {});
+    api
+      .get<any[]>(`/reports/revenue-over-time?${dateParams}`)
+      .then(setRevenueData)
+      .catch(() => {});
+    api
+      .get<any>(`/reports/no-show-rate?${dateParams}`)
+      .then(setNoShowData)
+      .catch(() => {});
+    api
+      .get<any[]>(`/reports/service-breakdown?${dateParams}`)
+      .then(setServiceData)
+      .catch(() => {});
+    api
+      .get<any[]>(`/reports/staff-performance?${dateParams}`)
+      .then(setStaffData)
+      .catch(() => {});
+    api
+      .get<any[]>(`/reports/status-breakdown?${dateParams}`)
+      .then(setStatusData)
+      .catch(() => {});
+    api
+      .get<any>(`/reports/peak-hours?${dateParams}`)
+      .then(setPeakData)
+      .catch(() => {});
+    api
+      .get<any>(`/reports/consult-conversion?${dateParams}`)
+      .then(setConversionData)
+      .catch(() => {});
+    api
+      .get<any[]>(`/reports/source-breakdown?${dateParams}`)
+      .then(setSourceData)
+      .catch(() => {});
 
     // New endpoints
-    api.get<any>(`/reports/revenue-summary?${q}`).then(setRevenueSummary).catch(() => {});
-    api.get<any[]>(`/reports/staff-utilization?${dateParams}`).then(setStaffUtilization).catch(() => {});
-    api.get<any>(`/reports/client-metrics?${dateParams}`).then(setClientMetrics).catch(() => {});
-    api.get<any>(`/reports/communication-metrics?${dateParams}`).then(setCommMetrics).catch(() => {});
+    api
+      .get<any>(`/reports/revenue-summary?${q}`)
+      .then(setRevenueSummary)
+      .catch(() => {});
+    api
+      .get<any[]>(`/reports/staff-utilization?${dateParams}`)
+      .then(setStaffUtilization)
+      .catch(() => {});
+    api
+      .get<any>(`/reports/client-metrics?${dateParams}`)
+      .then(setClientMetrics)
+      .catch(() => {});
+    api
+      .get<any>(`/reports/communication-metrics?${dateParams}`)
+      .then(setCommMetrics)
+      .catch(() => {});
   }, [dateParams, staffFilter]);
 
   useEffect(() => {
@@ -677,7 +716,9 @@ export default function ReportsPage() {
         {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-serif font-semibold text-slate-900">{t('reports.title')}</h1>
+            <h1 className="text-2xl font-serif font-semibold text-slate-900">
+              {t('reports.title')}
+            </h1>
             {scheduleCount > 0 && (
               <button
                 onClick={() => setShowManageModal(true)}
@@ -787,10 +828,7 @@ export default function ReportsPage() {
                   value={`$${revenueSummary.totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
                   change={revenueSummary.revenueChange}
                 />
-                <SummaryCard
-                  label="Completed Bookings"
-                  value={revenueSummary.bookingCount}
-                />
+                <SummaryCard label="Completed Bookings" value={revenueSummary.bookingCount} />
                 <SummaryCard
                   label="Avg. per Booking"
                   value={`$${revenueSummary.avgPerBooking.toFixed(2)}`}
@@ -808,7 +846,11 @@ export default function ReportsPage() {
                 <ResponsiveContainer width="100%" height={220}>
                   <AreaChart data={revenueData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                    <XAxis dataKey="date" tick={{ fontSize: 10 }} tickFormatter={(d) => d.slice(5)} />
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fontSize: 10 }}
+                      tickFormatter={(d) => d.slice(5)}
+                    />
                     <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `$${v}`} />
                     <Tooltip formatter={(v: number) => [`$${v}`, t('reports.revenue')]} />
                     <Area
@@ -895,7 +937,11 @@ export default function ReportsPage() {
                 <ResponsiveContainer width="100%" height={220}>
                   <AreaChart data={bookingsData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                    <XAxis dataKey="date" tick={{ fontSize: 10 }} tickFormatter={(d) => d.slice(5)} />
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fontSize: 10 }}
+                      tickFormatter={(d) => d.slice(5)}
+                    />
                     <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
                     <Tooltip />
                     <Area
@@ -955,7 +1001,8 @@ export default function ReportsPage() {
                           <div className="text-right">
                             <span className="text-sm font-medium">{s.count}</span>
                             <span className="text-xs text-slate-400 ml-1">
-                              ({totalBookings > 0 ? Math.round((s.count / totalBookings) * 100) : 0}%)
+                              ({totalBookings > 0 ? Math.round((s.count / totalBookings) * 100) : 0}
+                              %)
                             </span>
                           </div>
                         </div>
@@ -1043,7 +1090,11 @@ export default function ReportsPage() {
                       data={(peakData.byHour || []).filter((h: any) => h.hour >= 7 && h.hour <= 20)}
                     >
                       <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                      <XAxis dataKey="hour" tick={{ fontSize: 10 }} tickFormatter={(h) => `${h}:00`} />
+                      <XAxis
+                        dataKey="hour"
+                        tick={{ fontSize: 10 }}
+                        tickFormatter={(h) => `${h}:00`}
+                      />
                       <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
                       <Tooltip labelFormatter={(h) => `${h}:00`} />
                       <Bar dataKey="count" fill="#9F8ECB" radius={[4, 4, 0, 0]} />
@@ -1082,7 +1133,9 @@ export default function ReportsPage() {
                 <ExportButtons reportType="staff-performance" dateParams={dateParams} />
               </div>
               {staffData.length === 0 ? (
-                <p className="text-slate-400 text-sm py-4 text-center">{t('reports.no_staff_data')}</p>
+                <p className="text-slate-400 text-sm py-4 text-center">
+                  {t('reports.no_staff_data')}
+                </p>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full">
@@ -1142,7 +1195,9 @@ export default function ReportsPage() {
             <div className="bg-white rounded-2xl shadow-soft p-4">
               <h2 className="font-semibold mb-4">Staff Utilization</h2>
               {staffUtilization.length === 0 ? (
-                <p className="text-slate-400 text-sm py-4 text-center">No utilization data available</p>
+                <p className="text-slate-400 text-sm py-4 text-center">
+                  No utilization data available
+                </p>
               ) : (
                 <div className="space-y-4">
                   {staffUtilization.map((s) => (
@@ -1213,7 +1268,11 @@ export default function ReportsPage() {
                 <ResponsiveContainer width="100%" height={250}>
                   <LineChart data={commMetrics.responseTimeTrend}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                    <XAxis dataKey="date" tick={{ fontSize: 10 }} tickFormatter={(d) => d.slice(5)} />
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fontSize: 10 }}
+                      tickFormatter={(d) => d.slice(5)}
+                    />
                     <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `${v}m`} />
                     <Tooltip formatter={(v: number) => [`${v} min`, 'Avg Response']} />
                     <Line
@@ -1236,7 +1295,11 @@ export default function ReportsPage() {
             {clientMetrics && (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <SummaryCard label="Total Customers" value={clientMetrics.totalCustomers} />
-                <SummaryCard label="New Customers" value={clientMetrics.newCustomers} accent="green" />
+                <SummaryCard
+                  label="New Customers"
+                  value={clientMetrics.newCustomers}
+                  accent="green"
+                />
                 <SummaryCard label="Returning" value={clientMetrics.returningCustomers} />
                 <SummaryCard
                   label="Retention Rate"
@@ -1278,7 +1341,9 @@ export default function ReportsPage() {
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="w-3 h-3 rounded-sm bg-[#9F8ECB]" />
-                      <span className="text-sm">Returning ({clientMetrics.returningCustomers})</span>
+                      <span className="text-sm">
+                        Returning ({clientMetrics.returningCustomers})
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -1331,7 +1396,9 @@ export default function ReportsPage() {
                       <p className="text-xs text-slate-500">Consult Customers</p>
                     </div>
                     <div className="bg-sage-50 rounded-xl p-3 text-center">
-                      <p className="text-lg font-semibold text-sage-700">{conversionData.converted}</p>
+                      <p className="text-lg font-semibold text-sage-700">
+                        {conversionData.converted}
+                      </p>
                       <p className="text-xs text-slate-500">Converted</p>
                     </div>
                   </div>

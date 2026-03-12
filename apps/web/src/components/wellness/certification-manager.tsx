@@ -75,7 +75,9 @@ export default function CertificationManager({ staffId, staffName }: Certificati
     try {
       await apiFetch(`/staff/${staffId}/certifications/${certId}`, { method: 'DELETE' });
       loadCerts();
-    } catch {}
+    } catch {
+      // silently ignore
+    }
   };
 
   const isExpiringSoon = (date: string | null) => {
@@ -95,9 +97,7 @@ export default function CertificationManager({ staffId, staffName }: Certificati
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Award size={18} className="text-sage-600" />
-          <h3 className="text-sm font-semibold text-slate-900">
-            Certifications — {staffName}
-          </h3>
+          <h3 className="text-sm font-semibold text-slate-900">Certifications — {staffName}</h3>
         </div>
         <button
           onClick={() => setShowForm(!showForm)}

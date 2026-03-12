@@ -66,11 +66,7 @@ export function PhotoTimeline({ photos, onPhotoClick }: PhotoTimelineProps) {
             {areaPhotos.map((photo) => {
               const dotColor = TYPE_DOT[photo.type] || TYPE_DOT.PROGRESS;
               return (
-                <div
-                  key={photo.id}
-                  className="relative group"
-                  data-testid="timeline-entry"
-                >
+                <div key={photo.id} className="relative group" data-testid="timeline-entry">
                   {/* Timeline dot */}
                   <div
                     className={cn(

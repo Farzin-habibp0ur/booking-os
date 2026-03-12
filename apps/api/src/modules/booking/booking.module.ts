@@ -14,7 +14,17 @@ import { DealModule } from '../deal/deal.module';
 import { PackageModule } from '../package/package.module';
 
 @Module({
-  imports: [NotificationModule, BusinessModule, AuthModule, forwardRef(() => WaitlistModule), InvoiceModule, TreatmentPlanModule, AftercareModule, DealModule, PackageModule],
+  imports: [
+    NotificationModule,
+    BusinessModule,
+    AuthModule,
+    forwardRef(() => WaitlistModule),
+    InvoiceModule,
+    TreatmentPlanModule,
+    AftercareModule,
+    DealModule,
+    PackageModule,
+  ],
   controllers: [RecurringController, BookingController],
   providers: [BookingService, RecurringService],
   exports: [BookingService],

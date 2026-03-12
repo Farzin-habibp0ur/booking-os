@@ -160,9 +160,7 @@ td { padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
         </div>
       )}
 
-      {payError && (
-        <div className="bg-red-50 rounded-xl p-3 text-sm text-red-700">{payError}</div>
-      )}
+      {payError && <div className="bg-red-50 rounded-xl p-3 text-sm text-red-700">{payError}</div>}
 
       {/* Invoice list */}
       <div className="space-y-3" data-testid="invoice-list">

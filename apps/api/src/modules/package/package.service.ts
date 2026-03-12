@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  BadRequestException,
-  NotFoundException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../../common/prisma.service';
 import { CreatePackageDto, UpdatePackageDto, PurchasePackageDto, RedeemPackageDto } from './dto';
@@ -198,7 +193,12 @@ export class PackageService {
       where,
       include: {
         package: {
-          select: { id: true, name: true, serviceId: true, service: { select: { id: true, name: true } } },
+          select: {
+            id: true,
+            name: true,
+            serviceId: true,
+            service: { select: { id: true, name: true } },
+          },
         },
         customer: { select: { id: true, name: true, phone: true } },
         _count: { select: { redemptions: true } },
@@ -217,7 +217,12 @@ export class PackageService {
         redemptions: {
           include: {
             booking: {
-              select: { id: true, startTime: true, status: true, service: { select: { name: true } } },
+              select: {
+                id: true,
+                startTime: true,
+                status: true,
+                service: { select: { name: true } },
+              },
             },
           },
           orderBy: { redeemedAt: 'desc' },
@@ -265,7 +270,9 @@ export class PackageService {
 
       // Validate service match if package is service-specific
       if (purchase.package.serviceId && purchase.package.serviceId !== booking.serviceId) {
-        throw new BadRequestException('This package can only be redeemed for the specified service');
+        throw new BadRequestException(
+          'This package can only be redeemed for the specified service',
+        );
       }
 
       const newUsed = purchase.usedSessions + 1;
@@ -334,7 +341,12 @@ export class PackageService {
       where,
       include: {
         package: {
-          select: { id: true, name: true, serviceId: true, service: { select: { id: true, name: true } } },
+          select: {
+            id: true,
+            name: true,
+            serviceId: true,
+            service: { select: { id: true, name: true } },
+          },
         },
       },
       orderBy: { expiresAt: 'asc' },
@@ -342,9 +354,7 @@ export class PackageService {
 
     // Filter by service compatibility
     if (serviceId) {
-      return purchases.filter(
-        (p) => !p.package.serviceId || p.package.serviceId === serviceId,
-      );
+      return purchases.filter((p) => !p.package.serviceId || p.package.serviceId === serviceId);
     }
 
     return purchases;

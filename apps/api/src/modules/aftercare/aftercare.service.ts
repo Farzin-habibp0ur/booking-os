@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../../common/prisma.service';
 import { NotificationService } from '../notification/notification.service';
@@ -426,10 +421,7 @@ export class AftercareService {
 
   // ── Helpers ────────────────────────────────────────────────────────
 
-  private resolveVariables(
-    template: string,
-    context: Record<string, string>,
-  ): string {
+  private resolveVariables(template: string, context: Record<string, string>): string {
     return template.replace(/\{\{(\w+)\}\}/g, (_, key) => context[key] || '');
   }
 }

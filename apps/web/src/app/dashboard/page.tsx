@@ -88,7 +88,10 @@ export default function DashboardPage() {
   const [wizardOpen, setWizardOpen] = useState(false);
   const [bannerDismissed, setBannerDismissed] = useState(true);
   const [onboardingIncomplete, setOnboardingIncomplete] = useState(false);
-  const [invoiceStats, setInvoiceStats] = useState<{ overdueCount: number; overdueAmount: number } | null>(null);
+  const [invoiceStats, setInvoiceStats] = useState<{
+    overdueCount: number;
+    overdueAmount: number;
+  } | null>(null);
   const { t } = useI18n();
   const { user } = useAuth();
   const { mode } = useMode();
@@ -326,10 +329,12 @@ export default function DashboardPage() {
             <AlertTriangle size={20} className="text-red-500" />
             <div>
               <p className="text-sm font-medium text-red-800">
-                {invoiceStats.overdueCount} overdue invoice{invoiceStats.overdueCount !== 1 ? 's' : ''}
+                {invoiceStats.overdueCount} overdue invoice
+                {invoiceStats.overdueCount !== 1 ? 's' : ''}
               </p>
               <p className="text-xs text-red-600">
-                ${invoiceStats.overdueAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })} outstanding
+                ${invoiceStats.overdueAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}{' '}
+                outstanding
               </p>
             </div>
           </div>

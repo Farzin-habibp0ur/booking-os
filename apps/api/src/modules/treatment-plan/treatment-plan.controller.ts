@@ -6,7 +6,11 @@ import { RolesGuard } from '../../common/roles.guard';
 import { BusinessId, CurrentUser } from '../../common/decorators';
 import { TreatmentPlanService } from './treatment-plan.service';
 import { CreateTreatmentPlanDto } from './dto/create-treatment-plan.dto';
-import { UpdateTreatmentPlanDto, AddSessionDto, UpdateSessionDto } from './dto/update-treatment-plan.dto';
+import {
+  UpdateTreatmentPlanDto,
+  AddSessionDto,
+  UpdateSessionDto,
+} from './dto/update-treatment-plan.dto';
 
 @ApiTags('Treatment Plans')
 @Controller('treatment-plans')
@@ -24,10 +28,7 @@ export class TreatmentPlanController {
   }
 
   @Get()
-  findAll(
-    @BusinessId() businessId: string,
-    @Query('customerId') customerId?: string,
-  ) {
+  findAll(@BusinessId() businessId: string, @Query('customerId') customerId?: string) {
     return this.service.findAll(businessId, customerId);
   }
 

@@ -70,12 +70,18 @@ function ArrayDiff({ oldItems, newItems }: { oldItems: string[]; newItems: strin
         </span>
       ))}
       {added.map((item, i) => (
-        <span key={`a-${i}`} className="rounded-full bg-green-50 px-2 py-0.5 text-xs text-green-700">
+        <span
+          key={`a-${i}`}
+          className="rounded-full bg-green-50 px-2 py-0.5 text-xs text-green-700"
+        >
           + {item}
         </span>
       ))}
       {removed.map((item, i) => (
-        <span key={`r-${i}`} className="rounded-full bg-red-50 px-2 py-0.5 text-xs text-red-700 line-through">
+        <span
+          key={`r-${i}`}
+          className="rounded-full bg-red-50 px-2 py-0.5 text-xs text-red-700 line-through"
+        >
           {item}
         </span>
       ))}
@@ -98,13 +104,9 @@ function StringDiff({ oldVal, newVal }: { oldVal: string | null; newVal: string 
   if (oldVal === newVal) return null;
   return (
     <div className="text-sm">
-      {oldVal && (
-        <span className="text-red-600 line-through">{oldVal}</span>
-      )}
+      {oldVal && <span className="text-red-600 line-through">{oldVal}</span>}
       {oldVal && newVal && <span className="mx-1 text-sage-400">&rarr;</span>}
-      {newVal && (
-        <span className="text-green-600">{newVal}</span>
-      )}
+      {newVal && <span className="text-green-600">{newVal}</span>}
       {!oldVal && newVal && <span className="text-xs text-sage-400"> (added)</span>}
       {oldVal && !newVal && <span className="text-xs text-sage-400"> (removed)</span>}
     </div>
@@ -126,11 +128,15 @@ export function MedicalHistoryDiff({ oldRecord, newRecord }: MedicalHistoryDiffP
       <div className="mb-4 grid grid-cols-2 gap-4">
         <div>
           <h4 className="text-sm font-semibold text-sage-900">Version {oldRecord.version}</h4>
-          <p className="text-xs text-sage-500">{new Date(oldRecord.createdAt).toLocaleDateString()}</p>
+          <p className="text-xs text-sage-500">
+            {new Date(oldRecord.createdAt).toLocaleDateString()}
+          </p>
         </div>
         <div>
           <h4 className="text-sm font-semibold text-sage-900">Version {newRecord.version}</h4>
-          <p className="text-xs text-sage-500">{new Date(newRecord.createdAt).toLocaleDateString()}</p>
+          <p className="text-xs text-sage-500">
+            {new Date(newRecord.createdAt).toLocaleDateString()}
+          </p>
         </div>
       </div>
 
@@ -145,15 +151,9 @@ export function MedicalHistoryDiff({ oldRecord, newRecord }: MedicalHistoryDiffP
             return (
               <div key={field.key} className="border-t border-sage-100 pt-3">
                 <p className="mb-1 text-xs font-medium text-sage-500">{field.label}</p>
-                {field.type === 'array' && (
-                  <ArrayDiff oldItems={oldVal} newItems={newVal} />
-                )}
-                {field.type === 'boolean' && (
-                  <BooleanDiff oldVal={oldVal} newVal={newVal} />
-                )}
-                {field.type === 'string' && (
-                  <StringDiff oldVal={oldVal} newVal={newVal} />
-                )}
+                {field.type === 'array' && <ArrayDiff oldItems={oldVal} newItems={newVal} />}
+                {field.type === 'boolean' && <BooleanDiff oldVal={oldVal} newVal={newVal} />}
+                {field.type === 'string' && <StringDiff oldVal={oldVal} newVal={newVal} />}
               </div>
             );
           })}

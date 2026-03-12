@@ -80,7 +80,7 @@ export default function VehicleDetailPage() {
   async function handleStatusChange(status: string) {
     try {
       const updated = await api.patch(`/vehicles/${id}`, { status });
-      setVehicle((prev) => (prev ? { ...prev, ...updated } : prev));
+      setVehicle((prev) => (prev ? { ...prev, ...(updated as Record<string, unknown>) } : prev));
       setEditingStatus(false);
     } catch {
       // fail silently
@@ -135,7 +135,9 @@ export default function VehicleDetailPage() {
                     <>
                       <button
                         onClick={() =>
-                          setPhotoIdx((i) => (i - 1 + vehicle.imageUrls.length) % vehicle.imageUrls.length)
+                          setPhotoIdx(
+                            (i) => (i - 1 + vehicle.imageUrls.length) % vehicle.imageUrls.length,
+                          )
                         }
                         className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white p-1.5 rounded-full"
                       >
@@ -234,7 +236,9 @@ export default function VehicleDetailPage() {
 
             {/* Description */}
             {vehicle.description && (
-              <p className="text-sm text-slate-600 dark:text-slate-400 mt-4">{vehicle.description}</p>
+              <p className="text-sm text-slate-600 dark:text-slate-400 mt-4">
+                {vehicle.description}
+              </p>
             )}
 
             {/* Features */}
@@ -280,7 +284,9 @@ export default function VehicleDetailPage() {
                         {td.staff && ` — ${td.staff.name}`}
                       </p>
                       {td.feedback && (
-                        <p className="text-xs text-slate-500 mt-1 italic">&ldquo;{td.feedback}&rdquo;</p>
+                        <p className="text-xs text-slate-500 mt-1 italic">
+                          &ldquo;{td.feedback}&rdquo;
+                        </p>
                       )}
                     </div>
                     <span
@@ -321,7 +327,9 @@ export default function VehicleDetailPage() {
             {vehicle.costPrice != null && (
               <div className="mb-2">
                 <p className="text-xs text-slate-500">Cost</p>
-                <p className="text-sm text-slate-600">${Number(vehicle.costPrice).toLocaleString()}</p>
+                <p className="text-sm text-slate-600">
+                  ${Number(vehicle.costPrice).toLocaleString()}
+                </p>
               </div>
             )}
             {profit != null && (
@@ -343,12 +351,20 @@ export default function VehicleDetailPage() {
             </h2>
             <dl className="space-y-2.5">
               {[
-                { icon: Gauge, label: 'Mileage', value: vehicle.mileage != null ? `${vehicle.mileage.toLocaleString()} mi` : null },
+                {
+                  icon: Gauge,
+                  label: 'Mileage',
+                  value: vehicle.mileage != null ? `${vehicle.mileage.toLocaleString()} mi` : null,
+                },
                 { icon: Car, label: 'Color', value: vehicle.color },
                 { icon: MapPin, label: 'Location', value: vehicle.location?.name },
                 { icon: Calendar, label: 'Days on Lot', value: `${daysOnLot} days` },
                 { icon: User, label: 'Added By', value: vehicle.addedBy?.name },
-                { icon: Calendar, label: 'Added', value: new Date(vehicle.createdAt).toLocaleDateString() },
+                {
+                  icon: Calendar,
+                  label: 'Added',
+                  value: new Date(vehicle.createdAt).toLocaleDateString(),
+                },
               ]
                 .filter((item) => item.value)
                 .map((item) => (

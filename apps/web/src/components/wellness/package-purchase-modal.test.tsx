@@ -5,6 +5,7 @@ jest.mock('@/lib/api', () => ({
   apiFetch: jest.fn(),
 }));
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { apiFetch } = require('@/lib/api');
 
 describe('PackagePurchaseModal', () => {

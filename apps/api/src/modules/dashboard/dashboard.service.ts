@@ -299,15 +299,23 @@ export class DashboardService {
             where: { businessId, stage: 'CLOSED_WON', actualCloseDate: { gte: monthAgo } },
           }),
         ]);
-        const pipelineValue = openDeals.reduce((sum, d) => sum + (d.dealValue ? Number(d.dealValue) : 0), 0);
-        const weightedValue = openDeals.reduce((sum, d) => sum + (d.dealValue ? Number(d.dealValue) * ((d.probability || 0) / 100) : 0), 0);
+        const pipelineValue = openDeals.reduce(
+          (sum, d) => sum + (d.dealValue ? Number(d.dealValue) : 0),
+          0,
+        );
+        const weightedValue = openDeals.reduce(
+          (sum, d) => sum + (d.dealValue ? Number(d.dealValue) * ((d.probability || 0) / 100) : 0),
+          0,
+        );
         dealPipelineMetrics = {
           openDeals: openDeals.length,
           pipelineValue: Math.round(pipelineValue * 100) / 100,
           weightedValue: Math.round(weightedValue * 100) / 100,
           wonThisMonth: recentWon,
         };
-      } catch { /* deal table may not exist yet */ }
+      } catch {
+        /* deal table may not exist yet */
+      }
     }
 
     // Waitlist backfill stats

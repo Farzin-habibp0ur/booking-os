@@ -20,7 +20,11 @@ interface VehicleSelectorProps {
   placeholder?: string;
 }
 
-export function VehicleSelector({ value, onChange, placeholder = 'Search vehicles...' }: VehicleSelectorProps) {
+export function VehicleSelector({
+  value,
+  onChange,
+  placeholder = 'Search vehicles...',
+}: VehicleSelectorProps) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<VehicleOption[]>([]);
   const [selected, setSelected] = useState<VehicleOption | null>(null);
@@ -31,9 +35,12 @@ export function VehicleSelector({ value, onChange, placeholder = 'Search vehicle
   // Load selected vehicle on mount
   useEffect(() => {
     if (value && !selected) {
-      api.get(`/vehicles/${value}`).then((v: any) => {
-        setSelected(v);
-      }).catch(() => {});
+      api
+        .get(`/vehicles/${value}`)
+        .then((v: any) => {
+          setSelected(v);
+        })
+        .catch(() => {});
     }
   }, [value, selected]);
 
@@ -110,9 +117,7 @@ export function VehicleSelector({ value, onChange, placeholder = 'Search vehicle
 
       {open && (
         <div className="absolute z-50 w-full mt-1 bg-white dark:bg-slate-900 rounded-xl shadow-soft-sm border border-slate-200 dark:border-slate-700 max-h-60 overflow-y-auto">
-          {loading && (
-            <div className="p-3 text-center text-xs text-slate-400">Searching...</div>
-          )}
+          {loading && <div className="p-3 text-center text-xs text-slate-400">Searching...</div>}
           {!loading && results.length === 0 && (
             <div className="p-3 text-center text-xs text-slate-400">No vehicles found</div>
           )}

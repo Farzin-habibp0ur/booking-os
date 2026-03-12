@@ -254,7 +254,10 @@ export function photoTypeBadgeClasses(type: string): string {
 // Treatment plan status styles
 // ---------------------------------------------------------------------------
 
-export const TREATMENT_PLAN_STATUS_STYLES: Record<string, { bg: string; text: string; label: string }> = {
+export const TREATMENT_PLAN_STATUS_STYLES: Record<
+  string,
+  { bg: string; text: string; label: string }
+> = {
   DRAFT: { bg: 'bg-slate-100', text: 'text-slate-600', label: 'Draft' },
   PROPOSED: { bg: 'bg-lavender-50', text: 'text-lavender-900', label: 'Proposed' },
   ACCEPTED: { bg: 'bg-blue-50', text: 'text-blue-700', label: 'Accepted' },
@@ -273,14 +276,15 @@ export function treatmentPlanBadgeClasses(status: string): string {
 // Aftercare status styles
 // ---------------------------------------------------------------------------
 
-export const AFTERCARE_STATUS_STYLES: Record<string, { bg: string; text: string; label: string }> = {
-  ACTIVE: { bg: 'bg-blue-50', text: 'text-blue-700', label: 'Active' },
-  COMPLETED: { bg: 'bg-sage-50', text: 'text-sage-900', label: 'Completed' },
-  CANCELLED: { bg: 'bg-red-50', text: 'text-red-700', label: 'Cancelled' },
-  SCHEDULED: { bg: 'bg-lavender-50', text: 'text-lavender-900', label: 'Scheduled' },
-  SENT: { bg: 'bg-sage-50', text: 'text-sage-900', label: 'Sent' },
-  FAILED: { bg: 'bg-red-50', text: 'text-red-700', label: 'Failed' },
-};
+export const AFTERCARE_STATUS_STYLES: Record<string, { bg: string; text: string; label: string }> =
+  {
+    ACTIVE: { bg: 'bg-blue-50', text: 'text-blue-700', label: 'Active' },
+    COMPLETED: { bg: 'bg-sage-50', text: 'text-sage-900', label: 'Completed' },
+    CANCELLED: { bg: 'bg-red-50', text: 'text-red-700', label: 'Cancelled' },
+    SCHEDULED: { bg: 'bg-lavender-50', text: 'text-lavender-900', label: 'Scheduled' },
+    SENT: { bg: 'bg-sage-50', text: 'text-sage-900', label: 'Sent' },
+    FAILED: { bg: 'bg-red-50', text: 'text-red-700', label: 'Failed' },
+  };
 
 export function aftercareBadgeClasses(status: string): string {
   const s = AFTERCARE_STATUS_STYLES[status];
@@ -301,11 +305,12 @@ export const VEHICLE_STATUS_STYLES: Record<string, { bg: string; text: string; l
   ARCHIVED: { bg: 'bg-red-50', text: 'text-red-700', label: 'Archived' },
 };
 
-export const VEHICLE_CONDITION_STYLES: Record<string, { bg: string; text: string; label: string }> = {
-  NEW: { bg: 'bg-sage-50', text: 'text-sage-900', label: 'New' },
-  USED: { bg: 'bg-amber-50', text: 'text-amber-700', label: 'Used' },
-  CERTIFIED_PRE_OWNED: { bg: 'bg-sky-50', text: 'text-sky-700', label: 'Certified Pre-Owned' },
-};
+export const VEHICLE_CONDITION_STYLES: Record<string, { bg: string; text: string; label: string }> =
+  {
+    NEW: { bg: 'bg-sage-50', text: 'text-sage-900', label: 'New' },
+    USED: { bg: 'bg-amber-50', text: 'text-amber-700', label: 'Used' },
+    CERTIFIED_PRE_OWNED: { bg: 'bg-sky-50', text: 'text-sky-700', label: 'Certified Pre-Owned' },
+  };
 
 export function vehicleStatusBadgeClasses(status: string): string {
   const s = VEHICLE_STATUS_STYLES[status];
@@ -323,9 +328,17 @@ export function vehicleConditionBadgeClasses(condition: string): string {
 // Deal stage styles (dealership pipeline)
 // ---------------------------------------------------------------------------
 
-export const DEAL_STAGE_STYLES: Record<string, { bg: string; text: string; label: string; hex: string }> = {
+export const DEAL_STAGE_STYLES: Record<
+  string,
+  { bg: string; text: string; label: string; hex: string }
+> = {
   INQUIRY: { bg: 'bg-slate-100', text: 'text-slate-600', label: 'Inquiry', hex: '#64748b' },
-  QUALIFIED: { bg: 'bg-lavender-50', text: 'text-lavender-900', label: 'Qualified', hex: '#9F8ECB' },
+  QUALIFIED: {
+    bg: 'bg-lavender-50',
+    text: 'text-lavender-900',
+    label: 'Qualified',
+    hex: '#9F8ECB',
+  },
   TEST_DRIVE: { bg: 'bg-sky-50', text: 'text-sky-700', label: 'Test Drive', hex: '#0ea5e9' },
   NEGOTIATION: { bg: 'bg-amber-50', text: 'text-amber-700', label: 'Negotiation', hex: '#f59e0b' },
   FINANCE: { bg: 'bg-blue-50', text: 'text-blue-700', label: 'Finance', hex: '#3b82f6' },

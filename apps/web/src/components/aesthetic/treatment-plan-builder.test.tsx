@@ -17,14 +17,18 @@ describe('TreatmentPlanBuilder', () => {
   });
 
   it('renders the form', () => {
-    render(<TreatmentPlanBuilder services={mockServices} onSubmit={onSubmit} onCancel={onCancel} />);
+    render(
+      <TreatmentPlanBuilder services={mockServices} onSubmit={onSubmit} onCancel={onCancel} />,
+    );
     expect(screen.getByTestId('treatment-plan-builder')).toBeInTheDocument();
     expect(screen.getByText('Clinical Assessment')).toBeInTheDocument();
     expect(screen.getByText('Treatment Sessions')).toBeInTheDocument();
   });
 
   it('only shows TREATMENT services in dropdown', () => {
-    render(<TreatmentPlanBuilder services={mockServices} onSubmit={onSubmit} onCancel={onCancel} />);
+    render(
+      <TreatmentPlanBuilder services={mockServices} onSubmit={onSubmit} onCancel={onCancel} />,
+    );
     const selects = screen.getAllByRole('combobox');
     expect(selects.length).toBeGreaterThan(0);
     // Should not include Consultation (CONSULT kind)
@@ -32,7 +36,9 @@ describe('TreatmentPlanBuilder', () => {
   });
 
   it('allows adding and removing sessions', () => {
-    render(<TreatmentPlanBuilder services={mockServices} onSubmit={onSubmit} onCancel={onCancel} />);
+    render(
+      <TreatmentPlanBuilder services={mockServices} onSubmit={onSubmit} onCancel={onCancel} />,
+    );
     // Initially 1 session
     expect(screen.getByTestId('session-0')).toBeInTheDocument();
 
@@ -42,20 +48,26 @@ describe('TreatmentPlanBuilder', () => {
   });
 
   it('calculates total estimate based on selected services', () => {
-    render(<TreatmentPlanBuilder services={mockServices} onSubmit={onSubmit} onCancel={onCancel} />);
+    render(
+      <TreatmentPlanBuilder services={mockServices} onSubmit={onSubmit} onCancel={onCancel} />,
+    );
     const select = screen.getAllByRole('combobox')[0];
     fireEvent.change(select, { target: { value: 'svc-1' } });
     expect(screen.getByText('$350.00')).toBeInTheDocument();
   });
 
   it('calls onCancel when cancel button clicked', () => {
-    render(<TreatmentPlanBuilder services={mockServices} onSubmit={onSubmit} onCancel={onCancel} />);
+    render(
+      <TreatmentPlanBuilder services={mockServices} onSubmit={onSubmit} onCancel={onCancel} />,
+    );
     fireEvent.click(screen.getByText('Cancel'));
     expect(onCancel).toHaveBeenCalled();
   });
 
   it('calls onSubmit with form data', () => {
-    render(<TreatmentPlanBuilder services={mockServices} onSubmit={onSubmit} onCancel={onCancel} />);
+    render(
+      <TreatmentPlanBuilder services={mockServices} onSubmit={onSubmit} onCancel={onCancel} />,
+    );
 
     // Fill diagnosis
     fireEvent.change(screen.getByPlaceholderText('Clinical notes from consultation...'), {
@@ -71,9 +83,7 @@ describe('TreatmentPlanBuilder', () => {
     expect(onSubmit).toHaveBeenCalledWith(
       expect.objectContaining({
         diagnosis: 'Test diagnosis',
-        sessions: expect.arrayContaining([
-          expect.objectContaining({ serviceId: 'svc-1' }),
-        ]),
+        sessions: expect.arrayContaining([expect.objectContaining({ serviceId: 'svc-1' })]),
       }),
     );
   });
@@ -88,7 +98,8 @@ describe('TreatmentPlanBuilder', () => {
       />,
     );
     expect(
-      (screen.getByPlaceholderText('Clinical notes from consultation...') as HTMLTextAreaElement).value,
+      (screen.getByPlaceholderText('Clinical notes from consultation...') as HTMLTextAreaElement)
+        .value,
     ).toBe('Existing diagnosis');
   });
 });

@@ -8,7 +8,12 @@ describe('InvoiceService', () => {
   let prisma: any;
 
   const mockBusiness = { id: 'biz1', name: 'Test Business' };
-  const mockCustomer = { id: 'cust1', businessId: 'biz1', name: 'John Doe', email: 'john@test.com' };
+  const mockCustomer = {
+    id: 'cust1',
+    businessId: 'biz1',
+    name: 'John Doe',
+    email: 'john@test.com',
+  };
   const mockBooking = {
     id: 'book1',
     businessId: 'biz1',
@@ -45,7 +50,9 @@ describe('InvoiceService', () => {
         count: jest.fn().mockResolvedValue(1),
         update: jest.fn().mockResolvedValue({ ...mockInvoice, status: 'SENT' }),
         updateMany: jest.fn().mockResolvedValue({ count: 0 }),
-        aggregate: jest.fn().mockResolvedValue({ _sum: { total: 0, paidAmount: 0 }, _count: { id: 0 } }),
+        aggregate: jest
+          .fn()
+          .mockResolvedValue({ _sum: { total: 0, paidAmount: 0 }, _count: { id: 0 } }),
       },
       invoiceLineItem: {
         deleteMany: jest.fn().mockResolvedValue({ count: 0 }),
@@ -71,10 +78,7 @@ describe('InvoiceService', () => {
     };
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        InvoiceService,
-        { provide: PrismaService, useValue: prisma },
-      ],
+      providers: [InvoiceService, { provide: PrismaService, useValue: prisma }],
     }).compile();
 
     service = module.get<InvoiceService>(InvoiceService);
@@ -260,9 +264,9 @@ describe('InvoiceService', () => {
     it('should reject editing non-draft invoice', async () => {
       prisma.invoice.findFirst.mockResolvedValue({ ...mockInvoice, status: 'SENT' });
 
-      await expect(
-        service.update('biz1', 'inv1', { notes: 'Updated' }),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.update('biz1', 'inv1', { notes: 'Updated' })).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 
@@ -296,10 +300,15 @@ describe('InvoiceService', () => {
         paidAmount: 0,
       });
 
-      const result = await service.recordPayment('biz1', 'inv1', {
-        amount: 100,
-        method: 'CASH',
-      }, 'staff1');
+      const result = await service.recordPayment(
+        'biz1',
+        'inv1',
+        {
+          amount: 100,
+          method: 'CASH',
+        },
+        'staff1',
+      );
 
       expect(prisma.$transaction).toHaveBeenCalled();
       expect(result.invoiceStatus).toBe('PAID');
@@ -314,10 +323,15 @@ describe('InvoiceService', () => {
         paidAmount: 0,
       });
 
-      const result = await service.recordPayment('biz1', 'inv1', {
-        amount: 50,
-        method: 'CARD',
-      }, 'staff1');
+      const result = await service.recordPayment(
+        'biz1',
+        'inv1',
+        {
+          amount: 50,
+          method: 'CARD',
+        },
+        'staff1',
+      );
 
       expect(result.invoiceStatus).toBe('PARTIALLY_PAID');
       expect(result.remaining).toBe(50);

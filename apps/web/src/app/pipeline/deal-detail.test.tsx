@@ -8,9 +8,19 @@ jest.mock('@/lib/cn', () => ({ cn: (...args: any[]) => args.filter(Boolean).join
 jest.mock('@/lib/design-tokens', () => ({
   DEAL_STAGE_STYLES: {
     INQUIRY: { bg: 'bg-slate-100', text: 'text-slate-600', label: 'Inquiry', hex: '#64748b' },
-    QUALIFIED: { bg: 'bg-lavender-50', text: 'text-lavender-900', label: 'Qualified', hex: '#9F8ECB' },
+    QUALIFIED: {
+      bg: 'bg-lavender-50',
+      text: 'text-lavender-900',
+      label: 'Qualified',
+      hex: '#9F8ECB',
+    },
     TEST_DRIVE: { bg: 'bg-sky-50', text: 'text-sky-700', label: 'Test Drive', hex: '#0ea5e9' },
-    NEGOTIATION: { bg: 'bg-amber-50', text: 'text-amber-700', label: 'Negotiation', hex: '#f59e0b' },
+    NEGOTIATION: {
+      bg: 'bg-amber-50',
+      text: 'text-amber-700',
+      label: 'Negotiation',
+      hex: '#f59e0b',
+    },
     FINANCE: { bg: 'bg-sage-50', text: 'text-sage-700', label: 'Finance', hex: '#71907C' },
     CLOSED_WON: { bg: 'bg-green-50', text: 'text-green-700', label: 'Closed Won', hex: '#22c55e' },
     CLOSED_LOST: { bg: 'bg-red-50', text: 'text-red-700', label: 'Closed Lost', hex: '#ef4444' },
@@ -122,7 +132,10 @@ describe('DealDetailPage', () => {
   it('shows loading skeleton initially', async () => {
     let resolveGet: any;
     mockApi.get.mockImplementation(
-      () => new Promise((resolve) => { resolveGet = resolve; }),
+      () =>
+        new Promise((resolve) => {
+          resolveGet = resolve;
+        }),
     );
 
     await act(async () => {

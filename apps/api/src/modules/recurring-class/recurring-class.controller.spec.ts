@@ -31,7 +31,13 @@ describe('RecurringClassController', () => {
   const bizId = 'biz-1';
 
   it('create calls service.create', async () => {
-    const dto = { serviceId: 'svc-1', staffId: 'staff-1', dayOfWeek: 1, startTime: '09:00', maxParticipants: 10 };
+    const dto = {
+      serviceId: 'svc-1',
+      staffId: 'staff-1',
+      dayOfWeek: 1,
+      startTime: '09:00',
+      maxParticipants: 10,
+    };
     service.create.mockResolvedValue({ id: 'rc-1' });
     const result = await controller.create(bizId, dto);
     expect(service.create).toHaveBeenCalledWith(bizId, dto);

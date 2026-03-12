@@ -162,9 +162,7 @@ function EngagementRing({ score }: { score: number }) {
           className="text-sage-500 transition-all duration-700"
         />
       </svg>
-      <span className="absolute font-serif text-sm font-semibold text-slate-800">
-        {clamped}
-      </span>
+      <span className="absolute font-serif text-sm font-semibold text-slate-800">{clamped}</span>
     </div>
   );
 }
@@ -178,14 +176,7 @@ interface StageNodeProps {
   isLast: boolean;
 }
 
-function StageNode({
-  stage,
-  dateEntered,
-  timeSpent,
-  isActive,
-  isReached,
-  isLast,
-}: StageNodeProps) {
+function StageNode({ stage, dateEntered, timeSpent, isActive, isReached, isLast }: StageNodeProps) {
   const style = DEAL_STAGE_STYLES[stage];
   const label = style?.label ?? stage;
 
@@ -212,7 +203,9 @@ function StageNode({
           <span
             className={cn(
               'h-2.5 w-2.5 rounded-full',
-              isReached ? (style?.text ?? 'text-slate-600').replace('text-', 'bg-') : 'bg-slate-200',
+              isReached
+                ? (style?.text ?? 'text-slate-600').replace('text-', 'bg-')
+                : 'bg-slate-200',
             )}
           />
         </div>
@@ -243,12 +236,7 @@ function StageNode({
       {/* Connector line */}
       {!isLast && (
         <div className="mx-1 flex items-start pt-1">
-          <div
-            className={cn(
-              'h-0.5 w-8 sm:w-12',
-              isReached ? 'bg-sage-300' : 'bg-slate-200',
-            )}
-          />
+          <div className={cn('h-0.5 w-8 sm:w-12', isReached ? 'bg-sage-300' : 'bg-slate-200')} />
         </div>
       )}
     </div>
@@ -266,18 +254,17 @@ export function CustomerJourneyBoard({ journey }: CustomerJourneyBoardProps) {
 
   // Determine the most recent/active deal for timeline
   const primaryDeal = useMemo(() => {
-    const active = deals.filter(
-      (d) => d.stage !== 'CLOSED_WON' && d.stage !== 'CLOSED_LOST',
-    );
+    const active = deals.filter((d) => d.stage !== 'CLOSED_WON' && d.stage !== 'CLOSED_LOST');
     if (active.length > 0) {
       return active.sort(
         (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
       )[0];
     }
     // Fall back to most recent deal of any kind
-    return deals.sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-    )[0] ?? null;
+    return (
+      deals.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0] ??
+      null
+    );
   }, [deals]);
 
   // Build per-stage info from primary deal history
@@ -309,9 +296,7 @@ export function CustomerJourneyBoard({ journey }: CustomerJourneyBoardProps) {
     ? STAGE_ORDER.indexOf(primaryDeal.stage as (typeof STAGE_ORDER)[number])
     : -1;
 
-  const activeDeals = deals.filter(
-    (d) => d.stage !== 'CLOSED_WON' && d.stage !== 'CLOSED_LOST',
-  );
+  const activeDeals = deals.filter((d) => d.stage !== 'CLOSED_WON' && d.stage !== 'CLOSED_LOST');
 
   return (
     <div className="space-y-5">
@@ -368,33 +353,23 @@ export function CustomerJourneyBoard({ journey }: CustomerJourneyBoardProps) {
             <Eye className="h-4 w-4" />
             <span className="text-[11px] font-medium uppercase tracking-wider">Visits</span>
           </div>
-          <p className="font-serif text-2xl font-semibold text-slate-800">
-            {stats.totalVisits}
-          </p>
+          <p className="font-serif text-2xl font-semibold text-slate-800">{stats.totalVisits}</p>
         </div>
 
         <div className="rounded-2xl bg-white p-4 shadow-soft">
           <div className="mb-1 flex items-center gap-2 text-slate-400">
             <Car className="h-4 w-4" />
-            <span className="text-[11px] font-medium uppercase tracking-wider">
-              Test Drives
-            </span>
+            <span className="text-[11px] font-medium uppercase tracking-wider">Test Drives</span>
           </div>
-          <p className="font-serif text-2xl font-semibold text-slate-800">
-            {stats.testDriveCount}
-          </p>
+          <p className="font-serif text-2xl font-semibold text-slate-800">{stats.testDriveCount}</p>
         </div>
 
         <div className="rounded-2xl bg-white p-4 shadow-soft">
           <div className="mb-1 flex items-center gap-2 text-slate-400">
             <TrendingUp className="h-4 w-4" />
-            <span className="text-[11px] font-medium uppercase tracking-wider">
-              Active Deals
-            </span>
+            <span className="text-[11px] font-medium uppercase tracking-wider">Active Deals</span>
           </div>
-          <p className="font-serif text-2xl font-semibold text-slate-800">
-            {stats.activeDeals}
-          </p>
+          <p className="font-serif text-2xl font-semibold text-slate-800">{stats.activeDeals}</p>
         </div>
       </div>
 
@@ -403,9 +378,7 @@ export function CustomerJourneyBoard({ journey }: CustomerJourneyBoardProps) {
       {/* ----------------------------------------------------------------- */}
       {vehiclesOfInterest.length > 0 && (
         <div className="rounded-2xl bg-white p-5 shadow-soft">
-          <h3 className="mb-3 text-sm font-semibold text-slate-800">
-            Vehicles of Interest
-          </h3>
+          <h3 className="mb-3 text-sm font-semibold text-slate-800">Vehicles of Interest</h3>
           <div className="flex gap-2 overflow-x-auto pb-1">
             {vehiclesOfInterest.map((v) => (
               <Link

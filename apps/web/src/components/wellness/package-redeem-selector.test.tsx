@@ -5,6 +5,7 @@ jest.mock('@/lib/api', () => ({
   apiFetch: jest.fn(),
 }));
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { apiFetch } = require('@/lib/api');
 
 describe('PackageRedeemSelector', () => {
@@ -18,7 +19,9 @@ describe('PackageRedeemSelector', () => {
       <PackageRedeemSelector customerId="cust-1" serviceId="svc-1" onSelect={jest.fn()} />,
     );
     // Loading state renders nothing
-    expect(container.querySelector('[data-testid="package-redeem-selector"]')).not.toBeInTheDocument();
+    expect(
+      container.querySelector('[data-testid="package-redeem-selector"]'),
+    ).not.toBeInTheDocument();
   });
 
   it('shows nothing when no active packages', async () => {
@@ -29,7 +32,9 @@ describe('PackageRedeemSelector', () => {
     await waitFor(() => {
       expect(apiFetch).toHaveBeenCalled();
     });
-    expect(container.querySelector('[data-testid="package-redeem-selector"]')).not.toBeInTheDocument();
+    expect(
+      container.querySelector('[data-testid="package-redeem-selector"]'),
+    ).not.toBeInTheDocument();
   });
 
   it('shows active packages', async () => {
@@ -43,9 +48,7 @@ describe('PackageRedeemSelector', () => {
       },
     ]);
 
-    render(
-      <PackageRedeemSelector customerId="cust-1" serviceId="svc-1" onSelect={jest.fn()} />,
-    );
+    render(<PackageRedeemSelector customerId="cust-1" serviceId="svc-1" onSelect={jest.fn()} />);
 
     await waitFor(() => {
       expect(screen.getByText('Massage 10-Pack')).toBeInTheDocument();
@@ -65,9 +68,7 @@ describe('PackageRedeemSelector', () => {
       },
     ]);
 
-    render(
-      <PackageRedeemSelector customerId="cust-1" serviceId="svc-1" onSelect={onSelect} />,
-    );
+    render(<PackageRedeemSelector customerId="cust-1" serviceId="svc-1" onSelect={onSelect} />);
 
     await waitFor(() => {
       expect(screen.getByText('Massage 10-Pack')).toBeInTheDocument();
@@ -89,9 +90,7 @@ describe('PackageRedeemSelector', () => {
       },
     ]);
 
-    render(
-      <PackageRedeemSelector customerId="cust-1" serviceId="svc-1" onSelect={onSelect} />,
-    );
+    render(<PackageRedeemSelector customerId="cust-1" serviceId="svc-1" onSelect={onSelect} />);
 
     await waitFor(() => {
       expect(screen.getByText('Pay full price instead')).toBeInTheDocument();
@@ -103,9 +102,7 @@ describe('PackageRedeemSelector', () => {
 
   it('fetches with serviceId filter', async () => {
     apiFetch.mockResolvedValue([]);
-    render(
-      <PackageRedeemSelector customerId="cust-1" serviceId="svc-1" onSelect={jest.fn()} />,
-    );
+    render(<PackageRedeemSelector customerId="cust-1" serviceId="svc-1" onSelect={jest.fn()} />);
 
     await waitFor(() => {
       expect(apiFetch).toHaveBeenCalledWith('/packages/customer/cust-1/active?serviceId=svc-1');

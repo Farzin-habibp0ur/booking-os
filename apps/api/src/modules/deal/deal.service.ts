@@ -1,4 +1,10 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+  Logger,
+} from '@nestjs/common';
 import { PrismaService } from '../../common/prisma.service';
 import { CreateDealDto, UpdateDealDto, ChangeStageDto, CreateActivityDto } from './dto';
 
@@ -12,7 +18,15 @@ const STAGE_PROBABILITY: Record<string, number> = {
   CLOSED_LOST: 0,
 };
 
-const STAGE_ORDER = ['INQUIRY', 'QUALIFIED', 'TEST_DRIVE', 'NEGOTIATION', 'FINANCE', 'CLOSED_WON', 'CLOSED_LOST'];
+const STAGE_ORDER = [
+  'INQUIRY',
+  'QUALIFIED',
+  'TEST_DRIVE',
+  'NEGOTIATION',
+  'FINANCE',
+  'CLOSED_WON',
+  'CLOSED_LOST',
+];
 
 @Injectable()
 export class DealService {
@@ -32,7 +46,18 @@ export class DealService {
 
   private readonly dealInclude = {
     customer: { select: { id: true, name: true, phone: true, email: true } },
-    vehicle: { select: { id: true, stockNumber: true, year: true, make: true, model: true, trim: true, askingPrice: true, status: true } },
+    vehicle: {
+      select: {
+        id: true,
+        stockNumber: true,
+        year: true,
+        make: true,
+        model: true,
+        trim: true,
+        askingPrice: true,
+        status: true,
+      },
+    },
     assignedTo: { select: { id: true, name: true } },
     _count: { select: { activities: true } },
   };
@@ -93,7 +118,16 @@ export class DealService {
     return deal;
   }
 
-  async findAll(businessId: string, query: { stage?: string; assignedToId?: string; customerId?: string; skip?: number; take?: number }) {
+  async findAll(
+    businessId: string,
+    query: {
+      stage?: string;
+      assignedToId?: string;
+      customerId?: string;
+      skip?: number;
+      take?: number;
+    },
+  ) {
     await this.assertDealershipVertical(businessId);
 
     const where: any = { businessId };
@@ -221,10 +255,14 @@ export class DealService {
 
     // On CLOSED_WON: mark vehicle as SOLD
     if (data.stage === 'CLOSED_WON' && deal.vehicleId) {
-      this.prisma.vehicle.update({
-        where: { id: deal.vehicleId },
-        data: { status: 'SOLD', soldAt: new Date() },
-      }).catch((err) => this.logger.warn(`Failed to update vehicle status on deal won`, { error: err.message }));
+      this.prisma.vehicle
+        .update({
+          where: { id: deal.vehicleId },
+          data: { status: 'SOLD', soldAt: new Date() },
+        })
+        .catch((err) =>
+          this.logger.warn(`Failed to update vehicle status on deal won`, { error: err.message }),
+        );
     }
 
     return updatedDeal;
@@ -267,7 +305,13 @@ export class DealService {
     const [allDeals, stageHistory] = await Promise.all([
       this.prisma.deal.findMany({
         where: { businessId },
-        select: { stage: true, dealValue: true, probability: true, createdAt: true, actualCloseDate: true },
+        select: {
+          stage: true,
+          dealValue: true,
+          probability: true,
+          createdAt: true,
+          actualCloseDate: true,
+        },
       }),
       this.prisma.dealStageHistory.findMany({
         where: { deal: { businessId } },
@@ -298,7 +342,8 @@ export class DealService {
     const stageTimeTotals: Record<string, { totalMins: number; count: number }> = {};
     for (const h of stageHistory) {
       if (h.fromStage && h.duration != null) {
-        if (!stageTimeTotals[h.fromStage]) stageTimeTotals[h.fromStage] = { totalMins: 0, count: 0 };
+        if (!stageTimeTotals[h.fromStage])
+          stageTimeTotals[h.fromStage] = { totalMins: 0, count: 0 };
         stageTimeTotals[h.fromStage].totalMins += h.duration;
         stageTimeTotals[h.fromStage].count++;
       }
@@ -310,16 +355,18 @@ export class DealService {
 
     // Avg cycle time (for closed deals)
     const closedDeals = allDeals.filter((d) => d.actualCloseDate && d.stage === 'CLOSED_WON');
-    const avgCycleTime = closedDeals.length > 0
-      ? Math.round(
-          closedDeals.reduce((sum, d) => {
-            const days = Math.floor(
-              (new Date(d.actualCloseDate!).getTime() - new Date(d.createdAt).getTime()) / (1000 * 60 * 60 * 24),
-            );
-            return sum + days;
-          }, 0) / closedDeals.length,
-        )
-      : 0;
+    const avgCycleTime =
+      closedDeals.length > 0
+        ? Math.round(
+            closedDeals.reduce((sum, d) => {
+              const days = Math.floor(
+                (new Date(d.actualCloseDate!).getTime() - new Date(d.createdAt).getTime()) /
+                  (1000 * 60 * 60 * 24),
+              );
+              return sum + days;
+            }, 0) / closedDeals.length,
+          )
+        : 0;
 
     // Conversion rates between stages
     const conversionRates: Record<string, number> = {};
@@ -327,8 +374,11 @@ export class DealService {
       const from = STAGE_ORDER[i];
       const to = STAGE_ORDER[i + 1];
       const transitionsFrom = stageHistory.filter((h) => h.fromStage === from).length;
-      const transitionsTo = stageHistory.filter((h) => h.fromStage === from && h.toStage === to).length;
-      conversionRates[`${from}_to_${to}`] = transitionsFrom > 0 ? Math.round((transitionsTo / transitionsFrom) * 100) : 0;
+      const transitionsTo = stageHistory.filter(
+        (h) => h.fromStage === from && h.toStage === to,
+      ).length;
+      conversionRates[`${from}_to_${to}`] =
+        transitionsFrom > 0 ? Math.round((transitionsTo / transitionsFrom) * 100) : 0;
     }
 
     return {
@@ -417,7 +467,9 @@ export class DealService {
         }),
       ]);
 
-      this.logger.log(`Auto-advanced deal ${deal.id} to TEST_DRIVE stage after test drive completion`);
+      this.logger.log(
+        `Auto-advanced deal ${deal.id} to TEST_DRIVE stage after test drive completion`,
+      );
     }
   }
 }

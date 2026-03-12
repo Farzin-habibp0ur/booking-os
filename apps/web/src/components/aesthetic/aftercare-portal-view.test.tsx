@@ -10,8 +10,20 @@ const mockEnrollments = [
     protocol: {
       name: 'General Aesthetic Aftercare',
       steps: [
-        { id: 'step-1', sequenceOrder: 1, delayHours: 0, subject: 'Aftercare Instructions', body: 'Hello' },
-        { id: 'step-2', sequenceOrder: 2, delayHours: 24, subject: '24-Hour Check-in', body: 'Check-in' },
+        {
+          id: 'step-1',
+          sequenceOrder: 1,
+          delayHours: 0,
+          subject: 'Aftercare Instructions',
+          body: 'Hello',
+        },
+        {
+          id: 'step-2',
+          sequenceOrder: 2,
+          delayHours: 24,
+          subject: '24-Hour Check-in',
+          body: 'Check-in',
+        },
       ],
     },
     booking: {
@@ -19,8 +31,20 @@ const mockEnrollments = [
       service: { name: 'Botox' },
     },
     messages: [
-      { id: 'msg-1', stepId: 'step-1', scheduledFor: '2026-03-10T10:00:00Z', sentAt: '2026-03-10T10:01:00Z', status: 'SENT' },
-      { id: 'msg-2', stepId: 'step-2', scheduledFor: '2026-03-11T10:00:00Z', sentAt: null, status: 'SCHEDULED' },
+      {
+        id: 'msg-1',
+        stepId: 'step-1',
+        scheduledFor: '2026-03-10T10:00:00Z',
+        sentAt: '2026-03-10T10:01:00Z',
+        status: 'SENT',
+      },
+      {
+        id: 'msg-2',
+        stepId: 'step-2',
+        scheduledFor: '2026-03-11T10:00:00Z',
+        sentAt: null,
+        status: 'SCHEDULED',
+      },
     ],
   },
 ];

@@ -32,7 +32,9 @@ function getISOWeek(date: Date): string {
   d.setHours(0, 0, 0, 0);
   d.setDate(d.getDate() + 3 - ((d.getDay() + 6) % 7));
   const yearStart = new Date(d.getFullYear(), 0, 4);
-  const week = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + yearStart.getDay() + 1 - 1) / 7);
+  const week = Math.ceil(
+    ((d.getTime() - yearStart.getTime()) / 86400000 + yearStart.getDay() + 1 - 1) / 7,
+  );
   return `${d.getFullYear()}-W${String(week).padStart(2, '0')}`;
 }
 
@@ -125,9 +127,7 @@ export default function ClassSchedule({ onEnroll, portalMode, fetchFn }: ClassSc
                       >
                         <div className="flex items-start justify-between">
                           <div>
-                            <p className="text-sm font-medium text-slate-900">
-                              {cls.service.name}
-                            </p>
+                            <p className="text-sm font-medium text-slate-900">{cls.service.name}</p>
                             <div className="flex items-center gap-3 mt-1 text-xs text-slate-500">
                               <span className="flex items-center gap-1">
                                 <Clock size={12} />

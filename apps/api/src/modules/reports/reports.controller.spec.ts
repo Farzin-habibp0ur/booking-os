@@ -56,7 +56,12 @@ describe('ReportsController', () => {
 
   it('should get bookings over time with date range', async () => {
     await controller.bookingsOverTime(BID, undefined, '2026-03-01', '2026-03-31');
-    expect(service.bookingsOverTime).toHaveBeenCalledWith(BID, undefined, expect.any(Date), expect.any(Date));
+    expect(service.bookingsOverTime).toHaveBeenCalledWith(
+      BID,
+      undefined,
+      expect.any(Date),
+      expect.any(Date),
+    );
   });
 
   it('should get no-show rate', async () => {
@@ -86,7 +91,12 @@ describe('ReportsController', () => {
 
   it('should get consult conversion', async () => {
     const result = await controller.consultConversion(BID);
-    expect(service.consultToTreatmentConversion).toHaveBeenCalledWith(BID, undefined, undefined, undefined);
+    expect(service.consultToTreatmentConversion).toHaveBeenCalledWith(
+      BID,
+      undefined,
+      undefined,
+      undefined,
+    );
     expect(result.rate).toBe(50);
   });
 
@@ -101,13 +111,25 @@ describe('ReportsController', () => {
 
   it('should get revenue summary', async () => {
     const result = await controller.revenueSummary(BID);
-    expect(service.revenueSummary).toHaveBeenCalledWith(BID, undefined, undefined, undefined, undefined);
+    expect(service.revenueSummary).toHaveBeenCalledWith(
+      BID,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+    );
     expect(result.totalRevenue).toBe(1000);
   });
 
   it('should get revenue summary with staff filter', async () => {
     await controller.revenueSummary(BID, undefined, undefined, undefined, 'staff1');
-    expect(service.revenueSummary).toHaveBeenCalledWith(BID, undefined, undefined, undefined, 'staff1');
+    expect(service.revenueSummary).toHaveBeenCalledWith(
+      BID,
+      undefined,
+      undefined,
+      undefined,
+      'staff1',
+    );
   });
 
   it('should get staff utilization', async () => {
@@ -132,7 +154,11 @@ describe('ReportsController', () => {
   // ─── Report Schedule Endpoints ───────────────────────────────────
 
   it('should create a report schedule', async () => {
-    const dto = { reportType: 'bookings-over-time', frequency: 'WEEKLY', recipients: ['a@b.com'] } as any;
+    const dto = {
+      reportType: 'bookings-over-time',
+      frequency: 'WEEKLY',
+      recipients: ['a@b.com'],
+    } as any;
     const result = await controller.createSchedule(BID, dto);
     expect(scheduleService.create).toHaveBeenCalledWith(BID, dto);
     expect(result.id).toBe('rs-1');

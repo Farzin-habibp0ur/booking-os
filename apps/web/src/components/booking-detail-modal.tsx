@@ -899,18 +899,17 @@ export default function BookingDetailModal({
           )}
 
           {/* Create Treatment Plan — for completed consultations */}
-          {booking.status === 'COMPLETED' &&
-            booking.service?.kind === 'CONSULT' && (
-              <button
-                onClick={() => {
-                  window.location.href = `/customers/${booking.customerId}?createPlan=${booking.id}`;
-                }}
-                className="w-full py-2 border border-lavender-200 text-lavender-700 rounded-xl text-sm font-medium hover:bg-lavender-50 transition-colors flex items-center justify-center gap-2"
-                data-testid="create-treatment-plan-btn"
-              >
-                Create Treatment Plan
-              </button>
-            )}
+          {booking.status === 'COMPLETED' && booking.service?.kind === 'CONSULT' && (
+            <button
+              onClick={() => {
+                window.location.href = `/customers/${booking.customerId}?createPlan=${booking.id}`;
+              }}
+              className="w-full py-2 border border-lavender-200 text-lavender-700 rounded-xl text-sm font-medium hover:bg-lavender-50 transition-colors flex items-center justify-center gap-2"
+              data-testid="create-treatment-plan-btn"
+            >
+              Create Treatment Plan
+            </button>
+          )}
 
           {/* Reschedule button (available for PENDING, CONFIRMED) */}
           {['PENDING', 'PENDING_DEPOSIT', 'CONFIRMED'].includes(booking.status) && (

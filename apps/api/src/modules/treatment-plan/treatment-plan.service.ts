@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../common/prisma.service';
 import { NotificationService } from '../notification/notification.service';
@@ -172,9 +167,7 @@ export class TreatmentPlanService {
       };
       const allowed = validTransitions[plan.status] || [];
       if (!allowed.includes(data.status)) {
-        throw new BadRequestException(
-          `Cannot transition from ${plan.status} to ${data.status}`,
-        );
+        throw new BadRequestException(`Cannot transition from ${plan.status} to ${data.status}`);
       }
     }
 
@@ -305,12 +298,7 @@ export class TreatmentPlanService {
     const planLink = `${webUrl}/portal/${plan.business.slug}/dashboard`;
 
     this.notificationService
-      .sendTreatmentPlanProposal(
-        plan.customer,
-        plan.business,
-        plan.sessions.length,
-        planLink,
-      )
+      .sendTreatmentPlanProposal(plan.customer, plan.business, plan.sessions.length, planLink)
       .catch((err) =>
         this.logger.warn(`Failed to send treatment plan notification: ${err.message}`),
       );
@@ -366,9 +354,7 @@ export class TreatmentPlanService {
       where: { treatmentPlanId: planId },
     });
 
-    const allDone = sessions.every(
-      (s) => s.status === 'COMPLETED' || s.status === 'SKIPPED',
-    );
+    const allDone = sessions.every((s) => s.status === 'COMPLETED' || s.status === 'SKIPPED');
 
     if (allDone && sessions.length > 0) {
       await this.prisma.treatmentPlan.update({

@@ -92,7 +92,12 @@ describe('VehicleService', () => {
       prisma.vehicle.findUnique.mockResolvedValueOnce(mockVehicle); // stock number check
 
       await expect(
-        service.create(businessId, { year: 2024, make: 'Toyota', model: 'Camry', stockNumber: 'AUT-00001' }),
+        service.create(businessId, {
+          year: 2024,
+          make: 'Toyota',
+          model: 'Camry',
+          stockNumber: 'AUT-00001',
+        }),
       ).rejects.toThrow(BadRequestException);
     });
 

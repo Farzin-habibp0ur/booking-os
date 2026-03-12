@@ -25,8 +25,22 @@ describe('AftercareProtocolEditor', () => {
       name: 'Test Protocol',
       isDefault: true,
       steps: [
-        { sequenceOrder: 1, delayHours: 0, channel: 'WHATSAPP', subject: 'Immediate', body: 'Hello', isActive: true },
-        { sequenceOrder: 2, delayHours: 24, channel: 'EMAIL', subject: '24h', body: 'Check-in', isActive: true },
+        {
+          sequenceOrder: 1,
+          delayHours: 0,
+          channel: 'WHATSAPP',
+          subject: 'Immediate',
+          body: 'Hello',
+          isActive: true,
+        },
+        {
+          sequenceOrder: 2,
+          delayHours: 24,
+          channel: 'EMAIL',
+          subject: '24h',
+          body: 'Check-in',
+          isActive: true,
+        },
       ],
     };
 
@@ -49,17 +63,33 @@ describe('AftercareProtocolEditor', () => {
       name: 'Test',
       isDefault: false,
       steps: [
-        { sequenceOrder: 1, delayHours: 0, channel: 'WHATSAPP', subject: '', body: 'A', isActive: true },
-        { sequenceOrder: 2, delayHours: 24, channel: 'WHATSAPP', subject: '', body: 'B', isActive: true },
+        {
+          sequenceOrder: 1,
+          delayHours: 0,
+          channel: 'WHATSAPP',
+          subject: '',
+          body: 'A',
+          isActive: true,
+        },
+        {
+          sequenceOrder: 2,
+          delayHours: 24,
+          channel: 'WHATSAPP',
+          subject: '',
+          body: 'B',
+          isActive: true,
+        },
       ],
     };
 
     render(<AftercareProtocolEditor {...defaultProps} protocol={protocol} />);
     expect(screen.getByText('Steps (2)')).toBeInTheDocument();
 
-    const deleteButtons = screen.getAllByRole('button').filter(
-      (btn) => btn.querySelector('svg.lucide-trash-2') || btn.querySelector('.lucide-trash2'),
-    );
+    const deleteButtons = screen
+      .getAllByRole('button')
+      .filter(
+        (btn) => btn.querySelector('svg.lucide-trash-2') || btn.querySelector('.lucide-trash2'),
+      );
     // Click any trash button
     const trashBtns = screen.getByTestId('aftercare-step-0').querySelectorAll('button');
     const trash = Array.from(trashBtns).find((b) => b.querySelector('svg'));

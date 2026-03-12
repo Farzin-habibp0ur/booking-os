@@ -77,8 +77,8 @@ export default function InventoryPage() {
       params.set('take', '50');
 
       const [res, statsRes] = await Promise.all([
-        api.get(`/vehicles?${params.toString()}`),
-        api.get('/vehicles/stats'),
+        api.get<{ data: Vehicle[]; total: number }>(`/vehicles?${params.toString()}`),
+        api.get<Stats>('/vehicles/stats'),
       ]);
       setVehicles(res.data || []);
       setTotal(res.total || 0);
@@ -278,20 +278,15 @@ export default function InventoryPage() {
       {/* Vehicle Grid/Table */}
       {vehicles.length === 0 ? (
         <EmptyState
-          icon={<Car size={40} />}
+          icon={Car}
           title="No vehicles in inventory"
           description="Add your first vehicle to start managing your dealership inventory."
-          actionLabel="Add Vehicle"
-          onAction={() => setShowAddModal(true)}
+          action={{ label: 'Add Vehicle', onClick: () => setShowAddModal(true) }}
         />
       ) : view === 'grid' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {vehicles.map((v) => (
-            <VehicleCard
-              key={v.id}
-              vehicle={v}
-              onClick={() => router.push(`/inventory/${v.id}`)}
-            />
+            <VehicleCard key={v.id} vehicle={v} onClick={() => router.push(`/inventory/${v.id}`)} />
           ))}
         </div>
       ) : (
@@ -299,12 +294,24 @@ export default function InventoryPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-100 dark:border-slate-800">
-                <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">Vehicle</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">Stock #</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">Condition</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">Status</th>
-                <th className="text-right px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">Price</th>
-                <th className="text-right px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">Mileage</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  Vehicle
+                </th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  Stock #
+                </th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  Condition
+                </th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="text-right px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  Price
+                </th>
+                <th className="text-right px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  Mileage
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -330,7 +337,9 @@ export default function InventoryPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${vehicleStatusBadgeClasses(v.status)}`}>
+                    <span
+                      className={`text-xs px-2 py-0.5 rounded-full ${vehicleStatusBadgeClasses(v.status)}`}
+                    >
                       {VEHICLE_STATUS_STYLES[v.status]?.label || v.status}
                     </span>
                   </td>
@@ -363,13 +372,7 @@ export default function InventoryPage() {
 
 // ─── Add Vehicle Modal ─────────────────────────────────────────────────────
 
-function AddVehicleModal({
-  onClose,
-  onCreated,
-}: {
-  onClose: () => void;
-  onCreated: () => void;
-}) {
+function AddVehicleModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
   const [form, setForm] = useState({
     year: new Date().getFullYear(),
     make: '',

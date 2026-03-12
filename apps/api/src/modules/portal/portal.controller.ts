@@ -115,19 +115,12 @@ export class PortalController {
   @Get('documents')
   @UseGuards(PortalGuard)
   getDocuments(@Req() req: any) {
-    return this.portalService.getDocuments(
-      req.portalUser.customerId,
-      req.portalUser.businessId,
-    );
+    return this.portalService.getDocuments(req.portalUser.customerId, req.portalUser.businessId);
   }
 
   @Post('invoices/:id/pay')
   @UseGuards(PortalGuard)
-  payInvoice(
-    @Req() req: any,
-    @Param('id') id: string,
-    @Body() dto: PayInvoiceDto,
-  ) {
+  payInvoice(@Req() req: any, @Param('id') id: string, @Body() dto: PayInvoiceDto) {
     return this.portalService.createInvoicePaymentSession(
       req.portalUser.customerId,
       req.portalUser.businessId,
@@ -159,19 +152,13 @@ export class PortalController {
   @Get('aftercare')
   @UseGuards(PortalGuard)
   getAftercare(@Req() req: any) {
-    return this.portalService.getAftercare(
-      req.portalUser.customerId,
-      req.portalUser.businessId,
-    );
+    return this.portalService.getAftercare(req.portalUser.customerId, req.portalUser.businessId);
   }
 
   @Get('packages')
   @UseGuards(PortalGuard)
   getPackages(@Req() req: any) {
-    return this.portalService.getPackages(
-      req.portalUser.customerId,
-      req.portalUser.businessId,
-    );
+    return this.portalService.getPackages(req.portalUser.customerId, req.portalUser.businessId);
   }
 
   @Get('class-schedule')

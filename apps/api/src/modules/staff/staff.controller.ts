@@ -181,7 +181,14 @@ export class StaffController {
   addCertification(
     @BusinessId() businessId: string,
     @Param('id') id: string,
-    @Body() body: { name: string; issuedBy?: string; issuedDate?: string; expiryDate?: string; documentUrl?: string },
+    @Body()
+    body: {
+      name: string;
+      issuedBy?: string;
+      issuedDate?: string;
+      expiryDate?: string;
+      documentUrl?: string;
+    },
   ) {
     return this.staffService.addCertification(businessId, id, body);
   }

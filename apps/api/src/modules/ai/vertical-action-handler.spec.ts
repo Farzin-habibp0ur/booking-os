@@ -13,7 +13,11 @@ describe('VerticalActionHandler', () => {
       create: jest.fn().mockResolvedValue({ id: 'card1', status: 'PENDING' }),
     };
     prisma = {
-      deal: { findFirst: jest.fn().mockResolvedValue(null), findMany: jest.fn().mockResolvedValue([]), count: jest.fn().mockResolvedValue(0) },
+      deal: {
+        findFirst: jest.fn().mockResolvedValue(null),
+        findMany: jest.fn().mockResolvedValue([]),
+        count: jest.fn().mockResolvedValue(0),
+      },
       testDrive: { findMany: jest.fn().mockResolvedValue([]) },
     };
 

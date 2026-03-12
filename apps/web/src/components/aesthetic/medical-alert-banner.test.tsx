@@ -14,9 +14,7 @@ jest.mock('lucide-react', () => ({
 
 describe('MedicalAlertBanner', () => {
   it('returns null when flagged is false', () => {
-    const { container } = render(
-      <MedicalAlertBanner flagged={false} flagReason={null} />,
-    );
+    const { container } = render(<MedicalAlertBanner flagged={false} flagReason={null} />);
     expect(container.firstChild).toBeNull();
   });
 
@@ -27,23 +25,14 @@ describe('MedicalAlertBanner', () => {
 
   it('shows the flag reason', () => {
     render(
-      <MedicalAlertBanner
-        flagged={true}
-        flagReason="Patient has severe allergic reactions"
-      />,
+      <MedicalAlertBanner flagged={true} flagReason="Patient has severe allergic reactions" />,
     );
-    expect(
-      screen.getByText('Patient has severe allergic reactions'),
-    ).toBeInTheDocument();
+    expect(screen.getByText('Patient has severe allergic reactions')).toBeInTheDocument();
   });
 
   it('shows allergy tags', () => {
     render(
-      <MedicalAlertBanner
-        flagged={true}
-        flagReason={null}
-        allergies={['Lidocaine', 'Latex']}
-      />,
+      <MedicalAlertBanner flagged={true} flagReason={null} allergies={['Lidocaine', 'Latex']} />,
     );
     expect(screen.getByText('Allergies:')).toBeInTheDocument();
     expect(screen.getByText('Lidocaine')).toBeInTheDocument();
@@ -65,11 +54,7 @@ describe('MedicalAlertBanner', () => {
 
   it('renders compact mode with only an icon', () => {
     const { container } = render(
-      <MedicalAlertBanner
-        flagged={true}
-        flagReason="Alert reason"
-        compact={true}
-      />,
+      <MedicalAlertBanner flagged={true} flagReason="Alert reason" compact={true} />,
     );
     expect(screen.getByTestId('alert-triangle-icon')).toBeInTheDocument();
     expect(screen.queryByText('Medical Alert')).not.toBeInTheDocument();

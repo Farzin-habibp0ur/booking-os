@@ -10,13 +10,15 @@ jest.mock('@/lib/design-tokens', () => ({
     ACTIVE: { bg: 'bg-sage-50', text: 'text-sage-900', label: 'Active' },
     EXHAUSTED: { bg: 'bg-slate-100', text: 'text-slate-600', label: 'Exhausted' },
   },
-  packageBadgeClasses: (status: string) => status === 'ACTIVE' ? 'bg-sage-50 text-sage-900' : 'bg-slate-100 text-slate-600',
+  packageBadgeClasses: (status: string) =>
+    status === 'ACTIVE' ? 'bg-sage-50 text-sage-900' : 'bg-slate-100 text-slate-600',
 }));
 
 jest.mock('@/components/skeleton', () => ({
   PageSkeleton: () => <div data-testid="page-skeleton">Loading...</div>,
 }));
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { apiFetch } = require('@/lib/api');
 
 describe('PackagesPage', () => {
@@ -139,7 +141,13 @@ describe('PackagesPage', () => {
   it('shows empty state when no packages', async () => {
     apiFetch.mockImplementation((url: string) => {
       if (url === '/packages') return Promise.resolve([]);
-      if (url === '/packages/stats') return Promise.resolve({ totalPackages: 0, activePurchases: 0, totalRevenue: 0, totalRedemptions: 0 });
+      if (url === '/packages/stats')
+        return Promise.resolve({
+          totalPackages: 0,
+          activePurchases: 0,
+          totalRevenue: 0,
+          totalRedemptions: 0,
+        });
       if (url === '/packages/purchases') return Promise.resolve([]);
       if (url === '/services') return Promise.resolve([]);
       if (url === '/customers') return Promise.resolve([]);

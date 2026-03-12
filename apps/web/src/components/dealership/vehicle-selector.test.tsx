@@ -5,8 +5,24 @@ jest.mock('@/lib/api', () => ({
   api: {
     get: jest.fn().mockResolvedValue({
       data: [
-        { id: 'v1', stockNumber: 'A-001', year: 2024, make: 'Toyota', model: 'Camry', vin: null, status: 'IN_STOCK' },
-        { id: 'v2', stockNumber: 'A-002', year: 2023, make: 'Honda', model: 'Civic', vin: null, status: 'IN_STOCK' },
+        {
+          id: 'v1',
+          stockNumber: 'A-001',
+          year: 2024,
+          make: 'Toyota',
+          model: 'Camry',
+          vin: null,
+          status: 'IN_STOCK',
+        },
+        {
+          id: 'v2',
+          stockNumber: 'A-002',
+          year: 2023,
+          make: 'Honda',
+          model: 'Civic',
+          vin: null,
+          status: 'IN_STOCK',
+        },
       ],
     }),
   },

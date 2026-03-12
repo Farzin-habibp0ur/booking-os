@@ -115,9 +115,9 @@ describe('VerticalPackService', () => {
     expect(testDrive?.price).toBe(0);
   });
 
-  it('dealership pack has 10 default templates', () => {
+  it('dealership pack has 12 default templates', () => {
     const pack = service.getPack('dealership');
-    expect(pack.defaultTemplates).toHaveLength(10);
+    expect(pack.defaultTemplates).toHaveLength(12);
   });
 
   it('dealership templates include dealership-specific ones', () => {

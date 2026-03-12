@@ -126,15 +126,13 @@ describe('ReportsPage', () => {
             revenue: 3000,
           },
         ]);
-      if (url.includes('/reports/peak-hours'))
-        return Promise.resolve({ byHour: [], byDay: [] });
+      if (url.includes('/reports/peak-hours')) return Promise.resolve({ byHour: [], byDay: [] });
       if (url.includes('/reports/consult-conversion'))
         return Promise.resolve({ rate: 45, converted: 9, consultCustomers: 20 });
       if (url.includes('/reports/source-breakdown'))
         return Promise.resolve([{ source: 'MANUAL', count: 10, completed: 8 }]);
       if (url.includes('/reports/schedules')) return Promise.resolve([]);
-      if (url.includes('/staff'))
-        return Promise.resolve([{ id: 'st1', name: 'Dr. Smith' }]);
+      if (url.includes('/staff')) return Promise.resolve([{ id: 'st1', name: 'Dr. Smith' }]);
       return Promise.resolve({});
     });
   });

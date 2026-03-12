@@ -580,7 +580,13 @@ export class BookingService {
 
       const currentBooking = await tx.booking.findFirst({
         where: { id, businessId },
-        select: { status: true, startTime: true, customFields: true, customerId: true, service: { select: { kind: true } } },
+        select: {
+          status: true,
+          startTime: true,
+          customFields: true,
+          customerId: true,
+          service: { select: { kind: true } },
+        },
       });
 
       if (!currentBooking) {

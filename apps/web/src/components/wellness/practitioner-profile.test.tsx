@@ -9,7 +9,13 @@ describe('PractitionerProfile', () => {
       { id: 'svc-2', name: 'Hot Stone Therapy', category: 'Massage' },
     ],
     certifications: [
-      { id: 'cert-1', name: 'RMT', issuedBy: 'College of MT', expiryDate: '2027-12-31', isVerified: true },
+      {
+        id: 'cert-1',
+        name: 'RMT',
+        issuedBy: 'College of MT',
+        expiryDate: '2027-12-31',
+        isVerified: true,
+      },
       { id: 'cert-2', name: 'Reiki Level 2', issuedBy: 'Reiki Academy', isVerified: false },
     ],
     workingHours: [

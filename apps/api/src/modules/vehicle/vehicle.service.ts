@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from '../../common/prisma.service';
 import { CreateVehicleDto, UpdateVehicleDto, ListVehiclesDto } from './dto';
 
@@ -54,7 +59,9 @@ export class VehicleService {
 
     // Check VIN uniqueness
     if (data.vin) {
-      const vinExists = await this.prisma.vehicle.findUnique({ where: { vin: data.vin.toUpperCase() } });
+      const vinExists = await this.prisma.vehicle.findUnique({
+        where: { vin: data.vin.toUpperCase() },
+      });
       if (vinExists) throw new BadRequestException('VIN already exists');
     }
 
@@ -187,7 +194,9 @@ export class VehicleService {
 
     // Check VIN uniqueness if changing
     if (data.vin && data.vin.toUpperCase() !== vehicle.vin) {
-      const vinExists = await this.prisma.vehicle.findUnique({ where: { vin: data.vin.toUpperCase() } });
+      const vinExists = await this.prisma.vehicle.findUnique({
+        where: { vin: data.vin.toUpperCase() },
+      });
       if (vinExists) throw new BadRequestException('VIN already exists');
     }
 
@@ -251,7 +260,9 @@ export class VehicleService {
       if (v.askingPrice) totalValue += Number(v.askingPrice);
       if (v.status === 'IN_STOCK') {
         inStockCount++;
-        totalDaysOnLot += Math.floor((now.getTime() - v.createdAt.getTime()) / (1000 * 60 * 60 * 24));
+        totalDaysOnLot += Math.floor(
+          (now.getTime() - v.createdAt.getTime()) / (1000 * 60 * 60 * 24),
+        );
       }
     }
 

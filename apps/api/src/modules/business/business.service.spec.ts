@@ -874,6 +874,7 @@ describe('BusinessService', () => {
         { name: 'Cancellation Confirmation' },
         { name: 'Reschedule Link' },
         { name: 'Cancel Link' },
+        { name: 'Treatment Plan Proposed' },
       ] as any);
       prisma.service.findMany.mockResolvedValue([
         { name: 'Consultation' },

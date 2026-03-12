@@ -3,15 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { cn } from '@/lib/cn';
-import {
-  Calendar,
-  Clock,
-  ChevronLeft,
-  ChevronRight,
-  Check,
-  Loader2,
-  User,
-} from 'lucide-react';
+import { Calendar, Clock, ChevronLeft, ChevronRight, Check, Loader2, User } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
@@ -214,9 +206,7 @@ export default function PortalBookPage() {
             <div
               className={cn(
                 'flex items-center gap-1.5 px-2.5 py-1 rounded-full',
-                step === s
-                  ? 'bg-sage-50 text-sage-800 font-medium'
-                  : 'text-slate-400',
+                step === s ? 'bg-sage-50 text-sage-800 font-medium' : 'text-slate-400',
               )}
             >
               <span
@@ -305,10 +295,7 @@ export default function PortalBookPage() {
           {/* Date picker */}
           <div className="bg-white rounded-2xl shadow-soft p-4">
             <div className="flex items-center justify-between mb-3">
-              <button
-                onClick={() => changeDate(-1)}
-                className="p-1 hover:bg-slate-100 rounded-lg"
-              >
+              <button onClick={() => changeDate(-1)} className="p-1 hover:bg-slate-100 rounded-lg">
                 <ChevronLeft size={18} className="text-slate-600" />
               </button>
               <div className="flex items-center gap-2">
@@ -321,10 +308,7 @@ export default function PortalBookPage() {
                   className="text-sm font-medium text-slate-900 bg-transparent border-none focus:ring-0 text-center"
                 />
               </div>
-              <button
-                onClick={() => changeDate(1)}
-                className="p-1 hover:bg-slate-100 rounded-lg"
-              >
+              <button onClick={() => changeDate(1)} className="p-1 hover:bg-slate-100 rounded-lg">
                 <ChevronRight size={18} className="text-slate-600" />
               </button>
             </div>
@@ -416,7 +400,9 @@ export default function PortalBookPage() {
               )}
               <div className="flex justify-between text-sm">
                 <span className="text-slate-500">Duration</span>
-                <span className="font-medium text-slate-900">{selectedService.durationMins} min</span>
+                <span className="font-medium text-slate-900">
+                  {selectedService.durationMins} min
+                </span>
               </div>
               <div className="border-t pt-3 flex justify-between text-sm">
                 <span className="font-medium text-slate-900">Total</span>

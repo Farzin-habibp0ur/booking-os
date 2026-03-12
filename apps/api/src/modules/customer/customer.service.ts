@@ -160,69 +160,85 @@ export class CustomerService {
   ) {
     const { types, showSystem = true, limit = 20, offset = 0 } = opts;
 
-    const [bookings, conversations, notes, waitlistEntries, quotes, campaignSends, invoices, clinicalPhotos, deals, testDrives] =
-      await Promise.all([
-        !types || types.includes('booking')
-          ? this.prisma.booking.findMany({
-              where: { customerId, businessId },
-              include: { service: true, staff: true },
-            })
-          : Promise.resolve([]),
-        !types || types.includes('conversation')
-          ? this.prisma.conversation.findMany({
-              where: { customerId, businessId },
-              include: { messages: { take: 1, orderBy: { createdAt: 'desc' } } },
-            })
-          : Promise.resolve([]),
-        !types || types.includes('note')
-          ? this.prisma.customerNote.findMany({
-              where: { customerId, businessId },
-              include: { staff: { select: { id: true, name: true } } },
-            })
-          : Promise.resolve([]),
-        !types || types.includes('waitlist')
-          ? this.prisma.waitlistEntry.findMany({
-              where: { customerId, businessId },
-              include: { service: true },
-            })
-          : Promise.resolve([]),
-        !types || types.includes('quote')
-          ? this.prisma.quote.findMany({
-              where: { businessId, booking: { customerId } },
-              include: { booking: { include: { service: true } } },
-            })
-          : Promise.resolve([]),
-        !types || types.includes('campaign')
-          ? this.prisma.campaignSend.findMany({
-              where: { customerId, campaign: { businessId } },
-              include: { campaign: true },
-            })
-          : Promise.resolve([]),
-        !types || types.includes('invoice')
-          ? this.prisma.invoice.findMany({
-              where: { customerId, businessId },
-              include: { lineItems: true },
-            })
-          : Promise.resolve([]),
-        !types || types.includes('photo')
-          ? this.prisma.clinicalPhoto.findMany({
-              where: { customerId, businessId, deletedAt: null },
-              select: { id: true, type: true, bodyArea: true, createdAt: true },
-            })
-          : Promise.resolve([]),
-        !types || types.includes('deal')
-          ? this.prisma.deal.findMany({
-              where: { customerId, businessId },
-              include: { vehicle: { select: { year: true, make: true, model: true } }, assignedTo: { select: { name: true } } },
-            })
-          : Promise.resolve([]),
-        !types || types.includes('testDrive')
-          ? this.prisma.testDrive.findMany({
-              where: { customer: { id: customerId }, vehicle: { businessId } },
-              include: { vehicle: { select: { year: true, make: true, model: true } }, staff: { select: { name: true } } },
-            })
-          : Promise.resolve([]),
-      ]);
+    const [
+      bookings,
+      conversations,
+      notes,
+      waitlistEntries,
+      quotes,
+      campaignSends,
+      invoices,
+      clinicalPhotos,
+      deals,
+      testDrives,
+    ] = await Promise.all([
+      !types || types.includes('booking')
+        ? this.prisma.booking.findMany({
+            where: { customerId, businessId },
+            include: { service: true, staff: true },
+          })
+        : Promise.resolve([]),
+      !types || types.includes('conversation')
+        ? this.prisma.conversation.findMany({
+            where: { customerId, businessId },
+            include: { messages: { take: 1, orderBy: { createdAt: 'desc' } } },
+          })
+        : Promise.resolve([]),
+      !types || types.includes('note')
+        ? this.prisma.customerNote.findMany({
+            where: { customerId, businessId },
+            include: { staff: { select: { id: true, name: true } } },
+          })
+        : Promise.resolve([]),
+      !types || types.includes('waitlist')
+        ? this.prisma.waitlistEntry.findMany({
+            where: { customerId, businessId },
+            include: { service: true },
+          })
+        : Promise.resolve([]),
+      !types || types.includes('quote')
+        ? this.prisma.quote.findMany({
+            where: { businessId, booking: { customerId } },
+            include: { booking: { include: { service: true } } },
+          })
+        : Promise.resolve([]),
+      !types || types.includes('campaign')
+        ? this.prisma.campaignSend.findMany({
+            where: { customerId, campaign: { businessId } },
+            include: { campaign: true },
+          })
+        : Promise.resolve([]),
+      !types || types.includes('invoice')
+        ? this.prisma.invoice.findMany({
+            where: { customerId, businessId },
+            include: { lineItems: true },
+          })
+        : Promise.resolve([]),
+      !types || types.includes('photo')
+        ? this.prisma.clinicalPhoto.findMany({
+            where: { customerId, businessId, deletedAt: null },
+            select: { id: true, type: true, bodyArea: true, createdAt: true },
+          })
+        : Promise.resolve([]),
+      !types || types.includes('deal')
+        ? this.prisma.deal.findMany({
+            where: { customerId, businessId },
+            include: {
+              vehicle: { select: { year: true, make: true, model: true } },
+              assignedTo: { select: { name: true } },
+            },
+          })
+        : Promise.resolve([]),
+      !types || types.includes('testDrive')
+        ? this.prisma.testDrive.findMany({
+            where: { customer: { id: customerId }, vehicle: { businessId } },
+            include: {
+              vehicle: { select: { year: true, make: true, model: true } },
+              staff: { select: { name: true } },
+            },
+          })
+        : Promise.resolve([]),
+    ]);
 
     const events: Array<{
       id: string;
@@ -350,14 +366,18 @@ export class CustomerService {
 
     // Deals
     for (const d of deals as any[]) {
-      const vehicleLabel = d.vehicle ? `${d.vehicle.year} ${d.vehicle.make} ${d.vehicle.model}` : '';
+      const vehicleLabel = d.vehicle
+        ? `${d.vehicle.year} ${d.vehicle.make} ${d.vehicle.model}`
+        : '';
       const value = d.dealValue ? ` — $${Number(d.dealValue).toLocaleString()}` : '';
       events.push({
         id: `deal-${d.id}`,
         type: 'deal',
         timestamp: d.updatedAt.toISOString(),
         title: `Deal — ${d.stage}${value}`,
-        description: [vehicleLabel, d.assignedTo?.name ? `Assigned to ${d.assignedTo.name}` : ''].filter(Boolean).join(' · '),
+        description: [vehicleLabel, d.assignedTo?.name ? `Assigned to ${d.assignedTo.name}` : '']
+          .filter(Boolean)
+          .join(' · '),
         metadata: { dealId: d.id, stage: d.stage, vehicleId: d.vehicleId },
         isSystemEvent: false,
         deepLink: `/pipeline/${d.id}`,
@@ -366,13 +386,21 @@ export class CustomerService {
 
     // Test Drives
     for (const td of testDrives as any[]) {
-      const vehicleLabel = td.vehicle ? `${td.vehicle.year} ${td.vehicle.make} ${td.vehicle.model}` : 'Vehicle';
+      const vehicleLabel = td.vehicle
+        ? `${td.vehicle.year} ${td.vehicle.make} ${td.vehicle.model}`
+        : 'Vehicle';
       events.push({
         id: `testDrive-${td.id}`,
         type: 'testDrive',
         timestamp: td.createdAt.toISOString(),
         title: `Test Drive — ${vehicleLabel}`,
-        description: [td.status, td.feedback ? td.feedback.substring(0, 100) : '', td.staff?.name ? `with ${td.staff.name}` : ''].filter(Boolean).join(' · '),
+        description: [
+          td.status,
+          td.feedback ? td.feedback.substring(0, 100) : '',
+          td.staff?.name ? `with ${td.staff.name}` : '',
+        ]
+          .filter(Boolean)
+          .join(' · '),
         metadata: { testDriveId: td.id, vehicleId: td.vehicleId, status: td.status },
         isSystemEvent: false,
         deepLink: null,
@@ -414,7 +442,19 @@ export class CustomerService {
       this.prisma.deal.findMany({
         where: { customerId, businessId },
         include: {
-          vehicle: { select: { id: true, stockNumber: true, year: true, make: true, model: true, trim: true, askingPrice: true, status: true, imageUrls: true } },
+          vehicle: {
+            select: {
+              id: true,
+              stockNumber: true,
+              year: true,
+              make: true,
+              model: true,
+              trim: true,
+              askingPrice: true,
+              status: true,
+              imageUrls: true,
+            },
+          },
           assignedTo: { select: { id: true, name: true } },
           stageHistory: {
             include: { changedBy: { select: { id: true, name: true } } },
@@ -431,7 +471,16 @@ export class CustomerService {
       this.prisma.testDrive.findMany({
         where: { vehicle: { businessId }, customer: { id: customerId } },
         include: {
-          vehicle: { select: { id: true, stockNumber: true, year: true, make: true, model: true, trim: true } },
+          vehicle: {
+            select: {
+              id: true,
+              stockNumber: true,
+              year: true,
+              make: true,
+              model: true,
+              trim: true,
+            },
+          },
           staff: { select: { id: true, name: true } },
           booking: { select: { id: true, status: true, startTime: true } },
         },
@@ -469,7 +518,10 @@ export class CustomerService {
 
     // Stats
     const wonDeals = deals.filter((d) => d.stage === 'CLOSED_WON');
-    const totalWonValue = wonDeals.reduce((sum, d) => sum + (d.dealValue ? Number(d.dealValue) : 0), 0);
+    const totalWonValue = wonDeals.reduce(
+      (sum, d) => sum + (d.dealValue ? Number(d.dealValue) : 0),
+      0,
+    );
     const totalVisits = bookings.length;
     const testDriveCount = testDrives.length;
 

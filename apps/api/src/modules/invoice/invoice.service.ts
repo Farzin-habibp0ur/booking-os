@@ -215,8 +215,9 @@ export class InvoiceService {
     if (data.lineItems) {
       const { subtotal, taxAmount, total } = this.computeTotals(
         data.lineItems,
-        data.taxRate ?? Number(invoice.taxRate) ?? undefined,
-        data.discountAmount ?? Number(invoice.discountAmount) ?? undefined,
+        data.taxRate ?? (invoice.taxRate ? Number(invoice.taxRate) : undefined),
+        data.discountAmount ??
+          (invoice.discountAmount ? Number(invoice.discountAmount) : undefined),
       );
       updateData.subtotal = subtotal;
       updateData.taxAmount = taxAmount;
@@ -247,7 +248,8 @@ export class InvoiceService {
         const recalc = this.computeTotals(
           items,
           data.taxRate,
-          data.discountAmount ?? Number(invoice.discountAmount) ?? undefined,
+          data.discountAmount ??
+            (invoice.discountAmount ? Number(invoice.discountAmount) : undefined),
         );
         updateData.subtotal = recalc.subtotal;
         updateData.taxAmount = recalc.taxAmount;
@@ -295,7 +297,12 @@ export class InvoiceService {
     });
   }
 
-  async recordPayment(businessId: string, id: string, data: RecordPaymentDto, recordedById: string) {
+  async recordPayment(
+    businessId: string,
+    id: string,
+    data: RecordPaymentDto,
+    recordedById: string,
+  ) {
     const invoice = await this.prisma.invoice.findFirst({
       where: { id, businessId },
       include: { customer: true },
@@ -386,8 +393,7 @@ export class InvoiceService {
 
     const totalOutstanding =
       Number(outstanding._sum.total || 0) - Number(outstanding._sum.paidAmount || 0);
-    const overdueAmount =
-      Number(overdue._sum.total || 0) - Number(overdue._sum.paidAmount || 0);
+    const overdueAmount = Number(overdue._sum.total || 0) - Number(overdue._sum.paidAmount || 0);
 
     let avgDaysToPay = 0;
     if (allPaid.length > 0) {

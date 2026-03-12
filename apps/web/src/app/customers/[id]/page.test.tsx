@@ -687,56 +687,6 @@ describe('CustomerDetailPage — Dealership Pack', () => {
     });
   }
 
-  it('shows quotes summary for dealership pack', async () => {
-    setupDealershipMocks();
-    render(<CustomerDetailPage />);
-    await waitFor(() => screen.getAllByText('Emma Wilson'));
-
-    expect(screen.getByTestId('vertical-toggle')).toBeInTheDocument();
-    expect(screen.getByTestId('quotes-summary')).toBeInTheDocument();
-  });
-
-  it('shows pending and approved quote counts', async () => {
-    setupDealershipMocks();
-    render(<CustomerDetailPage />);
-    await waitFor(() => screen.getAllByText('Emma Wilson'));
-
-    await waitFor(() => {
-      expect(screen.getByText('customer_detail.pending_quotes')).toBeInTheDocument();
-      expect(screen.getByText('customer_detail.approved_quotes')).toBeInTheDocument();
-      expect(screen.getByText('customer_detail.total_quoted')).toBeInTheDocument();
-    });
-  });
-
-  it('shows quote rows', async () => {
-    setupDealershipMocks();
-    render(<CustomerDetailPage />);
-    await waitFor(() => screen.getAllByText('Emma Wilson'));
-
-    await waitFor(() => {
-      expect(screen.getAllByTestId('quote-row').length).toBe(3);
-    });
-  });
-
-  it('shows no quotes message when none exist', async () => {
-    setupDealershipMocks([
-      {
-        id: 'b1',
-        startTime: '2025-01-01T10:00:00Z',
-        status: 'COMPLETED',
-        service: { name: 'Oil Change', price: 60 },
-        staff: { name: 'Mike' },
-        quotes: [],
-      },
-    ]);
-    render(<CustomerDetailPage />);
-    await waitFor(() => screen.getAllByText('Emma Wilson'));
-
-    await waitFor(() => {
-      expect(screen.getByText('customer_detail.no_quotes')).toBeInTheDocument();
-    });
-  });
-
   it('does not show IntakeCard for dealership pack', async () => {
     setupDealershipMocks();
     render(<CustomerDetailPage />);
@@ -750,11 +700,11 @@ describe('CustomerDetailPage — Dealership Pack', () => {
     render(<CustomerDetailPage />);
     await waitFor(() => screen.getAllByText('Emma Wilson'));
 
-    expect(screen.getByTestId('quotes-summary')).toBeInTheDocument();
+    expect(screen.getByTestId('dealership-summary')).toBeInTheDocument();
 
     fireEvent.click(screen.getByTestId('vertical-toggle'));
 
-    expect(screen.queryByTestId('quotes-summary')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('dealership-summary')).not.toBeInTheDocument();
   });
 
   it('does not render RecentChangesPanel (removed from layout)', async () => {

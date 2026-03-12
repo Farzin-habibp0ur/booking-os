@@ -299,7 +299,7 @@ function KanbanCard({
           {booking.customer.name}
         </span>
         {dossier.isMedicalFlagged && (
-          <AlertTriangle size={14} className="text-amber-500 shrink-0" title="Medical flag" />
+          <AlertTriangle size={14} className="text-amber-500 shrink-0" aria-label="Medical flag" />
         )}
       </div>
 

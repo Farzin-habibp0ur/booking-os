@@ -46,10 +46,7 @@ export class PackageController {
   }
 
   @Get('purchases/:purchaseId')
-  getPurchase(
-    @BusinessId() businessId: string,
-    @Param('purchaseId') purchaseId: string,
-  ) {
+  getPurchase(@BusinessId() businessId: string, @Param('purchaseId') purchaseId: string) {
     return this.packageService.getPurchase(businessId, purchaseId);
   }
 

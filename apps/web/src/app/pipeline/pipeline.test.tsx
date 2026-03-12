@@ -14,9 +14,19 @@ jest.mock('@/lib/cn', () => ({ cn: (...args: any[]) => args.filter(Boolean).join
 jest.mock('@/lib/design-tokens', () => ({
   DEAL_STAGE_STYLES: {
     INQUIRY: { bg: 'bg-slate-100', text: 'text-slate-600', label: 'Inquiry', hex: '#64748b' },
-    QUALIFIED: { bg: 'bg-lavender-50', text: 'text-lavender-900', label: 'Qualified', hex: '#9F8ECB' },
+    QUALIFIED: {
+      bg: 'bg-lavender-50',
+      text: 'text-lavender-900',
+      label: 'Qualified',
+      hex: '#9F8ECB',
+    },
     TEST_DRIVE: { bg: 'bg-sky-50', text: 'text-sky-700', label: 'Test Drive', hex: '#0ea5e9' },
-    NEGOTIATION: { bg: 'bg-amber-50', text: 'text-amber-700', label: 'Negotiation', hex: '#f59e0b' },
+    NEGOTIATION: {
+      bg: 'bg-amber-50',
+      text: 'text-amber-700',
+      label: 'Negotiation',
+      hex: '#f59e0b',
+    },
     FINANCE: { bg: 'bg-sage-50', text: 'text-sage-700', label: 'Finance', hex: '#71907C' },
   },
   dealStageBadgeClasses: (stage: string) => `badge-${stage}`,
@@ -25,8 +35,7 @@ jest.mock('@/components/skeleton', () => ({
   PageSkeleton: () => <div data-testid="page-skeleton" />,
 }));
 jest.mock('@/components/dealership/pipeline-stats', () => ({
-  PipelineStats: ({ stats }: any) =>
-    stats ? <div data-testid="pipeline-stats">Stats</div> : null,
+  PipelineStats: ({ stats }: any) => (stats ? <div data-testid="pipeline-stats">Stats</div> : null),
 }));
 jest.mock('@/lib/api', () => ({
   api: {
@@ -140,9 +149,7 @@ beforeEach(() => {
 
 describe('PipelinePage', () => {
   it('shows loading skeleton initially', async () => {
-    mockApi.get.mockImplementation(
-      () => new Promise(() => {}),
-    );
+    mockApi.get.mockImplementation(() => new Promise(() => {}));
 
     await act(async () => {
       render(<PipelinePage />);

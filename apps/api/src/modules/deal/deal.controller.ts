@@ -12,11 +12,7 @@ export class DealController {
   constructor(private readonly dealService: DealService) {}
 
   @Post()
-  create(
-    @BusinessId() businessId: string,
-    @Body() body: CreateDealDto,
-    @CurrentUser() user: any,
-  ) {
+  create(@BusinessId() businessId: string, @Body() body: CreateDealDto, @CurrentUser() user: any) {
     return this.dealService.create(businessId, body, user.id);
   }
 
@@ -46,11 +42,7 @@ export class DealController {
   }
 
   @Patch(':id')
-  update(
-    @BusinessId() businessId: string,
-    @Param('id') id: string,
-    @Body() body: UpdateDealDto,
-  ) {
+  update(@BusinessId() businessId: string, @Param('id') id: string, @Body() body: UpdateDealDto) {
     return this.dealService.update(businessId, id, body);
   }
 

@@ -37,10 +37,7 @@ describe('ClinicalPhotoService', () => {
     jest.clearAllMocks();
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        ClinicalPhotoService,
-        { provide: PrismaService, useValue: mockPrisma },
-      ],
+      providers: [ClinicalPhotoService, { provide: PrismaService, useValue: mockPrisma }],
     }).compile();
 
     service = module.get<ClinicalPhotoService>(ClinicalPhotoService);
@@ -60,7 +57,11 @@ describe('ClinicalPhotoService', () => {
       mockPrisma.business.findUnique.mockResolvedValue({ verticalPack: 'general' });
 
       await expect(
-        service.upload(businessId, { customerId: 'c1', type: 'BEFORE' as any, bodyArea: 'face' }, mockFile),
+        service.upload(
+          businessId,
+          { customerId: 'c1', type: 'BEFORE' as any, bodyArea: 'face' },
+          mockFile,
+        ),
       ).rejects.toThrow(ForbiddenException);
     });
 
@@ -93,14 +94,23 @@ describe('ClinicalPhotoService', () => {
       mockPrisma.customer.findFirst.mockResolvedValue(null);
 
       await expect(
-        service.upload(businessId, { customerId: 'c1', type: 'BEFORE' as any, bodyArea: 'face' }, mockFile),
+        service.upload(
+          businessId,
+          { customerId: 'c1', type: 'BEFORE' as any, bodyArea: 'face' },
+          mockFile,
+        ),
       ).rejects.toThrow(NotFoundException);
     });
 
     it('should upload photo for aesthetic business', async () => {
       mockPrisma.business.findUnique.mockResolvedValue({ verticalPack: 'aesthetic' });
       mockPrisma.customer.findFirst.mockResolvedValue({ id: 'c1', businessId });
-      const createdPhoto = { id: 'p1', type: 'BEFORE', bodyArea: 'face', fileUrl: '/api/v1/clinical-photos/file/clinical-test.jpg' };
+      const createdPhoto = {
+        id: 'p1',
+        type: 'BEFORE',
+        bodyArea: 'face',
+        fileUrl: '/api/v1/clinical-photos/file/clinical-test.jpg',
+      };
       mockPrisma.clinicalPhoto.create.mockResolvedValue(createdPhoto);
 
       const result = await service.upload(
@@ -218,7 +228,9 @@ describe('ClinicalPhotoService', () => {
     it('should throw if photo not found', async () => {
       mockPrisma.clinicalPhoto.findFirst.mockResolvedValue(null);
 
-      await expect(service.softDelete(businessId, 'nonexistent')).rejects.toThrow(NotFoundException);
+      await expect(service.softDelete(businessId, 'nonexistent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -226,9 +238,7 @@ describe('ClinicalPhotoService', () => {
     it('should create comparison with valid photos', async () => {
       const before = { id: 'p1', businessId, customerId: 'c1', type: 'BEFORE' };
       const after = { id: 'p2', businessId, customerId: 'c1', type: 'AFTER' };
-      mockPrisma.clinicalPhoto.findFirst
-        .mockResolvedValueOnce(before)
-        .mockResolvedValueOnce(after);
+      mockPrisma.clinicalPhoto.findFirst.mockResolvedValueOnce(before).mockResolvedValueOnce(after);
 
       const comparison = { id: 'comp1', beforePhotoId: 'p1', afterPhotoId: 'p2' };
       mockPrisma.photoComparison.create.mockResolvedValue(comparison);

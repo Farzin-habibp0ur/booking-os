@@ -43,7 +43,14 @@ const mockInvoice = {
   customer: { id: 'c1', name: 'John Doe', email: 'john@test.com', phone: '+1234567890' },
   booking: null,
   lineItems: [
-    { id: 'li1', description: 'Consultation', quantity: 1, unitPrice: 100, total: 100, service: null },
+    {
+      id: 'li1',
+      description: 'Consultation',
+      quantity: 1,
+      unitPrice: 100,
+      total: 100,
+      service: null,
+    },
     { id: 'li2', description: 'Follow-up', quantity: 1, unitPrice: 50, total: 50, service: null },
   ],
   payments: [],
@@ -138,7 +145,13 @@ describe('InvoiceDetailPage', () => {
       status: 'PARTIALLY_PAID',
       paidAmount: 50,
       payments: [
-        { id: 'p1', amount: 50, method: 'CASH', createdAt: '2026-03-11T00:00:00Z', reference: 'RCP-001' },
+        {
+          id: 'p1',
+          amount: 50,
+          method: 'CASH',
+          createdAt: '2026-03-11T00:00:00Z',
+          reference: 'RCP-001',
+        },
       ],
     });
 

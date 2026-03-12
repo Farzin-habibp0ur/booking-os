@@ -32,7 +32,16 @@ describe('DealService', () => {
     createdAt: new Date('2026-01-01'),
     updatedAt: new Date('2026-01-01'),
     customer: { id: customerId, name: 'John Doe', phone: '555-0001', email: 'john@test.com' },
-    vehicle: { id: vehicleId, stockNumber: 'STK001', year: 2025, make: 'Toyota', model: 'Camry', trim: 'SE', askingPrice: 30000, status: 'IN_STOCK' },
+    vehicle: {
+      id: vehicleId,
+      stockNumber: 'STK001',
+      year: 2025,
+      make: 'Toyota',
+      model: 'Camry',
+      trim: 'SE',
+      askingPrice: 30000,
+      status: 'IN_STOCK',
+    },
     assignedTo: { id: staffId, name: 'Agent Smith' },
     _count: { activities: 3 },
   };
@@ -65,7 +74,12 @@ describe('DealService', () => {
               findMany: jest.fn().mockResolvedValue([]),
             },
             dealActivity: {
-              create: jest.fn().mockResolvedValue({ id: 'act-1', type: 'NOTE', description: 'Test', createdBy: { id: staffId, name: 'Agent Smith' } }),
+              create: jest.fn().mockResolvedValue({
+                id: 'act-1',
+                type: 'NOTE',
+                description: 'Test',
+                createdBy: { id: staffId, name: 'Agent Smith' },
+              }),
               findMany: jest.fn().mockResolvedValue([]),
             },
           },
@@ -81,7 +95,13 @@ describe('DealService', () => {
   // create
   // -------------------------------------------------------------------
   describe('create', () => {
-    const dto = { customerId, vehicleId, source: 'WALK_IN', dealType: 'NEW_PURCHASE', dealValue: 25000 };
+    const dto = {
+      customerId,
+      vehicleId,
+      source: 'WALK_IN',
+      dealType: 'NEW_PURCHASE',
+      dealValue: 25000,
+    };
 
     it('should create a deal successfully', async () => {
       const result = await service.create(businessId, dto as any, staffId);
@@ -121,21 +141,31 @@ describe('DealService', () => {
     it('should throw NotFoundException when customer not found', async () => {
       (prisma.customer.findFirst as jest.Mock).mockResolvedValue(null);
 
-      await expect(service.create(businessId, dto as any, staffId)).rejects.toThrow(NotFoundException);
-      await expect(service.create(businessId, dto as any, staffId)).rejects.toThrow('Customer not found');
+      await expect(service.create(businessId, dto as any, staffId)).rejects.toThrow(
+        NotFoundException,
+      );
+      await expect(service.create(businessId, dto as any, staffId)).rejects.toThrow(
+        'Customer not found',
+      );
     });
 
     it('should throw NotFoundException when vehicle not found', async () => {
       (prisma.vehicle.findFirst as jest.Mock).mockResolvedValue(null);
 
-      await expect(service.create(businessId, dto as any, staffId)).rejects.toThrow(NotFoundException);
-      await expect(service.create(businessId, dto as any, staffId)).rejects.toThrow('Vehicle not found');
+      await expect(service.create(businessId, dto as any, staffId)).rejects.toThrow(
+        NotFoundException,
+      );
+      await expect(service.create(businessId, dto as any, staffId)).rejects.toThrow(
+        'Vehicle not found',
+      );
     });
 
     it('should throw ForbiddenException for non-dealership vertical', async () => {
       (prisma.business.findUnique as jest.Mock).mockResolvedValue({ verticalPack: 'aesthetic' });
 
-      await expect(service.create(businessId, dto as any, staffId)).rejects.toThrow(ForbiddenException);
+      await expect(service.create(businessId, dto as any, staffId)).rejects.toThrow(
+        ForbiddenException,
+      );
       await expect(service.create(businessId, dto as any, staffId)).rejects.toThrow(
         'Deal pipeline is only available for dealership businesses',
       );
@@ -163,8 +193,12 @@ describe('DealService', () => {
       (prisma.staff.findFirst as jest.Mock).mockResolvedValue(null);
       const dtoWithStaff = { customerId, assignedToId: 'bad-staff' };
 
-      await expect(service.create(businessId, dtoWithStaff as any, staffId)).rejects.toThrow(NotFoundException);
-      await expect(service.create(businessId, dtoWithStaff as any, staffId)).rejects.toThrow('Staff not found');
+      await expect(service.create(businessId, dtoWithStaff as any, staffId)).rejects.toThrow(
+        NotFoundException,
+      );
+      await expect(service.create(businessId, dtoWithStaff as any, staffId)).rejects.toThrow(
+        'Staff not found',
+      );
     });
   });
 
@@ -271,8 +305,12 @@ describe('DealService', () => {
     it('should throw NotFoundException when deal not found', async () => {
       (prisma.deal.findFirst as jest.Mock).mockResolvedValue(null);
 
-      await expect(service.update(businessId, 'nonexistent', {} as any)).rejects.toThrow(NotFoundException);
-      await expect(service.update(businessId, 'nonexistent', {} as any)).rejects.toThrow('Deal not found');
+      await expect(service.update(businessId, 'nonexistent', {} as any)).rejects.toThrow(
+        NotFoundException,
+      );
+      await expect(service.update(businessId, 'nonexistent', {} as any)).rejects.toThrow(
+        'Deal not found',
+      );
     });
 
     it('should validate vehicle if vehicleId provided', async () => {
@@ -304,11 +342,20 @@ describe('DealService', () => {
 
     beforeEach(() => {
       (prisma.deal.findFirst as jest.Mock).mockResolvedValue(dealWithHistory);
-      (prisma.deal.update as jest.Mock).mockResolvedValue({ ...mockDeal, stage: 'QUALIFIED', probability: 25 });
+      (prisma.deal.update as jest.Mock).mockResolvedValue({
+        ...mockDeal,
+        stage: 'QUALIFIED',
+        probability: 25,
+      });
     });
 
     it('should change stage successfully', async () => {
-      const result = await service.changeStage(businessId, dealId, { stage: 'QUALIFIED' } as any, staffId);
+      const result = await service.changeStage(
+        businessId,
+        dealId,
+        { stage: 'QUALIFIED' } as any,
+        staffId,
+      );
 
       expect(result).toBeDefined();
       expect(prisma.deal.update).toHaveBeenCalledWith(
@@ -443,10 +490,34 @@ describe('DealService', () => {
     it('should return win rate, cycle time, and pipeline values', async () => {
       const now = new Date('2026-03-01');
       const deals = [
-        { stage: 'CLOSED_WON', dealValue: 25000, probability: 100, createdAt: new Date('2026-01-01'), actualCloseDate: new Date('2026-02-01') },
-        { stage: 'CLOSED_WON', dealValue: 30000, probability: 100, createdAt: new Date('2026-01-15'), actualCloseDate: new Date('2026-02-15') },
-        { stage: 'CLOSED_LOST', dealValue: 20000, probability: 0, createdAt: new Date('2026-01-10'), actualCloseDate: new Date('2026-02-10') },
-        { stage: 'NEGOTIATION', dealValue: 35000, probability: 60, createdAt: new Date('2026-02-01'), actualCloseDate: null },
+        {
+          stage: 'CLOSED_WON',
+          dealValue: 25000,
+          probability: 100,
+          createdAt: new Date('2026-01-01'),
+          actualCloseDate: new Date('2026-02-01'),
+        },
+        {
+          stage: 'CLOSED_WON',
+          dealValue: 30000,
+          probability: 100,
+          createdAt: new Date('2026-01-15'),
+          actualCloseDate: new Date('2026-02-15'),
+        },
+        {
+          stage: 'CLOSED_LOST',
+          dealValue: 20000,
+          probability: 0,
+          createdAt: new Date('2026-01-10'),
+          actualCloseDate: new Date('2026-02-10'),
+        },
+        {
+          stage: 'NEGOTIATION',
+          dealValue: 35000,
+          probability: 60,
+          createdAt: new Date('2026-02-01'),
+          actualCloseDate: null,
+        },
       ];
       const stageHistory = [
         { fromStage: 'INQUIRY', toStage: 'QUALIFIED', duration: 120 },
@@ -473,7 +544,13 @@ describe('DealService', () => {
 
     it('should return 0 win rate when no closed deals', async () => {
       (prisma.deal.findMany as jest.Mock).mockResolvedValue([
-        { stage: 'INQUIRY', dealValue: 10000, probability: 10, createdAt: new Date(), actualCloseDate: null },
+        {
+          stage: 'INQUIRY',
+          dealValue: 10000,
+          probability: 10,
+          createdAt: new Date(),
+          actualCloseDate: null,
+        },
       ]);
       (prisma.dealStageHistory.findMany as jest.Mock).mockResolvedValue([]);
 
@@ -512,10 +589,20 @@ describe('DealService', () => {
       (prisma.deal.findFirst as jest.Mock).mockResolvedValue(null);
 
       await expect(
-        service.addActivity(businessId, 'nonexistent', { type: 'NOTE', description: 'test' } as any, staffId),
+        service.addActivity(
+          businessId,
+          'nonexistent',
+          { type: 'NOTE', description: 'test' } as any,
+          staffId,
+        ),
       ).rejects.toThrow(NotFoundException);
       await expect(
-        service.addActivity(businessId, 'nonexistent', { type: 'NOTE', description: 'test' } as any, staffId),
+        service.addActivity(
+          businessId,
+          'nonexistent',
+          { type: 'NOTE', description: 'test' } as any,
+          staffId,
+        ),
       ).rejects.toThrow('Deal not found');
     });
   });
@@ -526,8 +613,18 @@ describe('DealService', () => {
   describe('advanceDealOnTestDriveCompletion', () => {
     it('should advance INQUIRY and QUALIFIED deals to TEST_DRIVE', async () => {
       const dealsToAdvance = [
-        { id: 'deal-a', stage: 'INQUIRY', customerId, stageHistory: [{ createdAt: new Date('2026-01-01') }] },
-        { id: 'deal-b', stage: 'QUALIFIED', customerId, stageHistory: [{ createdAt: new Date('2026-02-01') }] },
+        {
+          id: 'deal-a',
+          stage: 'INQUIRY',
+          customerId,
+          stageHistory: [{ createdAt: new Date('2026-01-01') }],
+        },
+        {
+          id: 'deal-b',
+          stage: 'QUALIFIED',
+          customerId,
+          stageHistory: [{ createdAt: new Date('2026-02-01') }],
+        },
       ];
       (prisma.deal.findMany as jest.Mock).mockResolvedValue(dealsToAdvance);
 

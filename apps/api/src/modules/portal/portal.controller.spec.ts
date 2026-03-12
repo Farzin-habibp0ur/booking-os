@@ -24,7 +24,9 @@ describe('PortalController', () => {
       getServices: jest.fn().mockResolvedValue([{ id: 's1', name: 'Haircut' }]),
       createBooking: jest.fn().mockResolvedValue({ id: 'b1', source: 'PORTAL' }),
       getDocuments: jest.fn().mockResolvedValue({ intake: null, bookingNotes: [] }),
-      createInvoicePaymentSession: jest.fn().mockResolvedValue({ url: 'https://checkout.stripe.com/session' }),
+      createInvoicePaymentSession: jest
+        .fn()
+        .mockResolvedValue({ url: 'https://checkout.stripe.com/session' }),
     };
 
     const module = await Test.createTestingModule({
@@ -119,10 +121,17 @@ describe('PortalController', () => {
 
   it('POST /portal/invoices/:id/pay calls portalService.createInvoicePaymentSession', async () => {
     const req = { portalUser: { customerId: 'c1', businessId: 'b1' } };
-    const dto = { successUrl: 'https://example.com/success', cancelUrl: 'https://example.com/cancel' };
+    const dto = {
+      successUrl: 'https://example.com/success',
+      cancelUrl: 'https://example.com/cancel',
+    };
     const result = await controller.payInvoice(req, 'inv1', dto);
     expect(portalService.createInvoicePaymentSession).toHaveBeenCalledWith(
-      'c1', 'b1', 'inv1', 'https://example.com/success', 'https://example.com/cancel',
+      'c1',
+      'b1',
+      'inv1',
+      'https://example.com/success',
+      'https://example.com/cancel',
     );
     expect(result.url).toBe('https://checkout.stripe.com/session');
   });

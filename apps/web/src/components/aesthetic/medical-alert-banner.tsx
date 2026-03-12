@@ -34,9 +34,7 @@ export function MedicalAlertBanner({
         <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-500" />
         <div className="space-y-2">
           <h4 className="text-sm font-semibold text-red-800">Medical Alert</h4>
-          {flagReason && (
-            <p className="text-sm text-red-700">{flagReason}</p>
-          )}
+          {flagReason && <p className="text-sm text-red-700">{flagReason}</p>}
           {allergies.length > 0 && (
             <div className="space-y-1">
               <p className="text-xs font-medium text-red-700">Allergies:</p>

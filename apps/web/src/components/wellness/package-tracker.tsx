@@ -32,7 +32,7 @@ export default function PackageTracker({ customerId, sessions }: PackageTrackerP
     if (!customerId) return;
     setLoading(true);
     apiFetch(`/packages/customer/${customerId}/active`)
-      .then((data) => setPurchases(Array.isArray(data) ? data : []))
+      .then((data: any) => setPurchases(Array.isArray(data) ? data : []))
       .catch(() => setPurchases([]))
       .finally(() => setLoading(false));
   }, [customerId]);
@@ -55,7 +55,10 @@ export default function PackageTracker({ customerId, sessions }: PackageTrackerP
 
   if (loading) {
     return (
-      <div className="bg-white rounded-2xl shadow-soft p-5 animate-pulse" data-testid="package-tracker">
+      <div
+        className="bg-white rounded-2xl shadow-soft p-5 animate-pulse"
+        data-testid="package-tracker"
+      >
         <div className="h-4 bg-slate-100 rounded w-32 mb-3" />
         <div className="h-2 bg-slate-100 rounded w-full mb-2" />
         <div className="h-3 bg-slate-100 rounded w-24" />
@@ -106,7 +109,10 @@ export default function PackageTracker({ customerId, sessions }: PackageTrackerP
                 {item.used} of {item.total} sessions used
               </span>
               <span
-                className={cn('text-xs font-medium', remaining <= 2 ? 'text-amber-600' : 'text-sage-600')}
+                className={cn(
+                  'text-xs font-medium',
+                  remaining <= 2 ? 'text-amber-600' : 'text-sage-600',
+                )}
               >
                 {remaining} remaining
               </span>

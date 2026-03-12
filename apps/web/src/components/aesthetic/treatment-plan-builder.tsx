@@ -43,14 +43,10 @@ export function TreatmentPlanBuilder({
 
   const [diagnosis, setDiagnosis] = useState(initialData?.diagnosis || '');
   const [goals, setGoals] = useState(initialData?.goals || '');
-  const [contraindications, setContraindications] = useState(
-    initialData?.contraindications || '',
-  );
+  const [contraindications, setContraindications] = useState(initialData?.contraindications || '');
   const [notes, setNotes] = useState(initialData?.notes || '');
   const [sessions, setSessions] = useState<SessionInput[]>(
-    initialData?.sessions || [
-      { serviceId: '', sequenceOrder: 1, scheduledDate: '', notes: '' },
-    ],
+    initialData?.sessions || [{ serviceId: '', sequenceOrder: 1, scheduledDate: '', notes: '' }],
   );
 
   const totalEstimate = sessions.reduce((sum, s) => {
@@ -71,10 +67,12 @@ export function TreatmentPlanBuilder({
   };
 
   const removeSession = (index: number) => {
-    const updated = sessions.filter((_, i) => i !== index).map((s, i) => ({
-      ...s,
-      sequenceOrder: i + 1,
-    }));
+    const updated = sessions
+      .filter((_, i) => i !== index)
+      .map((s, i) => ({
+        ...s,
+        sequenceOrder: i + 1,
+      }));
     setSessions(updated);
   };
 
@@ -125,9 +123,7 @@ export function TreatmentPlanBuilder({
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">
-            Contraindications
-          </label>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Contraindications</label>
           <textarea
             value={contraindications}
             onChange={(e) => setContraindications(e.target.value)}

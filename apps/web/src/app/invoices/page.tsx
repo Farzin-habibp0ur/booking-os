@@ -6,15 +6,7 @@ import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { ListSkeleton, EmptyState } from '@/components/skeleton';
 import { INVOICE_STATUS_STYLES, invoiceBadgeClasses } from '@/lib/design-tokens';
-import {
-  FileText,
-  Plus,
-  DollarSign,
-  AlertTriangle,
-  TrendingUp,
-  Clock,
-  Search,
-} from 'lucide-react';
+import { FileText, Plus, DollarSign, AlertTriangle, TrendingUp, Clock, Search } from 'lucide-react';
 
 interface Invoice {
   id: string;
@@ -196,20 +188,31 @@ export default function InvoicesPage() {
             icon={FileText}
             title="No invoices found"
             description={statusFilter ? 'Try a different filter' : 'Create your first invoice'}
-            actionLabel="New Invoice"
-            onAction={() => router.push('/invoices/new')}
+            action={{ label: 'New Invoice', onClick: () => router.push('/invoices/new') }}
           />
         ) : (
           <div className="bg-white rounded-2xl shadow-soft overflow-hidden">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-100">
-                  <th className="text-left px-4 py-3 text-xs font-medium text-slate-500">Invoice</th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-slate-500">Customer</th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 hidden sm:table-cell">Date</th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 hidden sm:table-cell">Due</th>
-                  <th className="text-right px-4 py-3 text-xs font-medium text-slate-500">Amount</th>
-                  <th className="text-center px-4 py-3 text-xs font-medium text-slate-500">Status</th>
+                  <th className="text-left px-4 py-3 text-xs font-medium text-slate-500">
+                    Invoice
+                  </th>
+                  <th className="text-left px-4 py-3 text-xs font-medium text-slate-500">
+                    Customer
+                  </th>
+                  <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 hidden sm:table-cell">
+                    Date
+                  </th>
+                  <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 hidden sm:table-cell">
+                    Due
+                  </th>
+                  <th className="text-right px-4 py-3 text-xs font-medium text-slate-500">
+                    Amount
+                  </th>
+                  <th className="text-center px-4 py-3 text-xs font-medium text-slate-500">
+                    Status
+                  </th>
                 </tr>
               </thead>
               <tbody>

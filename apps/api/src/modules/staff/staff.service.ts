@@ -306,7 +306,13 @@ export class StaffService {
   async addCertification(
     businessId: string,
     staffId: string,
-    data: { name: string; issuedBy?: string; issuedDate?: string; expiryDate?: string; documentUrl?: string },
+    data: {
+      name: string;
+      issuedBy?: string;
+      issuedDate?: string;
+      expiryDate?: string;
+      documentUrl?: string;
+    },
   ) {
     const staff = await this.prisma.staff.findFirst({
       where: { id: staffId, businessId },

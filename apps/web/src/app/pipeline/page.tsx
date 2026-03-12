@@ -113,9 +113,7 @@ export default function PipelinePage() {
 
   useEffect(() => {
     setLoading(true);
-    Promise.all([loadPipeline(), loadStats(), loadStaff()]).finally(() =>
-      setLoading(false),
-    );
+    Promise.all([loadPipeline(), loadStats(), loadStaff()]).finally(() => setLoading(false));
   }, [loadPipeline, loadStats, loadStaff]);
 
   // Auto-refresh every 30 seconds
@@ -162,9 +160,7 @@ export default function PipelinePage() {
     if (pipeline) {
       const updated = { ...pipeline, stages: { ...pipeline.stages } };
       // Remove from old stage
-      updated.stages[deal.stage] = updated.stages[deal.stage].filter(
-        (d) => d.id !== dragItem,
-      );
+      updated.stages[deal.stage] = updated.stages[deal.stage].filter((d) => d.id !== dragItem);
       // Add to new stage
       const movedDeal = { ...deal, stage: targetStage };
       updated.stages[targetStage] = [movedDeal, ...(updated.stages[targetStage] || [])];
@@ -282,14 +278,14 @@ export default function PipelinePage() {
                     <span
                       className={cn(
                         'text-xs font-semibold px-2 py-1 rounded-lg',
-                        stageStyle ? `${stageStyle.bg} ${stageStyle.text}` : 'bg-slate-100 text-slate-600',
+                        stageStyle
+                          ? `${stageStyle.bg} ${stageStyle.text}`
+                          : 'bg-slate-100 text-slate-600',
                       )}
                     >
                       {col.label}
                     </span>
-                    <span className="text-xs text-slate-400 font-medium">
-                      {colDeals.length}
-                    </span>
+                    <span className="text-xs text-slate-400 font-medium">{colDeals.length}</span>
                   </div>
                   {total && total.value > 0 && (
                     <p className="text-[10px] text-slate-400 px-1">
@@ -301,9 +297,7 @@ export default function PipelinePage() {
                 {/* Cards */}
                 <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-2">
                   {colDeals.length === 0 ? (
-                    <div className="text-center py-8 text-slate-300 text-xs">
-                      No deals
-                    </div>
+                    <div className="text-center py-8 text-slate-300 text-xs">No deals</div>
                   ) : (
                     colDeals.map((deal) => (
                       <DealKanbanCard
@@ -404,9 +398,7 @@ function DealKanbanCard({
         )}
         <div className="flex items-center gap-1">
           <Clock size={10} />
-          <span>
-            {daysInStage}d
-          </span>
+          <span>{daysInStage}d</span>
         </div>
       </div>
 
@@ -458,7 +450,9 @@ function NewDealModal({
     }
     const t = setTimeout(async () => {
       try {
-        const data = await api.get<any>(`/customers?search=${encodeURIComponent(customerSearch)}&take=10`);
+        const data = await api.get<any>(
+          `/customers?search=${encodeURIComponent(customerSearch)}&take=10`,
+        );
         setCustomers(Array.isArray(data) ? data : data?.data || []);
       } catch {
         // ignore
@@ -536,7 +530,10 @@ function NewDealModal({
               </div>
             ) : (
               <div className="relative">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Search
+                  size={14}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                />
                 <input
                   type="text"
                   value={customerSearch}
@@ -559,9 +556,7 @@ function NewDealModal({
                         className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-700"
                       >
                         {c.name}
-                        {c.phone && (
-                          <span className="text-xs text-slate-400 ml-2">{c.phone}</span>
-                        )}
+                        {c.phone && <span className="text-xs text-slate-400 ml-2">{c.phone}</span>}
                       </button>
                     ))}
                   </div>
@@ -572,9 +567,7 @@ function NewDealModal({
 
           {/* Vehicle */}
           <div>
-            <label className="text-sm text-slate-600 dark:text-slate-400 mb-1 block">
-              Vehicle
-            </label>
+            <label className="text-sm text-slate-600 dark:text-slate-400 mb-1 block">Vehicle</label>
             <select
               value={vehicleId}
               onChange={(e) => {
@@ -647,9 +640,7 @@ function NewDealModal({
 
           {/* Source */}
           <div>
-            <label className="text-sm text-slate-600 dark:text-slate-400 mb-1 block">
-              Source
-            </label>
+            <label className="text-sm text-slate-600 dark:text-slate-400 mb-1 block">Source</label>
             <select
               value={source}
               onChange={(e) => setSource(e.target.value)}
@@ -666,9 +657,7 @@ function NewDealModal({
 
           {/* Notes */}
           <div>
-            <label className="text-sm text-slate-600 dark:text-slate-400 mb-1 block">
-              Notes
-            </label>
+            <label className="text-sm text-slate-600 dark:text-slate-400 mb-1 block">Notes</label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
@@ -677,9 +666,7 @@ function NewDealModal({
             />
           </div>
 
-          {error && (
-            <p className="text-sm text-red-600">{error}</p>
-          )}
+          {error && <p className="text-sm text-red-600">{error}</p>}
 
           <div className="flex justify-end gap-2 pt-2">
             <button

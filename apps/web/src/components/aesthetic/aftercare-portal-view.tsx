@@ -81,13 +81,17 @@ export function AftercarePortalView({ enrollments }: Props) {
                 <MessageSquare className="w-4 h-4 text-sage-600" />
                 <h4 className="font-semibold text-slate-800">{enrollment.protocol.name}</h4>
               </div>
-              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${aftercareBadgeClasses(enrollment.status)}`}>
+              <span
+                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${aftercareBadgeClasses(enrollment.status)}`}
+              >
                 {AFTERCARE_STATUS_STYLES[enrollment.status]?.label || enrollment.status}
               </span>
             </div>
 
             <p className="text-sm text-slate-500 mb-4">
-              For your <span className="font-medium text-slate-700">{enrollment.booking.service.name}</span> on {formatDate(enrollment.booking.startTime)}
+              For your{' '}
+              <span className="font-medium text-slate-700">{enrollment.booking.service.name}</span>{' '}
+              on {formatDate(enrollment.booking.startTime)}
             </p>
 
             {/* Steps timeline */}
@@ -100,10 +104,19 @@ export function AftercarePortalView({ enrollments }: Props) {
                 const isCurrent = !isSent && idx === sentCount;
 
                 return (
-                  <div key={msg.id} className={`relative pb-4 last:pb-0 ${isSent ? 'opacity-70' : ''}`}>
-                    <div className={`absolute -left-3.5 w-5 h-5 rounded-full flex items-center justify-center ${
-                      isSent ? 'bg-sage-100' : isCurrent ? 'bg-lavender-100 ring-2 ring-lavender-200' : 'bg-slate-100'
-                    }`}>
+                  <div
+                    key={msg.id}
+                    className={`relative pb-4 last:pb-0 ${isSent ? 'opacity-70' : ''}`}
+                  >
+                    <div
+                      className={`absolute -left-3.5 w-5 h-5 rounded-full flex items-center justify-center ${
+                        isSent
+                          ? 'bg-sage-100'
+                          : isCurrent
+                            ? 'bg-lavender-100 ring-2 ring-lavender-200'
+                            : 'bg-slate-100'
+                      }`}
+                    >
                       {isSent ? (
                         <CheckCircle2 className="w-3 h-3 text-sage-600" />
                       ) : (
@@ -135,8 +148,12 @@ export function AftercarePortalView({ enrollments }: Props) {
             {/* Progress */}
             <div className="mt-4 pt-3 border-t border-slate-50">
               <div className="flex items-center justify-between text-xs text-slate-500">
-                <span>{sentCount} of {totalCount} messages sent</span>
-                <span>{totalCount > 0 ? Math.round((sentCount / totalCount) * 100) : 0}% complete</span>
+                <span>
+                  {sentCount} of {totalCount} messages sent
+                </span>
+                <span>
+                  {totalCount > 0 ? Math.round((sentCount / totalCount) * 100) : 0}% complete
+                </span>
               </div>
               <div className="w-full bg-slate-100 rounded-full h-1.5 mt-1.5">
                 <div

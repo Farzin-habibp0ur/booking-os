@@ -101,7 +101,9 @@ export default function PortalDocumentsPage() {
               {data.intake.medicalConditions && (
                 <div>
                   <p className="text-xs text-slate-500">Medical Conditions</p>
-                  <p className="text-sm font-medium text-slate-900">{data.intake.medicalConditions}</p>
+                  <p className="text-sm font-medium text-slate-900">
+                    {data.intake.medicalConditions}
+                  </p>
                 </div>
               )}
               {data.intake.medications && (

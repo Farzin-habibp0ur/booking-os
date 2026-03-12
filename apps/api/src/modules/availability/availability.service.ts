@@ -69,10 +69,7 @@ export class AvailabilityService {
         where: {
           staffId: { in: staffList.map((s) => s.id) },
           name: requiresCert,
-          OR: [
-            { expiryDate: null },
-            { expiryDate: { gt: new Date() } },
-          ],
+          OR: [{ expiryDate: null }, { expiryDate: { gt: new Date() } }],
         },
         select: { staffId: true },
       });
@@ -217,7 +214,9 @@ export class AvailabilityService {
         }
 
         const hasConflict = isGroupClass
-          ? (spotsRemaining !== undefined && spotsRemaining <= 0) || externalConflict || resourceConflict
+          ? (spotsRemaining !== undefined && spotsRemaining <= 0) ||
+            externalConflict ||
+            resourceConflict
           : internalConflict || externalConflict || resourceConflict;
 
         // Skip past slots
@@ -233,7 +232,9 @@ export class AvailabilityService {
           staffId: staff.id,
           staffName: staff.name,
           available: !hasConflict,
-          ...(effectiveResourceId ? { resourceId: effectiveResourceId, resourceName: effectiveResourceName } : {}),
+          ...(effectiveResourceId
+            ? { resourceId: effectiveResourceId, resourceName: effectiveResourceName }
+            : {}),
           ...(isGroupClass ? { spotsRemaining } : {}),
         });
       }

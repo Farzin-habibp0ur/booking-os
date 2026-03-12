@@ -43,7 +43,7 @@ export default function PackageRedeemSelector({
     }
     setLoading(true);
     apiFetch(`/packages/customer/${customerId}/active?serviceId=${serviceId}`)
-      .then((data) => setPurchases(Array.isArray(data) ? data : []))
+      .then((data: any) => setPurchases(Array.isArray(data) ? data : []))
       .catch(() => setPurchases([]))
       .finally(() => setLoading(false));
   }, [customerId, serviceId]);
@@ -72,7 +72,10 @@ export default function PackageRedeemSelector({
   if (loading || purchases.length === 0) return null;
 
   return (
-    <div className="rounded-xl border border-lavender-100 bg-lavender-50/50 p-4" data-testid="package-redeem-selector">
+    <div
+      className="rounded-xl border border-lavender-100 bg-lavender-50/50 p-4"
+      data-testid="package-redeem-selector"
+    >
       <div className="flex items-center gap-2 mb-3">
         <Package size={16} className="text-lavender-600" />
         <span className="text-sm font-medium text-slate-700">Active Packages Available</span>
@@ -87,12 +90,12 @@ export default function PackageRedeemSelector({
             <button
               key={p.id}
               type="button"
-              onClick={() => bookingId ? handleRedeem(p.id) : handleSelect(isSelected ? null : p.id)}
+              onClick={() =>
+                bookingId ? handleRedeem(p.id) : handleSelect(isSelected ? null : p.id)
+              }
               disabled={redeeming}
               className={`w-full flex items-center justify-between p-3 rounded-xl text-left transition-all ${
-                isSelected
-                  ? 'bg-sage-50 ring-2 ring-sage-500'
-                  : 'bg-white hover:bg-slate-50'
+                isSelected ? 'bg-sage-50 ring-2 ring-sage-500' : 'bg-white hover:bg-slate-50'
               }`}
             >
               <div>

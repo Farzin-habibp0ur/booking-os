@@ -46,6 +46,9 @@ describe('TestDriveController', () => {
     service.findAll.mockResolvedValue([]);
 
     await controller.findAll(businessId, 'veh-1', undefined);
-    expect(service.findAll).toHaveBeenCalledWith(businessId, { vehicleId: 'veh-1', customerId: undefined });
+    expect(service.findAll).toHaveBeenCalledWith(businessId, {
+      vehicleId: 'veh-1',
+      customerId: undefined,
+    });
   });
 });

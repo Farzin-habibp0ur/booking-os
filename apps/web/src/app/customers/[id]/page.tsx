@@ -176,11 +176,20 @@ export default function CustomerDetailPage() {
       .catch(() => setMedicalRecord(null));
     loadPhotos();
     if (pack.slug === 'aesthetic') {
-      api.get<any[]>(`/treatment-plans?customerId=${id}`).then(setTreatmentPlans).catch(() => setTreatmentPlans([]));
-      api.get<any[]>(`/aftercare-protocols/enrollments/list?customerId=${id}`).then(setAftercareEnrollments).catch(() => setAftercareEnrollments([]));
+      api
+        .get<any[]>(`/treatment-plans?customerId=${id}`)
+        .then(setTreatmentPlans)
+        .catch(() => setTreatmentPlans([]));
+      api
+        .get<any[]>(`/aftercare-protocols/enrollments/list?customerId=${id}`)
+        .then(setAftercareEnrollments)
+        .catch(() => setAftercareEnrollments([]));
     }
     if (pack.slug === 'dealership') {
-      api.get<any>(`/customers/${id}/journey`).then(setJourney).catch(() => setJourney(null));
+      api
+        .get<any>(`/customers/${id}/journey`)
+        .then(setJourney)
+        .catch(() => setJourney(null));
     }
   }, [id]);
 
@@ -749,7 +758,10 @@ export default function CustomerDetailPage() {
 
         {/* Treatment Plans — Aesthetic only */}
         {pack.slug === 'aesthetic' && treatmentPlans.length > 0 && (
-          <div className={cn(ELEVATION.card, 'bg-white p-5 mb-6')} data-testid="treatment-plans-section">
+          <div
+            className={cn(ELEVATION.card, 'bg-white p-5 mb-6')}
+            data-testid="treatment-plans-section"
+          >
             <h2 className="text-sm font-semibold text-slate-900 uppercase flex items-center gap-2 mb-4">
               Treatment Plans
               <span className="text-xs bg-lavender-50 text-lavender-700 px-2 py-0.5 rounded-full font-medium">
@@ -788,9 +800,13 @@ export default function CustomerDetailPage() {
                     try {
                       await api.post(`/aftercare-protocols/enrollments/${enrollmentId}/cancel`, {});
                       setAftercareEnrollments((prev) =>
-                        prev.map((e) => (e.id === enrollmentId ? { ...e, status: 'CANCELLED' } : e)),
+                        prev.map((e) =>
+                          e.id === enrollmentId ? { ...e, status: 'CANCELLED' } : e,
+                        ),
                       );
-                    } catch {}
+                    } catch {
+                      // silently ignore
+                    }
                   }}
                 />
               ))}
@@ -831,10 +847,7 @@ export default function CustomerDetailPage() {
 
             {/* Upload card */}
             <div className="mb-4">
-              <PhotoUploadCard
-                customerId={id as string}
-                onUploaded={() => loadPhotos()}
-              />
+              <PhotoUploadCard customerId={id as string} onUploaded={() => loadPhotos()} />
             </div>
 
             {/* Photo content */}
@@ -852,12 +865,8 @@ export default function CustomerDetailPage() {
                 }}
               />
             )}
-            {photoTab === 'timeline' && (
-              <PhotoTimeline photos={clinicalPhotos} />
-            )}
-            {photoTab === 'comparisons' && (
-              <PhotoComparisonViewer comparisons={photoComparisons} />
-            )}
+            {photoTab === 'timeline' && <PhotoTimeline photos={clinicalPhotos} />}
+            {photoTab === 'comparisons' && <PhotoComparisonViewer comparisons={photoComparisons} />}
           </div>
         )}
 
@@ -880,9 +889,7 @@ export default function CustomerDetailPage() {
                 size={14}
                 className={cn('transition-transform', verticalOpen ? '' : '-rotate-90')}
               />
-              {pack.slug === 'aesthetic'
-                ? t('customer_detail.clinic_intake')
-                : 'Sales Overview'}
+              {pack.slug === 'aesthetic' ? t('customer_detail.clinic_intake') : 'Sales Overview'}
             </button>
             {verticalOpen && (
               <div className={cn(ELEVATION.card, 'bg-white')} data-testid="vertical-content">
@@ -898,9 +905,13 @@ export default function CustomerDetailPage() {
                 {pack.slug === 'dealership' && (
                   <div className="p-5" data-testid="dealership-summary">
                     {/* Active Deals */}
-                    {journey?.deals?.filter((d: any) => !['CLOSED_WON', 'CLOSED_LOST'].includes(d.stage)).length > 0 ? (
+                    {journey?.deals?.filter(
+                      (d: any) => !['CLOSED_WON', 'CLOSED_LOST'].includes(d.stage),
+                    ).length > 0 ? (
                       <div className="mb-5">
-                        <h4 className="text-xs font-semibold text-slate-500 uppercase mb-3">Active Deals</h4>
+                        <h4 className="text-xs font-semibold text-slate-500 uppercase mb-3">
+                          Active Deals
+                        </h4>
                         <div className="space-y-2">
                           {journey.deals
                             .filter((d: any) => !['CLOSED_WON', 'CLOSED_LOST'].includes(d.stage))
@@ -912,7 +923,12 @@ export default function CustomerDetailPage() {
                                 data-testid="deal-row"
                               >
                                 <div className="flex items-center gap-3 min-w-0">
-                                  <span className={cn('text-[10px] px-2 py-0.5 rounded-lg font-medium shrink-0', dealStageBadgeClasses(deal.stage))}>
+                                  <span
+                                    className={cn(
+                                      'text-[10px] px-2 py-0.5 rounded-lg font-medium shrink-0',
+                                      dealStageBadgeClasses(deal.stage),
+                                    )}
+                                  >
                                     {DEAL_STAGE_STYLES[deal.stage]?.label || deal.stage}
                                   </span>
                                   {deal.vehicle && (
@@ -941,7 +957,10 @@ export default function CustomerDetailPage() {
                       <div className="text-center py-4 mb-4">
                         <DollarSign size={28} className="mx-auto mb-2 text-slate-300" />
                         <p className="text-sm text-slate-400">No active deals</p>
-                        <a href="/pipeline" className="text-xs text-sage-600 hover:underline mt-1 inline-block">
+                        <a
+                          href="/pipeline"
+                          className="text-xs text-sage-600 hover:underline mt-1 inline-block"
+                        >
                           Open Pipeline →
                         </a>
                       </div>
@@ -950,7 +969,9 @@ export default function CustomerDetailPage() {
                     {/* Vehicles of Interest */}
                     {journey?.vehiclesOfInterest?.length > 0 && (
                       <div>
-                        <h4 className="text-xs font-semibold text-slate-500 uppercase mb-3">Vehicles of Interest</h4>
+                        <h4 className="text-xs font-semibold text-slate-500 uppercase mb-3">
+                          Vehicles of Interest
+                        </h4>
                         <div className="flex flex-wrap gap-2">
                           {journey.vehiclesOfInterest.map((v: any) => (
                             <a

@@ -110,9 +110,7 @@ export function PhotoGallery({ photos, onDelete, onSelect }: PhotoGalleryProps) 
                     >
                       {photo.type}
                     </span>
-                    <span className="text-[10px] text-white/80">
-                      {photo.bodyArea}
-                    </span>
+                    <span className="text-[10px] text-white/80">{photo.bodyArea}</span>
                   </div>
                   <p className="text-[10px] text-white/70 mt-0.5">
                     {new Date(photo.takenAt).toLocaleDateString()}
