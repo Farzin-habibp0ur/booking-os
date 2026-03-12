@@ -42,10 +42,18 @@ booking-os/
 │   │   └── src/seed-content.ts # Content pillar seeding (12 blog posts → ContentDraft)
 │   ├── messaging-provider/     # WhatsApp Cloud API abstraction
 │   └── shared/                 # Shared types, DTOs, enums, profile field definitions
-├── system/                     # Growth engine config (launch, gates, budget, testing, escalation)
-├── data/                       # Founder-maintained inputs (customer signals, manual tracking)
-├── reports/                    # Generated reports (customer validation, performance, weekly)
-├── queue/                      # Content approval pipeline (pending/approved/rejected/published/archive)
+├── agents/                     # 13 agent prompt files (P9-P21: research, planning, content, distribution, analytics, growth)
+├── system/                     # Growth engine config (launch, gates, budget, testing, escalation, MCP fallback)
+├── data/                       # Founder-maintained inputs (customer signals, evergreen trends, daily metrics)
+├── reports/                    # Generated reports (customer validation, performance, keywords, optimization)
+├── queue/                      # Content approval pipeline (pending/approved/rejected/published/archive/ready-to-publish)
+├── briefings/                  # Daily trend briefings from Trend Scout agent
+├── briefs/                     # Content briefs (blog/, social/) from Content Strategist
+├── calendar/                   # Weekly content calendars from Content Strategist
+├── design-specs/               # Visual design specifications + template library
+├── engagement/                 # Daily engagement reports from Community Manager
+├── logs/                       # Publishing log and operational logs
+├── assets/recordings/          # Screen recordings for video content
 ├── docs/                       # PROJECT_CONTEXT.md, cicd.md, user-stories.md, ux-brainstorm-brief.md
 ├── docker-compose.yml          # Local development
 ├── docker-compose.prod.yml     # Production (Nginx + SSL)
@@ -519,6 +527,24 @@ Agents run via `AgentSchedulerService` cron → `AGENT_PROCESSING` BullMQ queue 
 | ab-testing-framework   | `system/ab-testing-framework.md`   | A/B test protocol, active tests log, quarterly review cycle   |
 | queue README           | `queue/README.md`                  | Approval queue process, folder structure, daily review steps  |
 | customer-signals       | `data/customer-signals.md`         | Founder-filled weekly trial/conversion/feedback tracking      |
+| mcp-fallback-config    | `system/mcp-fallback-config.md`    | MCP data source resilience, fallback chains, rate limits      |
+| evergreen-trends       | `data/evergreen-trends.md`         | Fallback trend/keyword library by pillar, seasonal calendar   |
+| template-library       | `design-specs/template-library.md` | Visual templates (IG, TikTok, LinkedIn, blog) with brand specs |
+| publishing-log         | `logs/publishing-log.md`           | Running log of all published content for dedup + compliance   |
+| **Agent Prompts**      | `agents/`                          | **13 agent-specific prompt files (P9-P21):**                  |
+| — Trend Scout (P9)     | `agents/trend-scout.md`            | Daily trend scanning, relevance scoring, MCP fallback         |
+| — Keyword Strategist (P10) | `agents/keyword-strategist.md` | Weekly keyword research, funnel tagging, priority scoring     |
+| — Content Strategist (P11) | `agents/content-strategist.md` | Weekly briefs + calendar, pillar balancing, Gate 2 validation |
+| — Blog Writer (P12)    | `agents/blog-writer.md`            | SEO blog posts, 4 value layers, Gate 3 self-check            |
+| — Social Creator (P13) | `agents/social-content-creator.md` | Platform-native social, 3-5/day, tier classification         |
+| — Visual Designer (P14)| `agents/visual-designer.md`        | Design specs for Canva, template library maintenance          |
+| — Video Producer (P15) | `agents/video-producer.md`         | Timestamped video scripts, recording instructions             |
+| — Publisher (P16)      | `agents/publisher.md`              | UTM generation, scheduling, post-publish verification         |
+| — Community Mgr (P17)  | `agents/community-manager.md`      | 5 response categories, <15 min/day, engagement reports        |
+| — Perf. Analyst (P18)  | `agents/performance-analyst.md`    | Daily metrics + weekly reports, pipeline health               |
+| — Learning Engine (P19)| `agents/learning-engine.md`        | Weekly optimization, advisory mode, founder approval          |
+| — Spanish Local. (P20) | `agents/spanish-localization.md`   | Cultural adaptation (not translation), LATAM priority         |
+| — Outbound Prosp. (P21)| `agents/outbound-prospecting.md`   | Warm outbound, prospect scoring, 10/batch max                 |
 
 ---
 

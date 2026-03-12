@@ -26,10 +26,18 @@ booking-os/
 │   ├── db/                # Prisma schema, migrations, seed data
 │   ├── messaging-provider/# Messaging abstraction layer
 │   └── shared/            # Shared types and utilities
-├── system/              # Growth engine config (launch phases, quality gates, budget)
-├── data/                # Founder-maintained inputs (customer signals)
-├── reports/             # Generated reports (customer validation, performance)
+├── agents/              # 13 agent prompt files (P9-P21: trend scout → outbound prospecting)
+├── system/              # Growth engine config (launch phases, quality gates, budget, MCP fallback)
+├── data/                # Founder-maintained inputs (customer signals, evergreen trends)
+├── reports/             # Generated reports (customer validation, performance, keywords, optimization)
 ├── queue/               # Content approval pipeline (pending → approved → published)
+├── briefings/           # Daily trend briefings from Trend Scout agent
+├── briefs/              # Content briefs (blog/, social/) from Content Strategist
+├── calendar/            # Weekly content calendars
+├── design-specs/        # Visual design specifications + template library
+├── engagement/          # Daily engagement reports
+├── logs/                # Publishing log
+├── assets/recordings/   # Screen recordings for video content
 ├── docs/                # Additional documentation
 ├── nginx/               # Reverse proxy config
 └── scripts/             # Utility scripts

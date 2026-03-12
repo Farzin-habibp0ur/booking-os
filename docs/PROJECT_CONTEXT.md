@@ -279,10 +279,18 @@ booking-os/
 │   ├── cicd.md                 # CI/CD pipeline documentation
 │   ├── user-stories.md         # Complete user stories (280 can-do, 215 gaps)
 │   └── ux-brainstorm-brief.md  # UX improvement brainstorm brief
-├── system/                     # Growth engine config (launch, gates, budget, testing, escalation)
-├── data/                       # Founder-maintained inputs (customer signals, manual tracking)
-├── reports/                    # Generated reports (customer validation, performance)
-├── queue/                      # Content approval pipeline (pending/approved/rejected/published/archive)
+├── agents/                     # 13 agent prompt files (P9-P21: trend scout → outbound prospecting)
+├── system/                     # Growth engine config (launch, gates, budget, testing, escalation, MCP fallback)
+├── data/                       # Founder-maintained inputs (customer signals, evergreen trends, daily metrics)
+├── reports/                    # Generated reports (customer validation, performance, keywords, optimization)
+├── queue/                      # Content approval pipeline (pending/approved/rejected/published/archive/ready-to-publish)
+├── briefings/                  # Daily trend briefings from Trend Scout agent
+├── briefs/                     # Content briefs (blog/, social/) from Content Strategist
+├── calendar/                   # Weekly content calendars from Content Strategist
+├── design-specs/               # Visual design specifications + template library
+├── engagement/                 # Daily engagement reports from Community Manager
+├── logs/                       # Publishing log and operational logs
+├── assets/recordings/          # Screen recordings for video content
 ├── nginx/                      # Reverse proxy config for self-hosted
 ├── scripts/
 │   └── docker-entrypoint.sh    # API startup: migrations → server
