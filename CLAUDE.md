@@ -531,7 +531,8 @@ Agents run via `AgentSchedulerService` cron → `AGENT_PROCESSING` BullMQ queue 
 | evergreen-trends       | `data/evergreen-trends.md`         | Fallback trend/keyword library by pillar, seasonal calendar   |
 | template-library       | `design-specs/template-library.md` | Visual templates (IG, TikTok, LinkedIn, blog) with brand specs |
 | publishing-log         | `logs/publishing-log.md`           | Running log of all published content for dedup + compliance   |
-| **Agent Prompts**      | `agents/`                          | **13 agent-specific prompt files (P9-P21):**                  |
+| mcp-failures           | `logs/mcp-failures.md`             | MCP server failure log for pattern analysis + fallback tuning |
+| **Agent Prompts**      | `agents/`                          | **15 agent prompt files (P9-P23):**                           |
 | — Trend Scout (P9)     | `agents/trend-scout.md`            | Daily trend scanning, relevance scoring, MCP fallback         |
 | — Keyword Strategist (P10) | `agents/keyword-strategist.md` | Weekly keyword research, funnel tagging, priority scoring     |
 | — Content Strategist (P11) | `agents/content-strategist.md` | Weekly briefs + calendar, pillar balancing, Gate 2 validation |
@@ -545,6 +546,8 @@ Agents run via `AgentSchedulerService` cron → `AGENT_PROCESSING` BullMQ queue 
 | — Learning Engine (P19)| `agents/learning-engine.md`        | Weekly optimization, advisory mode, founder approval          |
 | — Spanish Local. (P20) | `agents/spanish-localization.md`   | Cultural adaptation (not translation), LATAM priority         |
 | — Outbound Prosp. (P21)| `agents/outbound-prospecting.md`   | Warm outbound, prospect scoring, 10/batch max                 |
+| — Orchestrator (P22)   | `agents/master-orchestrator.md`    | Daily 5:30 AM, system health, pipeline cleanup, agent readiness |
+| — Weekly Maint. (P23)  | `agents/weekly-maintenance.md`     | Saturday 6 AM, archiving, data integrity, content inventory   |
 
 ---
 
