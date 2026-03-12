@@ -40,7 +40,7 @@ describe('ForgotPasswordPage', () => {
     });
   });
 
-  it('shows error message on failure', async () => {
+  it('shows success message even on API failure to prevent email enumeration', async () => {
     mockApi.post.mockRejectedValue(new Error('Network error'));
     render(<ForgotPasswordPage />);
 
@@ -50,7 +50,7 @@ describe('ForgotPasswordPage', () => {
     fireEvent.click(screen.getByText('Send reset link'));
 
     await waitFor(() => {
-      expect(screen.getByText('Network error')).toBeInTheDocument();
+      expect(screen.getByText(/we've sent a password reset link/i)).toBeInTheDocument();
     });
   });
 

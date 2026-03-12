@@ -27,15 +27,16 @@ booking-os/
 │   │   │   ├── components/     # Shared components
 │   │   │   ├── lib/            # API client, auth, i18n, socket, theme
 │   │   │   ├── locales/        # en.json, es.json (600+ keys each)
-│   │   │   └── middleware.ts   # Route protection (checks access_token cookie)
+│   │   │   └── middleware.ts   # Route protection (checks access_token + refresh_token cookies)
 │   │   └── Dockerfile          # Multi-stage production build
 │   └── whatsapp-simulator/     # WhatsApp testing tool (port 3002)
 ├── packages/
 │   ├── db/                     # Prisma schema (85 models), migrations, seed scripts
 │   │   ├── prisma/schema.prisma
-│   │   ├── src/seed.ts         # Base seed (idempotent)
-│   │   ├── src/seed-demo.ts    # Rich demo data (idempotent)
+│   │   ├── src/seed.ts         # Base seed (aesthetic + dealership + wellness, idempotent)
+│   │   ├── src/seed-demo.ts    # Rich demo data (idempotent, dedup-safe)
 │   │   ├── src/seed-agentic.ts # One-time agentic data fill
+│   │   ├── src/seed-wellness.ts # Standalone wellness seed (also called from seed.ts)
 │   │   ├── src/seed-console.ts # Platform console base data
 │   │   ├── src/seed-console-showcase.ts # Console demo data
 │   │   └── src/seed-content.ts # Content pillar seeding (12 blog posts → ContentDraft)
@@ -164,7 +165,7 @@ Key events: `message:new`, `conversation:updated`, `ai:suggestion`, `ai:auto-rep
 ### App Router
 
 - Pages are in `apps/web/src/app/` using Next.js App Router (not Pages Router)
-- Protected pages check `access_token` cookie in `middleware.ts`
+- Protected pages check `access_token` + `refresh_token` cookies in `middleware.ts` (redirects to /login only when both are missing)
 - **101 pages** total (17 public, ~54 protected, ~16 console, ~14 portal/marketing)
 - Client components use `'use client'` directive
 

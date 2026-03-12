@@ -2,7 +2,7 @@
 
 > **Purpose:** This document gives full context on the Booking OS platform — what it is, what's been built, how it's structured, and what's left to build. Share this with an AI assistant or new developer to get productive immediately.
 >
-> **Last updated:** March 11, 2026 (All phases COMPLETE — A through E + Phases 1-4 & 6 polish + QA Fixes + Sprints 1-4 + Prompts 4A-4C + Prompt 1C + Prompt 1A + Prompt 1B + Prompt 1D + Prompt 2A + Prompt 2B + Prompt 2C + Prompt 3A + Prompt 3C COMPLETE — ~5,825+ total tests across 392 test files, 85 Prisma models, 59 migrations)
+> **Last updated:** March 11, 2026 (All phases COMPLETE — A through E + Phases 1-4 & 6 polish + QA Fixes + Sprints 1-4 + Prompts 4A-4C + Prompt 1C + Prompt 1A + Prompt 1B + Prompt 1D + Prompt 2A + Prompt 2B + Prompt 2C + Prompt 3A + Prompt 3C + QA Bug Fix Sprint (10 bugs) COMPLETE — ~5,825+ total tests across 392 test files, 85 Prisma models, 59 migrations)
 
 ---
 
@@ -261,15 +261,16 @@ booking-os/
 │   │   │   ├── components/     # Shared components (shell, modals, tour, etc.)
 │   │   │   ├── lib/            # Utility modules (API client, auth, i18n, socket, theme)
 │   │   │   ├── locales/        # en.json, es.json (600+ keys each)
-│   │   │   └── middleware.ts   # Route protection (checks access_token cookie)
+│   │   │   └── middleware.ts   # Route protection (checks access_token + refresh_token cookies)
 │   │   └── Dockerfile          # Multi-stage production build
 │   └── whatsapp-simulator/     # WhatsApp testing tool (port 3002)
 ├── packages/
 │   ├── db/                     # Prisma schema (67 models), migrations, seed scripts
 │   │   ├── prisma/schema.prisma
-│   │   ├── src/seed.ts         # Base seed (idempotent)
-│   │   ├── src/seed-demo.ts    # Rich demo data (idempotent)
+│   │   ├── src/seed.ts         # Base seed (aesthetic + dealership + wellness, idempotent)
+│   │   ├── src/seed-demo.ts    # Rich demo data (idempotent, dedup-safe)
 │   │   ├── src/seed-agentic.ts # One-time agentic data fill (production)
+│   │   ├── src/seed-wellness.ts # Standalone wellness seed (also called from seed.ts)
 │   │   └── src/seed-content.ts # Content pillar seeding (12 blog posts → ContentDraft)
 │   ├── messaging-provider/     # WhatsApp Cloud API abstraction
 │   └── shared/                 # Shared types, DTOs, enums, profile field definitions
@@ -700,12 +701,13 @@ Pull request → lint-and-test → docker-build (no deploy, no smoke test)
 
 ## 11. Seed Data
 
-Two scripts, both idempotent:
+Multiple scripts, all idempotent:
 
-**`packages/db/src/seed.ts`** — Base data:
+**`packages/db/src/seed.ts`** — Base data (seeds all three verticals):
 
 - Glow Aesthetic Clinic (aesthetic pack): 3 staff, 5 services, 4 customers, 7 templates, conversations, bookings, reminders, ROI baseline
 - Metro Auto Group (dealership pack): 7 staff, 5 services, 4 locations, 10 resources, 2 customers, 5 templates
+- Serenity Wellness Spa (wellness pack): 3 staff, 6 services (called from seedWellness())
 
 **`packages/db/src/seed-demo.ts`** — Rich demo data:
 
@@ -730,14 +732,14 @@ Two scripts, both idempotent:
 - Zen Wellness Spa uses `wellness` vertical pack
 - Used to populate the Business Directory with realistic data for demos
 
-**`packages/db/src/seed-wellness.ts`** — Wellness pack showcase data:
+**`packages/db/src/seed-wellness.ts`** — Wellness pack showcase data (also called from `seed.ts`):
 
 - Serenity Wellness Spa (verticalPack: `wellness`, plan: `pro`)
 - 3 staff (Maya Chen ADMIN, Jordan Rivera + Aisha Patel SERVICE_PROVIDER)
 - 6 services matching wellness pack defaults
 - 5 customers with full wellness intake data (health goals, fitness levels, injuries, allergies, memberships)
 - 15 bookings spread across recent weeks
-- Run: `npx tsx packages/db/src/seed-wellness.ts`
+- Automatically seeded via `seed.ts`, or run standalone: `npx tsx packages/db/src/seed-wellness.ts`
 
 **`packages/db/src/seed-content.ts`** — Content pillar seed data:
 
@@ -952,6 +954,17 @@ Key groups (full list in `.env.example`):
   - Tenant isolation: verified STRONG (zero critical vulns, all 40+ services filter by businessId)
 - **BUG-001: P2010 Raw Query Fix** — COMPLETE (March 2026). Raw SQL `FOR UPDATE` lock queries used Prisma model names instead of `@@map` PostgreSQL table names, causing P2010 on every public portal booking. Fixed 4 raw queries across booking/billing/self-serve services. Hardened global exception filter to never expose Prisma error codes to users.
 - **BUG-002: /patients → /customers Redirect** — COMPLETE (March 2026). Added permanent 301 redirects in next.config.js for `/patients` and `/patients/:path*` to `/customers` equivalents. Preserves bookmarked/external links after the rename.
+- **QA Bug Fix Sprint (10 bugs)** — COMPLETE (March 2026). 10 bugs fixed across seed data, auth, dashboard, inbox, settings, services, routing, and integrations:
+  - BUG-010 (Critical): Wellness seed integrated into main seed.ts (was standalone-only)
+  - BUG-001 (Critical): Booking dedup in API findAll() + idempotent seed-demo.ts book() function
+  - BUG-003 (Critical): Middleware checks both access_token AND refresh_token before redirecting to /login
+  - BUG-007 (High): Dashboard "Consult → Treatment" metric now vertical-aware (dealership: "Quote → Service", wellness: "Booking → Session")
+  - BUG-009 (High): Intake card heading now vertical-aware via usePack() (aesthetic: "CLINIC INTAKE", dealership: "VEHICLE INTAKE", wellness: "CLIENT INTAKE")
+  - BUG-006 (Medium): Settings account card title aligned with page content
+  - BUG-002 (Medium): Service category normalization ("Injectable" → "Injectables")
+  - BUG-005 (Medium): Settings hub card labels updated (Account & Import, Calendar & Templates, Notifications, Branding)
+  - BUG-008 (Low): /appointments → /bookings permanent redirect in next.config.js
+  - BUG-004 (Low): WhatsApp integration button shows "Connect" (not "Configure") when not connected
 - **Deployment Resilience** — COMPLETE (Feb 19, 2026). Zero-downtime deploys via `railway.toml` health checks, NestJS `enableShutdownHooks()` for graceful shutdown, frontend `fetchWithRetry()` auto-retries once on network errors during deployment rollovers.
 - **Manual End-to-End Testing** — COMPLETE (Feb 19, 2026). 72 tests across 7 sessions (Security, Agentic, Inbox/Calendar, Exports/Dashboard, Automations, Self-Serve, Cross-Cutting) + 26 frontend verifications. **72/72 pass rate.** 4 defects found and fixed during testing:
   - D1 (Critical): Circular dependency in MessageModule ↔ MessagingModule preventing API startup — fixed with `forwardRef()`
