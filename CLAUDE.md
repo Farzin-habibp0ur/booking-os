@@ -508,6 +508,7 @@ Agents run via `AgentSchedulerService` cron → `AGENT_PROCESSING` BullMQ queue 
 | platform-launch-config | `system/platform-launch-config.md` | Phased platform rollout (A/B/C phases, cadence, unlock criteria) |
 | platform-gate-checker  | `system/platform-gate-checker.md`  | Weekly gate check template for phase unlocks                  |
 | agent-platform-filter  | `system/agent-platform-filter.md`  | Pre-flight content agent filter (skip LOCKED platforms)       |
+| quality-gates          | `system/quality-gates.md`          | Pipeline quality checkpoints, rejection taxonomy, tier rules  |
 
 ---
 
