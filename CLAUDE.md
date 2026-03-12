@@ -42,6 +42,7 @@ booking-os/
 │   │   └── src/seed-content.ts # Content pillar seeding (12 blog posts → ContentDraft)
 │   ├── messaging-provider/     # WhatsApp Cloud API abstraction
 │   └── shared/                 # Shared types, DTOs, enums, profile field definitions
+├── system/                     # Growth engine config (phased launch, platform gates, agent filters)
 ├── docs/                       # PROJECT_CONTEXT.md, cicd.md, user-stories.md, ux-brainstorm-brief.md
 ├── docker-compose.yml          # Local development
 ├── docker-compose.prod.yml     # Production (Nginx + SSL)
@@ -504,6 +505,9 @@ Agents run via `AgentSchedulerService` cron → `AGENT_PROCESSING` BullMQ queue 
 | cicd.md                | `docs/cicd.md`                | CI/CD pipeline details                                        |
 | user-stories.md        | `docs/user-stories.md`        | Complete user stories (280 capabilities, 215 gaps)            |
 | ux-brainstorm-brief.md | `docs/ux-brainstorm-brief.md` | UX improvement brainstorm                                     |
+| platform-launch-config | `system/platform-launch-config.md` | Phased platform rollout (A/B/C phases, cadence, unlock criteria) |
+| platform-gate-checker  | `system/platform-gate-checker.md`  | Weekly gate check template for phase unlocks                  |
+| agent-platform-filter  | `system/agent-platform-filter.md`  | Pre-flight content agent filter (skip LOCKED platforms)       |
 
 ---
 
