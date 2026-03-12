@@ -22,7 +22,7 @@ export class ReferralService {
     const corsOrigins = this.config.get<string>('CORS_ORIGINS');
     if (corsOrigins) {
       const firstOrigin = corsOrigins.split(',')[0].trim();
-      if (firstOrigin && !firstOrigin.includes('localhost')) return firstOrigin;
+      if (firstOrigin) return firstOrigin;
     }
 
     return 'http://localhost:3000';
