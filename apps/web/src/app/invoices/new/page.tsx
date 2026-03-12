@@ -1,9 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
-import { cn } from '@/lib/cn';
 import { ArrowLeft, Plus, Trash2 } from 'lucide-react';
 
 interface LineItem {
@@ -21,6 +20,14 @@ interface Customer {
 }
 
 export default function NewInvoicePage() {
+  return (
+    <Suspense>
+      <NewInvoiceContent />
+    </Suspense>
+  );
+}
+
+function NewInvoiceContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const bookingId = searchParams.get('bookingId');
