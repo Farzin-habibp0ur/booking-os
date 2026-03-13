@@ -20,45 +20,70 @@ jest.mock('recharts', () => {
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import AIPerformancePage from './page';
 
-const mockPerformance = {
-  totalRuns: 150,
-  successfulRuns: 135,
-  failedRuns: 15,
-  successRate: 90,
-  avgRunTime: 1250,
-  dailyStats: [
-    { date: 'Mar 1', successRate: 88, created: 10, approved: 8, dismissed: 2 },
-    { date: 'Mar 2', successRate: 92, created: 12, approved: 10, dismissed: 1 },
-  ],
-  agentComparison: [
-    { agentType: 'WAITLIST', runs: 50, successRate: 92, cardsCreated: 20 },
-    { agentType: 'RETENTION', runs: 40, successRate: 85, cardsCreated: 15 },
-  ],
+const mockContentStats = {
+  byStatus: { DRAFT: 10, IN_REVIEW: 5, PUBLISHED: 20, REJECTED: 3 },
+  byTier: { GREEN: 15, YELLOW: 10, RED: 3 },
+  byContentType: { BLOG: 12, SOCIAL: 8, EMAIL: 5 },
+  byPillar: { 'Product Education': 10, 'Social Proof': 8, 'Industry Trends': 5 },
 };
 
-const mockFeedback = [
-  { agentType: 'WAITLIST', helpful: 25, notHelpful: 5, total: 30, helpfulPercent: 83.3 },
-  { agentType: 'RETENTION', helpful: 10, notHelpful: 8, total: 18, helpfulPercent: 55.6 },
+const mockRejectionStats = {
+  byGate: { GATE_1: 3, GATE_2: 5, GATE_3: 2, GATE_4: 1 },
+  byCode: { R01: 3, R02: 2, R05: 4, R07: 1 },
+  byAgent: { BlogWriter: 5, SocialCreator: 3 },
+  bySeverity: { MINOR: 4, MAJOR: 5, CRITICAL: 2 },
+};
+
+const mockAbTests = [
+  {
+    id: 'ab-1',
+    name: 'CTA Button Color',
+    status: 'COMPLETED',
+    metric: 'click_rate',
+    winnerVariantId: 'v-1',
+    confidence: 95,
+  },
+  {
+    id: 'ab-2',
+    name: 'Email Subject Line',
+    status: 'RUNNING',
+    metric: 'open_rate',
+    winnerVariantId: null,
+    confidence: null,
+  },
 ];
+
+const mockAgentStats = {
+  totalRuns: 150,
+  byAgent: [
+    { agentType: 'BlogWriter', _count: 50 },
+    { agentType: 'SocialCreator', _count: 40 },
+  ],
+  byStatus: [
+    { status: 'SUCCESS', _count: 130 },
+    { status: 'FAILURE', _count: 20 },
+  ],
+};
 
 describe('AIPerformancePage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockGet.mockImplementation((url: string) => {
-      if (url.includes('/agents/runs')) return Promise.resolve(mockPerformance);
-      if (url.includes('/agents/feedback')) return Promise.resolve(mockFeedback);
+      if (url.includes('/marketing-content/stats')) return Promise.resolve(mockContentStats);
+      if (url.includes('/rejection-analytics/stats')) return Promise.resolve(mockRejectionStats);
+      if (url.includes('/ab-testing')) return Promise.resolve(mockAbTests);
+      if (url.includes('/agent-runs/stats')) return Promise.resolve(mockAgentStats);
       return Promise.resolve(null);
     });
   });
 
-  it('renders KPI cards with metrics', async () => {
+  it('renders KPI cards with marketing metrics', async () => {
     render(<AIPerformancePage />);
     await waitFor(() => {
       expect(screen.getByTestId('kpi-grid')).toBeInTheDocument();
-      expect(screen.getByText('150')).toBeInTheDocument(); // Total Runs
-      expect(screen.getByText('135')).toBeInTheDocument(); // Successful
-      expect(screen.getByText('15')).toBeInTheDocument(); // Failed
-      expect(screen.getByText('90%')).toBeInTheDocument(); // Success Rate
+      expect(screen.getByText('38')).toBeInTheDocument(); // Total Content (10+5+20+3)
+      expect(screen.getByText('29%')).toBeInTheDocument(); // Rejection Rate (11/38)
+      expect(screen.getByText('150')).toBeInTheDocument(); // Agent Runs
     });
   });
 
@@ -72,45 +97,56 @@ describe('AIPerformancePage', () => {
     });
   });
 
-  it('changes date range on click', async () => {
+  it('renders content tier distribution chart', async () => {
     render(<AIPerformancePage />);
-    await waitFor(() => screen.getByTestId('range-7'));
-
-    fireEvent.click(screen.getByTestId('range-7'));
-
     await waitFor(() => {
-      expect(mockGet).toHaveBeenCalledWith(expect.stringContaining('days=7'));
+      expect(screen.getByTestId('tier-chart')).toBeInTheDocument();
     });
   });
 
-  it('renders charts', async () => {
+  it('renders pillar balance chart', async () => {
     render(<AIPerformancePage />);
     await waitFor(() => {
-      expect(screen.getByTestId('success-rate-chart')).toBeInTheDocument();
-      expect(screen.getByTestId('cards-chart')).toBeInTheDocument();
+      expect(screen.getByTestId('pillar-chart')).toBeInTheDocument();
+    });
+  });
+
+  it('renders rejection analytics charts', async () => {
+    render(<AIPerformancePage />);
+    await waitFor(() => {
+      expect(screen.getByTestId('rejection-gate-chart')).toBeInTheDocument();
+      expect(screen.getByTestId('rejection-code-chart')).toBeInTheDocument();
+      expect(screen.getByTestId('severity-chart')).toBeInTheDocument();
+    });
+  });
+
+  it('renders A/B test summary table', async () => {
+    render(<AIPerformancePage />);
+    await waitFor(() => {
+      expect(screen.getByTestId('ab-test-summary')).toBeInTheDocument();
+      expect(screen.getByText('CTA Button Color')).toBeInTheDocument();
+      expect(screen.getByText('Email Subject Line')).toBeInTheDocument();
+      expect(screen.getByText('Winner declared')).toBeInTheDocument();
+      expect(screen.getByText('95%')).toBeInTheDocument(); // confidence
+    });
+  });
+
+  it('renders agent comparison chart', async () => {
+    render(<AIPerformancePage />);
+    await waitFor(() => {
       expect(screen.getByTestId('agent-comparison-chart')).toBeInTheDocument();
     });
   });
 
-  it('renders staff feedback table', async () => {
+  it('shows A/B test win rate in KPIs', async () => {
     render(<AIPerformancePage />);
     await waitFor(() => {
-      expect(screen.getByTestId('feedback-table')).toBeInTheDocument();
-      expect(screen.getByText('WAITLIST')).toBeInTheDocument();
-      expect(screen.getByText('25')).toBeInTheDocument(); // helpful count
-      expect(screen.getByText('83%')).toBeInTheDocument(); // helpful percent
-    });
-  });
-
-  it('renders average run time', async () => {
-    render(<AIPerformancePage />);
-    await waitFor(() => {
-      expect(screen.getByText('1250ms')).toBeInTheDocument();
+      expect(screen.getByText('100%')).toBeInTheDocument(); // 1/1 completed test has winner
     });
   });
 
   it('shows loading state initially', () => {
-    mockGet.mockReturnValue(new Promise(() => {})); // never resolves
+    mockGet.mockReturnValue(new Promise(() => {}));
     render(<AIPerformancePage />);
     expect(screen.getByTestId('performance-loading')).toBeInTheDocument();
   });

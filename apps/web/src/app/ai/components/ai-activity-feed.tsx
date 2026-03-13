@@ -3,94 +3,48 @@
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
-import { useI18n } from '@/lib/i18n';
-import { Activity } from 'lucide-react';
+import { Activity, CheckCircle, XCircle, Clock } from 'lucide-react';
 
-interface ActivityEntry {
+interface AgentRun {
   id: string;
-  timestamp: string;
-  agentName: string;
-  description: string;
-  outcome: 'success' | 'failed' | 'pending';
+  agentType: string;
+  status: 'SUCCESS' | 'FAILURE' | 'RUNNING';
+  startedAt: string;
+  completedAt?: string;
+  cardsCreated: number;
+  errors?: any;
 }
 
 export function AIActivityFeed() {
-  const { t } = useI18n();
-  const [activities, setActivities] = useState<ActivityEntry[]>([]);
+  const [runs, setRuns] = useState<AgentRun[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchActivities = async () => {
+    const fetchRuns = async () => {
       try {
         setLoading(true);
-        const data = await api.get<ActivityEntry[]>('/ai/activity?limit=50');
-        setActivities(data || []);
-      } catch (err) {
-        console.error('Failed to fetch activities:', err);
-        // Mock data on failure
-        const now = new Date();
-        const mockActivities: ActivityEntry[] = [
-          {
-            id: '1',
-            timestamp: new Date(now.getTime() - 5 * 60000).toISOString(),
-            agentName: 'Booking Agent',
-            description: 'Created booking for John Doe',
-            outcome: 'success',
-          },
-          {
-            id: '2',
-            timestamp: new Date(now.getTime() - 15 * 60000).toISOString(),
-            agentName: 'Follow-up Agent',
-            description: 'Sent reminder to customer',
-            outcome: 'success',
-          },
-          {
-            id: '3',
-            timestamp: new Date(now.getTime() - 25 * 60000).toISOString(),
-            agentName: 'Review Agent',
-            description: 'Processing review submission',
-            outcome: 'pending',
-          },
-          {
-            id: '4',
-            timestamp: new Date(now.getTime() - 35 * 60000).toISOString(),
-            agentName: 'Waitlist Agent',
-            description: 'Failed to process waitlist entry',
-            outcome: 'failed',
-          },
-        ];
-        setActivities(mockActivities);
+        const data = await api.get<any>('/agent-runs?take=15');
+        const items = data?.data || data || [];
+        setRuns(Array.isArray(items) ? items : []);
+      } catch {
+        setRuns([]);
       } finally {
         setLoading(false);
       }
     };
-
-    fetchActivities();
+    fetchRuns();
   }, []);
 
-  const getOutcomeColor = (outcome: string) => {
-    switch (outcome) {
-      case 'success':
-        return 'bg-green-500';
-      case 'failed':
-        return 'bg-red-500';
-      case 'pending':
-        return 'bg-amber-500';
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'SUCCESS':
+        return <CheckCircle size={14} className="text-green-500" />;
+      case 'FAILURE':
+        return <XCircle size={14} className="text-red-500" />;
+      case 'RUNNING':
+        return <Clock size={14} className="text-amber-500 animate-pulse" />;
       default:
-        return 'bg-slate-400';
-    }
-  };
-
-  const getOutcomeLabel = (outcome: string) => {
-    switch (outcome) {
-      case 'success':
-        return 'Success';
-      case 'failed':
-        return 'Failed';
-      case 'pending':
-        return 'Pending';
-      default:
-        return 'Unknown';
+        return <Clock size={14} className="text-slate-400" />;
     }
   };
 
@@ -99,27 +53,26 @@ export function AIActivityFeed() {
       const date = new Date(isoString);
       const now = new Date();
       const diffMinutes = Math.floor((now.getTime() - date.getTime()) / 60000);
-
       if (diffMinutes < 1) return 'Just now';
       if (diffMinutes < 60) return `${diffMinutes}m ago`;
       if (diffMinutes < 1440) return `${Math.floor(diffMinutes / 60)}h ago`;
-      if (diffMinutes < 10080) return `${Math.floor(diffMinutes / 1440)}d ago`;
-
-      // Format as date
-      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      return `${Math.floor(diffMinutes / 1440)}d ago`;
     } catch {
       return 'Unknown';
     }
   };
 
+  const formatAgentName = (agentType: string) =>
+    agentType.replace(/([A-Z])/g, ' $1').trim().replace(/_/g, ' ');
+
   if (loading) {
     return (
-      <div className="rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-soft">
+      <div className="rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-soft border border-slate-100 dark:border-slate-800">
         <div className="h-6 bg-slate-200 dark:bg-slate-700 rounded w-1/4 mb-6"></div>
         <div className="space-y-4">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="flex gap-4 animate-pulse">
-              <div className="h-3 w-3 bg-slate-200 dark:bg-slate-700 rounded-full flex-shrink-0 mt-2"></div>
+            <div key={i} className="flex gap-3 animate-pulse">
+              <div className="h-3.5 w-3.5 bg-slate-200 dark:bg-slate-700 rounded-full flex-shrink-0 mt-1"></div>
               <div className="flex-1">
                 <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-1/2 mb-2"></div>
                 <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-3/4"></div>
@@ -131,53 +84,60 @@ export function AIActivityFeed() {
     );
   }
 
-  if (activities.length === 0) {
+  if (runs.length === 0) {
     return (
-      <div className="rounded-2xl bg-white dark:bg-slate-900 p-12 shadow-soft text-center">
-        <div className="flex justify-center mb-4">
-          <Activity className="text-slate-400" size={48} />
-        </div>
-        <h3 className="font-serif text-lg text-slate-900 dark:text-white mb-2">No Activity Yet</h3>
+      <div className="rounded-2xl bg-white dark:bg-slate-900 p-12 shadow-soft border border-slate-100 dark:border-slate-800 text-center">
+        <Activity className="mx-auto mb-4 text-slate-400" size={48} />
+        <h3 className="font-serif text-lg text-slate-900 dark:text-white mb-2">No Recent Activity</h3>
         <p className="text-slate-600 dark:text-slate-400">
-          AI agents will show their activity here once they start running.
+          Agent runs will appear here once agents start processing.
         </p>
       </div>
     );
   }
 
   return (
-    <div className="rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-soft">
-      <h2 className="font-serif text-lg font-semibold text-slate-900 dark:text-white mb-6">
-        Recent Activity
+    <div className="rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-soft border border-slate-100 dark:border-slate-800">
+      <h2 className="font-serif text-lg font-semibold text-slate-900 dark:text-white mb-4">
+        Recent Agent Runs
       </h2>
 
-      <div className="max-h-96 overflow-y-auto space-y-4">
-        {activities.map((activity) => (
+      <div className="max-h-96 overflow-y-auto space-y-3">
+        {runs.map((run) => (
           <div
-            key={activity.id}
-            className="flex gap-4 pb-4 border-b border-slate-100 dark:border-slate-800 last:border-0 last:pb-0"
+            key={run.id}
+            className="flex gap-3 pb-3 border-b border-slate-100 dark:border-slate-800 last:border-0 last:pb-0"
           >
-            {/* Status dot */}
-            <div className="flex-shrink-0 mt-1">
-              <span className={cn('status-dot', getOutcomeColor(activity.outcome))}></span>
+            <div className="flex-shrink-0 mt-0.5">
+              {getStatusIcon(run.status)}
             </div>
-
-            {/* Content */}
             <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between gap-2 mb-1">
-                <p className="text-sm font-semibold text-slate-900 dark:text-white">
-                  {activity.agentName}
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-sm font-medium text-slate-900 dark:text-white">
+                  {formatAgentName(run.agentType)}
                 </p>
-                <span className="text-xs font-medium text-slate-500 dark:text-slate-400 flex-shrink-0">
-                  {formatTimestamp(activity.timestamp)}
+                <span className="text-[11px] text-slate-500 flex-shrink-0">
+                  {formatTimestamp(run.startedAt)}
                 </span>
               </div>
-              <p className="text-sm text-slate-600 dark:text-slate-300 mb-1">
-                {activity.description}
-              </p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                {getOutcomeLabel(activity.outcome)}
-              </p>
+              <div className="flex items-center gap-3 mt-0.5">
+                <span className={cn(
+                  'text-xs',
+                  run.status === 'SUCCESS' ? 'text-green-600' : run.status === 'FAILURE' ? 'text-red-600' : 'text-amber-600',
+                )}>
+                  {run.status.toLowerCase()}
+                </span>
+                {run.cardsCreated > 0 && (
+                  <span className="text-xs text-slate-500">{run.cardsCreated} cards created</span>
+                )}
+                {run.completedAt && run.startedAt && (
+                  <span className="text-xs text-slate-400">
+                    {Math.round(
+                      (new Date(run.completedAt).getTime() - new Date(run.startedAt).getTime()) / 1000,
+                    )}s
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         ))}

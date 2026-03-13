@@ -4,74 +4,68 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
-import { useI18n } from '@/lib/i18n';
-import { Settings } from 'lucide-react';
+import { Settings, Shield } from 'lucide-react';
 
-interface AutonomyLevel {
-  agentId: string;
-  agentName: string;
-  level: 'off' | 'assist' | 'auto';
+interface AutonomySetting {
+  id: string;
+  actionType: string;
+  autonomyLevel: string; // OFF, SUGGEST, AUTO_WITH_REVIEW, FULL_AUTO
+  scope?: string;
 }
 
+const LEVEL_ORDER = ['OFF', 'SUGGEST', 'AUTO_WITH_REVIEW', 'FULL_AUTO'] as const;
+
+const LEVEL_CONFIG: Record<string, { label: string; short: string; color: string }> = {
+  OFF: { label: 'Off', short: 'Off', color: 'bg-slate-300 dark:bg-slate-600' },
+  SUGGEST: { label: 'Suggest', short: 'Sug', color: 'bg-lavender-400 dark:bg-lavender-500' },
+  AUTO_WITH_REVIEW: { label: 'Auto + Review', short: 'A+R', color: 'bg-amber-500 dark:bg-amber-600' },
+  FULL_AUTO: { label: 'Full Auto', short: 'Auto', color: 'bg-sage-500 dark:bg-sage-600' },
+};
+
+const ACTION_TYPE_LABELS: Record<string, string> = {
+  CONTENT_CREATION: 'Content Creation',
+  CONTENT_PUBLISHING: 'Content Publishing',
+  EMAIL_CAMPAIGNS: 'Email Campaigns',
+  SOCIAL_POSTING: 'Social Posting',
+  TREND_RESEARCH: 'Trend Research',
+  PERFORMANCE_REPORTING: 'Performance Reports',
+  BUDGET_ALLOCATION: 'Budget Allocation',
+  AB_TESTING: 'A/B Testing',
+};
+
 export function AutonomyOverview() {
-  const { t } = useI18n();
-  const [autonomyLevels, setAutonomyLevels] = useState<AutonomyLevel[]>([]);
+  const [settings, setSettings] = useState<AutonomySetting[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchAutonomy = async () => {
+    const fetchSettings = async () => {
       try {
         setLoading(true);
-        const data = await api.get<AutonomyLevel[]>('/ai/autonomy');
-        setAutonomyLevels(data || []);
-      } catch (err) {
-        console.error('Failed to fetch autonomy levels:', err);
-        // Mock data on failure
-        setAutonomyLevels([
-          { agentId: '1', agentName: 'Booking Agent', level: 'auto' },
-          { agentId: '2', agentName: 'Follow-up Agent', level: 'assist' },
-          { agentId: '3', agentName: 'Review Agent', level: 'off' },
-        ]);
+        const data = await api.get<AutonomySetting[]>('/autonomy-settings');
+        setSettings(Array.isArray(data) ? data : []);
+      } catch {
+        setSettings([]);
       } finally {
         setLoading(false);
       }
     };
-
-    fetchAutonomy();
+    fetchSettings();
   }, []);
 
-  const getLevelColor = (level: string) => {
-    switch (level) {
-      case 'auto':
-        return 'bg-sage-500 dark:bg-sage-600';
-      case 'assist':
-        return 'bg-lavender-400 dark:bg-lavender-500';
-      case 'off':
-        return 'bg-slate-300 dark:bg-slate-600';
-      default:
-        return 'bg-slate-300';
-    }
-  };
-
-  const getLevelLabel = (level: string) => {
-    switch (level) {
-      case 'auto':
-        return 'Auto';
-      case 'assist':
-        return 'Assist';
-      case 'off':
-        return 'Off';
-      default:
-        return 'Unknown';
-    }
-  };
+  const levelCounts = LEVEL_ORDER.reduce(
+    (acc, level) => {
+      acc[level] = settings.filter((s) => s.autonomyLevel === level).length;
+      return acc;
+    },
+    {} as Record<string, number>,
+  );
 
   if (loading) {
     return (
       <div className="rounded-2xl bg-lavender-50 dark:bg-slate-900/50 border border-lavender-100 dark:border-slate-800 p-6 shadow-soft animate-pulse">
         <div className="h-6 bg-lavender-200 dark:bg-slate-700 rounded w-1/3 mb-6"></div>
         <div className="space-y-3">
-          {[...Array(3)].map((_, i) => (
+          {[...Array(4)].map((_, i) => (
             <div key={i} className="h-8 bg-lavender-200 dark:bg-slate-700 rounded w-full"></div>
           ))}
         </div>
@@ -81,50 +75,80 @@ export function AutonomyOverview() {
 
   return (
     <div className="rounded-2xl bg-lavender-50 dark:bg-slate-900/50 border border-lavender-100 dark:border-slate-800 p-6 shadow-soft">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="font-serif text-lg font-semibold text-slate-900 dark:text-white">
-          Autonomy Levels
-        </h2>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <Shield size={18} className="text-lavender-500" />
+          <h2 className="font-serif text-lg font-semibold text-slate-900 dark:text-white">
+            Marketing Autonomy
+          </h2>
+        </div>
         <Link
           href="/settings/autonomy"
-          className="inline-flex items-center gap-1 text-sm text-sage-600 dark:text-sage-400 hover:text-sage-700 dark:hover:text-sage-300 transition-colors"
+          className="inline-flex items-center gap-1 text-xs text-sage-600 dark:text-sage-400 hover:text-sage-700 dark:hover:text-sage-300 transition-colors"
         >
-          <Settings size={16} />
+          <Settings size={14} />
           Configure
         </Link>
       </div>
 
-      <div className="space-y-4">
-        {autonomyLevels.map((item) => (
-          <div key={item.agentId} className="flex items-center gap-3">
-            <div className="flex-1">
-              <p className="text-sm font-medium text-slate-900 dark:text-white mb-1.5">
-                {item.agentName}
+      {/* Level Summary Bar */}
+      {settings.length > 0 && (
+        <div className="flex gap-1 mb-4">
+          {LEVEL_ORDER.map((level) => {
+            const count = levelCounts[level] || 0;
+            if (count === 0) return null;
+            const config = LEVEL_CONFIG[level];
+            return (
+              <div
+                key={level}
+                className={cn('h-2 rounded-full', config.color)}
+                style={{ flex: count }}
+                title={`${config.label}: ${count}`}
+              />
+            );
+          })}
+        </div>
+      )}
+
+      {/* Settings List */}
+      <div className="space-y-2.5">
+        {settings.slice(0, 6).map((setting) => {
+          const config = LEVEL_CONFIG[setting.autonomyLevel] || LEVEL_CONFIG.OFF;
+          return (
+            <div key={setting.id || setting.actionType} className="flex items-center justify-between">
+              <p className="text-xs font-medium text-slate-700 dark:text-slate-300 truncate">
+                {ACTION_TYPE_LABELS[setting.actionType] || setting.actionType.replace(/_/g, ' ')}
               </p>
-              <div className="flex gap-2">
-                {['off', 'assist', 'auto'].map((level) => (
-                  <button
-                    key={level}
-                    className={cn(
-                      'px-3 py-1 rounded-lg text-xs font-medium transition-all',
-                      item.level === level
-                        ? cn(getLevelColor(level), 'text-white shadow-sm')
-                        : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700',
-                    )}
-                  >
-                    {getLevelLabel(level)}
-                  </button>
-                ))}
-              </div>
+              <span
+                className={cn(
+                  'text-[10px] px-2 py-0.5 rounded-full font-medium text-white flex-shrink-0',
+                  config.color,
+                )}
+              >
+                {config.short}
+              </span>
             </div>
-          </div>
-        ))}
+          );
+        })}
+        {settings.length > 6 && (
+          <p className="text-[11px] text-slate-500 text-center pt-1">
+            +{settings.length - 6} more settings
+          </p>
+        )}
       </div>
 
-      <p className="text-xs text-slate-500 dark:text-slate-400 mt-6 pt-6 border-t border-lavender-200 dark:border-slate-800">
-        <strong>Off:</strong> Disabled. <strong>Assist:</strong> Suggests actions for approval.{' '}
-        <strong>Auto:</strong> Runs autonomously.
-      </p>
+      {settings.length === 0 && (
+        <p className="text-xs text-slate-500 text-center py-4">
+          No marketing autonomy settings configured yet.
+        </p>
+      )}
+
+      <div className="text-[10px] text-slate-500 mt-4 pt-4 border-t border-lavender-200 dark:border-slate-800 space-x-2">
+        <span><strong>Off:</strong> Disabled</span>
+        <span><strong>Suggest:</strong> Recommends</span>
+        <span><strong>A+R:</strong> Auto with review</span>
+        <span><strong>Auto:</strong> Fully autonomous</span>
+      </div>
     </div>
   );
 }

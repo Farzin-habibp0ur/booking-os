@@ -19,7 +19,7 @@ jest.mock('@/lib/toast', () => ({
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import AIAgentsPage from './page';
 
-const mockCoreAgents = [
+const mockAllAgents = [
   {
     id: 'cfg-1',
     agentType: 'WAITLIST',
@@ -27,7 +27,7 @@ const mockCoreAgents = [
     autonomyLevel: 'auto',
     config: {},
     lastRunAt: '2026-03-09T10:00:00Z',
-    runCount: 15,
+    performanceScore: 85,
   },
   {
     id: 'cfg-2',
@@ -36,28 +36,27 @@ const mockCoreAgents = [
     autonomyLevel: 'assist',
     config: {},
     lastRunAt: null,
-    runCount: 0,
+    performanceScore: 60,
   },
-];
-
-const mockMarketingAgents = [
   {
     id: 'ma-1',
-    type: 'BLOG_WRITER',
-    name: 'Blog Writer',
-    enabled: true,
+    agentType: 'BlogWriter',
+    isEnabled: true,
+    autonomyLevel: 'auto',
+    config: {},
     lastRunAt: '2026-03-09T08:00:00Z',
-    runCount: 10,
     runIntervalMinutes: 60,
+    performanceScore: 92,
   },
   {
     id: 'ma-2',
-    type: 'SOCIAL_CREATOR',
-    name: 'Social Creator',
-    enabled: false,
+    agentType: 'ContentPublisher',
+    isEnabled: false,
+    autonomyLevel: 'suggest',
+    config: {},
     lastRunAt: null,
-    runCount: 0,
     runIntervalMinutes: 120,
+    performanceScore: 45,
   },
 ];
 
@@ -78,7 +77,6 @@ const mockRuns = {
       startedAt: '2026-03-09T09:00:00Z',
       completedAt: '2026-03-09T09:00:02Z',
       cardsCreated: 0,
-      error: 'Timeout',
     },
   ],
 };
@@ -87,9 +85,8 @@ describe('AIAgentsPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockGet.mockImplementation((url: string) => {
-      if (url.includes('/agents/config')) return Promise.resolve(mockCoreAgents);
-      if (url.includes('/marketing-agents')) return Promise.resolve(mockMarketingAgents);
-      if (url.includes('/agents/runs')) return Promise.resolve(mockRuns);
+      if (url.includes('/agent-config')) return Promise.resolve(mockAllAgents);
+      if (url.includes('/agent-runs')) return Promise.resolve(mockRuns);
       return Promise.resolve([]);
     });
     mockPatch.mockResolvedValue({});
@@ -111,11 +108,24 @@ describe('AIAgentsPage', () => {
     });
   });
 
-  it('shows marketing agents section', async () => {
+  it('shows marketing agents section with tab filters', async () => {
     render(<AIAgentsPage />);
     await waitFor(() => {
       expect(screen.getByText('Marketing Agents')).toBeInTheDocument();
-      expect(screen.getByTestId('marketing-agent-BLOG_WRITER')).toBeInTheDocument();
+      expect(screen.getByTestId('agent-tab-filters')).toBeInTheDocument();
+      expect(screen.getByTestId('agent-card-BlogWriter')).toBeInTheDocument();
+    });
+  });
+
+  it('filters marketing agents by category tab', async () => {
+    render(<AIAgentsPage />);
+    await waitFor(() => screen.getByTestId('filter-distribution'));
+
+    fireEvent.click(screen.getByTestId('filter-distribution'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('agent-card-ContentPublisher')).toBeInTheDocument();
+      expect(screen.queryByTestId('agent-card-BlogWriter')).not.toBeInTheDocument();
     });
   });
 
@@ -126,7 +136,7 @@ describe('AIAgentsPage', () => {
     fireEvent.click(screen.getByTestId('toggle-WAITLIST'));
 
     await waitFor(() => {
-      expect(mockPatch).toHaveBeenCalledWith('/agents/config/WAITLIST', { isEnabled: false });
+      expect(mockPatch).toHaveBeenCalledWith('/agent-config/WAITLIST', { isEnabled: false });
     });
   });
 
@@ -152,28 +162,35 @@ describe('AIAgentsPage', () => {
     });
   });
 
-  it('triggers agent run on Run Now click', async () => {
+  it('triggers agent run via /agent-config/:agentType/run-now', async () => {
     render(<AIAgentsPage />);
     await waitFor(() => screen.getByTestId('trigger-WAITLIST'));
 
     fireEvent.click(screen.getByTestId('trigger-WAITLIST'));
 
     await waitFor(() => {
-      expect(mockPost).toHaveBeenCalledWith('/agents/WAITLIST/trigger', {});
+      expect(mockPost).toHaveBeenCalledWith('/agent-config/WAITLIST/run-now', {});
     });
   });
 
-  it('shows empty state when no core agents', async () => {
+  it('shows performance score bars on agent cards', async () => {
+    render(<AIAgentsPage />);
+    await waitFor(() => {
+      expect(screen.getByText('85%')).toBeInTheDocument(); // WAITLIST score
+      expect(screen.getByText('92%')).toBeInTheDocument(); // BlogWriter score
+    });
+  });
+
+  it('shows empty state when no agents configured', async () => {
     mockGet.mockImplementation((url: string) => {
-      if (url.includes('/agents/config')) return Promise.resolve([]);
-      if (url.includes('/marketing-agents')) return Promise.resolve([]);
-      if (url.includes('/agents/runs')) return Promise.resolve({ data: [] });
+      if (url.includes('/agent-config')) return Promise.resolve([]);
+      if (url.includes('/agent-runs')) return Promise.resolve({ data: [] });
       return Promise.resolve([]);
     });
 
     render(<AIAgentsPage />);
     await waitFor(() => {
-      expect(screen.getByText('No Agents Configured')).toBeInTheDocument();
+      expect(screen.getByText('No Core Agents')).toBeInTheDocument();
     });
   });
 });

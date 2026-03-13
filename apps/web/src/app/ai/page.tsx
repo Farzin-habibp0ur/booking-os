@@ -3,70 +3,59 @@
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
-import { Bot, Megaphone } from 'lucide-react';
+import { Megaphone, FileText, BarChart3, Target } from 'lucide-react';
 import { PageSkeleton } from '@/components/skeleton';
 import { AgentDashboard } from './components/agent-dashboard';
 import { AutonomyOverview } from './components/autonomy-overview';
 import { AIActivityFeed } from './components/ai-activity-feed';
 
-interface MarketingAgent {
-  id: string;
-  type: string;
-  name: string;
-  enabled: boolean;
-  lastRunAt: string | null;
-  runCount: number;
+interface ContentStats {
+  byStatus?: Record<string, number>;
+  byTier?: Record<string, number>;
+  byContentType?: Record<string, number>;
+  byPillar?: Record<string, number>;
 }
 
-const MARKETING_AGENT_LABELS: Record<string, string> = {
-  BLOG_WRITER: 'Blog Writer',
-  SOCIAL_CREATOR: 'Social Creator',
-  EMAIL_COMPOSER: 'Email Composer',
-  CASE_STUDY: 'Case Study',
-  VIDEO_SCRIPT: 'Video Script',
-  NEWSLETTER: 'Newsletter',
-  CONTENT_SCHEDULER: 'Content Scheduler',
-  CONTENT_PUBLISHER: 'Content Publisher',
-  PERFORMANCE_TRACKER: 'Performance Tracker',
-  TREND_ANALYZER: 'Trend Analyzer',
-  CONTENT_CALENDAR: 'Content Calendar',
-  CONTENT_ROI: 'Content ROI',
-};
+interface PillarBalance {
+  pillar: string;
+  count: number;
+  percentage: number;
+}
 
 export default function AIOverviewPage() {
-  const [marketingAgents, setMarketingAgents] = useState<MarketingAgent[]>([]);
-  const [marketingLoading, setMarketingLoading] = useState(true);
+  const [contentStats, setContentStats] = useState<ContentStats | null>(null);
+  const [pillarBalance, setPillarBalance] = useState<PillarBalance[]>([]);
+  const [statsLoading, setStatsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchMarketingAgents = async () => {
+    const fetchContentData = async () => {
       try {
-        const data = await api.get<MarketingAgent[]>('/marketing-agents');
-        setMarketingAgents(data || []);
+        const [stats, balance] = await Promise.all([
+          api.get<ContentStats>('/marketing-content/stats').catch(() => null),
+          api.get<PillarBalance[]>('/marketing-content/pillar-balance').catch(() => []),
+        ]);
+        setContentStats(stats as ContentStats);
+        setPillarBalance(Array.isArray(balance) ? balance : []);
       } catch {
-        // Create mock data from known types
-        setMarketingAgents(
-          Object.entries(MARKETING_AGENT_LABELS).map(([type, name], i) => ({
-            id: `ma-${i}`,
-            type,
-            name,
-            enabled: i < 6,
-            lastRunAt: i < 6 ? new Date(Date.now() - Math.random() * 7200000).toISOString() : null,
-            runCount: i < 6 ? Math.floor(Math.random() * 50) + 5 : 0,
-          })),
-        );
+        // Graceful fallback
       } finally {
-        setMarketingLoading(false);
+        setStatsLoading(false);
       }
     };
-    fetchMarketingAgents();
+    fetchContentData();
   }, []);
+
+  const totalContent = contentStats?.byStatus
+    ? Object.values(contentStats.byStatus).reduce((s, v) => s + v, 0)
+    : 0;
+  const publishedCount = contentStats?.byStatus?.PUBLISHED || 0;
+  const draftCount = contentStats?.byStatus?.DRAFT || 0;
+  const reviewCount = contentStats?.byStatus?.IN_REVIEW || 0;
 
   return (
     <div className="space-y-6" data-testid="ai-overview">
-      {/* Core Agent Dashboard */}
-      <div>
-        <AgentDashboard />
-      </div>
+      {/* System Health + Agent Dashboard */}
+      <AgentDashboard />
 
       {/* Activity Feed + Autonomy */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -78,55 +67,75 @@ export default function AIOverviewPage() {
         </div>
       </div>
 
-      {/* Marketing Agents Summary */}
+      {/* Content Pipeline Summary */}
       <div
         className="rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-soft border border-slate-100 dark:border-slate-800"
-        data-testid="marketing-agents-summary"
+        data-testid="content-pipeline-summary"
       >
         <div className="flex items-center gap-2 mb-4">
           <Megaphone size={20} className="text-lavender-500" />
           <h2 className="font-serif text-lg font-semibold text-slate-900 dark:text-white">
-            Marketing Agents
+            Content Pipeline
           </h2>
-          <span className="text-xs text-slate-500 ml-auto">
-            {marketingAgents.filter((a) => a.enabled).length} of {marketingAgents.length} active
-          </span>
         </div>
 
-        {marketingLoading ? (
+        {statsLoading ? (
           <PageSkeleton />
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-            {marketingAgents.map((agent) => (
-              <div
-                key={agent.id}
-                className={cn(
-                  'rounded-xl p-3 border transition-colors',
-                  agent.enabled
-                    ? 'border-sage-100 bg-sage-50/50 dark:bg-sage-900/10 dark:border-sage-800'
-                    : 'border-slate-100 bg-slate-50 dark:bg-slate-800/50 dark:border-slate-700',
-                )}
-              >
-                <div className="flex items-center gap-1.5 mb-1">
-                  <span
-                    className={cn(
-                      'w-1.5 h-1.5 rounded-full flex-shrink-0',
-                      agent.enabled ? 'bg-green-500' : 'bg-slate-300',
-                    )}
-                  />
-                  <p className="text-xs font-medium text-slate-900 dark:text-white truncate">
-                    {MARKETING_AGENT_LABELS[agent.type] || agent.name}
-                  </p>
+          <div className="space-y-4">
+            {/* Content Status Row */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <MiniStat icon={<FileText size={16} />} label="Total Content" value={totalContent} />
+              <MiniStat icon={<Target size={16} />} label="Published" value={publishedCount} color="text-green-600" />
+              <MiniStat icon={<FileText size={16} />} label="Drafts" value={draftCount} color="text-amber-600" />
+              <MiniStat icon={<BarChart3 size={16} />} label="In Review" value={reviewCount} color="text-lavender-600" />
+            </div>
+
+            {/* Tier Distribution */}
+            {contentStats?.byTier && Object.keys(contentStats.byTier).length > 0 && (
+              <div>
+                <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-2">Content Tier Distribution</p>
+                <div className="flex gap-1 h-3 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800">
+                  {Object.entries(contentStats.byTier).map(([tier, count]) => {
+                    const total = Object.values(contentStats.byTier!).reduce((s, v) => s + v, 0);
+                    const pct = total > 0 ? (count / total) * 100 : 0;
+                    return (
+                      <div
+                        key={tier}
+                        className={cn(
+                          'h-full',
+                          tier === 'GREEN' ? 'bg-green-500' : tier === 'YELLOW' ? 'bg-amber-500' : 'bg-red-500',
+                        )}
+                        style={{ width: `${pct}%` }}
+                        title={`${tier}: ${count} (${Math.round(pct)}%)`}
+                      />
+                    );
+                  })}
                 </div>
-                <p className="text-[10px] text-slate-500 dark:text-slate-400">
-                  {agent.enabled
-                    ? agent.lastRunAt
-                      ? `Last run ${formatRelative(agent.lastRunAt)}`
-                      : 'Waiting'
-                    : 'Disabled'}
-                </p>
+                <div className="flex justify-between mt-1">
+                  {Object.entries(contentStats.byTier).map(([tier, count]) => (
+                    <span key={tier} className="text-[10px] text-slate-500">
+                      {tier}: {count}
+                    </span>
+                  ))}
+                </div>
               </div>
-            ))}
+            )}
+
+            {/* Pillar Balance */}
+            {pillarBalance.length > 0 && (
+              <div>
+                <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-2">Pillar Balance</p>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                  {pillarBalance.map((p) => (
+                    <div key={p.pillar} className="flex items-center justify-between bg-slate-50 dark:bg-slate-800 rounded-lg px-3 py-2">
+                      <span className="text-xs text-slate-700 dark:text-slate-300 truncate">{p.pillar}</span>
+                      <span className="text-xs font-medium text-lavender-600 ml-2">{Math.round(p.percentage)}%</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -134,12 +143,26 @@ export default function AIOverviewPage() {
   );
 }
 
-function formatRelative(isoString: string): string {
-  const diffMs = Date.now() - new Date(isoString).getTime();
-  const mins = Math.floor(diffMs / 60000);
-  if (mins < 1) return 'just now';
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  return `${Math.floor(hrs / 24)}d ago`;
+function MiniStat({
+  icon,
+  label,
+  value,
+  color,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: number;
+  color?: string;
+}) {
+  return (
+    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3">
+      <div className="flex items-center gap-1.5 mb-1 text-slate-500">
+        {icon}
+        <span className="text-[11px]">{label}</span>
+      </div>
+      <p className={cn('font-serif text-xl font-bold', color || 'text-slate-900 dark:text-white')}>
+        {value}
+      </p>
+    </div>
+  );
 }
