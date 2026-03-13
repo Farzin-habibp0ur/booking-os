@@ -1,11 +1,13 @@
 import { Controller, Get, Post, Patch, Param, Query, Body, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { TenantGuard } from '../../common/tenant.guard';
+import { RolesGuard, Roles } from '../../common/roles.guard';
 import { BusinessId, CurrentUser } from '../../common/decorators';
 import { ActionCardService } from './action-card.service';
+import { BulkUpdateActionCardsDto } from './dto';
 
 @Controller('action-cards')
-@UseGuards(AuthGuard('jwt'), TenantGuard)
+@UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
 export class ActionCardController {
   constructor(private actionCardService: ActionCardService) {}
 
@@ -32,6 +34,21 @@ export class ActionCardController {
   @Get('count')
   pendingCount(@BusinessId() businessId: string, @Query('staffId') staffId?: string) {
     return this.actionCardService.getPendingCount(businessId, staffId);
+  }
+
+  @Get('summary')
+  getSummary(@BusinessId() businessId: string) {
+    return this.actionCardService.getSummary(businessId);
+  }
+
+  @Post('bulk-update')
+  @Roles('OWNER', 'ADMIN')
+  bulkUpdate(
+    @BusinessId() businessId: string,
+    @CurrentUser('sub') staffId: string,
+    @Body() body: BulkUpdateActionCardsDto,
+  ) {
+    return this.actionCardService.bulkUpdate(businessId, body.cardIds, body.status, staffId);
   }
 
   @Get(':id')

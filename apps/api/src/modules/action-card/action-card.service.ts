@@ -236,6 +236,46 @@ export class ActionCardService {
     return this.prisma.actionCard.count({ where });
   }
 
+  async getSummary(businessId: string) {
+    const [byPriority, byStatus] = await Promise.all([
+      this.prisma.actionCard.groupBy({
+        by: ['priority'],
+        where: { businessId },
+        _count: true,
+      }),
+      this.prisma.actionCard.groupBy({
+        by: ['status'],
+        where: { businessId },
+        _count: true,
+      }),
+    ]);
+
+    return {
+      byPriority: byPriority.reduce(
+        (acc: any, r: any) => ({ ...acc, [r.priority]: r._count }),
+        {},
+      ),
+      byStatus: byStatus.reduce((acc: any, r: any) => ({ ...acc, [r.status]: r._count }), {}),
+    };
+  }
+
+  async bulkUpdate(businessId: string, cardIds: string[], status: string, staffId: string) {
+    const result = await this.prisma.actionCard.updateMany({
+      where: {
+        id: { in: cardIds },
+        businessId,
+        status: 'PENDING',
+      },
+      data: {
+        status,
+        resolvedById: staffId,
+        resolvedAt: new Date(),
+      },
+    });
+
+    return { updated: result.count };
+  }
+
   @Cron(CronExpression.EVERY_MINUTE)
   async expireCards() {
     const now = new Date();

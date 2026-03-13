@@ -496,4 +496,69 @@ describe('ActionCardService', () => {
       });
     });
   });
+
+  describe('getSummary', () => {
+    it('returns counts grouped by priority and status', async () => {
+      prisma.actionCard.groupBy
+        .mockResolvedValueOnce([
+          { priority: 50, _count: 5 },
+          { priority: 90, _count: 2 },
+        ] as any)
+        .mockResolvedValueOnce([
+          { status: 'PENDING', _count: 4 },
+          { status: 'APPROVED', _count: 3 },
+        ] as any);
+
+      const result = await service.getSummary('biz1');
+
+      expect(result.byPriority).toEqual({ 50: 5, 90: 2 });
+      expect(result.byStatus).toEqual({ PENDING: 4, APPROVED: 3 });
+    });
+
+    it('filters by businessId', async () => {
+      prisma.actionCard.groupBy.mockResolvedValue([] as any);
+
+      await service.getSummary('biz1');
+
+      expect(prisma.actionCard.groupBy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { businessId: 'biz1' },
+        }),
+      );
+    });
+  });
+
+  describe('bulkUpdate', () => {
+    it('bulk updates pending cards to given status', async () => {
+      prisma.actionCard.updateMany.mockResolvedValue({ count: 3 });
+
+      const result = await service.bulkUpdate('biz1', ['c1', 'c2', 'c3'], 'APPROVED', 'staff1');
+
+      expect(result).toEqual({ updated: 3 });
+      expect(prisma.actionCard.updateMany).toHaveBeenCalledWith({
+        where: {
+          id: { in: ['c1', 'c2', 'c3'] },
+          businessId: 'biz1',
+          status: 'PENDING',
+        },
+        data: {
+          status: 'APPROVED',
+          resolvedById: 'staff1',
+          resolvedAt: expect.any(Date),
+        },
+      });
+    });
+
+    it('filters by businessId for tenant isolation', async () => {
+      prisma.actionCard.updateMany.mockResolvedValue({ count: 0 });
+
+      await service.bulkUpdate('biz1', ['c1'], 'DISMISSED', 'staff1');
+
+      expect(prisma.actionCard.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ businessId: 'biz1' }),
+        }),
+      );
+    });
+  });
 });
