@@ -59,6 +59,9 @@ import { PaymentsModule } from './modules/payments/payments.module';
 import { RefundsModule } from './modules/refunds/refunds.module';
 import { ContentQueueModule } from './modules/content-queue/content-queue.module';
 import { MarketingContentModule } from './modules/marketing-content/marketing-content.module';
+import { AgentConfigModule } from './modules/agent-config/agent-config.module';
+import { AgentRunsModule } from './modules/agent-runs/agent-runs.module';
+import { EscalationModule } from './modules/escalation/escalation.module';
 import { MarketingAgentModule } from './modules/marketing-agent/marketing-agent.module';
 import { EmailSequenceModule } from './modules/email-sequences/email-sequences.module';
 import { TestimonialsModule } from './modules/testimonials/testimonials.module';
@@ -149,6 +152,9 @@ import { RecurringClassModule } from './modules/recurring-class/recurring-class.
     RefundsModule,
     ContentQueueModule,
     MarketingContentModule,
+    AgentConfigModule,
+    AgentRunsModule,
+    EscalationModule,
     MarketingAgentModule,
     EmailSequenceModule,
     TestimonialsModule,
