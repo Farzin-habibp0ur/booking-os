@@ -245,13 +245,15 @@ function ShellInner({ children }: { children: ReactNode }) {
   const workspaceNav = nav.filter((item) => sections?.workspace.includes(item.href));
   const toolsNav = nav.filter((item) => sections?.tools.includes(item.href));
   const insightsNav = nav.filter((item) => sections?.insights.includes(item.href));
+  const marketingAiNav = nav.filter((item) => sections?.marketingAi?.includes(item.href));
   // Items not in any section (e.g. console, pack-builder for SUPER_ADMIN)
   const extraNav = nav.filter(
     (item) =>
       item.href !== '/settings' &&
       !sections?.workspace.includes(item.href) &&
       !sections?.tools.includes(item.href) &&
-      !sections?.insights.includes(item.href),
+      !sections?.insights.includes(item.href) &&
+      !sections?.marketingAi?.includes(item.href),
   );
 
   const renderNavLink = ({ href, label, icon: Icon }: (typeof nav)[0]) => (
@@ -341,6 +343,18 @@ function ShellInner({ children }: { children: ReactNode }) {
               {t('nav.section_insights', undefined) || 'Insights'}
             </p>
             {insightsNav.map(renderNavLink)}
+          </>
+        )}
+
+        {/* MARKETING AI section */}
+        {marketingAiNav.length > 0 && (
+          <>
+            <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
+            <p className="nav-section-label flex items-center gap-1">
+              <Sparkles size={12} />
+              {t('nav.section_marketing_ai', undefined) || 'Marketing AI'}
+            </p>
+            {marketingAiNav.map(renderNavLink)}
           </>
         )}
 
@@ -610,6 +624,25 @@ function ShellInner({ children }: { children: ReactNode }) {
                 );
               })}
               {insightsNav.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={cn(
+                      'flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-colors',
+                      pathname.startsWith(item.href)
+                        ? 'bg-sage-100 dark:bg-sage-900/30 text-sage-700 dark:text-sage-400 font-medium'
+                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800',
+                    )}
+                    onClick={() => setMoreSheetOpen(false)}
+                  >
+                    <Icon size={20} />
+                    {item.label}
+                  </Link>
+                );
+              })}
+              {marketingAiNav.map((item) => {
                 const Icon = item.icon;
                 return (
                   <Link

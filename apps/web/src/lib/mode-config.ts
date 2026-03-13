@@ -4,6 +4,7 @@ export interface NavSections {
   workspace: string[];
   tools: string[];
   insights: string[];
+  marketingAi?: string[];
 }
 
 export interface ModeDefinition {
@@ -21,7 +22,7 @@ export interface ModeDefinition {
 
 function flattenSections(s: NavSections): { primary: string[]; secondary: string[] } {
   return {
-    primary: [...s.workspace, ...s.tools, ...s.insights],
+    primary: [...s.workspace, ...s.tools, ...s.insights, ...(s.marketingAi || [])],
     secondary: [],
   };
 }
@@ -37,21 +38,18 @@ const adminSections: NavSections = {
     '/packages',
     '/campaigns',
     '/automations',
+    '/testimonials',
+  ],
+  insights: ['/dashboard', '/reports', '/reports/monthly-review', '/roi'],
+  marketingAi: [
+    '/ai',
+    '/ai/agents',
+    '/ai/actions',
+    '/ai/performance',
     '/marketing/queue',
     '/marketing/agents',
     '/marketing/sequences',
     '/marketing/rejection-analytics',
-    '/testimonials',
-  ],
-  insights: [
-    '/dashboard',
-    '/reports',
-    '/reports/monthly-review',
-    '/roi',
-    '/ai',
-    '/ai/actions',
-    '/ai/agents',
-    '/ai/performance',
   ],
 };
 

@@ -114,25 +114,17 @@ jest.mock('@/lib/use-mode', () => ({
       key: 'admin',
       sections: {
         workspace: ['/dashboard', '/inbox', '/calendar', '/customers', '/bookings'],
-        tools: [
-          '/services',
-          '/campaigns',
-          '/automations',
+        tools: ['/services', '/campaigns', '/automations', '/waitlist', '/service-board'],
+        insights: ['/reports', '/reports/monthly-review', '/roi'],
+        marketingAi: [
+          '/ai',
+          '/ai/agents',
+          '/ai/actions',
+          '/ai/performance',
           '/marketing/queue',
           '/marketing/agents',
           '/marketing/sequences',
           '/marketing/rejection-analytics',
-          '/waitlist',
-          '/service-board',
-        ],
-        insights: [
-          '/reports',
-          '/reports/monthly-review',
-          '/roi',
-          '/ai',
-          '/ai/actions',
-          '/ai/agents',
-          '/ai/performance',
         ],
       },
       defaultLandingPath: '/dashboard',
@@ -283,7 +275,7 @@ describe('Shell', () => {
     expect(screen.queryByTestId('pinned-views-section')).not.toBeInTheDocument();
   });
 
-  it('renders section labels for workspace, tools, and insights', () => {
+  it('renders section labels for workspace, tools, insights, and marketing ai', () => {
     render(
       <Shell>
         <div>Content</div>
@@ -295,6 +287,7 @@ describe('Shell', () => {
     expect(within(nav).getByText('nav.section_workspace')).toBeInTheDocument();
     expect(within(nav).getByText('nav.section_tools')).toBeInTheDocument();
     expect(within(nav).getByText('nav.section_insights')).toBeInTheDocument();
+    expect(within(nav).getByText('nav.section_marketing_ai')).toBeInTheDocument();
   });
 
   it('section labels use nav-section-label class', () => {
