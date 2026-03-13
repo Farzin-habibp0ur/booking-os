@@ -17,7 +17,7 @@ booking-os/
 ├── apps/
 │   ├── api/                    # NestJS REST API (port 3001)
 │   │   ├── src/
-│   │   │   ├── modules/        # 68 feature modules (one dir per domain)
+│   │   │   ├── modules/        # 69 feature modules (one dir per domain)
 │   │   │   ├── common/         # Guards, decorators, filters, DTOs, PrismaService
 │   │   │   └── main.ts         # Bootstrap, Swagger, CORS, cookies, validation
 │   │   └── Dockerfile          # Multi-stage production build
@@ -92,7 +92,7 @@ booking-os/
 
 ### Module Structure
 
-Every feature is a NestJS module in `apps/api/src/modules/` (68 modules). Each module follows this pattern:
+Every feature is a NestJS module in `apps/api/src/modules/` (69 modules). Each module follows this pattern:
 
 ```
 modules/
@@ -304,7 +304,7 @@ All AI-related UI elements use the **lavender** palette: `bg-lavender-50 border 
 
 ### Test Counts
 
-- **~5,913 total tests** across 414 test files
+- **~5,947 total tests** across 416 test files
 - API: ~93% statement coverage, ~81% branch coverage
 - Web: ~78% statement coverage, ~73% branch coverage
 

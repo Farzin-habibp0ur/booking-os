@@ -58,6 +58,7 @@ import { WeeklyDigestModule } from './modules/weekly-digest/weekly-digest.module
 import { PaymentsModule } from './modules/payments/payments.module';
 import { RefundsModule } from './modules/refunds/refunds.module';
 import { ContentQueueModule } from './modules/content-queue/content-queue.module';
+import { MarketingContentModule } from './modules/marketing-content/marketing-content.module';
 import { MarketingAgentModule } from './modules/marketing-agent/marketing-agent.module';
 import { EmailSequenceModule } from './modules/email-sequences/email-sequences.module';
 import { TestimonialsModule } from './modules/testimonials/testimonials.module';
@@ -147,6 +148,7 @@ import { RecurringClassModule } from './modules/recurring-class/recurring-class.
     PaymentsModule,
     RefundsModule,
     ContentQueueModule,
+    MarketingContentModule,
     MarketingAgentModule,
     EmailSequenceModule,
     TestimonialsModule,
