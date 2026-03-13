@@ -88,6 +88,11 @@ model Business {
   servicePackages            ServicePackage[]
   packagePurchases           PackagePurchase[]
   recurringClasses           RecurringClass[]
+  abTests                    ABTest[]
+  rejectionLogs              RejectionLog[]
+  platformConfigs            PlatformConfig[]
+  budgetEntries              BudgetEntry[]
+  escalationEvents           EscalationEvent[]
 
   @@map("businesses")
 }
@@ -140,8 +145,10 @@ model Staff {
   assignedDeals       Deal[]             @relation("DealAssignedTo")
   dealStageChanges    DealStageHistory[] @relation("DealStageChangedBy")
   dealActivities      DealActivity[]     @relation("DealActivityCreatedBy")
-  certifications      StaffCertification[]
-  recurringClasses    RecurringClass[]
+  certifications          StaffCertification[]
+  recurringClasses        RecurringClass[]
+  rejectionLogReviews     RejectionLog[]      @relation("RejectionLogReviewer")
+  resolvedEscalations     EscalationEvent[]   @relation("EscalationResolver")
 
   @@index([businessId])
   @@map("staff")
@@ -1004,6 +1011,7 @@ model AutonomyConfig {
   autonomyLevel String   @default("ASSISTED") // OFF, ASSISTED, AUTO
   requiredRole  String?
   constraints   Json     @default("{}") // {maxPerDay, maxAmount, etc.}
+  scope         String?  // OPERATIONAL, MARKETING
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -1046,9 +1054,13 @@ model AgentConfig {
   isEnabled      Boolean  @default(false)
   autonomyLevel  String   @default("SUGGEST") // AUTO, SUGGEST, REQUIRE_APPROVAL
   config         Json     @default("{}")
-  roleVisibility String[] @default([])
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  roleVisibility     String[] @default([])
+  runIntervalMinutes Int?
+  lastRunAt          DateTime?
+  nextRunAt          DateTime?
+  performanceScore   Float?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   business Business @relation(fields: [businessId], references: [id])
 
@@ -1064,6 +1076,7 @@ model AgentRun {
   status       String    @default("RUNNING") // RUNNING, COMPLETED, FAILED
   cardsCreated Int       @default(0)
   error        String?
+  errors       Json?
   startedAt    DateTime  @default(now())
   completedAt  DateTime?
 
@@ -1286,14 +1299,25 @@ model ContentDraft {
   publishedAt   DateTime?
   reviewedById  String?
   reviewNote    String?
-  metadata      Json?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  metadata        Json?
+  tier            String?   // GREEN, YELLOW, RED
+  slug            String?
+  qualityScore    Int?      // 0-100
+  rejectionCode   String?   // R01-R10
+  rejectionReason String?
+  currentGate     String?   // GATE_1, GATE_2, GATE_3, GATE_4
+  platform        String?   // INSTAGRAM, TIKTOK, LINKEDIN, YOUTUBE, PINTEREST, TWITTER, BLOG
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
-  business Business @relation(fields: [businessId], references: [id])
+  business       Business        @relation(fields: [businessId], references: [id])
+  rejectionLogs  RejectionLog[]
+  abTestVariants ABTestVariant[]
 
   @@index([businessId])
   @@index([businessId, status])
+  @@index([businessId, tier])
+  @@index([businessId, currentGate])
   @@map("content_drafts")
 }
 
@@ -1307,6 +1331,7 @@ model EmailSequence {
   triggerEvent String?
   stopOnEvent  String?
   metadata     Json     @default("{}")
+  metrics      Json     @default("{}")
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -1967,4 +1992,141 @@ model RecurringClass {
 
   @@index([businessId])
   @@map("recurring_classes")
+}
+
+// ── Marketing Command Center Models ──────────────────────────────────
+
+model ABTest {
+  id               String    @id @default(cuid())
+  businessId       String
+  name             String
+  description      String?
+  status           String    @default("DRAFT") // DRAFT, RUNNING, PAUSED, COMPLETED, CANCELLED
+  metric           String    // engagement_rate, click_through_rate, conversion_rate, etc.
+  startedAt        DateTime?
+  endedAt          DateTime?
+  winnerVariantId  String?
+  confidence       Float?
+  metadata         Json      @default("{}")
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  business Business       @relation(fields: [businessId], references: [id])
+  variants ABTestVariant[]
+
+  @@index([businessId])
+  @@index([businessId, status])
+  @@map("ab_tests")
+}
+
+model ABTestVariant {
+  id              String  @id @default(cuid())
+  abTestId        String
+  contentDraftId  String?
+  variantLabel    String
+  impressions     Int     @default(0)
+  clicks          Int     @default(0)
+  conversions     Int     @default(0)
+  engagementScore Float?
+  isWinner        Boolean @default(false)
+  metadata        Json    @default("{}")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  abTest       ABTest        @relation(fields: [abTestId], references: [id])
+  contentDraft ContentDraft? @relation(fields: [contentDraftId], references: [id])
+
+  @@index([abTestId])
+  @@map("ab_test_variants")
+}
+
+model RejectionLog {
+  id             String   @id @default(cuid())
+  businessId     String
+  contentDraftId String
+  gate           String   // GATE_1, GATE_2, GATE_3, GATE_4
+  rejectionCode  String   // R01-R10
+  reason         String
+  severity       String   @default("MINOR") // MINOR, MAJOR, CRITICAL
+  agentId        String?
+  reviewedById   String?
+  metadata       Json     @default("{}")
+  createdAt      DateTime @default(now())
+
+  business     Business      @relation(fields: [businessId], references: [id])
+  contentDraft ContentDraft  @relation(fields: [contentDraftId], references: [id])
+  reviewedBy   Staff?        @relation("RejectionLogReviewer", fields: [reviewedById], references: [id])
+
+  @@index([businessId])
+  @@index([businessId, contentDraftId])
+  @@index([businessId, gate])
+  @@map("rejection_logs")
+}
+
+model PlatformConfig {
+  id              String    @id @default(cuid())
+  businessId      String
+  platform        String    // INSTAGRAM, TIKTOK, LINKEDIN, YOUTUBE, PINTEREST, TWITTER
+  phase           String    @default("LOCKED") // LOCKED, ACTIVE, SCALING
+  isEnabled       Boolean   @default(false)
+  credentials     Json      @default("{}")
+  postingSchedule Json      @default("{}")
+  constraints     Json      @default("{}")
+  metrics         Json      @default("{}")
+  unlockedAt      DateTime?
+  metadata        Json      @default("{}")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id])
+
+  @@unique([businessId, platform])
+  @@index([businessId])
+  @@map("platform_configs")
+}
+
+model BudgetEntry {
+  id          String   @id @default(cuid())
+  businessId  String
+  category    String   // CONTENT_CREATION, ADVERTISING, TOOLS, FREELANCE, etc.
+  description String?
+  amount      Decimal  @db.Decimal(10, 2)
+  currency    String   @default("USD")
+  period      String   // MONTHLY, QUARTERLY, ANNUAL, ONE_TIME
+  month       Int?     // 1-12
+  year        Int?
+  isRecurring Boolean  @default(false)
+  metadata    Json     @default("{}")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id])
+
+  @@index([businessId])
+  @@index([businessId, category])
+  @@map("budget_entries")
+}
+
+model EscalationEvent {
+  id             String    @id @default(cuid())
+  businessId     String
+  triggerType    String    // QUALITY_FAILURE, BUDGET_EXCEEDED, AGENT_ERROR, COMPLIANCE, etc.
+  severity       String    @default("MEDIUM") // LOW, MEDIUM, HIGH, CRITICAL
+  title          String
+  description    String?
+  agentId        String?
+  contentDraftId String?
+  isResolved     Boolean   @default(false)
+  resolvedById   String?
+  resolvedAt     DateTime?
+  metadata       Json      @default("{}")
+  createdAt      DateTime  @default(now())
+
+  business   Business @relation(fields: [businessId], references: [id])
+  resolvedBy Staff?   @relation("EscalationResolver", fields: [resolvedById], references: [id])
+
+  @@index([businessId])
+  @@index([businessId, isResolved])
+  @@index([businessId, severity])
+  @@map("escalation_events")
 }
