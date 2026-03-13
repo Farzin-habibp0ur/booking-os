@@ -9,6 +9,17 @@ import {
   statusBadgeClasses,
   statusCalendarClasses,
   statusHex,
+  CONTENT_TYPE_STYLES,
+  contentTypeBadgeClasses,
+  TIER_STYLES,
+  tierBadgeClasses,
+  ACTION_CARD_PRIORITY_STYLES,
+  priorityBadgeClasses,
+  AGENT_CATEGORY_STYLES,
+  agentCategoryBadgeClasses,
+  AUTONOMY_LEVEL_STYLES,
+  autonomyBadgeClasses,
+  PIPELINE_STAGE_STYLES,
 } from './design-tokens';
 
 const BOOKING_STATUSES = [
@@ -160,6 +171,149 @@ describe('design-tokens', () => {
 
     it('returns fallback hex for unknown status', () => {
       expect(statusHex('UNKNOWN')).toBe('#64748b');
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // Marketing Command Center tokens
+  // -----------------------------------------------------------------------
+
+  describe('CONTENT_TYPE_STYLES', () => {
+    const types = ['BLOG_POST', 'SOCIAL_POST', 'EMAIL', 'CASE_STUDY', 'VIDEO_SCRIPT', 'NEWSLETTER'];
+
+    it('has entries for all 6 content types', () => {
+      for (const t of types) {
+        expect(CONTENT_TYPE_STYLES[t]).toBeDefined();
+      }
+    });
+
+    it('each entry has bg, text, label, and hex', () => {
+      for (const t of types) {
+        const entry = CONTENT_TYPE_STYLES[t];
+        expect(entry).toHaveProperty('bg');
+        expect(entry).toHaveProperty('text');
+        expect(entry).toHaveProperty('label');
+        expect(entry.hex).toMatch(/^#[0-9a-fA-F]{6}$/);
+      }
+    });
+
+    it('contentTypeBadgeClasses returns bg+text for known type', () => {
+      const result = contentTypeBadgeClasses('BLOG_POST');
+      expect(result).toContain('bg-sage-50');
+      expect(result).toContain('text-sage-700');
+    });
+
+    it('contentTypeBadgeClasses returns fallback for unknown type', () => {
+      expect(contentTypeBadgeClasses('UNKNOWN')).toContain('bg-slate-100');
+    });
+  });
+
+  describe('TIER_STYLES', () => {
+    const tiers = ['GREEN', 'YELLOW', 'RED'];
+
+    it('has entries for all 3 tiers', () => {
+      for (const tier of tiers) {
+        expect(TIER_STYLES[tier]).toBeDefined();
+      }
+    });
+
+    it('each entry has bg, text, border, label, hex', () => {
+      for (const tier of tiers) {
+        const entry = TIER_STYLES[tier];
+        expect(entry).toHaveProperty('bg');
+        expect(entry).toHaveProperty('text');
+        expect(entry).toHaveProperty('border');
+        expect(entry).toHaveProperty('label');
+        expect(entry.hex).toMatch(/^#[0-9a-fA-F]{6}$/);
+      }
+    });
+
+    it('tierBadgeClasses returns correct classes', () => {
+      expect(tierBadgeClasses('GREEN')).toContain('bg-green-50');
+      expect(tierBadgeClasses('UNKNOWN')).toContain('bg-slate-100');
+    });
+  });
+
+  describe('ACTION_CARD_PRIORITY_STYLES', () => {
+    const priorities = ['URGENT_TODAY', 'NEEDS_APPROVAL', 'OPPORTUNITY', 'HYGIENE'];
+
+    it('has entries for all 4 priorities', () => {
+      for (const p of priorities) {
+        expect(ACTION_CARD_PRIORITY_STYLES[p]).toBeDefined();
+      }
+    });
+
+    it('uses correct color families', () => {
+      expect(ACTION_CARD_PRIORITY_STYLES.URGENT_TODAY.bg).toContain('red');
+      expect(ACTION_CARD_PRIORITY_STYLES.NEEDS_APPROVAL.bg).toContain('amber');
+      expect(ACTION_CARD_PRIORITY_STYLES.OPPORTUNITY.bg).toContain('sage');
+    });
+
+    it('priorityBadgeClasses works', () => {
+      expect(priorityBadgeClasses('URGENT_TODAY')).toContain('bg-red-50');
+      expect(priorityBadgeClasses('UNKNOWN')).toContain('bg-slate-100');
+    });
+  });
+
+  describe('AGENT_CATEGORY_STYLES', () => {
+    const categories = ['content', 'distribution', 'analytics'];
+
+    it('has entries for all 3 categories', () => {
+      for (const cat of categories) {
+        expect(AGENT_CATEGORY_STYLES[cat]).toBeDefined();
+      }
+    });
+
+    it('content category uses lavender', () => {
+      expect(AGENT_CATEGORY_STYLES.content.bg).toContain('lavender');
+    });
+
+    it('agentCategoryBadgeClasses works', () => {
+      expect(agentCategoryBadgeClasses('content')).toContain('lavender');
+      expect(agentCategoryBadgeClasses('unknown')).toContain('slate');
+    });
+  });
+
+  describe('AUTONOMY_LEVEL_STYLES', () => {
+    const levels = ['OFF', 'SUGGEST', 'AUTO_WITH_REVIEW', 'FULL_AUTO'];
+
+    it('has entries for all 4 levels', () => {
+      for (const level of levels) {
+        expect(AUTONOMY_LEVEL_STYLES[level]).toBeDefined();
+      }
+    });
+
+    it('FULL_AUTO uses sage', () => {
+      expect(AUTONOMY_LEVEL_STYLES.FULL_AUTO.bg).toContain('sage');
+    });
+
+    it('autonomyBadgeClasses works', () => {
+      expect(autonomyBadgeClasses('SUGGEST')).toContain('lavender');
+      expect(autonomyBadgeClasses('UNKNOWN')).toContain('slate');
+    });
+  });
+
+  describe('PIPELINE_STAGE_STYLES', () => {
+    const stages = ['research', 'creation', 'queue', 'approve', 'publish', 'analyze'];
+
+    it('has entries for all 6 stages', () => {
+      for (const stage of stages) {
+        expect(PIPELINE_STAGE_STYLES[stage]).toBeDefined();
+      }
+    });
+
+    it('each entry has bg, text, label, hex', () => {
+      for (const stage of stages) {
+        const entry = PIPELINE_STAGE_STYLES[stage];
+        expect(entry).toHaveProperty('bg');
+        expect(entry).toHaveProperty('text');
+        expect(entry).toHaveProperty('label');
+        expect(entry.hex).toMatch(/^#[0-9a-fA-F]{6}$/);
+      }
+    });
+
+    it('publish stage uses sage', () => {
+      expect(PIPELINE_STAGE_STYLES.publish.bg).toContain('sage');
     });
   });
 });

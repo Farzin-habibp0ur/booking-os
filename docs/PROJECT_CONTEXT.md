@@ -2,7 +2,7 @@
 
 > **Purpose:** This document gives full context on the Booking OS platform — what it is, what's been built, how it's structured, and what's left to build. Share this with an AI assistant or new developer to get productive immediately.
 >
-> **Last updated:** March 12, 2026 (All phases COMPLETE — A through E + Phases 1-4 & 6 polish + QA Fixes + Sprints 1-4 + Prompts 4A-4C + Prompt 1C + Prompt 1A + Prompt 1B + Prompt 1D + Prompt 2A + Prompt 2B + Prompt 2C + Prompt 3A + Prompt 3C + QA Bug Fix Sprint (10 bugs) + Growth Engine Agents (15 prompts) + Marketing Command Center Phase 1 (DB schema) + Phase 2 Prompt 02 (Marketing Content module) + Prompt 03 (Action Cards enhancements) + Prompt 04 (Agent Config, Agent Runs, Escalation) + Prompt 05 (Quality Gates, Rejection Analytics, A/B Testing) + Prompt 06 (Platform Config, Budget Tracker, Email Sequences enhancements) + Prompt 07 (Autonomy Settings, Dashboard Briefing) + Phase 3 Prompt 08 (AI Command Center frontend pages) + Prompt 09 (Marketing Section Pages: queue, agents, sequences) + Prompt 10 (Settings & Reports Pages: settings/ai, settings/agents, settings/autonomy, reports/monthly-review) + Prompt 11 (Dashboard Briefing & Rejection Analytics Pages: dashboard marketing briefing section, marketing/rejection-analytics page) COMPLETE — ~6,240 total tests across 430 test files, 91 Prisma models, 58 migrations)
+> **Last updated:** March 12, 2026 (All phases COMPLETE — A through E + Phases 1-4 & 6 polish + QA Fixes + Sprints 1-4 + Prompts 4A-4C + Prompt 1C + Prompt 1A + Prompt 1B + Prompt 1D + Prompt 2A + Prompt 2B + Prompt 2C + Prompt 3A + Prompt 3C + QA Bug Fix Sprint (10 bugs) + Growth Engine Agents (15 prompts) + Marketing Command Center Phase 1 (DB schema) + Phase 2 Prompt 02 (Marketing Content module) + Prompt 03 (Action Cards enhancements) + Prompt 04 (Agent Config, Agent Runs, Escalation) + Prompt 05 (Quality Gates, Rejection Analytics, A/B Testing) + Prompt 06 (Platform Config, Budget Tracker, Email Sequences enhancements) + Prompt 07 (Autonomy Settings, Dashboard Briefing) + Phase 3 Prompt 08 (AI Command Center frontend pages) + Prompt 09 (Marketing Section Pages: queue, agents, sequences) + Prompt 10 (Settings & Reports Pages: settings/ai, settings/agents, settings/autonomy, reports/monthly-review) + Prompt 11 (Dashboard Briefing & Rejection Analytics Pages: dashboard marketing briefing section, marketing/rejection-analytics page) + Phase 4 Prompt 12 (Marketing UI Components Library: 9 reusable components in components/marketing/) + Phase 5 Prompt 13 (Navigation, Socket.io, Shortcuts, Design Tokens: sidebar nav for marketing/AI routes, useMarketingSocket hook, useActionTriageShortcuts/useQueueShortcuts hooks, 6 new design token maps) COMPLETE — ~6,368 total tests across 441 test files, 91 Prisma models, 58 migrations)
 
 ---
 
@@ -258,7 +258,7 @@ booking-os/
 │   ├── web/                    # Next.js admin dashboard (port 3000)
 │   │   ├── src/
 │   │   │   ├── app/            # 96 pages
-│   │   │   ├── components/     # Shared components (shell, modals, tour, etc.)
+│   │   │   ├── components/     # Shared components (shell, modals, tour, marketing/, etc.)
 │   │   │   ├── lib/            # Utility modules (API client, auth, i18n, socket, theme)
 │   │   │   ├── locales/        # en.json, es.json (600+ keys each)
 │   │   │   └── middleware.ts   # Route protection (checks access_token + refresh_token cookies)

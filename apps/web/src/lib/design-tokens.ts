@@ -401,3 +401,212 @@ export const SPACING = {
   /** Gap between grid items */
   gridGap: 'gap-4 sm:gap-6',
 } as const;
+
+// ---------------------------------------------------------------------------
+// Marketing Command Center tokens
+// ---------------------------------------------------------------------------
+
+/** Content type styles (marketing content drafts) */
+export const CONTENT_TYPE_STYLES: Record<
+  string,
+  { bg: string; text: string; label: string; hex: string }
+> = {
+  BLOG_POST: { bg: 'bg-sage-50', text: 'text-sage-700', label: 'Blog Post', hex: '#71907C' },
+  SOCIAL_POST: {
+    bg: 'bg-lavender-50',
+    text: 'text-lavender-700',
+    label: 'Social Post',
+    hex: '#9F8ECB',
+  },
+  EMAIL: { bg: 'bg-sky-50', text: 'text-sky-700', label: 'Email', hex: '#0ea5e9' },
+  CASE_STUDY: { bg: 'bg-amber-50', text: 'text-amber-700', label: 'Case Study', hex: '#f59e0b' },
+  VIDEO_SCRIPT: { bg: 'bg-rose-50', text: 'text-rose-700', label: 'Video Script', hex: '#f43f5e' },
+  NEWSLETTER: { bg: 'bg-blue-50', text: 'text-blue-700', label: 'Newsletter', hex: '#3b82f6' },
+};
+
+export function contentTypeBadgeClasses(type: string): string {
+  const s = CONTENT_TYPE_STYLES[type];
+  if (!s) return 'bg-slate-100 text-slate-600';
+  return `${s.bg} ${s.text}`;
+}
+
+/** Content tier styles (GREEN / YELLOW / RED) */
+export const TIER_STYLES: Record<
+  string,
+  { bg: string; text: string; border: string; label: string; hex: string }
+> = {
+  GREEN: {
+    bg: 'bg-green-50',
+    text: 'text-green-700',
+    border: 'border-green-400',
+    label: 'Green',
+    hex: '#22c55e',
+  },
+  YELLOW: {
+    bg: 'bg-amber-50',
+    text: 'text-amber-700',
+    border: 'border-amber-400',
+    label: 'Yellow',
+    hex: '#f59e0b',
+  },
+  RED: {
+    bg: 'bg-red-50',
+    text: 'text-red-700',
+    border: 'border-red-400',
+    label: 'Red',
+    hex: '#ef4444',
+  },
+};
+
+export function tierBadgeClasses(tier: string): string {
+  const s = TIER_STYLES[tier];
+  if (!s) return 'bg-slate-100 text-slate-600';
+  return `${s.bg} ${s.text}`;
+}
+
+/** Action card priority styles */
+export const ACTION_CARD_PRIORITY_STYLES: Record<
+  string,
+  { bg: string; text: string; border: string; label: string; hex: string }
+> = {
+  URGENT_TODAY: {
+    bg: 'bg-red-50',
+    text: 'text-red-700',
+    border: 'border-red-400',
+    label: 'Urgent Today',
+    hex: '#ef4444',
+  },
+  NEEDS_APPROVAL: {
+    bg: 'bg-amber-50',
+    text: 'text-amber-700',
+    border: 'border-amber-400',
+    label: 'Needs Approval',
+    hex: '#f59e0b',
+  },
+  OPPORTUNITY: {
+    bg: 'bg-sage-50',
+    text: 'text-sage-700',
+    border: 'border-sage-400',
+    label: 'Opportunity',
+    hex: '#8AA694',
+  },
+  HYGIENE: {
+    bg: 'bg-slate-100',
+    text: 'text-slate-600',
+    border: 'border-slate-400',
+    label: 'Hygiene',
+    hex: '#64748b',
+  },
+};
+
+export function priorityBadgeClasses(priority: string): string {
+  const s = ACTION_CARD_PRIORITY_STYLES[priority];
+  if (!s) return 'bg-slate-100 text-slate-600';
+  return `${s.bg} ${s.text}`;
+}
+
+/** Agent category styles (Content / Distribution / Analytics) */
+export const AGENT_CATEGORY_STYLES: Record<
+  string,
+  { bg: string; text: string; label: string; hex: string }
+> = {
+  content: {
+    bg: 'bg-lavender-50',
+    text: 'text-lavender-700',
+    label: 'Content',
+    hex: '#9F8ECB',
+  },
+  distribution: {
+    bg: 'bg-blue-50',
+    text: 'text-blue-700',
+    label: 'Distribution',
+    hex: '#3b82f6',
+  },
+  analytics: {
+    bg: 'bg-amber-50',
+    text: 'text-amber-700',
+    label: 'Analytics',
+    hex: '#f59e0b',
+  },
+};
+
+export function agentCategoryBadgeClasses(category: string): string {
+  const s = AGENT_CATEGORY_STYLES[category];
+  if (!s) return 'bg-slate-100 text-slate-600';
+  return `${s.bg} ${s.text}`;
+}
+
+/** Autonomy level styles */
+export const AUTONOMY_LEVEL_STYLES: Record<
+  string,
+  { bg: string; text: string; label: string; hex: string }
+> = {
+  OFF: { bg: 'bg-slate-100', text: 'text-slate-600', label: 'Off', hex: '#64748b' },
+  SUGGEST: {
+    bg: 'bg-lavender-50',
+    text: 'text-lavender-700',
+    label: 'Suggest',
+    hex: '#9F8ECB',
+  },
+  AUTO_WITH_REVIEW: {
+    bg: 'bg-amber-50',
+    text: 'text-amber-700',
+    label: 'Auto + Review',
+    hex: '#f59e0b',
+  },
+  FULL_AUTO: {
+    bg: 'bg-sage-50',
+    text: 'text-sage-700',
+    label: 'Full Auto',
+    hex: '#71907C',
+  },
+};
+
+export function autonomyBadgeClasses(level: string): string {
+  const s = AUTONOMY_LEVEL_STYLES[level];
+  if (!s) return 'bg-slate-100 text-slate-600';
+  return `${s.bg} ${s.text}`;
+}
+
+/** Pipeline stage styles (6-stage content pipeline) */
+export const PIPELINE_STAGE_STYLES: Record<
+  string,
+  { bg: string; text: string; label: string; hex: string }
+> = {
+  research: {
+    bg: 'bg-slate-100',
+    text: 'text-slate-600',
+    label: 'Research',
+    hex: '#64748b',
+  },
+  creation: {
+    bg: 'bg-lavender-50',
+    text: 'text-lavender-700',
+    label: 'Creation',
+    hex: '#9F8ECB',
+  },
+  queue: {
+    bg: 'bg-amber-50',
+    text: 'text-amber-700',
+    label: 'Queue',
+    hex: '#f59e0b',
+  },
+  approve: {
+    bg: 'bg-blue-50',
+    text: 'text-blue-700',
+    label: 'Approve',
+    hex: '#3b82f6',
+  },
+  publish: {
+    bg: 'bg-sage-50',
+    text: 'text-sage-700',
+    label: 'Publish',
+    hex: '#71907C',
+  },
+  analyze: {
+    bg: 'bg-sky-50',
+    text: 'text-sky-700',
+    label: 'Analyze',
+    hex: '#0ea5e9',
+  },
+};

@@ -151,6 +151,22 @@ describe('mode-config', () => {
       expect(admin.sections.insights).toContain('/roi');
     });
 
+    it('admin tools include marketing routes', () => {
+      const admin = modes.find((m) => m.key === 'admin')!;
+      expect(admin.sections.tools).toContain('/marketing/queue');
+      expect(admin.sections.tools).toContain('/marketing/agents');
+      expect(admin.sections.tools).toContain('/marketing/sequences');
+      expect(admin.sections.tools).toContain('/marketing/rejection-analytics');
+    });
+
+    it('admin insights include AI sub-routes', () => {
+      const admin = modes.find((m) => m.key === 'admin')!;
+      expect(admin.sections.insights).toContain('/ai');
+      expect(admin.sections.insights).toContain('/ai/actions');
+      expect(admin.sections.insights).toContain('/ai/agents');
+      expect(admin.sections.insights).toContain('/ai/performance');
+    });
+
     it('agent sections include expected paths', () => {
       const agent = modes.find((m) => m.key === 'agent')!;
       expect(agent.sections.workspace).toContain('/inbox');

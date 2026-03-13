@@ -152,6 +152,8 @@ function ShellInner({ children }: { children: ReactNode }) {
     d: () => router.push('/dashboard'),
     s: () => router.push('/services'),
     a: () => router.push('/automations'),
+    m: () => router.push('/marketing/queue'),
+    q: () => router.push('/ai/actions'),
   });
 
   const role = user?.role;
@@ -196,6 +198,14 @@ function ShellInner({ children }: { children: ReactNode }) {
     { href: '/campaigns', label: 'Campaigns', icon: Megaphone, roles: ['ADMIN'] },
     { href: '/automations', label: 'Automations', icon: Zap, roles: ['ADMIN'] },
     { href: '/marketing/queue', label: 'Content Queue', icon: FileText, roles: ['ADMIN'] },
+    { href: '/marketing/agents', label: 'Marketing Agents', icon: Zap, roles: ['ADMIN'] },
+    { href: '/marketing/sequences', label: 'Email Sequences', icon: Megaphone, roles: ['ADMIN'] },
+    {
+      href: '/marketing/rejection-analytics',
+      label: 'Rejection Analytics',
+      icon: BarChart3,
+      roles: ['ADMIN'],
+    },
     ...((user?.business?.packConfig as any)?.kanbanEnabled
       ? [
           {
@@ -211,6 +221,9 @@ function ShellInner({ children }: { children: ReactNode }) {
       ? [{ href: '/roi', label: t('nav.roi'), icon: TrendingUp, roles: ['ADMIN'] }]
       : []),
     { href: '/ai', label: 'AI & Agents', icon: Sparkles, roles: ['ADMIN'] },
+    { href: '/ai/actions', label: 'Action Triage', icon: ClipboardList, roles: ['ADMIN'] },
+    { href: '/ai/agents', label: 'Agent Status', icon: Zap, roles: ['ADMIN'] },
+    { href: '/ai/performance', label: 'Performance', icon: TrendingUp, roles: ['ADMIN'] },
     {
       href: '/console',
       label: 'Platform Console',

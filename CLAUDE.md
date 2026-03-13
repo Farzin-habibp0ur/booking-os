@@ -24,7 +24,7 @@ booking-os/
 │   ├── web/                    # Next.js 15 admin dashboard (port 3000)
 │   │   ├── src/
 │   │   │   ├── app/            # 102 pages (App Router)
-│   │   │   ├── components/     # Shared components
+│   │   │   ├── components/     # Shared components (incl. marketing/ — 9 reusable MCC components)
 │   │   │   ├── lib/            # API client, auth, i18n, socket, theme
 │   │   │   ├── locales/        # en.json, es.json (600+ keys each)
 │   │   │   └── middleware.ts   # Route protection (checks access_token + refresh_token cookies)
@@ -200,6 +200,7 @@ Key events: `message:new`, `conversation:updated`, `ai:suggestion`, `ai:auto-rep
 
 - **No external component libraries** — strictly Tailwind CSS utility classes
 - Shared components in `apps/web/src/components/`
+- Marketing Command Center components in `apps/web/src/components/marketing/` — 9 reusable components (TierBadge, ContentDraftCard, ActionCardComponent, AgentStatusCard, PipelineVisualization, PillarBalanceChart, RejectionCodePicker, AutonomyLevelSelector, MarketingSkeleton) with barrel export via `index.ts`
 - Feature-specific components co-located with their page or in named subdirectories
 - Modals use a consistent pattern: `XxxModal` with `isOpen` + `onClose` props
 - Loading states: `Skeleton` component + compositions (`PageSkeleton`, `DetailSkeleton`, `FormSkeleton`, `ListSkeleton`, `InboxSkeleton`, `CalendarSkeleton`) — always use these instead of raw `animate-pulse` divs or "Loading..." text
@@ -218,7 +219,8 @@ Key events: `message:new`, `conversation:updated`, `ai:suggestion`, `ai:auto-rep
 - `BOOKING_SOURCE_STYLES` — map of 6 booking sources (MANUAL, PORTAL, WHATSAPP, AI, REFERRAL, WALK_IN) to `{ bg, text, label, hex }`
 - `CONVERSATION_STATUS_STYLES` — map of 4 conversation statuses (OPEN, WAITING, RESOLVED, SNOOZED)
 - `ELEVATION` — shadow + radius tokens: `card`, `modal`, `dropdown`, `cardSm`, `fab`
-- Helper functions: `statusBadgeClasses(status)`, `statusCalendarClasses(status)`, `statusHex(status)`
+- Marketing tokens: `CONTENT_TYPE_STYLES` (6 types), `TIER_STYLES` (GREEN/YELLOW/RED), `ACTION_CARD_PRIORITY_STYLES` (4 priorities), `AGENT_CATEGORY_STYLES` (3 categories), `AUTONOMY_LEVEL_STYLES` (4 levels), `PIPELINE_STAGE_STYLES` (6 stages)
+- Helper functions: `statusBadgeClasses(status)`, `statusCalendarClasses(status)`, `statusHex(status)`, `contentTypeBadgeClasses(type)`, `tierBadgeClasses(tier)`, `priorityBadgeClasses(priority)`, `agentCategoryBadgeClasses(category)`, `autonomyBadgeClasses(level)`
 - **Always import from design-tokens.ts** — never define inline status color objects
 
 ### Navigation Structure

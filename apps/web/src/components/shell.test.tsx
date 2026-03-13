@@ -119,10 +119,21 @@ jest.mock('@/lib/use-mode', () => ({
           '/campaigns',
           '/automations',
           '/marketing/queue',
+          '/marketing/agents',
+          '/marketing/sequences',
+          '/marketing/rejection-analytics',
           '/waitlist',
           '/service-board',
         ],
-        insights: ['/reports', '/roi', '/ai'],
+        insights: [
+          '/reports',
+          '/reports/monthly-review',
+          '/roi',
+          '/ai',
+          '/ai/actions',
+          '/ai/agents',
+          '/ai/performance',
+        ],
       },
       defaultLandingPath: '/dashboard',
     },
@@ -337,6 +348,43 @@ describe('Shell', () => {
     const nav = screen.getByRole('navigation', { name: 'Main navigation' });
     const link = within(nav).getByText('Content Queue');
     expect(link.closest('a')).toHaveAttribute('href', '/marketing/queue');
+  });
+
+  it('renders Marketing Agents nav link pointing to /marketing/agents', () => {
+    render(
+      <Shell>
+        <div>Content</div>
+      </Shell>,
+    );
+
+    const nav = screen.getByRole('navigation', { name: 'Main navigation' });
+    const link = within(nav).getByText('Marketing Agents');
+    expect(link.closest('a')).toHaveAttribute('href', '/marketing/agents');
+  });
+
+  it('renders AI sub-route nav links', () => {
+    render(
+      <Shell>
+        <div>Content</div>
+      </Shell>,
+    );
+
+    const nav = screen.getByRole('navigation', { name: 'Main navigation' });
+    expect(within(nav).getByText('Action Triage')).toBeInTheDocument();
+    expect(within(nav).getByText('Agent Status')).toBeInTheDocument();
+    expect(within(nav).getByText('Performance')).toBeInTheDocument();
+  });
+
+  it('renders Rejection Analytics nav link', () => {
+    render(
+      <Shell>
+        <div>Content</div>
+      </Shell>,
+    );
+
+    const nav = screen.getByRole('navigation', { name: 'Main navigation' });
+    const link = within(nav).getByText('Rejection Analytics');
+    expect(link.closest('a')).toHaveAttribute('href', '/marketing/rejection-analytics');
   });
 
   it('renders pinned view as link to page with viewId', async () => {

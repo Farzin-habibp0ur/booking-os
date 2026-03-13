@@ -40,9 +40,19 @@ const adminSections: NavSections = {
     '/marketing/queue',
     '/marketing/agents',
     '/marketing/sequences',
+    '/marketing/rejection-analytics',
     '/testimonials',
   ],
-  insights: ['/dashboard', '/reports', '/reports/monthly-review', '/roi', '/ai'],
+  insights: [
+    '/dashboard',
+    '/reports',
+    '/reports/monthly-review',
+    '/roi',
+    '/ai',
+    '/ai/actions',
+    '/ai/agents',
+    '/ai/performance',
+  ],
 };
 
 const agentSections: NavSections = {
