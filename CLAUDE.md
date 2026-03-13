@@ -42,7 +42,7 @@ booking-os/
 │   │   └── src/seed-content.ts # Content pillar seeding (12 blog posts → ContentDraft)
 │   ├── messaging-provider/     # WhatsApp Cloud API abstraction
 │   └── shared/                 # Shared types, DTOs, enums, profile field definitions
-├── agents/                     # 13 agent prompt files (P9-P21: research, planning, content, distribution, analytics, growth)
+├── agents/                     # 15 internal growth engine agent prompts (P9-P23: research → ops)
 ├── system/                     # Growth engine config (launch, gates, budget, testing, escalation, MCP fallback)
 ├── data/                       # Founder-maintained inputs (customer signals, evergreen trends, daily metrics)
 ├── reports/                    # Generated reports (customer validation, performance, keywords, optimization)
@@ -127,7 +127,7 @@ modules/
 
 ### Database (Prisma)
 
-- Schema at `packages/db/prisma/schema.prisma` — **85 models**, 59 migrations
+- Schema at `packages/db/prisma/schema.prisma` — **85 models**, 57 migrations
 - Generate client: `npx prisma generate --schema=packages/db/prisma/schema.prisma`
 - Create migration: `npx prisma migrate dev --name your_name --schema=packages/db/prisma/schema.prisma`
 - `PrismaService` is a global NestJS provider — inject it in constructors
@@ -304,7 +304,7 @@ All AI-related UI elements use the **lavender** palette: `bg-lavender-50 border 
 
 ### Test Counts
 
-- **~5,825+ total tests** across 392 test files
+- **~5,913 total tests** across 414 test files
 - API: ~93% statement coverage, ~81% branch coverage
 - Web: ~78% statement coverage, ~73% branch coverage
 
@@ -494,7 +494,9 @@ Confirm: `Domain=.businesscommandcentre.com`, `SameSite=Lax`, `Secure`, `Path=/`
 
 AI state persisted in `conversation.metadata` JSON for stateful multi-turn flows.
 
-### Background Agents (5 operational + 12 marketing)
+### In-App Agents — Customer-Facing (5 operational + 12 marketing)
+
+These run inside the NestJS API for each customer's business. Code in `apps/api/src/modules/agent-framework/`.
 
 - `WaitlistAgent` — Auto-match waitlist entries to cancelled slots
 - `RetentionAgent` — Detect at-risk customers, generate win-back action cards
@@ -503,7 +505,23 @@ AI state persisted in `conversation.metadata` JSON for stateful multi-turn flows
 - `QuoteFollowupAgent` — Expired quote reminders, follow-up action cards
 - 12 Marketing Agents — 6 content (BlogWriter, SocialCreator, EmailComposer, CaseStudy, VideoScript, Newsletter), 2 distribution (ContentScheduler, ContentPublisher), 4 analytics (PerformanceTracker, TrendAnalyzer, ContentCalendar, ContentROI)
 
-Agents run via `AgentSchedulerService` cron → `AGENT_PROCESSING` BullMQ queue → `AgentFrameworkService`. Per-agent `runIntervalMinutes` configurable via `config.config` JSON.
+Agents run via `AgentSchedulerService` cron → `AGENT_PROCESSING` BullMQ queue → `AgentFrameworkService`. Per-agent `runIntervalMinutes` configurable via `config.config` JSON. Managed via `/marketing/agents` and `/ai` pages. Content goes into `ContentDraft` DB records reviewed at `/marketing/queue`.
+
+### Internal Growth Engine Agents — BookingOS's Own Marketing (15 agents)
+
+These are **prompt files** in `agents/` that define how BookingOS markets itself. They are NOT NestJS code — they are operational AI prompts run by Claude or other LLMs to generate content for BookingOS's own social media, blog, and outreach.
+
+- **Research:** Trend Scout (P9), Keyword Strategist (P10)
+- **Planning:** Content Strategist (P11)
+- **Creation:** Blog Writer (P12), Social Creator (P13), Visual Designer (P14), Video Producer (P15)
+- **Distribution:** Publisher (P16), Community Manager (P17)
+- **Analytics:** Performance Analyst (P18), Learning Engine (P19)
+- **Expansion:** Spanish Localization (P20), Outbound Prospecting (P21)
+- **Ops:** Master Orchestrator (P22), Weekly Maintenance (P23)
+
+Output goes to file-based folders (`queue/pending/`, `briefings/`, `reports/`, etc.). Reviewed by founder manually. Config in `system/` directory. See `docs/AI_MARKETING_AGENTS_DAILY_WORKFLOW.md` for the daily schedule.
+
+**These two systems are completely separate.** In-app agents serve customers; internal agents market BookingOS itself.
 
 ---
 
@@ -514,7 +532,7 @@ Agents run via `AgentSchedulerService` cron → `AGENT_PROCESSING` BullMQ queue 
 | PROJECT_CONTEXT.md     | `docs/PROJECT_CONTEXT.md`     | Full project context — what's built, schema, modules, roadmap |
 | DEPLOY.md              | `DEPLOY.md`                   | Deployment operations guide with critical rules               |
 | cicd.md                | `docs/cicd.md`                | CI/CD pipeline details                                        |
-| user-stories.md        | `docs/user-stories.md`        | Complete user stories (280 capabilities, 215 gaps)            |
+| user-stories.md        | `docs/user-stories.md`        | Complete user stories (386 capabilities, 196 gaps)            |
 | ux-brainstorm-brief.md | `docs/ux-brainstorm-brief.md` | UX improvement brainstorm                                     |
 | platform-launch-config | `system/platform-launch-config.md` | Phased platform rollout (A/B/C phases, cadence, unlock criteria) |
 | platform-gate-checker  | `system/platform-gate-checker.md`  | Weekly gate check template for phase unlocks                  |

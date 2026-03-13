@@ -26,7 +26,7 @@ booking-os/
 │   ├── db/                # Prisma schema, migrations, seed data
 │   ├── messaging-provider/# Messaging abstraction layer
 │   └── shared/            # Shared types and utilities
-├── agents/              # 13 agent prompt files (P9-P21: trend scout → outbound prospecting)
+├── agents/              # 15 internal growth engine agent prompts (P9-P23: research → ops)
 ├── system/              # Growth engine config (launch phases, quality gates, budget, MCP fallback)
 ├── data/                # Founder-maintained inputs (customer signals, evergreen trends)
 ├── reports/             # Generated reports (customer validation, performance, keywords, optimization)

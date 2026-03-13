@@ -2,7 +2,7 @@
 
 > **Purpose:** This document gives full context on the Booking OS platform — what it is, what's been built, how it's structured, and what's left to build. Share this with an AI assistant or new developer to get productive immediately.
 >
-> **Last updated:** March 11, 2026 (All phases COMPLETE — A through E + Phases 1-4 & 6 polish + QA Fixes + Sprints 1-4 + Prompts 4A-4C + Prompt 1C + Prompt 1A + Prompt 1B + Prompt 1D + Prompt 2A + Prompt 2B + Prompt 2C + Prompt 3A + Prompt 3C + QA Bug Fix Sprint (10 bugs) COMPLETE — ~5,825+ total tests across 392 test files, 85 Prisma models, 59 migrations)
+> **Last updated:** March 12, 2026 (All phases COMPLETE — A through E + Phases 1-4 & 6 polish + QA Fixes + Sprints 1-4 + Prompts 4A-4C + Prompt 1C + Prompt 1A + Prompt 1B + Prompt 1D + Prompt 2A + Prompt 2B + Prompt 2C + Prompt 3A + Prompt 3C + QA Bug Fix Sprint (10 bugs) + Growth Engine Agents (15 prompts) COMPLETE — ~5,913 total tests across 414 test files, 85 Prisma models, 57 migrations)
 
 ---
 
@@ -277,9 +277,9 @@ booking-os/
 ├── docs/
 │   ├── PROJECT_CONTEXT.md      # This file
 │   ├── cicd.md                 # CI/CD pipeline documentation
-│   ├── user-stories.md         # Complete user stories (280 can-do, 215 gaps)
+│   ├── user-stories.md         # Complete user stories (386 capabilities, 196 gaps)
 │   └── ux-brainstorm-brief.md  # UX improvement brainstorm brief
-├── agents/                     # 13 agent prompt files (P9-P21: trend scout → outbound prospecting)
+├── agents/                     # 15 internal growth engine agent prompts (P9-P23: research → ops)
 ├── system/                     # Growth engine config (launch, gates, budget, testing, escalation, MCP fallback)
 ├── data/                       # Founder-maintained inputs (customer signals, evergreen trends, daily metrics)
 ├── reports/                    # Generated reports (customer validation, performance, keywords, optimization)
