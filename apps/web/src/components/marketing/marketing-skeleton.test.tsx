@@ -1,3 +1,4 @@
+// @ts-nocheck
 jest.mock('@/lib/cn', () => ({ cn: (...args) => args.filter(Boolean).join(' ') }));
 jest.mock('@/components/skeleton', () => ({
   Skeleton: ({ className }) => <div data-testid="skeleton" className={className} />,

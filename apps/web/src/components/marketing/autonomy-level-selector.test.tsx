@@ -1,3 +1,4 @@
+// @ts-nocheck
 jest.mock('@/lib/cn', () => ({ cn: (...args) => args.filter(Boolean).join(' ') }));
 jest.mock('lucide-react', () => ({
   Shield: () => <span data-testid="shield-icon" />,

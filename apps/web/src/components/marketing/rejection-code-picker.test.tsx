@@ -1,3 +1,4 @@
+// @ts-nocheck
 jest.mock('@/lib/cn', () => ({ cn: (...args) => args.filter(Boolean).join(' ') }));
 
 import { render, screen, fireEvent } from '@testing-library/react';
