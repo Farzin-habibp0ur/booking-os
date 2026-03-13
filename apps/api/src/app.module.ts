@@ -82,6 +82,8 @@ import { PackageModule } from './modules/package/package.module';
 import { RecurringClassModule } from './modules/recurring-class/recurring-class.module';
 import { PlatformConfigModule } from './modules/platform-config/platform-config.module';
 import { BudgetTrackerModule } from './modules/budget-tracker/budget-tracker.module';
+import { AutonomySettingsModule } from './modules/autonomy-settings/autonomy-settings.module';
+import { DashboardBriefingModule } from './modules/dashboard-briefing/dashboard-briefing.module';
 
 @Module({
   imports: [
@@ -180,6 +182,8 @@ import { BudgetTrackerModule } from './modules/budget-tracker/budget-tracker.mod
     RecurringClassModule,
     PlatformConfigModule,
     BudgetTrackerModule,
+    AutonomySettingsModule,
+    DashboardBriefingModule,
     process.env.REDIS_URL ? QueueModule.forRootWithRedis() : QueueModule.forRoot(),
   ],
 })
