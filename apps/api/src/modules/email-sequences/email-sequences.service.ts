@@ -756,6 +756,68 @@ export class EmailSequenceService {
     }
   }
 
+  // ─── Metrics & Bottleneck ─────────────────────────────────────────────
+
+  async getSequenceMetrics(businessId: string, sequenceId: string) {
+    const sequence = await this.findOne(businessId, sequenceId);
+    const steps = sequence.steps as unknown as SequenceStep[];
+
+    const enrollments = await this.prisma.emailSequenceEnrollment.findMany({
+      where: { sequenceId, businessId },
+    });
+
+    const totalEnrolled = enrollments.length;
+    const completed = enrollments.filter((e) => e.status === 'COMPLETED').length;
+    const active = enrollments.filter((e) => e.status === 'ACTIVE').length;
+    const cancelled = enrollments.filter((e) => e.status === 'CANCELLED').length;
+
+    const stepMetrics = steps.map((step) => {
+      const reachedStep = enrollments.filter((e) => e.currentStep >= step.step).length;
+      const passedStep =
+        step.step < Math.max(...steps.map((s) => s.step))
+          ? enrollments.filter((e) => e.currentStep > step.step).length
+          : completed;
+      const dropOff = reachedStep > 0 ? ((reachedStep - passedStep) / reachedStep) * 100 : 0;
+
+      return {
+        step: step.step,
+        subject: step.subject,
+        reached: reachedStep,
+        passed: passedStep,
+        dropOffRate: Math.round(dropOff * 100) / 100,
+      };
+    });
+
+    const completionRate = totalEnrolled > 0 ? Math.round((completed / totalEnrolled) * 10000) / 100 : 0;
+
+    return {
+      sequenceId,
+      totalEnrolled,
+      active,
+      completed,
+      cancelled,
+      completionRate,
+      stepMetrics,
+    };
+  }
+
+  async getBottleneck(businessId: string, sequenceId: string) {
+    const metrics = await this.getSequenceMetrics(businessId, sequenceId);
+
+    if (metrics.stepMetrics.length === 0) {
+      return { bottleneck: null, metrics };
+    }
+
+    const bottleneck = metrics.stepMetrics.reduce((worst, current) =>
+      current.dropOffRate > worst.dropOffRate ? current : worst,
+    );
+
+    return {
+      bottleneck: bottleneck.dropOffRate > 0 ? bottleneck : null,
+      metrics,
+    };
+  }
+
   // ─── Helpers ───────────────────────────────────────────────────────────
 
   private async removeQueuedJobs(enrollmentId: string, sequenceId: string) {

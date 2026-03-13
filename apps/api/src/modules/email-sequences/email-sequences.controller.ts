@@ -58,6 +58,16 @@ export class EmailSequenceController {
     return this.service.deleteSequence(businessId, id);
   }
 
+  @Get(':id/metrics')
+  getMetrics(@BusinessId() businessId: string, @Param('id') id: string) {
+    return this.service.getSequenceMetrics(businessId, id);
+  }
+
+  @Get(':id/bottleneck')
+  getBottleneck(@BusinessId() businessId: string, @Param('id') id: string) {
+    return this.service.getBottleneck(businessId, id);
+  }
+
   @Post(':id/enroll')
   @Roles('OWNER', 'ADMIN')
   enroll(

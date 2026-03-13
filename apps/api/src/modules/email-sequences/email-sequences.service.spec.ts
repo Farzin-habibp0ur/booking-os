@@ -490,6 +490,64 @@ describe('EmailSequenceService', () => {
     });
   });
 
+  describe('getSequenceMetrics', () => {
+    it('returns metrics with step-level drop-off', async () => {
+      prisma.emailSequence.findFirst.mockResolvedValue(mockSequence as any);
+      prisma.emailSequenceEnrollment.findMany.mockResolvedValue([
+        { ...mockEnrollment, currentStep: 2, status: 'COMPLETED' },
+        { ...mockEnrollment, id: 'enr2', currentStep: 1, status: 'ACTIVE' },
+        { ...mockEnrollment, id: 'enr3', currentStep: 0, status: 'CANCELLED' },
+      ] as any);
+
+      const result = await service.getSequenceMetrics('biz1', 'seq1');
+
+      expect(result.totalEnrolled).toBe(3);
+      expect(result.completed).toBe(1);
+      expect(result.active).toBe(1);
+      expect(result.cancelled).toBe(1);
+      expect(result.completionRate).toBe(33.33);
+      expect(result.stepMetrics).toHaveLength(2);
+    });
+
+    it('handles zero enrollments', async () => {
+      prisma.emailSequence.findFirst.mockResolvedValue(mockSequence as any);
+      prisma.emailSequenceEnrollment.findMany.mockResolvedValue([]);
+
+      const result = await service.getSequenceMetrics('biz1', 'seq1');
+
+      expect(result.totalEnrolled).toBe(0);
+      expect(result.completionRate).toBe(0);
+    });
+  });
+
+  describe('getBottleneck', () => {
+    it('identifies the step with highest drop-off', async () => {
+      prisma.emailSequence.findFirst.mockResolvedValue(mockSequence as any);
+      prisma.emailSequenceEnrollment.findMany.mockResolvedValue([
+        { ...mockEnrollment, currentStep: 1, status: 'ACTIVE' },
+        { ...mockEnrollment, id: 'enr2', currentStep: 1, status: 'ACTIVE' },
+        { ...mockEnrollment, id: 'enr3', currentStep: 2, status: 'COMPLETED' },
+      ] as any);
+
+      const result = await service.getBottleneck('biz1', 'seq1');
+
+      expect(result.bottleneck).not.toBeNull();
+      expect(result.metrics.totalEnrolled).toBe(3);
+    });
+
+    it('returns null bottleneck with no enrollments', async () => {
+      prisma.emailSequence.findFirst.mockResolvedValue({
+        ...mockSequence,
+        steps: [],
+      } as any);
+      prisma.emailSequenceEnrollment.findMany.mockResolvedValue([]);
+
+      const result = await service.getBottleneck('biz1', 'seq1');
+
+      expect(result.bottleneck).toBeNull();
+    });
+  });
+
   describe('checkUpgradeSignals', () => {
     it('triggers PLAN_LIMIT_HIT for businesses near limit', async () => {
       (prisma.business.findMany as jest.Mock).mockResolvedValue([

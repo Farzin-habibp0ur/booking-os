@@ -80,6 +80,8 @@ import { TestDriveModule } from './modules/test-drive/test-drive.module';
 import { DealModule } from './modules/deal/deal.module';
 import { PackageModule } from './modules/package/package.module';
 import { RecurringClassModule } from './modules/recurring-class/recurring-class.module';
+import { PlatformConfigModule } from './modules/platform-config/platform-config.module';
+import { BudgetTrackerModule } from './modules/budget-tracker/budget-tracker.module';
 
 @Module({
   imports: [
@@ -176,6 +178,8 @@ import { RecurringClassModule } from './modules/recurring-class/recurring-class.
     DealModule,
     PackageModule,
     RecurringClassModule,
+    PlatformConfigModule,
+    BudgetTrackerModule,
     process.env.REDIS_URL ? QueueModule.forRootWithRedis() : QueueModule.forRoot(),
   ],
 })
