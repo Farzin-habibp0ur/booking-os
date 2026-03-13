@@ -23,7 +23,7 @@ booking-os/
 │   │   └── Dockerfile          # Multi-stage production build
 │   ├── web/                    # Next.js 15 admin dashboard (port 3000)
 │   │   ├── src/
-│   │   │   ├── app/            # 101 pages (App Router)
+│   │   │   ├── app/            # 102 pages (App Router)
 │   │   │   ├── components/     # Shared components
 │   │   │   ├── lib/            # API client, auth, i18n, socket, theme
 │   │   │   ├── locales/        # en.json, es.json (600+ keys each)
@@ -178,7 +178,7 @@ Key events: `message:new`, `conversation:updated`, `ai:suggestion`, `ai:auto-rep
 
 - Pages are in `apps/web/src/app/` using Next.js App Router (not Pages Router)
 - Protected pages check `access_token` + `refresh_token` cookies in `middleware.ts` (redirects to /login only when both are missing)
-- **101 pages** total (17 public, ~54 protected, ~16 console, ~14 portal/marketing)
+- **102 pages** total (17 public, ~54 protected, ~16 console, ~15 portal/marketing)
 - Client components use `'use client'` directive
 
 ### API Client
@@ -304,7 +304,7 @@ All AI-related UI elements use the **lavender** palette: `bg-lavender-50 border 
 
 ### Test Counts
 
-- **~6,212 total tests** across 430 test files
+- **~6,240 total tests** across 430 test files
 - API: ~93% statement coverage, ~81% branch coverage
 - Web: ~78% statement coverage, ~73% branch coverage
 

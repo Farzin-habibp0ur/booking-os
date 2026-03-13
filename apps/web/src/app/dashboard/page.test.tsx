@@ -1,4 +1,4 @@
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor, act, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import DashboardPage from './page';
 
@@ -170,6 +170,7 @@ jest.mock('lucide-react', () => ({
   Play: (props: any) => <div data-testid="play-icon" {...props} />,
   CheckCircle: (props: any) => <div data-testid="check-circle-icon" {...props} />,
   UserX: (props: any) => <div data-testid="user-x-icon" {...props} />,
+  Bot: (props: any) => <div data-testid="bot-icon" {...props} />,
 }));
 
 jest.mock('./components/kpi-strip', () => ({
@@ -285,14 +286,43 @@ const baseDashboardData = {
   consultConversion: { rate: 45, converted: 9, consultCustomers: 20 },
 };
 
+const mockMktBriefingItems = [
+  {
+    id: 'mkt-1',
+    title: 'Review blog post',
+    description: 'New SEO blog post ready for approval',
+    priority: 'NEEDS_APPROVAL',
+    sourceAgent: 'Blog Writer',
+    createdAt: new Date().toISOString(),
+    status: 'PENDING',
+  },
+  {
+    id: 'mkt-2',
+    title: 'Budget alert',
+    description: 'Monthly budget threshold reached at 90%',
+    priority: 'URGENT_TODAY',
+    sourceAgent: 'ROI Reporter',
+    createdAt: new Date().toISOString(),
+    status: 'PENDING',
+  },
+];
+
+const mockMktBriefingCount = { urgent: 1, pending: 2, total: 3 };
+
 // Helper: mock API calls for setup-complete dashboard
-const mockDashboard = (dashboardData: any = baseDashboardData) => {
+const mockDashboard = (dashboardData: any = baseDashboardData, mktItems: any = mockMktBriefingItems, mktCount: any = mockMktBriefingCount) => {
   mockApi.get.mockImplementation((path: string) => {
     if (path === '/business') {
       return Promise.resolve({ packConfig: { setupComplete: true } });
     }
     if (path === '/dashboard') {
       return Promise.resolve(dashboardData);
+    }
+    if (path === '/dashboard-briefing/briefing') {
+      return Promise.resolve(mktItems);
+    }
+    if (path === '/dashboard-briefing/briefing/count') {
+      return Promise.resolve(mktCount);
     }
     return Promise.resolve({});
   });
@@ -1346,7 +1376,6 @@ describe('DashboardPage', () => {
   });
 
   it('dismisses nudge when X button is clicked', async () => {
-    const user = userEvent.setup();
     mockApi.patch.mockResolvedValue({});
     mockDashboard({
       ...baseDashboardData,
@@ -1366,17 +1395,17 @@ describe('DashboardPage', () => {
       expect(screen.getByText('dashboard.nudge_halfway_there')).toBeInTheDocument();
     });
 
-    // Find and click the dismiss button (X icon rendered as a button)
-    const dismissButtons = screen.getAllByTestId('x-dismiss-icon');
-    // Click the one that's inside the nudge area
+    // Find the nudge's X dismiss button — it's within the lavender nudge section
+    const nudgeText = screen.getByText('dashboard.nudge_halfway_there');
+    const nudgeContainer = nudgeText.closest('.bg-lavender-50');
+    expect(nudgeContainer).toBeTruthy();
+    const dismissIcon = nudgeContainer!.querySelector('[data-testid="x-dismiss-icon"]');
+    expect(dismissIcon).toBeTruthy();
+    const parentButton = dismissIcon!.closest('button') === dismissIcon ? dismissIcon!.parentElement : dismissIcon!.closest('button');
+    expect(parentButton).toBeTruthy();
+
     await act(async () => {
-      // The X dismiss icon is rendered inside a button, click the parent button
-      const parentButton = dismissButtons[0].closest('button');
-      if (parentButton && parentButton !== dismissButtons[0]) {
-        await user.click(parentButton);
-      } else {
-        await user.click(dismissButtons[0]);
-      }
+      fireEvent.click(parentButton!);
     });
 
     await waitFor(() => {
@@ -1982,5 +2011,126 @@ describe('DashboardPage', () => {
     });
 
     expect(mockPush).toHaveBeenCalledWith('/inbox?conversationId=conv-1');
+  });
+
+  // --- Marketing Briefing Section Tests ---
+
+  it('renders marketing briefing section for admin mode', async () => {
+    mockMode = 'admin';
+    mockDashboard();
+    render(<DashboardPage />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('marketing-briefing-section')).toBeInTheDocument();
+    });
+    expect(screen.getByText('Marketing Briefing')).toBeInTheDocument();
+  });
+
+  it('shows marketing briefing count badges', async () => {
+    mockMode = 'admin';
+    mockDashboard();
+    render(<DashboardPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('1 urgent')).toBeInTheDocument();
+      expect(screen.getByText('2 pending')).toBeInTheDocument();
+    });
+  });
+
+  it('renders marketing briefing cards', async () => {
+    mockMode = 'admin';
+    mockDashboard();
+    render(<DashboardPage />);
+
+    await waitFor(() => {
+      const cards = screen.getAllByTestId('mkt-briefing-card');
+      expect(cards.length).toBe(2);
+    });
+    expect(screen.getByText('Review blog post')).toBeInTheDocument();
+    expect(screen.getByText('Budget alert')).toBeInTheDocument();
+  });
+
+  it('shows source agent badge on briefing cards', async () => {
+    mockMode = 'admin';
+    mockDashboard();
+    render(<DashboardPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Blog Writer')).toBeInTheDocument();
+      expect(screen.getByText('ROI Reporter')).toBeInTheDocument();
+    });
+  });
+
+  it('renders action buttons on briefing cards', async () => {
+    mockMode = 'admin';
+    mockDashboard();
+    render(<DashboardPage />);
+
+    await waitFor(() => screen.getAllByTestId('mkt-briefing-card'));
+
+    expect(screen.getAllByTestId('mkt-briefing-approve').length).toBe(2);
+    expect(screen.getAllByTestId('mkt-briefing-dismiss').length).toBe(2);
+    expect(screen.getAllByTestId('mkt-briefing-snooze').length).toBe(2);
+    expect(screen.getAllByTestId('mkt-briefing-expand').length).toBe(2);
+  });
+
+  it('calls action API on approve click', async () => {
+    const user = userEvent.setup();
+    mockMode = 'admin';
+    mockDashboard();
+    mockApi.post.mockResolvedValue({});
+    render(<DashboardPage />);
+
+    await waitFor(() => screen.getAllByTestId('mkt-briefing-approve'));
+
+    await act(async () => {
+      await user.click(screen.getAllByTestId('mkt-briefing-approve')[0]);
+    });
+
+    await waitFor(() => {
+      expect(mockApi.post).toHaveBeenCalledWith('/dashboard-briefing/briefing/mkt-1/action', {
+        action: 'approve',
+      });
+    });
+  });
+
+  it('calls action API on dismiss click', async () => {
+    const user = userEvent.setup();
+    mockMode = 'admin';
+    mockDashboard();
+    mockApi.post.mockResolvedValue({});
+    render(<DashboardPage />);
+
+    await waitFor(() => screen.getAllByTestId('mkt-briefing-dismiss'));
+
+    await act(async () => {
+      await user.click(screen.getAllByTestId('mkt-briefing-dismiss')[0]);
+    });
+
+    await waitFor(() => {
+      expect(mockApi.post).toHaveBeenCalledWith('/dashboard-briefing/briefing/mkt-1/action', {
+        action: 'dismiss',
+      });
+    });
+  });
+
+  it('shows empty state when no marketing briefing items', async () => {
+    mockMode = 'admin';
+    mockDashboard(baseDashboardData, [], { urgent: 0, pending: 0, total: 0 });
+    render(<DashboardPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('No marketing actions right now')).toBeInTheDocument();
+    });
+  });
+
+  it('does not show marketing briefing for agent mode', async () => {
+    mockMode = 'agent';
+    mockDashboard();
+    render(<DashboardPage />);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('marketing-briefing-section')).not.toBeInTheDocument();
+    });
   });
 });

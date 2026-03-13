@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
@@ -44,6 +44,9 @@ import {
   Eye,
   Bell,
   Zap,
+  Bot,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 
 const DASHBOARD_VIEW_ICONS: Record<string, any> = {
@@ -78,6 +81,32 @@ const CHECKLIST_LABELS: Record<string, string> = {
   roi_baseline: 'checklist_roi_baseline',
 };
 
+interface MktBriefingItem {
+  id: string;
+  title: string;
+  description: string;
+  priority: 'URGENT_TODAY' | 'NEEDS_APPROVAL' | 'OPPORTUNITY' | 'HYGIENE';
+  sourceAgent?: string;
+  createdAt: string;
+  status: string;
+}
+
+interface MktBriefingCount {
+  urgent: number;
+  pending: number;
+  total: number;
+}
+
+const MKT_PRIORITY_STYLES: Record<
+  MktBriefingItem['priority'],
+  { border: string; bg: string }
+> = {
+  URGENT_TODAY: { border: 'border-l-red-400', bg: 'bg-red-50' },
+  NEEDS_APPROVAL: { border: 'border-l-lavender-400', bg: 'bg-lavender-50' },
+  OPPORTUNITY: { border: 'border-l-sage-400', bg: 'bg-sage-50' },
+  HYGIENE: { border: 'border-l-slate-300', bg: 'bg-slate-50' },
+};
+
 export default function DashboardPage() {
   const router = useRouter();
   const [data, setData] = useState<any>(null);
@@ -92,6 +121,10 @@ export default function DashboardPage() {
     overdueCount: number;
     overdueAmount: number;
   } | null>(null);
+  const [mktBriefingItems, setMktBriefingItems] = useState<MktBriefingItem[]>([]);
+  const [mktBriefingCount, setMktBriefingCount] = useState<MktBriefingCount | null>(null);
+  const [mktBriefingLoading, setMktBriefingLoading] = useState(true);
+  const [mktExpandedCards, setMktExpandedCards] = useState<Set<string>>(new Set());
   const { t } = useI18n();
   const { user } = useAuth();
   const { mode } = useMode();
@@ -158,6 +191,55 @@ export default function DashboardPage() {
   useEffect(() => {
     loadDashboard();
   }, []);
+
+  const loadMktBriefing = useCallback(() => {
+    setMktBriefingLoading(true);
+    Promise.all([
+      api.get<MktBriefingItem[]>('/dashboard-briefing/briefing').catch(() => []),
+      api.get<MktBriefingCount>('/dashboard-briefing/briefing/count').catch(() => null),
+    ]).then(([items, count]) => {
+      setMktBriefingItems(Array.isArray(items) ? items : []);
+      setMktBriefingCount(count);
+      setMktBriefingLoading(false);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (mode === 'admin') {
+      loadMktBriefing();
+      const interval = setInterval(loadMktBriefing, 5 * 60 * 1000);
+      return () => clearInterval(interval);
+    }
+  }, [mode, loadMktBriefing]);
+
+  const handleMktBriefingAction = async (
+    id: string,
+    action: 'approve' | 'dismiss' | 'snooze',
+  ) => {
+    try {
+      await api.post(`/dashboard-briefing/briefing/${id}/action`, { action });
+      setMktBriefingItems((prev) => prev.filter((item) => item.id !== id));
+      if (mktBriefingCount) {
+        setMktBriefingCount((prev) =>
+          prev ? { ...prev, total: Math.max(0, prev.total - 1) } : prev,
+        );
+      }
+    } catch {
+      // Silently handle
+    }
+  };
+
+  const toggleMktCardExpand = (id: string) => {
+    setMktExpandedCards((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
 
   const handleDismissNudge = async (nudgeId: string) => {
     try {
@@ -387,6 +469,134 @@ export default function DashboardPage() {
               }
             }}
           />
+
+          {/* Marketing Briefing — marketing-specific action feed */}
+          <div
+            data-testid="marketing-briefing-section"
+            className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft"
+          >
+            <div className="flex items-center justify-between p-6 pb-4">
+              <div className="flex items-center gap-2">
+                <Bot size={18} className="text-lavender-600" />
+                <h2 className="font-semibold text-slate-900 dark:text-slate-100">
+                  Marketing Briefing
+                </h2>
+                {mktBriefingCount && (
+                  <div className="flex items-center gap-1.5 ml-2">
+                    {mktBriefingCount.urgent > 0 && (
+                      <span className="text-[10px] font-medium bg-red-50 text-red-700 px-2 py-0.5 rounded-full">
+                        {mktBriefingCount.urgent} urgent
+                      </span>
+                    )}
+                    {mktBriefingCount.pending > 0 && (
+                      <span className="text-[10px] font-medium bg-lavender-50 text-lavender-700 px-2 py-0.5 rounded-full">
+                        {mktBriefingCount.pending} pending
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="px-6 pb-6">
+              {mktBriefingLoading ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <div
+                      key={i}
+                      className="rounded-xl border-l-4 border-l-slate-200 bg-slate-50 p-4 animate-pulse"
+                    >
+                      <div className="h-4 bg-slate-200 rounded w-2/3 mb-2" />
+                      <div className="h-3 bg-slate-200 rounded w-full mb-1" />
+                      <div className="h-3 bg-slate-200 rounded w-1/2" />
+                    </div>
+                  ))}
+                </div>
+              ) : mktBriefingItems.length === 0 ? (
+                <div className="text-center py-8">
+                  <Bot size={28} className="mx-auto text-slate-300 mb-2" />
+                  <p className="text-sm text-slate-400">No marketing actions right now</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {mktBriefingItems.map((item) => {
+                    const style = MKT_PRIORITY_STYLES[item.priority];
+                    const isExpanded = mktExpandedCards.has(item.id);
+                    return (
+                      <div
+                        key={item.id}
+                        data-testid="mkt-briefing-card"
+                        className={cn(
+                          'rounded-xl border-l-4 p-4 transition-colors',
+                          style.border,
+                          style.bg,
+                        )}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                              {item.title}
+                            </p>
+                            <p
+                              className={cn(
+                                'text-xs text-slate-600 mt-1',
+                                !isExpanded && 'line-clamp-2',
+                              )}
+                            >
+                              {item.description}
+                            </p>
+                            <div className="flex items-center gap-2 mt-2">
+                              {item.sourceAgent && (
+                                <span className="text-[10px] font-medium bg-lavender-100 text-lavender-700 px-2 py-0.5 rounded-full">
+                                  {item.sourceAgent}
+                                </span>
+                              )}
+                              <span className="text-[10px] text-slate-400">
+                                {timeAgo(new Date(item.createdAt), t)}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <button
+                              data-testid="mkt-briefing-approve"
+                              onClick={() => handleMktBriefingAction(item.id, 'approve')}
+                              className="p-1.5 rounded-lg text-sage-600 hover:bg-sage-100 transition-colors"
+                              title="Approve"
+                            >
+                              <Check size={14} />
+                            </button>
+                            <button
+                              data-testid="mkt-briefing-dismiss"
+                              onClick={() => handleMktBriefingAction(item.id, 'dismiss')}
+                              className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 transition-colors"
+                              title="Dismiss"
+                            >
+                              <X size={14} />
+                            </button>
+                            <button
+                              data-testid="mkt-briefing-snooze"
+                              onClick={() => handleMktBriefingAction(item.id, 'snooze')}
+                              className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 transition-colors"
+                              title="Snooze"
+                            >
+                              <Clock size={14} />
+                            </button>
+                            <button
+                              data-testid="mkt-briefing-expand"
+                              onClick={() => toggleMktCardExpand(item.id)}
+                              className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 transition-colors"
+                              title={isExpanded ? 'Collapse' : 'Expand'}
+                            >
+                              {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
 
           {/* Metric Cards */}
           <div
