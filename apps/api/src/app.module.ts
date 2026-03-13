@@ -62,6 +62,9 @@ import { MarketingContentModule } from './modules/marketing-content/marketing-co
 import { AgentConfigModule } from './modules/agent-config/agent-config.module';
 import { AgentRunsModule } from './modules/agent-runs/agent-runs.module';
 import { EscalationModule } from './modules/escalation/escalation.module';
+import { QualityGateModule } from './modules/quality-gates/quality-gates.module';
+import { RejectionAnalyticsModule } from './modules/rejection-analytics/rejection-analytics.module';
+import { AbTestingModule } from './modules/ab-testing/ab-testing.module';
 import { MarketingAgentModule } from './modules/marketing-agent/marketing-agent.module';
 import { EmailSequenceModule } from './modules/email-sequences/email-sequences.module';
 import { TestimonialsModule } from './modules/testimonials/testimonials.module';
@@ -155,6 +158,9 @@ import { RecurringClassModule } from './modules/recurring-class/recurring-class.
     AgentConfigModule,
     AgentRunsModule,
     EscalationModule,
+    QualityGateModule,
+    RejectionAnalyticsModule,
+    AbTestingModule,
     MarketingAgentModule,
     EmailSequenceModule,
     TestimonialsModule,
