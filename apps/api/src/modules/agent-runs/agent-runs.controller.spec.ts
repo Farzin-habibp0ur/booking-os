@@ -11,9 +11,7 @@ describe('AgentRunsController', () => {
       getStats: jest.fn(),
       findOne: jest.fn(),
     };
-    controller = new AgentRunsController(
-      mockService as unknown as AgentRunsService,
-    );
+    controller = new AgentRunsController(mockService as unknown as AgentRunsService);
   });
 
   it('findAll delegates to service with businessId and query', async () => {

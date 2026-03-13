@@ -121,10 +121,10 @@ const mockAgentDetail = {
 function setupMocks() {
   mockApi.get.mockImplementation((url: string) => {
     if (url.startsWith('/rejection-analytics/stats')) return Promise.resolve(mockStats);
-    if (url.startsWith('/rejection-analytics/weekly-summary')) return Promise.resolve(mockWeeklySummary);
+    if (url.startsWith('/rejection-analytics/weekly-summary'))
+      return Promise.resolve(mockWeeklySummary);
     if (url.startsWith('/rejection-analytics/logs')) return Promise.resolve(mockLogs);
-    if (url.startsWith('/rejection-analytics/agent/'))
-      return Promise.resolve(mockAgentDetail);
+    if (url.startsWith('/rejection-analytics/agent/')) return Promise.resolve(mockAgentDetail);
     return Promise.resolve(null);
   });
 }
@@ -326,8 +326,7 @@ describe('RejectionAnalyticsPage', () => {
     mockApi.get.mockImplementation((url: string) => {
       if (url === '/rejection-analytics/stats')
         return Promise.resolve({ byGate: [], byCode: [], byAgent: [], bySeverity: [] });
-      if (url === '/rejection-analytics/weekly-summary')
-        return Promise.resolve(null);
+      if (url === '/rejection-analytics/weekly-summary') return Promise.resolve(null);
       if (url.startsWith('/rejection-analytics/logs'))
         return Promise.resolve({ items: [], total: 0 });
       return Promise.resolve(null);

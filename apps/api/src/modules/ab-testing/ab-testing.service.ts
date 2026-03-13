@@ -132,9 +132,12 @@ export class AbTestingService {
     }
 
     if (test.startedAt) {
-      const daysSinceStart = (Date.now() - new Date(test.startedAt).getTime()) / (1000 * 60 * 60 * 24);
+      const daysSinceStart =
+        (Date.now() - new Date(test.startedAt).getTime()) / (1000 * 60 * 60 * 24);
       if (daysSinceStart < MIN_TEST_DAYS) {
-        throw new BadRequestException(`Test must run for at least ${MIN_TEST_DAYS} days (${Math.floor(daysSinceStart)} days elapsed)`);
+        throw new BadRequestException(
+          `Test must run for at least ${MIN_TEST_DAYS} days (${Math.floor(daysSinceStart)} days elapsed)`,
+        );
       }
     }
 

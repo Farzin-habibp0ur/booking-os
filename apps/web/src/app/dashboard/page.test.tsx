@@ -310,7 +310,11 @@ const mockMktBriefingItems = [
 const mockMktBriefingCount = { urgent: 1, pending: 2, total: 3 };
 
 // Helper: mock API calls for setup-complete dashboard
-const mockDashboard = (dashboardData: any = baseDashboardData, mktItems: any = mockMktBriefingItems, mktCount: any = mockMktBriefingCount) => {
+const mockDashboard = (
+  dashboardData: any = baseDashboardData,
+  mktItems: any = mockMktBriefingItems,
+  mktCount: any = mockMktBriefingCount,
+) => {
   mockApi.get.mockImplementation((path: string) => {
     if (path === '/business') {
       return Promise.resolve({ packConfig: { setupComplete: true } });
@@ -1401,7 +1405,10 @@ describe('DashboardPage', () => {
     expect(nudgeContainer).toBeTruthy();
     const dismissIcon = nudgeContainer!.querySelector('[data-testid="x-dismiss-icon"]');
     expect(dismissIcon).toBeTruthy();
-    const parentButton = dismissIcon!.closest('button') === dismissIcon ? dismissIcon!.parentElement : dismissIcon!.closest('button');
+    const parentButton =
+      dismissIcon!.closest('button') === dismissIcon
+        ? dismissIcon!.parentElement
+        : dismissIcon!.closest('button');
     expect(parentButton).toBeTruthy();
 
     await act(async () => {

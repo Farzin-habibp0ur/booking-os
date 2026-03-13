@@ -168,7 +168,10 @@ export default function MonthlyReviewPage() {
   const handleGenerate = async () => {
     setGenerating(true);
     try {
-      const res = await api.post<MarketingReview>('/dashboard-briefing/monthly-review/generate', {});
+      const res = await api.post<MarketingReview>(
+        '/dashboard-briefing/monthly-review/generate',
+        {},
+      );
       setMktReview(res);
       toast('Marketing review generated', 'success');
     } catch {
@@ -204,9 +207,7 @@ export default function MonthlyReviewPage() {
       <div className="flex items-center justify-between print:mb-4">
         <div>
           <h1 className="text-2xl font-serif font-semibold text-slate-900">Monthly Review</h1>
-          <p className="text-sm text-slate-500 mt-0.5">
-            AI-powered business performance insights
-          </p>
+          <p className="text-sm text-slate-500 mt-0.5">AI-powered business performance insights</p>
         </div>
         <div className="flex items-center gap-4 print:hidden">
           <div className="flex items-center gap-2">
@@ -237,11 +238,7 @@ export default function MonthlyReviewPage() {
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm bg-lavender-600 text-white hover:bg-lavender-700 transition-colors disabled:opacity-50"
             data-testid="generate-report-btn"
           >
-            {generating ? (
-              <Loader2 size={14} className="animate-spin" />
-            ) : (
-              <Sparkles size={14} />
-            )}
+            {generating ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
             {generating ? 'Generating...' : 'Generate Report'}
           </button>
           <button
@@ -431,7 +428,10 @@ export default function MonthlyReviewPage() {
                       <Sparkles size={16} className="text-lavender-600" />
                       <h3 className="font-semibold text-lavender-700">Executive Summary</h3>
                     </div>
-                    <p className="text-sm text-slate-700 leading-relaxed" data-testid="executive-summary">
+                    <p
+                      className="text-sm text-slate-700 leading-relaxed"
+                      data-testid="executive-summary"
+                    >
                       {mktReview.summary}
                     </p>
                   </div>
@@ -439,7 +439,10 @@ export default function MonthlyReviewPage() {
 
                 {/* Content Performance */}
                 {mktReview.contentPerformance && (
-                  <div className="bg-white rounded-2xl shadow-soft p-5" data-testid="content-performance-section">
+                  <div
+                    className="bg-white rounded-2xl shadow-soft p-5"
+                    data-testid="content-performance-section"
+                  >
                     <div className="flex items-center gap-2 mb-4">
                       <FileText size={16} className="text-lavender-600" />
                       <h3 className="font-semibold">Content Performance</h3>
@@ -470,7 +473,9 @@ export default function MonthlyReviewPage() {
                     {mktReview.contentPerformance.volumeTrend &&
                       mktReview.contentPerformance.volumeTrend.length > 0 && (
                         <div>
-                          <p className="text-xs font-medium text-slate-600 mb-2">Content Volume Trend</p>
+                          <p className="text-xs font-medium text-slate-600 mb-2">
+                            Content Volume Trend
+                          </p>
                           <ResponsiveContainer width="100%" height={160}>
                             <LineChart data={mktReview.contentPerformance.volumeTrend}>
                               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -503,9 +508,7 @@ export default function MonthlyReviewPage() {
                                 className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-slate-50 text-sm"
                               >
                                 <div className="flex items-center gap-2 min-w-0">
-                                  <span className="text-xs font-bold text-slate-400">
-                                    #{i + 1}
-                                  </span>
+                                  <span className="text-xs font-bold text-slate-400">#{i + 1}</span>
                                   <span className="truncate text-slate-700">{item.title}</span>
                                   <span className="text-xs text-slate-400">{item.platform}</span>
                                 </div>
@@ -522,13 +525,15 @@ export default function MonthlyReviewPage() {
 
                 {/* Agent Efficiency */}
                 {mktReview.agentEfficiency && (
-                  <div className="bg-white rounded-2xl shadow-soft p-5" data-testid="agent-efficiency-section">
+                  <div
+                    className="bg-white rounded-2xl shadow-soft p-5"
+                    data-testid="agent-efficiency-section"
+                  >
                     <div className="flex items-center gap-2 mb-4">
                       <Zap size={16} className="text-amber-600" />
                       <h3 className="font-semibold">Agent Efficiency</h3>
                       <span className="text-xs text-slate-400 ml-auto">
-                        Overall: {Math.round(mktReview.agentEfficiency.overallSuccessRate)}%
-                        success
+                        Overall: {Math.round(mktReview.agentEfficiency.overallSuccessRate)}% success
                       </span>
                     </div>
                     <div className="space-y-2">
@@ -562,7 +567,10 @@ export default function MonthlyReviewPage() {
 
                 {/* Budget Utilization */}
                 {mktReview.budgetUtilization && (
-                  <div className="bg-white rounded-2xl shadow-soft p-5" data-testid="budget-section">
+                  <div
+                    className="bg-white rounded-2xl shadow-soft p-5"
+                    data-testid="budget-section"
+                  >
                     <div className="flex items-center gap-2 mb-4">
                       <DollarSign size={16} className="text-sage-600" />
                       <h3 className="font-semibold">Budget Utilization</h3>
@@ -604,7 +612,12 @@ export default function MonthlyReviewPage() {
                           <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `$${v}`} />
                           <Tooltip />
                           <Bar dataKey="amount" fill="#9F8ECB" radius={[4, 4, 0, 0]} name="Spent" />
-                          <Bar dataKey="budget" fill="#E4EBE6" radius={[4, 4, 0, 0]} name="Budget" />
+                          <Bar
+                            dataKey="budget"
+                            fill="#E4EBE6"
+                            radius={[4, 4, 0, 0]}
+                            name="Budget"
+                          />
                         </BarChart>
                       </ResponsiveContainer>
                     )}

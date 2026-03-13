@@ -97,10 +97,7 @@ interface MktBriefingCount {
   total: number;
 }
 
-const MKT_PRIORITY_STYLES: Record<
-  MktBriefingItem['priority'],
-  { border: string; bg: string }
-> = {
+const MKT_PRIORITY_STYLES: Record<MktBriefingItem['priority'], { border: string; bg: string }> = {
   URGENT_TODAY: { border: 'border-l-red-400', bg: 'bg-red-50' },
   NEEDS_APPROVAL: { border: 'border-l-lavender-400', bg: 'bg-lavender-50' },
   OPPORTUNITY: { border: 'border-l-sage-400', bg: 'bg-sage-50' },
@@ -212,10 +209,7 @@ export default function DashboardPage() {
     }
   }, [mode, loadMktBriefing]);
 
-  const handleMktBriefingAction = async (
-    id: string,
-    action: 'approve' | 'dismiss' | 'snooze',
-  ) => {
+  const handleMktBriefingAction = async (id: string, action: 'approve' | 'dismiss' | 'snooze') => {
     try {
       await api.post(`/dashboard-briefing/briefing/${id}/action`, { action });
       setMktBriefingItems((prev) => prev.filter((item) => item.id !== id));

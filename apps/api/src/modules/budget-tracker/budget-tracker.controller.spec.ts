@@ -17,7 +17,12 @@ describe('BudgetTrackerController', () => {
       create: jest.fn().mockResolvedValue({ id: 'entry1', amount: 50 }),
       findAll: jest.fn().mockResolvedValue({ data: [], total: 0 }),
       getSummary: jest.fn().mockResolvedValue({ totalSpend: 0, budget: 500 }),
-      getRoi: jest.fn().mockResolvedValue({ totalSpend: 400, byCategory: {}, budgetRules: [], approvalThresholds: [] }),
+      getRoi: jest.fn().mockResolvedValue({
+        totalSpend: 400,
+        byCategory: {},
+        budgetRules: [],
+        approvalThresholds: [],
+      }),
       approve: jest.fn().mockResolvedValue({ id: 'entry1', status: 'APPROVED' }),
     };
 

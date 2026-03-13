@@ -102,14 +102,47 @@ const mockSkills = [
 ];
 
 const mockMktConfigs = [
-  { id: 'c1', agentType: 'MKT_BLOG_WRITER', isEnabled: true, config: { autonomyLevel: 'SUGGEST' }, runIntervalMinutes: 60, performanceScore: 85 },
-  { id: 'c2', agentType: 'MKT_SOCIAL_CREATOR', isEnabled: true, config: { autonomyLevel: 'AUTO_WITH_REVIEW' }, runIntervalMinutes: 30, performanceScore: 72 },
-  { id: 'c3', agentType: 'MKT_SCHEDULER', isEnabled: false, config: {}, runIntervalMinutes: 120, performanceScore: 45 },
+  {
+    id: 'c1',
+    agentType: 'MKT_BLOG_WRITER',
+    isEnabled: true,
+    config: { autonomyLevel: 'SUGGEST' },
+    runIntervalMinutes: 60,
+    performanceScore: 85,
+  },
+  {
+    id: 'c2',
+    agentType: 'MKT_SOCIAL_CREATOR',
+    isEnabled: true,
+    config: { autonomyLevel: 'AUTO_WITH_REVIEW' },
+    runIntervalMinutes: 30,
+    performanceScore: 72,
+  },
+  {
+    id: 'c3',
+    agentType: 'MKT_SCHEDULER',
+    isEnabled: false,
+    config: {},
+    runIntervalMinutes: 120,
+    performanceScore: 45,
+  },
 ];
 
 const mockMktPerformance = [
-  { agentType: 'MKT_BLOG_WRITER', performanceScore: 85, totalRuns: 50, successRate: 92, avgItemsPerRun: 3.2 },
-  { agentType: 'MKT_SOCIAL_CREATOR', performanceScore: 72, totalRuns: 120, successRate: 88, avgItemsPerRun: 5.1 },
+  {
+    agentType: 'MKT_BLOG_WRITER',
+    performanceScore: 85,
+    totalRuns: 50,
+    successRate: 92,
+    avgItemsPerRun: 3.2,
+  },
+  {
+    agentType: 'MKT_SOCIAL_CREATOR',
+    performanceScore: 72,
+    totalRuns: 120,
+    successRate: 88,
+    avgItemsPerRun: 5.1,
+  },
 ];
 
 function setupMocks(skills = mockSkills, configs = mockMktConfigs, perf = mockMktPerformance) {
@@ -370,7 +403,9 @@ describe('AgentSkillsPage', () => {
     });
 
     await waitFor(() => {
-      expect(mockApi.patch).toHaveBeenCalledWith('/agent-config/MKT_BLOG_WRITER', { isEnabled: false });
+      expect(mockApi.patch).toHaveBeenCalledWith('/agent-config/MKT_BLOG_WRITER', {
+        isEnabled: false,
+      });
     });
   });
 
@@ -391,7 +426,9 @@ describe('AgentSkillsPage', () => {
     });
 
     await waitFor(() => {
-      expect(mockApi.patch).toHaveBeenCalledWith('/agent-config/MKT_BLOG_WRITER', { runIntervalMinutes: 30 });
+      expect(mockApi.patch).toHaveBeenCalledWith('/agent-config/MKT_BLOG_WRITER', {
+        runIntervalMinutes: 30,
+      });
     });
   });
 

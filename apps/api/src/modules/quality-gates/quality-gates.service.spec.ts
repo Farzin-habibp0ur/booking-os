@@ -30,7 +30,9 @@ describe('QualityGateService', () => {
     it('throws NotFoundException for missing draft', async () => {
       prisma.contentDraft.findFirst.mockResolvedValue(null);
 
-      await expect(service.evaluateGate('biz1', 'missing', 'GATE_1')).rejects.toThrow(NotFoundException);
+      await expect(service.evaluateGate('biz1', 'missing', 'GATE_1')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('returns failure for unknown gate', async () => {
@@ -222,7 +224,8 @@ describe('QualityGateService', () => {
 
     it('detects UTM parameters in URL', () => {
       const metadata = {
-        publishUrl: 'https://example.com?utm_source=instagram&utm_medium=organic&utm_campaign=spring-promo',
+        publishUrl:
+          'https://example.com?utm_source=instagram&utm_medium=organic&utm_campaign=spring-promo',
         platformFormattingVerified: true,
         previewRendered: true,
       };

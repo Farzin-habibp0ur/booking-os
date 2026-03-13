@@ -63,7 +63,10 @@ export function AIActivityFeed() {
   };
 
   const formatAgentName = (agentType: string) =>
-    agentType.replace(/([A-Z])/g, ' $1').trim().replace(/_/g, ' ');
+    agentType
+      .replace(/([A-Z])/g, ' $1')
+      .trim()
+      .replace(/_/g, ' ');
 
   if (loading) {
     return (
@@ -88,7 +91,9 @@ export function AIActivityFeed() {
     return (
       <div className="rounded-2xl bg-white dark:bg-slate-900 p-12 shadow-soft border border-slate-100 dark:border-slate-800 text-center">
         <Activity className="mx-auto mb-4 text-slate-400" size={48} />
-        <h3 className="font-serif text-lg text-slate-900 dark:text-white mb-2">No Recent Activity</h3>
+        <h3 className="font-serif text-lg text-slate-900 dark:text-white mb-2">
+          No Recent Activity
+        </h3>
         <p className="text-slate-600 dark:text-slate-400">
           Agent runs will appear here once agents start processing.
         </p>
@@ -108,9 +113,7 @@ export function AIActivityFeed() {
             key={run.id}
             className="flex gap-3 pb-3 border-b border-slate-100 dark:border-slate-800 last:border-0 last:pb-0"
           >
-            <div className="flex-shrink-0 mt-0.5">
-              {getStatusIcon(run.status)}
-            </div>
+            <div className="flex-shrink-0 mt-0.5">{getStatusIcon(run.status)}</div>
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2">
                 <p className="text-sm font-medium text-slate-900 dark:text-white">
@@ -121,10 +124,16 @@ export function AIActivityFeed() {
                 </span>
               </div>
               <div className="flex items-center gap-3 mt-0.5">
-                <span className={cn(
-                  'text-xs',
-                  run.status === 'SUCCESS' ? 'text-green-600' : run.status === 'FAILURE' ? 'text-red-600' : 'text-amber-600',
-                )}>
+                <span
+                  className={cn(
+                    'text-xs',
+                    run.status === 'SUCCESS'
+                      ? 'text-green-600'
+                      : run.status === 'FAILURE'
+                        ? 'text-red-600'
+                        : 'text-amber-600',
+                  )}
+                >
                   {run.status.toLowerCase()}
                 </span>
                 {run.cardsCreated > 0 && (
@@ -133,8 +142,10 @@ export function AIActivityFeed() {
                 {run.completedAt && run.startedAt && (
                   <span className="text-xs text-slate-400">
                     {Math.round(
-                      (new Date(run.completedAt).getTime() - new Date(run.startedAt).getTime()) / 1000,
-                    )}s
+                      (new Date(run.completedAt).getTime() - new Date(run.startedAt).getTime()) /
+                        1000,
+                    )}
+                    s
                   </span>
                 )}
               </div>

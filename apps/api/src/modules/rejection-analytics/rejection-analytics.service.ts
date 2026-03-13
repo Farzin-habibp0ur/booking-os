@@ -74,10 +74,14 @@ export class RejectionAnalyticsService {
       weekEnd: weekEnd.toISOString(),
       totalRejections: currentWeek,
       previousWeekRejections: prevWeek,
-      weekOverWeekChange: prevWeek > 0 ? Math.round(((currentWeek - prevWeek) / prevWeek) * 100) : 0,
+      weekOverWeekChange:
+        prevWeek > 0 ? Math.round(((currentWeek - prevWeek) / prevWeek) * 100) : 0,
       rejectionRate,
       byCode: byCode.reduce((acc: any, r: any) => ({ ...acc, [r.rejectionCode]: r._count }), {}),
-      byAgent: byAgent.reduce((acc: any, r: any) => ({ ...acc, [r.agentId || 'manual']: r._count }), {}),
+      byAgent: byAgent.reduce(
+        (acc: any, r: any) => ({ ...acc, [r.agentId || 'manual']: r._count }),
+        {},
+      ),
     };
   }
 
@@ -108,7 +112,10 @@ export class RejectionAnalyticsService {
     return {
       byGate: byGate.reduce((acc: any, r: any) => ({ ...acc, [r.gate]: r._count }), {}),
       byCode: byCode.reduce((acc: any, r: any) => ({ ...acc, [r.rejectionCode]: r._count }), {}),
-      byAgent: byAgent.reduce((acc: any, r: any) => ({ ...acc, [r.agentId || 'manual']: r._count }), {}),
+      byAgent: byAgent.reduce(
+        (acc: any, r: any) => ({ ...acc, [r.agentId || 'manual']: r._count }),
+        {},
+      ),
       bySeverity: bySeverity.reduce((acc: any, r: any) => ({ ...acc, [r.severity]: r._count }), {}),
     };
   }

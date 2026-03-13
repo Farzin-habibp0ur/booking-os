@@ -11,9 +11,7 @@ describe('AutonomySettingsController', () => {
       update: jest.fn(),
       resetToDefaults: jest.fn(),
     };
-    controller = new AutonomySettingsController(
-      mockService as unknown as AutonomySettingsService,
-    );
+    controller = new AutonomySettingsController(mockService as unknown as AutonomySettingsService);
   });
 
   it('findAll delegates to service with businessId', async () => {

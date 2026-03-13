@@ -17,7 +17,10 @@ interface MarketingAutonomy {
   defaultLevel?: string;
 }
 
-const MARKETING_ACTIONS: Record<string, { label: string; description: string; recommended: string }> = {
+const MARKETING_ACTIONS: Record<
+  string,
+  { label: string; description: string; recommended: string }
+> = {
   GREEN_CONTENT_PUBLISH: {
     label: 'Green Content Publish',
     description: 'Auto-publishable content that meets all quality gates',
@@ -181,9 +184,7 @@ export default function AutonomySettingsPage() {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Bot size={20} className="text-lavender-600" />
-            <h2 className="text-lg font-serif font-semibold text-slate-900">
-              Marketing Autonomy
-            </h2>
+            <h2 className="text-lg font-serif font-semibold text-slate-900">Marketing Autonomy</h2>
           </div>
           <button
             onClick={handleReset}
@@ -199,7 +200,10 @@ export default function AutonomySettingsPage() {
           Control how much autonomy marketing AI agents have for each action type.
         </p>
 
-        <div className="bg-white rounded-2xl shadow-soft overflow-hidden" data-testid="marketing-autonomy-table">
+        <div
+          className="bg-white rounded-2xl shadow-soft overflow-hidden"
+          data-testid="marketing-autonomy-table"
+        >
           {/* Header */}
           <div className="grid grid-cols-12 gap-4 px-4 py-3 bg-slate-50 border-b text-xs font-medium text-slate-500">
             <div className="col-span-4">Action</div>
@@ -232,11 +236,17 @@ export default function AutonomySettingsPage() {
                         className={cn(
                           'px-2 py-1 rounded-lg text-[11px] font-medium transition-all',
                           currentLevel === level.value
-                            ? cn(level.color, 'ring-2 ring-offset-1',
-                                level.value === 'OFF' ? 'ring-slate-300' :
-                                level.value === 'SUGGEST' ? 'ring-blue-300' :
-                                level.value === 'AUTO_WITH_REVIEW' ? 'ring-lavender-300' :
-                                'ring-sage-300')
+                            ? cn(
+                                level.color,
+                                'ring-2 ring-offset-1',
+                                level.value === 'OFF'
+                                  ? 'ring-slate-300'
+                                  : level.value === 'SUGGEST'
+                                    ? 'ring-blue-300'
+                                    : level.value === 'AUTO_WITH_REVIEW'
+                                      ? 'ring-lavender-300'
+                                      : 'ring-sage-300',
+                              )
                             : 'bg-white border border-slate-200 text-slate-400 hover:border-slate-300',
                         )}
                         data-testid={`level-${actionType}-${level.value}`}

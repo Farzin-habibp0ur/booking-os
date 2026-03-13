@@ -78,7 +78,13 @@ const AGENT_DESCRIPTIONS: Record<string, string> = {
   QUOTE_FOLLOWUP: 'Sends follow-up reminders for expired or pending quotes',
 };
 
-const CORE_AGENTS = ['WAITLIST', 'RETENTION', 'DATA_HYGIENE', 'SCHEDULING_OPTIMIZER', 'QUOTE_FOLLOWUP'];
+const CORE_AGENTS = [
+  'WAITLIST',
+  'RETENTION',
+  'DATA_HYGIENE',
+  'SCHEDULING_OPTIMIZER',
+  'QUOTE_FOLLOWUP',
+];
 
 const TAB_FILTERS: Array<{ value: TabFilter; label: string }> = [
   { value: 'all', label: 'All' },
@@ -156,9 +162,10 @@ export default function AIAgentsPage() {
   const getAgentRuns = (agentType: string) =>
     runs.filter((r) => r.agentType === agentType).slice(0, 10);
 
-  const filteredMarketing = tabFilter === 'all'
-    ? marketingAgents
-    : marketingAgents.filter((a) => (AGENT_CATEGORIES[a.agentType] || 'content') === tabFilter);
+  const filteredMarketing =
+    tabFilter === 'all'
+      ? marketingAgents
+      : marketingAgents.filter((a) => (AGENT_CATEGORIES[a.agentType] || 'content') === tabFilter);
 
   if (loading) {
     return (
@@ -204,7 +211,9 @@ export default function AIAgentsPage() {
                 running={runningId === agent.agentType}
                 onToggle={() => toggleAgent(agent.agentType, agent.isEnabled)}
                 onTrigger={() => triggerAgent(agent.agentType)}
-                onExpand={() => setExpandedAgent(expandedAgent === agent.agentType ? null : agent.agentType)}
+                onExpand={() =>
+                  setExpandedAgent(expandedAgent === agent.agentType ? null : agent.agentType)
+                }
               />
             ))
           )}
@@ -225,7 +234,10 @@ export default function AIAgentsPage() {
           </div>
 
           {/* Tab Filters */}
-          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5" data-testid="agent-tab-filters">
+          <div
+            className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5"
+            data-testid="agent-tab-filters"
+          >
             {TAB_FILTERS.map((tab) => (
               <button
                 key={tab.value}
@@ -268,7 +280,9 @@ export default function AIAgentsPage() {
                 running={runningId === agent.agentType}
                 onToggle={() => toggleAgent(agent.agentType, agent.isEnabled)}
                 onTrigger={() => triggerAgent(agent.agentType)}
-                onExpand={() => setExpandedAgent(expandedAgent === agent.agentType ? null : agent.agentType)}
+                onExpand={() =>
+                  setExpandedAgent(expandedAgent === agent.agentType ? null : agent.agentType)
+                }
                 isMarketing
               />
             ))
@@ -347,10 +361,16 @@ function AgentCard({
           <div className="mb-3">
             <div className="flex items-center justify-between mb-1">
               <span className="text-[11px] text-slate-500">Performance</span>
-              <span className={cn(
-                'text-xs font-medium',
-                agent.performanceScore >= 80 ? 'text-green-600' : agent.performanceScore >= 50 ? 'text-amber-600' : 'text-red-600',
-              )}>
+              <span
+                className={cn(
+                  'text-xs font-medium',
+                  agent.performanceScore >= 80
+                    ? 'text-green-600'
+                    : agent.performanceScore >= 50
+                      ? 'text-amber-600'
+                      : 'text-red-600',
+                )}
+              >
                 {Math.round(agent.performanceScore)}%
               </span>
             </div>
@@ -358,7 +378,11 @@ function AgentCard({
               <div
                 className={cn(
                   'h-full rounded-full transition-all',
-                  agent.performanceScore >= 80 ? 'bg-green-500' : agent.performanceScore >= 50 ? 'bg-amber-500' : 'bg-red-500',
+                  agent.performanceScore >= 80
+                    ? 'bg-green-500'
+                    : agent.performanceScore >= 50
+                      ? 'bg-amber-500'
+                      : 'bg-red-500',
                 )}
                 style={{ width: `${agent.performanceScore}%` }}
               />
@@ -368,9 +392,7 @@ function AgentCard({
 
         <div className="flex items-center justify-between text-xs text-slate-500">
           <span>
-            {agent.lastRunAt
-              ? `Last run ${formatRelative(agent.lastRunAt)}`
-              : 'Never run'}
+            {agent.lastRunAt ? `Last run ${formatRelative(agent.lastRunAt)}` : 'Never run'}
           </span>
           {agent.runIntervalMinutes && (
             <span className="text-slate-400">Every {agent.runIntervalMinutes}min</span>
@@ -443,7 +465,8 @@ function AgentCard({
                           (new Date(run.completedAt).getTime() -
                             new Date(run.startedAt).getTime()) /
                             1000,
-                        )}s
+                        )}
+                        s
                       </span>
                     )}
                   </div>

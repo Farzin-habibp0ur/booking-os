@@ -187,7 +187,7 @@ export default function RejectionAnalyticsPage() {
         api.get<Stats>(`/rejection-analytics/stats?${query}`),
         api.get<WeeklySummary>(`/rejection-analytics/weekly-summary?${query}`),
         api.get<{ items: RejectionLog[]; total: number }>(
-          `/rejection-analytics/logs?${logParams.toString()}`
+          `/rejection-analytics/logs?${logParams.toString()}`,
         ),
       ]);
 
@@ -245,18 +245,13 @@ export default function RejectionAnalyticsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link
-            href="/marketing"
-            className="text-slate-400 hover:text-slate-600 transition-colors"
-          >
+          <Link href="/marketing" className="text-slate-400 hover:text-slate-600 transition-colors">
             <ArrowLeft size={20} />
             <span className="ml-1 text-sm">Back to Marketing</span>
           </Link>
           <div className="flex items-center gap-2">
             <BarChart3 size={24} className="text-[#71907C]" />
-            <h1 className="text-2xl font-serif font-bold text-slate-800">
-              Rejection Analytics
-            </h1>
+            <h1 className="text-2xl font-serif font-bold text-slate-800">Rejection Analytics</h1>
           </div>
         </div>
       </div>
@@ -362,10 +357,7 @@ export default function RejectionAnalyticsPage() {
           {/* Charts Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Rejection by Code */}
-            <div
-              data-testid="chart-by-code"
-              className="bg-white rounded-2xl shadow-soft p-6"
-            >
+            <div data-testid="chart-by-code" className="bg-white rounded-2xl shadow-soft p-6">
               <h2 className="text-sm font-semibold text-slate-700 mb-4">Rejections by Code</h2>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart
@@ -378,12 +370,7 @@ export default function RejectionAnalyticsPage() {
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                   <XAxis type="number" tick={{ fontSize: 12 }} />
-                  <YAxis
-                    type="category"
-                    dataKey="label"
-                    tick={{ fontSize: 11 }}
-                    width={95}
-                  />
+                  <YAxis type="category" dataKey="label" tick={{ fontSize: 11 }} width={95} />
                   <Tooltip
                     contentStyle={{
                       borderRadius: '12px',
@@ -397,10 +384,7 @@ export default function RejectionAnalyticsPage() {
             </div>
 
             {/* Rejection by Agent */}
-            <div
-              data-testid="chart-by-agent"
-              className="bg-white rounded-2xl shadow-soft p-6"
-            >
+            <div data-testid="chart-by-agent" className="bg-white rounded-2xl shadow-soft p-6">
               <h2 className="text-sm font-semibold text-slate-700 mb-4">Rejections by Agent</h2>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart
@@ -411,12 +395,7 @@ export default function RejectionAnalyticsPage() {
                   margin={{ left: 10, right: 20, top: 5, bottom: 40 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                  <XAxis
-                    dataKey="label"
-                    tick={{ fontSize: 10 }}
-                    interval={0}
-                    height={50}
-                  />
+                  <XAxis dataKey="label" tick={{ fontSize: 10 }} interval={0} height={50} />
                   <YAxis tick={{ fontSize: 12 }} />
                   <Tooltip
                     contentStyle={{
@@ -431,18 +410,12 @@ export default function RejectionAnalyticsPage() {
             </div>
 
             {/* Rejection Rate Trend */}
-            <div
-              data-testid="chart-trend"
-              className="bg-white rounded-2xl shadow-soft p-6"
-            >
+            <div data-testid="chart-trend" className="bg-white rounded-2xl shadow-soft p-6">
               <h2 className="text-sm font-semibold text-slate-700 mb-4">
                 Rejection Rate Trend (12 weeks)
               </h2>
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart
-                  data={trendData}
-                  margin={{ left: 10, right: 20, top: 5, bottom: 5 }}
-                >
+                <LineChart data={trendData} margin={{ left: 10, right: 20, top: 5, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                   <XAxis dataKey="week" tick={{ fontSize: 12 }} />
                   <YAxis tick={{ fontSize: 12 }} unit="%" />
@@ -467,13 +440,8 @@ export default function RejectionAnalyticsPage() {
             </div>
 
             {/* Agent-Specific Detail */}
-            <div
-              data-testid="agent-detail-panel"
-              className="bg-white rounded-2xl shadow-soft p-6"
-            >
-              <h2 className="text-sm font-semibold text-slate-700 mb-4">
-                Agent-Specific Detail
-              </h2>
+            <div data-testid="agent-detail-panel" className="bg-white rounded-2xl shadow-soft p-6">
+              <h2 className="text-sm font-semibold text-slate-700 mb-4">Agent-Specific Detail</h2>
               <select
                 value={selectedDetailAgent}
                 onChange={(e) => setSelectedDetailAgent(e.target.value)}
@@ -551,10 +519,7 @@ export default function RejectionAnalyticsPage() {
                       <p className="text-sm text-slate-400">No rejections</p>
                     ) : (
                       agentDetail.breakdown.map((item) => (
-                        <div
-                          key={item.code}
-                          className="flex items-center justify-between text-sm"
-                        >
+                        <div key={item.code} className="flex items-center justify-between text-sm">
                           <span className="text-slate-600">
                             {item.code}: {REJECTION_CODE_LABELS[item.code] || item.code}
                           </span>
@@ -576,10 +541,7 @@ export default function RejectionAnalyticsPage() {
 
           {/* Weekly Summary */}
           {weeklySummary && (
-            <div
-              data-testid="weekly-summary"
-              className="bg-white rounded-2xl shadow-soft p-6"
-            >
+            <div data-testid="weekly-summary" className="bg-white rounded-2xl shadow-soft p-6">
               <h2 className="text-sm font-semibold text-slate-700 mb-4">Weekly Summary</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="bg-slate-50 rounded-xl p-4">
@@ -599,7 +561,7 @@ export default function RejectionAnalyticsPage() {
                         'flex items-center gap-0.5 text-sm font-medium',
                         weeklySummary.changePercent > 0 && 'text-red-600',
                         weeklySummary.changePercent < 0 && 'text-[#71907C]',
-                        weeklySummary.changePercent === 0 && 'text-slate-500'
+                        weeklySummary.changePercent === 0 && 'text-slate-500',
                       )}
                     >
                       {weeklySummary.changePercent > 0 ? (
@@ -633,7 +595,6 @@ export default function RejectionAnalyticsPage() {
               </div>
             </div>
           )}
-
         </>
       )}
 
@@ -641,160 +602,155 @@ export default function RejectionAnalyticsPage() {
       <div
         data-testid="rejection-log-table"
         className="bg-white rounded-2xl shadow-soft overflow-hidden"
-          >
-            <div className="px-6 py-4 border-b border-slate-100">
-              <h2 className="text-sm font-semibold text-slate-700">
-                Rejection Log{' '}
-                <span className="text-slate-400 font-normal">({logsTotal} total)</span>
-              </h2>
+      >
+        <div className="px-6 py-4 border-b border-slate-100">
+          <h2 className="text-sm font-semibold text-slate-700">
+            Rejection Log <span className="text-slate-400 font-normal">({logsTotal} total)</span>
+          </h2>
+        </div>
+
+        {logs.length === 0 ? (
+          <div className="p-12 text-center">
+            <ShieldAlert size={36} className="text-slate-300 mx-auto mb-2" />
+            <p className="text-sm text-slate-400">No rejection logs match the current filters</p>
+          </div>
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-100">
+                    <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">
+                      Date
+                    </th>
+                    <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">
+                      Draft Title
+                    </th>
+                    <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">
+                      Agent
+                    </th>
+                    <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">
+                      Gate
+                    </th>
+                    <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">
+                      Code
+                    </th>
+                    <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">
+                      Severity
+                    </th>
+                    <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">
+                      Reason
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {logs.map((log) => (
+                    <tr
+                      key={log.id}
+                      data-testid="rejection-log-row"
+                      className="hover:bg-slate-50/50 cursor-pointer transition-colors"
+                      onClick={() => setExpandedRow(expandedRow === log.id ? null : log.id)}
+                    >
+                      <td className="px-6 py-3 text-slate-600 whitespace-nowrap">
+                        {new Date(log.date).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-3 text-slate-800 font-medium max-w-[200px] truncate">
+                        {log.draftTitle}
+                      </td>
+                      <td className="px-6 py-3 text-slate-600 whitespace-nowrap">
+                        {AGENT_LABELS[log.agentId] || log.agentId}
+                      </td>
+                      <td className="px-6 py-3 text-slate-600 whitespace-nowrap">
+                        {log.gate.replace('_', ' ')}
+                      </td>
+                      <td className="px-6 py-3 whitespace-nowrap">
+                        <span className="text-slate-800 font-medium">{log.rejectionCode}</span>
+                        <span className="text-slate-400 ml-1 text-xs">
+                          {REJECTION_CODE_LABELS[log.rejectionCode] || ''}
+                        </span>
+                      </td>
+                      <td className="px-6 py-3 whitespace-nowrap">
+                        <span
+                          className={cn(
+                            'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
+                            SEVERITY_BADGE_STYLES[log.severity] || 'bg-slate-100 text-slate-600',
+                          )}
+                        >
+                          {log.severity}
+                        </span>
+                      </td>
+                      <td className="px-6 py-3 text-slate-500">
+                        <div className="flex items-center gap-1">
+                          {expandedRow === log.id ? (
+                            <ChevronUp size={14} />
+                          ) : (
+                            <ChevronDown size={14} />
+                          )}
+                          <span className="text-xs">
+                            {expandedRow === log.id ? 'Hide' : 'Show'}
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {/* Expanded reason rows */}
+              {logs.map(
+                (log) =>
+                  expandedRow === log.id && (
+                    <div
+                      key={`reason-${log.id}`}
+                      className="px-6 py-4 bg-slate-50 border-b border-slate-100"
+                    >
+                      <p className="text-xs font-medium text-slate-500 mb-1">Rejection Reason</p>
+                      <p className="text-sm text-slate-700">{log.reason}</p>
+                    </div>
+                  ),
+              )}
             </div>
 
-            {logs.length === 0 ? (
-              <div className="p-12 text-center">
-                <ShieldAlert size={36} className="text-slate-300 mx-auto mb-2" />
-                <p className="text-sm text-slate-400">No rejection logs match the current filters</p>
-              </div>
-            ) : (
-              <>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-slate-100">
-                        <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">
-                          Date
-                        </th>
-                        <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">
-                          Draft Title
-                        </th>
-                        <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">
-                          Agent
-                        </th>
-                        <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">
-                          Gate
-                        </th>
-                        <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">
-                          Code
-                        </th>
-                        <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">
-                          Severity
-                        </th>
-                        <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">
-                          Reason
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-50">
-                      {logs.map((log) => (
-                        <tr
-                          key={log.id}
-                          data-testid="rejection-log-row"
-                          className="hover:bg-slate-50/50 cursor-pointer transition-colors"
-                          onClick={() =>
-                            setExpandedRow(expandedRow === log.id ? null : log.id)
-                          }
-                        >
-                          <td className="px-6 py-3 text-slate-600 whitespace-nowrap">
-                            {new Date(log.date).toLocaleDateString()}
-                          </td>
-                          <td className="px-6 py-3 text-slate-800 font-medium max-w-[200px] truncate">
-                            {log.draftTitle}
-                          </td>
-                          <td className="px-6 py-3 text-slate-600 whitespace-nowrap">
-                            {AGENT_LABELS[log.agentId] || log.agentId}
-                          </td>
-                          <td className="px-6 py-3 text-slate-600 whitespace-nowrap">
-                            {log.gate.replace('_', ' ')}
-                          </td>
-                          <td className="px-6 py-3 whitespace-nowrap">
-                            <span className="text-slate-800 font-medium">{log.rejectionCode}</span>
-                            <span className="text-slate-400 ml-1 text-xs">
-                              {REJECTION_CODE_LABELS[log.rejectionCode] || ''}
-                            </span>
-                          </td>
-                          <td className="px-6 py-3 whitespace-nowrap">
-                            <span
-                              className={cn(
-                                'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
-                                SEVERITY_BADGE_STYLES[log.severity] || 'bg-slate-100 text-slate-600'
-                              )}
-                            >
-                              {log.severity}
-                            </span>
-                          </td>
-                          <td className="px-6 py-3 text-slate-500">
-                            <div className="flex items-center gap-1">
-                              {expandedRow === log.id ? (
-                                <ChevronUp size={14} />
-                              ) : (
-                                <ChevronDown size={14} />
-                              )}
-                              <span className="text-xs">
-                                {expandedRow === log.id ? 'Hide' : 'Show'}
-                              </span>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-
-                  {/* Expanded reason rows */}
-                  {logs.map(
-                    (log) =>
-                      expandedRow === log.id && (
-                        <div
-                          key={`reason-${log.id}`}
-                          className="px-6 py-4 bg-slate-50 border-b border-slate-100"
-                        >
-                          <p className="text-xs font-medium text-slate-500 mb-1">
-                            Rejection Reason
-                          </p>
-                          <p className="text-sm text-slate-700">{log.reason}</p>
-                        </div>
-                      )
-                  )}
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-between">
+                <p className="text-xs text-slate-500">
+                  Showing {logsPage * PAGE_SIZE + 1}–
+                  {Math.min((logsPage + 1) * PAGE_SIZE, logsTotal)} of {logsTotal}
+                </p>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setLogsPage((p) => Math.max(0, p - 1))}
+                    disabled={logsPage === 0}
+                    className={cn(
+                      'p-2 rounded-xl transition-colors',
+                      logsPage === 0
+                        ? 'text-slate-300 cursor-not-allowed'
+                        : 'text-slate-600 hover:bg-slate-100',
+                    )}
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+                  <span className="text-sm text-slate-600">
+                    {logsPage + 1} / {totalPages}
+                  </span>
+                  <button
+                    onClick={() => setLogsPage((p) => Math.min(totalPages - 1, p + 1))}
+                    disabled={logsPage >= totalPages - 1}
+                    className={cn(
+                      'p-2 rounded-xl transition-colors',
+                      logsPage >= totalPages - 1
+                        ? 'text-slate-300 cursor-not-allowed'
+                        : 'text-slate-600 hover:bg-slate-100',
+                    )}
+                  >
+                    <ChevronRight size={16} />
+                  </button>
                 </div>
-
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-between">
-                    <p className="text-xs text-slate-500">
-                      Showing {logsPage * PAGE_SIZE + 1}–
-                      {Math.min((logsPage + 1) * PAGE_SIZE, logsTotal)} of {logsTotal}
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => setLogsPage((p) => Math.max(0, p - 1))}
-                        disabled={logsPage === 0}
-                        className={cn(
-                          'p-2 rounded-xl transition-colors',
-                          logsPage === 0
-                            ? 'text-slate-300 cursor-not-allowed'
-                            : 'text-slate-600 hover:bg-slate-100'
-                        )}
-                      >
-                        <ChevronLeft size={16} />
-                      </button>
-                      <span className="text-sm text-slate-600">
-                        {logsPage + 1} / {totalPages}
-                      </span>
-                      <button
-                        onClick={() => setLogsPage((p) => Math.min(totalPages - 1, p + 1))}
-                        disabled={logsPage >= totalPages - 1}
-                        className={cn(
-                          'p-2 rounded-xl transition-colors',
-                          logsPage >= totalPages - 1
-                            ? 'text-slate-300 cursor-not-allowed'
-                            : 'text-slate-600 hover:bg-slate-100'
-                        )}
-                      >
-                        <ChevronRight size={16} />
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </>
+              </div>
             )}
+          </>
+        )}
       </div>
     </div>
   );

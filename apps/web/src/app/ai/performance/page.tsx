@@ -193,7 +193,13 @@ export default function AIPerformancePage() {
           icon={<Target size={18} />}
           label="Rejection Rate"
           value={`${rejectionRate}%`}
-          color={rejectionRate > 20 ? 'text-red-600' : rejectionRate > 10 ? 'text-amber-600' : 'text-green-600'}
+          color={
+            rejectionRate > 20
+              ? 'text-red-600'
+              : rejectionRate > 10
+                ? 'text-amber-600'
+                : 'text-green-600'
+          }
         />
         <KPICard
           icon={<FlaskConical size={18} />}
@@ -252,7 +258,14 @@ export default function AIPerformancePage() {
               <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={pillarData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                  <XAxis dataKey="name" tick={{ fontSize: 10 }} stroke="#94a3b8" angle={-45} textAnchor="end" height={60} />
+                  <XAxis
+                    dataKey="name"
+                    tick={{ fontSize: 10 }}
+                    stroke="#94a3b8"
+                    angle={-45}
+                    textAnchor="end"
+                    height={60}
+                  />
                   <YAxis tick={{ fontSize: 11 }} stroke="#94a3b8" />
                   <Tooltip />
                   <Bar dataKey="value" name="Content Items">
@@ -304,7 +317,13 @@ export default function AIPerformancePage() {
                 <BarChart data={rejectionByCode} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                   <XAxis type="number" tick={{ fontSize: 11 }} stroke="#94a3b8" />
-                  <YAxis dataKey="code" type="category" tick={{ fontSize: 11 }} stroke="#94a3b8" width={50} />
+                  <YAxis
+                    dataKey="code"
+                    type="category"
+                    tick={{ fontSize: 11 }}
+                    stroke="#94a3b8"
+                    width={50}
+                  />
                   <Tooltip />
                   <Bar dataKey="count" fill="#f59e0b" name="Count" radius={[0, 4, 4, 0]} />
                 </BarChart>
@@ -361,11 +380,21 @@ export default function AIPerformancePage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-100 dark:border-slate-800">
-                  <th className="text-left py-2 font-medium text-slate-600 dark:text-slate-400">Test</th>
-                  <th className="text-center py-2 font-medium text-slate-600 dark:text-slate-400">Status</th>
-                  <th className="text-center py-2 font-medium text-slate-600 dark:text-slate-400">Metric</th>
-                  <th className="text-center py-2 font-medium text-slate-600 dark:text-slate-400">Winner</th>
-                  <th className="text-center py-2 font-medium text-slate-600 dark:text-slate-400">Confidence</th>
+                  <th className="text-left py-2 font-medium text-slate-600 dark:text-slate-400">
+                    Test
+                  </th>
+                  <th className="text-center py-2 font-medium text-slate-600 dark:text-slate-400">
+                    Status
+                  </th>
+                  <th className="text-center py-2 font-medium text-slate-600 dark:text-slate-400">
+                    Metric
+                  </th>
+                  <th className="text-center py-2 font-medium text-slate-600 dark:text-slate-400">
+                    Winner
+                  </th>
+                  <th className="text-center py-2 font-medium text-slate-600 dark:text-slate-400">
+                    Confidence
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -374,7 +403,9 @@ export default function AIPerformancePage() {
                     key={test.id}
                     className="border-b border-slate-50 dark:border-slate-800 last:border-0"
                   >
-                    <td className="py-2.5 text-slate-900 dark:text-white font-medium">{test.name}</td>
+                    <td className="py-2.5 text-slate-900 dark:text-white font-medium">
+                      {test.name}
+                    </td>
                     <td className="py-2.5 text-center">
                       <span
                         className={cn(
@@ -471,5 +502,8 @@ function KPICard({
 }
 
 function formatAgentName(agentType: string): string {
-  return agentType.replace(/([A-Z])/g, ' $1').trim().replace(/_/g, ' ');
+  return agentType
+    .replace(/([A-Z])/g, ' $1')
+    .trim()
+    .replace(/_/g, ' ');
 }

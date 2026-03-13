@@ -50,12 +50,7 @@ describe('ActionCardComponent', () => {
   });
 
   it('does not show confidence badge when absent', () => {
-    render(
-      <ActionCardComponent
-        {...baseProps}
-        card={{ ...mockCard, confidence: undefined }}
-      />,
-    );
+    render(<ActionCardComponent {...baseProps} card={{ ...mockCard, confidence: undefined }} />);
     expect(screen.queryByTestId('confidence-badge')).not.toBeInTheDocument();
   });
 
@@ -66,34 +61,19 @@ describe('ActionCardComponent', () => {
   });
 
   it('has red border for URGENT_TODAY priority', () => {
-    render(
-      <ActionCardComponent
-        {...baseProps}
-        card={{ ...mockCard, priority: 'URGENT_TODAY' }}
-      />,
-    );
+    render(<ActionCardComponent {...baseProps} card={{ ...mockCard, priority: 'URGENT_TODAY' }} />);
     const card = screen.getByTestId('action-card-card-1');
     expect(card.className).toContain('border-red-400');
   });
 
   it('has sage border for OPPORTUNITY priority', () => {
-    render(
-      <ActionCardComponent
-        {...baseProps}
-        card={{ ...mockCard, priority: 'OPPORTUNITY' }}
-      />,
-    );
+    render(<ActionCardComponent {...baseProps} card={{ ...mockCard, priority: 'OPPORTUNITY' }} />);
     const card = screen.getByTestId('action-card-card-1');
     expect(card.className).toContain('border-sage-400');
   });
 
   it('has slate border for HYGIENE priority', () => {
-    render(
-      <ActionCardComponent
-        {...baseProps}
-        card={{ ...mockCard, priority: 'HYGIENE' }}
-      />,
-    );
+    render(<ActionCardComponent {...baseProps} card={{ ...mockCard, priority: 'HYGIENE' }} />);
     const card = screen.getByTestId('action-card-card-1');
     expect(card.className).toContain('border-slate-400');
   });

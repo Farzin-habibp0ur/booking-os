@@ -44,23 +44,21 @@ export function RejectionCodePicker({
         className,
       )}
     >
-      {grouped ? (
-        Object.entries(SEVERITY_GROUPS).map(([severity, group]) => (
-          <optgroup key={severity} label={group.label}>
-            {group.codes.map((code) => (
-              <option key={code} value={code}>
-                {code} — {REJECTION_CODE_LABELS[code]}
-              </option>
-            ))}
-          </optgroup>
-        ))
-      ) : (
-        REJECTION_CODES.map((code) => (
-          <option key={code} value={code}>
-            {code} — {REJECTION_CODE_LABELS[code]}
-          </option>
-        ))
-      )}
+      {grouped
+        ? Object.entries(SEVERITY_GROUPS).map(([severity, group]) => (
+            <optgroup key={severity} label={group.label}>
+              {group.codes.map((code) => (
+                <option key={code} value={code}>
+                  {code} — {REJECTION_CODE_LABELS[code]}
+                </option>
+              ))}
+            </optgroup>
+          ))
+        : REJECTION_CODES.map((code) => (
+            <option key={code} value={code}>
+              {code} — {REJECTION_CODE_LABELS[code]}
+            </option>
+          ))}
     </select>
   );
 }

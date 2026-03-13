@@ -71,9 +71,7 @@ describe('AgentRunsService', () => {
 
       await service.findAll('biz1', { take: '999' } as any);
 
-      expect(prisma.agentRun.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({ take: 100 }),
-      );
+      expect(prisma.agentRun.findMany).toHaveBeenCalledWith(expect.objectContaining({ take: 100 }));
     });
   });
 
@@ -162,7 +160,10 @@ describe('AgentRunsService', () => {
 
     it('getStats filters by businessId', async () => {
       prisma.agentRun.groupBy.mockResolvedValue([] as any);
-      prisma.agentRun.aggregate.mockResolvedValue({ _count: 0, _sum: { cardsCreated: null } } as any);
+      prisma.agentRun.aggregate.mockResolvedValue({
+        _count: 0,
+        _sum: { cardsCreated: null },
+      } as any);
 
       await service.getStats('biz1');
 

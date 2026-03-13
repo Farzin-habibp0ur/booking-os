@@ -48,10 +48,7 @@ export function AutonomyLevelSelector({
   className,
 }: AutonomyLevelSelectorProps) {
   return (
-    <div
-      data-testid="autonomy-level-selector"
-      className={cn('flex gap-2', className)}
-    >
+    <div data-testid="autonomy-level-selector" className={cn('flex gap-2', className)}>
       {AUTONOMY_LEVELS.map((level) => {
         const isActive = value === level.value;
         const isRecommended = recommended === level.value;

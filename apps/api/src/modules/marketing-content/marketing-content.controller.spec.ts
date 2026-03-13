@@ -17,9 +17,7 @@ describe('MarketingContentController', () => {
       getPipelineStats: jest.fn(),
       getPillarBalance: jest.fn(),
     };
-    controller = new MarketingContentController(
-      mockService as unknown as MarketingContentService,
-    );
+    controller = new MarketingContentController(mockService as unknown as MarketingContentService);
   });
 
   it('create delegates to service with businessId and body', async () => {

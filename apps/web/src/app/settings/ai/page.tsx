@@ -45,9 +45,21 @@ const AUTONOMY_LEVELS = [
 ];
 
 const REVIEW_MODES = [
-  { value: 'STRICT', label: 'Strict', description: 'All content requires manual review before publishing' },
-  { value: 'NORMAL', label: 'Normal', description: 'Tier-based: GREEN auto-publishes, YELLOW/RED need review' },
-  { value: 'RELAXED', label: 'Relaxed', description: 'GREEN auto-publishes, YELLOW auto-publishes with review window' },
+  {
+    value: 'STRICT',
+    label: 'Strict',
+    description: 'All content requires manual review before publishing',
+  },
+  {
+    value: 'NORMAL',
+    label: 'Normal',
+    description: 'Tier-based: GREEN auto-publishes, YELLOW/RED need review',
+  },
+  {
+    value: 'RELAXED',
+    label: 'Relaxed',
+    description: 'GREEN auto-publishes, YELLOW auto-publishes with review window',
+  },
 ];
 
 const NOTIFICATION_EVENTS = [
@@ -103,7 +115,9 @@ export default function AiSettingsPage() {
           setMarketingEnabled(!allOff);
           // Most common level as default
           const counts: Record<string, number> = {};
-          levels.forEach((l) => { counts[l] = (counts[l] || 0) + 1; });
+          levels.forEach((l) => {
+            counts[l] = (counts[l] || 0) + 1;
+          });
           const mostCommon = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0];
           if (mostCommon) setDefaultAutonomy(mostCommon);
         }
@@ -151,9 +165,7 @@ export default function AiSettingsPage() {
       for (const a of marketingAutonomy) {
         await api.patch(`/autonomy-settings/${a.actionType}`, { autonomyLevel: level });
       }
-      setMarketingAutonomy((prev) =>
-        prev.map((a) => ({ ...a, autonomyLevel: level })),
-      );
+      setMarketingAutonomy((prev) => prev.map((a) => ({ ...a, autonomyLevel: level })));
       toast('Default autonomy updated', 'success');
     } catch {
       toast('Failed to update autonomy', 'error');
@@ -494,9 +506,7 @@ export default function AiSettingsPage() {
             >
               Save Marketing Settings
             </button>
-            {marketingSaved && (
-              <span className="text-sage-600 text-sm">Saved!</span>
-            )}
+            {marketingSaved && <span className="text-sage-600 text-sm">Saved!</span>}
           </div>
         </div>
       </div>

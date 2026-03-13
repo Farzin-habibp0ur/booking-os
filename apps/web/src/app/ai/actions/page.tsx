@@ -195,7 +195,17 @@ export default function AIActionsPage() {
   };
 
   // Build grouped items from briefing or fallback
-  const grouped: Record<PriorityKey, Array<{ id: string; title: string; description: string; sourceAgent: string; createdAt: string; confidence?: number }>> = {
+  const grouped: Record<
+    PriorityKey,
+    Array<{
+      id: string;
+      title: string;
+      description: string;
+      sourceAgent: string;
+      createdAt: string;
+      confidence?: number;
+    }>
+  > = {
     URGENT_TODAY: [],
     NEEDS_APPROVAL: [],
     OPPORTUNITY: [],
@@ -265,7 +275,9 @@ export default function AIActionsPage() {
             onClick={() => setViewMode('list')}
             className={cn(
               'flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md transition-colors',
-              viewMode === 'list' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500',
+              viewMode === 'list'
+                ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
+                : 'text-slate-500',
             )}
             data-testid="view-list"
           >
@@ -276,7 +288,9 @@ export default function AIActionsPage() {
             onClick={() => setViewMode('kanban')}
             className={cn(
               'flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md transition-colors',
-              viewMode === 'kanban' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500',
+              viewMode === 'kanban'
+                ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
+                : 'text-slate-500',
             )}
             data-testid="view-kanban"
           >
@@ -288,7 +302,10 @@ export default function AIActionsPage() {
 
       {viewMode === 'kanban' ? (
         /* Kanban View */
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" data-testid="kanban-view">
+        <div
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+          data-testid="kanban-view"
+        >
           {priorityOrder.map((key) => {
             const items = grouped[key];
             const config = PRIORITY_CONFIG[key];

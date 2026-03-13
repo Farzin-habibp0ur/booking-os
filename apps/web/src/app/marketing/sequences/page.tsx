@@ -370,19 +370,13 @@ export default function EmailSequencesPage() {
                         {/* Steps Timeline */}
                         <div className="space-y-3">
                           {seq.steps.map((step, idx) => {
-                            const stepMetric = metrics?.steps?.find(
-                              (m) => m.step === step.step,
-                            );
-                            const isBottleneck =
-                              bottleneck?.bottleneckStep === step.step;
+                            const stepMetric = metrics?.steps?.find((m) => m.step === step.step);
+                            const isBottleneck = bottleneck?.bottleneckStep === step.step;
 
                             return (
                               <div
                                 key={step.step}
-                                className={cn(
-                                  'flex items-start gap-3',
-                                  isBottleneck && 'relative',
-                                )}
+                                className={cn('flex items-start gap-3', isBottleneck && 'relative')}
                                 data-testid="step-row"
                               >
                                 <div className="flex flex-col items-center">
@@ -393,23 +387,15 @@ export default function EmailSequencesPage() {
                                         ? 'bg-amber-100 text-amber-700 ring-2 ring-amber-300'
                                         : 'bg-lavender-100 text-lavender-700',
                                     )}
-                                    data-testid={
-                                      isBottleneck ? 'bottleneck-step' : 'step-number'
-                                    }
+                                    data-testid={isBottleneck ? 'bottleneck-step' : 'step-number'}
                                   >
-                                    {isBottleneck ? (
-                                      <AlertTriangle size={14} />
-                                    ) : (
-                                      step.step
-                                    )}
+                                    {isBottleneck ? <AlertTriangle size={14} /> : step.step}
                                   </div>
                                   {idx < seq.steps.length - 1 && (
                                     <div
                                       className={cn(
                                         'w-px h-6 mt-1',
-                                        isBottleneck
-                                          ? 'bg-amber-300'
-                                          : 'bg-lavender-200',
+                                        isBottleneck ? 'bg-amber-300' : 'bg-lavender-200',
                                       )}
                                     />
                                   )}
@@ -439,7 +425,10 @@ export default function EmailSequencesPage() {
                                       data-testid="step-metrics"
                                     >
                                       <span className="text-slate-500">
-                                        Sent: <span className="font-medium text-slate-700">{stepMetric.sent}</span>
+                                        Sent:{' '}
+                                        <span className="font-medium text-slate-700">
+                                          {stepMetric.sent}
+                                        </span>
                                       </span>
                                       <span className="text-slate-500">
                                         Open:{' '}

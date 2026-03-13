@@ -42,7 +42,12 @@ describe('DashboardBriefingController', () => {
 
     const result = await controller.executeBriefingAction('biz1', 'b1', 'dismiss', user);
 
-    expect(mockService.executeBriefingAction).toHaveBeenCalledWith('biz1', 'b1', 'dismiss', 'user1');
+    expect(mockService.executeBriefingAction).toHaveBeenCalledWith(
+      'biz1',
+      'b1',
+      'dismiss',
+      'user1',
+    );
     expect(result).toEqual({ success: true });
   });
 

@@ -88,10 +88,7 @@ export class BudgetTrackerService {
     const entries = await this.prisma.budgetEntry.findMany({
       where: {
         businessId,
-        OR: [
-          { month: targetMonth, year: targetYear },
-          { isRecurring: true },
-        ],
+        OR: [{ month: targetMonth, year: targetYear }, { isRecurring: true }],
       },
     });
 

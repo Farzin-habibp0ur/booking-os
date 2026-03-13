@@ -18,7 +18,11 @@ const LEVEL_ORDER = ['OFF', 'SUGGEST', 'AUTO_WITH_REVIEW', 'FULL_AUTO'] as const
 const LEVEL_CONFIG: Record<string, { label: string; short: string; color: string }> = {
   OFF: { label: 'Off', short: 'Off', color: 'bg-slate-300 dark:bg-slate-600' },
   SUGGEST: { label: 'Suggest', short: 'Sug', color: 'bg-lavender-400 dark:bg-lavender-500' },
-  AUTO_WITH_REVIEW: { label: 'Auto + Review', short: 'A+R', color: 'bg-amber-500 dark:bg-amber-600' },
+  AUTO_WITH_REVIEW: {
+    label: 'Auto + Review',
+    short: 'A+R',
+    color: 'bg-amber-500 dark:bg-amber-600',
+  },
   FULL_AUTO: { label: 'Full Auto', short: 'Auto', color: 'bg-sage-500 dark:bg-sage-600' },
 };
 
@@ -115,7 +119,10 @@ export function AutonomyOverview() {
         {settings.slice(0, 6).map((setting) => {
           const config = LEVEL_CONFIG[setting.autonomyLevel] || LEVEL_CONFIG.OFF;
           return (
-            <div key={setting.id || setting.actionType} className="flex items-center justify-between">
+            <div
+              key={setting.id || setting.actionType}
+              className="flex items-center justify-between"
+            >
               <p className="text-xs font-medium text-slate-700 dark:text-slate-300 truncate">
                 {ACTION_TYPE_LABELS[setting.actionType] || setting.actionType.replace(/_/g, ' ')}
               </p>
@@ -144,10 +151,18 @@ export function AutonomyOverview() {
       )}
 
       <div className="text-[10px] text-slate-500 mt-4 pt-4 border-t border-lavender-200 dark:border-slate-800 space-x-2">
-        <span><strong>Off:</strong> Disabled</span>
-        <span><strong>Suggest:</strong> Recommends</span>
-        <span><strong>A+R:</strong> Auto with review</span>
-        <span><strong>Auto:</strong> Fully autonomous</span>
+        <span>
+          <strong>Off:</strong> Disabled
+        </span>
+        <span>
+          <strong>Suggest:</strong> Recommends
+        </span>
+        <span>
+          <strong>A+R:</strong> Auto with review
+        </span>
+        <span>
+          <strong>Auto:</strong> Fully autonomous
+        </span>
       </div>
     </div>
   );

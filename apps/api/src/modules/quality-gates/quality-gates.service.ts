@@ -36,7 +36,11 @@ export class QualityGateService {
       case 'GATE_4':
         return this.evaluateGate4(draft, metadata);
       default:
-        return { passed: false, gate, checks: [{ name: 'valid_gate', passed: false, message: `Unknown gate: ${gate}` }] };
+        return {
+          passed: false,
+          gate,
+          checks: [{ name: 'valid_gate', passed: false, message: `Unknown gate: ${gate}` }],
+        };
     }
   }
 
@@ -47,32 +51,44 @@ export class QualityGateService {
     checks.push({
       name: 'topic_relevance',
       passed: relevanceScore >= 0.7,
-      message: relevanceScore >= 0.7 ? 'Topic relevance score adequate' : `Topic relevance ${relevanceScore} below threshold 0.7`,
+      message:
+        relevanceScore >= 0.7
+          ? 'Topic relevance score adequate'
+          : `Topic relevance ${relevanceScore} below threshold 0.7`,
     });
 
     const keywordDensity = metadata.keywordDensity ?? 0;
     checks.push({
       name: 'keyword_density',
       passed: keywordDensity >= 1 && keywordDensity <= 3,
-      message: keywordDensity >= 1 && keywordDensity <= 3 ? 'Keyword density within range' : `Keyword density ${keywordDensity}% outside 1-3% range`,
+      message:
+        keywordDensity >= 1 && keywordDensity <= 3
+          ? 'Keyword density within range'
+          : `Keyword density ${keywordDensity}% outside 1-3% range`,
     });
 
     checks.push({
       name: 'source_citations',
       passed: !!metadata.sourceCitations?.length,
-      message: metadata.sourceCitations?.length ? 'Source citations present' : 'Missing source citations',
+      message: metadata.sourceCitations?.length
+        ? 'Source citations present'
+        : 'Missing source citations',
     });
 
     checks.push({
       name: 'competitor_analysis',
       passed: !!metadata.competitorAnalysisDone,
-      message: metadata.competitorAnalysisDone ? 'Competitor analysis completed' : 'Competitor analysis not done',
+      message: metadata.competitorAnalysisDone
+        ? 'Competitor analysis completed'
+        : 'Competitor analysis not done',
     });
 
     checks.push({
       name: 'audience_match',
       passed: !!metadata.audienceMatchVerified,
-      message: metadata.audienceMatchVerified ? 'Audience match verified' : 'Audience match not verified',
+      message: metadata.audienceMatchVerified
+        ? 'Audience match verified'
+        : 'Audience match not verified',
     });
 
     const passed = checks.every((c) => c.passed);
@@ -88,7 +104,10 @@ export class QualityGateService {
     checks.push({
       name: 'readability',
       passed: readabilityScore >= 60,
-      message: readabilityScore >= 60 ? 'Readability score adequate' : `Flesch score ${readabilityScore} below 60`,
+      message:
+        readabilityScore >= 60
+          ? 'Readability score adequate'
+          : `Flesch score ${readabilityScore} below 60`,
     });
 
     checks.push({
@@ -100,10 +119,14 @@ export class QualityGateService {
     checks.push({
       name: 'brand_voice',
       passed: !!metadata.brandVoiceConsistent,
-      message: metadata.brandVoiceConsistent ? 'Brand voice consistent' : 'Brand voice mismatch detected',
+      message: metadata.brandVoiceConsistent
+        ? 'Brand voice consistent'
+        : 'Brand voice mismatch detected',
     });
 
-    const hasCta = !!metadata.ctaPresent || /\b(sign up|get started|book now|try free|learn more|start|subscribe)\b/i.test(draft.body);
+    const hasCta =
+      !!metadata.ctaPresent ||
+      /\b(sign up|get started|book now|try free|learn more|start|subscribe)\b/i.test(draft.body);
     checks.push({
       name: 'cta_present',
       passed: hasCta,
@@ -122,7 +145,10 @@ export class QualityGateService {
     checks.push({
       name: 'word_count',
       passed: wordCount >= minWords && wordCount <= maxWords,
-      message: wordCount >= minWords && wordCount <= maxWords ? `Word count ${wordCount} within range` : `Word count ${wordCount} outside ${minWords}-${maxWords} range`,
+      message:
+        wordCount >= minWords && wordCount <= maxWords
+          ? `Word count ${wordCount} within range`
+          : `Word count ${wordCount} outside ${minWords}-${maxWords} range`,
     });
 
     const passed = checks.every((c) => c.passed);
@@ -140,7 +166,9 @@ export class QualityGateService {
     checks.push({
       name: 'file_naming',
       passed: hasValidName,
-      message: hasValidName ? 'File naming convention correct' : `Slug "${slug}" does not match YYYY-MM-DD-TIER-PLATFORM-LANG-slug-title format`,
+      message: hasValidName
+        ? 'File naming convention correct'
+        : `Slug "${slug}" does not match YYYY-MM-DD-TIER-PLATFORM-LANG-slug-title format`,
     });
 
     const requiredMeta = ['pillar', 'contentType', 'channel'];
@@ -160,19 +188,28 @@ export class QualityGateService {
     checks.push({
       name: 'pillar_balance',
       passed: metadata.pillarBalanceOk !== false,
-      message: metadata.pillarBalanceOk !== false ? 'Pillar balance acceptable' : 'Pillar imbalance detected',
+      message:
+        metadata.pillarBalanceOk !== false
+          ? 'Pillar balance acceptable'
+          : 'Pillar imbalance detected',
     });
 
     checks.push({
       name: 'scheduling_slot',
       passed: metadata.schedulingSlotAvailable !== false,
-      message: metadata.schedulingSlotAvailable !== false ? 'Scheduling slot available' : 'No scheduling slot available',
+      message:
+        metadata.schedulingSlotAvailable !== false
+          ? 'Scheduling slot available'
+          : 'No scheduling slot available',
     });
 
     checks.push({
       name: 'no_duplicates',
       passed: metadata.duplicateCheckPassed !== false,
-      message: metadata.duplicateCheckPassed !== false ? 'No duplicate content detected' : 'Duplicate content detected',
+      message:
+        metadata.duplicateCheckPassed !== false
+          ? 'No duplicate content detected'
+          : 'Duplicate content detected',
     });
 
     const passed = checks.every((c) => c.passed);
@@ -195,7 +232,9 @@ export class QualityGateService {
     checks.push({
       name: 'platform_formatting',
       passed: !!metadata.platformFormattingVerified,
-      message: metadata.platformFormattingVerified ? 'Platform-specific formatting verified' : 'Platform formatting not verified',
+      message: metadata.platformFormattingVerified
+        ? 'Platform-specific formatting verified'
+        : 'Platform formatting not verified',
     });
 
     checks.push({
@@ -213,7 +252,10 @@ export class QualityGateService {
     checks.push({
       name: 'publishing_window',
       passed: metadata.publishingWindowOptimal !== false,
-      message: metadata.publishingWindowOptimal !== false ? 'Publishing window optimal' : 'Outside optimal publishing window',
+      message:
+        metadata.publishingWindowOptimal !== false
+          ? 'Publishing window optimal'
+          : 'Outside optimal publishing window',
     });
 
     const passed = checks.every((c) => c.passed);

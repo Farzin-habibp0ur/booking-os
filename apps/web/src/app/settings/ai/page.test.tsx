@@ -186,10 +186,9 @@ describe('AiSettingsPage', () => {
     fireEvent.click(screen.getByTestId('marketing-master-toggle'));
 
     await waitFor(() => {
-      expect(mockApi.patch).toHaveBeenCalledWith(
-        '/autonomy-settings/GREEN_CONTENT_PUBLISH',
-        { autonomyLevel: 'OFF' },
-      );
+      expect(mockApi.patch).toHaveBeenCalledWith('/autonomy-settings/GREEN_CONTENT_PUBLISH', {
+        autonomyLevel: 'OFF',
+      });
     });
   });
 
@@ -221,10 +220,9 @@ describe('AiSettingsPage', () => {
     fireEvent.click(screen.getByTestId('autonomy-FULL_AUTO'));
 
     await waitFor(() => {
-      expect(mockApi.patch).toHaveBeenCalledWith(
-        '/autonomy-settings/GREEN_CONTENT_PUBLISH',
-        { autonomyLevel: 'FULL_AUTO' },
-      );
+      expect(mockApi.patch).toHaveBeenCalledWith('/autonomy-settings/GREEN_CONTENT_PUBLISH', {
+        autonomyLevel: 'FULL_AUTO',
+      });
     });
   });
 

@@ -111,33 +111,27 @@ export class DashboardBriefingService {
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
 
-    const [
-      contentDrafts,
-      prevContentDrafts,
-      rejectionLogs,
-      agentRuns,
-      budgetEntries,
-      actionCards,
-    ] = await Promise.all([
-      this.prisma.contentDraft.count({
-        where: { businessId, createdAt: { gte: monthStart } },
-      }),
-      this.prisma.contentDraft.count({
-        where: { businessId, createdAt: { gte: prevMonthStart, lt: monthStart } },
-      }),
-      this.prisma.rejectionLog.count({
-        where: { businessId, createdAt: { gte: monthStart } },
-      }),
-      this.prisma.agentRun.count({
-        where: { businessId, startedAt: { gte: monthStart } },
-      }),
-      this.prisma.budgetEntry.findMany({
-        where: { businessId, month: now.getMonth() + 1, year: now.getFullYear() },
-      }),
-      this.prisma.actionCard.count({
-        where: { businessId, createdAt: { gte: monthStart }, status: 'EXECUTED' },
-      }),
-    ]);
+    const [contentDrafts, prevContentDrafts, rejectionLogs, agentRuns, budgetEntries, actionCards] =
+      await Promise.all([
+        this.prisma.contentDraft.count({
+          where: { businessId, createdAt: { gte: monthStart } },
+        }),
+        this.prisma.contentDraft.count({
+          where: { businessId, createdAt: { gte: prevMonthStart, lt: monthStart } },
+        }),
+        this.prisma.rejectionLog.count({
+          where: { businessId, createdAt: { gte: monthStart } },
+        }),
+        this.prisma.agentRun.count({
+          where: { businessId, startedAt: { gte: monthStart } },
+        }),
+        this.prisma.budgetEntry.findMany({
+          where: { businessId, month: now.getMonth() + 1, year: now.getFullYear() },
+        }),
+        this.prisma.actionCard.count({
+          where: { businessId, createdAt: { gte: monthStart }, status: 'EXECUTED' },
+        }),
+      ]);
 
     const totalBudget = budgetEntries.reduce((sum, e) => sum + Number(e.amount), 0);
     const contentGrowth =
@@ -174,7 +168,9 @@ export class DashboardBriefingService {
     const recommendations: string[] = [];
 
     if (review.content.rejections > review.content.totalDrafts * 0.2) {
-      recommendations.push('Rejection rate above 20%. Review quality gate criteria and agent prompts.');
+      recommendations.push(
+        'Rejection rate above 20%. Review quality gate criteria and agent prompts.',
+      );
     }
     if (review.content.growthPercent < 0) {
       recommendations.push('Content output declined. Check agent scheduling and capacity.');

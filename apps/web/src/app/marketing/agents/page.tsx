@@ -55,18 +55,66 @@ const AGENT_META: Record<
   string,
   { name: string; description: string; category: 'content' | 'distribution' | 'analytics' }
 > = {
-  MKT_BLOG_WRITER: { name: 'Blog Writer', description: 'SEO blog posts with 4 value layers', category: 'content' },
-  MKT_SOCIAL_CREATOR: { name: 'Social Creator', description: 'Platform-native social content', category: 'content' },
-  MKT_EMAIL_COMPOSER: { name: 'Email Composer', description: 'Email campaigns and sequences', category: 'content' },
-  MKT_CASE_STUDY: { name: 'Case Study', description: 'Customer success case studies', category: 'content' },
-  MKT_VIDEO_SCRIPT: { name: 'Video Script', description: 'Timestamped video scripts', category: 'content' },
-  MKT_NEWSLETTER: { name: 'Newsletter', description: 'Weekly newsletter composition', category: 'content' },
-  MKT_SCHEDULER: { name: 'Content Scheduler', description: 'Optimal posting time scheduling', category: 'distribution' },
-  MKT_PUBLISHER: { name: 'Content Publisher', description: 'Cross-platform content publishing', category: 'distribution' },
-  MKT_PERF_TRACKER: { name: 'Performance Tracker', description: 'Content performance metrics', category: 'analytics' },
-  MKT_TREND_ANALYZER: { name: 'Trend Analyzer', description: 'Industry trend detection', category: 'analytics' },
-  MKT_CALENDAR_PLANNER: { name: 'Calendar Planner', description: 'Content calendar management', category: 'analytics' },
-  MKT_ROI_REPORTER: { name: 'ROI Reporter', description: 'Marketing ROI analysis', category: 'analytics' },
+  MKT_BLOG_WRITER: {
+    name: 'Blog Writer',
+    description: 'SEO blog posts with 4 value layers',
+    category: 'content',
+  },
+  MKT_SOCIAL_CREATOR: {
+    name: 'Social Creator',
+    description: 'Platform-native social content',
+    category: 'content',
+  },
+  MKT_EMAIL_COMPOSER: {
+    name: 'Email Composer',
+    description: 'Email campaigns and sequences',
+    category: 'content',
+  },
+  MKT_CASE_STUDY: {
+    name: 'Case Study',
+    description: 'Customer success case studies',
+    category: 'content',
+  },
+  MKT_VIDEO_SCRIPT: {
+    name: 'Video Script',
+    description: 'Timestamped video scripts',
+    category: 'content',
+  },
+  MKT_NEWSLETTER: {
+    name: 'Newsletter',
+    description: 'Weekly newsletter composition',
+    category: 'content',
+  },
+  MKT_SCHEDULER: {
+    name: 'Content Scheduler',
+    description: 'Optimal posting time scheduling',
+    category: 'distribution',
+  },
+  MKT_PUBLISHER: {
+    name: 'Content Publisher',
+    description: 'Cross-platform content publishing',
+    category: 'distribution',
+  },
+  MKT_PERF_TRACKER: {
+    name: 'Performance Tracker',
+    description: 'Content performance metrics',
+    category: 'analytics',
+  },
+  MKT_TREND_ANALYZER: {
+    name: 'Trend Analyzer',
+    description: 'Industry trend detection',
+    category: 'analytics',
+  },
+  MKT_CALENDAR_PLANNER: {
+    name: 'Calendar Planner',
+    description: 'Content calendar management',
+    category: 'analytics',
+  },
+  MKT_ROI_REPORTER: {
+    name: 'ROI Reporter',
+    description: 'Marketing ROI analysis',
+    category: 'analytics',
+  },
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -189,8 +237,7 @@ export default function MarketingAgentsPage() {
   const getConfigForType = (agentType: string) =>
     marketingConfigs.find((c) => c.agentType === agentType);
 
-  const getPerfForType = (agentType: string) =>
-    performance.find((p) => p.agentType === agentType);
+  const getPerfForType = (agentType: string) => performance.find((p) => p.agentType === agentType);
 
   const filteredTypes =
     tab === 'all' ? marketingTypes : marketingTypes.filter((t) => AGENT_META[t].category === tab);
@@ -455,9 +502,11 @@ export default function MarketingAgentsPage() {
                       (sum, r) => sum + (r.cardsCreated || 0),
                       0,
                     );
-                    const approvalRate = perf?.successRate ?? (agentTypeRuns.length > 0
-                      ? Math.round((completed.length / agentTypeRuns.length) * 100)
-                      : 0);
+                    const approvalRate =
+                      perf?.successRate ??
+                      (agentTypeRuns.length > 0
+                        ? Math.round((completed.length / agentTypeRuns.length) * 100)
+                        : 0);
                     const avgQuality = config?.performanceScore ?? perf?.performanceScore ?? 0;
 
                     return (
@@ -498,14 +547,22 @@ export default function MarketingAgentsPage() {
               {/* Configuration */}
               <div>
                 <h3 className="text-sm font-medium text-slate-700 mb-3">Configuration</h3>
-                <div className="rounded-xl bg-slate-50 p-4 space-y-2 text-sm" data-testid="agent-config-detail">
+                <div
+                  className="rounded-xl bg-slate-50 p-4 space-y-2 text-sm"
+                  data-testid="agent-config-detail"
+                >
                   {(() => {
                     const config = getConfigForType(selectedAgent);
                     return (
                       <>
                         <div className="flex justify-between">
                           <span className="text-slate-500">Status</span>
-                          <span className={cn('font-medium', config?.isEnabled ? 'text-sage-600' : 'text-slate-400')}>
+                          <span
+                            className={cn(
+                              'font-medium',
+                              config?.isEnabled ? 'text-sage-600' : 'text-slate-400',
+                            )}
+                          >
                             {config?.isEnabled ? 'Enabled' : 'Disabled'}
                           </span>
                         </div>
@@ -570,9 +627,7 @@ export default function MarketingAgentsPage() {
                           </span>
                         </div>
                         <div className="flex items-center gap-3 text-xs">
-                          <span className="text-slate-500">
-                            {run.cardsCreated} items
-                          </span>
+                          <span className="text-slate-500">{run.cardsCreated} items</span>
                           <span
                             className={cn(
                               'px-2 py-0.5 rounded-full font-medium',

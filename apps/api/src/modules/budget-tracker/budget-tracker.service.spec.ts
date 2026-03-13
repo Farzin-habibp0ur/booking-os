@@ -217,9 +217,7 @@ describe('BudgetTrackerService', () => {
     it('throws when already approved', async () => {
       prisma.budgetEntry.findFirst.mockResolvedValue(mockEntry as any);
 
-      await expect(service.approve('biz1', 'be1', 'FOUNDER')).rejects.toThrow(
-        BadRequestException,
-      );
+      await expect(service.approve('biz1', 'be1', 'FOUNDER')).rejects.toThrow(BadRequestException);
     });
 
     it('rejects insufficient approver role', async () => {
@@ -267,7 +265,9 @@ describe('BudgetTrackerService', () => {
 
       try {
         await service.approve('biz1', 'be1', 'FOUNDER');
-      } catch { /* expected */ }
+      } catch {
+        /* expected */
+      }
 
       expect(prisma.budgetEntry.findFirst).toHaveBeenCalledWith({
         where: { id: 'be1', businessId: 'biz1' },

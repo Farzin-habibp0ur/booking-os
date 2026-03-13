@@ -54,18 +54,66 @@ const AGENT_META: Record<
   string,
   { name: string; description: string; category: 'content' | 'distribution' | 'analytics' }
 > = {
-  MKT_BLOG_WRITER: { name: 'Blog Writer', description: 'SEO blog posts with 4 value layers', category: 'content' },
-  MKT_SOCIAL_CREATOR: { name: 'Social Creator', description: 'Platform-native social content', category: 'content' },
-  MKT_EMAIL_COMPOSER: { name: 'Email Composer', description: 'Email campaigns and sequences', category: 'content' },
-  MKT_CASE_STUDY: { name: 'Case Study', description: 'Customer success case studies', category: 'content' },
-  MKT_VIDEO_SCRIPT: { name: 'Video Script', description: 'Timestamped video scripts', category: 'content' },
-  MKT_NEWSLETTER: { name: 'Newsletter', description: 'Weekly newsletter composition', category: 'content' },
-  MKT_SCHEDULER: { name: 'Content Scheduler', description: 'Optimal posting time scheduling', category: 'distribution' },
-  MKT_PUBLISHER: { name: 'Content Publisher', description: 'Cross-platform content publishing', category: 'distribution' },
-  MKT_PERF_TRACKER: { name: 'Performance Tracker', description: 'Content performance metrics', category: 'analytics' },
-  MKT_TREND_ANALYZER: { name: 'Trend Analyzer', description: 'Industry trend detection', category: 'analytics' },
-  MKT_CALENDAR_PLANNER: { name: 'Calendar Planner', description: 'Content calendar management', category: 'analytics' },
-  MKT_ROI_REPORTER: { name: 'ROI Reporter', description: 'Marketing ROI analysis', category: 'analytics' },
+  MKT_BLOG_WRITER: {
+    name: 'Blog Writer',
+    description: 'SEO blog posts with 4 value layers',
+    category: 'content',
+  },
+  MKT_SOCIAL_CREATOR: {
+    name: 'Social Creator',
+    description: 'Platform-native social content',
+    category: 'content',
+  },
+  MKT_EMAIL_COMPOSER: {
+    name: 'Email Composer',
+    description: 'Email campaigns and sequences',
+    category: 'content',
+  },
+  MKT_CASE_STUDY: {
+    name: 'Case Study',
+    description: 'Customer success case studies',
+    category: 'content',
+  },
+  MKT_VIDEO_SCRIPT: {
+    name: 'Video Script',
+    description: 'Timestamped video scripts',
+    category: 'content',
+  },
+  MKT_NEWSLETTER: {
+    name: 'Newsletter',
+    description: 'Weekly newsletter composition',
+    category: 'content',
+  },
+  MKT_SCHEDULER: {
+    name: 'Content Scheduler',
+    description: 'Optimal posting time scheduling',
+    category: 'distribution',
+  },
+  MKT_PUBLISHER: {
+    name: 'Content Publisher',
+    description: 'Cross-platform content publishing',
+    category: 'distribution',
+  },
+  MKT_PERF_TRACKER: {
+    name: 'Performance Tracker',
+    description: 'Content performance metrics',
+    category: 'analytics',
+  },
+  MKT_TREND_ANALYZER: {
+    name: 'Trend Analyzer',
+    description: 'Industry trend detection',
+    category: 'analytics',
+  },
+  MKT_CALENDAR_PLANNER: {
+    name: 'Calendar Planner',
+    description: 'Content calendar management',
+    category: 'analytics',
+  },
+  MKT_ROI_REPORTER: {
+    name: 'ROI Reporter',
+    description: 'Marketing ROI analysis',
+    category: 'analytics',
+  },
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -99,7 +147,9 @@ export default function AgentSkillsPage() {
     try {
       const [skillsRes, configsRes, perfRes] = await Promise.all([
         api.get<AgentSkill[]>('/agent-skills').catch(() => []),
-        api.get<MarketingAgentConfig[] | { items: MarketingAgentConfig[] }>('/agent-config').catch(() => []),
+        api
+          .get<MarketingAgentConfig[] | { items: MarketingAgentConfig[] }>('/agent-config')
+          .catch(() => []),
         api.get<AgentPerformance[]>('/agent-config/performance').catch(() => []),
       ]);
       setSkills(Array.isArray(skillsRes) ? skillsRes : []);
@@ -157,9 +207,7 @@ export default function AgentSkillsPage() {
 
   // Marketing agent handlers (optimistic UI)
   const handleMktToggle = async (agentType: string, isEnabled: boolean) => {
-    setMktConfigs((prev) =>
-      prev.map((c) => (c.agentType === agentType ? { ...c, isEnabled } : c)),
-    );
+    setMktConfigs((prev) => prev.map((c) => (c.agentType === agentType ? { ...c, isEnabled } : c)));
     setMktUpdating(agentType);
     try {
       await api.patch(`/agent-config/${agentType}`, { isEnabled });
@@ -205,8 +253,7 @@ export default function AgentSkillsPage() {
     }
   };
 
-  const getConfigForType = (agentType: string) =>
-    mktConfigs.find((c) => c.agentType === agentType);
+  const getConfigForType = (agentType: string) => mktConfigs.find((c) => c.agentType === agentType);
 
   const getPerfForType = (agentType: string) =>
     mktPerformance.find((p) => p.agentType === agentType);
@@ -439,10 +486,7 @@ export default function AgentSkillsPage() {
                           <label className="text-xs font-medium text-slate-600 block mb-2">
                             Performance Summary
                           </label>
-                          <div
-                            className="grid grid-cols-4 gap-2"
-                            data-testid="mkt-perf-summary"
-                          >
+                          <div className="grid grid-cols-4 gap-2" data-testid="mkt-perf-summary">
                             <div className="rounded-lg bg-white p-2 text-center">
                               <div className="text-[10px] text-slate-500">Total Runs</div>
                               <div className="text-sm font-bold text-slate-900">

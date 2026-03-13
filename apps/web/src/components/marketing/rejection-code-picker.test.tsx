@@ -1,7 +1,11 @@
 jest.mock('@/lib/cn', () => ({ cn: (...args) => args.filter(Boolean).join(' ') }));
 
 import { render, screen, fireEvent } from '@testing-library/react';
-import { RejectionCodePicker, REJECTION_CODES, REJECTION_CODE_LABELS } from './rejection-code-picker';
+import {
+  RejectionCodePicker,
+  REJECTION_CODES,
+  REJECTION_CODE_LABELS,
+} from './rejection-code-picker';
 
 describe('RejectionCodePicker', () => {
   const onSelect = jest.fn();

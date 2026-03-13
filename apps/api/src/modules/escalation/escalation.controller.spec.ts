@@ -10,9 +10,7 @@ describe('EscalationController', () => {
       getHistory: jest.fn(),
       getStats: jest.fn(),
     };
-    controller = new EscalationController(
-      mockService as unknown as EscalationService,
-    );
+    controller = new EscalationController(mockService as unknown as EscalationService);
   });
 
   it('getHistory delegates to service with businessId and query', async () => {

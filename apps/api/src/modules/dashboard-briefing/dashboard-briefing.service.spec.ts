@@ -60,9 +60,7 @@ describe('DashboardBriefingService', () => {
     });
 
     it('falls back to type for sourceAgent', async () => {
-      prisma.actionCard.findMany.mockResolvedValue([
-        mockCard({ metadata: {} }),
-      ] as any);
+      prisma.actionCard.findMany.mockResolvedValue([mockCard({ metadata: {} })] as any);
 
       const result = await service.getBriefingFeed('biz1');
 
@@ -151,9 +149,9 @@ describe('DashboardBriefingService', () => {
     it('throws NotFoundException for missing card', async () => {
       prisma.actionCard.findFirst.mockResolvedValue(null);
 
-      await expect(
-        service.executeBriefingAction('biz1', 'missing', 'approve'),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.executeBriefingAction('biz1', 'missing', 'approve')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('returns card unchanged for unknown action', async () => {
@@ -174,10 +172,7 @@ describe('DashboardBriefingService', () => {
         .mockResolvedValueOnce(20); // previous month
       prisma.rejectionLog.count.mockResolvedValue(5);
       prisma.agentRun.count.mockResolvedValue(100);
-      prisma.budgetEntry.findMany.mockResolvedValue([
-        { amount: 50 },
-        { amount: 100 },
-      ] as any);
+      prisma.budgetEntry.findMany.mockResolvedValue([{ amount: 50 }, { amount: 100 }] as any);
       prisma.actionCard.count.mockResolvedValue(45);
 
       const result = await service.getMonthlyReview('biz1');
@@ -192,9 +187,7 @@ describe('DashboardBriefingService', () => {
     });
 
     it('handles zero previous month', async () => {
-      prisma.contentDraft.count
-        .mockResolvedValueOnce(10)
-        .mockResolvedValueOnce(0);
+      prisma.contentDraft.count.mockResolvedValueOnce(10).mockResolvedValueOnce(0);
       prisma.rejectionLog.count.mockResolvedValue(0);
       prisma.agentRun.count.mockResolvedValue(0);
       prisma.budgetEntry.findMany.mockResolvedValue([]);
@@ -208,9 +201,7 @@ describe('DashboardBriefingService', () => {
 
   describe('generateMonthlyReview', () => {
     it('includes recommendations for high rejection rate', async () => {
-      prisma.contentDraft.count
-        .mockResolvedValueOnce(10)
-        .mockResolvedValueOnce(10);
+      prisma.contentDraft.count.mockResolvedValueOnce(10).mockResolvedValueOnce(10);
       prisma.rejectionLog.count.mockResolvedValue(5); // 50% rejection rate
       prisma.agentRun.count.mockResolvedValue(10);
       prisma.budgetEntry.findMany.mockResolvedValue([{ amount: 100 }] as any);
@@ -232,9 +223,7 @@ describe('DashboardBriefingService', () => {
 
       const result = await service.generateMonthlyReview('biz1');
 
-      expect(result.recommendations).toContainEqual(
-        expect.stringContaining('No budget allocated'),
-      );
+      expect(result.recommendations).toContainEqual(expect.stringContaining('No budget allocated'));
     });
 
     it('includes recommendation when no agent runs', async () => {
@@ -270,7 +259,9 @@ describe('DashboardBriefingService', () => {
 
       try {
         await service.executeBriefingAction('biz1', 'ac1', 'approve');
-      } catch { /* expected */ }
+      } catch {
+        /* expected */
+      }
 
       expect(prisma.actionCard.findFirst).toHaveBeenCalledWith({
         where: { id: 'ac1', businessId: 'biz1' },

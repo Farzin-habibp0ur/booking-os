@@ -203,10 +203,9 @@ describe('AutonomySettingsPage', () => {
     });
 
     await waitFor(() => {
-      expect(mockApi.patch).toHaveBeenCalledWith(
-        '/autonomy-settings/GREEN_CONTENT_PUBLISH',
-        { autonomyLevel: 'FULL_AUTO' },
-      );
+      expect(mockApi.patch).toHaveBeenCalledWith('/autonomy-settings/GREEN_CONTENT_PUBLISH', {
+        autonomyLevel: 'FULL_AUTO',
+      });
     });
   });
 

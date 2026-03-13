@@ -20,8 +20,26 @@ describe('AbTestingService', () => {
     createdAt: new Date('2026-03-01'),
     updatedAt: new Date('2026-03-01'),
     variants: [
-      { id: 'v1', variantLabel: 'control', impressions: 500, clicks: 50, conversions: 10, engagementScore: 0.1, isWinner: false, metadata: { text: 'Sign Up' } },
-      { id: 'v2', variantLabel: 'test', impressions: 500, clicks: 75, conversions: 15, engagementScore: 0.15, isWinner: false, metadata: { text: 'Get Started' } },
+      {
+        id: 'v1',
+        variantLabel: 'control',
+        impressions: 500,
+        clicks: 50,
+        conversions: 10,
+        engagementScore: 0.1,
+        isWinner: false,
+        metadata: { text: 'Sign Up' },
+      },
+      {
+        id: 'v2',
+        variantLabel: 'test',
+        impressions: 500,
+        clicks: 75,
+        conversions: 15,
+        engagementScore: 0.15,
+        isWinner: false,
+        metadata: { text: 'Get Started' },
+      },
     ],
   };
 
@@ -193,7 +211,11 @@ describe('AbTestingService', () => {
         startedAt,
       } as any);
       prisma.aBTestVariant.update.mockResolvedValue({} as any);
-      prisma.aBTest.update.mockResolvedValue({ ...mockTest, status: 'COMPLETED', winnerVariantId: 'v2' } as any);
+      prisma.aBTest.update.mockResolvedValue({
+        ...mockTest,
+        status: 'COMPLETED',
+        winnerVariantId: 'v2',
+      } as any);
 
       await service.complete('biz1', 'test1');
 
@@ -254,7 +276,11 @@ describe('AbTestingService', () => {
     it('findOne filters by businessId', async () => {
       prisma.aBTest.findFirst.mockResolvedValue(null);
 
-      try { await service.findOne('biz1', 'test1'); } catch { /* expected */ }
+      try {
+        await service.findOne('biz1', 'test1');
+      } catch {
+        /* expected */
+      }
 
       expect(prisma.aBTest.findFirst).toHaveBeenCalledWith({
         where: { id: 'test1', businessId: 'biz1' },

@@ -1,11 +1,4 @@
-import {
-  IsString,
-  IsOptional,
-  IsNumber,
-  IsBoolean,
-  IsIn,
-  IsObject,
-} from 'class-validator';
+import { IsString, IsOptional, IsNumber, IsBoolean, IsIn, IsObject } from 'class-validator';
 
 export class CreateBudgetEntryDto {
   @IsString()

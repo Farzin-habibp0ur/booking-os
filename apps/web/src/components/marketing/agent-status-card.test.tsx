@@ -86,22 +86,12 @@ describe('AgentStatusCard', () => {
   });
 
   it('shows latest run status', () => {
-    render(
-      <AgentStatusCard
-        {...baseProps}
-        latestRun={{ status: 'COMPLETED', cardsCreated: 5 }}
-      />,
-    );
+    render(<AgentStatusCard {...baseProps} latestRun={{ status: 'COMPLETED', cardsCreated: 5 }} />);
     expect(screen.getByTestId('last-run-status')).toHaveTextContent('5 created');
   });
 
   it('shows FAILED run status', () => {
-    render(
-      <AgentStatusCard
-        {...baseProps}
-        latestRun={{ status: 'FAILED', cardsCreated: 0 }}
-      />,
-    );
+    render(<AgentStatusCard {...baseProps} latestRun={{ status: 'FAILED', cardsCreated: 0 }} />);
     expect(screen.getByTestId('last-run-status')).toHaveTextContent('FAILED');
   });
 

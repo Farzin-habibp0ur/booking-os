@@ -251,10 +251,7 @@ export class ActionCardService {
     ]);
 
     return {
-      byPriority: byPriority.reduce(
-        (acc: any, r: any) => ({ ...acc, [r.priority]: r._count }),
-        {},
-      ),
+      byPriority: byPriority.reduce((acc: any, r: any) => ({ ...acc, [r.priority]: r._count }), {}),
       byStatus: byStatus.reduce((acc: any, r: any) => ({ ...acc, [r.status]: r._count }), {}),
     };
   }

@@ -86,15 +86,32 @@ export default function AIOverviewPage() {
             {/* Content Status Row */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <MiniStat icon={<FileText size={16} />} label="Total Content" value={totalContent} />
-              <MiniStat icon={<Target size={16} />} label="Published" value={publishedCount} color="text-green-600" />
-              <MiniStat icon={<FileText size={16} />} label="Drafts" value={draftCount} color="text-amber-600" />
-              <MiniStat icon={<BarChart3 size={16} />} label="In Review" value={reviewCount} color="text-lavender-600" />
+              <MiniStat
+                icon={<Target size={16} />}
+                label="Published"
+                value={publishedCount}
+                color="text-green-600"
+              />
+              <MiniStat
+                icon={<FileText size={16} />}
+                label="Drafts"
+                value={draftCount}
+                color="text-amber-600"
+              />
+              <MiniStat
+                icon={<BarChart3 size={16} />}
+                label="In Review"
+                value={reviewCount}
+                color="text-lavender-600"
+              />
             </div>
 
             {/* Tier Distribution */}
             {contentStats?.byTier && Object.keys(contentStats.byTier).length > 0 && (
               <div>
-                <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-2">Content Tier Distribution</p>
+                <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-2">
+                  Content Tier Distribution
+                </p>
                 <div className="flex gap-1 h-3 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800">
                   {Object.entries(contentStats.byTier).map(([tier, count]) => {
                     const total = Object.values(contentStats.byTier!).reduce((s, v) => s + v, 0);
@@ -104,7 +121,11 @@ export default function AIOverviewPage() {
                         key={tier}
                         className={cn(
                           'h-full',
-                          tier === 'GREEN' ? 'bg-green-500' : tier === 'YELLOW' ? 'bg-amber-500' : 'bg-red-500',
+                          tier === 'GREEN'
+                            ? 'bg-green-500'
+                            : tier === 'YELLOW'
+                              ? 'bg-amber-500'
+                              : 'bg-red-500',
                         )}
                         style={{ width: `${pct}%` }}
                         title={`${tier}: ${count} (${Math.round(pct)}%)`}
@@ -125,12 +146,21 @@ export default function AIOverviewPage() {
             {/* Pillar Balance */}
             {pillarBalance.length > 0 && (
               <div>
-                <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-2">Pillar Balance</p>
+                <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-2">
+                  Pillar Balance
+                </p>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
                   {pillarBalance.map((p) => (
-                    <div key={p.pillar} className="flex items-center justify-between bg-slate-50 dark:bg-slate-800 rounded-lg px-3 py-2">
-                      <span className="text-xs text-slate-700 dark:text-slate-300 truncate">{p.pillar}</span>
-                      <span className="text-xs font-medium text-lavender-600 ml-2">{Math.round(p.percentage)}%</span>
+                    <div
+                      key={p.pillar}
+                      className="flex items-center justify-between bg-slate-50 dark:bg-slate-800 rounded-lg px-3 py-2"
+                    >
+                      <span className="text-xs text-slate-700 dark:text-slate-300 truncate">
+                        {p.pillar}
+                      </span>
+                      <span className="text-xs font-medium text-lavender-600 ml-2">
+                        {Math.round(p.percentage)}%
+                      </span>
                     </div>
                   ))}
                 </div>

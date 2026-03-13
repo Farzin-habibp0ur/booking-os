@@ -10,9 +10,7 @@ describe('QualityGateController', () => {
       evaluateGate: jest.fn(),
       getGateStatus: jest.fn(),
     };
-    controller = new QualityGateController(
-      mockService as unknown as QualityGateService,
-    );
+    controller = new QualityGateController(mockService as unknown as QualityGateService);
   });
 
   it('evaluateGate delegates to service with businessId, draftId, and gate', async () => {

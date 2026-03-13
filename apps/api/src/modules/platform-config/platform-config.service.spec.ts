@@ -114,9 +114,9 @@ describe('PlatformConfigService', () => {
     it('rejects phase downgrade from ACTIVE to LOCKED', async () => {
       prisma.platformConfig.findUnique.mockResolvedValue(mockConfig as any);
 
-      await expect(
-        service.update('biz1', 'INSTAGRAM', { phase: 'LOCKED' }),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.update('biz1', 'INSTAGRAM', { phase: 'LOCKED' })).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('allows phase upgrade from ACTIVE to SCALING', async () => {
@@ -137,9 +137,7 @@ describe('PlatformConfigService', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0].platform).toBe('INSTAGRAM');
-      expect(result[0].windows).toEqual(
-        expect.objectContaining({ days: ['TUE', 'WED', 'THU'] }),
-      );
+      expect(result[0].windows).toEqual(expect.objectContaining({ days: ['TUE', 'WED', 'THU'] }));
     });
 
     it('filters by non-LOCKED and enabled', async () => {

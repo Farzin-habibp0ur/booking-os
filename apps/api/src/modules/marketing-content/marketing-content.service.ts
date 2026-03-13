@@ -295,10 +295,7 @@ export class MarketingContentService {
 
     return {
       byStatus: byStatus.reduce((acc: any, r: any) => ({ ...acc, [r.status]: r._count }), {}),
-      byTier: byTier.reduce(
-        (acc: any, r: any) => ({ ...acc, [r.tier || 'UNSET']: r._count }),
-        {},
-      ),
+      byTier: byTier.reduce((acc: any, r: any) => ({ ...acc, [r.tier || 'UNSET']: r._count }), {}),
       byContentType: byContentType.reduce(
         (acc: any, r: any) => ({ ...acc, [r.contentType]: r._count }),
         {},

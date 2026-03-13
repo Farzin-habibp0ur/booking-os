@@ -6,20 +6,41 @@ import { QueryEscalationDto } from './dto';
 const YELLOW_TRIGGERS = [
   { type: 'MENTIONS_PRICING', pattern: /\b(price|pricing|cost|fee|discount|free trial)\b/i },
   { type: 'COMPETITOR_NAMES', pattern: /\b(calendly|acuity|mindbody|vagaro|fresha|square)\b/i },
-  { type: 'GUARANTEES_PROMISES', pattern: /\b(guarantee|promise|ensure|100%|always|never fail)\b/i },
-  { type: 'LEGAL_COMPLIANCE', pattern: /\b(hipaa|gdpr|compliant|certified|regulation|privacy policy)\b/i },
+  {
+    type: 'GUARANTEES_PROMISES',
+    pattern: /\b(guarantee|promise|ensure|100%|always|never fail)\b/i,
+  },
+  {
+    type: 'LEGAL_COMPLIANCE',
+    pattern: /\b(hipaa|gdpr|compliant|certified|regulation|privacy policy)\b/i,
+  },
   { type: 'NEGATIVE_SENTIMENT', pattern: /\b(worst|terrible|awful|horrible|hate|disgusting)\b/i },
-  { type: 'RELIGIOUS_POLITICAL', pattern: /\b(church|mosque|temple|democrat|republican|liberal|conservative|election)\b/i },
+  {
+    type: 'RELIGIOUS_POLITICAL',
+    pattern: /\b(church|mosque|temple|democrat|republican|liberal|conservative|election)\b/i,
+  },
 ];
 
 const RED_TRIGGERS = [
   { type: 'REVENUE_CLAIMS', pattern: /\b(earn|revenue|income|made \$|gross|net profit)\b/i },
   { type: 'ROI_GUARANTEES', pattern: /\b(roi|return on investment|guaranteed.*return|10x|20x)\b/i },
-  { type: 'CONTRACT_TERMS', pattern: /\b(contract|binding|terms and conditions|agreement|liability)\b/i },
+  {
+    type: 'CONTRACT_TERMS',
+    pattern: /\b(contract|binding|terms and conditions|agreement|liability)\b/i,
+  },
   { type: 'LEGAL_DISCLAIMERS', pattern: /\b(disclaimer|not liable|no warranty|as-is|indemnif)\b/i },
-  { type: 'FOUNDER_QUOTES', pattern: /\b(our (ceo|founder|cto) (said|believes|stated)|according to our founder)\b/i },
-  { type: 'CLIENT_DATA', pattern: /\b(case study.*client|client.*name|real.*result|actual.*customer)\b/i },
-  { type: 'PRESS_RELEASE', pattern: /\b(press release|for immediate release|media contact|pr newswire)\b/i },
+  {
+    type: 'FOUNDER_QUOTES',
+    pattern: /\b(our (ceo|founder|cto) (said|believes|stated)|according to our founder)\b/i,
+  },
+  {
+    type: 'CLIENT_DATA',
+    pattern: /\b(case study.*client|client.*name|real.*result|actual.*customer)\b/i,
+  },
+  {
+    type: 'PRESS_RELEASE',
+    pattern: /\b(press release|for immediate release|media contact|pr newswire)\b/i,
+  },
 ];
 
 @Injectable()
@@ -28,11 +49,10 @@ export class EscalationService {
 
   constructor(private prisma: PrismaService) {}
 
-  evaluateAutoEscalation(content: {
-    title: string;
-    body: string;
-    tier?: string | null;
-  }): { tier: string; triggers: string[] } {
+  evaluateAutoEscalation(content: { title: string; body: string; tier?: string | null }): {
+    tier: string;
+    triggers: string[];
+  } {
     const text = `${content.title} ${content.body}`;
     const triggers: string[] = [];
     let tier = content.tier || 'GREEN';
@@ -126,10 +146,7 @@ export class EscalationService {
         (acc: any, r: any) => ({ ...acc, [r.triggerType]: r._count }),
         {},
       ),
-      bySeverity: bySeverity.reduce(
-        (acc: any, r: any) => ({ ...acc, [r.severity]: r._count }),
-        {},
-      ),
+      bySeverity: bySeverity.reduce((acc: any, r: any) => ({ ...acc, [r.severity]: r._count }), {}),
     };
   }
 }

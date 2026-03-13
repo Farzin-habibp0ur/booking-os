@@ -788,7 +788,8 @@ export class EmailSequenceService {
       };
     });
 
-    const completionRate = totalEnrolled > 0 ? Math.round((completed / totalEnrolled) * 10000) / 100 : 0;
+    const completionRate =
+      totalEnrolled > 0 ? Math.round((completed / totalEnrolled) * 10000) / 100 : 0;
 
     return {
       sequenceId,

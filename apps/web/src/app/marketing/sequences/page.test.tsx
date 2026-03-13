@@ -251,9 +251,7 @@ describe('EmailSequencesPage', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('bottleneck-suggestion')).toBeInTheDocument();
-      expect(
-        screen.getByText(/Consider making the CTA more prominent/),
-      ).toBeInTheDocument();
+      expect(screen.getByText(/Consider making the CTA more prominent/)).toBeInTheDocument();
     });
   });
 

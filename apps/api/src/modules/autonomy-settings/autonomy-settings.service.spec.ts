@@ -41,9 +41,7 @@ describe('AutonomySettingsService', () => {
     });
 
     it('budget allocation defaults to OFF', () => {
-      const budget = DEFAULT_MARKETING_AUTONOMY.find(
-        (d) => d.actionType === 'BUDGET_ALLOCATION',
-      );
+      const budget = DEFAULT_MARKETING_AUTONOMY.find((d) => d.actionType === 'BUDGET_ALLOCATION');
       expect(budget?.defaultLevel).toBe('OFF');
     });
 

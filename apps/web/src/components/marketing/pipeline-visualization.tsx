@@ -33,10 +33,7 @@ export function PipelineVisualization({
   return (
     <div
       data-testid="pipeline-visualization"
-      className={cn(
-        'rounded-2xl bg-white p-5 shadow-soft border border-slate-100',
-        className,
-      )}
+      className={cn('rounded-2xl bg-white p-5 shadow-soft border border-slate-100', className)}
     >
       <div className="flex items-center justify-between">
         {PIPELINE_STAGES.map((stage, idx) => {
@@ -52,9 +49,7 @@ export function PipelineVisualization({
                 <div
                   className={cn(
                     'w-10 h-10 rounded-xl flex items-center justify-center mb-1.5',
-                    isActive
-                      ? 'bg-lavender-100 text-lavender-700'
-                      : 'bg-slate-100 text-slate-500',
+                    isActive ? 'bg-lavender-100 text-lavender-700' : 'bg-slate-100 text-slate-500',
                   )}
                 >
                   <Icon size={18} />

@@ -10,14 +10,42 @@ export interface AutonomySettingDef {
 }
 
 export const DEFAULT_MARKETING_AUTONOMY: AutonomySettingDef[] = [
-  { actionType: 'GREEN_CONTENT_PUBLISH', defaultLevel: 'AUTO_WITH_REVIEW', description: 'Publish GREEN tier content' },
-  { actionType: 'YELLOW_CONTENT_PUBLISH', defaultLevel: 'SUGGEST', description: 'Publish YELLOW tier content' },
-  { actionType: 'RED_CONTENT_PUBLISH', defaultLevel: 'OFF', description: 'Publish RED tier content (always manual)' },
-  { actionType: 'EMAIL_SEQUENCE_TRIGGER', defaultLevel: 'AUTO_WITH_REVIEW', description: 'Trigger email sequences' },
-  { actionType: 'SOCIAL_MEDIA_POSTING', defaultLevel: 'SUGGEST', description: 'Post to social media' },
-  { actionType: 'BUDGET_ALLOCATION', defaultLevel: 'OFF', description: 'Allocate marketing budget' },
+  {
+    actionType: 'GREEN_CONTENT_PUBLISH',
+    defaultLevel: 'AUTO_WITH_REVIEW',
+    description: 'Publish GREEN tier content',
+  },
+  {
+    actionType: 'YELLOW_CONTENT_PUBLISH',
+    defaultLevel: 'SUGGEST',
+    description: 'Publish YELLOW tier content',
+  },
+  {
+    actionType: 'RED_CONTENT_PUBLISH',
+    defaultLevel: 'OFF',
+    description: 'Publish RED tier content (always manual)',
+  },
+  {
+    actionType: 'EMAIL_SEQUENCE_TRIGGER',
+    defaultLevel: 'AUTO_WITH_REVIEW',
+    description: 'Trigger email sequences',
+  },
+  {
+    actionType: 'SOCIAL_MEDIA_POSTING',
+    defaultLevel: 'SUGGEST',
+    description: 'Post to social media',
+  },
+  {
+    actionType: 'BUDGET_ALLOCATION',
+    defaultLevel: 'OFF',
+    description: 'Allocate marketing budget',
+  },
   { actionType: 'AB_TEST_CREATION', defaultLevel: 'SUGGEST', description: 'Create A/B tests' },
-  { actionType: 'AGENT_SCHEDULING', defaultLevel: 'AUTO_WITH_REVIEW', description: 'Schedule agent runs' },
+  {
+    actionType: 'AGENT_SCHEDULING',
+    defaultLevel: 'AUTO_WITH_REVIEW',
+    description: 'Schedule agent runs',
+  },
 ];
 
 @Injectable()

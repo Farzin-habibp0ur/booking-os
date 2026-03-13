@@ -64,9 +64,10 @@ export function AgentDashboard() {
   }, []);
 
   const activeCount = agents.filter((a) => a.isEnabled).length;
-  const avgScore = agents.length > 0
-    ? Math.round(agents.reduce((sum, a) => sum + (a.performanceScore || 0), 0) / agents.length)
-    : 0;
+  const avgScore =
+    agents.length > 0
+      ? Math.round(agents.reduce((sum, a) => sum + (a.performanceScore || 0), 0) / agents.length)
+      : 0;
 
   if (loading) {
     return (
@@ -93,14 +94,18 @@ export function AgentDashboard() {
           icon={<Bot size={20} className="text-sage-600" />}
           label="Active Agents"
           value={`${activeCount}/${agents.length}`}
-          sublabel={activeCount === agents.length ? 'All running' : `${agents.length - activeCount} paused`}
+          sublabel={
+            activeCount === agents.length ? 'All running' : `${agents.length - activeCount} paused`
+          }
         />
         <HealthCard
           icon={<TrendingUp size={20} className="text-lavender-500" />}
           label="Avg Performance"
           value={`${avgScore}%`}
           sublabel={avgScore >= 80 ? 'Healthy' : avgScore >= 50 ? 'Moderate' : 'Needs attention'}
-          valueColor={avgScore >= 80 ? 'text-green-600' : avgScore >= 50 ? 'text-amber-600' : 'text-red-600'}
+          valueColor={
+            avgScore >= 80 ? 'text-green-600' : avgScore >= 50 ? 'text-amber-600' : 'text-red-600'
+          }
         />
         <HealthCard
           icon={<AlertTriangle size={20} className="text-red-500" />}
@@ -151,12 +156,18 @@ export function AgentDashboard() {
                       <div
                         className={cn(
                           'h-full rounded-full',
-                          agent.performanceScore >= 80 ? 'bg-green-500' : agent.performanceScore >= 50 ? 'bg-amber-500' : 'bg-red-500',
+                          agent.performanceScore >= 80
+                            ? 'bg-green-500'
+                            : agent.performanceScore >= 50
+                              ? 'bg-amber-500'
+                              : 'bg-red-500',
                         )}
                         style={{ width: `${agent.performanceScore}%` }}
                       />
                     </div>
-                    <span className="text-[9px] text-slate-400">{Math.round(agent.performanceScore)}%</span>
+                    <span className="text-[9px] text-slate-400">
+                      {Math.round(agent.performanceScore)}%
+                    </span>
                   </div>
                 )}
               </div>
@@ -168,7 +179,9 @@ export function AgentDashboard() {
       {agents.length === 0 && (
         <div className="rounded-2xl bg-white dark:bg-slate-900 p-12 shadow-soft text-center">
           <Zap className="mx-auto mb-4 text-lavender-400" size={48} />
-          <h3 className="font-serif text-lg text-slate-900 dark:text-white mb-2">No Agents Configured</h3>
+          <h3 className="font-serif text-lg text-slate-900 dark:text-white mb-2">
+            No Agents Configured
+          </h3>
           <p className="text-slate-600 dark:text-slate-400">
             Configure marketing agents to start automating your content pipeline.
           </p>
@@ -197,7 +210,12 @@ function HealthCard({
         {icon}
         <p className="text-xs text-slate-600 dark:text-slate-400">{label}</p>
       </div>
-      <p className={cn('font-serif text-2xl font-bold', valueColor || 'text-slate-900 dark:text-white')}>
+      <p
+        className={cn(
+          'font-serif text-2xl font-bold',
+          valueColor || 'text-slate-900 dark:text-white',
+        )}
+      >
         {value}
       </p>
       <p className="text-[11px] text-slate-500 mt-0.5">{sublabel}</p>

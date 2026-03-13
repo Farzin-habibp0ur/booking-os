@@ -13,9 +13,7 @@ describe('AgentConfigController', () => {
       update: jest.fn(),
       runNow: jest.fn(),
     };
-    controller = new AgentConfigController(
-      mockService as unknown as AgentConfigService,
-    );
+    controller = new AgentConfigController(mockService as unknown as AgentConfigService);
   });
 
   it('findAll delegates to service with businessId', async () => {

@@ -151,7 +151,9 @@ export default function ContentQueuePage() {
       params.set('take', '50');
 
       const [draftsRes, statsRes, balanceRes] = await Promise.all([
-        api.get<any>(`/marketing-content?${params.toString()}`).catch(() => ({ data: [], total: 0 })),
+        api
+          .get<any>(`/marketing-content?${params.toString()}`)
+          .catch(() => ({ data: [], total: 0 })),
         api.get<ContentStats>('/marketing-content/stats').catch(() => null),
         api.get<PillarBalance[]>('/marketing-content/pillar-balance').catch(() => []),
       ]);
@@ -293,16 +295,20 @@ export default function ContentQueuePage() {
                   >
                     <Icon size={18} />
                   </div>
-                  <p className={cn(
-                    'text-[11px] font-medium',
-                    isActive ? 'text-lavender-700' : 'text-slate-600 dark:text-slate-400',
-                  )}>
+                  <p
+                    className={cn(
+                      'text-[11px] font-medium',
+                      isActive ? 'text-lavender-700' : 'text-slate-600 dark:text-slate-400',
+                    )}
+                  >
                     {stage.label}
                   </p>
-                  <p className={cn(
-                    'text-lg font-bold',
-                    isActive ? 'text-lavender-700' : 'text-slate-900 dark:text-white',
-                  )}>
+                  <p
+                    className={cn(
+                      'text-lg font-bold',
+                      isActive ? 'text-lavender-700' : 'text-slate-900 dark:text-white',
+                    )}
+                  >
                     {count}
                   </p>
                 </div>
@@ -329,8 +335,25 @@ export default function ContentQueuePage() {
                 className={cn(
                   'px-3 py-1 rounded-full text-xs font-medium transition-colors',
                   tierFilter === tier
-                    ? tier === '' ? 'bg-slate-900 text-white' : cn(TIER_STYLES[tier]?.bg, TIER_STYLES[tier]?.text, 'ring-2 ring-offset-1', tier === 'GREEN' ? 'ring-green-400' : tier === 'YELLOW' ? 'ring-amber-400' : 'ring-red-400')
-                    : tier === '' ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' : cn(TIER_STYLES[tier]?.bg, TIER_STYLES[tier]?.text, 'opacity-60 hover:opacity-100'),
+                    ? tier === ''
+                      ? 'bg-slate-900 text-white'
+                      : cn(
+                          TIER_STYLES[tier]?.bg,
+                          TIER_STYLES[tier]?.text,
+                          'ring-2 ring-offset-1',
+                          tier === 'GREEN'
+                            ? 'ring-green-400'
+                            : tier === 'YELLOW'
+                              ? 'ring-amber-400'
+                              : 'ring-red-400',
+                        )
+                    : tier === ''
+                      ? 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      : cn(
+                          TIER_STYLES[tier]?.bg,
+                          TIER_STYLES[tier]?.text,
+                          'opacity-60 hover:opacity-100',
+                        ),
                 )}
                 data-testid={`tier-${tier || 'all'}`}
               >
@@ -345,7 +368,9 @@ export default function ContentQueuePage() {
             >
               <option value="">All Types</option>
               {Object.entries(CONTENT_TYPE_LABELS).map(([k, v]) => (
-                <option key={k} value={k}>{v}</option>
+                <option key={k} value={k}>
+                  {v}
+                </option>
               ))}
             </select>
             <select
@@ -356,7 +381,9 @@ export default function ContentQueuePage() {
             >
               <option value="">All Channels</option>
               {Object.entries(CHANNEL_LABELS).map(([k, v]) => (
-                <option key={k} value={k}>{v}</option>
+                <option key={k} value={k}>
+                  {v}
+                </option>
               ))}
             </select>
             <select
@@ -367,7 +394,9 @@ export default function ContentQueuePage() {
             >
               <option value="">All Pillars</option>
               {Object.keys(PILLAR_TARGETS).map((p) => (
-                <option key={p} value={p}>{p}</option>
+                <option key={p} value={p}>
+                  {p}
+                </option>
               ))}
             </select>
           </div>
@@ -477,7 +506,11 @@ export default function ContentQueuePage() {
                             <span
                               className={cn(
                                 'px-2 py-0.5 rounded-full text-[10px] font-bold',
-                                draft.qualityScore >= 80 ? 'bg-green-50 text-green-700' : draft.qualityScore >= 50 ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700',
+                                draft.qualityScore >= 80
+                                  ? 'bg-green-50 text-green-700'
+                                  : draft.qualityScore >= 50
+                                    ? 'bg-amber-50 text-amber-700'
+                                    : 'bg-red-50 text-red-700',
                               )}
                               data-testid="quality-score"
                             >
@@ -500,11 +533,11 @@ export default function ContentQueuePage() {
                             <Clock size={11} />
                             {new Date(draft.createdAt).toLocaleDateString()}
                           </span>
-                          {draft.body && (
-                            <span>{draft.body.split(/\s+/).length} words</span>
-                          )}
+                          {draft.body && <span>{draft.body.split(/\s+/).length} words</span>}
                           {draft.currentGate && (
-                            <span className="text-lavender-500">{draft.currentGate.replace('_', ' ')}</span>
+                            <span className="text-lavender-500">
+                              {draft.currentGate.replace('_', ' ')}
+                            </span>
                           )}
                         </div>
                       </div>
@@ -530,14 +563,21 @@ export default function ContentQueuePage() {
                           className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-400 hover:bg-slate-100 transition-colors"
                           data-testid="expand-btn"
                         >
-                          {expandedId === draft.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                          {expandedId === draft.id ? (
+                            <ChevronUp size={16} />
+                          ) : (
+                            <ChevronDown size={16} />
+                          )}
                         </button>
                       </div>
                     </div>
 
                     {/* Reject Form */}
                     {rejectingId === draft.id && (
-                      <div className="mt-3 p-3 bg-red-50 dark:bg-red-900/10 rounded-xl space-y-2" data-testid="reject-form">
+                      <div
+                        className="mt-3 p-3 bg-red-50 dark:bg-red-900/10 rounded-xl space-y-2"
+                        data-testid="reject-form"
+                      >
                         <select
                           value={rejectCode}
                           onChange={(e) => setRejectCode(e.target.value)}
@@ -545,7 +585,9 @@ export default function ContentQueuePage() {
                           data-testid="reject-code-select"
                         >
                           {REJECTION_CODES.map((rc) => (
-                            <option key={rc.code} value={rc.code}>{rc.label}</option>
+                            <option key={rc.code} value={rc.code}>
+                              {rc.label}
+                            </option>
                           ))}
                         </select>
                         <textarea
@@ -565,7 +607,10 @@ export default function ContentQueuePage() {
                             Confirm Reject
                           </button>
                           <button
-                            onClick={() => { setRejectingId(null); setRejectReason(''); }}
+                            onClick={() => {
+                              setRejectingId(null);
+                              setRejectReason('');
+                            }}
                             className="px-3 py-1.5 text-xs text-slate-500 hover:text-slate-700"
                           >
                             Cancel
@@ -577,7 +622,10 @@ export default function ContentQueuePage() {
 
                   {/* Expanded Content */}
                   {expandedId === draft.id && (
-                    <div className="border-t border-slate-100 dark:border-slate-800" data-testid="expanded-content">
+                    <div
+                      className="border-t border-slate-100 dark:border-slate-800"
+                      data-testid="expanded-content"
+                    >
                       {/* Full body */}
                       <div className="px-4 py-3 bg-slate-50 dark:bg-slate-800/50">
                         <p className="text-xs font-medium text-slate-600 mb-2">Full Content</p>
@@ -605,15 +653,24 @@ export default function ContentQueuePage() {
                       )}
                       {/* Rejection History */}
                       {draft.rejectionLogs && draft.rejectionLogs.length > 0 && (
-                        <div className="px-4 py-2 border-t border-slate-100 dark:border-slate-800" data-testid="rejection-history">
+                        <div
+                          className="px-4 py-2 border-t border-slate-100 dark:border-slate-800"
+                          data-testid="rejection-history"
+                        >
                           <p className="text-xs font-medium text-red-600 mb-2">Rejection History</p>
                           <div className="space-y-1.5">
                             {draft.rejectionLogs.map((log) => (
                               <div key={log.id} className="flex items-start gap-2 text-[11px]">
-                                <span className={cn(
-                                  'px-1.5 py-0.5 rounded text-[9px] font-bold',
-                                  log.severity === 'CRITICAL' ? 'bg-red-100 text-red-700' : log.severity === 'MAJOR' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600',
-                                )}>
+                                <span
+                                  className={cn(
+                                    'px-1.5 py-0.5 rounded text-[9px] font-bold',
+                                    log.severity === 'CRITICAL'
+                                      ? 'bg-red-100 text-red-700'
+                                      : log.severity === 'MAJOR'
+                                        ? 'bg-amber-100 text-amber-700'
+                                        : 'bg-slate-100 text-slate-600',
+                                  )}
+                                >
                                   {log.rejectionCode}
                                 </span>
                                 <span className="text-slate-600">{log.reason}</span>
@@ -657,10 +714,16 @@ export default function ContentQueuePage() {
                   <div key={pillar}>
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-xs text-slate-700 dark:text-slate-300">{pillar}</span>
-                      <span className={cn(
-                        'text-[10px] font-medium',
-                        Math.abs(diff) <= 5 ? 'text-green-600' : diff > 0 ? 'text-amber-600' : 'text-red-600',
-                      )}>
+                      <span
+                        className={cn(
+                          'text-[10px] font-medium',
+                          Math.abs(diff) <= 5
+                            ? 'text-green-600'
+                            : diff > 0
+                              ? 'text-amber-600'
+                              : 'text-red-600',
+                        )}
+                      >
                         {Math.round(actual)}% / {target}%
                       </span>
                     </div>
@@ -668,7 +731,11 @@ export default function ContentQueuePage() {
                       <div
                         className={cn(
                           'h-full rounded-full transition-all',
-                          Math.abs(diff) <= 5 ? 'bg-green-500' : diff > 0 ? 'bg-amber-500' : 'bg-red-400',
+                          Math.abs(diff) <= 5
+                            ? 'bg-green-500'
+                            : diff > 0
+                              ? 'bg-amber-500'
+                              : 'bg-red-400',
                         )}
                         style={{ width: `${Math.min(actual, 100)}%` }}
                       />

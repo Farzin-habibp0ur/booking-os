@@ -121,7 +121,11 @@ const mockMktReview = {
     ],
   },
   recommendations: [
-    { title: 'Increase social frequency', description: 'Post 5x/day instead of 3x', priority: 'HIGH' },
+    {
+      title: 'Increase social frequency',
+      description: 'Post 5x/day instead of 3x',
+      priority: 'HIGH',
+    },
     { title: 'Optimize blog SEO', description: 'Add internal links', priority: 'MEDIUM' },
   ],
 };

@@ -17,15 +17,21 @@ describe('ActionCardController', () => {
       snooze: jest.fn(),
       execute: jest.fn(),
     };
-    controller = new ActionCardController(
-      mockService as unknown as ActionCardService,
-    );
+    controller = new ActionCardController(mockService as unknown as ActionCardService);
   });
 
   it('findAll delegates to service with businessId and filters', async () => {
     mockService.findAll.mockResolvedValue({ data: [], total: 0 });
 
-    const result = await controller.findAll('biz1', 'PENDING', 'BOOKING', 'REMINDER', 'staff1', '2', '10');
+    const result = await controller.findAll(
+      'biz1',
+      'PENDING',
+      'BOOKING',
+      'REMINDER',
+      'staff1',
+      '2',
+      '10',
+    );
 
     expect(mockService.findAll).toHaveBeenCalledWith('biz1', {
       status: 'PENDING',

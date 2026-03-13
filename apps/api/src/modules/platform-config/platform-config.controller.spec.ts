@@ -11,9 +11,7 @@ describe('PlatformConfigController', () => {
       update: jest.fn(),
       getPublishingWindows: jest.fn(),
     };
-    controller = new PlatformConfigController(
-      mockService as unknown as PlatformConfigService,
-    );
+    controller = new PlatformConfigController(mockService as unknown as PlatformConfigService);
   });
 
   it('findAll delegates to service with businessId', async () => {
@@ -36,7 +34,9 @@ describe('PlatformConfigController', () => {
   });
 
   it('getPublishingWindows delegates to service with businessId', async () => {
-    mockService.getPublishingWindows.mockResolvedValue([{ day: 'MONDAY', startHour: 9, endHour: 17 }]);
+    mockService.getPublishingWindows.mockResolvedValue([
+      { day: 'MONDAY', startHour: 9, endHour: 17 },
+    ]);
 
     const result = await controller.getPublishingWindows('biz1');
 

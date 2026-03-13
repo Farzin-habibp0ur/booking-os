@@ -15,19 +15,13 @@ export function PillarBalanceChart({ data, className }: PillarBalanceChartProps)
   return (
     <div
       data-testid="pillar-balance-chart"
-      className={cn(
-        'rounded-2xl bg-white shadow-soft p-5 border border-slate-100',
-        className,
-      )}
+      className={cn('rounded-2xl bg-white shadow-soft p-5 border border-slate-100', className)}
     >
-      <h3 className="font-serif text-sm font-semibold text-slate-900 mb-4">
-        Pillar Balance
-      </h3>
+      <h3 className="font-serif text-sm font-semibold text-slate-900 mb-4">Pillar Balance</h3>
       <div className="space-y-3">
         {data.map(({ pillar, actual, target }) => {
           const diff = actual - target;
-          const color =
-            Math.abs(diff) <= 5 ? 'balanced' : diff > 0 ? 'over' : 'under';
+          const color = Math.abs(diff) <= 5 ? 'balanced' : diff > 0 ? 'over' : 'under';
           return (
             <div key={pillar} data-testid="pillar-row">
               <div className="flex items-center justify-between mb-1">

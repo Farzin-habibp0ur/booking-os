@@ -159,7 +159,9 @@ export class PlatformConfigService {
         ...(data.constraints && { constraints: data.constraints }),
         ...(data.metrics && { metrics: data.metrics }),
         ...(data.metadata && { metadata: data.metadata }),
-        ...(data.phase && data.phase !== 'LOCKED' && !config.unlockedAt && { unlockedAt: new Date() }),
+        ...(data.phase &&
+          data.phase !== 'LOCKED' &&
+          !config.unlockedAt && { unlockedAt: new Date() }),
       },
     });
   }

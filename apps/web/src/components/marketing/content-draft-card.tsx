@@ -1,12 +1,5 @@
 import { cn } from '@/lib/cn';
-import {
-  Check,
-  X,
-  ChevronDown,
-  ChevronUp,
-  Sparkles,
-  Clock,
-} from 'lucide-react';
+import { Check, X, ChevronDown, ChevronUp, Sparkles, Clock } from 'lucide-react';
 import { TierBadge } from './tier-badge';
 
 const CONTENT_TYPE_LABELS: Record<string, string> = {
@@ -78,9 +71,7 @@ export function ContentDraftCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap mb-1">
               <h3 className="font-medium text-slate-900 truncate">{draft.title}</h3>
-              {draft.tier && (
-                <TierBadge tier={draft.tier as 'GREEN' | 'YELLOW' | 'RED'} />
-              )}
+              {draft.tier && <TierBadge tier={draft.tier as 'GREEN' | 'YELLOW' | 'RED'} />}
               <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-600">
                 {CONTENT_TYPE_LABELS[draft.contentType] || draft.contentType}
               </span>

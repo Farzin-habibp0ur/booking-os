@@ -67,7 +67,10 @@ describe('RejectionAnalyticsService', () => {
         .mockResolvedValueOnce(10) // current week
         .mockResolvedValueOnce(8); // prev week
       prisma.rejectionLog.groupBy
-        .mockResolvedValueOnce([{ rejectionCode: 'R01', _count: 5 }, { rejectionCode: 'R03', _count: 5 }] as any)
+        .mockResolvedValueOnce([
+          { rejectionCode: 'R01', _count: 5 },
+          { rejectionCode: 'R03', _count: 5 },
+        ] as any)
         .mockResolvedValueOnce([{ agentId: 'BlogWriter', _count: 7 }] as any);
       prisma.contentDraft.count.mockResolvedValue(50);
 
@@ -82,9 +85,7 @@ describe('RejectionAnalyticsService', () => {
     });
 
     it('handles zero previous week rejections', async () => {
-      prisma.rejectionLog.count
-        .mockResolvedValueOnce(5)
-        .mockResolvedValueOnce(0);
+      prisma.rejectionLog.count.mockResolvedValueOnce(5).mockResolvedValueOnce(0);
       prisma.rejectionLog.groupBy.mockResolvedValue([] as any);
       prisma.contentDraft.count.mockResolvedValue(20);
 

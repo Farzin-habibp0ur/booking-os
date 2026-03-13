@@ -62,7 +62,9 @@ describe('PillarBalanceChart', () => {
 
   it('renders empty state without footer', () => {
     render(<PillarBalanceChart data={[]} />);
-    expect(screen.queryByText('Bars show actual %. Markers show ideal target.')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('Bars show actual %. Markers show ideal target.'),
+    ).not.toBeInTheDocument();
   });
 
   it('applies custom className', () => {
