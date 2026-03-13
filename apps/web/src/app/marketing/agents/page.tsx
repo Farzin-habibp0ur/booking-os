@@ -14,6 +14,10 @@ import {
   BarChart3,
   Send,
   FileText,
+  X,
+  TrendingUp,
+  Activity,
+  ArrowRight,
 } from 'lucide-react';
 import { ListSkeleton } from '@/components/skeleton';
 
@@ -22,6 +26,10 @@ interface AgentConfig {
   agentType: string;
   isEnabled: boolean;
   config: any;
+  runIntervalMinutes?: number;
+  lastRunAt?: string;
+  nextRunAt?: string;
+  performanceScore?: number;
 }
 
 interface AgentRun {
@@ -32,24 +40,33 @@ interface AgentRun {
   startedAt: string;
   completedAt?: string;
   error?: string;
+  errors?: any;
+}
+
+interface AgentPerformance {
+  agentType: string;
+  performanceScore: number;
+  totalRuns: number;
+  successRate: number;
+  avgItemsPerRun: number;
 }
 
 const AGENT_META: Record<
   string,
-  { name: string; category: 'content' | 'distribution' | 'analytics'; interval: string }
+  { name: string; description: string; category: 'content' | 'distribution' | 'analytics' }
 > = {
-  MKT_BLOG_WRITER: { name: 'Blog Writer', category: 'content', interval: '6h' },
-  MKT_SOCIAL_CREATOR: { name: 'Social Creator', category: 'content', interval: '4h' },
-  MKT_EMAIL_COMPOSER: { name: 'Email Composer', category: 'content', interval: '8h' },
-  MKT_CASE_STUDY: { name: 'Case Study', category: 'content', interval: '24h' },
-  MKT_VIDEO_SCRIPT: { name: 'Video Script', category: 'content', interval: '24h' },
-  MKT_NEWSLETTER: { name: 'Newsletter', category: 'content', interval: '168h' },
-  MKT_SCHEDULER: { name: 'Content Scheduler', category: 'distribution', interval: '2h' },
-  MKT_PUBLISHER: { name: 'Content Publisher', category: 'distribution', interval: '30min' },
-  MKT_PERF_TRACKER: { name: 'Performance Tracker', category: 'analytics', interval: '4h' },
-  MKT_TREND_ANALYZER: { name: 'Trend Analyzer', category: 'analytics', interval: '24h' },
-  MKT_CALENDAR_PLANNER: { name: 'Calendar Planner', category: 'analytics', interval: '24h' },
-  MKT_ROI_REPORTER: { name: 'ROI Reporter', category: 'analytics', interval: '168h' },
+  MKT_BLOG_WRITER: { name: 'Blog Writer', description: 'SEO blog posts with 4 value layers', category: 'content' },
+  MKT_SOCIAL_CREATOR: { name: 'Social Creator', description: 'Platform-native social content', category: 'content' },
+  MKT_EMAIL_COMPOSER: { name: 'Email Composer', description: 'Email campaigns and sequences', category: 'content' },
+  MKT_CASE_STUDY: { name: 'Case Study', description: 'Customer success case studies', category: 'content' },
+  MKT_VIDEO_SCRIPT: { name: 'Video Script', description: 'Timestamped video scripts', category: 'content' },
+  MKT_NEWSLETTER: { name: 'Newsletter', description: 'Weekly newsletter composition', category: 'content' },
+  MKT_SCHEDULER: { name: 'Content Scheduler', description: 'Optimal posting time scheduling', category: 'distribution' },
+  MKT_PUBLISHER: { name: 'Content Publisher', description: 'Cross-platform content publishing', category: 'distribution' },
+  MKT_PERF_TRACKER: { name: 'Performance Tracker', description: 'Content performance metrics', category: 'analytics' },
+  MKT_TREND_ANALYZER: { name: 'Trend Analyzer', description: 'Industry trend detection', category: 'analytics' },
+  MKT_CALENDAR_PLANNER: { name: 'Calendar Planner', description: 'Content calendar management', category: 'analytics' },
+  MKT_ROI_REPORTER: { name: 'ROI Reporter', description: 'Marketing ROI analysis', category: 'analytics' },
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -70,16 +87,21 @@ export default function MarketingAgentsPage() {
   const { toast } = useToast();
   const [configs, setConfigs] = useState<AgentConfig[]>([]);
   const [runs, setRuns] = useState<AgentRun[]>([]);
+  const [performance, setPerformance] = useState<AgentPerformance[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<TabFilter>('all');
   const [triggeringAgent, setTriggeringAgent] = useState<string | null>(null);
+  const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
+  const [agentRuns, setAgentRuns] = useState<AgentRun[]>([]);
+  const [loadingDetail, setLoadingDetail] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      const [configsRes, runsRes] = await Promise.all([
-        api.get<AgentConfig[] | { items: AgentConfig[] }>('/agents/config'),
-        api.get<AgentRun[] | { items: AgentRun[] }>('/agents/runs?pageSize=100'),
+      const [configsRes, runsRes, perfRes] = await Promise.all([
+        api.get<AgentConfig[] | { items: AgentConfig[] }>('/agent-config'),
+        api.get<AgentRun[] | { items: AgentRun[] }>('/agent-runs?take=100'),
+        api.get<AgentPerformance[]>('/agent-config/performance').catch(() => []),
       ]);
       setConfigs(
         Array.isArray(configsRes)
@@ -87,6 +109,7 @@ export default function MarketingAgentsPage() {
           : (configsRes as { items: AgentConfig[] }).items || [],
       );
       setRuns(Array.isArray(runsRes) ? runsRes : (runsRes as { items: AgentRun[] }).items || []);
+      setPerformance(Array.isArray(perfRes) ? perfRes : []);
     } catch {
       // handled by api client
     } finally {
@@ -98,9 +121,26 @@ export default function MarketingAgentsPage() {
     fetchData();
   }, [fetchData]);
 
+  const openAgentDetail = async (agentType: string) => {
+    setSelectedAgent(agentType);
+    setLoadingDetail(true);
+    try {
+      const runsRes = await api.get<AgentRun[] | { items: AgentRun[] }>(
+        `/agent-runs?agentType=${agentType}&take=10`,
+      );
+      setAgentRuns(
+        Array.isArray(runsRes) ? runsRes : (runsRes as { items: AgentRun[] }).items || [],
+      );
+    } catch {
+      setAgentRuns([]);
+    } finally {
+      setLoadingDetail(false);
+    }
+  };
+
   const handleToggle = async (agentType: string, isEnabled: boolean) => {
     try {
-      await api.patch(`/agents/config/${agentType}`, { isEnabled: !isEnabled });
+      await api.patch(`/agent-config/${agentType}`, { isEnabled: !isEnabled });
       toast(`Agent ${!isEnabled ? 'enabled' : 'disabled'}`, 'success');
       fetchData();
     } catch {
@@ -111,7 +151,7 @@ export default function MarketingAgentsPage() {
   const handleTrigger = async (agentType: string) => {
     try {
       setTriggeringAgent(agentType);
-      await api.post(`/agents/${agentType}/trigger`, {});
+      await api.post(`/agent-config/${agentType}/run-now`, {});
       toast('Agent triggered successfully', 'success');
       fetchData();
     } catch {
@@ -126,6 +166,13 @@ export default function MarketingAgentsPage() {
   const marketingRuns = runs.filter((r) => marketingTypes.includes(r.agentType));
 
   const enabledCount = marketingConfigs.filter((c) => c.isEnabled).length;
+  const avgPerformance =
+    marketingConfigs.length > 0
+      ? Math.round(
+          marketingConfigs.reduce((sum, c) => sum + (c.performanceScore || 0), 0) /
+            marketingConfigs.filter((c) => c.performanceScore != null).length || 0,
+        )
+      : 0;
   const draftsLast24h = marketingRuns
     .filter(
       (r) =>
@@ -142,8 +189,18 @@ export default function MarketingAgentsPage() {
   const getConfigForType = (agentType: string) =>
     marketingConfigs.find((c) => c.agentType === agentType);
 
+  const getPerfForType = (agentType: string) =>
+    performance.find((p) => p.agentType === agentType);
+
   const filteredTypes =
     tab === 'all' ? marketingTypes : marketingTypes.filter((t) => AGENT_META[t].category === tab);
+
+  const formatInterval = (minutes?: number) => {
+    if (!minutes) return 'Manual';
+    if (minutes < 60) return `${minutes}min`;
+    if (minutes < 1440) return `${Math.floor(minutes / 60)}h`;
+    return `${Math.floor(minutes / 1440)}d`;
+  };
 
   return (
     <div className="space-y-6" data-testid="marketing-agents-page">
@@ -175,9 +232,9 @@ export default function MarketingAgentsPage() {
           </div>
         </div>
         <div className="rounded-2xl bg-emerald-50 p-4">
-          <div className="text-sm text-emerald-600">Total Runs</div>
-          <div className="text-2xl font-bold text-emerald-700" data-testid="total-runs">
-            {totalRuns}
+          <div className="text-sm text-emerald-600">Avg Performance</div>
+          <div className="text-2xl font-bold text-emerald-700" data-testid="avg-performance">
+            {avgPerformance}
           </div>
         </div>
       </div>
@@ -215,13 +272,16 @@ export default function MarketingAgentsPage() {
             const meta = AGENT_META[agentType];
             const config = getConfigForType(agentType);
             const latestRun = getLatestRun(agentType);
+            const perf = getPerfForType(agentType);
             const isEnabled = config?.isEnabled || false;
+            const score = config?.performanceScore ?? perf?.performanceScore;
 
             return (
               <div
                 key={agentType}
-                className="rounded-2xl border bg-white shadow-sm p-4"
+                className="rounded-2xl border bg-white shadow-sm p-4 cursor-pointer hover:shadow-md transition-shadow"
                 data-testid="agent-card"
+                onClick={() => openAgentDetail(agentType)}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3 min-w-0">
@@ -259,8 +319,24 @@ export default function MarketingAgentsPage() {
                       <div className="flex items-center gap-3 mt-1 text-xs text-slate-400">
                         <span className="inline-flex items-center gap-1">
                           <Clock size={12} />
-                          Every {meta.interval}
+                          Every {formatInterval(config?.runIntervalMinutes)}
                         </span>
+                        {score != null && (
+                          <span
+                            className={cn(
+                              'inline-flex items-center gap-1 font-medium',
+                              score >= 80
+                                ? 'text-sage-600'
+                                : score >= 50
+                                  ? 'text-amber-600'
+                                  : 'text-red-500',
+                            )}
+                            data-testid="performance-score"
+                          >
+                            <TrendingUp size={12} />
+                            {Math.round(score)}%
+                          </span>
+                        )}
                         {latestRun && (
                           <span
                             className={cn(
@@ -283,8 +359,6 @@ export default function MarketingAgentsPage() {
                             {latestRun.status === 'COMPLETED'
                               ? `${latestRun.cardsCreated} created`
                               : latestRun.status}
-                            {' \u00b7 '}
-                            {new Date(latestRun.startedAt).toLocaleString()}
                           </span>
                         )}
                       </div>
@@ -292,7 +366,10 @@ export default function MarketingAgentsPage() {
                   </div>
                   <div className="flex items-center gap-3">
                     <button
-                      onClick={() => handleTrigger(agentType)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleTrigger(agentType);
+                      }}
                       disabled={!isEnabled || triggeringAgent === agentType}
                       className={cn(
                         'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors inline-flex items-center gap-1.5',
@@ -306,7 +383,10 @@ export default function MarketingAgentsPage() {
                       {triggeringAgent === agentType ? 'Running...' : 'Run Now'}
                     </button>
                     <button
-                      onClick={() => handleToggle(agentType, isEnabled)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleToggle(agentType, isEnabled);
+                      }}
                       className={cn(
                         'relative w-11 h-6 rounded-full transition-colors',
                         isEnabled ? 'bg-sage-500' : 'bg-slate-200',
@@ -327,6 +407,192 @@ export default function MarketingAgentsPage() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Agent Detail Modal */}
+      {selectedAgent && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 animate-backdrop"
+          data-testid="agent-detail-modal"
+          onClick={() => setSelectedAgent(null)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto animate-modal-enter"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6 border-b flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-slate-900">
+                  {AGENT_META[selectedAgent]?.name || selectedAgent}
+                </h2>
+                <p className="text-sm text-slate-500 mt-0.5">
+                  {AGENT_META[selectedAgent]?.description}
+                </p>
+              </div>
+              <button
+                onClick={() => setSelectedAgent(null)}
+                className="p-2 rounded-lg hover:bg-slate-100 text-slate-400"
+                data-testid="close-modal-btn"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Performance Metrics */}
+              <div>
+                <h3 className="text-sm font-medium text-slate-700 mb-3">Performance Metrics</h3>
+                <div className="grid grid-cols-3 gap-3" data-testid="agent-metrics">
+                  {(() => {
+                    const config = getConfigForType(selectedAgent);
+                    const perf = getPerfForType(selectedAgent);
+                    const agentTypeRuns = marketingRuns.filter(
+                      (r) => r.agentType === selectedAgent,
+                    );
+                    const completed = agentTypeRuns.filter((r) => r.status === 'COMPLETED');
+                    const itemsProduced = completed.reduce(
+                      (sum, r) => sum + (r.cardsCreated || 0),
+                      0,
+                    );
+                    const approvalRate = perf?.successRate ?? (agentTypeRuns.length > 0
+                      ? Math.round((completed.length / agentTypeRuns.length) * 100)
+                      : 0);
+                    const avgQuality = config?.performanceScore ?? perf?.performanceScore ?? 0;
+
+                    return (
+                      <>
+                        <div className="rounded-xl bg-slate-50 p-3 text-center">
+                          <div className="text-xs text-slate-500">Items Produced</div>
+                          <div
+                            className="text-xl font-bold text-slate-900 mt-1"
+                            data-testid="items-produced"
+                          >
+                            {itemsProduced}
+                          </div>
+                        </div>
+                        <div className="rounded-xl bg-slate-50 p-3 text-center">
+                          <div className="text-xs text-slate-500">Approval Rate</div>
+                          <div
+                            className="text-xl font-bold text-slate-900 mt-1"
+                            data-testid="approval-rate"
+                          >
+                            {approvalRate}%
+                          </div>
+                        </div>
+                        <div className="rounded-xl bg-slate-50 p-3 text-center">
+                          <div className="text-xs text-slate-500">Avg Quality Score</div>
+                          <div
+                            className="text-xl font-bold text-slate-900 mt-1"
+                            data-testid="avg-quality"
+                          >
+                            {Math.round(avgQuality)}
+                          </div>
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+              </div>
+
+              {/* Configuration */}
+              <div>
+                <h3 className="text-sm font-medium text-slate-700 mb-3">Configuration</h3>
+                <div className="rounded-xl bg-slate-50 p-4 space-y-2 text-sm" data-testid="agent-config-detail">
+                  {(() => {
+                    const config = getConfigForType(selectedAgent);
+                    return (
+                      <>
+                        <div className="flex justify-between">
+                          <span className="text-slate-500">Status</span>
+                          <span className={cn('font-medium', config?.isEnabled ? 'text-sage-600' : 'text-slate-400')}>
+                            {config?.isEnabled ? 'Enabled' : 'Disabled'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-500">Run Interval</span>
+                          <span className="font-medium text-slate-900">
+                            {formatInterval(config?.runIntervalMinutes)}
+                          </span>
+                        </div>
+                        {config?.lastRunAt && (
+                          <div className="flex justify-between">
+                            <span className="text-slate-500">Last Run</span>
+                            <span className="font-medium text-slate-900">
+                              {new Date(config.lastRunAt).toLocaleString()}
+                            </span>
+                          </div>
+                        )}
+                        {config?.nextRunAt && (
+                          <div className="flex justify-between">
+                            <span className="text-slate-500">Next Run</span>
+                            <span className="font-medium text-slate-900">
+                              {new Date(config.nextRunAt).toLocaleString()}
+                            </span>
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
+                </div>
+              </div>
+
+              {/* Run History */}
+              <div>
+                <h3 className="text-sm font-medium text-slate-700 mb-3">Recent Runs</h3>
+                {loadingDetail ? (
+                  <div className="text-center py-6 text-slate-400 text-sm">Loading runs...</div>
+                ) : agentRuns.length === 0 ? (
+                  <div
+                    className="text-center py-6 text-slate-400 text-sm"
+                    data-testid="no-runs-message"
+                  >
+                    No recent runs
+                  </div>
+                ) : (
+                  <div className="space-y-2" data-testid="run-history">
+                    {agentRuns.map((run) => (
+                      <div
+                        key={run.id}
+                        className="flex items-center justify-between rounded-xl bg-slate-50 p-3 text-sm"
+                        data-testid="run-entry"
+                      >
+                        <div className="flex items-center gap-2">
+                          {run.status === 'COMPLETED' ? (
+                            <CheckCircle2 size={14} className="text-sage-600" />
+                          ) : run.status === 'FAILED' ? (
+                            <XCircle size={14} className="text-red-500" />
+                          ) : (
+                            <Activity size={14} className="text-amber-500" />
+                          )}
+                          <span className="text-slate-700">
+                            {new Date(run.startedAt).toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3 text-xs">
+                          <span className="text-slate-500">
+                            {run.cardsCreated} items
+                          </span>
+                          <span
+                            className={cn(
+                              'px-2 py-0.5 rounded-full font-medium',
+                              run.status === 'COMPLETED'
+                                ? 'bg-sage-50 text-sage-700'
+                                : run.status === 'FAILED'
+                                  ? 'bg-red-50 text-red-700'
+                                  : 'bg-amber-50 text-amber-700',
+                            )}
+                          >
+                            {run.status}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

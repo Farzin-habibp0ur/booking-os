@@ -37,6 +37,9 @@ jest.mock('lucide-react', () => ({
   Pause: (props: any) => <div data-testid="pause-icon" {...props} />,
   Play: (props: any) => <div data-testid="play-icon" {...props} />,
   XCircle: (props: any) => <div data-testid="x-circle" {...props} />,
+  AlertTriangle: (props: any) => <div data-testid="alert-triangle" {...props} />,
+  TrendingDown: (props: any) => <div data-testid="trending-down" {...props} />,
+  BarChart3: (props: any) => <div data-testid="bar-chart" {...props} />,
 }));
 
 import EmailSequencesPage from './page';
@@ -50,6 +53,7 @@ const mockSequences = [
     steps: [
       { step: 1, delayHours: 0, subject: 'Welcome!', headline: 'Welcome', body: 'Hello' },
       { step: 2, delayHours: 24, subject: 'Day 2', headline: 'Next', body: 'Next step' },
+      { step: 3, delayHours: 72, subject: 'Day 3', headline: 'Tips', body: 'More tips' },
     ],
     triggerEvent: 'SIGNUP',
     _count: { enrollments: 5 },
@@ -73,12 +77,38 @@ const mockStats = {
   totalEnrolled: 7,
 };
 
+const mockMetrics = {
+  steps: [
+    { step: 1, sent: 100, opened: 65, clicked: 12, openRate: 65, clickRate: 12, dropOff: 0 },
+    { step: 2, sent: 80, opened: 40, clicked: 8, openRate: 50, clickRate: 10, dropOff: 20 },
+    { step: 3, sent: 50, opened: 20, clicked: 3, openRate: 40, clickRate: 6, dropOff: 37.5 },
+  ],
+  totalSent: 230,
+  totalOpened: 125,
+  totalClicked: 23,
+  overallOpenRate: 54.3,
+  overallClickRate: 10,
+  completionRate: 72,
+};
+
+const mockBottleneck = {
+  bottleneckStep: 3,
+  dropOffRate: 37.5,
+  subject: 'Day 3',
+  suggestion: 'Consider making the CTA more prominent and reducing email length.',
+};
+
 describe('EmailSequencesPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockGet.mockImplementation((url: string) => {
+      if (url.includes('/email-sequences/') && url.includes('/metrics'))
+        return Promise.resolve(mockMetrics);
+      if (url.includes('/email-sequences/') && url.includes('/bottleneck'))
+        return Promise.resolve(mockBottleneck);
       if (url.includes('/email-sequences/stats')) return Promise.resolve(mockStats);
-      return Promise.resolve(mockSequences);
+      if (url.includes('/email-sequences')) return Promise.resolve(mockSequences);
+      return Promise.resolve([]);
     });
     mockPatch.mockResolvedValue({});
   });
@@ -91,12 +121,20 @@ describe('EmailSequencesPage', () => {
     });
   });
 
-  it('renders stats strip', async () => {
+  it('renders stats strip with enrollment data', async () => {
     render(<EmailSequencesPage />);
 
     await waitFor(() => {
       expect(screen.getByTestId('stats-strip')).toBeInTheDocument();
       expect(screen.getByTestId('total-enrolled').textContent).toBe('7');
+    });
+  });
+
+  it('shows avg conversion stat', async () => {
+    render(<EmailSequencesPage />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('avg-conversion')).toBeInTheDocument();
     });
   });
 
@@ -152,7 +190,7 @@ describe('EmailSequencesPage', () => {
     });
   });
 
-  it('expands to show steps timeline', async () => {
+  it('expands to show steps timeline with metrics', async () => {
     render(<EmailSequencesPage />);
 
     await waitFor(() => {
@@ -161,9 +199,62 @@ describe('EmailSequencesPage', () => {
 
     fireEvent.click(screen.getAllByTestId('expand-btn')[0]);
 
-    expect(screen.getByTestId('steps-timeline')).toBeInTheDocument();
-    expect(screen.getByText('Welcome!')).toBeInTheDocument();
+    // Wait for metrics to load and steps to render
+    await waitFor(() => {
+      expect(screen.getByText('Welcome!')).toBeInTheDocument();
+    });
+
     expect(screen.getByText('Day 2')).toBeInTheDocument();
+    expect(screen.getByTestId('steps-timeline')).toBeInTheDocument();
+  });
+
+  it('loads and shows per-step metrics on expand', async () => {
+    render(<EmailSequencesPage />);
+
+    await waitFor(() => {
+      expect(screen.getAllByTestId('expand-btn')[0]).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getAllByTestId('expand-btn')[0]);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('metrics-summary')).toBeInTheDocument();
+    });
+
+    // Check per-step metrics are rendered
+    const stepMetrics = screen.getAllByTestId('step-metrics');
+    expect(stepMetrics.length).toBeGreaterThan(0);
+  });
+
+  it('highlights bottleneck step', async () => {
+    render(<EmailSequencesPage />);
+
+    await waitFor(() => {
+      expect(screen.getAllByTestId('expand-btn')[0]).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getAllByTestId('expand-btn')[0]);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('bottleneck-step')).toBeInTheDocument();
+    });
+  });
+
+  it('shows bottleneck suggestion', async () => {
+    render(<EmailSequencesPage />);
+
+    await waitFor(() => {
+      expect(screen.getAllByTestId('expand-btn')[0]).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getAllByTestId('expand-btn')[0]);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('bottleneck-suggestion')).toBeInTheDocument();
+      expect(
+        screen.getByText(/Consider making the CTA more prominent/),
+      ).toBeInTheDocument();
+    });
   });
 
   it('shows empty state when no sequences', async () => {
@@ -185,7 +276,7 @@ describe('EmailSequencesPage', () => {
     render(<EmailSequencesPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('2 steps')).toBeInTheDocument();
+      expect(screen.getByText('3 steps')).toBeInTheDocument();
       expect(screen.getByText('1 steps')).toBeInTheDocument();
     });
   });
@@ -195,6 +286,21 @@ describe('EmailSequencesPage', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Trigger: signup')).toBeInTheDocument();
+    });
+  });
+
+  it('fetches metrics and bottleneck endpoints on expand', async () => {
+    render(<EmailSequencesPage />);
+
+    await waitFor(() => {
+      expect(screen.getAllByTestId('expand-btn')[0]).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getAllByTestId('expand-btn')[0]);
+
+    await waitFor(() => {
+      expect(mockGet).toHaveBeenCalledWith('/email-sequences/seq1/metrics');
+      expect(mockGet).toHaveBeenCalledWith('/email-sequences/seq1/bottleneck');
     });
   });
 });

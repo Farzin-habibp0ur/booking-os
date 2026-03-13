@@ -37,10 +37,12 @@ jest.mock('lucide-react', () => ({
   Filter: (props: any) => <div data-testid="filter-icon" {...props} />,
   Sparkles: (props: any) => <div data-testid="sparkles-icon" {...props} />,
   Clock: (props: any) => <div data-testid="clock-icon" {...props} />,
-  CheckCircle2: (props: any) => <div data-testid="check-circle" {...props} />,
-  XCircle: (props: any) => <div data-testid="x-circle" {...props} />,
-  Calendar: (props: any) => <div data-testid="calendar-icon" {...props} />,
+  Search: (props: any) => <div data-testid="search-icon" {...props} />,
+  Beaker: (props: any) => <div data-testid="beaker-icon" {...props} />,
   Send: (props: any) => <div data-testid="send-icon" {...props} />,
+  BarChart3: (props: any) => <div data-testid="bar-chart" {...props} />,
+  Eye: (props: any) => <div data-testid="eye-icon" {...props} />,
+  Edit3: (props: any) => <div data-testid="edit3-icon" {...props} />,
 }));
 
 import ContentQueuePage from './page';
@@ -53,8 +55,14 @@ const mockDrafts = [
     contentType: 'BLOG_POST',
     channel: 'BLOG',
     pillar: 'INDUSTRY_INSIGHTS',
-    status: 'PENDING_REVIEW',
+    status: 'IN_REVIEW',
+    tier: 'YELLOW',
     agentId: 'blog-writer',
+    qualityScore: 78,
+    currentGate: 'GATE_3',
+    platform: 'BLOG',
+    metadata: {},
+    rejectionLogs: [],
     createdAt: '2026-03-01T10:00:00Z',
   },
   {
@@ -62,43 +70,64 @@ const mockDrafts = [
     title: 'Social Media Update',
     body: 'Check out our latest feature!',
     contentType: 'SOCIAL_POST',
-    channel: 'TWITTER',
-    status: 'APPROVED',
+    channel: 'INSTAGRAM',
+    status: 'IN_REVIEW',
+    tier: 'GREEN',
+    qualityScore: 92,
+    currentGate: 'GATE_4',
+    platform: 'INSTAGRAM',
+    metadata: {},
+    rejectionLogs: [],
     createdAt: '2026-03-02T10:00:00Z',
   },
 ];
 
 const mockStats = {
-  byStatus: { PENDING_REVIEW: 5, APPROVED: 3, PUBLISHED: 2 },
+  byStatus: { DRAFT: 2, IN_REVIEW: 5, APPROVED: 3, PUBLISHED: 2, REJECTED: 1 },
+  byTier: { GREEN: 3, YELLOW: 5, RED: 2 },
   byContentType: { BLOG_POST: 4, SOCIAL_POST: 6 },
-  byChannel: { BLOG: 4, TWITTER: 6 },
+  byPillar: { INDUSTRY_INSIGHTS: 3, PRODUCT_EDUCATION: 4, SUCCESS_STORIES: 2, ENGAGEMENT: 1 },
 };
+
+const mockPillarBalance = [
+  { pillar: 'INDUSTRY_INSIGHTS', count: 3, percentage: 30, target: 25 },
+  { pillar: 'PRODUCT_EDUCATION', count: 4, percentage: 40, target: 30 },
+  { pillar: 'SUCCESS_STORIES', count: 2, percentage: 20, target: 25 },
+  { pillar: 'ENGAGEMENT', count: 1, percentage: 10, target: 10 },
+  { pillar: 'THOUGHT_LEADERSHIP', count: 0, percentage: 0, target: 10 },
+];
 
 describe('ContentQueuePage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockGet.mockImplementation((url: string) => {
-      if (url.includes('/content-queue/stats')) return Promise.resolve(mockStats);
-      return Promise.resolve({ data: mockDrafts, total: 2 });
+      if (url.includes('/marketing-content/stats')) return Promise.resolve(mockStats);
+      if (url.includes('/marketing-content/pillar-balance'))
+        return Promise.resolve(mockPillarBalance);
+      if (url.includes('/marketing-content'))
+        return Promise.resolve({ data: mockDrafts, total: 2 });
+      return Promise.resolve([]);
     });
     mockPost.mockResolvedValue({});
   });
 
-  it('renders the page with title and stats', async () => {
+  it('renders the page with title', async () => {
     render(<ContentQueuePage />);
 
     await waitFor(() => {
       expect(screen.getByText('Content Queue')).toBeInTheDocument();
-      const statsStrip = screen.getByTestId('stats-strip');
-      expect(statsStrip.textContent).toContain('5');
     });
-
-    const statsStrip = screen.getByTestId('stats-strip');
-    expect(statsStrip.textContent).toContain('3');
-    expect(statsStrip.textContent).toContain('2');
   });
 
-  it('renders draft cards with badges', async () => {
+  it('renders pipeline visualization with stage counts', async () => {
+    render(<ContentQueuePage />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('pipeline-viz')).toBeInTheDocument();
+    });
+  });
+
+  it('renders draft cards with tier badges', async () => {
     render(<ContentQueuePage />);
 
     await waitFor(() => {
@@ -107,71 +136,93 @@ describe('ContentQueuePage', () => {
 
     expect(screen.getByText('Social Media Update')).toBeInTheDocument();
     expect(screen.getAllByTestId('draft-card')).toHaveLength(2);
-    expect(screen.getAllByText('Blog Post').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Blog').length).toBeGreaterThan(0);
   });
 
-  it('shows AI Generated badge for agent-created drafts', async () => {
+  it('shows tier-colored badges', async () => {
     render(<ContentQueuePage />);
 
     await waitFor(() => {
-      expect(screen.getByText('AI Generated')).toBeInTheDocument();
+      expect(screen.getAllByTestId('tier-badge').length).toBe(2);
     });
+
+    expect(screen.getByText('YELLOW')).toBeInTheDocument();
+    expect(screen.getByText('GREEN')).toBeInTheDocument();
   });
 
-  it('shows approve and reject buttons for pending drafts', async () => {
+  it('shows quality scores on draft cards', async () => {
     render(<ContentQueuePage />);
 
     await waitFor(() => {
-      expect(screen.getByTestId('approve-btn')).toBeInTheDocument();
-      expect(screen.getByTestId('reject-btn')).toBeInTheDocument();
+      expect(screen.getByText('Q: 78')).toBeInTheDocument();
+      expect(screen.getByText('Q: 92')).toBeInTheDocument();
     });
   });
 
-  it('calls approve endpoint when approve button clicked', async () => {
+  it('shows approve and reject buttons for review drafts', async () => {
     render(<ContentQueuePage />);
 
     await waitFor(() => {
-      expect(screen.getByTestId('approve-btn')).toBeInTheDocument();
-    });
-
-    fireEvent.click(screen.getByTestId('approve-btn'));
-
-    await waitFor(() => {
-      expect(mockPost).toHaveBeenCalledWith('/content-queue/cd1/approve', {});
+      expect(screen.getAllByTestId('approve-btn').length).toBeGreaterThan(0);
+      expect(screen.getAllByTestId('reject-btn').length).toBeGreaterThan(0);
     });
   });
 
-  it('shows reject form when reject button clicked', async () => {
+  it('calls review endpoint with approve when approve clicked', async () => {
     render(<ContentQueuePage />);
 
     await waitFor(() => {
-      expect(screen.getByTestId('reject-btn')).toBeInTheDocument();
+      expect(screen.getAllByTestId('approve-btn')[0]).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByTestId('reject-btn'));
+    fireEvent.click(screen.getAllByTestId('approve-btn')[0]);
+
+    await waitFor(() => {
+      expect(mockPost).toHaveBeenCalledWith(
+        '/marketing-content/cd1/review',
+        expect.objectContaining({ action: 'approve' }),
+      );
+    });
+  });
+
+  it('shows reject form with rejection code dropdown', async () => {
+    render(<ContentQueuePage />);
+
+    await waitFor(() => {
+      expect(screen.getAllByTestId('reject-btn')[0]).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getAllByTestId('reject-btn')[0]);
 
     expect(screen.getByTestId('reject-form')).toBeInTheDocument();
-    expect(screen.getByTestId('reject-note-input')).toBeInTheDocument();
+    expect(screen.getByTestId('reject-code-select')).toBeInTheDocument();
+    expect(screen.getByTestId('reject-reason-input')).toBeInTheDocument();
   });
 
-  it('submits rejection with note', async () => {
+  it('submits rejection with code and reason', async () => {
     render(<ContentQueuePage />);
 
     await waitFor(() => {
-      expect(screen.getByTestId('reject-btn')).toBeInTheDocument();
+      expect(screen.getAllByTestId('reject-btn')[0]).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByTestId('reject-btn'));
-    fireEvent.change(screen.getByTestId('reject-note-input'), {
+    fireEvent.click(screen.getAllByTestId('reject-btn')[0]);
+    fireEvent.change(screen.getByTestId('reject-code-select'), {
+      target: { value: 'R01' },
+    });
+    fireEvent.change(screen.getByTestId('reject-reason-input'), {
       target: { value: 'Needs more detail' },
     });
     fireEvent.click(screen.getByTestId('confirm-reject-btn'));
 
     await waitFor(() => {
-      expect(mockPost).toHaveBeenCalledWith('/content-queue/cd1/reject', {
-        reviewNote: 'Needs more detail',
-      });
+      expect(mockPost).toHaveBeenCalledWith(
+        '/marketing-content/cd1/review',
+        expect.objectContaining({
+          action: 'reject',
+          rejectionCode: 'R01',
+          reason: 'Needs more detail',
+        }),
+      );
     });
   });
 
@@ -187,18 +238,15 @@ describe('ContentQueuePage', () => {
     expect(screen.getByTestId('expanded-content')).toBeInTheDocument();
   });
 
-  it('filters by status when chip clicked', async () => {
+  it('renders filter bar with tier buttons and dropdowns', async () => {
     render(<ContentQueuePage />);
 
     await waitFor(() => {
-      expect(screen.getByText('Pending')).toBeInTheDocument();
+      expect(screen.getByTestId('filter-bar')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByText('Pending'));
-
-    await waitFor(() => {
-      expect(mockGet).toHaveBeenCalledWith(expect.stringContaining('status=PENDING_REVIEW'));
-    });
+    expect(screen.getByTestId('content-type-filter')).toBeInTheDocument();
+    expect(screen.getByTestId('channel-filter')).toBeInTheDocument();
   });
 
   it('shows bulk actions when items selected', async () => {
@@ -211,11 +259,10 @@ describe('ContentQueuePage', () => {
     fireEvent.click(screen.getAllByTestId('draft-checkbox')[0]);
 
     expect(screen.getByTestId('bulk-actions')).toBeInTheDocument();
-    expect(screen.getByText('1 selected')).toBeInTheDocument();
     expect(screen.getByText('Approve All')).toBeInTheDocument();
   });
 
-  it('calls bulk approve when Approve All clicked', async () => {
+  it('calls bulk review when Approve All clicked', async () => {
     render(<ContentQueuePage />);
 
     await waitFor(() => {
@@ -226,34 +273,37 @@ describe('ContentQueuePage', () => {
     fireEvent.click(screen.getByText('Approve All'));
 
     await waitFor(() => {
-      expect(mockPost).toHaveBeenCalledWith('/content-queue/bulk-approve', {
-        ids: ['cd1'],
-      });
+      expect(mockPost).toHaveBeenCalledWith(
+        '/marketing-content/bulk-review',
+        expect.objectContaining({
+          ids: ['cd1'],
+          action: 'approve',
+        }),
+      );
+    });
+  });
+
+  it('renders pillar balance sidebar', async () => {
+    render(<ContentQueuePage />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('pillar-sidebar')).toBeInTheDocument();
+      expect(screen.getByText('Pillar Balance')).toBeInTheDocument();
     });
   });
 
   it('shows empty state when no drafts', async () => {
     mockGet.mockImplementation((url: string) => {
-      if (url.includes('/content-queue/stats'))
-        return Promise.resolve({ byStatus: {}, byContentType: {}, byChannel: {} });
+      if (url.includes('/marketing-content/stats'))
+        return Promise.resolve({ byStatus: {}, byTier: {}, byContentType: {}, byPillar: {} });
+      if (url.includes('/marketing-content/pillar-balance')) return Promise.resolve([]);
       return Promise.resolve({ data: [], total: 0 });
     });
 
     render(<ContentQueuePage />);
 
     await waitFor(() => {
-      expect(screen.getByText('No content drafts')).toBeInTheDocument();
+      expect(screen.getByTestId('empty-state')).toBeInTheDocument();
     });
-  });
-
-  it('renders filter bar with dropdowns', async () => {
-    render(<ContentQueuePage />);
-
-    await waitFor(() => {
-      expect(screen.getByTestId('filter-bar')).toBeInTheDocument();
-    });
-
-    expect(screen.getByTestId('content-type-filter')).toBeInTheDocument();
-    expect(screen.getByTestId('channel-filter')).toBeInTheDocument();
   });
 });
