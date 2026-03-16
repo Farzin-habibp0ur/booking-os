@@ -184,8 +184,12 @@ function ShellInner({ children }: { children: ReactNode }) {
       roles: ['ADMIN', 'AGENT', 'SERVICE_PROVIDER'],
     },
     { href: '/staff', label: t('nav.staff'), icon: UserCog, roles: ['ADMIN'] },
-    { href: '/inventory', label: 'Inventory', icon: Car, roles: ['ADMIN', 'AGENT'] },
-    { href: '/pipeline', label: 'Pipeline', icon: Compass, roles: ['ADMIN', 'AGENT'] },
+    ...(pack.name === 'dealership'
+      ? [
+          { href: '/inventory', label: 'Inventory', icon: Car, roles: ['ADMIN', 'AGENT'] },
+          { href: '/pipeline', label: 'Pipeline', icon: Compass, roles: ['ADMIN', 'AGENT'] },
+        ]
+      : []),
     { href: '/invoices', label: 'Invoices', icon: Receipt, roles: ['ADMIN'] },
     { href: '/campaigns', label: 'Campaigns', icon: Megaphone, roles: ['ADMIN'] },
     { href: '/automations', label: 'Automations', icon: Zap, roles: ['ADMIN'] },
