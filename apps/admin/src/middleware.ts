@@ -30,7 +30,7 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Match all paths except Next.js internals and static files
-    '/((?!_next/static|_next/image|favicon.ico).*)',
+    // Match all paths except Next.js internals, static files, and API routes
+    '/((?!api|_next/static|_next/image|favicon.ico).*)',
   ],
 };
