@@ -144,7 +144,7 @@ describe('ConsoleOverviewService', () => {
       const item = result.find((r) => r.id === 'past-due-subs');
       expect(item).toBeDefined();
       expect(item!.severity).toBe('critical');
-      expect(item!.actionHref).toBe('/console/billing');
+      expect(item!.actionHref).toBe('/billing');
     });
 
     it('generates warning item for urgent support cases', async () => {
@@ -157,7 +157,7 @@ describe('ConsoleOverviewService', () => {
       const item = result.find((r) => r.id === 'urgent-support');
       expect(item).toBeDefined();
       expect(item!.severity).toBe('warning');
-      expect(item!.actionHref).toBe('/console/support');
+      expect(item!.actionHref).toBe('/support');
     });
 
     it('generates warning for active view-as sessions', async () => {
@@ -170,7 +170,7 @@ describe('ConsoleOverviewService', () => {
       const item = result.find((r) => r.id === 'active-view-as');
       expect(item).toBeDefined();
       expect(item!.severity).toBe('warning');
-      expect(item!.actionHref).toBe('/console/audit');
+      expect(item!.actionHref).toBe('/audit');
     });
 
     it('generates warning for high agent failure rate (>20%)', async () => {
@@ -205,7 +205,7 @@ describe('ConsoleOverviewService', () => {
       const item = result.find((r) => r.id === 'dormant-businesses');
       expect(item).toBeDefined();
       expect(item!.severity).toBe('info');
-      expect(item!.actionHref).toBe('/console/businesses');
+      expect(item!.actionHref).toBe('/businesses');
     });
 
     it('generates info for open support cases', async () => {

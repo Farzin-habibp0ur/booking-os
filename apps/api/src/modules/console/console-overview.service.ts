@@ -202,7 +202,7 @@ export class ConsoleOverviewService {
           title: `${pastDueSubs.length} past-due subscription${pastDueSubs.length !== 1 ? 's' : ''} (>3 days)`,
           description: pastDueSubs.map((s) => s.business.name).join(', '),
           actionLabel: 'View Billing',
-          actionHref: '/console/billing',
+          actionHref: '/billing',
           timestamp: now.toISOString(),
         });
       }
@@ -216,7 +216,7 @@ export class ConsoleOverviewService {
           title: `${urgentCases.length} urgent support case${urgentCases.length !== 1 ? 's' : ''} (>24h)`,
           description: urgentCases.map((c) => c.subject).join(', '),
           actionLabel: 'View Support',
-          actionHref: '/console/support',
+          actionHref: '/support',
           timestamp: now.toISOString(),
         });
       }
@@ -230,7 +230,7 @@ export class ConsoleOverviewService {
           title: `${activeViewAs.length} active view-as session${activeViewAs.length !== 1 ? 's' : ''}`,
           description: 'Admin users are currently impersonating business accounts',
           actionLabel: 'View Security',
-          actionHref: '/console/audit',
+          actionHref: '/audit',
           timestamp: now.toISOString(),
         });
       }
@@ -246,7 +246,7 @@ export class ConsoleOverviewService {
             title: `High agent failure rate (${Math.round(failureRate)}%)`,
             description: `${failedRuns7d} of ${agentRuns7d} agent runs failed in the last 7 days`,
             actionLabel: 'View Agents',
-            actionHref: '/console/agents',
+            actionHref: '/agents',
             timestamp: now.toISOString(),
           });
         }
@@ -266,7 +266,7 @@ export class ConsoleOverviewService {
               .join(', ') +
             (dormantBusinesses.length > 3 ? ` and ${dormantBusinesses.length - 3} more` : ''),
           actionLabel: 'View Businesses',
-          actionHref: '/console/businesses',
+          actionHref: '/businesses',
           timestamp: now.toISOString(),
         });
       }
@@ -280,7 +280,7 @@ export class ConsoleOverviewService {
           title: `${openCases} open support case${openCases !== 1 ? 's' : ''}`,
           description: 'Review and respond to pending support requests',
           actionLabel: 'View Support',
-          actionHref: '/console/support',
+          actionHref: '/support',
           timestamp: now.toISOString(),
         });
       }
