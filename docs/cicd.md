@@ -101,7 +101,7 @@ Runs Playwright E2E tests against a local development server with seeded test da
 **Depends on:** `lint-and-test`
 **Duration:** ~2 minutes
 
-Validates that both Docker images build successfully using the production Docker Compose file.
+Validates that all Docker images (API, web, admin) build successfully using the production Docker Compose file.
 
 ### What it does
 
@@ -109,7 +109,7 @@ Validates that both Docker images build successfully using the production Docker
 docker compose -f docker-compose.prod.yml build
 ```
 
-This builds two images:
+This builds three images:
 
 #### API image (`apps/api/Dockerfile`)
 
@@ -124,6 +124,13 @@ Multi-stage build:
 1. **deps** — Installs npm dependencies
 2. **builder** — Builds shared package, then Next.js app with standalone output
 3. **runner** — Production image with non-root `nextjs` user, runs `node apps/web/server.js`
+
+#### Admin image (`apps/admin/Dockerfile`)
+
+Multi-stage build:
+1. **deps** — Installs npm dependencies
+2. **builder** — Builds shared package, then Next.js admin app with standalone output
+3. **runner** — Production image with non-root `nextjs` user, runs `node apps/admin/server.js` on port 3002
 
 ### Dummy environment variables
 
@@ -143,10 +150,12 @@ The build step passes dummy values for required env vars (JWT secrets, API keys,
 1. Installs the Railway CLI (`npm install -g @railway/cli`)
 2. Deploys the **API** service to Railway production
 3. Deploys the **Web** service to Railway production
+4. Deploys the **Admin** service to Railway production
 
 ```bash
 railway up --service api -p 37eeca20-7dfe-45d9-8d29-e902a545f475 -e production --detach
 railway up --service web -p 37eeca20-7dfe-45d9-8d29-e902a545f475 -e production --detach
+railway up --service admin -p 37eeca20-7dfe-45d9-8d29-e902a545f475 -e production --detach
 ```
 
 The `--detach` flag means the CI job doesn't wait for Railway's own build to finish. Railway receives the source code and handles the Docker build + deploy asynchronously.
@@ -157,9 +166,10 @@ The `--detach` flag means the CI job doesn't wait for Railway's own build to fin
 | -------------- | ---------------------------------------- |
 | Project ID     | `37eeca20-7dfe-45d9-8d29-e902a545f475`   |
 | Environment    | `production`                             |
-| Services       | `api`, `web`, `postgres`, `redis`        |
+| Services       | `api`, `web`, `admin`, `postgres`, `redis` |
 | API domain     | `api.businesscommandcentre.com`          |
 | Web domain     | `businesscommandcentre.com`              |
+| Admin domain   | `admin.businesscommandcentre.com`        |
 
 ### Database migrations
 
@@ -185,7 +195,7 @@ exec node dist/apps/api/src/main
 
 ### What it does
 
-Runs `scripts/smoke-test.sh` against production to verify the deploy is healthy. The script performs 20 checks across 8 categories:
+Runs `scripts/smoke-test.sh` against production to verify the deploy is healthy, plus a separate curl check for the admin console (`admin.businesscommandcentre.com`). The smoke test script performs 20 checks across 8 categories:
 
 1. **Health & Infrastructure** — API health endpoint, database connectivity, Redis status
 2. **Web Application** — Homepage, Next.js health route
@@ -219,24 +229,23 @@ The Railway token must be a **Project Token** (created from Railway → Project 
 ## Production Architecture (Railway)
 
 ```
-                    ┌──────────────┐
-                    │   Railway    │
-                    │   Project    │
-                    └──────┬───────┘
-                           │
-            ┌──────────────┼──────────────┐
-            │              │              │
-     ┌──────▼──────┐ ┌────▼────┐ ┌───────▼───────┐
-     │     web     │ │   api   │ │   postgres    │
-     │  (Next.js)  │ │ (Nest)  │ │  (Postgres    │
-     │  port 3000  │ │ port 3001│ │   16-alpine)  │
-     └─────────────┘ └────┬────┘ └───────────────┘
-                          │
-                     ┌────▼────┐
-                     │  redis  │
-                     │ (Redis  │
-                     │ 7-alpine)│
-                     └─────────┘
+                      ┌──────────────┐
+                      │   Railway    │
+                      │   Project    │
+                      └──────┬───────┘
+                             │
+         ┌──────────┬────────┼────────┬──────────┐
+         │          │        │        │          │
+  ┌──────▼──────┐ ┌─▼──────┐│ ┌──────▼───────┐ ┌▼────────┐
+  │     web     │ │ admin  │ │ │   postgres   │ │  redis  │
+  │  (Next.js)  │ │(Next.js)│ │ │  (Postgres   │ │ (Redis  │
+  │  port 3000  │ │port 3002│ │ │   16-alpine) │ │7-alpine)│
+  └─────────────┘ └────────┘ │ └──────────────┘ └─────────┘
+                        ┌─────▼─────┐
+                        │    api    │
+                        │  (Nest)   │
+                        │ port 3001 │
+                        └───────────┘
 ```
 
 ---
@@ -247,13 +256,14 @@ The `docker-compose.prod.yml` file defines the full production stack for self-ho
 
 ### Services
 
-| Service    | Image/Build            | Port  | Health check                              |
-| ---------- | ---------------------- | ----- | ----------------------------------------- |
-| `postgres` | `postgres:16-alpine`   | 5432  | `pg_isready`                              |
-| `redis`    | `redis:7-alpine`       | 6379  | `redis-cli ping`                          |
-| `api`      | `apps/api/Dockerfile`  | 3001  | `wget -qO- http://localhost:3001/api/v1/health` |
-| `web`      | `apps/web/Dockerfile`  | 3000  | —                                         |
-| `nginx`    | `nginx:alpine`         | 80/443 | —                                        |
+| Service    | Image/Build              | Port   | Health check                              |
+| ---------- | ------------------------ | ------ | ----------------------------------------- |
+| `postgres` | `postgres:16-alpine`     | 5432   | `pg_isready`                              |
+| `redis`    | `redis:7-alpine`         | 6379   | `redis-cli ping`                          |
+| `api`      | `apps/api/Dockerfile`    | 3001   | `wget -qO- http://localhost:3001/api/v1/health` |
+| `web`      | `apps/web/Dockerfile`    | 3000   | —                                         |
+| `admin`    | `apps/admin/Dockerfile`  | 3002   | `wget -qO- http://localhost:3002`         |
+| `nginx`    | `nginx:alpine`           | 80/443 | —                                         |
 
 ### Volumes
 
