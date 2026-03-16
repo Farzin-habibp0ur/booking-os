@@ -41,7 +41,7 @@ function LoginPage() {
     sessionStorage.setItem('booking-os-login-redirect', '1');
     if (me.role === 'SUPER_ADMIN') {
       // Admin console is a separate app — redirect there
-      window.location.href = process.env.NEXT_PUBLIC_ADMIN_URL || 'http://localhost:3002';
+      window.location.href = process.env.NEXT_PUBLIC_ADMIN_URL || 'https://admin.businesscommandcentre.com';
       return;
     }
     router.push('/dashboard');

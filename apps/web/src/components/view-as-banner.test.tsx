@@ -156,7 +156,7 @@ describe('ViewAsBanner', () => {
 
     await user.click(screen.getByTestId('view-as-exit'));
 
-    expect(window.location.href).toBe('http://localhost:3002');
+    expect(window.location.href).toBe('https://admin.businesscommandcentre.com');
   });
 
   it('has the view-as-banner test id', () => {

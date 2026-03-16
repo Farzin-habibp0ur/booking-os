@@ -57,7 +57,7 @@ export function ViewAsBanner() {
 
     sessionStorage.removeItem('_view_as_started');
 
-    const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL || 'http://localhost:3002';
+    const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL || 'https://admin.businesscommandcentre.com';
     const returnPath = sessionStorage.getItem('_console_return_path') || adminUrl;
     sessionStorage.removeItem('_console_return_path');
 
