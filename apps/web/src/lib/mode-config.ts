@@ -42,16 +42,16 @@ function getAdminSections(packName?: string): NavSections {
       '/testimonials',
     ],
     insights: ['/dashboard', '/reports', '/reports/monthly-review', '/roi'],
-  marketingAi: [
-    '/ai',
-    '/ai/agents',
-    '/ai/actions',
-    '/ai/performance',
-    '/marketing/queue',
-    '/marketing/agents',
-    '/marketing/sequences',
-    '/marketing/rejection-analytics',
-  ],
+    marketingAi: [
+      '/ai',
+      '/ai/agents',
+      '/ai/actions',
+      '/ai/performance',
+      '/marketing/queue',
+      '/marketing/agents',
+      '/marketing/sequences',
+      '/marketing/rejection-analytics',
+    ],
   };
 }
 
