@@ -26,21 +26,23 @@ Complete reference for deploying, configuring, and operating Booking OS in produ
 ```
                  Browser
                     │
-        ┌───────────┴───────────┐
-        ▼                       ▼
- ┌─────────────┐       ┌──────────────┐
- │     Web     │       │     API      │
- │  (Next.js)  │──────►│   (NestJS)   │
- │  port 3000  │ fetch │  port 3001   │
- └─────────────┘       └──────┬───────┘
-                               │
-                    ┌──────────┼──────────┐
-                    ▼                     ▼
-             ┌───────────┐         ┌ ─ ─ ─ ─ ─┐
-             │ PostgreSQL│           Redis
-             │    16     │         │     7     │
-             │ port 5432 │           port 6379
-             └───────────┘         └ ─ ─ ─ ─ ─┘
+        ┌───────────┼───────────────┐
+        ▼           ▼               ▼
+ ┌─────────────┐ ┌─────────────┐ ┌──────────────┐
+ │     Web     │ │    Admin    │ │     API      │
+ │  (Next.js)  │ │  (Next.js)  │ │   (NestJS)   │
+ │  port 3000  │ │  port 3002  │ │  port 3001   │
+ └──────┬──────┘ └──────┬──────┘ └──────┬───────┘
+        │               │               │
+        └───────────────┴──────► fetch ──┘
+                                         │
+                              ┌──────────┼──────────┐
+                              ▼                     ▼
+                       ┌───────────┐         ┌ ─ ─ ─ ─ ─┐
+                       │ PostgreSQL│           Redis
+                       │    16     │         │     7     │
+                       │ port 5432 │           port 6379
+                       └───────────┘         └ ─ ─ ─ ─ ─┘
 ```
 
 > **Lean setup (current):** Redis is optional. Without `REDIS_URL`, the API uses fire-and-forget async processing and single-instance WebSocket — sufficient for <50 concurrent clients. See [Cost Optimization](#cost-optimization-pre-customer-phase) for details.
@@ -48,7 +50,8 @@ Complete reference for deploying, configuring, and operating Booking OS in produ
 **Monorepo structure:**
 
 - `apps/api` — NestJS REST API + WebSocket (Socket.IO)
-- `apps/web` — Next.js 15 frontend (standalone output)
+- `apps/web` — Next.js 15 customer-facing frontend (standalone output, port 3000)
+- `apps/admin` — Next.js 15 admin console (standalone output, port 3002) — SUPER_ADMIN only, will deploy to `admin.businesscommandcentre.com`
 - `packages/db` — Prisma schema, migrations, seed scripts
 - `packages/shared` — Shared types and utilities
 - `packages/messaging-provider` — WhatsApp Cloud API adapter
@@ -67,9 +70,11 @@ Complete reference for deploying, configuring, and operating Booking OS in produ
 | `DATABASE_URL`        | API     | `postgresql://user:pass@host:5432/booking_os?schema=public` | PostgreSQL connection string                                                                                   |
 | `JWT_SECRET`          | API     | _(64-char hex)_                                             | Access token signing key. Generate: `node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"` |
 | `JWT_REFRESH_SECRET`  | API     | _(64-char hex)_                                             | Refresh token signing key. Must differ from JWT_SECRET                                                         |
-| `CORS_ORIGINS`        | API     | `https://yourdomain.com,https://www.yourdomain.com`         | Comma-separated allowed origins. **Also used to derive cookie Domain** (see section 6)                         |
-| `NEXT_PUBLIC_API_URL` | Web     | `https://api.yourdomain.com/api/v1`                         | API URL the browser calls. Baked into the Next.js build at build time                                          |
+| `CORS_ORIGINS`        | API     | `https://yourdomain.com,https://admin.yourdomain.com`       | Comma-separated allowed origins. **Must include both web and admin URLs.** Also used to derive cookie Domain (see section 6) |
+| `NEXT_PUBLIC_API_URL` | Web, Admin | `https://api.yourdomain.com/api/v1`                         | API URL the browser calls. Baked into the Next.js build at build time                                          |
 | `NEXT_PUBLIC_WS_URL`  | Web     | `https://api.yourdomain.com`                                | WebSocket (Socket.IO) URL for real-time features                                                               |
+| `NEXT_PUBLIC_CUSTOMER_APP_URL` | Admin | `https://businesscommandcentre.com`                   | Customer app URL — admin redirects non-SUPER_ADMIN users and logout here                                       |
+| `NEXT_PUBLIC_SENTRY_DSN_ADMIN` | Admin | —                                                     | Separate Sentry DSN for admin console error tracking                                                           |
 
 ### Optional Services
 
@@ -262,8 +267,8 @@ mkdir -p nginx/ssl certbot/webroot
 # Use certbot or your preferred method to get certs
 # Place fullchain.pem and privkey.pem in nginx/ssl/
 
-# 5. Update CORS_ORIGINS in .env to match your domain
-# CORS_ORIGINS="https://yourdomain.com"
+# 5. Update CORS_ORIGINS in .env to match your domain (include admin subdomain)
+# CORS_ORIGINS="https://yourdomain.com,https://admin.yourdomain.com"
 
 # 6. Build and start
 docker compose -f docker-compose.prod.yml up -d
@@ -687,6 +692,7 @@ When Redis is enabled (`REDIS_URL` is set), the response also includes:
 | PostgreSQL | `pg_isready`                                    | 5s       |
 | Redis      | `redis-cli ping`                                | 5s       |
 | API        | `wget -qO- http://localhost:3001/api/v1/health` | 30s      |
+| Admin      | `wget -qO- http://localhost:3002`               | 30s      |
 
 ### Logging
 
@@ -701,6 +707,7 @@ When Redis is enabled (`REDIS_URL` is set), the response also includes:
 ```bash
 railway logs --service api --lines 100
 railway logs --service web --lines 100
+railway logs --service admin --lines 100
 ```
 
 **View Docker logs (self-hosted):**
@@ -708,6 +715,7 @@ railway logs --service web --lines 100
 ```bash
 docker compose -f docker-compose.prod.yml logs -f api
 docker compose -f docker-compose.prod.yml logs -f web
+docker compose -f docker-compose.prod.yml logs -f admin
 ```
 
 ### Sentry Error Tracking

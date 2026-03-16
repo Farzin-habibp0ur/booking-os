@@ -6,7 +6,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/dashboard', '/inbox', '/settings', '/console', '/api', '/marketing'],
+        disallow: ['/dashboard', '/inbox', '/settings', '/api', '/marketing'],
       },
     ],
     sitemap: 'https://businesscommandcentre.com/sitemap.xml',

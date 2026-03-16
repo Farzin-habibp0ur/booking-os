@@ -43,7 +43,6 @@ import {
   Heart,
   Eye,
   Bell,
-  Shield,
   Sparkles,
   Receipt,
   Car,
@@ -102,13 +101,6 @@ function ShellInner({ children }: { children: ReactNode }) {
   const { modeDef } = useMode();
   const [pinnedViews, setPinnedViews] = useState<any[]>([]);
   const [moreSheetOpen, setMoreSheetOpen] = useState(false);
-
-  // SUPER_ADMIN should always be in the console, not tenant UI
-  useEffect(() => {
-    if (user?.role === 'SUPER_ADMIN' && !user?.viewAs) {
-      router.replace('/console');
-    }
-  }, [user, router]);
 
   // Close sidebar on route change (mobile)
   useEffect(() => {
@@ -225,12 +217,6 @@ function ShellInner({ children }: { children: ReactNode }) {
     { href: '/ai/agents', label: 'Agent Status', icon: Zap, roles: ['ADMIN'] },
     { href: '/ai/performance', label: 'Performance', icon: TrendingUp, roles: ['ADMIN'] },
     {
-      href: '/console',
-      label: 'Platform Console',
-      icon: Shield,
-      roles: ['SUPER_ADMIN'],
-    },
-    {
       href: '/admin/pack-builder',
       label: 'Pack Builder',
       icon: Package,
@@ -246,7 +232,7 @@ function ShellInner({ children }: { children: ReactNode }) {
   const toolsNav = nav.filter((item) => sections?.tools.includes(item.href));
   const insightsNav = nav.filter((item) => sections?.insights.includes(item.href));
   const marketingAiNav = nav.filter((item) => sections?.marketingAi?.includes(item.href));
-  // Items not in any section (e.g. console, pack-builder for SUPER_ADMIN)
+  // Items not in any section (e.g. pack-builder for SUPER_ADMIN)
   const extraNav = nav.filter(
     (item) =>
       item.href !== '/settings' &&
@@ -358,7 +344,7 @@ function ShellInner({ children }: { children: ReactNode }) {
           </>
         )}
 
-        {/* Extra items (SUPER_ADMIN console, pack-builder, etc.) */}
+        {/* Extra items (SUPER_ADMIN pack-builder, etc.) */}
         {extraNav.length > 0 && (
           <>
             <div className="my-1 border-t border-slate-100 dark:border-slate-800" />

@@ -20,7 +20,8 @@ A modern, full-featured appointment booking and business management platform bui
 booking-os/
 ├── apps/
 │   ├── api/               # NestJS REST API (port 3001)
-│   ├── web/               # Next.js admin dashboard (port 3000)
+│   ├── web/               # Next.js customer dashboard (port 3000)
+│   ├── admin/             # Next.js admin console (port 3002) — SUPER_ADMIN only
 │   └── whatsapp-simulator/# WhatsApp testing tool
 ├── packages/
 │   ├── db/                # Prisma schema, migrations, seed data
@@ -86,10 +87,11 @@ booking-os/
 
 7. **Open the app**
    - Dashboard: [http://localhost:3000](http://localhost:3000)
+   - Admin Console: [http://localhost:3002](http://localhost:3002) (requires SUPER_ADMIN role)
    - API: [http://localhost:3001/api/v1](http://localhost:3001/api/v1)
    - API Docs (Swagger): [http://localhost:3001/api/docs](http://localhost:3001/api/docs)
    - Login: `sarah@glowclinic.com` / `password123`
-   - Platform Console: `admin@businesscommandcentre.com` / `superadmin123`
+   - Admin Console (SUPER_ADMIN): `admin@businesscommandcentre.com` / `superadmin123` — login redirects to admin app
 
 ## Available Scripts
 
@@ -174,11 +176,20 @@ Copy `.env.example` to `.env` for a full list of configuration options. Key vari
 - **Google Calendar** — `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
 - **Sentry** — `SENTRY_DSN`
 
+## Admin Console
+
+The internal admin console is a separate Next.js app at `apps/admin/`.
+
+- **Local dev:** runs on [http://localhost:3002](http://localhost:3002) via `npm run dev`
+- **Production:** will be deployed to `admin.businesscommandcentre.com`
+- **Access:** Requires `SUPER_ADMIN` role — non-admin users are redirected to the customer app
+- **15 routes** across 10 sections: Overview, Businesses, Billing, Agents, Messaging, Health, Packs & Skills, Support, Settings, Audit
+
 ## Deployment
 
 The project includes Docker Compose configurations for production deployment with Nginx reverse proxy.
 
-- **Production (Railway):** Push to `main` → CI → `railway up --detach`. Currently running a lean 3-service setup (api, web, postgres — no Redis) to minimize costs during pre-customer phase. See [`DEPLOY.md`](DEPLOY.md) for full deployment & operations guide.
+- **Production (Railway):** Push to `main` → CI → `railway up --detach` (deploys api, web, and admin). See [`DEPLOY.md`](DEPLOY.md) for full deployment & operations guide.
 - **Self-hosted:** `docker-compose.prod.yml` with Nginx + SSL. See [`DEPLOY.md`](DEPLOY.md) section 4.
 - **CI/CD Pipeline:** See [`docs/cicd.md`](docs/cicd.md) for pipeline details.
 

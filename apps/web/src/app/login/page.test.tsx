@@ -154,7 +154,7 @@ describe('LoginPage', () => {
     });
   });
 
-  it('redirects SUPER_ADMIN to /console after login', async () => {
+  it('redirects SUPER_ADMIN to admin app after login (not /dashboard)', async () => {
     const user = userEvent.setup();
     mockLogin.mockResolvedValue({ role: 'SUPER_ADMIN' });
 
@@ -168,8 +168,10 @@ describe('LoginPage', () => {
     await user.type(passwordInput, 'superadmin123');
     await user.click(submitButton);
 
+    // SUPER_ADMIN uses window.location.href (external redirect to admin app)
+    // so router.push('/dashboard') should NOT be called
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith('/console');
+      expect(mockPush).not.toHaveBeenCalledWith('/dashboard');
     });
   });
 

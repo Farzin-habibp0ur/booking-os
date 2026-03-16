@@ -162,6 +162,8 @@ jobs:
         run: railway up --service api -p 37eeca20-7dfe-45d9-8d29-e902a545f475 -e production --detach
       - name: Deploy Web
         run: railway up --service web -p 37eeca20-7dfe-45d9-8d29-e902a545f475 -e production --detach
+      - name: Deploy Admin
+        run: railway up --service admin -p 37eeca20-7dfe-45d9-8d29-e902a545f475 -e production --detach
 
   smoke-test:
     name: Production Smoke Test
@@ -182,3 +184,12 @@ jobs:
         run: |
           chmod +x scripts/smoke-test.sh
           ./scripts/smoke-test.sh https://businesscommandcentre.com
+
+      - name: Smoke test admin console
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://admin.businesscommandcentre.com)
+          if [ "$STATUS" -ne 200 ] && [ "$STATUS" -ne 307 ]; then
+            echo "Admin console returned HTTP $STATUS"
+            exit 1
+          fi
+          echo "Admin console reachable (HTTP $STATUS)"

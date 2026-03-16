@@ -1,20 +1,17 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { api } from '@/lib/api';
 import { Eye, X } from 'lucide-react';
 
 export function ViewAsBanner() {
   const { user } = useAuth();
-  const router = useRouter();
   const [remaining, setRemaining] = useState('');
   const [exiting, setExiting] = useState(false);
 
   const updateCountdown = useCallback(() => {
     // Session is 15 minutes. We estimate based on when we loaded
-    // Ideally we'd fetch expiresAt from the active session
     const stored = sessionStorage.getItem('_view_as_started');
     if (!stored) return;
 
@@ -57,8 +54,7 @@ export function ViewAsBanner() {
 
     sessionStorage.removeItem('_view_as_started');
 
-    const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL || 'http://localhost:3002';
-    const returnPath = sessionStorage.getItem('_console_return_path') || adminUrl;
+    const returnPath = sessionStorage.getItem('_console_return_path') || '/';
     sessionStorage.removeItem('_console_return_path');
 
     // Force a full page reload to pick up the new cookies

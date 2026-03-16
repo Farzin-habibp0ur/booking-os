@@ -1,0 +1,132 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background-color: #f8fafc;
+  @apply text-slate-800;
+}
+
+/* Keyframe animations */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out;
+}
+.animate-scale-in {
+  animation: scaleIn 0.2s ease-out;
+}
+
+/* Status dot indicator */
+.status-dot {
+  @apply w-1.5 h-1.5 rounded-full inline-block shrink-0;
+}
+
+/* Button press feedback */
+.btn-press {
+  transition: transform 100ms ease;
+}
+.btn-press:active {
+  transform: scale(0.98);
+}
+
+/* Card hover lift */
+.animate-card-hover {
+  transition: transform 200ms ease-out, box-shadow 200ms ease-out;
+}
+.animate-card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px -8px rgba(0, 0, 0, 0.1);
+}
+
+/* Dropdown open */
+@keyframes dropdownOpen {
+  from {
+    opacity: 0;
+    transform: scaleY(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+}
+.animate-dropdown-open {
+  transform-origin: top;
+  animation: dropdownOpen 150ms ease-out;
+}
+
+/* Page content fade in */
+.animate-page-fade {
+  animation: fadeIn 150ms ease-out;
+}
+
+/* Modal backdrop fade */
+.animate-backdrop {
+  animation: fadeIn 150ms ease-out;
+}
+
+/* Modal content entrance */
+@keyframes modalEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.animate-modal-enter {
+  animation: modalEnter 200ms ease-out;
+}
+
+/* Accessible focus ring */
+*:focus-visible {
+  outline: 2px solid #71907c;
+  outline-offset: 2px;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

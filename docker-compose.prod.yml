@@ -98,6 +98,34 @@ services:
       api:
         condition: service_healthy
 
+  admin:
+    build:
+      context: .
+      dockerfile: apps/admin/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://api.businesscommandcentre.com/api/v1}
+        NEXT_PUBLIC_CUSTOMER_APP_URL: ${NEXT_PUBLIC_CUSTOMER_APP_URL:-https://businesscommandcentre.com}
+    container_name: booking-os-admin
+    restart: unless-stopped
+    expose:
+      - "3002"
+    environment:
+      NODE_ENV: production
+      ADMIN_PORT: "3002"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3002"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
   nginx:
     image: nginx:alpine
     container_name: booking-os-nginx
@@ -112,6 +140,7 @@ services:
     depends_on:
       - api
       - web
+      - admin
 
 volumes:
   postgres_data:

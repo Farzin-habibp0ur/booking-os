@@ -133,17 +133,17 @@ describe('ViewAsBanner', () => {
       viewAs: true,
       business: { id: 'biz1', name: 'Glow Clinic', slug: 'glow-clinic' },
     };
-    sessionStorageMock['_console_return_path'] = '/console/businesses/biz1';
+    sessionStorageMock['_console_return_path'] = '/businesses/biz1';
 
     const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
     render(<ViewAsBanner />);
 
     await user.click(screen.getByTestId('view-as-exit'));
 
-    expect(window.location.href).toBe('/console/businesses/biz1');
+    expect(window.location.href).toBe('/businesses/biz1');
   });
 
-  it('redirects to /console by default when no return path stored', async () => {
+  it('redirects to admin app by default when no return path stored', async () => {
     mockUser = {
       id: 'admin1',
       role: 'ADMIN',
@@ -156,7 +156,7 @@ describe('ViewAsBanner', () => {
 
     await user.click(screen.getByTestId('view-as-exit'));
 
-    expect(window.location.href).toBe('/console');
+    expect(window.location.href).toBe('http://localhost:3002');
   });
 
   it('has the view-as-banner test id', () => {
