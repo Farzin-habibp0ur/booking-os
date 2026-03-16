@@ -11,9 +11,11 @@ For detailed setup and deployment instructions, see [DEPLOY.md](../DEPLOY.md).
 |-----|---------|
 | `https://businesscommandcentre.com` | Web app (root domain) |
 | `https://www.businesscommandcentre.com` | Web app (www redirect) |
+| `https://admin.businesscommandcentre.com` | Admin console (SUPER_ADMIN only) |
 | `https://api.businesscommandcentre.com` | API root |
 | `https://api.businesscommandcentre.com/api/v1` | API v1 base path |
 | `https://api.businesscommandcentre.com/api/v1/health` | API health check |
+| `https://admin.businesscommandcentre.com/api/v1/health` | Admin health check |
 | `https://businesscommandcentre.com/api/v1/health` | Web-proxied health check |
 
 **Cookie domain:** `.businesscommandcentre.com` (cross-subdomain auth)
@@ -29,7 +31,8 @@ For detailed setup and deployment instructions, see [DEPLOY.md](../DEPLOY.md).
 | API v1 base | `http://localhost:3001/api/v1` | 3001 |
 | Swagger / OpenAPI docs | `http://localhost:3001/api/docs` | 3001 |
 | API health check | `http://localhost:3001/api/v1/health` | 3001 |
-| WhatsApp Simulator | `http://localhost:3002` | 3002 |
+| Admin Console (Next.js) | `http://localhost:3002` | 3002 |
+| WhatsApp Simulator | `http://localhost:3003` | 3003 |
 | PostgreSQL | `127.0.0.1:5432` | 5432 |
 | Redis | `127.0.0.1:6379` | 6379 |
 
@@ -48,7 +51,8 @@ For detailed setup and deployment instructions, see [DEPLOY.md](../DEPLOY.md).
 | Service | Type |
 |---------|------|
 | `api` | NestJS backend |
-| `web` | Next.js frontend |
+| `web` | Next.js customer frontend |
+| `admin` | Next.js admin console |
 | `postgres` | PostgreSQL database |
 | `redis` | Redis cache (optional) |
 
@@ -58,6 +62,7 @@ For detailed setup and deployment instructions, see [DEPLOY.md](../DEPLOY.md).
 |-----------|--------------|
 | `@` (root) | `uqwnhuyx.up.railway.app` |
 | `api` | `cosm54wn.up.railway.app` |
+| `admin` | `6v4k4tij.up.railway.app` |
 
 **Railway CLI:**
 
@@ -83,9 +88,11 @@ railway up --service <name> --detach
 |------|------|--------|-------|
 | CNAME | `@` (root) | `uqwnhuyx.up.railway.app` | DNS only |
 | CNAME | `api` | `cosm54wn.up.railway.app` | DNS only |
+| CNAME | `admin` | `6v4k4tij.up.railway.app` | DNS only |
 | CNAME | `www` | `businesscommandcentre.com` | Proxied |
 | TXT | `_railway-verify` | `railway-verify=870b2ea...` | DNS only |
 | TXT | `_railway-verify.api` | `railway-verify=642c0135...` | DNS only |
+| TXT | `_railway-verify.admin` | `railway-verify=d5bd379d...` | DNS only |
 | TXT | `_dmarc` | `v=DMARC1; p=quarantine...` | DNS only |
 
 > Railway-pointing CNAME records must stay **DNS only** (grey cloud) so Railway can handle SSL via Let's Encrypt.
@@ -112,7 +119,7 @@ railway up --service <name> --detach
 | **WhatsApp Cloud API** | Meta WhatsApp messaging | `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_VERIFY_TOKEN` | [developers.facebook.com](https://developers.facebook.com) |
 | **Google Calendar** | Calendar OAuth integration | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | [console.cloud.google.com](https://console.cloud.google.com) |
 | **Microsoft Outlook** | Outlook Calendar OAuth | `MICROSOFT_CLIENT_ID`, `MICROSOFT_CLIENT_SECRET` | [portal.azure.com](https://portal.azure.com) |
-| **Sentry** | Error tracking (API + Web) | `SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_DSN` | [sentry.io](https://sentry.io) |
+| **Sentry** | Error tracking (API + Web + Admin) | `SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_DSN_ADMIN` | [sentry.io](https://sentry.io) |
 | **Resend** | Transactional email | `RESEND_API_KEY` | [resend.com](https://resend.com) |
 
 **Messaging provider toggle:** Set `MESSAGING_PROVIDER` to `mock` (default) or `whatsapp-cloud` for production.
