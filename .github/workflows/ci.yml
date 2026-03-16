@@ -187,9 +187,9 @@ jobs:
 
       - name: Smoke test admin console
         run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://admin.businesscommandcentre.com)
-          if [ "$STATUS" -ne 200 ] && [ "$STATUS" -ne 307 ]; then
-            echo "Admin console returned HTTP $STATUS"
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://admin.businesscommandcentre.com/api/v1/health)
+          if [ "$STATUS" -ne 200 ]; then
+            echo "Admin console health check returned HTTP $STATUS"
             exit 1
           fi
-          echo "Admin console reachable (HTTP $STATUS)"
+          echo "Admin console healthy (HTTP $STATUS)"
