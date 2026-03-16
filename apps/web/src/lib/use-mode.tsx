@@ -44,7 +44,8 @@ export function ModeProvider({ children }: { children: ReactNode }) {
   const pack = usePack();
 
   const role = user?.role || 'AGENT';
-  const availableModes = getAvailableModes(role);
+  const packName = pack.name;
+  const availableModes = getAvailableModes(role, packName);
 
   // Derive initial mode: preferences > localStorage > role default
   const getInitialMode = (): AppMode => {
@@ -83,7 +84,7 @@ export function ModeProvider({ children }: { children: ReactNode }) {
     }, 300);
   }, []);
 
-  const modeDef = getModeByKey(mode);
+  const modeDef = getModeByKey(mode, packName);
   const modeLabel = getModeLabel(mode, pack.name);
   const landingPath = modeDef?.defaultLandingPath || '/dashboard';
 

@@ -27,20 +27,21 @@ function flattenSections(s: NavSections): { primary: string[]; secondary: string
   };
 }
 
-const adminSections: NavSections = {
-  workspace: ['/inbox', '/calendar', '/customers', '/bookings'],
-  tools: [
-    '/services',
-    '/staff',
-    '/inventory',
-    '/pipeline',
-    '/invoices',
-    '/packages',
-    '/campaigns',
-    '/automations',
-    '/testimonials',
-  ],
-  insights: ['/dashboard', '/reports', '/reports/monthly-review', '/roi'],
+function getAdminSections(packName?: string): NavSections {
+  const isDealership = packName === 'dealership';
+  return {
+    workspace: ['/inbox', '/calendar', '/customers', '/bookings'],
+    tools: [
+      '/services',
+      '/staff',
+      ...(isDealership ? ['/inventory', '/pipeline'] : []),
+      '/invoices',
+      '/packages',
+      '/campaigns',
+      '/automations',
+      '/testimonials',
+    ],
+    insights: ['/dashboard', '/reports', '/reports/monthly-review', '/roi'],
   marketingAi: [
     '/ai',
     '/ai/agents',
@@ -51,13 +52,17 @@ const adminSections: NavSections = {
     '/marketing/sequences',
     '/marketing/rejection-analytics',
   ],
-};
+  };
+}
 
-const agentSections: NavSections = {
-  workspace: ['/inbox', '/calendar', '/customers', '/bookings', '/waitlist'],
-  tools: ['/services', '/inventory', '/pipeline'],
-  insights: ['/dashboard', '/reports'],
-};
+function getAgentSections(packName?: string): NavSections {
+  const isDealership = packName === 'dealership';
+  return {
+    workspace: ['/inbox', '/calendar', '/customers', '/bookings', '/waitlist'],
+    tools: ['/services', ...(isDealership ? ['/inventory', '/pipeline'] : [])],
+    insights: ['/dashboard', '/reports'],
+  };
+}
 
 const providerSections: NavSections = {
   workspace: ['/calendar', '/bookings'],
@@ -65,61 +70,65 @@ const providerSections: NavSections = {
   insights: ['/dashboard'],
 };
 
-const MODES: ModeDefinition[] = [
-  {
-    key: 'admin',
-    labels: {
-      general: 'Admin',
-      aesthetic: 'Clinic Manager',
-      dealership: 'Service Manager',
-      wellness: 'Studio Manager',
+function getModes(packName?: string): ModeDefinition[] {
+  const adminSections = getAdminSections(packName);
+  const agentSections = getAgentSections(packName);
+  return [
+    {
+      key: 'admin',
+      labels: {
+        general: 'Admin',
+        aesthetic: 'Clinic Manager',
+        dealership: 'Service Manager',
+        wellness: 'Studio Manager',
+      },
+      sections: adminSections,
+      primaryNavPaths: flattenSections(adminSections).primary,
+      secondaryNavPaths: [],
+      defaultLandingPath: '/dashboard',
+      allowedRoles: ['ADMIN'],
     },
-    sections: adminSections,
-    primaryNavPaths: flattenSections(adminSections).primary,
-    secondaryNavPaths: [],
-    defaultLandingPath: '/dashboard',
-    allowedRoles: ['ADMIN'],
-  },
-  {
-    key: 'agent',
-    labels: {
-      general: 'Agent',
-      aesthetic: 'Reception',
-      dealership: 'Service Advisor',
-      wellness: 'Front Desk',
+    {
+      key: 'agent',
+      labels: {
+        general: 'Agent',
+        aesthetic: 'Reception',
+        dealership: 'Service Advisor',
+        wellness: 'Front Desk',
+      },
+      sections: agentSections,
+      primaryNavPaths: flattenSections(agentSections).primary,
+      secondaryNavPaths: [],
+      defaultLandingPath: '/inbox',
+      allowedRoles: ['ADMIN', 'AGENT'],
     },
-    sections: agentSections,
-    primaryNavPaths: flattenSections(agentSections).primary,
-    secondaryNavPaths: [],
-    defaultLandingPath: '/inbox',
-    allowedRoles: ['ADMIN', 'AGENT'],
-  },
-  {
-    key: 'provider',
-    labels: {
-      general: 'Provider',
-      aesthetic: 'Provider',
-      dealership: 'Technician',
-      wellness: 'Practitioner',
+    {
+      key: 'provider',
+      labels: {
+        general: 'Provider',
+        aesthetic: 'Provider',
+        dealership: 'Technician',
+        wellness: 'Practitioner',
+      },
+      sections: providerSections,
+      primaryNavPaths: flattenSections(providerSections).primary,
+      secondaryNavPaths: [],
+      defaultLandingPath: '/calendar',
+      allowedRoles: ['ADMIN', 'SERVICE_PROVIDER'],
     },
-    sections: providerSections,
-    primaryNavPaths: flattenSections(providerSections).primary,
-    secondaryNavPaths: [],
-    defaultLandingPath: '/calendar',
-    allowedRoles: ['ADMIN', 'SERVICE_PROVIDER'],
-  },
-];
-
-export function getModeDefinitions(): ModeDefinition[] {
-  return MODES;
+  ];
 }
 
-export function getAvailableModes(role: string): ModeDefinition[] {
-  return MODES.filter((m) => m.allowedRoles.includes(role));
+export function getModeDefinitions(packName?: string): ModeDefinition[] {
+  return getModes(packName);
+}
+
+export function getAvailableModes(role: string, packName?: string): ModeDefinition[] {
+  return getModes(packName).filter((m) => m.allowedRoles.includes(role));
 }
 
 export function getModeLabel(mode: AppMode, packName: string): string {
-  const def = MODES.find((m) => m.key === mode);
+  const def = getModes(packName).find((m) => m.key === mode);
   if (!def) return mode;
   return def.labels[packName] || def.labels['general'] || mode;
 }
@@ -130,6 +139,6 @@ export function getDefaultMode(role: string): AppMode {
   return 'provider';
 }
 
-export function getModeByKey(key: AppMode): ModeDefinition | undefined {
-  return MODES.find((m) => m.key === key);
+export function getModeByKey(key: AppMode, packName?: string): ModeDefinition | undefined {
+  return getModes(packName).find((m) => m.key === key);
 }

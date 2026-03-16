@@ -300,7 +300,7 @@ function ShellInner({ children }: { children: ReactNode }) {
       <nav
         role="navigation"
         aria-label="Main navigation"
-        className="flex-1 p-2 space-y-0.5 overflow-y-auto"
+        className="flex-1 p-2 space-y-1 overflow-y-auto"
       >
         {/* WORKSPACE section */}
         {workspaceNav.length > 0 && (
@@ -315,7 +315,7 @@ function ShellInner({ children }: { children: ReactNode }) {
         {/* TOOLS section */}
         {toolsNav.length > 0 && (
           <>
-            <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
+            <div className="my-2 border-t border-slate-100 dark:border-slate-800" />
             <p className="nav-section-label">{t('nav.section_tools', undefined) || 'Tools'}</p>
             {toolsNav.map(renderNavLink)}
           </>
@@ -324,7 +324,7 @@ function ShellInner({ children }: { children: ReactNode }) {
         {/* INSIGHTS section */}
         {insightsNav.length > 0 && (
           <>
-            <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
+            <div className="my-2 border-t border-slate-100 dark:border-slate-800" />
             <p className="nav-section-label">
               {t('nav.section_insights', undefined) || 'Insights'}
             </p>
@@ -335,7 +335,7 @@ function ShellInner({ children }: { children: ReactNode }) {
         {/* MARKETING AI section */}
         {marketingAiNav.length > 0 && (
           <>
-            <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
+            <div className="my-2 border-t border-slate-100 dark:border-slate-800" />
             <p className="nav-section-label flex items-center gap-1">
               <Sparkles size={12} />
               {t('nav.section_marketing_ai', undefined) || 'Marketing AI'}
@@ -347,17 +347,18 @@ function ShellInner({ children }: { children: ReactNode }) {
         {/* Extra items (SUPER_ADMIN pack-builder, etc.) */}
         {extraNav.length > 0 && (
           <>
-            <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
+            <div className="my-2 border-t border-slate-100 dark:border-slate-800" />
             {extraNav.map(renderNavLink)}
           </>
         )}
       </nav>
-      {/* Onboarding Checklist */}
-      {(user?.business as Record<string, unknown>)?.onboardingComplete !== true && (
+      {/* Onboarding Checklist — shown until setup is complete */}
+      {(user?.business as Record<string, unknown>)?.onboardingComplete !== true ? (
         <OnboardingChecklist />
+      ) : (
+        /* Activation Widget — shown only after onboarding is complete */
+        <ActivationWidget />
       )}
-      {/* Activation Widget */}
-      <ActivationWidget />
       {/* Sidebar Pinned Views */}
       {pinnedViews.length > 0 && (
         <div
