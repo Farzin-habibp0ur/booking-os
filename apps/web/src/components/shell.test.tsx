@@ -113,19 +113,10 @@ jest.mock('@/lib/use-mode', () => ({
     modeDef: {
       key: 'admin',
       sections: {
-        workspace: ['/dashboard', '/inbox', '/calendar', '/customers', '/bookings'],
-        tools: ['/services', '/campaigns', '/automations', '/waitlist', '/service-board'],
+        workspace: ['/dashboard', '/inbox', '/calendar', '/customers', '/bookings', '/waitlist'],
+        tools: ['/services', '/campaigns', '/automations', '/service-board'],
         insights: ['/reports', '/reports/monthly-review', '/roi'],
-        marketingAi: [
-          '/ai',
-          '/ai/agents',
-          '/ai/actions',
-          '/ai/performance',
-          '/marketing/queue',
-          '/marketing/agents',
-          '/marketing/sequences',
-          '/marketing/rejection-analytics',
-        ],
+        aiAgents: ['/ai', '/ai/agents', '/ai/actions', '/ai/performance'],
       },
       defaultLandingPath: '/dashboard',
     },
@@ -275,7 +266,7 @@ describe('Shell', () => {
     expect(screen.queryByTestId('pinned-views-section')).not.toBeInTheDocument();
   });
 
-  it('renders section labels for workspace, tools, insights, and marketing ai', () => {
+  it('renders section labels for workspace, tools, insights, and ai agents', () => {
     render(
       <Shell>
         <div>Content</div>
@@ -287,7 +278,7 @@ describe('Shell', () => {
     expect(within(nav).getByText('nav.section_workspace')).toBeInTheDocument();
     expect(within(nav).getByText('nav.section_tools')).toBeInTheDocument();
     expect(within(nav).getByText('nav.section_insights')).toBeInTheDocument();
-    expect(within(nav).getByText('nav.section_marketing_ai')).toBeInTheDocument();
+    expect(within(nav).getByText('nav.section_ai_agents')).toBeInTheDocument();
   });
 
   it('section labels use nav-section-label class', () => {
@@ -331,7 +322,7 @@ describe('Shell', () => {
     expect(within(nav).queryByText(/show more/i)).not.toBeInTheDocument();
   });
 
-  it('renders Content Queue nav link pointing to /marketing/queue', () => {
+  it('does not render marketing nav links (Content Queue, Marketing Agents, etc.)', () => {
     render(
       <Shell>
         <div>Content</div>
@@ -339,20 +330,10 @@ describe('Shell', () => {
     );
 
     const nav = screen.getByRole('navigation', { name: 'Main navigation' });
-    const link = within(nav).getByText('Content Queue');
-    expect(link.closest('a')).toHaveAttribute('href', '/marketing/queue');
-  });
-
-  it('renders Marketing Agents nav link pointing to /marketing/agents', () => {
-    render(
-      <Shell>
-        <div>Content</div>
-      </Shell>,
-    );
-
-    const nav = screen.getByRole('navigation', { name: 'Main navigation' });
-    const link = within(nav).getByText('Marketing Agents');
-    expect(link.closest('a')).toHaveAttribute('href', '/marketing/agents');
+    expect(within(nav).queryByText('Content Queue')).not.toBeInTheDocument();
+    expect(within(nav).queryByText('Marketing Agents')).not.toBeInTheDocument();
+    expect(within(nav).queryByText('Email Sequences')).not.toBeInTheDocument();
+    expect(within(nav).queryByText('Rejection Analytics')).not.toBeInTheDocument();
   });
 
   it('renders AI sub-route nav links', () => {
@@ -366,18 +347,6 @@ describe('Shell', () => {
     expect(within(nav).getByText('Action Triage')).toBeInTheDocument();
     expect(within(nav).getByText('Agent Status')).toBeInTheDocument();
     expect(within(nav).getByText('Performance')).toBeInTheDocument();
-  });
-
-  it('renders Rejection Analytics nav link', () => {
-    render(
-      <Shell>
-        <div>Content</div>
-      </Shell>,
-    );
-
-    const nav = screen.getByRole('navigation', { name: 'Main navigation' });
-    const link = within(nav).getByText('Rejection Analytics');
-    expect(link.closest('a')).toHaveAttribute('href', '/marketing/rejection-analytics');
   });
 
   it('renders pinned view as link to page with viewId', async () => {

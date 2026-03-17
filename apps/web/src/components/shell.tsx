@@ -35,7 +35,6 @@ import {
   Package,
   Kanban,
   Compass,
-  FileText,
   Pin,
   Bookmark,
   Star,
@@ -144,7 +143,6 @@ function ShellInner({ children }: { children: ReactNode }) {
     d: () => router.push('/dashboard'),
     s: () => router.push('/services'),
     a: () => router.push('/automations'),
-    m: () => router.push('/marketing/queue'),
     q: () => router.push('/ai/actions'),
   });
 
@@ -193,15 +191,10 @@ function ShellInner({ children }: { children: ReactNode }) {
     { href: '/invoices', label: 'Invoices', icon: Receipt, roles: ['ADMIN'] },
     { href: '/campaigns', label: 'Campaigns', icon: Megaphone, roles: ['ADMIN'] },
     { href: '/automations', label: 'Automations', icon: Zap, roles: ['ADMIN'] },
-    { href: '/marketing/queue', label: 'Content Queue', icon: FileText, roles: ['ADMIN'] },
-    { href: '/marketing/agents', label: 'Marketing Agents', icon: Zap, roles: ['ADMIN'] },
-    { href: '/marketing/sequences', label: 'Email Sequences', icon: Megaphone, roles: ['ADMIN'] },
-    {
-      href: '/marketing/rejection-analytics',
-      label: 'Rejection Analytics',
-      icon: BarChart3,
-      roles: ['ADMIN'],
-    },
+    ...(pack.name === 'wellness'
+      ? [{ href: '/packages', label: 'Packages', icon: Package, roles: ['ADMIN'] }]
+      : []),
+    { href: '/testimonials', label: 'Testimonials', icon: Star, roles: ['ADMIN'] },
     ...((user?.business?.packConfig as any)?.kanbanEnabled
       ? [
           {
@@ -231,19 +224,19 @@ function ShellInner({ children }: { children: ReactNode }) {
   const nav = allNav.filter((item) => !role || item.roles.includes(role));
 
   // 3-section nav model: Workspace / Tools / Insights
-  const sections = modeDef?.sections;
-  const workspaceNav = nav.filter((item) => sections?.workspace.includes(item.href));
-  const toolsNav = nav.filter((item) => sections?.tools.includes(item.href));
-  const insightsNav = nav.filter((item) => sections?.insights.includes(item.href));
-  const marketingAiNav = nav.filter((item) => sections?.marketingAi?.includes(item.href));
+  const sections = modeDef?.sections ?? { workspace: [], tools: [], insights: [] };
+  const workspaceNav = nav.filter((item) => sections.workspace.includes(item.href));
+  const toolsNav = nav.filter((item) => sections.tools.includes(item.href));
+  const insightsNav = nav.filter((item) => sections.insights.includes(item.href));
+  const aiAgentsNav = nav.filter((item) => sections.aiAgents?.includes(item.href));
   // Items not in any section (e.g. pack-builder for SUPER_ADMIN)
   const extraNav = nav.filter(
     (item) =>
       item.href !== '/settings' &&
-      !sections?.workspace.includes(item.href) &&
-      !sections?.tools.includes(item.href) &&
-      !sections?.insights.includes(item.href) &&
-      !sections?.marketingAi?.includes(item.href),
+      !sections.workspace.includes(item.href) &&
+      !sections.tools.includes(item.href) &&
+      !sections.insights.includes(item.href) &&
+      !sections.aiAgents?.includes(item.href),
   );
 
   const renderNavLink = ({ href, label, icon: Icon }: (typeof nav)[0]) => (
@@ -336,15 +329,15 @@ function ShellInner({ children }: { children: ReactNode }) {
           </>
         )}
 
-        {/* MARKETING AI section */}
-        {marketingAiNav.length > 0 && (
+        {/* AI & AGENTS section */}
+        {aiAgentsNav.length > 0 && (
           <>
             <div className="my-2 border-t border-slate-100 dark:border-slate-800" />
             <p className="nav-section-label flex items-center gap-1">
               <Sparkles size={12} />
-              {t('nav.section_marketing_ai', undefined) || 'Marketing AI'}
+              {t('nav.section_ai_agents', undefined) || 'AI & Agents'}
             </p>
-            {marketingAiNav.map(renderNavLink)}
+            {aiAgentsNav.map(renderNavLink)}
           </>
         )}
 
@@ -633,7 +626,7 @@ function ShellInner({ children }: { children: ReactNode }) {
                   </Link>
                 );
               })}
-              {marketingAiNav.map((item) => {
+              {aiAgentsNav.map((item) => {
                 const Icon = item.icon;
                 return (
                   <Link

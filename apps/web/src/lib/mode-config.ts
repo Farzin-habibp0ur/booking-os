@@ -4,7 +4,7 @@ export interface NavSections {
   workspace: string[];
   tools: string[];
   insights: string[];
-  marketingAi?: string[];
+  aiAgents?: string[];
 }
 
 export interface ModeDefinition {
@@ -22,7 +22,7 @@ export interface ModeDefinition {
 
 function flattenSections(s: NavSections): { primary: string[]; secondary: string[] } {
   return {
-    primary: [...s.workspace, ...s.tools, ...s.insights, ...(s.marketingAi || [])],
+    primary: [...s.workspace, ...s.tools, ...s.insights, ...(s.aiAgents || [])],
     secondary: [],
   };
 }
@@ -30,7 +30,7 @@ function flattenSections(s: NavSections): { primary: string[]; secondary: string
 function getAdminSections(packName?: string): NavSections {
   const isDealership = packName === 'dealership';
   return {
-    workspace: ['/inbox', '/calendar', '/customers', '/bookings'],
+    workspace: ['/inbox', '/calendar', '/customers', '/bookings', '/waitlist'],
     tools: [
       '/services',
       '/staff',
@@ -42,16 +42,7 @@ function getAdminSections(packName?: string): NavSections {
       '/testimonials',
     ],
     insights: ['/dashboard', '/reports', '/reports/monthly-review', '/roi'],
-    marketingAi: [
-      '/ai',
-      '/ai/agents',
-      '/ai/actions',
-      '/ai/performance',
-      '/marketing/queue',
-      '/marketing/agents',
-      '/marketing/sequences',
-      '/marketing/rejection-analytics',
-    ],
+    aiAgents: ['/ai', '/ai/agents', '/ai/actions', '/ai/performance'],
   };
 }
 

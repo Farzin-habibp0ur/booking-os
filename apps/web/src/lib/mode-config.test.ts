@@ -104,10 +104,10 @@ describe('mode-config', () => {
     });
   });
 
-  describe('admin marketingAi section', () => {
-    it('admin mode includes /ai in marketingAi section', () => {
+  describe('admin aiAgents section', () => {
+    it('admin mode includes /ai in aiAgents section', () => {
       const admin = getModeByKey('admin');
-      expect(admin?.sections.marketingAi).toContain('/ai');
+      expect(admin?.sections.aiAgents).toContain('/ai');
     });
   });
 
@@ -129,7 +129,7 @@ describe('mode-config', () => {
           ...mode.sections.workspace,
           ...mode.sections.tools,
           ...mode.sections.insights,
-          ...(mode.sections.marketingAi || []),
+          ...(mode.sections.aiAgents || []),
         ];
         for (const path of allPaths) {
           expect(path).toMatch(/^\//);
@@ -143,6 +143,7 @@ describe('mode-config', () => {
       expect(admin.sections.workspace).toContain('/calendar');
       expect(admin.sections.workspace).toContain('/customers');
       expect(admin.sections.workspace).toContain('/bookings');
+      expect(admin.sections.workspace).toContain('/waitlist');
       expect(admin.sections.tools).toContain('/services');
       expect(admin.sections.tools).toContain('/staff');
       expect(admin.sections.tools).toContain('/campaigns');
@@ -152,20 +153,16 @@ describe('mode-config', () => {
       expect(admin.sections.insights).toContain('/roi');
     });
 
-    it('admin marketingAi includes marketing routes', () => {
+    it('admin aiAgents includes AI sub-routes only (no marketing routes)', () => {
       const admin = modes.find((m) => m.key === 'admin')!;
-      expect(admin.sections.marketingAi).toContain('/marketing/queue');
-      expect(admin.sections.marketingAi).toContain('/marketing/agents');
-      expect(admin.sections.marketingAi).toContain('/marketing/sequences');
-      expect(admin.sections.marketingAi).toContain('/marketing/rejection-analytics');
-    });
-
-    it('admin marketingAi includes AI sub-routes', () => {
-      const admin = modes.find((m) => m.key === 'admin')!;
-      expect(admin.sections.marketingAi).toContain('/ai');
-      expect(admin.sections.marketingAi).toContain('/ai/actions');
-      expect(admin.sections.marketingAi).toContain('/ai/agents');
-      expect(admin.sections.marketingAi).toContain('/ai/performance');
+      expect(admin.sections.aiAgents).toContain('/ai');
+      expect(admin.sections.aiAgents).toContain('/ai/actions');
+      expect(admin.sections.aiAgents).toContain('/ai/agents');
+      expect(admin.sections.aiAgents).toContain('/ai/performance');
+      expect(admin.sections.aiAgents).not.toContain('/marketing/queue');
+      expect(admin.sections.aiAgents).not.toContain('/marketing/agents');
+      expect(admin.sections.aiAgents).not.toContain('/marketing/sequences');
+      expect(admin.sections.aiAgents).not.toContain('/marketing/rejection-analytics');
     });
 
     it('agent sections include expected paths', () => {
@@ -191,7 +188,7 @@ describe('mode-config', () => {
           ...mode.sections.workspace,
           ...mode.sections.tools,
           ...mode.sections.insights,
-          ...(mode.sections.marketingAi || []),
+          ...(mode.sections.aiAgents || []),
         ];
         const unique = new Set(allPaths);
         expect(unique.size).toBe(allPaths.length);
@@ -204,7 +201,7 @@ describe('mode-config', () => {
           ...mode.sections.workspace,
           ...mode.sections.tools,
           ...mode.sections.insights,
-          ...(mode.sections.marketingAi || []),
+          ...(mode.sections.aiAgents || []),
         ];
         for (const path of allSectionPaths) {
           expect(mode.primaryNavPaths).toContain(path);
