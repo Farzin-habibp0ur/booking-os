@@ -4,18 +4,7 @@ import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { useToast } from '@/lib/toast';
-import {
-  Bot,
-  Megaphone,
-  ChevronDown,
-  ChevronUp,
-  Play,
-  CheckCircle,
-  XCircle,
-  Clock,
-  TrendingUp,
-  Filter,
-} from 'lucide-react';
+import { Bot, ChevronDown, ChevronUp, Play, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { ListSkeleton } from '@/components/skeleton';
 
 interface AgentConfig {
@@ -40,37 +29,7 @@ interface AgentRun {
   errors?: any;
 }
 
-type TabFilter = 'all' | 'content' | 'distribution' | 'analytics';
-
-const AGENT_CATEGORIES: Record<string, TabFilter> = {
-  BlogWriter: 'content',
-  SocialCreator: 'content',
-  EmailComposer: 'content',
-  CaseStudyWriter: 'content',
-  VideoScriptWriter: 'content',
-  NewsletterComposer: 'content',
-  ContentScheduler: 'distribution',
-  ContentPublisher: 'distribution',
-  PerformanceTracker: 'analytics',
-  TrendAnalyzer: 'analytics',
-  ContentCalendar: 'analytics',
-  ContentROI: 'analytics',
-};
-
 const AGENT_DESCRIPTIONS: Record<string, string> = {
-  BlogWriter: 'Generates SEO-optimized blog posts from business context',
-  SocialCreator: 'Creates social media posts and engagement content',
-  EmailComposer: 'Drafts marketing emails and newsletters',
-  CaseStudyWriter: 'Writes customer success stories and case studies',
-  VideoScriptWriter: 'Creates video scripts for social and marketing content',
-  NewsletterComposer: 'Compiles and formats regular business newsletters',
-  ContentScheduler: 'Schedules content publication across channels',
-  ContentPublisher: 'Publishes approved content to connected platforms',
-  PerformanceTracker: 'Tracks content performance metrics and KPIs',
-  TrendAnalyzer: 'Analyzes market trends and content opportunities',
-  ContentCalendar: 'Maintains and optimizes the content calendar',
-  ContentROI: 'Calculates return on investment for content efforts',
-  // Core agents
   WAITLIST: 'Auto-matches waitlist entries to cancelled booking slots',
   RETENTION: 'Detects at-risk customers and generates win-back action cards',
   DATA_HYGIENE: 'Identifies duplicate records and incomplete customer profiles',
@@ -78,31 +37,14 @@ const AGENT_DESCRIPTIONS: Record<string, string> = {
   QUOTE_FOLLOWUP: 'Sends follow-up reminders for expired or pending quotes',
 };
 
-const CORE_AGENTS = [
-  'WAITLIST',
-  'RETENTION',
-  'DATA_HYGIENE',
-  'SCHEDULING_OPTIMIZER',
-  'QUOTE_FOLLOWUP',
-];
-
-const TAB_FILTERS: Array<{ value: TabFilter; label: string }> = [
-  { value: 'all', label: 'All' },
-  { value: 'content', label: 'Content' },
-  { value: 'distribution', label: 'Distribution' },
-  { value: 'analytics', label: 'Analytics' },
-];
-
 export default function AIAgentsPage() {
   const { toast } = useToast();
-  const [coreAgents, setCoreAgents] = useState<AgentConfig[]>([]);
-  const [marketingAgents, setMarketingAgents] = useState<AgentConfig[]>([]);
+  const [agents, setAgents] = useState<AgentConfig[]>([]);
   const [runs, setRuns] = useState<AgentRun[]>([]);
   const [expandedAgent, setExpandedAgent] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [runningId, setRunningId] = useState<string | null>(null);
-  const [tabFilter, setTabFilter] = useState<TabFilter>('all');
 
   useEffect(() => {
     loadAgents();
@@ -116,10 +58,7 @@ export default function AIAgentsPage() {
         api.get<any>('/agent-runs?take=100').catch(() => ({ data: [] })),
       ]);
 
-      const allConfigs = Array.isArray(configs) ? configs : [];
-      // Separate core from marketing agents
-      setCoreAgents(allConfigs.filter((a) => CORE_AGENTS.includes(a.agentType)));
-      setMarketingAgents(allConfigs.filter((a) => !CORE_AGENTS.includes(a.agentType)));
+      setAgents(Array.isArray(configs) ? configs : []);
 
       const runData = (agentRuns as any)?.data || agentRuns || [];
       setRuns(Array.isArray(runData) ? runData : []);
@@ -134,10 +73,9 @@ export default function AIAgentsPage() {
     setTogglingId(agentType);
     try {
       await api.patch(`/agent-config/${agentType}`, { isEnabled: !currentEnabled });
-      const updateList = (prev: AgentConfig[]) =>
-        prev.map((a) => (a.agentType === agentType ? { ...a, isEnabled: !currentEnabled } : a));
-      setCoreAgents(updateList);
-      setMarketingAgents(updateList);
+      setAgents((prev) =>
+        prev.map((a) => (a.agentType === agentType ? { ...a, isEnabled: !currentEnabled } : a)),
+      );
       toast(`${formatAgentName(agentType)} ${!currentEnabled ? 'enabled' : 'disabled'}`);
     } catch {
       toast('Failed to toggle agent', 'error');
@@ -162,11 +100,6 @@ export default function AIAgentsPage() {
   const getAgentRuns = (agentType: string) =>
     runs.filter((r) => r.agentType === agentType).slice(0, 10);
 
-  const filteredMarketing =
-    tabFilter === 'all'
-      ? marketingAgents
-      : marketingAgents.filter((a) => (AGENT_CATEGORIES[a.agentType] || 'content') === tabFilter);
-
   if (loading) {
     return (
       <div className="space-y-6" data-testid="agents-loading">
@@ -185,12 +118,12 @@ export default function AIAgentsPage() {
             Core Agents
           </h2>
           <span className="text-xs text-slate-500 ml-2">
-            {coreAgents.filter((a) => a.isEnabled).length}/{coreAgents.length} active
+            {agents.filter((a) => a.isEnabled).length}/{agents.length} active
           </span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {coreAgents.length === 0 ? (
+          {agents.length === 0 ? (
             <div className="col-span-full rounded-2xl bg-white dark:bg-slate-900 p-12 shadow-soft text-center">
               <Bot className="mx-auto mb-4 text-slate-400" size={48} />
               <h3 className="font-serif text-lg text-slate-900 dark:text-white mb-2">
@@ -201,7 +134,7 @@ export default function AIAgentsPage() {
               </p>
             </div>
           ) : (
-            coreAgents.map((agent) => (
+            agents.map((agent) => (
               <AgentCard
                 key={agent.agentType}
                 agent={agent}
@@ -214,76 +147,6 @@ export default function AIAgentsPage() {
                 onExpand={() =>
                   setExpandedAgent(expandedAgent === agent.agentType ? null : agent.agentType)
                 }
-              />
-            ))
-          )}
-        </div>
-      </section>
-
-      {/* Marketing Agents */}
-      <section>
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Megaphone size={20} className="text-lavender-500" />
-            <h2 className="font-serif text-lg font-semibold text-slate-900 dark:text-white">
-              Marketing Agents
-            </h2>
-            <span className="text-xs text-slate-500 ml-2">
-              {marketingAgents.filter((a) => a.isEnabled).length}/{marketingAgents.length} active
-            </span>
-          </div>
-
-          {/* Tab Filters */}
-          <div
-            className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5"
-            data-testid="agent-tab-filters"
-          >
-            {TAB_FILTERS.map((tab) => (
-              <button
-                key={tab.value}
-                onClick={() => setTabFilter(tab.value)}
-                className={cn(
-                  'px-2.5 py-1 text-xs font-medium rounded-md transition-colors',
-                  tabFilter === tab.value
-                    ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
-                    : 'text-slate-500 hover:text-slate-700',
-                )}
-                data-testid={`filter-${tab.value}`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredMarketing.length === 0 ? (
-            <div className="col-span-full rounded-2xl bg-white dark:bg-slate-900 p-12 shadow-soft text-center">
-              <Filter className="mx-auto mb-4 text-slate-400" size={48} />
-              <h3 className="font-serif text-lg text-slate-900 dark:text-white mb-2">
-                No Agents Found
-              </h3>
-              <p className="text-sm text-slate-600 dark:text-slate-400">
-                {tabFilter === 'all'
-                  ? 'Marketing agents will appear here once configured.'
-                  : `No ${tabFilter} agents configured.`}
-              </p>
-            </div>
-          ) : (
-            filteredMarketing.map((agent) => (
-              <AgentCard
-                key={agent.agentType}
-                agent={agent}
-                runs={getAgentRuns(agent.agentType)}
-                expanded={expandedAgent === agent.agentType}
-                toggling={togglingId === agent.agentType}
-                running={runningId === agent.agentType}
-                onToggle={() => toggleAgent(agent.agentType, agent.isEnabled)}
-                onTrigger={() => triggerAgent(agent.agentType)}
-                onExpand={() =>
-                  setExpandedAgent(expandedAgent === agent.agentType ? null : agent.agentType)
-                }
-                isMarketing
               />
             ))
           )}
@@ -302,7 +165,6 @@ function AgentCard({
   onToggle,
   onTrigger,
   onExpand,
-  isMarketing,
 }: {
   agent: AgentConfig;
   runs: AgentRun[];
@@ -312,7 +174,6 @@ function AgentCard({
   onToggle: () => void;
   onTrigger: () => void;
   onExpand: () => void;
-  isMarketing?: boolean;
 }) {
   return (
     <div
@@ -405,9 +266,7 @@ function AgentCard({
             disabled={!agent.isEnabled || running}
             className={cn(
               'flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-lg transition-colors',
-              isMarketing
-                ? 'bg-lavender-50 text-lavender-700 hover:bg-lavender-100'
-                : 'bg-sage-50 text-sage-700 hover:bg-sage-100',
+              'bg-sage-50 text-sage-700 hover:bg-sage-100',
               'disabled:opacity-50',
             )}
             data-testid={`trigger-${agent.agentType}`}

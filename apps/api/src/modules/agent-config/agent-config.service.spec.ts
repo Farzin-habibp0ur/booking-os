@@ -10,10 +10,10 @@ describe('AgentConfigService', () => {
   const mockConfig = {
     id: 'cfg1',
     businessId: 'biz1',
-    agentType: 'BlogWriter',
+    agentType: 'WAITLIST',
     isEnabled: true,
     autonomyLevel: 'SUGGEST',
-    config: { description: 'SEO blog post writer' },
+    config: { description: 'Waitlist agent' },
     roleVisibility: [],
     runIntervalMinutes: null,
     lastRunAt: null,
@@ -30,72 +30,51 @@ describe('AgentConfigService', () => {
   });
 
   describe('findAll', () => {
-    it('seeds defaults then returns all configs for business', async () => {
-      prisma.agentConfig.count.mockResolvedValue(12);
+    it('returns only core agent configs, excluding marketing agents', async () => {
       prisma.agentConfig.findMany.mockResolvedValue([mockConfig] as any);
 
       const result = await service.findAll('biz1');
 
       expect(result).toEqual([mockConfig]);
       expect(prisma.agentConfig.findMany).toHaveBeenCalledWith({
-        where: { businessId: 'biz1' },
+        where: {
+          businessId: 'biz1',
+          agentType: {
+            notIn: expect.arrayContaining(['BlogWriter', 'SocialCreator', 'ContentROI']),
+          },
+        },
         orderBy: { agentType: 'asc' },
       });
     });
 
-    it('seeds missing configs when count is less than 12', async () => {
-      prisma.agentConfig.count.mockResolvedValue(0);
-      prisma.agentConfig.create.mockResolvedValue({} as any);
-      prisma.agentConfig.findMany.mockResolvedValue([]);
-
-      await service.findAll('biz1');
-
-      expect(prisma.agentConfig.create).toHaveBeenCalledTimes(12);
-      expect(prisma.agentConfig.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({
-            businessId: 'biz1',
-            agentType: 'BlogWriter',
-            isEnabled: false,
-            autonomyLevel: 'SUGGEST',
-          }),
-        }),
-      );
-    });
-
-    it('skips seeding when all 12 exist', async () => {
-      prisma.agentConfig.count.mockResolvedValue(12);
+    it('does not seed marketing agents', async () => {
       prisma.agentConfig.findMany.mockResolvedValue([]);
 
       await service.findAll('biz1');
 
       expect(prisma.agentConfig.create).not.toHaveBeenCalled();
     });
-
-    it('handles duplicate constraint errors during seeding gracefully', async () => {
-      prisma.agentConfig.count.mockResolvedValue(0);
-      prisma.agentConfig.create.mockRejectedValue(new Error('Unique constraint'));
-      prisma.agentConfig.findMany.mockResolvedValue([]);
-
-      await expect(service.findAll('biz1')).resolves.toEqual([]);
-    });
   });
 
   describe('findOne', () => {
-    it('returns config by agentType', async () => {
-      prisma.agentConfig.count.mockResolvedValue(12);
+    it('returns config for a core agent type', async () => {
       prisma.agentConfig.findFirst.mockResolvedValue(mockConfig as any);
 
-      const result = await service.findOne('biz1', 'BlogWriter');
+      const result = await service.findOne('biz1', 'WAITLIST');
 
       expect(result).toEqual(mockConfig);
       expect(prisma.agentConfig.findFirst).toHaveBeenCalledWith({
-        where: { businessId: 'biz1', agentType: 'BlogWriter' },
+        where: { businessId: 'biz1', agentType: 'WAITLIST' },
       });
     });
 
+    it('throws NotFoundException for marketing agent types', async () => {
+      await expect(service.findOne('biz1', 'BlogWriter')).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('biz1', 'SocialCreator')).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('biz1', 'ContentROI')).rejects.toThrow(NotFoundException);
+    });
+
     it('throws NotFoundException when not found', async () => {
-      prisma.agentConfig.count.mockResolvedValue(12);
       prisma.agentConfig.findFirst.mockResolvedValue(null);
 
       await expect(service.findOne('biz1', 'Unknown')).rejects.toThrow(NotFoundException);
@@ -104,7 +83,6 @@ describe('AgentConfigService', () => {
 
   describe('update', () => {
     it('updates config fields', async () => {
-      prisma.agentConfig.count.mockResolvedValue(12);
       prisma.agentConfig.findFirst.mockResolvedValue(mockConfig as any);
       prisma.agentConfig.update.mockResolvedValue({
         ...mockConfig,
@@ -112,7 +90,7 @@ describe('AgentConfigService', () => {
         runIntervalMinutes: 60,
       } as any);
 
-      const result = await service.update('biz1', 'BlogWriter', {
+      const result = await service.update('biz1', 'WAITLIST', {
         isEnabled: false,
         runIntervalMinutes: 60,
       });
@@ -131,66 +109,76 @@ describe('AgentConfigService', () => {
 
   describe('runNow', () => {
     it('adds job to AGENT_PROCESSING queue', async () => {
-      prisma.agentConfig.count.mockResolvedValue(12);
       prisma.agentConfig.findFirst.mockResolvedValue(mockConfig as any);
 
-      const result = await service.runNow('biz1', 'BlogWriter');
+      const result = await service.runNow('biz1', 'WAITLIST');
 
       expect(mockQueue.add).toHaveBeenCalledWith('run-agent', {
         businessId: 'biz1',
-        agentType: 'BlogWriter',
+        agentType: 'WAITLIST',
         triggeredManually: true,
       });
-      expect(result).toEqual({ queued: true, agentType: 'BlogWriter', businessId: 'biz1' });
+      expect(result).toEqual({ queued: true, agentType: 'WAITLIST', businessId: 'biz1' });
     });
 
     it('works without queue (graceful degradation)', async () => {
       const serviceNoQueue = new AgentConfigService(prisma as any);
-      prisma.agentConfig.count.mockResolvedValue(12);
       prisma.agentConfig.findFirst.mockResolvedValue(mockConfig as any);
 
-      const result = await serviceNoQueue.runNow('biz1', 'BlogWriter');
+      const result = await serviceNoQueue.runNow('biz1', 'WAITLIST');
 
       expect(result.queued).toBe(true);
     });
   });
 
   describe('getPerformanceSummary', () => {
-    it('aggregates run stats by agent', async () => {
+    it('aggregates run stats by agent, excluding marketing agents', async () => {
       prisma.agentRun.groupBy.mockResolvedValue([
-        { agentType: 'BlogWriter', status: 'COMPLETED', _count: 10, _sum: { cardsCreated: 8 } },
-        { agentType: 'BlogWriter', status: 'FAILED', _count: 2, _sum: { cardsCreated: 0 } },
-        { agentType: 'SocialCreator', status: 'COMPLETED', _count: 5, _sum: { cardsCreated: 5 } },
+        { agentType: 'WAITLIST', status: 'COMPLETED', _count: 10, _sum: { cardsCreated: 8 } },
+        { agentType: 'WAITLIST', status: 'FAILED', _count: 2, _sum: { cardsCreated: 0 } },
+        { agentType: 'RETENTION', status: 'COMPLETED', _count: 5, _sum: { cardsCreated: 5 } },
       ] as any);
 
       const result = await service.getPerformanceSummary('biz1');
 
-      expect(result.BlogWriter).toEqual({
+      expect(result.WAITLIST).toEqual({
         total: 12,
         completed: 10,
         failed: 2,
         cardsCreated: 8,
         successRate: 83,
       });
-      expect(result.SocialCreator).toEqual({
+      expect(result.RETENTION).toEqual({
         total: 5,
         completed: 5,
         failed: 0,
         cardsCreated: 5,
         successRate: 100,
       });
+
+      // Verify marketing agents are excluded via notIn filter
+      expect(prisma.agentRun.groupBy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            agentType: {
+              notIn: expect.arrayContaining(['BlogWriter', 'SocialCreator']),
+            },
+          }),
+        }),
+      );
     });
   });
 
   describe('tenant isolation', () => {
     it('findAll filters by businessId', async () => {
-      prisma.agentConfig.count.mockResolvedValue(12);
       prisma.agentConfig.findMany.mockResolvedValue([]);
 
       await service.findAll('biz1');
 
       expect(prisma.agentConfig.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { businessId: 'biz1' } }),
+        expect.objectContaining({
+          where: expect.objectContaining({ businessId: 'biz1' }),
+        }),
       );
     });
 
@@ -200,7 +188,9 @@ describe('AgentConfigService', () => {
       await service.getPerformanceSummary('biz1');
 
       expect(prisma.agentRun.groupBy).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { businessId: 'biz1' } }),
+        expect.objectContaining({
+          where: expect.objectContaining({ businessId: 'biz1' }),
+        }),
       );
     });
   });

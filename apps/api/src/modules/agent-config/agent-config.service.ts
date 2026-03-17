@@ -5,22 +5,25 @@ import { PrismaService } from '../../common/prisma.service';
 import { QUEUE_NAMES } from '../../common/queue/queue.module';
 import { UpdateAgentConfigDto } from './dto';
 
-const MARKETING_AGENTS = [
-  // Content agents
-  { agentType: 'BlogWriter', config: { description: 'SEO blog post writer' } },
-  { agentType: 'SocialCreator', config: { description: 'Social media content creator' } },
-  { agentType: 'EmailComposer', config: { description: 'Email campaign composer' } },
-  { agentType: 'CaseStudyWriter', config: { description: 'Customer case study writer' } },
-  { agentType: 'VideoScriptWriter', config: { description: 'Video script writer' } },
-  { agentType: 'NewsletterComposer', config: { description: 'Newsletter composer' } },
-  // Distribution agents
-  { agentType: 'ContentScheduler', config: { description: 'Content scheduling agent' } },
-  { agentType: 'ContentPublisher', config: { description: 'Content publishing agent' } },
-  // Analytics agents
-  { agentType: 'PerformanceTracker', config: { description: 'Content performance tracker' } },
-  { agentType: 'TrendAnalyzer', config: { description: 'Trend analysis agent' } },
-  { agentType: 'ContentCalendar', config: { description: 'Content calendar manager' } },
-  { agentType: 'ContentROI', config: { description: 'Content ROI analyzer' } },
+/**
+ * Marketing agents are BookingOS's internal growth engine — they should NOT
+ * be created or returned for customer businesses.  The list is kept here so
+ * that existing marketing-agent rows can be excluded from customer-facing
+ * queries (they may already exist in the DB from prior seeds).
+ */
+const MARKETING_AGENT_TYPES = [
+  'BlogWriter',
+  'SocialCreator',
+  'EmailComposer',
+  'CaseStudyWriter',
+  'VideoScriptWriter',
+  'NewsletterComposer',
+  'ContentScheduler',
+  'ContentPublisher',
+  'PerformanceTracker',
+  'TrendAnalyzer',
+  'ContentCalendar',
+  'ContentROI',
 ];
 
 @Injectable()
@@ -33,16 +36,19 @@ export class AgentConfigService {
   ) {}
 
   async findAll(businessId: string) {
-    await this.seedDefaultConfigs(businessId);
-
     return this.prisma.agentConfig.findMany({
-      where: { businessId },
+      where: {
+        businessId,
+        agentType: { notIn: MARKETING_AGENT_TYPES },
+      },
       orderBy: { agentType: 'asc' },
     });
   }
 
   async findOne(businessId: string, agentType: string) {
-    await this.seedDefaultConfigs(businessId);
+    if (MARKETING_AGENT_TYPES.includes(agentType)) {
+      throw new NotFoundException(`Agent config for ${agentType} not found`);
+    }
 
     const config = await this.prisma.agentConfig.findFirst({
       where: { businessId, agentType },
@@ -86,7 +92,10 @@ export class AgentConfigService {
   async getPerformanceSummary(businessId: string) {
     const runs = await this.prisma.agentRun.groupBy({
       by: ['agentType', 'status'],
-      where: { businessId },
+      where: {
+        businessId,
+        agentType: { notIn: MARKETING_AGENT_TYPES },
+      },
       _count: true,
       _sum: { cardsCreated: true },
     });
@@ -112,32 +121,5 @@ export class AgentConfigService {
     }
 
     return summary;
-  }
-
-  private async seedDefaultConfigs(businessId: string) {
-    const existing = await this.prisma.agentConfig.count({
-      where: {
-        businessId,
-        agentType: { in: MARKETING_AGENTS.map((a) => a.agentType) },
-      },
-    });
-
-    if (existing >= MARKETING_AGENTS.length) return;
-
-    for (const agent of MARKETING_AGENTS) {
-      await this.prisma.agentConfig
-        .create({
-          data: {
-            businessId,
-            agentType: agent.agentType,
-            isEnabled: false,
-            autonomyLevel: 'SUGGEST',
-            config: agent.config,
-          },
-        })
-        .catch(() => {
-          // unique constraint — config already exists, skip
-        });
-    }
   }
 }

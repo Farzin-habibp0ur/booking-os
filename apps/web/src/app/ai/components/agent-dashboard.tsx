@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
-import { Bot, Zap, Megaphone, TrendingUp, AlertTriangle } from 'lucide-react';
+import { Bot, Zap, TrendingUp, AlertTriangle } from 'lucide-react';
 
 interface AgentConfigItem {
   agentType: string;
@@ -24,19 +24,12 @@ interface BriefingCount {
   total: number;
 }
 
-const MARKETING_AGENT_LABELS: Record<string, string> = {
-  BlogWriter: 'Blog Writer',
-  SocialCreator: 'Social Creator',
-  EmailComposer: 'Email Composer',
-  CaseStudyWriter: 'Case Study',
-  VideoScriptWriter: 'Video Script',
-  NewsletterComposer: 'Newsletter',
-  ContentScheduler: 'Content Scheduler',
-  ContentPublisher: 'Content Publisher',
-  PerformanceTracker: 'Performance Tracker',
-  TrendAnalyzer: 'Trend Analyzer',
-  ContentCalendar: 'Content Calendar',
-  ContentROI: 'Content ROI',
+const CORE_AGENT_LABELS: Record<string, string> = {
+  WAITLIST: 'Waitlist',
+  RETENTION: 'Retention',
+  DATA_HYGIENE: 'Data Hygiene',
+  SCHEDULING_OPTIMIZER: 'Scheduling',
+  QUOTE_FOLLOWUP: 'Quote Follow-up',
 };
 
 export function AgentDashboard() {
@@ -115,10 +108,10 @@ export function AgentDashboard() {
           valueColor={(briefingCount?.URGENT_TODAY || 0) > 0 ? 'text-red-600' : 'text-slate-900'}
         />
         <HealthCard
-          icon={<Megaphone size={20} className="text-lavender-500" />}
-          label="Pending Approvals"
+          icon={<Zap size={20} className="text-lavender-500" />}
+          label="Needs Approval"
           value={briefingCount?.NEEDS_APPROVAL?.toString() || '0'}
-          sublabel="Content reviews"
+          sublabel="Action cards pending"
         />
       </div>
 
@@ -147,7 +140,7 @@ export function AgentDashboard() {
                     )}
                   />
                   <p className="text-[11px] font-medium text-slate-900 dark:text-white truncate">
-                    {MARKETING_AGENT_LABELS[agent.agentType] || agent.agentType.replace(/_/g, ' ')}
+                    {CORE_AGENT_LABELS[agent.agentType] || agent.agentType.replace(/_/g, ' ')}
                   </p>
                 </div>
                 {agent.performanceScore != null && (
@@ -183,7 +176,7 @@ export function AgentDashboard() {
             No Agents Configured
           </h3>
           <p className="text-slate-600 dark:text-slate-400">
-            Configure marketing agents to start automating your content pipeline.
+            AI agents will help automate your operations once configured.
           </p>
         </div>
       )}
