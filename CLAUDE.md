@@ -242,7 +242,7 @@ Key events: `message:new`, `conversation:updated`, `ai:suggestion`, `ai:auto-rep
 
 - Pages are in `apps/web/src/app/` using Next.js App Router (not Pages Router)
 - Protected pages check `access_token` + `refresh_token` cookies in `middleware.ts` (redirects to /login only when both are missing)
-- **87 pages** in `apps/web/` (~17 public, ~54 protected, ~15 portal/marketing) + **15 admin pages** in `apps/admin/`
+- **83 pages** in `apps/web/` (~17 public, ~50 protected, ~15 portal/marketing site) + **20 admin pages** in `apps/admin/` (15 original + 5 marketing)
 - Client components use `'use client'` directive
 
 ### Page Categories
@@ -253,7 +253,7 @@ Key events: `message:new`, `conversation:updated`, `ai:suggestion`, `ai:auto-rep
 
 **Protected pages (tenant):** `/dashboard`, `/bookings`, `/calendar`, `/inbox`, `/customers`, `/customers/[id]`, `/services`, `/staff`, `/waitlist`, `/campaigns`, `/automations`, `/reports`, `/roi`, `/service-board` (dealership kanban), `/settings/*` (13 sub-pages), `/packages` (wellness), `/testimonials`, `/marketing/*` (internal only — no sidebar nav), `/ai/*` (command center: overview, actions, agents, performance), `/search`, `/notifications`, `/help`
 
-**Console pages (Super Admin):** These pages live in the **separate `apps/admin/` app** (port 3002), not in `apps/web/`. Routes: `/` (overview), `/businesses` (directory), `/businesses/[id]` (Business 360), `/audit`, `/health`, `/support`, `/billing`, `/billing/past-due`, `/billing/subscriptions`, `/packs`, `/packs/[slug]`, `/packs/skills`, `/agents`, `/messaging`, `/settings`
+**Console pages (Super Admin):** These pages live in the **separate `apps/admin/` app** (port 3002), not in `apps/web/`. Routes: `/` (overview), `/businesses` (directory), `/businesses/[id]` (Business 360), `/audit`, `/health`, `/support`, `/billing`, `/billing/past-due`, `/billing/subscriptions`, `/packs`, `/packs/[slug]`, `/packs/skills`, `/agents`, `/messaging`, `/settings`, `/marketing` (landing), `/marketing/queue` (content approval), `/marketing/agents` (12 marketing agents), `/marketing/sequences` (email sequences), `/marketing/rejection-analytics`
 
 ### API Client
 
@@ -719,7 +719,26 @@ These are **prompt files** in `agents/` that define how BookingOS markets itself
 
 Output goes to file-based folders (`queue/pending/`, `briefings/`, `reports/`, etc.). Reviewed by founder manually. Config in `system/` directory. See `docs/AI_MARKETING_AGENTS_DAILY_WORKFLOW.md` for the daily operator workflow.
 
-**These two systems are completely separate.** In-app agents serve customers; internal agents market BookingOS itself.
+**These three systems are completely separate.** Operational agents serve customers in the web app; in-app marketing agents are managed via the admin app; internal growth engine agents operate in the file system.
+
+### Internal vs External Boundary
+
+The platform enforces a strict separation between customer-facing and internal tools:
+
+| Layer | Customer App (`businesscommandcentre.com`) | Admin App (`admin.businesscommandcentre.com`) |
+|-------|-------------------------------------------|----------------------------------------------|
+| **Agents** | 5 core: Waitlist, Retention, Data Hygiene, Scheduling Optimizer, Quote Followup | All 17 agents (5 core + 12 marketing) |
+| **AI pages** | `/ai` overview, agents, actions, performance — core agents only | `/marketing/agents` — full marketing agent dashboard |
+| **Content** | No content queue or pipeline UI | `/marketing/queue` — content approval workflow |
+| **Autonomy** | No autonomy settings visible | `/marketing` autonomy settings (SUPER_ADMIN) |
+| **API filtering** | `GET /agent-config` excludes marketing types via `notIn` | `GET /agent-config/admin/all` returns everything |
+| **API auth** | Marketing API endpoints return 403 for non-SUPER_ADMIN | Full access for SUPER_ADMIN users |
+| **Navigation** | No `/marketing/*` sidebar links; routes redirect to `/ai` | Marketing section in admin sidebar |
+
+**Key constants:**
+- `MARKETING_AGENT_TYPES` in `agent-config.service.ts` — 12 marketing agent type strings filtered from customer queries
+- `MARKETING_AGENT_TYPES` in `ai/actions/page.tsx` — same list for frontend action card filtering
+- E2E boundary tests in `apps/web/e2e/internal-external-boundary.spec.ts`
 
 ---
 
