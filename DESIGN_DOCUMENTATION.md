@@ -52,7 +52,7 @@
 - **Visual polish** — CSS keyframe animations, chart theme with brand palette, prefers-reduced-motion
 
 ### UX Phase 1: Role-based Modes + Mission Control + Saved Views (Complete — 6/6 batches)
-- **Role-based Modes** — Mode switcher (admin/agent/provider), mode-grouped sidebar nav with primary/secondary split and "More" toggle, role-appropriate landing pages, vertical-aware labels
+- **Role-based Modes** — Mode switcher (admin/agent/provider), mode-grouped sidebar nav with 4 sections (Workspace / Tools / Insights / AI & Agents) and mobile "More" sheet, role-appropriate landing pages, vertical-aware labels
 - **Mission Control Dashboard** — Mode-adaptive layout with KPI strip, "My Work" section, AttentionCards, dashboard-pinned saved views
 - **Saved Views** — Named filter/sort presets on list pages (inbox, bookings, customers, waitlist), sidebar-pinnable, dashboard-pinnable, personal + shared (admin-governed)
 - **Staff preferences** — JSON column on Staff for cross-device mode persistence

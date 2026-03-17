@@ -1,6 +1,6 @@
 # AI Marketing Agents — Operator Daily Workflow (In-App Agents)
 
-> **Scope:** This document covers the **12 in-app marketing agents** that run inside the NestJS API for each customer business. These are code-based agents in `apps/api/src/modules/agent-framework/` managed via `/marketing/agents` and `/marketing/queue` pages.
+> **Scope:** This document covers the **12 in-app marketing agents** that run inside the NestJS API. These are code-based agents in `apps/api/src/modules/agent-framework/`. **These agents are internal BookingOS tools — they are NOT visible to customers.** The marketing agents are filtered out of the customer-facing `GET /agent-config` API and do not appear in the customer AI Command Center. The `/marketing/*` pages exist but have no sidebar navigation.
 >
 > **Not covered here:** BookingOS's own internal growth engine (15 prompt-based agents in `agents/` directory). For that system, see the agent prompt files and `system/quality-gates.md`.
 

@@ -251,7 +251,7 @@ Key events: `message:new`, `conversation:updated`, `ai:suggestion`, `ai:auto-rep
 
 **Marketing pages:** `/` (landing page with hero, features, pricing), `/blog`, `/blog/[slug]` (JSON-LD, OpenGraph), `/pricing`, `/faq`
 
-**Protected pages (tenant):** `/dashboard`, `/bookings`, `/calendar`, `/inbox`, `/customers`, `/customers/[id]`, `/services`, `/staff`, `/waitlist`, `/campaigns`, `/automations`, `/reports`, `/roi`, `/service-board` (dealership kanban), `/settings/*` (13 sub-pages), `/marketing/*` (queue, agents, sequences, rejection-analytics), `/ai/*` (command center: overview, actions, agents, performance), `/search`, `/notifications`, `/help`
+**Protected pages (tenant):** `/dashboard`, `/bookings`, `/calendar`, `/inbox`, `/customers`, `/customers/[id]`, `/services`, `/staff`, `/waitlist`, `/campaigns`, `/automations`, `/reports`, `/roi`, `/service-board` (dealership kanban), `/settings/*` (13 sub-pages), `/packages` (wellness), `/testimonials`, `/marketing/*` (internal only — no sidebar nav), `/ai/*` (command center: overview, actions, agents, performance), `/search`, `/notifications`, `/help`
 
 **Console pages (Super Admin):** These pages live in the **separate `apps/admin/` app** (port 3002), not in `apps/web/`. Routes: `/` (overview), `/businesses` (directory), `/businesses/[id]` (Business 360), `/audit`, `/health`, `/support`, `/billing`, `/billing/past-due`, `/billing/subscriptions`, `/packs`, `/packs/[slug]`, `/packs/skills`, `/agents`, `/messaging`, `/settings`
 
@@ -300,9 +300,13 @@ Key events: `message:new`, `conversation:updated`, `ai:suggestion`, `ai:auto-rep
 
 ### Navigation Structure
 
-- Sidebar uses 3 sections: **Workspace** / **Tools** / **Insights** (defined per mode in `apps/web/src/lib/mode-config.ts`)
+- Sidebar uses 4 sections: **Workspace** / **Tools** / **Insights** / **AI & Agents** (defined per mode in `apps/web/src/lib/mode-config.ts`)
+- Admin workspace includes: Inbox, Calendar, Customers, Bookings, Waitlist
+- Admin tools includes: Services, Staff, Invoices, Packages (wellness), Campaigns, Automations, Testimonials
+- AI & Agents section (admin only): AI & Agents, Action Triage, Agent Status, Performance — shows only the 5 core operational agents, not marketing agents
 - Section labels use `.nav-section-label` CSS class from `globals.css`
 - Settings link is in the sidebar footer area, not in the main nav
+- **Marketing pages** (`/marketing/*`) exist but have no sidebar nav — they are internal BookingOS tools, not customer-facing
 - **SUPER_ADMIN login** redirects to the admin app (`NEXT_PUBLIC_ADMIN_URL`) via `window.location.href` — no admin/console nav items in the customer app sidebar
 - Mobile uses bottom tab bar (Calendar, Inbox, Clients, Home) + "More" sheet for overflow items
 - Mobile swipe gestures: `useSwipeGesture` hook in `apps/web/src/lib/use-swipe-gesture.ts` for touch swipe detection with threshold, vertical rejection, and `onSwiping` callback
@@ -696,12 +700,14 @@ These run inside the NestJS API for each customer's business. Code in `apps/api/
 - `SchedulingOptimizerAgent` — Gap detection, optimal slot suggestions
 - `QuoteFollowupAgent` — Expired quote reminders, follow-up action cards
 
-**12 Marketing Agents** (6 content, 2 distribution, 4 analytics):
+**12 Marketing Agents** (6 content, 2 distribution, 4 analytics) — **internal BookingOS growth engine only, NOT shown to customers:**
 - Content: BlogWriter, SocialCreator, EmailComposer, CaseStudy, VideoScript, Newsletter
 - Distribution: ContentScheduler, ContentPublisher
 - Analytics: PerformanceTracker, TrendAnalyzer, ContentCalendar, ContentROI
 
-Agents run via `AgentSchedulerService` cron → `AGENT_PROCESSING` BullMQ queue → `AgentFrameworkService`. Per-agent `runIntervalMinutes` configurable via `AgentConfig.config` JSON. Managed via `/marketing/agents` and `/ai` pages. Content goes into `ContentDraft` DB records reviewed at `/marketing/queue`.
+Marketing agents are filtered out of the customer-facing `GET /agent-config` API response. The `/ai/agents` page shows only the 5 core operational agents. Marketing agent DB records may still exist from prior seeds but are excluded via `agentType: { notIn: MARKETING_AGENT_TYPES }`.
+
+Agents run via `AgentSchedulerService` cron → `AGENT_PROCESSING` BullMQ queue → `AgentFrameworkService`. Per-agent `runIntervalMinutes` configurable via `AgentConfig.config` JSON. The customer-facing AI Command Center (`/ai`) shows only core agents. Marketing pages (`/marketing/*`) still exist but have no sidebar navigation.
 
 **Autonomy levels** (per-action-type via `AutonomyConfig`): OFF → SUGGEST → AUTO_WITH_REVIEW → FULL_AUTO. Start conservative, increase as trust builds.
 
