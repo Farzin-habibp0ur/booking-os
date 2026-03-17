@@ -18,6 +18,7 @@ import { CreateSequenceDto, UpdateSequenceDto, EnrollSequenceDto } from './dto';
 
 @Controller('email-sequences')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+@Roles('SUPER_ADMIN')
 export class EmailSequenceController {
   constructor(private readonly service: EmailSequenceService) {}
 
@@ -32,7 +33,6 @@ export class EmailSequenceController {
   }
 
   @Post()
-  @Roles('OWNER', 'ADMIN')
   create(@BusinessId() businessId: string, @Body() dto: CreateSequenceDto) {
     return this.service.createSequence(businessId, dto);
   }
@@ -43,7 +43,6 @@ export class EmailSequenceController {
   }
 
   @Patch(':id')
-  @Roles('OWNER', 'ADMIN')
   update(
     @BusinessId() businessId: string,
     @Param('id') id: string,
@@ -53,7 +52,6 @@ export class EmailSequenceController {
   }
 
   @Delete(':id')
-  @Roles('OWNER', 'ADMIN')
   remove(@BusinessId() businessId: string, @Param('id') id: string) {
     return this.service.deleteSequence(businessId, id);
   }
@@ -69,7 +67,6 @@ export class EmailSequenceController {
   }
 
   @Post(':id/enroll')
-  @Roles('OWNER', 'ADMIN')
   enroll(
     @BusinessId() businessId: string,
     @Param('id') id: string,
@@ -88,25 +85,21 @@ export class EmailSequenceController {
   }
 
   @Post('enrollments/:enrollmentId/cancel')
-  @Roles('OWNER', 'ADMIN')
   cancelEnrollment(@BusinessId() businessId: string, @Param('enrollmentId') enrollmentId: string) {
     return this.service.cancelEnrollment(businessId, enrollmentId);
   }
 
   @Post('enrollments/:enrollmentId/pause')
-  @Roles('OWNER', 'ADMIN')
   pauseEnrollment(@BusinessId() businessId: string, @Param('enrollmentId') enrollmentId: string) {
     return this.service.pauseEnrollment(businessId, enrollmentId);
   }
 
   @Post('enrollments/:enrollmentId/resume')
-  @Roles('OWNER', 'ADMIN')
   resumeEnrollment(@BusinessId() businessId: string, @Param('enrollmentId') enrollmentId: string) {
     return this.service.resumeEnrollment(businessId, enrollmentId);
   }
 
   @Post('seed')
-  @Roles('OWNER', 'ADMIN')
   seed() {
     return this.service.seedDefaultSequences();
   }

@@ -8,11 +8,11 @@ import { CreateBudgetEntryDto, QueryBudgetEntriesDto } from './dto';
 
 @Controller('budget')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+@Roles('SUPER_ADMIN')
 export class BudgetTrackerController {
   constructor(private readonly service: BudgetTrackerService) {}
 
   @Post()
-  @Roles('OWNER', 'ADMIN')
   create(@BusinessId() businessId: string, @Body() dto: CreateBudgetEntryDto) {
     return this.service.create(businessId, dto);
   }
@@ -41,7 +41,6 @@ export class BudgetTrackerController {
   }
 
   @Patch(':id/approve')
-  @Roles('OWNER', 'ADMIN')
   approve(
     @BusinessId() businessId: string,
     @Param('id') id: string,

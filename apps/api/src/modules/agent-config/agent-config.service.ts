@@ -35,6 +35,7 @@ export class AgentConfigService {
     @Optional() @InjectQueue(QUEUE_NAMES.AGENT_PROCESSING) private agentQueue?: Queue,
   ) {}
 
+  /** Customer-facing: excludes marketing agents */
   async findAll(businessId: string) {
     return this.prisma.agentConfig.findMany({
       where: {
@@ -45,11 +46,28 @@ export class AgentConfigService {
     });
   }
 
+  /** Admin-facing: returns ALL agents including marketing */
+  async findAllUnfiltered(businessId: string) {
+    return this.prisma.agentConfig.findMany({
+      where: { businessId },
+      orderBy: { agentType: 'asc' },
+    });
+  }
+
   async findOne(businessId: string, agentType: string) {
     if (MARKETING_AGENT_TYPES.includes(agentType)) {
       throw new NotFoundException(`Agent config for ${agentType} not found`);
     }
 
+    const config = await this.prisma.agentConfig.findFirst({
+      where: { businessId, agentType },
+    });
+    if (!config) throw new NotFoundException(`Agent config for ${agentType} not found`);
+    return config;
+  }
+
+  /** Admin-facing: allows looking up any agent type including marketing */
+  async findOneUnfiltered(businessId: string, agentType: string) {
     const config = await this.prisma.agentConfig.findFirst({
       where: { businessId, agentType },
     });
@@ -89,6 +107,48 @@ export class AgentConfigService {
     return { queued: true, agentType, businessId };
   }
 
+  /** Admin-facing: update any agent type including marketing */
+  async updateUnfiltered(businessId: string, agentType: string, dto: UpdateAgentConfigDto) {
+    const config = await this.findOneUnfiltered(businessId, agentType);
+    return this.prisma.agentConfig.update({
+      where: { id: config.id },
+      data: {
+        isEnabled: dto.isEnabled,
+        runIntervalMinutes: dto.runIntervalMinutes,
+        autonomyLevel: dto.autonomyLevel,
+        config: dto.config,
+      },
+    });
+  }
+
+  /** Admin-facing: run any agent including marketing */
+  async runNowUnfiltered(businessId: string, agentType: string) {
+    const config = await this.findOneUnfiltered(businessId, agentType);
+    if (!config.isEnabled) {
+      this.logger.warn(`Agent ${agentType} is disabled for business ${businessId}`);
+    }
+    if (this.agentQueue) {
+      await this.agentQueue.add('run-agent', {
+        businessId,
+        agentType,
+        triggeredManually: true,
+      });
+    }
+    return { queued: true, agentType, businessId };
+  }
+
+  /** Admin-facing: all agents performance */
+  async getPerformanceSummaryUnfiltered(businessId: string) {
+    const runs = await this.prisma.agentRun.groupBy({
+      by: ['agentType', 'status'],
+      where: { businessId },
+      _count: true,
+      _sum: { cardsCreated: true },
+    });
+    return this.buildPerformanceSummary(runs);
+  }
+
+  /** Customer-facing: excludes marketing agents */
   async getPerformanceSummary(businessId: string) {
     const runs = await this.prisma.agentRun.groupBy({
       by: ['agentType', 'status'],
@@ -99,7 +159,10 @@ export class AgentConfigService {
       _count: true,
       _sum: { cardsCreated: true },
     });
+    return this.buildPerformanceSummary(runs);
+  }
 
+  private buildPerformanceSummary(runs: any[]) {
     const summary: Record<string, any> = {};
     for (const run of runs) {
       if (!summary[run.agentType]) {
@@ -114,12 +177,10 @@ export class AgentConfigService {
         summary[run.agentType].failed += run._count;
       }
     }
-
     for (const agent of Object.keys(summary)) {
       const s = summary[agent];
       s.successRate = s.total > 0 ? Math.round((s.completed / s.total) * 100) : 0;
     }
-
     return summary;
   }
 }

@@ -147,9 +147,9 @@ export default function MarketingAgentsPage() {
     try {
       setLoading(true);
       const [configsRes, runsRes, perfRes] = await Promise.all([
-        api.get<AgentConfig[] | { items: AgentConfig[] }>('/agent-config'),
+        api.get<AgentConfig[] | { items: AgentConfig[] }>('/agent-config/admin/all'),
         api.get<AgentRun[] | { items: AgentRun[] }>('/agent-runs?take=100'),
-        api.get<AgentPerformance[]>('/agent-config/performance').catch(() => []),
+        api.get<AgentPerformance[]>('/agent-config/admin/performance').catch(() => []),
       ]);
       setConfigs(
         Array.isArray(configsRes)

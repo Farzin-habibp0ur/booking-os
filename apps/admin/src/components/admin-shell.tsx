@@ -21,6 +21,7 @@ import {
   ExternalLink,
   Menu,
   X,
+  Megaphone,
 } from 'lucide-react';
 
 const adminNav = [
@@ -29,6 +30,7 @@ const adminNav = [
   { href: '/billing', label: 'Billing', icon: CreditCard },
   { href: '/packs', label: 'Packs & Skills', icon: Package },
   { href: '/agents', label: 'AI Agents', icon: Bot },
+  { href: '/marketing', label: 'Marketing', icon: Megaphone },
   { href: '/messaging', label: 'Messaging', icon: MessageSquare },
   { href: '/support', label: 'Support', icon: LifeBuoy },
   { href: '/audit', label: 'Audit Log', icon: ScrollText },

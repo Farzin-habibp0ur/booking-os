@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { AuthProvider } from '@/lib/auth';
 import { AdminShell } from '@/components/admin-shell';
+import { ToastProvider } from '@/lib/toast';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -14,7 +15,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body className="font-sans antialiased">
         <AuthProvider>
-          <AdminShell>{children}</AdminShell>
+          <ToastProvider>
+            <AdminShell>{children}</AdminShell>
+          </ToastProvider>
         </AuthProvider>
       </body>
     </html>

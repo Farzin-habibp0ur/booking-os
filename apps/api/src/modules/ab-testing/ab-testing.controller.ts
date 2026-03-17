@@ -8,11 +8,11 @@ import { CreateAbTestDto, UpdateAbTestDto, QueryAbTestsDto } from './dto';
 
 @Controller('ab-testing')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+@Roles('SUPER_ADMIN')
 export class AbTestingController {
   constructor(private readonly service: AbTestingService) {}
 
   @Post()
-  @Roles('OWNER', 'ADMIN')
   create(@BusinessId() businessId: string, @Body() body: CreateAbTestDto) {
     return this.service.create(businessId, body);
   }
@@ -33,25 +33,21 @@ export class AbTestingController {
   }
 
   @Patch(':id')
-  @Roles('OWNER', 'ADMIN')
   update(@BusinessId() businessId: string, @Param('id') id: string, @Body() body: UpdateAbTestDto) {
     return this.service.update(businessId, id, body);
   }
 
   @Post(':id/start')
-  @Roles('OWNER', 'ADMIN')
   start(@BusinessId() businessId: string, @Param('id') id: string) {
     return this.service.start(businessId, id);
   }
 
   @Post(':id/complete')
-  @Roles('OWNER', 'ADMIN')
   complete(@BusinessId() businessId: string, @Param('id') id: string) {
     return this.service.complete(businessId, id);
   }
 
   @Post(':id/cancel')
-  @Roles('OWNER', 'ADMIN')
   cancel(@BusinessId() businessId: string, @Param('id') id: string) {
     return this.service.cancel(businessId, id);
   }

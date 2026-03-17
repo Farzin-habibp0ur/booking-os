@@ -1,13 +1,14 @@
 import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { TenantGuard } from '../../common/tenant.guard';
-import { RolesGuard } from '../../common/roles.guard';
+import { RolesGuard, Roles } from '../../common/roles.guard';
 import { BusinessId } from '../../common/decorators';
 import { RejectionAnalyticsService } from './rejection-analytics.service';
 import { QueryRejectionLogsDto } from './dto';
 
 @Controller('rejection-analytics')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+@Roles('SUPER_ADMIN')
 export class RejectionAnalyticsController {
   constructor(private readonly service: RejectionAnalyticsService) {}
 

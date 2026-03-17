@@ -24,11 +24,11 @@ import {
 
 @Controller('marketing/content')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+@Roles('SUPER_ADMIN')
 export class MarketingContentController {
   constructor(private readonly service: MarketingContentService) {}
 
   @Post()
-  @Roles('OWNER', 'ADMIN')
   create(@BusinessId() businessId: string, @Body() body: CreateContentDraftDto) {
     return this.service.create(businessId, body);
   }
@@ -54,7 +54,6 @@ export class MarketingContentController {
   }
 
   @Patch(':id')
-  @Roles('OWNER', 'ADMIN')
   update(
     @BusinessId() businessId: string,
     @Param('id') id: string,
@@ -64,7 +63,6 @@ export class MarketingContentController {
   }
 
   @Post(':id/review')
-  @Roles('OWNER', 'ADMIN')
   review(
     @BusinessId() businessId: string,
     @Param('id') id: string,
@@ -75,7 +73,6 @@ export class MarketingContentController {
   }
 
   @Post('bulk-review')
-  @Roles('OWNER', 'ADMIN')
   bulkReview(
     @BusinessId() businessId: string,
     @CurrentUser() user: any,
@@ -85,7 +82,6 @@ export class MarketingContentController {
   }
 
   @Delete(':id')
-  @Roles('OWNER', 'ADMIN')
   remove(@BusinessId() businessId: string, @Param('id') id: string) {
     return this.service.remove(businessId, id);
   }
