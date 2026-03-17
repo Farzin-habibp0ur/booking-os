@@ -50,6 +50,21 @@ interface ActionCard {
 type PriorityKey = 'URGENT_TODAY' | 'NEEDS_APPROVAL' | 'OPPORTUNITY' | 'HYGIENE';
 type ViewMode = 'list' | 'kanban';
 
+const MARKETING_AGENT_TYPES = [
+  'BlogWriter',
+  'SocialCreator',
+  'EmailComposer',
+  'CaseStudyWriter',
+  'VideoScriptWriter',
+  'NewsletterComposer',
+  'ContentScheduler',
+  'ContentPublisher',
+  'PerformanceTracker',
+  'TrendAnalyzer',
+  'ContentCalendar',
+  'ContentROI',
+];
+
 const PRIORITY_CONFIG: Record<
   PriorityKey,
   { label: string; icon: any; borderColor: string; bgColor: string; textColor: string }
@@ -98,8 +113,11 @@ export default function AIActionsPage() {
     try {
       // Try dashboard briefing endpoint first (Phase 2)
       const briefingData = await api.get<BriefingItem[]>('/dashboard-briefing/briefing');
-      if (Array.isArray(briefingData) && briefingData.length > 0) {
-        setBriefingItems(briefingData);
+      const filtered = Array.isArray(briefingData)
+        ? briefingData.filter((b) => !MARKETING_AGENT_TYPES.includes(b.sourceAgent))
+        : [];
+      if (filtered.length > 0) {
+        setBriefingItems(filtered);
         setUseBriefing(true);
       } else {
         throw new Error('empty briefing');
@@ -109,7 +127,10 @@ export default function AIActionsPage() {
       try {
         const data = await api.get<any>('/action-cards?status=PENDING&take=50');
         const items = data?.data || data || [];
-        setFallbackCards(Array.isArray(items) ? items : []);
+        const coreCards = (Array.isArray(items) ? items : []).filter(
+          (c: ActionCard) => !MARKETING_AGENT_TYPES.includes(c.agentType),
+        );
+        setFallbackCards(coreCards);
         setUseBriefing(false);
       } catch {
         setFallbackCards([]);
@@ -501,7 +522,7 @@ export default function AIActionsPage() {
 
 function classifyPriority(priority: number, category: string): PriorityKey {
   if (priority >= 80) return 'URGENT_TODAY';
-  if (priority >= 60 || category === 'CONTENT_REVIEW') return 'NEEDS_APPROVAL';
+  if (priority >= 60) return 'NEEDS_APPROVAL';
   if (priority >= 30) return 'OPPORTUNITY';
   return 'HYGIENE';
 }

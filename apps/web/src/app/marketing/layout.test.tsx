@@ -1,6 +1,7 @@
+const mockPush = jest.fn();
 jest.mock('next/navigation', () => ({
   usePathname: () => '/marketing',
-  useRouter: () => ({ push: jest.fn() }),
+  useRouter: () => ({ push: mockPush }),
   useSearchParams: () => new URLSearchParams(),
 }));
 jest.mock('next/link', () => ({ children, href, ...rest }: any) => (
@@ -8,9 +9,14 @@ jest.mock('next/link', () => ({ children, href, ...rest }: any) => (
     {children}
   </a>
 ));
+
+let mockRole = 'SUPER_ADMIN';
 jest.mock('@/lib/auth', () => ({
   AuthProvider: ({ children }: any) => <div data-testid="auth-provider">{children}</div>,
-  useAuth: () => ({ user: { sub: 'staff1', businessId: 'biz1', role: 'ADMIN' }, loading: false }),
+  useAuth: () => ({
+    user: { sub: 'staff1', businessId: 'biz1', role: mockRole },
+    loading: false,
+  }),
 }));
 jest.mock('@/components/shell', () => ({
   Shell: ({ children }: any) => <div data-testid="shell">{children}</div>,
@@ -23,7 +29,12 @@ import { render, screen } from '@testing-library/react';
 import MarketingLayout from './layout';
 
 describe('MarketingLayout', () => {
-  it('wraps children with AuthProvider and Shell', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockRole = 'SUPER_ADMIN';
+  });
+
+  it('renders children for SUPER_ADMIN users', () => {
     render(
       <MarketingLayout>
         <div data-testid="child-content">hello</div>
@@ -34,13 +45,25 @@ describe('MarketingLayout', () => {
     expect(screen.getByTestId('child-content')).toBeInTheDocument();
   });
 
-  it('renders children inside Shell', () => {
+  it('redirects non-SUPER_ADMIN users to /ai', () => {
+    mockRole = 'ADMIN';
     render(
       <MarketingLayout>
-        <span>test content</span>
+        <div data-testid="child-content">hello</div>
       </MarketingLayout>,
     );
-    const shell = screen.getByTestId('shell');
-    expect(shell).toHaveTextContent('test content');
+    expect(mockPush).toHaveBeenCalledWith('/ai');
+    expect(screen.queryByTestId('child-content')).not.toBeInTheDocument();
+  });
+
+  it('does not render children for AGENT role', () => {
+    mockRole = 'AGENT';
+    render(
+      <MarketingLayout>
+        <span>secret content</span>
+      </MarketingLayout>,
+    );
+    expect(mockPush).toHaveBeenCalledWith('/ai');
+    expect(screen.queryByText('secret content')).not.toBeInTheDocument();
   });
 });

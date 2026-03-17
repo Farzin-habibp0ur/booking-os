@@ -8,6 +8,7 @@ import { UpdateAutonomySettingDto } from './dto';
 
 @Controller('autonomy-settings')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+@Roles('SUPER_ADMIN')
 export class AutonomySettingsController {
   constructor(private readonly service: AutonomySettingsService) {}
 
@@ -17,7 +18,6 @@ export class AutonomySettingsController {
   }
 
   @Patch(':actionType')
-  @Roles('OWNER', 'ADMIN')
   update(
     @BusinessId() businessId: string,
     @Param('actionType') actionType: string,
@@ -27,7 +27,6 @@ export class AutonomySettingsController {
   }
 
   @Post('reset')
-  @Roles('OWNER', 'ADMIN')
   reset(@BusinessId() businessId: string) {
     return this.service.resetToDefaults(businessId);
   }
