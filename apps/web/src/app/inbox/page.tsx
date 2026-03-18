@@ -29,6 +29,7 @@ import {
   Trash2,
   Info,
   MapPin,
+  Instagram,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import BookingFormModal from '@/components/booking-form-modal';
@@ -1067,9 +1068,27 @@ function InboxPage() {
                     <ChevronLeft size={20} />
                   </button>
                   <div className="min-w-0">
-                    <p className="font-medium truncate">{selected.customer?.name}</p>
+                    <div className="flex items-center gap-1.5">
+                      <p className="font-medium truncate">{selected.customer?.name}</p>
+                      {selected.channel === 'INSTAGRAM' && (
+                        <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-gradient-to-r from-purple-50 to-pink-50 text-purple-700 flex-shrink-0">
+                          <Instagram size={10} />
+                          Instagram
+                        </span>
+                      )}
+                      {selected.channel === 'WHATSAPP' && (
+                        <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 flex-shrink-0">
+                          <MessageSquare size={10} />
+                          WhatsApp
+                        </span>
+                      )}
+                    </div>
                     <div className="flex items-center gap-2">
-                      <p className="text-xs text-slate-500 truncate">{selected.customer?.phone}</p>
+                      <p className="text-xs text-slate-500 truncate">
+                        {selected.channel === 'INSTAGRAM' && selected.customer?.instagramUserId
+                          ? `@${selected.customer.instagramUserId}`
+                          : selected.customer?.phone}
+                      </p>
                       {selected.location && (
                         <span className="text-[10px] text-slate-400 flex items-center gap-0.5 flex-shrink-0">
                           <MapPin size={10} /> {selected.location.name}
@@ -1276,18 +1295,32 @@ function InboxPage() {
                   return (
                     <div
                       className={cn(
-                        'mx-3 mt-1 flex items-center gap-2 text-xs px-3 py-1.5 rounded-lg',
+                        'mx-3 mt-1 text-xs px-3 py-2 rounded-lg',
                         windowOpen
                           ? hoursLeft < 2
-                            ? 'bg-amber-50 text-amber-700'
-                            : 'bg-sage-50 text-sage-600'
-                          : 'bg-red-50 text-red-600',
+                            ? 'bg-amber-50 text-amber-700 border border-amber-100'
+                            : 'bg-slate-50 text-slate-500'
+                          : 'bg-red-50 text-red-700 border border-red-100',
                       )}
                     >
-                      <Clock size={12} />
-                      {windowOpen
-                        ? `${Math.floor(hoursLeft)}h ${Math.floor((hoursLeft % 1) * 60)}m remaining in messaging window`
-                        : 'Window expired — replies will use HUMAN_AGENT tag (7-day extension)'}
+                      <div className="flex items-center gap-2">
+                        <Clock size={12} className="flex-shrink-0" />
+                        {windowOpen ? (
+                          <span>
+                            <strong>
+                              {Math.floor(hoursLeft)}h {Math.floor((hoursLeft % 1) * 60)}m
+                            </strong>{' '}
+                            left to reply — Instagram allows responses within 24 hours of the
+                            customer&apos;s last message.
+                          </span>
+                        ) : (
+                          <span>
+                            The 24-hour reply window has closed. You can still send{' '}
+                            <strong>one follow-up message</strong> within 7 days for customer
+                            service purposes.
+                          </span>
+                        )}
+                      </div>
                     </div>
                   );
                 })()}
