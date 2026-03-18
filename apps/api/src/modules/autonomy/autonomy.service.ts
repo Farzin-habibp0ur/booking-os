@@ -18,7 +18,7 @@ export class AutonomyService {
 
   async getConfig(businessId: string, actionType: string) {
     return this.prisma.autonomyConfig.findUnique({
-      where: { businessId_actionType: { businessId, actionType } },
+      where: { businessId_actionType_scope: { businessId, actionType, scope: null } },
     });
   }
 
@@ -32,7 +32,7 @@ export class AutonomyService {
     },
   ) {
     return this.prisma.autonomyConfig.upsert({
-      where: { businessId_actionType: { businessId, actionType } },
+      where: { businessId_actionType_scope: { businessId, actionType, scope: null } },
       create: {
         businessId,
         actionType,
@@ -51,12 +51,12 @@ export class AutonomyService {
   async getLevel(businessId: string, actionType: string): Promise<AutonomyLevel> {
     // Check specific config first, then fallback to wildcard "*", then default
     const specific = await this.prisma.autonomyConfig.findUnique({
-      where: { businessId_actionType: { businessId, actionType } },
+      where: { businessId_actionType_scope: { businessId, actionType, scope: null } },
     });
     if (specific) return specific.autonomyLevel as AutonomyLevel;
 
     const wildcard = await this.prisma.autonomyConfig.findUnique({
-      where: { businessId_actionType: { businessId, actionType: '*' } },
+      where: { businessId_actionType_scope: { businessId, actionType: '*', scope: null } },
     });
     if (wildcard) return wildcard.autonomyLevel as AutonomyLevel;
 
@@ -68,7 +68,7 @@ export class AutonomyService {
     actionType: string,
   ): Promise<{ allowed: boolean; reason?: string }> {
     const config = await this.prisma.autonomyConfig.findUnique({
-      where: { businessId_actionType: { businessId, actionType } },
+      where: { businessId_actionType_scope: { businessId, actionType, scope: null } },
     });
 
     if (!config) return { allowed: true };

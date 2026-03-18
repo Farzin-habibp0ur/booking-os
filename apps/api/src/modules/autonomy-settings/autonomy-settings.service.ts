@@ -56,7 +56,7 @@ export class AutonomySettingsService {
     let created = 0;
     for (const def of DEFAULT_MARKETING_AUTONOMY) {
       const existing = await this.prisma.autonomyConfig.findUnique({
-        where: { businessId_actionType: { businessId, actionType: def.actionType } },
+        where: { businessId_actionType_scope: { businessId, actionType, scope: 'MARKETING': def.actionType } },
       });
       if (!existing) {
         await this.prisma.autonomyConfig.create({
@@ -93,12 +93,12 @@ export class AutonomySettingsService {
 
   async update(businessId: string, actionType: string, level: MarketingAutonomyLevel) {
     const config = await this.prisma.autonomyConfig.findUnique({
-      where: { businessId_actionType: { businessId, actionType } },
+      where: { businessId_actionType_scope: { businessId, actionType, scope: 'MARKETING' } },
     });
     if (!config) throw new NotFoundException(`Autonomy setting for ${actionType} not found`);
 
     return this.prisma.autonomyConfig.update({
-      where: { businessId_actionType: { businessId, actionType } },
+      where: { businessId_actionType_scope: { businessId, actionType, scope: 'MARKETING' } },
       data: { autonomyLevel: level },
     });
   }
@@ -113,7 +113,7 @@ export class AutonomySettingsService {
 
   async getLevel(businessId: string, actionType: string): Promise<MarketingAutonomyLevel> {
     const config = await this.prisma.autonomyConfig.findUnique({
-      where: { businessId_actionType: { businessId, actionType } },
+      where: { businessId_actionType_scope: { businessId, actionType, scope: 'MARKETING' } },
     });
     if (config) return config.autonomyLevel as MarketingAutonomyLevel;
 
