@@ -2,6 +2,7 @@ import { Test } from '@nestjs/testing';
 import { ConsoleMessagingController } from './console-messaging.controller';
 import { ConsoleMessagingService } from './console-messaging.service';
 import { PlatformAuditService } from './platform-audit.service';
+import { PrismaService } from '../../common/prisma.service';
 
 describe('ConsoleMessagingController', () => {
   let controller: ConsoleMessagingController;
@@ -26,6 +27,7 @@ describe('ConsoleMessagingController', () => {
       providers: [
         { provide: ConsoleMessagingService, useValue: mockService },
         { provide: PlatformAuditService, useValue: mockAuditService },
+        { provide: PrismaService, useValue: {} },
       ],
     }).compile();
 
