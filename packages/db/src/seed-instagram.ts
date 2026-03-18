@@ -111,7 +111,7 @@ async function main() {
         direction: 'OUTBOUND',
         senderStaffId: staff?.id,
         content:
-          "Thank you so much, Sophia! We love sharing our results 😊 Botox starts at $12/unit, and most areas are 20-40 units. Would you like to book a free consultation?",
+          'Thank you so much, Sophia! We love sharing our results 😊 Botox starts at $12/unit, and most areas are 20-40 units. Would you like to book a free consultation?',
         contentType: 'TEXT',
         externalId: 'mid.ig_sophia_2',
         createdAt: minutesAgo(30),
@@ -119,7 +119,8 @@ async function main() {
       {
         conversationId: convo1.id,
         direction: 'INBOUND',
-        content: "Yes please! Do you have anything available this week? I'm free Thursday or Friday afternoon.",
+        content:
+          "Yes please! Do you have anything available this week? I'm free Thursday or Friday afternoon.",
         contentType: 'TEXT',
         externalId: 'mid.ig_sophia_3',
         createdAt: minutesAgo(12),
@@ -196,7 +197,8 @@ async function main() {
       {
         conversationId: convo3.id,
         direction: 'INBOUND',
-        content: "I'm interested in lip filler! I've never had it done before. Is there a consultation first?",
+        content:
+          "I'm interested in lip filler! I've never had it done before. Is there a consultation first?",
         contentType: 'TEXT',
         externalId: 'mid.ig_mia_3',
         createdAt: minutesAgo(100),
@@ -206,7 +208,7 @@ async function main() {
         direction: 'OUTBOUND',
         senderStaffId: staff?.id,
         content:
-          "Great choice! Yes, we always do a consultation first so Dr. Chen can discuss your goals and create a personalized plan. Our next available consult is Thursday at 3pm or Friday at 10am. Which works for you?",
+          'Great choice! Yes, we always do a consultation first so Dr. Chen can discuss your goals and create a personalized plan. Our next available consult is Thursday at 3pm or Friday at 10am. Which works for you?',
         contentType: 'TEXT',
         externalId: 'mid.ig_mia_4',
         createdAt: minutesAgo(90),
@@ -233,7 +235,8 @@ async function main() {
       {
         conversationId: convo4.id,
         direction: 'INBOUND',
-        content: 'Do you guys do PRP for hair? My friend got it done somewhere and said it works great',
+        content:
+          'Do you guys do PRP for hair? My friend got it done somewhere and said it works great',
         contentType: 'TEXT',
         externalId: 'mid.ig_liam_1',
         createdAt: hoursAgo(23),
