@@ -123,7 +123,11 @@ describe('AutonomySettingsService', () => {
       expect(result.autonomyLevel).toBe('FULL_AUTO');
       expect(prisma.autonomyConfig.update).toHaveBeenCalledWith({
         where: {
-          businessId_actionType: { businessId: 'biz1', actionType: 'GREEN_CONTENT_PUBLISH' },
+          businessId_actionType_scope: {
+            businessId: 'biz1',
+            actionType: 'GREEN_CONTENT_PUBLISH',
+            scope: 'MARKETING',
+          },
         },
         data: { autonomyLevel: 'FULL_AUTO' },
       });

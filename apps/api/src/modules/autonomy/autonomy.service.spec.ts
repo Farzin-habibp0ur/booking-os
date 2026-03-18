@@ -77,7 +77,13 @@ describe('AutonomyService', () => {
 
       expect(result).toEqual(config);
       expect(prisma.autonomyConfig.upsert).toHaveBeenCalledWith({
-        where: { businessId_actionType: { businessId: 'biz1', actionType: 'DEPOSIT_PENDING' } },
+        where: {
+          businessId_actionType_scope: {
+            businessId: 'biz1',
+            actionType: 'DEPOSIT_PENDING',
+            scope: 'OPERATIONAL',
+          },
+        },
         create: expect.objectContaining({
           businessId: 'biz1',
           actionType: 'DEPOSIT_PENDING',

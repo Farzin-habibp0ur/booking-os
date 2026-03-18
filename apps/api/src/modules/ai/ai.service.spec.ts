@@ -116,7 +116,7 @@ describe('AiService', () => {
     } as any;
 
     messagingService = {
-      getProvider: jest.fn().mockReturnValue('whatsapp'),
+      getProviderForConversation: jest.fn().mockReturnValue('whatsapp'),
     } as any;
 
     const module = await Test.createTestingModule({
