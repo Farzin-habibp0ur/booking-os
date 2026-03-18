@@ -52,6 +52,14 @@ jest.mock('lucide-react', () => ({
   Settings: (p: any) => <span data-testid="icon-settings" {...p} />,
   Check: (p: any) => <span data-testid="icon-check" {...p} />,
   ArrowLeft: (p: any) => <span data-testid="icon-arrow-left" {...p} />,
+  Instagram: (p: any) => <span data-testid="icon-instagram" {...p} />,
+}));
+
+jest.mock('@/components/settings/instagram-connection', () => ({
+  InstagramConnection: () => <div data-testid="instagram-connection" />,
+}));
+jest.mock('@/components/settings/ice-breaker-config', () => ({
+  IceBreakerConfig: () => <div data-testid="ice-breaker-config" />,
 }));
 
 function setupMockApi(opts?: { connections?: any[]; business?: any }) {
@@ -61,6 +69,9 @@ function setupMockApi(opts?: { connections?: any[]; business?: any }) {
   mockApi.get.mockImplementation((url: string) => {
     if (url === '/calendar-sync/connections') return Promise.resolve(connections);
     if (url === '/business') return Promise.resolve(business);
+    if (url === '/locations') return Promise.resolve([{ id: 'loc1', name: 'Main' }]);
+    if (url.includes('/instagram-auth/') && url.includes('/status'))
+      return Promise.resolve({ connected: false });
     return Promise.resolve(null);
   });
 }
@@ -88,7 +99,7 @@ describe('IntegrationsPage', () => {
     });
   });
 
-  test('shows all 9 integration cards', async () => {
+  test('shows all 10 integration cards', async () => {
     setupMockApi();
     render(<IntegrationsPage />);
 
@@ -97,6 +108,7 @@ describe('IntegrationsPage', () => {
       expect(screen.getByText('Microsoft Outlook')).toBeInTheDocument();
       expect(screen.getByText('Stripe')).toBeInTheDocument();
       expect(screen.getByText('WhatsApp Business')).toBeInTheDocument();
+      expect(screen.getByText('Instagram DM')).toBeInTheDocument();
       expect(screen.getByText('Email (Resend/SendGrid)')).toBeInTheDocument();
       expect(screen.getByText('Google Analytics')).toBeInTheDocument();
       expect(screen.getByText('Zapier')).toBeInTheDocument();
@@ -131,8 +143,8 @@ describe('IntegrationsPage', () => {
 
     await waitFor(() => {
       const badges = screen.getAllByText('Not Connected');
-      // Google, Outlook, Stripe, WhatsApp should all be Not Connected
-      expect(badges.length).toBe(4);
+      // Google, Outlook, Stripe, WhatsApp, Instagram should all be Not Connected
+      expect(badges.length).toBe(5);
     });
   });
 
