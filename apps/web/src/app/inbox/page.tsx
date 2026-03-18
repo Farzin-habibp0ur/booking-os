@@ -865,164 +865,167 @@ function InboxPage() {
           </div>
           <ChannelFilterBar selected={channelFilter} onChange={setChannelFilter} />
           <div className="flex-1 overflow-auto">
-            {conversations.filter((c) => channelFilter === 'ALL' || c.channel === channelFilter).map((c) => (
-              <div
-                key={c.id}
-                className={cn(
-                  'relative overflow-hidden border-b',
-                  selected?.id === c.id && 'bg-sage-50',
-                  selectedConvoIds.has(c.id) && 'bg-sage-100',
-                )}
-              >
-                {/* Swipe reveal backgrounds - mobile only */}
-                {swipingConvoId === c.id && swipeDelta !== 0 && (
+            {conversations
+              .filter((c) => channelFilter === 'ALL' || c.channel === channelFilter)
+              .map((c) => (
+                <div
+                  key={c.id}
+                  className={cn(
+                    'relative overflow-hidden border-b',
+                    selected?.id === c.id && 'bg-sage-50',
+                    selectedConvoIds.has(c.id) && 'bg-sage-100',
+                  )}
+                >
+                  {/* Swipe reveal backgrounds - mobile only */}
+                  {swipingConvoId === c.id && swipeDelta !== 0 && (
+                    <div
+                      className={cn(
+                        'absolute inset-0 flex items-center md:hidden',
+                        swipeDelta > 0
+                          ? 'bg-emerald-500 justify-start pl-6'
+                          : 'bg-amber-500 justify-end pr-6',
+                      )}
+                    >
+                      {swipeDelta > 0 ? (
+                        <Archive size={20} className="text-white" />
+                      ) : (
+                        <AlarmClock size={20} className="text-white" />
+                      )}
+                    </div>
+                  )}
                   <div
                     className={cn(
-                      'absolute inset-0 flex items-center md:hidden',
-                      swipeDelta > 0
-                        ? 'bg-emerald-500 justify-start pl-6'
-                        : 'bg-amber-500 justify-end pr-6',
+                      'p-3 bg-white hover:bg-slate-50 transition-colors relative z-10',
+                      selected?.id === c.id && 'bg-sage-50',
                     )}
-                  >
-                    {swipeDelta > 0 ? (
-                      <Archive size={20} className="text-white" />
-                    ) : (
-                      <AlarmClock size={20} className="text-white" />
-                    )}
-                  </div>
-                )}
-                <div
-                  className={cn(
-                    'p-3 bg-white hover:bg-slate-50 transition-colors relative z-10',
-                    selected?.id === c.id && 'bg-sage-50',
-                  )}
-                  style={{
-                    transform: swipingConvoId === c.id ? `translateX(${swipeDelta}px)` : undefined,
-                    transition: swipingConvoId === c.id ? 'none' : 'transform 0.2s ease-out',
-                  }}
-                  onTouchStart={(e) => {
-                    const touch = e.touches[0];
-                    (e.currentTarget as any)._touchStartX = touch.clientX;
-                    (e.currentTarget as any)._touchStartY = touch.clientY;
-                    (e.currentTarget as any)._isVertical = false;
-                    setSwipingConvoId(c.id);
-                  }}
-                  onTouchMove={(e) => {
-                    const touch = e.touches[0];
-                    const target = e.currentTarget as any;
-                    const dx = touch.clientX - (target._touchStartX || 0);
-                    const dy = touch.clientY - (target._touchStartY || 0);
-                    if (target._isVertical) return;
-                    if (Math.abs(dy) > Math.abs(dx)) {
-                      target._isVertical = true;
+                    style={{
+                      transform:
+                        swipingConvoId === c.id ? `translateX(${swipeDelta}px)` : undefined,
+                      transition: swipingConvoId === c.id ? 'none' : 'transform 0.2s ease-out',
+                    }}
+                    onTouchStart={(e) => {
+                      const touch = e.touches[0];
+                      (e.currentTarget as any)._touchStartX = touch.clientX;
+                      (e.currentTarget as any)._touchStartY = touch.clientY;
+                      (e.currentTarget as any)._isVertical = false;
+                      setSwipingConvoId(c.id);
+                    }}
+                    onTouchMove={(e) => {
+                      const touch = e.touches[0];
+                      const target = e.currentTarget as any;
+                      const dx = touch.clientX - (target._touchStartX || 0);
+                      const dy = touch.clientY - (target._touchStartY || 0);
+                      if (target._isVertical) return;
+                      if (Math.abs(dy) > Math.abs(dx)) {
+                        target._isVertical = true;
+                        setSwipeDelta(0);
+                        return;
+                      }
+                      setSwipeDelta(dx);
+                    }}
+                    onTouchEnd={() => {
+                      if (Math.abs(swipeDelta) > 80) {
+                        if (swipeDelta > 0) resolveConversation(c.id);
+                        else snoozeConversationById(c.id);
+                      }
                       setSwipeDelta(0);
-                      return;
-                    }
-                    setSwipeDelta(dx);
-                  }}
-                  onTouchEnd={() => {
-                    if (Math.abs(swipeDelta) > 80) {
-                      if (swipeDelta > 0) resolveConversation(c.id);
-                      else snoozeConversationById(c.id);
-                    }
-                    setSwipeDelta(0);
-                    setSwipingConvoId(null);
-                  }}
-                >
-                  <div className="flex items-start gap-2">
-                    <input
-                      type="checkbox"
-                      checked={selectedConvoIds.has(c.id)}
-                      onChange={(e) => {
-                        e.stopPropagation();
-                        toggleSelectConvo(c.id);
-                      }}
-                      className="rounded text-sage-600 mt-1 flex-shrink-0"
-                    />
-                    <div
-                      onClick={() => {
-                        captureEvent('conversation_selected');
-                        setSelected(c);
-                        setMobileView('thread');
-                      }}
-                      className="flex-1 cursor-pointer min-w-0"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1.5 min-w-0">
-                          {c.isOverdue && (
-                            <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" />
-                          )}
-                          <p className="text-sm font-medium truncate">
-                            {c.customer?.name || t('common.unknown')}
-                          </p>
-                          {c.channel === 'INSTAGRAM' && <InstagramChannelBadge />}
-                        </div>
-                        <div className="flex items-center gap-1 flex-shrink-0">
-                          {c.isNew && (
-                            <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-sage-100 text-sage-700 font-medium">
-                              {t('inbox.new_badge')}
-                            </span>
-                          )}
-                          {c.status === 'SNOOZED' && (
-                            <AlarmClock size={12} className="text-lavender-500" />
-                          )}
-                        </div>
-                      </div>
-                      <p className="text-xs text-slate-500 truncate mt-0.5">
-                        {c.messages?.[0]?.content || t('dashboard.no_messages')}
-                      </p>
-                      <div className="flex items-center justify-between mt-1">
-                        <div className="flex items-center gap-1.5 min-w-0">
-                          <span
-                            className={cn(
-                              'text-[9px] px-1.5 py-0.5 rounded-full flex-shrink-0',
-                              c.status === 'OPEN'
-                                ? 'bg-sage-50 text-sage-700'
-                                : c.status === 'WAITING'
-                                  ? 'bg-amber-50 text-amber-700'
-                                  : c.status === 'SNOOZED'
-                                    ? 'bg-lavender-100 text-lavender-700'
-                                    : c.status === 'RESOLVED'
-                                      ? 'bg-slate-100 text-slate-500'
-                                      : 'bg-slate-100 text-slate-600',
+                      setSwipingConvoId(null);
+                    }}
+                  >
+                    <div className="flex items-start gap-2">
+                      <input
+                        type="checkbox"
+                        checked={selectedConvoIds.has(c.id)}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          toggleSelectConvo(c.id);
+                        }}
+                        className="rounded text-sage-600 mt-1 flex-shrink-0"
+                      />
+                      <div
+                        onClick={() => {
+                          captureEvent('conversation_selected');
+                          setSelected(c);
+                          setMobileView('thread');
+                        }}
+                        className="flex-1 cursor-pointer min-w-0"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            {c.isOverdue && (
+                              <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" />
                             )}
-                          >
-                            {t(`status.${c.status.toLowerCase()}`)}
-                          </span>
-                          {c.assignedTo && (
-                            <span className="text-[9px] text-slate-400 truncate">
-                              {c.assignedTo.name}
+                            <p className="text-sm font-medium truncate">
+                              {c.customer?.name || t('common.unknown')}
+                            </p>
+                            {c.channel === 'INSTAGRAM' && <InstagramChannelBadge />}
+                          </div>
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            {c.isNew && (
+                              <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-sage-100 text-sage-700 font-medium">
+                                {t('inbox.new_badge')}
+                              </span>
+                            )}
+                            {c.status === 'SNOOZED' && (
+                              <AlarmClock size={12} className="text-lavender-500" />
+                            )}
+                          </div>
+                        </div>
+                        <p className="text-xs text-slate-500 truncate mt-0.5">
+                          {c.messages?.[0]?.content || t('dashboard.no_messages')}
+                        </p>
+                        <div className="flex items-center justify-between mt-1">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <span
+                              className={cn(
+                                'text-[9px] px-1.5 py-0.5 rounded-full flex-shrink-0',
+                                c.status === 'OPEN'
+                                  ? 'bg-sage-50 text-sage-700'
+                                  : c.status === 'WAITING'
+                                    ? 'bg-amber-50 text-amber-700'
+                                    : c.status === 'SNOOZED'
+                                      ? 'bg-lavender-100 text-lavender-700'
+                                      : c.status === 'RESOLVED'
+                                        ? 'bg-slate-100 text-slate-500'
+                                        : 'bg-slate-100 text-slate-600',
+                              )}
+                            >
+                              {t(`status.${c.status.toLowerCase()}`)}
                             </span>
-                          )}
-                          {c.location && (
-                            <span className="text-[9px] text-slate-400 flex items-center gap-0.5 flex-shrink-0">
-                              <MapPin size={8} /> {c.location.name}
+                            {c.assignedTo && (
+                              <span className="text-[9px] text-slate-400 truncate">
+                                {c.assignedTo.name}
+                              </span>
+                            )}
+                            {c.location && (
+                              <span className="text-[9px] text-slate-400 flex items-center gap-0.5 flex-shrink-0">
+                                <MapPin size={8} /> {c.location.name}
+                              </span>
+                            )}
+                          </div>
+                          {c.lastMessageAt && (
+                            <span className="text-[9px] text-slate-400 flex-shrink-0">
+                              {formatRelativeTime(c.lastMessageAt)}
                             </span>
                           )}
                         </div>
-                        {c.lastMessageAt && (
-                          <span className="text-[9px] text-slate-400 flex-shrink-0">
-                            {formatRelativeTime(c.lastMessageAt)}
-                          </span>
+                        {c.tags?.length > 0 && (
+                          <div className="flex gap-1 mt-1">
+                            {c.tags.slice(0, 3).map((tg: string) => (
+                              <span
+                                key={tg}
+                                className="text-[8px] bg-sage-50 text-sage-600 px-1 py-0.5 rounded"
+                              >
+                                {tg}
+                              </span>
+                            ))}
+                          </div>
                         )}
                       </div>
-                      {c.tags?.length > 0 && (
-                        <div className="flex gap-1 mt-1">
-                          {c.tags.slice(0, 3).map((tg: string) => (
-                            <span
-                              key={tg}
-                              className="text-[8px] bg-sage-50 text-sage-600 px-1 py-0.5 rounded"
-                            >
-                              {tg}
-                            </span>
-                          ))}
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
             {conversations.length === 0 && (
               <div className="flex flex-col items-center justify-center py-12 text-center px-4">
                 <InboxIcon size={40} className="text-slate-300 mb-3" />
@@ -1196,9 +1199,11 @@ function InboxPage() {
                           {m.senderStaff.name}
                         </p>
                       )}
-                      {m.direction === 'INBOUND' && m.metadata && selected?.channel === 'INSTAGRAM' && (
-                        <InstagramContext metadata={m.metadata} className="mb-1.5" />
-                      )}
+                      {m.direction === 'INBOUND' &&
+                        m.metadata &&
+                        selected?.channel === 'INSTAGRAM' && (
+                          <InstagramContext metadata={m.metadata} className="mb-1.5" />
+                        )}
                       {m.attachments?.length > 0 && (
                         <MediaMessage attachments={m.attachments} direction={m.direction} />
                       )}
@@ -1261,28 +1266,31 @@ function InboxPage() {
               )}
 
               {/* Instagram messaging window indicator */}
-              {selected?.channel === 'INSTAGRAM' && (() => {
-                const lastInbound = messages?.filter((m: any) => m.direction === 'INBOUND').pop();
-                if (!lastInbound) return null;
-                const elapsed = Date.now() - new Date(lastInbound.createdAt).getTime();
-                const hoursLeft = Math.max(0, 24 - elapsed / (1000 * 60 * 60));
-                const windowOpen = hoursLeft > 0;
-                return (
-                  <div className={cn(
-                    'mx-3 mt-1 flex items-center gap-2 text-xs px-3 py-1.5 rounded-lg',
-                    windowOpen
-                      ? hoursLeft < 2
-                        ? 'bg-amber-50 text-amber-700'
-                        : 'bg-sage-50 text-sage-600'
-                      : 'bg-red-50 text-red-600',
-                  )}>
-                    <Clock size={12} />
-                    {windowOpen
-                      ? `${Math.floor(hoursLeft)}h ${Math.floor((hoursLeft % 1) * 60)}m remaining in messaging window`
-                      : 'Window expired — replies will use HUMAN_AGENT tag (7-day extension)'}
-                  </div>
-                );
-              })()}
+              {selected?.channel === 'INSTAGRAM' &&
+                (() => {
+                  const lastInbound = messages?.filter((m: any) => m.direction === 'INBOUND').pop();
+                  if (!lastInbound) return null;
+                  const elapsed = Date.now() - new Date(lastInbound.createdAt).getTime();
+                  const hoursLeft = Math.max(0, 24 - elapsed / (1000 * 60 * 60));
+                  const windowOpen = hoursLeft > 0;
+                  return (
+                    <div
+                      className={cn(
+                        'mx-3 mt-1 flex items-center gap-2 text-xs px-3 py-1.5 rounded-lg',
+                        windowOpen
+                          ? hoursLeft < 2
+                            ? 'bg-amber-50 text-amber-700'
+                            : 'bg-sage-50 text-sage-600'
+                          : 'bg-red-50 text-red-600',
+                      )}
+                    >
+                      <Clock size={12} />
+                      {windowOpen
+                        ? `${Math.floor(hoursLeft)}h ${Math.floor((hoursLeft % 1) * 60)}m remaining in messaging window`
+                        : 'Window expired — replies will use HUMAN_AGENT tag (7-day extension)'}
+                    </div>
+                  );
+                })()}
 
               {/* Composer */}
               <div className="p-3 border-t bg-white">
@@ -1342,7 +1350,10 @@ function InboxPage() {
                     <textarea
                       value={newMessage}
                       onChange={(e) => {
-                        const val = selected?.channel === 'INSTAGRAM' ? e.target.value.slice(0, 1000) : e.target.value;
+                        const val =
+                          selected?.channel === 'INSTAGRAM'
+                            ? e.target.value.slice(0, 1000)
+                            : e.target.value;
                         setNewMessage(val);
                       }}
                       onKeyDown={(e) => {
@@ -1367,10 +1378,12 @@ function InboxPage() {
                       }}
                     />
                     {selected?.channel === 'INSTAGRAM' && newMessage.length > 0 && (
-                      <span className={cn(
-                        'absolute right-2 bottom-1 text-[10px]',
-                        newMessage.length > 900 ? 'text-amber-500' : 'text-slate-400',
-                      )}>
+                      <span
+                        className={cn(
+                          'absolute right-2 bottom-1 text-[10px]',
+                          newMessage.length > 900 ? 'text-amber-500' : 'text-slate-400',
+                        )}
+                      >
                         {newMessage.length}/1000
                       </span>
                     )}

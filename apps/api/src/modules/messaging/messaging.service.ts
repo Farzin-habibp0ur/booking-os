@@ -134,10 +134,7 @@ export class MessagingService {
     if (!instagramConfig?.pageId || !instagramConfig?.pageAccessToken) {
       return null;
     }
-    return this.registerInstagramProvider(
-      instagramConfig.pageId,
-      instagramConfig.pageAccessToken,
-    );
+    return this.registerInstagramProvider(instagramConfig.pageId, instagramConfig.pageAccessToken);
   }
 
   isInstagramAvailable(): boolean {
@@ -154,7 +151,9 @@ export class MessagingService {
     locationWhatsappConfig?: Record<string, any> | null,
   ): MessagingProvider {
     if (channel === 'INSTAGRAM') {
-      const igProvider = this.getProviderForLocationInstagramConfig(locationInstagramConfig || null);
+      const igProvider = this.getProviderForLocationInstagramConfig(
+        locationInstagramConfig || null,
+      );
       if (igProvider) return igProvider;
       this.logger.warn('Instagram provider not found for conversation, falling back to default');
     }

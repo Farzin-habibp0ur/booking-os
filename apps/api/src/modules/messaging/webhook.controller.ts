@@ -162,9 +162,7 @@ export class WebhookController {
         business = await this.prisma.business.findUnique({
           where: { id: location.businessId },
         });
-        this.logger.log(
-          `Routed Instagram message to location "${location.name}" (${location.id})`,
-        );
+        this.logger.log(`Routed Instagram message to location "${location.name}" (${location.id})`);
       }
     } else if (businessPhoneNumberId) {
       const location =
@@ -365,10 +363,7 @@ export class WebhookController {
 
   /** Meta Instagram inbound messages (POST from Meta webhook) */
   @Post('instagram')
-  async instagramInbound(
-    @Body() payload: any,
-    @Headers('x-hub-signature-256') signature?: string,
-  ) {
+  async instagramInbound(@Body() payload: any, @Headers('x-hub-signature-256') signature?: string) {
     const secret = this.configService.get<string>('INSTAGRAM_APP_SECRET');
     if (secret) {
       const raw = JSON.stringify(payload);

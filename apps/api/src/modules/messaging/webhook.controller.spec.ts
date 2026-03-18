@@ -513,9 +513,9 @@ describe('WebhookController', () => {
       expect(result.status).toBe('EVENT_RECEIVED');
 
       // With wrong signature — should throw
-      await expect(
-        controller.instagramInbound(payload, 'sha256=wrong'),
-      ).rejects.toThrow('Invalid Instagram webhook signature');
+      await expect(controller.instagramInbound(payload, 'sha256=wrong')).rejects.toThrow(
+        'Invalid Instagram webhook signature',
+      );
     });
   });
 
@@ -534,7 +534,10 @@ describe('WebhookController', () => {
           { provide: ConversationService, useValue: conversationService },
           { provide: LocationService, useValue: locationService },
           { provide: InboxGateway, useValue: inboxGateway },
-          { provide: MessagingService, useValue: { getProvider: jest.fn(), getMockProvider: jest.fn() } },
+          {
+            provide: MessagingService,
+            useValue: { getProvider: jest.fn(), getMockProvider: jest.fn() },
+          },
           { provide: ConfigService, useValue: configService },
           { provide: AiService, useValue: aiService },
           { provide: MessageService, useValue: messageService },

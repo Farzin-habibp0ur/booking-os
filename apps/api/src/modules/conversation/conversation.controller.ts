@@ -175,7 +175,7 @@ export class ConversationController {
     const channelToSource: Record<string, string> = {
       WHATSAPP: 'WHATSAPP',
       INSTAGRAM: 'WHATSAPP', // Instagram DMs map to WHATSAPP (messaging channel)
-      SMS: 'WHATSAPP',       // SMS also maps to WHATSAPP (messaging channel)
+      SMS: 'WHATSAPP', // SMS also maps to WHATSAPP (messaging channel)
     };
     const source = channelToSource[conversation?.channel || ''] || 'WHATSAPP';
     return this.bookingService.create(businessId, {

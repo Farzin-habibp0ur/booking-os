@@ -367,9 +367,7 @@ export class ActionCardService {
         expiresAt: new Date(Date.now() + 2 * 60 * 60 * 1000), // Expires in 2 hours
       });
 
-      this.logger.log(
-        `Created Instagram window expiry card for conversation ${conv.id}`,
-      );
+      this.logger.log(`Created Instagram window expiry card for conversation ${conv.id}`);
     }
   }
 }

@@ -16,9 +16,7 @@ interface IceBreakerConfigProps {
 
 export function IceBreakerConfig({ locationId, initialPrompts = [] }: IceBreakerConfigProps) {
   const [prompts, setPrompts] = useState<IceBreakerPrompt[]>(
-    initialPrompts.length > 0
-      ? initialPrompts
-      : [{ question: '', payload: '' }],
+    initialPrompts.length > 0 ? initialPrompts : [{ question: '', payload: '' }],
   );
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -66,8 +64,8 @@ export function IceBreakerConfig({ locationId, initialPrompts = [] }: IceBreaker
         <h3 className="font-medium text-slate-900">Ice Breaker Prompts</h3>
       </div>
       <p className="text-sm text-slate-500 mb-4">
-        Ice breakers appear when a customer opens a conversation with you for the first
-        time. Add up to 4 quick-tap prompts.
+        Ice breakers appear when a customer opens a conversation with you for the first time. Add up
+        to 4 quick-tap prompts.
       </p>
 
       <div className="space-y-3">

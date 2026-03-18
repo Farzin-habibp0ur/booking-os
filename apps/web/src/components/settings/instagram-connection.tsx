@@ -28,9 +28,7 @@ export function InstagramConnection({ locationId }: InstagramConnectionProps) {
 
   async function loadStatus() {
     try {
-      const data = await api.get<InstagramStatus>(
-        `/instagram-auth/${locationId}/status`,
-      );
+      const data = await api.get<InstagramStatus>(`/instagram-auth/${locationId}/status`);
       setStatus(data);
     } catch {
       setStatus({ connected: false });
@@ -121,9 +119,8 @@ export function InstagramConnection({ locationId }: InstagramConnectionProps) {
               <AlertCircle size={14} />
               <span>
                 Token expires{' '}
-                {status.tokenExpiresAt &&
-                  new Date(status.tokenExpiresAt).toLocaleDateString()}
-                . It will auto-refresh.
+                {status.tokenExpiresAt && new Date(status.tokenExpiresAt).toLocaleDateString()}. It
+                will auto-refresh.
               </span>
             </div>
           )}
@@ -161,8 +158,8 @@ export function InstagramConnection({ locationId }: InstagramConnectionProps) {
       ) : (
         <div className="space-y-3">
           <p className="text-sm text-slate-500">
-            Connect your Instagram Professional account to receive and respond to DMs
-            directly from your inbox.
+            Connect your Instagram Professional account to receive and respond to DMs directly from
+            your inbox.
           </p>
           <button
             onClick={handleConnect}

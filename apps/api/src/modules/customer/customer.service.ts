@@ -81,11 +81,7 @@ export class CustomerService {
     return customer;
   }
 
-  async findOrCreateByInstagramId(
-    businessId: string,
-    instagramUserId: string,
-    name?: string,
-  ) {
+  async findOrCreateByInstagramId(businessId: string, instagramUserId: string, name?: string) {
     let customer = await this.prisma.customer.findFirst({
       where: { businessId, instagramUserId },
     });

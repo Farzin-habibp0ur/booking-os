@@ -443,7 +443,10 @@ export default function ConsoleMessagingPage() {
                             <span
                               className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                                 tenant.hasInstagramConfig
-                                  ? tenant.instagramTokenExpiresAt && new Date(tenant.instagramTokenExpiresAt).getTime() - Date.now() < 10 * 24 * 60 * 60 * 1000
+                                  ? tenant.instagramTokenExpiresAt &&
+                                    new Date(tenant.instagramTokenExpiresAt).getTime() -
+                                      Date.now() <
+                                      10 * 24 * 60 * 60 * 1000
                                     ? 'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400'
                                     : 'bg-sage-50 text-sage-700 dark:bg-sage-900/20 dark:text-sage-400'
                                   : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
@@ -451,7 +454,9 @@ export default function ConsoleMessagingPage() {
                               data-testid={`instagram-badge-${tenant.businessId}`}
                             >
                               {tenant.hasInstagramConfig
-                                ? tenant.instagramTokenExpiresAt && new Date(tenant.instagramTokenExpiresAt).getTime() - Date.now() < 10 * 24 * 60 * 60 * 1000
+                                ? tenant.instagramTokenExpiresAt &&
+                                  new Date(tenant.instagramTokenExpiresAt).getTime() - Date.now() <
+                                    10 * 24 * 60 * 60 * 1000
                                   ? 'Token Expiring'
                                   : 'Connected'
                                 : 'Not configured'}

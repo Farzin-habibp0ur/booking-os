@@ -621,9 +621,11 @@ export class AiService {
       let instagramContext = '';
       if (conversationChannel === 'INSTAGRAM') {
         if (msgMetadata.storyReplyUrl) {
-          instagramContext = '\nThis message is a reply to an Instagram Story. Acknowledge the story and engage warmly.';
+          instagramContext =
+            '\nThis message is a reply to an Instagram Story. Acknowledge the story and engage warmly.';
         } else if (msgMetadata.referral) {
-          instagramContext = '\nThis customer came from an Instagram ad. Welcome them and reference the promotion if applicable.';
+          instagramContext =
+            '\nThis customer came from an Instagram ad. Welcome them and reference the promotion if applicable.';
         } else if (msgMetadata.postback) {
           instagramContext = `\nThe customer tapped an ice breaker: "${msgMetadata.postback}". Respond directly to this topic.`;
           // Treat ice breaker taps as booking intent when relevant

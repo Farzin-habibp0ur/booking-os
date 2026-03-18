@@ -257,9 +257,7 @@ describe('MessagingService', () => {
       const service = await createService({});
 
       expect(service.getProviderForLocationInstagramConfig({ pageId: 'p1' })).toBeNull();
-      expect(
-        service.getProviderForLocationInstagramConfig({ pageAccessToken: 'tok' }),
-      ).toBeNull();
+      expect(service.getProviderForLocationInstagramConfig({ pageAccessToken: 'tok' })).toBeNull();
     });
 
     it('getProviderForLocationInstagramConfig lazy-registers provider', async () => {

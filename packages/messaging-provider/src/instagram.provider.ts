@@ -74,9 +74,7 @@ export class InstagramProvider implements MessagingProvider {
   /**
    * Configure ice breaker prompts for the Instagram account.
    */
-  async setIceBreakers(
-    prompts: Array<{ question: string; payload: string }>,
-  ): Promise<void> {
+  async setIceBreakers(prompts: Array<{ question: string; payload: string }>): Promise<void> {
     const payload = {
       platform: 'instagram',
       ice_breakers: prompts.map((p) => ({
@@ -233,9 +231,7 @@ export class InstagramProvider implements MessagingProvider {
         if (event.referral && !event.message) {
           messages.push({
             from: senderId,
-            body: event.referral.ad_id
-              ? `[Ad referral: ${event.referral.ad_id}]`
-              : '[Referral]',
+            body: event.referral.ad_id ? `[Ad referral: ${event.referral.ad_id}]` : '[Referral]',
             externalId: `referral_${senderId}_${timestamp}`,
             timestamp,
             instagramPageId: pageId,

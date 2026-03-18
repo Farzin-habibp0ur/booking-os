@@ -51,17 +51,11 @@ export class InstagramAuthController {
    * BusinessId and locationId are passed via the `state` parameter.
    */
   @Get('callback')
-  async callback(
-    @Query('code') code: string,
-    @Query('state') state: string,
-    @Res() res: Response,
-  ) {
+  async callback(@Query('code') code: string, @Query('state') state: string, @Res() res: Response) {
     if (!code) throw new BadRequestException('Authorization code missing');
     if (!state) throw new BadRequestException('State parameter missing');
 
-    const { businessId, locationId } = JSON.parse(
-      Buffer.from(state, 'base64').toString('utf8'),
-    );
+    const { businessId, locationId } = JSON.parse(Buffer.from(state, 'base64').toString('utf8'));
 
     await this.instagramAuthService.handleCallback(
       businessId,
@@ -70,29 +64,20 @@ export class InstagramAuthController {
       this.getRedirectUri(),
     );
 
-    const webUrl = this.configService.get<string>(
-      'NEXT_PUBLIC_APP_URL',
-      'http://localhost:3000',
-    );
+    const webUrl = this.configService.get<string>('NEXT_PUBLIC_APP_URL', 'http://localhost:3000');
     res.redirect(`${webUrl}/settings/integrations?instagram=connected`);
   }
 
   @Delete(':locationId/disconnect')
   @UseGuards(AuthGuard('jwt'), TenantGuard)
-  async disconnect(
-    @BusinessId() businessId: string,
-    @Param('locationId') locationId: string,
-  ) {
+  async disconnect(@BusinessId() businessId: string, @Param('locationId') locationId: string) {
     await this.instagramAuthService.disconnect(businessId, locationId);
     return { ok: true };
   }
 
   @Get(':locationId/status')
   @UseGuards(AuthGuard('jwt'), TenantGuard)
-  async status(
-    @BusinessId() businessId: string,
-    @Param('locationId') locationId: string,
-  ) {
+  async status(@BusinessId() businessId: string, @Param('locationId') locationId: string) {
     return this.instagramAuthService.getStatus(businessId, locationId);
   }
 
