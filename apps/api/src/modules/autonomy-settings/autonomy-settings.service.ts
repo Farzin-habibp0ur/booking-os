@@ -56,7 +56,13 @@ export class AutonomySettingsService {
     let created = 0;
     for (const def of DEFAULT_MARKETING_AUTONOMY) {
       const existing = await this.prisma.autonomyConfig.findUnique({
-        where: { businessId_actionType_scope: { businessId, actionType, scope: 'MARKETING': def.actionType } },
+        where: {
+          businessId_actionType_scope: {
+            businessId,
+            actionType: def.actionType,
+            scope: 'MARKETING',
+          },
+        },
       });
       if (!existing) {
         await this.prisma.autonomyConfig.create({
