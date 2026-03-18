@@ -11,10 +11,7 @@ describe('CockpitTasksContextService', () => {
     prisma = createMockPrisma();
 
     const module = await Test.createTestingModule({
-      providers: [
-        CockpitTasksContextService,
-        { provide: PrismaService, useValue: prisma },
-      ],
+      providers: [CockpitTasksContextService, { provide: PrismaService, useValue: prisma }],
     }).compile();
 
     service = module.get(CockpitTasksContextService);

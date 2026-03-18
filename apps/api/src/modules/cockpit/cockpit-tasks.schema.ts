@@ -12,10 +12,7 @@ export const ENTITY_TYPES = [
   'DRIFT_ALERT',
 ] as const;
 
-export const LINKED_ENTITY_TYPES = [
-  ...ENTITY_TYPES,
-  'PERSON',
-] as const;
+export const LINKED_ENTITY_TYPES = [...ENTITY_TYPES, 'PERSON'] as const;
 
 export type EntityType = (typeof ENTITY_TYPES)[number];
 export type LinkedEntityType = (typeof LINKED_ENTITY_TYPES)[number];
@@ -62,7 +59,8 @@ function validateActionItem(item: unknown): item is ActionItem {
   if (!item || typeof item !== 'object') return false;
   const a = item as Record<string, unknown>;
   if (!isNonEmptyString(a.label)) return false;
-  if (a.entityType !== undefined && !ENTITY_TYPES.includes(a.entityType as EntityType)) return false;
+  if (a.entityType !== undefined && !ENTITY_TYPES.includes(a.entityType as EntityType))
+    return false;
   return true;
 }
 
