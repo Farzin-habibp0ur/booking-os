@@ -84,6 +84,7 @@ import { PlatformConfigModule } from './modules/platform-config/platform-config.
 import { BudgetTrackerModule } from './modules/budget-tracker/budget-tracker.module';
 import { AutonomySettingsModule } from './modules/autonomy-settings/autonomy-settings.module';
 import { DashboardBriefingModule } from './modules/dashboard-briefing/dashboard-briefing.module';
+import { CockpitModule } from './modules/cockpit/cockpit.module';
 
 @Module({
   imports: [
@@ -184,6 +185,7 @@ import { DashboardBriefingModule } from './modules/dashboard-briefing/dashboard-
     BudgetTrackerModule,
     AutonomySettingsModule,
     DashboardBriefingModule,
+    CockpitModule,
     process.env.REDIS_URL ? QueueModule.forRootWithRedis() : QueueModule.forRoot(),
   ],
 })

@@ -305,3 +305,50 @@ export function getPhase1Config(
   if (!phase1) return { ...PHASE1_DEFAULTS };
   return { ...PHASE1_DEFAULTS, ...phase1 };
 }
+
+// ---- Cockpit Task types ----
+
+export type CockpitEntityType =
+  | 'JIRA_ISSUE'
+  | 'COMMITMENT'
+  | 'DOCUMENT'
+  | 'MEETING'
+  | 'SLACK_THREAD'
+  | 'EMAIL'
+  | 'ROCK'
+  | 'DRIFT_ALERT';
+
+export type CockpitLinkedEntityType = CockpitEntityType | 'PERSON';
+
+export interface CockpitActionItem {
+  label: string;
+  entityType?: CockpitEntityType;
+  entityId?: string;
+  entityLabel?: string;
+}
+
+export interface CockpitLinkedEntity {
+  type: CockpitLinkedEntityType;
+  id: string;
+  label: string;
+  status?: string;
+  url?: string;
+}
+
+export interface CockpitTask {
+  id: string;
+  title: string;
+  description: string;
+  priority: 'URGENT_TODAY' | 'NEEDS_APPROVAL' | 'OPPORTUNITY' | 'HYGIENE';
+  category: string;
+  actionItems: CockpitActionItem[];
+  linkedEntities: CockpitLinkedEntity[];
+  evidenceRefs?: string[];
+  qualityFlag?: 'SPECIFIC' | 'VAGUE';
+}
+
+export interface CockpitDailyTasks {
+  tasks: CockpitTask[];
+  generatedAt: string;
+  businessId: string;
+}
