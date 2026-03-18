@@ -11,11 +11,11 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses (aes
 
 ### Demo Credentials
 
-| Business              | Email                    | Password    | Vertical   |
-| --------------------- | ------------------------ | ----------- | ---------- |
-| Glow Aesthetic Clinic  | sarah@glowclinic.com     | password123 | Aesthetic  |
-| Metro Auto Group       | mike@metroauto.com       | password123 | Dealership |
-| Serenity Wellness Spa  | maya@serenitywellness.com | password123 | Wellness   |
+| Business              | Email                     | Password    | Vertical   |
+| --------------------- | ------------------------- | ----------- | ---------- |
+| Glow Aesthetic Clinic | sarah@glowclinic.com      | password123 | Aesthetic  |
+| Metro Auto Group      | mike@metroauto.com        | password123 | Dealership |
+| Serenity Wellness Spa | maya@serenitywellness.com | password123 | Wellness   |
 
 ---
 
@@ -26,22 +26,22 @@ booking-os/
 ├── apps/
 │   ├── api/                    # NestJS REST API (port 3001)
 │   │   ├── src/
-│   │   │   ├── modules/        # 79 feature modules (one dir per domain)
+│   │   │   ├── modules/        # 80 feature modules (one dir per domain)
 │   │   │   ├── common/         # Guards, decorators, filters, DTOs, PrismaService
 │   │   │   └── main.ts         # Bootstrap, Swagger, CORS, cookies, validation
 │   │   └── Dockerfile          # Multi-stage production build
 │   ├── web/                    # Next.js 15 customer dashboard (port 3000)
 │   │   ├── src/
-│   │   │   ├── app/            # 87 pages (App Router) — customer-facing only, no admin/console
-│   │   │   ├── components/     # Shared components (incl. marketing/ — 9 reusable MCC components)
+│   │   │   ├── app/            # 83 pages (App Router) — customer-facing only, no admin/console
+│   │   │   ├── components/     # Shared components (briefing/, aesthetic/, skeletons, modals)
 │   │   │   ├── lib/            # API client, auth, i18n, socket, theme
 │   │   │   ├── locales/        # en.json, es.json (600+ keys each)
 │   │   │   └── middleware.ts   # Route protection (checks access_token + refresh_token cookies)
 │   │   └── Dockerfile          # Multi-stage production build
 │   ├── admin/                  # Next.js 15 admin console (port 3002) — SUPER_ADMIN only
 │   │   ├── src/
-│   │   │   ├── app/            # 15 admin pages (App Router) — migrated from apps/web/src/app/console/
-│   │   │   ├── components/     # Admin shell, skeleton loaders, view-as banner
+│   │   │   ├── app/            # 20 admin pages (App Router) — 15 core + 5 marketing, migrated from apps/web/
+│   │   │   ├── components/     # Admin shell, skeleton loaders, view-as banner, marketing/ (9 MCC components)
 │   │   │   ├── lib/            # API client, auth (SUPER_ADMIN gate), cn utility
 │   │   │   └── middleware.ts   # Strict route protection (redirects to customer app if unauthenticated)
 │   │   └── next.config.js      # Stricter CSP (no analytics), X-Robots-Tag: noindex
@@ -56,7 +56,7 @@ booking-os/
 │   │   ├── src/seed-console.ts # Platform console base data
 │   │   ├── src/seed-console-showcase.ts # Console demo data
 │   │   └── src/seed-content.ts # Content pillar seeding (12 blog posts → ContentDraft)
-│   ├── messaging-provider/     # WhatsApp Cloud API abstraction
+│   ├── messaging-provider/     # WhatsApp Cloud + Instagram DM API abstraction
 │   └── shared/                 # Shared types, DTOs, enums, profile field definitions
 ├── agents/                     # 15 internal growth engine agent prompts (research → ops)
 ├── system/                     # Growth engine config (launch, gates, budget, testing, escalation, MCP fallback)
@@ -82,26 +82,26 @@ booking-os/
 
 ## Tech Stack
 
-| Layer       | Technology                              | Version       |
-| ----------- | --------------------------------------- | ------------- |
-| Frontend    | Next.js (App Router), React, TypeScript | 15.x, 19.x    |
-| Styling     | Tailwind CSS                            | 4.x           |
-| Icons       | lucide-react                            | 0.468         |
-| Charts      | Recharts                                | 2.15          |
-| Real-time   | Socket.io                               | 4.x           |
-| Backend     | NestJS, TypeScript                      | 11.x          |
-| ORM         | Prisma                                  | 6.x           |
-| Database    | PostgreSQL                              | 16            |
-| AI          | Anthropic Claude API                    | claude-sonnet |
-| Payments    | Stripe                                  | stripe-node   |
-| Email       | Resend                                  | -             |
-| Messaging   | WhatsApp Business Cloud API             | -             |
-| Cache/Queue | Redis 7 + BullMQ                        | -             |
-| Monorepo    | Turborepo                               | 2.x           |
-| CI/CD       | GitHub Actions → Railway                | -             |
-| Monitoring  | Sentry                                  | -             |
-| Analytics   | PostHog                                 | -             |
-| Linting     | ESLint 9 + Prettier                     | -             |
+| Layer       | Technology                                    | Version       |
+| ----------- | --------------------------------------------- | ------------- |
+| Frontend    | Next.js (App Router), React, TypeScript       | 15.x, 19.x    |
+| Styling     | Tailwind CSS                                  | 4.x           |
+| Icons       | lucide-react                                  | 0.468         |
+| Charts      | Recharts                                      | 2.15          |
+| Real-time   | Socket.io                                     | 4.x           |
+| Backend     | NestJS, TypeScript                            | 11.x          |
+| ORM         | Prisma                                        | 6.x           |
+| Database    | PostgreSQL                                    | 16            |
+| AI          | Anthropic Claude API                          | claude-sonnet |
+| Payments    | Stripe                                        | stripe-node   |
+| Email       | Resend                                        | -             |
+| Messaging   | WhatsApp Business Cloud API, Instagram DM API | -             |
+| Cache/Queue | Redis 7 + BullMQ                              | -             |
+| Monorepo    | Turborepo                                     | 2.x           |
+| CI/CD       | GitHub Actions → Railway                      | -             |
+| Monitoring  | Sentry                                        | -             |
+| Analytics   | PostHog                                       | -             |
+| Linting     | ESLint 9 + Prettier                           | -             |
 
 ---
 
@@ -110,6 +110,7 @@ booking-os/
 Each vertical customizes fields, templates, automations, and workflows. The pack is set on `Business.verticalPack` and configured via `Business.packConfig` (JSON).
 
 ### Aesthetic Clinics
+
 - Consult → Treatment → Aftercare workflows
 - Medical intake fields, before/after tracking
 - `ServiceKind: CONSULT | TREATMENT | OTHER`
@@ -117,6 +118,7 @@ Each vertical customizes fields, templates, automations, and workflows. The pack
 - AI features: consult→treatment conversion tracking, aftercare follow-ups
 
 ### Car Dealerships
+
 - Service kanban board: `CHECKED_IN → DIAGNOSING → AWAITING_APPROVAL → IN_PROGRESS → READY_FOR_PICKUP`
 - Vehicle inventory: VIN tracking, stock numbers, test drives (`VehicleStatus`, `VehicleCondition`, `TestDriveStatus`)
 - Sales pipeline: 7-stage deal tracking (`DealStage: INQUIRY → QUALIFIED → TEST_DRIVE → NEGOTIATION → FINANCE → CLOSED_WON → CLOSED_LOST`)
@@ -124,6 +126,7 @@ Each vertical customizes fields, templates, automations, and workflows. The pack
 - Resource/bay scheduling
 
 ### Wellness & Spa
+
 - 7-field wellness intake (health goals, fitness level, injuries, medications, allergies, modality, membership)
 - Session packages: `ServicePackage` + `PackagePurchase` + `PackageRedemption` models
 - Auto-unredeem on booking cancel
@@ -131,6 +134,7 @@ Each vertical customizes fields, templates, automations, and workflows. The pack
 - Components: `WellnessIntakeCard`, `PackageTracker`, `MembershipBadge`, `PackagePurchaseModal`, `PackageRedeemSelector`
 
 ### General
+
 - Base vertical with standard booking features, no vertical-specific customizations
 
 ---
@@ -139,7 +143,7 @@ Each vertical customizes fields, templates, automations, and workflows. The pack
 
 ### Module Structure
 
-Every feature is a NestJS module in `apps/api/src/modules/` (79 modules). Each module follows this pattern:
+Every feature is a NestJS module in `apps/api/src/modules/` (80 modules). Each module follows this pattern:
 
 ```
 modules/
@@ -186,7 +190,7 @@ modules/
 
 ### Database (Prisma)
 
-- Schema at `packages/db/prisma/schema.prisma` — **91 models**, 59 migrations
+- Schema at `packages/db/prisma/schema.prisma` — **91 models**, 61 migrations
 - Generate client: `npx prisma generate --schema=packages/db/prisma/schema.prisma`
 - Create migration: `npx prisma migrate dev --name your_name --schema=packages/db/prisma/schema.prisma`
 - `PrismaService` is a global NestJS provider — inject it in constructors
@@ -242,7 +246,7 @@ Key events: `message:new`, `conversation:updated`, `ai:suggestion`, `ai:auto-rep
 
 - Pages are in `apps/web/src/app/` using Next.js App Router (not Pages Router)
 - Protected pages check `access_token` + `refresh_token` cookies in `middleware.ts` (redirects to /login only when both are missing)
-- **83 pages** in `apps/web/` (~17 public, ~50 protected, ~15 portal/marketing site) + **20 admin pages** in `apps/admin/` (15 original + 5 marketing)
+- **83 pages** in `apps/web/` (~17 public, ~50 protected, ~16 portal/marketing site) + **20 admin pages** in `apps/admin/` (15 core + 5 marketing)
 - Client components use `'use client'` directive
 
 ### Page Categories
@@ -274,7 +278,7 @@ Key events: `message:new`, `conversation:updated`, `ai:suggestion`, `ai:auto-rep
 
 - **No external component libraries** — strictly Tailwind CSS utility classes
 - Shared components in `apps/web/src/components/`
-- Marketing Command Center components in `apps/web/src/components/marketing/` — 9 reusable components (TierBadge, ContentDraftCard, ActionCardComponent, AgentStatusCard, PipelineVisualization, PillarBalanceChart, RejectionCodePicker, AutonomyLevelSelector, MarketingSkeleton) with barrel export via `index.ts`
+- Marketing Command Center components in `apps/admin/src/components/marketing/` — 9 reusable components (TierBadge, ContentDraftCard, ActionCardComponent, AgentStatusCard, PipelineVisualization, PillarBalanceChart, RejectionCodePicker, AutonomyLevelSelector, MarketingSkeleton) with barrel export via `index.ts`
 - Briefing components in `apps/web/src/components/briefing/` — BriefingCard, OpportunityCard, BriefingFeed
 - Feature-specific components co-located with their page or in named subdirectories
 - Modals use a consistent pattern: `XxxModal` with `isOpen` + `onClose` props
@@ -389,7 +393,7 @@ The Console is a **standalone Next.js app** at `apps/admin/` for platform-wide a
 ### Admin App Architecture
 
 - **Separate app:** `apps/admin/` — independent from `apps/web/`, with its own auth, middleware, and layout
-- **15 routes** across 10 sections: `/`, `/businesses`, `/businesses/[id]`, `/billing`, `/billing/past-due`, `/billing/subscriptions`, `/agents`, `/messaging`, `/health`, `/packs`, `/packs/[slug]`, `/packs/skills`, `/support`, `/settings`, `/audit`
+- **20 routes** across 11 sections: `/`, `/businesses`, `/businesses/[id]`, `/billing`, `/billing/past-due`, `/billing/subscriptions`, `/agents`, `/messaging`, `/health`, `/packs`, `/packs/[slug]`, `/packs/skills`, `/support`, `/settings`, `/audit`, `/marketing`, `/marketing/queue`, `/marketing/agents`, `/marketing/sequences`, `/marketing/rejection-analytics`
 - **Dark sidebar theme:** `bg-slate-900` with red "ADMIN" badge — visually distinct from the customer app's sage/lavender theme
 - **Auth flow:** Users authenticate via the customer app; the admin app checks for auth cookies and validates `SUPER_ADMIN` role. Non-admin users are redirected to `businesscommandcentre.com`
 - **No analytics:** No PostHog, no service worker, `X-Robots-Tag: noindex, nofollow`
@@ -504,22 +508,23 @@ When building a new feature end-to-end, follow this order:
 
 Full reference at `.env.example` in the repo root. Key groups:
 
-| Category | Variables | Notes |
-| -------- | --------- | ----- |
-| Database | `DATABASE_URL` | PostgreSQL connection string |
-| Auth | `JWT_SECRET`, `JWT_REFRESH_SECRET` | Must be strong random values in production |
-| CORS | `CORS_ORIGINS` | **Source of truth for cookie domain** — comma-separated origins |
-| API URLs | `API_URL`, `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_WS_URL` | `NEXT_PUBLIC_*` baked at build time |
-| Admin | `NEXT_PUBLIC_ADMIN_URL`, `NEXT_PUBLIC_CUSTOMER_APP_URL`, `NEXT_PUBLIC_SENTRY_DSN_ADMIN` | Admin app URL (used by web for SUPER_ADMIN login redirect), customer app URL (used by admin for logout/unauthorized redirect) |
-| AI | `ANTHROPIC_API_KEY` | Claude API for intent detection, replies, booking assistant |
-| WhatsApp | `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_VERIFY_TOKEN` | Required for production messaging |
-| Messaging | `MESSAGING_PROVIDER` | `mock` (default dev) or `whatsapp-cloud` (production) |
-| Email | `EMAIL_PROVIDER`, `EMAIL_API_KEY`, `EMAIL_FROM` | Provider: `resend`, `sendgrid`, or `none` (default, logs only) |
-| Stripe | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID_*` | 3-tier pricing (Starter/Professional/Enterprise) × monthly/annual |
-| Calendar | `GOOGLE_CLIENT_ID/SECRET`, `MICROSOFT_CLIENT_ID/SECRET`, `CALENDAR_ENCRYPTION_KEY` | OAuth for Google Calendar + Outlook |
-| Redis | `REDIS_URL` | Required for BullMQ queues, WebSocket, caching |
-| Monitoring | `SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_DSN` | Error tracking for API + web |
-| Analytics | `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST` | Product analytics (web only) |
+| Category   | Variables                                                                               | Notes                                                                                                                         |
+| ---------- | --------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Database   | `DATABASE_URL`                                                                          | PostgreSQL connection string                                                                                                  |
+| Auth       | `JWT_SECRET`, `JWT_REFRESH_SECRET`                                                      | Must be strong random values in production                                                                                    |
+| CORS       | `CORS_ORIGINS`                                                                          | **Source of truth for cookie domain** — comma-separated origins                                                               |
+| API URLs   | `API_URL`, `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_WS_URL`                                  | `NEXT_PUBLIC_*` baked at build time                                                                                           |
+| Admin      | `NEXT_PUBLIC_ADMIN_URL`, `NEXT_PUBLIC_CUSTOMER_APP_URL`, `NEXT_PUBLIC_SENTRY_DSN_ADMIN` | Admin app URL (used by web for SUPER_ADMIN login redirect), customer app URL (used by admin for logout/unauthorized redirect) |
+| AI         | `ANTHROPIC_API_KEY`                                                                     | Claude API for intent detection, replies, booking assistant                                                                   |
+| WhatsApp   | `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_VERIFY_TOKEN`            | Required for production messaging                                                                                             |
+| Instagram  | `INSTAGRAM_APP_ID`, `INSTAGRAM_APP_SECRET`, `INSTAGRAM_VERIFY_TOKEN`                    | Required for Instagram DM integration                                                                                         |
+| Messaging  | `MESSAGING_PROVIDER`                                                                    | `mock` (default dev) or `whatsapp-cloud` (production)                                                                         |
+| Email      | `EMAIL_PROVIDER`, `EMAIL_API_KEY`, `EMAIL_FROM`                                         | Provider: `resend`, `sendgrid`, or `none` (default, logs only)                                                                |
+| Stripe     | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID_*`                       | 3-tier pricing (Starter/Professional/Enterprise) × monthly/annual                                                             |
+| Calendar   | `GOOGLE_CLIENT_ID/SECRET`, `MICROSOFT_CLIENT_ID/SECRET`, `CALENDAR_ENCRYPTION_KEY`      | OAuth for Google Calendar + Outlook                                                                                           |
+| Redis      | `REDIS_URL`                                                                             | Required for BullMQ queues, WebSocket, caching                                                                                |
+| Monitoring | `SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_DSN`                                                  | Error tracking for API + web                                                                                                  |
+| Analytics  | `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST`                                   | Product analytics (web only)                                                                                                  |
 
 **Critical:** `NEXT_PUBLIC_*` variables are baked at build time — changing them requires a Docker rebuild, not just an env var update.
 
@@ -529,15 +534,16 @@ Full reference at `.env.example` in the repo root. Key groups:
 
 All seed scripts are in `packages/db/src/`. They are **idempotent** (safe to re-run) and use dedup checks.
 
-| Script | Command | Purpose | When to Use |
-| ------ | ------- | ------- | ----------- |
-| `seed.ts` | `npx tsx packages/db/src/seed.ts` | Base data: 3 businesses (aesthetic + dealership + wellness), staff, services, working hours | Fresh database setup, CI |
-| `seed-demo.ts` | `npx tsx packages/db/src/seed-demo.ts` | Rich demo data: bookings, customers, conversations, action cards | Demo environments, testing |
-| `seed-agentic.ts` | `npx tsx packages/db/src/seed-agentic.ts` | Agentic framework data: agent configs, agent runs, action cards, autonomy configs | One-time production fill |
-| `seed-wellness.ts` | `npx tsx packages/db/src/seed-wellness.ts` | Wellness vertical: packages, memberships, intake data | Also called from seed.ts |
-| `seed-console.ts` | `npx tsx packages/db/src/seed-console.ts` | Console base data: platform settings, agent defaults | Super Admin setup |
-| `seed-console-showcase.ts` | `npx tsx packages/db/src/seed-console-showcase.ts` | Console demo data: support cases, audit logs | Console demos |
-| `seed-content.ts` | `npx tsx packages/db/src/seed-content.ts` | 12 blog posts across 5 content pillars → ContentDraft records | Marketing content setup |
+| Script                     | Command                                            | Purpose                                                                                     | When to Use                |
+| -------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------- | -------------------------- |
+| `seed.ts`                  | `npx tsx packages/db/src/seed.ts`                  | Base data: 3 businesses (aesthetic + dealership + wellness), staff, services, working hours | Fresh database setup, CI   |
+| `seed-demo.ts`             | `npx tsx packages/db/src/seed-demo.ts`             | Rich demo data: bookings, customers, conversations, action cards                            | Demo environments, testing |
+| `seed-agentic.ts`          | `npx tsx packages/db/src/seed-agentic.ts`          | Agentic framework data: agent configs, agent runs, action cards, autonomy configs           | One-time production fill   |
+| `seed-wellness.ts`         | `npx tsx packages/db/src/seed-wellness.ts`         | Wellness vertical: packages, memberships, intake data                                       | Also called from seed.ts   |
+| `seed-console.ts`          | `npx tsx packages/db/src/seed-console.ts`          | Console base data: platform settings, agent defaults                                        | Super Admin setup          |
+| `seed-console-showcase.ts` | `npx tsx packages/db/src/seed-console-showcase.ts` | Console demo data: support cases, audit logs                                                | Console demos              |
+| `seed-content.ts`          | `npx tsx packages/db/src/seed-content.ts`          | 12 blog posts across 5 content pillars → ContentDraft records                               | Marketing content setup    |
+| `seed-instagram.ts`        | `npx tsx packages/db/src/seed-instagram.ts`        | 4 Instagram DM conversations (story reply, ad referral, ice breaker, expiring window)       | Instagram integration testing |
 
 ---
 
@@ -694,6 +700,7 @@ AI state persisted in `conversation.metadata` JSON for stateful multi-turn flows
 These run inside the NestJS API for each customer's business. Code in `apps/api/src/modules/agent-framework/`.
 
 **5 Operational Agents:**
+
 - `WaitlistAgent` — Auto-match waitlist entries to cancelled slots
 - `RetentionAgent` — Detect at-risk customers, generate win-back action cards
 - `DataHygieneAgent` — Duplicate detection, incomplete profile flagging
@@ -701,6 +708,7 @@ These run inside the NestJS API for each customer's business. Code in `apps/api/
 - `QuoteFollowupAgent` — Expired quote reminders, follow-up action cards
 
 **12 Marketing Agents** (6 content, 2 distribution, 4 analytics) — **internal BookingOS growth engine only, NOT shown to customers:**
+
 - Content: BlogWriter, SocialCreator, EmailComposer, CaseStudy, VideoScript, Newsletter
 - Distribution: ContentScheduler, ContentPublisher
 - Analytics: PerformanceTracker, TrendAnalyzer, ContentCalendar, ContentROI
@@ -725,17 +733,18 @@ Output goes to file-based folders (`queue/pending/`, `briefings/`, `reports/`, e
 
 The platform enforces a strict separation between customer-facing and internal tools:
 
-| Layer | Customer App (`businesscommandcentre.com`) | Admin App (`admin.businesscommandcentre.com`) |
-|-------|-------------------------------------------|----------------------------------------------|
-| **Agents** | 5 core: Waitlist, Retention, Data Hygiene, Scheduling Optimizer, Quote Followup | All 17 agents (5 core + 12 marketing) |
-| **AI pages** | `/ai` overview, agents, actions, performance — core agents only | `/marketing/agents` — full marketing agent dashboard |
-| **Content** | No content queue or pipeline UI | `/marketing/queue` — content approval workflow |
-| **Autonomy** | No autonomy settings visible | `/marketing` autonomy settings (SUPER_ADMIN) |
-| **API filtering** | `GET /agent-config` excludes marketing types via `notIn` | `GET /agent-config/admin/all` returns everything |
-| **API auth** | Marketing API endpoints return 403 for non-SUPER_ADMIN | Full access for SUPER_ADMIN users |
-| **Navigation** | No `/marketing/*` sidebar links; routes redirect to `/ai` | Marketing section in admin sidebar |
+| Layer             | Customer App (`businesscommandcentre.com`)                                      | Admin App (`admin.businesscommandcentre.com`)        |
+| ----------------- | ------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| **Agents**        | 5 core: Waitlist, Retention, Data Hygiene, Scheduling Optimizer, Quote Followup | All 17 agents (5 core + 12 marketing)                |
+| **AI pages**      | `/ai` overview, agents, actions, performance — core agents only                 | `/marketing/agents` — full marketing agent dashboard |
+| **Content**       | No content queue or pipeline UI                                                 | `/marketing/queue` — content approval workflow       |
+| **Autonomy**      | No autonomy settings visible                                                    | `/marketing` autonomy settings (SUPER_ADMIN)         |
+| **API filtering** | `GET /agent-config` excludes marketing types via `notIn`                        | `GET /agent-config/admin/all` returns everything     |
+| **API auth**      | Marketing API endpoints return 403 for non-SUPER_ADMIN                          | Full access for SUPER_ADMIN users                    |
+| **Navigation**    | No `/marketing/*` sidebar links; routes redirect to `/ai`                       | Marketing section in admin sidebar                   |
 
 **Key constants:**
+
 - `MARKETING_AGENT_TYPES` in `agent-config.service.ts` — 12 marketing agent type strings filtered from customer queries
 - `MARKETING_AGENT_TYPES` in `ai/actions/page.tsx` — same list for frontend action card filtering
 - E2E boundary tests in `apps/web/e2e/internal-external-boundary.spec.ts`
@@ -758,17 +767,17 @@ The app includes a public-facing marketing site at the root domain:
 
 ## Key Documentation
 
-| Document               | Location                      | Purpose                                                       |
-| ---------------------- | ----------------------------- | ------------------------------------------------------------- |
-| PROJECT_CONTEXT.md     | `docs/PROJECT_CONTEXT.md`     | Full project context — what's built, schema, modules, roadmap |
-| DEPLOY.md              | `DEPLOY.md`                   | Deployment operations guide with critical rules               |
-| cicd.md                | `docs/cicd.md`                | CI/CD pipeline details                                        |
-| user-stories.md        | `docs/user-stories.md`        | Complete user stories (386 capabilities, 196 gaps)            |
-| ux-brainstorm-brief.md | `docs/ux-brainstorm-brief.md` | UX improvement brainstorm                                     |
-| URLS.md                | `docs/URLS.md`                | All domains, services, DNS, third-party dashboards            |
-| AI_MARKETING_AGENTS_DAILY_WORKFLOW.md | `docs/AI_MARKETING_AGENTS_DAILY_WORKFLOW.md` | In-app marketing agent operator guide |
-| DESIGN_DOCUMENTATION.md | `DESIGN_DOCUMENTATION.md`   | Comprehensive design system documentation                     |
-| .env.example           | `.env.example`                | Full environment variable reference with comments             |
+| Document                              | Location                                     | Purpose                                                       |
+| ------------------------------------- | -------------------------------------------- | ------------------------------------------------------------- |
+| PROJECT_CONTEXT.md                    | `docs/PROJECT_CONTEXT.md`                    | Full project context — what's built, schema, modules, roadmap |
+| DEPLOY.md                             | `DEPLOY.md`                                  | Deployment operations guide with critical rules               |
+| cicd.md                               | `docs/cicd.md`                               | CI/CD pipeline details                                        |
+| user-stories.md                       | `docs/user-stories.md`                       | Complete user stories (386 capabilities, 196 gaps)            |
+| ux-brainstorm-brief.md                | `docs/ux-brainstorm-brief.md`                | UX improvement brainstorm                                     |
+| URLS.md                               | `docs/URLS.md`                               | All domains, services, DNS, third-party dashboards            |
+| AI_MARKETING_AGENTS_DAILY_WORKFLOW.md | `docs/AI_MARKETING_AGENTS_DAILY_WORKFLOW.md` | In-app marketing agent operator guide                         |
+| DESIGN_DOCUMENTATION.md               | `DESIGN_DOCUMENTATION.md`                    | Comprehensive design system documentation                     |
+| .env.example                          | `.env.example`                               | Full environment variable reference with comments             |
 
 ### Growth Engine Docs (in `system/`)
 
