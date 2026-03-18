@@ -440,4 +440,66 @@ export class DashboardService {
       })),
     };
   }
+
+  async getMessagingChannelBreakdown(businessId: string) {
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+    const conversations = await this.prisma.conversation.groupBy({
+      by: ['channel'],
+      where: {
+        businessId,
+        lastMessageAt: { gte: thirtyDaysAgo },
+      },
+      _count: true,
+    });
+
+    const channelStats: Record<string, number> = {};
+    for (const c of conversations) {
+      channelStats[c.channel] = c._count;
+    }
+
+    // Instagram window utilization: % of Instagram conversations where business replied within 24h
+    let instagramWindowUtilization = 0;
+    if (channelStats['INSTAGRAM']) {
+      const igConversations = await this.prisma.conversation.findMany({
+        where: {
+          businessId,
+          channel: 'INSTAGRAM',
+          lastMessageAt: { gte: thirtyDaysAgo },
+        },
+        select: {
+          id: true,
+          messages: {
+            take: 2,
+            orderBy: { createdAt: 'asc' },
+            where: { direction: { in: ['INBOUND', 'OUTBOUND'] } },
+            select: { direction: true, createdAt: true },
+          },
+        },
+      });
+
+      let replied = 0;
+      let total = 0;
+      for (const conv of igConversations) {
+        const firstInbound = conv.messages.find((m) => m.direction === 'INBOUND');
+        const firstOutbound = conv.messages.find((m) => m.direction === 'OUTBOUND');
+        if (firstInbound) {
+          total++;
+          if (
+            firstOutbound &&
+            firstOutbound.createdAt.getTime() - firstInbound.createdAt.getTime() <
+              24 * 60 * 60 * 1000
+          ) {
+            replied++;
+          }
+        }
+      }
+      instagramWindowUtilization = total > 0 ? Math.round((replied / total) * 100) : 0;
+    }
+
+    return {
+      channels: channelStats,
+      instagramWindowUtilization,
+    };
+  }
 }

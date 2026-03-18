@@ -304,4 +304,72 @@ export class ActionCardService {
       this.logger.log(`Unsnoozed ${count} action card(s)`);
     }
   }
+
+  /**
+   * Check Instagram conversations where the messaging window is about to expire.
+   * Instagram's 24-hour window closes if no customer message within 24h.
+   * Creates URGENT_TODAY action cards for conversations at the 22-hour mark.
+   * Runs every 15 minutes.
+   */
+  @Cron('0 */15 * * * *')
+  async checkInstagramWindowExpiry() {
+    const twentyTwoHoursAgo = new Date(Date.now() - 22 * 60 * 60 * 1000);
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+    // Find open Instagram conversations with last inbound message between 22-24 hours ago
+    const conversations = await this.prisma.conversation.findMany({
+      where: {
+        channel: 'INSTAGRAM',
+        status: { in: ['OPEN', 'WAITING'] },
+        messages: {
+          some: {
+            direction: 'INBOUND',
+            createdAt: { gte: twentyFourHoursAgo, lte: twentyTwoHoursAgo },
+          },
+        },
+      },
+      include: {
+        customer: { select: { id: true, name: true } },
+        business: { select: { id: true } },
+      },
+    });
+
+    for (const conv of conversations) {
+      // Check if we already created a window expiry card for this conversation
+      const existing = await this.prisma.actionCard.findFirst({
+        where: {
+          businessId: conv.businessId,
+          type: 'INSTAGRAM_WINDOW_EXPIRING',
+          status: 'PENDING',
+          preview: { path: ['conversationId'], equals: conv.id },
+        },
+      });
+      if (existing) continue;
+
+      await this.create({
+        businessId: conv.businessId,
+        type: 'INSTAGRAM_WINDOW_EXPIRING',
+        category: 'URGENT_TODAY',
+        priority: 90,
+        title: `Instagram window closing for ${conv.customer?.name || 'customer'}`,
+        description:
+          'The 24-hour Instagram messaging window is about to expire. Reply now or use the HUMAN_AGENT tag for a 7-day extension.',
+        suggestedAction: 'Reply to the conversation before the window closes.',
+        preview: { conversationId: conv.id },
+        ctaConfig: [
+          {
+            label: 'Reply Now',
+            action: 'navigate',
+            url: `/inbox?conversationId=${conv.id}`,
+          },
+        ],
+        customerId: conv.customer?.id,
+        expiresAt: new Date(Date.now() + 2 * 60 * 60 * 1000), // Expires in 2 hours
+      });
+
+      this.logger.log(
+        `Created Instagram window expiry card for conversation ${conv.id}`,
+      );
+    }
+  }
 }

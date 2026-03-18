@@ -4,6 +4,7 @@ import {
   MockProvider,
   WhatsAppCloudProvider,
   TwilioSmsProvider,
+  InstagramProvider,
   MessagingProvider,
 } from '@booking-os/messaging-provider';
 
@@ -14,6 +15,7 @@ export class MessagingService {
   private mockProvider?: MockProvider;
   private smsProvider?: TwilioSmsProvider;
   private providerRegistry = new Map<string, WhatsAppCloudProvider>();
+  private instagramProviderRegistry = new Map<string, InstagramProvider>();
 
   constructor(private configService: ConfigService) {
     const providerName = this.configService.get<string>('MESSAGING_PROVIDER', 'mock');
@@ -107,5 +109,66 @@ export class MessagingService {
 
   isSmsAvailable(): boolean {
     return !!this.smsProvider;
+  }
+
+  /** Register an Instagram provider for a specific page ID */
+  registerInstagramProvider(pageId: string, accessToken: string): InstagramProvider {
+    const existing = this.instagramProviderRegistry.get(pageId);
+    if (existing) return existing;
+
+    const provider = new InstagramProvider({ pageId, pageAccessToken: accessToken });
+    this.instagramProviderRegistry.set(pageId, provider);
+    this.logger.log(`Registered Instagram provider for pageId: ${pageId}`);
+    return provider;
+  }
+
+  /** Get Instagram provider for a specific page ID */
+  getProviderForInstagramPageId(pageId: string): InstagramProvider | null {
+    return this.instagramProviderRegistry.get(pageId) || null;
+  }
+
+  /** Get Instagram provider for a location's Instagram config (lazy-registers if needed) */
+  getProviderForLocationInstagramConfig(
+    instagramConfig: Record<string, any> | null,
+  ): InstagramProvider | null {
+    if (!instagramConfig?.pageId || !instagramConfig?.pageAccessToken) {
+      return null;
+    }
+    return this.registerInstagramProvider(
+      instagramConfig.pageId,
+      instagramConfig.pageAccessToken,
+    );
+  }
+
+  isInstagramAvailable(): boolean {
+    return this.instagramProviderRegistry.size > 0;
+  }
+
+  /**
+   * Resolve the correct messaging provider for a conversation based on its channel
+   * and associated location config. This is the primary method for outbound message routing.
+   */
+  getProviderForConversation(
+    channel: string,
+    locationInstagramConfig?: Record<string, any> | null,
+    locationWhatsappConfig?: Record<string, any> | null,
+  ): MessagingProvider {
+    if (channel === 'INSTAGRAM') {
+      const igProvider = this.getProviderForLocationInstagramConfig(locationInstagramConfig || null);
+      if (igProvider) return igProvider;
+      this.logger.warn('Instagram provider not found for conversation, falling back to default');
+    }
+
+    if (channel === 'SMS') {
+      const sms = this.getSmsProvider();
+      if (sms) return sms;
+    }
+
+    // WhatsApp or fallback
+    if (locationWhatsappConfig) {
+      return this.getProviderForLocationConfig(locationWhatsappConfig);
+    }
+
+    return this.provider;
   }
 }

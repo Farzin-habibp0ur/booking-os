@@ -41,9 +41,12 @@ describe('WebhookController', () => {
   let controller: WebhookController;
   let configService: { get: jest.Mock };
   let prisma: MockPrisma;
-  let customerService: { findOrCreateByPhone: jest.Mock };
+  let customerService: { findOrCreateByPhone: jest.Mock; findOrCreateByInstagramId: jest.Mock };
   let conversationService: { findOrCreate: jest.Mock };
-  let locationService: { findLocationByWhatsappPhoneNumberId: jest.Mock };
+  let locationService: {
+    findLocationByWhatsappPhoneNumberId: jest.Mock;
+    findByInstagramPageId: jest.Mock;
+  };
   let inboxGateway: { notifyNewMessage: jest.Mock; notifyConversationUpdate: jest.Mock };
   let aiService: { processInboundMessage: jest.Mock };
 
@@ -66,10 +69,14 @@ describe('WebhookController', () => {
     };
 
     prisma = createMockPrisma();
-    customerService = { findOrCreateByPhone: jest.fn() };
+    customerService = {
+      findOrCreateByPhone: jest.fn(),
+      findOrCreateByInstagramId: jest.fn(),
+    };
     conversationService = { findOrCreate: jest.fn() };
     locationService = {
       findLocationByWhatsappPhoneNumberId: jest.fn().mockResolvedValue(null),
+      findByInstagramPageId: jest.fn().mockResolvedValue(null),
     };
     inboxGateway = { notifyNewMessage: jest.fn(), notifyConversationUpdate: jest.fn() };
     aiService = { processInboundMessage: jest.fn().mockResolvedValue(undefined) };
@@ -399,6 +406,162 @@ describe('WebhookController', () => {
           { externalId: 'wamid.dup', status: 'duplicate' },
         ],
       });
+    });
+  });
+
+  describe('Instagram webhook verification', () => {
+    it('should return challenge for valid verify token', () => {
+      configService.get.mockImplementation((key: string, defaultValue?: any) => {
+        if (key === 'INSTAGRAM_VERIFY_TOKEN') return 'ig-verify-token';
+        return defaultValue;
+      });
+
+      const result = controller.instagramVerify('subscribe', 'ig-verify-token', '67890');
+      expect(result).toBe(67890);
+    });
+
+    it('should reject invalid verify token', () => {
+      configService.get.mockImplementation((key: string, defaultValue?: any) => {
+        if (key === 'INSTAGRAM_VERIFY_TOKEN') return 'ig-verify-token';
+        return defaultValue;
+      });
+
+      expect(() => controller.instagramVerify('subscribe', 'wrong', '67890')).toThrow(
+        'Webhook verification failed',
+      );
+    });
+  });
+
+  describe('Instagram inbound message processing', () => {
+    const mockBusiness = { id: 'biz1', name: 'Test Biz' };
+    const mockCustomer = { id: 'cust1', name: 'IG User' };
+    const mockConversation = { id: 'conv1', customerId: 'cust1' };
+    const mockMessage = { id: 'msg1', conversationId: 'conv1', externalId: 'mid.123' };
+    const mockUpdatedConversation = {
+      id: 'conv1',
+      customer: mockCustomer,
+      assignedTo: null,
+      messages: [mockMessage],
+    };
+
+    function buildInstagramPayload(senderId: string, text: string, mid: string) {
+      return {
+        object: 'instagram',
+        entry: [
+          {
+            id: 'PAGE_ABC',
+            time: 1700000000,
+            messaging: [
+              {
+                sender: { id: senderId },
+                recipient: { id: 'PAGE_ABC' },
+                timestamp: 1700000000,
+                message: { mid, text },
+              },
+            ],
+          },
+        ],
+      };
+    }
+
+    it('should process an Instagram inbound message', async () => {
+      const mockLocation = { id: 'loc1', name: 'Main', businessId: 'biz1' };
+      locationService.findByInstagramPageId.mockResolvedValue(mockLocation);
+      (prisma.business.findUnique as jest.Mock).mockResolvedValue(mockBusiness);
+      (prisma.message.findUnique as jest.Mock).mockResolvedValue(null);
+      customerService.findOrCreateByInstagramId.mockResolvedValue(mockCustomer);
+      conversationService.findOrCreate.mockResolvedValue(mockConversation);
+      (prisma.message.create as jest.Mock).mockResolvedValue(mockMessage);
+      (prisma.conversation.update as jest.Mock).mockResolvedValue(mockUpdatedConversation);
+
+      const payload = buildInstagramPayload('USER_789', 'Hi via Instagram', 'mid.ig1');
+      const result = await controller.instagramInbound(payload);
+
+      expect(result.status).toBe('EVENT_RECEIVED');
+      expect(result.processed).toBe(1);
+      expect(locationService.findByInstagramPageId).toHaveBeenCalledWith('PAGE_ABC');
+      expect(customerService.findOrCreateByInstagramId).toHaveBeenCalledWith(
+        'biz1',
+        'USER_789',
+        'USER_789',
+      );
+      expect(conversationService.findOrCreate).toHaveBeenCalledWith(
+        'biz1',
+        'cust1',
+        'INSTAGRAM',
+        'loc1',
+      );
+    });
+
+    it('should validate HMAC signature when INSTAGRAM_APP_SECRET is set', async () => {
+      configService.get.mockImplementation((key: string, defaultValue?: any) => {
+        if (key === 'INSTAGRAM_APP_SECRET') return 'ig-app-secret';
+        if (key === 'NODE_ENV') return 'production';
+        return defaultValue;
+      });
+
+      const payload = buildInstagramPayload('USER_789', 'Hello', 'mid.sig');
+      const raw = JSON.stringify(payload);
+      const expected = crypto.createHmac('sha256', 'ig-app-secret').update(raw).digest('hex');
+
+      // With correct signature — should not throw ForbiddenException
+      // (will throw business not found instead since we haven't set up routing)
+      locationService.findByInstagramPageId.mockResolvedValue(null);
+      (prisma.message.findUnique as jest.Mock).mockResolvedValue(null);
+
+      const result = await controller.instagramInbound(payload, `sha256=${expected}`);
+      expect(result.status).toBe('EVENT_RECEIVED');
+
+      // With wrong signature — should throw
+      await expect(
+        controller.instagramInbound(payload, 'sha256=wrong'),
+      ).rejects.toThrow('Invalid Instagram webhook signature');
+    });
+  });
+
+  describe('Instagram status webhook', () => {
+    it('should process delivery status', async () => {
+      const messageService = {
+        updateDeliveryStatus: jest.fn().mockResolvedValue({ id: 'msg1' }),
+      };
+
+      // Re-create module with messageService mock
+      const module = await Test.createTestingModule({
+        controllers: [WebhookController],
+        providers: [
+          { provide: PrismaService, useValue: prisma },
+          { provide: CustomerService, useValue: customerService },
+          { provide: ConversationService, useValue: conversationService },
+          { provide: LocationService, useValue: locationService },
+          { provide: InboxGateway, useValue: inboxGateway },
+          { provide: MessagingService, useValue: { getProvider: jest.fn(), getMockProvider: jest.fn() } },
+          { provide: ConfigService, useValue: configService },
+          { provide: AiService, useValue: aiService },
+          { provide: MessageService, useValue: messageService },
+        ],
+      }).compile();
+
+      const ctrl = module.get(WebhookController);
+
+      const payload = {
+        entry: [
+          {
+            id: 'PAGE_ABC',
+            messaging: [
+              {
+                timestamp: 1700000000,
+                delivery: { mids: ['mid.1'] },
+              },
+            ],
+          },
+        ],
+      };
+
+      const result = await ctrl.instagramStatusCallback(payload);
+
+      expect(result.ok).toBe(true);
+      expect(result.updated).toBe(1);
+      expect(messageService.updateDeliveryStatus).toHaveBeenCalledWith('mid.1', 'DELIVERED');
     });
   });
 });

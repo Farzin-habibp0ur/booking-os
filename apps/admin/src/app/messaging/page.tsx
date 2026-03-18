@@ -54,6 +54,8 @@ interface TenantStatusItem {
   businessId: string;
   businessName: string;
   hasWhatsappConfig: boolean;
+  hasInstagramConfig: boolean;
+  instagramTokenExpiresAt: string | null;
   locationCount: number;
   configuredLocationCount: number;
   recentDeliveryRate: number;
@@ -407,6 +409,7 @@ export default function ConsoleMessagingPage() {
                     <tr className="text-left text-xs text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800">
                       <th className="pb-3 pr-4">Business</th>
                       <th className="pb-3 pr-4">WhatsApp</th>
+                      <th className="pb-3 pr-4">Instagram</th>
                       <th className="pb-3 pr-4">Locations</th>
                       <th className="pb-3 pr-4">Delivery Rate</th>
                       <th className="pb-3 pr-4">Last Message</th>
@@ -434,6 +437,24 @@ export default function ConsoleMessagingPage() {
                               data-testid={`whatsapp-badge-${tenant.businessId}`}
                             >
                               {tenant.hasWhatsappConfig ? 'Connected' : 'Not configured'}
+                            </span>
+                          </td>
+                          <td className="py-3 pr-4">
+                            <span
+                              className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                                tenant.hasInstagramConfig
+                                  ? tenant.instagramTokenExpiresAt && new Date(tenant.instagramTokenExpiresAt).getTime() - Date.now() < 10 * 24 * 60 * 60 * 1000
+                                    ? 'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400'
+                                    : 'bg-sage-50 text-sage-700 dark:bg-sage-900/20 dark:text-sage-400'
+                                  : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
+                              }`}
+                              data-testid={`instagram-badge-${tenant.businessId}`}
+                            >
+                              {tenant.hasInstagramConfig
+                                ? tenant.instagramTokenExpiresAt && new Date(tenant.instagramTokenExpiresAt).getTime() - Date.now() < 10 * 24 * 60 * 60 * 1000
+                                  ? 'Token Expiring'
+                                  : 'Connected'
+                                : 'Not configured'}
                             </span>
                           </td>
                           <td className="py-3 pr-4 text-slate-600 dark:text-slate-300">
@@ -473,7 +494,7 @@ export default function ConsoleMessagingPage() {
                         </tr>
                         {expandedTenant === tenant.businessId && (
                           <tr key={`${tenant.businessId}-checklist`}>
-                            <td colSpan={6} className="p-4 bg-slate-50 dark:bg-slate-800/50">
+                            <td colSpan={7} className="p-4 bg-slate-50 dark:bg-slate-800/50">
                               {checklistLoading ? (
                                 <div className="animate-pulse space-y-2">
                                   {[...Array(4)].map((_, i) => (

@@ -159,10 +159,11 @@ model Customer {
   businessId   String
   name         String
   phone        String
-  email        String?
-  tags         String[] @default([])
-  customFields Json     @default("{}")
-  deletedAt    DateTime?
+  email           String?
+  instagramUserId String?
+  tags            String[] @default([])
+  customFields    Json     @default("{}")
+  deletedAt       DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -190,6 +191,7 @@ model Customer {
   packagePurchases          PackagePurchase[]
 
   @@unique([businessId, phone])
+  @@unique([businessId, instagramUserId])
   @@index([businessId])
   @@map("customers")
 }
@@ -784,8 +786,9 @@ model Location {
   name           String
   address        String?
   isBookable     Boolean  @default(true)
-  whatsappConfig Json?
-  isActive       Boolean  @default(true)
+  whatsappConfig  Json?
+  instagramConfig Json?
+  isActive        Boolean  @default(true)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -1017,7 +1020,7 @@ model AutonomyConfig {
 
   business Business @relation(fields: [businessId], references: [id])
 
-  @@unique([businessId, actionType])
+  @@unique([businessId, actionType, scope])
   @@index([businessId])
   @@map("autonomy_configs")
 }

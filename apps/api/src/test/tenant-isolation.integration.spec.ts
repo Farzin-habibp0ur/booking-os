@@ -112,6 +112,7 @@ describe('Tenant Isolation', () => {
         name: 'Test',
         phone: '+1234567890',
         email: null,
+        instagramUserId: null,
         tags: [],
         customFields: {},
         createdAt: new Date(),

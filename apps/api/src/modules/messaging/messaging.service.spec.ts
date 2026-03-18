@@ -205,4 +205,74 @@ describe('MessagingService', () => {
       expect(first).toBe(second);
     });
   });
+
+  // ─── Instagram Provider Registry ──────────────────────────────────────
+
+  describe('Instagram provider registry', () => {
+    it('registerInstagramProvider creates and caches provider', async () => {
+      const service = await createService({});
+
+      const provider = service.registerInstagramProvider('page1', 'ig-token');
+
+      expect(provider.name).toBe('instagram');
+      expect(service.getProviderForInstagramPageId('page1')).toBe(provider);
+    });
+
+    it('registerInstagramProvider returns existing if already registered', async () => {
+      const service = await createService({});
+
+      const first = service.registerInstagramProvider('page1', 'token');
+      const second = service.registerInstagramProvider('page1', 'different-token');
+
+      expect(first).toBe(second);
+    });
+
+    it('getProviderForInstagramPageId returns null for unknown page', async () => {
+      const service = await createService({});
+
+      expect(service.getProviderForInstagramPageId('unknown')).toBeNull();
+    });
+
+    it('isInstagramAvailable returns false when no providers registered', async () => {
+      const service = await createService({});
+
+      expect(service.isInstagramAvailable()).toBe(false);
+    });
+
+    it('isInstagramAvailable returns true after registration', async () => {
+      const service = await createService({});
+
+      service.registerInstagramProvider('page1', 'token');
+
+      expect(service.isInstagramAvailable()).toBe(true);
+    });
+
+    it('getProviderForLocationInstagramConfig returns null for null config', async () => {
+      const service = await createService({});
+
+      expect(service.getProviderForLocationInstagramConfig(null)).toBeNull();
+    });
+
+    it('getProviderForLocationInstagramConfig returns null for incomplete config', async () => {
+      const service = await createService({});
+
+      expect(service.getProviderForLocationInstagramConfig({ pageId: 'p1' })).toBeNull();
+      expect(
+        service.getProviderForLocationInstagramConfig({ pageAccessToken: 'tok' }),
+      ).toBeNull();
+    });
+
+    it('getProviderForLocationInstagramConfig lazy-registers provider', async () => {
+      const service = await createService({});
+
+      const provider = service.getProviderForLocationInstagramConfig({
+        pageId: 'ig-page-1',
+        pageAccessToken: 'ig-token-1',
+      });
+
+      expect(provider).not.toBeNull();
+      expect(provider!.name).toBe('instagram');
+      expect(service.getProviderForInstagramPageId('ig-page-1')).toBe(provider);
+    });
+  });
 });

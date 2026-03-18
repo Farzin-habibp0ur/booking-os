@@ -9,6 +9,7 @@ import { useToast } from '@/lib/toast';
 interface MediaComposerProps {
   conversationId: string;
   onUploadComplete: () => void;
+  channel?: string;
 }
 
 const ACCEPTED_TYPES = {
@@ -23,7 +24,18 @@ const ACCEPTED_TYPES = {
   'audio/webm': ['.webm'],
 };
 
+// Instagram only supports image, video, and audio — no PDF/doc
+const INSTAGRAM_ACCEPTED_TYPES = {
+  'image/*': ['.jpg', '.jpeg', '.png', '.gif'],
+  'video/mp4': ['.mp4'],
+  'audio/mpeg': ['.mp3'],
+  'audio/ogg': ['.ogg'],
+  'audio/wav': ['.wav'],
+  'audio/webm': ['.webm'],
+};
+
 const ACCEPT_STRING = Object.keys(ACCEPTED_TYPES).join(',');
+const INSTAGRAM_ACCEPT_STRING = Object.keys(INSTAGRAM_ACCEPTED_TYPES).join(',');
 
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -37,7 +49,7 @@ function getFileIcon(type: string) {
   return FileText;
 }
 
-export function MediaComposer({ conversationId, onUploadComplete }: MediaComposerProps) {
+export function MediaComposer({ conversationId, onUploadComplete, channel }: MediaComposerProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -103,7 +115,7 @@ export function MediaComposer({ conversationId, onUploadComplete }: MediaCompose
       <input
         ref={fileInputRef}
         type="file"
-        accept={ACCEPT_STRING}
+        accept={channel === 'INSTAGRAM' ? INSTAGRAM_ACCEPT_STRING : ACCEPT_STRING}
         onChange={handleInputChange}
         className="hidden"
         data-testid="media-file-input"

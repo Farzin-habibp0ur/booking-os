@@ -3,6 +3,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { MessageService } from './message.service';
 import { MessagingService } from '../messaging/messaging.service';
+import { PrismaService } from '../../common/prisma.service';
 import { BusinessId, CurrentUser } from '../../common/decorators';
 import { TenantGuard } from '../../common/tenant.guard';
 
@@ -13,22 +14,35 @@ export class MessageController {
   constructor(
     private messageService: MessageService,
     private messagingService: MessagingService,
+    private prisma: PrismaService,
   ) {}
 
   @Post(':id/messages')
-  sendMessage(
+  async sendMessage(
     @BusinessId() businessId: string,
     @Param('id') conversationId: string,
     @CurrentUser('sub') staffId: string,
     @Body() body: { content: string; scheduledFor?: string },
   ) {
+    // Resolve the correct provider based on conversation channel + location config
+    const conversation = await this.prisma.conversation.findFirst({
+      where: { id: conversationId, businessId },
+      include: { location: { select: { whatsappConfig: true, instagramConfig: true } } },
+    });
+
+    const provider = this.messagingService.getProviderForConversation(
+      conversation?.channel || 'WHATSAPP',
+      conversation?.location?.instagramConfig as Record<string, any> | null,
+      conversation?.location?.whatsappConfig as Record<string, any> | null,
+    );
+
     const scheduledFor = body.scheduledFor ? new Date(body.scheduledFor) : undefined;
     return this.messageService.sendMessage(
       businessId,
       conversationId,
       staffId,
       body.content,
-      this.messagingService.getProvider(),
+      provider,
       scheduledFor,
     );
   }

@@ -48,4 +48,9 @@ export class DashboardController {
   getCertificationAlerts(@BusinessId() businessId: string) {
     return this.dashboardService.getCertificationAlerts(businessId);
   }
+
+  @Get('messaging-channels')
+  getMessagingChannelBreakdown(@BusinessId() businessId: string) {
+    return this.dashboardService.getMessagingChannelBreakdown(businessId);
+  }
 }

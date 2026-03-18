@@ -66,6 +66,7 @@ export class LocationService {
       address?: string;
       isBookable?: boolean;
       whatsappConfig?: Record<string, unknown>;
+      instagramConfig?: Record<string, unknown>;
     },
   ) {
     await this.findById(businessId, id);
@@ -75,6 +76,9 @@ export class LocationService {
       ...(data.isBookable !== undefined && { isBookable: data.isBookable }),
       ...(data.whatsappConfig !== undefined && {
         whatsappConfig: data.whatsappConfig as Prisma.InputJsonValue,
+      }),
+      ...(data.instagramConfig !== undefined && {
+        instagramConfig: data.instagramConfig as Prisma.InputJsonValue,
       }),
     };
     return this.prisma.location.update({
@@ -218,6 +222,16 @@ export class LocationService {
     return locations.find((loc) => {
       const config = loc.whatsappConfig as Record<string, unknown> | null;
       return config?.phoneNumberId === phoneNumberId;
+    });
+  }
+
+  async findByInstagramPageId(pageId: string) {
+    const locations = await this.prisma.location.findMany({
+      where: { isActive: true },
+    });
+    return locations.find((loc) => {
+      const config = loc.instagramConfig as Record<string, unknown> | null;
+      return config?.pageId === pageId;
     });
   }
 }

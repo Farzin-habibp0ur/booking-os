@@ -43,6 +43,8 @@ import { OutboundCompose } from '@/components/outbound';
 import { MediaComposer } from '@/components/inbox/media-composer';
 import { MediaMessage } from '@/components/inbox/media-message';
 import { DeliveryStatus } from '@/components/inbox/delivery-status';
+import { ChannelFilterBar, type ChannelFilter } from '@/components/inbox/channel-filter';
+import { InstagramChannelBadge, InstagramContext } from '@/components/inbox/instagram-context';
 import { FeatureDiscovery } from '@/components/feature-discovery';
 import ScheduledMessage from '@/components/scheduled-message';
 import { captureEvent } from '@/lib/posthog';
@@ -142,6 +144,7 @@ function InboxPage() {
   const [bulkTagInput, setBulkTagInput] = useState('');
   const [showBulkTagInput, setShowBulkTagInput] = useState(false);
   const [infoSidebarOpen, setInfoSidebarOpen] = useState(true);
+  const [channelFilter, setChannelFilter] = useState<ChannelFilter>('ALL');
   const [swipingConvoId, setSwipingConvoId] = useState<string | null>(null);
   const [swipeDelta, setSwipeDelta] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -860,8 +863,9 @@ function InboxPage() {
               onClearView={handleClearView}
             />
           </div>
+          <ChannelFilterBar selected={channelFilter} onChange={setChannelFilter} />
           <div className="flex-1 overflow-auto">
-            {conversations.map((c) => (
+            {conversations.filter((c) => channelFilter === 'ALL' || c.channel === channelFilter).map((c) => (
               <div
                 key={c.id}
                 className={cn(
@@ -951,6 +955,7 @@ function InboxPage() {
                           <p className="text-sm font-medium truncate">
                             {c.customer?.name || t('common.unknown')}
                           </p>
+                          {c.channel === 'INSTAGRAM' && <InstagramChannelBadge />}
                         </div>
                         <div className="flex items-center gap-1 flex-shrink-0">
                           {c.isNew && (
@@ -1191,6 +1196,9 @@ function InboxPage() {
                           {m.senderStaff.name}
                         </p>
                       )}
+                      {m.direction === 'INBOUND' && m.metadata && selected?.channel === 'INSTAGRAM' && (
+                        <InstagramContext metadata={m.metadata} className="mb-1.5" />
+                      )}
                       {m.attachments?.length > 0 && (
                         <MediaMessage attachments={m.attachments} direction={m.direction} />
                       )}
@@ -1252,6 +1260,30 @@ function InboxPage() {
                 />
               )}
 
+              {/* Instagram messaging window indicator */}
+              {selected?.channel === 'INSTAGRAM' && (() => {
+                const lastInbound = messages?.filter((m: any) => m.direction === 'INBOUND').pop();
+                if (!lastInbound) return null;
+                const elapsed = Date.now() - new Date(lastInbound.createdAt).getTime();
+                const hoursLeft = Math.max(0, 24 - elapsed / (1000 * 60 * 60));
+                const windowOpen = hoursLeft > 0;
+                return (
+                  <div className={cn(
+                    'mx-3 mt-1 flex items-center gap-2 text-xs px-3 py-1.5 rounded-lg',
+                    windowOpen
+                      ? hoursLeft < 2
+                        ? 'bg-amber-50 text-amber-700'
+                        : 'bg-sage-50 text-sage-600'
+                      : 'bg-red-50 text-red-600',
+                  )}>
+                    <Clock size={12} />
+                    {windowOpen
+                      ? `${Math.floor(hoursLeft)}h ${Math.floor((hoursLeft % 1) * 60)}m remaining in messaging window`
+                      : 'Window expired — replies will use HUMAN_AGENT tag (7-day extension)'}
+                  </div>
+                );
+              })()}
+
               {/* Composer */}
               <div className="p-3 border-t bg-white">
                 {showTemplates && (
@@ -1291,6 +1323,7 @@ function InboxPage() {
                     <MediaComposer
                       conversationId={selected.id}
                       onUploadComplete={() => loadMessages(selected.id)}
+                      channel={selected.channel}
                     />
                     <button
                       onClick={() => setShowQuickReplies(!showQuickReplies)}
@@ -1305,29 +1338,43 @@ function InboxPage() {
                       <Zap size={18} />
                     </button>
                   </div>
-                  <textarea
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        sendMessage();
-                      }
-                      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-                        e.preventDefault();
-                        sendMessage();
-                      }
-                    }}
-                    placeholder={t('inbox.type_message')}
-                    rows={1}
-                    className="flex-1 border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sage-500 resize-none min-h-[38px] max-h-24"
-                    style={{ height: 'auto' }}
-                    onInput={(e) => {
-                      const el = e.currentTarget;
-                      el.style.height = 'auto';
-                      el.style.height = Math.min(el.scrollHeight, 96) + 'px';
-                    }}
-                  />
+                  <div className="flex-1 relative">
+                    <textarea
+                      value={newMessage}
+                      onChange={(e) => {
+                        const val = selected?.channel === 'INSTAGRAM' ? e.target.value.slice(0, 1000) : e.target.value;
+                        setNewMessage(val);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          sendMessage();
+                        }
+                        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                          e.preventDefault();
+                          sendMessage();
+                        }
+                      }}
+                      placeholder={t('inbox.type_message')}
+                      rows={1}
+                      maxLength={selected?.channel === 'INSTAGRAM' ? 1000 : undefined}
+                      className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sage-500 resize-none min-h-[38px] max-h-24"
+                      style={{ height: 'auto' }}
+                      onInput={(e) => {
+                        const el = e.currentTarget;
+                        el.style.height = 'auto';
+                        el.style.height = Math.min(el.scrollHeight, 96) + 'px';
+                      }}
+                    />
+                    {selected?.channel === 'INSTAGRAM' && newMessage.length > 0 && (
+                      <span className={cn(
+                        'absolute right-2 bottom-1 text-[10px]',
+                        newMessage.length > 900 ? 'text-amber-500' : 'text-slate-400',
+                      )}>
+                        {newMessage.length}/1000
+                      </span>
+                    )}
+                  </div>
                   <ScheduledMessage
                     onSchedule={(date) => setScheduledFor(date)}
                     onClear={() => setScheduledFor(null)}
@@ -1446,7 +1493,11 @@ function InboxPage() {
                       >
                         {customer.name}
                       </button>
-                      <p className="text-xs text-slate-500">{customer.phone}</p>
+                      <p className="text-xs text-slate-500">
+                        {selected?.channel === 'INSTAGRAM' && customer.instagramUserId
+                          ? `@${customer.instagramUserId}`
+                          : customer.phone}
+                      </p>
                     </div>
                   </div>
                   {customer.email && (

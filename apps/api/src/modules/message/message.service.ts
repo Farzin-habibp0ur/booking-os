@@ -64,8 +64,14 @@ export class MessageService {
     }
 
     // Send immediately via provider
+    // Instagram uses instagramUserId (IGSID), WhatsApp/SMS uses phone
+    const recipient =
+      conversation.channel === 'INSTAGRAM' && (conversation.customer as any).instagramUserId
+        ? (conversation.customer as any).instagramUserId
+        : conversation.customer.phone;
+
     const { externalId } = await provider.sendMessage({
-      to: conversation.customer.phone,
+      to: recipient,
       body: content,
       businessId,
       conversationId,

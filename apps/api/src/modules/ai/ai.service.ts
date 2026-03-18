@@ -80,6 +80,18 @@ export class AiService {
     private conversationActionHandler: ConversationActionHandler,
   ) {}
 
+  private async getProviderForConversation(conversationId: string) {
+    const conv = await this.prisma.conversation.findUnique({
+      where: { id: conversationId },
+      include: { location: { select: { whatsappConfig: true, instagramConfig: true } } },
+    });
+    return this.messagingService.getProviderForConversation(
+      conv?.channel || 'WHATSAPP',
+      (conv?.location as any)?.instagramConfig || null,
+      (conv?.location as any)?.whatsappConfig || null,
+    );
+  }
+
   private getAiSettings(business: any): AiSettings {
     const raw = business.aiSettings || {};
     const merged = { ...DEFAULT_AI_SETTINGS, ...(typeof raw === 'object' ? raw : {}) };
@@ -218,10 +230,11 @@ export class AiService {
         .map((m) => `${m.direction === 'INBOUND' ? 'Customer' : 'Staff'}: ${m.content}`)
         .join('\n');
 
-      // Load customer data for context
+      // Load customer data and channel context
       const conversation = await this.prisma.conversation.findUnique({
         where: { id: conversationId },
       });
+      const conversationChannel = (conversation as any)?.channel || 'WHATSAPP';
       const customerData = conversation?.customerId
         ? await this.prisma.customer.findUnique({ where: { id: conversation.customerId } })
         : null;
@@ -484,7 +497,7 @@ export class AiService {
               where: { businessId, role: 'ADMIN' },
             });
             if (defaultStaff) {
-              const provider = this.messagingService.getProvider();
+              const provider = await this.getProviderForConversation(conversationId);
               await this.messageService.sendMessage(
                 businessId,
                 conversationId,
@@ -526,7 +539,7 @@ export class AiService {
             where: { businessId, role: 'ADMIN' },
           });
           if (defaultStaff) {
-            const provider = this.messagingService.getProvider();
+            const provider = await this.getProviderForConversation(conversationId);
             await this.messageService.sendMessage(
               businessId,
               conversationId,
@@ -571,7 +584,7 @@ export class AiService {
             where: { businessId, role: 'ADMIN' },
           });
           if (defaultStaff) {
-            const provider = this.messagingService.getProvider();
+            const provider = await this.getProviderForConversation(conversationId);
             await this.messageService.sendMessage(
               businessId,
               conversationId,
@@ -602,6 +615,24 @@ export class AiService {
         }
       }
 
+      // Detect Instagram-specific context from message metadata
+      const currentMessage = await this.prisma.message.findUnique({ where: { id: messageId } });
+      const msgMetadata = (currentMessage?.metadata as any) || {};
+      let instagramContext = '';
+      if (conversationChannel === 'INSTAGRAM') {
+        if (msgMetadata.storyReplyUrl) {
+          instagramContext = '\nThis message is a reply to an Instagram Story. Acknowledge the story and engage warmly.';
+        } else if (msgMetadata.referral) {
+          instagramContext = '\nThis customer came from an Instagram ad. Welcome them and reference the promotion if applicable.';
+        } else if (msgMetadata.postback) {
+          instagramContext = `\nThe customer tapped an ice breaker: "${msgMetadata.postback}". Respond directly to this topic.`;
+          // Treat ice breaker taps as booking intent when relevant
+          if (intentResult.intent === 'GENERAL' || intentResult.intent === 'INQUIRY') {
+            intentResult.intent = 'BOOK_APPOINTMENT';
+          }
+        }
+      }
+
       // Use assistant's suggestedResponse as draft if available; otherwise generate a draft
       const assistantDraft =
         bookingState?.suggestedResponse ||
@@ -614,16 +645,28 @@ export class AiService {
         const services = await this.serviceService.findAll(businessId);
         const activeServiceNames = services.filter((s: any) => s.isActive).map((s: any) => s.name);
 
+        // Add channel context for the reply generator
+        let channelContext = '';
+        if (conversationChannel === 'INSTAGRAM') {
+          channelContext = `\nThis conversation is on Instagram DM. Keep replies concise (under 1000 chars), avoid referencing message templates, and use a casual friendly tone.`;
+          channelContext += instagramContext;
+        }
+
         const draft: DraftReply = await this.replyGenerator.generate(
           messageContent,
           intentResult.intent,
           business.name,
           settings.personality,
-          recentContext || undefined,
+          (recentContext || '') + channelContext || undefined,
           activeServiceNames,
           customerContext,
         );
         draftText = draft.draftText;
+      }
+
+      // Enforce Instagram 1000-char limit on AI drafts
+      if (conversationChannel === 'INSTAGRAM' && draftText && draftText.length > 1000) {
+        draftText = draftText.slice(0, 997) + '...';
       }
 
       // Store draft in message metadata
@@ -661,7 +704,7 @@ export class AiService {
             where: { businessId, role: 'ADMIN' },
           });
           if (defaultStaff) {
-            const provider = this.messagingService.getProvider();
+            const provider = await this.getProviderForConversation(conversationId);
             await this.messageService.sendMessage(
               businessId,
               conversationId,
@@ -980,7 +1023,7 @@ export class AiService {
 
       // Auto-send handoff message
       const handoffMessage = "I'm connecting you with a team member who can help you further.";
-      const provider = this.messagingService.getProvider();
+      const provider = await this.getProviderForConversation(conversationId);
       await this.messageService.sendMessage(
         businessId,
         conversationId,
@@ -1348,7 +1391,7 @@ export class AiService {
       // Send handoff message
       const customerName = customerContext?.name || 'there';
       const handoffMessage = `Thanks for your interest, ${customerName}! I'm connecting you with our sales team who can help you with your inquiry.`;
-      const provider = this.messagingService.getProvider();
+      const provider = await this.getProviderForConversation(conversationId);
       await this.messageService.sendMessage(
         businessId,
         conversationId,
@@ -1526,7 +1569,7 @@ export class AiService {
 
     const customerName = customerData?.name || 'there';
     const handoffMessage = `Thank you for the vehicle details, ${customerName}! I'm connecting you with our team for your trade-in valuation.`;
-    const provider = this.messagingService.getProvider();
+    const provider = await this.getProviderForConversation(conversationId);
     await this.messageService.sendMessage(
       businessId,
       conversationId,

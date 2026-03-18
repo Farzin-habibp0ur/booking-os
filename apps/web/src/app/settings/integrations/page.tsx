@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import {
@@ -19,7 +19,10 @@ import {
   Settings,
   Check,
   ArrowLeft,
+  Instagram,
 } from 'lucide-react';
+import { InstagramConnection } from '@/components/settings/instagram-connection';
+import { IceBreakerConfig } from '@/components/settings/ice-breaker-config';
 
 interface CalendarConnection {
   id: string;
@@ -78,11 +81,23 @@ const STATUS_CONFIG: Record<
   },
 };
 
-export default function IntegrationsPage() {
+export default function IntegrationsPageWrapper() {
+  return (
+    <Suspense fallback={<div className="p-6"><p className="text-slate-400">Loading...</p></div>}>
+      <IntegrationsPage />
+    </Suspense>
+  );
+}
+
+function IntegrationsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const section = searchParams.get('section');
   const [loading, setLoading] = useState(true);
   const [calendarConnections, setCalendarConnections] = useState<CalendarConnection[]>([]);
   const [business, setBusiness] = useState<BusinessData | null>(null);
+  const [instagramConnected, setInstagramConnected] = useState(false);
+  const [primaryLocationId, setPrimaryLocationId] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -93,6 +108,22 @@ export default function IntegrationsPage() {
         ]);
         setCalendarConnections(connections);
         setBusiness(biz);
+
+        // Check Instagram status for the first location
+        if (biz) {
+          try {
+            const locations = await api.get<any[]>('/locations');
+            if (locations?.length > 0) {
+              setPrimaryLocationId(locations[0].id);
+              const igStatus = await api.get<{ connected: boolean }>(
+                `/instagram-auth/${locations[0].id}/status`,
+              );
+              setInstagramConnected(igStatus.connected);
+            }
+          } catch {
+            // ignore — Instagram auth module may not be deployed yet
+          }
+        }
       } catch {
         // ignore
       } finally {
@@ -144,6 +175,15 @@ export default function IntegrationsPage() {
       status: hasWhatsApp ? 'connected' : 'not_connected',
       actionLabel: hasWhatsApp ? 'Settings' : 'Connect',
       actionHref: '/settings/notifications',
+    },
+    {
+      id: 'instagram',
+      name: 'Instagram DM',
+      description: 'Receive and respond to Instagram Direct Messages',
+      icon: Instagram,
+      status: instagramConnected ? 'connected' : 'not_connected',
+      actionLabel: instagramConnected ? 'Settings' : 'Connect',
+      actionHref: '/settings/integrations?section=instagram',
     },
     {
       id: 'email',
@@ -200,6 +240,54 @@ export default function IntegrationsPage() {
     );
   }
 
+  // Instagram settings section
+  if (section === 'instagram') {
+    return (
+      <div className="p-6 max-w-2xl">
+        <button
+          onClick={() => router.push('/settings/integrations')}
+          className="inline-flex items-center gap-1 text-sm text-sage-600 hover:text-sage-700 dark:text-sage-400 dark:hover:text-sage-300 mb-3 transition-colors"
+        >
+          <ArrowLeft size={14} />
+          Back to Integrations
+        </button>
+
+        <div className="flex items-center gap-2 mb-6">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+            <Instagram size={20} className="text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-serif font-semibold text-slate-900">Instagram DM</h1>
+            <p className="text-sm text-slate-500 mt-0.5">
+              Connect your Instagram Professional account to manage DMs
+            </p>
+          </div>
+        </div>
+
+        {primaryLocationId ? (
+          <div className="space-y-4">
+            <InstagramConnection locationId={primaryLocationId} />
+            {instagramConnected && (
+              <IceBreakerConfig locationId={primaryLocationId} />
+            )}
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-slate-200 p-6 text-center">
+            <p className="text-sm text-slate-500">
+              You need at least one location before connecting Instagram.
+            </p>
+            <Link
+              href="/settings"
+              className="inline-flex items-center gap-1.5 text-sm px-4 py-2 rounded-xl bg-sage-600 text-white hover:bg-sage-700 transition-colors mt-3"
+            >
+              Go to Settings
+            </Link>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 max-w-4xl">
       <Link
@@ -234,8 +322,13 @@ export default function IntegrationsPage() {
             >
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center">
-                    <Icon size={20} className="text-slate-600" />
+                  <div className={cn(
+                    'w-10 h-10 rounded-xl flex items-center justify-center',
+                    integration.id === 'instagram'
+                      ? 'bg-gradient-to-br from-purple-500 to-pink-500'
+                      : 'bg-slate-50',
+                  )}>
+                    <Icon size={20} className={integration.id === 'instagram' ? 'text-white' : 'text-slate-600'} />
                   </div>
                   <div>
                     <p className="font-medium text-slate-900">{integration.name}</p>

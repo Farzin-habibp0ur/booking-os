@@ -24,7 +24,11 @@ import { MessagingService } from './messaging.service';
 import { MessageService } from '../message/message.service';
 import { AiService } from '../ai/ai.service';
 import { WebhookInboundDto } from '../../common/dto';
-import { WhatsAppCloudProvider, TwilioSmsProvider } from '@booking-os/messaging-provider';
+import {
+  WhatsAppCloudProvider,
+  TwilioSmsProvider,
+  InstagramProvider,
+} from '@booking-os/messaging-provider';
 
 @ApiTags('Messaging Webhooks')
 @Controller('webhook')
@@ -124,6 +128,12 @@ export class WebhookController {
     externalId: string,
     businessPhone: string | undefined,
     businessPhoneNumberId?: string,
+    instagramContext?: {
+      channel: 'INSTAGRAM';
+      instagramPageId: string;
+      instagramUserId: string;
+      metadata?: Record<string, any>;
+    },
   ): Promise<{ conversationId?: string; messageId?: string; duplicate?: boolean }> {
     // Dedup: check if message with this externalId already exists
     if (externalId) {
@@ -136,11 +146,27 @@ export class WebhookController {
       }
     }
 
-    // Route by WhatsApp phone number ID → Location → Business
+    const channel = instagramContext?.channel || 'WHATSAPP';
+
+    // Route to Location → Business
     let business;
     let locationId: string | undefined;
 
-    if (businessPhoneNumberId) {
+    if (instagramContext?.instagramPageId) {
+      // Instagram routing: lookup Location by instagramConfig.pageId
+      const location = await this.locationService.findByInstagramPageId(
+        instagramContext.instagramPageId,
+      );
+      if (location) {
+        locationId = location.id;
+        business = await this.prisma.business.findUnique({
+          where: { id: location.businessId },
+        });
+        this.logger.log(
+          `Routed Instagram message to location "${location.name}" (${location.id})`,
+        );
+      }
+    } else if (businessPhoneNumberId) {
       const location =
         await this.locationService.findLocationByWhatsappPhoneNumberId(businessPhoneNumberId);
       if (location) {
@@ -167,11 +193,22 @@ export class WebhookController {
     }
     if (!business) throw new BadRequestException('No business found');
 
-    const customer = await this.customerService.findOrCreateByPhone(business.id, from, from);
+    // Customer lookup: Instagram uses instagramUserId, WhatsApp/SMS uses phone
+    let customer;
+    if (instagramContext) {
+      customer = await this.customerService.findOrCreateByInstagramId(
+        business.id,
+        instagramContext.instagramUserId,
+        from,
+      );
+    } else {
+      customer = await this.customerService.findOrCreateByPhone(business.id, from, from);
+    }
+
     const conversation = await this.conversationService.findOrCreate(
       business.id,
       customer.id,
-      'WHATSAPP',
+      channel,
       locationId,
     );
 
@@ -184,6 +221,10 @@ export class WebhookController {
           content: body,
           contentType: 'TEXT',
           externalId,
+          ...(instagramContext?.metadata &&
+            Object.keys(instagramContext.metadata).length > 0 && {
+              metadata: instagramContext.metadata,
+            }),
         },
       });
     } catch (err: any) {
@@ -303,5 +344,111 @@ export class WebhookController {
       this.logger.error(`SMS inbound processing error: ${err.message}`, err.stack);
       return { status: 'EVENT_RECEIVED', processed: 0 };
     }
+  }
+
+  // ─── Instagram Webhook Endpoints ─────────────────────────────────────
+
+  /** Meta Instagram webhook verification (GET challenge-response) */
+  @Get('instagram')
+  instagramVerify(
+    @Query('hub.mode') mode: string,
+    @Query('hub.verify_token') token: string,
+    @Query('hub.challenge') challenge: string,
+  ) {
+    const verifyToken = this.configService.get<string>('INSTAGRAM_VERIFY_TOKEN');
+    if (mode === 'subscribe' && token === verifyToken) {
+      this.logger.log('Instagram webhook verified');
+      return parseInt(challenge);
+    }
+    throw new ForbiddenException('Webhook verification failed');
+  }
+
+  /** Meta Instagram inbound messages (POST from Meta webhook) */
+  @Post('instagram')
+  async instagramInbound(
+    @Body() payload: any,
+    @Headers('x-hub-signature-256') signature?: string,
+  ) {
+    const secret = this.configService.get<string>('INSTAGRAM_APP_SECRET');
+    if (secret) {
+      const raw = JSON.stringify(payload);
+      const expected = crypto.createHmac('sha256', secret).update(raw).digest('hex');
+      const sig = (signature || '').replace('sha256=', '');
+      const sigBuf = Buffer.from(sig);
+      const expBuf = Buffer.from(expected);
+      if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
+        throw new ForbiddenException('Invalid Instagram webhook signature');
+      }
+    }
+
+    const messages = InstagramProvider.parseInboundWebhook(payload);
+    const results: Array<{ externalId: string; status: 'processed' | 'duplicate' | 'error' }> = [];
+
+    for (const msg of messages) {
+      try {
+        const result = await this.processInboundMessage(
+          msg.from,
+          msg.body,
+          msg.externalId,
+          undefined,
+          undefined,
+          {
+            channel: 'INSTAGRAM',
+            instagramPageId: msg.instagramPageId,
+            instagramUserId: msg.from,
+            metadata: {
+              ...(msg.storyReplyUrl && { storyReplyUrl: msg.storyReplyUrl }),
+              ...(msg.referral && { referral: msg.referral }),
+              ...(msg.postback && { postback: msg.postback }),
+              ...(msg.mediaType && { mediaType: msg.mediaType }),
+              ...(msg.mediaUrl && { mediaUrl: msg.mediaUrl }),
+            },
+          },
+        );
+        results.push({
+          externalId: msg.externalId,
+          status: result.duplicate ? 'duplicate' : 'processed',
+        });
+      } catch (err: any) {
+        this.logger.error(`Instagram inbound processing error: ${err.message}`, err.stack);
+        results.push({ externalId: msg.externalId, status: 'error' });
+      }
+    }
+
+    return {
+      status: 'EVENT_RECEIVED',
+      processed: results.filter((r) => r.status === 'processed').length,
+      results,
+    };
+  }
+
+  /** Instagram delivery/read status webhooks */
+  @Post('instagram/status')
+  async instagramStatusCallback(
+    @Body() payload: any,
+    @Headers('x-hub-signature-256') signature?: string,
+  ) {
+    const secret = this.configService.get<string>('INSTAGRAM_APP_SECRET');
+    if (secret) {
+      const raw = JSON.stringify(payload);
+      const expected = crypto.createHmac('sha256', secret).update(raw).digest('hex');
+      const sig = (signature || '').replace('sha256=', '');
+      const sigBuf = Buffer.from(sig);
+      const expBuf = Buffer.from(expected);
+      if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
+        throw new ForbiddenException('Invalid Instagram webhook signature');
+      }
+    }
+
+    const statuses = InstagramProvider.parseStatusWebhook(payload);
+    let updated = 0;
+
+    for (const s of statuses) {
+      const mappedStatus = s.status === 'delivered' ? 'DELIVERED' : 'READ';
+      const result = await this.messageService.updateDeliveryStatus(s.messageId, mappedStatus);
+      if (result) updated++;
+    }
+
+    return { ok: true, updated };
   }
 }

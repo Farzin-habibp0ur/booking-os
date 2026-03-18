@@ -81,6 +81,27 @@ export class CustomerService {
     return customer;
   }
 
+  async findOrCreateByInstagramId(
+    businessId: string,
+    instagramUserId: string,
+    name?: string,
+  ) {
+    let customer = await this.prisma.customer.findFirst({
+      where: { businessId, instagramUserId },
+    });
+    if (!customer) {
+      customer = await this.prisma.customer.create({
+        data: {
+          businessId,
+          phone: `ig:${instagramUserId}`,
+          name: name || `Instagram User ${instagramUserId.slice(-6)}`,
+          instagramUserId,
+        },
+      });
+    }
+    return customer;
+  }
+
   async create(
     businessId: string,
     data: { name: string; phone: string; email?: string; tags?: string[]; customFields?: any },

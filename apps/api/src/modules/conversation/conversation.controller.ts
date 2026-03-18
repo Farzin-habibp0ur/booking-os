@@ -164,15 +164,24 @@ export class ConversationController {
   }
 
   @Post(':id/booking')
-  createBooking(
+  async createBooking(
     @BusinessId() businessId: string,
     @Param('id') id: string,
     @Body() body: CreateBookingFromConversationDto,
   ) {
+    const conversation = await this.conversationService.findById(businessId, id);
+    // Map conversation channel to valid BookingSource
+    // Valid sources: MANUAL, PORTAL, WHATSAPP, AI, REFERRAL, WALK_IN
+    const channelToSource: Record<string, string> = {
+      WHATSAPP: 'WHATSAPP',
+      INSTAGRAM: 'WHATSAPP', // Instagram DMs map to WHATSAPP (messaging channel)
+      SMS: 'WHATSAPP',       // SMS also maps to WHATSAPP (messaging channel)
+    };
+    const source = channelToSource[conversation?.channel || ''] || 'WHATSAPP';
     return this.bookingService.create(businessId, {
       ...body,
       conversationId: id,
-      source: 'WHATSAPP',
+      source,
     });
   }
 }
