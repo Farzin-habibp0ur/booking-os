@@ -56,7 +56,7 @@ export class AutonomyService {
     if (specific) return specific.autonomyLevel as AutonomyLevel;
 
     const wildcard = await this.prisma.autonomyConfig.findUnique({
-      where: { businessId_actionType_scope: { businessId, actionType: '*', scope: null } },
+      where: { businessId_actionType_scope: { businessId, actionType: '*', scope: 'OPERATIONAL' } },
     });
     if (wildcard) return wildcard.autonomyLevel as AutonomyLevel;
 
