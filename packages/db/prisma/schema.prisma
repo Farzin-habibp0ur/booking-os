@@ -1014,7 +1014,7 @@ model AutonomyConfig {
   autonomyLevel String   @default("ASSISTED") // OFF, ASSISTED, AUTO
   requiredRole  String?
   constraints   Json     @default("{}") // {maxPerDay, maxAmount, etc.}
-  scope         String?  // OPERATIONAL, MARKETING
+  scope         String   @default("OPERATIONAL") // OPERATIONAL, MARKETING
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
