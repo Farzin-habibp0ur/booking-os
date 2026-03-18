@@ -73,11 +73,14 @@ export function CockpitDetailDrawer({ task, isOpen, onClose }: CockpitDetailDraw
 
     setLoading(true);
     try {
-      const data = (await api.post(`/cockpit/daily-tasks/${task.id}/detail`, {
-        linkedEntities: task.linkedEntities,
-        title: task.title,
-        description: task.description,
-      })) as TaskDetailData;
+      const data = (await api.post(
+        `/cockpit/daily-tasks/${task.id}/detail`,
+        {
+          linkedEntities: task.linkedEntities,
+          title: task.title,
+          description: task.description,
+        },
+      )) as TaskDetailData;
       setDetail(data);
     } catch {
       // Fall back to showing unresolved entities
@@ -151,7 +154,9 @@ export function CockpitDetailDrawer({ task, isOpen, onClose }: CockpitDetailDraw
               </h4>
               <div className="space-y-2">
                 {task.actionItems.map((item, i) => {
-                  const Icon = item.entityType ? ENTITY_ICONS[item.entityType] || Circle : Circle;
+                  const Icon = item.entityType
+                    ? ENTITY_ICONS[item.entityType] || Circle
+                    : Circle;
                   return (
                     <div
                       key={i}
@@ -245,10 +250,7 @@ export function CockpitDetailDrawer({ task, isOpen, onClose }: CockpitDetailDraw
               </h4>
               <ul className="space-y-1">
                 {task.evidenceRefs.map((ref, i) => (
-                  <li
-                    key={i}
-                    className="text-xs text-slate-500 dark:text-slate-400 pl-2 border-l-2 border-slate-100"
-                  >
+                  <li key={i} className="text-xs text-slate-500 dark:text-slate-400 pl-2 border-l-2 border-slate-100">
                     {ref}
                   </li>
                 ))}

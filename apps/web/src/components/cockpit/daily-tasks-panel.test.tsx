@@ -110,7 +110,10 @@ describe('DailyTasksPanel', () => {
   });
 
   it('groups tasks by priority', () => {
-    const tasks: CockpitTask[] = [mockTask, { ...mockTask, id: 'ct-3', priority: 'OPPORTUNITY' }];
+    const tasks: CockpitTask[] = [
+      mockTask,
+      { ...mockTask, id: 'ct-3', priority: 'OPPORTUNITY' },
+    ];
     render(<DailyTasksPanel tasks={tasks} />);
 
     expect(screen.getByText(/Urgent Today/)).toBeInTheDocument();

@@ -205,7 +205,9 @@ describe('CockpitTasksService', () => {
         description: 'PROJ-234 is stuck for 3 days.',
         priority: 'URGENT_TODAY',
         category: 'STALLED_WORK',
-        actionItems: [{ label: 'Ping Sarah', entityType: 'JIRA_ISSUE', entityId: 'PROJ-234' }],
+        actionItems: [
+          { label: 'Ping Sarah', entityType: 'JIRA_ISSUE', entityId: 'PROJ-234' },
+        ],
         linkedEntities: [
           { type: 'JIRA_ISSUE', id: 'PROJ-234', label: 'API setup', status: 'In Progress' },
         ],

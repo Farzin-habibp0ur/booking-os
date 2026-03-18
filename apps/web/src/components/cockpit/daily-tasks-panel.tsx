@@ -299,12 +299,7 @@ export function DailyTasksPanel({ tasks, loading, onViewDetail }: DailyTasksPane
   };
 
   const sections = [
-    {
-      key: 'URGENT_TODAY',
-      label: 'Urgent Today',
-      icon: AlertTriangle,
-      tasks: grouped.URGENT_TODAY,
-    },
+    { key: 'URGENT_TODAY', label: 'Urgent Today', icon: AlertTriangle, tasks: grouped.URGENT_TODAY },
     { key: 'NEEDS_APPROVAL', label: 'Needs Approval', icon: Clock, tasks: grouped.NEEDS_APPROVAL },
     { key: 'OPPORTUNITY', label: 'Opportunities', icon: Target, tasks: grouped.OPPORTUNITY },
     { key: 'HYGIENE', label: 'Hygiene', icon: CheckCircle2, tasks: grouped.HYGIENE },

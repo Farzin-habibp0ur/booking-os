@@ -2,7 +2,10 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma.service';
 import { ClaudeClient } from '../ai/claude.client';
 import { CockpitTasksContextService } from './cockpit-tasks-context.service';
-import { DAILY_TASKS_SYSTEM_PROMPT, buildDailyTasksUserPrompt } from './cockpit-tasks.prompt';
+import {
+  DAILY_TASKS_SYSTEM_PROMPT,
+  buildDailyTasksUserPrompt,
+} from './cockpit-tasks.prompt';
 import {
   CockpitTaskSchema,
   CockpitTasksOutput,

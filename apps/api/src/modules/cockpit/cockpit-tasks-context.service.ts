@@ -137,18 +137,14 @@ export class CockpitTasksContextService {
     const lines: string[] = [];
 
     for (const b of overdueBookings) {
-      const daysOverdue = Math.floor(
-        (now.getTime() - b.startTime.getTime()) / (24 * 60 * 60 * 1000),
-      );
+      const daysOverdue = Math.floor((now.getTime() - b.startTime.getTime()) / (24 * 60 * 60 * 1000));
       lines.push(
         `- OVERDUE BOOKING (${daysOverdue}d): ${b.service.name} for ${b.customer.name} — still PENDING (staff: ${b.staff?.name || 'Unassigned'}) [bookingId: ${b.id}]`,
       );
     }
 
     for (const c of expiredCards) {
-      lines.push(
-        `- EXPIRED ACTION CARD: "${c.title}" — should have been resolved by ${c.expiresAt?.toISOString()} [cardId: ${c.id}]`,
-      );
+      lines.push(`- EXPIRED ACTION CARD: "${c.title}" — should have been resolved by ${c.expiresAt?.toISOString()} [cardId: ${c.id}]`);
     }
 
     return {
@@ -202,9 +198,7 @@ export class CockpitTasksContextService {
 
     const now = new Date();
     const lines = quotes.map((q) => {
-      const daysPending = Math.floor(
-        (now.getTime() - q.createdAt.getTime()) / (24 * 60 * 60 * 1000),
-      );
+      const daysPending = Math.floor((now.getTime() - q.createdAt.getTime()) / (24 * 60 * 60 * 1000));
       return `- $${q.totalAmount.toFixed(2)} for ${q.booking.customer.name} (${q.booking.service.name}) — pending ${daysPending}d [quoteId: ${q.id}]`;
     });
 
@@ -253,9 +247,7 @@ export class CockpitTasksContextService {
     if (failed.length > 0) {
       lines.push('Failed runs:');
       for (const f of failed.slice(0, 5)) {
-        lines.push(
-          `- ${f.agentType} at ${f.startedAt.toISOString()}: ${f.error || 'Unknown error'} [runId: ${f.id}]`,
-        );
+        lines.push(`- ${f.agentType} at ${f.startedAt.toISOString()}: ${f.error || 'Unknown error'} [runId: ${f.id}]`);
       }
     }
 

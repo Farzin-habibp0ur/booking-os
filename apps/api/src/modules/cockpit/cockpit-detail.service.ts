@@ -76,9 +76,7 @@ export class CockpitDetailService {
           };
       }
     } catch (err) {
-      this.logger.warn(
-        `Failed to resolve entity ${entity.type}:${entity.id}: ${(err as Error).message}`,
-      );
+      this.logger.warn(`Failed to resolve entity ${entity.type}:${entity.id}: ${(err as Error).message}`);
       return {
         type: entity.type,
         id: entity.id,
