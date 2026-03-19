@@ -68,6 +68,7 @@ describe('WebhookController', () => {
   let locationService: {
     findLocationByWhatsappPhoneNumberId: jest.Mock;
     findByInstagramPageId: jest.Mock;
+    findByFacebookPageId: jest.Mock;
     findLocationBySmsNumber: jest.Mock;
   };
   let inboxGateway: { notifyNewMessage: jest.Mock; notifyConversationUpdate: jest.Mock };
@@ -126,6 +127,7 @@ describe('WebhookController', () => {
     locationService = {
       findLocationByWhatsappPhoneNumberId: jest.fn().mockResolvedValue(null),
       findByInstagramPageId: jest.fn().mockResolvedValue(null),
+      findByFacebookPageId: jest.fn().mockResolvedValue(null),
       findLocationBySmsNumber: jest.fn().mockResolvedValue(null),
     };
     inboxGateway = { notifyNewMessage: jest.fn(), notifyConversationUpdate: jest.fn() };
@@ -977,7 +979,27 @@ describe('WebhookController', () => {
     });
   });
 
-  // ─── Facebook Stub Endpoints ────────────────────────────────────────
+  // ─── Facebook Webhook Endpoints ─────────────────────────────────────
+
+  function buildFacebookPayload(senderId: string, text: string, mid: string) {
+    return {
+      object: 'page',
+      entry: [
+        {
+          id: 'PAGE_FB1',
+          time: 1700000000,
+          messaging: [
+            {
+              sender: { id: senderId },
+              recipient: { id: 'PAGE_FB1' },
+              timestamp: 1700000000,
+              message: { mid, text },
+            },
+          ],
+        },
+      ],
+    };
+  }
 
   describe('Facebook webhook verification', () => {
     it('should verify Facebook webhook with correct token', () => {
@@ -998,16 +1020,275 @@ describe('WebhookController', () => {
     });
   });
 
-  describe('Facebook inbound (stub)', () => {
-    it('should return EVENT_RECEIVED with processed 0', async () => {
-      const result = await controller.facebookInbound({ object: 'page', entry: [] });
-      expect(result).toEqual({ status: 'EVENT_RECEIVED', processed: 0 });
+  describe('Facebook inbound processing', () => {
+    it('should process a text message', async () => {
+      setupHappyPath();
+
+      const payload = buildFacebookPayload('USER_FB1', 'Hello via FB', 'mid.fb1');
+      const result = await controller.facebookInbound(payload);
+
+      expect(result.status).toBe('EVENT_RECEIVED');
+      expect(result.processed).toBe(1);
+      expect(result.results).toHaveLength(1);
+      expect(result.results[0].status).toBe('processed');
     });
 
-    it('should handle any payload without errors', async () => {
-      const result = await controller.facebookInbound({});
+    it('should process a media message', async () => {
+      setupHappyPath();
+
+      const payload = {
+        object: 'page',
+        entry: [
+          {
+            id: 'PAGE_FB1',
+            messaging: [
+              {
+                sender: { id: 'USER_FB1' },
+                recipient: { id: 'PAGE_FB1' },
+                timestamp: 1700000000,
+                message: {
+                  mid: 'mid.fb-media',
+                  attachments: [
+                    { type: 'image', payload: { url: 'https://cdn.facebook.com/photo.jpg' } },
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+      };
+
+      const result = await controller.facebookInbound(payload);
+      expect(result.processed).toBe(1);
+    });
+
+    it('should process a postback', async () => {
+      setupHappyPath();
+
+      const payload = {
+        object: 'page',
+        entry: [
+          {
+            id: 'PAGE_FB1',
+            messaging: [
+              {
+                sender: { id: 'USER_FB1' },
+                recipient: { id: 'PAGE_FB1' },
+                timestamp: 1700000000,
+                postback: { title: 'Get Started', payload: 'GET_STARTED' },
+              },
+            ],
+          },
+        ],
+      };
+
+      const result = await controller.facebookInbound(payload);
+      expect(result.processed).toBe(1);
+    });
+
+    it('should process a referral', async () => {
+      setupHappyPath();
+
+      const payload = {
+        object: 'page',
+        entry: [
+          {
+            id: 'PAGE_FB1',
+            messaging: [
+              {
+                sender: { id: 'USER_FB1' },
+                recipient: { id: 'PAGE_FB1' },
+                timestamp: 1700000000,
+                referral: { source: 'SHORTLINK', type: 'OPEN_THREAD', ref: 'promo' },
+              },
+            ],
+          },
+        ],
+      };
+
+      const result = await controller.facebookInbound(payload);
+      expect(result.processed).toBe(1);
+    });
+
+    it('should resolve customer with facebookPsid', async () => {
+      const mockLocation = { id: 'loc1', name: 'Main', businessId: 'biz1' };
+      locationService.findByFacebookPageId.mockResolvedValue(mockLocation);
+      (prisma.business.findUnique as jest.Mock).mockResolvedValue(mockBusiness);
+      (prisma.message.findUnique as jest.Mock).mockResolvedValue(null);
+      customerIdentityService.resolveCustomer.mockResolvedValue(mockCustomer);
+      conversationService.findOrCreate.mockResolvedValue(mockConversation);
+      (prisma.message.create as jest.Mock).mockResolvedValue(mockMessage);
+      (prisma.conversation.update as jest.Mock).mockResolvedValue(mockUpdatedConversation);
+
+      const payload = buildFacebookPayload('USER_FB1', 'Hello FB', 'mid.fb-resolve');
+      await controller.facebookInbound(payload);
+
+      expect(customerIdentityService.resolveCustomer).toHaveBeenCalledWith('biz1', {
+        facebookPsid: 'USER_FB1',
+        name: 'USER_FB1',
+      });
+    });
+
+    it('should handle duplicate messages', async () => {
+      (prisma.message.findUnique as jest.Mock).mockResolvedValue({
+        id: 'existing',
+        externalId: 'mid.fb-dup',
+      });
+
+      const payload = buildFacebookPayload('USER_FB1', 'Dup', 'mid.fb-dup');
+      const result = await controller.facebookInbound(payload);
+
+      expect(result.results[0].status).toBe('duplicate');
+      expect(result.processed).toBe(0);
+    });
+
+    it('should validate HMAC signature when FACEBOOK_APP_SECRET is set', async () => {
+      configService.get.mockImplementation((key: string, defaultValue?: any) => {
+        if (key === 'FACEBOOK_APP_SECRET') return 'fb-app-secret';
+        if (key === 'NODE_ENV') return 'development';
+        return defaultValue;
+      });
+
+      setupHappyPath();
+
+      const payload = buildFacebookPayload('USER_FB1', 'Signed', 'mid.fb-sig');
+      const raw = JSON.stringify(payload);
+      const expected = crypto.createHmac('sha256', 'fb-app-secret').update(raw).digest('hex');
+
+      const result = await controller.facebookInbound(payload, `sha256=${expected}`);
+      expect(result.status).toBe('EVENT_RECEIVED');
+    });
+
+    it('should reject invalid HMAC signature', async () => {
+      configService.get.mockImplementation((key: string, defaultValue?: any) => {
+        if (key === 'FACEBOOK_APP_SECRET') return 'fb-app-secret';
+        return defaultValue;
+      });
+
+      const payload = buildFacebookPayload('USER_FB1', 'Bad sig', 'mid.fb-badsig');
+      await expect(
+        controller.facebookInbound(payload, 'sha256=invalidhash'),
+      ).rejects.toThrow('Invalid Facebook webhook signature');
+    });
+
+    it('should route by Facebook page ID to location', async () => {
+      const mockLocation = { id: 'loc-fb', name: 'FB Location', businessId: 'biz1' };
+      locationService.findByFacebookPageId.mockResolvedValue(mockLocation);
+      (prisma.business.findUnique as jest.Mock).mockResolvedValue(mockBusiness);
+      (prisma.message.findUnique as jest.Mock).mockResolvedValue(null);
+      customerIdentityService.resolveCustomer.mockResolvedValue(mockCustomer);
+      conversationService.findOrCreate.mockResolvedValue(mockConversation);
+      (prisma.message.create as jest.Mock).mockResolvedValue(mockMessage);
+      (prisma.conversation.update as jest.Mock).mockResolvedValue(mockUpdatedConversation);
+
+      const payload = buildFacebookPayload('USER_FB1', 'Route test', 'mid.fb-route');
+      await controller.facebookInbound(payload);
+
+      expect(locationService.findByFacebookPageId).toHaveBeenCalledWith('PAGE_FB1');
+      expect(conversationService.findOrCreate).toHaveBeenCalledWith(
+        'biz1',
+        'cust1',
+        'FACEBOOK',
+        'loc-fb',
+      );
+    });
+
+    it('should set channel to FACEBOOK on created messages', async () => {
+      setupHappyPath();
+
+      const payload = buildFacebookPayload('USER_FB1', 'Channel FB', 'mid.fb-chan');
+      await controller.facebookInbound(payload);
+
+      expect(prisma.message.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            channel: 'FACEBOOK',
+          }),
+        }),
+      );
+    });
+
+    it('should return empty results for payload with no messages', async () => {
+      const payload = { object: 'page', entry: [] };
+      const result = await controller.facebookInbound(payload);
+
       expect(result.status).toBe('EVENT_RECEIVED');
       expect(result.processed).toBe(0);
+      expect(result.results).toHaveLength(0);
+    });
+  });
+
+  describe('Facebook status callback', () => {
+    it('should process delivered status', async () => {
+      messageService.updateDeliveryStatus.mockResolvedValue({ id: 'msg1' });
+
+      const payload = {
+        entry: [
+          {
+            id: 'PAGE_FB1',
+            messaging: [
+              {
+                timestamp: 1700000000,
+                delivery: { mids: ['mid.fb-del1'] },
+              },
+            ],
+          },
+        ],
+      };
+
+      const result = await controller.facebookStatusCallback(payload);
+      expect(result.ok).toBe(true);
+      expect(result.updated).toBe(1);
+      expect(messageService.updateDeliveryStatus).toHaveBeenCalledWith('mid.fb-del1', 'DELIVERED');
+    });
+
+    it('should process read status', async () => {
+      messageService.updateDeliveryStatus.mockResolvedValue({ id: 'msg1' });
+
+      const payload = {
+        entry: [
+          {
+            id: 'PAGE_FB1',
+            messaging: [
+              {
+                timestamp: 1700000000,
+                read: { watermark: 1700000000 },
+              },
+            ],
+          },
+        ],
+      };
+
+      const result = await controller.facebookStatusCallback(payload);
+      expect(result.ok).toBe(true);
+      expect(result.updated).toBe(1);
+      expect(messageService.updateDeliveryStatus).toHaveBeenCalledWith(
+        'read_1700000000',
+        'READ',
+      );
+    });
+
+    it('should validate HMAC signature on status callback', async () => {
+      configService.get.mockImplementation((key: string, defaultValue?: any) => {
+        if (key === 'FACEBOOK_APP_SECRET') return 'fb-status-secret';
+        return defaultValue;
+      });
+
+      const payload = {
+        entry: [
+          { messaging: [{ delivery: { mids: ['mid.x'] }, timestamp: 123 }] },
+        ],
+      };
+
+      await expect(
+        controller.facebookStatusCallback(payload, 'sha256=wrong'),
+      ).rejects.toThrow('Invalid Facebook webhook signature');
+    });
+
+    it('should return updated 0 for empty payload', async () => {
+      const result = await controller.facebookStatusCallback({});
+      expect(result.ok).toBe(true);
+      expect(result.updated).toBe(0);
     });
   });
 

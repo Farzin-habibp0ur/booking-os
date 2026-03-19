@@ -29,6 +29,7 @@ import {
   WhatsAppCloudProvider,
   TwilioSmsProvider,
   InstagramProvider,
+  FacebookProvider,
 } from '@booking-os/messaging-provider';
 
 @ApiTags('Messaging Webhooks')
@@ -137,6 +138,12 @@ export class WebhookController {
       metadata?: Record<string, any>;
     },
     channelOverride?: string,
+    facebookContext?: {
+      channel: 'FACEBOOK';
+      facebookPageId: string;
+      facebookPsid: string;
+      metadata?: Record<string, any>;
+    },
   ): Promise<{ conversationId?: string; messageId?: string; duplicate?: boolean }> {
     // Dedup: check if message with this externalId already exists
     if (externalId) {
@@ -149,7 +156,8 @@ export class WebhookController {
       }
     }
 
-    const channel = channelOverride || instagramContext?.channel || 'WHATSAPP';
+    const channel =
+      channelOverride || facebookContext?.channel || instagramContext?.channel || 'WHATSAPP';
 
     // Route to Location → Business
     let business;
@@ -166,6 +174,20 @@ export class WebhookController {
           where: { id: location.businessId },
         });
         this.logger.log(`Routed Instagram message to location "${location.name}" (${location.id})`);
+      }
+    } else if (facebookContext?.facebookPageId) {
+      // Facebook routing: lookup Location by facebookConfig.pageId
+      const location = await this.locationService.findByFacebookPageId(
+        facebookContext.facebookPageId,
+      );
+      if (location) {
+        locationId = location.id;
+        business = await this.prisma.business.findUnique({
+          where: { id: location.businessId },
+        });
+        this.logger.log(
+          `Routed Facebook message to location "${location.name}" (${location.id})`,
+        );
       }
     } else if (businessPhoneNumberId) {
       const location =
@@ -201,6 +223,11 @@ export class WebhookController {
         instagramUserId: instagramContext.instagramUserId,
         name: from,
       });
+    } else if (facebookContext) {
+      customer = await this.customerIdentityService.resolveCustomer(business.id, {
+        facebookPsid: facebookContext.facebookPsid,
+        name: from,
+      });
     } else {
       // WhatsApp and SMS both use phone-based resolution
       customer = await this.customerIdentityService.resolveCustomer(business.id, {
@@ -216,6 +243,9 @@ export class WebhookController {
       locationId,
     );
 
+    // Determine metadata from the appropriate context
+    const contextMetadata = facebookContext?.metadata || instagramContext?.metadata;
+
     let message;
     try {
       message = await this.prisma.message.create({
@@ -226,9 +256,9 @@ export class WebhookController {
           contentType: 'TEXT',
           channel,
           externalId,
-          ...(instagramContext?.metadata &&
-            Object.keys(instagramContext.metadata).length > 0 && {
-              metadata: instagramContext.metadata,
+          ...(contextMetadata &&
+            Object.keys(contextMetadata).length > 0 && {
+              metadata: contextMetadata,
             }),
         },
       });
@@ -539,11 +569,95 @@ export class WebhookController {
     throw new ForbiddenException('Webhook verification failed');
   }
 
-  /** Facebook Messenger inbound messages (stub) */
+  /** Facebook Messenger inbound messages */
   @Post('facebook')
-  async facebookInbound(@Body() payload: any) {
-    this.logger.log('Facebook inbound webhook received (stub — Phase 1)');
-    return { status: 'EVENT_RECEIVED', processed: 0 };
+  async facebookInbound(
+    @Body() payload: any,
+    @Headers('x-hub-signature-256') signature?: string,
+  ) {
+    const secret = this.configService.get<string>('FACEBOOK_APP_SECRET');
+    if (secret) {
+      const raw = JSON.stringify(payload);
+      const expected = crypto.createHmac('sha256', secret).update(raw).digest('hex');
+      const sig = (signature || '').replace('sha256=', '');
+      const sigBuf = Buffer.from(sig);
+      const expBuf = Buffer.from(expected);
+      if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
+        throw new ForbiddenException('Invalid Facebook webhook signature');
+      }
+    }
+
+    const messages = FacebookProvider.parseInboundWebhook(payload);
+    const results: Array<{ externalId: string; status: 'processed' | 'duplicate' | 'error' }> =
+      [];
+
+    for (const msg of messages) {
+      try {
+        const result = await this.processInboundMessage(
+          msg.from,
+          msg.body,
+          msg.externalId,
+          undefined,
+          undefined,
+          undefined, // no instagramContext
+          undefined, // no channelOverride
+          {
+            channel: 'FACEBOOK',
+            facebookPageId: msg.pageId,
+            facebookPsid: msg.from,
+            metadata: {
+              ...(msg.referral && { referral: msg.referral }),
+              ...(msg.postback && { postback: msg.postback }),
+              ...(msg.mediaType && { mediaType: msg.mediaType }),
+              ...(msg.mediaUrl && { mediaUrl: msg.mediaUrl }),
+            },
+          },
+        );
+        results.push({
+          externalId: msg.externalId,
+          status: result.duplicate ? 'duplicate' : 'processed',
+        });
+      } catch (err: any) {
+        this.logger.error(`Facebook inbound processing error: ${err.message}`, err.stack);
+        results.push({ externalId: msg.externalId, status: 'error' });
+      }
+    }
+
+    return {
+      status: 'EVENT_RECEIVED',
+      processed: results.filter((r) => r.status === 'processed').length,
+      results,
+    };
+  }
+
+  /** Facebook Messenger delivery/read status webhooks */
+  @Post('facebook/status')
+  async facebookStatusCallback(
+    @Body() payload: any,
+    @Headers('x-hub-signature-256') signature?: string,
+  ) {
+    const secret = this.configService.get<string>('FACEBOOK_APP_SECRET');
+    if (secret) {
+      const raw = JSON.stringify(payload);
+      const expected = crypto.createHmac('sha256', secret).update(raw).digest('hex');
+      const sig = (signature || '').replace('sha256=', '');
+      const sigBuf = Buffer.from(sig);
+      const expBuf = Buffer.from(expected);
+      if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
+        throw new ForbiddenException('Invalid Facebook webhook signature');
+      }
+    }
+
+    const statuses = FacebookProvider.parseStatusWebhook(payload);
+    let updated = 0;
+
+    for (const s of statuses) {
+      const mappedStatus = s.status === 'delivered' ? 'DELIVERED' : 'READ';
+      const result = await this.messageService.updateDeliveryStatus(s.messageId, mappedStatus);
+      if (result) updated++;
+    }
+
+    return { ok: true, updated };
   }
 
   // ─── Email Webhook Endpoints ──────────────────────────────────────────

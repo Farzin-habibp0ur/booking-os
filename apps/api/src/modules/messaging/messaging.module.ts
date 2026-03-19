@@ -2,6 +2,7 @@ import { Global, Module, forwardRef } from '@nestjs/common';
 import { MessagingService } from './messaging.service';
 import { WebhookController } from './webhook.controller';
 import { SmsController } from './sms.controller';
+import { FacebookController } from './facebook.controller';
 import { CustomerModule } from '../customer/customer.module';
 import { ConversationModule } from '../conversation/conversation.module';
 import { LocationModule } from '../location/location.module';
@@ -19,7 +20,7 @@ import { CustomerIdentityModule } from '../customer-identity/customer-identity.m
     forwardRef(() => MessageModule),
     forwardRef(() => AiModule),
   ],
-  controllers: [WebhookController, SmsController],
+  controllers: [WebhookController, SmsController, FacebookController],
   providers: [MessagingService],
   exports: [MessagingService],
 })

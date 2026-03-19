@@ -246,4 +246,16 @@ export class LocationService {
       return config?.pageId === pageId;
     });
   }
+
+  async findByFacebookPageId(pageId: string) {
+    const locations = await this.prisma.location.findMany({
+      where: { isActive: true },
+    });
+    return (
+      locations.find((loc) => {
+        const config = loc.facebookConfig as any;
+        return config?.pageId === pageId;
+      }) || null
+    );
+  }
 }

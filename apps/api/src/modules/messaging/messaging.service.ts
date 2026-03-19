@@ -182,10 +182,21 @@ export class MessagingService {
    * Resolve the correct messaging provider for a conversation based on its channel
    * and associated location config. This is the primary method for outbound message routing.
    */
+  /** Get Facebook provider for a location's Facebook config (lazy-registers if needed) */
+  getProviderForLocationFacebookConfig(
+    facebookConfig: Record<string, any> | null,
+  ): FacebookProvider | null {
+    if (!facebookConfig?.pageId || !facebookConfig?.pageAccessToken) {
+      return null;
+    }
+    return this.registerFacebookProvider(facebookConfig.pageId, facebookConfig.pageAccessToken);
+  }
+
   getProviderForConversation(
     channel: string,
     locationInstagramConfig?: Record<string, any> | null,
     locationWhatsappConfig?: Record<string, any> | null,
+    locationFacebookConfig?: Record<string, any> | null,
   ): MessagingProvider {
     if (channel === 'INSTAGRAM') {
       const igProvider = this.getProviderForLocationInstagramConfig(
@@ -202,11 +213,10 @@ export class MessagingService {
 
     if (channel === 'FACEBOOK') {
       // Facebook Messenger: look up by page ID from location config
-      const pageId = locationWhatsappConfig?.facebookPageId;
-      if (pageId) {
-        const fbProvider = this.getProviderForFacebookPageId(pageId);
-        if (fbProvider) return fbProvider;
-      }
+      const fbProvider = this.getProviderForLocationFacebookConfig(
+        locationFacebookConfig || null,
+      );
+      if (fbProvider) return fbProvider;
       this.logger.warn('Facebook provider not found for conversation, falling back to default');
       return this.provider;
     }

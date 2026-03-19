@@ -15,6 +15,7 @@ import {
   Palette,
   Puzzle,
   Phone,
+  Facebook,
 } from 'lucide-react';
 
 export interface SettingsCategory {
@@ -83,6 +84,15 @@ export const SETTINGS_CATEGORIES: SettingsCategory[] = [
     icon: Phone,
     accent: 'sage',
     pages: ['sms'],
+    roles: ['ADMIN'],
+  },
+  {
+    key: 'facebook',
+    label: 'Facebook Messenger',
+    description: 'Connect Facebook Pages for Messenger conversations',
+    icon: Facebook,
+    accent: 'lavender',
+    pages: ['facebook'],
     roles: ['ADMIN'],
   },
   {
