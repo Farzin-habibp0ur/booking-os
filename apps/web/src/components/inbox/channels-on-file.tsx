@@ -42,7 +42,7 @@ export function ChannelsOnFile({ channels }: ChannelsOnFileProps) {
   if (available.length === 0) return null;
 
   return (
-    <div className="space-y-1.5" data-testid="channels-on-file">
+    <div className="space-y-1.5" aria-label="Customer channels on file" data-testid="channels-on-file">
       <h4 className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">Channels</h4>
       <div className="space-y-1">
         {available.map(({ channel, identifier }) => {

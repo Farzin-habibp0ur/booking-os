@@ -149,7 +149,7 @@ export default function SmsSettingsPage() {
         className="inline-flex items-center gap-1 text-sm text-sage-600 hover:text-sage-700 dark:text-sage-400 dark:hover:text-sage-300 mb-3 transition-colors"
       >
         <ArrowLeft size={14} />
-        Back to Settings
+        {t('sms.back_to_settings')}
       </Link>
 
       <div className="flex items-center gap-2 mb-2">
@@ -260,7 +260,7 @@ export default function SmsSettingsPage() {
               </span>
             </h3>
             <p className="text-sm text-amber-800 dark:text-amber-300 mt-2 mb-2">
-              To send business SMS in the US, you must register with The Campaign Registry (TCR):
+              {t('sms.a2p_intro')}
             </p>
             <ol className="text-sm text-amber-800 dark:text-amber-300 space-y-1 list-decimal list-inside">
               <li>{t('sms.a2p_step1')}</li>
@@ -285,7 +285,7 @@ export default function SmsSettingsPage() {
         {loadingLocations ? (
           <div className="flex items-center gap-2 text-slate-400 text-sm py-4">
             <Loader2 size={16} className="animate-spin" />
-            Loading locations...
+            {t('sms.loading_locations')}
           </div>
         ) : locations.length === 0 ? (
           <div className="text-sm text-slate-500 dark:text-slate-400 py-4 flex items-center gap-2">

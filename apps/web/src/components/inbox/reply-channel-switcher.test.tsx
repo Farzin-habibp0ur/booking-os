@@ -81,4 +81,57 @@ describe('ReplyChannelSwitcher', () => {
     const currentOption = screen.getByTestId('reply-channel-option-whatsapp');
     expect(currentOption).toHaveClass('bg-slate-50', 'font-medium');
   });
+
+  it('should have proper ARIA attributes', () => {
+    render(<ReplyChannelSwitcher {...defaultProps} />);
+    const trigger = screen.getByTestId('reply-channel-switcher');
+    expect(trigger).toHaveAttribute('aria-haspopup', 'listbox');
+    expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    expect(trigger).toHaveAttribute('aria-label', 'Switch reply channel');
+  });
+
+  it('should set aria-expanded to true when open', () => {
+    render(<ReplyChannelSwitcher {...defaultProps} />);
+    const trigger = screen.getByTestId('reply-channel-switcher');
+    fireEvent.click(trigger);
+    expect(trigger).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  it('should have listbox role on dropdown', () => {
+    render(<ReplyChannelSwitcher {...defaultProps} />);
+    fireEvent.click(screen.getByTestId('reply-channel-switcher'));
+    expect(screen.getByRole('listbox')).toBeInTheDocument();
+  });
+
+  it('should have option role with aria-selected on dropdown items', () => {
+    render(<ReplyChannelSwitcher {...defaultProps} />);
+    fireEvent.click(screen.getByTestId('reply-channel-switcher'));
+    const options = screen.getAllByRole('option');
+    expect(options).toHaveLength(3);
+    expect(screen.getByTestId('reply-channel-option-whatsapp')).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByTestId('reply-channel-option-instagram')).toHaveAttribute('aria-selected', 'false');
+  });
+
+  it('should close dropdown on Escape key', () => {
+    render(<ReplyChannelSwitcher {...defaultProps} />);
+    fireEvent.click(screen.getByTestId('reply-channel-switcher'));
+    expect(screen.getByTestId('reply-channel-option-whatsapp')).toBeInTheDocument();
+    fireEvent.keyDown(screen.getByTestId('reply-channel-switcher').parentElement!, { key: 'Escape' });
+    expect(screen.queryByTestId('reply-channel-option-whatsapp')).not.toBeInTheDocument();
+  });
+
+  it('should navigate options with arrow keys and select with Enter', () => {
+    render(<ReplyChannelSwitcher {...defaultProps} />);
+    fireEvent.click(screen.getByTestId('reply-channel-switcher'));
+    const container = screen.getByTestId('reply-channel-switcher').parentElement!;
+
+    // Arrow down to first option
+    fireEvent.keyDown(container, { key: 'ArrowDown' });
+    // Arrow down to second option (Instagram)
+    fireEvent.keyDown(container, { key: 'ArrowDown' });
+    // Select with Enter
+    fireEvent.keyDown(container, { key: 'Enter' });
+
+    expect(defaultProps.onChannelChange).toHaveBeenCalledWith('INSTAGRAM');
+  });
 });

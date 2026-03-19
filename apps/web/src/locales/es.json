@@ -1080,13 +1080,17 @@
     "a2p_step3": "Asigne sus números de teléfono a la campaña",
     "a2p_step4": "Espere la aprobación (típicamente 1-3 días hábiles)",
     "a2p_warning": "Los números no conformes pueden experimentar filtrado de mensajes o fallas en la entrega.",
-    "no_locations": "No se encontraron ubicaciones. Cree una ubicación primero."
+    "a2p_intro": "Para enviar SMS empresariales en EE.UU., debe registrarse en The Campaign Registry (TCR):",
+    "no_locations": "No se encontraron ubicaciones. Cree una ubicación primero.",
+    "loading_locations": "Cargando ubicaciones...",
+    "back_to_settings": "Volver a Configuración"
   },
 
   "facebook": {
     "title": "Facebook Messenger",
     "description": "Conectar páginas de Facebook para conversaciones de Messenger",
     "page_connection": "Conexión de Página",
+    "setup_intro": "Para conectar Facebook Messenger, necesitará una Página de Facebook con mensajería habilitada.",
     "page_id": "ID de Página de Facebook",
     "page_access_token": "Token de Acceso de Página",
     "test_connection": "Probar Conexión",
@@ -1116,7 +1120,9 @@
     "setup_step1": "Vaya a Meta Business Suite y obtenga su Token de Acceso de Página",
     "setup_step2": "Copie el ID de su Página desde la sección Acerca de",
     "setup_step3": "Ingrese las credenciales a continuación",
-    "no_locations": "No se encontraron ubicaciones. Cree una ubicación primero."
+    "no_locations": "No se encontraron ubicaciones. Cree una ubicación primero.",
+    "loading_locations": "Cargando ubicaciones...",
+    "back_to_settings": "Volver a Configuración"
   },
 
   "emailChannel": {
@@ -1163,7 +1169,10 @@
     "signature": "Firma de Email",
     "signature_hint": "Firma HTML adjunta a emails salientes",
     "signature_preview": "Vista Previa",
-    "no_locations": "No se encontraron ubicaciones. Cree una ubicación primero."
+    "no_locations": "No se encontraron ubicaciones. Cree una ubicación primero.",
+    "loading_locations": "Cargando ubicaciones...",
+    "back_to_settings": "Volver a Configuración",
+    "dns_intro": "Para recibir emails entrantes, configure SendGrid Inbound Parse:"
   },
 
   "webChat": {
@@ -1202,7 +1211,20 @@
     "step3": "Llenan un breve formulario y comienzan a chatear",
     "step4": "Los mensajes aparecen en tu bandeja junto a todos los demás canales",
     "step5": "Cuando estás offline, los visitantes pueden dejar un mensaje",
-    "no_locations": "No se encontraron ubicaciones. Cree una ubicación primero."
+    "no_locations": "No se encontraron ubicaciones. Cree una ubicación primero.",
+    "loading_locations": "Cargando ubicaciones...",
+    "back_to_settings": "Volver a Configuración"
+  },
+
+  "channels": {
+    "title": "Canales de Mensajería",
+    "description": "Administra tus canales de mensajería en todas las ubicaciones",
+    "connected": "Conectado",
+    "not_configured": "No Configurado",
+    "configure": "Configurar",
+    "messages_7d": "{{count}} mensajes (7d)",
+    "whatsapp_hint": "Configurar en Integraciones",
+    "instagram_hint": "Configurar en Integraciones"
   },
 
   "errors": {

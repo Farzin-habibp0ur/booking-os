@@ -63,4 +63,22 @@ describe('ChannelBadge', () => {
     const badge = screen.getByTestId('channel-badge-whatsapp');
     expect(badge).toHaveClass('ml-2');
   });
+
+  it('should have role="status" for accessibility', () => {
+    render(<ChannelBadge channel="WHATSAPP" />);
+    expect(screen.getByRole('status')).toBeInTheDocument();
+  });
+
+  it('should have aria-label for accessibility', () => {
+    render(<ChannelBadge channel="WHATSAPP" />);
+    expect(screen.getByRole('status')).toHaveAttribute('aria-label', 'Channel: WhatsApp');
+  });
+
+  it('should have correct aria-label for each channel', () => {
+    const { rerender } = render(<ChannelBadge channel="SMS" />);
+    expect(screen.getByRole('status')).toHaveAttribute('aria-label', 'Channel: SMS');
+
+    rerender(<ChannelBadge channel="EMAIL" />);
+    expect(screen.getByRole('status')).toHaveAttribute('aria-label', 'Channel: Email');
+  });
 });

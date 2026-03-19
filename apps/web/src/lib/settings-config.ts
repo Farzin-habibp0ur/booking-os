@@ -18,6 +18,7 @@ import {
   Facebook,
   Mail,
   Globe,
+  Radio,
 } from 'lucide-react';
 
 export interface SettingsCategory {
@@ -77,6 +78,15 @@ export const SETTINGS_CATEGORIES: SettingsCategory[] = [
     icon: Gift,
     accent: 'lavender',
     pages: ['waitlist', 'offers'],
+    roles: ['ADMIN'],
+  },
+  {
+    key: 'channels',
+    label: 'Messaging Channels',
+    description: 'Manage all messaging channels across your locations',
+    icon: Radio,
+    accent: 'sage',
+    pages: ['channels'],
     roles: ['ADMIN'],
   },
   {

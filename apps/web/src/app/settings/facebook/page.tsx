@@ -193,7 +193,7 @@ export default function FacebookSettingsPage() {
         className="inline-flex items-center gap-1 text-sm text-sage-600 hover:text-sage-700 dark:text-sage-400 dark:hover:text-sage-300 mb-3 transition-colors"
       >
         <ArrowLeft size={14} />
-        Back to Settings
+        {t('facebook.back_to_settings')}
       </Link>
 
       <div className="flex items-center gap-2 mb-2">
@@ -221,8 +221,7 @@ export default function FacebookSettingsPage() {
             <Info size={18} className="text-blue-600 mt-0.5 shrink-0" />
             <div>
               <p className="text-sm text-blue-800 dark:text-blue-300 mb-2">
-                To connect Facebook Messenger, you&apos;ll need a Facebook Page with
-                messaging enabled.
+                {t('facebook.setup_intro')}
               </p>
               <ol className="text-sm text-blue-800 dark:text-blue-300 space-y-1 list-decimal list-inside">
                 <li>{t('facebook.setup_step1')}</li>
@@ -354,7 +353,7 @@ export default function FacebookSettingsPage() {
         {loadingLocations ? (
           <div className="flex items-center gap-2 text-slate-400 text-sm py-4">
             <Loader2 size={16} className="animate-spin" />
-            Loading locations...
+            {t('facebook.loading_locations')}
           </div>
         ) : locations.length === 0 ? (
           <div

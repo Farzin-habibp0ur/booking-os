@@ -179,7 +179,7 @@ export default function EmailChannelSettingsPage() {
         className="inline-flex items-center gap-1 text-sm text-sage-600 hover:text-sage-700 dark:text-sage-400 dark:hover:text-sage-300 mb-3 transition-colors"
       >
         <ArrowLeft size={14} />
-        Back to Settings
+        {t('emailChannel.back_to_settings')}
       </Link>
 
       <div className="flex items-center gap-2 mb-2">
@@ -312,7 +312,7 @@ export default function EmailChannelSettingsPage() {
         {loadingLocations ? (
           <div className="flex items-center gap-2 text-slate-400 text-sm py-4">
             <Loader2 size={16} className="animate-spin" />
-            Loading locations...
+            {t('emailChannel.loading_locations')}
           </div>
         ) : locations.length === 0 ? (
           <div
@@ -348,7 +348,7 @@ export default function EmailChannelSettingsPage() {
               {t('emailChannel.dns_config')}
             </h3>
             <p className="text-sm text-sky-800 dark:text-sky-300 mt-2 mb-2">
-              To receive inbound emails, configure SendGrid Inbound Parse:
+              {t('emailChannel.dns_intro')}
             </p>
             <ol className="text-sm text-sky-800 dark:text-sky-300 space-y-1 list-decimal list-inside">
               <li>{t('emailChannel.dns_step1')}</li>

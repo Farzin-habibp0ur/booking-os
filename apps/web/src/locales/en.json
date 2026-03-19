@@ -1132,13 +1132,17 @@
     "a2p_step3": "Assign your phone numbers to the campaign",
     "a2p_step4": "Wait for approval (typically 1-3 business days)",
     "a2p_warning": "Non-compliant numbers may experience message filtering or delivery failures.",
-    "no_locations": "No locations found. Create a location first."
+    "a2p_intro": "To send business SMS in the US, you must register with The Campaign Registry (TCR):",
+    "no_locations": "No locations found. Create a location first.",
+    "loading_locations": "Loading locations...",
+    "back_to_settings": "Back to Settings"
   },
 
   "facebook": {
     "title": "Facebook Messenger",
     "description": "Connect Facebook Pages for Messenger conversations",
     "page_connection": "Page Connection",
+    "setup_intro": "To connect Facebook Messenger, you'll need a Facebook Page with messaging enabled.",
     "page_id": "Facebook Page ID",
     "page_access_token": "Page Access Token",
     "test_connection": "Test Connection",
@@ -1168,7 +1172,9 @@
     "setup_step1": "Go to Meta Business Suite and get your Page Access Token",
     "setup_step2": "Copy your Page ID from the Page's About section",
     "setup_step3": "Enter the credentials below",
-    "no_locations": "No locations found. Create a location first."
+    "no_locations": "No locations found. Create a location first.",
+    "loading_locations": "Loading locations...",
+    "back_to_settings": "Back to Settings"
   },
 
   "emailChannel": {
@@ -1215,7 +1221,10 @@
     "signature": "Email Signature",
     "signature_hint": "HTML signature appended to outbound emails",
     "signature_preview": "Preview",
-    "no_locations": "No locations found. Create a location first."
+    "no_locations": "No locations found. Create a location first.",
+    "loading_locations": "Loading locations...",
+    "back_to_settings": "Back to Settings",
+    "dns_intro": "To receive inbound emails, configure SendGrid Inbound Parse:"
   },
 
   "webChat": {
@@ -1254,7 +1263,20 @@
     "step3": "They fill out a short form and start chatting",
     "step4": "Messages appear in your inbox alongside all other channels",
     "step5": "When offline, visitors can leave a message via the offline form",
-    "no_locations": "No locations found. Create a location first."
+    "no_locations": "No locations found. Create a location first.",
+    "loading_locations": "Loading locations...",
+    "back_to_settings": "Back to Settings"
+  },
+
+  "channels": {
+    "title": "Messaging Channels",
+    "description": "Manage your messaging channels across all locations",
+    "connected": "Connected",
+    "not_configured": "Not Configured",
+    "configure": "Configure",
+    "messages_7d": "{{count}} messages (7d)",
+    "whatsapp_hint": "Configure in Integrations",
+    "instagram_hint": "Configure in Integrations"
   },
 
   "errors": {

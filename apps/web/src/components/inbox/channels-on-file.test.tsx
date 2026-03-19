@@ -69,4 +69,10 @@ describe('ChannelsOnFile', () => {
     render(<ChannelsOnFile channels={{ phone: '+1234567890' }} />);
     expect(screen.getByText('Channels')).toBeInTheDocument();
   });
+
+  it('should have aria-label for accessibility', () => {
+    render(<ChannelsOnFile channels={{ phone: '+1234567890' }} />);
+    const container = screen.getByTestId('channels-on-file');
+    expect(container).toHaveAttribute('aria-label', 'Customer channels on file');
+  });
 });
