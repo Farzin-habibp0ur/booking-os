@@ -2,7 +2,7 @@
 
 > **Purpose:** This document gives full context on the Booking OS platform — what it is, what's been built, how it's structured, and what's left to build. Share this with an AI assistant or new developer to get productive immediately.
 >
-> **Last updated:** March 12, 2026 (All phases COMPLETE — A through E + Phases 1-4 & 6 polish + QA Fixes + Sprints 1-4 + Prompts 4A-4C + Prompt 1C + Prompt 1A + Prompt 1B + Prompt 1D + Prompt 2A + Prompt 2B + Prompt 2C + Prompt 3A + Prompt 3C + QA Bug Fix Sprint (10 bugs) + Growth Engine Agents (15 prompts) + Marketing Command Center Phase 1 (DB schema) + Phase 2 Prompt 02 (Marketing Content module) + Prompt 03 (Action Cards enhancements) + Prompt 04 (Agent Config, Agent Runs, Escalation) + Prompt 05 (Quality Gates, Rejection Analytics, A/B Testing) + Prompt 06 (Platform Config, Budget Tracker, Email Sequences enhancements) + Prompt 07 (Autonomy Settings, Dashboard Briefing) + Phase 3 Prompt 08 (AI Command Center frontend pages) + Prompt 09 (Marketing Section Pages: queue, agents, sequences) + Prompt 10 (Settings & Reports Pages: settings/ai, settings/agents, settings/autonomy, reports/monthly-review) + Prompt 11 (Dashboard Briefing & Rejection Analytics Pages: dashboard marketing briefing section, marketing/rejection-analytics page) + Phase 4 Prompt 12 (Marketing UI Components Library: 9 reusable components in components/marketing/) + Phase 5 Prompt 13 (Navigation, Socket.io, Shortcuts, Design Tokens) + Phase 6 Prompt 14 (Backend & Frontend Test Suites: 11 new controller specs for all MCC modules) COMPLETE — ALL 14 PROMPTS ACROSS 6 PHASES COMPLETE — ~6,421 total tests across 452 test files, 91 Prisma models, 58 migrations)
+> **Last updated:** March 19, 2026 (All phases COMPLETE — A through E + Phases 1-4 & 6 polish + QA Fixes + Sprints 1-4 + Prompts 4A-4C + Prompt 1C + Prompt 1A + Prompt 1B + Prompt 1D + Prompt 2A + Prompt 2B + Prompt 2C + Prompt 3A + Prompt 3C + QA Bug Fix Sprint (10 bugs) + Growth Engine Agents (15 prompts) + Marketing Command Center Phases 1-6 (14 prompts) COMPLETE + Admin Console Extraction (4 phases — scaffold, migrate, remove from web, infrastructure) + Internal/External Separation (3 phases — marketing tools removed from customer app, migrated to admin app, API endpoints gated behind SUPER_ADMIN) + Launch QA fixes (SUPER_ADMIN guards, AutonomyConfig scope constraint, test timeouts) + Omnichannel Phases 0-3 (6-channel messaging: WhatsApp, Instagram, Facebook, SMS, Email + Web Chat pending) — 92 Prisma models, 59 migrations)
 
 ---
 
@@ -32,13 +32,13 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 ### Core Capabilities (All Built & Working)
 
 - **Appointment scheduling** — Calendar views (day/week/month), conflict detection, recurring bookings, automated reminders, force-book with reason, drag-and-drop reschedule with recommended slots, calendar command center (sidebar summary, keyboard shortcuts, booking popover)
-- **WhatsApp messaging inbox** — Real-time via Socket.io, AI auto-replies, conversation management (assign, snooze, tag, close), media attachments (images/docs/audio), delivery/read receipts, presence indicators, scheduled messages (BullMQ delayed jobs with cancel), bulk actions (close/assign/tag/mark-read up to 50 at once)
+- **Omnichannel messaging inbox** — 6-channel support (WhatsApp, Instagram DM, Facebook Messenger, Email, SMS, Web Chat [pending]), real-time via Socket.io, AI auto-replies, conversation management (assign, snooze, tag, close), media attachments (images/docs/audio), delivery/read receipts, presence indicators, scheduled messages (BullMQ delayed jobs with cancel), bulk actions (close/assign/tag/mark-read up to 50 at once), channel badge + reply channel switcher + channel filter bar
 - **AI booking assistant** — Guides customers through booking/cancellation/rescheduling via chat (powered by Claude API)
 - **AI features** — Intent detection, reply suggestions, conversation summaries, customer profile collection, per-customer AI chat
 - **Customer management** — Profiles with custom fields, tags, CSV import, AI-powered profile extraction from conversations
 - **Staff management** — Roles (Admin/Service Provider/Agent/Super Admin), working hours per day, time off, email invitations
 - **Service catalog** — Categories, pricing, durations, buffer times, deposit requirements, service kinds (CONSULT/TREATMENT/OTHER), soft delete
-- **Multi-location** — Multiple physical locations per business, staff-location assignments, per-location WhatsApp routing, location-based conversation filtering
+- **Multi-location** — Multiple physical locations per business, staff-location assignments, per-location channel configs (WhatsApp, Instagram, Facebook, SMS, Email, Web Chat), location-based conversation filtering
 - **Resource management** — Equipment/bays/rooms per location with metadata, resource-level booking
 - **Service kanban** — Dealership workflow board (CHECKED_IN → DIAGNOSING → AWAITING_APPROVAL → IN_PROGRESS → READY_FOR_PICKUP)
 - **Quotes** — Create quotes for bookings, customer self-serve approval via token link with IP audit
@@ -95,7 +95,7 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 
 ### Phase 3: "Platformization + Second Vertical" — COMPLETE (11/11 batches)
 
-- **Multi-location support** — Locations with staff assignments, WhatsApp routing, booking/conversation filtering
+- **Multi-location support** — Locations with staff assignments, per-location channel configs (WhatsApp, Instagram, Facebook, SMS, Email), booking/conversation filtering
 - **Resource management** — Equipment/bays per location, resource-level booking
 - **Dealership vertical** — Service kanban board, quote system, vehicle-specific customer fields
 - **Pack builder** — Internal tooling for pack definitions with versioning, publish flow, slug management
@@ -235,7 +235,7 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 | AI          | Anthropic Claude API        | claude-sonnet |
 | Payments    | Stripe                      | stripe-node   |
 | Email       | Resend                      | -             |
-| Messaging   | WhatsApp Business Cloud API | -             |
+| Messaging   | WhatsApp Cloud, Instagram DM, Facebook Messenger, Email (Resend/SendGrid), SMS (Twilio) | 6-channel omnichannel |
 | Cache/Queue | Redis 7 + BullMQ            | -             |
 | Monorepo    | Turborepo                   | 2.x           |
 | CI/CD       | GitHub Actions → Railway    | -             |
@@ -251,7 +251,7 @@ booking-os/
 ├── apps/
 │   ├── api/                    # NestJS REST API (port 3001)
 │   │   ├── src/
-│   │   │   ├── modules/        # 62 feature modules
+│   │   │   ├── modules/        # 83 feature modules
 │   │   │   ├── common/         # Guards, decorators, filters, DTOs, Prisma service
 │   │   │   └── main.ts         # Bootstrap, Swagger, CORS, cookies, validation
 │   │   └── Dockerfile          # Multi-stage production build
@@ -265,14 +265,14 @@ booking-os/
 │   │   └── Dockerfile          # Multi-stage production build
 │   └── whatsapp-simulator/     # WhatsApp testing tool (port 3002)
 ├── packages/
-│   ├── db/                     # Prisma schema (67 models), migrations, seed scripts
+│   ├── db/                     # Prisma schema (92 models), migrations, seed scripts
 │   │   ├── prisma/schema.prisma
 │   │   ├── src/seed.ts         # Base seed (aesthetic + dealership + wellness, idempotent)
 │   │   ├── src/seed-demo.ts    # Rich demo data (idempotent, dedup-safe)
 │   │   ├── src/seed-agentic.ts # One-time agentic data fill (production)
 │   │   ├── src/seed-wellness.ts # Standalone wellness seed (also called from seed.ts)
 │   │   └── src/seed-content.ts # Content pillar seeding (12 blog posts → ContentDraft)
-│   ├── messaging-provider/     # WhatsApp Cloud API abstraction
+│   ├── messaging-provider/     # 6-channel messaging provider abstraction (WhatsApp, Instagram, Facebook, Email, SMS)
 │   └── shared/                 # Shared types, DTOs, enums, profile field definitions
 ├── docs/
 │   ├── PROJECT_CONTEXT.md      # This file
@@ -304,7 +304,7 @@ booking-os/
 
 ---
 
-## 5. Database Schema (67 Models)
+## 5. Database Schema (92 Models)
 
 ```
 Business (1) ──┬── (*) Staff ──── (*) WorkingHours
@@ -347,6 +347,7 @@ Business (1) ──┬── (*) Staff ──── (*) WorkingHours
                ├── (*) Referral (referrer ↔ referred businesses)
                ├── (*) StaffServicePrice (per-staff pricing overrides)
                └── (*) SupportCase ──── (*) SupportCaseNote
+               └── (*) MessageUsage (per-channel monthly message counts for billing)
 ViewAsSession ──── Staff (superAdmin) + Business (target)
 PlatformAuditLog (standalone)
 PlatformAgentDefault (standalone — platform-wide agent governance)
@@ -375,10 +376,10 @@ VerticalPack:       AESTHETIC, SALON, TUTORING, GENERAL, DEALERSHIP, WELLNESS
 | **CustomerNote**         | customerId (FK), staffId (FK), businessId (FK), content                                                                                                                                                                                                                                                                                                                                                                                                          | Staff ownership validation for edit/delete                                         |
 | **Service**              | kind (CONSULT/TREATMENT/OTHER), depositRequired, bufferBefore/After, isActive                                                                                                                                                                                                                                                                                                                                                                                    | Catalog item                                                                       |
 | **Booking**              | status (7 states), kanbanStatus, locationId, resourceId, recurringSeriesId, customFields (JSON)                                                                                                                                                                                                                                                                                                                                                                  | Core scheduling                                                                    |
-| **Location**             | name, address, isBookable, whatsappConfig (JSON), isActive                                                                                                                                                                                                                                                                                                                                                                                                       | Multi-location                                                                     |
+| **Location**             | name, address, isBookable, whatsappConfig (JSON), instagramConfig (JSON), facebookConfig (JSON), smsConfig (JSON), emailConfig (JSON), webChatConfig (JSON), isActive                                                                                                                                                                                                                                                                                            | Multi-location (per-channel configs)                                               |
 | **Resource**             | locationId, type, metadata (JSON), isActive                                                                                                                                                                                                                                                                                                                                                                                                                      | Equipment/bays                                                                     |
 | **Quote**                | bookingId, totalAmount, status (PENDING/APPROVED/REJECTED), approverIp                                                                                                                                                                                                                                                                                                                                                                                           | Service quotes                                                                     |
-| **Conversation**         | channel (WHATSAPP/WEB), status, tags[], metadata (JSON for AI state), locationId                                                                                                                                                                                                                                                                                                                                                                                 | Messaging                                                                          |
+| **Conversation**         | channel (WHATSAPP/INSTAGRAM/FACEBOOK/SMS/EMAIL/WEB_CHAT), status, tags[], metadata (JSON for AI state), locationId                                                                                                                                                                                                                                                                                                                                               | Messaging (6-channel omnichannel)                                                  |
 | **WaitlistEntry**        | status (ACTIVE/OFFERED/BOOKED/EXPIRED/CANCELLED), offeredSlot (JSON)                                                                                                                                                                                                                                                                                                                                                                                             | Smart waitlist                                                                     |
 | **AutomationRule**       | trigger (6 types), filters (JSON), actions (JSON), quietStart/End                                                                                                                                                                                                                                                                                                                                                                                                | Automation engine                                                                  |
 | **Campaign**             | filters (JSON), throttlePerMinute, stats (JSON)                                                                                                                                                                                                                                                                                                                                                                                                                  | Bulk messaging                                                                     |
@@ -421,7 +422,7 @@ The Message model now includes delivery receipt fields:
 
 ---
 
-## 6. API Modules (51 Modules)
+## 6. API Modules (83 Modules)
 
 All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 
@@ -546,7 +547,7 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 | Reports             | `/reports`                          | 9 chart types                                                                                                                                                                                                  |
 | ROI Dashboard       | `/roi`                              | Baseline vs current metrics                                                                                                                                                                                    |
 | Service Board       | `/service-board`                    | Kanban board (dealership)                                                                                                                                                                                      |
-| Settings            | `/settings/*`                       | 13 settings sub-pages (account, AI, AI Autonomy, Agent Skills, agents, templates, translations, calendar, billing, notifications, offers, policies, waitlist, profile fields); hub page links to all sub-pages |
+| Settings            | `/settings/*`                       | 16 settings sub-pages (account, AI, AI Autonomy, Agent Skills, agents, templates, translations, calendar, billing, notifications, offers, policies, waitlist, profile fields, sms, facebook, email-channel); hub page links to all sub-pages |
 | Marketing Queue     | `/marketing/queue`                  | Content approval queue with card-based review, filter tabs, stats strip. **Internal only — no sidebar nav, not shown to customers**                                                                            |
 | Marketing Agents    | `/marketing/agents`                 | 12 marketing agents dashboard with tab filters (Content/Distribution/Analytics), toggle, Run Now. **Internal only — not in sidebar, agents filtered from customer API**                                        |
 | Marketing Sequences | `/marketing/sequences`              | Email sequence management with stats, toggle, expand timeline. **Internal only — no sidebar nav**                                                                                                              |
@@ -566,25 +567,30 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 | Pricing      | `/pricing`     | Detailed plan comparison                                    |
 | FAQ          | `/faq`         | Frequently asked questions                                  |
 
-### Console Pages (Super Admin Only)
+### Console Pages (Super Admin Only — `apps/admin/` at `admin.businesscommandcentre.com`)
 
-| Page               | Route                            | Description                                                                                                                                                                                    |
-| ------------------ | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Console Overview   | `/console`                       | Platform KPIs, billing breakdown, support cases, security summary, audit feed                                                                                                                  |
-| Business Directory | `/console/businesses`            | Search, filter by plan/billing/health, paginated table                                                                                                                                         |
-| Business 360       | `/console/businesses/[id]`       | Summary, People, and Billing tabs (subscription info, plan change, credits, cancel/reactivate, invoices)                                                                                       |
-| Security & Audit   | `/console/audit`                 | Audit log explorer with search, action type filter, paginated table                                                                                                                            |
-| System Health      | `/console/health`                | Overall status, 5 service checks, business health distribution                                                                                                                                 |
-| Support Cases      | `/console/support`               | Full CRUD with search, status/priority filters, case detail drawer, notes                                                                                                                      |
-| Billing Dashboard  | `/console/billing`               | Subscription stats, plan distribution, MRR, churn rate, past-due businesses                                                                                                                    |
-| Past-Due           | `/console/billing/past-due`      | Filtered list of past-due businesses with quick actions                                                                                                                                        |
-| Subscriptions      | `/console/billing/subscriptions` | All subscriptions with search, plan/status filters, sortable table                                                                                                                             |
-| Pack Registry      | `/console/packs`                 | Vertical pack registry with search, version history, install counts (Phase 4)                                                                                                                  |
-| Pack Detail        | `/console/packs/[slug]`          | Pack detail with version timeline, installed businesses, skills list (Phase 4)                                                                                                                 |
-| Skills Catalog     | `/console/packs/skills`          | Skills catalog with per-pack filtering (Phase 4)                                                                                                                                               |
-| AI & Agents        | `/console/agents`                | 3-tab interface: Performance (KPIs, agent breakdown, funnel, failures, abnormal tenants), Tenant Controls (search, pause/resume, agent config), Platform Defaults (governance table) (Phase 5) |
-| Messaging Ops      | `/console/messaging`             | 2-tab interface: Dashboard (KPIs, webhook health, failure reasons, impacted tenants), Tenant Status (WhatsApp config, delivery rate, expandable fix checklist) (Phase 5)                       |
-| Platform Settings  | `/console/settings`              | 4-category settings (Security, Notifications, Regional, Platform) with bulk save, maintenance mode confirmation modal (Phase 6)                                                                |
+| Page                | Route                        | Description                                                                                                    |
+| ------------------- | ---------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Overview            | `/`                          | Platform KPIs (businesses, bookings, staff, agents, support, security), billing breakdown, audit feed          |
+| Business Directory  | `/businesses`                | Search, filter by plan/billing/health, paginated table                                                         |
+| Business 360        | `/businesses/[id]`           | Summary, People, and Billing tabs (subscription info, plan change, credits, cancel/reactivate, invoices)       |
+| Security & Audit    | `/audit`                     | Audit log explorer with search, action type filter, paginated table                                            |
+| System Health       | `/health`                    | Overall status, 5 service checks, business health distribution                                                 |
+| Support Cases       | `/support`                   | Full CRUD with search, status/priority filters, case detail drawer, notes                                      |
+| Billing Dashboard   | `/billing`                   | MRR, churn rate, plan distribution, past-due businesses                                                        |
+| Past-Due            | `/billing/past-due`          | Filtered list of past-due businesses with quick actions                                                        |
+| Subscriptions       | `/billing/subscriptions`     | All subscriptions with search, plan/status filters, sortable table                                             |
+| Pack Registry       | `/packs`                     | Vertical pack registry with search, version history, install counts                                            |
+| Pack Detail         | `/packs/[slug]`              | Pack detail with version timeline, installed businesses, skills list                                           |
+| Skills Catalog      | `/packs/skills`              | Skills catalog with per-pack filtering                                                                         |
+| AI & Agents         | `/agents`                    | Agent performance dashboard, tenant controls, platform defaults                                                |
+| Messaging Ops       | `/messaging`                 | Delivery rates, webhook health, failure analysis, per-tenant status                                            |
+| Platform Settings   | `/settings`                  | 4-category settings (Security, Notifications, Regional, Platform) with bulk save                               |
+| Marketing Landing   | `/marketing`                 | Marketing autonomy settings, agent overview                                                                    |
+| Content Queue       | `/marketing/queue`           | Content approval workflow (approve/reject/schedule drafts)                                                     |
+| Marketing Agents    | `/marketing/agents`          | 12 marketing agent dashboard (status, runs, performance)                                                       |
+| Email Sequences     | `/marketing/sequences`       | Email sequence management                                                                                      |
+| Rejection Analytics | `/marketing/rejection-analytics` | Content rejection patterns and analytics                                                                   |
 
 ### Key Components
 
@@ -814,7 +820,7 @@ Key groups (full list in `.env.example`):
 | Item                           | Description                                                                               |
 | ------------------------------ | ----------------------------------------------------------------------------------------- |
 | **Benchmarking & Coaching**    | Anonymized peer benchmarks by vertical + region, "what top performers do" recommendations |
-| **Omnichannel Inbox**          | IG DM, Messenger, web chat — unified timeline and automations                             |
+| **Omnichannel Inbox**          | WhatsApp, Instagram DM, Facebook Messenger, SMS, Email — ALL COMPLETE. Only Web Chat remains pending (Phase 4) |
 | **Vertical Packs Marketplace** | Partner portal, revenue share, certification program                                      |
 | **Customer Mini-Portal**       | Booking management, receipts, memberships, referrals                                      |
 
@@ -886,7 +892,7 @@ Key groups (full list in `.env.example`):
 ### Phase C: Growth & Self-Service — ALL COMPLETE
 
 - **D5: Bookings Search, Sort & Filters** — COMPLETE. Server-side sorting on 6 fields (startTime, createdAt, customerName, serviceName, status, amount) with nested Prisma orderBy for relations. BookingQueryDto with @IsIn validators. Frontend: status chip bar (7 chips), inline staff filter dropdown, sortable column headers with server-side sort, Amount column, print button + print styles, Last 30 Days date preset. 20 new tests (8 service + 2 controller + 10 web).
-- **C5: Settings Consolidation** — COMPLETE. Settings hub promoted to primary position on settings page (above business info). 7 categorized cards (Account & Security, Operations, Communication, AI & Automation, Growth, Billing, Appearance) with role-based filtering. All 13 sub-pages already had back navigation. Page widened to max-w-4xl for grid. 22 new tests (14 config + 8 hub).
+- **C5: Settings Consolidation** — COMPLETE. Settings hub promoted to primary position on settings page (above business info). 7 categorized cards (Account & Security, Operations, Communication, AI & Automation, Growth, Billing, Appearance) with role-based filtering. All sub-pages already had back navigation (now 16 sub-pages with sms, facebook, email-channel additions). Page widened to max-w-4xl for grid. 22 new tests (14 config + 8 hub).
 - **C1: Testimonial Collection System** — COMPLETE. New Prisma model `Testimonial` (58th model) with status (PENDING/APPROVED/REJECTED/FEATURED), source (MANUAL/REQUESTED/IMPORTED). API module: CRUD + approve/reject/feature (max 6 with auto-demotion), sendRequest (NOTIFICATIONS queue email), findPublic (no auth, by slug). Frontend: `/testimonials` admin page with status tabs, grid cards, request modal with customer search + email preview. Reusable `TestimonialCard` component with star ratings, quote marks, action buttons, showActions prop. Public booking page `book/[slug]` "What Our Clients Say" section (up to 3 featured). Added to admin tools nav. 49 new tests (27 API + 22 web).
 - **C4: Annual Plan & Discount Engine** — COMPLETE. Added switchToAnnual/switchToMonthly (Stripe proration), calculateAnnualSavings (20% discount per plan), getCurrentBillingInterval to billing service. 4 new controller endpoints (switch-annual, switch-monthly, annual-savings, billing-interval). Frontend: savings banner for monthly subscribers, annual savings card for annual subscribers, switch confirmation modal with proration warning. BillingLifecycleService with @Cron daily jobs: annual renewal reminders (30 days before) and account anniversary celebration emails. 21 new tests (15 API + 6 web).
 - **C3: Upgrade Campaign System** — COMPLETE. `plan-limits.ts` with per-tier limits (FREE/STARTER/PROFESSIONAL/ENTERPRISE) for bookings, staff, automations, sequences, services. `getPlanLimits()`, `getUpgradePlan()`, `isNearLimit()`, `isAtLimit()`, `getUsagePercent()`. `upgrade-nudge.tsx` (lavender at 80%, amber at limit, session-dismissable). `feature-discovery.tsx` (one-time localStorage tips, sage bg, Lightbulb icon). Nudges on bookings/staff/automations/services pages. Discovery tips on bookings/inbox/dashboard. Extended email-sequences: `checkUpgradeSignals()` weekly cron for 80%+ usage. 38 new tests (21 plan-limits + 8 nudge + 5 discovery + 4 email-sequences).
@@ -1120,6 +1126,14 @@ Key groups (full list in `.env.example`):
 - Web components: PractitionerProfile (staff card with services, certs, weekly availability), ClassSchedule (weekly timetable with enrollment counts + Book buttons), CertificationManager (add/edit/remove with expiry tracking)
 - Wellness component barrel export updated
 - 48 new tests (25 API + 23 web)
+
+### Omnichannel Messaging — Phases 0-3 — COMPLETE
+
+- **Phase 0: Foundation** — Channel enum (WHATSAPP/INSTAGRAM/FACEBOOK/SMS/EMAIL/WEB_CHAT), Message.channel denormalized field, Business.channelSettings JSON, CustomerIdentityService (cross-channel customer resolution by phone/email/facebookPsid/instagramUserId), CircuitBreakerService (CLOSED→OPEN→HALF_OPEN with Redis backing), DeadLetterQueueService (Redis hash with 7-day TTL), CHANNEL_STYLES design tokens, ChannelBadge/ReplyChannelSwitcher/ChannelsOnFile/ChannelFilterBar inbox components
+- **Phase 1: Instagram DM** — Instagram messaging provider, webhook controller with HMAC validation, story reply/ad referral support, 24h messaging window tracking, seed-instagram.ts demo data
+- **Phase 2: SMS (Twilio)** — Full two-way SMS + MMS via Twilio, signature validation, segment-based billing tracking in MessageUsage model, /settings/sms config page, Location.smsConfig JSON
+- **Phase 3: Facebook Messenger + Email Channel** — Facebook Messenger via Meta Graph API with webhook verification + HMAC signature validation, /settings/facebook config page, Location.facebookConfig JSON. Email as messaging channel (Resend/SendGrid), /settings/email-channel config page, Location.emailConfig JSON. UsageService for per-channel billing rates. seed-omnichannel.ts for multi-channel demo data
+- **Remaining:** Web Chat (Phase 4) — not yet started
 
 ### Do Not Build (Yet)
 

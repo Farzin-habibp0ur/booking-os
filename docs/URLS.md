@@ -120,9 +120,12 @@ railway up --service <name> --detach
 | **Google Calendar** | Calendar OAuth integration | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | [console.cloud.google.com](https://console.cloud.google.com) |
 | **Microsoft Outlook** | Outlook Calendar OAuth | `MICROSOFT_CLIENT_ID`, `MICROSOFT_CLIENT_SECRET` | [portal.azure.com](https://portal.azure.com) |
 | **Sentry** | Error tracking (API + Web + Admin) | `SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_DSN_ADMIN` | [sentry.io](https://sentry.io) |
-| **Resend** | Transactional email | `RESEND_API_KEY` | [resend.com](https://resend.com) |
+| **Resend** | Transactional email + email channel messaging | `RESEND_API_KEY` | [resend.com](https://resend.com) |
+| **Twilio** | SMS/MMS messaging | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER` | [twilio.com/console](https://twilio.com/console) |
+| **Instagram DM** | Instagram messaging | `INSTAGRAM_APP_ID`, `INSTAGRAM_APP_SECRET` | [developers.facebook.com](https://developers.facebook.com) |
+| **Facebook Messenger** | Messenger messaging | `FACEBOOK_VERIFY_TOKEN`, `FACEBOOK_APP_SECRET` | [developers.facebook.com](https://developers.facebook.com) |
 
-**Messaging provider toggle:** Set `MESSAGING_PROVIDER` to `mock` (default) or `whatsapp-cloud` for production.
+**Messaging provider toggle:** Set `MESSAGING_PROVIDER` to `mock` (default) or `whatsapp-cloud` for production. SMS, Facebook, and Email have separate per-channel configuration via Location settings.
 
 ---
 

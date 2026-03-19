@@ -6,7 +6,7 @@ Use this document to brainstorm user experience improvements for Booking OS, a m
 
 ## What Is Booking OS?
 
-Booking OS is a WhatsApp-first booking and business management platform built for service businesses. It currently supports two verticals:
+Booking OS is an omnichannel booking and business management platform built for service businesses. It currently supports two verticals:
 
 - **Aesthetic clinics** (consult → treatment → aftercare workflows, medical intake, before/after tracking)
 - **Car dealerships** (service kanban board, quote approval, resource/bay scheduling)
@@ -22,7 +22,7 @@ The platform is designed to be extended to any service vertical via a "Vertical 
 - **Frontend:** Next.js 15 (React 19), Tailwind CSS, standalone deployment
 - **Backend:** NestJS REST API + Socket.IO WebSocket
 - **Database:** PostgreSQL 16 with Prisma ORM
-- **Messaging:** WhatsApp Cloud API (with mock provider for development)
+- **Messaging:** WhatsApp Cloud, Instagram DM, Facebook Messenger, SMS (Twilio), Email (Resend/SendGrid) — 6-channel omnichannel
 - **AI:** Claude API for intent detection, reply suggestions, conversation summaries
 - **Payments:** Stripe (subscriptions + deposits)
 - **Calendar:** Google Calendar + Outlook OAuth sync, iCal feed
@@ -53,8 +53,11 @@ Minimalist premium aesthetic (Apple Health meets Stripe). Lots of whitespace, su
                                     │
                           ┌─────────┼──────────┐
                           ▼         ▼          ▼
-                      WhatsApp    Stripe     Claude AI
-                      Cloud API   Payments   (Anthropic)
+                      Messaging  Stripe     Claude AI
+                      Channels   Payments   (Anthropic)
+                      (WhatsApp, Instagram,
+                       FB Messenger, SMS,
+                       Email, Web Chat)
 ```
 
 ---
@@ -73,7 +76,7 @@ Minimalist premium aesthetic (Apple Health meets Stripe). Lots of whitespace, su
 
 ## Current Feature Inventory
 
-### What Users CAN Do Today (296 capabilities)
+### What Users CAN Do Today (303 capabilities)
 
 #### Authentication & Account (12)
 - Sign up with business name, owner name, email, password (creates business + admin)
@@ -253,7 +256,7 @@ Minimalist premium aesthetic (Apple Health meets Stripe). Lots of whitespace, su
 
 ---
 
-### What Users CANNOT Do Today (199 gaps)
+### What Users CANNOT Do Today (197 gaps)
 
 Organized by theme for brainstorming.
 
@@ -292,8 +295,8 @@ Organized by theme for brainstorming.
 - No typing indicators
 - Cannot pin or archive conversations
 - No presence indicators (who's viewing what)
-- No email as a messaging channel (WhatsApp only)
-- No SMS channel
+- ~~No email as a messaging channel (WhatsApp only)~~ — **DONE** (Omnichannel Phase 3)
+- ~~No SMS channel~~ — **DONE** (Omnichannel Phase 1)
 
 #### Missing Booking Features
 - Cannot add multiple services to one booking
@@ -406,7 +409,7 @@ Organized by theme for brainstorming.
 - **Security remediation**: 22 fixes across 5 batches (CSP, tenant isolation, input validation, state machine, token blacklisting)
 
 ### Not Yet Started
-- **Phase 4**: Benchmarking, omnichannel inbox (IG/Messenger/web chat), vertical packs marketplace, customer mini-portal
+- **Phase 4**: Benchmarking, Web Chat channel, vertical packs marketplace, customer mini-portal
 
 ### North Star Metric
 "Completed booked revenue per active business per month"
@@ -422,13 +425,13 @@ Organized by theme for brainstorming.
 
 Use these prompts to generate ideas. Feel free to approach from any angle.
 
-1. **Quick wins**: Which of the 215 "cannot do" gaps would deliver the most user value with the least engineering effort? Rank the top 10.
+1. **Quick wins**: Which of the 197 "cannot do" gaps would deliver the most user value with the least engineering effort? Rank the top 10.
 
 2. **Retention drivers**: What UX improvements would make a business owner log in daily? What creates habit loops?
 
 3. **Conversion blockers**: A prospect is evaluating Booking OS. What missing features would cause them to choose a competitor? What's table stakes?
 
-4. **Customer journey**: Map the end-customer journey from receiving a WhatsApp message → booking → arriving → follow-up. Where are the friction points?
+4. **Customer journey**: Map the end-customer journey from receiving a message (WhatsApp, SMS, Email, etc.) → booking → arriving → follow-up. Where are the friction points?
 
 5. **Staff workflow**: A receptionist starts their day. Walk through their ideal morning workflow. Where does the current UX slow them down?
 
@@ -449,6 +452,6 @@ Use these prompts to generate ideas. Feel free to approach from any angle.
 - **No external component libraries.** Strictly Tailwind CSS utility classes. No MUI, shadcn, etc.
 - **Every change must include tests.** No code ships without associated test coverage.
 - **Minimalist premium design.** Don't over-clutter. Whitespace is intentional.
-- **WhatsApp-first messaging.** Email and SMS are future channels, not current.
+- **Omnichannel messaging.** 5 channels fully implemented (WhatsApp, Instagram, Facebook, SMS, Email). Web Chat pending.
 - **Multi-tenant.** All features must respect business isolation.
 - **Vertical-agnostic core.** New features should work across all verticals unless explicitly vertical-specific.

@@ -1,6 +1,6 @@
 # Booking OS — Complete User Stories
 
-> **Last updated:** February 20, 2026 (Platform Console Phases 1-6 COMPLETE — Console Shell, Business Directory, Business 360, View-as, Audit, Health, Support, Billing & Revenue Operations, Packs & Skills, AI & Agents Governance, Messaging Ops, Platform Settings)
+> **Last updated:** March 19, 2026 (Omnichannel Phases 0-3 — SMS, Facebook Messenger, Email channels)
 
 Exhaustive inventory of everything each user persona can and cannot do on the platform. Organized by persona, then by feature area. Each story marked with current status.
 
@@ -328,6 +328,10 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 | 7.35a | See delivery/read receipts on outbound messages (sent → delivered → read)      | All staff | DeliveryStatus component with check icons (UX Upgrade Pack R1) |
 | 7.36a | See which other staff are viewing the same conversation (collision detection)  | All staff | Lavender presence pills in thread header (UX Upgrade Pack R1) |
 | 7.37a | Initiate outbound conversation from customer profile ("Send Message" button)   | All staff | Creates conversation + sends directly (UX Upgrade Pack R1) |
+| 7.38a | Filter conversations by channel (WhatsApp, Instagram, Facebook, SMS, Email, Web Chat) | All staff | ChannelFilterBar with 7 tabs (ALL + 6 channels) |
+| 7.39a | View channel badge on each conversation showing which channel it came from     | All staff | ChannelBadge component with colored icon+label |
+| 7.40a | Switch reply channel when customer has multiple channels on file               | All staff | ReplyChannelSwitcher dropdown in compose area |
+| 7.41a | View all channels available for a customer in the sidebar                      | All staff | ChannelsOnFile component in customer sidebar |
 
 ### What Users CANNOT Do
 
@@ -549,6 +553,9 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 | 13.23a | Enable/disable background AI agents                                              | Admin     | 5 agents: Waitlist, Retention, Data Hygiene, Scheduling Optimizer, Quote Follow-up                                         |
 | 13.24a | Set autonomy level per agent (Suggest Only / Require Approval / Fully Automatic) | Admin     | —                                                                                                                          |
 | 13.25a | Navigate to AI Autonomy and Agent Skills from Settings hub                       | Admin     | Cards after AI Settings                                                                                                    |
+| 13.26a | Configure SMS messaging via Twilio (/settings/sms) — account credentials, A2P 10DLC compliance, per-location numbers, test send | Admin | Twilio integration settings page |
+| 13.27a | Configure Facebook Messenger (/settings/facebook) — page connection, per-location pages, ice breakers, messaging window info | Admin | Facebook Messenger integration settings page |
+| 13.28a | Configure Email channel (/settings/email-channel) — Resend/SendGrid provider, per-location inbound addresses, DNS verification, signature editor | Admin | Email channel settings page |
 
 ### What Users CANNOT Do
 
@@ -563,7 +570,7 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 | 13.28 | Set up webhook integrations to external systems    | Not user-facing                    |
 | 13.29 | Export all business data                           | Not implemented                    |
 | 13.30 | Set currency (no setting post-setup)               | Only during setup wizard           |
-| 13.31 | Configure SMS as a messaging channel               | WhatsApp only                      |
+| 13.31 | ~~Configure SMS as a messaging channel~~           | **DONE** — SMS via Twilio at /settings/sms (Omnichannel Phase 1) |
 | 13.32 | Set timezone per location                          | One timezone per business          |
 
 ---
@@ -582,7 +589,7 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 | 14.6  | Create resources at a location (name, type, metadata) | Admin     | Equipment, bays, etc.           |
 | 14.7  | Edit a resource                                       | Admin     | —                               |
 | 14.8  | Deactivate a resource (soft delete)                   | Admin     | —                               |
-| 14.9  | Configure WhatsApp routing per location               | Admin     | phoneNumberId in whatsappConfig |
+| 14.9  | Configure per-location channel routing (WhatsApp, Instagram, Facebook, SMS, Email, Web Chat) | Admin | Per-channel config JSON fields on Location model |
 | 14.10 | View all locations and their resources                | All staff | —                               |
 | 14.11 | Filter bookings/calendar by location                  | All staff | —                               |
 | 14.12 | Filter conversations by location                      | All staff | —                               |
@@ -926,13 +933,13 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 | Bookings          | 24      | 15        |
 | Calendar          | 15      | 7         |
 | Customers         | 21      | 7         |
-| Inbox             | 37      | 11        |
+| Inbox             | 41      | 11        |
 | Services          | 9       | 10        |
 | Staff             | 11      | 11        |
 | Waitlist          | 6       | 6         |
 | Campaigns         | 7       | 9         |
 | Automations       | 17      | 9         |
-| Settings          | 25      | 11        |
+| Settings          | 28      | 11        |
 | Locations         | 12      | 9         |
 | Reports           | 9       | 9         |
 | ROI               | 5       | 4         |
@@ -943,6 +950,6 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 | Billing           | 4       | 7         |
 | Global            | 17      | 7         |
 | Platform Console  | 38      | 8         |
-| **Total**         | **386** | **196**   |
+| **Total**         | **393** | **196**   |
 
-> **Platform Console Impact**: +38 capabilities across all 6 phases (Phases 1-3: 18, Phase 4: 3, Phase 5: 13, Phase 6: 4). Total shift from 348/188 to 386/196.
+> **Omnichannel Impact**: +7 capabilities (4 inbox channel features, 3 settings channel pages). Total shift from 386/196 to 393/196.
