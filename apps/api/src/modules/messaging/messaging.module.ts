@@ -4,6 +4,8 @@ import { WebhookController } from './webhook.controller';
 import { SmsController } from './sms.controller';
 import { FacebookController } from './facebook.controller';
 import { EmailChannelController } from './email-channel.controller';
+import { ChatWidgetController } from './chat-widget.controller';
+import { WebChatController } from './web-chat.controller';
 import { CustomerModule } from '../customer/customer.module';
 import { ConversationModule } from '../conversation/conversation.module';
 import { LocationModule } from '../location/location.module';
@@ -21,7 +23,7 @@ import { CustomerIdentityModule } from '../customer-identity/customer-identity.m
     forwardRef(() => MessageModule),
     forwardRef(() => AiModule),
   ],
-  controllers: [WebhookController, SmsController, FacebookController, EmailChannelController],
+  controllers: [WebhookController, SmsController, FacebookController, EmailChannelController, ChatWidgetController, WebChatController],
   providers: [MessagingService],
   exports: [MessagingService],
 })

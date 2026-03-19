@@ -17,6 +17,7 @@ import {
   Phone,
   Facebook,
   Mail,
+  Globe,
 } from 'lucide-react';
 
 export interface SettingsCategory {
@@ -103,6 +104,15 @@ export const SETTINGS_CATEGORIES: SettingsCategory[] = [
     icon: Mail,
     accent: 'sage',
     pages: ['email-channel'],
+    roles: ['ADMIN'],
+  },
+  {
+    key: 'web-chat',
+    label: 'Live Chat',
+    description: 'Add a chat widget to your website for real-time conversations',
+    icon: Globe,
+    accent: 'lavender',
+    pages: ['web-chat'],
     roles: ['ADMIN'],
   },
   {
