@@ -125,7 +125,7 @@ railway up --service <name> --detach
 | **Instagram DM** | Instagram messaging | `INSTAGRAM_APP_ID`, `INSTAGRAM_APP_SECRET` | [developers.facebook.com](https://developers.facebook.com) |
 | **Facebook Messenger** | Messenger messaging | `FACEBOOK_VERIFY_TOKEN`, `FACEBOOK_APP_SECRET` | [developers.facebook.com](https://developers.facebook.com) |
 
-**Messaging provider toggle:** Set `MESSAGING_PROVIDER` to `mock` (default) or `whatsapp-cloud` for production. SMS, Facebook, and Email have separate per-channel configuration via Location settings.
+**Messaging provider toggle:** Set `MESSAGING_PROVIDER` to `mock` (default) or `whatsapp-cloud` for production. SMS, Facebook, and Email have separate per-channel configuration via Location settings, and Web Chat uses the built-in Socket.IO `/web-chat` namespace (no external provider needed).
 
 ---
 

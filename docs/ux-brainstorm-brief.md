@@ -22,7 +22,7 @@ The platform is designed to be extended to any service vertical via a "Vertical 
 - **Frontend:** Next.js 15 (React 19), Tailwind CSS, standalone deployment
 - **Backend:** NestJS REST API + Socket.IO WebSocket
 - **Database:** PostgreSQL 16 with Prisma ORM
-- **Messaging:** WhatsApp Cloud, Instagram DM, Facebook Messenger, SMS (Twilio), Email (Resend/SendGrid) — 6-channel omnichannel
+- **Messaging:** WhatsApp Cloud, Instagram DM, Facebook Messenger, SMS (Twilio), Email (Resend/SendGrid), Web Chat (Socket.IO widget) — 6-channel omnichannel
 - **AI:** Claude API for intent detection, reply suggestions, conversation summaries
 - **Payments:** Stripe (subscriptions + deposits)
 - **Calendar:** Google Calendar + Outlook OAuth sync, iCal feed
@@ -409,7 +409,7 @@ Organized by theme for brainstorming.
 - **Security remediation**: 22 fixes across 5 batches (CSP, tenant isolation, input validation, state machine, token blacklisting)
 
 ### Not Yet Started
-- **Phase 4**: Benchmarking, Web Chat channel, vertical packs marketplace, customer mini-portal
+- **Phase 4**: Benchmarking, vertical packs marketplace, customer mini-portal
 
 ### North Star Metric
 "Completed booked revenue per active business per month"
@@ -452,6 +452,6 @@ Use these prompts to generate ideas. Feel free to approach from any angle.
 - **No external component libraries.** Strictly Tailwind CSS utility classes. No MUI, shadcn, etc.
 - **Every change must include tests.** No code ships without associated test coverage.
 - **Minimalist premium design.** Don't over-clutter. Whitespace is intentional.
-- **Omnichannel messaging.** 5 channels fully implemented (WhatsApp, Instagram, Facebook, SMS, Email). Web Chat pending.
+- **Omnichannel messaging.** 6 channels fully implemented (WhatsApp, Instagram, Facebook, SMS, Email, Web Chat).
 - **Multi-tenant.** All features must respect business isolation.
 - **Vertical-agnostic core.** New features should work across all verticals unless explicitly vertical-specific.

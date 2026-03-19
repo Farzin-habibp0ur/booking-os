@@ -1,6 +1,6 @@
 # Booking OS — Complete User Stories
 
-> **Last updated:** March 19, 2026 (Omnichannel Phases 0-3 — SMS, Facebook Messenger, Email channels)
+> **Last updated:** March 19, 2026 (Omnichannel Phases 0-5 COMPLETE — WhatsApp, Instagram, Facebook, SMS, Email, Web Chat)
 
 Exhaustive inventory of everything each user persona can and cannot do on the platform. Organized by persona, then by feature area. Each story marked with current status.
 
@@ -332,6 +332,7 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 | 7.39a | View channel badge on each conversation showing which channel it came from     | All staff | ChannelBadge component with colored icon+label |
 | 7.40a | Switch reply channel when customer has multiple channels on file               | All staff | ReplyChannelSwitcher dropdown in compose area |
 | 7.41a | View all channels available for a customer in the sidebar                      | All staff | ChannelsOnFile component in customer sidebar |
+| 7.42a | Use live chat widget on website to communicate with visitors in real-time      | All staff | Web Chat channel via Socket.IO `/web-chat` namespace |
 
 ### What Users CANNOT Do
 
@@ -556,6 +557,8 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 | 13.26a | Configure SMS messaging via Twilio (/settings/sms) — account credentials, A2P 10DLC compliance, per-location numbers, test send | Admin | Twilio integration settings page |
 | 13.27a | Configure Facebook Messenger (/settings/facebook) — page connection, per-location pages, ice breakers, messaging window info | Admin | Facebook Messenger integration settings page |
 | 13.28a | Configure Email channel (/settings/email-channel) — Resend/SendGrid provider, per-location inbound addresses, DNS verification, signature editor | Admin | Email channel settings page |
+| 13.29a | Configure Web Chat widget appearance, pre-chat form, embed snippet (/settings/web-chat) | Admin | Web Chat widget settings page |
+| 13.30a | View channel settings hub with all 6 channel statuses (/settings/channels)   | Admin | Unified channel status overview |
 
 ### What Users CANNOT Do
 
@@ -571,6 +574,7 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 | 13.29 | Export all business data                           | Not implemented                    |
 | 13.30 | Set currency (no setting post-setup)               | Only during setup wizard           |
 | 13.31 | ~~Configure SMS as a messaging channel~~           | **DONE** — SMS via Twilio at /settings/sms (Omnichannel Phase 1) |
+| 13.33 | ~~No Web Chat channel~~                            | **DONE** — Web Chat via Socket.IO widget (Omnichannel Phases 4-5) |
 | 13.32 | Set timezone per location                          | One timezone per business          |
 
 ---
@@ -953,3 +957,5 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 | **Total**         | **393** | **196**   |
 
 > **Omnichannel Impact**: +7 capabilities (4 inbox channel features, 3 settings channel pages). Total shift from 386/196 to 393/196.
+>
+> **Web Chat Impact (Phases 4-5)**: +4 capabilities (1 inbox live chat, 2 settings pages, 1 gap closed). Total shift from 393/196 to 397/196.

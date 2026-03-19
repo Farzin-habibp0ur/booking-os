@@ -57,6 +57,7 @@ booking-os/
 │   │   ├── src/seed-console-showcase.ts # Console demo data
 │   │   └── src/seed-content.ts # Content pillar seeding (12 blog posts → ContentDraft)
 │   ├── messaging-provider/     # WhatsApp Cloud, Instagram DM, Facebook Messenger, Email (Resend/SendGrid), SMS (Twilio) provider abstraction
+│   ├── web-chat-widget/        # Embeddable live chat widget (shadow DOM, Socket.IO, esbuild IIFE bundle)
 │   └── shared/                 # Shared types, DTOs, enums, profile field definitions
 ├── agents/                     # 15 internal growth engine agent prompts (research → ops)
 ├── system/                     # Growth engine config (launch, gates, budget, testing, escalation, MCP fallback)
@@ -239,6 +240,7 @@ Channel:            WHATSAPP, INSTAGRAM, FACEBOOK, SMS, EMAIL, WEB_CHAT
 ### Real-Time (Socket.io)
 
 Key events: `message:new`, `conversation:updated`, `ai:suggestion`, `ai:auto-replied`, `ai:transfer-to-human`, `booking:updated`, `ai:booking-state`, `action-card:created`, `action-card:updated`, `message:status`, `viewing:start`/`viewing:stop`, `presence:update`
+- WebChat gateway on `/web-chat` namespace — visitor sessions, pre-chat forms, real-time messaging bridge to staff inbox
 
 ### Omnichannel Messaging Infrastructure
 

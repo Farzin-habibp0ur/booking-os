@@ -2,7 +2,7 @@
 
 > **Purpose:** This document gives full context on the Booking OS platform — what it is, what's been built, how it's structured, and what's left to build. Share this with an AI assistant or new developer to get productive immediately.
 >
-> **Last updated:** March 19, 2026 (All phases COMPLETE — A through E + Phases 1-4 & 6 polish + QA Fixes + Sprints 1-4 + Prompts 4A-4C + Prompt 1C + Prompt 1A + Prompt 1B + Prompt 1D + Prompt 2A + Prompt 2B + Prompt 2C + Prompt 3A + Prompt 3C + QA Bug Fix Sprint (10 bugs) + Growth Engine Agents (15 prompts) + Marketing Command Center Phases 1-6 (14 prompts) COMPLETE + Admin Console Extraction (4 phases — scaffold, migrate, remove from web, infrastructure) + Internal/External Separation (3 phases — marketing tools removed from customer app, migrated to admin app, API endpoints gated behind SUPER_ADMIN) + Launch QA fixes (SUPER_ADMIN guards, AutonomyConfig scope constraint, test timeouts) + Omnichannel Phases 0-3 (6-channel messaging: WhatsApp, Instagram, Facebook, SMS, Email + Web Chat pending) — 92 Prisma models, 59 migrations)
+> **Last updated:** March 19, 2026 (All phases COMPLETE — A through E + Phases 1-4 & 6 polish + QA Fixes + Sprints 1-4 + Prompts 4A-4C + Prompt 1C + Prompt 1A + Prompt 1B + Prompt 1D + Prompt 2A + Prompt 2B + Prompt 2C + Prompt 3A + Prompt 3C + QA Bug Fix Sprint (10 bugs) + Growth Engine Agents (15 prompts) + Marketing Command Center Phases 1-6 (14 prompts) COMPLETE + Admin Console Extraction (4 phases — scaffold, migrate, remove from web, infrastructure) + Internal/External Separation (3 phases — marketing tools removed from customer app, migrated to admin app, API endpoints gated behind SUPER_ADMIN) + Launch QA fixes (SUPER_ADMIN guards, AutonomyConfig scope constraint, test timeouts) + Omnichannel Phases 0-5 COMPLETE — 6 channels fully implemented (WhatsApp, Instagram, Facebook, SMS, Email, Web Chat) — 92 Prisma models, 59 migrations)
 
 ---
 
@@ -32,7 +32,7 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 ### Core Capabilities (All Built & Working)
 
 - **Appointment scheduling** — Calendar views (day/week/month), conflict detection, recurring bookings, automated reminders, force-book with reason, drag-and-drop reschedule with recommended slots, calendar command center (sidebar summary, keyboard shortcuts, booking popover)
-- **Omnichannel messaging inbox** — 6-channel support (WhatsApp, Instagram DM, Facebook Messenger, Email, SMS, Web Chat [pending]), real-time via Socket.io, AI auto-replies, conversation management (assign, snooze, tag, close), media attachments (images/docs/audio), delivery/read receipts, presence indicators, scheduled messages (BullMQ delayed jobs with cancel), bulk actions (close/assign/tag/mark-read up to 50 at once), channel badge + reply channel switcher + channel filter bar
+- **Omnichannel messaging inbox** — 6-channel support (WhatsApp, Instagram DM, Facebook Messenger, Email, SMS, Web Chat [fully implemented]), real-time via Socket.io, AI auto-replies, conversation management (assign, snooze, tag, close), media attachments (images/docs/audio), delivery/read receipts, presence indicators, scheduled messages (BullMQ delayed jobs with cancel), bulk actions (close/assign/tag/mark-read up to 50 at once), channel badge + reply channel switcher + channel filter bar
 - **AI booking assistant** — Guides customers through booking/cancellation/rescheduling via chat (powered by Claude API)
 - **AI features** — Intent detection, reply suggestions, conversation summaries, customer profile collection, per-customer AI chat
 - **Customer management** — Profiles with custom fields, tags, CSV import, AI-powered profile extraction from conversations
@@ -95,7 +95,7 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 
 ### Phase 3: "Platformization + Second Vertical" — COMPLETE (11/11 batches)
 
-- **Multi-location support** — Locations with staff assignments, per-location channel configs (WhatsApp, Instagram, Facebook, SMS, Email), booking/conversation filtering
+- **Multi-location support** — Locations with staff assignments, per-location channel configs (WhatsApp, Instagram, Facebook, SMS, Email, Web Chat), booking/conversation filtering
 - **Resource management** — Equipment/bays per location, resource-level booking
 - **Dealership vertical** — Service kanban board, quote system, vehicle-specific customer fields
 - **Pack builder** — Internal tooling for pack definitions with versioning, publish flow, slug management
@@ -273,6 +273,7 @@ booking-os/
 │   │   ├── src/seed-wellness.ts # Standalone wellness seed (also called from seed.ts)
 │   │   └── src/seed-content.ts # Content pillar seeding (12 blog posts → ContentDraft)
 │   ├── messaging-provider/     # 6-channel messaging provider abstraction (WhatsApp, Instagram, Facebook, Email, SMS)
+│   ├── web-chat-widget/        # Embeddable live chat widget (shadow DOM, Socket.IO, esbuild IIFE bundle)
 │   └── shared/                 # Shared types, DTOs, enums, profile field definitions
 ├── docs/
 │   ├── PROJECT_CONTEXT.md      # This file
@@ -820,7 +821,7 @@ Key groups (full list in `.env.example`):
 | Item                           | Description                                                                               |
 | ------------------------------ | ----------------------------------------------------------------------------------------- |
 | **Benchmarking & Coaching**    | Anonymized peer benchmarks by vertical + region, "what top performers do" recommendations |
-| **Omnichannel Inbox**          | WhatsApp, Instagram DM, Facebook Messenger, SMS, Email — ALL COMPLETE. Only Web Chat remains pending (Phase 4) |
+| **Omnichannel Inbox**          | WhatsApp, Instagram DM, Facebook Messenger, SMS, Email, Web Chat — ALL 6 CHANNELS COMPLETE |
 | **Vertical Packs Marketplace** | Partner portal, revenue share, certification program                                      |
 | **Customer Mini-Portal**       | Booking management, receipts, memberships, referrals                                      |
 
@@ -1127,13 +1128,13 @@ Key groups (full list in `.env.example`):
 - Wellness component barrel export updated
 - 48 new tests (25 API + 23 web)
 
-### Omnichannel Messaging — Phases 0-3 — COMPLETE
+### Omnichannel Messaging — Phases 0-5 — COMPLETE
 
 - **Phase 0: Foundation** — Channel enum (WHATSAPP/INSTAGRAM/FACEBOOK/SMS/EMAIL/WEB_CHAT), Message.channel denormalized field, Business.channelSettings JSON, CustomerIdentityService (cross-channel customer resolution by phone/email/facebookPsid/instagramUserId), CircuitBreakerService (CLOSED→OPEN→HALF_OPEN with Redis backing), DeadLetterQueueService (Redis hash with 7-day TTL), CHANNEL_STYLES design tokens, ChannelBadge/ReplyChannelSwitcher/ChannelsOnFile/ChannelFilterBar inbox components
 - **Phase 1: Instagram DM** — Instagram messaging provider, webhook controller with HMAC validation, story reply/ad referral support, 24h messaging window tracking, seed-instagram.ts demo data
 - **Phase 2: SMS (Twilio)** — Full two-way SMS + MMS via Twilio, signature validation, segment-based billing tracking in MessageUsage model, /settings/sms config page, Location.smsConfig JSON
 - **Phase 3: Facebook Messenger + Email Channel** — Facebook Messenger via Meta Graph API with webhook verification + HMAC signature validation, /settings/facebook config page, Location.facebookConfig JSON. Email as messaging channel (Resend/SendGrid), /settings/email-channel config page, Location.emailConfig JSON. UsageService for per-channel billing rates. seed-omnichannel.ts for multi-channel demo data
-- **Remaining:** Web Chat (Phase 4) — not yet started
+- **All omnichannel phases complete** — 6 channels fully implemented (WhatsApp, Instagram, Facebook, SMS, Email, Web Chat)
 
 ### Do Not Build (Yet)
 
