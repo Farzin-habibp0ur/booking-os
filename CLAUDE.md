@@ -95,7 +95,7 @@ booking-os/
 | AI          | Anthropic Claude API                          | claude-sonnet |
 | Payments    | Stripe                                        | stripe-node   |
 | Email       | Resend                                        | -             |
-| Messaging   | WhatsApp Cloud, Instagram DM, SMS (Twilio, full two-way + MMS), Facebook Messenger (Meta Graph API), Email (Resend/SendGrid), Web Chat (pending) | - |
+| Messaging   | WhatsApp Cloud, Instagram DM, SMS (Twilio + MMS), Facebook Messenger, Email (Resend/SendGrid), Live Web Chat (Socket.IO widget) | - |
 | Cache/Queue | Redis 7 + BullMQ                              | -             |
 | Monorepo    | Turborepo                                     | 2.x           |
 | CI/CD       | GitHub Actions → Railway                      | -             |
@@ -242,7 +242,7 @@ Key events: `message:new`, `conversation:updated`, `ai:suggestion`, `ai:auto-rep
 
 ### Omnichannel Messaging Infrastructure
 
-BookingOS supports 6 messaging channels: **WhatsApp**, **Instagram DM**, **Facebook Messenger**, **SMS**, **Email**, **Web Chat**. WhatsApp, Instagram, SMS, Facebook Messenger, and Email are fully implemented; Web Chat is pending (Phase 4).
+BookingOS supports 6 messaging channels: **WhatsApp**, **Instagram DM**, **Facebook Messenger**, **SMS**, **Email**, **Web Chat**. All 6 channels are fully implemented.
 
 **Key services:**
 - `CustomerIdentityService` (`modules/customer-identity/`) — resolves customers across channels by priority (phone → email → facebookPsid → instagramUserId → webChatSessionId), links identifiers, reports available channels
@@ -270,7 +270,7 @@ BookingOS supports 6 messaging channels: **WhatsApp**, **Instagram DM**, **Faceb
 
 - Pages are in `apps/web/src/app/` using Next.js App Router (not Pages Router)
 - Protected pages check `access_token` + `refresh_token` cookies in `middleware.ts` (redirects to /login only when both are missing)
-- **86 pages** in `apps/web/` (~17 public, ~53 protected, ~16 portal/marketing site) + **20 admin pages** in `apps/admin/` (15 core + 5 marketing)
+- **87 pages** in `apps/web/` (~17 public, ~54 protected, ~16 portal/marketing site) + **20 admin pages** in `apps/admin/` (15 core + 5 marketing)
 - Client components use `'use client'` directive
 
 ### Page Categories
@@ -279,7 +279,7 @@ BookingOS supports 6 messaging channels: **WhatsApp**, **Instagram DM**, **Faceb
 
 **Marketing pages:** `/` (landing page with hero, features, pricing), `/blog`, `/blog/[slug]` (JSON-LD, OpenGraph), `/pricing`, `/faq`
 
-**Protected pages (tenant):** `/dashboard`, `/bookings`, `/calendar`, `/inbox`, `/customers`, `/customers/[id]`, `/services`, `/staff`, `/waitlist`, `/campaigns`, `/automations`, `/reports`, `/roi`, `/service-board` (dealership kanban), `/settings/*` (16 sub-pages including `/sms`, `/facebook`, `/email-channel`), `/packages` (wellness), `/testimonials`, `/marketing/*` (internal only — no sidebar nav), `/ai/*` (command center: overview, actions, agents, performance), `/search`, `/notifications`, `/help`
+**Protected pages (tenant):** `/dashboard`, `/bookings`, `/calendar`, `/inbox`, `/customers`, `/customers/[id]`, `/services`, `/staff`, `/waitlist`, `/campaigns`, `/automations`, `/reports`, `/roi`, `/service-board` (dealership kanban), `/settings/*` (17 sub-pages including `/channels`, `/sms`, `/facebook`, `/email-channel`, `/web-chat`), `/packages` (wellness), `/testimonials`, `/marketing/*` (internal only — no sidebar nav), `/ai/*` (command center: overview, actions, agents, performance), `/search`, `/notifications`, `/help`
 
 **Console pages (Super Admin):** These pages live in the **separate `apps/admin/` app** (port 3002), not in `apps/web/`. Routes: `/` (overview), `/businesses` (directory), `/businesses/[id]` (Business 360), `/audit`, `/health`, `/support`, `/billing`, `/billing/past-due`, `/billing/subscriptions`, `/packs`, `/packs/[slug]`, `/packs/skills`, `/agents`, `/messaging`, `/settings`, `/marketing` (landing), `/marketing/queue` (content approval), `/marketing/agents` (12 marketing agents), `/marketing/sequences` (email sequences), `/marketing/rejection-analytics`
 
