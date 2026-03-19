@@ -1,3 +1,4 @@
+import * as crypto from 'crypto';
 import { EmailChannelProvider, EmailProviderConfig } from '@booking-os/messaging-provider';
 
 // Mock global fetch
@@ -329,7 +330,6 @@ describe('EmailChannelProvider', () => {
     it('returns true for valid signature', () => {
       const secret = 'test-webhook-secret';
       const rawBody = '{"event":"inbound","data":"test"}';
-      const crypto = require('crypto');
       const signature = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
 
       expect(EmailChannelProvider.verifyWebhookIntegrity(rawBody, signature, secret)).toBe(true);
@@ -347,7 +347,6 @@ describe('EmailChannelProvider', () => {
     it('returns false for tampered body', () => {
       const secret = 'test-webhook-secret';
       const rawBody = '{"event":"inbound","data":"test"}';
-      const crypto = require('crypto');
       const signature = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
 
       const tamperedBody = '{"event":"inbound","data":"tampered"}';
@@ -359,7 +358,6 @@ describe('EmailChannelProvider', () => {
     it('returns false for wrong secret', () => {
       const secret = 'test-webhook-secret';
       const rawBody = '{"event":"inbound"}';
-      const crypto = require('crypto');
       const signature = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
 
       expect(EmailChannelProvider.verifyWebhookIntegrity(rawBody, signature, 'wrong-secret')).toBe(
