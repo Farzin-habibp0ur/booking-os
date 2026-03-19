@@ -22,8 +22,8 @@ jest.mock('@/lib/cn', () => ({
   cn: (...args: any[]) => args.filter(Boolean).join(' '),
 }));
 
-// Mock API
-const mockApi = {
+// Mock API — use var for hoisting compatibility with jest.mock
+var mockApi = {
   get: jest.fn(),
   post: jest.fn(),
   patch: jest.fn(),
