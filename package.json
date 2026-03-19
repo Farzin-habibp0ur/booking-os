@@ -18,6 +18,8 @@
     "format": "prettier --write \"apps/**/*.{ts,tsx}\" \"packages/**/*.{ts,tsx}\"",
     "format:check": "prettier --check \"apps/**/*.{ts,tsx}\" \"packages/**/*.{ts,tsx}\"",
     "test": "npx turbo test",
+    "doctor:env": "bash scripts/dev-env-doctor.sh",
+    "launch:readiness": "bash scripts/launch-readiness-check.sh",
     "test:coverage": "npx turbo test:coverage",
     "test:e2e": "npx playwright test --config apps/web/playwright.config.ts"
   },
