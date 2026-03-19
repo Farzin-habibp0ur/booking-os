@@ -2,7 +2,7 @@
 
 > **Purpose:** This document gives full context on the Booking OS platform — what it is, what's been built, how it's structured, and what's left to build. Share this with an AI assistant or new developer to get productive immediately.
 >
-> **Last updated:** March 19, 2026 (All phases COMPLETE — A through E + Phases 1-4 & 6 polish + QA Fixes + Sprints 1-4 + Prompts 4A-4C + Prompt 1C + Prompt 1A + Prompt 1B + Prompt 1D + Prompt 2A + Prompt 2B + Prompt 2C + Prompt 3A + Prompt 3C + QA Bug Fix Sprint (10 bugs) + Growth Engine Agents (15 prompts) + Marketing Command Center Phases 1-6 (14 prompts) COMPLETE + Admin Console Extraction (4 phases — scaffold, migrate, remove from web, infrastructure) + Internal/External Separation (3 phases — marketing tools removed from customer app, migrated to admin app, API endpoints gated behind SUPER_ADMIN) + Launch QA fixes (SUPER_ADMIN guards, AutonomyConfig scope constraint, test timeouts) + Omnichannel Phases 0-5 COMPLETE — 6 channels fully implemented (WhatsApp, Instagram, Facebook, SMS, Email, Web Chat) — 92 Prisma models, 59 migrations)
+> **Last updated:** March 19, 2026 (All phases COMPLETE — A through E + Phases 1-4 & 6 polish + QA Fixes + Sprints 1-4 + Prompts 4A-4C + Prompt 1C + Prompt 1A + Prompt 1B + Prompt 1D + Prompt 2A + Prompt 2B + Prompt 2C + Prompt 3A + Prompt 3C + QA Bug Fix Sprint (10 bugs) + Growth Engine Agents (15 prompts) + Marketing Command Center Phases 1-6 (14 prompts) COMPLETE + Admin Console Extraction (4 phases — scaffold, migrate, remove from web, infrastructure) + Internal/External Separation (3 phases — marketing tools removed from customer app, migrated to admin app, API endpoints gated behind SUPER_ADMIN) + Launch QA fixes (SUPER_ADMIN guards, AutonomyConfig scope constraint, test timeouts) + Omnichannel Phases 0-5 COMPLETE + Omnichannel Gap Fix (16 issues) — 6 channels fully implemented (WhatsApp, Instagram, Facebook, SMS, Email, Web Chat) — 92 Prisma models, 64 migrations, 4100+ tests)
 
 ---
 
@@ -32,7 +32,7 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 ### Core Capabilities (All Built & Working)
 
 - **Appointment scheduling** — Calendar views (day/week/month), conflict detection, recurring bookings, automated reminders, force-book with reason, drag-and-drop reschedule with recommended slots, calendar command center (sidebar summary, keyboard shortcuts, booking popover)
-- **Omnichannel messaging inbox** — 6-channel support (WhatsApp, Instagram DM, Facebook Messenger, Email, SMS, Web Chat [fully implemented]), real-time via Socket.io, AI auto-replies, conversation management (assign, snooze, tag, close), media attachments (images/docs/audio), delivery/read receipts, presence indicators, scheduled messages (BullMQ delayed jobs with cancel), bulk actions (close/assign/tag/mark-read up to 50 at once), channel badge + reply channel switcher + channel filter bar
+- **Omnichannel messaging inbox** — 6-channel support (WhatsApp, Instagram DM, Facebook Messenger, Email, SMS, Web Chat), real-time via Socket.io, AI auto-replies, conversation management (assign, snooze, tag, close), media attachments (images/docs/audio), delivery/read receipts for all 6 channels, presence indicators, scheduled messages (BullMQ delayed jobs with cancel), bulk actions (close/assign/tag/mark-read up to 50 at once), channel badge + reply channel switcher (with disabled channels + default selection) + channel filter bar (with unread badges) + conversation context bar (messaging window countdown, email subject, SMS opt-in), circuit breaker protection on all outbound sends, usage tracking with Stripe metered billing, customer merge across channels, inline add-email/phone with format validation
 - **AI booking assistant** — Guides customers through booking/cancellation/rescheduling via chat (powered by Claude API)
 - **AI features** — Intent detection, reply suggestions, conversation summaries, customer profile collection, per-customer AI chat
 - **Customer management** — Profiles with custom fields, tags, CSV import, AI-powered profile extraction from conversations
@@ -44,7 +44,7 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 - **Quotes** — Create quotes for bookings, customer self-serve approval via token link with IP audit
 - **Analytics & reports** — Bookings over time, revenue, service breakdown, staff performance, no-show rates, peak hours, consult conversion, CSV/PDF export for all reports, automated scheduled report emails (daily/weekly/monthly via BullMQ)
 - **ROI dashboard** — Baseline vs current metrics, recovered revenue estimate, weekly review with email
-- **Multi-language** — English & Spanish (600+ translation keys), per-business overrides, language picker
+- **Multi-language** — English & Spanish (650+ translation keys), per-business overrides, language picker
 - **Billing** — Stripe integration (Starter/Professional/Enterprise plans), checkout, customer portal, webhooks, deposit collection, dunning email flow, referral credits
 - **Calendar sync** — Google Calendar + Outlook OAuth integration, iCal feed generation
 - **Public booking portal** — Customer-facing booking page at `/book/{slug}` with service selection, availability, Stripe payment (PaymentElement), pay-at-visit option, booking, waitlist join
@@ -235,7 +235,7 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 | AI          | Anthropic Claude API                                                                    | claude-sonnet         |
 | Payments    | Stripe                                                                                  | stripe-node           |
 | Email       | Resend                                                                                  | -                     |
-| Messaging   | WhatsApp Cloud, Instagram DM, Facebook Messenger, Email (Resend/SendGrid), SMS (Twilio) | 6-channel omnichannel |
+| Messaging   | WhatsApp Cloud, Instagram DM, Facebook Messenger, Email (Resend/SendGrid), SMS (Twilio + MMS), Live Web Chat (Socket.IO) | 6-channel omnichannel |
 | Cache/Queue | Redis 7 + BullMQ                                                                        | -                     |
 | Monorepo    | Turborepo                                                                               | 2.x                   |
 | CI/CD       | GitHub Actions → Railway                                                                | -                     |
@@ -260,12 +260,12 @@ booking-os/
 │   │   │   ├── app/            # 96 pages
 │   │   │   ├── components/     # Shared components (shell, modals, tour, marketing/, etc.)
 │   │   │   ├── lib/            # Utility modules (API client, auth, i18n, socket, theme)
-│   │   │   ├── locales/        # en.json, es.json (600+ keys each)
+│   │   │   ├── locales/        # en.json, es.json (650+ keys each)
 │   │   │   └── middleware.ts   # Route protection (checks access_token + refresh_token cookies)
 │   │   └── Dockerfile          # Multi-stage production build
 │   └── whatsapp-simulator/     # WhatsApp testing tool (port 3002)
 ├── packages/
-│   ├── db/                     # Prisma schema (92 models), migrations, seed scripts
+│   ├── db/                     # Prisma schema (92 models), 64 migrations, seed scripts
 │   │   ├── prisma/schema.prisma
 │   │   ├── src/seed.ts         # Base seed (aesthetic + dealership + wellness, idempotent)
 │   │   ├── src/seed-demo.ts    # Rich demo data (idempotent, dedup-safe)
@@ -305,7 +305,7 @@ booking-os/
 
 ---
 
-## 5. Database Schema (92 Models)
+## 5. Database Schema (92 Models, 64 Migrations)
 
 ```
 Business (1) ──┬── (*) Staff ──── (*) WorkingHours
@@ -348,7 +348,7 @@ Business (1) ──┬── (*) Staff ──── (*) WorkingHours
                ├── (*) Referral (referrer ↔ referred businesses)
                ├── (*) StaffServicePrice (per-staff pricing overrides)
                └── (*) SupportCase ──── (*) SupportCaseNote
-               └── (*) MessageUsage (per-channel monthly message counts for billing)
+               └── (*) MessageUsage (per-channel message counts with segments + cost, Stripe metered billing)
 ViewAsSession ──── Staff (superAdmin) + Business (target)
 PlatformAuditLog (standalone)
 PlatformAgentDefault (standalone — platform-wide agent governance)
@@ -1128,13 +1128,14 @@ Key groups (full list in `.env.example`):
 - Wellness component barrel export updated
 - 48 new tests (25 API + 23 web)
 
-### Omnichannel Messaging — Phases 0-5 — COMPLETE
+### Omnichannel Messaging — Phases 0-5 + Gap Fix — COMPLETE
 
 - **Phase 0: Foundation** — Channel enum (WHATSAPP/INSTAGRAM/FACEBOOK/SMS/EMAIL/WEB_CHAT), Message.channel denormalized field, Business.channelSettings JSON, CustomerIdentityService (cross-channel customer resolution by phone/email/facebookPsid/instagramUserId), CircuitBreakerService (CLOSED→OPEN→HALF_OPEN with Redis backing), DeadLetterQueueService (Redis hash with 7-day TTL), CHANNEL_STYLES design tokens, ChannelBadge/ReplyChannelSwitcher/ChannelsOnFile/ChannelFilterBar inbox components
 - **Phase 1: Instagram DM** — Instagram messaging provider, webhook controller with HMAC validation, story reply/ad referral support, 24h messaging window tracking, seed-instagram.ts demo data
 - **Phase 2: SMS (Twilio)** — Full two-way SMS + MMS via Twilio, signature validation, segment-based billing tracking in MessageUsage model, /settings/sms config page, Location.smsConfig JSON
 - **Phase 3: Facebook Messenger + Email Channel** — Facebook Messenger via Meta Graph API with webhook verification + HMAC signature validation, /settings/facebook config page, Location.facebookConfig JSON. Email as messaging channel (Resend/SendGrid), /settings/email-channel config page, Location.emailConfig JSON. UsageService for per-channel billing rates. seed-omnichannel.ts for multi-channel demo data
-- **All omnichannel phases complete** — 6 channels fully implemented (WhatsApp, Instagram, Facebook, SMS, Email, Web Chat)
+- **Gap Fix (16 issues)** — Security: timing-safe Twilio signature + email webhook verification. Wiring: UsageService + CircuitBreakerService wired into actual message flow (inbound in webhook controller, outbound in MessageService). Missing methods: mergeCustomers() + findConversation() on CustomerIdentityService. Infrastructure: Stripe metered billing via Meter Events API, Redis-backed webchat sessions (24h TTL), per-provider circuit breaker config (twilio-sms: 3/30s/20s, default: 5/60s/30s). Schema: MessageUsage segments + cost fields, Customer email index. UI: ConversationContextBar (FB/IG window countdown, email subject, SMS opt-in), unread count badges, disabled channels with tooltips, inline add-email/phone with validation, getDefaultReplyChannel() helper. Providers: Facebook verifyWebhookSignature() + quick_reply parsing, email delivery status endpoint, SMS location routing fix, identifier format validation (E.164/email). 4100+ tests passing.
+- **All omnichannel phases + gap fix complete** — 6 channels fully implemented with production-grade security, billing, and reliability
 
 ### Do Not Build (Yet)
 
@@ -1184,7 +1185,7 @@ npm run dev                    # Starts all apps via Turborepo
 | `npm run dev`           | Start all apps                 |
 | `npm run build`         | Build all                      |
 | `npm run lint`          | Lint all (ESLint + TypeScript) |
-| `npm test`              | Run all tests (~5,000+ tests)  |
+| `npm test`              | Run all tests (4,100+ API tests) |
 | `npm run test:coverage` | Tests with coverage thresholds |
 | `npm run db:generate`   | Generate Prisma client         |
 | `npm run db:migrate`    | Run migrations                 |
