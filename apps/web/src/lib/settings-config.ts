@@ -16,6 +16,7 @@ import {
   Puzzle,
   Phone,
   Facebook,
+  Mail,
 } from 'lucide-react';
 
 export interface SettingsCategory {
@@ -93,6 +94,15 @@ export const SETTINGS_CATEGORIES: SettingsCategory[] = [
     icon: Facebook,
     accent: 'lavender',
     pages: ['facebook'],
+    roles: ['ADMIN'],
+  },
+  {
+    key: 'email-channel',
+    label: 'Email Channel',
+    description: 'Send and receive conversational emails in your inbox',
+    icon: Mail,
+    accent: 'sage',
+    pages: ['email-channel'],
     roles: ['ADMIN'],
   },
   {

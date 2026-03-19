@@ -258,4 +258,16 @@ export class LocationService {
       }) || null
     );
   }
+
+  async findByEmailAddress(emailAddress: string) {
+    const locations = await this.prisma.location.findMany({
+      where: { isActive: true },
+    });
+    return (
+      locations.find((loc) => {
+        const config = loc.emailConfig as any;
+        return config?.inboundAddress === emailAddress;
+      }) || null
+    );
+  }
 }

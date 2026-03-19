@@ -70,6 +70,7 @@ describe('WebhookController', () => {
     findByInstagramPageId: jest.Mock;
     findByFacebookPageId: jest.Mock;
     findLocationBySmsNumber: jest.Mock;
+    findByEmailAddress: jest.Mock;
   };
   let inboxGateway: { notifyNewMessage: jest.Mock; notifyConversationUpdate: jest.Mock };
   let aiService: { processInboundMessage: jest.Mock };
@@ -129,6 +130,7 @@ describe('WebhookController', () => {
       findByInstagramPageId: jest.fn().mockResolvedValue(null),
       findByFacebookPageId: jest.fn().mockResolvedValue(null),
       findLocationBySmsNumber: jest.fn().mockResolvedValue(null),
+      findByEmailAddress: jest.fn().mockResolvedValue(null),
     };
     inboxGateway = { notifyNewMessage: jest.fn(), notifyConversationUpdate: jest.fn() };
     aiService = { processInboundMessage: jest.fn().mockResolvedValue(undefined) };
@@ -1292,16 +1294,179 @@ describe('WebhookController', () => {
     });
   });
 
-  // ─── Email Stub Endpoint ────────────────────────────────────────────
+  // ─── Email Inbound Processing ───────────────────────────────────────
 
-  describe('Email inbound (stub)', () => {
-    it('should return EVENT_RECEIVED with processed 0', async () => {
-      const result = await controller.emailInbound({ from: 'test@example.com', subject: 'Test' });
-      expect(result).toEqual({ status: 'EVENT_RECEIVED', processed: 0 });
+  describe('Email inbound processing', () => {
+    it('should process a basic inbound email', async () => {
+      setupHappyPath();
+
+      const result = await controller.emailInbound({
+        from: 'customer@example.com',
+        to: 'inbox@mybusiness.com',
+        subject: 'Booking question',
+        text: 'I want to book an appointment.',
+      });
+
+      expect(result.status).toBe('EVENT_RECEIVED');
+      expect(result.processed).toBe(1);
+      expect(result.results).toHaveLength(1);
+      expect(result.results![0].status).toBe('processed');
     });
 
-    it('should handle any payload without errors', async () => {
+    it('should resolve customer by email', async () => {
+      setupHappyPath();
+
+      await controller.emailInbound({
+        from: 'Jane Doe <jane@example.com>',
+        to: 'inbox@mybusiness.com',
+        subject: 'Hello',
+        text: 'Hi there',
+      });
+
+      expect(customerIdentityService.resolveCustomer).toHaveBeenCalledWith('biz1', {
+        email: 'jane@example.com',
+        name: 'jane@example.com',
+      });
+    });
+
+    it('should store thread headers (In-Reply-To) in metadata', async () => {
+      setupHappyPath();
+
+      await controller.emailInbound({
+        from: 'customer@example.com',
+        to: 'inbox@mybusiness.com',
+        subject: 'Re: Booking',
+        text: 'Thanks for confirming.',
+        'In-Reply-To': '<original-msg@example.com>',
+        'Message-ID': '<reply-msg@example.com>',
+      });
+
+      expect(prisma.message.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            metadata: expect.objectContaining({
+              inReplyTo: '<original-msg@example.com>',
+              messageId: '<reply-msg@example.com>',
+              subject: 'Re: Booking',
+            }),
+          }),
+        }),
+      );
+    });
+
+    it('should strip quoted content from email replies', async () => {
+      setupHappyPath();
+
+      await controller.emailInbound({
+        from: 'customer@example.com',
+        to: 'inbox@mybusiness.com',
+        subject: 'Re: Booking',
+        text: 'Yes, confirmed.\n\n> Previous quoted content\n> More quoted text',
+      });
+
+      expect(prisma.message.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            content: 'Yes, confirmed.',
+          }),
+        }),
+      );
+    });
+
+    it('should return processed 0 for empty/invalid payload', async () => {
       const result = await controller.emailInbound({});
+      expect(result.status).toBe('EVENT_RECEIVED');
+      expect(result.processed).toBe(0);
+    });
+
+    it('should route by emailConfig.inboundAddress on location', async () => {
+      const mockLocation = { id: 'loc-email', name: 'Email Location', businessId: 'biz-email' };
+      const emailBiz = { id: 'biz-email', name: 'Email Biz' };
+      locationService.findByEmailAddress.mockResolvedValue(mockLocation);
+      (prisma.business.findUnique as jest.Mock).mockResolvedValue(emailBiz);
+      (prisma.message.findUnique as jest.Mock).mockResolvedValue(null);
+      customerIdentityService.resolveCustomer.mockResolvedValue(mockCustomer);
+      conversationService.findOrCreate.mockResolvedValue(mockConversation);
+      (prisma.message.create as jest.Mock).mockResolvedValue(mockMessage);
+      (prisma.conversation.update as jest.Mock).mockResolvedValue(mockUpdatedConversation);
+
+      await controller.emailInbound({
+        from: 'customer@example.com',
+        to: 'support@mybusiness.com',
+        subject: 'Help',
+        text: 'Need help',
+      });
+
+      expect(locationService.findByEmailAddress).toHaveBeenCalledWith('support@mybusiness.com');
+      expect(conversationService.findOrCreate).toHaveBeenCalledWith(
+        'biz-email',
+        'cust1',
+        'EMAIL',
+        'loc-email',
+      );
+    });
+
+    it('should set channel to EMAIL on created messages', async () => {
+      setupHappyPath();
+
+      await controller.emailInbound({
+        from: 'customer@example.com',
+        to: 'inbox@mybusiness.com',
+        subject: 'Test',
+        text: 'Channel test',
+      });
+
+      expect(prisma.message.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            channel: 'EMAIL',
+          }),
+        }),
+      );
+    });
+
+    it('should handle duplicate email dedup', async () => {
+      (prisma.message.findUnique as jest.Mock).mockResolvedValue({
+        id: 'existing',
+        externalId: '<dup-msg@example.com>',
+      });
+
+      const result = await controller.emailInbound({
+        from: 'customer@example.com',
+        to: 'inbox@mybusiness.com',
+        text: 'Duplicate',
+        'Message-ID': '<dup-msg@example.com>',
+      });
+
+      expect(result.results![0].status).toBe('duplicate');
+      expect(result.processed).toBe(0);
+    });
+
+    it('should handle processing errors gracefully', async () => {
+      (prisma.message.findUnique as jest.Mock).mockResolvedValue(null);
+      (prisma.business.findFirst as jest.Mock).mockResolvedValue(null);
+      configService.get.mockImplementation((key: string, defaultValue?: any) => {
+        if (key === 'NODE_ENV') return 'production';
+        return defaultValue;
+      });
+
+      const result = await controller.emailInbound({
+        from: 'customer@example.com',
+        to: 'inbox@mybusiness.com',
+        text: 'Error test',
+      });
+
+      expect(result.status).toBe('EVENT_RECEIVED');
+      expect(result.results![0].status).toBe('error');
+      expect(result.processed).toBe(0);
+    });
+
+    it('should return empty results for payload with missing from', async () => {
+      const result = await controller.emailInbound({
+        to: 'inbox@mybusiness.com',
+        text: 'No from field',
+      });
+
       expect(result.status).toBe('EVENT_RECEIVED');
       expect(result.processed).toBe(0);
     });

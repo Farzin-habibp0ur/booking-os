@@ -30,6 +30,7 @@ import {
   TwilioSmsProvider,
   InstagramProvider,
   FacebookProvider,
+  EmailChannelProvider,
 } from '@booking-os/messaging-provider';
 
 @ApiTags('Messaging Webhooks')
@@ -144,6 +145,13 @@ export class WebhookController {
       facebookPsid: string;
       metadata?: Record<string, any>;
     },
+    emailContext?: {
+      channel: 'EMAIL';
+      fromEmail: string;
+      toEmail: string;
+      subject?: string;
+      metadata?: Record<string, any>;
+    },
   ): Promise<{ conversationId?: string; messageId?: string; duplicate?: boolean }> {
     // Dedup: check if message with this externalId already exists
     if (externalId) {
@@ -157,7 +165,7 @@ export class WebhookController {
     }
 
     const channel =
-      channelOverride || facebookContext?.channel || instagramContext?.channel || 'WHATSAPP';
+      channelOverride || emailContext?.channel || facebookContext?.channel || instagramContext?.channel || 'WHATSAPP';
 
     // Route to Location → Business
     let business;
@@ -189,6 +197,16 @@ export class WebhookController {
           `Routed Facebook message to location "${location.name}" (${location.id})`,
         );
       }
+    } else if (emailContext?.toEmail) {
+      // Email routing: lookup Location by emailConfig.inboundAddress
+      const location = await this.locationService.findByEmailAddress(emailContext.toEmail);
+      if (location) {
+        locationId = location.id;
+        business = await this.prisma.business.findUnique({
+          where: { id: location.businessId },
+        });
+        this.logger.log(`Routed email to location "${location.name}" (${location.id})`);
+      }
     } else if (businessPhoneNumberId) {
       const location =
         await this.locationService.findLocationByWhatsappPhoneNumberId(businessPhoneNumberId);
@@ -218,7 +236,12 @@ export class WebhookController {
 
     // Customer lookup via CustomerIdentityService (unified resolution)
     let customer;
-    if (instagramContext) {
+    if (emailContext) {
+      customer = await this.customerIdentityService.resolveCustomer(business.id, {
+        email: emailContext.fromEmail,
+        name: from,
+      });
+    } else if (instagramContext) {
       customer = await this.customerIdentityService.resolveCustomer(business.id, {
         instagramUserId: instagramContext.instagramUserId,
         name: from,
@@ -244,7 +267,7 @@ export class WebhookController {
     );
 
     // Determine metadata from the appropriate context
-    const contextMetadata = facebookContext?.metadata || instagramContext?.metadata;
+    const contextMetadata = emailContext?.metadata || facebookContext?.metadata || instagramContext?.metadata;
 
     let message;
     try {
@@ -662,10 +685,52 @@ export class WebhookController {
 
   // ─── Email Webhook Endpoints ──────────────────────────────────────────
 
-  /** Email inbound webhook (stub) */
+  /** Email inbound webhook (SendGrid Inbound Parse / Resend) */
   @Post('email/inbound')
-  async emailInbound(@Body() payload: any) {
-    this.logger.log('Email inbound webhook received (stub — Phase 2)');
-    return { status: 'EVENT_RECEIVED', processed: 0 };
+  async emailInbound(@Body() body: Record<string, string>) {
+    const messages = EmailChannelProvider.parseInboundWebhook(body);
+    if (messages.length === 0) {
+      return { status: 'EVENT_RECEIVED', processed: 0 };
+    }
+
+    const results: Array<{ externalId: string; status: string }> = [];
+    for (const msg of messages) {
+      try {
+        const result = await this.processInboundMessage(
+          msg.from,
+          msg.body,
+          msg.externalId,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          {
+            channel: 'EMAIL',
+            fromEmail: msg.from,
+            toEmail: msg.to,
+            subject: msg.subject,
+            metadata: {
+              ...(msg.inReplyTo && { inReplyTo: msg.inReplyTo }),
+              ...(msg.messageId && { messageId: msg.messageId }),
+              ...(msg.subject && { subject: msg.subject }),
+            },
+          },
+        );
+        results.push({
+          externalId: msg.externalId,
+          status: result.duplicate ? 'duplicate' : 'processed',
+        });
+      } catch (err: any) {
+        this.logger.error(`Email inbound processing error: ${err.message}`, err.stack);
+        results.push({ externalId: msg.externalId, status: 'error' });
+      }
+    }
+
+    return {
+      status: 'EVENT_RECEIVED',
+      processed: results.filter((r) => r.status === 'processed').length,
+      results,
+    };
   }
 }
