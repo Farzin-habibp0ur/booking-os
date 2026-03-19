@@ -427,8 +427,8 @@ describe('Cross-Channel Integration Tests', () => {
     it('should keep other providers unaffected when circuit opens for one provider', async () => {
       const failFn = jest.fn().mockRejectedValue(new Error('Provider down'));
 
-      // Trip the circuit for twilio-sms
-      for (let i = 0; i < 5; i++) {
+      // Trip the circuit for twilio-sms (3 failures — per-provider threshold)
+      for (let i = 0; i < 3; i++) {
         await expect(circuitBreakerService.execute('twilio-sms', failFn)).rejects.toThrow(
           'Provider down',
         );

@@ -18,9 +18,17 @@ interface CircuitBreakerState {
   lastStateChange: number;
 }
 
-const FAILURE_THRESHOLD = 5;
-const FAILURE_WINDOW_MS = 60_000; // 60s
-const COOLDOWN_MS = 30_000; // 30s
+export interface CircuitBreakerConfig {
+  failureThreshold: number;
+  failureWindowMs: number;
+  cooldownMs: number;
+}
+
+const DEFAULT_CONFIG: CircuitBreakerConfig = {
+  failureThreshold: 5,
+  failureWindowMs: 60_000,
+  cooldownMs: 30_000,
+};
 
 const REDIS_KEY_PREFIX = 'cb:';
 
@@ -33,10 +41,39 @@ export class CircuitBreakerService implements OnModuleInit {
   // In-memory fallback
   private memoryStore = new Map<string, CircuitBreakerState>();
 
+  // Per-provider configuration
+  private providerConfigs = new Map<string, CircuitBreakerConfig>();
+
   constructor(
     private config: ConfigService,
     @Inject(forwardRef(() => InboxGateway)) private inboxGateway: InboxGateway,
-  ) {}
+  ) {
+    // SMS is expensive per message — be more sensitive
+    this.providerConfigs.set('twilio-sms', {
+      failureThreshold: 3,
+      failureWindowMs: 30_000,
+      cooldownMs: 20_000,
+    });
+    // Meta APIs share infrastructure
+    this.providerConfigs.set('whatsapp', DEFAULT_CONFIG);
+    this.providerConfigs.set('instagram', DEFAULT_CONFIG);
+    this.providerConfigs.set('facebook', DEFAULT_CONFIG);
+    // Email providers
+    this.providerConfigs.set('resend', DEFAULT_CONFIG);
+    this.providerConfigs.set('sendgrid', DEFAULT_CONFIG);
+  }
+
+  getProviderConfig(provider: string): CircuitBreakerConfig {
+    return this.providerConfigs.get(provider) || DEFAULT_CONFIG;
+  }
+
+  setProviderConfig(provider: string, config: Partial<CircuitBreakerConfig>): void {
+    const current = this.getProviderConfig(provider);
+    this.providerConfigs.set(provider, { ...current, ...config });
+    this.logger.log(
+      `Circuit breaker config updated for ${provider}: ${JSON.stringify(this.providerConfigs.get(provider))}`,
+    );
+  }
 
   async onModuleInit() {
     const redisUrl = this.config.get<string>('REDIS_URL');
@@ -69,10 +106,11 @@ export class CircuitBreakerService implements OnModuleInit {
    */
   async execute<T>(providerName: string, fn: () => Promise<T>): Promise<T> {
     const current = await this.getState(providerName);
+    const cfg = this.getProviderConfig(providerName);
 
     if (current.state === 'OPEN') {
       const elapsed = Date.now() - current.lastStateChange;
-      if (elapsed >= COOLDOWN_MS) {
+      if (elapsed >= cfg.cooldownMs) {
         // Transition to HALF_OPEN and attempt
         await this.transitionState(providerName, 'HALF_OPEN');
         return this.attemptHalfOpen(providerName, fn);
@@ -174,17 +212,18 @@ export class CircuitBreakerService implements OnModuleInit {
 
   private async recordFailure(providerName: string): Promise<void> {
     const current = await this.getState(providerName);
+    const cfg = this.getProviderConfig(providerName);
     const now = Date.now();
 
     // Reset failure count if outside the failure window
     let failures = current.failures;
-    if (now - current.lastFailureAt > FAILURE_WINDOW_MS) {
+    if (now - current.lastFailureAt > cfg.failureWindowMs) {
       failures = 0;
     }
 
     failures += 1;
 
-    if (failures >= FAILURE_THRESHOLD) {
+    if (failures >= cfg.failureThreshold) {
       // Transition to OPEN
       const openState: CircuitBreakerState = {
         state: 'OPEN',

@@ -1,4 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import Stripe from 'stripe';
 import { PrismaService } from '../../common/prisma.service';
 
 export interface UsageReport {
@@ -20,7 +22,18 @@ export type ChannelRates = Record<string, { inbound: number; outbound: number }>
 
 @Injectable()
 export class UsageService {
-  constructor(private prisma: PrismaService) {}
+  private readonly logger = new Logger(UsageService.name);
+  private stripe: Stripe | null = null;
+
+  constructor(
+    private prisma: PrismaService,
+    private configService: ConfigService,
+  ) {
+    const secretKey = this.configService.get<string>('STRIPE_SECRET_KEY');
+    if (secretKey) {
+      this.stripe = new Stripe(secretKey);
+    }
+  }
 
   /**
    * Atomic upsert — increments today's count for the given channel/direction.
@@ -174,14 +187,36 @@ export class UsageService {
       }
     }
 
-    const stripeKey = process.env.STRIPE_SECRET_KEY;
-    if (!stripeKey) {
+    if (!this.stripe) {
       return { totalCost, reported: false };
     }
 
-    // In production, call Stripe metered billing API here
-    // For now, log the computed cost
-    return { totalCost, reported: false };
+    try {
+      // Look up the business's active subscription
+      const subscription = await this.prisma.subscription.findFirst({
+        where: { businessId, status: 'active' },
+      });
+      if (!subscription?.stripeSubscriptionId) {
+        return { totalCost, reported: false };
+      }
+
+      // Report metered usage via Stripe Billing Meter Events
+      await this.stripe.billing.meterEvents.create({
+        event_name: 'messaging_usage',
+        payload: {
+          value: String(Math.ceil(totalCost * 100)), // cents
+          stripe_customer_id: subscription.stripeCustomerId,
+        },
+      });
+
+      this.logger.log(
+        `Reported $${totalCost.toFixed(4)} usage to Stripe for business ${businessId} (${month})`,
+      );
+      return { totalCost, reported: true };
+    } catch (err: any) {
+      this.logger.error(`Stripe usage reporting failed: ${err.message}`);
+      return { totalCost, reported: false };
+    }
   }
 
   async getAllBusinessUsage(startDate?: string, endDate?: string): Promise<UsageReport[]> {

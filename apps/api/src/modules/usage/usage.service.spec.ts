@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { ConfigService } from '@nestjs/config';
 import { UsageService } from './usage.service';
 import { PrismaService } from '../../common/prisma.service';
 
@@ -9,7 +10,11 @@ describe('UsageService', () => {
       upsert: jest.Mock;
       findMany: jest.Mock;
     };
+    subscription: {
+      findFirst: jest.Mock;
+    };
   };
+  let configService: { get: jest.Mock };
 
   beforeEach(async () => {
     prisma = {
@@ -17,10 +22,20 @@ describe('UsageService', () => {
         upsert: jest.fn().mockResolvedValue({}),
         findMany: jest.fn().mockResolvedValue([]),
       },
+      subscription: {
+        findFirst: jest.fn().mockResolvedValue(null),
+      },
+    };
+    configService = {
+      get: jest.fn().mockReturnValue(undefined),
     };
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [UsageService, { provide: PrismaService, useValue: prisma }],
+      providers: [
+        UsageService,
+        { provide: PrismaService, useValue: prisma },
+        { provide: ConfigService, useValue: configService },
+      ],
     }).compile();
 
     service = module.get<UsageService>(UsageService);

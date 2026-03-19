@@ -552,11 +552,11 @@ describe('SMS Integration Tests', () => {
       expect(state.state).toBe('CLOSED');
     });
 
-    it('should open circuit after 5 consecutive failures', async () => {
+    it('should open circuit after 3 consecutive failures (twilio-sms threshold)', async () => {
       const sendFn = jest.fn().mockRejectedValue(new Error('Twilio API error'));
 
-      // 5 failures to trip the breaker
-      for (let i = 0; i < 5; i++) {
+      // 3 failures to trip the breaker (twilio-sms has lower threshold)
+      for (let i = 0; i < 3; i++) {
         await expect(circuitBreakerService.execute('twilio-sms', sendFn)).rejects.toThrow(
           'Twilio API error',
         );
@@ -564,7 +564,7 @@ describe('SMS Integration Tests', () => {
 
       const state = await circuitBreakerService.getState('twilio-sms');
       expect(state.state).toBe('OPEN');
-      expect(state.failures).toBe(5);
+      expect(state.failures).toBe(3);
 
       // Next call should throw CircuitOpenException without calling the function
       const nextFn = jest.fn();
@@ -577,8 +577,8 @@ describe('SMS Integration Tests', () => {
     it('should transition to HALF_OPEN after cooldown and close on success', async () => {
       const failFn = jest.fn().mockRejectedValue(new Error('Twilio API error'));
 
-      // Trip the circuit
-      for (let i = 0; i < 5; i++) {
+      // Trip the circuit (3 failures for twilio-sms)
+      for (let i = 0; i < 3; i++) {
         await expect(circuitBreakerService.execute('twilio-sms', failFn)).rejects.toThrow();
       }
 

@@ -169,4 +169,60 @@ describe('CircuitBreakerService', () => {
       expect(state.failures).toBe(0);
     });
   });
+
+  describe('per-provider configuration', () => {
+    it('should return default config for unknown providers', () => {
+      const config = service.getProviderConfig('unknown-provider');
+      expect(config).toEqual({
+        failureThreshold: 5,
+        failureWindowMs: 60_000,
+        cooldownMs: 30_000,
+      });
+    });
+
+    it('should return custom config for twilio-sms', () => {
+      const config = service.getProviderConfig('twilio-sms');
+      expect(config.failureThreshold).toBe(3);
+      expect(config.failureWindowMs).toBe(30_000);
+      expect(config.cooldownMs).toBe(20_000);
+    });
+
+    it('should allow runtime config updates', () => {
+      service.setProviderConfig('whatsapp', { failureThreshold: 10 });
+      const config = service.getProviderConfig('whatsapp');
+      expect(config.failureThreshold).toBe(10);
+      expect(config.cooldownMs).toBe(30_000); // unchanged
+    });
+
+    it('should use provider-specific threshold for twilio-sms (3 failures instead of 5)', async () => {
+      // twilio-sms has threshold of 3
+      for (let i = 0; i < 3; i++) {
+        try {
+          await service.execute('twilio-sms', async () => {
+            throw new Error('fail');
+          });
+        } catch {
+          // expected
+        }
+      }
+
+      const state = await service.getState('twilio-sms');
+      expect(state.state).toBe('OPEN');
+    });
+
+    it('should NOT open circuit for whatsapp after 3 failures (threshold is 5)', async () => {
+      for (let i = 0; i < 3; i++) {
+        try {
+          await service.execute('whatsapp', async () => {
+            throw new Error('fail');
+          });
+        } catch {
+          // expected
+        }
+      }
+
+      const state = await service.getState('whatsapp');
+      expect(state.state).toBe('CLOSED');
+    });
+  });
 });

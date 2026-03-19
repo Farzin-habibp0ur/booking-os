@@ -35,8 +35,10 @@ export class WebChatGateway implements OnGatewayConnection, OnGatewayDisconnect,
   server!: Server;
 
   private readonly logger = new Logger(WebChatGateway.name);
-  // In-memory session store (ephemeral — sessions don't survive restart)
+  // In-memory session store (always maintained for fast lookups)
   private sessions = new Map<string, WebChatSession>();
+  // Redis client for cross-instance session persistence
+  private redisClient: any = null;
 
   constructor(
     private configService: ConfigService,
@@ -47,8 +49,64 @@ export class WebChatGateway implements OnGatewayConnection, OnGatewayDisconnect,
     private inboxGateway: InboxGateway,
   ) {}
 
-  afterInit(server: Server) {
+  async afterInit(server: Server) {
     this.logger.log('WebChat gateway initialized on /web-chat namespace');
+
+    // Connect to Redis for session persistence
+    const redisUrl = this.configService.get<string>('REDIS_URL');
+    if (redisUrl) {
+      try {
+        const { createClient } = await import('redis');
+        this.redisClient = createClient({ url: redisUrl });
+        this.redisClient.on('error', (err: any) => {
+          this.logger.warn(`Redis error for webchat sessions: ${err.message}`);
+          this.redisClient = null;
+        });
+        await this.redisClient.connect();
+        this.logger.log('WebChat Redis session store connected');
+      } catch (err: any) {
+        this.logger.warn(
+          `Failed to connect Redis for webchat sessions: ${err.message} — using in-memory only`,
+        );
+      }
+    }
+  }
+
+  private async getSession(sessionId: string): Promise<WebChatSession | null> {
+    // Check in-memory first (fastest)
+    const local = this.sessions.get(sessionId);
+    if (local) return local;
+
+    // Fall back to Redis
+    if (this.redisClient) {
+      try {
+        const data = await this.redisClient.get(`webchat:session:${sessionId}`);
+        if (data) {
+          const session = JSON.parse(data) as WebChatSession;
+          this.sessions.set(sessionId, session); // Cache locally
+          return session;
+        }
+      } catch {
+        // Redis read failed — fall through
+      }
+    }
+
+    return null;
+  }
+
+  private async saveSession(sessionId: string, session: WebChatSession): Promise<void> {
+    this.sessions.set(sessionId, session);
+    if (this.redisClient) {
+      try {
+        await this.redisClient.set(
+          `webchat:session:${sessionId}`,
+          JSON.stringify(session),
+          { EX: 86400 }, // 24-hour TTL
+        );
+      } catch {
+        // Redis write failed — in-memory still holds it
+      }
+    }
   }
 
   /**
@@ -86,9 +144,10 @@ export class WebChatGateway implements OnGatewayConnection, OnGatewayDisconnect,
           secret: this.configService.get<string>('JWT_SECRET'),
         });
         if (payload.type === 'web-chat' && payload.businessId === businessId) {
-          const existingSession = this.sessions.get(payload.sessionId);
+          const existingSession = await this.getSession(payload.sessionId);
           if (existingSession) {
             existingSession.socketId = client.id;
+            await this.saveSession(payload.sessionId, existingSession);
             session = existingSession;
             this.logger.log(`WebChat session resumed: ${session.sessionId}`);
           }
@@ -107,7 +166,7 @@ export class WebChatGateway implements OnGatewayConnection, OnGatewayDisconnect,
         socketId: client.id,
         connectedAt: Date.now(),
       };
-      this.sessions.set(sessionId, session);
+      await this.saveSession(sessionId, session);
 
       // Generate session token for reconnection
       const sessionToken = this.jwtService.sign(
