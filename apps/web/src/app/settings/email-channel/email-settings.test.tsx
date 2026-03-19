@@ -22,25 +22,26 @@ jest.mock('@/lib/cn', () => ({
   cn: (...args: any[]) => args.filter(Boolean).join(' '),
 }));
 
-// Mock API — use var for hoisting compatibility with jest.mock
-var mockApi = {
-  get: jest.fn(),
-  post: jest.fn(),
-  patch: jest.fn(),
-};
-
+// Mock API
 jest.mock('@/lib/api', () => ({
-  api: mockApi,
+  api: {
+    get: jest.fn(),
+    post: jest.fn(),
+    patch: jest.fn(),
+  },
 }));
 
 import EmailChannelSettingsPage from './page';
+import { api as mockApi } from '@/lib/api';
+
+const mockedApi = mockApi as { get: jest.Mock; post: jest.Mock; patch: jest.Mock };
 
 describe('EmailChannelSettingsPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
     // Default mocks
-    mockApi.get.mockImplementation((url: string) => {
+    mockedApi.get.mockImplementation((url: string) => {
       if (url === '/business') {
         return Promise.resolve({
           channelSettings: {
@@ -134,7 +135,7 @@ describe('EmailChannelSettingsPage', () => {
   });
 
   it('shows no locations message when empty', async () => {
-    mockApi.get.mockImplementation((url: string) => {
+    mockedApi.get.mockImplementation((url: string) => {
       if (url === '/business') return Promise.resolve({ channelSettings: {} });
       if (url === '/locations') return Promise.resolve([]);
       return Promise.resolve({});
@@ -159,7 +160,7 @@ describe('EmailChannelSettingsPage', () => {
   });
 
   it('save triggers API call with provider settings', async () => {
-    mockApi.patch.mockResolvedValue({});
+    mockedApi.patch.mockResolvedValue({});
 
     render(<EmailChannelSettingsPage />);
 
@@ -170,7 +171,7 @@ describe('EmailChannelSettingsPage', () => {
     fireEvent.click(screen.getByTestId('save-provider-button'));
 
     await waitFor(() => {
-      expect(mockApi.patch).toHaveBeenCalledWith(
+      expect(mockedApi.patch).toHaveBeenCalledWith(
         '/business',
         expect.objectContaining({
           channelSettings: expect.objectContaining({
