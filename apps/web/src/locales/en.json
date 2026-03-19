@@ -270,6 +270,8 @@
     "add_email": "Add email",
     "add_phone": "Add phone",
     "add_save": "Save",
+    "invalid_email": "Please enter a valid email address",
+    "invalid_phone": "Please enter a valid phone number (e.g., +12025551234)",
     "disabled_window_expired": "Messaging window expired",
     "disabled_opted_out": "Customer opted out"
   },

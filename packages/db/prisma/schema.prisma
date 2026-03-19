@@ -199,6 +199,7 @@ model Customer {
   @@unique([businessId, facebookPsid])
   @@unique([businessId, webChatSessionId])
   @@index([businessId])
+  @@index([businessId, email])
   @@map("customers")
 }
 

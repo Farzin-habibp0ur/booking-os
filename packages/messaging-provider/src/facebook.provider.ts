@@ -1,5 +1,6 @@
 import { OutboundMessage } from '@booking-os/shared';
 import { MessagingProvider } from './provider.interface';
+import * as crypto from 'crypto';
 
 export interface FacebookConfig {
   pageId: string;
@@ -201,6 +202,19 @@ export class FacebookProvider implements MessagingProvider {
   }
 
   /**
+   * Verify Facebook webhook signature using HMAC-SHA256 with timing-safe comparison.
+   */
+  static verifyWebhookSignature(rawBody: string, signature: string, appSecret: string): boolean {
+    if (!signature || !signature.startsWith('sha256=')) return false;
+    const expected = crypto.createHmac('sha256', appSecret).update(rawBody).digest('hex');
+    const sigHash = signature.replace('sha256=', '');
+    const sigBuf = Buffer.from(sigHash);
+    const expBuf = Buffer.from(expected);
+    if (sigBuf.length !== expBuf.length) return false;
+    return crypto.timingSafeEqual(sigBuf, expBuf);
+  }
+
+  /**
    * Parse Facebook Messenger's inbound webhook payload into a normalized format.
    * Facebook Messenger webhook structure:
    * { object: "page", entry: [{ id, time, messaging: [{ sender, recipient, timestamp, message }] }] }
@@ -215,6 +229,7 @@ export class FacebookProvider implements MessagingProvider {
     mediaUrl?: string;
     referral?: { source: string; type: string; ref?: string };
     postback?: string;
+    quickReplyPayload?: string;
   }> {
     const messages: Array<{
       from: string;
@@ -226,6 +241,7 @@ export class FacebookProvider implements MessagingProvider {
       mediaUrl?: string;
       referral?: { source: string; type: string; ref?: string };
       postback?: string;
+      quickReplyPayload?: string;
     }> = [];
 
     if (!payload?.entry) return messages;
@@ -263,6 +279,11 @@ export class FacebookProvider implements MessagingProvider {
                 parsed.body = `[${att.type}]`;
               }
             }
+          }
+
+          // Quick reply payload
+          if (msg.quick_reply?.payload) {
+            parsed.quickReplyPayload = msg.quick_reply.payload;
           }
 
           messages.push(parsed);

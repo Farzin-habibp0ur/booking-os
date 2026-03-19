@@ -459,7 +459,7 @@ export class WebhookController {
         parsed.from,
         parsed.body,
         parsed.externalId,
-        undefined,
+        parsed.to || undefined,
         undefined,
         undefined,
         'SMS',
@@ -637,13 +637,9 @@ export class WebhookController {
   @Post('facebook')
   async facebookInbound(@Body() payload: any, @Headers('x-hub-signature-256') signature?: string) {
     const secret = this.configService.get<string>('FACEBOOK_APP_SECRET');
-    if (secret) {
+    if (secret && signature) {
       const raw = JSON.stringify(payload);
-      const expected = crypto.createHmac('sha256', secret).update(raw).digest('hex');
-      const sig = (signature || '').replace('sha256=', '');
-      const sigBuf = Buffer.from(sig);
-      const expBuf = Buffer.from(expected);
-      if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
+      if (!FacebookProvider.verifyWebhookSignature(raw, signature, secret)) {
         throw new ForbiddenException('Invalid Facebook webhook signature');
       }
     }
@@ -697,13 +693,9 @@ export class WebhookController {
     @Headers('x-hub-signature-256') signature?: string,
   ) {
     const secret = this.configService.get<string>('FACEBOOK_APP_SECRET');
-    if (secret) {
+    if (secret && signature) {
       const raw = JSON.stringify(payload);
-      const expected = crypto.createHmac('sha256', secret).update(raw).digest('hex');
-      const sig = (signature || '').replace('sha256=', '');
-      const sigBuf = Buffer.from(sig);
-      const expBuf = Buffer.from(expected);
-      if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
+      if (!FacebookProvider.verifyWebhookSignature(raw, signature, secret)) {
         throw new ForbiddenException('Invalid Facebook webhook signature');
       }
     }
@@ -795,5 +787,37 @@ export class WebhookController {
       processed: results.filter((r) => r.status === 'processed').length,
       results,
     };
+  }
+
+  /** Email delivery status webhook (Resend events) */
+  @Post('email/status')
+  async emailStatusCallback(@Body() body: any) {
+    const { type, data } = body || {};
+    if (!data?.email_id) return { ok: true, status: 'ignored' };
+
+    const statusMap: Record<string, 'DELIVERED' | 'READ' | 'FAILED'> = {
+      'email.delivered': 'DELIVERED',
+      'email.bounced': 'FAILED',
+      'email.complained': 'FAILED',
+      'email.opened': 'READ',
+    };
+
+    const mappedStatus = statusMap[type];
+    if (!mappedStatus) return { ok: true, status: 'ignored' };
+
+    let failureReason: string | undefined;
+    if (type === 'email.bounced') {
+      failureReason = data.bounce?.message || 'Email bounced';
+    } else if (type === 'email.complained') {
+      failureReason = 'Recipient marked as spam';
+    }
+
+    const result = await this.messageService.updateDeliveryStatus(
+      data.email_id,
+      mappedStatus,
+      failureReason,
+    );
+
+    return { ok: true, updated: !!result };
   }
 }

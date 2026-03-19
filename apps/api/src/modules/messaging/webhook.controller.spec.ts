@@ -1651,6 +1651,62 @@ describe('WebhookController', () => {
     });
   });
 
+  // ─── Email Delivery Status ─────────────────────────────────────────
+
+  describe('emailStatusCallback', () => {
+    it('should update status for email.delivered event', async () => {
+      messageService.updateDeliveryStatus.mockResolvedValue({ id: 'msg1' });
+
+      const result = await controller.emailStatusCallback({
+        type: 'email.delivered',
+        data: { email_id: 'resend-123' },
+      });
+
+      expect(result).toEqual({ ok: true, updated: true });
+      expect(messageService.updateDeliveryStatus).toHaveBeenCalledWith(
+        'resend-123',
+        'DELIVERED',
+        undefined,
+      );
+    });
+
+    it('should set failure reason for email.bounced event', async () => {
+      messageService.updateDeliveryStatus.mockResolvedValue({ id: 'msg1' });
+
+      const result = await controller.emailStatusCallback({
+        type: 'email.bounced',
+        data: { email_id: 'resend-456', bounce: { message: 'Mailbox full' } },
+      });
+
+      expect(result).toEqual({ ok: true, updated: true });
+      expect(messageService.updateDeliveryStatus).toHaveBeenCalledWith(
+        'resend-456',
+        'FAILED',
+        'Mailbox full',
+      );
+    });
+
+    it('should ignore unknown event type', async () => {
+      const result = await controller.emailStatusCallback({
+        type: 'email.sent',
+        data: { email_id: 'resend-789' },
+      });
+
+      expect(result).toEqual({ ok: true, status: 'ignored' });
+      expect(messageService.updateDeliveryStatus).not.toHaveBeenCalled();
+    });
+
+    it('should ignore when email_id is missing', async () => {
+      const result = await controller.emailStatusCallback({
+        type: 'email.delivered',
+        data: {},
+      });
+
+      expect(result).toEqual({ ok: true, status: 'ignored' });
+      expect(messageService.updateDeliveryStatus).not.toHaveBeenCalled();
+    });
+  });
+
   // ─── Usage Recording ───────────────────────────────────────────────
 
   describe('Usage recording on inbound messages', () => {

@@ -1,6 +1,28 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { ReplyChannelSwitcher } from './reply-channel-switcher';
+import { ReplyChannelSwitcher, getDefaultReplyChannel } from './reply-channel-switcher';
+
+describe('getDefaultReplyChannel', () => {
+  it('returns last inbound channel when available', () => {
+    const result = getDefaultReplyChannel('WHATSAPP', ['WHATSAPP', 'SMS', 'EMAIL'], 'SMS');
+    expect(result).toBe('SMS');
+  });
+
+  it('falls back to conversation channel when last inbound not in available', () => {
+    const result = getDefaultReplyChannel('WHATSAPP', ['WHATSAPP', 'EMAIL'], 'INSTAGRAM');
+    expect(result).toBe('WHATSAPP');
+  });
+
+  it('falls back to first available when conversation channel not available', () => {
+    const result = getDefaultReplyChannel('INSTAGRAM', ['SMS', 'EMAIL'], 'FACEBOOK');
+    expect(result).toBe('SMS');
+  });
+
+  it('returns conversation channel when available list is empty', () => {
+    const result = getDefaultReplyChannel('WHATSAPP', []);
+    expect(result).toBe('WHATSAPP');
+  });
+});
 
 describe('ReplyChannelSwitcher', () => {
   const defaultProps = {

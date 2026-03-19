@@ -10,6 +10,8 @@ jest.mock('@/lib/i18n', () => ({
         'inbox.add_email': 'Add email',
         'inbox.add_phone': 'Add phone',
         'inbox.add_save': 'Save',
+        'inbox.invalid_email': 'Please enter a valid email address',
+        'inbox.invalid_phone': 'Please enter a valid phone number (e.g., +12025551234)',
       };
       return map[key as keyof typeof map] || key;
     },
@@ -179,6 +181,55 @@ describe('ChannelsOnFile', () => {
       expect(screen.getByTestId('channels-on-file')).toBeInTheDocument();
       expect(screen.getByTestId('add-email-button')).toBeInTheDocument();
       expect(screen.getByTestId('add-phone-button')).toBeInTheDocument();
+    });
+
+    it('shows error for invalid email', () => {
+      const onAdd = jest.fn();
+      render(<ChannelsOnFile channels={{ phone: '+1234567890' }} onAddIdentifier={onAdd} />);
+      fireEvent.click(screen.getByTestId('add-email-button'));
+      const input = screen.getByTestId('add-email-input');
+      fireEvent.change(input, { target: { value: 'not-an-email' } });
+      fireEvent.click(screen.getByText('Save'));
+      expect(screen.getByTestId('add-identifier-error')).toHaveTextContent(
+        'Please enter a valid email address',
+      );
+      expect(onAdd).not.toHaveBeenCalled();
+    });
+
+    it('shows error for invalid phone', () => {
+      const onAdd = jest.fn();
+      render(<ChannelsOnFile channels={{ email: 'test@example.com' }} onAddIdentifier={onAdd} />);
+      fireEvent.click(screen.getByTestId('add-phone-button'));
+      const input = screen.getByTestId('add-phone-input');
+      fireEvent.change(input, { target: { value: '12345' } });
+      fireEvent.click(screen.getByText('Save'));
+      expect(screen.getByTestId('add-identifier-error')).toHaveTextContent(
+        'Please enter a valid phone number',
+      );
+      expect(onAdd).not.toHaveBeenCalled();
+    });
+
+    it('clears error when input changes', () => {
+      const onAdd = jest.fn();
+      render(<ChannelsOnFile channels={{ phone: '+1234567890' }} onAddIdentifier={onAdd} />);
+      fireEvent.click(screen.getByTestId('add-email-button'));
+      const input = screen.getByTestId('add-email-input');
+      fireEvent.change(input, { target: { value: 'bad' } });
+      fireEvent.click(screen.getByText('Save'));
+      expect(screen.getByTestId('add-identifier-error')).toBeInTheDocument();
+      fireEvent.change(input, { target: { value: 'bad2' } });
+      expect(screen.queryByTestId('add-identifier-error')).not.toBeInTheDocument();
+    });
+
+    it('accepts valid email and calls onAddIdentifier', () => {
+      const onAdd = jest.fn();
+      render(<ChannelsOnFile channels={{ phone: '+1234567890' }} onAddIdentifier={onAdd} />);
+      fireEvent.click(screen.getByTestId('add-email-button'));
+      const input = screen.getByTestId('add-email-input');
+      fireEvent.change(input, { target: { value: 'valid@example.com' } });
+      fireEvent.click(screen.getByText('Save'));
+      expect(screen.queryByTestId('add-identifier-error')).not.toBeInTheDocument();
+      expect(onAdd).toHaveBeenCalledWith('email', 'valid@example.com');
     });
 
     it('does not call onAddIdentifier when input is empty', () => {

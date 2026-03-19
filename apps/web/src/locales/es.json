@@ -236,6 +236,8 @@
     "add_email": "Agregar correo",
     "add_phone": "Agregar teléfono",
     "add_save": "Guardar",
+    "invalid_email": "Por favor ingrese un correo electrónico válido",
+    "invalid_phone": "Por favor ingrese un número de teléfono válido (ej. +12025551234)",
     "disabled_window_expired": "Ventana de mensajería expirada",
     "disabled_opted_out": "Cliente canceló suscripción"
   },

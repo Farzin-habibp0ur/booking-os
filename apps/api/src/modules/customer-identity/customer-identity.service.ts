@@ -49,6 +49,14 @@ export class CustomerIdentityService {
 
   constructor(private prisma: PrismaService) {}
 
+  private isValidPhone(phone: string): boolean {
+    return /^\+[1-9]\d{1,14}$/.test(phone);
+  }
+
+  private isValidEmail(email: string): boolean {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
   /**
    * Resolve a customer by looking up identifiers in priority order:
    *   phone → email → facebookPsid → instagramUserId → webChatSessionId
@@ -61,6 +69,16 @@ export class CustomerIdentityService {
     for (const field of IDENTIFIER_PRIORITY) {
       const value = identifiers[field];
       if (!value) continue;
+
+      // Validate format for phone and email
+      if (field === 'phone' && !this.isValidPhone(value)) {
+        this.logger.warn(`Invalid phone format skipped during resolution: ${value}`);
+        continue;
+      }
+      if (field === 'email' && !this.isValidEmail(value)) {
+        this.logger.warn(`Invalid email format skipped during resolution: ${value}`);
+        continue;
+      }
 
       const customer = await this.prisma.customer.findFirst({
         where: {

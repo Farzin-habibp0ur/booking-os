@@ -326,6 +326,66 @@ describe('CustomerIdentityService', () => {
       });
     });
 
+    it('should skip invalid phone format and fall through to next identifier', async () => {
+      const emailCustomer = { ...existingCustomer, id: 'cust-email' };
+      mockPrisma.customer.findFirst.mockResolvedValueOnce(emailCustomer); // email hit
+
+      const result = await service.resolveCustomer(businessId, {
+        phone: 'not-a-phone',
+        email: 'alice@example.com',
+      });
+
+      expect(result.id).toBe('cust-email');
+      // Should only have called findFirst once (phone was skipped, email matched)
+      expect(mockPrisma.customer.findFirst).toHaveBeenCalledTimes(1);
+      expect(mockPrisma.customer.findFirst).toHaveBeenCalledWith({
+        where: { businessId, email: 'alice@example.com', deletedAt: null },
+      });
+    });
+
+    it('should skip invalid email format during resolution', async () => {
+      mockPrisma.customer.findFirst.mockResolvedValue(null);
+      const newCustomer = { id: 'cust-new', businessId, phone: 'fb:psid123', name: 'FB User' };
+      mockPrisma.customer.create.mockResolvedValueOnce(newCustomer);
+
+      await service.resolveCustomer(businessId, {
+        email: 'invalid-email',
+        facebookPsid: 'psid123',
+      });
+
+      // Email should be skipped (invalid format), facebookPsid should be tried
+      expect(mockPrisma.customer.findFirst).toHaveBeenCalledTimes(1);
+      expect(mockPrisma.customer.findFirst).toHaveBeenCalledWith({
+        where: { businessId, facebookPsid: 'psid123', deletedAt: null },
+      });
+    });
+
+    it('should accept valid E.164 phone numbers', async () => {
+      mockPrisma.customer.findFirst.mockResolvedValueOnce(existingCustomer);
+
+      await service.resolveCustomer(businessId, {
+        phone: '+12025551234',
+      });
+
+      expect(mockPrisma.customer.findFirst).toHaveBeenCalledWith({
+        where: { businessId, phone: '+12025551234', deletedAt: null },
+      });
+    });
+
+    it('should never validate PSID identifiers (no format check)', async () => {
+      const fbCustomer = { ...existingCustomer, facebookPsid: 'any-format-psid' };
+      mockPrisma.customer.findFirst.mockResolvedValueOnce(fbCustomer);
+
+      const result = await service.resolveCustomer(businessId, {
+        facebookPsid: 'any-format-psid',
+      });
+
+      expect(result).toEqual(fbCustomer);
+      expect(mockPrisma.customer.findFirst).toHaveBeenCalledWith({
+        where: { businessId, facebookPsid: 'any-format-psid', deletedAt: null },
+      });
+    });
+
     it('should handle undefined identifier values gracefully', async () => {
       mockPrisma.customer.findFirst.mockResolvedValue(null);
       const newCustomer = { id: 'cust-x', businessId, phone: '+555', name: 'Test' };

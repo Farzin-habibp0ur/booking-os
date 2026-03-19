@@ -13,6 +13,27 @@ import {
   Globe,
 } from 'lucide-react';
 
+/**
+ * Determine the best default reply channel for a conversation.
+ * Priority: last inbound message channel → conversation channel → first available.
+ */
+export function getDefaultReplyChannel(
+  conversationChannel: string,
+  availableChannels: string[],
+  lastInboundChannel?: string,
+): string {
+  // Prefer the channel the customer last contacted us on
+  if (lastInboundChannel && availableChannels.includes(lastInboundChannel)) {
+    return lastInboundChannel;
+  }
+  // Fall back to the conversation's channel
+  if (availableChannels.includes(conversationChannel)) {
+    return conversationChannel;
+  }
+  // Fall back to first available channel
+  return availableChannels[0] || conversationChannel;
+}
+
 const CHANNEL_ICONS: Record<string, any> = {
   WHATSAPP: MessageSquare,
   INSTAGRAM: Instagram,

@@ -45,13 +45,25 @@ export function ChannelsOnFile({ channels, onAddIdentifier }: ChannelsOnFileProp
   const available = channelList(channels);
   const [addingType, setAddingType] = useState<'email' | 'phone' | null>(null);
   const [inputValue, setInputValue] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = (type: 'email' | 'phone') => {
-    if (inputValue.trim() && onAddIdentifier) {
-      onAddIdentifier(type, inputValue.trim());
-      setAddingType(null);
-      setInputValue('');
+    const trimmed = inputValue.trim();
+    if (!trimmed) return;
+
+    if (type === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      setError(t('inbox.invalid_email'));
+      return;
     }
+    if (type === 'phone' && !/^\+[1-9]\d{1,14}$/.test(trimmed)) {
+      setError(t('inbox.invalid_phone'));
+      return;
+    }
+
+    onAddIdentifier?.(type, trimmed);
+    setAddingType(null);
+    setInputValue('');
+    setError(null);
   };
 
   const missingEmail = !channels.email;
@@ -115,39 +127,50 @@ export function ChannelsOnFile({ channels, onAddIdentifier }: ChannelsOnFileProp
           )}
 
           {addingType && (
-            <div className="flex items-center gap-1">
-              <input
-                type={addingType === 'email' ? 'email' : 'tel'}
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleSubmit(addingType);
-                  if (e.key === 'Escape') {
+            <>
+              <div className="flex items-center gap-1">
+                <input
+                  type={addingType === 'email' ? 'email' : 'tel'}
+                  value={inputValue}
+                  onChange={(e) => {
+                    setInputValue(e.target.value);
+                    if (error) setError(null);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSubmit(addingType);
+                    if (e.key === 'Escape') {
+                      setAddingType(null);
+                      setInputValue('');
+                    }
+                  }}
+                  placeholder={addingType === 'email' ? 'email@example.com' : '+1234567890'}
+                  className="flex-1 text-[10px] px-1.5 py-0.5 rounded border border-slate-200 bg-white focus:ring-1 focus:ring-sage-500 outline-none"
+                  autoFocus
+                  data-testid={`add-${addingType}-input`}
+                />
+                <button
+                  onClick={() => handleSubmit(addingType)}
+                  className="text-[10px] px-1.5 py-0.5 rounded bg-sage-600 text-white hover:bg-sage-700 transition-colors"
+                >
+                  {t('inbox.add_save')}
+                </button>
+                <button
+                  onClick={() => {
                     setAddingType(null);
                     setInputValue('');
-                  }
-                }}
-                placeholder={addingType === 'email' ? 'email@example.com' : '+1234567890'}
-                className="flex-1 text-[10px] px-1.5 py-0.5 rounded border border-slate-200 bg-white focus:ring-1 focus:ring-sage-500 outline-none"
-                autoFocus
-                data-testid={`add-${addingType}-input`}
-              />
-              <button
-                onClick={() => handleSubmit(addingType)}
-                className="text-[10px] px-1.5 py-0.5 rounded bg-sage-600 text-white hover:bg-sage-700 transition-colors"
-              >
-                {t('inbox.add_save')}
-              </button>
-              <button
-                onClick={() => {
-                  setAddingType(null);
-                  setInputValue('');
-                }}
-                className="text-[10px] px-1.5 py-0.5 text-slate-400 hover:text-slate-600"
-              >
-                ✕
-              </button>
-            </div>
+                    setError(null);
+                  }}
+                  className="text-[10px] px-1.5 py-0.5 text-slate-400 hover:text-slate-600"
+                >
+                  ✕
+                </button>
+              </div>
+              {error && (
+                <p className="text-[10px] text-red-500" data-testid="add-identifier-error">
+                  {error}
+                </p>
+              )}
+            </>
           )}
         </div>
       )}
