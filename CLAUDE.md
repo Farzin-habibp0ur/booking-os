@@ -56,7 +56,7 @@ booking-os/
 │   │   ├── src/seed-console.ts # Platform console base data
 │   │   ├── src/seed-console-showcase.ts # Console demo data
 │   │   └── src/seed-content.ts # Content pillar seeding (12 blog posts → ContentDraft)
-│   ├── messaging-provider/     # WhatsApp Cloud, Instagram DM, Facebook (stub), Email (stub), SMS (Twilio) abstraction
+│   ├── messaging-provider/     # WhatsApp Cloud, Instagram DM, Facebook Messenger, Email (Resend/SendGrid), SMS (Twilio) provider abstraction
 │   └── shared/                 # Shared types, DTOs, enums, profile field definitions
 ├── agents/                     # 15 internal growth engine agent prompts (research → ops)
 ├── system/                     # Growth engine config (launch, gates, budget, testing, escalation, MCP fallback)
@@ -95,7 +95,7 @@ booking-os/
 | AI          | Anthropic Claude API                          | claude-sonnet |
 | Payments    | Stripe                                        | stripe-node   |
 | Email       | Resend                                        | -             |
-| Messaging   | WhatsApp Cloud, Instagram DM, SMS (Twilio, full two-way + MMS), Facebook Messenger (stub), Email (stub), Web Chat | - |
+| Messaging   | WhatsApp Cloud, Instagram DM, SMS (Twilio, full two-way + MMS), Facebook Messenger (Meta Graph API), Email (Resend/SendGrid), Web Chat (pending) | - |
 | Cache/Queue | Redis 7 + BullMQ                              | -             |
 | Monorepo    | Turborepo                                     | 2.x           |
 | CI/CD       | GitHub Actions → Railway                      | -             |
@@ -242,7 +242,7 @@ Key events: `message:new`, `conversation:updated`, `ai:suggestion`, `ai:auto-rep
 
 ### Omnichannel Messaging Infrastructure
 
-BookingOS supports 6 messaging channels: **WhatsApp**, **Instagram DM**, **Facebook Messenger**, **SMS**, **Email**, **Web Chat**. WhatsApp + Instagram + SMS are fully implemented; Facebook, Email, and Web Chat have stub providers (Phase 1-5 pending).
+BookingOS supports 6 messaging channels: **WhatsApp**, **Instagram DM**, **Facebook Messenger**, **SMS**, **Email**, **Web Chat**. WhatsApp, Instagram, SMS, Facebook Messenger, and Email are fully implemented; Web Chat is pending (Phase 4).
 
 **Key services:**
 - `CustomerIdentityService` (`modules/customer-identity/`) — resolves customers across channels by priority (phone → email → facebookPsid → instagramUserId → webChatSessionId), links identifiers, reports available channels
@@ -270,7 +270,7 @@ BookingOS supports 6 messaging channels: **WhatsApp**, **Instagram DM**, **Faceb
 
 - Pages are in `apps/web/src/app/` using Next.js App Router (not Pages Router)
 - Protected pages check `access_token` + `refresh_token` cookies in `middleware.ts` (redirects to /login only when both are missing)
-- **83 pages** in `apps/web/` (~17 public, ~50 protected, ~16 portal/marketing site) + **20 admin pages** in `apps/admin/` (15 core + 5 marketing)
+- **86 pages** in `apps/web/` (~17 public, ~53 protected, ~16 portal/marketing site) + **20 admin pages** in `apps/admin/` (15 core + 5 marketing)
 - Client components use `'use client'` directive
 
 ### Page Categories
@@ -279,7 +279,7 @@ BookingOS supports 6 messaging channels: **WhatsApp**, **Instagram DM**, **Faceb
 
 **Marketing pages:** `/` (landing page with hero, features, pricing), `/blog`, `/blog/[slug]` (JSON-LD, OpenGraph), `/pricing`, `/faq`
 
-**Protected pages (tenant):** `/dashboard`, `/bookings`, `/calendar`, `/inbox`, `/customers`, `/customers/[id]`, `/services`, `/staff`, `/waitlist`, `/campaigns`, `/automations`, `/reports`, `/roi`, `/service-board` (dealership kanban), `/settings/*` (13 sub-pages), `/packages` (wellness), `/testimonials`, `/marketing/*` (internal only — no sidebar nav), `/ai/*` (command center: overview, actions, agents, performance), `/search`, `/notifications`, `/help`
+**Protected pages (tenant):** `/dashboard`, `/bookings`, `/calendar`, `/inbox`, `/customers`, `/customers/[id]`, `/services`, `/staff`, `/waitlist`, `/campaigns`, `/automations`, `/reports`, `/roi`, `/service-board` (dealership kanban), `/settings/*` (16 sub-pages including `/sms`, `/facebook`, `/email-channel`), `/packages` (wellness), `/testimonials`, `/marketing/*` (internal only — no sidebar nav), `/ai/*` (command center: overview, actions, agents, performance), `/search`, `/notifications`, `/help`
 
 **Console pages (Super Admin):** These pages live in the **separate `apps/admin/` app** (port 3002), not in `apps/web/`. Routes: `/` (overview), `/businesses` (directory), `/businesses/[id]` (Business 360), `/audit`, `/health`, `/support`, `/billing`, `/billing/past-due`, `/billing/subscriptions`, `/packs`, `/packs/[slug]`, `/packs/skills`, `/agents`, `/messaging`, `/settings`, `/marketing` (landing), `/marketing/queue` (content approval), `/marketing/agents` (12 marketing agents), `/marketing/sequences` (email sequences), `/marketing/rejection-analytics`
 
@@ -437,7 +437,9 @@ The Console is a **standalone Next.js app** at `apps/admin/` for platform-wide a
 - **Billing Dashboard** (`/billing`) — MRR, churn rate, plan distribution, past-due businesses, `BillingCredit` management
 - **Pack Registry** (`/packs`) — Vertical pack management with version history and install counts
 - **AI & Agents Governance** (`/agents`) — Agent performance dashboard, action card funnel, `PlatformAgentDefault` model for platform-wide governance defaults
-- **Messaging Ops** (`/messaging`) — Delivery rates, webhook health, failure analysis, per-tenant fix checklists
+- **Messaging Ops** (`/messaging`) — Delivery rates, webhook health, failure analysis, per-tenant fix checklists, omnichannel seed endpoint
+- **Dead Letter Queue** (`/admin/dlq/*`) — DLQ management API (list, retry, purge failed messages)
+- **Usage Tracking** (`/admin/usage/*`) — Per-channel message usage and billing rates
 - **Platform Settings** (`/settings`) — `PlatformSetting` model (security, notifications, regional, platform categories) with bulk save
 
 ### Console-Specific Models
@@ -544,8 +546,9 @@ Full reference at `.env.example` in the repo root. Key groups:
 | WhatsApp   | `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_VERIFY_TOKEN`            | Required for production messaging                                                                                             |
 | Instagram  | `INSTAGRAM_APP_ID`, `INSTAGRAM_APP_SECRET`, `INSTAGRAM_VERIFY_TOKEN`                    | Required for Instagram DM integration                                                                                         |
 | SMS        | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER`, `TWILIO_WEBHOOK_URL`  | Twilio SMS/MMS — signature validation uses auth token + webhook URL                                                           |
+| Facebook   | `FACEBOOK_VERIFY_TOKEN`, `FACEBOOK_APP_SECRET`                                          | Facebook Messenger webhook verification + HMAC signature validation                                                           |
 | Messaging  | `MESSAGING_PROVIDER`                                                                    | `mock` (default dev) or `whatsapp-cloud` (production)                                                                         |
-| Email      | `EMAIL_PROVIDER`, `EMAIL_API_KEY`, `EMAIL_FROM`                                         | Provider: `resend`, `sendgrid`, or `none` (default, logs only)                                                                |
+| Email      | `EMAIL_PROVIDER`, `EMAIL_API_KEY`, `EMAIL_FROM`                                         | Provider: `resend`, `sendgrid`, or `none` (default, logs only). Also used by email channel for conversational messaging       |
 | Stripe     | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID_*`                       | 3-tier pricing (Starter/Professional/Enterprise) × monthly/annual                                                             |
 | Calendar   | `GOOGLE_CLIENT_ID/SECRET`, `MICROSOFT_CLIENT_ID/SECRET`, `CALENDAR_ENCRYPTION_KEY`      | OAuth for Google Calendar + Outlook                                                                                           |
 | Redis      | `REDIS_URL`                                                                             | Required for BullMQ queues, WebSocket, caching                                                                                |
