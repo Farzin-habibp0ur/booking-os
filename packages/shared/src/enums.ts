@@ -26,6 +26,7 @@ export enum ConversationStatus {
 export enum ConversationChannel {
   WHATSAPP = 'WHATSAPP',
   WEB = 'WEB',
+  INSTAGRAM = 'INSTAGRAM',
 }
 
 export enum MessageDirection {
@@ -38,6 +39,7 @@ export enum MessageContentType {
   IMAGE = 'IMAGE',
   DOCUMENT = 'DOCUMENT',
   AUDIO = 'AUDIO',
+  VIDEO = 'VIDEO',
 }
 
 export enum ReminderStatus {
