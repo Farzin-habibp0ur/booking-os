@@ -108,7 +108,10 @@ export class TwilioSmsProvider implements MessagingProvider {
       data += key + params[key];
     }
     const expected = crypto.createHmac('sha1', authToken).update(data).digest('base64');
-    return expected === signature;
+    const sigBuf = Buffer.from(signature);
+    const expBuf = Buffer.from(expected);
+    if (sigBuf.length !== expBuf.length) return false;
+    return crypto.timingSafeEqual(sigBuf, expBuf);
   }
 
   /**

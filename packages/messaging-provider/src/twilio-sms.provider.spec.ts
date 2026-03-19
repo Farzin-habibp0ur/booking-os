@@ -371,6 +371,27 @@ describe('TwilioSmsProvider', () => {
         }),
       ).toBe(false);
     });
+
+    it('rejects equal-length wrong signatures using timing-safe comparison', () => {
+      const params = { From: '+14155551234', Body: 'Test', MessageSid: 'SM_TIMING' };
+      const validSig = buildTwilioSignature(authToken, webhookUrl, params);
+      // Create a wrong signature of the same length
+      const wrongSig = validSig
+        .split('')
+        .map((c) => (c === 'a' ? 'b' : 'a'))
+        .join('');
+      expect(wrongSig.length).toBe(validSig.length);
+      expect(TwilioSmsProvider.validateSignature(authToken, wrongSig, webhookUrl, params)).toBe(
+        false,
+      );
+    });
+
+    it('rejects different-length signatures', () => {
+      const params = { From: '+14155551234', Body: 'Test', MessageSid: 'SM_LEN' };
+      expect(TwilioSmsProvider.validateSignature(authToken, 'short', webhookUrl, params)).toBe(
+        false,
+      );
+    });
   });
 
   // ─── parseOptOutWebhook ──────────────────────────────────────────────

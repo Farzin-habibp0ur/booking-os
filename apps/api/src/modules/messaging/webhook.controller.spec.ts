@@ -1586,6 +1586,67 @@ describe('WebhookController', () => {
     });
   });
 
+  // ─── Email Webhook Signature Verification ──────────────────────────
+
+  describe('Email webhook signature verification', () => {
+    it('should reject email with invalid signature when secret is configured', async () => {
+      configService.get.mockImplementation((key: string) => {
+        if (key === 'SENDGRID_INBOUND_WEBHOOK_SECRET') return 'email-webhook-secret';
+        return undefined;
+      });
+
+      await expect(
+        controller.emailInbound(
+          { from: 'a@b.com', to: 'c@d.com', text: 'hi' },
+          'invalid-sig',
+          Buffer.from('raw body'),
+        ),
+      ).rejects.toThrow('Invalid email webhook signature');
+    });
+
+    it('should process email with valid signature', async () => {
+      const secret = 'email-webhook-secret';
+      const rawBody = '{"from":"a@b.com","to":"c@d.com","text":"hi"}';
+      const crypto = await import('crypto');
+      const validSig = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
+
+      configService.get.mockImplementation((key: string) => {
+        if (key === 'SENDGRID_INBOUND_WEBHOOK_SECRET') return secret;
+        return undefined;
+      });
+      setupHappyPath();
+
+      const result = await controller.emailInbound(
+        { from: 'a@b.com', to: 'c@d.com', text: 'hi' },
+        validSig,
+        Buffer.from(rawBody),
+      );
+
+      expect(result.status).toBe('EVENT_RECEIVED');
+    });
+
+    it('should process email without signature when no secret is configured', async () => {
+      configService.get.mockImplementation(() => undefined);
+      setupHappyPath();
+
+      const result = await controller.emailInbound({ from: 'a@b.com', to: 'c@d.com', text: 'hi' });
+
+      expect(result.status).toBe('EVENT_RECEIVED');
+    });
+
+    it('should warn but process when secret is set but no signature header present', async () => {
+      configService.get.mockImplementation((key: string) => {
+        if (key === 'SENDGRID_INBOUND_WEBHOOK_SECRET') return 'some-secret';
+        return undefined;
+      });
+      setupHappyPath();
+
+      const result = await controller.emailInbound({ from: 'a@b.com', to: 'c@d.com', text: 'hi' });
+
+      expect(result.status).toBe('EVENT_RECEIVED');
+    });
+  });
+
   // ─── Error Handling ─────────────────────────────────────────────────
 
   describe('error handling', () => {

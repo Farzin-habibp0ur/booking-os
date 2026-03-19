@@ -717,7 +717,33 @@ export class WebhookController {
 
   /** Email inbound webhook (SendGrid Inbound Parse / Resend) */
   @Post('email/inbound')
-  async emailInbound(@Body() body: Record<string, string>) {
+  async emailInbound(
+    @Body() body: Record<string, string>,
+    @Headers('x-twilio-email-integrity') integritySignature?: string,
+    @RawBody() rawBody?: Buffer,
+  ) {
+    const emailWebhookSecret = this.configService.get<string>('SENDGRID_INBOUND_WEBHOOK_SECRET');
+    if (emailWebhookSecret) {
+      if (integritySignature && rawBody) {
+        const isValid = EmailChannelProvider.verifyWebhookIntegrity(
+          rawBody.toString(),
+          integritySignature,
+          emailWebhookSecret,
+        );
+        if (!isValid) {
+          throw new ForbiddenException('Invalid email webhook signature');
+        }
+      } else if (!integritySignature) {
+        this.logger.warn(
+          'Email webhook received without integrity signature — consider requiring signatures in production',
+        );
+      }
+    } else {
+      this.logger.warn(
+        'SENDGRID_INBOUND_WEBHOOK_SECRET not configured — email webhook signature verification disabled',
+      );
+    }
+
     const messages = EmailChannelProvider.parseInboundWebhook(body);
     if (messages.length === 0) {
       return { status: 'EVENT_RECEIVED', processed: 0 };
