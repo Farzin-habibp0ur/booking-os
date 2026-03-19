@@ -43,7 +43,7 @@ describe('CircuitBreakerService', () => {
         await service.execute('whatsapp', async () => {
           throw new Error('fail');
         });
-      } catch {}
+      } catch { /* expected */ }
 
       const state = await service.getState('whatsapp');
       expect(state.failures).toBe(1);
@@ -56,7 +56,7 @@ describe('CircuitBreakerService', () => {
           await service.execute('whatsapp', async () => {
             throw new Error('fail');
           });
-        } catch {}
+        } catch { /* expected */ }
       }
 
       const state = await service.getState('whatsapp');
@@ -72,7 +72,7 @@ describe('CircuitBreakerService', () => {
           await service.execute('whatsapp', async () => {
             throw new Error('fail');
           });
-        } catch {}
+        } catch { /* expected */ }
       }
 
       const state = await service.getState('whatsapp');
@@ -87,7 +87,7 @@ describe('CircuitBreakerService', () => {
           await service.execute('whatsapp', async () => {
             throw new Error('fail');
           });
-        } catch {}
+        } catch { /* expected */ }
       }
 
       await expect(service.execute('whatsapp', async () => 'should not run')).rejects.toThrow(
@@ -101,7 +101,7 @@ describe('CircuitBreakerService', () => {
           await service.execute('twilio-sms', async () => {
             throw new Error('fail');
           });
-        } catch {}
+        } catch { /* expected */ }
       }
 
       try {
@@ -119,7 +119,7 @@ describe('CircuitBreakerService', () => {
           await service.execute('whatsapp', async () => {
             throw new Error('fail');
           });
-        } catch {}
+        } catch { /* expected */ }
       }
 
       const fn = jest.fn().mockResolvedValue('should not run');
@@ -136,7 +136,7 @@ describe('CircuitBreakerService', () => {
           await service.execute('whatsapp', async () => {
             throw new Error('fail');
           });
-        } catch {}
+        } catch { /* expected */ }
       }
 
       // Fast-forward past cooldown by manipulating state
@@ -162,7 +162,7 @@ describe('CircuitBreakerService', () => {
           await service.execute('whatsapp', async () => {
             throw new Error('fail');
           });
-        } catch {}
+        } catch { /* expected */ }
       }
 
       // Fast-forward past cooldown
@@ -186,7 +186,7 @@ describe('CircuitBreakerService', () => {
           await service.execute('whatsapp', async () => {
             throw new Error('fail');
           });
-        } catch {}
+        } catch { /* expected */ }
       }
 
       // Fast-forward past cooldown
@@ -221,7 +221,7 @@ describe('CircuitBreakerService', () => {
         await service.execute('instagram', async () => {
           throw new Error('fail');
         });
-      } catch {}
+      } catch { /* expected */ }
 
       const state = await service.getState('instagram');
       expect(state.state).toBe('CLOSED');
@@ -238,7 +238,7 @@ describe('CircuitBreakerService', () => {
           await service.execute('whatsapp', async () => {
             throw new Error('fail');
           });
-        } catch {}
+        } catch { /* expected */ }
       }
 
       expect((await service.getState('whatsapp')).state).toBe('OPEN');
@@ -257,7 +257,7 @@ describe('CircuitBreakerService', () => {
           await service.execute('whatsapp', async () => {
             throw new Error('fail');
           });
-        } catch {}
+        } catch { /* expected */ }
       }
 
       await service.resetCircuit('whatsapp');
@@ -279,12 +279,12 @@ describe('CircuitBreakerService', () => {
         await service.execute('whatsapp', async () => {
           throw new Error('fail');
         });
-      } catch {}
+      } catch { /* expected */ }
       try {
         await service.execute('instagram', async () => {
           throw new Error('fail');
         });
-      } catch {}
+      } catch { /* expected */ }
 
       const states = await service.getAllStates();
       expect(Object.keys(states)).toContain('whatsapp');
@@ -311,7 +311,7 @@ describe('CircuitBreakerService', () => {
           await service.execute('sendgrid', async () => {
             throw new Error('fail');
           });
-        } catch {}
+        } catch { /* expected */ }
       }
 
       expect((await service.getState('sendgrid')).failures).toBe(3);
@@ -328,7 +328,7 @@ describe('CircuitBreakerService', () => {
         await service.execute('sendgrid', async () => {
           throw new Error('fail again');
         });
-      } catch {}
+      } catch { /* expected */ }
 
       const newState = await service.getState('sendgrid');
       expect(newState.failures).toBe(1);
@@ -342,7 +342,7 @@ describe('CircuitBreakerService', () => {
           await service.execute('facebook', async () => {
             throw new Error('fail');
           });
-        } catch {}
+        } catch { /* expected */ }
       }
 
       // Move outside window
@@ -358,7 +358,7 @@ describe('CircuitBreakerService', () => {
           await service.execute('facebook', async () => {
             throw new Error('fail');
           });
-        } catch {}
+        } catch { /* expected */ }
       }
 
       const newState = await service.getState('facebook');
@@ -375,7 +375,7 @@ describe('CircuitBreakerService', () => {
           await service.execute('whatsapp', async () => {
             throw new Error('fail');
           });
-        } catch {}
+        } catch { /* expected */ }
       }
 
       // Instagram should still be CLOSED
