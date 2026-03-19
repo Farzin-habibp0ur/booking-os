@@ -35,7 +35,7 @@ booking-os/
 │   │   │   ├── app/            # 83 pages (App Router) — customer-facing only, no admin/console
 │   │   │   ├── components/     # Shared components (briefing/, aesthetic/, skeletons, modals)
 │   │   │   ├── lib/            # API client, auth, i18n, socket, theme
-│   │   │   ├── locales/        # en.json, es.json (600+ keys each)
+│   │   │   ├── locales/        # en.json, es.json (650+ keys each)
 │   │   │   └── middleware.ts   # Route protection (checks access_token + refresh_token cookies)
 │   │   └── Dockerfile          # Multi-stage production build
 │   ├── admin/                  # Next.js 15 admin console (port 3002) — SUPER_ADMIN only
@@ -191,7 +191,7 @@ modules/
 
 ### Database (Prisma)
 
-- Schema at `packages/db/prisma/schema.prisma` — **92 models**, 62 migrations
+- Schema at `packages/db/prisma/schema.prisma` — **92 models**, 64 migrations
 - Generate client: `npx prisma generate --schema=packages/db/prisma/schema.prisma`
 - Create migration: `npx prisma migrate dev --name your_name --schema=packages/db/prisma/schema.prisma`
 - `PrismaService` is a global NestJS provider — inject it in constructors
@@ -239,9 +239,11 @@ Channel:            WHATSAPP, INSTAGRAM, FACEBOOK, SMS, EMAIL, WEB_CHAT
 
 ### Real-Time (Socket.io)
 
-Key events: `message:new`, `conversation:updated`, `ai:suggestion`, `ai:auto-replied`, `ai:transfer-to-human`, `booking:updated`, `ai:booking-state`, `action-card:created`, `action-card:updated`, `message:status`, `viewing:start`/`viewing:stop`, `presence:update`
+Key events: `message:new`, `conversation:updated`, `ai:suggestion`, `ai:auto-replied`, `ai:transfer-to-human`, `booking:updated`, `ai:booking-state`, `action-card:created`, `action-card:updated`, `message:status`, `viewing:start`/`viewing:stop`, `presence:update`, `circuit:state-change`
 
-- WebChat gateway on `/web-chat` namespace — visitor sessions, pre-chat forms, real-time messaging bridge to staff inbox
+- `InboxGateway.emitToAll()` for system-wide broadcasts (circuit breaker state changes)
+- WebChat gateway on `/web-chat` namespace — visitor sessions (Redis-backed with in-memory fallback, 24h TTL), pre-chat forms, real-time messaging bridge to staff inbox. Supports `session:identify` (link visitor to customer), `history:request` (paginated message history), `file:upload-request` (stub). Offline visitors with email get notification logging.
+- `PublicChatController` at `GET /public/chat/config/:businessSlug` — unauthenticated endpoint for widget bootstrapping (greeting, theme, preChatFields, offlineMessage)
 
 ### Omnichannel Messaging Infrastructure
 
@@ -249,24 +251,27 @@ BookingOS supports 6 messaging channels: **WhatsApp**, **Instagram DM**, **Faceb
 
 **Key services:**
 
-- `CustomerIdentityService` (`modules/customer-identity/`) — resolves customers across channels by priority (phone → email → facebookPsid → instagramUserId → webChatSessionId), links identifiers, reports available channels
-- `CircuitBreakerService` (`common/circuit-breaker/`) — wraps provider calls with CLOSED→OPEN→HALF_OPEN state machine (5 failures in 60s → open, 30s cooldown). Redis-backed with in-memory fallback
+- `CustomerIdentityService` (`modules/customer-identity/`) — resolves customers across channels by priority (phone → email → facebookPsid → instagramUserId → webChatSessionId), links identifiers, reports available channels, merges duplicate customers (`mergeCustomers`), finds open conversations across channels (`findConversation`). Validates phone (E.164) and email format before lookup.
+- `CircuitBreakerService` (`common/circuit-breaker/`) — wraps all outbound provider.sendMessage() calls with CLOSED→OPEN→HALF_OPEN state machine. Per-provider configurable thresholds (twilio-sms: 3 failures/30s, default: 5/60s). Emits `circuit:state-change` WebSocket events. Redis-backed with in-memory fallback. On CircuitOpenException, messages are stored as FAILED and captured to DLQ.
 - `DeadLetterQueueService` (`common/queue/dead-letter.service.ts`) — captures failed messaging jobs in Redis hash keys `dlq:msg:{id}` with 7-day TTL. Admin API at `/admin/dlq/*`
-- `UsageService` (`modules/usage/`) — tracks per-channel message counts in `MessageUsage` model for billing. Rates: SMS $0.0079/segment out, $0.0075 in; Email $0.00065; WA/IG/FB/Web $0
+- `UsageService` (`modules/usage/`) — tracks per-channel message counts in `MessageUsage` model (with `segments` and `cost` fields) for billing. Records inbound usage in webhook controller, outbound usage in MessageService. Reports to Stripe via `billing.meterEvents.create()`. Cross-business aggregation via `getAllBusinessUsage()`. Rates: SMS $0.0079/segment out, $0.0075 in; MMS $0.02; Email $0.00065; WA/IG/FB/Web $0
 
 **Key patterns:**
 
 - `Message.channel` is denormalized from `Conversation.channel` — set at creation time for query efficiency
-- Each channel gets its own conversation (no cross-channel thread merging). Same customer linked via shared identifiers
+- Each channel gets its own conversation by default. `CustomerIdentityService.findConversation()` enables unified thread lookup across channels for future cross-channel merging.
 - `Business.channelSettings` JSON stores enabled channels, default reply channel, and autoDetectChannel flag
 - `Location` has per-channel config JSON fields: `whatsappConfig`, `instagramConfig`, `facebookConfig`, `smsConfig`, `emailConfig`, `webChatConfig`
+- All webhook endpoints verify provider signatures (HMAC-SHA256 for WhatsApp/Instagram/Facebook/Email, HMAC-SHA1 for Twilio SMS) using timing-safe comparison
+- All 6 channels have delivery status callback endpoints (WhatsApp, SMS, Instagram, Facebook, Email via Resend webhooks)
 
 **UI components** (in `apps/web/src/components/inbox/`):
 
 - `ChannelBadge` — colored icon+label badge per channel
-- `ReplyChannelSwitcher` — dropdown to switch reply channel
-- `ChannelsOnFile` — sidebar listing customer's available channels
-- `ChannelFilterBar` — 7-tab filter (ALL + 6 channels)
+- `ReplyChannelSwitcher` — dropdown to switch reply channel with disabled channel support (tooltip reasons) and `getDefaultReplyChannel()` helper
+- `ChannelsOnFile` — sidebar listing customer's available channels with inline "Add email"/"Add phone" forms (E.164 and email format validation)
+- `ChannelFilterBar` — 7-tab filter (ALL + 6 channels) with unread count badges
+- `ConversationContextBar` — compact bar showing FB/IG messaging window countdown, email subject, SMS opt-in/out status
 
 ---
 
@@ -554,7 +559,7 @@ Full reference at `.env.example` in the repo root. Key groups:
 | SMS        | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER`, `TWILIO_WEBHOOK_URL`  | Twilio SMS/MMS — signature validation uses auth token + webhook URL                                                           |
 | Facebook   | `FACEBOOK_VERIFY_TOKEN`, `FACEBOOK_APP_SECRET`                                          | Facebook Messenger webhook verification + HMAC signature validation                                                           |
 | Messaging  | `MESSAGING_PROVIDER`                                                                    | `mock` (default dev) or `whatsapp-cloud` (production)                                                                         |
-| Email      | `EMAIL_PROVIDER`, `EMAIL_API_KEY`, `EMAIL_FROM`                                         | Provider: `resend`, `sendgrid`, or `none` (default, logs only). Also used by email channel for conversational messaging       |
+| Email      | `EMAIL_PROVIDER`, `EMAIL_API_KEY`, `EMAIL_FROM`, `SENDGRID_INBOUND_WEBHOOK_SECRET`      | Provider: `resend`, `sendgrid`, or `none` (default, logs only). Webhook secret for email inbound signature verification       |
 | Stripe     | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID_*`                       | 3-tier pricing (Starter/Professional/Enterprise) × monthly/annual                                                             |
 | Calendar   | `GOOGLE_CLIENT_ID/SECRET`, `MICROSOFT_CLIENT_ID/SECRET`, `CALENDAR_ENCRYPTION_KEY`      | OAuth for Google Calendar + Outlook                                                                                           |
 | Redis      | `REDIS_URL`                                                                             | Required for BullMQ queues, WebSocket, caching                                                                                |
@@ -579,7 +584,7 @@ All seed scripts are in `packages/db/src/`. They are **idempotent** (safe to re-
 | `seed-console-showcase.ts` | `npx tsx packages/db/src/seed-console-showcase.ts` | Console demo data: support cases, audit logs                                                | Console demos                 |
 | `seed-content.ts`          | `npx tsx packages/db/src/seed-content.ts`          | 12 blog posts across 5 content pillars → ContentDraft records                               | Marketing content setup       |
 | `seed-instagram.ts`        | `npx tsx packages/db/src/seed-instagram.ts`        | 4 Instagram DM conversations (story reply, ad referral, ice breaker, expiring window)       | Instagram integration testing |
-| `seed-omnichannel.ts`      | `npx tsx packages/db/src/seed-omnichannel.ts`      | Multi-channel customers, MessageUsage (7 days), channelSettings for all demo businesses     | Omnichannel foundation setup  |
+| `seed-omnichannel.ts`      | `npx tsx packages/db/src/seed-omnichannel.ts`      | Multi-channel customers, conversations + messages (Alex: WA+IG, Jordan: email threaded, Taylor: web chat offline), MessageUsage with segments/cost (7 days), channelSettings | Omnichannel foundation setup  |
 
 ---
 
@@ -639,7 +644,7 @@ Push to main → lint-and-test → docker-build → deploy (Railway) → smoke-t
 Pull request → lint-and-test → docker-build + e2e-test (Playwright)
 ```
 
-- **lint-and-test:** PostgreSQL 16 service container, `npm ci`, Prisma generate + migrate, format check, lint, test
+- **lint-and-test:** PostgreSQL 16 service container, `npm ci`, Prisma generate, web-chat widget build, migrate, format check, lint, test
 - **docker-build:** Multi-stage Docker builds for API, web, and admin images
 - **deploy:** `railway up --service api/web/admin --detach` (async — Railway build takes 2-5 min after CI passes)
 - **smoke-test:** Runs `scripts/smoke-test.sh` against production + curl check on `admin.businesscommandcentre.com`
