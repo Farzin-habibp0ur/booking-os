@@ -7,8 +7,8 @@ import {
 
 describe('settings-config', () => {
   describe('SETTINGS_CATEGORIES', () => {
-    it('defines exactly 7 categories', () => {
-      expect(SETTINGS_CATEGORIES).toHaveLength(8);
+    it('defines exactly 13 categories', () => {
+      expect(SETTINGS_CATEGORIES).toHaveLength(13);
     });
 
     it('has the expected category keys', () => {
@@ -19,6 +19,11 @@ describe('settings-config', () => {
         'communication',
         'ai',
         'growth',
+        'channels',
+        'sms',
+        'facebook',
+        'email-channel',
+        'web-chat',
         'integrations',
         'billing',
         'appearance',
@@ -64,15 +69,15 @@ describe('settings-config', () => {
   });
 
   describe('getSettingsCategoriesForRole', () => {
-    it('returns all 7 categories for ADMIN', () => {
+    it('returns all 13 categories for ADMIN', () => {
       const categories = getSettingsCategoriesForRole('ADMIN');
-      expect(categories).toHaveLength(8);
+      expect(categories).toHaveLength(13);
     });
 
     it('returns only categories with AGENT in roles for AGENT', () => {
       const categories = getSettingsCategoriesForRole('AGENT');
       expect(categories.length).toBeGreaterThan(0);
-      expect(categories.length).toBeLessThan(8);
+      expect(categories.length).toBeLessThan(13);
       for (const cat of categories) {
         expect(cat.roles).toContain('AGENT');
       }
@@ -81,7 +86,7 @@ describe('settings-config', () => {
     it('returns only categories with SERVICE_PROVIDER in roles', () => {
       const categories = getSettingsCategoriesForRole('SERVICE_PROVIDER');
       expect(categories.length).toBeGreaterThan(0);
-      expect(categories.length).toBeLessThan(8);
+      expect(categories.length).toBeLessThan(13);
       for (const cat of categories) {
         expect(cat.roles).toContain('SERVICE_PROVIDER');
       }

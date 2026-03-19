@@ -38,6 +38,11 @@ jest.mock('lucide-react', () => ({
   CreditCard: () => <div data-testid="icon-credit" />,
   Palette: () => <div data-testid="icon-palette" />,
   Puzzle: () => <div data-testid="icon-puzzle" />,
+  Phone: () => <div data-testid="icon-phone" />,
+  Facebook: () => <div data-testid="icon-facebook" />,
+  Mail: () => <div data-testid="icon-mail" />,
+  Globe: () => <div data-testid="icon-globe" />,
+  Radio: () => <div data-testid="icon-radio" />,
   ChevronRight: () => <div data-testid="icon-chevron" />,
 }));
 
@@ -47,7 +52,7 @@ describe('SettingsHub', () => {
     mockRole = 'ADMIN';
   });
 
-  it('renders all 8 category cards for ADMIN role', () => {
+  it('renders all 13 category cards for ADMIN role', () => {
     render(<SettingsHub />);
 
     expect(screen.getByTestId('settings-card-account')).toBeInTheDocument();
@@ -55,6 +60,11 @@ describe('SettingsHub', () => {
     expect(screen.getByTestId('settings-card-communication')).toBeInTheDocument();
     expect(screen.getByTestId('settings-card-ai')).toBeInTheDocument();
     expect(screen.getByTestId('settings-card-growth')).toBeInTheDocument();
+    expect(screen.getByTestId('settings-card-channels')).toBeInTheDocument();
+    expect(screen.getByTestId('settings-card-sms')).toBeInTheDocument();
+    expect(screen.getByTestId('settings-card-facebook')).toBeInTheDocument();
+    expect(screen.getByTestId('settings-card-email-channel')).toBeInTheDocument();
+    expect(screen.getByTestId('settings-card-web-chat')).toBeInTheDocument();
     expect(screen.getByTestId('settings-card-integrations')).toBeInTheDocument();
     expect(screen.getByTestId('settings-card-billing')).toBeInTheDocument();
     expect(screen.getByTestId('settings-card-appearance')).toBeInTheDocument();
@@ -125,6 +135,6 @@ describe('SettingsHub', () => {
     render(<SettingsHub />);
 
     const chevrons = screen.getAllByTestId('icon-chevron');
-    expect(chevrons).toHaveLength(8); // 8 cards for ADMIN
+    expect(chevrons).toHaveLength(13); // 13 cards for ADMIN
   });
 });
