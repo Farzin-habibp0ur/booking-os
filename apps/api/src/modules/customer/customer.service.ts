@@ -98,6 +98,44 @@ export class CustomerService {
     return customer;
   }
 
+  async findOrCreateByFacebookPsid(businessId: string, facebookPsid: string, name?: string) {
+    let customer = await this.prisma.customer.findFirst({
+      where: { businessId, facebookPsid },
+    });
+    if (!customer) {
+      customer = await this.prisma.customer.create({
+        data: {
+          businessId,
+          phone: `fb:${facebookPsid}`,
+          name: name || `Facebook User ${facebookPsid.slice(-6)}`,
+          facebookPsid,
+        },
+      });
+    }
+    return customer;
+  }
+
+  async findOrCreateByWebChatSessionId(
+    businessId: string,
+    webChatSessionId: string,
+    name?: string,
+  ) {
+    let customer = await this.prisma.customer.findFirst({
+      where: { businessId, webChatSessionId },
+    });
+    if (!customer) {
+      customer = await this.prisma.customer.create({
+        data: {
+          businessId,
+          phone: `web:${webChatSessionId}`,
+          name: name || `Web Visitor ${webChatSessionId.slice(-6)}`,
+          webChatSessionId,
+        },
+      });
+    }
+    return customer;
+  }
+
   async create(
     businessId: string,
     data: { name: string; phone: string; email?: string; tags?: string[]; customFields?: any },

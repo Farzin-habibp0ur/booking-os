@@ -1,5 +1,5 @@
 import * as crypto from 'crypto';
-import { TwilioSmsProvider } from './twilio-sms.provider';
+import { TwilioSmsProvider } from '@booking-os/messaging-provider';
 
 const mockConfig = {
   accountSid: 'AC_TEST_SID',

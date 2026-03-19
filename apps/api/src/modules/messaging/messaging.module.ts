@@ -1,11 +1,13 @@
 import { Global, Module, forwardRef } from '@nestjs/common';
 import { MessagingService } from './messaging.service';
 import { WebhookController } from './webhook.controller';
+import { SmsController } from './sms.controller';
 import { CustomerModule } from '../customer/customer.module';
 import { ConversationModule } from '../conversation/conversation.module';
 import { LocationModule } from '../location/location.module';
 import { MessageModule } from '../message/message.module';
 import { AiModule } from '../ai/ai.module';
+import { CustomerIdentityModule } from '../customer-identity/customer-identity.module';
 
 @Global()
 @Module({
@@ -13,10 +15,11 @@ import { AiModule } from '../ai/ai.module';
     CustomerModule,
     ConversationModule,
     LocationModule,
+    CustomerIdentityModule,
     forwardRef(() => MessageModule),
     forwardRef(() => AiModule),
   ],
-  controllers: [WebhookController],
+  controllers: [WebhookController, SmsController],
   providers: [MessagingService],
   exports: [MessagingService],
 })

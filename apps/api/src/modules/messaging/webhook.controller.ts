@@ -17,6 +17,7 @@ import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
 import { PrismaService } from '../../common/prisma.service';
 import { CustomerService } from '../customer/customer.service';
+import { CustomerIdentityService } from '../customer-identity/customer-identity.service';
 import { ConversationService } from '../conversation/conversation.service';
 import { LocationService } from '../location/location.service';
 import { InboxGateway } from '../../common/inbox.gateway';
@@ -38,6 +39,7 @@ export class WebhookController {
   constructor(
     private prisma: PrismaService,
     private customerService: CustomerService,
+    private customerIdentityService: CustomerIdentityService,
     private conversationService: ConversationService,
     private locationService: LocationService,
     private inboxGateway: InboxGateway,
@@ -134,6 +136,7 @@ export class WebhookController {
       instagramUserId: string;
       metadata?: Record<string, any>;
     },
+    channelOverride?: string,
   ): Promise<{ conversationId?: string; messageId?: string; duplicate?: boolean }> {
     // Dedup: check if message with this externalId already exists
     if (externalId) {
@@ -146,7 +149,7 @@ export class WebhookController {
       }
     }
 
-    const channel = instagramContext?.channel || 'WHATSAPP';
+    const channel = channelOverride || instagramContext?.channel || 'WHATSAPP';
 
     // Route to Location → Business
     let business;
@@ -191,16 +194,19 @@ export class WebhookController {
     }
     if (!business) throw new BadRequestException('No business found');
 
-    // Customer lookup: Instagram uses instagramUserId, WhatsApp/SMS uses phone
+    // Customer lookup via CustomerIdentityService (unified resolution)
     let customer;
     if (instagramContext) {
-      customer = await this.customerService.findOrCreateByInstagramId(
-        business.id,
-        instagramContext.instagramUserId,
-        from,
-      );
+      customer = await this.customerIdentityService.resolveCustomer(business.id, {
+        instagramUserId: instagramContext.instagramUserId,
+        name: from,
+      });
     } else {
-      customer = await this.customerService.findOrCreateByPhone(business.id, from, from);
+      // WhatsApp and SMS both use phone-based resolution
+      customer = await this.customerIdentityService.resolveCustomer(business.id, {
+        phone: from,
+        name: from,
+      });
     }
 
     const conversation = await this.conversationService.findOrCreate(
@@ -218,6 +224,7 @@ export class WebhookController {
           direction: 'INBOUND',
           content: body,
           contentType: 'TEXT',
+          channel,
           externalId,
           ...(instagramContext?.metadata &&
             Object.keys(instagramContext.metadata).length > 0 && {
@@ -319,7 +326,25 @@ export class WebhookController {
    * Twilio sends a POST with form-urlencoded body containing From, Body, MessageSid, etc.
    */
   @Post('sms/inbound')
-  async smsInbound(@Body() body: Record<string, string>) {
+  async smsInbound(
+    @Body() body: Record<string, string>,
+    @Headers('x-twilio-signature') twilioSignature?: string,
+  ) {
+    // Validate Twilio signature if auth token is configured
+    const authToken = this.configService.get<string>('TWILIO_AUTH_TOKEN');
+    const webhookUrl = this.configService.get<string>('TWILIO_WEBHOOK_URL');
+    if (authToken && webhookUrl && twilioSignature) {
+      const isValid = TwilioSmsProvider.validateSignature(
+        authToken,
+        twilioSignature,
+        webhookUrl,
+        body,
+      );
+      if (!isValid) {
+        throw new ForbiddenException('Invalid Twilio webhook signature');
+      }
+    }
+
     const parsed = TwilioSmsProvider.parseInboundWebhook(body);
     if (!parsed) {
       throw new BadRequestException('Invalid SMS webhook payload');
@@ -327,12 +352,23 @@ export class WebhookController {
 
     this.logger.log(`SMS inbound from ${parsed.from}: ${parsed.body.substring(0, 50)}`);
 
+    // Route by SMS phone number on the To field
+    if (parsed.to) {
+      const location = await this.locationService.findLocationBySmsNumber(parsed.to);
+      if (location) {
+        this.logger.log(`Routed SMS to location "${location.name}" (${location.id})`);
+      }
+    }
+
     try {
       const result = await this.processInboundMessage(
         parsed.from,
         parsed.body,
         parsed.externalId,
         undefined,
+        undefined,
+        undefined,
+        'SMS',
       );
       return {
         status: 'EVENT_RECEIVED',
@@ -342,6 +378,45 @@ export class WebhookController {
       this.logger.error(`SMS inbound processing error: ${err.message}`, err.stack);
       return { status: 'EVENT_RECEIVED', processed: 0 };
     }
+  }
+
+  /**
+   * Twilio SMS status callback webhook.
+   * Receives delivery status updates (delivered, failed, undelivered, etc.)
+   */
+  @Post('sms/status')
+  async smsStatusCallback(@Body() body: Record<string, string>) {
+    const parsed = TwilioSmsProvider.parseStatusWebhook(body);
+    if (!parsed) {
+      return { ok: true, skipped: true, reason: 'Invalid status payload' };
+    }
+
+    const statusMap: Record<string, 'DELIVERED' | 'READ' | 'FAILED'> = {
+      delivered: 'DELIVERED',
+      read: 'READ',
+      failed: 'FAILED',
+      undelivered: 'FAILED',
+    };
+
+    const mappedStatus = statusMap[parsed.status?.toLowerCase()];
+    if (!mappedStatus) {
+      return { ok: true, skipped: true, reason: `Unrecognized status: ${parsed.status}` };
+    }
+
+    // Build failure reason from error classification
+    let failureReason: string | undefined;
+    if (mappedStatus === 'FAILED' && parsed.errorCode) {
+      const classification = TwilioSmsProvider.classifyError(parsed.errorCode);
+      failureReason = `${classification.category}: ${classification.description} (${parsed.errorCode})`;
+    }
+
+    const result = await this.messageService.updateDeliveryStatus(
+      parsed.messageSid,
+      mappedStatus,
+      failureReason,
+    );
+
+    return { ok: true, updated: !!result };
   }
 
   // ─── Instagram Webhook Endpoints ─────────────────────────────────────
@@ -445,5 +520,38 @@ export class WebhookController {
     }
 
     return { ok: true, updated };
+  }
+
+  // ─── Facebook Messenger Webhook Endpoints ─────────────────────────────
+
+  /** Facebook Messenger webhook verification */
+  @Get('facebook')
+  facebookVerify(
+    @Query('hub.mode') mode: string,
+    @Query('hub.verify_token') token: string,
+    @Query('hub.challenge') challenge: string,
+  ) {
+    const verifyToken = this.configService.get<string>('FACEBOOK_VERIFY_TOKEN');
+    if (mode === 'subscribe' && token === verifyToken) {
+      this.logger.log('Facebook webhook verified');
+      return parseInt(challenge);
+    }
+    throw new ForbiddenException('Webhook verification failed');
+  }
+
+  /** Facebook Messenger inbound messages (stub) */
+  @Post('facebook')
+  async facebookInbound(@Body() payload: any) {
+    this.logger.log('Facebook inbound webhook received (stub — Phase 1)');
+    return { status: 'EVENT_RECEIVED', processed: 0 };
+  }
+
+  // ─── Email Webhook Endpoints ──────────────────────────────────────────
+
+  /** Email inbound webhook (stub) */
+  @Post('email/inbound')
+  async emailInbound(@Body() payload: any) {
+    this.logger.log('Email inbound webhook received (stub — Phase 2)');
+    return { status: 'EVENT_RECEIVED', processed: 0 };
   }
 }

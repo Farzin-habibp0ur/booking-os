@@ -4,6 +4,7 @@ import * as crypto from 'crypto';
 import { WebhookController } from './webhook.controller';
 import { PrismaService } from '../../common/prisma.service';
 import { CustomerService } from '../customer/customer.service';
+import { CustomerIdentityService } from '../customer-identity/customer-identity.service';
 import { ConversationService } from '../conversation/conversation.service';
 import { LocationService } from '../location/location.service';
 import { InboxGateway } from '../../common/inbox.gateway';
@@ -37,23 +38,66 @@ function buildWhatsAppPayload(externalId: string, from: string, body: string) {
   };
 }
 
+function buildInstagramPayload(senderId: string, text: string, mid: string) {
+  return {
+    object: 'instagram',
+    entry: [
+      {
+        id: 'PAGE_ABC',
+        time: 1700000000,
+        messaging: [
+          {
+            sender: { id: senderId },
+            recipient: { id: 'PAGE_ABC' },
+            timestamp: 1700000000,
+            message: { mid, text },
+          },
+        ],
+      },
+    ],
+  };
+}
+
 describe('WebhookController', () => {
   let controller: WebhookController;
   let configService: { get: jest.Mock };
   let prisma: MockPrisma;
   let customerService: { findOrCreateByPhone: jest.Mock; findOrCreateByInstagramId: jest.Mock };
+  let customerIdentityService: { resolveCustomer: jest.Mock };
   let conversationService: { findOrCreate: jest.Mock };
   let locationService: {
     findLocationByWhatsappPhoneNumberId: jest.Mock;
     findByInstagramPageId: jest.Mock;
+    findLocationBySmsNumber: jest.Mock;
   };
   let inboxGateway: { notifyNewMessage: jest.Mock; notifyConversationUpdate: jest.Mock };
   let aiService: { processInboundMessage: jest.Mock };
+  let messageService: { updateDeliveryStatus: jest.Mock };
 
   const WEBHOOK_SECRET = 'test-webhook-secret';
 
   function signPayload(payload: any, secret: string): string {
     return crypto.createHmac('sha256', secret).update(JSON.stringify(payload)).digest('hex');
+  }
+
+  const mockBusiness = { id: 'biz1', name: 'Test Biz' };
+  const mockCustomer = { id: 'cust1', name: 'John' };
+  const mockConversation = { id: 'conv1', customerId: 'cust1' };
+  const mockMessage = { id: 'msg1', conversationId: 'conv1', externalId: 'wamid.123' };
+  const mockUpdatedConversation = {
+    id: 'conv1',
+    customer: mockCustomer,
+    assignedTo: null,
+    messages: [mockMessage],
+  };
+
+  function setupHappyPath() {
+    (prisma.message.findUnique as jest.Mock).mockResolvedValue(null);
+    (prisma.business.findFirst as jest.Mock).mockResolvedValue(mockBusiness);
+    customerIdentityService.resolveCustomer.mockResolvedValue(mockCustomer);
+    conversationService.findOrCreate.mockResolvedValue(mockConversation);
+    (prisma.message.create as jest.Mock).mockResolvedValue(mockMessage);
+    (prisma.conversation.update as jest.Mock).mockResolvedValue(mockUpdatedConversation);
   }
 
   beforeEach(async () => {
@@ -62,6 +106,8 @@ describe('WebhookController', () => {
         const config: Record<string, string> = {
           WEBHOOK_SECRET,
           WHATSAPP_VERIFY_TOKEN: 'test-verify-token',
+          INSTAGRAM_VERIFY_TOKEN: 'ig-verify-token',
+          FACEBOOK_VERIFY_TOKEN: 'fb-verify-token',
           NODE_ENV: 'development',
         };
         return config[key] ?? defaultValue;
@@ -73,19 +119,25 @@ describe('WebhookController', () => {
       findOrCreateByPhone: jest.fn(),
       findOrCreateByInstagramId: jest.fn(),
     };
+    customerIdentityService = {
+      resolveCustomer: jest.fn(),
+    };
     conversationService = { findOrCreate: jest.fn() };
     locationService = {
       findLocationByWhatsappPhoneNumberId: jest.fn().mockResolvedValue(null),
       findByInstagramPageId: jest.fn().mockResolvedValue(null),
+      findLocationBySmsNumber: jest.fn().mockResolvedValue(null),
     };
     inboxGateway = { notifyNewMessage: jest.fn(), notifyConversationUpdate: jest.fn() };
     aiService = { processInboundMessage: jest.fn().mockResolvedValue(undefined) };
+    messageService = { updateDeliveryStatus: jest.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [WebhookController],
       providers: [
         { provide: PrismaService, useValue: prisma },
         { provide: CustomerService, useValue: customerService },
+        { provide: CustomerIdentityService, useValue: customerIdentityService },
         { provide: ConversationService, useValue: conversationService },
         { provide: LocationService, useValue: locationService },
         { provide: InboxGateway, useValue: inboxGateway },
@@ -95,12 +147,14 @@ describe('WebhookController', () => {
         },
         { provide: ConfigService, useValue: configService },
         { provide: AiService, useValue: aiService },
-        { provide: MessageService, useValue: { updateDeliveryStatus: jest.fn() } },
+        { provide: MessageService, useValue: messageService },
       ],
     }).compile();
 
     controller = module.get(WebhookController);
   });
+
+  // ─── HMAC Signature Validation ──────────────────────────────────────
 
   describe('HMAC signature validation', () => {
     beforeEach(() => {
@@ -141,6 +195,8 @@ describe('WebhookController', () => {
     });
   });
 
+  // ─── WhatsApp Webhook Verification ──────────────────────────────────
+
   describe('WhatsApp webhook verification', () => {
     it('should return challenge for valid verify token', () => {
       const result = controller.whatsappVerify('subscribe', 'test-verify-token', '12345');
@@ -160,6 +216,8 @@ describe('WebhookController', () => {
     });
   });
 
+  // ─── Security Enforcement ───────────────────────────────────────────
+
   describe('Security enforcement', () => {
     it('should reject unsigned requests even in development (no dev bypass)', async () => {
       configService.get.mockImplementation((key: string, defaultValue?: any) => {
@@ -176,27 +234,9 @@ describe('WebhookController', () => {
     });
   });
 
-  describe('WhatsApp inbound deduplication', () => {
-    const mockBusiness = { id: 'biz1', name: 'Test Biz' };
-    const mockCustomer = { id: 'cust1', name: 'John' };
-    const mockConversation = { id: 'conv1', customerId: 'cust1' };
-    const mockMessage = { id: 'msg1', conversationId: 'conv1', externalId: 'wamid.123' };
-    const mockUpdatedConversation = {
-      id: 'conv1',
-      customer: mockCustomer,
-      assignedTo: null,
-      messages: [mockMessage],
-    };
+  // ─── WhatsApp Inbound Processing ────────────────────────────────────
 
-    function setupHappyPath() {
-      (prisma.message.findUnique as jest.Mock).mockResolvedValue(null);
-      (prisma.business.findFirst as jest.Mock).mockResolvedValue(mockBusiness);
-      customerService.findOrCreateByPhone.mockResolvedValue(mockCustomer);
-      conversationService.findOrCreate.mockResolvedValue(mockConversation);
-      (prisma.message.create as jest.Mock).mockResolvedValue(mockMessage);
-      (prisma.conversation.update as jest.Mock).mockResolvedValue(mockUpdatedConversation);
-    }
-
+  describe('WhatsApp inbound processing', () => {
     it('should process a new message successfully', async () => {
       setupHappyPath();
 
@@ -209,6 +249,129 @@ describe('WebhookController', () => {
       expect(prisma.message.create).toHaveBeenCalledTimes(1);
     });
 
+    it('should call CustomerIdentityService.resolveCustomer with phone for WhatsApp', async () => {
+      setupHappyPath();
+
+      const payload = buildWhatsAppPayload('wamid.resolve-wa', '+1234567890', 'Hello');
+      await controller.whatsappInbound(payload);
+
+      expect(customerIdentityService.resolveCustomer).toHaveBeenCalledWith('biz1', {
+        phone: '+1234567890',
+        name: '+1234567890',
+      });
+    });
+
+    it('should set channel to WHATSAPP on created messages', async () => {
+      setupHappyPath();
+
+      const payload = buildWhatsAppPayload('wamid.chan-wa', '+1234567890', 'Hello');
+      await controller.whatsappInbound(payload);
+
+      expect(prisma.message.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            channel: 'WHATSAPP',
+            direction: 'INBOUND',
+            content: 'Hello',
+          }),
+        }),
+      );
+    });
+
+    it('should reject invalid WhatsApp webhook signature', async () => {
+      configService.get.mockImplementation((key: string, defaultValue?: any) => {
+        if (key === 'WHATSAPP_APP_SECRET') return 'wa-app-secret';
+        return defaultValue;
+      });
+
+      const payload = buildWhatsAppPayload('wamid.sig', '+1234567890', 'Hello');
+      await expect(controller.whatsappInbound(payload, 'sha256=invalid')).rejects.toThrow(
+        'Invalid WhatsApp webhook signature',
+      );
+    });
+
+    it('should route message via location when phone number matches', async () => {
+      const mockLocation = { id: 'loc1', name: 'Service Center', businessId: 'biz-dealer' };
+      const dealerBiz = { id: 'biz-dealer', name: 'Metro Auto' };
+      locationService.findLocationByWhatsappPhoneNumberId.mockResolvedValue(mockLocation);
+      (prisma.business.findUnique as jest.Mock).mockResolvedValue(dealerBiz);
+      (prisma.message.findUnique as jest.Mock).mockResolvedValue(null);
+      customerIdentityService.resolveCustomer.mockResolvedValue({ id: 'cust1' });
+      conversationService.findOrCreate.mockResolvedValue({ id: 'conv1' });
+      (prisma.message.create as jest.Mock).mockResolvedValue({
+        id: 'msg1',
+        externalId: 'wamid.route',
+      });
+      (prisma.conversation.update as jest.Mock).mockResolvedValue({
+        id: 'conv1',
+        customer: { id: 'cust1' },
+        assignedTo: null,
+        messages: [],
+      });
+
+      const payload = buildWhatsAppPayload('wamid.route', '+1234567890', 'Hello');
+      const result = await controller.whatsappInbound(payload);
+
+      expect(result.processed).toBe(1);
+      expect(locationService.findLocationByWhatsappPhoneNumberId).toHaveBeenCalledWith('phone1');
+      expect(prisma.business.findUnique).toHaveBeenCalledWith({
+        where: { id: 'biz-dealer' },
+      });
+      expect(conversationService.findOrCreate).toHaveBeenCalledWith(
+        'biz-dealer',
+        'cust1',
+        'WHATSAPP',
+        'loc1',
+      );
+    });
+
+    it('should fall back to first business when location not found', async () => {
+      setupHappyPath();
+      locationService.findLocationByWhatsappPhoneNumberId.mockResolvedValue(null);
+
+      const payload = buildWhatsAppPayload('wamid.fallback', '+1234567890', 'Hello');
+      const result = await controller.whatsappInbound(payload);
+
+      expect(result.processed).toBe(1);
+      expect(conversationService.findOrCreate).toHaveBeenCalledWith(
+        'biz1',
+        'cust1',
+        'WHATSAPP',
+        undefined,
+      );
+    });
+
+    it('should trigger AI processing after message creation', async () => {
+      setupHappyPath();
+
+      const payload = buildWhatsAppPayload('wamid.ai', '+1234567890', 'AI test');
+      await controller.whatsappInbound(payload);
+
+      expect(aiService.processInboundMessage).toHaveBeenCalledWith(
+        'biz1',
+        'conv1',
+        'msg1',
+        'AI test',
+      );
+    });
+
+    it('should notify inbox gateway with new message and conversation update', async () => {
+      setupHappyPath();
+
+      const payload = buildWhatsAppPayload('wamid.notify', '+1234567890', 'Notify test');
+      await controller.whatsappInbound(payload);
+
+      expect(inboxGateway.notifyNewMessage).toHaveBeenCalledWith('biz1', mockMessage);
+      expect(inboxGateway.notifyConversationUpdate).toHaveBeenCalledWith(
+        'biz1',
+        mockUpdatedConversation,
+      );
+    });
+  });
+
+  // ─── Duplicate Message Deduplication ────────────────────────────────
+
+  describe('duplicate message deduplication', () => {
     it('should skip duplicate messages via findUnique hit', async () => {
       (prisma.message.findUnique as jest.Mock).mockResolvedValue(mockMessage);
 
@@ -224,7 +387,7 @@ describe('WebhookController', () => {
     it('should handle P2002 race condition gracefully', async () => {
       (prisma.message.findUnique as jest.Mock).mockResolvedValue(null);
       (prisma.business.findFirst as jest.Mock).mockResolvedValue(mockBusiness);
-      customerService.findOrCreateByPhone.mockResolvedValue(mockCustomer);
+      customerIdentityService.resolveCustomer.mockResolvedValue(mockCustomer);
       conversationService.findOrCreate.mockResolvedValue(mockConversation);
 
       const prismaError = new Error('Unique constraint failed');
@@ -240,8 +403,59 @@ describe('WebhookController', () => {
       expect(result.results).toEqual([{ externalId: 'wamid.123', status: 'duplicate' }]);
     });
 
+    it('should return structured JSON response with per-message status', async () => {
+      (prisma.message.findUnique as jest.Mock)
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(mockMessage);
+      (prisma.business.findFirst as jest.Mock).mockResolvedValue(mockBusiness);
+      customerIdentityService.resolveCustomer.mockResolvedValue(mockCustomer);
+      conversationService.findOrCreate.mockResolvedValue(mockConversation);
+      (prisma.message.create as jest.Mock).mockResolvedValue(mockMessage);
+      (prisma.conversation.update as jest.Mock).mockResolvedValue(mockUpdatedConversation);
+
+      const payload = {
+        entry: [
+          {
+            changes: [
+              {
+                value: {
+                  metadata: { phone_number_id: 'phone1' },
+                  messages: [
+                    {
+                      id: 'wamid.new',
+                      from: '+111',
+                      type: 'text',
+                      text: { body: 'new msg' },
+                      timestamp: '1700000000',
+                    },
+                    {
+                      id: 'wamid.dup',
+                      from: '+222',
+                      type: 'text',
+                      text: { body: 'dup msg' },
+                      timestamp: '1700000001',
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+      };
+
+      const result = await controller.whatsappInbound(payload);
+
+      expect(result).toEqual({
+        status: 'EVENT_RECEIVED',
+        processed: 1,
+        results: [
+          { externalId: 'wamid.new', status: 'processed' },
+          { externalId: 'wamid.dup', status: 'duplicate' },
+        ],
+      });
+    });
+
     it('should continue processing remaining messages when one fails', async () => {
-      // First message: error (business not found in production)
       configService.get.mockImplementation((key: string, defaultValue?: any) => {
         const config: Record<string, string> = {
           WEBHOOK_SECRET,
@@ -290,186 +504,32 @@ describe('WebhookController', () => {
       expect(result.results[0].status).toBe('error');
       expect(result.results[1].status).toBe('error');
     });
-
-    it('should route message via location when phone number matches', async () => {
-      const mockLocation = { id: 'loc1', name: 'Service Center', businessId: 'biz-dealer' };
-      const mockBusiness = { id: 'biz-dealer', name: 'Metro Auto' };
-      locationService.findLocationByWhatsappPhoneNumberId.mockResolvedValue(mockLocation);
-      (prisma.business.findUnique as jest.Mock).mockResolvedValue(mockBusiness);
-      (prisma.message.findUnique as jest.Mock).mockResolvedValue(null);
-      customerService.findOrCreateByPhone.mockResolvedValue({ id: 'cust1' });
-      conversationService.findOrCreate.mockResolvedValue({ id: 'conv1' });
-      (prisma.message.create as jest.Mock).mockResolvedValue({
-        id: 'msg1',
-        externalId: 'wamid.route',
-      });
-      (prisma.conversation.update as jest.Mock).mockResolvedValue({
-        id: 'conv1',
-        customer: { id: 'cust1' },
-        assignedTo: null,
-        messages: [],
-      });
-
-      const payload = buildWhatsAppPayload('wamid.route', '+1234567890', 'Hello');
-      const result = await controller.whatsappInbound(payload);
-
-      expect(result.processed).toBe(1);
-      expect(locationService.findLocationByWhatsappPhoneNumberId).toHaveBeenCalledWith('phone1');
-      expect(prisma.business.findUnique).toHaveBeenCalledWith({
-        where: { id: 'biz-dealer' },
-      });
-      expect(conversationService.findOrCreate).toHaveBeenCalledWith(
-        'biz-dealer',
-        'cust1',
-        'WHATSAPP',
-        'loc1',
-      );
-    });
-
-    it('should fall back to first business when location not found', async () => {
-      locationService.findLocationByWhatsappPhoneNumberId.mockResolvedValue(null);
-      (prisma.message.findUnique as jest.Mock).mockResolvedValue(null);
-      (prisma.business.findFirst as jest.Mock).mockResolvedValue({ id: 'biz1', name: 'Test' });
-      customerService.findOrCreateByPhone.mockResolvedValue({ id: 'cust1' });
-      conversationService.findOrCreate.mockResolvedValue({ id: 'conv1' });
-      (prisma.message.create as jest.Mock).mockResolvedValue({
-        id: 'msg1',
-        externalId: 'wamid.fallback',
-      });
-      (prisma.conversation.update as jest.Mock).mockResolvedValue({
-        id: 'conv1',
-        customer: { id: 'cust1' },
-        assignedTo: null,
-        messages: [],
-      });
-
-      const payload = buildWhatsAppPayload('wamid.fallback', '+1234567890', 'Hello');
-      const result = await controller.whatsappInbound(payload);
-
-      expect(result.processed).toBe(1);
-      expect(conversationService.findOrCreate).toHaveBeenCalledWith(
-        'biz1',
-        'cust1',
-        'WHATSAPP',
-        undefined,
-      );
-    });
-
-    it('should return structured JSON response with per-message status', async () => {
-      // First message: new, Second message: duplicate
-      (prisma.message.findUnique as jest.Mock)
-        .mockResolvedValueOnce(null) // first: not found
-        .mockResolvedValueOnce(mockMessage); // second: found (duplicate)
-      (prisma.business.findFirst as jest.Mock).mockResolvedValue(mockBusiness);
-      customerService.findOrCreateByPhone.mockResolvedValue(mockCustomer);
-      conversationService.findOrCreate.mockResolvedValue(mockConversation);
-      (prisma.message.create as jest.Mock).mockResolvedValue(mockMessage);
-      (prisma.conversation.update as jest.Mock).mockResolvedValue(mockUpdatedConversation);
-
-      const payload = {
-        entry: [
-          {
-            changes: [
-              {
-                value: {
-                  metadata: { phone_number_id: 'phone1' },
-                  messages: [
-                    {
-                      id: 'wamid.new',
-                      from: '+111',
-                      type: 'text',
-                      text: { body: 'new msg' },
-                      timestamp: '1700000000',
-                    },
-                    {
-                      id: 'wamid.dup',
-                      from: '+222',
-                      type: 'text',
-                      text: { body: 'dup msg' },
-                      timestamp: '1700000001',
-                    },
-                  ],
-                },
-              },
-            ],
-          },
-        ],
-      };
-
-      const result = await controller.whatsappInbound(payload);
-
-      expect(result).toEqual({
-        status: 'EVENT_RECEIVED',
-        processed: 1,
-        results: [
-          { externalId: 'wamid.new', status: 'processed' },
-          { externalId: 'wamid.dup', status: 'duplicate' },
-        ],
-      });
-    });
   });
+
+  // ─── Instagram Webhook Verification ─────────────────────────────────
 
   describe('Instagram webhook verification', () => {
     it('should return challenge for valid verify token', () => {
-      configService.get.mockImplementation((key: string, defaultValue?: any) => {
-        if (key === 'INSTAGRAM_VERIFY_TOKEN') return 'ig-verify-token';
-        return defaultValue;
-      });
-
       const result = controller.instagramVerify('subscribe', 'ig-verify-token', '67890');
       expect(result).toBe(67890);
     });
 
     it('should reject invalid verify token', () => {
-      configService.get.mockImplementation((key: string, defaultValue?: any) => {
-        if (key === 'INSTAGRAM_VERIFY_TOKEN') return 'ig-verify-token';
-        return defaultValue;
-      });
-
       expect(() => controller.instagramVerify('subscribe', 'wrong', '67890')).toThrow(
         'Webhook verification failed',
       );
     });
   });
 
-  describe('Instagram inbound message processing', () => {
-    const mockBusiness = { id: 'biz1', name: 'Test Biz' };
-    const mockCustomer = { id: 'cust1', name: 'IG User' };
-    const mockConversation = { id: 'conv1', customerId: 'cust1' };
-    const mockMessage = { id: 'msg1', conversationId: 'conv1', externalId: 'mid.123' };
-    const mockUpdatedConversation = {
-      id: 'conv1',
-      customer: mockCustomer,
-      assignedTo: null,
-      messages: [mockMessage],
-    };
+  // ─── Instagram Inbound Processing ───────────────────────────────────
 
-    function buildInstagramPayload(senderId: string, text: string, mid: string) {
-      return {
-        object: 'instagram',
-        entry: [
-          {
-            id: 'PAGE_ABC',
-            time: 1700000000,
-            messaging: [
-              {
-                sender: { id: senderId },
-                recipient: { id: 'PAGE_ABC' },
-                timestamp: 1700000000,
-                message: { mid, text },
-              },
-            ],
-          },
-        ],
-      };
-    }
-
+  describe('Instagram inbound processing', () => {
     it('should process an Instagram inbound message', async () => {
       const mockLocation = { id: 'loc1', name: 'Main', businessId: 'biz1' };
       locationService.findByInstagramPageId.mockResolvedValue(mockLocation);
       (prisma.business.findUnique as jest.Mock).mockResolvedValue(mockBusiness);
       (prisma.message.findUnique as jest.Mock).mockResolvedValue(null);
-      customerService.findOrCreateByInstagramId.mockResolvedValue(mockCustomer);
+      customerIdentityService.resolveCustomer.mockResolvedValue(mockCustomer);
       conversationService.findOrCreate.mockResolvedValue(mockConversation);
       (prisma.message.create as jest.Mock).mockResolvedValue(mockMessage);
       (prisma.conversation.update as jest.Mock).mockResolvedValue(mockUpdatedConversation);
@@ -480,16 +540,52 @@ describe('WebhookController', () => {
       expect(result.status).toBe('EVENT_RECEIVED');
       expect(result.processed).toBe(1);
       expect(locationService.findByInstagramPageId).toHaveBeenCalledWith('PAGE_ABC');
-      expect(customerService.findOrCreateByInstagramId).toHaveBeenCalledWith(
-        'biz1',
-        'USER_789',
-        'USER_789',
-      );
       expect(conversationService.findOrCreate).toHaveBeenCalledWith(
         'biz1',
         'cust1',
         'INSTAGRAM',
         'loc1',
+      );
+    });
+
+    it('should call CustomerIdentityService.resolveCustomer with instagramUserId', async () => {
+      const mockLocation = { id: 'loc1', name: 'Main', businessId: 'biz1' };
+      locationService.findByInstagramPageId.mockResolvedValue(mockLocation);
+      (prisma.business.findUnique as jest.Mock).mockResolvedValue(mockBusiness);
+      (prisma.message.findUnique as jest.Mock).mockResolvedValue(null);
+      customerIdentityService.resolveCustomer.mockResolvedValue(mockCustomer);
+      conversationService.findOrCreate.mockResolvedValue(mockConversation);
+      (prisma.message.create as jest.Mock).mockResolvedValue(mockMessage);
+      (prisma.conversation.update as jest.Mock).mockResolvedValue(mockUpdatedConversation);
+
+      const payload = buildInstagramPayload('USER_789', 'Hello IG', 'mid.ig-resolve');
+      await controller.instagramInbound(payload);
+
+      expect(customerIdentityService.resolveCustomer).toHaveBeenCalledWith('biz1', {
+        instagramUserId: 'USER_789',
+        name: 'USER_789',
+      });
+    });
+
+    it('should set channel to INSTAGRAM on created messages', async () => {
+      const mockLocation = { id: 'loc1', name: 'Main', businessId: 'biz1' };
+      locationService.findByInstagramPageId.mockResolvedValue(mockLocation);
+      (prisma.business.findUnique as jest.Mock).mockResolvedValue(mockBusiness);
+      (prisma.message.findUnique as jest.Mock).mockResolvedValue(null);
+      customerIdentityService.resolveCustomer.mockResolvedValue(mockCustomer);
+      conversationService.findOrCreate.mockResolvedValue(mockConversation);
+      (prisma.message.create as jest.Mock).mockResolvedValue(mockMessage);
+      (prisma.conversation.update as jest.Mock).mockResolvedValue(mockUpdatedConversation);
+
+      const payload = buildInstagramPayload('USER_789', 'Channel IG', 'mid.ig-chan');
+      await controller.instagramInbound(payload);
+
+      expect(prisma.message.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            channel: 'INSTAGRAM',
+          }),
+        }),
       );
     });
 
@@ -504,47 +600,318 @@ describe('WebhookController', () => {
       const raw = JSON.stringify(payload);
       const expected = crypto.createHmac('sha256', 'ig-app-secret').update(raw).digest('hex');
 
-      // With correct signature — should not throw ForbiddenException
-      // (will throw business not found instead since we haven't set up routing)
       locationService.findByInstagramPageId.mockResolvedValue(null);
       (prisma.message.findUnique as jest.Mock).mockResolvedValue(null);
 
       const result = await controller.instagramInbound(payload, `sha256=${expected}`);
       expect(result.status).toBe('EVENT_RECEIVED');
 
-      // With wrong signature — should throw
       await expect(controller.instagramInbound(payload, 'sha256=wrong')).rejects.toThrow(
         'Invalid Instagram webhook signature',
       );
     });
   });
 
-  describe('Instagram status webhook', () => {
-    it('should process delivery status', async () => {
-      const messageService = {
-        updateDeliveryStatus: jest.fn().mockResolvedValue({ id: 'msg1' }),
+  // ─── SMS Inbound Processing ─────────────────────────────────────────
+
+  describe('SMS inbound processing', () => {
+    it('should process SMS inbound messages correctly', async () => {
+      setupHappyPath();
+
+      const result = await controller.smsInbound({
+        From: '+1234567890',
+        Body: 'Hello via SMS',
+        MessageSid: 'SM-abc123',
+        To: '+15551234567',
+      });
+
+      expect(result.status).toBe('EVENT_RECEIVED');
+      expect(result.processed).toBe(1);
+    });
+
+    it('should call CustomerIdentityService.resolveCustomer with phone for SMS', async () => {
+      setupHappyPath();
+
+      await controller.smsInbound({
+        From: '+1234567890',
+        Body: 'SMS resolve test',
+        MessageSid: 'SM-resolve',
+        To: '+15551234567',
+      });
+
+      expect(customerIdentityService.resolveCustomer).toHaveBeenCalledWith('biz1', {
+        phone: '+1234567890',
+        name: '+1234567890',
+      });
+    });
+
+    it('should set channel to SMS on created messages', async () => {
+      setupHappyPath();
+
+      await controller.smsInbound({
+        From: '+1234567890',
+        Body: 'Channel SMS test',
+        MessageSid: 'SM-chan',
+        To: '+15551234567',
+      });
+
+      expect(prisma.message.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            channel: 'SMS',
+            direction: 'INBOUND',
+            content: 'Channel SMS test',
+          }),
+        }),
+      );
+    });
+
+    it('should reject invalid SMS payload', async () => {
+      await expect(controller.smsInbound({})).rejects.toThrow('Invalid SMS webhook payload');
+    });
+
+    it('should validate Twilio signature when configured', async () => {
+      configService.get.mockImplementation((key: string, defaultValue?: any) => {
+        const config: Record<string, string> = {
+          TWILIO_AUTH_TOKEN: 'twilio-test-token',
+          TWILIO_WEBHOOK_URL: 'https://example.com/webhook/sms/inbound',
+          NODE_ENV: 'development',
+        };
+        return config[key] ?? defaultValue;
+      });
+
+      // Invalid signature should throw
+      await expect(
+        controller.smsInbound(
+          {
+            From: '+1234567890',
+            Body: 'Test',
+            MessageSid: 'SM-sigtest',
+            To: '+15551234567',
+          },
+          'invalid-signature',
+        ),
+      ).rejects.toThrow('Invalid Twilio webhook signature');
+    });
+
+    it('should accept request with valid Twilio signature', async () => {
+      const authToken = 'twilio-test-token';
+      const webhookUrl = 'https://example.com/webhook/sms/inbound';
+      const body = {
+        From: '+1234567890',
+        Body: 'Signed test',
+        MessageSid: 'SM-signed',
+        To: '+15551234567',
       };
 
-      // Re-create module with messageService mock
-      const module = await Test.createTestingModule({
-        controllers: [WebhookController],
-        providers: [
-          { provide: PrismaService, useValue: prisma },
-          { provide: CustomerService, useValue: customerService },
-          { provide: ConversationService, useValue: conversationService },
-          { provide: LocationService, useValue: locationService },
-          { provide: InboxGateway, useValue: inboxGateway },
-          {
-            provide: MessagingService,
-            useValue: { getProvider: jest.fn(), getMockProvider: jest.fn() },
-          },
-          { provide: ConfigService, useValue: configService },
-          { provide: AiService, useValue: aiService },
-          { provide: MessageService, useValue: messageService },
-        ],
-      }).compile();
+      // Build a valid Twilio signature
+      const sortedKeys = Object.keys(body).sort();
+      let data = webhookUrl;
+      for (const key of sortedKeys) {
+        data += key + body[key as keyof typeof body];
+      }
+      const validSignature = crypto.createHmac('sha1', authToken).update(data).digest('base64');
 
-      const ctrl = module.get(WebhookController);
+      configService.get.mockImplementation((key: string, defaultValue?: any) => {
+        const config: Record<string, string> = {
+          TWILIO_AUTH_TOKEN: authToken,
+          TWILIO_WEBHOOK_URL: webhookUrl,
+          NODE_ENV: 'development',
+        };
+        return config[key] ?? defaultValue;
+      });
+
+      setupHappyPath();
+
+      const result = await controller.smsInbound(body, validSignature);
+      expect(result.status).toBe('EVENT_RECEIVED');
+      expect(result.processed).toBe(1);
+    });
+
+    it('should skip signature validation when auth token is not configured', async () => {
+      configService.get.mockImplementation((key: string, defaultValue?: any) => {
+        const config: Record<string, string> = {
+          NODE_ENV: 'development',
+        };
+        return config[key] ?? defaultValue;
+      });
+
+      setupHappyPath();
+
+      // No signature provided, but no auth token either — should pass through
+      const result = await controller.smsInbound({
+        From: '+1234567890',
+        Body: 'No auth check',
+        MessageSid: 'SM-noauth',
+        To: '+15551234567',
+      });
+
+      expect(result.status).toBe('EVENT_RECEIVED');
+      expect(result.processed).toBe(1);
+    });
+
+    it('should handle MMS with media metadata', async () => {
+      setupHappyPath();
+
+      const result = await controller.smsInbound({
+        From: '+1234567890',
+        Body: 'See attached',
+        MessageSid: 'SM-mms',
+        To: '+15551234567',
+        NumMedia: '1',
+        MediaUrl0: 'https://api.twilio.com/media/img.jpg',
+      });
+
+      expect(result.status).toBe('EVENT_RECEIVED');
+      expect(result.processed).toBe(1);
+    });
+
+    it('should attempt SMS location routing by To number', async () => {
+      setupHappyPath();
+
+      await controller.smsInbound({
+        From: '+1234567890',
+        Body: 'Route test',
+        MessageSid: 'SM-route',
+        To: '+15551234567',
+      });
+
+      expect(locationService.findLocationBySmsNumber).toHaveBeenCalledWith('+15551234567');
+    });
+  });
+
+  // ─── SMS Status Callback ──────────────────────────────────────────────
+
+  describe('SMS status callback', () => {
+    it('should process delivered status', async () => {
+      messageService.updateDeliveryStatus.mockResolvedValue({ id: 'msg1' });
+
+      const result = await controller.smsStatusCallback({
+        MessageSid: 'SM-status-1',
+        MessageStatus: 'delivered',
+      });
+
+      expect(result).toEqual({ ok: true, updated: true });
+      expect(messageService.updateDeliveryStatus).toHaveBeenCalledWith(
+        'SM-status-1',
+        'DELIVERED',
+        undefined,
+      );
+    });
+
+    it('should process read status', async () => {
+      messageService.updateDeliveryStatus.mockResolvedValue({ id: 'msg1' });
+
+      const result = await controller.smsStatusCallback({
+        MessageSid: 'SM-status-2',
+        MessageStatus: 'read',
+      });
+
+      expect(result).toEqual({ ok: true, updated: true });
+      expect(messageService.updateDeliveryStatus).toHaveBeenCalledWith(
+        'SM-status-2',
+        'READ',
+        undefined,
+      );
+    });
+
+    it('should process failed status', async () => {
+      messageService.updateDeliveryStatus.mockResolvedValue({ id: 'msg1' });
+
+      const result = await controller.smsStatusCallback({
+        MessageSid: 'SM-status-3',
+        MessageStatus: 'failed',
+        ErrorCode: '30003',
+        ErrorMessage: 'Unreachable',
+      });
+
+      expect(result).toEqual({ ok: true, updated: true });
+      expect(messageService.updateDeliveryStatus).toHaveBeenCalledWith(
+        'SM-status-3',
+        'FAILED',
+        'UNREACHABLE: Unreachable number (30003)',
+      );
+    });
+
+    it('should map undelivered to FAILED', async () => {
+      messageService.updateDeliveryStatus.mockResolvedValue({ id: 'msg1' });
+
+      const result = await controller.smsStatusCallback({
+        MessageSid: 'SM-status-4',
+        MessageStatus: 'undelivered',
+        ErrorCode: '30007',
+      });
+
+      expect(result).toEqual({ ok: true, updated: true });
+      expect(messageService.updateDeliveryStatus).toHaveBeenCalledWith(
+        'SM-status-4',
+        'FAILED',
+        'FILTERED: Message filtered by carrier (30007)',
+      );
+    });
+
+    it('should include error classification in failure reason', async () => {
+      messageService.updateDeliveryStatus.mockResolvedValue({ id: 'msg1' });
+
+      await controller.smsStatusCallback({
+        MessageSid: 'SM-err-class',
+        MessageStatus: 'failed',
+        ErrorCode: '21610',
+      });
+
+      expect(messageService.updateDeliveryStatus).toHaveBeenCalledWith(
+        'SM-err-class',
+        'FAILED',
+        'UNSUBSCRIBED: Number opted out (21610)',
+      );
+    });
+
+    it('should skip unrecognized status', async () => {
+      const result = await controller.smsStatusCallback({
+        MessageSid: 'SM-skip',
+        MessageStatus: 'queued',
+      });
+
+      expect(result).toEqual({
+        ok: true,
+        skipped: true,
+        reason: 'Unrecognized status: queued',
+      });
+      expect(messageService.updateDeliveryStatus).not.toHaveBeenCalled();
+    });
+
+    it('should return skipped for invalid status payload', async () => {
+      const result = await controller.smsStatusCallback({});
+
+      expect(result).toEqual({
+        ok: true,
+        skipped: true,
+        reason: 'Invalid status payload',
+      });
+    });
+
+    it('should handle failed status without error code', async () => {
+      messageService.updateDeliveryStatus.mockResolvedValue({ id: 'msg1' });
+
+      const result = await controller.smsStatusCallback({
+        MessageSid: 'SM-nocode',
+        MessageStatus: 'failed',
+      });
+
+      expect(result).toEqual({ ok: true, updated: true });
+      expect(messageService.updateDeliveryStatus).toHaveBeenCalledWith(
+        'SM-nocode',
+        'FAILED',
+        undefined,
+      );
+    });
+  });
+
+  // ─── Instagram Status Webhook ───────────────────────────────────────
+
+  describe('Instagram status webhook', () => {
+    it('should process delivery status', async () => {
+      messageService.updateDeliveryStatus.mockResolvedValue({ id: 'msg1' });
 
       const payload = {
         entry: [
@@ -560,11 +927,149 @@ describe('WebhookController', () => {
         ],
       };
 
-      const result = await ctrl.instagramStatusCallback(payload);
+      const result = await controller.instagramStatusCallback(payload);
 
       expect(result.ok).toBe(true);
       expect(result.updated).toBe(1);
       expect(messageService.updateDeliveryStatus).toHaveBeenCalledWith('mid.1', 'DELIVERED');
+    });
+  });
+
+  // ─── WhatsApp Status Callback ───────────────────────────────────────
+
+  describe('WhatsApp status callback', () => {
+    it('should handle unrecognized status gracefully', async () => {
+      const result = await controller.whatsappStatusCallback({
+        externalId: 'wamid.status-1',
+        status: 'unknown_status',
+      });
+      expect(result).toEqual({ ok: true, skipped: true, reason: 'Unrecognized status' });
+    });
+
+    it('should process delivered status', async () => {
+      messageService.updateDeliveryStatus.mockResolvedValue({ id: 'msg1' });
+
+      const result = await controller.whatsappStatusCallback({
+        externalId: 'wamid.status-2',
+        status: 'delivered',
+      });
+      expect(result).toEqual({ ok: true, updated: true });
+      expect(messageService.updateDeliveryStatus).toHaveBeenCalledWith(
+        'wamid.status-2',
+        'DELIVERED',
+        undefined,
+      );
+    });
+
+    it('should process read status', async () => {
+      messageService.updateDeliveryStatus.mockResolvedValue({ id: 'msg1' });
+
+      const result = await controller.whatsappStatusCallback({
+        externalId: 'wamid.status-3',
+        status: 'read',
+      });
+      expect(result).toEqual({ ok: true, updated: true });
+      expect(messageService.updateDeliveryStatus).toHaveBeenCalledWith(
+        'wamid.status-3',
+        'READ',
+        undefined,
+      );
+    });
+  });
+
+  // ─── Facebook Stub Endpoints ────────────────────────────────────────
+
+  describe('Facebook webhook verification', () => {
+    it('should verify Facebook webhook with correct token', () => {
+      const result = controller.facebookVerify('subscribe', 'fb-verify-token', '99999');
+      expect(result).toBe(99999);
+    });
+
+    it('should reject Facebook webhook with incorrect token', () => {
+      expect(() => controller.facebookVerify('subscribe', 'wrong-token', '99999')).toThrow(
+        'Webhook verification failed',
+      );
+    });
+
+    it('should reject Facebook webhook with wrong mode', () => {
+      expect(() => controller.facebookVerify('unsubscribe', 'fb-verify-token', '99999')).toThrow(
+        'Webhook verification failed',
+      );
+    });
+  });
+
+  describe('Facebook inbound (stub)', () => {
+    it('should return EVENT_RECEIVED with processed 0', async () => {
+      const result = await controller.facebookInbound({ object: 'page', entry: [] });
+      expect(result).toEqual({ status: 'EVENT_RECEIVED', processed: 0 });
+    });
+
+    it('should handle any payload without errors', async () => {
+      const result = await controller.facebookInbound({});
+      expect(result.status).toBe('EVENT_RECEIVED');
+      expect(result.processed).toBe(0);
+    });
+  });
+
+  // ─── Email Stub Endpoint ────────────────────────────────────────────
+
+  describe('Email inbound (stub)', () => {
+    it('should return EVENT_RECEIVED with processed 0', async () => {
+      const result = await controller.emailInbound({ from: 'test@example.com', subject: 'Test' });
+      expect(result).toEqual({ status: 'EVENT_RECEIVED', processed: 0 });
+    });
+
+    it('should handle any payload without errors', async () => {
+      const result = await controller.emailInbound({});
+      expect(result.status).toBe('EVENT_RECEIVED');
+      expect(result.processed).toBe(0);
+    });
+  });
+
+  // ─── Error Handling ─────────────────────────────────────────────────
+
+  describe('error handling', () => {
+    it('should throw BadRequestException when no business found in production', async () => {
+      configService.get.mockImplementation((key: string, defaultValue?: any) => {
+        if (key === 'NODE_ENV') return 'production';
+        return defaultValue;
+      });
+      (prisma.message.findUnique as jest.Mock).mockResolvedValue(null);
+      (prisma.business.findFirst as jest.Mock).mockResolvedValue(null);
+
+      const payload = buildWhatsAppPayload('wamid.err-1', '+10000000000', 'No business');
+      const result = await controller.whatsappInbound(payload);
+
+      expect(result.results[0].status).toBe('error');
+    });
+
+    it('should fall back to first business in dev when no match', async () => {
+      locationService.findLocationByWhatsappPhoneNumberId.mockResolvedValue(null);
+      (prisma.message.findUnique as jest.Mock).mockResolvedValue(null);
+      (prisma.business.findFirst as jest.Mock).mockResolvedValue(mockBusiness);
+      customerIdentityService.resolveCustomer.mockResolvedValue(mockCustomer);
+      conversationService.findOrCreate.mockResolvedValue(mockConversation);
+      (prisma.message.create as jest.Mock).mockResolvedValue(mockMessage);
+      (prisma.conversation.update as jest.Mock).mockResolvedValue(mockUpdatedConversation);
+
+      const payload = buildWhatsAppPayload('wamid.dev-fallback', '+10000000000', 'Dev fallback');
+      const result = await controller.whatsappInbound(payload);
+
+      expect(result.processed).toBe(1);
+      expect(prisma.business.findFirst).toHaveBeenCalled();
+    });
+  });
+
+  // ─── Simulator Outbox ───────────────────────────────────────────────
+
+  describe('simulatorOutbox', () => {
+    it('should throw ForbiddenException in production', async () => {
+      configService.get.mockImplementation((key: string, defaultValue?: any) => {
+        if (key === 'NODE_ENV') return 'production';
+        return defaultValue;
+      });
+
+      await expect(controller.simulatorOutbox()).rejects.toThrow('Simulator not available');
     });
   });
 });

@@ -5,8 +5,11 @@ import {
   WhatsAppCloudProvider,
   TwilioSmsProvider,
   InstagramProvider,
+  FacebookProvider,
+  EmailChannelProvider,
   MessagingProvider,
 } from '@booking-os/messaging-provider';
+import type { EmailProviderConfig } from '@booking-os/messaging-provider';
 
 @Injectable()
 export class MessagingService {
@@ -16,6 +19,8 @@ export class MessagingService {
   private smsProvider?: TwilioSmsProvider;
   private providerRegistry = new Map<string, WhatsAppCloudProvider>();
   private instagramProviderRegistry = new Map<string, InstagramProvider>();
+  private facebookProviderRegistry = new Map<string, FacebookProvider>();
+  private emailProviderRegistry = new Map<string, EmailChannelProvider>();
 
   constructor(private configService: ConfigService) {
     const providerName = this.configService.get<string>('MESSAGING_PROVIDER', 'mock');
@@ -141,6 +146,38 @@ export class MessagingService {
     return this.instagramProviderRegistry.size > 0;
   }
 
+  /** Register a Facebook Messenger provider for a specific page ID */
+  registerFacebookProvider(pageId: string, accessToken: string): FacebookProvider {
+    const existing = this.facebookProviderRegistry.get(pageId);
+    if (existing) return existing;
+
+    const provider = new FacebookProvider({ pageId, pageAccessToken: accessToken });
+    this.facebookProviderRegistry.set(pageId, provider);
+    this.logger.log(`Registered Facebook provider for pageId: ${pageId}`);
+    return provider;
+  }
+
+  /** Get Facebook provider for a specific page ID */
+  getProviderForFacebookPageId(pageId: string): FacebookProvider | null {
+    return this.facebookProviderRegistry.get(pageId) || null;
+  }
+
+  /** Register an Email channel provider */
+  registerEmailProvider(key: string, config: EmailProviderConfig): EmailChannelProvider {
+    const existing = this.emailProviderRegistry.get(key);
+    if (existing) return existing;
+
+    const provider = new EmailChannelProvider(config);
+    this.emailProviderRegistry.set(key, provider);
+    this.logger.log(`Registered Email provider for key: ${key}`);
+    return provider;
+  }
+
+  /** Get Email provider for a specific key */
+  getEmailProvider(key: string): EmailChannelProvider | null {
+    return this.emailProviderRegistry.get(key) || null;
+  }
+
   /**
    * Resolve the correct messaging provider for a conversation based on its channel
    * and associated location config. This is the primary method for outbound message routing.
@@ -161,6 +198,34 @@ export class MessagingService {
     if (channel === 'SMS') {
       const sms = this.getSmsProvider();
       if (sms) return sms;
+    }
+
+    if (channel === 'FACEBOOK') {
+      // Facebook Messenger: look up by page ID from location config
+      const pageId = locationWhatsappConfig?.facebookPageId;
+      if (pageId) {
+        const fbProvider = this.getProviderForFacebookPageId(pageId);
+        if (fbProvider) return fbProvider;
+      }
+      this.logger.warn('Facebook provider not found for conversation, falling back to default');
+      return this.provider;
+    }
+
+    if (channel === 'EMAIL') {
+      // Email: look up by a key from location config, fallback to null (not implemented yet)
+      const emailKey = locationWhatsappConfig?.emailProviderKey;
+      if (emailKey) {
+        const emailProvider = this.getEmailProvider(emailKey);
+        if (emailProvider) return emailProvider;
+      }
+      this.logger.warn('Email provider not found for conversation, falling back to default');
+      return this.provider;
+    }
+
+    if (channel === 'WEB_CHAT') {
+      // Web chat is handled via WebSocket, not an external provider — return mock
+      if (this.mockProvider) return this.mockProvider;
+      return this.provider;
     }
 
     // WhatsApp or fallback

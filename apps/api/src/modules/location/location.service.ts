@@ -225,6 +225,18 @@ export class LocationService {
     });
   }
 
+  async findLocationBySmsNumber(phoneNumber: string) {
+    const locations = await this.prisma.location.findMany({
+      where: { isActive: true },
+    });
+    return (
+      locations.find((loc) => {
+        const config = loc.smsConfig as Record<string, unknown> | null;
+        return config?.phoneNumber === phoneNumber;
+      }) || null
+    );
+  }
+
   async findByInstagramPageId(pageId: string) {
     const locations = await this.prisma.location.findMany({
       where: { isActive: true },

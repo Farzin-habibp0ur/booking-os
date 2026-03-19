@@ -85,6 +85,9 @@ import { BudgetTrackerModule } from './modules/budget-tracker/budget-tracker.mod
 import { AutonomySettingsModule } from './modules/autonomy-settings/autonomy-settings.module';
 import { DashboardBriefingModule } from './modules/dashboard-briefing/dashboard-briefing.module';
 import { InstagramAuthModule } from './modules/instagram-auth/instagram-auth.module';
+import { UsageModule } from './modules/usage/usage.module';
+import { CustomerIdentityModule } from './modules/customer-identity/customer-identity.module';
+import { CircuitBreakerModule } from './common/circuit-breaker';
 
 @Module({
   imports: [
@@ -186,6 +189,9 @@ import { InstagramAuthModule } from './modules/instagram-auth/instagram-auth.mod
     AutonomySettingsModule,
     DashboardBriefingModule,
     InstagramAuthModule,
+    UsageModule,
+    CustomerIdentityModule,
+    CircuitBreakerModule,
     process.env.REDIS_URL ? QueueModule.forRootWithRedis() : QueueModule.forRoot(),
   ],
 })

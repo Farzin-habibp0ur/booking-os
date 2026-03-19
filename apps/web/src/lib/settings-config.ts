@@ -14,6 +14,7 @@ import {
   CreditCard,
   Palette,
   Puzzle,
+  Phone,
 } from 'lucide-react';
 
 export interface SettingsCategory {
@@ -73,6 +74,15 @@ export const SETTINGS_CATEGORIES: SettingsCategory[] = [
     icon: Gift,
     accent: 'lavender',
     pages: ['waitlist', 'offers'],
+    roles: ['ADMIN'],
+  },
+  {
+    key: 'sms',
+    label: 'SMS',
+    description: 'Configure Twilio SMS for two-way messaging',
+    icon: Phone,
+    accent: 'sage',
+    pages: ['sms'],
     roles: ['ADMIN'],
   },
   {

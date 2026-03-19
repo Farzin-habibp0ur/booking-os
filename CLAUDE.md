@@ -26,7 +26,7 @@ booking-os/
 ├── apps/
 │   ├── api/                    # NestJS REST API (port 3001)
 │   │   ├── src/
-│   │   │   ├── modules/        # 80 feature modules (one dir per domain)
+│   │   │   ├── modules/        # 83 feature modules (one dir per domain)
 │   │   │   ├── common/         # Guards, decorators, filters, DTOs, PrismaService
 │   │   │   └── main.ts         # Bootstrap, Swagger, CORS, cookies, validation
 │   │   └── Dockerfile          # Multi-stage production build
@@ -47,7 +47,7 @@ booking-os/
 │   │   └── next.config.js      # Stricter CSP (no analytics), X-Robots-Tag: noindex
 │   └── whatsapp-simulator/     # WhatsApp testing tool (port 3002)
 ├── packages/
-│   ├── db/                     # Prisma schema (91 models), migrations, seed scripts
+│   ├── db/                     # Prisma schema (92 models), migrations, seed scripts
 │   │   ├── prisma/schema.prisma
 │   │   ├── src/seed.ts         # Base seed (aesthetic + dealership + wellness, idempotent)
 │   │   ├── src/seed-demo.ts    # Rich demo data (idempotent, dedup-safe)
@@ -56,7 +56,7 @@ booking-os/
 │   │   ├── src/seed-console.ts # Platform console base data
 │   │   ├── src/seed-console-showcase.ts # Console demo data
 │   │   └── src/seed-content.ts # Content pillar seeding (12 blog posts → ContentDraft)
-│   ├── messaging-provider/     # WhatsApp Cloud + Instagram DM API abstraction
+│   ├── messaging-provider/     # WhatsApp Cloud, Instagram DM, Facebook (stub), Email (stub), SMS (Twilio) abstraction
 │   └── shared/                 # Shared types, DTOs, enums, profile field definitions
 ├── agents/                     # 15 internal growth engine agent prompts (research → ops)
 ├── system/                     # Growth engine config (launch, gates, budget, testing, escalation, MCP fallback)
@@ -95,7 +95,7 @@ booking-os/
 | AI          | Anthropic Claude API                          | claude-sonnet |
 | Payments    | Stripe                                        | stripe-node   |
 | Email       | Resend                                        | -             |
-| Messaging   | WhatsApp Business Cloud API, Instagram DM API | -             |
+| Messaging   | WhatsApp Cloud, Instagram DM, SMS (Twilio, full two-way + MMS), Facebook Messenger (stub), Email (stub), Web Chat | - |
 | Cache/Queue | Redis 7 + BullMQ                              | -             |
 | Monorepo    | Turborepo                                     | 2.x           |
 | CI/CD       | GitHub Actions → Railway                      | -             |
@@ -143,7 +143,7 @@ Each vertical customizes fields, templates, automations, and workflows. The pack
 
 ### Module Structure
 
-Every feature is a NestJS module in `apps/api/src/modules/` (80 modules). Each module follows this pattern:
+Every feature is a NestJS module in `apps/api/src/modules/` (83 modules). Each module follows this pattern:
 
 ```
 modules/
@@ -190,13 +190,13 @@ modules/
 
 ### Database (Prisma)
 
-- Schema at `packages/db/prisma/schema.prisma` — **91 models**, 61 migrations
+- Schema at `packages/db/prisma/schema.prisma` — **92 models**, 62 migrations
 - Generate client: `npx prisma generate --schema=packages/db/prisma/schema.prisma`
 - Create migration: `npx prisma migrate dev --name your_name --schema=packages/db/prisma/schema.prisma`
 - `PrismaService` is a global NestJS provider — inject it in constructors
 - All queries **must filter by `businessId`** for tenant isolation
 - JSON fields (customFields, metadata, aiSettings, packConfig, etc.) — use `Prisma.JsonValue` type
-- Key JSON fields to be aware of: `Business.packConfig` (vertical config), `Business.aiSettings` (AI behavior), `Business.policySettings` (cancellation/reschedule), `Conversation.metadata` (AI state for multi-turn flows), `ActionCard.preview` (diff data), `ActionCard.ctaConfig` (button config), `AutomationRule.filters`/`.actions` (rule definitions)
+- Key JSON fields to be aware of: `Business.packConfig` (vertical config), `Business.aiSettings` (AI behavior), `Business.policySettings` (cancellation/reschedule), `Business.channelSettings` (omnichannel config), `Conversation.metadata` (AI state for multi-turn flows), `ActionCard.preview` (diff data), `ActionCard.ctaConfig` (button config), `AutomationRule.filters`/`.actions` (rule definitions), `Location.facebookConfig`/`.smsConfig`/`.emailConfig`/`.webChatConfig` (per-location channel configs)
 
 ### Key Enums
 
@@ -218,6 +218,7 @@ DealType:           NEW_PURCHASE, USED_PURCHASE, TRADE_IN, LEASE
 ActionCardCategory: URGENT_TODAY, NEEDS_APPROVAL, OPPORTUNITY, HYGIENE
 AutonomyLevel:      OFF, SUGGEST, AUTO_WITH_REVIEW, FULL_AUTO
 AgentType:          WAITLIST, RETENTION, DATA_HYGIENE, SCHEDULING_OPTIMIZER, QUOTE_FOLLOWUP (+ 12 marketing agents)
+Channel:            WHATSAPP, INSTAGRAM, FACEBOOK, SMS, EMAIL, WEB_CHAT
 ```
 
 ### BullMQ Queues (8)
@@ -231,12 +232,35 @@ AgentType:          WAITLIST, RETENTION, DATA_HYGIENE, SCHEDULING_OPTIMIZER, QUO
 - `ONBOARDING_DRIP` — 13-email onboarding sequence
 - `DUNNING` — 3-email payment failure sequence with auto-downgrade after 14 days
 - Queue processors are in `apps/api/src/common/queue/`
+- Dead letter queue (DLQ) uses Redis hash keys `dlq:msg:{id}` with 7-day TTL — no separate BullMQ queue. Admin API at `GET/POST/DELETE /admin/dlq/*`
 - Redis connection via `REDIS_URL` environment variable
 - **Do not add new queues without discussing consolidation first** — 8 queues is already a lot for Redis to manage
 
 ### Real-Time (Socket.io)
 
 Key events: `message:new`, `conversation:updated`, `ai:suggestion`, `ai:auto-replied`, `ai:transfer-to-human`, `booking:updated`, `ai:booking-state`, `action-card:created`, `action-card:updated`, `message:status`, `viewing:start`/`viewing:stop`, `presence:update`
+
+### Omnichannel Messaging Infrastructure
+
+BookingOS supports 6 messaging channels: **WhatsApp**, **Instagram DM**, **Facebook Messenger**, **SMS**, **Email**, **Web Chat**. WhatsApp + Instagram + SMS are fully implemented; Facebook, Email, and Web Chat have stub providers (Phase 1-5 pending).
+
+**Key services:**
+- `CustomerIdentityService` (`modules/customer-identity/`) — resolves customers across channels by priority (phone → email → facebookPsid → instagramUserId → webChatSessionId), links identifiers, reports available channels
+- `CircuitBreakerService` (`common/circuit-breaker/`) — wraps provider calls with CLOSED→OPEN→HALF_OPEN state machine (5 failures in 60s → open, 30s cooldown). Redis-backed with in-memory fallback
+- `DeadLetterQueueService` (`common/queue/dead-letter.service.ts`) — captures failed messaging jobs in Redis hash keys `dlq:msg:{id}` with 7-day TTL. Admin API at `/admin/dlq/*`
+- `UsageService` (`modules/usage/`) — tracks per-channel message counts in `MessageUsage` model for billing. Rates: SMS $0.0079/segment out, $0.0075 in; Email $0.00065; WA/IG/FB/Web $0
+
+**Key patterns:**
+- `Message.channel` is denormalized from `Conversation.channel` — set at creation time for query efficiency
+- Each channel gets its own conversation (no cross-channel thread merging). Same customer linked via shared identifiers
+- `Business.channelSettings` JSON stores enabled channels, default reply channel, and autoDetectChannel flag
+- `Location` has per-channel config JSON fields: `whatsappConfig`, `instagramConfig`, `facebookConfig`, `smsConfig`, `emailConfig`, `webChatConfig`
+
+**UI components** (in `apps/web/src/components/inbox/`):
+- `ChannelBadge` — colored icon+label badge per channel
+- `ReplyChannelSwitcher` — dropdown to switch reply channel
+- `ChannelsOnFile` — sidebar listing customer's available channels
+- `ChannelFilterBar` — 7-tab filter (ALL + 6 channels)
 
 ---
 
@@ -298,8 +322,9 @@ Key events: `message:new`, `conversation:updated`, `ai:suggestion`, `ai:auto-rep
 - `BOOKING_SOURCE_STYLES` — map of 6 booking sources (MANUAL, PORTAL, WHATSAPP, AI, REFERRAL, WALK_IN) to `{ bg, text, label, hex }`
 - `CONVERSATION_STATUS_STYLES` — map of 4 conversation statuses (OPEN, WAITING, RESOLVED, SNOOZED)
 - `ELEVATION` — shadow + radius tokens: `card`, `modal`, `dropdown`, `cardSm`, `fab`
+- `CHANNEL_STYLES` — map of 6 messaging channels (WHATSAPP, INSTAGRAM, FACEBOOK, SMS, EMAIL, WEB_CHAT) to `{ bg, text, border, label, hex }`
 - Marketing tokens: `CONTENT_TYPE_STYLES` (6 types), `TIER_STYLES` (GREEN/YELLOW/RED), `ACTION_CARD_PRIORITY_STYLES` (4 priorities), `AGENT_CATEGORY_STYLES` (3 categories), `AUTONOMY_LEVEL_STYLES` (4 levels), `PIPELINE_STAGE_STYLES` (6 stages)
-- Helper functions: `statusBadgeClasses(status)`, `statusCalendarClasses(status)`, `statusHex(status)`, `contentTypeBadgeClasses(type)`, `tierBadgeClasses(tier)`, `priorityBadgeClasses(priority)`, `agentCategoryBadgeClasses(category)`, `autonomyBadgeClasses(level)`
+- Helper functions: `statusBadgeClasses(status)`, `statusCalendarClasses(status)`, `statusHex(status)`, `channelBadgeClasses(channel)`, `contentTypeBadgeClasses(type)`, `tierBadgeClasses(tier)`, `priorityBadgeClasses(priority)`, `agentCategoryBadgeClasses(category)`, `autonomyBadgeClasses(level)`
 - **Always import from design-tokens.ts** — never define inline status color objects
 
 ### Navigation Structure
@@ -518,6 +543,7 @@ Full reference at `.env.example` in the repo root. Key groups:
 | AI         | `ANTHROPIC_API_KEY`                                                                     | Claude API for intent detection, replies, booking assistant                                                                   |
 | WhatsApp   | `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_VERIFY_TOKEN`            | Required for production messaging                                                                                             |
 | Instagram  | `INSTAGRAM_APP_ID`, `INSTAGRAM_APP_SECRET`, `INSTAGRAM_VERIFY_TOKEN`                    | Required for Instagram DM integration                                                                                         |
+| SMS        | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER`, `TWILIO_WEBHOOK_URL`  | Twilio SMS/MMS — signature validation uses auth token + webhook URL                                                           |
 | Messaging  | `MESSAGING_PROVIDER`                                                                    | `mock` (default dev) or `whatsapp-cloud` (production)                                                                         |
 | Email      | `EMAIL_PROVIDER`, `EMAIL_API_KEY`, `EMAIL_FROM`                                         | Provider: `resend`, `sendgrid`, or `none` (default, logs only)                                                                |
 | Stripe     | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID_*`                       | 3-tier pricing (Starter/Professional/Enterprise) × monthly/annual                                                             |
@@ -544,6 +570,7 @@ All seed scripts are in `packages/db/src/`. They are **idempotent** (safe to re-
 | `seed-console-showcase.ts` | `npx tsx packages/db/src/seed-console-showcase.ts` | Console demo data: support cases, audit logs                                                | Console demos              |
 | `seed-content.ts`          | `npx tsx packages/db/src/seed-content.ts`          | 12 blog posts across 5 content pillars → ContentDraft records                               | Marketing content setup    |
 | `seed-instagram.ts`        | `npx tsx packages/db/src/seed-instagram.ts`        | 4 Instagram DM conversations (story reply, ad referral, ice breaker, expiring window)       | Instagram integration testing |
+| `seed-omnichannel.ts`      | `npx tsx packages/db/src/seed-omnichannel.ts`      | Multi-channel customers, MessageUsage (7 days), channelSettings for all demo businesses     | Omnichannel foundation setup |
 
 ---
 

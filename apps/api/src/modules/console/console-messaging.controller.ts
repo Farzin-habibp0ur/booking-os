@@ -302,4 +302,82 @@ export class ConsoleMessagingController {
       },
     };
   }
+
+  /**
+   * Seed omnichannel test data: multi-channel customer, MessageUsage, channelSettings.
+   * POST /admin/messaging-console/seed-omnichannel-test
+   */
+  @Post('seed-omnichannel-test')
+  async seedOmnichannelTest(@CurrentUser() user: { sub: string; email: string }) {
+    this.auditService.log(user.sub, user.email, 'OMNICHANNEL_SEED');
+
+    const business = await this.prisma.business.findFirst();
+    if (!business) return { error: 'No business found' };
+
+    // Upsert multi-channel customer
+    const customer = await this.prisma.customer.upsert({
+      where: {
+        businessId_phone: { businessId: business.id, phone: '+1555MULTI01' },
+      },
+      update: {
+        facebookPsid: 'fb_test_001',
+        webChatSessionId: 'wc_test_001',
+      },
+      create: {
+        businessId: business.id,
+        name: 'Omnichannel Test Customer',
+        phone: '+1555MULTI01',
+        email: 'omni@test.com',
+        instagramUserId: 'ig_test_omni',
+        facebookPsid: 'fb_test_001',
+        webChatSessionId: 'wc_test_001',
+      },
+    });
+
+    // Create today's MessageUsage across all channels
+    const today = new Date().toISOString().split('T')[0];
+    const channels = ['WHATSAPP', 'INSTAGRAM', 'SMS', 'EMAIL', 'FACEBOOK', 'WEB_CHAT'];
+
+    for (const channel of channels) {
+      for (const direction of ['INBOUND', 'OUTBOUND']) {
+        await this.prisma.messageUsage.upsert({
+          where: {
+            businessId_channel_direction_date: {
+              businessId: business.id,
+              channel,
+              direction,
+              date: today,
+            },
+          },
+          update: { count: { increment: Math.floor(Math.random() * 10) + 1 } },
+          create: {
+            businessId: business.id,
+            channel,
+            direction,
+            date: today,
+            count: Math.floor(Math.random() * 50) + 5,
+          },
+        });
+      }
+    }
+
+    // Set channelSettings
+    await this.prisma.business.update({
+      where: { id: business.id },
+      data: {
+        channelSettings: {
+          enabledChannels: channels,
+          defaultReplyChannel: 'WHATSAPP',
+          autoDetectChannel: true,
+        },
+      },
+    });
+
+    return {
+      ok: true,
+      business: business.name,
+      customer: customer.id,
+      usageRecordsCreated: channels.length * 2,
+    };
+  }
 }

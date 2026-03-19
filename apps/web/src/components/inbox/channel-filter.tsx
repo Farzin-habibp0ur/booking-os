@@ -1,9 +1,16 @@
 'use client';
 
 import { cn } from '@/lib/cn';
-import { MessageSquare, Instagram, Globe } from 'lucide-react';
+import { MessageSquare, Instagram, Facebook, Mail, MessageCircle, Globe } from 'lucide-react';
 
-export type ChannelFilter = 'ALL' | 'WHATSAPP' | 'INSTAGRAM' | 'WEB';
+export type ChannelFilter =
+  | 'ALL'
+  | 'WHATSAPP'
+  | 'INSTAGRAM'
+  | 'FACEBOOK'
+  | 'SMS'
+  | 'EMAIL'
+  | 'WEB_CHAT';
 
 interface ChannelFilterProps {
   selected: ChannelFilter;
@@ -14,7 +21,10 @@ const CHANNELS: { key: ChannelFilter; label: string; icon: any }[] = [
   { key: 'ALL', label: 'All', icon: null },
   { key: 'WHATSAPP', label: 'WhatsApp', icon: MessageSquare },
   { key: 'INSTAGRAM', label: 'Instagram', icon: Instagram },
-  { key: 'WEB', label: 'Web', icon: Globe },
+  { key: 'FACEBOOK', label: 'Messenger', icon: Facebook },
+  { key: 'SMS', label: 'SMS', icon: MessageCircle },
+  { key: 'EMAIL', label: 'Email', icon: Mail },
+  { key: 'WEB_CHAT', label: 'Web', icon: Globe },
 ];
 
 export function ChannelFilterBar({ selected, onChange }: ChannelFilterProps) {

@@ -113,6 +113,8 @@ describe('Tenant Isolation', () => {
         phone: '+1234567890',
         email: null,
         instagramUserId: null,
+        facebookPsid: null,
+        webChatSessionId: null,
         tags: [],
         customFields: {},
         createdAt: new Date(),

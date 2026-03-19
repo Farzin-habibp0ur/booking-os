@@ -1,6 +1,8 @@
 import { Module, Global, Logger, DynamicModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { BullModule } from '@nestjs/bullmq';
+import { DeadLetterQueueService } from './dead-letter.service';
+import { DeadLetterController } from './dead-letter.controller';
 
 export const QUEUE_NAMES = {
   AI_PROCESSING: 'ai-processing',
@@ -22,6 +24,7 @@ export class QueueModule {
     return {
       module: QueueModule,
       imports: [ConfigModule],
+      controllers: [DeadLetterController],
       providers: [
         {
           provide: 'QUEUE_AVAILABLE',
@@ -38,8 +41,9 @@ export class QueueModule {
           },
           inject: [ConfigService],
         },
+        DeadLetterQueueService,
       ],
-      exports: ['QUEUE_AVAILABLE'],
+      exports: ['QUEUE_AVAILABLE', DeadLetterQueueService],
     };
   }
 
@@ -67,13 +71,15 @@ export class QueueModule {
           { name: QUEUE_NAMES.DUNNING },
         ),
       ],
+      controllers: [DeadLetterController],
       providers: [
         {
           provide: 'QUEUE_AVAILABLE',
           useValue: true,
         },
+        DeadLetterQueueService,
       ],
-      exports: ['QUEUE_AVAILABLE', BullModule],
+      exports: ['QUEUE_AVAILABLE', BullModule, DeadLetterQueueService],
     };
   }
 }

@@ -216,7 +216,16 @@
     "intake_cancel": "Cancelar",
     "intake_saved": "Ficha actualizada",
     "intake_save_failed": "Error al actualizar ficha",
-    "new_outbound": "Nuevo Mensaje"
+    "new_outbound": "Nuevo Mensaje",
+    "channel_whatsapp": "WhatsApp",
+    "channel_instagram": "Instagram",
+    "channel_facebook": "Messenger",
+    "channel_sms": "SMS",
+    "channel_email": "Correo",
+    "channel_web_chat": "Chat Web",
+    "reply_via": "Responder vía",
+    "channels_on_file": "Canales",
+    "no_channels": "Sin canales registrados"
   },
 
   "calendar": {
@@ -1038,6 +1047,40 @@
     "no_results": "No se encontraron resultados para \"{{query}}\"",
     "enter_query": "Escribe al menos 2 caracteres para buscar",
     "load_more": "Cargar más {{type}}"
+  },
+
+  "sms": {
+    "title": "Configuración SMS",
+    "description": "Configurar mensajería SMS bidireccional vía Twilio",
+    "account_config": "Configuración de Cuenta",
+    "account_sid": "Twilio Account SID",
+    "auth_token": "Twilio Auth Token",
+    "from_number": "Número de Origen",
+    "from_number_hint": "Formato E.164 (ej. +1234567890)",
+    "status_callback_url": "URL de Callback de Estado",
+    "status_callback_hint": "Twilio enviará actualizaciones de estado de entrega a esta URL",
+    "save": "Guardar",
+    "saved": "Configuración SMS guardada",
+    "save_failed": "Error al guardar configuración SMS",
+    "location_config": "Números SMS por Ubicación",
+    "location_phone": "Número de Teléfono SMS",
+    "location_enabled": "Habilitado",
+    "location_saved": "Configuración SMS de ubicación guardada",
+    "location_save_failed": "Error al guardar configuración de ubicación",
+    "test_send": "Probar SMS",
+    "test_phone": "Número de Teléfono Destinatario",
+    "test_message": "Mensaje de Prueba",
+    "test_send_button": "Enviar Prueba",
+    "test_success": "SMS de prueba enviado exitosamente",
+    "test_failed": "Error al enviar SMS de prueba",
+    "a2p_title": "Cumplimiento A2P 10DLC",
+    "a2p_required": "Requerido para números de EE.UU.",
+    "a2p_step1": "Registre su marca en twilio.com/console/sms/campaigns",
+    "a2p_step2": "Cree una campaña de mensajería describiendo su caso de uso",
+    "a2p_step3": "Asigne sus números de teléfono a la campaña",
+    "a2p_step4": "Espere la aprobación (típicamente 1-3 días hábiles)",
+    "a2p_warning": "Los números no conformes pueden experimentar filtrado de mensajes o fallas en la entrega.",
+    "no_locations": "No se encontraron ubicaciones. Cree una ubicación primero."
   },
 
   "errors": {
