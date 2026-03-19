@@ -134,9 +134,7 @@ export class EmailChannelProvider implements MessagingProvider {
     const strippedBody =
       rawText
         .split('\n')
-        .filter(
-          (line) => !line.startsWith('>') && !line.startsWith('On ') && !line.match(/^-{3,}/),
-        )
+        .filter((line) => !line.startsWith('>') && !line.startsWith('On ') && !line.match(/^-{3,}/))
         .join('\n')
         .trim() || rawText;
 
@@ -147,8 +145,7 @@ export class EmailChannelProvider implements MessagingProvider {
         body: strippedBody,
         subject: payload.subject || '',
         externalId:
-          payload['Message-ID'] ||
-          `email_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+          payload['Message-ID'] || `email_${Date.now()}_${Math.random().toString(36).slice(2)}`,
         htmlBody: payload.html,
         inReplyTo: payload['In-Reply-To'],
         messageId: payload['Message-ID'],

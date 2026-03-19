@@ -56,9 +56,7 @@ export class FacebookController {
       this.logger.error(
         `Facebook page info fetch failed for business ${businessId}: ${err.message}`,
       );
-      throw new BadRequestException(
-        `Failed to fetch page info: ${err.message}`,
-      );
+      throw new BadRequestException(`Failed to fetch page info: ${err.message}`);
     }
   }
 
@@ -87,9 +85,7 @@ export class FacebookController {
       throw new BadRequestException('Maximum 4 ice breakers allowed');
     }
 
-    const provider = this.messagingService.getProviderForFacebookPageId(
-      body.pageId,
-    );
+    const provider = this.messagingService.getProviderForFacebookPageId(body.pageId);
     if (!provider) {
       throw new BadRequestException(
         'Facebook provider not configured for this page. Save page credentials first.',
@@ -103,12 +99,8 @@ export class FacebookController {
       );
       return { ok: true, count: body.prompts.length };
     } catch (err: any) {
-      this.logger.error(
-        `Failed to set ice breakers for business ${businessId}: ${err.message}`,
-      );
-      throw new BadRequestException(
-        `Failed to set ice breakers: ${err.message}`,
-      );
+      this.logger.error(`Failed to set ice breakers for business ${businessId}: ${err.message}`);
+      throw new BadRequestException(`Failed to set ice breakers: ${err.message}`);
     }
   }
 }

@@ -51,8 +51,7 @@ const CHANNELS: ChannelInfo[] = [
     settingsPath: '/settings/integrations',
     hint: 'whatsapp_hint',
     isConnected: (locations, cs) =>
-      locations.some((l) => l.whatsappConfig?.phoneNumberId) ||
-      !!(cs?.whatsapp?.enabled),
+      locations.some((l) => l.whatsappConfig?.phoneNumberId) || !!cs?.whatsapp?.enabled,
   },
   {
     key: 'instagram',
@@ -62,8 +61,7 @@ const CHANNELS: ChannelInfo[] = [
     settingsPath: '/settings/integrations',
     hint: 'instagram_hint',
     isConnected: (locations, cs) =>
-      locations.some((l) => l.instagramConfig?.pageId) ||
-      !!(cs?.instagram?.enabled),
+      locations.some((l) => l.instagramConfig?.pageId) || !!cs?.instagram?.enabled,
   },
   {
     key: 'facebook',
@@ -82,7 +80,7 @@ const CHANNELS: ChannelInfo[] = [
     settingsPath: '/settings/sms',
     isConnected: (locations, cs) =>
       locations.some((l) => l.smsConfig?.phoneNumber && l.smsConfig?.enabled) ||
-      !!(cs?.sms?.twilioAccountSid),
+      !!cs?.sms?.twilioAccountSid,
   },
   {
     key: 'email',
@@ -99,8 +97,7 @@ const CHANNELS: ChannelInfo[] = [
     label: 'Web Chat',
     icon: Globe,
     settingsPath: '/settings/web-chat',
-    isConnected: (locations) =>
-      locations.some((l) => l.webChatConfig?.enabled),
+    isConnected: (locations) => locations.some((l) => l.webChatConfig?.enabled),
   },
 ];
 
@@ -123,9 +120,7 @@ export default function ChannelsSettingsPage() {
       .finally(() => setLoading(false));
 
     // Fetch 7-day message counts per channel
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-      .toISOString()
-      .slice(0, 10);
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
     const today = new Date().toISOString().slice(0, 10);
     api
       .get<any>(`/admin/usage/current?startDate=${sevenDaysAgo}&endDate=${today}`)
@@ -160,9 +155,7 @@ export default function ChannelsSettingsPage() {
           {t('channels.title')}
         </h1>
       </div>
-      <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
-        {t('channels.description')}
-      </p>
+      <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">{t('channels.description')}</p>
 
       {loading ? (
         <div className="flex items-center gap-2 text-slate-400 text-sm py-8">
@@ -189,7 +182,9 @@ export default function ChannelsSettingsPage() {
                   'flex flex-col items-start p-5 bg-white dark:bg-slate-900 rounded-2xl shadow-soft',
                   'hover:shadow-soft-lg transition-shadow duration-200 btn-press text-left',
                   'border-l-4',
-                  connected ? style?.border || 'border-slate-300' : 'border-slate-200 dark:border-slate-700',
+                  connected
+                    ? style?.border || 'border-slate-300'
+                    : 'border-slate-200 dark:border-slate-700',
                 )}
               >
                 <div className="flex items-center gap-3 mb-3 w-full">
@@ -234,9 +229,7 @@ export default function ChannelsSettingsPage() {
                 )}
 
                 {ch.hint && (
-                  <p className="text-xs text-slate-400 italic">
-                    {t(`channels.${ch.hint}`)}
-                  </p>
+                  <p className="text-xs text-slate-400 italic">{t(`channels.${ch.hint}`)}</p>
                 )}
 
                 <span className="text-xs font-medium text-sage-600 dark:text-sage-400 mt-auto pt-2">

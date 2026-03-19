@@ -45,7 +45,9 @@ export default function SmsSettingsPage() {
   // Location state
   const [locations, setLocations] = useState<Location[]>([]);
   const [loadingLocations, setLoadingLocations] = useState(true);
-  const [locationSaveStatus, setLocationSaveStatus] = useState<Record<string, 'idle' | 'saved' | 'error'>>({});
+  const [locationSaveStatus, setLocationSaveStatus] = useState<
+    Record<string, 'idle' | 'saved' | 'error'>
+  >({});
 
   // Test send state
   const [testPhone, setTestPhone] = useState('');
@@ -161,7 +163,10 @@ export default function SmsSettingsPage() {
       <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">{t('sms.description')}</p>
 
       {/* Section 1: Account Configuration */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6 mb-6" data-testid="account-config-section">
+      <div
+        className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6 mb-6"
+        data-testid="account-config-section"
+      >
         <h2 className="font-semibold text-slate-900 dark:text-white mb-4">
           {t('sms.account_config')}
         </h2>
@@ -277,7 +282,10 @@ export default function SmsSettingsPage() {
       </div>
 
       {/* Section 2: Per-Location SMS Config */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6 mb-6" data-testid="location-config-section">
+      <div
+        className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6 mb-6"
+        data-testid="location-config-section"
+      >
         <h2 className="font-semibold text-slate-900 dark:text-white mb-4">
           {t('sms.location_config')}
         </h2>
@@ -307,7 +315,10 @@ export default function SmsSettingsPage() {
       </div>
 
       {/* Section 3: Test Send */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6" data-testid="test-send-section">
+      <div
+        className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6"
+        data-testid="test-send-section"
+      >
         <h2 className="font-semibold text-slate-900 dark:text-white mb-4">{t('sms.test_send')}</h2>
 
         <div className="space-y-4">
@@ -343,11 +354,7 @@ export default function SmsSettingsPage() {
               disabled={testSending || !testPhone || !testMessage}
               className="inline-flex items-center gap-2 bg-sage-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-sage-700 transition-colors disabled:opacity-50"
             >
-              {testSending ? (
-                <Loader2 size={14} className="animate-spin" />
-              ) : (
-                <Send size={14} />
-              )}
+              {testSending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
               {t('sms.test_send_button')}
             </button>
 

@@ -28,8 +28,8 @@ Take approved content from the queue, generate UTM parameters, determine optimal
 
 ## Schedule
 
-| Day | Time | Action |
-|-----|------|--------|
+| Day           | Time    | Action                                               |
+| ------------- | ------- | ---------------------------------------------------- |
 | Monday–Sunday | 1:00 PM | Process approved queue → schedule → publish → verify |
 
 ---
@@ -39,6 +39,7 @@ Take approved content from the queue, generate UTM parameters, determine optimal
 ### Step 1: Queue Scan
 
 Scan `queue/approved/` for content ready to publish:
+
 - Read each approved file's metadata
 - Check platform is ACTIVE
 - Check target publish date (don't publish future-dated content early)
@@ -55,15 +56,16 @@ utm_campaign=bookingos-[pillar-abbreviation]-[YYYY-MM]
 utm_content=[slug]
 ```
 
-| Pillar | Abbreviation |
-|--------|-------------|
-| Booking & Scheduling | `booking` |
-| Client Experience | `cx` |
-| Business Growth | `growth` |
-| Operations & Efficiency | `ops` |
-| Industry Insights | `industry` |
+| Pillar                  | Abbreviation |
+| ----------------------- | ------------ |
+| Booking & Scheduling    | `booking`    |
+| Client Experience       | `cx`         |
+| Business Growth         | `growth`     |
+| Operations & Efficiency | `ops`        |
+| Industry Insights       | `industry`   |
 
 **Examples:**
+
 - `?utm_source=instagram&utm_medium=reel&utm_campaign=bookingos-cx-2026-03&utm_content=reduce-no-shows`
 - `?utm_source=linkedin&utm_medium=post&utm_campaign=bookingos-growth-2026-03&utm_content=first-100-clients`
 
@@ -71,12 +73,12 @@ utm_content=[slug]
 
 Determine best publish time based on platform data:
 
-| Platform | Optimal Windows | Best Days |
-|----------|----------------|-----------|
-| **Instagram** | 11:00 AM - 1:00 PM, 7:00 PM - 9:00 PM | Tue, Wed, Thu |
-| **TikTok** | 7:00 AM - 9:00 AM, 12:00 PM - 3:00 PM, 7:00 PM - 11:00 PM | Tue, Thu, Fri |
-| **LinkedIn** | 7:00 AM - 8:00 AM, 12:00 PM - 1:00 PM, 5:00 PM - 6:00 PM | Tue, Wed, Thu |
-| **Blog** | 10:00 AM - 12:00 PM | Mon, Wed |
+| Platform      | Optimal Windows                                           | Best Days     |
+| ------------- | --------------------------------------------------------- | ------------- |
+| **Instagram** | 11:00 AM - 1:00 PM, 7:00 PM - 9:00 PM                     | Tue, Wed, Thu |
+| **TikTok**    | 7:00 AM - 9:00 AM, 12:00 PM - 3:00 PM, 7:00 PM - 11:00 PM | Tue, Thu, Fri |
+| **LinkedIn**  | 7:00 AM - 8:00 AM, 12:00 PM - 1:00 PM, 5:00 PM - 6:00 PM  | Tue, Wed, Thu |
+| **Blog**      | 10:00 AM - 12:00 PM                                       | Mon, Wed      |
 
 These are starting defaults. As Performance Analyst (P18) provides data, adjust based on actual engagement patterns.
 
@@ -84,18 +86,19 @@ These are starting defaults. As Performance Analyst (P18) provides data, adjust 
 
 Run `system/quality-gates.md` Gate 4 before publishing:
 
-| # | Check | Requirement | Status |
-|---|-------|-------------|--------|
-| 1 | Content has APPROVED status | Must be in `queue/approved/` | |
-| 2 | UTM parameters generated | All 4 UTM fields present | |
-| 3 | Publish time is in optimal window | Within ±1 hour of optimal | |
-| 4 | No duplicate content published in last 48h | Check `logs/publishing-log.md` | |
-| 5 | Platform is ACTIVE | Checked against platform filter | |
-| 6 | CTA links are functional | URLs resolve correctly | |
+| #   | Check                                      | Requirement                     | Status |
+| --- | ------------------------------------------ | ------------------------------- | ------ |
+| 1   | Content has APPROVED status                | Must be in `queue/approved/`    |        |
+| 2   | UTM parameters generated                   | All 4 UTM fields present        |        |
+| 3   | Publish time is in optimal window          | Within ±1 hour of optimal       |        |
+| 4   | No duplicate content published in last 48h | Check `logs/publishing-log.md`  |        |
+| 5   | Platform is ACTIVE                         | Checked against platform filter |        |
+| 6   | CTA links are functional                   | URLs resolve correctly          |        |
 
 ### Step 5: Publish
 
 Prepare the publish queue document and execute:
+
 1. Create `queue/ready-to-publish/[DATE]-publish-queue.md` with all items
 2. Use Buffer (if configured) for social media scheduling
 3. For blog posts: prepare for CMS upload
@@ -105,6 +108,7 @@ Prepare the publish queue document and execute:
 ### Step 6: Post-Publish Verification
 
 Within 30 minutes of publishing, verify:
+
 - [ ] Post is live and accessible
 - [ ] Links work (UTM parameters intact)
 - [ ] Images/videos display correctly
@@ -129,16 +133,17 @@ Create file: `queue/ready-to-publish/[YYYY-MM-DD]-publish-queue.md`
 
 ## Queue
 
-| # | Time | Platform | Title | Tier | UTM Campaign | Status |
-|---|------|----------|-------|------|-------------|--------|
-| 1 | [time] | [platform] | [title] | [tier] | [utm] | SCHEDULED / PUBLISHED / FAILED |
-| 2 | [time] | [platform] | [title] | [tier] | [utm] | |
+| #   | Time   | Platform   | Title   | Tier   | UTM Campaign | Status                         |
+| --- | ------ | ---------- | ------- | ------ | ------------ | ------------------------------ |
+| 1   | [time] | [platform] | [title] | [tier] | [utm]        | SCHEDULED / PUBLISHED / FAILED |
+| 2   | [time] | [platform] | [title] | [tier] | [utm]        |                                |
 
 ---
 
 ## UTM Links
 
 ### Item 1: [Title]
+
 - Platform link: [URL with UTM]
 - Short link: [if applicable]
 
@@ -146,9 +151,9 @@ Create file: `queue/ready-to-publish/[YYYY-MM-DD]-publish-queue.md`
 
 ## Verification Results
 
-| # | Title | Published? | Link Works? | Visual OK? | Notes |
-|---|-------|-----------|------------|------------|-------|
-| 1 | [title] | ✅/❌ | ✅/❌ | ✅/❌ | [any issues] |
+| #   | Title   | Published? | Link Works? | Visual OK? | Notes        |
+| --- | ------- | ---------- | ----------- | ---------- | ------------ |
+| 1   | [title] | ✅/❌      | ✅/❌       | ✅/❌      | [any issues] |
 ```
 
 ---
@@ -167,11 +172,12 @@ Append to `logs/publishing-log.md`:
 
 ## [YYYY-MM-DD]
 
-| Time | Platform | Title | Tier | UTM Campaign | Verification | Notes |
-|------|----------|-------|------|-------------|-------------|-------|
-| [time] | [platform] | [title] | [tier] | [utm] | PASS/FAIL | [notes] |
+| Time   | Platform   | Title   | Tier   | UTM Campaign | Verification | Notes   |
+| ------ | ---------- | ------- | ------ | ------------ | ------------ | ------- |
+| [time] | [platform] | [title] | [tier] | [utm]        | PASS/FAIL    | [notes] |
 
 ## [Previous date]
+
 [Same format]
 ```
 
@@ -179,32 +185,33 @@ Append to `logs/publishing-log.md`:
 
 ## Error Handling
 
-| Scenario | Action |
-|----------|--------|
-| Content in `approved/` but platform is LOCKED | Skip, do NOT publish. Move back to `pending/` with note |
-| Duplicate detected (same title + platform in last 48h) | Skip, flag in publish queue as DUPLICATE |
-| Post-publish verification fails | Log failure, create RED alert for manual intervention |
-| Buffer/publishing tool unavailable | Log content as READY-TO-PUBLISH, do not mark as published |
-| No approved content in queue | Log "No content to publish today" — normal operation |
+| Scenario                                               | Action                                                    |
+| ------------------------------------------------------ | --------------------------------------------------------- |
+| Content in `approved/` but platform is LOCKED          | Skip, do NOT publish. Move back to `pending/` with note   |
+| Duplicate detected (same title + platform in last 48h) | Skip, flag in publish queue as DUPLICATE                  |
+| Post-publish verification fails                        | Log failure, create RED alert for manual intervention     |
+| Buffer/publishing tool unavailable                     | Log content as READY-TO-PUBLISH, do not mark as published |
+| No approved content in queue                           | Log "No content to publish today" — normal operation      |
 
 ---
 
 ## Interaction with Other Agents
 
-| Agent | Relationship |
-|-------|-------------|
-| **Blog Writer** (P12) | Publishes approved blog posts |
-| **Social Content Creator** (P13) | Publishes approved social content |
-| **Visual Designer** (P14) | Attaches visual assets to published content |
-| **Video Producer** (P15) | Publishes approved video content |
-| **Performance Analyst** (P18) | Tracks published content performance |
-| **Community Manager** (P17) | Monitors engagement on published content |
+| Agent                            | Relationship                                |
+| -------------------------------- | ------------------------------------------- |
+| **Blog Writer** (P12)            | Publishes approved blog posts               |
+| **Social Content Creator** (P13) | Publishes approved social content           |
+| **Visual Designer** (P14)        | Attaches visual assets to published content |
+| **Video Producer** (P15)         | Publishes approved video content            |
+| **Performance Analyst** (P18)    | Tracks published content performance        |
+| **Community Manager** (P17)      | Monitors engagement on published content    |
 
 ---
 
 ## Directory Management
 
 After publishing:
+
 1. Move file from `queue/approved/` to `queue/published/`
 2. Rename: `[DATE]-PUBLISHED-[PLATFORM]-[LANG]-[TITLE].md`
 3. Monthly: Move files > 30 days old from `queue/published/` to `queue/archive/`
@@ -213,6 +220,6 @@ After publishing:
 
 ## Change Log
 
-| Date | Change |
-|------|--------|
+| Date       | Change           |
+| ---------- | ---------------- |
 | 2026-03-12 | Initial creation |

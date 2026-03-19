@@ -12,20 +12,20 @@
 
 ## The 12 Marketing Agents at a Glance
 
-| Category | Agent | What It Does |
-|----------|-------|-------------|
-| **Content** | BlogWriter | Drafts blog posts across 5 content pillars |
-| **Content** | SocialCreator | Creates social media posts for multiple channels |
-| **Content** | EmailComposer | Writes marketing emails and campaign copy |
-| **Content** | CaseStudy | Produces customer success stories |
-| **Content** | VideoScript | Writes video scripts and storyboards |
-| **Content** | Newsletter | Assembles newsletter editions |
-| **Distribution** | ContentScheduler | Plans optimal publish times and cadence |
-| **Distribution** | ContentPublisher | Publishes approved content to channels |
-| **Analytics** | PerformanceTracker | Monitors content engagement metrics |
-| **Analytics** | TrendAnalyzer | Identifies trending topics and opportunities |
-| **Analytics** | ContentCalendar | Maintains the editorial calendar view |
-| **Analytics** | ContentROI | Calculates return on content investment |
+| Category         | Agent              | What It Does                                     |
+| ---------------- | ------------------ | ------------------------------------------------ |
+| **Content**      | BlogWriter         | Drafts blog posts across 5 content pillars       |
+| **Content**      | SocialCreator      | Creates social media posts for multiple channels |
+| **Content**      | EmailComposer      | Writes marketing emails and campaign copy        |
+| **Content**      | CaseStudy          | Produces customer success stories                |
+| **Content**      | VideoScript        | Writes video scripts and storyboards             |
+| **Content**      | Newsletter         | Assembles newsletter editions                    |
+| **Distribution** | ContentScheduler   | Plans optimal publish times and cadence          |
+| **Distribution** | ContentPublisher   | Publishes approved content to channels           |
+| **Analytics**    | PerformanceTracker | Monitors content engagement metrics              |
+| **Analytics**    | TrendAnalyzer      | Identifies trending topics and opportunities     |
+| **Analytics**    | ContentCalendar    | Maintains the editorial calendar view            |
+| **Analytics**    | ContentROI         | Calculates return on content investment          |
 
 All agents run on configurable schedules via the AgentSchedulerService (cron → AGENT_PROCESSING BullMQ queue → AgentFrameworkService). Each agent has its own `runIntervalMinutes` setting.
 
@@ -245,12 +245,12 @@ BookingOS comes with 7 default drip campaigns: Welcome, FeatureEducation, Social
 1. Navigate to `/settings/autonomy`.
 2. Configure per-action-type autonomy levels. The four levels are:
 
-| Level | Behavior |
-|-------|----------|
-| **OFF** | Agent is disabled for this action type. |
-| **SUGGEST** | Agent creates drafts/suggestions but takes no action. Everything requires manual approval. |
+| Level                | Behavior                                                                                               |
+| -------------------- | ------------------------------------------------------------------------------------------------------ |
+| **OFF**              | Agent is disabled for this action type.                                                                |
+| **SUGGEST**          | Agent creates drafts/suggestions but takes no action. Everything requires manual approval.             |
 | **AUTO_WITH_REVIEW** | Agent acts autonomously but flags actions for post-hoc review. You can reverse actions after the fact. |
-| **FULL_AUTO** | Agent acts completely independently. No approval required. |
+| **FULL_AUTO**        | Agent acts completely independently. No approval required.                                             |
 
 3. **Recommended starting configuration:**
    - Content creation agents → **SUGGEST** (you review all content before it goes out).
@@ -290,20 +290,20 @@ BookingOS comes with 7 default drip campaigns: Welcome, FeatureEducation, Social
 
 ## Quick Reference: Where Everything Lives
 
-| Task | Page | Route |
-|------|------|-------|
-| Morning briefing & urgencies | Dashboard | `/dashboard` |
-| All action cards (bulk triage) | AI Command Center → Actions | `/ai/actions` |
-| AI overview & activity feed | AI Command Center → Overview | `/ai` |
-| Agent run history & status | AI Command Center → Agents | `/ai/agents` |
-| Performance dashboards & KPIs | AI Command Center → Performance | `/ai/performance` |
-| Content draft review & approval | Marketing → Content Queue | `/marketing/queue` |
-| Agent toggles & manual triggers | Marketing → Agents | `/marketing/agents` |
-| Email drip campaigns | Marketing → Sequences | `/marketing/sequences` |
-| Per-agent configuration | Settings → Agents | `/settings/agents` |
-| Autonomy levels per action type | Settings → Autonomy | `/settings/autonomy` |
-| AI behavior settings | Settings → AI | `/settings/ai` |
-| Monthly business review | Reports → Monthly Review | `/reports/monthly-review` |
+| Task                             | Page                                     | Route                       |
+| -------------------------------- | ---------------------------------------- | --------------------------- |
+| Morning briefing & urgencies     | Dashboard                                | `/dashboard`                |
+| All action cards (bulk triage)   | AI Command Center → Actions              | `/ai/actions`               |
+| AI overview & activity feed      | AI Command Center → Overview             | `/ai`                       |
+| Agent run history & status       | AI Command Center → Agents               | `/ai/agents`                |
+| Performance dashboards & KPIs    | AI Command Center → Performance          | `/ai/performance`           |
+| Content draft review & approval  | Marketing → Content Queue                | `/marketing/queue`          |
+| Agent toggles & manual triggers  | Marketing → Agents                       | `/marketing/agents`         |
+| Email drip campaigns             | Marketing → Sequences                    | `/marketing/sequences`      |
+| Per-agent configuration          | Settings → Agents                        | `/settings/agents`          |
+| Autonomy levels per action type  | Settings → Autonomy                      | `/settings/autonomy`        |
+| AI behavior settings             | Settings → AI                            | `/settings/ai`              |
+| Monthly business review          | Reports → Monthly Review                 | `/reports/monthly-review`   |
 | Agent feedback (thumbs/comments) | AI Command Center → Agents → Run History | `/ai/agents` → expand agent |
 
 ---

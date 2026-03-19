@@ -33,9 +33,7 @@ describe('WebChatController', () => {
       expect(result.placeholder).toBe('Type a message...');
       expect(result.position).toBe('bottom-right');
       expect(result.preChatFields).toEqual(['name', 'email']);
-      expect(result.offlineMessage).toBe(
-        'We are currently offline. Leave us a message!',
-      );
+      expect(result.offlineMessage).toBe('We are currently offline. Leave us a message!');
       expect(result.showOfflineForm).toBe(true);
     });
 

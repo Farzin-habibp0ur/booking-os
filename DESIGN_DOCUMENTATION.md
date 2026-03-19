@@ -11,6 +11,7 @@
 **Booking OS** is a multi-tenant SaaS platform for service-based businesses (aesthetic clinics, car dealerships, salons, spas) to manage bookings, customer conversations, and operations — with AI-powered agentic automation.
 
 ### Core Capabilities
+
 - **Appointment scheduling** with calendar views, conflict detection, recurring bookings, and automated reminders
 - **WhatsApp messaging inbox** with real-time updates, AI auto-replies, and conversation management
 - **AI booking assistant** that guides customers through booking/cancellation/rescheduling via chat
@@ -28,6 +29,7 @@
 - **Global search** — Cmd+K command palette across customers, bookings, services, conversations
 
 ### Phase 1: Outcome Machine for Aesthetics (Complete — 27/27 tasks)
+
 - **Consult vs Treatment types** with service kind badges (CONSULT/TREATMENT/OTHER)
 - **Aesthetics intake fields** — 7-field Clinic Intake card in inbox sidebar with amber dot indicators
 - **Automated follow-ups** — Consult → treatment follow-up, aftercare instructions, 24h check-in
@@ -41,6 +43,7 @@
 - **Role-based permissions** — Money/policy actions restricted with explanations
 
 ### Phase 2: Automation & Growth Engine (Complete — 13/13 batches)
+
 - **Waitlist system** — Join waitlist, auto-offers on cancellation, 1-tap claim via token, backfill metrics
 - **Bulk actions** — Multi-select on bookings (status change, staff assign) and customers (tag/untag)
 - **Global search (Cmd+K)** — Command palette with keyboard navigation, grouped results, recent searches
@@ -52,12 +55,14 @@
 - **Visual polish** — CSS keyframe animations, chart theme with brand palette, prefers-reduced-motion
 
 ### UX Phase 1: Role-based Modes + Mission Control + Saved Views (Complete — 6/6 batches)
+
 - **Role-based Modes** — Mode switcher (admin/agent/provider), mode-grouped sidebar nav with 4 sections (Workspace / Tools / Insights / AI & Agents) and mobile "More" sheet, role-appropriate landing pages, vertical-aware labels
 - **Mission Control Dashboard** — Mode-adaptive layout with KPI strip, "My Work" section, AttentionCards, dashboard-pinned saved views
 - **Saved Views** — Named filter/sort presets on list pages (inbox, bookings, customers, waitlist), sidebar-pinnable, dashboard-pinnable, personal + shared (admin-governed)
 - **Staff preferences** — JSON column on Staff for cross-device mode persistence
 
 ### UX Phase 2: Customer Hub + Unified Timeline + Global Search (Bundle B) (Complete — 7/7 batches)
+
 - **Customer Hub** — Redesigned `/customers/{id}` with sticky header, context row (last booking, last conversation, waitlist count), notes tab, message deep link, vertical modules (IntakeCard for aesthetic, quotes for dealership)
 - **Customer Notes** — New `CustomerNote` model with full CRUD, staff ownership validation
 - **Unified Timeline** — Timeline API endpoint (6 data sources: bookings, conversations, notes, waitlist, quotes, campaigns), `CustomerTimeline` component with type filtering, pagination, deep linking
@@ -65,6 +70,7 @@
 - **Inbox Deep Linking** — `?conversationId=` URL param auto-selects conversation, customer name links to profile
 
 ### Agentic-First Transformation — Milestone 1: Agentic Foundations & Trust Rails (Complete — commit d8be527)
+
 - **ActionCard system** — 4 new Prisma models (ActionCard, ActionHistory, AutonomyConfig, OutboundDraft), 4 new API modules with full CRUD
 - **Action Cards** — AI-generated action recommendations with approve/dismiss/snooze/execute lifecycle, priority levels, expiry cron
 - **Action History** — Unified audit trail with polymorphic entity references (entityType + entityId), tracks STAFF/SYSTEM/AI performers
@@ -74,6 +80,7 @@
 - **Integration** — ActionCardBadge in inbox, OutboundCompose in inbox, RecentChangesPanel in customer detail, /settings/autonomy page
 
 ### Agentic-First Transformation — Milestone 2: Daily Briefing Agent (Complete — 4/4 batches)
+
 - **OpportunityDetectorService** — Cron-based scanner detecting deposit pending bookings, overdue conversation replies, and open time slots
 - **BriefingService** — Grouped ActionCard feed aggregating detected opportunities into a prioritized daily briefing
 - **BriefingController** — `GET /briefing` (grouped feed) and `GET /briefing/opportunities` (raw opportunity list)
@@ -81,6 +88,7 @@
 - **Dashboard integration** — BriefingFeed rendered above admin metric cards on the dashboard, cards navigate to inbox/bookings/customers based on entity data
 
 ### Agentic-First Transformation — Milestone 3: Inbox-as-OS (Complete — 5/5 batches)
+
 - **Agent Framework** (Batch 3a) — 4 new Prisma models (AgentConfig, AgentRun, AgentFeedback, DuplicateCandidate), agent module with AgentFrameworkService, AgentSchedulerService, AgentController, AGENT_PROCESSING BullMQ queue
 - **Conversation Action Handler** (Batch 3b) — ConversationActionHandler (`ai/conversation-action-handler.ts`) for executing conversation-level actions from action cards, ActionCardInline frontend component
 - **Policy Compliance & Deposits** (Batch 3c) — PolicyComplianceService for automated policy enforcement, DepositCardHandler for deposit-related action cards, deposit-card.tsx frontend component
@@ -88,6 +96,7 @@
 - **Vertical Actions** (Batch 3e) — VerticalActionHandler (`ai/vertical-action-handler.ts`) for vertical-specific action execution (aesthetic, dealership workflows)
 
 ### Agentic-First Transformation — Milestone 4: Background Agents (Complete)
+
 - **5 Background Agents** — WaitlistAgent (auto-match waitlist entries to cancelled slots), RetentionAgent (detect at-risk customers, generate win-back action cards), DataHygieneAgent (duplicate detection, incomplete profile flagging), SchedulingOptimizerAgent (gap detection, optimal slot suggestions), QuoteFollowupAgent (expired quote reminders, follow-up action cards)
 - **Agent Scheduler** — Cron-driven scheduler runs agents per their AgentConfig schedule, tracks AgentRun status/results/errors
 - **Agent Feedback** — New AgentFeedback API module with staff feedback CRUD (thumbs up/down + comments) and aggregation stats for agent run outcomes
@@ -95,12 +104,14 @@
 - **Settings page** — `/settings/agents` page for enabling/disabling agents, configuring schedules and autonomy levels per agent type
 
 ### Agentic-First Transformation — Milestone 5: Vertical Pack Agents (Complete)
+
 - **Agent Skills Catalog** — New AgentSkills API module providing per-pack skill definitions with business-level overrides
 - **Pack-specific agent behaviors** — Agents adapt skills and action card types based on business vertical pack (aesthetic: aftercare follow-ups, consult conversion; dealership: quote follow-up, service bay optimization)
 - **Frontend components** — skill-card.tsx (skill catalog display with enable/disable), vertical-launch-checklist.tsx (vertical-specific agent readiness checklist), waitlist-match-card.tsx (waitlist auto-match opportunities), quote-followup-card.tsx (expired/pending quote follow-up actions), ai-state-indicator.tsx (real-time agent processing status)
 - **Final counts (all 5 milestones):** 3,158 tests total (1,937 API + 1,221 web)
 
 ### UX Upgrade Pack — Release 1 (Batches 1a–1h) (Complete)
+
 - **Media Attachments** (Batch 1a) — New `MessageAttachment` model, Attachment API module (upload + download), `POST /conversations/:id/messages/media`, `GET /attachments/:id/download`. 18 tests.
 - **Delivery/Read Receipts** (Batch 1b) — New fields on Message (`deliveryStatus`, `deliveredAt`, `readAt`, `failureReason`), `updateDeliveryStatus()` in MessageService, WebSocket `message:status` event, `POST /webhook/whatsapp/status`. 7 tests.
 - **Inbox Media UI + Receipt Indicators** (Batch 1c) — New components: `delivery-status.tsx` (delivery/read indicators), `media-message.tsx` (image/doc/audio display), `media-composer.tsx` (file attachment composer). 14 tests.
@@ -111,6 +122,7 @@
 - **Final counts:** 3,227 tests total (1,982 API + 1,245 web), +69 new tests
 
 ### UX Upgrade Pack — Release 2 (Batches 2a–2g) (Complete)
+
 - **CSV Export API** (Batch 2a) — New Export module with `GET /customers/export`, `GET /bookings/export`, streaming CSV response (RFC 4180), field selection, date range filters, 10k row cap. 20 tests.
 - **Export UI + Duplicate Review Page** (Batch 2b) — `ExportModal` component, export buttons on list pages, `/customers/duplicates` page with status tabs and merge/dismiss/snooze actions. 14 tests.
 - **Audit Export + Timeline Polish** (Batch 2c) — `GET /action-history/export` CSV endpoint, customer timeline count badges per event type. 13 tests.
@@ -121,6 +133,7 @@
 - **Final counts:** 3,309 tests total (2,003 API + 1,306 web), +82 new tests
 
 ### UX Upgrade Pack — Release 3 (Batches 3a–3f) (Complete)
+
 - **Add-to-Calendar** (Batch 3a) — Client-side calendar add buttons on all self-serve success screens (Google Calendar URL, Outlook URL, iCal .ics download), `AddToCalendar` component. 12 tests.
 - **Branded Error Pages + Confirmation Polish** (Batch 3b) — `SelfServeError` component with auto-variant detection (expired/used/invalid/policy/generic), "Book Again" link. "What happens next" bullet points on all 5 success screens (booking, reschedule, cancel, quote, claim). 22 tests.
 - **Automation Playbook UX Overhaul** (Batch 3c) — Rich `PlaybookCard` component with expandable recipe details (what/when/who/examples/sample message), impact stats from AutomationLog, color-coded borders per playbook. 15 tests.
@@ -133,30 +146,33 @@
 - **Deployment Resilience** — railway.toml health checks, graceful shutdown hooks, frontend fetchWithRetry for network errors during deployment rollovers
 
 ### Tech Stack
-| Layer | Technology |
-|-------|-----------|
-| Frontend | Next.js 15, React 19, TypeScript |
-| Styling | Tailwind CSS 4 (utility-first) |
-| Icons | lucide-react v0.468 |
-| Charts | Recharts v2.15 |
-| Real-time | Socket.io |
-| Backend | NestJS 11, TypeScript |
-| Database | PostgreSQL 16 + Prisma 6 ORM |
-| AI | Claude API (Anthropic) |
-| Payments | Stripe |
-| Email | Resend |
-| Messaging | WhatsApp Business Cloud API |
-| Monitoring | Sentry |
+
+| Layer      | Technology                       |
+| ---------- | -------------------------------- |
+| Frontend   | Next.js 15, React 19, TypeScript |
+| Styling    | Tailwind CSS 4 (utility-first)   |
+| Icons      | lucide-react v0.468              |
+| Charts     | Recharts v2.15                   |
+| Real-time  | Socket.io                        |
+| Backend    | NestJS 11, TypeScript            |
+| Database   | PostgreSQL 16 + Prisma 6 ORM     |
+| AI         | Claude API (Anthropic)           |
+| Payments   | Stripe                           |
+| Email      | Resend                           |
+| Messaging  | WhatsApp Business Cloud API      |
+| Monitoring | Sentry                           |
 
 ### Default Seed Data (Demo Accounts)
 
 **Glow Aesthetic Clinic** (slug: glow-aesthetic)
+
 - **Login:** sarah@glowclinic.com / password123
 - **Staff:** Dr. Sarah Chen (Admin), Maria Garcia (Agent), Dr. Emily Park (Service Provider)
 - **Services:** Botox ($350/30min, deposit $100), Dermal Filler ($500/45min), Chemical Peel ($200/60min), Microneedling ($275/45min), Consultation (Free/20min)
 - **Customers:** 20+ including Emma Wilson (VIP), James Thompson, Sofia Rodriguez, Liam Parker
 
 **Metro Auto Group** (slug: metro-auto)
+
 - **Login:** mike@metroauto.com / password123
 - **Staff:** Mike Torres (Admin), Jen Davis (Agent), Carlos Ruiz (Service Provider), Priya Shah (Service Provider)
 - **Services:** Oil Change, Full Detailing, Brake Service, Tire Rotation, Pre-Purchase Inspection
@@ -222,6 +238,7 @@
 | Dark mode secondary | slate-400 |
 
 ### 2.2 Typography
+
 - **UI / Data font:** `Inter` (Google Fonts) — set as Tailwind's default `font-sans`
 - **Display / Header font:** `Playfair Display` (Google Fonts) — set as Tailwind's `font-serif`
 - Use `font-serif` for large metrics, page titles, and high-impact headers
@@ -229,11 +246,13 @@
 - Text sizes: text-xs, text-sm, text-base, text-lg, text-xl, text-2xl used throughout
 
 ### 2.3 Component Library
+
 - **No third-party component library** (no shadcn, Radix, Material UI)
 - All components are hand-built with Tailwind utility classes
 - Class merging via `clsx` + `tailwind-merge` (cn() utility)
 
 ### 2.4 Layout Patterns
+
 - **Sidebar navigation:** Fixed left sidebar, flex-1 main content, Sun/Moon dark mode toggle
 - **Grid layouts:** Responsive grid-cols-1 → md:grid-cols-2 → lg:grid-cols-4
 - **Card pattern:** White background, `rounded-2xl`, `shadow-soft` (0 12px 40px -12px rgba(0,0,0,0.05)), no borders
@@ -242,6 +261,7 @@
 ### 2.5 Interactive Patterns
 
 **Buttons**
+
 - Primary: `bg-sage-600 hover:bg-sage-700 text-white rounded-xl` with subtle hover transitions
 - Dark: `bg-slate-900 hover:bg-slate-800 text-white rounded-xl`
 - Danger: `bg-red-600 text-white hover:bg-red-700 rounded-xl`
@@ -249,17 +269,20 @@
 - Disabled: opacity-50 cursor-not-allowed
 
 **Form Inputs**
+
 - `bg-slate-50 border-transparent focus:bg-white focus:ring-2 focus:ring-sage-500 rounded-xl`
 - Controlled components with useState
 - Required fields marked with `*`
 - Error display: AlertCircle icon + red-50 bg + red-700 text
 
 **Badges/Pills**
+
 - Status: px-2 py-0.5 rounded-full text-xs font-medium (colors per status table above)
 - Tags: px-2 py-0.5 rounded text-xs
 - Role: ADMIN=lavender, SERVICE_PROVIDER=sage, AGENT=slate
 
 **Modals**
+
 - Right drawer: fixed right-0 top-0 h-full w-[480px] z-50, slideInRight animation
 - Center modal: fixed inset centered, max-w-lg/xl, max-h-[80vh], z-50, scaleIn animation
 - Overlay: bg-black/30, click to dismiss
@@ -267,6 +290,7 @@
 - Auth cards: `rounded-3xl`
 
 **Toast Notifications**
+
 - Fixed bottom-right, z-[100]
 - 3-second auto-dismiss
 - Types: success (sage), error (red), info (lavender)
@@ -274,6 +298,7 @@
 - Slide-in animation from right
 
 **Animations (CSS keyframes)**
+
 - `slideUp` — modals entering from below
 - `fadeIn` — general fade entrance
 - `scaleIn` — center modals scaling in
@@ -281,6 +306,7 @@
 - All respect `prefers-reduced-motion`
 
 ### 2.6 Icons
+
 - **Library:** lucide-react
 - **Navigation icons:** LayoutDashboard, MessageSquare, Calendar, Users, BookOpen, Scissors, UserCog, BarChart3, Settings, LogOut, Zap (automations), Megaphone (campaigns), Clock (waitlist), Search
 - **Action icons:** X, Plus, Pencil, Trash2, Send, RefreshCw, Search, Filter
@@ -290,6 +316,7 @@
 - **Standard size:** 16-18px in navigation, 14-16px inline, 48px for empty states
 
 ### 2.7 Dark Mode
+
 - **Strategy:** Tailwind `darkMode: 'class'`
 - **Toggle:** Sun/Moon icon in sidebar
 - **Settings:** System / Light / Dark picker in settings page
@@ -304,6 +331,7 @@
 ### 3.1 Public Pages (No Authentication)
 
 #### Login Page (`/login`)
+
 - Centered card on gray background
 - App title "Booking OS" + subtitle
 - Email + Password inputs
@@ -312,6 +340,7 @@
 - Success banner if redirected from password reset
 
 #### Sign Up Page (`/signup`)
+
 - Centered card
 - Business name, Admin name, Email, Password inputs
 - "Create account" button
@@ -319,16 +348,19 @@
 - On success: redirects to `/setup`
 
 #### Forgot Password (`/forgot-password`)
+
 - Centered card
 - Email input → "Send reset link" button
 - After submit: success message "If an account exists for {email}, we've sent a password reset link"
 
 #### Reset Password (`/reset-password?token=...`)
+
 - Centered card
 - New password + Confirm password inputs (min 8 chars)
 - Validation: passwords must match
 
 #### Accept Invite (`/accept-invite?token=...`)
+
 - Centered card
 - Password + Confirm password inputs
 - "Set password & join" button
@@ -340,18 +372,18 @@
 
 A linear onboarding wizard with progress bar. Each step has a title, subtitle, and navigation (Back/Next/Finish).
 
-| Step | Name | What It Contains |
-|------|------|-----------------|
-| 0 | Clinic Type | Vertical pack selector: Aesthetic Clinic (recommended) or General Practice. Auto-installs services, templates, settings for chosen pack. |
-| 1 | Business Info | Business name input, timezone dropdown, currency dropdown |
-| 2 | Connect WhatsApp | Green info box, Connect WhatsApp button, Skip for now option |
-| 3 | Add Staff | Staff list with status/role badges, invite form (name, email, role dropdown), resend invite button |
-| 4 | Define Services | Service list (editable/deletable), add service form (name, duration, price, kind), edit mode with inline inputs |
-| 5 | Working Hours | Staff member tabs, per-day schedule (Sunday–Saturday), Working/Off toggle + time pickers |
-| 6 | Templates | Template list showing name, category badge, body in code box, variable badges |
-| 7 | Profile Requirements | Two categories (Basic/Medical), checkbox per field to mark as required |
-| 8 | Import Customers | Three cards: CSV import (drag-drop + preview table), Conversation import (with AI profile generation), Manual import (link to customers page) |
-| 9 | Test & Finish | Feature readiness checklist (6 items with green/amber indicators), Create Test Booking button, Open WhatsApp Simulator button, Go to Dashboard button |
+| Step | Name                 | What It Contains                                                                                                                                      |
+| ---- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0    | Clinic Type          | Vertical pack selector: Aesthetic Clinic (recommended) or General Practice. Auto-installs services, templates, settings for chosen pack.              |
+| 1    | Business Info        | Business name input, timezone dropdown, currency dropdown                                                                                             |
+| 2    | Connect WhatsApp     | Green info box, Connect WhatsApp button, Skip for now option                                                                                          |
+| 3    | Add Staff            | Staff list with status/role badges, invite form (name, email, role dropdown), resend invite button                                                    |
+| 4    | Define Services      | Service list (editable/deletable), add service form (name, duration, price, kind), edit mode with inline inputs                                       |
+| 5    | Working Hours        | Staff member tabs, per-day schedule (Sunday–Saturday), Working/Off toggle + time pickers                                                              |
+| 6    | Templates            | Template list showing name, category badge, body in code box, variable badges                                                                         |
+| 7    | Profile Requirements | Two categories (Basic/Medical), checkbox per field to mark as required                                                                                |
+| 8    | Import Customers     | Three cards: CSV import (drag-drop + preview table), Conversation import (with AI profile generation), Manual import (link to customers page)         |
+| 9    | Test & Finish        | Feature readiness checklist (6 items with green/amber indicators), Create Test Booking button, Open WhatsApp Simulator button, Go to Dashboard button |
 
 ---
 
@@ -360,6 +392,7 @@ A linear onboarding wizard with progress bar. Each step has a title, subtitle, a
 The dashboard layout adapts based on the active mode (admin/agent/provider).
 
 **Agent/Provider modes show:**
+
 - **KPI Strip** — 3 compact role-appropriate metrics, clickable → relevant pages with action subtitles (R2)
 - **My Work** — Personal assigned conversations + today's bookings + completed count
 - **Attention Cards** — Items needing action with primary action buttons (Send Reminders/Open Queue/Confirm Schedule), expand/collapse for >3 items, "Resolve next" navigation (R2)
@@ -369,6 +402,7 @@ The dashboard layout adapts based on the active mode (admin/agent/provider).
 **Admin mode shows the full dashboard:**
 
 **Top: Daily Briefing Feed**
+
 - `BriefingFeed` component rendered above metric cards
 - Grouped action cards from `OpportunityDetectorService` (deposit pending, overdue replies, open slots)
 - Each `BriefingCard` / `OpportunityCard` navigates to the relevant page (inbox, bookings, customers) based on entity data
@@ -378,27 +412,32 @@ The dashboard layout adapts based on the active mode (admin/agent/provider).
 - Auto-refresh every 5 minutes (R2)
 
 **Today's Appointments: TodayTimeline** (R2)
+
 - Vertical timeline with time markers (8AM–7PM), booking cards positioned chronologically
 - Current time red indicator, gap indicators for free time
 - Quick action buttons: Start (IN_PROGRESS), Complete, No-Show, Open Chat
 
 **Metric Cards (4-column grid)**
+
 1. **Bookings This Week** — calendar icon (blue), count, "vs last week" with % change arrow
 2. **Revenue (30 days)** — dollar icon (green), formatted currency
 3. **Total Customers** — users icon (purple), count, "X new this week"
 4. **Open Conversations** — message icon (orange), count, "Avg response X mins"
 
 **Middle: Secondary Metrics (3-column grid)**
+
 1. **No-Show Rate** — percentage with progress bar (color: red >15%, amber >5%, green ≤5%)
 2. **Avg Response Time** — minutes with status text ("Excellent" ≤5m / "Good" ≤15m / "Needs improvement")
 3. **This Week by Status** — color dots + status name + count for each booking status
 
 **Dashboard-Pinned Saved Views (if any exist):**
+
 - 2-4 column grid of clickable cards
 - Each card shows: icon, view name, page name
 - Click navigates to the page with the saved view filters applied
 
 **Bottom: Two-Column Section**
+
 - **Left: Today's Appointments** — time-ordered list with customer name, service, staff, status badge. Empty state: "No appointments today"
 - **Right: Unassigned Conversations** — customer name, last message preview, "Unassigned" orange badge, time ago. Empty state: green checkmark + "All caught up"
 
@@ -409,6 +448,7 @@ The dashboard layout adapts based on the active mode (admin/agent/provider).
 **Header:** Date navigation (< Today >), date display, staff filter chips (toggle), Day/Week/Month view toggle, "+ New Booking" button
 
 **Day View:**
+
 - Time gutter (8am–7pm, hourly slots)
 - Multiple columns (one per selected staff member)
 - Staff column header: name + role
@@ -419,12 +459,14 @@ The dashboard layout adapts based on the active mode (admin/agent/provider).
 - Draggable booking cards with HTML5 DnD (30-min snap to drop targets, conflict detection, confirmation popover)
 
 **Week View:**
+
 - 7 day columns with abbreviated day names
 - Today highlighted in blue
 - Compact booking cards with customer name + time
 - Non-working hours and time-off visualization
 
 **Month View:**
+
 - 6x7 CSS grid calendar layout
 - Colored dots per day: sage=confirmed, lavender=pending, red=cancelled
 - Day number + booking count summary
@@ -432,11 +474,13 @@ The dashboard layout adapts based on the active mode (admin/agent/provider).
 - Prev/next month navigation
 
 **Recommended Slots:**
+
 - `RecommendedSlots` component shown during drag-and-drop reschedule
 - Top 5 slots scored by proximity to original time + staff workload balance
 - Click slot to auto-fill reschedule
 
 **Interactions:**
+
 - Click time slot → BookingFormModal (create)
 - Click booking card → BookingDetailModal (view/edit)
 - Click "+ New Booking" → BookingFormModal
@@ -462,14 +506,17 @@ The dashboard layout adapts based on the active mode (admin/agent/provider).
 ### 3.6 Inbox (`/inbox`) — 4-Panel Layout
 
 **Panel 1: Filter Sidebar (w-48)**
+
 - Title "Inbox"
 - Filter items with counts: All, Unassigned (orange badge), Mine, Overdue (red badge), Waiting, Snoozed (purple badge), Closed
 
 **Panel 2: Conversation List (w-80)**
+
 - Search box with clear button
 - Per conversation: overdue red dot, customer name, "New" blue badge, last message preview, status badge, assigned staff, time ago, first 3 tags
 
 **Panel 3: Message Thread (flex-1)**
+
 - **Header:** Customer name + phone, snooze button, "Resume auto-reply" (purple), close conversation, "+ New Booking", presence pills (who else is viewing)
 - **Messages:** Inbound (left, white/border), Outbound (right, blue bg/white text), timestamps, staff name labels, delivery status indicators (sent/delivered/read checkmarks), media attachments (inline images, document links, audio players)
 - **AI Suggestions section:** Purple-to-blue gradient bg, intent badge (color-coded), editable textarea, Send/Dismiss buttons
@@ -479,6 +526,7 @@ The dashboard layout adapts based on the active mode (admin/agent/provider).
 Two tabs: **Info** | **Notes**
 
 **Info tab:**
+
 - Customer avatar circle + name + phone + email
 - Customer tags (removable badges + add input)
 - AI Summary (purple sparkles icon, refresh button)
@@ -489,6 +537,7 @@ Two tabs: **Info** | **Notes**
 - Upcoming Bookings (max 3)
 
 **Notes tab:**
+
 - Notes list (yellow sticky style: content + staff name + timestamp + delete)
 - Add note textarea + "Add Note" button
 
@@ -507,6 +556,7 @@ Two tabs: **Info** | **Notes**
 **Click row** → navigates to `/customers/{id}`
 
 **Modals:**
+
 - CustomerForm: Name, Phone, Email inputs
 - ImportModal: CSV upload (drag-drop + preview), Conversation import (with AI), Export CSV
 
@@ -521,6 +571,7 @@ Two tabs: **Info** | **Notes**
 **3-Column Layout:**
 
 **Left Column (1/3):**
+
 1. Contact Info card (name, phone, email, address) with edit button
 2. Tags card (removable tags + add input)
 3. Quick Stats card: total bookings, total spent, upcoming, no-shows (red if >0)
@@ -529,11 +580,13 @@ Two tabs: **Info** | **Notes**
 **Right Column (2/3) — Tabbed card (5 tabs):**
 
 **AI Chat tab:**
+
 - Chat interface with user messages (right/sage) and AI responses (left/gray)
 - 4 prompt chips: "Summarize customer...", "What treatments...", "Upcoming appointments...", "Any allergies..."
 - Chat input with send button
 
 **Timeline tab:**
+
 - `CustomerTimeline` component — unified activity feed from 6 sources
 - Filter chips: All, Bookings, Messages, Notes, Waitlist, Quotes, Campaigns
 - System events toggle
@@ -541,18 +594,22 @@ Two tabs: **Info** | **Notes**
 - Load more pagination
 
 **Bookings tab:**
+
 - Upcoming section + History section
 - Each booking: date+time, service, staff+price, status badge
 
 **Notes tab:**
+
 - Composer textarea + "Add Note" button
 - Yellow sticky note cards: content, author, timestamp, edit/delete (owner only)
 
 **Details tab:**
+
 - Grid: full name, phone, email, customer since, tags, custom fields
 - Edit modal: name, email, tags (comma-separated), custom fields (boolean=checkbox, select=dropdown, text=input)
 
 **Vertical Modules (below main grid):**
+
 - Collapsible section with ChevronDown toggle
 - Aesthetic pack (`pack.slug === 'aesthetic'`): `IntakeCard` with clinic intake fields
 - Dealership pack (`pack.slug === 'dealership'`): Quotes summary (pending/approved/total), quote rows with status badges
@@ -566,6 +623,7 @@ Two tabs: **Info** | **Notes**
 **Grouped by category:** Each category section header → 3-column responsive grid of service cards
 
 **Service card:**
+
 - Name (bold)
 - Description (2-line truncated)
 - Badges: "Inactive" (red), "Deposit Required" (amber)
@@ -582,6 +640,7 @@ Two tabs: **Info** | **Notes**
 **Header:** Title + "+ Add Staff" button
 
 **Expandable table:**
+
 - Columns: expand arrow | Name | Email | Role badge | Status badge
 - Role badges: ADMIN=lavender, SERVICE_PROVIDER=sage, AGENT=slate
 - Status: Active=green, Inactive=red, "Invite Pending" with resend/revoke
@@ -603,6 +662,7 @@ Two tabs: **Info** | **Notes**
 **Summary cards (4-column):** Total Bookings, Revenue, No-Show Rate (color-coded), Avg Response Time (color-coded)
 
 **Charts (2-column rows):**
+
 1. Bookings Over Time (area chart, blue) | Revenue Over Time (area chart, green)
 2. Service Popularity (horizontal bar list with booking count + revenue) | Status Breakdown (donut chart with legend)
 
@@ -615,12 +675,14 @@ Two tabs: **Info** | **Notes**
 ### 3.12 Settings (`/settings`)
 
 **Settings Home:**
+
 - Business Info card: name, phone, timezone (read-only), vertical pack (read-only), Save button
 - Change Password card: current password, new password, confirm password
 - Quick Links grid (cards with icons linking to sub-pages):
   Message Templates, Translations, Profile Fields, AI Settings, AI Autonomy, Agent Skills, Account & Import, Notifications, Billing, Calendar, Offers, Policies, Waitlist Settings, Setup Wizard
 
 #### AI Settings (`/settings/ai`)
+
 - Master toggle: Enable AI Assistance
 - Auto Reply Suggestions toggle
 - Booking Assistant toggle
@@ -628,12 +690,14 @@ Two tabs: **Info** | **Notes**
 - AI Personality textarea
 
 #### Templates (`/settings/templates`)
+
 - Category filter buttons with counts: ALL | CONFIRMATION | REMINDER | FOLLOW_UP | CANCELLATION | CONSULT_FOLLOW_UP | AFTERCARE | TREATMENT_CHECK_IN | DEPOSIT_REQUIRED | RESCHEDULE_LINK | CANCEL_LINK | CUSTOM
 - Template cards: name, category badge, body in code box, variable badges
 - Preview toggle: shows resolved template with sample data; unresolved {{vars}} show amber warning badge + red highlight
 - TemplateForm modal: name, category dropdown, body textarea (monospace), variable insertion buttons, detected variables display (green=recognized, orange=unknown), live preview
 
 #### Translations (`/settings/translations`)
+
 - Locale buttons (English | Espanol)
 - Search box (searches keys + defaults + overrides)
 - Filter: "Show all" / "Show overrides only" with override count
@@ -641,43 +705,52 @@ Two tabs: **Info** | **Notes**
 - Per row: key (code style), English default, current value with inline edit, reset button for overrides
 
 #### Profile Fields (`/settings/profile-fields`)
+
 - Two sections: Basic Fields, Medical Fields
 - Per field: label, type indicator, required checkbox
 - Fields: firstName, lastName, email, dateOfBirth, address, allergies, medicalNotes, emergencyContact
 
 #### Account & Import (`/settings/account`)
+
 - CSV Import: drag-drop zone, preview table (10 rows), Import button, result counts
 - Conversation Import: "Include messages" checkbox, Generate Profiles button, result counts
 - Export: "Export as CSV" button
 
 #### Calendar Sync (`/settings/calendar`)
+
 - Google Calendar connection management
 - Connect/disconnect buttons per provider
 - iCal feed URL generation and regeneration
 
 #### Billing (`/settings/billing`)
+
 - Stripe subscription management (Basic/Pro plans)
 - Checkout, customer portal links
 
 #### Notifications (`/settings/notifications`)
+
 - Channel preferences (WhatsApp, email, or both)
 - Follow-up delay hours, consult follow-up days, treatment check-in hours
 
 #### Offers (`/settings/offers`)
+
 - Offers CRUD: name, description, terms, applicable services, validity dates, max redemptions
 - Active/inactive toggle
 
 #### Policies (`/settings/policies`)
+
 - Cancellation window (hours before appointment)
 - Reschedule window (hours before appointment)
 - Policy copy text shown to customers
 
 #### Waitlist Settings (`/settings/waitlist`)
+
 - Max offers per cancellation
 - Offer expiry time
 - Quiet hours (start/end)
 
 #### Agent Settings (`/settings/agents`)
+
 - Per-agent configuration for 5 background agents (waitlist, retention, data-hygiene, scheduling-optimizer, quote-followup)
 - Enable/disable toggle per agent type
 - Schedule configuration (cron expression or interval)
@@ -686,6 +759,7 @@ Two tabs: **Info** | **Notes**
 - Saves to `AgentConfig` model (unique per businessId + agentType)
 
 #### Autonomy Settings (`/settings/autonomy`)
+
 - Per-action-type autonomy level configuration
 - `AutonomySettings` component with list of action types
 - `AutonomyLevelPicker` — visual selector for autonomy levels (OFF / SUGGEST / AUTO_WITH_REVIEW / FULL_AUTO)
@@ -702,6 +776,7 @@ Two tabs: **Info** | **Notes**
 **Table columns:** Customer | Service | Preferred Staff | Date Range | Time Window | Status badge | Actions
 
 **Features:**
+
 - Filter by status (ACTIVE, OFFERED, BOOKED, EXPIRED, CANCELLED)
 - Resolve entries manually
 - Dashboard metrics card: total entries, offers sent, claimed, fill rate, avg time to claim
@@ -712,18 +787,22 @@ Two tabs: **Info** | **Notes**
 ### 3.14 Automations (`/automations`)
 
 **Built-in Playbooks section:**
+
 - 3 playbook cards (No-Show Prevention, Consult Conversion, Re-engagement)
 - Each shows: name, description, "what will happen" summary, toggle on/off
 
 **Custom Rules section:**
+
 - Rules table: name, trigger badge, active toggle, actions
 - "+ New Rule" button → `/automations/new`
 
 **Activity Log section:**
+
 - Searchable, filterable log of automation executions
 - Per entry: rule name, customer, action, outcome badge (SENT/SKIPPED/FAILED), timestamp
 
 **New Automation page (`/automations/new`):**
+
 - 4-step wizard: Trigger → Filters → Actions → Review
 - 6 trigger types with descriptions
 - Filter options vary by trigger
@@ -735,15 +814,18 @@ Two tabs: **Info** | **Notes**
 ### 3.15 Campaigns (`/campaigns`)
 
 **Campaign List:**
+
 - Table: name, status badge (DRAFT/SCHEDULED/SENDING/SENT/CANCELLED), audience size, send stats, created date
 - "+ New Campaign" button
 
 **Campaign Detail (`/campaigns/[id]`):**
+
 - Stats grid: total sends, delivered, read, failed, booking conversions
 - Campaign config summary
 - Send log table
 
 **New Campaign (`/campaigns/new`):**
+
 - 4-step wizard: Audience → Template → Schedule → Review
 - Audience step: segment filters (tags, last booking, service kind, no upcoming, exclude do-not-message), live preview count + sample names
 - Template step: template picker with variable preview
@@ -757,11 +839,13 @@ Two tabs: **Info** | **Notes**
 **Tab bar:** Dashboard | Weekly Review
 
 **Dashboard tab:**
+
 - 6 metric cards: No-Show Rate, Consult → Treatment Conversion, Avg Response Time, Revenue, Staff Utilization, Deposit Compliance
 - Each shows: current value, baseline value, delta badge (green=improved, red=worsened)
 - Recovered Revenue estimate card with "How we calculate this" methodology link
 
 **Weekly Review tab:**
+
 - Week-over-week comparison table (6 metrics × 2 periods)
 - Delta badges per metric
 - "Email Review" button to send summary to team
@@ -815,118 +899,128 @@ PlatformAuditLog (standalone)
 ### 4.2 Key Models
 
 #### Business
-| Field | Type | Notes |
-|-------|------|-------|
-| name | String | Business display name |
-| slug | String (unique) | URL-friendly identifier |
-| phone | String? | Business phone |
-| timezone | String | Default: "UTC" |
-| verticalPack | String | "aesthetic", "salon", "tutoring", "general" |
-| packConfig | JSON | Business-specific settings (requiredProfileFields, requireConsultation, etc.) |
-| defaultLocale | String | "en" or "es" |
-| aiSettings | JSON | AI configuration (enabled, autoReply, personality, etc.) |
+
+| Field         | Type            | Notes                                                                         |
+| ------------- | --------------- | ----------------------------------------------------------------------------- |
+| name          | String          | Business display name                                                         |
+| slug          | String (unique) | URL-friendly identifier                                                       |
+| phone         | String?         | Business phone                                                                |
+| timezone      | String          | Default: "UTC"                                                                |
+| verticalPack  | String          | "aesthetic", "salon", "tutoring", "general"                                   |
+| packConfig    | JSON            | Business-specific settings (requiredProfileFields, requireConsultation, etc.) |
+| defaultLocale | String          | "en" or "es"                                                                  |
+| aiSettings    | JSON            | AI configuration (enabled, autoReply, personality, etc.)                      |
 
 #### Staff
-| Field | Type | Notes |
-|-------|------|-------|
-| name | String | Display name |
-| email | String (unique) | Login email |
-| passwordHash | String? | Null = invite pending |
-| role | String | "ADMIN", "SERVICE_PROVIDER", "AGENT" |
-| locale | String? | Staff language preference |
-| preferences | JSON | Mode/landing prefs `{ mode, landingPath }` |
-| isActive | Boolean | Soft delete |
+
+| Field        | Type            | Notes                                      |
+| ------------ | --------------- | ------------------------------------------ |
+| name         | String          | Display name                               |
+| email        | String (unique) | Login email                                |
+| passwordHash | String?         | Null = invite pending                      |
+| role         | String          | "ADMIN", "SERVICE_PROVIDER", "AGENT"       |
+| locale       | String?         | Staff language preference                  |
+| preferences  | JSON            | Mode/landing prefs `{ mode, landingPath }` |
+| isActive     | Boolean         | Soft delete                                |
 
 #### Customer
-| Field | Type | Notes |
-|-------|------|-------|
-| name | String | Customer name |
-| phone | String | Phone number (unique per business) |
-| email | String? | Optional email |
-| tags | String[] | Custom tags (VIP, Regular, New, etc.) |
-| customFields | JSON | Flexible profile data (allergies, medicalNotes, etc.) |
+
+| Field        | Type     | Notes                                                 |
+| ------------ | -------- | ----------------------------------------------------- |
+| name         | String   | Customer name                                         |
+| phone        | String   | Phone number (unique per business)                    |
+| email        | String?  | Optional email                                        |
+| tags         | String[] | Custom tags (VIP, Regular, New, etc.)                 |
+| customFields | JSON     | Flexible profile data (allergies, medicalNotes, etc.) |
 
 #### Service
-| Field | Type | Notes |
-|-------|------|-------|
-| name | String | Service name |
-| durationMins | Int | Duration in minutes |
-| price | Float | Price (0 = free) |
-| category | String | Grouping category |
-| isActive | Boolean | Soft delete |
-| depositRequired | Boolean | Requires deposit |
-| depositAmount | Float? | Deposit amount |
-| bufferBefore | Int | Buffer minutes before |
-| bufferAfter | Int | Buffer minutes after |
+
+| Field           | Type    | Notes                 |
+| --------------- | ------- | --------------------- |
+| name            | String  | Service name          |
+| durationMins    | Int     | Duration in minutes   |
+| price           | Float   | Price (0 = free)      |
+| category        | String  | Grouping category     |
+| isActive        | Boolean | Soft delete           |
+| depositRequired | Boolean | Requires deposit      |
+| depositAmount   | Float?  | Deposit amount        |
+| bufferBefore    | Int     | Buffer minutes before |
+| bufferAfter     | Int     | Buffer minutes after  |
 
 #### Booking
-| Field | Type | Notes |
-|-------|------|-------|
-| customerId | FK | Customer reference |
-| serviceId | FK | Service reference |
-| staffId | FK? | Optional staff assignment |
-| conversationId | FK? | Optional conversation link |
-| status | String | PENDING/CONFIRMED/IN_PROGRESS/COMPLETED/CANCELLED/NO_SHOW |
-| startTime | DateTime | Appointment start |
-| endTime | DateTime | Auto-calculated from service duration |
-| notes | String? | Booking notes |
-| Indexes | | [businessId], [businessId, startTime], [businessId, status] |
+
+| Field          | Type     | Notes                                                       |
+| -------------- | -------- | ----------------------------------------------------------- |
+| customerId     | FK       | Customer reference                                          |
+| serviceId      | FK       | Service reference                                           |
+| staffId        | FK?      | Optional staff assignment                                   |
+| conversationId | FK?      | Optional conversation link                                  |
+| status         | String   | PENDING/CONFIRMED/IN_PROGRESS/COMPLETED/CANCELLED/NO_SHOW   |
+| startTime      | DateTime | Appointment start                                           |
+| endTime        | DateTime | Auto-calculated from service duration                       |
+| notes          | String?  | Booking notes                                               |
+| Indexes        |          | [businessId], [businessId, startTime], [businessId, status] |
 
 #### Conversation
-| Field | Type | Notes |
-|-------|------|-------|
-| customerId | FK | Customer reference |
-| assignedToId | FK? | Assigned staff |
-| channel | String | "WHATSAPP" or "WEB" |
-| status | String | OPEN/WAITING/RESOLVED/SNOOZED |
-| lastMessageAt | DateTime? | For ordering/SLA |
-| snoozedUntil | DateTime? | Snooze expiry |
-| tags | String[] | Conversation tags |
-| metadata | JSON | AI state, drafts, booking state |
+
+| Field         | Type      | Notes                           |
+| ------------- | --------- | ------------------------------- |
+| customerId    | FK        | Customer reference              |
+| assignedToId  | FK?       | Assigned staff                  |
+| channel       | String    | "WHATSAPP" or "WEB"             |
+| status        | String    | OPEN/WAITING/RESOLVED/SNOOZED   |
+| lastMessageAt | DateTime? | For ordering/SLA                |
+| snoozedUntil  | DateTime? | Snooze expiry                   |
+| tags          | String[]  | Conversation tags               |
+| metadata      | JSON      | AI state, drafts, booking state |
 
 #### Message
-| Field | Type | Notes |
-|-------|------|-------|
-| direction | String | "INBOUND" or "OUTBOUND" |
-| senderStaffId | FK? | Null for inbound |
-| content | String | Message body |
-| contentType | String | TEXT/IMAGE/DOCUMENT/AUDIO |
-| externalId | String? | WhatsApp message ID |
-| deliveryStatus | String? | SENT/DELIVERED/READ/FAILED (UX Upgrade Pack R1) |
-| deliveredAt | DateTime? | Timestamp when delivered (UX Upgrade Pack R1) |
-| readAt | DateTime? | Timestamp when read (UX Upgrade Pack R1) |
-| failureReason | String? | Delivery failure reason (UX Upgrade Pack R1) |
+
+| Field          | Type      | Notes                                           |
+| -------------- | --------- | ----------------------------------------------- |
+| direction      | String    | "INBOUND" or "OUTBOUND"                         |
+| senderStaffId  | FK?       | Null for inbound                                |
+| content        | String    | Message body                                    |
+| contentType    | String    | TEXT/IMAGE/DOCUMENT/AUDIO                       |
+| externalId     | String?   | WhatsApp message ID                             |
+| deliveryStatus | String?   | SENT/DELIVERED/READ/FAILED (UX Upgrade Pack R1) |
+| deliveredAt    | DateTime? | Timestamp when delivered (UX Upgrade Pack R1)   |
+| readAt         | DateTime? | Timestamp when read (UX Upgrade Pack R1)        |
+| failureReason  | String?   | Delivery failure reason (UX Upgrade Pack R1)    |
 
 #### MessageAttachment (New — UX Upgrade Pack R1)
-| Field | Type | Notes |
-|-------|------|-------|
-| id | String (CUID) | Primary key |
-| messageId | FK | Parent message |
-| businessId | FK | Tenant isolation |
-| fileName | String | Original file name |
-| fileType | String | MIME type (image/jpeg, application/pdf, etc.) |
-| fileSize | Int | File size in bytes |
-| storageKey | String | Storage path/key for the file |
-| thumbnailKey | String? | Storage path/key for thumbnail (images) |
-| createdAt | DateTime | Upload timestamp |
+
+| Field        | Type          | Notes                                         |
+| ------------ | ------------- | --------------------------------------------- |
+| id           | String (CUID) | Primary key                                   |
+| messageId    | FK            | Parent message                                |
+| businessId   | FK            | Tenant isolation                              |
+| fileName     | String        | Original file name                            |
+| fileType     | String        | MIME type (image/jpeg, application/pdf, etc.) |
+| fileSize     | Int           | File size in bytes                            |
+| storageKey   | String        | Storage path/key for the file                 |
+| thumbnailKey | String?       | Storage path/key for thumbnail (images)       |
+| createdAt    | DateTime      | Upload timestamp                              |
 
 #### SavedView
-| Field | Type | Notes |
-|-------|------|-------|
-| id | String (CUID) | Primary key |
-| businessId | FK | Parent business |
-| staffId | FK? | Creator (null = shared business-level) |
-| page | String | "inbox", "bookings", "customers", "waitlist" |
-| name | String | Display name |
-| filters | JSON | Serialized filter state (page-specific) |
-| icon | String? | Lucide icon name (flag, bell, star, etc.) |
-| color | String? | Color key (sage, lavender, amber) |
-| isPinned | Boolean | Appears in sidebar |
-| isDashboard | Boolean | Appears on Mission Control dashboard |
-| isShared | Boolean | Visible to all staff (admin-controlled) |
-| sortOrder | Int | Display ordering |
+
+| Field       | Type          | Notes                                        |
+| ----------- | ------------- | -------------------------------------------- |
+| id          | String (CUID) | Primary key                                  |
+| businessId  | FK            | Parent business                              |
+| staffId     | FK?           | Creator (null = shared business-level)       |
+| page        | String        | "inbox", "bookings", "customers", "waitlist" |
+| name        | String        | Display name                                 |
+| filters     | JSON          | Serialized filter state (page-specific)      |
+| icon        | String?       | Lucide icon name (flag, bell, star, etc.)    |
+| color       | String?       | Color key (sage, lavender, amber)            |
+| isPinned    | Boolean       | Appears in sidebar                           |
+| isDashboard | Boolean       | Appears on Mission Control dashboard         |
+| isShared    | Boolean       | Visible to all staff (admin-controlled)      |
+| sortOrder   | Int           | Display ordering                             |
 
 #### Other Models
+
 - **CustomerNote:** customerId, staffId, businessId, content, createdAt, updatedAt (staff ownership validated for edit/delete)
 - **Reminder:** bookingId, templateId, scheduledAt, sentAt, status (PENDING/SENT/FAILED/CANCELLED), type (REMINDER/CONSULT_FOLLOW_UP/AFTERCARE/TREATMENT_CHECK_IN)
 - **MessageTemplate:** name, category (11 types), body (with {{variables}}), variables[]
@@ -960,11 +1054,13 @@ PlatformAuditLog (standalone)
 ## 5. Key User Flows
 
 ### 5.1 New Business Onboarding
+
 1. Sign up (business name, owner info) → redirect to setup wizard
 2. 9-step wizard: business info → WhatsApp → staff → services → hours → templates → profile fields → import customers → finish
 3. Redirect to dashboard
 
 ### 5.2 Booking Creation (Manual)
+
 1. Click "+ New Booking" (from calendar, customer detail, or inbox)
 2. Select customer, service, optional staff
 3. Pick date → system fetches available time slots
@@ -972,6 +1068,7 @@ PlatformAuditLog (standalone)
 5. Submit → booking created with CONFIRMED status + 24h reminder auto-scheduled
 
 ### 5.3 AI-Assisted Booking (via Chat)
+
 1. Customer sends message via WhatsApp
 2. AI detects booking intent → shows booking panel in sidebar
 3. AI guides through steps: service → date → time → confirm
@@ -979,6 +1076,7 @@ PlatformAuditLog (standalone)
 5. On confirmation → booking auto-created, confirmation message sent
 
 ### 5.4 Conversation Management
+
 1. Inbound message creates/reopens conversation
 2. Appears in Inbox with AI draft suggestion
 3. Agent can: send AI draft, edit and send, write own reply, assign to staff
@@ -986,6 +1084,7 @@ PlatformAuditLog (standalone)
 5. AI auto-reply can handle messages automatically (configurable per intent)
 
 ### 5.5 Customer Journey
+
 1. First contact: customer auto-created from phone number
 2. Profile enriched via: AI extraction from messages, manual edit, import
 3. Required profile fields collected by AI before booking confirmation
@@ -996,17 +1095,20 @@ PlatformAuditLog (standalone)
 ## 6. AI Features
 
 ### 6.1 AI Draft Suggestions
+
 - Shown in purple-to-blue gradient box in message composer area
 - Displays: intent badge (color-coded), confidence level, editable draft text
 - Agent can send as-is, edit, or dismiss
 
 ### 6.2 AI Auto-Reply
+
 - Configurable: all messages or selected intents only
 - Intents: GENERAL_INQUIRY, BOOK_APPOINTMENT, CANCEL_APPOINTMENT, RESCHEDULE_APPOINTMENT
 - When active, AI responds automatically without agent intervention
 - "Resume auto-reply" purple button appears when human takes over
 
 ### 6.3 AI Booking Panel
+
 - Displayed in inbox sidebar during booking flow
 - Three modes with color themes:
   - **Book:** purple, 4 steps (service → date → time → confirm)
@@ -1015,17 +1117,20 @@ PlatformAuditLog (standalone)
 - Progress bar, info rows (label + value), step counter
 
 ### 6.4 AI Customer Chat
+
 - On customer detail page, "AI Chat" tab
 - Natural language Q&A about the customer
 - Pre-filled prompt chips for common queries
 - Conversation-style interface
 
 ### 6.5 AI Conversation Summary
+
 - Purple sparkles icon in inbox sidebar
 - Auto-generated summary of conversation
 - Refresh button to regenerate
 
 ### 6.6 AI Profile Collection
+
 - When required profile fields are missing during booking
 - AI conversationally asks for 1-2 fields at a time
 - Collected data saved to customer customFields
@@ -1036,13 +1141,16 @@ PlatformAuditLog (standalone)
 ## 7. Internationalization
 
 ### Supported Locales
+
 - **en** (English) — 589 translation keys
 - **es** (Spanish) — complete translation
 
 ### Translation Sections
+
 common, app, nav, login, dashboard, inbox, calendar, bookings, customers, customer_detail, services, staff, days, days_short, reports, settings, translations, templates, setup, ai, import, status, errors
 
 ### Features
+
 - Per-business translation overrides (stored in DB)
 - Variable interpolation: `{{variable}}`
 - Dynamic entity labels per vertical pack (Customer/Client, Booking/Appointment, Service/Treatment)
@@ -1054,6 +1162,7 @@ common, app, nav, login, dashboard, inbox, calendar, bookings, customers, custom
 ## 8. Real-Time Features (Socket.io)
 
 Events handled in the inbox:
+
 - `message:new` — new inbound/outbound message
 - `message:status` — delivery/read receipt update (sent → delivered → read)
 - `conversation:updated` — status, assignment changes
@@ -1070,6 +1179,7 @@ Events handled in the inbox:
 ## 9. Current UI Characteristics (As-Is)
 
 ### Strengths
+
 - **Minimalist Premium** aesthetic with custom brand palette (sage/lavender)
 - **Custom typography** — Inter for UI, Playfair Display for headers
 - Clean, minimal layout with clear information hierarchy and generous whitespace
@@ -1086,6 +1196,7 @@ Events handled in the inbox:
 - Comprehensive feature set across 62 pages
 
 ### Remaining Opportunities
+
 - **No third-party component library** — all components hand-built, some inconsistency possible
 - **Calendar is custom-built** — functional but could benefit from polish
 - **Mobile responsiveness** — grid-based but not optimized for mobile-first
@@ -1099,39 +1210,43 @@ Events handled in the inbox:
 The Platform Console is a **standalone Next.js app** at `apps/admin/` for managing tenants, health, and support. Deployed at `admin.businesscommandcentre.com`. Accessible only to `SUPER_ADMIN` role. All API endpoints are under `/admin/*` with `@Roles('SUPER_ADMIN')` guard (no TenantGuard).
 
 ### 10.1 Admin Shell & Navigation
+
 - Separate app at `apps/admin/` with dark sidebar (`bg-slate-900`), red "ADMIN" badge, and `AdminShell` layout component
 - 10 sidebar items: Overview, Businesses, Billing, Packs & Skills, AI Agents, Messaging, Support, Audit Log, System Health, Settings
 - SUPER_ADMIN login on customer app redirects to `admin.businesscommandcentre.com`
 
 ### 10.2 Pages
 
-| Page | Route | API Endpoints | Description |
-|------|-------|---------------|-------------|
-| Overview | `/` | `GET /admin/overview` | Platform KPIs (businesses, bookings, staff, agents), billing breakdown, support count, security summary, recent audit feed |
-| Business Directory | `/businesses` | `GET /admin/businesses` | Search/filter by name/slug/email/plan/billing/health, paginated table with health dots |
-| Business 360 | `/businesses/[id]` | `GET /admin/businesses/:id`, `/admin/businesses/:id/usage`, `/admin/businesses/:id/staff` | Summary tab (metadata, usage snapshot, health, quick actions) + People tab (read-only staff list) + Billing tab |
-| Security & Audit | `/audit` | `GET /admin/audit-logs`, `GET /admin/audit-logs/action-types` | Searchable audit log with action type filter, paginated table |
-| System Health | `/health` | `GET /admin/health` | Overall status banner, 5 service checks (DB, Business Activity, AI Agents, Calendar Sync, Message Delivery), business health distribution bar |
-| Support Cases | `/support` | `GET/POST /admin/support-cases`, `GET/PATCH /admin/support-cases/:id`, `POST /admin/support-cases/:id/notes` | Full CRUD with search, status/priority filters, case detail drawer with notes |
-| Billing | `/billing` | `GET /admin/billing/dashboard`, `/admin/billing/past-due`, `/admin/billing/subscriptions` | MRR, churn, plan distribution, past-due accounts, subscription management |
-| Packs & Skills | `/packs` | `GET /admin/packs-console/*`, `/admin/skills-console/*` | Pack registry, version management, skills catalog |
-| AI & Agents | `/agents` | `GET /admin/agents-console/*` | Agent performance dashboard, tenant controls, platform defaults |
-| Messaging Ops | `/messaging` | `GET /admin/messaging-console/*` | Delivery rates, webhook health, failure analysis, per-tenant status |
-| Settings | `/settings` | `GET/PUT /admin/settings/*` | Platform settings (security, notifications, regional, platform) with bulk save |
+| Page               | Route              | API Endpoints                                                                                                | Description                                                                                                                                   |
+| ------------------ | ------------------ | ------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Overview           | `/`                | `GET /admin/overview`                                                                                        | Platform KPIs (businesses, bookings, staff, agents), billing breakdown, support count, security summary, recent audit feed                    |
+| Business Directory | `/businesses`      | `GET /admin/businesses`                                                                                      | Search/filter by name/slug/email/plan/billing/health, paginated table with health dots                                                        |
+| Business 360       | `/businesses/[id]` | `GET /admin/businesses/:id`, `/admin/businesses/:id/usage`, `/admin/businesses/:id/staff`                    | Summary tab (metadata, usage snapshot, health, quick actions) + People tab (read-only staff list) + Billing tab                               |
+| Security & Audit   | `/audit`           | `GET /admin/audit-logs`, `GET /admin/audit-logs/action-types`                                                | Searchable audit log with action type filter, paginated table                                                                                 |
+| System Health      | `/health`          | `GET /admin/health`                                                                                          | Overall status banner, 5 service checks (DB, Business Activity, AI Agents, Calendar Sync, Message Delivery), business health distribution bar |
+| Support Cases      | `/support`         | `GET/POST /admin/support-cases`, `GET/PATCH /admin/support-cases/:id`, `POST /admin/support-cases/:id/notes` | Full CRUD with search, status/priority filters, case detail drawer with notes                                                                 |
+| Billing            | `/billing`         | `GET /admin/billing/dashboard`, `/admin/billing/past-due`, `/admin/billing/subscriptions`                    | MRR, churn, plan distribution, past-due accounts, subscription management                                                                     |
+| Packs & Skills     | `/packs`           | `GET /admin/packs-console/*`, `/admin/skills-console/*`                                                      | Pack registry, version management, skills catalog                                                                                             |
+| AI & Agents        | `/agents`          | `GET /admin/agents-console/*`                                                                                | Agent performance dashboard, tenant controls, platform defaults                                                                               |
+| Messaging Ops      | `/messaging`       | `GET /admin/messaging-console/*`                                                                             | Delivery rates, webhook health, failure analysis, per-tenant status                                                                           |
+| Settings           | `/settings`        | `GET/PUT /admin/settings/*`                                                                                  | Platform settings (security, notifications, regional, platform) with bulk save                                                                |
 
 ### 10.3 View-as Tenant
+
 - Super Admin can impersonate any business for 15 minutes
 - Requires reason (audit-logged), issues scoped JWT with `viewAs: true` claim
 - Persistent amber countdown banner with "Exit" button
 - Session tracked in `ViewAsSession` model, all actions logged to `PlatformAuditLog`
 
 ### 10.4 Console-Specific Models
+
 - **ViewAsSession** — Time-limited impersonation sessions (superAdminId, targetBusinessId, reason, expiresAt)
 - **PlatformAuditLog** — All Super Admin actions (actorEmail, action, targetType, targetId, reason, metadata)
 - **SupportCase** — Support case tracking (businessId, subject, description, status, priority, category, resolution)
 - **SupportCaseNote** — Notes on support cases (caseId, authorName, content) with cascade delete
 
 ### 10.5 Seed Scripts
+
 - `packages/db/src/seed-console.ts` — Platform business + Super Admin staff
 - `packages/db/src/seed-console-showcase.ts` — 6 diverse businesses with varied health/billing/plans
 

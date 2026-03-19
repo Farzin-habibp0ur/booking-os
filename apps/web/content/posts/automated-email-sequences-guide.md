@@ -1,10 +1,10 @@
 ---
-title: "The Complete Guide to Automated Email Sequences for Service Businesses"
-description: "How to set up email drip campaigns that onboard new clients, reduce churn, and drive repeat bookings on autopilot."
-date: "2026-03-03"
-category: "Product Education"
-author: "Booking OS Team"
-readTime: "6 min read"
+title: 'The Complete Guide to Automated Email Sequences for Service Businesses'
+description: 'How to set up email drip campaigns that onboard new clients, reduce churn, and drive repeat bookings on autopilot.'
+date: '2026-03-03'
+category: 'Product Education'
+author: 'Booking OS Team'
+readTime: '6 min read'
 ---
 
 Email sequences are one of the highest-ROI marketing tools available to service businesses, yet most still rely on one-off blasts or manual follow-ups. A well-designed sequence delivers the right message at the right time — automatically.

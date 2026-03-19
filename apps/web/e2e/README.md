@@ -7,10 +7,12 @@ Comprehensive end-to-end testing for the Booking OS web application using Playwr
 The E2E test suite is organized into the following test files:
 
 ### Authentication & Authorization
+
 - **auth.spec.ts** - Core authentication flows (login page, redirects, invalid credentials, protected routes)
 - **login.spec.ts** - Detailed login UI testing and logout functionality
 
 ### Main Application Features
+
 - **bookings.spec.ts** - Bookings page, list display, navigation
 - **customers.spec.ts** - Customers page, search functionality, data display
 - **services.spec.ts** - Services page, categories, pricing information
@@ -19,10 +21,12 @@ The E2E test suite is organized into the following test files:
 - **inbox.spec.ts** - Messaging inbox, conversations, message threads
 
 ### Navigation & UX
+
 - **navigation.spec.ts** - Sidebar navigation, active states, browser history, page titles
 - **setup-wizard.spec.ts** - Initial setup wizard flow for new organizations
 
 ### Workflow Tests
+
 - **workflows.spec.ts** - End-to-end clinic journey tests covering critical workflows:
   - Booking lifecycle (create and view)
   - Deposit flow (pending deposit visible)
@@ -37,11 +41,14 @@ The E2E test suite is organized into the following test files:
 Located in `e2e/helpers/`:
 
 ### auth.ts
+
 Provides authentication utilities:
+
 - `loginViaApi()` - Fast authentication by calling API directly and setting token
 - `loginViaUi()` - Authentication through the login form UI
 
 **Usage:**
+
 ```typescript
 import { loginViaApi } from './helpers/auth';
 
@@ -51,7 +58,9 @@ test.beforeEach(async ({ page }) => {
 ```
 
 ### api-data.ts
+
 Provides API data helpers for workflow tests (authenticated via page.request):
+
 - `getServicesViaApi(page)` — Fetch services list
 - `getStaffViaApi(page)` — Fetch staff list
 - `getCustomersViaApi(page)` — Fetch customers list
@@ -61,6 +70,7 @@ Provides API data helpers for workflow tests (authenticated via page.request):
 - `sendCancelLinkViaApi(page, bookingId)` — Send cancel link
 
 **Usage:**
+
 ```typescript
 import { getServicesViaApi, createBookingViaApi } from './helpers/api-data';
 
@@ -76,31 +86,37 @@ const booking = await createBookingViaApi(page, {
 ## Running Tests
 
 ### Run all tests
+
 ```bash
 npm run test:e2e
 ```
 
 ### Run tests in UI mode (interactive)
+
 ```bash
 npx playwright test --ui
 ```
 
 ### Run specific test file
+
 ```bash
 npx playwright test e2e/bookings.spec.ts
 ```
 
 ### Run tests in headed mode (see browser)
+
 ```bash
 npx playwright test --headed
 ```
 
 ### Debug tests
+
 ```bash
 npx playwright test --debug
 ```
 
 ### Run tests matching a pattern
+
 ```bash
 npx playwright test --grep "bookings"
 ```
@@ -108,6 +124,7 @@ npx playwright test --grep "bookings"
 ## Test Credentials
 
 Default test user credentials:
+
 - **Email:** sarah@glowclinic.com
 - **Password:** password123
 
@@ -128,6 +145,7 @@ Tests are configured in `playwright.config.ts`:
 ### Web Servers
 
 Playwright automatically starts both servers before running tests:
+
 1. API server on port 3001
 2. Web server on port 3000
 
@@ -138,6 +156,7 @@ The servers are reused if already running (useful during development).
 ### Best Practices
 
 1. **Use loginViaApi for speed**
+
    ```typescript
    test.beforeEach(async ({ page }) => {
      await loginViaApi(page);
@@ -145,12 +164,14 @@ The servers are reused if already running (useful during development).
    ```
 
 2. **Wait for page load states**
+
    ```typescript
    await page.goto('/customers');
    await page.waitForLoadState('networkidle');
    ```
 
 3. **Use flexible selectors**
+
    ```typescript
    // Prefer role-based selectors
    await page.getByRole('button', { name: /submit/i });
@@ -160,8 +181,10 @@ The servers are reused if already running (useful during development).
    ```
 
 4. **Handle empty states gracefully**
+
    ```typescript
-   const hasData = await page.locator('[data-testid="item"]')
+   const hasData = await page
+     .locator('[data-testid="item"]')
      .first()
      .isVisible()
      .catch(() => false);
@@ -206,11 +229,13 @@ test.describe('Feature Name', () => {
 ## Test Reports
 
 After running tests, view the HTML report:
+
 ```bash
 npx playwright show-report
 ```
 
 Reports include:
+
 - Test results with pass/fail status
 - Screenshots of failures
 - Traces for debugging
@@ -219,6 +244,7 @@ Reports include:
 ## CI/CD Integration
 
 Tests are configured to run in CI environments:
+
 - Increased retries (2 attempts)
 - Single worker for consistency
 - Forbid `.only()` to prevent incomplete test runs
@@ -227,21 +253,25 @@ Tests are configured to run in CI environments:
 ## Troubleshooting
 
 ### Tests fail with "Navigation timeout"
+
 - Ensure both API and web servers are running
 - Check that database is seeded with test data
 - Increase timeout in playwright.config.ts if needed
 
 ### Authentication failures
+
 - Verify test credentials exist in database
 - Check that seed script has been run
 - Ensure API is accessible at http://localhost:3001
 
 ### Flaky tests
+
 - Add `waitForLoadState('networkidle')` after navigation
 - Use explicit waits with timeouts
 - Check for race conditions in async operations
 
 ### Debug mode not working
+
 ```bash
 # Set headed and slowMo for better visibility
 PWDEBUG=1 npx playwright test --headed --slowMo=500
@@ -250,6 +280,7 @@ PWDEBUG=1 npx playwright test --headed --slowMo=500
 ## Coverage
 
 Current test coverage (54 tests, 0 failures):
+
 - Authentication flows (login, redirects, protected routes)
 - Protected route access
 - Main navigation (sidebar, active states, browser back/forward)
@@ -262,6 +293,7 @@ Current test coverage (54 tests, 0 failures):
 ## Future Enhancements
 
 Potential additions:
+
 - Form submission tests (create/edit bookings, customers)
 - Delete operations with confirmations
 - Filter and sort functionality

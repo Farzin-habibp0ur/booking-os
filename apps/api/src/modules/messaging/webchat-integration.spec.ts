@@ -211,11 +211,7 @@ describe('WebChat Integration Tests', () => {
       );
 
       // Conversation created with WEB_CHAT channel
-      expect(conversationService.findOrCreate).toHaveBeenCalledWith(
-        'biz1',
-        'cust1',
-        'WEB_CHAT',
-      );
+      expect(conversationService.findOrCreate).toHaveBeenCalledWith('biz1', 'cust1', 'WEB_CHAT');
 
       // Message stored with correct fields
       expect(mockPrisma.message.create).toHaveBeenCalledWith({
@@ -444,11 +440,7 @@ describe('WebChat Integration Tests', () => {
       );
 
       // Conversation created with WEB_CHAT
-      expect(conversationService.findOrCreate).toHaveBeenCalledWith(
-        'biz1',
-        'cust-off',
-        'WEB_CHAT',
-      );
+      expect(conversationService.findOrCreate).toHaveBeenCalledWith('biz1', 'cust-off', 'WEB_CHAT');
 
       // Message stored with offline metadata
       expect(mockPrisma.message.create).toHaveBeenCalledWith({
@@ -608,8 +600,7 @@ describe('WebChat Integration Tests', () => {
       });
 
       // Verify the resolved customer has all channel identifiers
-      const resolvedCustomer =
-        await customerIdentityService.resolveCustomer.mock.results[0].value;
+      const resolvedCustomer = await customerIdentityService.resolveCustomer.mock.results[0].value;
       expect(resolvedCustomer.phone).toBe('+14155557777');
       expect(resolvedCustomer.email).toBe('multi@test.com');
       expect(resolvedCustomer.webChatSessionId).toBe('sess-multi');
@@ -682,26 +673,18 @@ describe('WebChat Integration Tests', () => {
 
       gateway.handleTyping(client, { isTyping: true });
 
-      expect(inboxGateway.emitToBusinessRoom).toHaveBeenCalledWith(
-        'biz1',
-        'webchat:typing',
-        {
-          conversationId: 'conv1',
-          isTyping: true,
-        },
-      );
+      expect(inboxGateway.emitToBusinessRoom).toHaveBeenCalledWith('biz1', 'webchat:typing', {
+        conversationId: 'conv1',
+        isTyping: true,
+      });
 
       // Also test stopping typing
       gateway.handleTyping(client, { isTyping: false });
 
-      expect(inboxGateway.emitToBusinessRoom).toHaveBeenCalledWith(
-        'biz1',
-        'webchat:typing',
-        {
-          conversationId: 'conv1',
-          isTyping: false,
-        },
-      );
+      expect(inboxGateway.emitToBusinessRoom).toHaveBeenCalledWith('biz1', 'webchat:typing', {
+        conversationId: 'conv1',
+        isTyping: false,
+      });
     });
   });
 

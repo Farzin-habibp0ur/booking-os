@@ -390,11 +390,7 @@ describe('Cross-Channel Integration Tests', () => {
       const conv = { id: 'conv-ig', channel: 'INSTAGRAM', businessId: 'biz1' };
       conversationService.findOrCreate.mockResolvedValue(conv);
 
-      const createdConv = await conversationService.findOrCreate(
-        'biz1',
-        'cust-multi',
-        'INSTAGRAM',
-      );
+      const createdConv = await conversationService.findOrCreate('biz1', 'cust-multi', 'INSTAGRAM');
 
       // Message created with same channel as conversation
       const messageData = {

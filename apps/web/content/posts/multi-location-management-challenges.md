@@ -1,10 +1,10 @@
 ---
-title: "Managing Multiple Locations Without Losing Your Mind"
-description: "Operational strategies and technology solutions for service businesses expanding to two, five, or twenty locations."
-date: "2026-02-17"
-category: "Industry Insights"
-author: "Booking OS Team"
-readTime: "5 min read"
+title: 'Managing Multiple Locations Without Losing Your Mind'
+description: 'Operational strategies and technology solutions for service businesses expanding to two, five, or twenty locations.'
+date: '2026-02-17'
+category: 'Industry Insights'
+author: 'Booking OS Team'
+readTime: '5 min read'
 ---
 
 Opening a second location is exciting. Managing five locations with consistent quality, centralized reporting, and coordinated marketing is a different challenge entirely. Here's what successful multi-location operators get right.

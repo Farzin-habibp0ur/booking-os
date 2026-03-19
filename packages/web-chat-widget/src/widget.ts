@@ -59,7 +59,12 @@ export class BookingOSChatWidget {
     });
   }
 
-  private startChat(data: { name: string; email?: string; phone?: string; message?: string }): void {
+  private startChat(data: {
+    name: string;
+    email?: string;
+    phone?: string;
+    message?: string;
+  }): void {
     if (!this.socket.isConnected()) {
       this.ui.showStatus('Connecting... Please wait.', 'info');
       // Retry after a short delay
@@ -81,7 +86,12 @@ export class BookingOSChatWidget {
     this.socket.sendMessage(content);
   }
 
-  private sendOfflineForm(data: { name: string; email: string; phone?: string; message: string }): void {
+  private sendOfflineForm(data: {
+    name: string;
+    email: string;
+    phone?: string;
+    message: string;
+  }): void {
     this.socket.sendOfflineForm(data);
     // Show success after a small delay (optimistic)
     setTimeout(() => {
@@ -97,7 +107,11 @@ export class BookingOSChatWidget {
     this.ui.addMessage(msg);
   }
 
-  private handleSessionCreated(data: { sessionId: string; sessionToken: string; businessName: string }): void {
+  private handleSessionCreated(data: {
+    sessionId: string;
+    sessionToken: string;
+    businessName: string;
+  }): void {
     if (data.businessName) {
       this.ui.updateTitle(data.businessName);
     }

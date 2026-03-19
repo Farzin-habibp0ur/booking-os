@@ -1168,9 +1168,9 @@ describe('WebhookController', () => {
       });
 
       const payload = buildFacebookPayload('USER_FB1', 'Bad sig', 'mid.fb-badsig');
-      await expect(
-        controller.facebookInbound(payload, 'sha256=invalidhash'),
-      ).rejects.toThrow('Invalid Facebook webhook signature');
+      await expect(controller.facebookInbound(payload, 'sha256=invalidhash')).rejects.toThrow(
+        'Invalid Facebook webhook signature',
+      );
     });
 
     it('should route by Facebook page ID to location', async () => {
@@ -1264,10 +1264,7 @@ describe('WebhookController', () => {
       const result = await controller.facebookStatusCallback(payload);
       expect(result.ok).toBe(true);
       expect(result.updated).toBe(1);
-      expect(messageService.updateDeliveryStatus).toHaveBeenCalledWith(
-        'read_1700000000',
-        'READ',
-      );
+      expect(messageService.updateDeliveryStatus).toHaveBeenCalledWith('read_1700000000', 'READ');
     });
 
     it('should validate HMAC signature on status callback', async () => {
@@ -1277,14 +1274,12 @@ describe('WebhookController', () => {
       });
 
       const payload = {
-        entry: [
-          { messaging: [{ delivery: { mids: ['mid.x'] }, timestamp: 123 }] },
-        ],
+        entry: [{ messaging: [{ delivery: { mids: ['mid.x'] }, timestamp: 123 }] }],
       };
 
-      await expect(
-        controller.facebookStatusCallback(payload, 'sha256=wrong'),
-      ).rejects.toThrow('Invalid Facebook webhook signature');
+      await expect(controller.facebookStatusCallback(payload, 'sha256=wrong')).rejects.toThrow(
+        'Invalid Facebook webhook signature',
+      );
     });
 
     it('should return updated 0 for empty payload', async () => {

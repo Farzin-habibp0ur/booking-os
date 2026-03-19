@@ -89,10 +89,13 @@ describe('WebChatGateway', () => {
         where: { id: 'biz-1' },
         select: { id: true, name: true, channelSettings: true },
       });
-      expect(client.emit).toHaveBeenCalledWith('session:created', expect.objectContaining({
-        sessionToken: 'session-token-123',
-        businessName: 'Test Biz',
-      }));
+      expect(client.emit).toHaveBeenCalledWith(
+        'session:created',
+        expect.objectContaining({
+          sessionToken: 'session-token-123',
+          businessName: 'Test Biz',
+        }),
+      );
       expect(client.join).toHaveBeenCalledWith(expect.stringMatching(/^webchat:/));
       expect((client as any).webChatSession).toBeDefined();
       expect((client as any).webChatSession.businessId).toBe('biz-1');
@@ -490,11 +493,10 @@ describe('WebChatGateway', () => {
 
       gateway.handleTyping(client, { isTyping: true });
 
-      expect(mockInboxGateway.emitToBusinessRoom).toHaveBeenCalledWith(
-        'biz-1',
-        'webchat:typing',
-        { conversationId: 'conv-1', isTyping: true },
-      );
+      expect(mockInboxGateway.emitToBusinessRoom).toHaveBeenCalledWith('biz-1', 'webchat:typing', {
+        conversationId: 'conv-1',
+        isTyping: true,
+      });
     });
 
     it('should not forward if no conversationId', () => {

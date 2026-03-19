@@ -1,10 +1,10 @@
 ---
-title: "WhatsApp Business for Appointment Booking: A Complete Guide"
-description: "Learn how to leverage WhatsApp Business Cloud API to streamline appointment booking, reduce no-shows, and improve client communication."
-date: "2026-02-20"
-category: "Product Education"
-author: "Booking OS Team"
-readTime: "6 min read"
+title: 'WhatsApp Business for Appointment Booking: A Complete Guide'
+description: 'Learn how to leverage WhatsApp Business Cloud API to streamline appointment booking, reduce no-shows, and improve client communication.'
+date: '2026-02-20'
+category: 'Product Education'
+author: 'Booking OS Team'
+readTime: '6 min read'
 ---
 
 With over 2 billion active users worldwide, WhatsApp has become the preferred communication channel for many businesses. For service-based businesses like clinics and salons, integrating WhatsApp into the booking workflow is no longer optional — it is essential.

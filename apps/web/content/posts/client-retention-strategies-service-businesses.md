@@ -1,10 +1,10 @@
 ---
-title: "5 Client Retention Strategies That Actually Work for Service Businesses"
-description: "Proven retention tactics from referral programs to automated follow-ups that keep clients coming back and boost lifetime value."
-date: "2026-02-25"
-category: "Customer Success"
-author: "Booking OS Team"
-readTime: "5 min read"
+title: '5 Client Retention Strategies That Actually Work for Service Businesses'
+description: 'Proven retention tactics from referral programs to automated follow-ups that keep clients coming back and boost lifetime value.'
+date: '2026-02-25'
+category: 'Customer Success'
+author: 'Booking OS Team'
+readTime: '5 min read'
 ---
 
 Acquiring a new client costs five to seven times more than retaining an existing one. Yet most service businesses pour their marketing budget into acquisition while neglecting the clients already in their database. Here are five strategies that consistently deliver results.

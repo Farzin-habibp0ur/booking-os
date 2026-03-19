@@ -37,9 +37,12 @@ describe('EmailChannelProvider', () => {
       });
 
       expect(result.externalId).toBe('resend_msg_123');
-      expect(mockFetch).toHaveBeenCalledWith('https://api.resend.com/emails', expect.objectContaining({
-        method: 'POST',
-      }));
+      expect(mockFetch).toHaveBeenCalledWith(
+        'https://api.resend.com/emails',
+        expect.objectContaining({
+          method: 'POST',
+        }),
+      );
 
       const callBody = JSON.parse(mockFetch.mock.calls[0][1].body);
       expect(callBody.from).toBe('Test Business <noreply@example.com>');
@@ -140,16 +143,22 @@ describe('EmailChannelProvider', () => {
       });
 
       expect(result.externalId).toBe('sg_msg_abc');
-      expect(mockFetch).toHaveBeenCalledWith('https://api.sendgrid.com/v3/mail/send', expect.objectContaining({
-        method: 'POST',
-      }));
+      expect(mockFetch).toHaveBeenCalledWith(
+        'https://api.sendgrid.com/v3/mail/send',
+        expect.objectContaining({
+          method: 'POST',
+        }),
+      );
 
       const callBody = JSON.parse(mockFetch.mock.calls[0][1].body);
       expect(callBody.personalizations[0].to[0].email).toBe('customer@example.com');
       expect(callBody.from.email).toBe('noreply@example.com');
       expect(callBody.from.name).toBe('Test Business');
       expect(callBody.subject).toBe('Appointment Ready');
-      expect(callBody.content[0]).toEqual({ type: 'text/plain', value: 'Your appointment is ready.' });
+      expect(callBody.content[0]).toEqual({
+        type: 'text/plain',
+        value: 'Your appointment is ready.',
+      });
       expect(callBody.reply_to.email).toBe('reply@example.com');
     });
 

@@ -207,9 +207,7 @@ describe('Email Integration Tests', () => {
       const parsed = EmailChannelProvider.parseInboundWebhook(payload);
 
       expect(parsed).toHaveLength(1);
-      expect(parsed[0].htmlBody).toBe(
-        '<h1>Rich Email</h1><p>With <strong>formatting</strong></p>',
-      );
+      expect(parsed[0].htmlBody).toBe('<h1>Rich Email</h1><p>With <strong>formatting</strong></p>');
       expect(parsed[0].body).toBe('Plain text version');
     });
 
@@ -277,8 +275,7 @@ describe('Email Integration Tests', () => {
       global.fetch = jest.fn().mockResolvedValue({
         ok: true,
         headers: {
-          get: (key: string) =>
-            key === 'x-message-id' ? 'sg_email_456' : null,
+          get: (key: string) => (key === 'x-message-id' ? 'sg_email_456' : null),
         },
       });
 

@@ -64,17 +64,17 @@ Complete reference for deploying, configuring, and operating Booking OS in produ
 
 ### Required for Production
 
-| Variable              | Service | Example                                                     | Description                                                                                                    |
-| --------------------- | ------- | ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `NODE_ENV`            | API     | `production`                                                | Enables secure cookies, disables Swagger, enables Helmet                                                       |
-| `DATABASE_URL`        | API     | `postgresql://user:pass@host:5432/booking_os?schema=public` | PostgreSQL connection string                                                                                   |
-| `JWT_SECRET`          | API     | _(64-char hex)_                                             | Access token signing key. Generate: `node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"` |
-| `JWT_REFRESH_SECRET`  | API     | _(64-char hex)_                                             | Refresh token signing key. Must differ from JWT_SECRET                                                         |
-| `CORS_ORIGINS`        | API     | `https://yourdomain.com,https://admin.yourdomain.com`       | Comma-separated allowed origins. **Must include both web and admin URLs.** Also used to derive cookie Domain (see section 6) |
-| `NEXT_PUBLIC_API_URL` | Web, Admin | `https://api.yourdomain.com/api/v1`                         | API URL the browser calls. Baked into the Next.js build at build time                                          |
-| `NEXT_PUBLIC_WS_URL`  | Web     | `https://api.yourdomain.com`                                | WebSocket (Socket.IO) URL for real-time features                                                               |
-| `NEXT_PUBLIC_CUSTOMER_APP_URL` | Admin | `https://businesscommandcentre.com`                   | Customer app URL — admin redirects non-SUPER_ADMIN users and logout here                                       |
-| `NEXT_PUBLIC_SENTRY_DSN_ADMIN` | Admin | —                                                     | Separate Sentry DSN for admin console error tracking                                                           |
+| Variable                       | Service    | Example                                                     | Description                                                                                                                  |
+| ------------------------------ | ---------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `NODE_ENV`                     | API        | `production`                                                | Enables secure cookies, disables Swagger, enables Helmet                                                                     |
+| `DATABASE_URL`                 | API        | `postgresql://user:pass@host:5432/booking_os?schema=public` | PostgreSQL connection string                                                                                                 |
+| `JWT_SECRET`                   | API        | _(64-char hex)_                                             | Access token signing key. Generate: `node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"`               |
+| `JWT_REFRESH_SECRET`           | API        | _(64-char hex)_                                             | Refresh token signing key. Must differ from JWT_SECRET                                                                       |
+| `CORS_ORIGINS`                 | API        | `https://yourdomain.com,https://admin.yourdomain.com`       | Comma-separated allowed origins. **Must include both web and admin URLs.** Also used to derive cookie Domain (see section 6) |
+| `NEXT_PUBLIC_API_URL`          | Web, Admin | `https://api.yourdomain.com/api/v1`                         | API URL the browser calls. Baked into the Next.js build at build time                                                        |
+| `NEXT_PUBLIC_WS_URL`           | Web        | `https://api.yourdomain.com`                                | WebSocket (Socket.IO) URL for real-time features                                                                             |
+| `NEXT_PUBLIC_CUSTOMER_APP_URL` | Admin      | `https://businesscommandcentre.com`                         | Customer app URL — admin redirects non-SUPER_ADMIN users and logout here                                                     |
+| `NEXT_PUBLIC_SENTRY_DSN_ADMIN` | Admin      | —                                                           | Separate Sentry DSN for admin console error tracking                                                                         |
 
 ### Optional Services
 

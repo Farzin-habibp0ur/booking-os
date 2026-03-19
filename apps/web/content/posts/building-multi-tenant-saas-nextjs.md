@@ -1,10 +1,10 @@
 ---
-title: "Building a Multi-Tenant SaaS with Next.js and NestJS"
-description: "Technical deep-dive into architecting a multi-tenant SaaS platform using Next.js 15, NestJS 11, Prisma, and PostgreSQL with tenant isolation at every layer."
-date: "2026-02-10"
-category: "Technical"
-author: "Booking OS Team"
-readTime: "8 min read"
+title: 'Building a Multi-Tenant SaaS with Next.js and NestJS'
+description: 'Technical deep-dive into architecting a multi-tenant SaaS platform using Next.js 15, NestJS 11, Prisma, and PostgreSQL with tenant isolation at every layer.'
+date: '2026-02-10'
+category: 'Technical'
+author: 'Booking OS Team'
+readTime: '8 min read'
 ---
 
 Building a multi-tenant SaaS platform requires careful architectural decisions at every layer of the stack. This post shares practical patterns we have found effective when building with Next.js, NestJS, Prisma, and PostgreSQL.

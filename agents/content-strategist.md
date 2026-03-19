@@ -27,25 +27,25 @@ Synthesize research from the Trend Scout and Keyword Strategist into actionable 
 
 ## Schedule
 
-| Day | Time | Action |
-|-----|------|--------|
+| Day    | Time    | Action                                                |
+| ------ | ------- | ----------------------------------------------------- |
 | Monday | 9:00 AM | Read inputs → Create briefs → Publish weekly calendar |
 
 ---
 
 ## Inputs
 
-| Source | File | What to Extract |
-|--------|------|----------------|
-| Trend briefing | `briefings/trend-briefing-[latest].md` | Top trends, content opportunities, platform suggestions |
-| Keyword report | `reports/keyword-report-[latest].md` | Priority keyword clusters, content type suggestions |
-| Customer signals | `data/customer-signals.md` | Feedback themes, content requests, customer language |
-| Customer validation | `reports/customer-validation-[latest].md` | What resonated with customers this week |
-| Product-content map | `system/product-content-map.md` | Feature coverage gaps, priority features |
-| Platform config | `system/platform-launch-config.md` | Platform cadence targets, ramp-up phase |
-| Previous calendar | `calendar/week-[previous].md` | What was planned last week (avoid repetition) |
-| Rejection tracker | `system/rejection-tracker.md` | Recurring rejection reasons to avoid |
-| A/B testing | `system/ab-testing-framework.md` | Active tests to incorporate |
+| Source              | File                                      | What to Extract                                         |
+| ------------------- | ----------------------------------------- | ------------------------------------------------------- |
+| Trend briefing      | `briefings/trend-briefing-[latest].md`    | Top trends, content opportunities, platform suggestions |
+| Keyword report      | `reports/keyword-report-[latest].md`      | Priority keyword clusters, content type suggestions     |
+| Customer signals    | `data/customer-signals.md`                | Feedback themes, content requests, customer language    |
+| Customer validation | `reports/customer-validation-[latest].md` | What resonated with customers this week                 |
+| Product-content map | `system/product-content-map.md`           | Feature coverage gaps, priority features                |
+| Platform config     | `system/platform-launch-config.md`        | Platform cadence targets, ramp-up phase                 |
+| Previous calendar   | `calendar/week-[previous].md`             | What was planned last week (avoid repetition)           |
+| Rejection tracker   | `system/rejection-tracker.md`             | Recurring rejection reasons to avoid                    |
+| A/B testing         | `system/ab-testing-framework.md`          | Active tests to incorporate                             |
 
 ---
 
@@ -54,6 +54,7 @@ Synthesize research from the Trend Scout and Keyword Strategist into actionable 
 ### Step 1: Research Synthesis (5 min)
 
 Read all inputs. Extract:
+
 1. **Top 3 trends** from the trend briefing
 2. **Top 5 keyword clusters** from the keyword report
 3. **Customer pain points** from signals/validation
@@ -64,12 +65,12 @@ Read all inputs. Extract:
 
 Plan the week's content following this distribution:
 
-| Content Type | Weekly Target | Platform |
-|-------------|--------------|----------|
-| Blog posts | 3 (Mon/Wed/Fri) | Website |
+| Content Type    | Weekly Target                          | Platform  |
+| --------------- | -------------------------------------- | --------- |
+| Blog posts      | 3 (Mon/Wed/Fri)                        | Website   |
 | Instagram posts | 5 (per platform-launch-config ramp-up) | Instagram |
-| TikTok videos | 5 (per platform-launch-config ramp-up) | TikTok |
-| LinkedIn posts | 4 (per platform-launch-config ramp-up) | LinkedIn |
+| TikTok videos   | 5 (per platform-launch-config ramp-up) | TikTok    |
+| LinkedIn posts  | 4 (per platform-launch-config ramp-up) | LinkedIn  |
 
 Adjust targets based on current ramp-up phase in `system/platform-launch-config.md`.
 
@@ -77,23 +78,23 @@ Adjust targets based on current ramp-up phase in `system/platform-launch-config.
 
 Track rolling 4-week pillar distribution. Target:
 
-| Pillar | Target % | Tolerance |
-|--------|----------|-----------|
-| Booking & Scheduling | 20% | ±5% |
-| Client Experience | 20% | ±5% |
-| Business Growth | 25% | ±5% |
-| Operations & Efficiency | 20% | ±5% |
-| Industry Insights | 15% | ±5% |
+| Pillar                  | Target % | Tolerance |
+| ----------------------- | -------- | --------- |
+| Booking & Scheduling    | 20%      | ±5%       |
+| Client Experience       | 20%      | ±5%       |
+| Business Growth         | 25%      | ±5%       |
+| Operations & Efficiency | 20%      | ±5%       |
+| Industry Insights       | 15%      | ±5%       |
 
 If a pillar is under-represented, prioritize it this week.
 
 ### Step 4: Funnel Stage Distribution
 
 | Stage | Target % |
-|-------|----------|
-| TOFU | 50% |
-| MOFU | 35% |
-| BOFU | 15% |
+| ----- | -------- |
+| TOFU  | 50%      |
+| MOFU  | 35%      |
+| BOFU  | 15%      |
 
 ### Step 5: Brief Creation
 
@@ -217,41 +218,43 @@ Create in `calendar/week-[YYYY-MM-DD].md`:
 
 ## Monday [DATE]
 
-| Time | Platform | Type | Title | Pillar | Funnel | Brief |
-|------|----------|------|-------|--------|--------|-------|
-| 10:00 AM | Blog | Post | [title] | [pillar] | [stage] | `briefs/blog/[file]` |
+| Time     | Platform  | Type | Title   | Pillar   | Funnel  | Brief                  |
+| -------- | --------- | ---- | ------- | -------- | ------- | ---------------------- |
+| 10:00 AM | Blog      | Post | [title] | [pillar] | [stage] | `briefs/blog/[file]`   |
 | 12:00 PM | Instagram | Reel | [title] | [pillar] | [stage] | `briefs/social/[file]` |
-| 2:00 PM | LinkedIn | Post | [title] | [pillar] | [stage] | `briefs/social/[file]` |
+| 2:00 PM  | LinkedIn  | Post | [title] | [pillar] | [stage] | `briefs/social/[file]` |
 
 ## Tuesday [DATE]
+
 [Same format]
 
 ...
 
 ## Sunday [DATE]
+
 [Same format or "Rest day — no content scheduled"]
 
 ---
 
 ## Week Summary
 
-| Metric | Target | Planned | Status |
-|--------|--------|---------|--------|
+| Metric       | Target        | Planned | Status            |
+| ------------ | ------------- | ------- | ----------------- |
 | Total pieces | [per cadence] | [count] | ON TRACK / BEHIND |
-| Blog posts | 3 | [count] | |
-| Instagram | [per ramp-up] | [count] | |
-| TikTok | [per ramp-up] | [count] | |
-| LinkedIn | [per ramp-up] | [count] | |
+| Blog posts   | 3             | [count] |                   |
+| Instagram    | [per ramp-up] | [count] |                   |
+| TikTok       | [per ramp-up] | [count] |                   |
+| LinkedIn     | [per ramp-up] | [count] |                   |
 
 ## Pillar Balance (Rolling 4-Week)
 
-| Pillar | Target | This Week | Rolling 4-Week |
-|--------|--------|-----------|----------------|
-| Booking & Scheduling | 20% | [%] | [%] |
-| Client Experience | 20% | [%] | [%] |
-| Business Growth | 25% | [%] | [%] |
-| Operations & Efficiency | 20% | [%] | [%] |
-| Industry Insights | 15% | [%] | [%] |
+| Pillar                  | Target | This Week | Rolling 4-Week |
+| ----------------------- | ------ | --------- | -------------- |
+| Booking & Scheduling    | 20%    | [%]       | [%]            |
+| Client Experience       | 20%    | [%]       | [%]            |
+| Business Growth         | 25%    | [%]       | [%]            |
+| Operations & Efficiency | 20%    | [%]       | [%]            |
+| Industry Insights       | 15%    | [%]       | [%]            |
 ```
 
 ---
@@ -260,34 +263,34 @@ Create in `calendar/week-[YYYY-MM-DD].md`:
 
 Every brief MUST pass Gate 2 (`system/quality-gates.md`) before handoff:
 
-| # | Check | Requirement | Status |
-|---|-------|-------------|--------|
-| 1 | Content pillar assignment | Exactly 1 of 5 pillars | |
-| 2 | Funnel stage tag | TOFU / MOFU / BOFU | |
-| 3 | Specific CTA defined | Not generic ("learn more") | |
-| 4 | Target keywords or hashtags | >= 1 primary + 2 secondary | |
-| 5 | Unique angle/hook | Distinct from topic name | |
-| 6 | Platform is ACTIVE | Checked against platform-launch-config | |
+| #   | Check                       | Requirement                            | Status |
+| --- | --------------------------- | -------------------------------------- | ------ |
+| 1   | Content pillar assignment   | Exactly 1 of 5 pillars                 |        |
+| 2   | Funnel stage tag            | TOFU / MOFU / BOFU                     |        |
+| 3   | Specific CTA defined        | Not generic ("learn more")             |        |
+| 4   | Target keywords or hashtags | >= 1 primary + 2 secondary             |        |
+| 5   | Unique angle/hook           | Distinct from topic name               |        |
+| 6   | Platform is ACTIVE          | Checked against platform-launch-config |        |
 
 ---
 
 ## Interaction with Other Agents
 
-| Agent | Relationship |
-|-------|-------------|
-| **Trend Scout** (P9) | Provides trending topics — your primary inspiration source |
-| **Keyword Strategist** (P10) | Provides keyword data — you assign keywords to briefs |
-| **Blog Writer** (P12) | Reads your blog briefs and writes the content |
-| **Social Content Creator** (P13) | Reads your social briefs and creates platform content |
-| **Visual Designer** (P14) | Receives design requests from your briefs |
-| **Video Producer** (P15) | Receives video briefs for scripting |
-| **Performance Analyst** (P18) | Provides performance data to inform next week's planning |
-| **Learning Engine** (P19) | Suggests strategy adjustments based on performance patterns |
+| Agent                            | Relationship                                                |
+| -------------------------------- | ----------------------------------------------------------- |
+| **Trend Scout** (P9)             | Provides trending topics — your primary inspiration source  |
+| **Keyword Strategist** (P10)     | Provides keyword data — you assign keywords to briefs       |
+| **Blog Writer** (P12)            | Reads your blog briefs and writes the content               |
+| **Social Content Creator** (P13) | Reads your social briefs and creates platform content       |
+| **Visual Designer** (P14)        | Receives design requests from your briefs                   |
+| **Video Producer** (P15)         | Receives video briefs for scripting                         |
+| **Performance Analyst** (P18)    | Provides performance data to inform next week's planning    |
+| **Learning Engine** (P19)        | Suggests strategy adjustments based on performance patterns |
 
 ---
 
 ## Change Log
 
-| Date | Change |
-|------|--------|
+| Date       | Change           |
+| ---------- | ---------------- |
 | 2026-03-12 | Initial creation |

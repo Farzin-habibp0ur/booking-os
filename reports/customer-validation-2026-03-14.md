@@ -27,15 +27,16 @@ No conversion data to map yet. Once trial signups begin (post Phase A launch on 
 
 ## Pillar Performance by Revenue Impact
 
-| Pillar | Engagement | Trial Signups | Conversions | Revenue Impact Score |
-|--------|-----------|---------------|-------------|---------------------|
-| Booking & Scheduling | — | — | — | — |
-| Client Experience | — | — | — | — |
-| Business Growth | — | — | — | — |
-| Operations & Efficiency | — | — | — | — |
-| Industry Insights | — | — | — | — |
+| Pillar                  | Engagement | Trial Signups | Conversions | Revenue Impact Score |
+| ----------------------- | ---------- | ------------- | ----------- | -------------------- |
+| Booking & Scheduling    | —          | —             | —           | —                    |
+| Client Experience       | —          | —             | —           | —                    |
+| Business Growth         | —          | —             | —           | —                    |
+| Operations & Efficiency | —          | —             | —           | —                    |
+| Industry Insights       | —          | —             | —           | —                    |
 
 **Scoring method (once data exists):**
+
 - Revenue Impact Score = (0.2 × Engagement Rank) + (0.3 × Trial Signup Rank) + (0.5 × Conversion Rank)
 - Scale: 1-10, recalculated weekly
 - Pillars scoring < 3 for 3 consecutive weeks should be deprioritized
@@ -45,14 +46,17 @@ No conversion data to map yet. Once trial signups begin (post Phase A launch on 
 ## Strategy Adjustments
 
 ### INCREASE (topics/formats likely to convert)
+
 - Content focused on **pain points** (no-shows, manual booking, double-bookings) — these are high-intent signals
 - **Comparison content** (BookingOS vs. Calendly/Fresha/Acuity) — captures active shoppers
 - **ROI calculators** and time-saved narratives — supports conversion decision
 
 ### DECREASE (topics/formats with low conversion potential)
+
 - None yet — too early to cut anything. Revisit after 4 weeks of data.
 
 ### NEW (topics customers might ask about)
+
 - "How to migrate from [competitor] to BookingOS" — likely onboarding friction reducer
 - "Is BookingOS right for [specific vertical]?" — pre-qualifies leads
 - "BookingOS pricing breakdown" — high-intent search query
@@ -65,14 +69,14 @@ No conversion data to map yet. Once trial signups begin (post Phase A launch on 
 
 No customer data to identify gaps. Based on product capabilities, these features likely need content:
 
-| Feature | Content Exists? | Priority |
-|---------|----------------|----------|
-| AI auto-reply / WhatsApp automation | No | High |
-| Multi-location / multi-staff scheduling | No | High |
-| Customer portal (self-service) | No | Medium |
-| Referral program setup | No | Medium |
-| Invoice & payment tracking | No | Medium |
-| Before/after photo tracking (aesthetic) | No | High (vertical-specific) |
+| Feature                                 | Content Exists? | Priority                 |
+| --------------------------------------- | --------------- | ------------------------ |
+| AI auto-reply / WhatsApp automation     | No              | High                     |
+| Multi-location / multi-staff scheduling | No              | High                     |
+| Customer portal (self-service)          | No              | Medium                   |
+| Referral program setup                  | No              | Medium                   |
+| Invoice & payment tracking              | No              | Medium                   |
+| Before/after photo tracking (aesthetic) | No              | High (vertical-specific) |
 
 ---
 
@@ -97,13 +101,13 @@ Since no conversion data exists yet, focus on:
 
 ## Validation Loop Health
 
-| Metric | Current | Target | Status |
-|--------|---------|--------|--------|
-| Tracked trial signups | 0 | 5+/week | Not started |
-| Source attribution rate | 0% | >= 80% | Not started |
-| Customer feedback entries | 0 | 3+/week | Not started |
-| Content request backlog | 0 | Reviewed weekly | Not started |
-| Report generated on time | Yes | Weekly Friday | On track |
+| Metric                    | Current | Target          | Status      |
+| ------------------------- | ------- | --------------- | ----------- |
+| Tracked trial signups     | 0       | 5+/week         | Not started |
+| Source attribution rate   | 0%      | >= 80%          | Not started |
+| Customer feedback entries | 0       | 3+/week         | Not started |
+| Content request backlog   | 0       | Reviewed weekly | Not started |
+| Report generated on time  | Yes     | Weekly Friday   | On track    |
 
 ---
 
@@ -118,6 +122,6 @@ Since no conversion data exists yet, focus on:
 
 ## Change Log
 
-| Date | Change | Reason |
-|------|--------|--------|
+| Date       | Change                               | Reason                                                        |
+| ---------- | ------------------------------------ | ------------------------------------------------------------- |
 | 2026-03-14 | Initial report (pre-launch baseline) | No customer data yet, established templates and tracking plan |

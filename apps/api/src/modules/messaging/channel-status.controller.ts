@@ -1,9 +1,4 @@
-import {
-  Controller,
-  Get,
-  UseGuards,
-  Logger,
-} from '@nestjs/common';
+import { Controller, Get, UseGuards, Logger } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { TenantGuard } from '../../common/tenant.guard';
@@ -40,29 +35,15 @@ export class ChannelStatusController {
     });
 
     const channels = {
-      WHATSAPP: locations.some(
-        (l) => !!(l.whatsappConfig as any)?.phoneNumberId,
-      ),
-      INSTAGRAM: locations.some(
-        (l) => !!(l.instagramConfig as any)?.pageId,
-      ),
-      FACEBOOK: locations.some(
-        (l) => !!(l.facebookConfig as any)?.pageId,
-      ),
-      SMS: locations.some(
-        (l) => !!(l.smsConfig as any)?.phoneNumber,
-      ),
-      EMAIL: locations.some(
-        (l) => !!(l.emailConfig as any)?.inboundAddress,
-      ),
-      WEB_CHAT: locations.some(
-        (l) => !!(l.webChatConfig as any)?.enabled,
-      ),
+      WHATSAPP: locations.some((l) => !!(l.whatsappConfig as any)?.phoneNumberId),
+      INSTAGRAM: locations.some((l) => !!(l.instagramConfig as any)?.pageId),
+      FACEBOOK: locations.some((l) => !!(l.facebookConfig as any)?.pageId),
+      SMS: locations.some((l) => !!(l.smsConfig as any)?.phoneNumber),
+      EMAIL: locations.some((l) => !!(l.emailConfig as any)?.inboundAddress),
+      WEB_CHAT: locations.some((l) => !!(l.webChatConfig as any)?.enabled),
     };
 
-    this.logger.debug(
-      `Channel status for business ${businessId}: ${JSON.stringify(channels)}`,
-    );
+    this.logger.debug(`Channel status for business ${businessId}: ${JSON.stringify(channels)}`);
 
     return { channels, locationCount: locations.length };
   }

@@ -11,7 +11,7 @@
 Each entry follows this structure:
 
 | Date | Time | Platform | Title | Language | Tier | UTM Campaign | Verification | Notes |
-|------|------|----------|-------|----------|------|-------------|-------------|-------|
+| ---- | ---- | -------- | ----- | -------- | ---- | ------------ | ------------ | ----- |
 
 ---
 
@@ -23,6 +23,6 @@ _No entries yet — publishing begins after Phase A launch (2026-03-17)._
 
 ## Change Log
 
-| Date | Change |
-|------|--------|
+| Date       | Change           |
+| ---------- | ---------------- |
 | 2026-03-12 | Initial creation |

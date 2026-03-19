@@ -249,9 +249,15 @@ html.dark body {
 
 /* Badge status flash — brief white pulse when status text changes */
 @keyframes badgeFlash {
-  0% { background-color: rgba(255, 255, 255, 0); }
-  30% { background-color: rgba(255, 255, 255, 0.6); }
-  100% { background-color: rgba(255, 255, 255, 0); }
+  0% {
+    background-color: rgba(255, 255, 255, 0);
+  }
+  30% {
+    background-color: rgba(255, 255, 255, 0.6);
+  }
+  100% {
+    background-color: rgba(255, 255, 255, 0);
+  }
 }
 .animate-badge-flash {
   animation: badgeFlash 400ms ease-out;
@@ -259,7 +265,9 @@ html.dark body {
 
 /* Card hover lift — subtle raise on hover */
 .animate-card-hover {
-  transition: transform 200ms ease-out, box-shadow 200ms ease-out;
+  transition:
+    transform 200ms ease-out,
+    box-shadow 200ms ease-out;
 }
 .animate-card-hover:hover {
   transform: translateY(-2px);
@@ -268,8 +276,12 @@ html.dark body {
 
 /* Sidebar nav active — left border slides in */
 @keyframes borderSlideIn {
-  from { transform: scaleY(0); }
-  to { transform: scaleY(1); }
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
 }
 .animate-sidebar-active {
   transform-origin: top;
@@ -278,16 +290,32 @@ html.dark body {
 
 /* Toggle switch spring — overshoot animation on thumb */
 @keyframes toggleSpring {
-  0% { transform: translateX(0); }
-  60% { transform: translateX(calc(100% + 2px)); }
-  80% { transform: translateX(calc(100% - 1px)); }
-  100% { transform: translateX(100%); }
+  0% {
+    transform: translateX(0);
+  }
+  60% {
+    transform: translateX(calc(100% + 2px));
+  }
+  80% {
+    transform: translateX(calc(100% - 1px));
+  }
+  100% {
+    transform: translateX(100%);
+  }
 }
 @keyframes toggleSpringOff {
-  0% { transform: translateX(100%); }
-  60% { transform: translateX(-2px); }
-  80% { transform: translateX(1px); }
-  100% { transform: translateX(0); }
+  0% {
+    transform: translateX(100%);
+  }
+  60% {
+    transform: translateX(-2px);
+  }
+  80% {
+    transform: translateX(1px);
+  }
+  100% {
+    transform: translateX(0);
+  }
 }
 
 /* Dropdown open — scale from top origin */
@@ -308,8 +336,12 @@ html.dark body {
 
 /* Page content fade in */
 @keyframes pageFade {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 .animate-page-fade {
   animation: pageFade 150ms ease-out;

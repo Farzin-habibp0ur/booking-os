@@ -30,9 +30,7 @@ interface WebChatSession {
 }
 
 @WebSocketGateway({ namespace: '/web-chat', cors: { origin: '*', credentials: false } })
-export class WebChatGateway
-  implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit
-{
+export class WebChatGateway implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit {
   @WebSocketServer()
   server!: Server;
 
@@ -125,9 +123,7 @@ export class WebChatGateway
         sessionToken,
         businessName: business.name,
       });
-      this.logger.log(
-        `WebChat new session: ${sessionId} for business ${businessId}`,
-      );
+      this.logger.log(`WebChat new session: ${sessionId} for business ${businessId}`);
     }
 
     // Store session ref on socket
@@ -136,9 +132,7 @@ export class WebChatGateway
   }
 
   handleDisconnect(client: Socket) {
-    const session = (client as any).webChatSession as
-      | WebChatSession
-      | undefined;
+    const session = (client as any).webChatSession as WebChatSession | undefined;
     if (session) {
       this.logger.log(`WebChat disconnected: ${session.sessionId}`);
       // Don't delete session — allow reconnection within 24h
@@ -173,11 +167,7 @@ export class WebChatGateway
       );
 
       // If customer was created with webChatSessionId, link it
-      if (
-        !data.email &&
-        !data.phone &&
-        !customer.webChatSessionId
-      ) {
+      if (!data.email && !data.phone && !customer.webChatSessionId) {
         await this.prisma.customer.update({
           where: { id: customer.id },
           data: { webChatSessionId: session.sessionId },
@@ -225,10 +215,7 @@ export class WebChatGateway
           },
         });
         if (updatedConv) {
-          this.inboxGateway.notifyConversationUpdate(
-            session.businessId,
-            updatedConv,
-          );
+          this.inboxGateway.notifyConversationUpdate(session.businessId, updatedConv);
         }
       }
 
@@ -238,10 +225,7 @@ export class WebChatGateway
         customerName: customer.name,
       });
     } catch (err: any) {
-      this.logger.error(
-        `WebChat start error: ${err.message}`,
-        err.stack,
-      );
+      this.logger.error(`WebChat start error: ${err.message}`, err.stack);
       client.emit('chat:error', { message: 'Failed to start chat' });
     }
   }
@@ -290,10 +274,7 @@ export class WebChatGateway
         createdAt: message.createdAt,
       });
     } catch (err: any) {
-      this.logger.error(
-        `WebChat message error: ${err.message}`,
-        err.stack,
-      );
+      this.logger.error(`WebChat message error: ${err.message}`, err.stack);
       client.emit('chat:error', { message: 'Failed to send message' });
     }
   }
@@ -313,10 +294,11 @@ export class WebChatGateway
 
     try {
       // Create customer and conversation even when offline
-      const customer = await this.customerIdentityService.resolveCustomer(
-        session.businessId,
-        { email: data.email, phone: data.phone, name: data.name },
-      );
+      const customer = await this.customerIdentityService.resolveCustomer(session.businessId, {
+        email: data.email,
+        phone: data.phone,
+        name: data.name,
+      });
 
       const conversation = await this.conversationService.findOrCreate(
         session.businessId,
@@ -348,10 +330,7 @@ export class WebChatGateway
 
       client.emit('chat:offline:ack', { success: true });
     } catch (err: any) {
-      this.logger.error(
-        `WebChat offline form error: ${err.message}`,
-        err.stack,
-      );
+      this.logger.error(`WebChat offline form error: ${err.message}`, err.stack);
       client.emit('chat:error', { message: 'Failed to submit form' });
     }
   }
@@ -372,14 +351,12 @@ export class WebChatGateway
     // Find session by conversationId
     for (const session of this.sessions.values()) {
       if (session.conversationId === conversationId) {
-        this.server
-          .to(`webchat:${session.sessionId}`)
-          .emit('chat:reply', {
-            messageId: message.id,
-            content: message.content,
-            createdAt: message.createdAt,
-            senderName: message.senderName || 'Support',
-          });
+        this.server.to(`webchat:${session.sessionId}`).emit('chat:reply', {
+          messageId: message.id,
+          content: message.content,
+          createdAt: message.createdAt,
+          senderName: message.senderName || 'Support',
+        });
         return true;
       }
     }
@@ -390,28 +367,19 @@ export class WebChatGateway
    * Typing indicator from visitor.
    */
   @SubscribeMessage('chat:typing')
-  handleTyping(
-    @ConnectedSocket() client: Socket,
-    @MessageBody() data: { isTyping: boolean },
-  ) {
+  handleTyping(@ConnectedSocket() client: Socket, @MessageBody() data: { isTyping: boolean }) {
     const session = (client as any).webChatSession as WebChatSession;
     if (!session?.conversationId) return;
 
     // Forward typing state to staff inbox
-    this.inboxGateway.emitToBusinessRoom(
-      session.businessId,
-      'webchat:typing',
-      {
-        conversationId: session.conversationId,
-        isTyping: data.isTyping,
-      },
-    );
+    this.inboxGateway.emitToBusinessRoom(session.businessId, 'webchat:typing', {
+      conversationId: session.conversationId,
+      isTyping: data.isTyping,
+    });
   }
 
   getActiveSessions(businessId: string): WebChatSession[] {
-    return Array.from(this.sessions.values()).filter(
-      (s) => s.businessId === businessId,
-    );
+    return Array.from(this.sessions.values()).filter((s) => s.businessId === businessId);
   }
 
   getSessionCount(): number {

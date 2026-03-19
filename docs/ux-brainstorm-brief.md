@@ -14,11 +14,13 @@ Booking OS is an omnichannel booking and business management platform built for 
 The platform is designed to be extended to any service vertical via a "Vertical Pack" system that customizes fields, templates, automations, and workflows per industry.
 
 ### Target Users
+
 - Small to mid-size service businesses (1-20 staff)
 - Business owners, receptionists, and service providers
 - Their end customers who book and manage appointments
 
 ### Tech Stack
+
 - **Frontend:** Next.js 15 (React 19), Tailwind CSS, standalone deployment
 - **Backend:** NestJS REST API + Socket.IO WebSocket
 - **Database:** PostgreSQL 16 with Prisma ORM
@@ -28,6 +30,7 @@ The platform is designed to be extended to any service vertical via a "Vertical 
 - **Calendar:** Google Calendar + Outlook OAuth sync, iCal feed
 
 ### Design Language
+
 Minimalist premium aesthetic (Apple Health meets Stripe). Lots of whitespace, subtle shadows, Playfair Display headers, Inter body text. Custom color palette: sage (primary/success), lavender (AI/pending), warm off-white backgrounds.
 
 ---
@@ -64,13 +67,13 @@ Minimalist premium aesthetic (Apple Health meets Stripe). Lots of whitespace, su
 
 ## User Personas
 
-| Persona | Description | Access Level |
-|---------|-------------|-------------|
-| **Admin** | Business owner/manager. Full access to everything. | All features, settings, billing, staff management |
-| **Service Provider** | Staff who performs services. | View bookings/calendar, manage own schedule and time off, use inbox |
-| **Agent** | Front desk / receptionist. | Manage bookings, conversations, customers. Cannot change settings or staff |
-| **Customer (Public)** | Visitor to booking portal. No account needed. | Book appointments, join waitlist |
-| **Customer (Self-Serve)** | Received a link via WhatsApp. Token-based access. | Reschedule, cancel, claim waitlist, approve quotes |
+| Persona                   | Description                                        | Access Level                                                               |
+| ------------------------- | -------------------------------------------------- | -------------------------------------------------------------------------- |
+| **Admin**                 | Business owner/manager. Full access to everything. | All features, settings, billing, staff management                          |
+| **Service Provider**      | Staff who performs services.                       | View bookings/calendar, manage own schedule and time off, use inbox        |
+| **Agent**                 | Front desk / receptionist.                         | Manage bookings, conversations, customers. Cannot change settings or staff |
+| **Customer (Public)**     | Visitor to booking portal. No account needed.      | Book appointments, join waitlist                                           |
+| **Customer (Self-Serve)** | Received a link via WhatsApp. Token-based access.  | Reschedule, cancel, claim waitlist, approve quotes                         |
 
 ---
 
@@ -79,6 +82,7 @@ Minimalist premium aesthetic (Apple Health meets Stripe). Lots of whitespace, su
 ### What Users CAN Do Today (303 capabilities)
 
 #### Authentication & Account (12)
+
 - Sign up with business name, owner name, email, password (creates business + admin)
 - Log in / log out with httpOnly cookie session
 - Request + complete password reset via email
@@ -90,12 +94,14 @@ Minimalist premium aesthetic (Apple Health meets Stripe). Lots of whitespace, su
 - Brute force protection (5 failed attempts = 15-min lockout)
 
 #### Onboarding (14)
+
 - 10-step setup wizard: choose vertical pack → business info → WhatsApp → invite staff → define services → working hours → templates → profile fields → import customers → test booking
 - CSV customer import (max 5,000 rows) with preview
 - Import customers from conversation history
 - Setup readiness checklist on dashboard
 
 #### Dashboard (18)
+
 - Real-time metrics: bookings this week, 30-day revenue, total customers, open conversations
 - Secondary metrics: no-show rate, avg response time, consult→treatment conversion, status breakdown
 - Waitlist backfill metrics
@@ -107,6 +113,7 @@ Minimalist premium aesthetic (Apple Health meets Stripe). Lots of whitespace, su
 - Click-through to detailed views
 
 #### Bookings (24)
+
 - CRUD bookings with customer, service, staff, date/time, notes, custom fields
 - Status workflow: PENDING → PENDING_DEPOSIT → CONFIRMED → IN_PROGRESS → COMPLETED / CANCELLED / NO_SHOW
 - Kanban workflow for dealerships: CHECKED_IN → DIAGNOSING → AWAITING_APPROVAL → IN_PROGRESS → READY_FOR_PICKUP
@@ -123,6 +130,7 @@ Minimalist premium aesthetic (Apple Health meets Stripe). Lots of whitespace, su
 - Cancel recurring series (single occurrence, all future, or entire series)
 
 #### Customers (21)
+
 - List with search, paginated
 - CRUD with name, phone (required), email, tags, custom fields
 - Bulk add/remove tags
@@ -136,6 +144,7 @@ Minimalist premium aesthetic (Apple Health meets Stripe). Lots of whitespace, su
 - Create booking from customer detail
 
 #### Inbox / Conversations (31)
+
 - 3-pane layout: filter sidebar, conversation list, message thread + customer info
 - Filter: All, Unassigned, Mine, Overdue, Waiting, Snoozed, Closed (with badge counts)
 - Filter by location
@@ -154,6 +163,7 @@ Minimalist premium aesthetic (Apple Health meets Stripe). Lots of whitespace, su
 - Clickable customer name in inbox navigates to customer profile
 
 #### Services (9)
+
 - CRUD services: name, duration, price, category, kind (Consult/Treatment/Other), description
 - Set deposit requirement
 - Set buffer times (before/after)
@@ -161,6 +171,7 @@ Minimalist premium aesthetic (Apple Health meets Stripe). Lots of whitespace, su
 - Toggle active/inactive with show/hide filter
 
 #### Staff Management (11)
+
 - View all staff, create new (name, email, password, role)
 - Invite by email, resend/revoke invitations
 - Edit name, email, role (Admin only)
@@ -169,16 +180,19 @@ Minimalist premium aesthetic (Apple Health meets Stripe). Lots of whitespace, su
 - Add/remove time off
 
 #### Waitlist (6)
+
 - View entries with status and service filters
 - Resolve entry (link to booking), cancel entry, update notes/staff
 
 #### Campaigns (7)
+
 - CRUD campaigns with name, template, audience filters (tags + services), scheduled time
 - Preview audience count
 - Send campaign (bulk messages with throttling)
 - View delivery stats (total, sent, delivered, read, failed)
 
 #### Automations (12)
+
 - Pre-built playbooks with toggle on/off
 - Custom rules: trigger (booking created, upcoming, status changed, no response, tag applied, cancelled) + filters + actions
 - Quiet hours and max messages per customer per day
@@ -186,6 +200,7 @@ Minimalist premium aesthetic (Apple Health meets Stripe). Lots of whitespace, su
 - Activity log with outcomes (sent/skipped/failed) and reasons
 
 #### Settings (21)
+
 - Business profile, timezone
 - Cancellation/reschedule policies (window hours, text, enable/disable)
 - Notification settings (channels, follow-up delay)
@@ -199,6 +214,7 @@ Minimalist premium aesthetic (Apple Health meets Stripe). Lots of whitespace, su
 - Stripe checkout and customer portal
 
 #### Locations & Resources (12)
+
 - CRUD locations with name, address, bookable flag
 - Assign/remove staff to locations
 - CRUD resources at locations (name, type, metadata)
@@ -206,16 +222,19 @@ Minimalist premium aesthetic (Apple Health meets Stripe). Lots of whitespace, su
 - Filter bookings, calendar, and conversations by location
 
 #### Reports (9)
+
 - Bookings over time, no-show rate, response times, service breakdown
 - Staff performance, revenue over time, status breakdown, peak hours
 - Consult→treatment conversion rate
 
 #### ROI Dashboard (5)
+
 - Go-live to capture baseline metrics
 - View baseline vs current: bookings, revenue, growth
 - Weekly review + email weekly review
 
 #### AI Features (12)
+
 - Enable/disable AI, configure personality, toggle auto-reply
 - Draft reply suggestions with confidence and intent
 - Accept/dismiss drafts, resume auto-reply
@@ -224,6 +243,7 @@ Minimalist premium aesthetic (Apple Health meets Stripe). Lots of whitespace, su
 - Customer AI chat (ask questions about a specific customer)
 
 #### Public Booking Portal (11)
+
 - Multi-step wizard: select service → pick date (30 days) → choose time slot → enter details → confirm
 - See service info (name, duration, price, description)
 - See policies and deposit requirements
@@ -231,19 +251,23 @@ Minimalist premium aesthetic (Apple Health meets Stripe). Lots of whitespace, su
 - Booking confirmation with summary
 
 #### Self-Serve Links (7)
+
 - Reschedule appointment: browse availability, pick new time, confirm
 - Cancel appointment with optional reason
 - Claim waitlist offer
 - View and approve quote (IP logged)
 
 #### Quotes (4)
+
 - Create quote for a booking (description, amount, PDF URL)
 - View quote detail, customer approval via token link
 
 #### Billing (4)
+
 - View subscription status, Stripe checkout, customer portal, deposit payment intents
 
 #### Global (14)
+
 - Global search (Cmd+K): customers, bookings, conversations — grouped results, deep links to detail pages, vertical-aware labels
 - Dedicated `/search` page with type filter chips, counts, and load more per section
 - Role-based mode switcher (Admin/Agent/Provider) with mode-grouped sidebar nav
@@ -261,6 +285,7 @@ Minimalist premium aesthetic (Apple Health meets Stripe). Lots of whitespace, su
 Organized by theme for brainstorming.
 
 #### Missing Table/List Functionality
+
 - No search on bookings table (only status filter)
 - No date range, staff, service, or location filters on bookings table
 - No column sorting on any table (bookings, customers, waitlist)
@@ -270,6 +295,7 @@ Organized by theme for brainstorming.
 - No print functionality anywhere
 
 #### Missing Calendar Features
+
 - No monthly calendar view
 - No drag-and-drop reschedule or resize on calendar
 - No external calendar event overlay (Google/Outlook events not shown)
@@ -280,12 +306,14 @@ Organized by theme for brainstorming.
 - No color-coding by service type (only by status)
 
 #### Missing Customer Features
+
 - Cannot delete or merge duplicate customers
 - No customer lifetime value calculation
 - No customer photos (before/after)
 - Cannot link customer to multiple phone numbers
 
 #### Missing Communication Features
+
 - Cannot send images, documents, or audio from inbox (text-only in UI)
 - Cannot initiate outbound conversations (staff can't message first)
 - No bulk close or bulk assign conversations
@@ -299,6 +327,7 @@ Organized by theme for brainstorming.
 - ~~No SMS channel~~ — **DONE** (Omnichannel Phase 1)
 
 #### Missing Booking Features
+
 - Cannot add multiple services to one booking
 - Cannot set custom duration per booking (tied to service)
 - Cannot attach files/photos to bookings
@@ -308,6 +337,7 @@ Organized by theme for brainstorming.
 - No booking audit log visible in UI (who changed what, when)
 
 #### Missing Service Features
+
 - No per-staff pricing or duration
 - No service packages/bundles
 - No staff-service capability mapping (which staff can do which services)
@@ -318,6 +348,7 @@ Organized by theme for brainstorming.
 - No membership/recurring pricing
 
 #### Missing Staff Features
+
 - Cannot reactivate deactivated staff
 - No break times within working hours
 - No per-location working hours
@@ -326,6 +357,7 @@ Organized by theme for brainstorming.
 - Cannot view staff bookings from staff page
 
 #### Missing Campaign Features
+
 - No A/B testing
 - No recurring campaigns
 - No advanced audience filters (last visit, spend, booking status)
@@ -334,6 +366,7 @@ Organized by theme for brainstorming.
 - Cannot duplicate or cancel-in-progress campaigns
 
 #### Missing Automation Features
+
 - No multi-step sequences (only single action per rule)
 - No delays between actions
 - No conditional branching (if/else)
@@ -341,6 +374,7 @@ Organized by theme for brainstorming.
 - Cannot duplicate rules
 
 #### Missing Settings/Business Features
+
 - No business logo or branding customization
 - No booking portal appearance customization (colors, logo, custom text)
 - No business-level hours (only staff-level)
@@ -352,6 +386,7 @@ Organized by theme for brainstorming.
 - No dedicated UI page for location management
 
 #### Missing Account Features
+
 - Cannot change own email address
 - No social login (Google, Apple, Facebook)
 - No two-factor authentication (2FA)
@@ -360,6 +395,7 @@ Organized by theme for brainstorming.
 - Cannot delete own account
 
 #### Missing Public Booking Portal Features
+
 - No online payment during booking (deposits sent separately after)
 - No customer accounts or booking history
 - No location selection on booking portal
@@ -370,6 +406,7 @@ Organized by theme for brainstorming.
 - No real-time availability updates
 
 #### Missing Analytics/Reporting Features
+
 - No export for any report
 - No automated report emails
 - No custom reports
@@ -380,6 +417,7 @@ Organized by theme for brainstorming.
 - No booking source attribution
 
 #### Missing Global/Platform Features
+
 - No browser push notifications
 - No keyboard shortcuts beyond Cmd+K
 - No global activity feed/audit log
@@ -392,12 +430,14 @@ Organized by theme for brainstorming.
 ## Business Context
 
 ### Current Metrics
+
 - 2,533 automated tests (972 web + 1,561 API)
 - API test coverage: 93% statements, 81% branches
 - Web test coverage: 78% statements, 73% branches
 - Deployed on Railway with CI/CD via GitHub Actions
 
 ### Completed Roadmap
+
 - **Phase 1**: Core booking + aesthetic vertical (consult→treatment→aftercare, deposits, reminders, ROI dashboard)
 - **Phase 2**: Automations, campaigns, waitlist, calendar sync
 - **Phase 3**: Multi-location, resources, dealership vertical, pack builder, kanban, quotes, i18n
@@ -409,12 +449,15 @@ Organized by theme for brainstorming.
 - **Security remediation**: 22 fixes across 5 batches (CSP, tenant isolation, input validation, state machine, token blacklisting)
 
 ### Not Yet Started
+
 - **Phase 4**: Benchmarking, vertical packs marketplace, customer mini-portal
 
 ### North Star Metric
+
 "Completed booked revenue per active business per month"
 
 ### Three KPI Pillars
+
 1. Lead → booking conversion rate
 2. No-show rate reduction
 3. Speed to first response

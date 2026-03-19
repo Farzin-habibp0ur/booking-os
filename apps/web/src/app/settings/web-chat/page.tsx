@@ -208,9 +208,7 @@ export default function WebChatSettingsPage() {
           {t('webChat.title')}
         </h1>
       </div>
-      <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
-        {t('webChat.description')}
-      </p>
+      <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">{t('webChat.description')}</p>
 
       {/* Section 1: Appearance */}
       <div
@@ -488,9 +486,7 @@ export default function WebChatSettingsPage() {
             </label>
             <textarea
               value={config.offlineMessage}
-              onChange={(e) =>
-                setConfig((prev) => ({ ...prev, offlineMessage: e.target.value }))
-              }
+              onChange={(e) => setConfig((prev) => ({ ...prev, offlineMessage: e.target.value }))}
               placeholder="We are currently offline. Leave us a message!"
               rows={3}
               className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-sage-500 focus:border-transparent outline-none resize-none"
@@ -511,17 +507,13 @@ export default function WebChatSettingsPage() {
               data-testid="toggle-offline-form"
               className={cn(
                 'relative inline-flex h-5 w-9 shrink-0 rounded-full transition-colors duration-200',
-                config.showOfflineForm
-                  ? 'bg-sage-600'
-                  : 'bg-slate-300 dark:bg-slate-600',
+                config.showOfflineForm ? 'bg-sage-600' : 'bg-slate-300 dark:bg-slate-600',
               )}
             >
               <span
                 className={cn(
                   'inline-block h-4 w-4 rounded-full bg-white shadow transform transition-transform duration-200 mt-0.5',
-                  config.showOfflineForm
-                    ? 'translate-x-4 ml-0.5'
-                    : 'translate-x-0 ml-0.5',
+                  config.showOfflineForm ? 'translate-x-4 ml-0.5' : 'translate-x-0 ml-0.5',
                 )}
               />
             </button>
@@ -537,9 +529,7 @@ export default function WebChatSettingsPage() {
         <h2 className="font-semibold text-slate-900 dark:text-white mb-1">
           {t('webChat.embed_snippet')}
         </h2>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
-          {t('webChat.embed_hint')}
-        </p>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">{t('webChat.embed_hint')}</p>
 
         <div className="relative">
           <pre className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 text-xs text-slate-700 dark:text-slate-300 overflow-x-auto whitespace-pre-wrap break-all">

@@ -3,13 +3,7 @@ import '@testing-library/jest-dom';
 
 // Mock next/link
 jest.mock('next/link', () => {
-  return function MockLink({
-    children,
-    href,
-  }: {
-    children: React.ReactNode;
-    href: string;
-  }) {
+  return function MockLink({ children, href }: { children: React.ReactNode; href: string }) {
     return <a href={href}>{children}</a>;
   };
 });

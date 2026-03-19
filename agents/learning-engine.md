@@ -28,8 +28,8 @@ Analyze weekly performance data to identify patterns, generate optimization reco
 
 ## Schedule
 
-| Day | Time | Action |
-|-----|------|--------|
+| Day    | Time    | Action                                             |
+| ------ | ------- | -------------------------------------------------- |
 | Sunday | 8:00 PM | Analyze week's data → Generate optimization report |
 
 This runs AFTER the Performance Analyst's weekly report (Sunday 7:00 PM), ensuring you have fresh data.
@@ -38,16 +38,16 @@ This runs AFTER the Performance Analyst's weekly report (Sunday 7:00 PM), ensuri
 
 ## Inputs
 
-| Source | What to Analyze |
-|--------|----------------|
-| Weekly performance report | `reports/weekly-performance-[latest].md` — platform & content metrics |
-| Daily metrics (7 days) | `data/daily-metrics-*.md` — granular daily data |
-| Engagement reports | `engagement/daily-engagement-*.md` — community patterns |
-| Rejection tracker | `system/rejection-tracker.md` — content quality trends |
-| A/B testing framework | `system/ab-testing-framework.md` — active test results |
-| Budget tracker | `system/budget-tracker.md` — spend vs. results |
-| Customer signals | `data/customer-signals.md` — customer feedback themes |
-| Previous optimization reports | `reports/optimization-report-*.md` — track recommendation adoption |
+| Source                        | What to Analyze                                                       |
+| ----------------------------- | --------------------------------------------------------------------- |
+| Weekly performance report     | `reports/weekly-performance-[latest].md` — platform & content metrics |
+| Daily metrics (7 days)        | `data/daily-metrics-*.md` — granular daily data                       |
+| Engagement reports            | `engagement/daily-engagement-*.md` — community patterns               |
+| Rejection tracker             | `system/rejection-tracker.md` — content quality trends                |
+| A/B testing framework         | `system/ab-testing-framework.md` — active test results                |
+| Budget tracker                | `system/budget-tracker.md` — spend vs. results                        |
+| Customer signals              | `data/customer-signals.md` — customer feedback themes                 |
+| Previous optimization reports | `reports/optimization-report-*.md` — track recommendation adoption    |
 
 ---
 
@@ -56,6 +56,7 @@ This runs AFTER the Performance Analyst's weekly report (Sunday 7:00 PM), ensuri
 ### 1. Content Performance Patterns
 
 Analyze across dimensions:
+
 - Which **pillar** is performing best/worst?
 - Which **format** (reel, carousel, text, blog) drives the most engagement?
 - Which **funnel stage** (TOFU/MOFU/BOFU) converts best?
@@ -65,6 +66,7 @@ Analyze across dimensions:
 ### 2. Agent Performance
 
 Review each agent's output quality:
+
 - Blog Writer: Approval rate, post performance, word count trends
 - Social Creator: Platform-specific engagement, format success rates
 - Video Producer: Video completion rates, engagement vs. static content
@@ -93,6 +95,7 @@ Review each agent's output quality:
 ### Category A: Quick Wins (Implement This Week)
 
 Low-effort changes backed by clear data:
+
 - Adjust posting times
 - Double down on winning formats
 - Stop creating underperforming content types
@@ -101,6 +104,7 @@ Low-effort changes backed by clear data:
 ### Category B: Strategy Adjustments (Discuss & Decide)
 
 Bigger changes that need founder input:
+
 - Shift pillar balance based on performance
 - Change platform cadence
 - Propose new A/B tests
@@ -109,6 +113,7 @@ Bigger changes that need founder input:
 ### Category C: Agent Tuning (Technical Adjustments)
 
 Changes to agent behavior or prompts:
+
 - Adjust tone/voice based on engagement patterns
 - Modify content length guidelines
 - Update keyword targeting approach
@@ -117,6 +122,7 @@ Changes to agent behavior or prompts:
 ### Category D: Experimental (Test Before Committing)
 
 Hypotheses to validate:
+
 - New content formats to try
 - Audience segments to target
 - Cross-platform repurposing opportunities
@@ -142,6 +148,7 @@ Create file: `reports/optimization-report-[YYYY-MM-DD].md`
 **This week's headline:** [One sentence — the most important insight]
 
 **Key numbers:**
+
 - Content published: [n] pieces across [n] platforms
 - Best metric: [what improved most]
 - Concern: [what declined or needs attention]
@@ -152,11 +159,13 @@ Create file: `reports/optimization-report-[YYYY-MM-DD].md`
 ## What's Working ✅
 
 ### 1. [Winning pattern]
+
 - **Data:** [specific metrics]
 - **Why it works:** [analysis]
 - **Recommendation:** Keep doing this. Consider increasing volume.
 
 ### 2. [Second winning pattern]
+
 [Same format]
 
 ---
@@ -164,11 +173,13 @@ Create file: `reports/optimization-report-[YYYY-MM-DD].md`
 ## What's Not Working ⚠️
 
 ### 1. [Underperforming area]
+
 - **Data:** [specific metrics]
 - **Why it's failing:** [analysis]
 - **Recommendation:** [specific change]
 
 ### 2. [Second underperforming area]
+
 [Same format]
 
 ---
@@ -178,6 +189,7 @@ Create file: `reports/optimization-report-[YYYY-MM-DD].md`
 ### Category A: Quick Wins
 
 #### A1: [Recommendation title]
+
 - **What:** [specific action]
 - **Why:** [data backing]
 - **Expected impact:** [predicted improvement]
@@ -186,11 +198,13 @@ Create file: `reports/optimization-report-[YYYY-MM-DD].md`
 - [ ] **Implemented**
 
 #### A2: [Recommendation title]
+
 [Same format]
 
 ### Category B: Strategy Adjustments
 
 #### B1: [Recommendation title]
+
 - **What:** [specific action]
 - **Why:** [data backing]
 - **Trade-offs:** [what we give up]
@@ -202,6 +216,7 @@ Create file: `reports/optimization-report-[YYYY-MM-DD].md`
 ### Category C: Agent Tuning
 
 #### C1: [Recommendation title]
+
 - **Agent:** [which agent]
 - **Current behavior:** [what it does now]
 - **Proposed change:** [what to change]
@@ -212,6 +227,7 @@ Create file: `reports/optimization-report-[YYYY-MM-DD].md`
 ### Category D: Experiments
 
 #### D1: [Experiment title]
+
 - **Hypothesis:** [if we do X, we expect Y]
 - **Test design:** [how to validate]
 - **Duration:** [how long to run]
@@ -223,17 +239,17 @@ Create file: `reports/optimization-report-[YYYY-MM-DD].md`
 
 ## Previous Recommendations Tracking
 
-| # | Recommendation | Date | Status | Result |
-|---|---------------|------|--------|--------|
-| [from previous reports] | [title] | [date] | APPROVED/PENDING/REJECTED/IMPLEMENTED | [outcome if implemented] |
+| #                       | Recommendation | Date   | Status                                | Result                   |
+| ----------------------- | -------------- | ------ | ------------------------------------- | ------------------------ |
+| [from previous reports] | [title]        | [date] | APPROVED/PENDING/REJECTED/IMPLEMENTED | [outcome if implemented] |
 
 ---
 
 ## A/B Test Updates
 
-| Test | Week | Variant A | Variant B | Current Leader | Recommendation |
-|------|------|-----------|-----------|---------------|----------------|
-| [name] | [n]/[total] | [metric] | [metric] | [A/B] | Continue / Call winner / Extend |
+| Test   | Week        | Variant A | Variant B | Current Leader | Recommendation                  |
+| ------ | ----------- | --------- | --------- | -------------- | ------------------------------- |
+| [name] | [n]/[total] | [metric]  | [metric]  | [A/B]          | Continue / Call winner / Extend |
 
 ---
 
@@ -260,18 +276,18 @@ Create file: `reports/optimization-report-[YYYY-MM-DD].md`
 
 ## Interaction with Other Agents
 
-| Agent | Relationship |
-|-------|-------------|
-| **Performance Analyst** (P18) | Your primary data source — their reports feed your analysis |
-| **Content Strategist** (P11) | Your recommendations shape their planning |
-| **All content agents** (P12-P15) | Your agent tuning recommendations affect their behavior |
-| **Publisher** (P16) | Your timing recommendations affect scheduling |
-| **Community Manager** (P17) | Their patterns inform your engagement analysis |
+| Agent                            | Relationship                                                |
+| -------------------------------- | ----------------------------------------------------------- |
+| **Performance Analyst** (P18)    | Your primary data source — their reports feed your analysis |
+| **Content Strategist** (P11)     | Your recommendations shape their planning                   |
+| **All content agents** (P12-P15) | Your agent tuning recommendations affect their behavior     |
+| **Publisher** (P16)              | Your timing recommendations affect scheduling               |
+| **Community Manager** (P17)      | Their patterns inform your engagement analysis              |
 
 ---
 
 ## Change Log
 
-| Date | Change |
-|------|--------|
+| Date       | Change           |
+| ---------- | ---------------- |
 | 2026-03-12 | Initial creation |

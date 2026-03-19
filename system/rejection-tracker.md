@@ -8,9 +8,9 @@
 
 ## Rejection Log
 
-| Date | Content Title | Rejection Code | Agent | Gate | Notes | Resubmitted? | Approved on Retry? |
-|------|--------------|---------------|-------|------|-------|--------------|-------------------|
-| (populated during review) | | | | | | | |
+| Date                      | Content Title | Rejection Code | Agent | Gate | Notes | Resubmitted? | Approved on Retry? |
+| ------------------------- | ------------- | -------------- | ----- | ---- | ----- | ------------ | ------------------ |
+| (populated during review) |               |                |       |      |       |              |                    |
 
 ---
 
@@ -18,18 +18,18 @@
 
 > From `system/quality-gates.md`
 
-| Code | Reason | Severity |
-|------|--------|----------|
-| R01 | Missing required fields | Medium |
-| R02 | Below quality threshold | High |
-| R03 | Stale/outdated data | High |
-| R04 | Wrong tier classification | Medium |
-| R05 | Platform not yet active | Critical |
-| R06 | Duplicate/too similar to recent content | Medium |
-| R07 | Missing CTA or product tie-in | Medium |
-| R08 | Placeholder text remaining | High |
-| R09 | Cultural adaptation needed | High |
-| R10 | Factual accuracy concern | Critical |
+| Code | Reason                                  | Severity |
+| ---- | --------------------------------------- | -------- |
+| R01  | Missing required fields                 | Medium   |
+| R02  | Below quality threshold                 | High     |
+| R03  | Stale/outdated data                     | High     |
+| R04  | Wrong tier classification               | Medium   |
+| R05  | Platform not yet active                 | Critical |
+| R06  | Duplicate/too similar to recent content | Medium   |
+| R07  | Missing CTA or product tie-in           | Medium   |
+| R08  | Placeholder text remaining              | High     |
+| R09  | Cultural adaptation needed              | High     |
+| R10  | Factual accuracy concern                | Critical |
 
 ---
 
@@ -39,39 +39,39 @@
 
 ### Week of [DATE]
 
-| Metric | Value |
-|--------|-------|
-| Total pieces reviewed | ___ |
-| Approved | ___ (___%) |
-| Rejected | ___ (___%) |
-| Top rejection reason | ___ |
-| Agent with most rejections | ___ |
-| Avg rejections before approval | ___ |
+| Metric                         | Value      |
+| ------------------------------ | ---------- |
+| Total pieces reviewed          | \_\_\_     |
+| Approved                       | **_ (_**%) |
+| Rejected                       | **_ (_**%) |
+| Top rejection reason           | \_\_\_     |
+| Agent with most rejections     | \_\_\_     |
+| Avg rejections before approval | \_\_\_     |
 
 ### Rejection Distribution by Code
 
 | Code | Count | % of Total Rejections |
-|------|-------|----------------------|
-| R01 | | |
-| R02 | | |
-| R03 | | |
-| R04 | | |
-| R05 | | |
-| R06 | | |
-| R07 | | |
-| R08 | | |
-| R09 | | |
-| R10 | | |
+| ---- | ----- | --------------------- |
+| R01  |       |                       |
+| R02  |       |                       |
+| R03  |       |                       |
+| R04  |       |                       |
+| R05  |       |                       |
+| R06  |       |                       |
+| R07  |       |                       |
+| R08  |       |                       |
+| R09  |       |                       |
+| R10  |       |                       |
 
 ### Rejection Distribution by Agent
 
-| Agent | Pieces Submitted | Rejected | Rejection Rate | Trend |
-|-------|-----------------|----------|---------------|-------|
-| Blog Writer | | | | |
-| Social Creator | | | | |
-| Video Producer | | | | |
-| Email Composer | | | | |
-| Newsletter Agent | | | | |
+| Agent            | Pieces Submitted | Rejected | Rejection Rate | Trend |
+| ---------------- | ---------------- | -------- | -------------- | ----- |
+| Blog Writer      |                  |          |                |       |
+| Social Creator   |                  |          |                |       |
+| Video Producer   |                  |          |                |       |
+| Email Composer   |                  |          |                |       |
+| Newsletter Agent |                  |          |                |       |
 
 ### Action Items
 
@@ -81,6 +81,6 @@
 
 ## Historical Weekly Summaries
 
-| Week | Reviewed | Approved | Rejected | Top Code | Notes |
-|------|----------|----------|----------|----------|-------|
-| (accumulated over time) | | | | | |
+| Week                    | Reviewed | Approved | Rejected | Top Code | Notes |
+| ----------------------- | -------- | -------- | -------- | -------- | ----- |
+| (accumulated over time) |          |          |          |          |       |

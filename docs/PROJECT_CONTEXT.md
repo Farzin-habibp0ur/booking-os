@@ -222,25 +222,25 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 
 ## 3. Tech Stack
 
-| Layer       | Technology                  | Version       |
-| ----------- | --------------------------- | ------------- |
-| Frontend    | Next.js, React, TypeScript  | 15.x, 19.x    |
-| Styling     | Tailwind CSS                | 4.x           |
-| Icons       | lucide-react                | 0.468         |
-| Charts      | Recharts                    | 2.15          |
-| Real-time   | Socket.io                   | 4.x           |
-| Backend     | NestJS, TypeScript          | 11.x          |
-| ORM         | Prisma                      | 6.x           |
-| Database    | PostgreSQL                  | 16            |
-| AI          | Anthropic Claude API        | claude-sonnet |
-| Payments    | Stripe                      | stripe-node   |
-| Email       | Resend                      | -             |
+| Layer       | Technology                                                                              | Version               |
+| ----------- | --------------------------------------------------------------------------------------- | --------------------- |
+| Frontend    | Next.js, React, TypeScript                                                              | 15.x, 19.x            |
+| Styling     | Tailwind CSS                                                                            | 4.x                   |
+| Icons       | lucide-react                                                                            | 0.468                 |
+| Charts      | Recharts                                                                                | 2.15                  |
+| Real-time   | Socket.io                                                                               | 4.x                   |
+| Backend     | NestJS, TypeScript                                                                      | 11.x                  |
+| ORM         | Prisma                                                                                  | 6.x                   |
+| Database    | PostgreSQL                                                                              | 16                    |
+| AI          | Anthropic Claude API                                                                    | claude-sonnet         |
+| Payments    | Stripe                                                                                  | stripe-node           |
+| Email       | Resend                                                                                  | -                     |
 | Messaging   | WhatsApp Cloud, Instagram DM, Facebook Messenger, Email (Resend/SendGrid), SMS (Twilio) | 6-channel omnichannel |
-| Cache/Queue | Redis 7 + BullMQ            | -             |
-| Monorepo    | Turborepo                   | 2.x           |
-| CI/CD       | GitHub Actions → Railway    | -             |
-| Monitoring  | Sentry                      | -             |
-| Linting     | ESLint 9 + Prettier         | -             |
+| Cache/Queue | Redis 7 + BullMQ                                                                        | -                     |
+| Monorepo    | Turborepo                                                                               | 2.x                   |
+| CI/CD       | GitHub Actions → Railway                                                                | -                     |
+| Monitoring  | Sentry                                                                                  | -                     |
+| Linting     | ESLint 9 + Prettier                                                                     | -                     |
 
 ---
 
@@ -528,35 +528,35 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 
 ### Protected Pages
 
-| Page                | Route                               | Description                                                                                                                                                                                                    |
-| ------------------- | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Setup Wizard        | `/setup`                            | 10-step onboarding                                                                                                                                                                                             |
-| Dashboard           | `/dashboard`                        | KPI metrics, attention items, checklist, milestones                                                                                                                                                            |
-| Bookings            | `/bookings`                         | Filterable list, bulk actions, detail modal                                                                                                                                                                    |
-| Calendar            | `/calendar`                         | Day/week/month view, staff columns, click-to-book, drag-and-drop reschedule, working hours/time-off visualization, recommended slots                                                                           |
-| Inbox               | `/inbox`                            | 3-pane messaging with AI suggestions, media attachments, delivery/read receipts, presence indicators                                                                                                           |
-| Customers           | `/customers`                        | Search, import, bulk tag                                                                                                                                                                                       |
-| Customer Detail     | `/customers/[id]`                   | Profile hub: AI chat, timeline, notes, bookings, info, vertical modules                                                                                                                                        |
-| Search              | `/search`                           | Full search results page with type filters, grouped results, load more                                                                                                                                         |
-| Services            | `/services`                         | Category-grouped CRUD                                                                                                                                                                                          |
-| Staff               | `/staff`                            | Expandable table with hours + time off                                                                                                                                                                         |
-| Waitlist            | `/waitlist`                         | Entry management with filters                                                                                                                                                                                  |
-| Campaigns           | `/campaigns`                        | Campaign list                                                                                                                                                                                                  |
-| Campaign New/Edit   | `/campaigns/new`, `/campaigns/[id]` | 4-step builder wizard                                                                                                                                                                                          |
-| Automations         | `/automations`                      | Playbooks, custom rules, activity log                                                                                                                                                                          |
-| Automation New      | `/automations/new`                  | Rule builder wizard                                                                                                                                                                                            |
-| Reports             | `/reports`                          | 9 chart types                                                                                                                                                                                                  |
-| ROI Dashboard       | `/roi`                              | Baseline vs current metrics                                                                                                                                                                                    |
-| Service Board       | `/service-board`                    | Kanban board (dealership)                                                                                                                                                                                      |
+| Page                | Route                               | Description                                                                                                                                                                                                                                  |
+| ------------------- | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Setup Wizard        | `/setup`                            | 10-step onboarding                                                                                                                                                                                                                           |
+| Dashboard           | `/dashboard`                        | KPI metrics, attention items, checklist, milestones                                                                                                                                                                                          |
+| Bookings            | `/bookings`                         | Filterable list, bulk actions, detail modal                                                                                                                                                                                                  |
+| Calendar            | `/calendar`                         | Day/week/month view, staff columns, click-to-book, drag-and-drop reschedule, working hours/time-off visualization, recommended slots                                                                                                         |
+| Inbox               | `/inbox`                            | 3-pane messaging with AI suggestions, media attachments, delivery/read receipts, presence indicators                                                                                                                                         |
+| Customers           | `/customers`                        | Search, import, bulk tag                                                                                                                                                                                                                     |
+| Customer Detail     | `/customers/[id]`                   | Profile hub: AI chat, timeline, notes, bookings, info, vertical modules                                                                                                                                                                      |
+| Search              | `/search`                           | Full search results page with type filters, grouped results, load more                                                                                                                                                                       |
+| Services            | `/services`                         | Category-grouped CRUD                                                                                                                                                                                                                        |
+| Staff               | `/staff`                            | Expandable table with hours + time off                                                                                                                                                                                                       |
+| Waitlist            | `/waitlist`                         | Entry management with filters                                                                                                                                                                                                                |
+| Campaigns           | `/campaigns`                        | Campaign list                                                                                                                                                                                                                                |
+| Campaign New/Edit   | `/campaigns/new`, `/campaigns/[id]` | 4-step builder wizard                                                                                                                                                                                                                        |
+| Automations         | `/automations`                      | Playbooks, custom rules, activity log                                                                                                                                                                                                        |
+| Automation New      | `/automations/new`                  | Rule builder wizard                                                                                                                                                                                                                          |
+| Reports             | `/reports`                          | 9 chart types                                                                                                                                                                                                                                |
+| ROI Dashboard       | `/roi`                              | Baseline vs current metrics                                                                                                                                                                                                                  |
+| Service Board       | `/service-board`                    | Kanban board (dealership)                                                                                                                                                                                                                    |
 | Settings            | `/settings/*`                       | 16 settings sub-pages (account, AI, AI Autonomy, Agent Skills, agents, templates, translations, calendar, billing, notifications, offers, policies, waitlist, profile fields, sms, facebook, email-channel); hub page links to all sub-pages |
-| Marketing Queue     | `/marketing/queue`                  | Content approval queue with card-based review, filter tabs, stats strip. **Internal only — no sidebar nav, not shown to customers**                                                                            |
-| Marketing Agents    | `/marketing/agents`                 | 12 marketing agents dashboard with tab filters (Content/Distribution/Analytics), toggle, Run Now. **Internal only — not in sidebar, agents filtered from customer API**                                        |
-| Marketing Sequences | `/marketing/sequences`              | Email sequence management with stats, toggle, expand timeline. **Internal only — no sidebar nav**                                                                                                              |
-| Rejection Analytics | `/marketing/rejection-analytics`    | 4 Recharts visualizations (by code, by agent, trend, agent detail), weekly summary panel, filterable rejection log table. **Internal only — no sidebar nav**                                                   |
-| Notifications       | `/notifications`                    | Notification list with filter tabs (All/Unread/Bookings/Messages/AI)                                                                                                                                           |
-| Help                | `/help`                             | FAQ page with 6 accordion sections                                                                                                                                                                             |
-| Audit Log           | `/settings/audit-log`               | Paginated audit table with filters, expandable diff viewer, CSV export                                                                                                                                         |
-| Integrations        | `/settings/integrations`            | Grid of 9 integration cards (Google Calendar, Stripe, WhatsApp, etc.)                                                                                                                                          |
+| Marketing Queue     | `/marketing/queue`                  | Content approval queue with card-based review, filter tabs, stats strip. **Internal only — no sidebar nav, not shown to customers**                                                                                                          |
+| Marketing Agents    | `/marketing/agents`                 | 12 marketing agents dashboard with tab filters (Content/Distribution/Analytics), toggle, Run Now. **Internal only — not in sidebar, agents filtered from customer API**                                                                      |
+| Marketing Sequences | `/marketing/sequences`              | Email sequence management with stats, toggle, expand timeline. **Internal only — no sidebar nav**                                                                                                                                            |
+| Rejection Analytics | `/marketing/rejection-analytics`    | 4 Recharts visualizations (by code, by agent, trend, agent detail), weekly summary panel, filterable rejection log table. **Internal only — no sidebar nav**                                                                                 |
+| Notifications       | `/notifications`                    | Notification list with filter tabs (All/Unread/Bookings/Messages/AI)                                                                                                                                                                         |
+| Help                | `/help`                             | FAQ page with 6 accordion sections                                                                                                                                                                                                           |
+| Audit Log           | `/settings/audit-log`               | Paginated audit table with filters, expandable diff viewer, CSV export                                                                                                                                                                       |
+| Integrations        | `/settings/integrations`            | Grid of 9 integration cards (Google Calendar, Stripe, WhatsApp, etc.)                                                                                                                                                                        |
 
 ### Public Marketing Pages
 
@@ -570,28 +570,28 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 
 ### Console Pages (Super Admin Only — `apps/admin/` at `admin.businesscommandcentre.com`)
 
-| Page                | Route                        | Description                                                                                                    |
-| ------------------- | ---------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| Overview            | `/`                          | Platform KPIs (businesses, bookings, staff, agents, support, security), billing breakdown, audit feed          |
-| Business Directory  | `/businesses`                | Search, filter by plan/billing/health, paginated table                                                         |
-| Business 360        | `/businesses/[id]`           | Summary, People, and Billing tabs (subscription info, plan change, credits, cancel/reactivate, invoices)       |
-| Security & Audit    | `/audit`                     | Audit log explorer with search, action type filter, paginated table                                            |
-| System Health       | `/health`                    | Overall status, 5 service checks, business health distribution                                                 |
-| Support Cases       | `/support`                   | Full CRUD with search, status/priority filters, case detail drawer, notes                                      |
-| Billing Dashboard   | `/billing`                   | MRR, churn rate, plan distribution, past-due businesses                                                        |
-| Past-Due            | `/billing/past-due`          | Filtered list of past-due businesses with quick actions                                                        |
-| Subscriptions       | `/billing/subscriptions`     | All subscriptions with search, plan/status filters, sortable table                                             |
-| Pack Registry       | `/packs`                     | Vertical pack registry with search, version history, install counts                                            |
-| Pack Detail         | `/packs/[slug]`              | Pack detail with version timeline, installed businesses, skills list                                           |
-| Skills Catalog      | `/packs/skills`              | Skills catalog with per-pack filtering                                                                         |
-| AI & Agents         | `/agents`                    | Agent performance dashboard, tenant controls, platform defaults                                                |
-| Messaging Ops       | `/messaging`                 | Delivery rates, webhook health, failure analysis, per-tenant status                                            |
-| Platform Settings   | `/settings`                  | 4-category settings (Security, Notifications, Regional, Platform) with bulk save                               |
-| Marketing Landing   | `/marketing`                 | Marketing autonomy settings, agent overview                                                                    |
-| Content Queue       | `/marketing/queue`           | Content approval workflow (approve/reject/schedule drafts)                                                     |
-| Marketing Agents    | `/marketing/agents`          | 12 marketing agent dashboard (status, runs, performance)                                                       |
-| Email Sequences     | `/marketing/sequences`       | Email sequence management                                                                                      |
-| Rejection Analytics | `/marketing/rejection-analytics` | Content rejection patterns and analytics                                                                   |
+| Page                | Route                            | Description                                                                                              |
+| ------------------- | -------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Overview            | `/`                              | Platform KPIs (businesses, bookings, staff, agents, support, security), billing breakdown, audit feed    |
+| Business Directory  | `/businesses`                    | Search, filter by plan/billing/health, paginated table                                                   |
+| Business 360        | `/businesses/[id]`               | Summary, People, and Billing tabs (subscription info, plan change, credits, cancel/reactivate, invoices) |
+| Security & Audit    | `/audit`                         | Audit log explorer with search, action type filter, paginated table                                      |
+| System Health       | `/health`                        | Overall status, 5 service checks, business health distribution                                           |
+| Support Cases       | `/support`                       | Full CRUD with search, status/priority filters, case detail drawer, notes                                |
+| Billing Dashboard   | `/billing`                       | MRR, churn rate, plan distribution, past-due businesses                                                  |
+| Past-Due            | `/billing/past-due`              | Filtered list of past-due businesses with quick actions                                                  |
+| Subscriptions       | `/billing/subscriptions`         | All subscriptions with search, plan/status filters, sortable table                                       |
+| Pack Registry       | `/packs`                         | Vertical pack registry with search, version history, install counts                                      |
+| Pack Detail         | `/packs/[slug]`                  | Pack detail with version timeline, installed businesses, skills list                                     |
+| Skills Catalog      | `/packs/skills`                  | Skills catalog with per-pack filtering                                                                   |
+| AI & Agents         | `/agents`                        | Agent performance dashboard, tenant controls, platform defaults                                          |
+| Messaging Ops       | `/messaging`                     | Delivery rates, webhook health, failure analysis, per-tenant status                                      |
+| Platform Settings   | `/settings`                      | 4-category settings (Security, Notifications, Regional, Platform) with bulk save                         |
+| Marketing Landing   | `/marketing`                     | Marketing autonomy settings, agent overview                                                              |
+| Content Queue       | `/marketing/queue`               | Content approval workflow (approve/reject/schedule drafts)                                               |
+| Marketing Agents    | `/marketing/agents`              | 12 marketing agent dashboard (status, runs, performance)                                                 |
+| Email Sequences     | `/marketing/sequences`           | Email sequence management                                                                                |
+| Rejection Analytics | `/marketing/rejection-analytics` | Content rejection patterns and analytics                                                                 |
 
 ### Key Components
 
@@ -818,12 +818,12 @@ Key groups (full list in `.env.example`):
 
 ### Phase 5: Engagement OS + Benchmarking + Marketplace (NOT STARTED)
 
-| Item                           | Description                                                                               |
-| ------------------------------ | ----------------------------------------------------------------------------------------- |
-| **Benchmarking & Coaching**    | Anonymized peer benchmarks by vertical + region, "what top performers do" recommendations |
+| Item                           | Description                                                                                |
+| ------------------------------ | ------------------------------------------------------------------------------------------ |
+| **Benchmarking & Coaching**    | Anonymized peer benchmarks by vertical + region, "what top performers do" recommendations  |
 | **Omnichannel Inbox**          | WhatsApp, Instagram DM, Facebook Messenger, SMS, Email, Web Chat — ALL 6 CHANNELS COMPLETE |
-| **Vertical Packs Marketplace** | Partner portal, revenue share, certification program                                      |
-| **Customer Mini-Portal**       | Booking management, receipts, memberships, referrals                                      |
+| **Vertical Packs Marketplace** | Partner portal, revenue share, certification program                                       |
+| **Customer Mini-Portal**       | Booking management, receipts, memberships, referrals                                       |
 
 ### UX Improvements
 

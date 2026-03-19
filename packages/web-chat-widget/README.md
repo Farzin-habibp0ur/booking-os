@@ -17,18 +17,18 @@ Embeddable chat widget for BookingOS. Connects to the web-chat WebSocket namespa
 
 ## Configuration Options
 
-| Option           | Type                             | Default                                | Description                        |
-| ---------------- | -------------------------------- | -------------------------------------- | ---------------------------------- |
-| `businessId`     | `string`                         | **required**                           | Business ID                        |
-| `apiUrl`         | `string`                         | **required**                           | API base URL                       |
-| `position`       | `'bottom-right' \| 'bottom-left'` | `'bottom-right'`                     | Widget position                    |
-| `primaryColor`   | `string`                         | `'#71907C'`                            | Primary color (sage green)         |
-| `title`          | `string`                         | `'Chat with us'`                       | Header title                       |
-| `subtitle`       | `string`                         | `'We typically reply within minutes'`  | Header subtitle                    |
-| `placeholder`    | `string`                         | `'Type a message...'`                  | Input placeholder                  |
-| `offlineMessage` | `string`                         | `"We're currently offline..."`         | Offline form message               |
-| `preChatFields`  | `Array<'name'\|'email'\|'phone'>` | `['name', 'email']`                   | Fields to show in pre-chat form    |
-| `zIndex`         | `number`                         | `999999`                               | CSS z-index for the widget         |
+| Option           | Type                              | Default                               | Description                     |
+| ---------------- | --------------------------------- | ------------------------------------- | ------------------------------- |
+| `businessId`     | `string`                          | **required**                          | Business ID                     |
+| `apiUrl`         | `string`                          | **required**                          | API base URL                    |
+| `position`       | `'bottom-right' \| 'bottom-left'` | `'bottom-right'`                      | Widget position                 |
+| `primaryColor`   | `string`                          | `'#71907C'`                           | Primary color (sage green)      |
+| `title`          | `string`                          | `'Chat with us'`                      | Header title                    |
+| `subtitle`       | `string`                          | `'We typically reply within minutes'` | Header subtitle                 |
+| `placeholder`    | `string`                          | `'Type a message...'`                 | Input placeholder               |
+| `offlineMessage` | `string`                          | `"We're currently offline..."`        | Offline form message            |
+| `preChatFields`  | `Array<'name'\|'email'\|'phone'>` | `['name', 'email']`                   | Fields to show in pre-chat form |
+| `zIndex`         | `number`                          | `999999`                              | CSS z-index for the widget      |
 
 ## Building
 

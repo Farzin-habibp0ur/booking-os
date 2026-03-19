@@ -1,10 +1,10 @@
 ---
-title: "Building Real-Time Features with WebSockets in a NestJS Monorepo"
-description: "Architecture patterns for adding live updates, presence indicators, and collaborative features to a production NestJS application."
-date: "2026-02-08"
-category: "Technical"
-author: "Booking OS Team"
-readTime: "7 min read"
+title: 'Building Real-Time Features with WebSockets in a NestJS Monorepo'
+description: 'Architecture patterns for adding live updates, presence indicators, and collaborative features to a production NestJS application.'
+date: '2026-02-08'
+category: 'Technical'
+author: 'Booking OS Team'
+readTime: '7 min read'
 ---
 
 Real-time features transform a booking platform from a static tool into a living workspace. Live inbox updates, presence indicators showing who's viewing a conversation, and instant booking notifications create an experience that feels responsive and collaborative. Here's how we built it.

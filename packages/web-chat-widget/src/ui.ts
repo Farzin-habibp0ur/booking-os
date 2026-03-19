@@ -4,10 +4,12 @@ import { getStyles } from './styles';
 // SVG icons as strings
 const ICONS = {
   chat: '<svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>',
-  close: '<svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>',
+  close:
+    '<svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>',
   send: '<svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>',
   check: '<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>',
-  message: '<svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>',
+  message:
+    '<svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>',
 };
 
 export class ChatUI {
@@ -17,8 +19,19 @@ export class ChatUI {
   private state: ChatState = 'prechat';
   private messages: ChatMessage[] = [];
   private config: Required<
-    Pick<BookingOSChatConfig, 'position' | 'primaryColor' | 'title' | 'subtitle' | 'placeholder' | 'preChatFields' | 'zIndex' | 'offlineMessage'>
-  > & BookingOSChatConfig;
+    Pick<
+      BookingOSChatConfig,
+      | 'position'
+      | 'primaryColor'
+      | 'title'
+      | 'subtitle'
+      | 'placeholder'
+      | 'preChatFields'
+      | 'zIndex'
+      | 'offlineMessage'
+    >
+  > &
+    BookingOSChatConfig;
 
   // DOM references
   private fab!: HTMLButtonElement;
@@ -30,9 +43,13 @@ export class ChatUI {
   private statusBanner: HTMLDivElement | null = null;
 
   // Callbacks
-  public onStartChat: ((data: { name: string; email?: string; phone?: string; message?: string }) => void) | null = null;
+  public onStartChat:
+    | ((data: { name: string; email?: string; phone?: string; message?: string }) => void)
+    | null = null;
   public onSendMessage: ((content: string) => void) | null = null;
-  public onSendOffline: ((data: { name: string; email: string; phone?: string; message: string }) => void) | null = null;
+  public onSendOffline:
+    | ((data: { name: string; email: string; phone?: string; message: string }) => void)
+    | null = null;
   public onSendTyping: ((isTyping: boolean) => void) | null = null;
 
   constructor(config: BookingOSChatConfig) {
@@ -108,7 +125,8 @@ export class ChatUI {
     // Powered by footer
     const powered = document.createElement('div');
     powered.className = 'bos-chat-powered';
-    powered.innerHTML = 'Powered by <a href="https://businesscommandcentre.com" target="_blank" rel="noopener">BookingOS</a>';
+    powered.innerHTML =
+      'Powered by <a href="https://businesscommandcentre.com" target="_blank" rel="noopener">BookingOS</a>';
     this.window.appendChild(powered);
 
     this.shadow.appendChild(this.window);
@@ -201,7 +219,8 @@ export class ChatUI {
       };
       if (inputs.email) data.email = (inputs.email as HTMLInputElement).value.trim() || undefined;
       if (inputs.phone) data.phone = (inputs.phone as HTMLInputElement).value.trim() || undefined;
-      if (inputs.message) data.message = (inputs.message as HTMLTextAreaElement).value.trim() || undefined;
+      if (inputs.message)
+        data.message = (inputs.message as HTMLTextAreaElement).value.trim() || undefined;
 
       this.onStartChat?.(data);
     });
@@ -405,12 +424,18 @@ export class ChatUI {
     this.contentArea.appendChild(form);
   }
 
-  private createFormGroup(label: string, type: string, placeholder: string, required: boolean): HTMLDivElement {
+  private createFormGroup(
+    label: string,
+    type: string,
+    placeholder: string,
+    required: boolean,
+  ): HTMLDivElement {
     const group = document.createElement('div');
     group.className = 'bos-chat-form-group';
 
     const labelEl = document.createElement('label');
-    labelEl.innerHTML = this.escapeHtml(label) + (required ? '<span class="required">*</span>' : '');
+    labelEl.innerHTML =
+      this.escapeHtml(label) + (required ? '<span class="required">*</span>' : '');
     group.appendChild(labelEl);
 
     const input = document.createElement('input');

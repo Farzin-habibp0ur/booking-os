@@ -2,9 +2,7 @@ const CACHE_NAME = 'booking-os-v1';
 const PRECACHE_URLS = ['/', '/dashboard'];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_URLS)),
-  );
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_URLS)));
   self.skipWaiting();
 });
 
@@ -56,8 +54,6 @@ self.addEventListener('fetch', (event) => {
 
   // Network-first for navigation requests, fall back to cached /dashboard
   if (event.request.mode === 'navigate') {
-    event.respondWith(
-      fetch(event.request).catch(() => caches.match('/dashboard')),
-    );
+    event.respondWith(fetch(event.request).catch(() => caches.match('/dashboard')));
   }
 });

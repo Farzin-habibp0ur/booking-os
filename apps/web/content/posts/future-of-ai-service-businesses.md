@@ -1,10 +1,10 @@
 ---
-title: "The Future of AI in Service Businesses: Beyond Chatbots"
-description: "Exploring how autonomous AI agents, predictive analytics, and intelligent automation will reshape service businesses over the next five years."
-date: "2026-03-05"
-category: "Thought Leadership"
-author: "Booking OS Team"
-readTime: "7 min read"
+title: 'The Future of AI in Service Businesses: Beyond Chatbots'
+description: 'Exploring how autonomous AI agents, predictive analytics, and intelligent automation will reshape service businesses over the next five years.'
+date: '2026-03-05'
+category: 'Thought Leadership'
+author: 'Booking OS Team'
+readTime: '7 min read'
 ---
 
 When most people think of AI in business, they picture chatbots handling customer service queries. But the real transformation happening in service businesses goes far deeper — autonomous agents that operate continuously in the background, making decisions and taking actions that previously required human oversight.

@@ -11,6 +11,7 @@
 **Launch date: 2026-03-17 (Week 1)**
 
 ### Instagram
+
 - **Status:** ACTIVE
 - **Launch date:** 2026-03-17
 - **Initial cadence:** 5 posts/week (3 Reels, 1 carousel, 1 static)
@@ -23,6 +24,7 @@
 - **KPIs:** Follower growth rate, engagement rate, Reels reach, link clicks
 
 ### TikTok
+
 - **Status:** ACTIVE
 - **Launch date:** 2026-03-17
 - **Initial cadence:** 5 videos/week
@@ -34,6 +36,7 @@
 - **KPIs:** Views, completion rate, follower growth, shares
 
 ### LinkedIn
+
 - **Status:** ACTIVE
 - **Launch date:** 2026-03-17
 - **Initial cadence:** 4 posts/week
@@ -52,6 +55,7 @@
 **Projected launch: 2026-05-12 (earliest)**
 
 ### Unlock Criteria (ALL must be met):
+
 - [ ] Instagram followers >= 500
 - [ ] Instagram engagement rate >= 2%
 - [ ] TikTok followers >= 500
@@ -61,6 +65,7 @@
 - [ ] Consistent posting for 8+ weeks (no more than 2 missed posts in any week)
 
 ### YouTube
+
 - **Status:** LOCKED
 - **Post-unlock cadence:** 2 long-form videos/week + 3 Shorts/week
 - **Ramp-up schedule (post-unlock):**
@@ -70,6 +75,7 @@
 - **KPIs:** Watch time, subscriber growth, CTR, Shorts views
 
 ### Pinterest
+
 - **Status:** LOCKED
 - **Post-unlock cadence:** 10 pins/week
 - **Ramp-up schedule (post-unlock):**
@@ -86,6 +92,7 @@
 **Projected launch: 2026-07-07 (earliest)**
 
 ### Unlock Criteria (ALL must be met):
+
 - [ ] YouTube subscribers >= 300
 - [ ] YouTube engagement rate >= 2%
 - [ ] Pinterest followers >= 300
@@ -94,6 +101,7 @@
 - [ ] Phase B platforms active for 4+ weeks with no cadence drops
 
 ### X/Twitter
+
 - **Status:** LOCKED
 - **Post-unlock cadence:** 7 tweets/week + 2 threads/week
 - **Ramp-up schedule (post-unlock):**
@@ -106,19 +114,19 @@
 
 ## Summary Table
 
-| Platform  | Phase | Status | Launch Date | Full Cadence     |
-|-----------|-------|--------|-------------|------------------|
-| Instagram | A     | ACTIVE | 2026-03-17  | 5 posts/week     |
-| TikTok    | A     | ACTIVE | 2026-03-17  | 5 videos/week    |
-| LinkedIn  | A     | ACTIVE | 2026-03-17  | 4 posts/week     |
-| YouTube   | B     | LOCKED | TBD         | 2 vids + 3 Shorts/week |
-| Pinterest | B     | LOCKED | TBD         | 10 pins/week     |
+| Platform  | Phase | Status | Launch Date | Full Cadence              |
+| --------- | ----- | ------ | ----------- | ------------------------- |
+| Instagram | A     | ACTIVE | 2026-03-17  | 5 posts/week              |
+| TikTok    | A     | ACTIVE | 2026-03-17  | 5 videos/week             |
+| LinkedIn  | A     | ACTIVE | 2026-03-17  | 4 posts/week              |
+| YouTube   | B     | LOCKED | TBD         | 2 vids + 3 Shorts/week    |
+| Pinterest | B     | LOCKED | TBD         | 10 pins/week              |
 | X/Twitter | C     | LOCKED | TBD         | 7 tweets + 2 threads/week |
 
 ---
 
 ## Change Log
 
-| Date       | Change                        | Reason                      |
-|------------|-------------------------------|-----------------------------|
-| 2026-03-12 | Initial config created        | Phased launch setup         |
+| Date       | Change                 | Reason              |
+| ---------- | ---------------------- | ------------------- |
+| 2026-03-12 | Initial config created | Phased launch setup |

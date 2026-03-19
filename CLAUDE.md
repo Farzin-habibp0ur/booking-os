@@ -83,26 +83,26 @@ booking-os/
 
 ## Tech Stack
 
-| Layer       | Technology                                    | Version       |
-| ----------- | --------------------------------------------- | ------------- |
-| Frontend    | Next.js (App Router), React, TypeScript       | 15.x, 19.x    |
-| Styling     | Tailwind CSS                                  | 4.x           |
-| Icons       | lucide-react                                  | 0.468         |
-| Charts      | Recharts                                      | 2.15          |
-| Real-time   | Socket.io                                     | 4.x           |
-| Backend     | NestJS, TypeScript                            | 11.x          |
-| ORM         | Prisma                                        | 6.x           |
-| Database    | PostgreSQL                                    | 16            |
-| AI          | Anthropic Claude API                          | claude-sonnet |
-| Payments    | Stripe                                        | stripe-node   |
-| Email       | Resend                                        | -             |
-| Messaging   | WhatsApp Cloud, Instagram DM, SMS (Twilio + MMS), Facebook Messenger, Email (Resend/SendGrid), Live Web Chat (Socket.IO widget) | - |
-| Cache/Queue | Redis 7 + BullMQ                              | -             |
-| Monorepo    | Turborepo                                     | 2.x           |
-| CI/CD       | GitHub Actions → Railway                      | -             |
-| Monitoring  | Sentry                                        | -             |
-| Analytics   | PostHog                                       | -             |
-| Linting     | ESLint 9 + Prettier                           | -             |
+| Layer       | Technology                                                                                                                      | Version       |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| Frontend    | Next.js (App Router), React, TypeScript                                                                                         | 15.x, 19.x    |
+| Styling     | Tailwind CSS                                                                                                                    | 4.x           |
+| Icons       | lucide-react                                                                                                                    | 0.468         |
+| Charts      | Recharts                                                                                                                        | 2.15          |
+| Real-time   | Socket.io                                                                                                                       | 4.x           |
+| Backend     | NestJS, TypeScript                                                                                                              | 11.x          |
+| ORM         | Prisma                                                                                                                          | 6.x           |
+| Database    | PostgreSQL                                                                                                                      | 16            |
+| AI          | Anthropic Claude API                                                                                                            | claude-sonnet |
+| Payments    | Stripe                                                                                                                          | stripe-node   |
+| Email       | Resend                                                                                                                          | -             |
+| Messaging   | WhatsApp Cloud, Instagram DM, SMS (Twilio + MMS), Facebook Messenger, Email (Resend/SendGrid), Live Web Chat (Socket.IO widget) | -             |
+| Cache/Queue | Redis 7 + BullMQ                                                                                                                | -             |
+| Monorepo    | Turborepo                                                                                                                       | 2.x           |
+| CI/CD       | GitHub Actions → Railway                                                                                                        | -             |
+| Monitoring  | Sentry                                                                                                                          | -             |
+| Analytics   | PostHog                                                                                                                         | -             |
+| Linting     | ESLint 9 + Prettier                                                                                                             | -             |
 
 ---
 
@@ -240,6 +240,7 @@ Channel:            WHATSAPP, INSTAGRAM, FACEBOOK, SMS, EMAIL, WEB_CHAT
 ### Real-Time (Socket.io)
 
 Key events: `message:new`, `conversation:updated`, `ai:suggestion`, `ai:auto-replied`, `ai:transfer-to-human`, `booking:updated`, `ai:booking-state`, `action-card:created`, `action-card:updated`, `message:status`, `viewing:start`/`viewing:stop`, `presence:update`
+
 - WebChat gateway on `/web-chat` namespace — visitor sessions, pre-chat forms, real-time messaging bridge to staff inbox
 
 ### Omnichannel Messaging Infrastructure
@@ -247,18 +248,21 @@ Key events: `message:new`, `conversation:updated`, `ai:suggestion`, `ai:auto-rep
 BookingOS supports 6 messaging channels: **WhatsApp**, **Instagram DM**, **Facebook Messenger**, **SMS**, **Email**, **Web Chat**. All 6 channels are fully implemented.
 
 **Key services:**
+
 - `CustomerIdentityService` (`modules/customer-identity/`) — resolves customers across channels by priority (phone → email → facebookPsid → instagramUserId → webChatSessionId), links identifiers, reports available channels
 - `CircuitBreakerService` (`common/circuit-breaker/`) — wraps provider calls with CLOSED→OPEN→HALF_OPEN state machine (5 failures in 60s → open, 30s cooldown). Redis-backed with in-memory fallback
 - `DeadLetterQueueService` (`common/queue/dead-letter.service.ts`) — captures failed messaging jobs in Redis hash keys `dlq:msg:{id}` with 7-day TTL. Admin API at `/admin/dlq/*`
 - `UsageService` (`modules/usage/`) — tracks per-channel message counts in `MessageUsage` model for billing. Rates: SMS $0.0079/segment out, $0.0075 in; Email $0.00065; WA/IG/FB/Web $0
 
 **Key patterns:**
+
 - `Message.channel` is denormalized from `Conversation.channel` — set at creation time for query efficiency
 - Each channel gets its own conversation (no cross-channel thread merging). Same customer linked via shared identifiers
 - `Business.channelSettings` JSON stores enabled channels, default reply channel, and autoDetectChannel flag
 - `Location` has per-channel config JSON fields: `whatsappConfig`, `instagramConfig`, `facebookConfig`, `smsConfig`, `emailConfig`, `webChatConfig`
 
 **UI components** (in `apps/web/src/components/inbox/`):
+
 - `ChannelBadge` — colored icon+label badge per channel
 - `ReplyChannelSwitcher` — dropdown to switch reply channel
 - `ChannelsOnFile` — sidebar listing customer's available channels
@@ -565,17 +569,17 @@ Full reference at `.env.example` in the repo root. Key groups:
 
 All seed scripts are in `packages/db/src/`. They are **idempotent** (safe to re-run) and use dedup checks.
 
-| Script                     | Command                                            | Purpose                                                                                     | When to Use                |
-| -------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------- | -------------------------- |
-| `seed.ts`                  | `npx tsx packages/db/src/seed.ts`                  | Base data: 3 businesses (aesthetic + dealership + wellness), staff, services, working hours | Fresh database setup, CI   |
-| `seed-demo.ts`             | `npx tsx packages/db/src/seed-demo.ts`             | Rich demo data: bookings, customers, conversations, action cards                            | Demo environments, testing |
-| `seed-agentic.ts`          | `npx tsx packages/db/src/seed-agentic.ts`          | Agentic framework data: agent configs, agent runs, action cards, autonomy configs           | One-time production fill   |
-| `seed-wellness.ts`         | `npx tsx packages/db/src/seed-wellness.ts`         | Wellness vertical: packages, memberships, intake data                                       | Also called from seed.ts   |
-| `seed-console.ts`          | `npx tsx packages/db/src/seed-console.ts`          | Console base data: platform settings, agent defaults                                        | Super Admin setup          |
-| `seed-console-showcase.ts` | `npx tsx packages/db/src/seed-console-showcase.ts` | Console demo data: support cases, audit logs                                                | Console demos              |
-| `seed-content.ts`          | `npx tsx packages/db/src/seed-content.ts`          | 12 blog posts across 5 content pillars → ContentDraft records                               | Marketing content setup    |
+| Script                     | Command                                            | Purpose                                                                                     | When to Use                   |
+| -------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------- | ----------------------------- |
+| `seed.ts`                  | `npx tsx packages/db/src/seed.ts`                  | Base data: 3 businesses (aesthetic + dealership + wellness), staff, services, working hours | Fresh database setup, CI      |
+| `seed-demo.ts`             | `npx tsx packages/db/src/seed-demo.ts`             | Rich demo data: bookings, customers, conversations, action cards                            | Demo environments, testing    |
+| `seed-agentic.ts`          | `npx tsx packages/db/src/seed-agentic.ts`          | Agentic framework data: agent configs, agent runs, action cards, autonomy configs           | One-time production fill      |
+| `seed-wellness.ts`         | `npx tsx packages/db/src/seed-wellness.ts`         | Wellness vertical: packages, memberships, intake data                                       | Also called from seed.ts      |
+| `seed-console.ts`          | `npx tsx packages/db/src/seed-console.ts`          | Console base data: platform settings, agent defaults                                        | Super Admin setup             |
+| `seed-console-showcase.ts` | `npx tsx packages/db/src/seed-console-showcase.ts` | Console demo data: support cases, audit logs                                                | Console demos                 |
+| `seed-content.ts`          | `npx tsx packages/db/src/seed-content.ts`          | 12 blog posts across 5 content pillars → ContentDraft records                               | Marketing content setup       |
 | `seed-instagram.ts`        | `npx tsx packages/db/src/seed-instagram.ts`        | 4 Instagram DM conversations (story reply, ad referral, ice breaker, expiring window)       | Instagram integration testing |
-| `seed-omnichannel.ts`      | `npx tsx packages/db/src/seed-omnichannel.ts`      | Multi-channel customers, MessageUsage (7 days), channelSettings for all demo businesses     | Omnichannel foundation setup |
+| `seed-omnichannel.ts`      | `npx tsx packages/db/src/seed-omnichannel.ts`      | Multi-channel customers, MessageUsage (7 days), channelSettings for all demo businesses     | Omnichannel foundation setup  |
 
 ---
 

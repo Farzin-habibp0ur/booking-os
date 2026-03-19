@@ -117,7 +117,11 @@ export default function EmailChannelSettingsPage() {
     }
   };
 
-  const handleSaveLocation = async (locationId: string, inboundAddress: string, enabled: boolean) => {
+  const handleSaveLocation = async (
+    locationId: string,
+    inboundAddress: string,
+    enabled: boolean,
+  ) => {
     setLocationSaveStatus((prev) => ({ ...prev, [locationId]: 'idle' }));
     try {
       await api.patch(`/locations/${locationId}`, {
@@ -519,11 +523,7 @@ export default function EmailChannelSettingsPage() {
               data-testid="test-send-button"
               className="inline-flex items-center gap-2 bg-sage-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-sage-700 transition-colors disabled:opacity-50"
             >
-              {testSending ? (
-                <Loader2 size={14} className="animate-spin" />
-              ) : (
-                <Send size={14} />
-              )}
+              {testSending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
               {t('emailChannel.test_send_button')}
             </button>
 
@@ -555,9 +555,7 @@ function LocationEmailRow({
   onSave: (locationId: string, inboundAddress: string, enabled: boolean) => void;
 }) {
   const { t } = useI18n();
-  const [inboundAddress, setInboundAddress] = useState(
-    location.emailConfig?.inboundAddress || '',
-  );
+  const [inboundAddress, setInboundAddress] = useState(location.emailConfig?.inboundAddress || '');
   const [enabled, setEnabled] = useState(location.emailConfig?.enabled || false);
 
   return (

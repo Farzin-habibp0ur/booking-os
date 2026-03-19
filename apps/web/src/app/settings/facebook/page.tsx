@@ -41,9 +41,7 @@ export default function FacebookSettingsPage() {
   const [pageId, setPageId] = useState('');
   const [pageAccessToken, setPageAccessToken] = useState('');
   const [testingConnection, setTestingConnection] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<
-    'idle' | 'connected' | 'failed'
-  >('idle');
+  const [connectionStatus, setConnectionStatus] = useState<'idle' | 'connected' | 'failed'>('idle');
   const [connectedPageName, setConnectedPageName] = useState('');
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saved' | 'error'>('idle');
@@ -58,9 +56,7 @@ export default function FacebookSettingsPage() {
   // Ice breakers state
   const [iceBreakers, setIceBreakers] = useState<IceBreaker[]>([]);
   const [savingIceBreakers, setSavingIceBreakers] = useState(false);
-  const [iceBreakersStatus, setIceBreakersStatus] = useState<
-    'idle' | 'saved' | 'error'
-  >('idle');
+  const [iceBreakersStatus, setIceBreakersStatus] = useState<'idle' | 'saved' | 'error'>('idle');
 
   useEffect(() => {
     // Fetch business Facebook settings
@@ -158,11 +154,7 @@ export default function FacebookSettingsPage() {
     setIceBreakers(iceBreakers.filter((_, i) => i !== index));
   };
 
-  const handleIceBreakerChange = (
-    index: number,
-    field: 'question' | 'payload',
-    value: string,
-  ) => {
+  const handleIceBreakerChange = (index: number, field: 'question' | 'payload', value: string) => {
     const updated = [...iceBreakers];
     updated[index] = { ...updated[index], [field]: value };
     setIceBreakers(updated);
@@ -202,9 +194,7 @@ export default function FacebookSettingsPage() {
           {t('facebook.title')}
         </h1>
       </div>
-      <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
-        {t('facebook.description')}
-      </p>
+      <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">{t('facebook.description')}</p>
 
       {/* Section 1: Page Connection */}
       <div
@@ -281,11 +271,7 @@ export default function FacebookSettingsPage() {
               disabled={saving}
               className="inline-flex items-center gap-2 bg-sage-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-sage-700 transition-colors disabled:opacity-50"
             >
-              {saving ? (
-                <Loader2 size={14} className="animate-spin" />
-              ) : (
-                <Save size={14} />
-              )}
+              {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
               {t('facebook.save')}
             </button>
 
@@ -400,9 +386,7 @@ export default function FacebookSettingsPage() {
                   <input
                     type="text"
                     value={ib.question}
-                    onChange={(e) =>
-                      handleIceBreakerChange(index, 'question', e.target.value)
-                    }
+                    onChange={(e) => handleIceBreakerChange(index, 'question', e.target.value)}
                     placeholder={t('facebook.ice_breaker_question')}
                     data-testid={`ice-breaker-question-${index}`}
                     className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-sage-500 focus:border-transparent outline-none"
@@ -410,9 +394,7 @@ export default function FacebookSettingsPage() {
                   <input
                     type="text"
                     value={ib.payload}
-                    onChange={(e) =>
-                      handleIceBreakerChange(index, 'payload', e.target.value)
-                    }
+                    onChange={(e) => handleIceBreakerChange(index, 'payload', e.target.value)}
                     placeholder={t('facebook.ice_breaker_payload')}
                     data-testid={`ice-breaker-payload-${index}`}
                     className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-sage-500 focus:border-transparent outline-none"
@@ -441,9 +423,7 @@ export default function FacebookSettingsPage() {
             {t('facebook.add_ice_breaker')}
           </button>
           {iceBreakers.length >= 4 && (
-            <span className="text-xs text-slate-400">
-              {t('facebook.max_ice_breakers')}
-            </span>
+            <span className="text-xs text-slate-400">{t('facebook.max_ice_breakers')}</span>
           )}
         </div>
 
@@ -486,34 +466,21 @@ function LocationFacebookRow({
 }: {
   location: Location;
   saveStatus: 'idle' | 'saved' | 'error';
-  onSave: (
-    locationId: string,
-    pageId: string,
-    accessToken: string,
-    enabled: boolean,
-  ) => void;
+  onSave: (locationId: string, pageId: string, accessToken: string, enabled: boolean) => void;
 }) {
   const { t } = useI18n();
-  const [locPageId, setLocPageId] = useState(
-    location.facebookConfig?.pageId || '',
-  );
+  const [locPageId, setLocPageId] = useState(location.facebookConfig?.pageId || '');
   const [locAccessToken, setLocAccessToken] = useState(
     location.facebookConfig?.pageAccessToken || '',
   );
-  const [enabled, setEnabled] = useState(
-    location.facebookConfig?.enabled || false,
-  );
+  const [enabled, setEnabled] = useState(location.facebookConfig?.enabled || false);
 
   return (
     <div className="border border-slate-200 dark:border-slate-700 rounded-xl p-4">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-medium text-slate-900 dark:text-white">
-          {location.name}
-        </h3>
+        <h3 className="text-sm font-medium text-slate-900 dark:text-white">{location.name}</h3>
         <label className="inline-flex items-center gap-2 cursor-pointer">
-          <span className="text-xs text-slate-500">
-            {t('facebook.location_enabled')}
-          </span>
+          <span className="text-xs text-slate-500">{t('facebook.location_enabled')}</span>
           <button
             role="switch"
             aria-checked={enabled}

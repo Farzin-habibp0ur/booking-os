@@ -165,7 +165,11 @@ export class WebhookController {
     }
 
     const channel =
-      channelOverride || emailContext?.channel || facebookContext?.channel || instagramContext?.channel || 'WHATSAPP';
+      channelOverride ||
+      emailContext?.channel ||
+      facebookContext?.channel ||
+      instagramContext?.channel ||
+      'WHATSAPP';
 
     // Route to Location → Business
     let business;
@@ -193,9 +197,7 @@ export class WebhookController {
         business = await this.prisma.business.findUnique({
           where: { id: location.businessId },
         });
-        this.logger.log(
-          `Routed Facebook message to location "${location.name}" (${location.id})`,
-        );
+        this.logger.log(`Routed Facebook message to location "${location.name}" (${location.id})`);
       }
     } else if (emailContext?.toEmail) {
       // Email routing: lookup Location by emailConfig.inboundAddress
@@ -267,7 +269,8 @@ export class WebhookController {
     );
 
     // Determine metadata from the appropriate context
-    const contextMetadata = emailContext?.metadata || facebookContext?.metadata || instagramContext?.metadata;
+    const contextMetadata =
+      emailContext?.metadata || facebookContext?.metadata || instagramContext?.metadata;
 
     let message;
     try {
@@ -594,10 +597,7 @@ export class WebhookController {
 
   /** Facebook Messenger inbound messages */
   @Post('facebook')
-  async facebookInbound(
-    @Body() payload: any,
-    @Headers('x-hub-signature-256') signature?: string,
-  ) {
+  async facebookInbound(@Body() payload: any, @Headers('x-hub-signature-256') signature?: string) {
     const secret = this.configService.get<string>('FACEBOOK_APP_SECRET');
     if (secret) {
       const raw = JSON.stringify(payload);
@@ -611,8 +611,7 @@ export class WebhookController {
     }
 
     const messages = FacebookProvider.parseInboundWebhook(payload);
-    const results: Array<{ externalId: string; status: 'processed' | 'duplicate' | 'error' }> =
-      [];
+    const results: Array<{ externalId: string; status: 'processed' | 'duplicate' | 'error' }> = [];
 
     for (const msg of messages) {
       try {

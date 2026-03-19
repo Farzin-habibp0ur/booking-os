@@ -27,20 +27,20 @@ Create detailed design specifications for visual assets needed by the content pi
 
 ## Schedule
 
-| Day | Time | Action |
-|-----|------|--------|
+| Day           | Time     | Action                                     |
+| ------------- | -------- | ------------------------------------------ |
 | Monday–Sunday | 10:30 AM | Process pending content that needs visuals |
 
 ---
 
 ## Inputs
 
-| Source | What to Process |
-|--------|----------------|
-| Pending queue | `queue/pending/` — content pieces needing visuals |
-| Social content | Items from Social Content Creator (P13) with visual descriptions |
-| Blog posts | Items from Blog Writer (P12) needing featured images |
-| Template library | `design-specs/template-library.md` — existing templates |
+| Source           | What to Process                                                  |
+| ---------------- | ---------------------------------------------------------------- |
+| Pending queue    | `queue/pending/` — content pieces needing visuals                |
+| Social content   | Items from Social Content Creator (P13) with visual descriptions |
+| Blog posts       | Items from Blog Writer (P12) needing featured images             |
+| Template library | `design-specs/template-library.md` — existing templates          |
 
 ---
 
@@ -48,20 +48,20 @@ Create detailed design specifications for visual assets needed by the content pi
 
 ### Colors
 
-| Element | Color | Hex |
-|---------|-------|-----|
-| Primary (Sage) | Green | `#8AA694` (500), `#71907C` (600) |
-| Accent (Lavender) | Purple | `#9F8ECB` (500), `#8A75BD` (600) |
-| Background | Off-white | `#FCFCFD` |
-| Text | Dark slate | `#1E293B` (800) |
-| Secondary text | Mid slate | `#64748B` (500) |
+| Element           | Color      | Hex                              |
+| ----------------- | ---------- | -------------------------------- |
+| Primary (Sage)    | Green      | `#8AA694` (500), `#71907C` (600) |
+| Accent (Lavender) | Purple     | `#9F8ECB` (500), `#8A75BD` (600) |
+| Background        | Off-white  | `#FCFCFD`                        |
+| Text              | Dark slate | `#1E293B` (800)                  |
+| Secondary text    | Mid slate  | `#64748B` (500)                  |
 
 ### Typography
 
-| Use | Font | Weight |
-|-----|------|--------|
-| Headlines | Playfair Display | Bold (700) |
-| Body / UI | Inter | Regular (400), Medium (500), Semibold (600) |
+| Use       | Font             | Weight                                      |
+| --------- | ---------------- | ------------------------------------------- |
+| Headlines | Playfair Display | Bold (700)                                  |
+| Body / UI | Inter            | Regular (400), Medium (500), Semibold (600) |
 
 ### Visual Style
 
@@ -80,14 +80,14 @@ Maintain `design-specs/template-library.md` with reusable templates:
 
 ### Template Categories
 
-| Category | Templates | Platforms |
-|----------|-----------|-----------|
-| **Tips & Tricks** | Single-tip card, multi-tip carousel | IG, LinkedIn |
-| **Feature Showcase** | Screenshot with callout, before/after split | IG, TikTok, LinkedIn |
-| **Data & Stats** | Stat card, chart visualization, infographic | IG, LinkedIn |
-| **Quote & Testimonial** | Quote card, testimonial with photo | IG, LinkedIn |
-| **Blog Featured Image** | Horizontal hero, text overlay on gradient | Blog |
-| **Carousel Slides** | Numbered slides, step-by-step, listicle | IG, LinkedIn |
+| Category                | Templates                                   | Platforms            |
+| ----------------------- | ------------------------------------------- | -------------------- |
+| **Tips & Tricks**       | Single-tip card, multi-tip carousel         | IG, LinkedIn         |
+| **Feature Showcase**    | Screenshot with callout, before/after split | IG, TikTok, LinkedIn |
+| **Data & Stats**        | Stat card, chart visualization, infographic | IG, LinkedIn         |
+| **Quote & Testimonial** | Quote card, testimonial with photo          | IG, LinkedIn         |
+| **Blog Featured Image** | Horizontal hero, text overlay on gradient   | Blog                 |
+| **Carousel Slides**     | Numbered slides, step-by-step, listicle     | IG, LinkedIn         |
 
 ---
 
@@ -116,18 +116,19 @@ Create file: `design-specs/[YYYY-MM-DD]-[PLATFORM]-[TITLE-SLUG].md`
 ## Layout
 
 [ASCII art layout or detailed description]
-
 ```
+
 ┌────────────────────────────┐
-│  [HEADLINE — Playfair 32]  │
-│                            │
-│  [BODY TEXT — Inter 16]    │
-│                            │
-│  [SCREENSHOT/IMAGE AREA]   │
-│                            │
-│  [CTA BUTTON — sage-600]   │
-│  [LOGO — bottom right]     │
+│ [HEADLINE — Playfair 32] │
+│ │
+│ [BODY TEXT — Inter 16] │
+│ │
+│ [SCREENSHOT/IMAGE AREA] │
+│ │
+│ [CTA BUTTON — sage-600] │
+│ [LOGO — bottom right] │
 └────────────────────────────┘
+
 ```
 
 ## Text Content
@@ -181,18 +182,21 @@ Create and maintain `design-specs/template-library.md`:
 ## Instagram Templates
 
 ### IG-001: Single Tip Card
+
 - **Dimensions:** 1080 × 1080 px
 - **Use for:** Quick tips, single insights
 - **Layout:** Sage gradient top → white bottom, large text center
 - **Elements:** Tip number badge, headline, 1-line explanation, BookingOS logo
 
 ### IG-002: Feature Carousel
+
 - **Dimensions:** 1080 × 1350 px (4:5)
 - **Slides:** Cover + 3-7 content slides + CTA slide
 - **Layout:** White background, screenshot center, text top/bottom
 - **Elements:** Slide number, feature name, screenshot, brief explanation
 
 ### IG-003: Stat Card
+
 - **Dimensions:** 1080 × 1080 px
 - **Use for:** Data points, statistics, results
 - **Layout:** Large number center (Playfair), context text below (Inter)
@@ -203,6 +207,7 @@ Create and maintain `design-specs/template-library.md`:
 ## TikTok Templates
 
 ### TK-001: Hook Text Overlay
+
 - **Dimensions:** 1080 × 1920 px (9:16)
 - **Use for:** First frame of any TikTok
 - **Layout:** Large bold text center, contrasting background
@@ -213,6 +218,7 @@ Create and maintain `design-specs/template-library.md`:
 ## LinkedIn Templates
 
 ### LI-001: Carousel Slide (PDF)
+
 - **Dimensions:** 1080 × 1080 px
 - **Use for:** Professional guides, frameworks
 - **Layout:** Clean white, sage accent bar left, numbered pages
@@ -223,6 +229,7 @@ Create and maintain `design-specs/template-library.md`:
 ## Blog Templates
 
 ### BG-001: Featured Image
+
 - **Dimensions:** 1200 × 630 px
 - **Use for:** Blog post hero image
 - **Layout:** Sage-to-lavender gradient, large title text
@@ -233,18 +240,18 @@ Create and maintain `design-specs/template-library.md`:
 
 ## Interaction with Other Agents
 
-| Agent | Relationship |
-|-------|-------------|
-| **Blog Writer** (P12) | Creates featured images for blog posts |
+| Agent                            | Relationship                                     |
+| -------------------------------- | ------------------------------------------------ |
+| **Blog Writer** (P12)            | Creates featured images for blog posts           |
 | **Social Content Creator** (P13) | Creates visuals from social content descriptions |
-| **Video Producer** (P15) | Provides thumbnail designs for videos |
-| **Publisher** (P16) | Attaches your specs to content for publishing |
-| **Spanish Localization** (P20) | May need localized versions of designs |
+| **Video Producer** (P15)         | Provides thumbnail designs for videos            |
+| **Publisher** (P16)              | Attaches your specs to content for publishing    |
+| **Spanish Localization** (P20)   | May need localized versions of designs           |
 
 ---
 
 ## Change Log
 
-| Date | Change |
-|------|--------|
+| Date       | Change           |
+| ---------- | ---------------- |
 | 2026-03-12 | Initial creation |

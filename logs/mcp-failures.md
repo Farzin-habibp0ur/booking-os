@@ -11,7 +11,7 @@
 Each failure entry:
 
 | Date | Time | Server | Error Type | Response | Fallback Used | Agent Affected |
-|------|------|--------|-----------|----------|---------------|---------------|
+| ---- | ---- | ------ | ---------- | -------- | ------------- | -------------- |
 
 ---
 
@@ -29,6 +29,6 @@ _No failures recorded yet._
 
 ## Change Log
 
-| Date | Change |
-|------|--------|
+| Date       | Change           |
+| ---------- | ---------------- |
 | 2026-03-12 | Initial creation |

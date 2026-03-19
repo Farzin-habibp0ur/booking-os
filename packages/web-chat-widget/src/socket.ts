@@ -8,18 +8,13 @@ export class ChatSocket {
   private sessionToken: string | null = null;
   private callbacks: ChatSocketCallbacks;
 
-  constructor(
-    config: { apiUrl: string; businessId: string },
-    callbacks: ChatSocketCallbacks,
-  ) {
+  constructor(config: { apiUrl: string; businessId: string }, callbacks: ChatSocketCallbacks) {
     this.config = config;
     this.callbacks = callbacks;
 
     // Restore session token from localStorage if available
     try {
-      this.sessionToken = localStorage.getItem(
-        `bos_chat_session_${config.businessId}`,
-      );
+      this.sessionToken = localStorage.getItem(`bos_chat_session_${config.businessId}`);
     } catch {
       // localStorage may not be available
     }
@@ -65,12 +60,10 @@ export class ChatSocket {
       script.onerror = () => {
         // Fallback to CDN
         const cdnScript = document.createElement('script');
-        cdnScript.src =
-          'https://cdn.socket.io/4.7.5/socket.io.min.js';
+        cdnScript.src = 'https://cdn.socket.io/4.7.5/socket.io.min.js';
         cdnScript.async = true;
         cdnScript.onload = () => resolve();
-        cdnScript.onerror = () =>
-          reject(new Error('Failed to load socket.io client'));
+        cdnScript.onerror = () => reject(new Error('Failed to load socket.io client'));
         document.head.appendChild(cdnScript);
       };
       document.head.appendChild(script);
@@ -84,18 +77,18 @@ export class ChatSocket {
       // Connection established
     });
 
-    this.socket.on('session:created', (data: { sessionId: string; sessionToken: string; businessName: string }) => {
-      this.sessionToken = data.sessionToken;
-      try {
-        localStorage.setItem(
-          `bos_chat_session_${this.config.businessId}`,
-          data.sessionToken,
-        );
-      } catch {
-        // localStorage may not be available
-      }
-      this.callbacks.onSessionCreated(data);
-    });
+    this.socket.on(
+      'session:created',
+      (data: { sessionId: string; sessionToken: string; businessName: string }) => {
+        this.sessionToken = data.sessionToken;
+        try {
+          localStorage.setItem(`bos_chat_session_${this.config.businessId}`, data.sessionToken);
+        } catch {
+          // localStorage may not be available
+        }
+        this.callbacks.onSessionCreated(data);
+      },
+    );
 
     this.socket.on('chat:started', (data: { conversationId: string }) => {
       this.callbacks.onChatStarted(data);

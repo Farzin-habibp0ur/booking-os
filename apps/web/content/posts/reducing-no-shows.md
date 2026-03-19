@@ -1,10 +1,10 @@
 ---
-title: "How One Clinic Reduced No-Shows by 60% with Smart Automation"
-description: "A case study on how automated reminders, deposit collection, and waitlist management helped an aesthetic clinic dramatically reduce missed appointments."
-date: "2026-03-01"
-category: "Customer Success"
-author: "Booking OS Team"
-readTime: "4 min read"
+title: 'How One Clinic Reduced No-Shows by 60% with Smart Automation'
+description: 'A case study on how automated reminders, deposit collection, and waitlist management helped an aesthetic clinic dramatically reduce missed appointments.'
+date: '2026-03-01'
+category: 'Customer Success'
+author: 'Booking OS Team'
+readTime: '4 min read'
 ---
 
 No-shows are the silent revenue killer for service businesses. For aesthetic clinics, where appointment slots often represent hundreds of dollars in potential revenue, even a modest no-show rate can significantly impact the bottom line.

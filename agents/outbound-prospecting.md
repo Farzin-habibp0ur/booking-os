@@ -30,9 +30,9 @@ Identify and qualify warm outbound prospects for BookingOS through research-firs
 
 ## Schedule
 
-| Day | Time | Action |
-|-----|------|--------|
-| Monday | 8:00 AM | Research + prospect batch 1 |
+| Day      | Time    | Action                      |
+| -------- | ------- | --------------------------- |
+| Monday   | 8:00 AM | Research + prospect batch 1 |
 | Thursday | 8:00 AM | Research + prospect batch 2 |
 
 ---
@@ -41,12 +41,12 @@ Identify and qualify warm outbound prospects for BookingOS through research-firs
 
 ### Primary Targets
 
-| Vertical | Business Type | Size | Signals |
-|----------|-------------|------|---------|
-| **Aesthetic** | Med spas, aesthetic clinics, dermatology practices | 1-20 staff | Online booking pain, manual scheduling, no-show complaints |
-| **Wellness** | Day spas, massage studios, yoga studios, fitness studios | 1-15 staff | Paper-based booking, no online presence, growing client base |
-| **Dealership** | Independent auto dealerships, service centers | 5-50 staff | Manual service scheduling, no digital intake |
-| **General** | Salons, barbershops, nail studios, tattoo studios | 1-10 staff | Using phone/SMS for bookings, no dedicated software |
+| Vertical       | Business Type                                            | Size       | Signals                                                      |
+| -------------- | -------------------------------------------------------- | ---------- | ------------------------------------------------------------ |
+| **Aesthetic**  | Med spas, aesthetic clinics, dermatology practices       | 1-20 staff | Online booking pain, manual scheduling, no-show complaints   |
+| **Wellness**   | Day spas, massage studios, yoga studios, fitness studios | 1-15 staff | Paper-based booking, no online presence, growing client base |
+| **Dealership** | Independent auto dealerships, service centers            | 5-50 staff | Manual service scheduling, no digital intake                 |
+| **General**    | Salons, barbershops, nail studios, tattoo studios        | 1-10 staff | Using phone/SMS for bookings, no dedicated software          |
 
 ### Disqualifiers
 
@@ -61,13 +61,13 @@ Identify and qualify warm outbound prospects for BookingOS through research-firs
 
 Score each prospect 0-100:
 
-| Factor | Weight | Score Range | How to Evaluate |
-|--------|--------|-------------|-----------------|
-| **ICP Fit** | 30% | 0-100 | How well does this match our target vertical/size? |
-| **Pain Signal** | 25% | 0-100 | Evidence of booking/scheduling pain (reviews, social posts, website analysis) |
-| **Digital Maturity** | 20% | 0-100 | Low = more opportunity (no online booking = pain point we solve) |
-| **Engagement Potential** | 15% | 0-100 | Active on social media, responds to comments, engaged community |
-| **Growth Signals** | 10% | 0-100 | Hiring, expanding, new location, positive reviews trending up |
+| Factor                   | Weight | Score Range | How to Evaluate                                                               |
+| ------------------------ | ------ | ----------- | ----------------------------------------------------------------------------- |
+| **ICP Fit**              | 30%    | 0-100       | How well does this match our target vertical/size?                            |
+| **Pain Signal**          | 25%    | 0-100       | Evidence of booking/scheduling pain (reviews, social posts, website analysis) |
+| **Digital Maturity**     | 20%    | 0-100       | Low = more opportunity (no online booking = pain point we solve)              |
+| **Engagement Potential** | 15%    | 0-100       | Active on social media, responds to comments, engaged community               |
+| **Growth Signals**       | 10%    | 0-100       | Hiring, expanding, new location, positive reviews trending up                 |
 
 **Formula:** `Score = (ICP × 0.30) + (Pain × 0.25) + (Digital × 0.20) + (Engagement × 0.15) + (Growth × 0.10)`
 
@@ -80,6 +80,7 @@ Score each prospect 0-100:
 ### Step 1: Prospect Discovery (Vibe Prospecting MCP)
 
 Use Vibe Prospecting MCP to find businesses matching ICP:
+
 - Search by vertical + location + size
 - Filter by signals (no online booking, manual processes)
 - Enrich with business details (website, social profiles, reviews)
@@ -87,6 +88,7 @@ Use Vibe Prospecting MCP to find businesses matching ICP:
 ### Step 2: Deep Research (Firecrawl MCP + Manual)
 
 For each discovered prospect:
+
 1. **Website analysis:** Do they have online booking? What tools do they use? Is the site modern or outdated?
 2. **Review analysis:** Google/Yelp reviews mentioning scheduling issues, long wait times, communication problems
 3. **Social presence:** Instagram/TikTok/LinkedIn activity, engagement rate, content quality
@@ -96,19 +98,20 @@ For each discovered prospect:
 
 For each prospect, identify specific pain points we can solve:
 
-| Pain Point | BookingOS Solution | Evidence |
-|-----------|-------------------|----------|
-| No online booking | Public booking portal | "Call to book" on website |
-| No-show problem | Automated reminders | Reviews mentioning missed appointments |
-| Manual scheduling | AI scheduling assistant | Phone-based booking process |
-| No client communication | WhatsApp integration | No messaging visible on site |
-| No analytics | Reports dashboard | No visible metrics/tracking |
+| Pain Point              | BookingOS Solution      | Evidence                               |
+| ----------------------- | ----------------------- | -------------------------------------- |
+| No online booking       | Public booking portal   | "Call to book" on website              |
+| No-show problem         | Automated reminders     | Reviews mentioning missed appointments |
+| Manual scheduling       | AI scheduling assistant | Phone-based booking process            |
+| No client communication | WhatsApp integration    | No messaging visible on site           |
+| No analytics            | Reports dashboard       | No visible metrics/tracking            |
 
 ### Step 4: Value-First Outreach Draft
 
 Create personalized outreach that leads with value:
 
 **Outreach Philosophy:**
+
 1. **Research** — Show you know their business
 2. **Insight** — Share something useful they didn't know
 3. **Value** — Offer something free (tip, template, benchmark)
@@ -188,10 +191,11 @@ Create file: `queue/pending/[YYYY-MM-DD]-YELLOW-outbound-en-prospecting.md`
 
 ## Batch Summary
 
-| # | Business | Vertical | Score | Pain Point | Outreach Template |
-|---|----------|----------|-------|-----------|------------------|
-| 1 | [name] | [vertical] | [score] | [primary pain] | [template #] |
-| 2 | [name] | [vertical] | [score] | [primary pain] | [template #] |
+| #   | Business | Vertical   | Score   | Pain Point     | Outreach Template |
+| --- | -------- | ---------- | ------- | -------------- | ----------------- |
+| 1   | [name]   | [vertical] | [score] | [primary pain] | [template #]      |
+| 2   | [name]   | [vertical] | [score] | [primary pain] | [template #]      |
+
 ...
 
 ---
@@ -201,6 +205,7 @@ Create file: `queue/pending/[YYYY-MM-DD]-YELLOW-outbound-en-prospecting.md`
 ### Prospect 1: [Business Name]
 
 **Basic Info:**
+
 - Business: [name]
 - Vertical: [aesthetic/wellness/dealership/general]
 - Location: [city, state/country]
@@ -209,22 +214,26 @@ Create file: `queue/pending/[YYYY-MM-DD]-YELLOW-outbound-en-prospecting.md`
 - Social: [IG/TikTok/LinkedIn profiles]
 
 **Score:** [X]/100
+
 - ICP Fit: [X] | Pain Signal: [X] | Digital Maturity: [X] | Engagement: [X] | Growth: [X]
 
 **Research Findings:**
+
 - Website: [observations]
 - Reviews: [key review insights]
 - Social: [activity level, content type]
 - Current tools: [what they're using now]
 
 **Pain Points Identified:**
+
 1. [Pain point] → BookingOS solves with [feature]
 2. [Pain point] → BookingOS solves with [feature]
 
 **Personalized Outreach:**
-
 ```
+
 [Full personalized outreach message using appropriate template]
+
 ```
 
 **Channel:** Email / LinkedIn DM / Instagram DM
@@ -261,11 +270,11 @@ Create file: `queue/pending/[YYYY-MM-DD]-YELLOW-outbound-en-prospecting.md`
 
 Per `system/mcp-fallback-config.md`:
 
-| Scenario | Action |
-|----------|--------|
-| Vibe Prospecting MCP down | **HALT** — do NOT prospect without verified data |
-| Firecrawl MCP down | Reduce research depth, flag prospects as `[LIMITED-RESEARCH]` |
-| Both MCPs down | **HALT completely** — skip this batch, log reason |
+| Scenario                  | Action                                                        |
+| ------------------------- | ------------------------------------------------------------- |
+| Vibe Prospecting MCP down | **HALT** — do NOT prospect without verified data              |
+| Firecrawl MCP down        | Reduce research depth, flag prospects as `[LIMITED-RESEARCH]` |
+| Both MCPs down            | **HALT completely** — skip this batch, log reason             |
 
 **Critical:** Never send outreach based on unverified prospect data.
 
@@ -284,17 +293,17 @@ Per `system/mcp-fallback-config.md`:
 
 ## Interaction with Other Agents
 
-| Agent | Relationship |
-|-------|-------------|
-| **Trend Scout** (P9) | Industry trends can inform outreach personalization |
-| **Content Strategist** (P11) | Your prospect research informs content targeting |
-| **Performance Analyst** (P18) | Tracks outreach response rates |
-| **Learning Engine** (P19) | Optimizes outreach templates based on response data |
+| Agent                         | Relationship                                        |
+| ----------------------------- | --------------------------------------------------- |
+| **Trend Scout** (P9)          | Industry trends can inform outreach personalization |
+| **Content Strategist** (P11)  | Your prospect research informs content targeting    |
+| **Performance Analyst** (P18) | Tracks outreach response rates                      |
+| **Learning Engine** (P19)     | Optimizes outreach templates based on response data |
 
 ---
 
 ## Change Log
 
-| Date | Change |
-|------|--------|
+| Date       | Change           |
+| ---------- | ---------------- |
 | 2026-03-12 | Initial creation |

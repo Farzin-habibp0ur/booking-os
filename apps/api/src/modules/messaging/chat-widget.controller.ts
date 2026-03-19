@@ -43,9 +43,7 @@ export class ChatWidgetController {
       this.logger.warn(`Widget file not found at ${widgetPath}`);
       res
         .status(404)
-        .send(
-          '// Widget not built. Run: cd packages/web-chat-widget && npm run build',
-        );
+        .send('// Widget not built. Run: cd packages/web-chat-widget && npm run build');
     }
   }
 }

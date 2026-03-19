@@ -57,12 +57,7 @@ const mockLocation = {
   facebookConfig: { pageId: 'PAGE_ABC', pageAccessToken: 'token123', enabled: true },
 };
 
-function buildFacebookPayload(
-  senderId: string,
-  text: string,
-  mid: string,
-  pageId = 'PAGE_ABC',
-) {
+function buildFacebookPayload(senderId: string, text: string, mid: string, pageId = 'PAGE_ABC') {
   return {
     object: 'page',
     entry: [
@@ -144,11 +139,7 @@ function buildFacebookPostbackPayload(
   };
 }
 
-function buildFacebookReferralPayload(
-  senderId: string,
-  adId: string,
-  pageId = 'PAGE_ABC',
-) {
+function buildFacebookReferralPayload(senderId: string, adId: string, pageId = 'PAGE_ABC') {
   return {
     object: 'page',
     entry: [
@@ -331,7 +322,11 @@ describe('Facebook Integration Tests', () => {
     it('should process text message: resolve customer by facebookPsid → create conversation with channel=FACEBOOK → store message', async () => {
       setupHappyPath();
 
-      const payload = buildFacebookPayload('PSID_123456', 'Hello from Messenger', 'mid.facebook123');
+      const payload = buildFacebookPayload(
+        'PSID_123456',
+        'Hello from Messenger',
+        'mid.facebook123',
+      );
       const result = await controller.facebookInbound(payload);
 
       expect(result.status).toBe('EVENT_RECEIVED');
@@ -565,9 +560,7 @@ describe('Facebook Integration Tests', () => {
       const mockFbProvider = {
         name: 'facebook',
         sendMessage: jest.fn(),
-        sendHumanAgentMessage: jest
-          .fn()
-          .mockResolvedValue({ externalId: 'mid.human123' }),
+        sendHumanAgentMessage: jest.fn().mockResolvedValue({ externalId: 'mid.human123' }),
       };
       messagingService.getProviderForConversation.mockReturnValue(mockFbProvider);
 
@@ -643,8 +636,7 @@ describe('Facebook Integration Tests', () => {
         facebookPsid: 'PSID_EXISTING',
         name: 'PSID_EXISTING',
       });
-      const resolvedCustomer =
-        await customerIdentityService.resolveCustomer.mock.results[0].value;
+      const resolvedCustomer = await customerIdentityService.resolveCustomer.mock.results[0].value;
       expect(resolvedCustomer.facebookPsid).toBe('PSID_EXISTING');
     });
 
@@ -666,12 +658,9 @@ describe('Facebook Integration Tests', () => {
       });
       (prisma.conversation.update as jest.Mock).mockResolvedValue(mockUpdatedConversation);
 
-      await controller.facebookInbound(
-        buildFacebookPayload('PSID_MULTI', 'Hello', 'mid.multi'),
-      );
+      await controller.facebookInbound(buildFacebookPayload('PSID_MULTI', 'Hello', 'mid.multi'));
 
-      const resolvedCustomer =
-        await customerIdentityService.resolveCustomer.mock.results[0].value;
+      const resolvedCustomer = await customerIdentityService.resolveCustomer.mock.results[0].value;
       expect(resolvedCustomer.facebookPsid).toBe('PSID_MULTI');
       expect(resolvedCustomer.phone).toBe('+14155557777');
     });
@@ -733,11 +722,7 @@ describe('Facebook Integration Tests', () => {
       });
       setupHappyPath();
 
-      const payload = buildFacebookPayload(
-        'PSID_123456',
-        'Signed message',
-        'mid.signed',
-      );
+      const payload = buildFacebookPayload('PSID_123456', 'Signed message', 'mid.signed');
       const signature = buildFacebookHmacSignature(appSecret, payload);
 
       const result = await controller.facebookInbound(payload, signature);
@@ -754,11 +739,7 @@ describe('Facebook Integration Tests', () => {
         return config[key] ?? defaultValue;
       });
 
-      const payload = buildFacebookPayload(
-        'PSID_123456',
-        'Bad sig message',
-        'mid.badsig',
-      );
+      const payload = buildFacebookPayload('PSID_123456', 'Bad sig message', 'mid.badsig');
 
       await expect(
         controller.facebookInbound(payload, 'sha256=invalid-signature-hex'),
@@ -794,9 +775,7 @@ describe('Facebook Integration Tests', () => {
       const mockFbProvider = {
         name: 'facebook',
         sendMessage: jest.fn(),
-        sendHumanAgentMessage: jest
-          .fn()
-          .mockResolvedValue({ externalId: 'mid.humanagent' }),
+        sendHumanAgentMessage: jest.fn().mockResolvedValue({ externalId: 'mid.humanagent' }),
       };
       messagingService.getProviderForConversation.mockReturnValue(mockFbProvider);
 

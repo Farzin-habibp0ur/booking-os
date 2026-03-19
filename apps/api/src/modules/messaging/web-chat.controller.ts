@@ -1,11 +1,4 @@
-import {
-  Controller,
-  Get,
-  Put,
-  Body,
-  UseGuards,
-  Logger,
-} from '@nestjs/common';
+import { Controller, Get, Put, Body, UseGuards, Logger } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { TenantGuard } from '../../common/tenant.guard';
@@ -35,14 +28,12 @@ export class WebChatController {
     return {
       primaryColor: settings.webChat?.primaryColor || '#71907C',
       title: settings.webChat?.title || 'Chat with us',
-      subtitle:
-        settings.webChat?.subtitle || 'We typically reply within minutes',
+      subtitle: settings.webChat?.subtitle || 'We typically reply within minutes',
       placeholder: settings.webChat?.placeholder || 'Type a message...',
       position: settings.webChat?.position || 'bottom-right',
       preChatFields: settings.webChat?.preChatFields || ['name', 'email'],
       offlineMessage:
-        settings.webChat?.offlineMessage ||
-        'We are currently offline. Leave us a message!',
+        settings.webChat?.offlineMessage || 'We are currently offline. Leave us a message!',
       showOfflineForm: settings.webChat?.showOfflineForm !== false,
     };
   }

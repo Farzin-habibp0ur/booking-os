@@ -108,15 +108,23 @@ describe('ReplyChannelSwitcher', () => {
     fireEvent.click(screen.getByTestId('reply-channel-switcher'));
     const options = screen.getAllByRole('option');
     expect(options).toHaveLength(3);
-    expect(screen.getByTestId('reply-channel-option-whatsapp')).toHaveAttribute('aria-selected', 'true');
-    expect(screen.getByTestId('reply-channel-option-instagram')).toHaveAttribute('aria-selected', 'false');
+    expect(screen.getByTestId('reply-channel-option-whatsapp')).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    expect(screen.getByTestId('reply-channel-option-instagram')).toHaveAttribute(
+      'aria-selected',
+      'false',
+    );
   });
 
   it('should close dropdown on Escape key', () => {
     render(<ReplyChannelSwitcher {...defaultProps} />);
     fireEvent.click(screen.getByTestId('reply-channel-switcher'));
     expect(screen.getByTestId('reply-channel-option-whatsapp')).toBeInTheDocument();
-    fireEvent.keyDown(screen.getByTestId('reply-channel-switcher').parentElement!, { key: 'Escape' });
+    fireEvent.keyDown(screen.getByTestId('reply-channel-switcher').parentElement!, {
+      key: 'Escape',
+    });
     expect(screen.queryByTestId('reply-channel-option-whatsapp')).not.toBeInTheDocument();
   });
 

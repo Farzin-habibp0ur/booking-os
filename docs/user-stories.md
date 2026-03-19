@@ -8,13 +8,13 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 
 ## Personas
 
-| Persona                      | Description                                                                         | Role             |
-| ---------------------------- | ----------------------------------------------------------------------------------- | ---------------- |
-| **Admin**                    | Business owner / manager. Full access to all features.                              | ADMIN            |
-| **Service Provider**         | Staff who performs services (stylist, technician, doctor). Limited to own schedule. | SERVICE_PROVIDER |
-| **Agent**                    | Front desk / reception. Manages bookings and conversations.                         | AGENT            |
-| **Customer (Authenticated)** | End customer using self-serve links (reschedule, cancel, claim, quote). No login.   | Token-based      |
-| **Customer (Public)**        | Visitor to the public booking portal. No auth required.                             | None             |
+| Persona                      | Description                                                                           | Role             |
+| ---------------------------- | ------------------------------------------------------------------------------------- | ---------------- |
+| **Admin**                    | Business owner / manager. Full access to all features.                                | ADMIN            |
+| **Service Provider**         | Staff who performs services (stylist, technician, doctor). Limited to own schedule.   | SERVICE_PROVIDER |
+| **Agent**                    | Front desk / reception. Manages bookings and conversations.                           | AGENT            |
+| **Customer (Authenticated)** | End customer using self-serve links (reschedule, cancel, claim, quote). No login.     | Token-based      |
+| **Customer (Public)**        | Visitor to the public booking portal. No auth required.                               | None             |
 | **Super Admin**              | Platform-wide admin for pack management, billing, audit, and multi-tenant operations. | SUPER_ADMIN      |
 
 ---
@@ -58,22 +58,22 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 
 ### What Users CAN Do
 
-| #    | Story                                                      | Persona | Notes                                                          |
-| ---- | ---------------------------------------------------------- | ------- | -------------------------------------------------------------- |
-| 2.1  | Choose vertical pack (Aesthetic, Wellness, or General) during setup   | Admin   | Installs default services, templates, profile fields           |
-| 2.2  | Set business name, timezone, and currency                  | Admin   | —                                                              |
-| 2.3  | Connect WhatsApp (placeholder)                             | Admin   | UI exists but actual connection requires Meta portal setup     |
-| 2.4  | Invite staff members by email during setup                 | Admin   | Sends invitation link                                          |
-| 2.5  | Define services (name, duration, price, category)          | Admin   | —                                                              |
-| 2.6  | Configure working hours per staff member per day           | Admin   | —                                                              |
-| 2.7  | View installed message templates                           | Admin   | Read-only in setup                                             |
-| 2.8  | Configure required profile fields (medical flags, intake)  | Admin   | Saves to packConfig                                            |
-| 2.9  | Import customers via CSV upload (name, phone, email, tags) | Admin   | Max 2MB, 5000 rows, RFC 4180                                   |
-| 2.10 | Import customers from existing conversations               | Admin   | —                                                              |
-| 2.11 | Create a test booking to verify setup                      | Admin   | —                                                              |
-| 2.12 | View setup readiness checklist                             | Admin   | Tracks: staff, services, templates, notifications, hours, pack |
-| 2.13 | Skip setup steps                                           | Admin   | —                                                              |
-| 2.14 | Mark setup as complete                                     | Admin   | Hides checklist on dashboard                                   |
+| #    | Story                                                               | Persona | Notes                                                          |
+| ---- | ------------------------------------------------------------------- | ------- | -------------------------------------------------------------- |
+| 2.1  | Choose vertical pack (Aesthetic, Wellness, or General) during setup | Admin   | Installs default services, templates, profile fields           |
+| 2.2  | Set business name, timezone, and currency                           | Admin   | —                                                              |
+| 2.3  | Connect WhatsApp (placeholder)                                      | Admin   | UI exists but actual connection requires Meta portal setup     |
+| 2.4  | Invite staff members by email during setup                          | Admin   | Sends invitation link                                          |
+| 2.5  | Define services (name, duration, price, category)                   | Admin   | —                                                              |
+| 2.6  | Configure working hours per staff member per day                    | Admin   | —                                                              |
+| 2.7  | View installed message templates                                    | Admin   | Read-only in setup                                             |
+| 2.8  | Configure required profile fields (medical flags, intake)           | Admin   | Saves to packConfig                                            |
+| 2.9  | Import customers via CSV upload (name, phone, email, tags)          | Admin   | Max 2MB, 5000 rows, RFC 4180                                   |
+| 2.10 | Import customers from existing conversations                        | Admin   | —                                                              |
+| 2.11 | Create a test booking to verify setup                               | Admin   | —                                                              |
+| 2.12 | View setup readiness checklist                                      | Admin   | Tracks: staff, services, templates, notifications, hours, pack |
+| 2.13 | Skip setup steps                                                    | Admin   | —                                                              |
+| 2.14 | Mark setup as complete                                              | Admin   | Hides checklist on dashboard                                   |
 
 ### What Users CANNOT Do
 
@@ -92,53 +92,53 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 
 ### What Users CAN Do
 
-| #     | Story                                                                                 | Persona         | Notes                                                                |
-| ----- | ------------------------------------------------------------------------------------- | --------------- | -------------------------------------------------------------------- |
-| 3.1   | View bookings this week (count + trend)                                               | All staff       | —                                                                    |
-| 3.2   | View revenue over 30 days                                                             | All staff       | —                                                                    |
-| 3.3   | View total customer count                                                             | All staff       | —                                                                    |
-| 3.4   | View open conversation count                                                          | All staff       | —                                                                    |
-| 3.5   | View no-show rate                                                                     | All staff       | —                                                                    |
-| 3.6   | View average response time                                                            | All staff       | —                                                                    |
-| 3.7   | View consult-to-treatment conversion rate                                             | All staff       | Aesthetic vertical                                                   |
-| 3.8   | View booking status breakdown                                                         | All staff       | —                                                                    |
-| 3.9   | View waitlist backfill metrics                                                        | All staff       | If waitlist feature used                                             |
-| 3.10  | See "Attention Needed" items (deposit pending, overdue replies, tomorrow's schedule)  | All staff       | —                                                                    |
-| 3.11  | View today's appointments list                                                        | All staff       | —                                                                    |
-| 3.12  | View unassigned conversations                                                         | All staff       | —                                                                    |
-| 3.13  | See go-live checklist (first-time setup guidance)                                     | Admin           | Hidden after setup complete                                          |
-| 3.14  | Track "First 10 Bookings" milestone                                                   | Admin           | With nudge messages                                                  |
-| 3.15  | Dismiss nudge notifications                                                           | Admin           | —                                                                    |
-| 3.16  | See email verification banner and resend verification                                 | All staff       | If email not verified                                                |
-| 3.17  | View AI usage stats                                                                   | All staff       | —                                                                    |
-| 3.18  | Navigate to detailed views by clicking metrics                                        | All staff       | Links to bookings, inbox, etc.                                       |
-| 3.19a | View Daily Briefing feed with AI-generated action cards                               | Admin           | Grouped by: Urgent Today, Needs Approval, Opportunities, Maintenance |
-| 3.20a | Approve an action card from the briefing (e.g., "Send Reminder")                      | Admin           | Calls PATCH /action-cards/:id/approve                                |
-| 3.21a | Dismiss an action card from the briefing                                              | Admin           | Calls PATCH /action-cards/:id/dismiss                                |
-| 3.22a | See contextual CTA labels per card type (Send Reminder, Nudge Staff, Follow Up, etc.) | Admin           | Not generic "Approve"                                                |
-| 3.23a | See urgent count badge on Daily Briefing header                                       | Admin           | —                                                                    |
-| 3.24a | Refresh the briefing feed manually                                                    | Admin           | Refresh button                                                       |
-| 3.25a | See "All clear" empty state when no pending items                                     | Admin           | —                                                                    |
-| 3.26a | View pinned Saved Views as shortcut cards on dashboard                                | All staff       | —                                                                    |
-| 3.27a | See KPI strip + MyWork section (agent/provider modes)                                 | Agent, Provider | Mode-specific dashboard layout                                       |
-| 3.28a | See Today Timeline with time-positioned booking cards + quick actions (Start/Complete/No-Show/Chat) | All staff | TodayTimeline component replacing flat list (UX Upgrade Pack R2) |
-| 3.29a | Click actionable KPIs to navigate to relevant pages                                   | All staff       | KPI cards link to bookings/inbox/customers with action subtitles (UX Upgrade Pack R2) |
-| 3.30a | Snooze a briefing card for later (1h/4h/tomorrow/next week)                           | Admin           | Snooze dropdown on BriefingCard (UX Upgrade Pack R2) |
-| 3.31a | Expand briefing card to see details (booking info, staff, suggested action)            | Admin           | Expandable detail section on briefing cards (UX Upgrade Pack R2) |
+| #     | Story                                                                                               | Persona         | Notes                                                                                 |
+| ----- | --------------------------------------------------------------------------------------------------- | --------------- | ------------------------------------------------------------------------------------- |
+| 3.1   | View bookings this week (count + trend)                                                             | All staff       | —                                                                                     |
+| 3.2   | View revenue over 30 days                                                                           | All staff       | —                                                                                     |
+| 3.3   | View total customer count                                                                           | All staff       | —                                                                                     |
+| 3.4   | View open conversation count                                                                        | All staff       | —                                                                                     |
+| 3.5   | View no-show rate                                                                                   | All staff       | —                                                                                     |
+| 3.6   | View average response time                                                                          | All staff       | —                                                                                     |
+| 3.7   | View consult-to-treatment conversion rate                                                           | All staff       | Aesthetic vertical                                                                    |
+| 3.8   | View booking status breakdown                                                                       | All staff       | —                                                                                     |
+| 3.9   | View waitlist backfill metrics                                                                      | All staff       | If waitlist feature used                                                              |
+| 3.10  | See "Attention Needed" items (deposit pending, overdue replies, tomorrow's schedule)                | All staff       | —                                                                                     |
+| 3.11  | View today's appointments list                                                                      | All staff       | —                                                                                     |
+| 3.12  | View unassigned conversations                                                                       | All staff       | —                                                                                     |
+| 3.13  | See go-live checklist (first-time setup guidance)                                                   | Admin           | Hidden after setup complete                                                           |
+| 3.14  | Track "First 10 Bookings" milestone                                                                 | Admin           | With nudge messages                                                                   |
+| 3.15  | Dismiss nudge notifications                                                                         | Admin           | —                                                                                     |
+| 3.16  | See email verification banner and resend verification                                               | All staff       | If email not verified                                                                 |
+| 3.17  | View AI usage stats                                                                                 | All staff       | —                                                                                     |
+| 3.18  | Navigate to detailed views by clicking metrics                                                      | All staff       | Links to bookings, inbox, etc.                                                        |
+| 3.19a | View Daily Briefing feed with AI-generated action cards                                             | Admin           | Grouped by: Urgent Today, Needs Approval, Opportunities, Maintenance                  |
+| 3.20a | Approve an action card from the briefing (e.g., "Send Reminder")                                    | Admin           | Calls PATCH /action-cards/:id/approve                                                 |
+| 3.21a | Dismiss an action card from the briefing                                                            | Admin           | Calls PATCH /action-cards/:id/dismiss                                                 |
+| 3.22a | See contextual CTA labels per card type (Send Reminder, Nudge Staff, Follow Up, etc.)               | Admin           | Not generic "Approve"                                                                 |
+| 3.23a | See urgent count badge on Daily Briefing header                                                     | Admin           | —                                                                                     |
+| 3.24a | Refresh the briefing feed manually                                                                  | Admin           | Refresh button                                                                        |
+| 3.25a | See "All clear" empty state when no pending items                                                   | Admin           | —                                                                                     |
+| 3.26a | View pinned Saved Views as shortcut cards on dashboard                                              | All staff       | —                                                                                     |
+| 3.27a | See KPI strip + MyWork section (agent/provider modes)                                               | Agent, Provider | Mode-specific dashboard layout                                                        |
+| 3.28a | See Today Timeline with time-positioned booking cards + quick actions (Start/Complete/No-Show/Chat) | All staff       | TodayTimeline component replacing flat list (UX Upgrade Pack R2)                      |
+| 3.29a | Click actionable KPIs to navigate to relevant pages                                                 | All staff       | KPI cards link to bookings/inbox/customers with action subtitles (UX Upgrade Pack R2) |
+| 3.30a | Snooze a briefing card for later (1h/4h/tomorrow/next week)                                         | Admin           | Snooze dropdown on BriefingCard (UX Upgrade Pack R2)                                  |
+| 3.31a | Expand briefing card to see details (booking info, staff, suggested action)                         | Admin           | Expandable detail section on briefing cards (UX Upgrade Pack R2)                      |
 
 ### What Users CANNOT Do
 
-| #    | Story                                        | Notes                                                         |
-| ---- | -------------------------------------------- | ------------------------------------------------------------- |
-| 3.19 | Customize which metrics appear on dashboard  | Fixed layout                                                  |
-| 3.20 | Set custom date ranges for dashboard metrics | Fixed periods (week, 30 days)                                 |
-| 3.21 | Export dashboard data                        | No export functionality                                       |
-| 3.22 | Compare metrics across time periods          | No comparison view                                            |
-| 3.23 | See dashboard for a specific location        | No location filter on dashboard                               |
-| 3.24 | Set personal goals or targets for metrics    | Not implemented                                               |
-| 3.25 | ~~Pin or favorite certain metrics~~          | **DONE** — Saved Views can be pinned to dashboard             |
-| 3.26 | ~~Snooze a briefing card (defer for later)~~     | **DONE** — Snooze dropdown (1h/4h/tomorrow/next week) on briefing cards (UX Upgrade Pack R2) |
-| 3.27 | Preview action card details before approving | Preview button exists but only shows if card has preview data |
+| #    | Story                                        | Notes                                                                                        |
+| ---- | -------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| 3.19 | Customize which metrics appear on dashboard  | Fixed layout                                                                                 |
+| 3.20 | Set custom date ranges for dashboard metrics | Fixed periods (week, 30 days)                                                                |
+| 3.21 | Export dashboard data                        | No export functionality                                                                      |
+| 3.22 | Compare metrics across time periods          | No comparison view                                                                           |
+| 3.23 | See dashboard for a specific location        | No location filter on dashboard                                                              |
+| 3.24 | Set personal goals or targets for metrics    | Not implemented                                                                              |
+| 3.25 | ~~Pin or favorite certain metrics~~          | **DONE** — Saved Views can be pinned to dashboard                                            |
+| 3.26 | ~~Snooze a briefing card (defer for later)~~ | **DONE** — Snooze dropdown (1h/4h/tomorrow/next week) on briefing cards (UX Upgrade Pack R2) |
+| 3.27 | Preview action card details before approving | Preview button exists but only shows if card has preview data                                |
 
 ---
 
@@ -200,39 +200,39 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 
 ### What Users CAN Do
 
-| #    | Story                                                | Persona   | Notes                              |
-| ---- | ---------------------------------------------------- | --------- | ---------------------------------- |
-| 5.1  | View day view (staff as columns, time slots as rows) | All staff | —                                  |
-| 5.2  | View week view (days as columns)                     | All staff | —                                  |
-| 5.3  | Navigate between dates (prev/next/today)             | All staff | —                                  |
-| 5.4  | Filter by location                                   | All staff | If locations exist                 |
-| 5.5  | Filter by staff (chip buttons)                       | All staff | —                                  |
-| 5.6  | Click a time slot to create a new booking            | All staff | Pre-fills date/time/staff          |
-| 5.7  | Click a booking to view details                      | All staff | Opens detail modal                 |
-| 5.8  | See color-coded booking statuses                     | All staff | —                                  |
-| 5.9  | See recurring booking indicators                     | All staff | Icon on recurring bookings         |
-| 5.10 | View booking tooltip on hover                        | All staff | Full details without opening modal |
-| 5.10a | View month view with booking count summaries per day | All staff | 6x7 grid, colored dots, click-to-drill (UX Upgrade Pack R1) |
+| #     | Story                                                | Persona   | Notes                                                                      |
+| ----- | ---------------------------------------------------- | --------- | -------------------------------------------------------------------------- |
+| 5.1   | View day view (staff as columns, time slots as rows) | All staff | —                                                                          |
+| 5.2   | View week view (days as columns)                     | All staff | —                                                                          |
+| 5.3   | Navigate between dates (prev/next/today)             | All staff | —                                                                          |
+| 5.4   | Filter by location                                   | All staff | If locations exist                                                         |
+| 5.5   | Filter by staff (chip buttons)                       | All staff | —                                                                          |
+| 5.6   | Click a time slot to create a new booking            | All staff | Pre-fills date/time/staff                                                  |
+| 5.7   | Click a booking to view details                      | All staff | Opens detail modal                                                         |
+| 5.8   | See color-coded booking statuses                     | All staff | —                                                                          |
+| 5.9   | See recurring booking indicators                     | All staff | Icon on recurring bookings                                                 |
+| 5.10  | View booking tooltip on hover                        | All staff | Full details without opening modal                                         |
+| 5.10a | View month view with booking count summaries per day | All staff | 6x7 grid, colored dots, click-to-drill (UX Upgrade Pack R1)                |
 | 5.10b | Drag-and-drop a booking to reschedule                | All staff | 30-min snap, conflict detection, confirmation popover (UX Upgrade Pack R1) |
-| 5.10c | See staff working hours shaded on calendar           | All staff | Non-working hours in gray via calendar-context API (UX Upgrade Pack R1) |
-| 5.10d | See time-off blocks on the calendar grid             | All staff | Red shading with "Time Off" badge (UX Upgrade Pack R1) |
-| 5.10e | See recommended time slots during reschedule         | All staff | Top 5 slots scored by proximity + staff balance (UX Upgrade Pack R1) |
+| 5.10c | See staff working hours shaded on calendar           | All staff | Non-working hours in gray via calendar-context API (UX Upgrade Pack R1)    |
+| 5.10d | See time-off blocks on the calendar grid             | All staff | Red shading with "Time Off" badge (UX Upgrade Pack R1)                     |
+| 5.10e | See recommended time slots during reschedule         | All staff | Top 5 slots scored by proximity + staff balance (UX Upgrade Pack R1)       |
 
 ### What Users CANNOT Do
 
-| #    | Story                                                   | Notes                                                   |
-| ---- | ------------------------------------------------------- | ------------------------------------------------------- |
-| 5.11 | ~~View monthly calendar~~                               | **DONE** — Month view with 6x7 grid, colored dots (sage/lavender/red), click-to-drill to day (UX Upgrade Pack R1) |
-| 5.12 | ~~Drag-and-drop to reschedule~~                         | **DONE** — HTML5 DnD with 30-min snap, conflict detection, confirmation popover (UX Upgrade Pack R1)              |
-| 5.13 | Drag to resize booking duration                         | Not implemented                                         |
-| 5.14 | See external calendar events overlaid (Google/Outlook)  | API supports fetching external events but no UI overlay |
-| 5.15 | Color-code by service type                              | Colored by status only                                  |
-| 5.16 | ~~See staff availability/working hours shaded on calendar~~ | **DONE** — Non-working hours shaded gray via calendar-context API (UX Upgrade Pack R1)                        |
-| 5.17 | ~~See time-off blocks on calendar~~                     | **DONE** — Time-off shaded red with "Time Off" badge (UX Upgrade Pack R1)                                         |
-| 5.18 | Print calendar view                                     | Not implemented                                         |
-| 5.19 | Export calendar to PDF                                  | Not implemented                                         |
-| 5.20 | Set custom time range for calendar grid                 | Fixed 8am–7pm                                           |
-| 5.21 | See resource/equipment scheduling on calendar           | Only staff-based calendar                               |
+| #    | Story                                                       | Notes                                                                                                             |
+| ---- | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| 5.11 | ~~View monthly calendar~~                                   | **DONE** — Month view with 6x7 grid, colored dots (sage/lavender/red), click-to-drill to day (UX Upgrade Pack R1) |
+| 5.12 | ~~Drag-and-drop to reschedule~~                             | **DONE** — HTML5 DnD with 30-min snap, conflict detection, confirmation popover (UX Upgrade Pack R1)              |
+| 5.13 | Drag to resize booking duration                             | Not implemented                                                                                                   |
+| 5.14 | See external calendar events overlaid (Google/Outlook)      | API supports fetching external events but no UI overlay                                                           |
+| 5.15 | Color-code by service type                                  | Colored by status only                                                                                            |
+| 5.16 | ~~See staff availability/working hours shaded on calendar~~ | **DONE** — Non-working hours shaded gray via calendar-context API (UX Upgrade Pack R1)                            |
+| 5.17 | ~~See time-off blocks on calendar~~                         | **DONE** — Time-off shaded red with "Time Off" badge (UX Upgrade Pack R1)                                         |
+| 5.18 | Print calendar view                                         | Not implemented                                                                                                   |
+| 5.19 | Export calendar to PDF                                      | Not implemented                                                                                                   |
+| 5.20 | Set custom time range for calendar grid                     | Fixed 8am–7pm                                                                                                     |
+| 5.21 | See resource/equipment scheduling on calendar               | Only staff-based calendar                                                                                         |
 
 ---
 
@@ -266,22 +266,22 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 
 ### What Users CANNOT Do
 
-| #    | Story                                                             | Notes                                                              |
-| ---- | ----------------------------------------------------------------- | ------------------------------------------------------------------ |
-| 6.17 | Delete a customer                                                 | No delete endpoint — only edit                                     |
+| #    | Story                                                             | Notes                                                                                                                       |
+| ---- | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| 6.17 | Delete a customer                                                 | No delete endpoint — only edit                                                                                              |
 | 6.18 | ~~Merge duplicate customers~~                                     | **PARTIAL** — DuplicateCandidate model + `/customers/duplicates` review page with merge/dismiss/snooze (UX Upgrade Pack R2) |
-| 6.19 | ~~Export customer list to CSV~~                                   | **DONE** — `GET /customers/export` streaming CSV with field selection, date range, 10k cap (UX Upgrade Pack R2)              |
-| 6.20 | ~~View customer communication history (messages)~~                | **DONE** — Timeline tab + "Message" button deep link               |
-| 6.21 | See customer lifetime value calculation                           | Only total bookings and raw spend                                  |
-| 6.22 | ~~Add notes directly to a customer profile~~                      | **DONE** — CustomerNote model with full CRUD                       |
-| 6.23 | Upload customer photos (before/after)                             | Not implemented                                                    |
-| 6.24 | Link a customer to multiple phone numbers                         | One phone per customer per business                                |
-| 6.25 | ~~View customer's waitlist entries~~                              | **DONE** — Waitlist count in context row + timeline events         |
-| 6.26 | ~~View customer's conversation from their profile~~               | **DONE** — "Message" button navigates to `/inbox?conversationId=X` |
-| 6.27 | Filter customers by tag                                           | No tag filter on customer list page                                |
-| 6.28 | Filter customers by last visit date                               | Not implemented                                                    |
-| 6.29 | Sort customers by column                                          | Not implemented                                                    |
-| 6.30 | ~~See customer activity timeline (all interactions in one feed)~~ | **DONE** — CustomerTimeline component with 6 event types           |
+| 6.19 | ~~Export customer list to CSV~~                                   | **DONE** — `GET /customers/export` streaming CSV with field selection, date range, 10k cap (UX Upgrade Pack R2)             |
+| 6.20 | ~~View customer communication history (messages)~~                | **DONE** — Timeline tab + "Message" button deep link                                                                        |
+| 6.21 | See customer lifetime value calculation                           | Only total bookings and raw spend                                                                                           |
+| 6.22 | ~~Add notes directly to a customer profile~~                      | **DONE** — CustomerNote model with full CRUD                                                                                |
+| 6.23 | Upload customer photos (before/after)                             | Not implemented                                                                                                             |
+| 6.24 | Link a customer to multiple phone numbers                         | One phone per customer per business                                                                                         |
+| 6.25 | ~~View customer's waitlist entries~~                              | **DONE** — Waitlist count in context row + timeline events                                                                  |
+| 6.26 | ~~View customer's conversation from their profile~~               | **DONE** — "Message" button navigates to `/inbox?conversationId=X`                                                          |
+| 6.27 | Filter customers by tag                                           | No tag filter on customer list page                                                                                         |
+| 6.28 | Filter customers by last visit date                               | Not implemented                                                                                                             |
+| 6.29 | Sort customers by column                                          | Not implemented                                                                                                             |
+| 6.30 | ~~See customer activity timeline (all interactions in one feed)~~ | **DONE** — CustomerTimeline component with 6 event types                                                                    |
 
 ---
 
@@ -289,71 +289,71 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 
 ### What Users CAN Do
 
-| #     | Story                                                                          | Persona   | Notes                                       |
-| ----- | ------------------------------------------------------------------------------ | --------- | ------------------------------------------- |
-| 7.1   | View all conversations (3-pane layout: filters, list, thread)                  | All staff | —                                           |
-| 7.2   | Filter conversations: All, Unassigned, Mine, Overdue, Waiting, Snoozed, Closed | All staff | Badge counts per filter                     |
-| 7.3   | Filter by location                                                             | All staff | If locations exist                          |
-| 7.4   | Search conversations                                                           | All staff | —                                           |
-| 7.5   | View conversation thread (messages in chronological order)                     | All staff | —                                           |
-| 7.6   | Send a message in a conversation                                               | All staff | —                                           |
-| 7.7   | Use a message template                                                         | All staff | Template picker                             |
-| 7.8   | Use quick replies                                                              | All staff | Chip buttons                                |
-| 7.9   | Assign conversation to a staff member                                          | All staff | Dropdown in sidebar                         |
-| 7.10  | Unassign conversation (set to null)                                            | All staff | —                                           |
-| 7.11  | Close/resolve a conversation                                                   | All staff | —                                           |
-| 7.12  | Snooze a conversation (1h, 3h, tomorrow, 1 day, 3 days)                        | All staff | —                                           |
-| 7.13  | Add/remove conversation tags                                                   | All staff | —                                           |
-| 7.14  | Add internal notes to a conversation                                           | All staff | Visible to staff only                       |
-| 7.15  | Delete internal notes                                                          | All staff | —                                           |
-| 7.16  | Create a booking from a conversation                                           | All staff | Pre-links customer                          |
-| 7.17  | Send deposit request from conversation sidebar                                 | All staff | For PENDING_DEPOSIT bookings                |
-| 7.18  | View AI draft suggestions with confidence/intent                               | All staff | Auto-generated                              |
-| 7.19  | Accept or dismiss AI draft                                                     | All staff | —                                           |
-| 7.20  | Resume auto-reply (after human takeover)                                       | All staff | —                                           |
-| 7.21  | View AI conversation summary                                                   | All staff | In sidebar                                  |
-| 7.22  | See AI booking/cancel/reschedule intent panels                                 | All staff | In sidebar                                  |
-| 7.23  | View customer info in sidebar (name, phone, tags, upcoming)                    | All staff | —                                           |
-| 7.24  | View intake card / custom fields in sidebar                                    | All staff | —                                           |
-| 7.25  | See unread message badges                                                      | All staff | —                                           |
-| 7.26  | See overdue conversation indicators                                            | All staff | Red dot                                     |
-| 7.27  | See conversation status badges                                                 | All staff | OPEN, WAITING, SNOOZED, RESOLVED            |
-| 7.28  | Real-time message updates via WebSocket                                        | All staff | —                                           |
-| 7.29  | View conversation notes in a separate tab                                      | All staff | Info / Notes tabs in sidebar                |
-| 7.30  | Deep link to a specific conversation via URL param                             | All staff | `?conversationId=X` auto-selects            |
-| 7.31  | Click customer name in inbox to navigate to their profile                      | All staff | Links to `/customers/{id}`                  |
-| 7.32a | Compose a new outbound message to a customer                                   | All staff | "New Message" button in conversation header |
-| 7.33a | See pending action card count badge in customer sidebar                        | All staff | Shows count of PENDING action cards         |
-| 7.34a | Send images, documents, and audio attachments in messages                      | All staff | MediaComposer with drag-drop, preview, validation (UX Upgrade Pack R1) |
-| 7.35a | See delivery/read receipts on outbound messages (sent → delivered → read)      | All staff | DeliveryStatus component with check icons (UX Upgrade Pack R1) |
-| 7.36a | See which other staff are viewing the same conversation (collision detection)  | All staff | Lavender presence pills in thread header (UX Upgrade Pack R1) |
-| 7.37a | Initiate outbound conversation from customer profile ("Send Message" button)   | All staff | Creates conversation + sends directly (UX Upgrade Pack R1) |
-| 7.38a | Filter conversations by channel (WhatsApp, Instagram, Facebook, SMS, Email, Web Chat) | All staff | ChannelFilterBar with 7 tabs (ALL + 6 channels) |
-| 7.39a | View channel badge on each conversation showing which channel it came from     | All staff | ChannelBadge component with colored icon+label |
-| 7.40a | Switch reply channel when customer has multiple channels on file               | All staff | ReplyChannelSwitcher dropdown in compose area |
-| 7.41a | View all channels available for a customer in the sidebar                      | All staff | ChannelsOnFile component in customer sidebar |
-| 7.42a | Use live chat widget on website to communicate with visitors in real-time      | All staff | Web Chat channel via Socket.IO `/web-chat` namespace |
+| #     | Story                                                                                 | Persona   | Notes                                                                  |
+| ----- | ------------------------------------------------------------------------------------- | --------- | ---------------------------------------------------------------------- |
+| 7.1   | View all conversations (3-pane layout: filters, list, thread)                         | All staff | —                                                                      |
+| 7.2   | Filter conversations: All, Unassigned, Mine, Overdue, Waiting, Snoozed, Closed        | All staff | Badge counts per filter                                                |
+| 7.3   | Filter by location                                                                    | All staff | If locations exist                                                     |
+| 7.4   | Search conversations                                                                  | All staff | —                                                                      |
+| 7.5   | View conversation thread (messages in chronological order)                            | All staff | —                                                                      |
+| 7.6   | Send a message in a conversation                                                      | All staff | —                                                                      |
+| 7.7   | Use a message template                                                                | All staff | Template picker                                                        |
+| 7.8   | Use quick replies                                                                     | All staff | Chip buttons                                                           |
+| 7.9   | Assign conversation to a staff member                                                 | All staff | Dropdown in sidebar                                                    |
+| 7.10  | Unassign conversation (set to null)                                                   | All staff | —                                                                      |
+| 7.11  | Close/resolve a conversation                                                          | All staff | —                                                                      |
+| 7.12  | Snooze a conversation (1h, 3h, tomorrow, 1 day, 3 days)                               | All staff | —                                                                      |
+| 7.13  | Add/remove conversation tags                                                          | All staff | —                                                                      |
+| 7.14  | Add internal notes to a conversation                                                  | All staff | Visible to staff only                                                  |
+| 7.15  | Delete internal notes                                                                 | All staff | —                                                                      |
+| 7.16  | Create a booking from a conversation                                                  | All staff | Pre-links customer                                                     |
+| 7.17  | Send deposit request from conversation sidebar                                        | All staff | For PENDING_DEPOSIT bookings                                           |
+| 7.18  | View AI draft suggestions with confidence/intent                                      | All staff | Auto-generated                                                         |
+| 7.19  | Accept or dismiss AI draft                                                            | All staff | —                                                                      |
+| 7.20  | Resume auto-reply (after human takeover)                                              | All staff | —                                                                      |
+| 7.21  | View AI conversation summary                                                          | All staff | In sidebar                                                             |
+| 7.22  | See AI booking/cancel/reschedule intent panels                                        | All staff | In sidebar                                                             |
+| 7.23  | View customer info in sidebar (name, phone, tags, upcoming)                           | All staff | —                                                                      |
+| 7.24  | View intake card / custom fields in sidebar                                           | All staff | —                                                                      |
+| 7.25  | See unread message badges                                                             | All staff | —                                                                      |
+| 7.26  | See overdue conversation indicators                                                   | All staff | Red dot                                                                |
+| 7.27  | See conversation status badges                                                        | All staff | OPEN, WAITING, SNOOZED, RESOLVED                                       |
+| 7.28  | Real-time message updates via WebSocket                                               | All staff | —                                                                      |
+| 7.29  | View conversation notes in a separate tab                                             | All staff | Info / Notes tabs in sidebar                                           |
+| 7.30  | Deep link to a specific conversation via URL param                                    | All staff | `?conversationId=X` auto-selects                                       |
+| 7.31  | Click customer name in inbox to navigate to their profile                             | All staff | Links to `/customers/{id}`                                             |
+| 7.32a | Compose a new outbound message to a customer                                          | All staff | "New Message" button in conversation header                            |
+| 7.33a | See pending action card count badge in customer sidebar                               | All staff | Shows count of PENDING action cards                                    |
+| 7.34a | Send images, documents, and audio attachments in messages                             | All staff | MediaComposer with drag-drop, preview, validation (UX Upgrade Pack R1) |
+| 7.35a | See delivery/read receipts on outbound messages (sent → delivered → read)             | All staff | DeliveryStatus component with check icons (UX Upgrade Pack R1)         |
+| 7.36a | See which other staff are viewing the same conversation (collision detection)         | All staff | Lavender presence pills in thread header (UX Upgrade Pack R1)          |
+| 7.37a | Initiate outbound conversation from customer profile ("Send Message" button)          | All staff | Creates conversation + sends directly (UX Upgrade Pack R1)             |
+| 7.38a | Filter conversations by channel (WhatsApp, Instagram, Facebook, SMS, Email, Web Chat) | All staff | ChannelFilterBar with 7 tabs (ALL + 6 channels)                        |
+| 7.39a | View channel badge on each conversation showing which channel it came from            | All staff | ChannelBadge component with colored icon+label                         |
+| 7.40a | Switch reply channel when customer has multiple channels on file                      | All staff | ReplyChannelSwitcher dropdown in compose area                          |
+| 7.41a | View all channels available for a customer in the sidebar                             | All staff | ChannelsOnFile component in customer sidebar                           |
+| 7.42a | Use live chat widget on website to communicate with visitors in real-time             | All staff | Web Chat channel via Socket.IO `/web-chat` namespace                   |
 
 ### What Users CANNOT Do
 
-| #    | Story                                                         | Notes                                                                     |
-| ---- | ------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| 7.30 | ~~Send images, documents, or audio~~                          | **DONE** — MediaComposer component with drag-drop, file preview, images/docs/audio (UX Upgrade Pack R1) |
-| 7.31 | Forward or share a conversation                               | Not implemented                                                           |
-| 7.32 | Mark a conversation as read/unread manually                   | Auto-marked on view                                                       |
-| 7.33 | ~~Create a conversation manually (staff-initiated outbound)~~ | **DONE** — Outbound compose modal creates drafts via POST /outbound/draft |
-| 7.34 | Bulk close conversations                                      | No bulk operations                                                        |
-| 7.35 | Bulk assign conversations                                     | No bulk operations                                                        |
-| 7.36 | Edit a sent message                                           | Messages are immutable                                                    |
-| 7.37 | Delete a message                                              | Messages are immutable                                                    |
-| 7.38 | ~~See message delivery/read receipts~~                        | **DONE** — DeliveryStatus component (sent/delivered/read check icons), WebSocket `message:status` event (UX Upgrade Pack R1) |
-| 7.39 | Schedule a message for later                                  | Not implemented                                                           |
-| 7.40 | Use canned responses / saved replies beyond templates         | Templates only                                                            |
-| 7.41 | See typing indicators                                         | Not implemented                                                           |
-| 7.42 | Pin a conversation                                            | Not implemented                                                           |
-| 7.43 | Export conversation history                                   | Not implemented                                                           |
-| 7.44 | Archive a conversation (vs close)                             | Only close/resolve                                                        |
-| 7.45 | ~~Start a new conversation with an existing customer~~        | **DONE** — Outbound compose creates draft message to any customer         |
+| #    | Story                                                         | Notes                                                                                                                                |
+| ---- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| 7.30 | ~~Send images, documents, or audio~~                          | **DONE** — MediaComposer component with drag-drop, file preview, images/docs/audio (UX Upgrade Pack R1)                              |
+| 7.31 | Forward or share a conversation                               | Not implemented                                                                                                                      |
+| 7.32 | Mark a conversation as read/unread manually                   | Auto-marked on view                                                                                                                  |
+| 7.33 | ~~Create a conversation manually (staff-initiated outbound)~~ | **DONE** — Outbound compose modal creates drafts via POST /outbound/draft                                                            |
+| 7.34 | Bulk close conversations                                      | No bulk operations                                                                                                                   |
+| 7.35 | Bulk assign conversations                                     | No bulk operations                                                                                                                   |
+| 7.36 | Edit a sent message                                           | Messages are immutable                                                                                                               |
+| 7.37 | Delete a message                                              | Messages are immutable                                                                                                               |
+| 7.38 | ~~See message delivery/read receipts~~                        | **DONE** — DeliveryStatus component (sent/delivered/read check icons), WebSocket `message:status` event (UX Upgrade Pack R1)         |
+| 7.39 | Schedule a message for later                                  | Not implemented                                                                                                                      |
+| 7.40 | Use canned responses / saved replies beyond templates         | Templates only                                                                                                                       |
+| 7.41 | See typing indicators                                         | Not implemented                                                                                                                      |
+| 7.42 | Pin a conversation                                            | Not implemented                                                                                                                      |
+| 7.43 | Export conversation history                                   | Not implemented                                                                                                                      |
+| 7.44 | Archive a conversation (vs close)                             | Only close/resolve                                                                                                                   |
+| 7.45 | ~~Start a new conversation with an existing customer~~        | **DONE** — Outbound compose creates draft message to any customer                                                                    |
 | 7.46 | ~~See which staff member is viewing a conversation~~          | **DONE** — Presence tracking via InboxGateway (`viewing:start`/`viewing:stop`), lavender pills in thread header (UX Upgrade Pack R1) |
 
 ---
@@ -487,25 +487,25 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 
 ### What Users CAN Do
 
-| #     | Story                                                                | Persona   | Notes           |
-| ----- | -------------------------------------------------------------------- | --------- | --------------- |
-| 12.1  | View pre-built playbooks                                             | All staff | —               |
-| 12.2  | Toggle playbooks on/off                                              | Admin     | —               |
-| 12.3  | View custom automation rules                                         | All staff | —               |
-| 12.4  | Create custom rule (trigger, filters, actions, quiet hours, max/day) | Admin     | —               |
-| 12.5  | Edit a custom rule                                                   | Admin     | —               |
-| 12.6  | Delete a custom rule                                                 | Admin     | —               |
-| 12.7  | Toggle a custom rule on/off                                          | Admin     | —               |
-| 12.8  | Test a rule (dry run)                                                | Admin     | —               |
-| 12.9  | View automation activity log (rule, action, outcome, time)           | All staff | —               |
-| 12.10 | See skipped automation reasons                                       | All staff | In activity log |
-| 12.11 | Set quiet hours for automations                                      | Admin     | Start/end HH:mm |
-| 12.12 | Set max messages per customer per day                                | Admin     | 0-100           |
-| 12.12a | View playbooks as rich recipe cards (what/when/who/examples/stats)  | All staff | PlaybookCard with expandable details, impact stats (UX Upgrade Pack R3) |
-| 12.12b | See plain-language summary of custom rules                          | All staff | `getPlainLanguageSummary()` on review step (UX Upgrade Pack R3) |
-| 12.12c | Run real dry-run test showing matched/skipped bookings              | Admin     | DryRunModal with real booking data (UX Upgrade Pack R3) |
-| 12.12d | Search and filter activity log by outcome, date range               | All staff | Search input, outcome chips, date range filters (UX Upgrade Pack R3) |
-| 12.12e | See safety controls panel (quiet hours, frequency caps) at a glance | All staff | Safety summary panel + safety column in rules table (UX Upgrade Pack R3) |
+| #      | Story                                                                | Persona   | Notes                                                                    |
+| ------ | -------------------------------------------------------------------- | --------- | ------------------------------------------------------------------------ |
+| 12.1   | View pre-built playbooks                                             | All staff | —                                                                        |
+| 12.2   | Toggle playbooks on/off                                              | Admin     | —                                                                        |
+| 12.3   | View custom automation rules                                         | All staff | —                                                                        |
+| 12.4   | Create custom rule (trigger, filters, actions, quiet hours, max/day) | Admin     | —                                                                        |
+| 12.5   | Edit a custom rule                                                   | Admin     | —                                                                        |
+| 12.6   | Delete a custom rule                                                 | Admin     | —                                                                        |
+| 12.7   | Toggle a custom rule on/off                                          | Admin     | —                                                                        |
+| 12.8   | Test a rule (dry run)                                                | Admin     | —                                                                        |
+| 12.9   | View automation activity log (rule, action, outcome, time)           | All staff | —                                                                        |
+| 12.10  | See skipped automation reasons                                       | All staff | In activity log                                                          |
+| 12.11  | Set quiet hours for automations                                      | Admin     | Start/end HH:mm                                                          |
+| 12.12  | Set max messages per customer per day                                | Admin     | 0-100                                                                    |
+| 12.12a | View playbooks as rich recipe cards (what/when/who/examples/stats)   | All staff | PlaybookCard with expandable details, impact stats (UX Upgrade Pack R3)  |
+| 12.12b | See plain-language summary of custom rules                           | All staff | `getPlainLanguageSummary()` on review step (UX Upgrade Pack R3)          |
+| 12.12c | Run real dry-run test showing matched/skipped bookings               | Admin     | DryRunModal with real booking data (UX Upgrade Pack R3)                  |
+| 12.12d | Search and filter activity log by outcome, date range                | All staff | Search input, outcome chips, date range filters (UX Upgrade Pack R3)     |
+| 12.12e | See safety controls panel (quiet hours, frequency caps) at a glance  | All staff | Safety summary panel + safety column in rules table (UX Upgrade Pack R3) |
 
 ### What Users CANNOT Do
 
@@ -527,55 +527,55 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 
 ### What Users CAN Do
 
-| #      | Story                                                                            | Persona   | Notes                                                                                                                      |
-| ------ | -------------------------------------------------------------------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------- |
-| 13.1   | Edit business profile (name, phone, timezone)                                    | Admin     | —                                                                                                                          |
-| 13.2   | Configure cancellation policy (window hours, policy text)                        | Admin     | 1-168 hours                                                                                                                |
-| 13.3   | Configure reschedule policy (window hours, policy text)                          | Admin     | 1-168 hours                                                                                                                |
-| 13.4   | Enable/disable policies                                                          | Admin     | —                                                                                                                          |
-| 13.5   | Configure notification settings (channels, follow-up delay)                      | Admin     | —                                                                                                                          |
-| 13.6   | Manage message templates (CRUD)                                                  | Admin     | —                                                                                                                          |
-| 13.7   | Configure waitlist settings (offer count, expiry, quiet hours)                   | Admin     | —                                                                                                                          |
-| 13.8   | Manage offers (create, edit, activate/deactivate, set expiry, max redemptions)   | Admin     | —                                                                                                                          |
-| 13.9   | Configure AI settings (enable/disable, personality, auto-reply)                  | Admin     | —                                                                                                                          |
-| 13.10  | Manage translations / i18n overrides per locale                                  | Admin     | —                                                                                                                          |
-| 13.11  | Install a vertical pack                                                          | Admin     | —                                                                                                                          |
-| 13.12  | Configure customer profile fields                                                | Admin     | —                                                                                                                          |
-| 13.13  | Connect Google Calendar (OAuth)                                                  | All staff | Own calendar                                                                                                               |
-| 13.14  | Connect Outlook Calendar (OAuth)                                                 | All staff | Own calendar                                                                                                               |
-| 13.15  | Disconnect a calendar                                                            | All staff | Own calendar                                                                                                               |
-| 13.16  | Get iCal feed URL for external subscription                                      | All staff | —                                                                                                                          |
-| 13.17  | Regenerate iCal feed token                                                       | All staff | —                                                                                                                          |
-| 13.18  | Manually sync external calendar events                                           | All staff | —                                                                                                                          |
-| 13.19  | View subscription / billing status                                               | Admin     | —                                                                                                                          |
-| 13.20  | Open Stripe checkout for plan upgrade                                            | Admin     | —                                                                                                                          |
-| 13.21  | Open Stripe customer portal                                                      | Admin     | —                                                                                                                          |
-| 13.22a | Configure AI autonomy level per action type (Off / Assist / Auto)                | Admin     | 8 action types: deposit, overdue reply, open slot, stalled quote, waitlist, retention, data cleanup, schedule optimization |
-| 13.23a | Enable/disable background AI agents                                              | Admin     | 5 agents: Waitlist, Retention, Data Hygiene, Scheduling Optimizer, Quote Follow-up                                         |
-| 13.24a | Set autonomy level per agent (Suggest Only / Require Approval / Fully Automatic) | Admin     | —                                                                                                                          |
-| 13.25a | Navigate to AI Autonomy and Agent Skills from Settings hub                       | Admin     | Cards after AI Settings                                                                                                    |
-| 13.26a | Configure SMS messaging via Twilio (/settings/sms) — account credentials, A2P 10DLC compliance, per-location numbers, test send | Admin | Twilio integration settings page |
-| 13.27a | Configure Facebook Messenger (/settings/facebook) — page connection, per-location pages, ice breakers, messaging window info | Admin | Facebook Messenger integration settings page |
-| 13.28a | Configure Email channel (/settings/email-channel) — Resend/SendGrid provider, per-location inbound addresses, DNS verification, signature editor | Admin | Email channel settings page |
-| 13.29a | Configure Web Chat widget appearance, pre-chat form, embed snippet (/settings/web-chat) | Admin | Web Chat widget settings page |
-| 13.30a | View channel settings hub with all 6 channel statuses (/settings/channels)   | Admin | Unified channel status overview |
+| #      | Story                                                                                                                                            | Persona   | Notes                                                                                                                      |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------ | --------- | -------------------------------------------------------------------------------------------------------------------------- |
+| 13.1   | Edit business profile (name, phone, timezone)                                                                                                    | Admin     | —                                                                                                                          |
+| 13.2   | Configure cancellation policy (window hours, policy text)                                                                                        | Admin     | 1-168 hours                                                                                                                |
+| 13.3   | Configure reschedule policy (window hours, policy text)                                                                                          | Admin     | 1-168 hours                                                                                                                |
+| 13.4   | Enable/disable policies                                                                                                                          | Admin     | —                                                                                                                          |
+| 13.5   | Configure notification settings (channels, follow-up delay)                                                                                      | Admin     | —                                                                                                                          |
+| 13.6   | Manage message templates (CRUD)                                                                                                                  | Admin     | —                                                                                                                          |
+| 13.7   | Configure waitlist settings (offer count, expiry, quiet hours)                                                                                   | Admin     | —                                                                                                                          |
+| 13.8   | Manage offers (create, edit, activate/deactivate, set expiry, max redemptions)                                                                   | Admin     | —                                                                                                                          |
+| 13.9   | Configure AI settings (enable/disable, personality, auto-reply)                                                                                  | Admin     | —                                                                                                                          |
+| 13.10  | Manage translations / i18n overrides per locale                                                                                                  | Admin     | —                                                                                                                          |
+| 13.11  | Install a vertical pack                                                                                                                          | Admin     | —                                                                                                                          |
+| 13.12  | Configure customer profile fields                                                                                                                | Admin     | —                                                                                                                          |
+| 13.13  | Connect Google Calendar (OAuth)                                                                                                                  | All staff | Own calendar                                                                                                               |
+| 13.14  | Connect Outlook Calendar (OAuth)                                                                                                                 | All staff | Own calendar                                                                                                               |
+| 13.15  | Disconnect a calendar                                                                                                                            | All staff | Own calendar                                                                                                               |
+| 13.16  | Get iCal feed URL for external subscription                                                                                                      | All staff | —                                                                                                                          |
+| 13.17  | Regenerate iCal feed token                                                                                                                       | All staff | —                                                                                                                          |
+| 13.18  | Manually sync external calendar events                                                                                                           | All staff | —                                                                                                                          |
+| 13.19  | View subscription / billing status                                                                                                               | Admin     | —                                                                                                                          |
+| 13.20  | Open Stripe checkout for plan upgrade                                                                                                            | Admin     | —                                                                                                                          |
+| 13.21  | Open Stripe customer portal                                                                                                                      | Admin     | —                                                                                                                          |
+| 13.22a | Configure AI autonomy level per action type (Off / Assist / Auto)                                                                                | Admin     | 8 action types: deposit, overdue reply, open slot, stalled quote, waitlist, retention, data cleanup, schedule optimization |
+| 13.23a | Enable/disable background AI agents                                                                                                              | Admin     | 5 agents: Waitlist, Retention, Data Hygiene, Scheduling Optimizer, Quote Follow-up                                         |
+| 13.24a | Set autonomy level per agent (Suggest Only / Require Approval / Fully Automatic)                                                                 | Admin     | —                                                                                                                          |
+| 13.25a | Navigate to AI Autonomy and Agent Skills from Settings hub                                                                                       | Admin     | Cards after AI Settings                                                                                                    |
+| 13.26a | Configure SMS messaging via Twilio (/settings/sms) — account credentials, A2P 10DLC compliance, per-location numbers, test send                  | Admin     | Twilio integration settings page                                                                                           |
+| 13.27a | Configure Facebook Messenger (/settings/facebook) — page connection, per-location pages, ice breakers, messaging window info                     | Admin     | Facebook Messenger integration settings page                                                                               |
+| 13.28a | Configure Email channel (/settings/email-channel) — Resend/SendGrid provider, per-location inbound addresses, DNS verification, signature editor | Admin     | Email channel settings page                                                                                                |
+| 13.29a | Configure Web Chat widget appearance, pre-chat form, embed snippet (/settings/web-chat)                                                          | Admin     | Web Chat widget settings page                                                                                              |
+| 13.30a | View channel settings hub with all 6 channel statuses (/settings/channels)                                                                       | Admin     | Unified channel status overview                                                                                            |
 
 ### What Users CANNOT Do
 
-| #     | Story                                              | Notes                              |
-| ----- | -------------------------------------------------- | ---------------------------------- |
-| 13.22 | Change business slug                               | Set once at creation, not editable |
-| 13.23 | Delete business                                    | No self-service deletion           |
-| 13.24 | Set business logo / branding                       | Not implemented                    |
-| 13.25 | Customize booking portal appearance (colors, logo) | Not implemented                    |
-| 13.26 | Set business hours (separate from staff hours)     | Business-level hours not supported |
-| 13.27 | Configure email notification templates             | WhatsApp templates only            |
-| 13.28 | Set up webhook integrations to external systems    | Not user-facing                    |
-| 13.29 | Export all business data                           | Not implemented                    |
-| 13.30 | Set currency (no setting post-setup)               | Only during setup wizard           |
-| 13.31 | ~~Configure SMS as a messaging channel~~           | **DONE** — SMS via Twilio at /settings/sms (Omnichannel Phase 1) |
+| #     | Story                                              | Notes                                                             |
+| ----- | -------------------------------------------------- | ----------------------------------------------------------------- |
+| 13.22 | Change business slug                               | Set once at creation, not editable                                |
+| 13.23 | Delete business                                    | No self-service deletion                                          |
+| 13.24 | Set business logo / branding                       | Not implemented                                                   |
+| 13.25 | Customize booking portal appearance (colors, logo) | Not implemented                                                   |
+| 13.26 | Set business hours (separate from staff hours)     | Business-level hours not supported                                |
+| 13.27 | Configure email notification templates             | WhatsApp templates only                                           |
+| 13.28 | Set up webhook integrations to external systems    | Not user-facing                                                   |
+| 13.29 | Export all business data                           | Not implemented                                                   |
+| 13.30 | Set currency (no setting post-setup)               | Only during setup wizard                                          |
+| 13.31 | ~~Configure SMS as a messaging channel~~           | **DONE** — SMS via Twilio at /settings/sms (Omnichannel Phase 1)  |
 | 13.33 | ~~No Web Chat channel~~                            | **DONE** — Web Chat via Socket.IO widget (Omnichannel Phases 4-5) |
-| 13.32 | Set timezone per location                          | One timezone per business          |
+| 13.32 | Set timezone per location                          | One timezone per business                                         |
 
 ---
 
@@ -583,20 +583,20 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 
 ### What Users CAN Do
 
-| #     | Story                                                 | Persona   | Notes                           |
-| ----- | ----------------------------------------------------- | --------- | ------------------------------- |
-| 14.1  | Create a location (name, address, bookable flag)      | Admin     | —                               |
-| 14.2  | Edit a location                                       | Admin     | —                               |
-| 14.3  | Deactivate a location (soft delete)                   | Admin     | —                               |
-| 14.4  | Assign staff to locations                             | Admin     | Many-to-many                    |
-| 14.5  | Remove staff from locations                           | Admin     | —                               |
-| 14.6  | Create resources at a location (name, type, metadata) | Admin     | Equipment, bays, etc.           |
-| 14.7  | Edit a resource                                       | Admin     | —                               |
-| 14.8  | Deactivate a resource (soft delete)                   | Admin     | —                               |
-| 14.9  | Configure per-location channel routing (WhatsApp, Instagram, Facebook, SMS, Email, Web Chat) | Admin | Per-channel config JSON fields on Location model |
-| 14.10 | View all locations and their resources                | All staff | —                               |
-| 14.11 | Filter bookings/calendar by location                  | All staff | —                               |
-| 14.12 | Filter conversations by location                      | All staff | —                               |
+| #     | Story                                                                                        | Persona   | Notes                                            |
+| ----- | -------------------------------------------------------------------------------------------- | --------- | ------------------------------------------------ |
+| 14.1  | Create a location (name, address, bookable flag)                                             | Admin     | —                                                |
+| 14.2  | Edit a location                                                                              | Admin     | —                                                |
+| 14.3  | Deactivate a location (soft delete)                                                          | Admin     | —                                                |
+| 14.4  | Assign staff to locations                                                                    | Admin     | Many-to-many                                     |
+| 14.5  | Remove staff from locations                                                                  | Admin     | —                                                |
+| 14.6  | Create resources at a location (name, type, metadata)                                        | Admin     | Equipment, bays, etc.                            |
+| 14.7  | Edit a resource                                                                              | Admin     | —                                                |
+| 14.8  | Deactivate a resource (soft delete)                                                          | Admin     | —                                                |
+| 14.9  | Configure per-location channel routing (WhatsApp, Instagram, Facebook, SMS, Email, Web Chat) | Admin     | Per-channel config JSON fields on Location model |
+| 14.10 | View all locations and their resources                                                       | All staff | —                                                |
+| 14.11 | Filter bookings/calendar by location                                                         | All staff | —                                                |
+| 14.12 | Filter conversations by location                                                             | All staff | —                                                |
 
 ### What Users CANNOT Do
 
@@ -734,18 +734,18 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 
 ### What Customers CANNOT Do
 
-| #     | Story                                                              | Notes                                              |
-| ----- | ------------------------------------------------------------------ | -------------------------------------------------- |
-| 18.12 | Choose a specific staff member (only see available slots by staff) | Can see who, but slot selection implicitly chooses |
-| 18.13 | Book multiple services at once                                     | One service per booking                            |
-| 18.14 | Create an account / view booking history                           | No customer login                                  |
-| 18.15 | Pay deposit online during booking                                  | Deposit request sent separately after booking      |
-| 18.16 | See staff bios or photos                                           | Not displayed                                      |
-| 18.17 | See customer reviews or ratings                                    | Not implemented                                    |
-| 18.18 | Select a preferred location                                        | Not shown on portal                                |
-| 18.19 | Choose a recurring schedule                                        | Not available publicly                             |
+| #     | Story                                                              | Notes                                                                                                                                            |
+| ----- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 18.12 | Choose a specific staff member (only see available slots by staff) | Can see who, but slot selection implicitly chooses                                                                                               |
+| 18.13 | Book multiple services at once                                     | One service per booking                                                                                                                          |
+| 18.14 | Create an account / view booking history                           | No customer login                                                                                                                                |
+| 18.15 | Pay deposit online during booking                                  | Deposit request sent separately after booking                                                                                                    |
+| 18.16 | See staff bios or photos                                           | Not displayed                                                                                                                                    |
+| 18.17 | See customer reviews or ratings                                    | Not implemented                                                                                                                                  |
+| 18.18 | Select a preferred location                                        | Not shown on portal                                                                                                                              |
+| 18.19 | Choose a recurring schedule                                        | Not available publicly                                                                                                                           |
 | 18.20 | ~~Add booking to their personal calendar (iCal download)~~         | **DONE** — AddToCalendar component (Google Calendar URL, Outlook URL, iCal .ics download) on all self-serve success screens (UX Upgrade Pack R3) |
-| 18.21 | See real-time availability updates                                 | Static on page load                                |
+| 18.21 | See real-time availability updates                                 | Static on page load                                                                                                                              |
 
 ---
 
@@ -753,18 +753,18 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 
 ### What Customers CAN Do
 
-| #    | Story                                                   | Notes                         |
-| ---- | ------------------------------------------------------- | ----------------------------- |
-| 19.1 | Reschedule an appointment via token link                | Pick new date + time, confirm |
-| 19.2 | Cancel an appointment via token link                    | Optional reason               |
-| 19.3 | Claim a waitlist offer via token link                   | —                             |
-| 19.4 | View and approve a quote via token link                 | IP logged for audit           |
-| 19.5 | See booking summary before taking action                | —                             |
-| 19.6 | See policy text (cancellation/reschedule windows)       | If configured                 |
-| 19.7 | Browse available slots for rescheduling (30-day window) | —                             |
-| 19.8a | Add booking to personal calendar after reschedule/claim (Google, Outlook, iCal) | AddToCalendar component on success screens (UX Upgrade Pack R3) |
-| 19.9a | See branded error page with contextual guidance when link is expired/invalid | SelfServeError component with auto-variant detection (UX Upgrade Pack R3) |
-| 19.10a | See "What happens next" guidance after completing any self-serve action | Bullet points on all 5 success screens (UX Upgrade Pack R3) |
+| #      | Story                                                                           | Notes                                                                     |
+| ------ | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| 19.1   | Reschedule an appointment via token link                                        | Pick new date + time, confirm                                             |
+| 19.2   | Cancel an appointment via token link                                            | Optional reason                                                           |
+| 19.3   | Claim a waitlist offer via token link                                           | —                                                                         |
+| 19.4   | View and approve a quote via token link                                         | IP logged for audit                                                       |
+| 19.5   | See booking summary before taking action                                        | —                                                                         |
+| 19.6   | See policy text (cancellation/reschedule windows)                               | If configured                                                             |
+| 19.7   | Browse available slots for rescheduling (30-day window)                         | —                                                                         |
+| 19.8a  | Add booking to personal calendar after reschedule/claim (Google, Outlook, iCal) | AddToCalendar component on success screens (UX Upgrade Pack R3)           |
+| 19.9a  | See branded error page with contextual guidance when link is expired/invalid    | SelfServeError component with auto-variant detection (UX Upgrade Pack R3) |
+| 19.10a | See "What happens next" guidance after completing any self-serve action         | Bullet points on all 5 success screens (UX Upgrade Pack R3)               |
 
 ### What Customers CANNOT Do
 
@@ -832,25 +832,25 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 
 ### What Users CAN Do
 
-| #     | Story                                                                            | Persona   | Notes                                      |
-| ----- | -------------------------------------------------------------------------------- | --------- | ------------------------------------------ |
-| 22.1  | Global search (customers, bookings, conversations)                               | All staff | Cmd+K or search bar                        |
-| 22.2  | Switch language (locale picker on auth pages)                                    | All       | —                                          |
-| 22.3  | Use command palette (Cmd+K)                                                      | All staff | —                                          |
-| 22.4  | Toggle dark mode                                                                 | All staff | —                                          |
-| 22.5  | Start interactive demo tour (9 steps)                                            | All staff | Sidebar button or ?tour=true               |
-| 22.6  | Navigate via sidebar (Dashboard, Bookings, Calendar, Customers, etc.)            | All staff | —                                          |
-| 22.7  | View Swagger API docs                                                            | Dev only  | Disabled in production                     |
-| 22.7a | Switch between role-based modes (Admin, Agent, Provider)                         | All staff | Mode switcher pill in sidebar              |
-| 22.7b | Save and reuse filter views on list pages (bookings, customers, inbox, waitlist) | All staff | ViewPicker + SaveViewModal                 |
-| 22.7c | Pin saved views to sidebar for quick access                                      | All staff | —                                          |
-| 22.7d | Pin saved views to dashboard as cards                                            | All staff | —                                          |
-| 22.7e | Set default landing page per mode                                                | All staff | Persisted in staff preferences             |
-| 22.7f | View dedicated search results page with type filters and load more               | All staff | `/search?q=`                               |
-| 22.7g | Navigate to detail pages from Cmd+K results                                      | All staff | Customers → profile, conversations → inbox |
-| 22.7h | Export customers and bookings to CSV from list pages                              | All staff | ExportModal with date range + field selection, streaming CSV (UX Upgrade Pack R2) |
+| #     | Story                                                                            | Persona   | Notes                                                                                    |
+| ----- | -------------------------------------------------------------------------------- | --------- | ---------------------------------------------------------------------------------------- |
+| 22.1  | Global search (customers, bookings, conversations)                               | All staff | Cmd+K or search bar                                                                      |
+| 22.2  | Switch language (locale picker on auth pages)                                    | All       | —                                                                                        |
+| 22.3  | Use command palette (Cmd+K)                                                      | All staff | —                                                                                        |
+| 22.4  | Toggle dark mode                                                                 | All staff | —                                                                                        |
+| 22.5  | Start interactive demo tour (9 steps)                                            | All staff | Sidebar button or ?tour=true                                                             |
+| 22.6  | Navigate via sidebar (Dashboard, Bookings, Calendar, Customers, etc.)            | All staff | —                                                                                        |
+| 22.7  | View Swagger API docs                                                            | Dev only  | Disabled in production                                                                   |
+| 22.7a | Switch between role-based modes (Admin, Agent, Provider)                         | All staff | Mode switcher pill in sidebar                                                            |
+| 22.7b | Save and reuse filter views on list pages (bookings, customers, inbox, waitlist) | All staff | ViewPicker + SaveViewModal                                                               |
+| 22.7c | Pin saved views to sidebar for quick access                                      | All staff | —                                                                                        |
+| 22.7d | Pin saved views to dashboard as cards                                            | All staff | —                                                                                        |
+| 22.7e | Set default landing page per mode                                                | All staff | Persisted in staff preferences                                                           |
+| 22.7f | View dedicated search results page with type filters and load more               | All staff | `/search?q=`                                                                             |
+| 22.7g | Navigate to detail pages from Cmd+K results                                      | All staff | Customers → profile, conversations → inbox                                               |
+| 22.7h | Export customers and bookings to CSV from list pages                             | All staff | ExportModal with date range + field selection, streaming CSV (UX Upgrade Pack R2)        |
 | 22.7i | Review and merge duplicate customer records                                      | Admin     | `/customers/duplicates` page with side-by-side merge/dismiss/snooze (UX Upgrade Pack R2) |
-| 22.7j | Export action history / audit trail to CSV                                        | Admin     | `GET /action-history/export` with date/entity/actor filters (UX Upgrade Pack R2) |
+| 22.7j | Export action history / audit trail to CSV                                       | Admin     | `GET /action-history/export` with date/entity/actor filters (UX Upgrade Pack R2)         |
 
 ### What Users CANNOT Do
 
@@ -871,90 +871,90 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 
 ### What Users CAN Do
 
-| #      | Story                                                                                          | Persona     | Notes                                                                 |
-| ------ | ---------------------------------------------------------------------------------------------- | ----------- | --------------------------------------------------------------------- |
-| 23.1   | View platform overview dashboard (business count, bookings, staff, agents, billing, security)  | Super Admin | Console home page with KPI cards                                      |
-| 23.2   | Browse all businesses in a paginated directory with search                                      | Super Admin | Filter by plan, billing status, health                                |
-| 23.3   | View Business 360 detail (Summary tab: metadata, usage, health)                                | Super Admin | Read-only business overview                                           |
-| 23.4   | View Business 360 detail (People tab: staff list)                                              | Super Admin | Read-only staff listing                                               |
-| 23.5   | View Business 360 detail (Billing tab: subscription info, credits, invoices)                   | Super Admin | Full billing management per business (Phase 3)                        |
-| 23.6   | Impersonate a business via View-as (time-limited 15-min JWT, audit-logged)                     | Super Admin | Countdown banner, scoped to target business                           |
-| 23.7   | Browse platform audit log with search, action type filter, pagination                          | Super Admin | Time, Actor, Action, Target, Reason columns                          |
-| 23.8   | View system health (overall status, 5 service checks, business health distribution)            | Super Admin | DB, Business Activity, AI Agents, Calendar Sync, Message Delivery    |
-| 23.9   | Manage support cases (CRUD with search, status/priority filters, case detail drawer, notes)    | Super Admin | open/in_progress/resolved/closed lifecycle                            |
-| 23.10  | View billing dashboard (subscription stats, plan distribution, MRR, churn rate)                | Super Admin | Platform-wide billing overview (Phase 3)                              |
-| 23.11  | View past-due businesses list with quick actions                                               | Super Admin | Filtered view of past-due subscriptions (Phase 3)                     |
-| 23.12  | Browse all subscriptions with search, plan/status filters, sortable table                      | Super Admin | All business subscriptions (Phase 3)                                  |
-| 23.13  | Change a business plan (upgrade/downgrade)                                                     | Super Admin | Plan change modal with audit logging (Phase 3)                        |
-| 23.14  | Apply billing credits to a business                                                            | Super Admin | Credit modal with amount + reason, audit-logged (Phase 3)             |
-| 23.15  | Cancel a business subscription with reason                                                     | Super Admin | Cancel modal with reason field, sets canceledAt + cancelReason (Phase 3) |
-| 23.16  | Reactivate a canceled subscription                                                             | Super Admin | Reactivate button on canceled subscriptions (Phase 3)                 |
-| 23.17  | View billing credits table per business                                                        | Super Admin | Credits history in Business 360 Billing tab (Phase 3)                 |
-| 23.18  | View invoices table per business                                                               | Super Admin | Invoice history in Business 360 Billing tab (Phase 3)                 |
-| 23.19  | Browse pack registry with version history, install counts, and status                          | Super Admin | Pack listing with search and version timeline (Phase 4)               |
-| 23.20  | View pack detail page with version history, installed businesses, and skills                   | Super Admin | Drill-down from pack registry (Phase 4)                               |
-| 23.21  | Browse skills catalog with per-pack filtering                                                  | Super Admin | Skills listing with pack association (Phase 4)                        |
-| 23.22  | View AI agent performance dashboard (runs, success rate, cards created, helpful rate)           | Super Admin | KPI cards + per-agent-type breakdown table (Phase 5)                  |
-| 23.23  | View action card funnel (pending/approved/dismissed/executed/expired/snoozed)                  | Super Admin | Approval rate and execution rate metrics (Phase 5)                    |
-| 23.24  | View top agent failure errors with count and last seen                                         | Super Admin | Error aggregation across all agent runs (Phase 5)                     |
-| 23.25  | View abnormal tenants with failure rates above platform average                                | Super Admin | Tenant-level agent health monitoring (Phase 5)                        |
-| 23.26  | Search tenant agent status by business ID                                                      | Super Admin | Per-business agent config and run stats (Phase 5)                     |
-| 23.27  | Pause/resume all agents for a specific business                                                | Super Admin | Emergency kill switch per tenant (Phase 5)                            |
-| 23.28  | Update individual agent config per business (enable/disable, autonomy level)                   | Super Admin | Autonomy level capped by platform ceiling (Phase 5)                   |
-| 23.29  | View and update platform agent defaults (max autonomy, confidence threshold, review required)  | Super Admin | Platform-wide agent governance controls (Phase 5)                     |
-| 23.30  | View messaging ops dashboard (messages sent/delivered/failed, delivery rate, reminders)        | Super Admin | KPI cards with 7-day metrics (Phase 5)                                |
-| 23.31  | View webhook health status (healthy/degraded indicator)                                        | Super Admin | Inbound/outbound counts, failed outbound tracking (Phase 5)          |
-| 23.32  | View messaging failure reasons and impacted tenants                                            | Super Admin | Top failure reasons with affected business list (Phase 5)             |
-| 23.33  | View tenant messaging status (WhatsApp config, location coverage, delivery rate)               | Super Admin | Per-tenant messaging health overview (Phase 5)                        |
-| 23.34  | Expand tenant row to view fix checklist (WhatsApp config, delivery, reminders, conversations)  | Super Admin | Diagnostic checklist with ok/warning/error status (Phase 5)           |
-| 23.35  | Configure platform settings (security, notifications, regional, platform)                      | Super Admin | 4-category settings with bulk save (Phase 6)                          |
-| 23.36  | Toggle maintenance mode with confirmation modal                                                | Super Admin | Safety confirmation before enabling maintenance mode (Phase 6)        |
-| 23.37  | View overview attention items (past-due subs, urgent cases, active view-as, agent failures)    | Super Admin | Severity-ranked attention feed on overview dashboard (Phase 6)        |
-| 23.38  | View accounts at risk with weighted risk scoring                                               | Super Admin | Risk score from billing, activity, support, AI health signals (Phase 6) |
+| #     | Story                                                                                         | Persona     | Notes                                                                    |
+| ----- | --------------------------------------------------------------------------------------------- | ----------- | ------------------------------------------------------------------------ |
+| 23.1  | View platform overview dashboard (business count, bookings, staff, agents, billing, security) | Super Admin | Console home page with KPI cards                                         |
+| 23.2  | Browse all businesses in a paginated directory with search                                    | Super Admin | Filter by plan, billing status, health                                   |
+| 23.3  | View Business 360 detail (Summary tab: metadata, usage, health)                               | Super Admin | Read-only business overview                                              |
+| 23.4  | View Business 360 detail (People tab: staff list)                                             | Super Admin | Read-only staff listing                                                  |
+| 23.5  | View Business 360 detail (Billing tab: subscription info, credits, invoices)                  | Super Admin | Full billing management per business (Phase 3)                           |
+| 23.6  | Impersonate a business via View-as (time-limited 15-min JWT, audit-logged)                    | Super Admin | Countdown banner, scoped to target business                              |
+| 23.7  | Browse platform audit log with search, action type filter, pagination                         | Super Admin | Time, Actor, Action, Target, Reason columns                              |
+| 23.8  | View system health (overall status, 5 service checks, business health distribution)           | Super Admin | DB, Business Activity, AI Agents, Calendar Sync, Message Delivery        |
+| 23.9  | Manage support cases (CRUD with search, status/priority filters, case detail drawer, notes)   | Super Admin | open/in_progress/resolved/closed lifecycle                               |
+| 23.10 | View billing dashboard (subscription stats, plan distribution, MRR, churn rate)               | Super Admin | Platform-wide billing overview (Phase 3)                                 |
+| 23.11 | View past-due businesses list with quick actions                                              | Super Admin | Filtered view of past-due subscriptions (Phase 3)                        |
+| 23.12 | Browse all subscriptions with search, plan/status filters, sortable table                     | Super Admin | All business subscriptions (Phase 3)                                     |
+| 23.13 | Change a business plan (upgrade/downgrade)                                                    | Super Admin | Plan change modal with audit logging (Phase 3)                           |
+| 23.14 | Apply billing credits to a business                                                           | Super Admin | Credit modal with amount + reason, audit-logged (Phase 3)                |
+| 23.15 | Cancel a business subscription with reason                                                    | Super Admin | Cancel modal with reason field, sets canceledAt + cancelReason (Phase 3) |
+| 23.16 | Reactivate a canceled subscription                                                            | Super Admin | Reactivate button on canceled subscriptions (Phase 3)                    |
+| 23.17 | View billing credits table per business                                                       | Super Admin | Credits history in Business 360 Billing tab (Phase 3)                    |
+| 23.18 | View invoices table per business                                                              | Super Admin | Invoice history in Business 360 Billing tab (Phase 3)                    |
+| 23.19 | Browse pack registry with version history, install counts, and status                         | Super Admin | Pack listing with search and version timeline (Phase 4)                  |
+| 23.20 | View pack detail page with version history, installed businesses, and skills                  | Super Admin | Drill-down from pack registry (Phase 4)                                  |
+| 23.21 | Browse skills catalog with per-pack filtering                                                 | Super Admin | Skills listing with pack association (Phase 4)                           |
+| 23.22 | View AI agent performance dashboard (runs, success rate, cards created, helpful rate)         | Super Admin | KPI cards + per-agent-type breakdown table (Phase 5)                     |
+| 23.23 | View action card funnel (pending/approved/dismissed/executed/expired/snoozed)                 | Super Admin | Approval rate and execution rate metrics (Phase 5)                       |
+| 23.24 | View top agent failure errors with count and last seen                                        | Super Admin | Error aggregation across all agent runs (Phase 5)                        |
+| 23.25 | View abnormal tenants with failure rates above platform average                               | Super Admin | Tenant-level agent health monitoring (Phase 5)                           |
+| 23.26 | Search tenant agent status by business ID                                                     | Super Admin | Per-business agent config and run stats (Phase 5)                        |
+| 23.27 | Pause/resume all agents for a specific business                                               | Super Admin | Emergency kill switch per tenant (Phase 5)                               |
+| 23.28 | Update individual agent config per business (enable/disable, autonomy level)                  | Super Admin | Autonomy level capped by platform ceiling (Phase 5)                      |
+| 23.29 | View and update platform agent defaults (max autonomy, confidence threshold, review required) | Super Admin | Platform-wide agent governance controls (Phase 5)                        |
+| 23.30 | View messaging ops dashboard (messages sent/delivered/failed, delivery rate, reminders)       | Super Admin | KPI cards with 7-day metrics (Phase 5)                                   |
+| 23.31 | View webhook health status (healthy/degraded indicator)                                       | Super Admin | Inbound/outbound counts, failed outbound tracking (Phase 5)              |
+| 23.32 | View messaging failure reasons and impacted tenants                                           | Super Admin | Top failure reasons with affected business list (Phase 5)                |
+| 23.33 | View tenant messaging status (WhatsApp config, location coverage, delivery rate)              | Super Admin | Per-tenant messaging health overview (Phase 5)                           |
+| 23.34 | Expand tenant row to view fix checklist (WhatsApp config, delivery, reminders, conversations) | Super Admin | Diagnostic checklist with ok/warning/error status (Phase 5)              |
+| 23.35 | Configure platform settings (security, notifications, regional, platform)                     | Super Admin | 4-category settings with bulk save (Phase 6)                             |
+| 23.36 | Toggle maintenance mode with confirmation modal                                               | Super Admin | Safety confirmation before enabling maintenance mode (Phase 6)           |
+| 23.37 | View overview attention items (past-due subs, urgent cases, active view-as, agent failures)   | Super Admin | Severity-ranked attention feed on overview dashboard (Phase 6)           |
+| 23.38 | View accounts at risk with weighted risk scoring                                              | Super Admin | Risk score from billing, activity, support, AI health signals (Phase 6)  |
 
 ### What Users CANNOT Do
 
-| #      | Story                                                   | Notes                                              |
-| ------ | ------------------------------------------------------- | -------------------------------------------------- |
-| 23.39  | Edit business details (name, slug, timezone) directly   | Read-only; must use View-as to access business UI  |
-| 23.40  | Create a new business from the console                  | Businesses created via signup only                  |
-| 23.41  | Delete a business                                       | No business deletion                                |
-| 23.42  | Process refunds from the console                        | Must use Stripe dashboard                           |
-| 23.43  | View per-business revenue analytics                     | No revenue reporting in console yet                 |
-| 23.44  | Send platform-wide announcements                        | Not yet implemented                                 |
-| 23.45  | Create/edit vertical packs from the console              | Pack builder is a separate admin tool               |
-| 23.46  | View per-business messaging conversation content        | Privacy boundary; use View-as for this              |
+| #     | Story                                                 | Notes                                             |
+| ----- | ----------------------------------------------------- | ------------------------------------------------- |
+| 23.39 | Edit business details (name, slug, timezone) directly | Read-only; must use View-as to access business UI |
+| 23.40 | Create a new business from the console                | Businesses created via signup only                |
+| 23.41 | Delete a business                                     | No business deletion                              |
+| 23.42 | Process refunds from the console                      | Must use Stripe dashboard                         |
+| 23.43 | View per-business revenue analytics                   | No revenue reporting in console yet               |
+| 23.44 | Send platform-wide announcements                      | Not yet implemented                               |
+| 23.45 | Create/edit vertical packs from the console           | Pack builder is a separate admin tool             |
+| 23.46 | View per-business messaging conversation content      | Privacy boundary; use View-as for this            |
 
 ---
 
 ## Summary Statistics
 
-| Category          | Can Do  | Cannot Do |
-| ----------------- | ------- | --------- |
-| Authentication    | 12      | 9         |
-| Onboarding        | 14      | 6         |
-| Dashboard         | 31      | 8         |
-| Bookings          | 24      | 15        |
-| Calendar          | 15      | 7         |
-| Customers         | 21      | 7         |
-| Inbox             | 41      | 11        |
-| Services          | 9       | 10        |
-| Staff             | 11      | 11        |
-| Waitlist          | 6       | 6         |
-| Campaigns         | 7       | 9         |
-| Automations       | 17      | 9         |
-| Settings          | 28      | 11        |
-| Locations         | 12      | 9         |
-| Reports           | 9       | 9         |
-| ROI               | 5       | 4         |
-| AI                | 22      | 9         |
-| Public Booking    | 11      | 9         |
-| Self-Serve        | 10      | 6         |
-| Quotes            | 4       | 6         |
-| Billing           | 4       | 7         |
-| Global            | 17      | 7         |
-| Platform Console  | 38      | 8         |
-| **Total**         | **393** | **196**   |
+| Category         | Can Do  | Cannot Do |
+| ---------------- | ------- | --------- |
+| Authentication   | 12      | 9         |
+| Onboarding       | 14      | 6         |
+| Dashboard        | 31      | 8         |
+| Bookings         | 24      | 15        |
+| Calendar         | 15      | 7         |
+| Customers        | 21      | 7         |
+| Inbox            | 41      | 11        |
+| Services         | 9       | 10        |
+| Staff            | 11      | 11        |
+| Waitlist         | 6       | 6         |
+| Campaigns        | 7       | 9         |
+| Automations      | 17      | 9         |
+| Settings         | 28      | 11        |
+| Locations        | 12      | 9         |
+| Reports          | 9       | 9         |
+| ROI              | 5       | 4         |
+| AI               | 22      | 9         |
+| Public Booking   | 11      | 9         |
+| Self-Serve       | 10      | 6         |
+| Quotes           | 4       | 6         |
+| Billing          | 4       | 7         |
+| Global           | 17      | 7         |
+| Platform Console | 38      | 8         |
+| **Total**        | **393** | **196**   |
 
 > **Omnichannel Impact**: +7 capabilities (4 inbox channel features, 3 settings channel pages). Total shift from 386/196 to 393/196.
 >

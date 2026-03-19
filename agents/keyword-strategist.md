@@ -27,21 +27,21 @@ Conduct weekly keyword research to identify high-value search terms for BookingO
 
 ## Schedule
 
-| Day | Time | Action |
-|-----|------|--------|
+| Day    | Time    | Action                         |
+| ------ | ------- | ------------------------------ |
 | Monday | 7:00 AM | Full keyword research + report |
 
 ---
 
 ## Inputs
 
-| Source | File | What to Extract |
-|--------|------|----------------|
-| Trend briefing | `briefings/trend-briefing-[latest].md` | Suggested keywords from top trends |
-| Customer signals | `data/customer-signals.md` | Feature requests, questions, language customers use |
-| Product-content map | `system/product-content-map.md` | Target keywords per feature |
-| Previous keyword report | `reports/keyword-report-[previous].md` | Track position changes, identify new opportunities |
-| Evergreen trends | `data/evergreen-trends.md` | Baseline keywords by pillar |
+| Source                  | File                                   | What to Extract                                     |
+| ----------------------- | -------------------------------------- | --------------------------------------------------- |
+| Trend briefing          | `briefings/trend-briefing-[latest].md` | Suggested keywords from top trends                  |
+| Customer signals        | `data/customer-signals.md`             | Feature requests, questions, language customers use |
+| Product-content map     | `system/product-content-map.md`        | Target keywords per feature                         |
+| Previous keyword report | `reports/keyword-report-[previous].md` | Track position changes, identify new opportunities  |
+| Evergreen trends        | `data/evergreen-trends.md`             | Baseline keywords by pillar                         |
 
 ---
 
@@ -50,6 +50,7 @@ Conduct weekly keyword research to identify high-value search terms for BookingO
 ### Step 1: Seed Keyword Collection
 
 Gather seed keywords from:
+
 1. **Trend briefing** — suggested keywords from this week's trends
 2. **Customer signals** — exact phrases customers use when describing problems
 3. **Product-content map** — target keywords mapped to features
@@ -59,6 +60,7 @@ Gather seed keywords from:
 ### Step 2: Keyword Expansion (Ahrefs MCP)
 
 For each seed keyword, use Ahrefs MCP to find:
+
 - Related keywords and questions
 - Long-tail variations
 - Monthly search volume
@@ -70,11 +72,11 @@ For each seed keyword, use Ahrefs MCP to find:
 
 Tag every keyword with a funnel stage:
 
-| Stage | Intent Signal | Examples |
-|-------|--------------|---------|
-| **TOFU** (Top of Funnel) | Informational, "what is", "how to", "tips" | "how to reduce no-shows", "salon marketing ideas" |
-| **MOFU** (Middle of Funnel) | Comparison, "best", "vs", "review", "software" | "best salon booking software", "BookingOS vs Calendly" |
-| **BOFU** (Bottom of Funnel) | Transactional, "pricing", "demo", "free trial", brand terms | "BookingOS pricing", "booking software free trial" |
+| Stage                       | Intent Signal                                               | Examples                                               |
+| --------------------------- | ----------------------------------------------------------- | ------------------------------------------------------ |
+| **TOFU** (Top of Funnel)    | Informational, "what is", "how to", "tips"                  | "how to reduce no-shows", "salon marketing ideas"      |
+| **MOFU** (Middle of Funnel) | Comparison, "best", "vs", "review", "software"              | "best salon booking software", "BookingOS vs Calendly" |
+| **BOFU** (Bottom of Funnel) | Transactional, "pricing", "demo", "free trial", brand terms | "BookingOS pricing", "booking software free trial"     |
 
 ### Step 4: Priority Scoring
 
@@ -85,16 +87,17 @@ Priority = Volume × (1 / KD) × Funnel_Weight
 ```
 
 | Funnel Stage | Weight |
-|-------------|--------|
-| BOFU | 3.0 |
-| MOFU | 2.0 |
-| TOFU | 1.0 |
+| ------------ | ------ |
+| BOFU         | 3.0    |
+| MOFU         | 2.0    |
+| TOFU         | 1.0    |
 
 **Normalization:** Scale the final priority score to 0-100 for readability.
 
 ### Step 5: Clustering
 
 Group keywords into clusters by topic/intent:
+
 - Each cluster = 1 content piece opportunity
 - Identify the **primary keyword** (highest priority) and **supporting keywords** per cluster
 - Map each cluster to a content pillar
@@ -130,6 +133,7 @@ Create file: `reports/keyword-report-[YYYY-MM-DD].md`
 ### Cluster 1: [Cluster Name]
 
 **Primary keyword:** [keyword]
+
 - Volume: [monthly]
 - KD: [0-100]
 - Funnel: TOFU / MOFU / BOFU
@@ -146,6 +150,7 @@ Create file: `reports/keyword-report-[YYYY-MM-DD].md`
 **Content brief notes:** [1-2 sentences on what the content piece should cover]
 
 ### Cluster 2: [Cluster Name]
+
 [Same format]
 
 ...
@@ -154,39 +159,39 @@ Create file: `reports/keyword-report-[YYYY-MM-DD].md`
 
 ## Keyword Tracking (Position Changes)
 
-| Keyword | Last Week Pos | This Week Pos | Change | Action |
-|---------|--------------|---------------|--------|--------|
-| [keyword] | [pos] | [pos] | [+/-] | [Monitor / Create content / Optimize existing] |
+| Keyword   | Last Week Pos | This Week Pos | Change | Action                                         |
+| --------- | ------------- | ------------- | ------ | ---------------------------------------------- |
+| [keyword] | [pos]         | [pos]         | [+/-]  | [Monitor / Create content / Optimize existing] |
 
 ---
 
 ## Competitor Keyword Gaps
 
-| Keyword | Competitor | Their Position | Our Position | Opportunity |
-|---------|-----------|---------------|-------------|-------------|
-| [keyword] | [competitor] | [pos] | Not ranking | [HIGH/MED/LOW] |
+| Keyword   | Competitor   | Their Position | Our Position | Opportunity    |
+| --------- | ------------ | -------------- | ------------ | -------------- |
+| [keyword] | [competitor] | [pos]          | Not ranking  | [HIGH/MED/LOW] |
 
 ---
 
 ## Funnel Distribution
 
-| Stage | Keywords | % of Total | Target % | Gap |
-|-------|----------|-----------|----------|-----|
-| TOFU | [count] | [%] | 50% | [over/under] |
-| MOFU | [count] | [%] | 35% | [over/under] |
-| BOFU | [count] | [%] | 15% | [over/under] |
+| Stage | Keywords | % of Total | Target % | Gap          |
+| ----- | -------- | ---------- | -------- | ------------ |
+| TOFU  | [count]  | [%]        | 50%      | [over/under] |
+| MOFU  | [count]  | [%]        | 35%      | [over/under] |
+| BOFU  | [count]  | [%]        | 15%      | [over/under] |
 
 ---
 
 ## Pillar Distribution
 
-| Pillar | Keywords | % of Total | Target % | Gap |
-|--------|----------|-----------|----------|-----|
-| Booking & Scheduling | [count] | [%] | 20% | |
-| Client Experience | [count] | [%] | 20% | |
-| Business Growth | [count] | [%] | 25% | |
-| Operations & Efficiency | [count] | [%] | 20% | |
-| Industry Insights | [count] | [%] | 15% | |
+| Pillar                  | Keywords | % of Total | Target % | Gap |
+| ----------------------- | -------- | ---------- | -------- | --- |
+| Booking & Scheduling    | [count]  | [%]        | 20%      |     |
+| Client Experience       | [count]  | [%]        | 20%      |     |
+| Business Growth         | [count]  | [%]        | 25%      |     |
+| Operations & Efficiency | [count]  | [%]        | 20%      |     |
+| Industry Insights       | [count]  | [%]        | 15%      |     |
 
 ---
 
@@ -203,13 +208,13 @@ Create file: `reports/keyword-report-[YYYY-MM-DD].md`
 
 Self-check against `system/quality-gates.md` Gate 1:
 
-| # | Check | Threshold | Status |
-|---|-------|-----------|--------|
-| 1 | Each keyword has verified search volume data | Not guessed/estimated | |
-| 2 | All keywords tagged with funnel stage | 100% tagged | |
-| 3 | Keywords map to content pillars | >= 3 of 5 pillars | |
-| 4 | No duplicate keywords from previous report | Deduplicated | |
-| 5 | Priority formula applied consistently | All scored | |
+| #   | Check                                        | Threshold             | Status |
+| --- | -------------------------------------------- | --------------------- | ------ |
+| 1   | Each keyword has verified search volume data | Not guessed/estimated |        |
+| 2   | All keywords tagged with funnel stage        | 100% tagged           |        |
+| 3   | Keywords map to content pillars              | >= 3 of 5 pillars     |        |
+| 4   | No duplicate keywords from previous report   | Deduplicated          |        |
+| 5   | Priority formula applied consistently        | All scored            |        |
 
 ---
 
@@ -217,27 +222,27 @@ Self-check against `system/quality-gates.md` Gate 1:
 
 Per `system/mcp-fallback-config.md`:
 
-| Scenario | Action |
-|----------|--------|
-| Ahrefs MCP unavailable | Use Google Trends for relative volume, flag KD as `[ESTIMATED]` |
-| No MCP data at all | Use `data/evergreen-trends.md` keywords, flag entire report as `[FALLBACK]` |
-| Rate limit approaching | Prioritize BOFU keywords, skip TOFU expansion |
+| Scenario               | Action                                                                      |
+| ---------------------- | --------------------------------------------------------------------------- |
+| Ahrefs MCP unavailable | Use Google Trends for relative volume, flag KD as `[ESTIMATED]`             |
+| No MCP data at all     | Use `data/evergreen-trends.md` keywords, flag entire report as `[FALLBACK]` |
+| Rate limit approaching | Prioritize BOFU keywords, skip TOFU expansion                               |
 
 ---
 
 ## Interaction with Other Agents
 
-| Agent | Relationship |
-|-------|-------------|
-| **Trend Scout** (P9) | Provides trending topics with suggested keywords — your primary seed source |
-| **Content Strategist** (P11) | Reads your report to assign keywords to content briefs |
-| **Blog Writer** (P12) | Uses your primary/supporting keywords for SEO optimization |
-| **Performance Analyst** (P18) | Provides ranking data to inform your position tracking |
+| Agent                         | Relationship                                                                |
+| ----------------------------- | --------------------------------------------------------------------------- |
+| **Trend Scout** (P9)          | Provides trending topics with suggested keywords — your primary seed source |
+| **Content Strategist** (P11)  | Reads your report to assign keywords to content briefs                      |
+| **Blog Writer** (P12)         | Uses your primary/supporting keywords for SEO optimization                  |
+| **Performance Analyst** (P18) | Provides ranking data to inform your position tracking                      |
 
 ---
 
 ## Change Log
 
-| Date | Change |
-|------|--------|
+| Date       | Change           |
+| ---------- | ---------------- |
 | 2026-03-12 | Initial creation |

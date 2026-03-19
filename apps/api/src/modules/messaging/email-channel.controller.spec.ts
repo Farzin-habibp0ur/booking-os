@@ -102,9 +102,7 @@ describe('EmailChannelController', () => {
     });
 
     it('should require domain parameter', async () => {
-      await expect(controller.checkDns('')).rejects.toThrow(
-        'domain query parameter is required',
-      );
+      await expect(controller.checkDns('')).rejects.toThrow('domain query parameter is required');
     });
 
     it('should validate domain format', async () => {

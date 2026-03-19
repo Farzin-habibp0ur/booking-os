@@ -21,18 +21,21 @@ queue/
 ## File Naming Convention
 
 ### New content (pending)
+
 ```
 [DATE]-[TIER]-[PLATFORM]-[LANGUAGE]-[TITLE].md
 Example: 2026-03-17-GREEN-instagram-en-5-ways-reduce-noshows.md
 ```
 
 ### Rejected content
+
 ```
 [DATE]-REJECTED-[CODE]-[PLATFORM]-[LANGUAGE]-[TITLE].md
 Example: 2026-03-17-REJECTED-R07-instagram-en-5-ways-reduce-noshows.md
 ```
 
 ### Published content
+
 ```
 [DATE]-PUBLISHED-[PLATFORM]-[LANGUAGE]-[TITLE].md
 Example: 2026-03-17-PUBLISHED-instagram-en-5-ways-reduce-noshows.md
@@ -43,25 +46,30 @@ Example: 2026-03-17-PUBLISHED-instagram-en-5-ways-reduce-noshows.md
 ## Daily Review Process (15 minutes)
 
 ### Step 1: Triage (2 min)
+
 - Open `queue/pending/`
-- Count items by tier: RED ___ | YELLOW ___ | GREEN ___
+- Count items by tier: RED **_ | YELLOW _** | GREEN \_\_\_
 - If > 30 items, focus on RED + YELLOW only (defer GREEN to next session)
 
 ### Step 2: Review RED tier first (5 min)
+
 - These need the most careful review — legal, medical, competitor claims
 - Approve → move to `approved/`
 - Reject → rename with rejection code, move to `rejected/`, log in `system/rejection-tracker.md`
 
 ### Step 3: Review YELLOW tier (5 min)
+
 - Check pricing accuracy, testimonial verification, cultural adaptation
 - Same approve/reject flow
 
 ### Step 4: Review GREEN tier (3 min)
+
 - Quick scan for obvious issues
 - Auto-approve candidates (see `system/auto-escalation-rules.md`) can be batch-approved
 - Spot-check 1 in 5 auto-approve candidates
 
 ### Step 5: Log (1 min)
+
 - Update `system/rejection-tracker.md` with any rejections
 - Note any patterns for Learning Engine
 
@@ -69,11 +77,11 @@ Example: 2026-03-17-PUBLISHED-instagram-en-5-ways-reduce-noshows.md
 
 ## Tier Quick Reference
 
-| Tier | Review Level | Examples |
-|------|-------------|---------|
-| **GREEN** | Quick scan, auto-approve candidates | Evergreen tips, educational content, TOFU |
-| **YELLOW** | Careful review required | Pricing mentions, testimonials, MOFU, Spanish cultural content |
-| **RED** | Founder deep review required | Competitor comparisons, health claims, legal language, guarantees |
+| Tier       | Review Level                        | Examples                                                          |
+| ---------- | ----------------------------------- | ----------------------------------------------------------------- |
+| **GREEN**  | Quick scan, auto-approve candidates | Evergreen tips, educational content, TOFU                         |
+| **YELLOW** | Careful review required             | Pricing mentions, testimonials, MOFU, Spanish cultural content    |
+| **RED**    | Founder deep review required        | Competitor comparisons, health claims, legal language, guarantees |
 
 ---
 

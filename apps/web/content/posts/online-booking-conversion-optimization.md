@@ -1,10 +1,10 @@
 ---
-title: "Optimizing Your Online Booking Page for Higher Conversion Rates"
-description: "Practical tips for designing an online booking experience that converts visitors into confirmed appointments."
-date: "2026-02-22"
-category: "Product Education"
-author: "Booking OS Team"
-readTime: "5 min read"
+title: 'Optimizing Your Online Booking Page for Higher Conversion Rates'
+description: 'Practical tips for designing an online booking experience that converts visitors into confirmed appointments.'
+date: '2026-02-22'
+category: 'Product Education'
+author: 'Booking OS Team'
+readTime: '5 min read'
 ---
 
 Your online booking page is often the first real interaction a potential client has with your business. A confusing or slow booking flow can cost you clients before they ever walk through your door. Here's how to optimize every step.

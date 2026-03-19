@@ -8,11 +8,12 @@
 
 ## New Trial Signups This Week
 
-| Name/ID | Source Channel | Content That Brought Them | Landing Page | Status |
-|---------|---------------|--------------------------|--------------|--------|
-| (fill in) | Instagram / TikTok / LinkedIn / Blog / Direct / Referral / Other | Link or title of content piece | /signup, /blog/*, /portal | Trial / Active / Churned |
+| Name/ID   | Source Channel                                                   | Content That Brought Them      | Landing Page               | Status                   |
+| --------- | ---------------------------------------------------------------- | ------------------------------ | -------------------------- | ------------------------ |
+| (fill in) | Instagram / TikTok / LinkedIn / Blog / Direct / Referral / Other | Link or title of content piece | /signup, /blog/\*, /portal | Trial / Active / Churned |
 
 **How to fill in Source Channel:**
+
 - Check UTM params in signup analytics (utm_source, utm_campaign)
 - Ask during onboarding: "How did you hear about us?"
 - Check referral codes if applicable
@@ -21,17 +22,17 @@
 
 ## Conversions (Trial → Paid)
 
-| Name/ID | Days to Convert | Plan Chosen | Top Features Used | Feedback |
-|---------|----------------|-------------|-------------------|----------|
-| (fill in) | | Basic / Pro / Premium | e.g., booking calendar, AI auto-reply, WhatsApp | Quote or paraphrase |
+| Name/ID   | Days to Convert | Plan Chosen           | Top Features Used                               | Feedback            |
+| --------- | --------------- | --------------------- | ----------------------------------------------- | ------------------- |
+| (fill in) |                 | Basic / Pro / Premium | e.g., booking calendar, AI auto-reply, WhatsApp | Quote or paraphrase |
 
 ---
 
 ## Churned Trials (Did Not Convert)
 
-| Name/ID | Days Active | Reason (if known) | Last Feature Used | Could We Win Back? |
-|---------|------------|-------------------|-------------------|--------------------|
-| (fill in) | | | | Yes / No / Maybe |
+| Name/ID   | Days Active | Reason (if known) | Last Feature Used | Could We Win Back? |
+| --------- | ----------- | ----------------- | ----------------- | ------------------ |
+| (fill in) |             |                   |                   | Yes / No / Maybe   |
 
 ---
 

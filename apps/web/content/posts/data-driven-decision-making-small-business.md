@@ -1,10 +1,10 @@
 ---
-title: "Data-Driven Decision Making for Small Service Businesses"
-description: "How to use the data you already collect to make smarter decisions about staffing, marketing, pricing, and client experience."
-date: "2026-02-28"
-category: "Thought Leadership"
-author: "Booking OS Team"
-readTime: "5 min read"
+title: 'Data-Driven Decision Making for Small Service Businesses'
+description: 'How to use the data you already collect to make smarter decisions about staffing, marketing, pricing, and client experience.'
+date: '2026-02-28'
+category: 'Thought Leadership'
+author: 'Booking OS Team'
+readTime: '5 min read'
 ---
 
 Most small service businesses are sitting on a goldmine of data they never use. Every booking, every client interaction, every cancelled appointment tells a story. The businesses that learn to read these stories consistently outperform those that rely on gut feel alone.

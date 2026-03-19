@@ -30,8 +30,7 @@ jest.mock('@/lib/i18n', () => ({
         'sms.from_number': 'Default From Number',
         'sms.from_number_hint': 'E.164 format (e.g. +1234567890)',
         'sms.status_callback_url': 'Status Callback URL',
-        'sms.status_callback_hint':
-          'Twilio will send delivery status updates to this URL',
+        'sms.status_callback_hint': 'Twilio will send delivery status updates to this URL',
         'sms.save': 'Save',
         'sms.saved': 'SMS settings saved',
         'sms.save_failed': 'Failed to save SMS settings',
@@ -48,17 +47,13 @@ jest.mock('@/lib/i18n', () => ({
         'sms.test_failed': 'Failed to send test SMS',
         'sms.a2p_title': 'A2P 10DLC Compliance',
         'sms.a2p_required': 'Required for US numbers',
-        'sms.a2p_step1':
-          'Register your brand at twilio.com/console/sms/campaigns',
-        'sms.a2p_step2':
-          'Create a messaging campaign describing your use case',
+        'sms.a2p_step1': 'Register your brand at twilio.com/console/sms/campaigns',
+        'sms.a2p_step2': 'Create a messaging campaign describing your use case',
         'sms.a2p_step3': 'Assign your phone numbers to the campaign',
-        'sms.a2p_step4':
-          'Wait for approval (typically 1-3 business days)',
+        'sms.a2p_step4': 'Wait for approval (typically 1-3 business days)',
         'sms.a2p_warning':
           'Non-compliant numbers may experience message filtering or delivery failures.',
-        'sms.no_locations':
-          'No locations found. Create a location first.',
+        'sms.no_locations': 'No locations found. Create a location first.',
       };
       return translations[key] || key;
     },
@@ -102,13 +97,14 @@ jest.mock('lucide-react', () => ({
   Loader2: (p: any) => <span data-testid="icon-loader" {...p} />,
 }));
 
-function setupMockApi(opts?: {
-  locations?: any[];
-  business?: any;
-}) {
+function setupMockApi(opts?: { locations?: any[]; business?: any }) {
   const locations = opts?.locations ?? [
     { id: 'loc1', name: 'Main Office', smsConfig: null },
-    { id: 'loc2', name: 'Branch Office', smsConfig: { phoneNumber: '+15551234567', enabled: true } },
+    {
+      id: 'loc2',
+      name: 'Branch Office',
+      smsConfig: { phoneNumber: '+15551234567', enabled: true },
+    },
   ];
   const business = opts?.business ?? {
     id: 'b1',
@@ -139,9 +135,7 @@ describe('SmsSettingsPage', () => {
 
     await waitFor(() => {
       expect(screen.getByText('SMS Settings')).toBeInTheDocument();
-      expect(
-        screen.getByText('Configure two-way SMS messaging via Twilio'),
-      ).toBeInTheDocument();
+      expect(screen.getByText('Configure two-way SMS messaging via Twilio')).toBeInTheDocument();
     });
   });
 
@@ -163,9 +157,7 @@ describe('SmsSettingsPage', () => {
     await waitFor(() => {
       expect(screen.getByTestId('a2p-compliance-card')).toBeInTheDocument();
       expect(screen.getByText(/A2P 10DLC Compliance/)).toBeInTheDocument();
-      expect(
-        screen.getByText(/Register your brand at twilio.com/),
-      ).toBeInTheDocument();
+      expect(screen.getByText(/Register your brand at twilio.com/)).toBeInTheDocument();
     });
   });
 
@@ -184,9 +176,7 @@ describe('SmsSettingsPage', () => {
     render(<SmsSettingsPage />);
 
     await waitFor(() => {
-      expect(
-        screen.getByText('No locations found. Create a location first.'),
-      ).toBeInTheDocument();
+      expect(screen.getByText('No locations found. Create a location first.')).toBeInTheDocument();
     });
   });
 
@@ -240,9 +230,7 @@ describe('SmsSettingsPage', () => {
     fireEvent.click(saveButtons[0]);
 
     await waitFor(() => {
-      expect(
-        screen.getByText('Failed to save SMS settings'),
-      ).toBeInTheDocument();
+      expect(screen.getByText('Failed to save SMS settings')).toBeInTheDocument();
     });
   });
 });

@@ -24,7 +24,15 @@ import { CustomerIdentityModule } from '../customer-identity/customer-identity.m
     forwardRef(() => MessageModule),
     forwardRef(() => AiModule),
   ],
-  controllers: [WebhookController, SmsController, FacebookController, EmailChannelController, ChatWidgetController, WebChatController, ChannelStatusController],
+  controllers: [
+    WebhookController,
+    SmsController,
+    FacebookController,
+    EmailChannelController,
+    ChatWidgetController,
+    WebChatController,
+    ChannelStatusController,
+  ],
   providers: [MessagingService],
   exports: [MessagingService],
 })

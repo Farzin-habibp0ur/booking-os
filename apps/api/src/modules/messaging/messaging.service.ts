@@ -213,9 +213,7 @@ export class MessagingService {
 
     if (channel === 'FACEBOOK') {
       // Facebook Messenger: look up by page ID from location config
-      const fbProvider = this.getProviderForLocationFacebookConfig(
-        locationFacebookConfig || null,
-      );
+      const fbProvider = this.getProviderForLocationFacebookConfig(locationFacebookConfig || null);
       if (fbProvider) return fbProvider;
       this.logger.warn('Facebook provider not found for conversation, falling back to default');
       return this.provider;

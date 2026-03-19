@@ -161,11 +161,14 @@ describe('WebChatSettingsPage', () => {
     });
 
     await waitFor(() => {
-      expect(mockPut).toHaveBeenCalledWith('/messaging/web-chat/config', expect.objectContaining({
-        primaryColor: '#71907C',
-        title: 'Chat with us',
-        position: 'bottom-right',
-      }));
+      expect(mockPut).toHaveBeenCalledWith(
+        '/messaging/web-chat/config',
+        expect.objectContaining({
+          primaryColor: '#71907C',
+          title: 'Chat with us',
+          position: 'bottom-right',
+        }),
+      );
     });
   });
 });

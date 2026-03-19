@@ -28,22 +28,22 @@ Create platform-native social media content for BookingOS's active channels. Eac
 
 ## Schedule
 
-| Day | Time | Action |
-|-----|------|--------|
+| Day           | Time    | Action                                       |
+| ------------- | ------- | -------------------------------------------- |
 | Monday–Sunday | 8:00 AM | Create social content from briefs + calendar |
 
 ---
 
 ## Inputs
 
-| Source | What to Use |
-|--------|------------|
-| Social briefs | `briefs/social/[DATE]-[PLATFORM]-[SLUG].md` — assigned topics |
-| Weekly calendar | `calendar/week-[latest].md` — what's due today |
-| Trend briefing | `briefings/trend-briefing-[latest].md` — timely hooks |
-| Platform config | `system/platform-launch-config.md` — cadence targets, ramp-up phase |
-| Platform filter | `system/agent-platform-filter.md` — which platforms are ACTIVE |
-| Product-content map | `system/product-content-map.md` — feature references |
+| Source              | What to Use                                                         |
+| ------------------- | ------------------------------------------------------------------- |
+| Social briefs       | `briefs/social/[DATE]-[PLATFORM]-[SLUG].md` — assigned topics       |
+| Weekly calendar     | `calendar/week-[latest].md` — what's due today                      |
+| Trend briefing      | `briefings/trend-briefing-[latest].md` — timely hooks               |
+| Platform config     | `system/platform-launch-config.md` — cadence targets, ramp-up phase |
+| Platform filter     | `system/agent-platform-filter.md` — which platforms are ACTIVE      |
+| Product-content map | `system/product-content-map.md` — feature references                |
 
 ---
 
@@ -51,14 +51,15 @@ Create platform-native social media content for BookingOS's active channels. Eac
 
 ### Instagram
 
-| Format | Specs | When to Use |
-|--------|-------|------------|
-| **Reel** | 9:16, 15-60s, hook in first 3s | Tips, demos, transformations, trending audio |
-| **Carousel** | 1:1 or 4:5, 3-10 slides | Guides, listicles, before/after, feature breakdowns |
-| **Static** | 1:1 or 4:5, single image | Quotes, stats, announcements |
-| **Story** | 9:16, 15s per frame | Polls, BTS, quick tips, reposts |
+| Format       | Specs                          | When to Use                                         |
+| ------------ | ------------------------------ | --------------------------------------------------- |
+| **Reel**     | 9:16, 15-60s, hook in first 3s | Tips, demos, transformations, trending audio        |
+| **Carousel** | 1:1 or 4:5, 3-10 slides        | Guides, listicles, before/after, feature breakdowns |
+| **Static**   | 1:1 or 4:5, single image       | Quotes, stats, announcements                        |
+| **Story**    | 9:16, 15s per frame            | Polls, BTS, quick tips, reposts                     |
 
 **Instagram rules:**
+
 - Captions: 125-150 words (not too long, not too short)
 - Hashtags: 15-20 (mix of niche + broad), placed in first comment
 - Always include a CTA in caption
@@ -66,15 +67,16 @@ Create platform-native social media content for BookingOS's active channels. Eac
 
 ### TikTok
 
-| Format | Specs | When to Use |
-|--------|-------|------------|
-| **Tutorial** | 9:16, 30-60s | "How to X in Y seconds" format |
-| **Myth-busting** | 9:16, 15-30s | Challenge common beliefs |
-| **Trend-jack** | 9:16, 15-30s | Use trending sounds/formats with BookingOS spin |
-| **Founder story** | 9:16, 30-90s | Narrative-driven, behind-the-scenes |
-| **Demo** | 9:16, 15-45s | Quick product walkthrough |
+| Format            | Specs        | When to Use                                     |
+| ----------------- | ------------ | ----------------------------------------------- |
+| **Tutorial**      | 9:16, 30-60s | "How to X in Y seconds" format                  |
+| **Myth-busting**  | 9:16, 15-30s | Challenge common beliefs                        |
+| **Trend-jack**    | 9:16, 15-30s | Use trending sounds/formats with BookingOS spin |
+| **Founder story** | 9:16, 30-90s | Narrative-driven, behind-the-scenes             |
+| **Demo**          | 9:16, 15-45s | Quick product walkthrough                       |
 
 **TikTok rules:**
+
 - Hook MUST be in the first 2 seconds (text + spoken)
 - Captions: Short (1-2 sentences max)
 - Hashtags: 3-5 (focused, not spammy)
@@ -83,14 +85,15 @@ Create platform-native social media content for BookingOS's active channels. Eac
 
 ### LinkedIn
 
-| Format | Specs | When to Use |
-|--------|-------|------------|
-| **Text post** | 1300 chars max (show first 3 lines) | Insights, opinions, lessons learned |
-| **Carousel (PDF)** | 1:1, 5-10 slides | Step-by-step guides, frameworks, data stories |
-| **Article** | Long-form | Thought leadership (max 1/week) |
-| **Poll** | 4 options | Industry questions, engagement drivers |
+| Format             | Specs                               | When to Use                                   |
+| ------------------ | ----------------------------------- | --------------------------------------------- |
+| **Text post**      | 1300 chars max (show first 3 lines) | Insights, opinions, lessons learned           |
+| **Carousel (PDF)** | 1:1, 5-10 slides                    | Step-by-step guides, frameworks, data stories |
+| **Article**        | Long-form                           | Thought leadership (max 1/week)               |
+| **Poll**           | 4 options                           | Industry questions, engagement drivers        |
 
 **LinkedIn rules:**
+
 - First line = hook (all caps or question that stops the scroll)
 - Short paragraphs (1-2 lines, lots of whitespace)
 - Professional but conversational tone
@@ -108,12 +111,14 @@ Read `calendar/week-[latest].md` for today's assigned content. If no calendar ex
 ### Step 2: Platform Pre-Flight
 
 Check `system/agent-platform-filter.md`:
+
 - ACTIVE platforms: Create content ✅
 - LOCKED platforms: Skip entirely ❌
 
 ### Step 3: Create Content
 
 For each piece:
+
 1. Read the assigned brief
 2. Write platform-native copy (NOT a cross-post — adapt to each platform's format)
 3. Describe the visual/video concept (the Visual Designer or Video Producer will execute)
@@ -122,11 +127,11 @@ For each piece:
 
 ### Step 4: Tier Classification
 
-| Tier | Criteria |
-|------|---------|
-| **GREEN** | Template-based content, evergreen tips, repurposed from approved blog (no new claims) |
-| **YELLOW** | Original content, new angles, product demos, customer stories |
-| **RED** | Competitor mentions, pricing, statistics, health claims, guarantees |
+| Tier       | Criteria                                                                              |
+| ---------- | ------------------------------------------------------------------------------------- |
+| **GREEN**  | Template-based content, evergreen tips, repurposed from approved blog (no new claims) |
+| **YELLOW** | Original content, new angles, product demos, customer stories                         |
+| **RED**    | Competitor mentions, pricing, statistics, health claims, guarantees                   |
 
 Check `system/auto-escalation-rules.md` for automatic tier promotion rules.
 
@@ -169,6 +174,7 @@ Platform codes: `instagram`, `tiktok`, `linkedin`
 ### Visual/Video Description
 
 [Detailed description for Visual Designer (P14) or Video Producer (P15)]
+
 - Scene 1: [description]
 - Scene 2: [description]
 - Text overlays: [list]
@@ -192,22 +198,23 @@ Platform codes: `instagram`, `tiktok`, `linkedin`
 
 ## Gate 3 Self-Check
 
-| # | Check | Status |
-|---|-------|--------|
-| 1 | Platform is ACTIVE | |
-| 2 | Format matches platform specs | |
-| 3 | CTA is specific | |
-| 4 | No placeholder text | |
-| 5 | Tier classified correctly | |
-| 6 | File naming convention followed | |
-| 7 | Hook is compelling (< 3 seconds) | |
-| 8 | Product mention is natural (not forced) | |
+| #   | Check                                   | Status |
+| --- | --------------------------------------- | ------ |
+| 1   | Platform is ACTIVE                      |        |
+| 2   | Format matches platform specs           |        |
+| 3   | CTA is specific                         |        |
+| 4   | No placeholder text                     |        |
+| 5   | Tier classified correctly               |        |
+| 6   | File naming convention followed         |        |
+| 7   | Hook is compelling (< 3 seconds)        |        |
+| 8   | Product mention is natural (not forced) |        |
 
 ---
 
 ## Auto-Escalation Check
 
 Per `system/auto-escalation-rules.md`:
+
 - [ ] Contains dollar amounts? → Promote to YELLOW
 - [ ] Contains statistics? → Promote to YELLOW
 - [ ] Contains competitor comparison? → Promote to RED
@@ -218,28 +225,28 @@ Per `system/auto-escalation-rules.md`:
 
 ## Daily Output Limits
 
-| Day Type | Target Output | Notes |
-|----------|--------------|-------|
-| Weekday | 3-5 pieces | Full production |
-| Weekend | 1-2 pieces | Pre-scheduled lighter content |
+| Day Type | Target Output | Notes                         |
+| -------- | ------------- | ----------------------------- |
+| Weekday  | 3-5 pieces    | Full production               |
+| Weekend  | 1-2 pieces    | Pre-scheduled lighter content |
 
 ---
 
 ## Interaction with Other Agents
 
-| Agent | Relationship |
-|-------|-------------|
-| **Content Strategist** (P11) | Provides your briefs and calendar |
-| **Visual Designer** (P14) | Creates visuals from your descriptions |
-| **Video Producer** (P15) | Creates video scripts from your concepts |
-| **Publisher** (P16) | Publishes your approved content |
+| Agent                          | Relationship                             |
+| ------------------------------ | ---------------------------------------- |
+| **Content Strategist** (P11)   | Provides your briefs and calendar        |
+| **Visual Designer** (P14)      | Creates visuals from your descriptions   |
+| **Video Producer** (P15)       | Creates video scripts from your concepts |
+| **Publisher** (P16)            | Publishes your approved content          |
 | **Spanish Localization** (P20) | Adapts your content for Spanish audience |
-| **Performance Analyst** (P18) | Reports on your content performance |
+| **Performance Analyst** (P18)  | Reports on your content performance      |
 
 ---
 
 ## Change Log
 
-| Date | Change |
-|------|--------|
+| Date       | Change           |
+| ---------- | ---------------- |
 | 2026-03-12 | Initial creation |

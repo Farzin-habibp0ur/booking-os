@@ -152,13 +152,11 @@ describe('FacebookProvider', () => {
 
   describe('retry on 429', () => {
     it('should retry with exponential backoff on rate limit', async () => {
-      mockFetch
-        .mockResolvedValueOnce({ ok: false, status: 429 })
-        .mockResolvedValueOnce({
-          ok: true,
-          status: 200,
-          json: async () => ({ message_id: 'mid.retry' }),
-        });
+      mockFetch.mockResolvedValueOnce({ ok: false, status: 429 }).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({ message_id: 'mid.retry' }),
+      });
 
       const result = await provider.sendMessage({
         to: 'psid_user1',

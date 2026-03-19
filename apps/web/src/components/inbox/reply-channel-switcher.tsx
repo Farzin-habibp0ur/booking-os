@@ -66,9 +66,7 @@ export function ReplyChannelSwitcher({
       }
       if (e.key === 'ArrowDown') {
         e.preventDefault();
-        setFocusedIndex((prev) =>
-          Math.min(prev + 1, availableChannels.length - 1),
-        );
+        setFocusedIndex((prev) => Math.min(prev + 1, availableChannels.length - 1));
       }
       if (e.key === 'ArrowUp') {
         e.preventDefault();

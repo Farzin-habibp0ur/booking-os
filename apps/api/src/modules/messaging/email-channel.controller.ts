@@ -59,9 +59,7 @@ export class EmailChannelController {
     const emailConfig = channelSettings.email;
 
     if (!emailConfig?.apiKey || !emailConfig?.fromAddress) {
-      throw new BadRequestException(
-        'Email provider not configured. Save provider settings first.',
-      );
+      throw new BadRequestException('Email provider not configured. Save provider settings first.');
     }
 
     try {
@@ -80,15 +78,11 @@ export class EmailChannelController {
         businessId,
       });
 
-      this.logger.log(
-        `Test email sent for business ${businessId}: ${result.externalId}`,
-      );
+      this.logger.log(`Test email sent for business ${businessId}: ${result.externalId}`);
 
       return { ok: true, externalId: result.externalId };
     } catch (err: any) {
-      this.logger.error(
-        `Test email failed for business ${businessId}: ${err.message}`,
-      );
+      this.logger.error(`Test email failed for business ${businessId}: ${err.message}`);
       throw new BadRequestException(`Failed to send test email: ${err.message}`);
     }
   }

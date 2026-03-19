@@ -28,8 +28,8 @@ Scan external sources daily for trending topics, conversations, and content oppo
 
 ## Schedule
 
-| Day | Time | Action |
-|-----|------|--------|
+| Day           | Time    | Action                     |
+| ------------- | ------- | -------------------------- |
 | Monday–Sunday | 6:00 AM | Full trend scan + briefing |
 
 ---
@@ -38,18 +38,19 @@ Scan external sources daily for trending topics, conversations, and content oppo
 
 ### Primary Sources (MCP-powered)
 
-| # | Source | MCP | What to Look For |
-|---|--------|-----|-----------------|
-| 1 | Reddit | Apify MCP | r/smallbusiness, r/Entrepreneur, r/aesthetics, r/salonowners, r/AutoDetailing, r/MedSpa — posts with 50+ upvotes in last 24h |
-| 2 | LinkedIn | Apify MCP | Posts from beauty/wellness/automotive industry leaders, SaaS founders, service business coaches — 100+ reactions in last 48h |
-| 3 | TikTok | Apify MCP | #salonlife, #medspa, #smallbusinesstips, #bookingsoftware, #salonowner — videos with 10K+ views in last 48h |
-| 4 | Instagram | Apify MCP | Same hashtags as TikTok, Reels with high save rates, carousel posts with high shares |
-| 5 | Google Trends | Free API | Rising queries in "Beauty & Fitness", "Autos & Vehicles", "Health" categories — breakout or 100%+ growth |
-| 6 | Industry blogs | Firecrawl MCP | Modern Salon, Skin Inc, American Spa, Automotive News, NailPro — new articles in last 48h |
+| #   | Source         | MCP           | What to Look For                                                                                                             |
+| --- | -------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Reddit         | Apify MCP     | r/smallbusiness, r/Entrepreneur, r/aesthetics, r/salonowners, r/AutoDetailing, r/MedSpa — posts with 50+ upvotes in last 24h |
+| 2   | LinkedIn       | Apify MCP     | Posts from beauty/wellness/automotive industry leaders, SaaS founders, service business coaches — 100+ reactions in last 48h |
+| 3   | TikTok         | Apify MCP     | #salonlife, #medspa, #smallbusinesstips, #bookingsoftware, #salonowner — videos with 10K+ views in last 48h                  |
+| 4   | Instagram      | Apify MCP     | Same hashtags as TikTok, Reels with high save rates, carousel posts with high shares                                         |
+| 5   | Google Trends  | Free API      | Rising queries in "Beauty & Fitness", "Autos & Vehicles", "Health" categories — breakout or 100%+ growth                     |
+| 6   | Industry blogs | Firecrawl MCP | Modern Salon, Skin Inc, American Spa, Automotive News, NailPro — new articles in last 48h                                    |
 
 ### Fallback Sources
 
 If MCP sources are unavailable, follow `system/mcp-fallback-config.md`:
+
 1. Use `data/evergreen-trends.md` for baseline trends
 2. Flag output with `[CACHED]` or `[EVERGREEN]`
 3. Reduce output to top 3 trends (not 5)
@@ -60,13 +61,13 @@ If MCP sources are unavailable, follow `system/mcp-fallback-config.md`:
 
 Score each trend on a 0-100 scale using the following weighted formula:
 
-| Factor | Weight | Score Range | How to Evaluate |
-|--------|--------|-------------|-----------------|
-| **Audience Fit** | 30% | 0-100 | How relevant is this to service business owners? |
-| **BookingOS Angle** | 25% | 0-100 | Can we connect this to a BookingOS feature or use case? |
-| **Timeliness** | 20% | 0-100 | Is this trending NOW (100) or evergreen (50) or declining (20)? |
-| **Content Potential** | 15% | 0-100 | Can this generate multiple content pieces across platforms? |
-| **Engagement Signal** | 10% | 0-100 | How strong are the engagement metrics from source? |
+| Factor                | Weight | Score Range | How to Evaluate                                                 |
+| --------------------- | ------ | ----------- | --------------------------------------------------------------- |
+| **Audience Fit**      | 30%    | 0-100       | How relevant is this to service business owners?                |
+| **BookingOS Angle**   | 25%    | 0-100       | Can we connect this to a BookingOS feature or use case?         |
+| **Timeliness**        | 20%    | 0-100       | Is this trending NOW (100) or evergreen (50) or declining (20)? |
+| **Content Potential** | 15%    | 0-100       | Can this generate multiple content pieces across platforms?     |
+| **Engagement Signal** | 10%    | 0-100       | How strong are the engagement metrics from source?              |
 
 **Formula:** `Score = (Audience × 0.30) + (BookingOS × 0.25) + (Timeliness × 0.20) + (Content × 0.15) + (Engagement × 0.10)`
 
@@ -122,33 +123,35 @@ Create file: `briefings/trend-briefing-[YYYY-MM-DD].md`
 - **Score breakdown:** Audience [X] | BookingOS [X] | Timeliness [X] | Content [X] | Engagement [X]
 
 ### Trend 2: [Title]
+
 [Same format]
 
 ...
 
 ### Trend [N]: [Title]
+
 [Same format]
 
 ---
 
 ## Trends Below Threshold (Watchlist)
 
-| Trend | Score | Reason Below Threshold | Revisit? |
-|-------|-------|----------------------|----------|
-| [Title] | [X] | [e.g., "Low BookingOS angle"] | Next week |
+| Trend   | Score | Reason Below Threshold        | Revisit?  |
+| ------- | ----- | ----------------------------- | --------- |
+| [Title] | [X]   | [e.g., "Low BookingOS angle"] | Next week |
 
 ---
 
 ## Source Health
 
-| Source | Status | Notes |
-|--------|--------|-------|
-| Reddit (Apify) | OK/FALLBACK/DOWN | |
-| LinkedIn (Apify) | OK/FALLBACK/DOWN | |
-| TikTok (Apify) | OK/FALLBACK/DOWN | |
-| Instagram (Apify) | OK/FALLBACK/DOWN | |
-| Google Trends | OK/DOWN | |
-| Industry blogs (Firecrawl) | OK/FALLBACK/DOWN | |
+| Source                     | Status           | Notes |
+| -------------------------- | ---------------- | ----- |
+| Reddit (Apify)             | OK/FALLBACK/DOWN |       |
+| LinkedIn (Apify)           | OK/FALLBACK/DOWN |       |
+| TikTok (Apify)             | OK/FALLBACK/DOWN |       |
+| Instagram (Apify)          | OK/FALLBACK/DOWN |       |
+| Google Trends              | OK/DOWN          |       |
+| Industry blogs (Firecrawl) | OK/FALLBACK/DOWN |       |
 
 ---
 
@@ -163,13 +166,13 @@ Checked against last 7 days of briefings: [PASS / FAIL — list duplicates if an
 
 Before publishing the briefing, self-check against `system/quality-gates.md` Gate 1:
 
-| # | Check | Threshold | Status |
-|---|-------|-----------|--------|
-| 1 | All trends scored >= 60 | Yes | |
-| 2 | Each trend maps to a content pillar | Yes | |
-| 3 | Trends are current (within 7 days) | Yes | |
-| 4 | >= 3 of 5 pillars represented | Yes | |
-| 5 | No duplicates from previous week | Zero | |
+| #   | Check                               | Threshold | Status |
+| --- | ----------------------------------- | --------- | ------ |
+| 1   | All trends scored >= 60             | Yes       |        |
+| 2   | Each trend maps to a content pillar | Yes       |        |
+| 3   | Trends are current (within 7 days)  | Yes       |        |
+| 4   | >= 3 of 5 pillars represented       | Yes       |        |
+| 5   | No duplicates from previous week    | Zero      |        |
 
 If any check fails, do NOT publish. Fix or remove the failing trend.
 
@@ -178,6 +181,7 @@ If any check fails, do NOT publish. Fix or remove the failing trend.
 ## Platform Filter
 
 Before suggesting platform-specific content opportunities, check `system/agent-platform-filter.md`:
+
 - Only suggest content for ACTIVE platforms (currently: Instagram, TikTok, LinkedIn)
 - Do NOT suggest YouTube, Pinterest, or X/Twitter content
 
@@ -185,28 +189,28 @@ Before suggesting platform-specific content opportunities, check `system/agent-p
 
 ## Interaction with Other Agents
 
-| Agent | Relationship |
-|-------|-------------|
-| **Keyword Strategist** (P10) | Keyword Strategist enriches your trends with search volume data |
-| **Content Strategist** (P11) | Content Strategist reads your briefing to plan the week's content |
-| **Blog Writer** (P12) | May reference your briefing for timely topic hooks |
-| **Social Content Creator** (P13) | Uses your social trend signals for content ideas |
+| Agent                            | Relationship                                                      |
+| -------------------------------- | ----------------------------------------------------------------- |
+| **Keyword Strategist** (P10)     | Keyword Strategist enriches your trends with search volume data   |
+| **Content Strategist** (P11)     | Content Strategist reads your briefing to plan the week's content |
+| **Blog Writer** (P12)            | May reference your briefing for timely topic hooks                |
+| **Social Content Creator** (P13) | Uses your social trend signals for content ideas                  |
 
 ---
 
 ## Error Handling
 
-| Scenario | Action |
-|----------|--------|
-| All MCP sources down | Use `data/evergreen-trends.md`, flag `[EMERGENCY-FALLBACK]`, reduce to 3 trends |
-| No trends pass threshold | Publish briefing with watchlist only, note "No actionable trends today" |
-| Duplicate trend detected | Remove from output, note in Duplicate Check section |
-| Rate limit approaching | Switch to fallback per `system/mcp-fallback-config.md` rate limit rules |
+| Scenario                 | Action                                                                          |
+| ------------------------ | ------------------------------------------------------------------------------- |
+| All MCP sources down     | Use `data/evergreen-trends.md`, flag `[EMERGENCY-FALLBACK]`, reduce to 3 trends |
+| No trends pass threshold | Publish briefing with watchlist only, note "No actionable trends today"         |
+| Duplicate trend detected | Remove from output, note in Duplicate Check section                             |
+| Rate limit approaching   | Switch to fallback per `system/mcp-fallback-config.md` rate limit rules         |
 
 ---
 
 ## Change Log
 
-| Date | Change |
-|------|--------|
+| Date       | Change           |
+| ---------- | ---------------- |
 | 2026-03-12 | Initial creation |

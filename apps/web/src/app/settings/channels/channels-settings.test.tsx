@@ -31,21 +31,59 @@ jest.mock('@/lib/auth', () => ({
   }),
 }));
 jest.mock('@/lib/i18n', () => ({
-  useI18n: () => ({ t: (key: string, params?: any) => {
-    if (params?.count !== undefined) return `${params.count} messages (7d)`;
-    return key;
-  }}),
+  useI18n: () => ({
+    t: (key: string, params?: any) => {
+      if (params?.count !== undefined) return `${params.count} messages (7d)`;
+      return key;
+    },
+  }),
   I18nProvider: ({ children }: any) => children,
 }));
 jest.mock('@/lib/cn', () => ({ cn: (...args: any[]) => args.filter(Boolean).join(' ') }));
 jest.mock('@/lib/design-tokens', () => ({
   CHANNEL_STYLES: {
-    WHATSAPP: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-400', label: 'WhatsApp', hex: '#25D366' },
-    INSTAGRAM: { bg: 'bg-pink-50', text: 'text-pink-700', border: 'border-pink-400', label: 'Instagram', hex: '#E4405F' },
-    FACEBOOK: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-400', label: 'Messenger', hex: '#0084FF' },
-    SMS: { bg: 'bg-slate-100', text: 'text-slate-700', border: 'border-slate-400', label: 'SMS', hex: '#64748b' },
-    EMAIL: { bg: 'bg-sky-50', text: 'text-sky-700', border: 'border-sky-400', label: 'Email', hex: '#0ea5e9' },
-    WEB_CHAT: { bg: 'bg-lavender-50', text: 'text-lavender-700', border: 'border-lavender-400', label: 'Web Chat', hex: '#9F8ECB' },
+    WHATSAPP: {
+      bg: 'bg-emerald-50',
+      text: 'text-emerald-700',
+      border: 'border-emerald-400',
+      label: 'WhatsApp',
+      hex: '#25D366',
+    },
+    INSTAGRAM: {
+      bg: 'bg-pink-50',
+      text: 'text-pink-700',
+      border: 'border-pink-400',
+      label: 'Instagram',
+      hex: '#E4405F',
+    },
+    FACEBOOK: {
+      bg: 'bg-blue-50',
+      text: 'text-blue-700',
+      border: 'border-blue-400',
+      label: 'Messenger',
+      hex: '#0084FF',
+    },
+    SMS: {
+      bg: 'bg-slate-100',
+      text: 'text-slate-700',
+      border: 'border-slate-400',
+      label: 'SMS',
+      hex: '#64748b',
+    },
+    EMAIL: {
+      bg: 'bg-sky-50',
+      text: 'text-sky-700',
+      border: 'border-sky-400',
+      label: 'Email',
+      hex: '#0ea5e9',
+    },
+    WEB_CHAT: {
+      bg: 'bg-lavender-50',
+      text: 'text-lavender-700',
+      border: 'border-lavender-400',
+      label: 'Web Chat',
+      hex: '#9F8ECB',
+    },
   },
   ELEVATION: { card: 'shadow-soft rounded-2xl' },
 }));

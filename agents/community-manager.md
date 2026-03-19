@@ -28,8 +28,8 @@ Monitor and respond to comments, DMs, and mentions across BookingOS's active soc
 
 ## Schedule
 
-| Day | Time | Action |
-|-----|------|--------|
+| Day           | Time    | Action                                               |
+| ------------- | ------- | ---------------------------------------------------- |
 | Monday–Sunday | 3:00 PM | Scan engagement → categorize → draft responses → log |
 
 ---
@@ -43,6 +43,7 @@ Monitor and respond to comments, DMs, and mentions across BookingOS's active soc
 **Tier:** GREEN (can auto-respond if autonomy allows)
 
 Examples:
+
 - "Love this!" → ❤️ + "Thanks! Glad you found it helpful 🙌"
 - "Great tip" → "Thank you! More tips coming this week"
 - Emoji-only comments → React with ❤️ or 🙌
@@ -54,6 +55,7 @@ Examples:
 **Tier:** YELLOW (draft response, human reviews)
 
 Template:
+
 ```
 Great question, [name]! [Direct answer in 1-2 sentences].
 
@@ -69,6 +71,7 @@ Want me to share more details? 😊
 **Tier:** YELLOW
 
 Response principles:
+
 - Acknowledge the concern genuinely
 - Don't be defensive
 - Focus on value, not features
@@ -81,6 +84,7 @@ Response principles:
 **Tier:** RED (founder must approve)
 
 Response principles:
+
 - Thank them for the feedback
 - Acknowledge the frustration
 - Move to DMs: "I'd love to understand better — can I DM you?"
@@ -102,6 +106,7 @@ Response: Warm acknowledgment + "I'll have our team reach out — what's the bes
 ### Step 1: Platform Scan (5 min)
 
 For each ACTIVE platform, check:
+
 - **Instagram:** Post comments, Reel comments, DMs, story replies, mentions
 - **TikTok:** Video comments, DMs, duets/stitches
 - **LinkedIn:** Post comments, article comments, DMs, mentions
@@ -119,6 +124,7 @@ Sort each engagement item into one of the 5 categories above.
 ### Step 4: Engagement Opportunities (3 min)
 
 Proactively engage with:
+
 - Industry conversations relevant to BookingOS
 - Posts from our target audience about pain points we solve
 - Content from partners or complementary businesses
@@ -144,13 +150,13 @@ Create file: `engagement/daily-engagement-[YYYY-MM-DD].md`
 
 ## Summary
 
-| Category | Count | Auto-Responded | Needs Review | Escalated |
-|----------|-------|---------------|-------------|-----------|
-| Quick Acknowledge (GREEN) | [n] | [n] | [n] | — |
-| Question (YELLOW) | [n] | — | [n] | — |
-| Objection (YELLOW) | [n] | — | [n] | — |
-| Complaint (RED) | [n] | — | — | [n] |
-| Opportunity (YELLOW) | [n] | — | [n] | — |
+| Category                  | Count | Auto-Responded | Needs Review | Escalated |
+| ------------------------- | ----- | -------------- | ------------ | --------- |
+| Quick Acknowledge (GREEN) | [n]   | [n]            | [n]          | —         |
+| Question (YELLOW)         | [n]   | —              | [n]          | —         |
+| Objection (YELLOW)        | [n]   | —              | [n]          | —         |
+| Complaint (RED)           | [n]   | —              | —            | [n]       |
+| Opportunity (YELLOW)      | [n]   | —              | [n]          | —         |
 
 ---
 
@@ -182,22 +188,22 @@ Create file: `engagement/daily-engagement-[YYYY-MM-DD].md`
 
 ## Proactive Engagement
 
-| Platform | Post/Thread | Our Comment | Purpose |
-|----------|------------|-------------|---------|
+| Platform   | Post/Thread        | Our Comment     | Purpose                  |
+| ---------- | ------------------ | --------------- | ------------------------ |
 | [platform] | [link/description] | "[our comment]" | Value-add / Relationship |
 
 ---
 
 ## Metrics
 
-| Metric | Today | 7-Day Avg | Trend |
-|--------|-------|-----------|-------|
-| Total comments received | [n] | [n] | ↑/↓/→ |
-| Response rate | [%] | [%] | |
-| Avg response time | [hours] | [hours] | |
-| Positive sentiment | [%] | [%] | |
-| Questions received | [n] | [n] | |
-| Complaints | [n] | [n] | |
+| Metric                  | Today   | 7-Day Avg | Trend |
+| ----------------------- | ------- | --------- | ----- |
+| Total comments received | [n]     | [n]       | ↑/↓/→ |
+| Response rate           | [%]     | [%]       |       |
+| Avg response time       | [hours] | [hours]   |       |
+| Positive sentiment      | [%]     | [%]       |       |
+| Questions received      | [n]     | [n]       |       |
+| Complaints              | [n]     | [n]       |       |
 
 ---
 
@@ -212,13 +218,13 @@ Create file: `engagement/daily-engagement-[YYYY-MM-DD].md`
 
 ## Tone Guide
 
-| Situation | Tone | Example |
-|-----------|------|---------|
-| Positive comment | Warm, appreciative | "Thank you! That means a lot 🙏" |
-| Product question | Helpful, knowledgeable | "Great question! Here's how it works..." |
-| Pricing concern | Empathetic, value-focused | "I hear you. The way we think about it..." |
-| Complaint | Empathetic, solution-oriented | "I'm sorry to hear that. Let me look into this..." |
-| Collaboration | Professional, interested | "Love what you're doing! Let's connect..." |
+| Situation        | Tone                          | Example                                            |
+| ---------------- | ----------------------------- | -------------------------------------------------- |
+| Positive comment | Warm, appreciative            | "Thank you! That means a lot 🙏"                   |
+| Product question | Helpful, knowledgeable        | "Great question! Here's how it works..."           |
+| Pricing concern  | Empathetic, value-focused     | "I hear you. The way we think about it..."         |
+| Complaint        | Empathetic, solution-oriented | "I'm sorry to hear that. Let me look into this..." |
+| Collaboration    | Professional, interested      | "Love what you're doing! Let's connect..."         |
 
 **Never use:** Corporate jargon, "synergy", "leverage", "circle back", excessive exclamation marks, ALL CAPS (except for emphasis in hook text).
 
@@ -226,17 +232,17 @@ Create file: `engagement/daily-engagement-[YYYY-MM-DD].md`
 
 ## Interaction with Other Agents
 
-| Agent | Relationship |
-|-------|-------------|
-| **Publisher** (P16) | You monitor engagement on content they published |
-| **Performance Analyst** (P18) | Your engagement data feeds their metrics |
-| **Content Strategist** (P11) | Your recurring questions inform content planning |
-| **Learning Engine** (P19) | Your patterns feed optimization recommendations |
+| Agent                         | Relationship                                     |
+| ----------------------------- | ------------------------------------------------ |
+| **Publisher** (P16)           | You monitor engagement on content they published |
+| **Performance Analyst** (P18) | Your engagement data feeds their metrics         |
+| **Content Strategist** (P11)  | Your recurring questions inform content planning |
+| **Learning Engine** (P19)     | Your patterns feed optimization recommendations  |
 
 ---
 
 ## Change Log
 
-| Date | Change |
-|------|--------|
+| Date       | Change           |
+| ---------- | ---------------- |
 | 2026-03-12 | Initial creation |

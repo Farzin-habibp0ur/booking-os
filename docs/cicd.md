@@ -15,10 +15,10 @@ The workflow is defined in [`.github/workflows/ci.yml`](../.github/workflows/ci.
 
 ### Triggers
 
-| Trigger              | Runs                            |
-| -------------------- | ------------------------------- |
-| Push to `main`       | lint-and-test → docker-build → deploy → smoke-test |
-| Pull request to `main` | lint-and-test → docker-build + e2e-test  |
+| Trigger                      | Runs                                               |
+| ---------------------------- | -------------------------------------------------- |
+| Push to `main`               | lint-and-test → docker-build → deploy → smoke-test |
+| Pull request to `main`       | lint-and-test → docker-build + e2e-test            |
 | Manual (`workflow_dispatch`) | lint-and-test → docker-build → deploy → smoke-test |
 
 ---
@@ -32,18 +32,18 @@ Spins up a PostgreSQL 16 service container and runs the full quality gate.
 
 ### Service containers
 
-| Service    | Image               | Port | Database          |
-| ---------- | ------------------- | ---- | ----------------- |
+| Service    | Image                | Port | Database          |
+| ---------- | -------------------- | ---- | ----------------- |
 | PostgreSQL | `postgres:16-alpine` | 5432 | `booking_os_test` |
 
 ### Environment variables
 
-| Variable             | Value                                   |
-| -------------------- | --------------------------------------- |
+| Variable             | Value                                                                         |
+| -------------------- | ----------------------------------------------------------------------------- |
 | `DATABASE_URL`       | `postgresql://postgres:postgres@localhost:5432/booking_os_test?schema=public` |
-| `JWT_SECRET`         | `test-secret-for-ci-only`               |
-| `JWT_REFRESH_SECRET` | `test-refresh-secret-for-ci-only`       |
-| `NODE_ENV`           | `test`                                  |
+| `JWT_SECRET`         | `test-secret-for-ci-only`                                                     |
+| `JWT_REFRESH_SECRET` | `test-refresh-secret-for-ci-only`                                             |
+| `NODE_ENV`           | `test`                                                                        |
 
 ### Steps
 
@@ -77,21 +77,21 @@ Runs Playwright E2E tests against a local development server with seeded test da
 
 ### Test suites
 
-| Suite | Tests | Coverage |
-|-------|-------|----------|
-| `auth.spec.ts` | Login, invalid credentials, forgot password, logout | Auth flows |
-| `booking-flow.spec.ts` | Page load, new booking modal, status filters, table structure | Booking CRUD |
-| `customer-flow.spec.ts` | Page load, new customer form, search, column rendering | Customer CRUD |
-| `portal-booking.spec.ts` | Portal load, business info, no-auth access, sub-pages | Public portal |
-| `settings.spec.ts` | Page load, business name edit, save button, sub-page nav | Settings |
-| `accessibility.spec.ts` | WCAG 2.1 AA compliance via axe-core on 11 pages | Accessibility |
+| Suite                    | Tests                                                         | Coverage      |
+| ------------------------ | ------------------------------------------------------------- | ------------- |
+| `auth.spec.ts`           | Login, invalid credentials, forgot password, logout           | Auth flows    |
+| `booking-flow.spec.ts`   | Page load, new booking modal, status filters, table structure | Booking CRUD  |
+| `customer-flow.spec.ts`  | Page load, new customer form, search, column rendering        | Customer CRUD |
+| `portal-booking.spec.ts` | Portal load, business info, no-auth access, sub-pages         | Public portal |
+| `settings.spec.ts`       | Page load, business name edit, save button, sub-page nav      | Settings      |
+| `accessibility.spec.ts`  | WCAG 2.1 AA compliance via axe-core on 11 pages               | Accessibility |
 
 ### Environment variables
 
-| Variable | Value |
-|----------|-------|
-| `E2E_EMAIL` | `sarah@glowclinic.com` |
-| `E2E_PASSWORD` | `password123` |
+| Variable       | Value                  |
+| -------------- | ---------------------- |
+| `E2E_EMAIL`    | `sarah@glowclinic.com` |
+| `E2E_PASSWORD` | `password123`          |
 
 ---
 
@@ -114,6 +114,7 @@ This builds three images:
 #### API image (`apps/api/Dockerfile`)
 
 Multi-stage build:
+
 1. **deps** — Installs npm dependencies
 2. **builder** — Generates Prisma client, builds shared packages (`@booking-os/shared`, `@booking-os/db`, `@booking-os/messaging-provider`), then builds the API (`@booking-os/api`)
 3. **runner** — Production image with non-root `nestjs` user, copies only built artifacts and Prisma schema. Runs `docker-entrypoint.sh` which executes migrations then starts the API
@@ -121,6 +122,7 @@ Multi-stage build:
 #### Web image (`apps/web/Dockerfile`)
 
 Multi-stage build:
+
 1. **deps** — Installs npm dependencies
 2. **builder** — Builds shared package, then Next.js app with standalone output
 3. **runner** — Production image with non-root `nextjs` user, runs `node apps/web/server.js`
@@ -128,6 +130,7 @@ Multi-stage build:
 #### Admin image (`apps/admin/Dockerfile`)
 
 Multi-stage build:
+
 1. **deps** — Installs npm dependencies
 2. **builder** — Builds shared package, then Next.js admin app with standalone output
 3. **runner** — Production image with non-root `nextjs` user, runs `node apps/admin/server.js` on port 3002
@@ -162,14 +165,14 @@ The `--detach` flag means the CI job doesn't wait for Railway's own build to fin
 
 ### Railway project
 
-| Property       | Value                                    |
-| -------------- | ---------------------------------------- |
-| Project ID     | `37eeca20-7dfe-45d9-8d29-e902a545f475`   |
-| Environment    | `production`                             |
-| Services       | `api`, `web`, `admin`, `postgres`, `redis` |
-| API domain     | `api.businesscommandcentre.com`          |
-| Web domain     | `businesscommandcentre.com`              |
-| Admin domain   | `admin.businesscommandcentre.com`        |
+| Property     | Value                                      |
+| ------------ | ------------------------------------------ |
+| Project ID   | `37eeca20-7dfe-45d9-8d29-e902a545f475`     |
+| Environment  | `production`                               |
+| Services     | `api`, `web`, `admin`, `postgres`, `redis` |
+| API domain   | `api.businesscommandcentre.com`            |
+| Web domain   | `businesscommandcentre.com`                |
+| Admin domain | `admin.businesscommandcentre.com`          |
 
 ### Database migrations
 
@@ -218,9 +221,9 @@ If any check fails, the job exits with code 1 and the pipeline is marked as fail
 
 ## GitHub Secrets
 
-| Secret          | Purpose                           | How to update                     |
-| --------------- | --------------------------------- | --------------------------------- |
-| `RAILWAY_TOKEN` | Railway project deploy token      | `gh secret set RAILWAY_TOKEN`     |
+| Secret          | Purpose                      | How to update                 |
+| --------------- | ---------------------------- | ----------------------------- |
+| `RAILWAY_TOKEN` | Railway project deploy token | `gh secret set RAILWAY_TOKEN` |
 
 The Railway token must be a **Project Token** (created from Railway → Project Settings → Tokens), not an Account Token. It must be scoped to the `production` environment.
 
@@ -256,14 +259,14 @@ The `docker-compose.prod.yml` file defines the full production stack for self-ho
 
 ### Services
 
-| Service    | Image/Build              | Port   | Health check                              |
-| ---------- | ------------------------ | ------ | ----------------------------------------- |
-| `postgres` | `postgres:16-alpine`     | 5432   | `pg_isready`                              |
-| `redis`    | `redis:7-alpine`         | 6379   | `redis-cli ping`                          |
-| `api`      | `apps/api/Dockerfile`    | 3001   | `wget -qO- http://localhost:3001/api/v1/health` |
-| `web`      | `apps/web/Dockerfile`    | 3000   | —                                         |
-| `admin`    | `apps/admin/Dockerfile`  | 3002   | `wget -qO- http://localhost:3002`         |
-| `nginx`    | `nginx:alpine`           | 80/443 | —                                         |
+| Service    | Image/Build             | Port   | Health check                                    |
+| ---------- | ----------------------- | ------ | ----------------------------------------------- |
+| `postgres` | `postgres:16-alpine`    | 5432   | `pg_isready`                                    |
+| `redis`    | `redis:7-alpine`        | 6379   | `redis-cli ping`                                |
+| `api`      | `apps/api/Dockerfile`   | 3001   | `wget -qO- http://localhost:3001/api/v1/health` |
+| `web`      | `apps/web/Dockerfile`   | 3000   | —                                               |
+| `admin`    | `apps/admin/Dockerfile` | 3002   | `wget -qO- http://localhost:3002`               |
+| `nginx`    | `nginx:alpine`          | 80/443 | —                                               |
 
 ### Volumes
 
@@ -275,36 +278,43 @@ The `docker-compose.prod.yml` file defines the full production stack for self-ho
 ## Running the Pipeline Locally
 
 ### Format check
+
 ```bash
 npm run format:check
 ```
 
 ### Lint + type-check
+
 ```bash
 npm run lint
 ```
 
 ### Tests
+
 ```bash
 npm test
 ```
 
 ### E2E tests (Playwright)
+
 ```bash
 cd apps/web && npm run test:e2e
 ```
 
 ### Docker build
+
 ```bash
 docker compose -f docker-compose.prod.yml build
 ```
 
 ### Production smoke test
+
 ```bash
 ./scripts/smoke-test.sh https://businesscommandcentre.com
 ```
 
 ### Manual deploy trigger
+
 ```bash
 gh workflow run ci.yml
 ```
@@ -314,27 +324,37 @@ gh workflow run ci.yml
 ## Troubleshooting
 
 ### Deploy fails with "Unauthorized"
+
 The `RAILWAY_TOKEN` is invalid or expired. Generate a new **Project Token** from Railway → booking-os project → Settings → Tokens, then update:
+
 ```bash
 gh secret set RAILWAY_TOKEN
 ```
 
 ### API crashes on startup
+
 Check Railway logs:
+
 ```bash
 npx @railway/cli logs --service api --environment production --latest --lines 50
 ```
+
 Common causes: missing environment variables in Railway, database connection issues, or missing module imports.
 
 ### Formatting check fails
+
 Run Prettier to auto-fix:
+
 ```bash
 npm run format
 ```
+
 Then commit the changes.
 
 ### Docker build fails with prerender errors
+
 Usually a Next.js page using client-side hooks (e.g., `useSearchParams`) without a `Suspense` boundary. Wrap the component in `<Suspense fallback={null}>`.
 
 ### "Table does not exist" errors after deploying new models
+
 If new Prisma models were added during development using `prisma db push` instead of `prisma migrate dev`, no migration file exists. Production runs `prisma migrate deploy` which only applies migration files. Create the migration SQL manually, mark it as applied locally with `prisma migrate resolve --applied`, and push. See `DEPLOY.md` troubleshooting for details.

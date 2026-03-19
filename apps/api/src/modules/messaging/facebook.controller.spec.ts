@@ -18,9 +18,7 @@ describe('FacebookController', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [FacebookController],
-      providers: [
-        { provide: MessagingService, useValue: messagingService },
-      ],
+      providers: [{ provide: MessagingService, useValue: messagingService }],
     }).compile();
 
     controller = module.get(FacebookController);
@@ -32,19 +30,19 @@ describe('FacebookController', () => {
       // but we can test the error path and contract.
       // For a full test, we'd need to mock the fetch call.
       // Here we verify the error handling for missing params.
-      await expect(
-        controller.getPageInfo('', 'token', 'biz1'),
-      ).rejects.toThrow(BadRequestException);
+      await expect(controller.getPageInfo('', 'token', 'biz1')).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should throw BadRequestException for missing credentials', async () => {
-      await expect(
-        controller.getPageInfo('', '', 'biz1'),
-      ).rejects.toThrow('pageId and accessToken are required');
+      await expect(controller.getPageInfo('', '', 'biz1')).rejects.toThrow(
+        'pageId and accessToken are required',
+      );
 
-      await expect(
-        controller.getPageInfo('page1', '', 'biz1'),
-      ).rejects.toThrow('pageId and accessToken are required');
+      await expect(controller.getPageInfo('page1', '', 'biz1')).rejects.toThrow(
+        'pageId and accessToken are required',
+      );
     });
   });
 
@@ -53,9 +51,7 @@ describe('FacebookController', () => {
       const mockProvider = {
         setIceBreakers: jest.fn().mockResolvedValue(undefined),
       };
-      messagingService.getProviderForFacebookPageId.mockReturnValue(
-        mockProvider,
-      );
+      messagingService.getProviderForFacebookPageId.mockReturnValue(mockProvider);
 
       const result = await controller.setIceBreakers(
         {
@@ -69,9 +65,7 @@ describe('FacebookController', () => {
       );
 
       expect(result).toEqual({ ok: true, count: 2 });
-      expect(
-        messagingService.getProviderForFacebookPageId,
-      ).toHaveBeenCalledWith('page123');
+      expect(messagingService.getProviderForFacebookPageId).toHaveBeenCalledWith('page123');
       expect(mockProvider.setIceBreakers).toHaveBeenCalledWith([
         { question: 'What services do you offer?', payload: 'SERVICES' },
         { question: 'Book appointment', payload: 'BOOK' },
@@ -89,9 +83,7 @@ describe('FacebookController', () => {
           },
           'biz1',
         ),
-      ).rejects.toThrow(
-        'Facebook provider not configured for this page',
-      );
+      ).rejects.toThrow('Facebook provider not configured for this page');
     });
 
     it('should reject when pageId is missing', async () => {
