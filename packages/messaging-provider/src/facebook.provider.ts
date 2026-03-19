@@ -97,6 +97,70 @@ export class FacebookProvider implements MessagingProvider {
     return { id: data.id, name: data.name };
   }
 
+  /**
+   * Check if within the standard 24-hour messaging window.
+   */
+  isWithinMessagingWindow(lastUserMessageAt: Date): boolean {
+    const windowMs = 24 * 60 * 60 * 1000; // 24 hours
+    return Date.now() - lastUserMessageAt.getTime() < windowMs;
+  }
+
+  /**
+   * Check if within the 7-day HUMAN_AGENT messaging window.
+   */
+  isWithinHumanAgentWindow(lastUserMessageAt: Date): boolean {
+    const windowMs = 7 * 24 * 60 * 60 * 1000; // 7 days
+    return Date.now() - lastUserMessageAt.getTime() < windowMs;
+  }
+
+  /**
+   * Send a template message with buttons and/or quick replies.
+   */
+  async sendTemplateMessage(
+    psid: string,
+    template: {
+      text: string;
+      buttons?: Array<{
+        type: 'web_url' | 'postback';
+        title: string;
+        url?: string;
+        payload?: string;
+      }>;
+      quickReplies?: Array<{ title: string; payload: string }>;
+    },
+  ): Promise<{ externalId: string }> {
+    const message: any = {};
+
+    if (template.buttons && template.buttons.length > 0) {
+      message.attachment = {
+        type: 'template',
+        payload: {
+          template_type: 'button',
+          text: template.text.slice(0, 640),
+          buttons: template.buttons.slice(0, 3).map((b) => ({
+            type: b.type,
+            title: b.title.slice(0, 20),
+            ...(b.type === 'web_url' ? { url: b.url } : { payload: b.payload }),
+          })),
+        },
+      };
+    } else {
+      message.text = template.text.slice(0, 2000);
+    }
+
+    if (template.quickReplies && template.quickReplies.length > 0) {
+      message.quick_replies = template.quickReplies.slice(0, 13).map((qr) => ({
+        content_type: 'text',
+        title: qr.title.slice(0, 20),
+        payload: qr.payload,
+      }));
+    }
+
+    const payload = { recipient: { id: psid }, message };
+    const response = await this.makeRequest('/me/messages', payload);
+    return { externalId: response.message_id || '' };
+  }
+
   private async makeRequest(path: string, body: any, retries = 3): Promise<any> {
     let lastError: Error | null = null;
 

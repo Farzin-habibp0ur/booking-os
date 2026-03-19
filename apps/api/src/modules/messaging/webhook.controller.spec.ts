@@ -82,6 +82,10 @@ describe('WebhookController', () => {
     return crypto.createHmac('sha256', secret).update(JSON.stringify(payload)).digest('hex');
   }
 
+  function createMockRes() {
+    return { type: jest.fn().mockReturnThis() } as any;
+  }
+
   const mockBusiness = { id: 'biz1', name: 'Test Biz' };
   const mockCustomer = { id: 'cust1', name: 'John' };
   const mockConversation = { id: 'conv1', customerId: 'cust1' };
@@ -619,29 +623,39 @@ describe('WebhookController', () => {
   // ─── SMS Inbound Processing ─────────────────────────────────────────
 
   describe('SMS inbound processing', () => {
-    it('should process SMS inbound messages correctly', async () => {
+    it('should process SMS inbound messages and return TwiML', async () => {
       setupHappyPath();
+      const mockRes = createMockRes();
 
-      const result = await controller.smsInbound({
-        From: '+1234567890',
-        Body: 'Hello via SMS',
-        MessageSid: 'SM-abc123',
-        To: '+15551234567',
-      });
+      const result = await controller.smsInbound(
+        {
+          From: '+1234567890',
+          Body: 'Hello via SMS',
+          MessageSid: 'SM-abc123',
+          To: '+15551234567',
+        },
+        undefined,
+        mockRes,
+      );
 
-      expect(result.status).toBe('EVENT_RECEIVED');
-      expect(result.processed).toBe(1);
+      expect(result).toBe('<Response></Response>');
+      expect(mockRes.type).toHaveBeenCalledWith('text/xml');
     });
 
     it('should call CustomerIdentityService.resolveCustomer with phone for SMS', async () => {
       setupHappyPath();
+      const mockRes = createMockRes();
 
-      await controller.smsInbound({
-        From: '+1234567890',
-        Body: 'SMS resolve test',
-        MessageSid: 'SM-resolve',
-        To: '+15551234567',
-      });
+      await controller.smsInbound(
+        {
+          From: '+1234567890',
+          Body: 'SMS resolve test',
+          MessageSid: 'SM-resolve',
+          To: '+15551234567',
+        },
+        undefined,
+        mockRes,
+      );
 
       expect(customerIdentityService.resolveCustomer).toHaveBeenCalledWith('biz1', {
         phone: '+1234567890',
@@ -651,13 +665,18 @@ describe('WebhookController', () => {
 
     it('should set channel to SMS on created messages', async () => {
       setupHappyPath();
+      const mockRes = createMockRes();
 
-      await controller.smsInbound({
-        From: '+1234567890',
-        Body: 'Channel SMS test',
-        MessageSid: 'SM-chan',
-        To: '+15551234567',
-      });
+      await controller.smsInbound(
+        {
+          From: '+1234567890',
+          Body: 'Channel SMS test',
+          MessageSid: 'SM-chan',
+          To: '+15551234567',
+        },
+        undefined,
+        mockRes,
+      );
 
       expect(prisma.message.create).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -671,7 +690,10 @@ describe('WebhookController', () => {
     });
 
     it('should reject invalid SMS payload', async () => {
-      await expect(controller.smsInbound({})).rejects.toThrow('Invalid SMS webhook payload');
+      const mockRes = createMockRes();
+      await expect(controller.smsInbound({}, undefined, mockRes)).rejects.toThrow(
+        'Invalid SMS webhook payload',
+      );
     });
 
     it('should validate Twilio signature when configured', async () => {
@@ -684,6 +706,8 @@ describe('WebhookController', () => {
         return config[key] ?? defaultValue;
       });
 
+      const mockRes = createMockRes();
+
       // Invalid signature should throw
       await expect(
         controller.smsInbound(
@@ -694,6 +718,7 @@ describe('WebhookController', () => {
             To: '+15551234567',
           },
           'invalid-signature',
+          mockRes,
         ),
       ).rejects.toThrow('Invalid Twilio webhook signature');
     });
@@ -726,10 +751,11 @@ describe('WebhookController', () => {
       });
 
       setupHappyPath();
+      const mockRes = createMockRes();
 
-      const result = await controller.smsInbound(body, validSignature);
-      expect(result.status).toBe('EVENT_RECEIVED');
-      expect(result.processed).toBe(1);
+      const result = await controller.smsInbound(body, validSignature, mockRes);
+      expect(result).toBe('<Response></Response>');
+      expect(mockRes.type).toHaveBeenCalledWith('text/xml');
     });
 
     it('should skip signature validation when auth token is not configured', async () => {
@@ -741,46 +767,139 @@ describe('WebhookController', () => {
       });
 
       setupHappyPath();
+      const mockRes = createMockRes();
 
       // No signature provided, but no auth token either — should pass through
-      const result = await controller.smsInbound({
-        From: '+1234567890',
-        Body: 'No auth check',
-        MessageSid: 'SM-noauth',
-        To: '+15551234567',
-      });
+      const result = await controller.smsInbound(
+        {
+          From: '+1234567890',
+          Body: 'No auth check',
+          MessageSid: 'SM-noauth',
+          To: '+15551234567',
+        },
+        undefined,
+        mockRes,
+      );
 
-      expect(result.status).toBe('EVENT_RECEIVED');
-      expect(result.processed).toBe(1);
+      expect(result).toBe('<Response></Response>');
     });
 
     it('should handle MMS with media metadata', async () => {
       setupHappyPath();
+      const mockRes = createMockRes();
 
-      const result = await controller.smsInbound({
-        From: '+1234567890',
-        Body: 'See attached',
-        MessageSid: 'SM-mms',
-        To: '+15551234567',
-        NumMedia: '1',
-        MediaUrl0: 'https://api.twilio.com/media/img.jpg',
-      });
+      const result = await controller.smsInbound(
+        {
+          From: '+1234567890',
+          Body: 'See attached',
+          MessageSid: 'SM-mms',
+          To: '+15551234567',
+          NumMedia: '1',
+          MediaUrl0: 'https://api.twilio.com/media/img.jpg',
+        },
+        undefined,
+        mockRes,
+      );
 
-      expect(result.status).toBe('EVENT_RECEIVED');
-      expect(result.processed).toBe(1);
+      expect(result).toBe('<Response></Response>');
     });
 
     it('should attempt SMS location routing by To number', async () => {
       setupHappyPath();
+      const mockRes = createMockRes();
 
-      await controller.smsInbound({
-        From: '+1234567890',
-        Body: 'Route test',
-        MessageSid: 'SM-route',
-        To: '+15551234567',
-      });
+      await controller.smsInbound(
+        {
+          From: '+1234567890',
+          Body: 'Route test',
+          MessageSid: 'SM-route',
+          To: '+15551234567',
+        },
+        undefined,
+        mockRes,
+      );
 
       expect(locationService.findLocationBySmsNumber).toHaveBeenCalledWith('+15551234567');
+    });
+
+    it('should handle STOP opt-out and update customer', async () => {
+      const mockRes = createMockRes();
+      const mockCust = { id: 'cust-optout', phone: '+1234567890', customFields: {} };
+      (prisma.customer.findFirst as jest.Mock).mockResolvedValue(mockCust);
+      (prisma.customer.update as jest.Mock).mockResolvedValue({
+        ...mockCust,
+        customFields: { smsOptOut: true },
+      });
+
+      const result = await controller.smsInbound(
+        {
+          From: '+1234567890',
+          OptOutType: 'STOP',
+          MessageSid: 'SM-optout-stop',
+        },
+        undefined,
+        mockRes,
+      );
+
+      expect(result).toBe('<Response></Response>');
+      expect(mockRes.type).toHaveBeenCalledWith('text/xml');
+      expect(prisma.customer.findFirst).toHaveBeenCalledWith({
+        where: { phone: '+1234567890' },
+      });
+      expect(prisma.customer.update).toHaveBeenCalledWith({
+        where: { id: 'cust-optout' },
+        data: { customFields: { smsOptOut: true } },
+      });
+    });
+
+    it('should handle START opt-in and update customer', async () => {
+      const mockRes = createMockRes();
+      const mockCust = {
+        id: 'cust-optin',
+        phone: '+1234567890',
+        customFields: { smsOptOut: true },
+      };
+      (prisma.customer.findFirst as jest.Mock).mockResolvedValue(mockCust);
+      (prisma.customer.update as jest.Mock).mockResolvedValue({
+        ...mockCust,
+        customFields: { smsOptOut: false },
+      });
+
+      const result = await controller.smsInbound(
+        {
+          From: '+1234567890',
+          OptOutType: 'START',
+          MessageSid: 'SM-optout-start',
+        },
+        undefined,
+        mockRes,
+      );
+
+      expect(result).toBe('<Response></Response>');
+      expect(prisma.customer.update).toHaveBeenCalledWith({
+        where: { id: 'cust-optin' },
+        data: { customFields: { smsOptOut: false } },
+      });
+    });
+
+    it('should return TwiML even when processing errors occur', async () => {
+      const mockRes = createMockRes();
+      (prisma.message.findUnique as jest.Mock).mockResolvedValue(null);
+      (prisma.business.findFirst as jest.Mock).mockRejectedValue(new Error('DB error'));
+
+      const result = await controller.smsInbound(
+        {
+          From: '+1234567890',
+          Body: 'Error test',
+          MessageSid: 'SM-error',
+          To: '+15551234567',
+        },
+        undefined,
+        mockRes,
+      );
+
+      expect(result).toBe('<Response></Response>');
+      expect(mockRes.type).toHaveBeenCalledWith('text/xml');
     });
   });
 

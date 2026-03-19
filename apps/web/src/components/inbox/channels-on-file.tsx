@@ -1,7 +1,9 @@
 'use client';
 
+import { useState } from 'react';
+import { useI18n } from '@/lib/i18n';
 import { CHANNEL_STYLES } from '@/lib/design-tokens';
-import { MessageSquare, Instagram, Facebook, Mail, MessageCircle, Globe } from 'lucide-react';
+import { MessageSquare, Instagram, Facebook, Mail, MessageCircle, Globe, Plus } from 'lucide-react';
 
 const CHANNEL_ICONS: Record<string, any> = {
   WHATSAPP: MessageSquare,
@@ -22,6 +24,7 @@ interface CustomerChannels {
 
 interface ChannelsOnFileProps {
   channels: CustomerChannels;
+  onAddIdentifier?: (type: 'email' | 'phone', value: string) => void;
 }
 
 function channelList(channels: CustomerChannels): Array<{ channel: string; identifier: string }> {
@@ -37,9 +40,24 @@ function channelList(channels: CustomerChannels): Array<{ channel: string; ident
   return list;
 }
 
-export function ChannelsOnFile({ channels }: ChannelsOnFileProps) {
+export function ChannelsOnFile({ channels, onAddIdentifier }: ChannelsOnFileProps) {
+  const { t } = useI18n();
   const available = channelList(channels);
-  if (available.length === 0) return null;
+  const [addingType, setAddingType] = useState<'email' | 'phone' | null>(null);
+  const [inputValue, setInputValue] = useState('');
+
+  const handleSubmit = (type: 'email' | 'phone') => {
+    if (inputValue.trim() && onAddIdentifier) {
+      onAddIdentifier(type, inputValue.trim());
+      setAddingType(null);
+      setInputValue('');
+    }
+  };
+
+  const missingEmail = !channels.email;
+  const missingPhone = !channels.phone;
+
+  if (available.length === 0 && !onAddIdentifier) return null;
 
   return (
     <div
@@ -47,7 +65,9 @@ export function ChannelsOnFile({ channels }: ChannelsOnFileProps) {
       aria-label="Customer channels on file"
       data-testid="channels-on-file"
     >
-      <h4 className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">Channels</h4>
+      <h4 className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">
+        {t('inbox.channels_on_file')}
+      </h4>
       <div className="space-y-1">
         {available.map(({ channel, identifier }) => {
           const style = CHANNEL_STYLES[channel];
@@ -64,6 +84,73 @@ export function ChannelsOnFile({ channels }: ChannelsOnFileProps) {
           );
         })}
       </div>
+
+      {onAddIdentifier && (missingEmail || missingPhone) && (
+        <div className="space-y-1 pt-1 border-t border-slate-100">
+          {missingEmail && addingType !== 'email' && (
+            <button
+              onClick={() => {
+                setAddingType('email');
+                setInputValue('');
+              }}
+              className="flex items-center gap-1 text-[10px] text-sage-600 hover:text-sage-700 transition-colors"
+              data-testid="add-email-button"
+            >
+              <Plus size={10} />
+              {t('inbox.add_email')}
+            </button>
+          )}
+          {missingPhone && addingType !== 'phone' && (
+            <button
+              onClick={() => {
+                setAddingType('phone');
+                setInputValue('');
+              }}
+              className="flex items-center gap-1 text-[10px] text-sage-600 hover:text-sage-700 transition-colors"
+              data-testid="add-phone-button"
+            >
+              <Plus size={10} />
+              {t('inbox.add_phone')}
+            </button>
+          )}
+
+          {addingType && (
+            <div className="flex items-center gap-1">
+              <input
+                type={addingType === 'email' ? 'email' : 'tel'}
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleSubmit(addingType);
+                  if (e.key === 'Escape') {
+                    setAddingType(null);
+                    setInputValue('');
+                  }
+                }}
+                placeholder={addingType === 'email' ? 'email@example.com' : '+1234567890'}
+                className="flex-1 text-[10px] px-1.5 py-0.5 rounded border border-slate-200 bg-white focus:ring-1 focus:ring-sage-500 outline-none"
+                autoFocus
+                data-testid={`add-${addingType}-input`}
+              />
+              <button
+                onClick={() => handleSubmit(addingType)}
+                className="text-[10px] px-1.5 py-0.5 rounded bg-sage-600 text-white hover:bg-sage-700 transition-colors"
+              >
+                {t('inbox.add_save')}
+              </button>
+              <button
+                onClick={() => {
+                  setAddingType(null);
+                  setInputValue('');
+                }}
+                className="text-[10px] px-1.5 py-0.5 text-slate-400 hover:text-slate-600"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

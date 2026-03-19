@@ -99,6 +99,7 @@ describe('Cross-Channel Integration Tests', () => {
     getUsage: jest.Mock;
     getRates: jest.Mock;
   };
+  const mockRes = { type: jest.fn().mockReturnThis() } as any;
 
   beforeEach(async () => {
     configService = {
@@ -140,7 +141,10 @@ describe('Cross-Channel Integration Tests', () => {
       getRates: jest.fn(),
     };
 
-    circuitBreakerService = new CircuitBreakerService(configService as any);
+    circuitBreakerService = new CircuitBreakerService(
+      configService as any,
+      { emitToAll: jest.fn() } as any,
+    );
     deadLetterQueueService = new DeadLetterQueueService(configService as any);
 
     const module: TestingModule = await Test.createTestingModule({
@@ -661,12 +665,16 @@ describe('Cross-Channel Integration Tests', () => {
         messages: [],
       });
 
-      await controller.smsInbound({
-        From: '+14155559999',
-        Body: 'Hello',
-        MessageSid: 'SM-locA',
-        To: '+15551111111',
-      });
+      await controller.smsInbound(
+        {
+          From: '+14155559999',
+          Body: 'Hello',
+          MessageSid: 'SM-locA',
+          To: '+15551111111',
+        },
+        undefined,
+        mockRes,
+      );
 
       // The controller looks up the location by SMS number
       expect(locationService.findLocationBySmsNumber).toHaveBeenCalledWith('+15551111111');

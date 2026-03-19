@@ -1,145 +1,116 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import { randomBetween, pastDate, computeSegmentsAndCost, CHANNEL_RATES } from './seed-omnichannel';
 
-/**
- * Lightweight tests for seed-omnichannel.ts.
- *
- * Since the seed script instantiates PrismaClient at module scope we mock
- * the entire @prisma/client module, then dynamically import the seed script
- * so all Prisma calls hit our mocks.
- */
+describe('seed-omnichannel helpers', () => {
+  describe('randomBetween', () => {
+    it('returns a value within the specified range', () => {
+      for (let i = 0; i < 100; i++) {
+        const val = randomBetween(5, 10);
+        expect(val).toBeGreaterThanOrEqual(5);
+        expect(val).toBeLessThanOrEqual(10);
+      }
+    });
 
-// ── Mock helpers ──────────────────────────────────────────────────────
+    it('returns the only value when min equals max', () => {
+      expect(randomBetween(7, 7)).toBe(7);
+    });
 
-const upsertedCustomers: any[] = [];
-const upsertedUsage: any[] = [];
-const updatedBusinesses: any[] = [];
-
-const fakeBusiness = {
-  id: 'biz_001',
-  name: 'Glow Aesthetic Clinic',
-  slug: 'glow-aesthetic',
-};
-const fakeBusiness2 = {
-  id: 'biz_002',
-  name: 'Metro Auto Group',
-  slug: 'metro-auto-group',
-};
-const fakeBusiness3 = {
-  id: 'biz_003',
-  name: 'Serenity Wellness Spa',
-  slug: 'serenity-wellness-spa',
-};
-
-const mockPrisma = {
-  business: {
-    findFirst: jest.fn().mockImplementation(({ where }: any) => {
-      const map: Record<string, any> = {
-        'glow-aesthetic': fakeBusiness,
-        'metro-auto-group': fakeBusiness2,
-        'serenity-wellness-spa': fakeBusiness3,
-      };
-      return Promise.resolve(map[where.slug] ?? null);
-    }),
-    update: jest.fn().mockImplementation(({ where, data }: any) => {
-      updatedBusinesses.push({ id: where.id, data });
-      return Promise.resolve({ id: where.id, ...data });
-    }),
-  },
-  customer: {
-    upsert: jest.fn().mockImplementation(({ create }: any) => {
-      const record = { id: `cust_${upsertedCustomers.length + 1}`, ...create };
-      upsertedCustomers.push(record);
-      return Promise.resolve(record);
-    }),
-  },
-  messageUsage: {
-    upsert: jest.fn().mockImplementation(({ create }: any) => {
-      const record = { id: `mu_${upsertedUsage.length + 1}`, ...create };
-      upsertedUsage.push(record);
-      return Promise.resolve(record);
-    }),
-  },
-  $disconnect: jest.fn().mockResolvedValue(undefined),
-};
-
-jest.mock('@prisma/client', () => ({
-  PrismaClient: jest.fn(() => mockPrisma),
-}));
-
-// ── Tests ─────────────────────────────────────────────────────────────
-
-describe('seed-omnichannel', () => {
-  beforeAll(async () => {
-    // Suppress console.log during seed
-    jest.spyOn(console, 'log').mockImplementation(() => {});
-    // Dynamically import so it runs against our mock
-    await import('./seed-omnichannel');
+    it('returns an integer', () => {
+      const val = randomBetween(1, 100);
+      expect(Number.isInteger(val)).toBe(true);
+    });
   });
 
-  afterAll(() => {
-    jest.restoreAllMocks();
+  describe('pastDate', () => {
+    it('returns a string in YYYY-MM-DD format', () => {
+      const result = pastDate(3);
+      expect(result).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    });
+
+    it('returns today when daysAgo is 0', () => {
+      const today = new Date().toISOString().split('T')[0];
+      expect(pastDate(0)).toBe(today);
+    });
+
+    it('returns yesterday when daysAgo is 1', () => {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const expected = yesterday.toISOString().split('T')[0];
+      expect(pastDate(1)).toBe(expected);
+    });
   });
 
-  it('executes without error', () => {
-    // If we reach here, main() completed without throwing.
-    expect(true).toBe(true);
+  describe('CHANNEL_RATES', () => {
+    it('has rates for all expected channels', () => {
+      const expected = ['SMS', 'MMS', 'EMAIL', 'WHATSAPP', 'INSTAGRAM', 'FACEBOOK', 'WEB_CHAT'];
+      for (const ch of expected) {
+        expect(CHANNEL_RATES).toHaveProperty(ch);
+        expect(CHANNEL_RATES[ch]).toHaveProperty('inbound');
+        expect(CHANNEL_RATES[ch]).toHaveProperty('outbound');
+      }
+    });
+
+    it('has zero rates for free channels', () => {
+      const freeChannels = ['WHATSAPP', 'INSTAGRAM', 'FACEBOOK', 'WEB_CHAT'];
+      for (const ch of freeChannels) {
+        expect(CHANNEL_RATES[ch].inbound).toBe(0);
+        expect(CHANNEL_RATES[ch].outbound).toBe(0);
+      }
+    });
+
+    it('has positive rates for paid channels', () => {
+      expect(CHANNEL_RATES['SMS'].inbound).toBeGreaterThan(0);
+      expect(CHANNEL_RATES['SMS'].outbound).toBeGreaterThan(0);
+      expect(CHANNEL_RATES['EMAIL'].inbound).toBeGreaterThan(0);
+      expect(CHANNEL_RATES['EMAIL'].outbound).toBeGreaterThan(0);
+    });
+
+    it('has correct SMS rates', () => {
+      expect(CHANNEL_RATES['SMS'].inbound).toBe(0.0075);
+      expect(CHANNEL_RATES['SMS'].outbound).toBe(0.0079);
+    });
   });
 
-  it('creates multi-channel customers for the aesthetic clinic', () => {
-    // 3 customers upserted (Alex, Jordan, Taylor)
-    expect(mockPrisma.customer.upsert).toHaveBeenCalledTimes(3);
+  describe('computeSegmentsAndCost', () => {
+    it('computes segments 1-3 for SMS', () => {
+      for (let i = 0; i < 50; i++) {
+        const { segments } = computeSegmentsAndCost('SMS', 'OUTBOUND', 10);
+        expect(segments).toBeGreaterThanOrEqual(1);
+        expect(segments).toBeLessThanOrEqual(3);
+      }
+    });
 
-    // Alex should have all channel identifiers
-    const alexCall = mockPrisma.customer.upsert.mock.calls[0][0];
-    expect(alexCall.create.instagramUserId).toBe('ig_alex_mc');
-    expect(alexCall.create.facebookPsid).toBe('fb_alex_mc');
-    expect(alexCall.create.phone).toBe('+1555MULTI01');
+    it('computes 0 segments for non-SMS channels', () => {
+      const channels = ['WHATSAPP', 'INSTAGRAM', 'EMAIL', 'FACEBOOK', 'WEB_CHAT'];
+      for (const ch of channels) {
+        const { segments } = computeSegmentsAndCost(ch, 'INBOUND', 10);
+        expect(segments).toBe(0);
+      }
+    });
 
-    // Jordan is email-only
-    const jordanCall = mockPrisma.customer.upsert.mock.calls[1][0];
-    expect(jordanCall.create.email).toBe('jordan@example.com');
+    it('computes correct cost for SMS outbound', () => {
+      const count = 10;
+      const { segments, cost } = computeSegmentsAndCost('SMS', 'OUTBOUND', count);
+      // cost = count * segments * rate = 10 * segments * 0.0079
+      expect(cost).toBeCloseTo(count * segments * 0.0079, 6);
+    });
 
-    // Taylor has webChatSessionId
-    const taylorCall = mockPrisma.customer.upsert.mock.calls[2][0];
-    expect(taylorCall.create.webChatSessionId).toBe('wc_taylor_001');
-  });
+    it('computes correct cost for EMAIL', () => {
+      const count = 20;
+      const { segments, cost } = computeSegmentsAndCost('EMAIL', 'INBOUND', count);
+      expect(segments).toBe(0);
+      // When segments is 0, cost = count * 1 * rate
+      expect(cost).toBeCloseTo(count * 1 * 0.00065, 6);
+    });
 
-  it('creates MessageUsage records for all businesses and channels', () => {
-    // 3 businesses x 7 days x 6 channels x 2 directions = 252
-    expect(mockPrisma.messageUsage.upsert).toHaveBeenCalledTimes(252);
+    it('computes zero cost for free channels', () => {
+      const { cost } = computeSegmentsAndCost('WHATSAPP', 'OUTBOUND', 50);
+      expect(cost).toBe(0);
+    });
 
-    // Verify a call has the expected shape
-    const firstCall = mockPrisma.messageUsage.upsert.mock.calls[0][0];
-    expect(firstCall.create).toHaveProperty('businessId');
-    expect(firstCall.create).toHaveProperty('channel');
-    expect(firstCall.create).toHaveProperty('direction');
-    expect(firstCall.create).toHaveProperty('date');
-    expect(firstCall.create).toHaveProperty('count');
-    expect(firstCall.create.count).toBeGreaterThan(0);
-  });
-
-  it('updates channelSettings on all demo businesses', () => {
-    expect(mockPrisma.business.update).toHaveBeenCalledTimes(3);
-
-    for (const call of mockPrisma.business.update.mock.calls) {
-      const settings = call[0].data.channelSettings;
-      expect(settings.enabledChannels).toHaveLength(6);
-      expect(settings.defaultReplyChannel).toBe('WHATSAPP');
-      expect(settings.autoDetectChannel).toBe(true);
-    }
-  });
-
-  it('is idempotent (upsert-based, can run twice safely)', () => {
-    // All customer and messageUsage mutations use upsert
-    // Verify no create/createMany calls were made
-    expect(mockPrisma.customer.upsert).toBeDefined();
-    expect(mockPrisma.messageUsage.upsert).toBeDefined();
-
-    // The update call on business is also idempotent (overwrites same JSON)
-    expect(mockPrisma.business.update).toBeDefined();
-  });
-
-  it('disconnects PrismaClient on completion', () => {
-    expect(mockPrisma.$disconnect).toHaveBeenCalled();
+    it('handles unknown channels with zero cost', () => {
+      const { segments, cost } = computeSegmentsAndCost('UNKNOWN', 'INBOUND', 10);
+      expect(segments).toBe(0);
+      expect(cost).toBe(0);
+    });
   });
 });

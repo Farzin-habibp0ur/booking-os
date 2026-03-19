@@ -147,7 +147,10 @@ describe('Email Integration Tests', () => {
     };
     usageService = { recordUsage: jest.fn().mockResolvedValue(undefined) };
 
-    circuitBreakerService = new CircuitBreakerService(configService as any);
+    circuitBreakerService = new CircuitBreakerService(
+      configService as any,
+      { emitToAll: jest.fn() } as any,
+    );
     deadLetterQueueService = new DeadLetterQueueService(configService as any);
   });
 

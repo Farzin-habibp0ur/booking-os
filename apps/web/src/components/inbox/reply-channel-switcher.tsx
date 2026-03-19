@@ -26,12 +26,14 @@ interface ReplyChannelSwitcherProps {
   currentChannel: string;
   availableChannels: string[];
   onChannelChange: (channel: string) => void;
+  disabledChannels?: Record<string, string>;
 }
 
 export function ReplyChannelSwitcher({
   currentChannel,
   availableChannels,
   onChannelChange,
+  disabledChannels,
 }: ReplyChannelSwitcherProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(-1);
@@ -74,11 +76,14 @@ export function ReplyChannelSwitcher({
       }
       if (e.key === 'Enter' && focusedIndex >= 0) {
         e.preventDefault();
-        onChannelChange(availableChannels[focusedIndex]);
-        setIsOpen(false);
+        const ch = availableChannels[focusedIndex];
+        if (!disabledChannels?.[ch]) {
+          onChannelChange(ch);
+          setIsOpen(false);
+        }
       }
     },
-    [focusedIndex, availableChannels, onChannelChange],
+    [focusedIndex, availableChannels, onChannelChange, disabledChannels],
   );
 
   if (availableChannels.length <= 1) return null;
@@ -115,25 +120,36 @@ export function ReplyChannelSwitcher({
           {availableChannels.map((ch, index) => {
             const style = CHANNEL_STYLES[ch];
             const Icon = CHANNEL_ICONS[ch];
+            const disabledReason = disabledChannels?.[ch];
+            const isDisabled = !!disabledReason;
+
             return (
               <button
                 key={ch}
                 onClick={() => {
-                  onChannelChange(ch);
-                  setIsOpen(false);
+                  if (!isDisabled) {
+                    onChannelChange(ch);
+                    setIsOpen(false);
+                  }
                 }}
                 role="option"
                 aria-selected={ch === currentChannel}
+                aria-disabled={isDisabled}
+                title={isDisabled ? disabledReason : undefined}
                 className={cn(
                   'w-full flex items-center gap-2 px-3 py-1.5 text-xs transition-colors',
-                  ch === currentChannel
-                    ? 'bg-slate-50 font-medium text-slate-900'
-                    : 'text-slate-600 hover:bg-slate-50',
-                  focusedIndex === index && 'ring-2 ring-inset ring-sage-500',
+                  isDisabled
+                    ? 'opacity-40 cursor-not-allowed text-slate-400'
+                    : ch === currentChannel
+                      ? 'bg-slate-50 font-medium text-slate-900'
+                      : 'text-slate-600 hover:bg-slate-50',
+                  focusedIndex === index && !isDisabled && 'ring-2 ring-inset ring-sage-500',
                 )}
                 data-testid={`reply-channel-option-${ch.toLowerCase()}`}
               >
-                {Icon && <Icon size={12} className={style?.text || ''} />}
+                {Icon && (
+                  <Icon size={12} className={isDisabled ? 'text-slate-300' : style?.text || ''} />
+                )}
                 <span>{style?.label || ch}</span>
               </button>
             );

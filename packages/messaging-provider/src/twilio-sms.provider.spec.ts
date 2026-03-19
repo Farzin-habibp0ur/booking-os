@@ -373,6 +373,99 @@ describe('TwilioSmsProvider', () => {
     });
   });
 
+  // ─── parseOptOutWebhook ──────────────────────────────────────────────
+
+  describe('parseOptOutWebhook', () => {
+    it('parses a STOP opt-out event', () => {
+      const result = TwilioSmsProvider.parseOptOutWebhook({
+        From: '+14155551234',
+        OptOutType: 'STOP',
+        MessageSid: 'SM_OPTOUT_1',
+      });
+
+      expect(result).not.toBeNull();
+      expect(result!.from).toBe('+14155551234');
+      expect(result!.optOutType).toBe('STOP');
+      expect(result!.messageSid).toBe('SM_OPTOUT_1');
+    });
+
+    it('parses a START opt-in event', () => {
+      const result = TwilioSmsProvider.parseOptOutWebhook({
+        From: '+14155551234',
+        OptOutType: 'START',
+      });
+
+      expect(result).not.toBeNull();
+      expect(result!.optOutType).toBe('START');
+    });
+
+    it('parses a HELP event', () => {
+      const result = TwilioSmsProvider.parseOptOutWebhook({
+        From: '+14155551234',
+        OptOutType: 'HELP',
+      });
+
+      expect(result).not.toBeNull();
+      expect(result!.optOutType).toBe('HELP');
+    });
+
+    it('returns null when OptOutType is missing', () => {
+      expect(TwilioSmsProvider.parseOptOutWebhook({ From: '+14155551234' })).toBeNull();
+    });
+
+    it('returns null when From is missing', () => {
+      expect(TwilioSmsProvider.parseOptOutWebhook({ OptOutType: 'STOP' })).toBeNull();
+    });
+
+    it('returns null for unrecognized OptOutType', () => {
+      expect(
+        TwilioSmsProvider.parseOptOutWebhook({
+          From: '+14155551234',
+          OptOutType: 'UNKNOWN',
+        }),
+      ).toBeNull();
+    });
+  });
+
+  // ─── messagingServiceSid ───────────────────────────────────────────
+
+  describe('messagingServiceSid', () => {
+    it('uses MessagingServiceSid instead of From when configured', async () => {
+      const providerWithMsgSvc = new TwilioSmsProvider({
+        ...mockConfig,
+        messagingServiceSid: 'MG_TEST_SID',
+      });
+
+      (global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({ sid: 'SM_MSGSVC' }),
+      });
+
+      await providerWithMsgSvc.sendMessage(mockMessage);
+
+      const [, options] = (global.fetch as jest.Mock).mock.calls[0];
+      const body = new URLSearchParams(options.body);
+      expect(body.get('MessagingServiceSid')).toBe('MG_TEST_SID');
+      expect(body.has('From')).toBe(false);
+    });
+
+    it('uses From when messagingServiceSid is not configured', async () => {
+      (global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({ sid: 'SM_FROM' }),
+      });
+
+      await provider.sendMessage(mockMessage);
+
+      const [, options] = (global.fetch as jest.Mock).mock.calls[0];
+      const body = new URLSearchParams(options.body);
+      expect(body.get('From')).toBe('+15551234567');
+      expect(body.has('MessagingServiceSid')).toBe(false);
+    });
+  });
+
   // ─── classifyError ────────────────────────────────────────────────────
 
   describe('classifyError', () => {

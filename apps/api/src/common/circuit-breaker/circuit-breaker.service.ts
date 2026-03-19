@@ -1,5 +1,6 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit, Inject, forwardRef } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { InboxGateway } from '../inbox.gateway';
 
 export class CircuitOpenException extends Error {
   constructor(public readonly providerName: string) {
@@ -32,7 +33,10 @@ export class CircuitBreakerService implements OnModuleInit {
   // In-memory fallback
   private memoryStore = new Map<string, CircuitBreakerState>();
 
-  constructor(private config: ConfigService) {}
+  constructor(
+    private config: ConfigService,
+    @Inject(forwardRef(() => InboxGateway)) private inboxGateway: InboxGateway,
+  ) {}
 
   async onModuleInit() {
     const redisUrl = this.config.get<string>('REDIS_URL');
@@ -192,6 +196,17 @@ export class CircuitBreakerService implements OnModuleInit {
       this.logger.warn(
         `Circuit OPEN for provider: ${providerName} (${failures} failures in window)`,
       );
+
+      try {
+        this.inboxGateway.emitToAll('circuit:state-change', {
+          provider: providerName,
+          from: 'CLOSED',
+          to: 'OPEN',
+          timestamp: new Date().toISOString(),
+        });
+      } catch {
+        // InboxGateway may not be ready during startup
+      }
     } else {
       const updatedState: CircuitBreakerState = {
         ...current,
@@ -212,6 +227,18 @@ export class CircuitBreakerService implements OnModuleInit {
     };
     await this.saveState(providerName, updated);
     this.logger.log(`Circuit state change for ${providerName}: ${current.state} -> ${newState}`);
+
+    // Broadcast state change to all connected clients
+    try {
+      this.inboxGateway.emitToAll('circuit:state-change', {
+        provider: providerName,
+        from: current.state,
+        to: newState,
+        timestamp: new Date().toISOString(),
+      });
+    } catch {
+      // InboxGateway may not be ready during startup
+    }
   }
 
   private async saveState(providerName: string, state: CircuitBreakerState): Promise<void> {

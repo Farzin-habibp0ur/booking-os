@@ -180,6 +180,12 @@ describe('UsageService', () => {
       expect(rates.EMAIL).toEqual({ inbound: 0.00065, outbound: 0.00065 });
     });
 
+    it('returns MMS rate', () => {
+      const rates = service.getRates();
+
+      expect(rates.MMS).toEqual({ inbound: 0.02, outbound: 0.02 });
+    });
+
     it('returns zero rates for free channels', () => {
       const rates = service.getRates();
 
@@ -189,17 +195,89 @@ describe('UsageService', () => {
       expect(rates.WEB_CHAT).toEqual({ inbound: 0, outbound: 0 });
     });
 
-    it('includes all 6 channels', () => {
+    it('includes all 7 channels (SMS, MMS, EMAIL, WHATSAPP, INSTAGRAM, FACEBOOK, WEB_CHAT)', () => {
       const rates = service.getRates();
       const channels = Object.keys(rates);
 
-      expect(channels).toHaveLength(6);
+      expect(channels).toHaveLength(7);
       expect(channels).toContain('SMS');
+      expect(channels).toContain('MMS');
       expect(channels).toContain('EMAIL');
       expect(channels).toContain('WHATSAPP');
       expect(channels).toContain('INSTAGRAM');
       expect(channels).toContain('FACEBOOK');
       expect(channels).toContain('WEB_CHAT');
+    });
+  });
+
+  describe('reportToStripe', () => {
+    it('computes cost correctly from channel usage', async () => {
+      prisma.messageUsage.findMany.mockResolvedValue([
+        { channel: 'SMS', direction: 'INBOUND', count: 100 },
+        { channel: 'SMS', direction: 'OUTBOUND', count: 200 },
+        { channel: 'EMAIL', direction: 'OUTBOUND', count: 50 },
+      ]);
+
+      const result = await service.reportToStripe('biz-1', '2026-03');
+
+      // SMS: 100 * 0.0075 + 200 * 0.0079 = 0.75 + 1.58 = 2.33
+      // EMAIL: 0 * 0.00065 + 50 * 0.00065 = 0.0325
+      const expectedCost = 100 * 0.0075 + 200 * 0.0079 + 50 * 0.00065;
+      expect(result.totalCost).toBeCloseTo(expectedCost);
+      expect(result.reported).toBe(false);
+    });
+
+    it('returns zero cost when no usage', async () => {
+      prisma.messageUsage.findMany.mockResolvedValue([]);
+
+      const result = await service.reportToStripe('biz-1', '2026-03');
+
+      expect(result.totalCost).toBe(0);
+      expect(result.reported).toBe(false);
+    });
+  });
+
+  describe('getAllBusinessUsage', () => {
+    it('aggregates across multiple businesses', async () => {
+      prisma.messageUsage.findMany.mockResolvedValue([
+        { businessId: 'biz-1', channel: 'SMS', direction: 'INBOUND', count: 10 },
+        { businessId: 'biz-1', channel: 'SMS', direction: 'OUTBOUND', count: 20 },
+        { businessId: 'biz-2', channel: 'EMAIL', direction: 'INBOUND', count: 5 },
+        { businessId: 'biz-2', channel: 'EMAIL', direction: 'OUTBOUND', count: 15 },
+      ]);
+
+      const reports = await service.getAllBusinessUsage('2026-03-01', '2026-03-31');
+
+      expect(reports).toHaveLength(2);
+
+      const biz1 = reports.find((r) => r.businessId === 'biz-1');
+      expect(biz1).toBeDefined();
+      expect(biz1!.channels).toHaveLength(1);
+      expect(biz1!.channels[0].channel).toBe('SMS');
+      expect(biz1!.channels[0].inbound).toBe(10);
+      expect(biz1!.channels[0].outbound).toBe(20);
+      expect(biz1!.totals).toEqual({ inbound: 10, outbound: 20, total: 30 });
+
+      const biz2 = reports.find((r) => r.businessId === 'biz-2');
+      expect(biz2).toBeDefined();
+      expect(biz2!.totals).toEqual({ inbound: 5, outbound: 15, total: 20 });
+    });
+
+    it('returns empty array when no records', async () => {
+      prisma.messageUsage.findMany.mockResolvedValue([]);
+
+      const reports = await service.getAllBusinessUsage();
+      expect(reports).toEqual([]);
+    });
+
+    it('uses default wide date range when no dates provided', async () => {
+      prisma.messageUsage.findMany.mockResolvedValue([]);
+
+      await service.getAllBusinessUsage();
+
+      expect(prisma.messageUsage.findMany).toHaveBeenCalledWith({
+        where: { date: { gte: '2000-01-01', lte: '2099-12-31' } },
+      });
     });
   });
 });

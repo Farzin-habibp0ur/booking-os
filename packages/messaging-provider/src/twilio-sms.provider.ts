@@ -6,6 +6,7 @@ export interface TwilioSmsConfig {
   accountSid: string;
   authToken: string;
   fromNumber: string;
+  messagingServiceSid?: string;
   statusCallbackUrl?: string;
 }
 
@@ -23,9 +24,14 @@ export class TwilioSmsProvider implements MessagingProvider {
     const url = `${this.apiBase}/Messages.json`;
     const params = new URLSearchParams({
       To: msg.to,
-      From: this.config.fromNumber,
       Body: msg.body,
     });
+
+    if (this.config.messagingServiceSid) {
+      params.append('MessagingServiceSid', this.config.messagingServiceSid);
+    } else {
+      params.append('From', this.config.fromNumber);
+    }
 
     if (msg.mediaUrl) {
       params.append('MediaUrl', msg.mediaUrl);
@@ -182,6 +188,32 @@ export class TwilioSmsProvider implements MessagingProvider {
       fromState: body.FromState,
       fromCountry: body.FromCountry,
       timestamp: new Date().toISOString(),
+    };
+  }
+
+  /**
+   * Parse Twilio's status callback webhook payload.
+   */
+  static parseOptOutWebhook(body: Record<string, string>): {
+    from: string;
+    optOutType: 'STOP' | 'START' | 'HELP';
+    messageSid: string;
+  } | null {
+    if (!body.OptOutType || !body.From) return null;
+
+    const typeMap: Record<string, 'STOP' | 'START' | 'HELP'> = {
+      STOP: 'STOP',
+      START: 'START',
+      HELP: 'HELP',
+    };
+
+    const optOutType = typeMap[body.OptOutType?.toUpperCase()];
+    if (!optOutType) return null;
+
+    return {
+      from: body.From,
+      optOutType,
+      messageSid: body.MessageSid || '',
     };
   }
 

@@ -16,6 +16,11 @@ export class UsageController {
     return this.usageService.getRates();
   }
 
+  @Get('all')
+  async getAllUsage(@Query('startDate') startDate?: string, @Query('endDate') endDate?: string) {
+    return this.usageService.getAllBusinessUsage(startDate, endDate);
+  }
+
   @Get(':businessId')
   async getUsage(
     @Param('businessId') businessId: string,

@@ -103,6 +103,9 @@ describe('WebChat Integration Tests', () => {
 
   const mockServer = {
     to: jest.fn().mockReturnThis(),
+    in: jest.fn().mockReturnValue({
+      fetchSockets: jest.fn().mockResolvedValue([]),
+    }),
     emit: jest.fn(),
   };
 

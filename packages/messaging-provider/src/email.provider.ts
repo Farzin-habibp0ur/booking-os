@@ -1,3 +1,4 @@
+import * as crypto from 'crypto';
 import { OutboundMessage } from '@booking-os/shared';
 import { MessagingProvider } from './provider.interface';
 
@@ -157,6 +158,17 @@ export class EmailChannelProvider implements MessagingProvider {
    * Validate that a domain has proper DNS records for receiving email.
    * Returns a simple check result (in production, you'd verify MX, SPF, DKIM, DMARC).
    */
+  /**
+   * Verify webhook payload integrity via HMAC-SHA256 with timing-safe comparison.
+   */
+  static verifyWebhookIntegrity(rawBody: string, signature: string, secret: string): boolean {
+    const expected = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
+    const sigBuf = Buffer.from(signature);
+    const expBuf = Buffer.from(expected);
+    if (sigBuf.length !== expBuf.length) return false;
+    return crypto.timingSafeEqual(sigBuf, expBuf);
+  }
+
   static validateDomain(domain: string): {
     valid: boolean;
     checks: Array<{ type: string; status: string }>;

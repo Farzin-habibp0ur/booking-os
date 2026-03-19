@@ -6,12 +6,14 @@ import {
   Query,
   Headers,
   RawBody,
+  Res,
   ForbiddenException,
   BadRequestException,
   Inject,
   forwardRef,
   Logger,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { ApiTags } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
@@ -384,7 +386,8 @@ export class WebhookController {
   @Post('sms/inbound')
   async smsInbound(
     @Body() body: Record<string, string>,
-    @Headers('x-twilio-signature') twilioSignature?: string,
+    @Headers('x-twilio-signature') twilioSignature: string | undefined,
+    @Res({ passthrough: true }) res: Response,
   ) {
     // Validate Twilio signature if auth token is configured
     const authToken = this.configService.get<string>('TWILIO_AUTH_TOKEN');
@@ -399,6 +402,34 @@ export class WebhookController {
       if (!isValid) {
         throw new ForbiddenException('Invalid Twilio webhook signature');
       }
+    }
+
+    // Check for opt-out events (STOP/START/HELP)
+    const optOut = TwilioSmsProvider.parseOptOutWebhook(body);
+    if (optOut) {
+      this.logger.log(`SMS opt-out event: ${optOut.optOutType} from ${optOut.from}`);
+      try {
+        // Find customer by phone and update opt-out status
+        const customer = await this.prisma.customer.findFirst({
+          where: { phone: optOut.from },
+        });
+        if (customer) {
+          const customFields = (customer.customFields as Record<string, any>) || {};
+          customFields.smsOptOut = optOut.optOutType === 'STOP';
+          await this.prisma.customer.update({
+            where: { id: customer.id },
+            data: { customFields },
+          });
+          this.logger.log(
+            `Updated smsOptOut=${customFields.smsOptOut} for customer ${customer.id}`,
+          );
+        }
+      } catch (err: any) {
+        this.logger.error(`Failed to process opt-out: ${err.message}`, err.stack);
+      }
+
+      res.type('text/xml');
+      return '<Response></Response>';
     }
 
     const parsed = TwilioSmsProvider.parseInboundWebhook(body);
@@ -426,13 +457,13 @@ export class WebhookController {
         undefined,
         'SMS',
       );
-      return {
-        status: 'EVENT_RECEIVED',
-        processed: result.duplicate ? 0 : 1,
-      };
+
+      res.type('text/xml');
+      return '<Response></Response>';
     } catch (err: any) {
       this.logger.error(`SMS inbound processing error: ${err.message}`, err.stack);
-      return { status: 'EVENT_RECEIVED', processed: 0 };
+      res.type('text/xml');
+      return '<Response></Response>';
     }
   }
 

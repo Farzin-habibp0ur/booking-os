@@ -180,6 +180,171 @@ describe('FacebookProvider', () => {
     }, 30000);
   });
 
+  describe('isWithinMessagingWindow', () => {
+    it('returns true when within 24 hours', () => {
+      const recentMessage = new Date(Date.now() - 12 * 60 * 60 * 1000); // 12 hours ago
+      expect(provider.isWithinMessagingWindow(recentMessage)).toBe(true);
+    });
+
+    it('returns false when outside 24 hours', () => {
+      const oldMessage = new Date(Date.now() - 25 * 60 * 60 * 1000); // 25 hours ago
+      expect(provider.isWithinMessagingWindow(oldMessage)).toBe(false);
+    });
+
+    it('returns true for message sent just now', () => {
+      expect(provider.isWithinMessagingWindow(new Date())).toBe(true);
+    });
+  });
+
+  describe('isWithinHumanAgentWindow', () => {
+    it('returns true when within 7 days', () => {
+      const recentMessage = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000); // 3 days ago
+      expect(provider.isWithinHumanAgentWindow(recentMessage)).toBe(true);
+    });
+
+    it('returns false when outside 7 days', () => {
+      const oldMessage = new Date(Date.now() - 8 * 24 * 60 * 60 * 1000); // 8 days ago
+      expect(provider.isWithinHumanAgentWindow(oldMessage)).toBe(false);
+    });
+
+    it('returns true for message at exactly 6 days', () => {
+      const sixDaysAgo = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000);
+      expect(provider.isWithinHumanAgentWindow(sixDaysAgo)).toBe(true);
+    });
+  });
+
+  describe('sendTemplateMessage', () => {
+    it('sends a button template message', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({ message_id: 'mid.tmpl1' }),
+      });
+
+      const result = await provider.sendTemplateMessage('psid_user1', {
+        text: 'Choose an option',
+        buttons: [
+          { type: 'postback', title: 'Book Now', payload: 'BOOK' },
+          { type: 'web_url', title: 'Visit Site', url: 'https://example.com' },
+        ],
+      });
+
+      expect(result.externalId).toBe('mid.tmpl1');
+      const sentBody = JSON.parse(mockFetch.mock.calls[0][1].body);
+      expect(sentBody.recipient.id).toBe('psid_user1');
+      expect(sentBody.message.attachment.type).toBe('template');
+      expect(sentBody.message.attachment.payload.template_type).toBe('button');
+      expect(sentBody.message.attachment.payload.buttons).toHaveLength(2);
+      expect(sentBody.message.attachment.payload.buttons[0].type).toBe('postback');
+      expect(sentBody.message.attachment.payload.buttons[0].payload).toBe('BOOK');
+      expect(sentBody.message.attachment.payload.buttons[1].type).toBe('web_url');
+      expect(sentBody.message.attachment.payload.buttons[1].url).toBe('https://example.com');
+    });
+
+    it('sends text message when no buttons provided', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({ message_id: 'mid.tmpl2' }),
+      });
+
+      const result = await provider.sendTemplateMessage('psid_user1', {
+        text: 'Just a text message',
+      });
+
+      expect(result.externalId).toBe('mid.tmpl2');
+      const sentBody = JSON.parse(mockFetch.mock.calls[0][1].body);
+      expect(sentBody.message.text).toBe('Just a text message');
+      expect(sentBody.message.attachment).toBeUndefined();
+    });
+
+    it('includes quick replies when provided', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({ message_id: 'mid.tmpl3' }),
+      });
+
+      await provider.sendTemplateMessage('psid_user1', {
+        text: 'Quick reply test',
+        quickReplies: [
+          { title: 'Yes', payload: 'YES' },
+          { title: 'No', payload: 'NO' },
+        ],
+      });
+
+      const sentBody = JSON.parse(mockFetch.mock.calls[0][1].body);
+      expect(sentBody.message.quick_replies).toHaveLength(2);
+      expect(sentBody.message.quick_replies[0].content_type).toBe('text');
+      expect(sentBody.message.quick_replies[0].title).toBe('Yes');
+      expect(sentBody.message.quick_replies[0].payload).toBe('YES');
+    });
+
+    it('truncates button title to 20 characters', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({ message_id: 'mid.tmpl4' }),
+      });
+
+      await provider.sendTemplateMessage('psid_user1', {
+        text: 'Truncation test',
+        buttons: [
+          {
+            type: 'postback',
+            title: 'A very long button title that exceeds 20 chars',
+            payload: 'X',
+          },
+        ],
+      });
+
+      const sentBody = JSON.parse(mockFetch.mock.calls[0][1].body);
+      expect(sentBody.message.attachment.payload.buttons[0].title.length).toBe(20);
+    });
+
+    it('limits buttons to maximum of 3', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({ message_id: 'mid.tmpl5' }),
+      });
+
+      await provider.sendTemplateMessage('psid_user1', {
+        text: 'Max buttons test',
+        buttons: [
+          { type: 'postback', title: 'Btn 1', payload: '1' },
+          { type: 'postback', title: 'Btn 2', payload: '2' },
+          { type: 'postback', title: 'Btn 3', payload: '3' },
+          { type: 'postback', title: 'Btn 4', payload: '4' },
+        ],
+      });
+
+      const sentBody = JSON.parse(mockFetch.mock.calls[0][1].body);
+      expect(sentBody.message.attachment.payload.buttons).toHaveLength(3);
+    });
+
+    it('limits quick replies to maximum of 13', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({ message_id: 'mid.tmpl6' }),
+      });
+
+      const quickReplies = Array.from({ length: 15 }, (_, i) => ({
+        title: `QR ${i}`,
+        payload: `QR_${i}`,
+      }));
+
+      await provider.sendTemplateMessage('psid_user1', {
+        text: 'Max QR test',
+        quickReplies,
+      });
+
+      const sentBody = JSON.parse(mockFetch.mock.calls[0][1].body);
+      expect(sentBody.message.quick_replies).toHaveLength(13);
+    });
+  });
+
   describe('parseInboundWebhook', () => {
     it('should parse a text message', () => {
       const payload = {

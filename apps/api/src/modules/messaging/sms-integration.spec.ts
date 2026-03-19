@@ -105,6 +105,7 @@ describe('SMS Integration Tests', () => {
   let circuitBreakerService: CircuitBreakerService;
   let deadLetterQueueService: DeadLetterQueueService;
   let usageService: { recordUsage: jest.Mock };
+  const mockRes = { type: jest.fn().mockReturnThis() } as any;
 
   function setupHappyPath() {
     (prisma.message.findUnique as jest.Mock).mockResolvedValue(null);
@@ -147,7 +148,10 @@ describe('SMS Integration Tests', () => {
     usageService = { recordUsage: jest.fn().mockResolvedValue(undefined) };
 
     // CircuitBreakerService uses in-memory store (no Redis in tests)
-    circuitBreakerService = new CircuitBreakerService(configService as any);
+    circuitBreakerService = new CircuitBreakerService(
+      configService as any,
+      { emitToAll: jest.fn() } as any,
+    );
 
     // DeadLetterQueueService uses in-memory store (no Redis in tests)
     deadLetterQueueService = new DeadLetterQueueService(configService as any);
@@ -185,10 +189,10 @@ describe('SMS Integration Tests', () => {
       setupHappyPath();
 
       const payload = buildSmsInboundPayload();
-      const result = await controller.smsInbound(payload);
+      const result = await controller.smsInbound(payload, undefined, mockRes);
 
-      expect(result.status).toBe('EVENT_RECEIVED');
-      expect(result.processed).toBe(1);
+      expect(result).toBe('<Response></Response>');
+      expect(mockRes.type).toHaveBeenCalledWith('text/xml');
 
       // Customer resolved via phone
       expect(customerIdentityService.resolveCustomer).toHaveBeenCalledWith('biz1', {
@@ -256,10 +260,12 @@ describe('SMS Integration Tests', () => {
           MessageSid: 'SM-repeat',
           Body: 'Follow up message',
         }),
+        undefined,
+        mockRes,
       );
 
-      expect(result.status).toBe('EVENT_RECEIVED');
-      expect(result.processed).toBe(1);
+      expect(result).toBe('<Response></Response>');
+      expect(mockRes.type).toHaveBeenCalledWith('text/xml');
       expect(customerIdentityService.resolveCustomer).toHaveBeenCalledWith('biz1', {
         phone: '+14155559999',
         name: '+14155559999',
@@ -283,10 +289,12 @@ describe('SMS Integration Tests', () => {
           MediaUrl0: 'https://api.twilio.com/media/img1.jpg',
           MediaUrl1: 'https://api.twilio.com/media/img2.jpg',
         }),
+        undefined,
+        mockRes,
       );
 
-      expect(result.status).toBe('EVENT_RECEIVED');
-      expect(result.processed).toBe(1);
+      expect(result).toBe('<Response></Response>');
+      expect(mockRes.type).toHaveBeenCalledWith('text/xml');
       // The parsed body is stored; media URLs are parsed by TwilioSmsProvider.parseInboundWebhook
       // but the webhook controller passes the body text through processInboundMessage
       expect(prisma.message.create).toHaveBeenCalledWith(
@@ -307,10 +315,14 @@ describe('SMS Integration Tests', () => {
         externalId: 'SM-dup',
       });
 
-      const result = await controller.smsInbound(buildSmsInboundPayload({ MessageSid: 'SM-dup' }));
+      const result = await controller.smsInbound(
+        buildSmsInboundPayload({ MessageSid: 'SM-dup' }),
+        undefined,
+        mockRes,
+      );
 
-      expect(result.status).toBe('EVENT_RECEIVED');
-      expect(result.processed).toBe(0);
+      expect(result).toBe('<Response></Response>');
+      expect(mockRes.type).toHaveBeenCalledWith('text/xml');
       expect(prisma.message.create).not.toHaveBeenCalled();
       expect(customerIdentityService.resolveCustomer).not.toHaveBeenCalled();
     });
@@ -443,6 +455,8 @@ describe('SMS Integration Tests', () => {
           From: '+14155550001',
           MessageSid: 'SM-new',
         }),
+        undefined,
+        mockRes,
       );
 
       expect(customerIdentityService.resolveCustomer).toHaveBeenCalledWith('biz1', {
@@ -467,6 +481,8 @@ describe('SMS Integration Tests', () => {
           From: '+14155559999',
           MessageSid: 'SM-exist',
         }),
+        undefined,
+        mockRes,
       );
 
       expect(customerIdentityService.resolveCustomer).toHaveBeenCalledWith('biz1', {
@@ -507,6 +523,8 @@ describe('SMS Integration Tests', () => {
           From: '+14155557777',
           MessageSid: 'SM-multi',
         }),
+        undefined,
+        mockRes,
       );
 
       // Resolved customer has both phone and Instagram
@@ -686,7 +704,11 @@ describe('SMS Integration Tests', () => {
       (prisma.message.create as jest.Mock).mockResolvedValue(mockMessage);
       (prisma.conversation.update as jest.Mock).mockResolvedValue(mockUpdatedConversation);
 
-      await controller.smsInbound(buildSmsInboundPayload({ To: '+15551234567' }));
+      await controller.smsInbound(
+        buildSmsInboundPayload({ To: '+15551234567' }),
+        undefined,
+        mockRes,
+      );
 
       expect(locationService.findLocationBySmsNumber).toHaveBeenCalledWith('+15551234567');
     });
@@ -697,10 +719,12 @@ describe('SMS Integration Tests', () => {
 
       const result = await controller.smsInbound(
         buildSmsInboundPayload({ To: '+15559999999', MessageSid: 'SM-noloc' }),
+        undefined,
+        mockRes,
       );
 
-      expect(result.status).toBe('EVENT_RECEIVED');
-      expect(result.processed).toBe(1);
+      expect(result).toBe('<Response></Response>');
+      expect(mockRes.type).toHaveBeenCalledWith('text/xml');
       expect(locationService.findLocationBySmsNumber).toHaveBeenCalledWith('+15559999999');
       // Falls back to business.findFirst dev fallback
       expect(prisma.business.findFirst).toHaveBeenCalled();
@@ -727,9 +751,9 @@ describe('SMS Integration Tests', () => {
       });
       setupHappyPath();
 
-      const result = await controller.smsInbound(body, validSignature);
-      expect(result.status).toBe('EVENT_RECEIVED');
-      expect(result.processed).toBe(1);
+      const result = await controller.smsInbound(body, validSignature, mockRes);
+      expect(result).toBe('<Response></Response>');
+      expect(mockRes.type).toHaveBeenCalledWith('text/xml');
     });
 
     it('should reject request with invalid Twilio signature', async () => {
@@ -744,7 +768,7 @@ describe('SMS Integration Tests', () => {
 
       const body = buildSmsInboundPayload({ MessageSid: 'SM-bad-sig' });
 
-      await expect(controller.smsInbound(body, 'invalid-signature')).rejects.toThrow(
+      await expect(controller.smsInbound(body, 'invalid-signature', mockRes)).rejects.toThrow(
         'Invalid Twilio webhook signature',
       );
     });
@@ -761,10 +785,12 @@ describe('SMS Integration Tests', () => {
 
       const result = await controller.smsInbound(
         buildSmsInboundPayload({ MessageSid: 'SM-no-sig-config' }),
+        undefined,
+        mockRes,
       );
 
-      expect(result.status).toBe('EVENT_RECEIVED');
-      expect(result.processed).toBe(1);
+      expect(result).toBe('<Response></Response>');
+      expect(mockRes.type).toHaveBeenCalledWith('text/xml');
     });
   });
 

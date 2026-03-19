@@ -351,12 +351,31 @@ export class WebChatGateway implements OnGatewayConnection, OnGatewayDisconnect,
     // Find session by conversationId
     for (const session of this.sessions.values()) {
       if (session.conversationId === conversationId) {
-        this.server.to(`webchat:${session.sessionId}`).emit('chat:reply', {
+        const roomName = `webchat:${session.sessionId}`;
+
+        this.server.to(roomName).emit('chat:reply', {
           messageId: message.id,
           content: message.content,
           createdAt: message.createdAt,
           senderName: message.senderName || 'Support',
         });
+
+        // Check if visitor is connected — if not and has email, log notification
+        this.server
+          .in(roomName)
+          .fetchSockets()
+          .then((connectedSockets) => {
+            if (connectedSockets.length === 0 && session.customerEmail) {
+              this.logger.log(
+                `Visitor offline for conversation ${conversationId} — ` +
+                  `would send email notification to ${session.customerEmail}`,
+              );
+            }
+          })
+          .catch(() => {
+            // Ignore socket check errors
+          });
+
         return true;
       }
     }
@@ -375,6 +394,118 @@ export class WebChatGateway implements OnGatewayConnection, OnGatewayDisconnect,
     this.inboxGateway.emitToBusinessRoom(session.businessId, 'webchat:typing', {
       conversationId: session.conversationId,
       isTyping: data.isTyping,
+    });
+  }
+
+  /**
+   * Identify a visitor by linking them to an existing customer record.
+   * Re-issues JWT with customerId for future session resumption.
+   * Payload: { email?: string, phone?: string }
+   */
+  @SubscribeMessage('session:identify')
+  async handleSessionIdentify(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { email?: string; phone?: string },
+  ) {
+    const session = (client as any).webChatSession as WebChatSession;
+    if (!session) return;
+
+    if (!data?.email && !data?.phone) {
+      client.emit('session:identify:error', { message: 'Email or phone required' });
+      return;
+    }
+
+    try {
+      const identifiers: any = {};
+      if (data.email) identifiers.email = data.email;
+      if (data.phone) identifiers.phone = data.phone;
+
+      const customer = await this.customerIdentityService.resolveCustomer(
+        session.businessId,
+        identifiers,
+      );
+
+      session.customerId = customer.id;
+      session.customerEmail = data.email;
+
+      // Re-issue JWT with customerId
+      const sessionToken = this.jwtService.sign(
+        {
+          sessionId: session.sessionId,
+          businessId: session.businessId,
+          customerId: customer.id,
+          type: 'web-chat',
+        },
+        {
+          secret: this.configService.get<string>('JWT_SECRET'),
+          expiresIn: '24h',
+        },
+      );
+
+      client.emit('session:identified', {
+        customerId: customer.id,
+        customerName: customer.name,
+        sessionToken,
+      });
+    } catch (err: any) {
+      this.logger.error(`Session identify error: ${err.message}`, err.stack);
+      client.emit('session:identify:error', { message: 'Failed to identify session' });
+    }
+  }
+
+  /**
+   * Load paginated message history for the current conversation.
+   * Payload: { cursor?: string, limit?: number }
+   */
+  @SubscribeMessage('history:request')
+  async handleHistoryRequest(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { cursor?: string; limit?: number },
+  ) {
+    const session = (client as any).webChatSession as WebChatSession;
+    if (!session?.conversationId) {
+      client.emit('history:error', { message: 'No active conversation' });
+      return;
+    }
+
+    try {
+      const take = Math.min(data?.limit || 20, 50);
+      const messages = await this.prisma.message.findMany({
+        where: { conversationId: session.conversationId },
+        orderBy: { createdAt: 'desc' },
+        take,
+        ...(data?.cursor && {
+          cursor: { id: data.cursor },
+          skip: 1,
+        }),
+        select: {
+          id: true,
+          content: true,
+          direction: true,
+          createdAt: true,
+          contentType: true,
+        },
+      });
+
+      client.emit('history:response', {
+        messages: messages.reverse(),
+        hasMore: messages.length === take,
+        cursor: messages.length > 0 ? messages[0].id : null,
+      });
+    } catch (err: any) {
+      this.logger.error(`History request error: ${err.message}`, err.stack);
+      client.emit('history:error', { message: 'Failed to load history' });
+    }
+  }
+
+  /**
+   * File upload request handler (stub — actual file upload is future work).
+   */
+  @SubscribeMessage('file:upload-request')
+  handleFileUploadRequest(@ConnectedSocket() client: Socket) {
+    client.emit('file:upload-response', {
+      supported: false,
+      message: 'File uploads are not yet supported in web chat. Please share files via email.',
     });
   }
 

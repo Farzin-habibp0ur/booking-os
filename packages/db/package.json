@@ -12,7 +12,8 @@
     "migrate:deploy": "prisma migrate deploy",
     "seed": "tsx src/seed.ts",
     "seed-demo": "tsx src/seed-demo.ts",
-    "studio": "prisma studio"
+    "studio": "prisma studio",
+    "test": "jest"
   },
   "dependencies": {
     "@prisma/client": "^6.2.0",
@@ -20,7 +21,10 @@
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
+    "@types/jest": "^30.0.0",
+    "jest": "^30.2.0",
     "prisma": "^6.2.0",
+    "ts-jest": "^29.4.6",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0"
   }

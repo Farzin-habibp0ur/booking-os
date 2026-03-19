@@ -204,4 +204,11 @@ export class InboxGateway implements OnGatewayConnection, OnGatewayDisconnect, O
   notifyAiSuggestions(businessId: string, data: unknown) {
     this.emitToBusinessRoom(businessId, 'ai:suggestions', data);
   }
+
+  /**
+   * Emit an event to ALL connected clients across all businesses (system-wide broadcasts).
+   */
+  emitToAll(event: string, data: unknown) {
+    this.server.emit(event, data);
+  }
 }

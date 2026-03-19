@@ -323,6 +323,51 @@ describe('EmailChannelProvider', () => {
     });
   });
 
+  // ─── verifyWebhookIntegrity ────────────────────────────────────────
+
+  describe('verifyWebhookIntegrity', () => {
+    it('returns true for valid signature', () => {
+      const secret = 'test-webhook-secret';
+      const rawBody = '{"event":"inbound","data":"test"}';
+      const crypto = require('crypto');
+      const signature = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
+
+      expect(EmailChannelProvider.verifyWebhookIntegrity(rawBody, signature, secret)).toBe(true);
+    });
+
+    it('returns false for invalid signature', () => {
+      const secret = 'test-webhook-secret';
+      const rawBody = '{"event":"inbound","data":"test"}';
+
+      expect(
+        EmailChannelProvider.verifyWebhookIntegrity(rawBody, 'invalid-signature', secret),
+      ).toBe(false);
+    });
+
+    it('returns false for tampered body', () => {
+      const secret = 'test-webhook-secret';
+      const rawBody = '{"event":"inbound","data":"test"}';
+      const crypto = require('crypto');
+      const signature = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
+
+      const tamperedBody = '{"event":"inbound","data":"tampered"}';
+      expect(EmailChannelProvider.verifyWebhookIntegrity(tamperedBody, signature, secret)).toBe(
+        false,
+      );
+    });
+
+    it('returns false for wrong secret', () => {
+      const secret = 'test-webhook-secret';
+      const rawBody = '{"event":"inbound"}';
+      const crypto = require('crypto');
+      const signature = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
+
+      expect(EmailChannelProvider.verifyWebhookIntegrity(rawBody, signature, 'wrong-secret')).toBe(
+        false,
+      );
+    });
+  });
+
   // ─── validateDomain ────────────────────────────────────────────────
 
   describe('validateDomain', () => {

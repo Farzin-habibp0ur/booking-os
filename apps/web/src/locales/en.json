@@ -259,7 +259,19 @@
     "channel_web_chat": "Web Chat",
     "reply_via": "Reply via",
     "channels_on_file": "Channels",
-    "no_channels": "No channels on file"
+    "no_channels": "No channels on file",
+    "context_messaging_window": "Messaging window",
+    "context_human_agent_window": "Human agent window",
+    "context_window_expired": "Messaging window expired — send a template or wait for customer",
+    "context_no_window": "No recent customer message — messaging window not active",
+    "context_subject": "Subject",
+    "context_sms_opted_in": "SMS — Customer opted in",
+    "context_sms_opted_out": "SMS — Customer has opted out (STOP received)",
+    "add_email": "Add email",
+    "add_phone": "Add phone",
+    "add_save": "Save",
+    "disabled_window_expired": "Messaging window expired",
+    "disabled_opted_out": "Customer opted out"
   },
 
   "calendar": {

@@ -7,6 +7,7 @@ import { EmailChannelController } from './email-channel.controller';
 import { ChatWidgetController } from './chat-widget.controller';
 import { WebChatController } from './web-chat.controller';
 import { ChannelStatusController } from './channel-status.controller';
+import { PublicChatController } from './public-chat.controller';
 import { CustomerModule } from '../customer/customer.module';
 import { ConversationModule } from '../conversation/conversation.module';
 import { LocationModule } from '../location/location.module';
@@ -32,6 +33,7 @@ import { CustomerIdentityModule } from '../customer-identity/customer-identity.m
     ChatWidgetController,
     WebChatController,
     ChannelStatusController,
+    PublicChatController,
   ],
   providers: [MessagingService],
   exports: [MessagingService],

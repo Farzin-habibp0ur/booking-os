@@ -225,7 +225,19 @@
     "channel_web_chat": "Chat Web",
     "reply_via": "Responder vía",
     "channels_on_file": "Canales",
-    "no_channels": "Sin canales registrados"
+    "no_channels": "Sin canales registrados",
+    "context_messaging_window": "Ventana de mensajería",
+    "context_human_agent_window": "Ventana de agente humano",
+    "context_window_expired": "Ventana de mensajería expirada — envíe una plantilla o espere al cliente",
+    "context_no_window": "Sin mensaje reciente del cliente — ventana de mensajería no activa",
+    "context_subject": "Asunto",
+    "context_sms_opted_in": "SMS — Cliente suscrito",
+    "context_sms_opted_out": "SMS — Cliente canceló suscripción (STOP recibido)",
+    "add_email": "Agregar correo",
+    "add_phone": "Agregar teléfono",
+    "add_save": "Guardar",
+    "disabled_window_expired": "Ventana de mensajería expirada",
+    "disabled_opted_out": "Cliente canceló suscripción"
   },
 
   "calendar": {

@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "message_usage" ADD COLUMN "segments" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "message_usage" ADD COLUMN "cost" DECIMAL(65,30) NOT NULL DEFAULT 0;

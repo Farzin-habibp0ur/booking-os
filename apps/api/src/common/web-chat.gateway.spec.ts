@@ -30,6 +30,9 @@ describe('WebChatGateway', () => {
   const mockServer = {
     to: jest.fn().mockReturnThis(),
     emit: jest.fn(),
+    in: jest.fn().mockReturnValue({
+      fetchSockets: jest.fn().mockResolvedValue([]),
+    }),
   };
 
   function createMockSocket(overrides: Partial<Socket> = {}): Socket {

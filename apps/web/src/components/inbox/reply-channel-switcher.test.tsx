@@ -142,4 +142,83 @@ describe('ReplyChannelSwitcher', () => {
 
     expect(defaultProps.onChannelChange).toHaveBeenCalledWith('INSTAGRAM');
   });
+
+  describe('disabled channels', () => {
+    it('renders disabled channel with reduced opacity', () => {
+      render(
+        <ReplyChannelSwitcher
+          {...defaultProps}
+          disabledChannels={{ INSTAGRAM: 'Messaging window expired' }}
+        />,
+      );
+      fireEvent.click(screen.getByTestId('reply-channel-switcher'));
+      const igOption = screen.getByTestId('reply-channel-option-instagram');
+      expect(igOption).toHaveClass('opacity-40', 'cursor-not-allowed');
+      expect(igOption).toHaveAttribute('aria-disabled', 'true');
+      expect(igOption).toHaveAttribute('title', 'Messaging window expired');
+    });
+
+    it('does not call onChannelChange when clicking disabled channel', () => {
+      const onChange = jest.fn();
+      render(
+        <ReplyChannelSwitcher
+          {...defaultProps}
+          onChannelChange={onChange}
+          disabledChannels={{ INSTAGRAM: 'Messaging window expired' }}
+        />,
+      );
+      fireEvent.click(screen.getByTestId('reply-channel-switcher'));
+      fireEvent.click(screen.getByTestId('reply-channel-option-instagram'));
+      expect(onChange).not.toHaveBeenCalled();
+    });
+
+    it('does not select disabled channel via Enter key', () => {
+      const onChange = jest.fn();
+      render(
+        <ReplyChannelSwitcher
+          currentChannel="WHATSAPP"
+          availableChannels={['WHATSAPP', 'INSTAGRAM']}
+          onChannelChange={onChange}
+          disabledChannels={{ INSTAGRAM: 'Window expired' }}
+        />,
+      );
+      fireEvent.click(screen.getByTestId('reply-channel-switcher'));
+      const container = screen.getByTestId('reply-channel-switcher').parentElement!;
+
+      // Arrow down to first option (WHATSAPP at index 0)
+      fireEvent.keyDown(container, { key: 'ArrowDown' });
+      // Arrow down to second option (INSTAGRAM at index 1)
+      fireEvent.keyDown(container, { key: 'ArrowDown' });
+      // Try to select with Enter
+      fireEvent.keyDown(container, { key: 'Enter' });
+
+      expect(onChange).not.toHaveBeenCalled();
+    });
+
+    it('allows selecting non-disabled channels normally', () => {
+      const onChange = jest.fn();
+      render(
+        <ReplyChannelSwitcher
+          {...defaultProps}
+          onChannelChange={onChange}
+          disabledChannels={{ INSTAGRAM: 'Messaging window expired' }}
+        />,
+      );
+      fireEvent.click(screen.getByTestId('reply-channel-switcher'));
+      fireEvent.click(screen.getByTestId('reply-channel-option-sms'));
+      expect(onChange).toHaveBeenCalledWith('SMS');
+    });
+
+    it('non-disabled channels have aria-disabled false', () => {
+      render(
+        <ReplyChannelSwitcher
+          {...defaultProps}
+          disabledChannels={{ INSTAGRAM: 'Window expired' }}
+        />,
+      );
+      fireEvent.click(screen.getByTestId('reply-channel-switcher'));
+      const smsOption = screen.getByTestId('reply-channel-option-sms');
+      expect(smsOption).toHaveAttribute('aria-disabled', 'false');
+    });
+  });
 });
