@@ -160,9 +160,9 @@ describe('Cross-Channel Integration Tests', () => {
         { provide: ConfigService, useValue: configService },
         { provide: AiService, useValue: aiService },
         { provide: MessageService, useValue: messageService },
+        { provide: UsageService, useValue: usageService },
         { provide: CircuitBreakerService, useValue: circuitBreakerService },
         { provide: DeadLetterQueueService, useValue: deadLetterQueueService },
-        { provide: UsageService, useValue: usageService },
       ],
     }).compile();
 

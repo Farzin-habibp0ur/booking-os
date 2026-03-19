@@ -4,6 +4,12 @@ import { getQueueToken } from '@nestjs/bullmq';
 import { MessageService } from './message.service';
 import { PrismaService } from '../../common/prisma.service';
 import { InboxGateway } from '../../common/inbox.gateway';
+import {
+  CircuitBreakerService,
+  CircuitOpenException,
+} from '../../common/circuit-breaker/circuit-breaker.service';
+import { DeadLetterQueueService } from '../../common/queue/dead-letter.service';
+import { UsageService } from '../usage/usage.service';
 import { createMockPrisma } from '../../test/mocks';
 
 describe('MessageService', () => {
@@ -18,6 +24,15 @@ describe('MessageService', () => {
     add: jest.Mock;
     getJob: jest.Mock;
   };
+  let mockCircuitBreaker: {
+    execute: jest.Mock;
+  };
+  let mockDlq: {
+    capture: jest.Mock;
+  };
+  let mockUsageService: {
+    recordUsage: jest.Mock;
+  };
 
   beforeEach(async () => {
     prisma = createMockPrisma();
@@ -30,6 +45,15 @@ describe('MessageService', () => {
       add: jest.fn().mockResolvedValue({ id: 'job-123' }),
       getJob: jest.fn(),
     };
+    mockCircuitBreaker = {
+      execute: jest.fn().mockImplementation((_name: string, fn: () => any) => fn()),
+    };
+    mockDlq = {
+      capture: jest.fn().mockResolvedValue('dlq-123'),
+    };
+    mockUsageService = {
+      recordUsage: jest.fn().mockResolvedValue(undefined),
+    };
 
     const module = await Test.createTestingModule({
       providers: [
@@ -37,6 +61,9 @@ describe('MessageService', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: InboxGateway, useValue: mockGateway },
         { provide: getQueueToken('messaging'), useValue: mockQueue },
+        { provide: CircuitBreakerService, useValue: mockCircuitBreaker },
+        { provide: DeadLetterQueueService, useValue: mockDlq },
+        { provide: UsageService, useValue: mockUsageService },
       ],
     }).compile();
 
@@ -52,6 +79,7 @@ describe('MessageService', () => {
       id: 'conv1',
       businessId: 'biz1',
       customerId: 'cust1',
+      channel: 'WHATSAPP',
       assignedToId: null,
       customer: { id: 'cust1', phone: '+1234567890', name: 'Emma' },
     };
@@ -142,6 +170,64 @@ describe('MessageService', () => {
         service.sendMessage('biz1', 'conv1', 'staff1', 'Hello!', mockProvider),
       ).rejects.toThrow('Conversation not found');
     });
+
+    it('wraps provider call with circuit breaker', async () => {
+      await service.sendMessage('biz1', 'conv1', 'staff1', 'Hello!', mockProvider);
+
+      expect(mockCircuitBreaker.execute).toHaveBeenCalledWith('whatsapp', expect.any(Function));
+    });
+
+    it('records outbound usage on successful send', async () => {
+      await service.sendMessage('biz1', 'conv1', 'staff1', 'Hello!', mockProvider);
+
+      expect(mockUsageService.recordUsage).toHaveBeenCalledWith('biz1', 'WHATSAPP', 'OUTBOUND');
+    });
+
+    it('does not break on usage recording failure', async () => {
+      mockUsageService.recordUsage.mockRejectedValue(new Error('DB down'));
+
+      const result = await service.sendMessage('biz1', 'conv1', 'staff1', 'Hello!', mockProvider);
+
+      expect(result.id).toBe('msg1');
+    });
+
+    it('adds message to DLQ when circuit breaker is open', async () => {
+      mockCircuitBreaker.execute.mockRejectedValue(new CircuitOpenException('whatsapp'));
+      prisma.message.create.mockResolvedValue({
+        id: 'msg-failed',
+        deliveryStatus: 'FAILED',
+      } as any);
+
+      await expect(
+        service.sendMessage('biz1', 'conv1', 'staff1', 'Hello!', mockProvider),
+      ).rejects.toThrow(CircuitOpenException);
+
+      expect(prisma.message.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            deliveryStatus: 'FAILED',
+            failureReason: 'Circuit breaker open — provider temporarily unavailable',
+          }),
+        }),
+      );
+      expect(mockDlq.capture).toHaveBeenCalledWith(
+        expect.objectContaining({ messageId: 'msg-failed', businessId: 'biz1' }),
+        expect.any(CircuitOpenException),
+        'messaging',
+      );
+    });
+
+    it('maps channel to correct circuit breaker name', async () => {
+      const smsConversation = {
+        ...mockConversation,
+        channel: 'SMS',
+      };
+      prisma.conversation.findFirst.mockResolvedValue(smsConversation as any);
+
+      await service.sendMessage('biz1', 'conv1', 'staff1', 'Hello!', mockProvider);
+
+      expect(mockCircuitBreaker.execute).toHaveBeenCalledWith('twilio-sms', expect.any(Function));
+    });
   });
 
   describe('sendMessage (scheduled)', () => {
@@ -153,6 +239,7 @@ describe('MessageService', () => {
       id: 'conv1',
       businessId: 'biz1',
       customerId: 'cust1',
+      channel: 'WHATSAPP',
       assignedToId: null,
       customer: { id: 'cust1', phone: '+1234567890', name: 'Emma' },
     };

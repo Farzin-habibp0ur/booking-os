@@ -26,6 +26,7 @@ import { InboxGateway } from '../../common/inbox.gateway';
 import { MessagingService } from './messaging.service';
 import { MessageService } from '../message/message.service';
 import { AiService } from '../ai/ai.service';
+import { UsageService } from '../usage/usage.service';
 import { WebhookInboundDto } from '../../common/dto';
 import {
   WhatsAppCloudProvider,
@@ -51,6 +52,7 @@ export class WebhookController {
     private messageService: MessageService,
     private configService: ConfigService,
     @Inject(forwardRef(() => AiService)) private aiService: AiService,
+    private usageService: UsageService,
   ) {}
 
   private verifyHmac(body: string, signature: string | undefined): boolean {
@@ -315,6 +317,11 @@ export class WebhookController {
     this.aiService
       .processInboundMessage(business.id, conversation.id, message.id, body)
       .catch((err) => this.logger.error(`AI processing error: ${err.message}`));
+
+    // Record usage for billing
+    this.usageService
+      .recordUsage(business.id, channel, 'INBOUND')
+      .catch((err) => this.logger.error(`Usage recording failed: ${err.message}`));
 
     return { conversationId: conversation.id, messageId: message.id };
   }

@@ -3,6 +3,12 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { PrismaService } from '../../common/prisma.service';
 import { InboxGateway } from '../../common/inbox.gateway';
+import {
+  CircuitBreakerService,
+  CircuitOpenException,
+} from '../../common/circuit-breaker/circuit-breaker.service';
+import { DeadLetterQueueService } from '../../common/queue/dead-letter.service';
+import { UsageService } from '../usage/usage.service';
 
 @Injectable()
 export class MessageService {
@@ -12,6 +18,9 @@ export class MessageService {
     private prisma: PrismaService,
     private inboxGateway: InboxGateway,
     @InjectQueue('messaging') private messagingQueue: Queue,
+    private circuitBreakerService: CircuitBreakerService,
+    private deadLetterQueueService: DeadLetterQueueService,
+    private usageService: UsageService,
   ) {}
 
   async sendMessage(
@@ -70,12 +79,57 @@ export class MessageService {
         ? (conversation.customer as any).instagramUserId
         : conversation.customer.phone;
 
-    const { externalId } = await provider.sendMessage({
-      to: recipient,
-      body: content,
-      businessId,
-      conversationId,
-    });
+    const providerName = this.getCircuitBreakerName(conversation.channel);
+    let externalId: string;
+
+    try {
+      const result = await this.circuitBreakerService.execute(providerName, () =>
+        provider.sendMessage({
+          to: recipient,
+          body: content,
+          businessId,
+          conversationId,
+        }),
+      );
+      externalId = result.externalId;
+    } catch (error) {
+      if (error instanceof CircuitOpenException) {
+        this.logger.warn(`Circuit breaker open for ${providerName} — message queued to DLQ`);
+
+        // Store message as FAILED
+        const failedMessage = await this.prisma.message.create({
+          data: {
+            conversationId,
+            direction: 'OUTBOUND',
+            senderStaffId: staffId,
+            content,
+            contentType: 'TEXT',
+            deliveryStatus: 'FAILED',
+            failureReason: 'Circuit breaker open — provider temporarily unavailable',
+          },
+          include: {
+            senderStaff: { select: { id: true, name: true } },
+            attachments: true,
+          },
+        });
+
+        // Add to Dead Letter Queue
+        await this.deadLetterQueueService.capture(
+          { messageId: failedMessage.id, businessId, conversationId, content },
+          error,
+          'messaging',
+        );
+
+        this.inboxGateway.notifyNewMessage(businessId, failedMessage);
+        throw error;
+      }
+      throw error;
+    }
+
+    // Record outbound usage for billing
+    this.usageService
+      .recordUsage(businessId, conversation.channel || 'WHATSAPP', 'OUTBOUND')
+      .catch((err) => this.logger.error(`Usage recording failed: ${err.message}`));
 
     // Store message
     const message = await this.prisma.message.create({
@@ -249,5 +303,16 @@ export class MessageService {
     }
 
     return updated;
+  }
+
+  private getCircuitBreakerName(channel: string): string {
+    const map: Record<string, string> = {
+      WHATSAPP: 'whatsapp',
+      INSTAGRAM: 'instagram',
+      FACEBOOK: 'facebook',
+      SMS: 'twilio-sms',
+      EMAIL: 'resend',
+    };
+    return map[channel] || channel.toLowerCase();
   }
 }

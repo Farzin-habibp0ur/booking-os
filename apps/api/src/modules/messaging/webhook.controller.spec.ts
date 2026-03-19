@@ -11,6 +11,7 @@ import { InboxGateway } from '../../common/inbox.gateway';
 import { MessagingService } from './messaging.service';
 import { MessageService } from '../message/message.service';
 import { AiService } from '../ai/ai.service';
+import { UsageService } from '../usage/usage.service';
 import { createMockPrisma, MockPrisma } from '../../test/mocks';
 
 function buildWhatsAppPayload(externalId: string, from: string, body: string) {
@@ -75,6 +76,7 @@ describe('WebhookController', () => {
   let inboxGateway: { notifyNewMessage: jest.Mock; notifyConversationUpdate: jest.Mock };
   let aiService: { processInboundMessage: jest.Mock };
   let messageService: { updateDeliveryStatus: jest.Mock };
+  let usageService: { recordUsage: jest.Mock };
 
   const WEBHOOK_SECRET = 'test-webhook-secret';
 
@@ -139,6 +141,7 @@ describe('WebhookController', () => {
     inboxGateway = { notifyNewMessage: jest.fn(), notifyConversationUpdate: jest.fn() };
     aiService = { processInboundMessage: jest.fn().mockResolvedValue(undefined) };
     messageService = { updateDeliveryStatus: jest.fn() };
+    usageService = { recordUsage: jest.fn().mockResolvedValue(undefined) };
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [WebhookController],
@@ -156,6 +159,7 @@ describe('WebhookController', () => {
         { provide: ConfigService, useValue: configService },
         { provide: AiService, useValue: aiService },
         { provide: MessageService, useValue: messageService },
+        { provide: UsageService, useValue: usageService },
       ],
     }).compile();
 
@@ -1644,6 +1648,69 @@ describe('WebhookController', () => {
       const result = await controller.emailInbound({ from: 'a@b.com', to: 'c@d.com', text: 'hi' });
 
       expect(result.status).toBe('EVENT_RECEIVED');
+    });
+  });
+
+  // ─── Usage Recording ───────────────────────────────────────────────
+
+  describe('Usage recording on inbound messages', () => {
+    it('should record usage for WhatsApp inbound', async () => {
+      setupHappyPath();
+
+      await controller.whatsappInbound(buildWhatsAppPayload('wamid.usage1', '+14155551234', 'Hi'));
+
+      expect(usageService.recordUsage).toHaveBeenCalledWith('biz1', 'WHATSAPP', 'INBOUND');
+    });
+
+    it('should record usage for SMS inbound', async () => {
+      setupHappyPath();
+      const mockRes = createMockRes();
+
+      await controller.smsInbound(
+        { From: '+14155551234', Body: 'Hello', MessageSid: 'SM_USAGE', To: '+15551234567' },
+        undefined,
+        mockRes,
+      );
+
+      expect(usageService.recordUsage).toHaveBeenCalledWith('biz1', 'SMS', 'INBOUND');
+    });
+
+    it('should record usage for email inbound', async () => {
+      setupHappyPath();
+
+      await controller.emailInbound({
+        from: 'test@example.com',
+        to: 'inbox@biz.com',
+        text: 'Hello',
+        subject: 'Test',
+      });
+
+      expect(usageService.recordUsage).toHaveBeenCalledWith('biz1', 'EMAIL', 'INBOUND');
+    });
+
+    it('should not break message processing when usage recording fails', async () => {
+      setupHappyPath();
+      usageService.recordUsage.mockRejectedValue(new Error('DB down'));
+
+      const result = await controller.whatsappInbound(
+        buildWhatsAppPayload('wamid.usage-fail', '+14155551234', 'Still works'),
+      );
+
+      expect(result.status).toBe('EVENT_RECEIVED');
+      expect(result.processed).toBe(1);
+    });
+
+    it('should not record usage for duplicate messages', async () => {
+      (prisma.message.findUnique as jest.Mock).mockResolvedValue({
+        id: 'existing',
+        externalId: 'wamid.dup-usage',
+      });
+
+      await controller.whatsappInbound(
+        buildWhatsAppPayload('wamid.dup-usage', '+14155551234', 'Dup'),
+      );
+
+      expect(usageService.recordUsage).not.toHaveBeenCalled();
     });
   });
 
