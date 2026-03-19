@@ -1,7 +1,16 @@
 import { Test } from '@nestjs/testing';
-import { ConflictException, NotFoundException } from '@nestjs/common';
+import { ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
 import { CustomerIdentityService } from './customer-identity.service';
 import { PrismaService } from '../../common/prisma.service';
+
+const mockTx = {
+  conversation: { updateMany: jest.fn() },
+  booking: { updateMany: jest.fn() },
+  customerNote: { updateMany: jest.fn() },
+  waitlistEntry: { updateMany: jest.fn() },
+  customer: { update: jest.fn() },
+  actionHistory: { create: jest.fn() },
+};
 
 const mockPrisma = {
   customer: {
@@ -10,6 +19,10 @@ const mockPrisma = {
     update: jest.fn(),
     findUnique: jest.fn(),
   },
+  conversation: {
+    findFirst: jest.fn(),
+  },
+  $transaction: jest.fn().mockImplementation((fn: any) => fn(mockTx)),
 };
 
 describe('CustomerIdentityService', () => {
@@ -23,6 +36,13 @@ describe('CustomerIdentityService', () => {
     service = module.get(CustomerIdentityService);
 
     jest.clearAllMocks();
+    // Reset transaction mocks
+    mockTx.conversation.updateMany.mockResolvedValue({ count: 0 });
+    mockTx.booking.updateMany.mockResolvedValue({ count: 0 });
+    mockTx.customerNote.updateMany.mockResolvedValue({ count: 0 });
+    mockTx.waitlistEntry.updateMany.mockResolvedValue({ count: 0 });
+    mockTx.customer.update.mockResolvedValue({});
+    mockTx.actionHistory.create.mockResolvedValue({});
   });
 
   const businessId = 'biz-1';
@@ -571,6 +591,272 @@ describe('CustomerIdentityService', () => {
       const result = await service.getCustomerChannels('cust-1');
 
       expect(result).toEqual({});
+    });
+  });
+
+  // ─── mergeCustomers ────────────────────────────────────────────────
+
+  describe('mergeCustomers', () => {
+    const primaryCustomer = {
+      id: 'cust-primary',
+      businessId,
+      phone: '+1111111111',
+      email: 'primary@example.com',
+      facebookPsid: null,
+      instagramUserId: null,
+      webChatSessionId: null,
+      tags: ['vip'],
+      customFields: { preference: 'morning' },
+      deletedAt: null,
+    };
+
+    const secondaryCustomer = {
+      id: 'cust-secondary',
+      businessId,
+      phone: '+2222222222',
+      email: null,
+      facebookPsid: 'fb-secondary',
+      instagramUserId: 'ig-secondary',
+      webChatSessionId: null,
+      tags: ['vip', 'new'],
+      customFields: { preference: 'evening', source: 'referral' },
+      deletedAt: null,
+    };
+
+    it('should merge customers and move conversations and bookings', async () => {
+      mockPrisma.customer.findFirst
+        .mockResolvedValueOnce(primaryCustomer)
+        .mockResolvedValueOnce(secondaryCustomer);
+      mockTx.conversation.updateMany.mockResolvedValue({ count: 3 });
+      mockTx.booking.updateMany.mockResolvedValue({ count: 2 });
+
+      const result = await service.mergeCustomers(
+        businessId,
+        'cust-primary',
+        'cust-secondary',
+        'staff-1',
+      );
+
+      expect(result).toEqual({ merged: true, movedConversations: 3, movedBookings: 2 });
+      expect(mockTx.conversation.updateMany).toHaveBeenCalledWith({
+        where: { customerId: 'cust-secondary', businessId },
+        data: { customerId: 'cust-primary' },
+      });
+      expect(mockTx.booking.updateMany).toHaveBeenCalledWith({
+        where: { customerId: 'cust-secondary', businessId },
+        data: { customerId: 'cust-primary' },
+      });
+    });
+
+    it('should copy identifiers from secondary where primary is null', async () => {
+      mockPrisma.customer.findFirst
+        .mockResolvedValueOnce(primaryCustomer)
+        .mockResolvedValueOnce(secondaryCustomer);
+
+      await service.mergeCustomers(businessId, 'cust-primary', 'cust-secondary');
+
+      expect(mockTx.customer.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'cust-primary' },
+          data: expect.objectContaining({
+            facebookPsid: 'fb-secondary',
+            instagramUserId: 'ig-secondary',
+          }),
+        }),
+      );
+    });
+
+    it('should keep primary email when both have email (no overwrite)', async () => {
+      const secondaryWithEmail = { ...secondaryCustomer, email: 'secondary@example.com' };
+      mockPrisma.customer.findFirst
+        .mockResolvedValueOnce(primaryCustomer)
+        .mockResolvedValueOnce(secondaryWithEmail);
+
+      await service.mergeCustomers(businessId, 'cust-primary', 'cust-secondary');
+
+      // Should NOT overwrite primary's email
+      const updateCall = mockTx.customer.update.mock.calls.find(
+        (c: any) => c[0].where.id === 'cust-primary',
+      );
+      expect(updateCall[0].data.email).toBeUndefined();
+    });
+
+    it('should merge tags with deduplication', async () => {
+      mockPrisma.customer.findFirst
+        .mockResolvedValueOnce(primaryCustomer)
+        .mockResolvedValueOnce(secondaryCustomer);
+
+      await service.mergeCustomers(businessId, 'cust-primary', 'cust-secondary');
+
+      const updateCall = mockTx.customer.update.mock.calls.find(
+        (c: any) => c[0].where.id === 'cust-primary',
+      );
+      expect(updateCall[0].data.tags).toEqual(['vip', 'new']);
+    });
+
+    it('should merge customFields with primary taking precedence', async () => {
+      mockPrisma.customer.findFirst
+        .mockResolvedValueOnce(primaryCustomer)
+        .mockResolvedValueOnce(secondaryCustomer);
+
+      await service.mergeCustomers(businessId, 'cust-primary', 'cust-secondary');
+
+      const updateCall = mockTx.customer.update.mock.calls.find(
+        (c: any) => c[0].where.id === 'cust-primary',
+      );
+      expect(updateCall[0].data.customFields).toEqual({
+        preference: 'morning', // primary wins
+        source: 'referral', // from secondary
+      });
+    });
+
+    it('should soft-delete the secondary customer', async () => {
+      mockPrisma.customer.findFirst
+        .mockResolvedValueOnce(primaryCustomer)
+        .mockResolvedValueOnce(secondaryCustomer);
+
+      await service.mergeCustomers(businessId, 'cust-primary', 'cust-secondary');
+
+      const deleteCall = mockTx.customer.update.mock.calls.find(
+        (c: any) => c[0].where.id === 'cust-secondary',
+      );
+      expect(deleteCall[0].data.deletedAt).toBeInstanceOf(Date);
+    });
+
+    it('should create audit trail', async () => {
+      mockPrisma.customer.findFirst
+        .mockResolvedValueOnce(primaryCustomer)
+        .mockResolvedValueOnce(secondaryCustomer);
+
+      await service.mergeCustomers(businessId, 'cust-primary', 'cust-secondary', 'staff-1');
+
+      expect(mockTx.actionHistory.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          businessId,
+          actorType: 'STAFF',
+          actorId: 'staff-1',
+          action: 'CUSTOMER_MERGED',
+          entityType: 'CUSTOMER',
+          entityId: 'cust-primary',
+        }),
+      });
+    });
+
+    it('should use SYSTEM actor when no staffId provided', async () => {
+      mockPrisma.customer.findFirst
+        .mockResolvedValueOnce(primaryCustomer)
+        .mockResolvedValueOnce(secondaryCustomer);
+
+      await service.mergeCustomers(businessId, 'cust-primary', 'cust-secondary');
+
+      expect(mockTx.actionHistory.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({ actorType: 'SYSTEM', actorId: undefined }),
+      });
+    });
+
+    it('should reject when primary customer not found', async () => {
+      mockPrisma.customer.findFirst.mockResolvedValueOnce(null);
+
+      await expect(
+        service.mergeCustomers(businessId, 'nonexistent', 'cust-secondary'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should reject when secondary customer not found', async () => {
+      mockPrisma.customer.findFirst
+        .mockResolvedValueOnce(primaryCustomer)
+        .mockResolvedValueOnce(null);
+
+      await expect(
+        service.mergeCustomers(businessId, 'cust-primary', 'nonexistent'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should reject merging a customer with itself', async () => {
+      mockPrisma.customer.findFirst.mockResolvedValue(primaryCustomer);
+
+      await expect(
+        service.mergeCustomers(businessId, 'cust-primary', 'cust-primary'),
+      ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  // ─── findConversation ──────────────────────────────────────────────
+
+  describe('findConversation', () => {
+    it('should find open conversation matching preferred channel', async () => {
+      const conv = { id: 'conv-wa', channel: 'WHATSAPP', status: 'OPEN' };
+      mockPrisma.conversation.findFirst.mockResolvedValueOnce(conv);
+
+      const result = await service.findConversation(businessId, 'cust-1', 'WHATSAPP');
+
+      expect(result).toEqual(conv);
+      expect(mockPrisma.conversation.findFirst).toHaveBeenCalledWith({
+        where: {
+          businessId,
+          customerId: 'cust-1',
+          channel: 'WHATSAPP',
+          status: { in: ['OPEN', 'WAITING'] },
+        },
+        orderBy: { lastMessageAt: 'desc' },
+        select: { id: true, channel: true, status: true },
+      });
+    });
+
+    it('should fall back to any open conversation when preferred channel has none', async () => {
+      const conv = { id: 'conv-email', channel: 'EMAIL', status: 'WAITING' };
+      mockPrisma.conversation.findFirst
+        .mockResolvedValueOnce(null) // no WHATSAPP conversation
+        .mockResolvedValueOnce(conv); // fallback finds EMAIL
+
+      const result = await service.findConversation(businessId, 'cust-1', 'WHATSAPP');
+
+      expect(result).toEqual(conv);
+      expect(mockPrisma.conversation.findFirst).toHaveBeenCalledTimes(2);
+    });
+
+    it('should find any open conversation when no preferred channel', async () => {
+      const conv = { id: 'conv-sms', channel: 'SMS', status: 'OPEN' };
+      mockPrisma.conversation.findFirst.mockResolvedValueOnce(conv);
+
+      const result = await service.findConversation(businessId, 'cust-1');
+
+      expect(result).toEqual(conv);
+      // Should only query once (no preferred channel check)
+      expect(mockPrisma.conversation.findFirst).toHaveBeenCalledTimes(1);
+      expect(mockPrisma.conversation.findFirst).toHaveBeenCalledWith({
+        where: {
+          businessId,
+          customerId: 'cust-1',
+          status: { in: ['OPEN', 'WAITING'] },
+        },
+        orderBy: { lastMessageAt: 'desc' },
+        select: { id: true, channel: true, status: true },
+      });
+    });
+
+    it('should return null when no open conversations exist', async () => {
+      mockPrisma.conversation.findFirst.mockResolvedValue(null);
+
+      const result = await service.findConversation(businessId, 'cust-1', 'WHATSAPP');
+
+      expect(result).toBeNull();
+    });
+
+    it('should not return resolved or snoozed conversations', async () => {
+      // The query uses status: { in: ['OPEN', 'WAITING'] } so resolved/snoozed are excluded
+      mockPrisma.conversation.findFirst.mockResolvedValue(null);
+
+      const result = await service.findConversation(businessId, 'cust-1');
+
+      expect(result).toBeNull();
+      expect(mockPrisma.conversation.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            status: { in: ['OPEN', 'WAITING'] },
+          }),
+        }),
+      );
     });
   });
 });

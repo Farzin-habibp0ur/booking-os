@@ -1,4 +1,10 @@
-import { Injectable, Logger, ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  ConflictException,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../common/prisma.service';
 
 export type IdentifierType =
@@ -193,5 +199,187 @@ export class CustomerIdentityService {
     if (customer.webChatSessionId) channels.webChatSessionId = customer.webChatSessionId;
 
     return channels;
+  }
+
+  /**
+   * Merge two customer records into one. All conversations, bookings,
+   * notes, and waitlist entries are moved from secondary to primary.
+   * The secondary customer is soft-deleted.
+   */
+  async mergeCustomers(
+    businessId: string,
+    primaryCustomerId: string,
+    secondaryCustomerId: string,
+    mergedBy?: string,
+  ): Promise<{
+    merged: boolean;
+    movedConversations: number;
+    movedBookings: number;
+  }> {
+    // Verify both customers belong to the same business
+    const [primary, secondary] = await Promise.all([
+      this.prisma.customer.findFirst({
+        where: { id: primaryCustomerId, businessId, deletedAt: null },
+      }),
+      this.prisma.customer.findFirst({
+        where: { id: secondaryCustomerId, businessId, deletedAt: null },
+      }),
+    ]);
+
+    if (!primary) {
+      throw new NotFoundException(`Primary customer ${primaryCustomerId} not found`);
+    }
+    if (!secondary) {
+      throw new NotFoundException(`Secondary customer ${secondaryCustomerId} not found`);
+    }
+    if (primaryCustomerId === secondaryCustomerId) {
+      throw new BadRequestException('Cannot merge a customer with itself');
+    }
+
+    // Build identifier updates — copy non-null values from secondary where primary is null
+    const identifierUpdates: Record<string, string> = {};
+    const mergedIdentifiers: string[] = [];
+    const identifierFields: IdentifierType[] = [
+      'email',
+      'facebookPsid',
+      'instagramUserId',
+      'webChatSessionId',
+    ];
+
+    for (const field of identifierFields) {
+      if ((secondary as any)[field] && !(primary as any)[field]) {
+        identifierUpdates[field] = (secondary as any)[field];
+        mergedIdentifiers.push(field);
+      }
+    }
+
+    // Merge tags (union, deduplicate)
+    const primaryTags = Array.isArray((primary as any).tags) ? (primary as any).tags : [];
+    const secondaryTags = Array.isArray((secondary as any).tags) ? (secondary as any).tags : [];
+    const mergedTags = [...new Set([...primaryTags, ...secondaryTags])];
+
+    // Merge customFields (primary takes precedence)
+    const primaryFields =
+      (primary as any).customFields && typeof (primary as any).customFields === 'object'
+        ? (primary as any).customFields
+        : {};
+    const secondaryFields =
+      (secondary as any).customFields && typeof (secondary as any).customFields === 'object'
+        ? (secondary as any).customFields
+        : {};
+    const mergedCustomFields = { ...secondaryFields, ...primaryFields };
+
+    // Execute atomic transaction
+    const result = await this.prisma.$transaction(async (tx) => {
+      // Move conversations
+      const conversations = await tx.conversation.updateMany({
+        where: { customerId: secondaryCustomerId, businessId },
+        data: { customerId: primaryCustomerId },
+      });
+
+      // Move bookings
+      const bookings = await tx.booking.updateMany({
+        where: { customerId: secondaryCustomerId, businessId },
+        data: { customerId: primaryCustomerId },
+      });
+
+      // Move customer notes
+      await tx.customerNote.updateMany({
+        where: { customerId: secondaryCustomerId, businessId },
+        data: { customerId: primaryCustomerId },
+      });
+
+      // Move waitlist entries
+      await tx.waitlistEntry.updateMany({
+        where: { customerId: secondaryCustomerId, businessId },
+        data: { customerId: primaryCustomerId },
+      });
+
+      // Update primary with merged data
+      await tx.customer.update({
+        where: { id: primaryCustomerId },
+        data: {
+          ...identifierUpdates,
+          tags: mergedTags,
+          customFields: mergedCustomFields,
+        },
+      });
+
+      // Soft-delete secondary
+      await tx.customer.update({
+        where: { id: secondaryCustomerId },
+        data: { deletedAt: new Date() },
+      });
+
+      // Create audit entry
+      await tx.actionHistory.create({
+        data: {
+          businessId,
+          actorType: mergedBy ? 'STAFF' : 'SYSTEM',
+          actorId: mergedBy,
+          action: 'CUSTOMER_MERGED',
+          entityType: 'CUSTOMER',
+          entityId: primaryCustomerId,
+          description: `Merged customer ${secondaryCustomerId} into ${primaryCustomerId}`,
+          diff: {
+            secondaryCustomerId,
+            movedConversations: conversations.count,
+            movedBookings: bookings.count,
+            mergedIdentifiers,
+          },
+        },
+      });
+
+      return {
+        movedConversations: conversations.count,
+        movedBookings: bookings.count,
+      };
+    });
+
+    this.logger.log(
+      `Merged customer ${secondaryCustomerId} into ${primaryCustomerId}: ` +
+        `${result.movedConversations} conversations, ${result.movedBookings} bookings`,
+    );
+
+    return { merged: true, ...result };
+  }
+
+  /**
+   * Find the most recent open/waiting conversation for a customer.
+   * Prefers a conversation matching the preferred channel, but falls
+   * back to any open conversation.
+   */
+  async findConversation(
+    businessId: string,
+    customerId: string,
+    preferredChannel?: string,
+  ): Promise<{ id: string; channel: string; status: string } | null> {
+    // If a preferred channel is specified, try that first
+    if (preferredChannel) {
+      const preferred = await this.prisma.conversation.findFirst({
+        where: {
+          businessId,
+          customerId,
+          channel: preferredChannel,
+          status: { in: ['OPEN', 'WAITING'] },
+        },
+        orderBy: { lastMessageAt: 'desc' },
+        select: { id: true, channel: true, status: true },
+      });
+      if (preferred) return preferred;
+    }
+
+    // Fall back to any open/waiting conversation
+    const conversation = await this.prisma.conversation.findFirst({
+      where: {
+        businessId,
+        customerId,
+        status: { in: ['OPEN', 'WAITING'] },
+      },
+      orderBy: { lastMessageAt: 'desc' },
+      select: { id: true, channel: true, status: true },
+    });
+
+    return conversation;
   }
 }
