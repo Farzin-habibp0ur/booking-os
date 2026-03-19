@@ -34,7 +34,7 @@ jest.mock('@/lib/api', () => ({
 import EmailChannelSettingsPage from './page';
 import { api as mockApi } from '@/lib/api';
 
-const mockedApi = mockApi as { get: jest.Mock; post: jest.Mock; patch: jest.Mock };
+const mockedApi = mockApi as unknown as { get: jest.Mock; post: jest.Mock; patch: jest.Mock };
 
 describe('EmailChannelSettingsPage', () => {
   beforeEach(() => {
