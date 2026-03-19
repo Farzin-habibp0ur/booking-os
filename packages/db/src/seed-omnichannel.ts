@@ -478,11 +478,14 @@ async function main() {
   console.log('\n✅ Omnichannel seed complete');
 }
 
-main()
-  .catch((e) => {
-    console.error('❌ Omnichannel seed failed:', e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+// Only run when executed directly (not when imported by tests)
+if (require.main === module) {
+  main()
+    .catch((e) => {
+      console.error('❌ Omnichannel seed failed:', e);
+      process.exit(1);
+    })
+    .finally(async () => {
+      await prisma.$disconnect();
+    });
+}
