@@ -21,6 +21,8 @@ const config: Config = {
   },
   // Limit workers to avoid SIGSEGV during coverage runs
   maxWorkers: '50%',
+  // Force exit after all tests complete to prevent hanging from leaked timers/handles
+  forceExit: true,
 };
 
 export default config;
