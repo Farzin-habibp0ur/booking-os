@@ -74,6 +74,54 @@ export class OutboundController {
     return this.outboundService.reject(businessId, id);
   }
 
+  @Post(':id/send')
+  async approveAndSend(
+    @BusinessId() businessId: string,
+    @Param('id') id: string,
+    @CurrentUser('sub') staffId: string,
+  ) {
+    // Approve the draft
+    const draft = await this.outboundService.approve(businessId, id, staffId);
+
+    // Send the message
+    const conversationId = draft.conversationId;
+    if (!conversationId) {
+      // Find or create conversation for the customer
+      const conversation = await this.conversationService.findOrCreate(
+        businessId,
+        draft.customerId,
+        draft.channel || 'WHATSAPP',
+      );
+      const provider = this.messagingService.getProvider();
+      const message = await this.messageService.sendMessage(
+        businessId,
+        conversation.id,
+        staffId,
+        draft.content,
+        provider,
+      );
+      await this.outboundService.markSent(businessId, id, conversation.id);
+      return { message, conversationId: conversation.id, draftId: id };
+    }
+
+    // Use existing conversation
+    const conversation = await this.conversationService.findById(businessId, conversationId);
+    const provider = this.messagingService.getProviderForConversation(
+      conversation?.channel || draft.channel || 'WHATSAPP',
+      null,
+      null,
+    );
+    const message = await this.messageService.sendMessage(
+      businessId,
+      conversationId,
+      staffId,
+      draft.content,
+      provider,
+    );
+    await this.outboundService.markSent(businessId, id, conversationId);
+    return { message, conversationId, draftId: id };
+  }
+
   @Post('send-direct')
   async sendDirect(
     @BusinessId() businessId: string,

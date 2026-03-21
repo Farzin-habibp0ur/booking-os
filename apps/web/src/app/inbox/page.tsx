@@ -35,6 +35,11 @@ import {
   Globe,
   Pin,
   PinOff,
+  Check,
+  Edit2,
+  RefreshCw,
+  Sparkles,
+  Loader,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import BookingFormModal from '@/components/booking-form-modal';
@@ -178,6 +183,10 @@ function InboxPage() {
   const [newTag, setNewTag] = useState('');
   const [aiDraftText, setAiDraftText] = useState<string>('');
   const [pendingDrafts, setPendingDrafts] = useState<any[]>([]);
+  const [aiProcessing, setAiProcessing] = useState(false);
+  const [editingDraft, setEditingDraft] = useState<any>(null);
+  const [regenerateContext, setRegenerateContext] = useState('');
+  const [showRegenerateInput, setShowRegenerateInput] = useState(false);
   const [aiIntent, setAiIntent] = useState<string | undefined>();
   const [aiConfidence, setAiConfidence] = useState<number | undefined>();
   const [aiBookingState, setAiBookingState] = useState<any>(null);
@@ -317,8 +326,25 @@ function InboxPage() {
         loadCustomerBookings(selectedRef.current.customerId);
       }
     }, []),
+    'ai:processing': useCallback((data: any) => {
+      if (selectedRef.current && data.conversationId === selectedRef.current.id) {
+        setAiProcessing(true);
+      }
+    }, []),
+    'ai:draft-ready': useCallback((data: any) => {
+      if (selectedRef.current && data.conversationId === selectedRef.current.id) {
+        setAiProcessing(false);
+        loadMessages(selectedRef.current.id);
+      }
+    }, []),
+    'ai:processing-failed': useCallback((data: any) => {
+      if (selectedRef.current && data.conversationId === selectedRef.current.id) {
+        setAiProcessing(false);
+      }
+    }, []),
     'ai:suggestions': useCallback((data: any) => {
       if (selectedRef.current && data.conversationId === selectedRef.current.id) {
+        setAiProcessing(false);
         setAiDraftText(data.draftText || '');
         setAiIntent(data.intent);
         setAiConfidence(data.confidence);
@@ -367,6 +393,32 @@ function InboxPage() {
         loadMessages(selectedRef.current.id);
       }
     }, []),
+    'draft:review-requested': useCallback((data: any) => {
+      // Auto-navigate to conversation with draft loaded
+      if (data.conversationId) {
+        const conv = conversations.find((c: any) => c.id === data.conversationId);
+        if (conv) {
+          setSelected(conv);
+          loadMessages(conv.id);
+        } else {
+          // Conversation not in current list — reload and select
+          loadConversations().then(() => {
+            loadMessages(data.conversationId);
+          });
+        }
+        const name = data.customerName || 'customer';
+        toast(t('ai.draft_review_requested') || `Draft ready for ${name}. Review and send.`, 'info');
+      }
+    }, [conversations]),
+    'conversation:focus': useCallback((data: any) => {
+      if (data.conversationId) {
+        const conv = conversations.find((c: any) => c.id === data.conversationId);
+        if (conv) {
+          setSelected(conv);
+          loadMessages(conv.id);
+        }
+      }
+    }, [conversations]),
     'presence:update': useCallback((data: any) => {
       if (selectedRef.current && data.conversationId === selectedRef.current.id) {
         setViewers(data.viewers || []);
@@ -628,6 +680,71 @@ function InboxPage() {
     }
   };
 
+  // --- AI Draft Actions ---
+  const handleApproveDraft = async (draftId: string) => {
+    if (!selected) return;
+    try {
+      await api.post(`/outbound/${draftId}/send`);
+      toast(t('ai.draft_sent') || 'Draft sent successfully');
+      loadMessages(selected.id);
+      loadConversations();
+    } catch (e: any) {
+      toast(e?.message || 'Failed to send draft', 'error');
+    }
+  };
+
+  const handleEditDraft = (draft: any) => {
+    setNewMessage(draft.content || '');
+    setEditingDraft(draft);
+    if (draft.channel) setReplyChannel(draft.channel);
+    if (draft.channel === 'EMAIL' && draft.metadata?.subject) {
+      setEmailSubject(draft.metadata.subject);
+    }
+    composerRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleRejectDraft = async (draftId: string) => {
+    if (!selected) return;
+    try {
+      await api.patch(`/outbound/${draftId}/reject`);
+      setEditingDraft(null);
+      loadMessages(selected.id);
+    } catch (e: any) {
+      toast(e?.message || 'Failed to reject draft', 'error');
+    }
+  };
+
+  const handleRegenerateDraft = async (context?: string) => {
+    if (!selected) return;
+    try {
+      setAiProcessing(true);
+      setShowRegenerateInput(false);
+      setRegenerateContext('');
+      await api.post(`/ai/conversations/${selected.id}/regenerate-draft`, {
+        ...(context ? { additionalContext: context } : {}),
+      });
+    } catch (e: any) {
+      setAiProcessing(false);
+      toast(e?.message || 'Failed to regenerate draft', 'error');
+    }
+  };
+
+  // When staff switches channel while editing an AI draft, offer to regenerate
+  const handleDraftChannelSwitch = (newChannel: string) => {
+    if (editingDraft && editingDraft.channel !== newChannel) {
+      const fromCh = editingDraft.channel;
+      if (confirm(`AI generated this for ${fromCh}. Regenerate for ${newChannel}?`)) {
+        setReplyChannel(newChannel);
+        handleRegenerateDraft(`Reformat this message for ${newChannel} channel`);
+        setEditingDraft(null);
+      } else {
+        setReplyChannel(newChannel);
+      }
+    } else {
+      setReplyChannel(newChannel);
+    }
+  };
+
   const sendMessage = async (content?: string) => {
     const text = content || newMessage.trim();
     if (!text || !selected) return;
@@ -650,6 +767,7 @@ function InboxPage() {
       setAiDraftText('');
       setAiIntent(undefined);
       setAiConfidence(undefined);
+      setEditingDraft(null);
       setShowQuickReplies(false);
       // Clear draft for this channel
       if (selected) {
@@ -865,9 +983,22 @@ function InboxPage() {
     setSmartSuggestions(suggestions);
   };
 
-  // Handle reply channel change with draft persistence
+  // Handle reply channel change with draft persistence + AI regenerate prompt
   const handleReplyChannelChange = (newChannel: string) => {
     if (!selected) return;
+
+    // If editing an AI draft and switching channel, offer to regenerate
+    if (editingDraft && editingDraft.channel && editingDraft.channel !== newChannel) {
+      const fromLabel = CHANNEL_STYLES[editingDraft.channel as keyof typeof CHANNEL_STYLES]?.label || editingDraft.channel;
+      const toLabel = CHANNEL_STYLES[newChannel as keyof typeof CHANNEL_STYLES]?.label || newChannel;
+      if (confirm(`AI generated this for ${fromLabel}. Regenerate for ${toLabel}?`)) {
+        setReplyChannel(newChannel);
+        setEditingDraft(null);
+        handleRegenerateDraft(`Reformat this message for ${newChannel} channel`);
+        return;
+      }
+    }
+
     // Save current draft
     const currentKey = `${selected.id}:${replyChannel}`;
     if (newMessage.trim() || emailSubject.trim()) {
@@ -885,6 +1016,7 @@ function InboxPage() {
     setNewMessage(saved?.text || '');
     setEmailSubject(newChannel === 'EMAIL' ? saved?.subject || '' : '');
     setReplyChannel(newChannel);
+    if (editingDraft) setEditingDraft(null);
     toast(
       t('inbox.channel_switched', { channel: CHANNEL_STYLES[newChannel]?.label || newChannel }),
     );
@@ -1637,6 +1769,22 @@ function InboxPage() {
               {showQuickReplies && (
                 <div className="px-3 pb-1 bg-white border-t">
                   <div className="flex flex-wrap gap-1.5 py-2">
+                    {/* AI draft as first quick reply option */}
+                    {pendingDrafts.length > 0 && (
+                      <button
+                        onClick={() => {
+                          const draft = pendingDrafts[0];
+                          setNewMessage(draft.content || '');
+                          if (draft.channel) setReplyChannel(draft.channel);
+                          setShowQuickReplies(false);
+                        }}
+                        className="text-xs bg-lavender-50 hover:bg-lavender-100 text-lavender-700 px-2.5 py-1.5 rounded-full transition-colors flex items-center gap-1"
+                      >
+                        <Sparkles size={10} />
+                        {pendingDrafts[0].content?.slice(0, 50)}
+                        {(pendingDrafts[0].content?.length || 0) > 50 ? '...' : ''}
+                      </button>
+                    )}
                     {QUICK_REPLIES.map((qr) => (
                       <button
                         key={qr}
@@ -1650,8 +1798,106 @@ function InboxPage() {
                 </div>
               )}
 
-              {/* AI Suggestions Ghost Bubble — above composer */}
-              {aiDraftText && (
+              {/* AI Processing Indicator */}
+              {aiProcessing && (
+                <div className="mx-3 my-2 px-3 py-2 bg-lavender-50 border border-lavender-100 rounded-xl flex items-center gap-2">
+                  <Loader size={14} className="text-lavender-600 animate-spin" />
+                  <span className="text-xs text-lavender-700 font-medium">
+                    {t('ai.processing') || 'AI is drafting a response...'}
+                  </span>
+                </div>
+              )}
+
+              {/* OutboundDraft Bubbles (from AI or Agent) */}
+              {pendingDrafts.length > 0 && pendingDrafts.map((draft: any) => {
+                const conf = draft.confidence != null ? draft.confidence * 100 : null;
+                const confColor = conf != null
+                  ? conf > 85 ? 'bg-green-500' : conf > 60 ? 'bg-amber-500' : 'bg-red-500'
+                  : '';
+                const confLabel = conf != null
+                  ? conf > 85 ? 'AI is confident' : conf > 60 ? 'Review recommended' : 'Significant editing recommended'
+                  : '';
+                return (
+                  <div
+                    key={draft.id}
+                    className="mx-3 my-2 px-3 py-3 bg-indigo-50 border border-dashed border-indigo-200 rounded-xl"
+                  >
+                    <div className="flex items-center gap-2 mb-2">
+                      <Sparkles size={14} className="text-indigo-600 flex-shrink-0" />
+                      <span className="text-xs font-medium text-indigo-700">
+                        {draft.source === 'AGENT' ? 'Agent Draft' : 'AI Draft'}
+                      </span>
+                      {draft.channel && (
+                        <span className="text-[10px] bg-indigo-100 text-indigo-600 px-1.5 py-0.5 rounded-full">
+                          {draft.channel}
+                        </span>
+                      )}
+                      {draft.intent && (
+                        <span className="text-[10px] text-indigo-500">
+                          Intent: {draft.intent.replace(/_/g, ' ')}
+                        </span>
+                      )}
+                      {conf != null && (
+                        <span className="flex items-center gap-1 text-[10px] text-indigo-400" title={confLabel}>
+                          <span className={cn('w-1.5 h-1.5 rounded-full', confColor)} />
+                          {Math.round(conf)}%
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-slate-800 mb-3 whitespace-pre-wrap">{draft.content}</p>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={() => handleApproveDraft(draft.id)}
+                        className="flex items-center gap-1 bg-sage-600 text-white px-2.5 py-1 rounded-lg text-xs hover:bg-sage-700 transition-colors"
+                      >
+                        <Check size={12} /> Approve & Send
+                      </button>
+                      <button
+                        onClick={() => handleEditDraft(draft)}
+                        className="flex items-center gap-1 text-slate-600 px-2.5 py-1 rounded-lg text-xs border border-slate-200 hover:bg-slate-50 transition-colors"
+                      >
+                        <Edit2 size={12} /> Edit
+                      </button>
+                      <button
+                        onClick={() => handleRejectDraft(draft.id)}
+                        className="flex items-center gap-1 text-slate-400 px-2.5 py-1 rounded-lg text-xs hover:text-red-500 transition-colors"
+                      >
+                        <X size={12} /> Reject
+                      </button>
+                      <button
+                        onClick={() => setShowRegenerateInput((v) => !v)}
+                        className="flex items-center gap-1 text-indigo-500 px-2.5 py-1 rounded-lg text-xs hover:text-indigo-700 transition-colors"
+                      >
+                        <RefreshCw size={12} /> Regenerate
+                      </button>
+                    </div>
+                    {/* Regenerate with context input */}
+                    {showRegenerateInput && (
+                      <div className="flex gap-2 mt-2">
+                        <input
+                          type="text"
+                          value={regenerateContext}
+                          onChange={(e) => setRegenerateContext(e.target.value)}
+                          placeholder="Additional context (optional)"
+                          className="flex-1 text-xs border border-indigo-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleRegenerateDraft(regenerateContext || undefined);
+                          }}
+                        />
+                        <button
+                          onClick={() => handleRegenerateDraft(regenerateContext || undefined)}
+                          className="text-xs bg-indigo-600 text-white px-2.5 py-1 rounded-lg hover:bg-indigo-700 transition-colors"
+                        >
+                          Go
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+
+              {/* AI Suggestions Ghost Bubble (legacy metadata-based) — above composer */}
+              {aiDraftText && pendingDrafts.length === 0 && (
                 <AiSuggestions
                   intent={aiIntent}
                   confidence={aiConfidence}
@@ -1779,6 +2025,36 @@ function InboxPage() {
                   isCompact ? 'p-2 max-h-[35vh]' : 'p-3 max-h-[45vh]',
                 )}
               >
+                {/* Editing AI draft banner + confidence */}
+                {editingDraft && (
+                  <div className="flex items-center gap-2 mb-2 px-2 py-1.5 bg-lavender-50 border border-lavender-100 rounded-lg">
+                    <Sparkles size={12} className="text-lavender-600 flex-shrink-0" />
+                    <span className="text-[11px] text-lavender-700 flex-1">
+                      Editing AI draft
+                      {editingDraft.intent && (
+                        <> &mdash; intent: <strong>{editingDraft.intent.replace(/_/g, ' ')}</strong></>
+                      )}
+                    </span>
+                    {editingDraft.confidence != null && (() => {
+                      const c = editingDraft.confidence * 100;
+                      const color = c > 85 ? 'bg-green-500' : c > 60 ? 'bg-amber-500' : 'bg-red-500';
+                      const label = c > 85 ? 'AI is confident' : c > 60 ? 'Review before sending' : 'Significant editing recommended';
+                      return (
+                        <span className="flex items-center gap-1 text-[10px] text-slate-500" title={label}>
+                          <span className={cn('w-1.5 h-1.5 rounded-full', color)} />
+                          {label}
+                        </span>
+                      );
+                    })()}
+                    <button
+                      onClick={() => { setEditingDraft(null); setNewMessage(''); }}
+                      className="text-lavender-400 hover:text-lavender-600"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                )}
+
                 {/* Reply channel pills with tablist (Prompt 3, 4, 12) */}
                 {availableChannels.length > 1 && !isNarrowComposer && (
                   <div

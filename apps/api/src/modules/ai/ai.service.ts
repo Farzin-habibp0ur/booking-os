@@ -16,6 +16,17 @@ import { BookingService } from '../booking/booking.service';
 import { MessageService } from '../message/message.service';
 import { MessagingService } from '../messaging/messaging.service';
 import { ConversationActionHandler } from './conversation-action-handler';
+import { OutboundService } from '../outbound/outbound.service';
+
+interface ChannelOverride {
+  enabled: boolean;
+}
+
+interface ChannelValidationResult {
+  allowed: boolean;
+  reason?: string;
+  fallbackToDraft: boolean;
+}
 
 interface AiSettings {
   enabled: boolean;
@@ -26,6 +37,7 @@ interface AiSettings {
     enabled: boolean;
     mode: 'all' | 'selected';
     selectedIntents: string[];
+    channelOverrides?: Record<string, ChannelOverride>;
   };
 }
 
@@ -38,6 +50,7 @@ const DEFAULT_AI_SETTINGS: AiSettings = {
     enabled: false,
     mode: 'all',
     selectedIntents: ['GENERAL', 'BOOK_APPOINTMENT', 'CANCEL', 'RESCHEDULE', 'INQUIRY'],
+    channelOverrides: {},
   },
 };
 
@@ -78,6 +91,7 @@ export class AiService {
     private messageService: MessageService,
     private messagingService: MessagingService,
     private conversationActionHandler: ConversationActionHandler,
+    private outboundService: OutboundService,
   ) {}
 
   private async getProviderForConversation(conversationId: string) {
@@ -97,7 +111,11 @@ export class AiService {
     const merged = { ...DEFAULT_AI_SETTINGS, ...(typeof raw === 'object' ? raw : {}) };
     // Deep merge autoReply
     if (typeof raw === 'object' && raw.autoReply) {
-      merged.autoReply = { ...DEFAULT_AI_SETTINGS.autoReply, ...raw.autoReply };
+      merged.autoReply = {
+        ...DEFAULT_AI_SETTINGS.autoReply,
+        ...raw.autoReply,
+        channelOverrides: { ...raw.autoReply.channelOverrides },
+      };
     }
     return merged;
   }
@@ -106,6 +124,76 @@ export class AiService {
     if (!settings.autoReply?.enabled) return false;
     if (settings.autoReply.mode === 'all') return true;
     return settings.autoReply.selectedIntents?.includes(intent) || false;
+  }
+
+  private isAutoReplyEnabledForChannel(settings: AiSettings, channel: string): boolean {
+    const overrides = settings.autoReply?.channelOverrides;
+    if (!overrides || !overrides[channel]) return true; // inherit global setting
+    return overrides[channel].enabled;
+  }
+
+  private async validateChannelForAutoReply(
+    conversationId: string,
+    channel: string,
+    draftText: string,
+    customer: any,
+  ): Promise<ChannelValidationResult> {
+    const ch = channel.toUpperCase();
+
+    if (ch === 'INSTAGRAM') {
+      const withinWindow = await this.isWithinMessagingWindow(conversationId);
+      if (!withinWindow) {
+        this.logger.log(`Channel validation: INSTAGRAM window expired for ${conversationId}`);
+        return { allowed: false, reason: 'Instagram 24h messaging window expired', fallbackToDraft: true };
+      }
+      if (draftText.length > 1000) {
+        this.logger.log(`Channel validation: INSTAGRAM message too long (${draftText.length} chars)`);
+        return { allowed: false, reason: 'Instagram message exceeds 1000 characters', fallbackToDraft: true };
+      }
+    }
+
+    if (ch === 'FACEBOOK') {
+      const withinWindow = await this.isWithinMessagingWindow(conversationId);
+      if (!withinWindow) {
+        this.logger.log(`Channel validation: FACEBOOK window expired for ${conversationId}`);
+        return { allowed: false, reason: 'Facebook 24h messaging window expired', fallbackToDraft: true };
+      }
+    }
+
+    if (ch === 'WHATSAPP') {
+      const withinWindow = await this.isWithinMessagingWindow(conversationId);
+      if (!withinWindow) {
+        this.logger.log(`Channel validation: WHATSAPP window expired for ${conversationId}`);
+        return { allowed: false, reason: 'WhatsApp 24h window expired — template required', fallbackToDraft: true };
+      }
+    }
+
+    if (ch === 'SMS') {
+      const customFields = (customer?.customFields as any) || {};
+      if (customFields.smsOptOut) {
+        this.logger.log(`Channel validation: SMS opt-out for customer ${customer?.id}`);
+        return { allowed: false, reason: 'Customer opted out of SMS', fallbackToDraft: false };
+      }
+      if (draftText.length > 320) {
+        this.logger.log(`Channel validation: SMS too long (${draftText.length} chars), switching to draft`);
+        return { allowed: false, reason: 'SMS exceeds 2-segment limit (320 chars)', fallbackToDraft: true };
+      }
+    }
+
+    this.logger.debug(`Channel validation: ${ch} PASSED for ${conversationId}`);
+    return { allowed: true, fallbackToDraft: false };
+  }
+
+  private async isWithinMessagingWindow(conversationId: string): Promise<boolean> {
+    const lastInbound = await this.prisma.message.findFirst({
+      where: { conversationId, direction: 'INBOUND' },
+      orderBy: { createdAt: 'desc' },
+      select: { createdAt: true },
+    });
+    if (!lastInbound) return false;
+    const hoursSinceLastInbound =
+      (Date.now() - lastInbound.createdAt.getTime()) / (1000 * 60 * 60);
+    return hoursSinceLastInbound < 24;
   }
 
   private async checkRateLimit(businessId: string): Promise<boolean> {
@@ -662,6 +750,7 @@ export class AiService {
           (recentContext || '') + channelContext || undefined,
           activeServiceNames,
           customerContext,
+          conversationChannel,
         );
         draftText = draft.draftText;
       }
@@ -671,8 +760,46 @@ export class AiService {
         draftText = draftText.slice(0, 997) + '...';
       }
 
-      // Store draft in message metadata
+      // Store draft in message metadata + create OutboundDraft record
+      let outboundDraftId: string | undefined;
+
       if (draftText) {
+        // Create OutboundDraft for non-auto-reply path (Prompt 1)
+        const willAutoReply =
+          isAutoReplyEnabled &&
+          this.shouldAutoReplyForIntent(settings, intentResult.intent) &&
+          this.isAutoReplyEnabledForChannel(settings, conversationChannel);
+
+        if (!willAutoReply && conversation?.customerId) {
+          try {
+            const defaultStaff = await this.prisma.staff.findFirst({
+              where: { businessId, role: 'ADMIN' },
+            });
+            if (defaultStaff) {
+              const draft = await this.outboundService.createAiDraft({
+                businessId,
+                customerId: conversation.customerId,
+                staffId: defaultStaff.id,
+                conversationId,
+                channel: conversationChannel,
+                content: draftText,
+                sourceMessageId: messageId,
+                intent: intentResult.intent,
+                confidence: intentResult.confidence,
+                metadata: {
+                  intent: intentResult.intent,
+                  entities: intentResult.extractedEntities,
+                  generatedAt: new Date().toISOString(),
+                },
+              });
+              outboundDraftId = draft.id;
+            }
+          } catch (err: any) {
+            this.logger.warn(`Failed to create OutboundDraft: ${err.message}`);
+          }
+        }
+
+        // Backward compat: still store in message metadata
         await this.prisma.message.update({
           where: { id: messageId },
           data: {
@@ -682,6 +809,7 @@ export class AiService {
                 confidence: intentResult.confidence,
                 extractedEntities: intentResult.extractedEntities,
                 draftText,
+                ...(outboundDraftId ? { outboundDraftId } : {}),
               },
             },
           },
@@ -694,37 +822,89 @@ export class AiService {
         await this.generateAndStoreSummary(conversationId);
       }
 
-      // Auto-reply for non-action intents (general replies)
+      // Auto-reply for non-action intents (general replies) — with channel validation
       const shouldAutoReply =
         draftText &&
         isAutoReplyEnabled &&
-        this.shouldAutoReplyForIntent(settings, intentResult.intent);
+        this.shouldAutoReplyForIntent(settings, intentResult.intent) &&
+        this.isAutoReplyEnabledForChannel(settings, conversationChannel);
+
+      let autoReplySent = false;
 
       if (shouldAutoReply) {
-        try {
-          const defaultStaff = await this.prisma.staff.findFirst({
-            where: { businessId, role: 'ADMIN' },
-          });
-          if (defaultStaff) {
-            const provider = await this.getProviderForConversation(conversationId);
-            await this.messageService.sendMessage(
-              businessId,
-              conversationId,
-              defaultStaff.id,
-              draftText,
-              provider,
-            );
-            this.inboxGateway.emitToBusinessRoom(businessId, 'ai:auto-replied', {
-              conversationId,
-              messageId,
-              intent: intentResult.intent,
-              draftText,
+        // Validate channel constraints before sending
+        const validation = await this.validateChannelForAutoReply(
+          conversationId,
+          conversationChannel,
+          draftText,
+          customerData,
+        );
+
+        if (validation.allowed) {
+          try {
+            const defaultStaff = await this.prisma.staff.findFirst({
+              where: { businessId, role: 'ADMIN' },
             });
+            if (defaultStaff) {
+              const provider = await this.getProviderForConversation(conversationId);
+              await this.messageService.sendMessage(
+                businessId,
+                conversationId,
+                defaultStaff.id,
+                draftText,
+                provider,
+              );
+              this.inboxGateway.emitToBusinessRoom(businessId, 'ai:auto-replied', {
+                conversationId,
+                messageId,
+                intent: intentResult.intent,
+                draftText,
+              });
+              autoReplySent = true;
+            }
+          } catch (err: any) {
+            this.logger.error(`Auto-reply failed: ${err.message}`);
           }
-        } catch (err: any) {
-          this.logger.error(`Auto-reply failed: ${err.message}`);
+        } else if (validation.fallbackToDraft && conversation?.customerId && !outboundDraftId) {
+          // Channel validation failed — create draft instead
+          this.logger.log(
+            `Auto-reply blocked for ${conversationChannel}: ${validation.reason}. Creating draft.`,
+          );
+          try {
+            const defaultStaff = await this.prisma.staff.findFirst({
+              where: { businessId, role: 'ADMIN' },
+            });
+            if (defaultStaff) {
+              const draft = await this.outboundService.createAiDraft({
+                businessId,
+                customerId: conversation.customerId,
+                staffId: defaultStaff.id,
+                conversationId,
+                channel: conversationChannel,
+                content: draftText,
+                sourceMessageId: messageId,
+                intent: intentResult.intent,
+                confidence: intentResult.confidence,
+                metadata: {
+                  intent: intentResult.intent,
+                  entities: intentResult.extractedEntities,
+                  channelValidationReason: validation.reason,
+                  generatedAt: new Date().toISOString(),
+                },
+              });
+              outboundDraftId = draft.id;
+            }
+          } catch (err: any) {
+            this.logger.warn(`Failed to create fallback OutboundDraft: ${err.message}`);
+          }
+        } else {
+          this.logger.log(
+            `Auto-reply skipped for ${conversationChannel}: ${validation.reason}`,
+          );
         }
-      } else {
+      }
+
+      if (!autoReplySent) {
         // Create action cards for states needing staff approval (non-auto-reply path)
         if (bookingState) {
           this.conversationActionHandler
@@ -1585,6 +1765,103 @@ export class AiService {
       assignedTo: { id: defaultStaff.id, name: defaultStaff.name },
       reason: 'trade_in_inquiry',
     });
+  }
+
+  async getAiStats(businessId: string) {
+    const today = new Date().toISOString().split('T')[0];
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    // Today's stats from AiUsage
+    const todayUsage = await this.prisma.aiUsage.findUnique({
+      where: { businessId_date: { businessId, date: today } },
+    });
+
+    // Today's drafts created
+    const todayStart = new Date(today);
+    const todayEnd = new Date(today);
+    todayEnd.setDate(todayEnd.getDate() + 1);
+
+    const [draftsCreated, autoReplied] = await Promise.all([
+      this.prisma.outboundDraft.count({
+        where: {
+          businessId,
+          source: { in: ['AI', 'AGENT'] },
+          createdAt: { gte: todayStart, lt: todayEnd },
+        },
+      }),
+      this.prisma.message.count({
+        where: {
+          conversation: { businessId },
+          direction: 'OUTBOUND',
+          createdAt: { gte: todayStart, lt: todayEnd },
+          metadata: { path: ['ai', 'autoReplied'], equals: true },
+        },
+      }).catch(() => 0),
+    ]);
+
+    // Last 7 days stats
+    const last7Days: Array<{ date: string; processed: number; draftsCreated: number }> = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().split('T')[0];
+      const dayStart = new Date(dateStr);
+      const dayEnd = new Date(dateStr);
+      dayEnd.setDate(dayEnd.getDate() + 1);
+
+      const [usage, dayDrafts] = await Promise.all([
+        this.prisma.aiUsage.findUnique({
+          where: { businessId_date: { businessId, date: dateStr } },
+        }),
+        this.prisma.outboundDraft.count({
+          where: {
+            businessId,
+            source: { in: ['AI', 'AGENT'] },
+            createdAt: { gte: dayStart, lt: dayEnd },
+          },
+        }),
+      ]);
+
+      last7Days.push({
+        date: dateStr,
+        processed: usage?.count || 0,
+        draftsCreated: dayDrafts,
+      });
+    }
+
+    return {
+      today: {
+        processed: todayUsage?.count || 0,
+        autoReplied,
+        draftsCreated,
+        failed: 0, // Could query DLQ but keeping it simple
+      },
+      dailyLimit: MAX_AI_CALLS_PER_DAY,
+      last7Days,
+    };
+  }
+
+  async regenerateDraft(businessId: string, conversationId: string) {
+    // Find the latest inbound message
+    const lastInbound = await this.prisma.message.findFirst({
+      where: { conversationId, direction: 'INBOUND' },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!lastInbound) {
+      return { error: 'No inbound message found to regenerate draft for' };
+    }
+
+    // Re-process the message (this will create a new OutboundDraft)
+    await this.processInboundMessage(
+      businessId,
+      conversationId,
+      lastInbound.id,
+      lastInbound.content,
+    );
+
+    return { ok: true, messageId: lastInbound.id };
   }
 
   async customerChat(

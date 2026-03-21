@@ -16,6 +16,7 @@ import { BookingService } from '../booking/booking.service';
 import { MessageService } from '../message/message.service';
 import { MessagingService } from '../messaging/messaging.service';
 import { ConversationActionHandler } from './conversation-action-handler';
+import { OutboundService } from '../outbound/outbound.service';
 import { createMockPrisma } from '../../test/mocks';
 
 describe('AiService', () => {
@@ -145,6 +146,13 @@ describe('AiService', () => {
             handleRescheduleState: jest.fn().mockResolvedValue(null),
             handleLowConfidence: jest.fn().mockResolvedValue(null),
             handleTransferToHuman: jest.fn().mockResolvedValue(null),
+          },
+        },
+        {
+          provide: OutboundService,
+          useValue: {
+            createAiDraft: jest.fn().mockResolvedValue({ id: 'draft1', status: 'DRAFT' }),
+            findByConversation: jest.fn().mockResolvedValue([]),
           },
         },
       ],
@@ -1424,6 +1432,10 @@ describe('AiService', () => {
         id: 'staff1',
         name: 'Admin',
         role: 'ADMIN',
+      } as any);
+      // Mock recent inbound message for channel validation (24h window check)
+      prisma.message.findFirst.mockResolvedValue({
+        createdAt: new Date(),
       } as any);
       replyGenerator.generate.mockResolvedValue({ draftText: 'Auto reply text' });
 

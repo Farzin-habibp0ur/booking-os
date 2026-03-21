@@ -445,15 +445,27 @@ export class ConversationService {
     const conversation = await this.prisma.conversation.findFirst({
       where: { id: conversationId, businessId },
     });
-    if (!conversation) return [];
+    if (!conversation) return { messages: [], pendingDrafts: [] };
 
-    return this.prisma.message.findMany({
-      where: { conversationId },
-      include: {
-        senderStaff: { select: { id: true, name: true } },
-        attachments: true,
-      },
-      orderBy: { createdAt: 'asc' },
-    });
+    const [messages, pendingDrafts] = await Promise.all([
+      this.prisma.message.findMany({
+        where: { conversationId },
+        include: {
+          senderStaff: { select: { id: true, name: true } },
+          attachments: true,
+        },
+        orderBy: { createdAt: 'asc' },
+      }),
+      this.prisma.outboundDraft.findMany({
+        where: { conversationId, businessId, status: 'DRAFT' },
+        include: {
+          customer: { select: { id: true, name: true } },
+          staff: { select: { id: true, name: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+      }),
+    ]);
+
+    return { messages, pendingDrafts };
   }
 }

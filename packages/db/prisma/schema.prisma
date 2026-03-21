@@ -1038,18 +1038,23 @@ model AutonomyConfig {
 }
 
 model OutboundDraft {
-  id             String    @id @default(cuid())
-  businessId     String
-  customerId     String
-  staffId        String
-  channel        String    @default("WHATSAPP")
-  content        String
-  status         String    @default("DRAFT") // DRAFT, APPROVED, SENT, REJECTED
-  approvedById   String?
-  sentAt         DateTime?
-  conversationId String?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id              String    @id @default(cuid())
+  businessId      String
+  customerId      String
+  staffId         String
+  channel         String    @default("WHATSAPP")
+  content         String
+  status          String    @default("DRAFT") // DRAFT, APPROVED, SENT, REJECTED
+  approvedById    String?
+  sentAt          DateTime?
+  conversationId  String?
+  source          String    @default("MANUAL") // MANUAL, AI, AGENT
+  sourceMessageId String?
+  intent          String?
+  confidence      Float?
+  metadata        Json?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   business     Business      @relation(fields: [businessId], references: [id])
   customer     Customer      @relation(fields: [customerId], references: [id])
@@ -1059,6 +1064,7 @@ model OutboundDraft {
 
   @@index([businessId, status])
   @@index([businessId, customerId])
+  @@index([businessId, conversationId, status])
   @@map("outbound_drafts")
 }
 

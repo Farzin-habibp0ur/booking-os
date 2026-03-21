@@ -95,6 +95,31 @@ export class RetentionAgentService implements BackgroundAgent, OnModuleInit {
 
         const overdueDays = Math.round(customer.daysSinceLastBooking - customer.avgDaysBetween);
 
+        // Look up business for booking link and phone
+        const business = await this.prisma.business.findUnique({
+          where: { id: businessId },
+          select: { name: true, slug: true, phone: true },
+        });
+        const bookingLink = business?.slug ? `book/${business.slug}` : '';
+        const bizPhone = business?.phone || '';
+        const bizName = business?.name || '';
+        const lastDate = customer.lastBookingDate.toISOString().split('T')[0];
+
+        // Determine recommended channel
+        const customerChannels = await this.getCustomerChannels(businessId, customer.customerId);
+        const recommendedChannel = customerChannels[0] || 'WHATSAPP';
+
+        // Pre-generate channel-specific follow-up messages
+        const suggestedMessages: Record<string, any> = {
+          SMS: `Hi ${customer.customerName}, it's been ${customer.daysSinceLastBooking} days since your last ${customer.lastServiceName}. Ready to book again? Reply YES or call us at ${bizPhone}.`,
+          EMAIL: {
+            subject: `We miss you, ${customer.customerName}!`,
+            body: `Dear ${customer.customerName},\n\nIt's been a while since your last visit on ${lastDate}. We'd love to welcome you back for your next ${customer.lastServiceName}.\n\n${bookingLink ? `Book online: ${bookingLink}\n\n` : ''}Best,\n${bizName}`,
+          },
+          WHATSAPP: `Hi ${customer.customerName}! It's been ${customer.daysSinceLastBooking} days since your last ${customer.lastServiceName}. Would you like to book your next appointment?`,
+          DEFAULT: `Hi ${customer.customerName}, it's been a while since your last ${customer.lastServiceName} on ${lastDate}. We'd love to see you again! Would you like to book?`,
+        };
+
         await this.actionCardService.create({
           businessId,
           type: 'RETENTION_DUE',
@@ -121,6 +146,9 @@ export class RetentionAgentService implements BackgroundAgent, OnModuleInit {
             overdueDays,
             avgCadence: Math.round(customer.avgDaysBetween),
             source: 'retention-agent',
+            suggestedMessages,
+            customerChannels,
+            recommendedChannel,
           },
         });
 
@@ -218,6 +246,35 @@ export class RetentionAgentService implements BackgroundAgent, OnModuleInit {
     );
 
     return overdueCustomers;
+  }
+
+  private async getCustomerChannels(businessId: string, customerId: string): Promise<string[]> {
+    try {
+      const channels: string[] = [];
+      const conversations = await this.prisma.conversation.findMany({
+        where: { businessId, customerId },
+        select: { channel: true },
+        distinct: ['channel'],
+      });
+      if (Array.isArray(conversations)) {
+        for (const c of conversations) {
+          if (c.channel && !channels.includes(c.channel)) channels.push(c.channel);
+        }
+      }
+      if (channels.length === 0) {
+        const customer = await this.prisma.customer.findUnique({
+          where: { id: customerId },
+          select: { phone: true, email: true },
+        });
+        if (customer?.phone && !customer.phone.startsWith('fb:') && !customer.phone.startsWith('ig:') && !customer.phone.startsWith('web:') && !customer.phone.startsWith('email:')) {
+          channels.push('WHATSAPP', 'SMS');
+        }
+        if (customer?.email) channels.push('EMAIL');
+      }
+      return channels;
+    } catch {
+      return [];
+    }
   }
 
   private calculatePriority(customer: CustomerCadence): number {

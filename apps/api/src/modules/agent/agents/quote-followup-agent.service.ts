@@ -83,13 +83,33 @@ export class QuoteFollowupAgentService implements BackgroundAgent, OnModuleInit 
 
         if (existingCard) continue;
 
+        // Look up business info
+        const business = await this.prisma.business.findUnique({
+          where: { id: businessId },
+          select: { name: true, phone: true },
+        });
+        const bizPhone = business?.phone || '';
+        const bizName = business?.name || '';
+        const amount = `$${quote.totalAmount.toFixed(2)}`;
+
+        // Pre-generate channel-specific follow-up messages
+        const suggestedMessages: Record<string, any> = {
+          SMS: `Hi ${quote.customerName}, following up on your quote for ${amount}. Ready to proceed? Reply or call ${bizPhone}.`,
+          EMAIL: {
+            subject: `Your Quote — Ready to proceed?`,
+            body: `Hi ${quote.customerName},\n\nJust checking in about your quote for ${amount} for ${quote.serviceName}.\n\nLet me know if you'd like to move forward or if you have any questions.\n\nBest,\n${bizName}`,
+          },
+          WHATSAPP: `Hi ${quote.customerName}! Just following up on your ${quote.serviceName} quote for ${amount}. Would you like to proceed?`,
+          DEFAULT: `Hi ${quote.customerName}, just following up on your quote for ${amount}. Would you like to proceed?`,
+        };
+
         await this.actionCardService.create({
           businessId,
           type: 'STALLED_QUOTE',
           category: 'OPPORTUNITY',
           priority: this.calculatePriority(quote.totalAmount, quote.daysSinceCreated),
           title: `Quote pending: ${quote.customerName}`,
-          description: `Because ${quote.customerName}'s quote for ${quote.serviceName} ($${quote.totalAmount.toFixed(2)}) has been pending for ${quote.daysSinceCreated} days. Follow up to convert.`,
+          description: `Because ${quote.customerName}'s quote for ${quote.serviceName} (${amount}) has been pending for ${quote.daysSinceCreated} days. Follow up to convert.`,
           suggestedAction: `Send a follow-up message about their ${quote.serviceName} quote`,
           customerId: quote.customerId,
           bookingId: quote.bookingId,
@@ -110,6 +130,8 @@ export class QuoteFollowupAgentService implements BackgroundAgent, OnModuleInit 
             totalAmount: quote.totalAmount,
             daysSinceCreated: quote.daysSinceCreated,
             source: 'quote-followup-agent',
+            suggestedMessages,
+            recommendedChannel: 'SMS',
           },
         });
 

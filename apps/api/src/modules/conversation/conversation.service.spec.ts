@@ -736,25 +736,26 @@ describe('ConversationService', () => {
   // ─── getMessages ──────────────────────────────────────────────────────
 
   describe('getMessages', () => {
-    it('returns empty array for missing conversation', async () => {
+    it('returns empty object for missing conversation', async () => {
       prisma.conversation.findFirst.mockResolvedValue(null);
 
       const result = await service.getMessages('biz1', 'nonexistent');
 
-      expect(result).toEqual([]);
+      expect(result).toEqual({ messages: [], pendingDrafts: [] });
     });
 
-    it('returns ordered messages for existing conversation', async () => {
+    it('returns ordered messages with pending drafts for existing conversation', async () => {
       prisma.conversation.findFirst.mockResolvedValue({ id: 'conv1' } as any);
       const messages = [
         { id: 'm1', createdAt: new Date('2026-01-01') },
         { id: 'm2', createdAt: new Date('2026-01-02') },
       ];
       prisma.message.findMany.mockResolvedValue(messages as any);
+      prisma.outboundDraft.findMany.mockResolvedValue([] as any);
 
       const result = await service.getMessages('biz1', 'conv1');
 
-      expect(result).toEqual(messages);
+      expect(result).toEqual({ messages, pendingDrafts: [] });
     });
   });
 });

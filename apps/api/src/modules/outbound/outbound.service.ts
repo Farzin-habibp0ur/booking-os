@@ -1,6 +1,13 @@
-import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  BadRequestException,
+  Optional,
+} from '@nestjs/common';
 import { PrismaService } from '../../common/prisma.service';
 import { ActionHistoryService } from '../action-history/action-history.service';
+import { InboxGateway } from '../../common/inbox.gateway';
 
 @Injectable()
 export class OutboundService {
@@ -9,6 +16,7 @@ export class OutboundService {
   constructor(
     private prisma: PrismaService,
     private actionHistoryService: ActionHistoryService,
+    @Optional() private inboxGateway?: InboxGateway,
   ) {}
 
   async createDraft(data: {
@@ -32,6 +40,67 @@ export class OutboundService {
         content: data.content,
         status: 'DRAFT',
       },
+      include: { customer: true, staff: true },
+    });
+  }
+
+  async createAiDraft(data: {
+    businessId: string;
+    customerId: string;
+    staffId: string;
+    conversationId: string;
+    channel: string;
+    content: string;
+    sourceMessageId?: string;
+    intent?: string;
+    confidence?: number;
+    metadata?: Record<string, any>;
+    source?: string;
+  }) {
+    const draft = await this.prisma.outboundDraft.create({
+      data: {
+        businessId: data.businessId,
+        customerId: data.customerId,
+        staffId: data.staffId,
+        conversationId: data.conversationId,
+        channel: data.channel || 'WHATSAPP',
+        content: data.content,
+        status: 'DRAFT',
+        source: data.source || 'AI',
+        sourceMessageId: data.sourceMessageId,
+        intent: data.intent,
+        confidence: data.confidence,
+        metadata: data.metadata as any,
+      },
+      include: { customer: true, staff: true },
+    });
+
+    // Notify inbox in real-time
+    if (this.inboxGateway) {
+      this.inboxGateway.emitToBusinessRoom(data.businessId, 'draft:created', {
+        conversationId: data.conversationId,
+        draftId: draft.id,
+        channel: draft.channel,
+        source: draft.source,
+        intent: data.intent,
+        preview: data.content.slice(0, 120),
+      });
+    }
+
+    this.logger.log(
+      `AI draft created: ${draft.id} for conversation ${data.conversationId} (${data.intent})`,
+    );
+
+    return draft;
+  }
+
+  async findByConversation(businessId: string, conversationId: string, status?: string) {
+    const where: any = { businessId, conversationId };
+    if (status) where.status = status;
+
+    return this.prisma.outboundDraft.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
       include: { customer: true, staff: true },
     });
   }

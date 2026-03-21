@@ -22,6 +22,7 @@ import { AvailabilityModule } from '../availability/availability.module';
 import { BookingModule } from '../booking/booking.module';
 import { MessageModule } from '../message/message.module';
 import { ActionCardModule } from '../action-card/action-card.module';
+import { OutboundModule } from '../outbound/outbound.module';
 
 @Module({
   // MessagingModule is @Global() so no need to import it here
@@ -33,6 +34,7 @@ import { ActionCardModule } from '../action-card/action-card.module';
     BookingModule,
     forwardRef(() => MessageModule),
     ActionCardModule,
+    OutboundModule,
   ],
   controllers: [AiController],
   providers: [

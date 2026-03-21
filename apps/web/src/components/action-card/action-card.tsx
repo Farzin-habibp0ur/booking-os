@@ -82,6 +82,7 @@ interface ActionCardProps {
   onDismiss?: (id: string) => void;
   onSnooze?: (id: string) => void;
   onExecute?: (id: string) => void;
+  onExecuteCta?: (id: string, ctaAction: string) => void;
   onPreview?: (card: ActionCardData) => void;
   compact?: boolean;
 }
@@ -92,11 +93,14 @@ export function ActionCard({
   onDismiss,
   onSnooze,
   onExecute,
+  onExecuteCta,
   onPreview,
   compact = false,
 }: ActionCardProps) {
   const style = CATEGORY_STYLES[card.category] || CATEGORY_STYLES.HYGIENE;
   const Icon = TYPE_ICONS[card.type] || Sparkles;
+  const metadata = (card as any).metadata || {};
+  const hasSuggestedMessages = !!metadata.suggestedMessages;
   const isPending = card.status === 'PENDING';
 
   return (
@@ -177,7 +181,16 @@ export function ActionCard({
               <Check size={12} /> Approve
             </button>
           )}
-          {onExecute && (
+          {hasSuggestedMessages && onExecuteCta && (
+            <button
+              onClick={() => onExecuteCta(card.id, 'send_followup')}
+              className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-xl bg-sage-600 text-white hover:bg-sage-700 transition-colors"
+              data-testid={`send-followup-${card.id}`}
+            >
+              <MessageSquare size={12} /> Send Follow-up
+            </button>
+          )}
+          {onExecute && !hasSuggestedMessages && (
             <button
               onClick={() => onExecute(card.id)}
               className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-xl bg-lavender-600 text-white hover:bg-lavender-700 transition-colors"

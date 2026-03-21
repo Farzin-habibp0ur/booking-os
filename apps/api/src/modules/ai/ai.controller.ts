@@ -26,6 +26,11 @@ export class AiController {
     private aiService: AiService,
   ) {}
 
+  @Get('stats')
+  async getStats(@BusinessId() businessId: string) {
+    return this.aiService.getAiStats(businessId);
+  }
+
   @Get('settings')
   async getSettings(@BusinessId() businessId: string) {
     const business = await this.businessService.findById(businessId);
@@ -39,12 +44,17 @@ export class AiController {
         enabled: false,
         mode: 'all',
         selectedIntents: ['GENERAL', 'BOOK_APPOINTMENT', 'CANCEL', 'RESCHEDULE', 'INQUIRY'],
+        channelOverrides: {},
       },
     };
     const raw = (business.aiSettings || {}) as any;
     const merged = { ...defaults, ...(typeof raw === 'object' ? raw : {}) };
     if (typeof raw === 'object' && raw.autoReply) {
-      merged.autoReply = { ...defaults.autoReply, ...raw.autoReply };
+      merged.autoReply = {
+        ...defaults.autoReply,
+        ...raw.autoReply,
+        channelOverrides: raw.autoReply.channelOverrides || {},
+      };
     }
     return merged;
   }
@@ -58,7 +68,12 @@ export class AiController {
       autoReplySuggestions?: boolean;
       bookingAssistant?: boolean;
       personality?: string;
-      autoReply?: { enabled: boolean; mode: 'all' | 'selected'; selectedIntents: string[] };
+      autoReply?: {
+        enabled: boolean;
+        mode: 'all' | 'selected';
+        selectedIntents: string[];
+        channelOverrides?: Record<string, { enabled: boolean }>;
+      };
     },
   ) {
     return this.businessService.updateAiSettings(businessId, body);
@@ -110,6 +125,14 @@ export class AiController {
   async resumeAutoReply(@BusinessId() businessId: string, @Param('id') conversationId: string) {
     await this.aiService.resumeAutoReply(businessId, conversationId);
     return { ok: true };
+  }
+
+  @Post('conversations/:id/regenerate-draft')
+  async regenerateDraft(
+    @BusinessId() businessId: string,
+    @Param('id') conversationId: string,
+  ) {
+    return this.aiService.regenerateDraft(businessId, conversationId);
   }
 
   @Post('customers/:id/chat')

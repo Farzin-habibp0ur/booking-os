@@ -12,7 +12,10 @@ import {
   Inject,
   forwardRef,
   Logger,
+  Optional,
 } from '@nestjs/common';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 import { Response } from 'express';
 import { ApiTags } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
@@ -27,6 +30,7 @@ import { MessagingService } from './messaging.service';
 import { MessageService } from '../message/message.service';
 import { AiService } from '../ai/ai.service';
 import { UsageService } from '../usage/usage.service';
+import { QUEUE_NAMES } from '../../common/queue/queue.module';
 import { WebhookInboundDto } from '../../common/dto';
 import {
   WhatsAppCloudProvider,
@@ -53,6 +57,7 @@ export class WebhookController {
     private configService: ConfigService,
     @Inject(forwardRef(() => AiService)) private aiService: AiService,
     private usageService: UsageService,
+    @Optional() @InjectQueue(QUEUE_NAMES.AI_PROCESSING) private aiQueue?: Queue,
   ) {}
 
   private verifyHmac(body: string, signature: string | undefined): boolean {
@@ -314,9 +319,33 @@ export class WebhookController {
     this.inboxGateway.notifyNewMessage(business.id, message);
     this.inboxGateway.notifyConversationUpdate(business.id, updatedConversation);
 
-    this.aiService
-      .processInboundMessage(business.id, conversation.id, message.id, body)
-      .catch((err) => this.logger.error(`AI processing error: ${err.message}`));
+    // Queue AI processing via BullMQ (with retry) or fall back to fire-and-forget
+    if (this.aiQueue) {
+      this.aiQueue
+        .add(
+          'process-inbound',
+          {
+            businessId: business.id,
+            conversationId: conversation.id,
+            messageId: message.id,
+            messageBody: body,
+            channel,
+            customerName: customer.name,
+            customerId: customer.id,
+          },
+          {
+            attempts: 3,
+            backoff: { type: 'exponential', delay: 1000 },
+            removeOnComplete: 100,
+            removeOnFail: false,
+          },
+        )
+        .catch((err) => this.logger.error(`Failed to queue AI processing: ${err.message}`));
+    } else {
+      this.aiService
+        .processInboundMessage(business.id, conversation.id, message.id, body)
+        .catch((err) => this.logger.error(`AI processing error: ${err.message}`));
+    }
 
     // Record usage for billing
     this.usageService

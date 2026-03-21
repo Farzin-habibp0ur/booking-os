@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Send } from 'lucide-react';
 import { ActionCard, ActionCardData } from './action-card';
 
 const CATEGORY_ORDER = ['URGENT_TODAY', 'NEEDS_APPROVAL', 'OPPORTUNITY', 'HYGIENE'];
@@ -17,7 +18,9 @@ interface ActionCardListProps {
   onDismiss?: (id: string) => void;
   onSnooze?: (id: string) => void;
   onExecute?: (id: string) => void;
+  onExecuteCta?: (id: string, ctaAction: string) => Promise<void>;
   onPreview?: (card: ActionCardData) => void;
+  onBulkFollowUp?: (cardIds: string[]) => Promise<void>;
   filterCategory?: string;
   grouped?: boolean;
   compact?: boolean;
@@ -29,14 +32,37 @@ export function ActionCardList({
   onDismiss,
   onSnooze,
   onExecute,
+  onExecuteCta,
   onPreview,
+  onBulkFollowUp,
   filterCategory,
   grouped = true,
   compact = false,
 }: ActionCardListProps) {
   const [activeFilter, setActiveFilter] = useState<string | undefined>(filterCategory);
+  const [bulkSending, setBulkSending] = useState(false);
+  const [showBulkConfirm, setShowBulkConfirm] = useState(false);
 
   const filtered = activeFilter ? cards.filter((c) => c.category === activeFilter) : cards;
+
+  // Cards eligible for bulk follow-up: PENDING retention/quote cards with suggestedMessages
+  const bulkEligible = filtered.filter(
+    (c) =>
+      c.status === 'PENDING' &&
+      (c.type === 'RETENTION_DUE' || c.type === 'STALLED_QUOTE') &&
+      (c as any).metadata?.suggestedMessages,
+  );
+
+  const handleBulkFollowUp = async () => {
+    if (!onBulkFollowUp || bulkEligible.length === 0) return;
+    setBulkSending(true);
+    try {
+      await onBulkFollowUp(bulkEligible.map((c) => c.id));
+    } finally {
+      setBulkSending(false);
+      setShowBulkConfirm(false);
+    }
+  };
 
   if (grouped) {
     const groups = CATEGORY_ORDER.map((cat) => ({
@@ -78,6 +104,40 @@ export function ActionCardList({
               </button>
             );
           })}
+
+          {/* Bulk follow-up button */}
+          {onBulkFollowUp && bulkEligible.length > 1 && (
+            <>
+              <div className="flex-1" />
+              {showBulkConfirm ? (
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="text-slate-600">
+                    Create {bulkEligible.length} follow-up drafts?
+                  </span>
+                  <button
+                    onClick={handleBulkFollowUp}
+                    disabled={bulkSending}
+                    className="px-3 py-1 rounded-full bg-sage-600 text-white hover:bg-sage-700 disabled:opacity-50 transition-colors"
+                  >
+                    {bulkSending ? 'Creating...' : 'Confirm'}
+                  </button>
+                  <button
+                    onClick={() => setShowBulkConfirm(false)}
+                    className="px-3 py-1 rounded-full text-slate-500 hover:bg-slate-100 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowBulkConfirm(true)}
+                  className="flex items-center gap-1 text-xs px-3 py-1 rounded-full bg-sage-50 text-sage-700 hover:bg-sage-100 transition-colors"
+                >
+                  <Send size={12} /> Send All Follow-ups ({bulkEligible.length})
+                </button>
+              )}
+            </>
+          )}
         </div>
 
         {groups.map((group) => (
@@ -94,6 +154,7 @@ export function ActionCardList({
                   onDismiss={onDismiss}
                   onSnooze={onSnooze}
                   onExecute={onExecute}
+                  onExecuteCta={onExecuteCta}
                   onPreview={onPreview}
                   compact={compact}
                 />
@@ -121,6 +182,7 @@ export function ActionCardList({
           onDismiss={onDismiss}
           onSnooze={onSnooze}
           onExecute={onExecute}
+          onExecuteCta={onExecuteCta}
           onPreview={onPreview}
           compact={compact}
         />

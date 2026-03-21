@@ -10,6 +10,10 @@ import { captureEvent } from '@/lib/posthog';
 import { cn } from '@/lib/cn';
 import { FormSkeleton } from '@/components/skeleton';
 
+interface ChannelOverride {
+  enabled: boolean;
+}
+
 interface AiSettings {
   enabled: boolean;
   autoReplySuggestions: boolean;
@@ -19,7 +23,14 @@ interface AiSettings {
     enabled: boolean;
     mode: 'all' | 'selected';
     selectedIntents: string[];
+    channelOverrides: Record<string, ChannelOverride>;
   };
+}
+
+interface AiStats {
+  today: { processed: number; autoReplied: number; draftsCreated: number; failed: number };
+  dailyLimit: number;
+  last7Days: Array<{ date: string; processed: number; draftsCreated: number }>;
 }
 
 interface MarketingAutonomy {
@@ -83,10 +94,12 @@ export default function AiSettingsPage() {
       enabled: false,
       mode: 'all',
       selectedIntents: ['GENERAL', 'BOOK_APPOINTMENT', 'CANCEL', 'RESCHEDULE', 'INQUIRY'],
+      channelOverrides: {},
     },
   });
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [aiStats, setAiStats] = useState<AiStats | null>(null);
 
   // Marketing AI state
   const [marketingAutonomy, setMarketingAutonomy] = useState<MarketingAutonomy[]>([]);
@@ -103,8 +116,9 @@ export default function AiSettingsPage() {
     Promise.all([
       api.get<AiSettings>('/ai/settings').catch(() => null),
       api.get<MarketingAutonomy[]>('/autonomy-settings').catch(() => []),
+      api.get<AiStats>('/ai/stats').catch(() => null),
     ])
-      .then(([aiRes, autonomyRes]) => {
+      .then(([aiRes, autonomyRes, statsRes]) => {
         if (aiRes) setSettings(aiRes);
         const autonomyList = Array.isArray(autonomyRes) ? autonomyRes : [];
         setMarketingAutonomy(autonomyList);
@@ -121,6 +135,7 @@ export default function AiSettingsPage() {
           const mostCommon = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0];
           if (mostCommon) setDefaultAutonomy(mostCommon);
         }
+        if (statsRes) setAiStats(statsRes as AiStats);
       })
       .finally(() => setLoading(false));
   }, []);
@@ -144,6 +159,26 @@ export default function AiSettingsPage() {
       ...settings,
       autoReply: { ...settings.autoReply, selectedIntents: updated },
     });
+  };
+
+  const toggleChannelOverride = (channel: string) => {
+    const current = settings.autoReply.channelOverrides || {};
+    const currentEnabled = current[channel]?.enabled ?? true; // default: inherit (enabled)
+    setSettings({
+      ...settings,
+      autoReply: {
+        ...settings.autoReply,
+        channelOverrides: {
+          ...current,
+          [channel]: { enabled: !currentEnabled },
+        },
+      },
+    });
+  };
+
+  const isChannelEnabled = (channel: string): boolean => {
+    const override = settings.autoReply.channelOverrides?.[channel];
+    return override?.enabled ?? true; // default: inherit global
   };
 
   const handleMarketingToggle = async (enabled: boolean) => {
@@ -336,9 +371,49 @@ export default function AiSettingsPage() {
               )}
             </div>
 
+            {/* Per-Channel Auto-Reply Controls */}
+            {settings.autoReply.enabled && (
+              <>
+                <hr />
+                <div>
+                  <p className="text-sm font-medium mb-1">Per-Channel Auto-Reply</p>
+                  <p className="text-xs text-slate-500 mb-3">
+                    Override auto-reply for specific channels. Unchecked channels will create drafts instead of auto-replying.
+                  </p>
+                  <div className="space-y-2">
+                    {['WHATSAPP', 'INSTAGRAM', 'FACEBOOK', 'SMS', 'EMAIL', 'WEB_CHAT'].map(
+                      (ch) => (
+                        <div key={ch} className="flex items-center justify-between py-1.5">
+                          <span className="text-sm text-slate-700">
+                            {ch.replace(/_/g, ' ')}
+                          </span>
+                          <button
+                            onClick={() => toggleChannelOverride(ch)}
+                            className={cn(
+                              'relative w-9 h-5 rounded-full transition-colors',
+                              isChannelEnabled(ch) ? 'bg-sage-500' : 'bg-slate-200',
+                            )}
+                            role="switch"
+                            aria-checked={isChannelEnabled(ch)}
+                          >
+                            <span
+                              className={cn(
+                                'absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform',
+                                isChannelEnabled(ch) ? 'translate-x-4' : 'translate-x-0',
+                              )}
+                            />
+                          </button>
+                        </div>
+                      ),
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+
             <hr />
 
-            {/* Personality */}
+            {/* Personality / Response Style */}
             <div>
               <label className="block text-sm font-medium mb-1">{t('ai.personality_label')}</label>
               <p className="text-xs text-slate-500 mb-2">{t('ai.personality_desc')}</p>
@@ -346,7 +421,7 @@ export default function AiSettingsPage() {
                 value={settings.personality}
                 onChange={(e) => setSettings({ ...settings, personality: e.target.value })}
                 rows={3}
-                placeholder="e.g. friendly and professional"
+                placeholder="e.g. friendly and professional, always recommend scheduling a cleaning if they haven't had one in 6 months"
                 className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-lavender-500"
               />
             </div>
@@ -363,6 +438,71 @@ export default function AiSettingsPage() {
           {saved && <span className="text-sage-600 text-sm">{t('common.saved')}</span>}
         </div>
       </div>
+
+      {/* AI Processing Dashboard */}
+      {aiStats && (
+        <div className="mt-8" data-testid="ai-stats-section">
+          <div className="flex items-center gap-2 mb-4">
+            <Sparkles size={20} className="text-lavender-600" />
+            <h2 className="text-lg font-serif font-semibold text-slate-900">AI Processing</h2>
+          </div>
+          <div className="bg-white rounded-2xl shadow-soft p-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              <div className="text-center">
+                <p className="text-2xl font-serif font-bold text-slate-900">
+                  {aiStats.today.processed}
+                  <span className="text-sm font-normal text-slate-400">/{aiStats.dailyLimit}</span>
+                </p>
+                <p className="text-xs text-slate-500 mt-1">Processed Today</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-serif font-bold text-sage-600">
+                  {aiStats.today.autoReplied}
+                </p>
+                <p className="text-xs text-slate-500 mt-1">Auto-Replies Sent</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-serif font-bold text-lavender-600">
+                  {aiStats.today.draftsCreated}
+                </p>
+                <p className="text-xs text-slate-500 mt-1">Drafts Created</p>
+              </div>
+              <div className="text-center">
+                <p className={cn(
+                  'text-2xl font-serif font-bold',
+                  aiStats.today.failed > 0 ? 'text-red-600' : 'text-slate-400',
+                )}>
+                  {aiStats.today.failed}
+                </p>
+                <p className="text-xs text-slate-500 mt-1">Failed</p>
+              </div>
+            </div>
+
+            {/* 7-day mini chart */}
+            <div>
+              <p className="text-xs font-medium text-slate-500 mb-2">Last 7 Days</p>
+              <div className="flex items-end gap-1 h-16">
+                {aiStats.last7Days.map((day) => {
+                  const max = Math.max(...aiStats.last7Days.map((d) => d.processed), 1);
+                  const height = Math.max(4, (day.processed / max) * 100);
+                  return (
+                    <div key={day.date} className="flex-1 flex flex-col items-center gap-0.5">
+                      <div
+                        className="w-full bg-lavender-200 rounded-t"
+                        style={{ height: `${height}%` }}
+                        title={`${day.date}: ${day.processed} processed, ${day.draftsCreated} drafts`}
+                      />
+                      <span className="text-[8px] text-slate-400">
+                        {new Date(day.date).toLocaleDateString(undefined, { weekday: 'narrow' })}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Marketing AI Settings */}
       <div className="mt-8" data-testid="marketing-ai-section">

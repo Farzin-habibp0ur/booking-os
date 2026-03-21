@@ -115,6 +115,20 @@ export class WaitlistAgentService implements BackgroundAgent, OnModuleInit {
 
         if (matchedSlots.length === 0) continue;
 
+        // Pre-generate slot offer message
+        const topSlot = matchedSlots[0];
+        const slotDisplay = topSlot?.display || 'an available time';
+        const staffDisplay = topSlot?.staffName ? ` with ${topSlot.staffName}` : '';
+        const suggestedMessages: Record<string, any> = {
+          SMS: `Great news ${entry.customer.name}! A ${entry.service.name} slot opened up on ${slotDisplay}. Want to book it? Reply YES.`,
+          WHATSAPP: `Great news, ${entry.customer.name}! A ${entry.service.name} slot opened up on ${slotDisplay}${staffDisplay}. Would you like to book it?`,
+          EMAIL: {
+            subject: `A slot opened up for ${entry.service.name}!`,
+            body: `Hi ${entry.customer.name},\n\nGreat news! A ${entry.service.name} slot has become available on ${slotDisplay}${staffDisplay}.\n\nWould you like to book it? Just reply to this email or give us a call.\n\nBest regards`,
+          },
+          DEFAULT: `Great news, ${entry.customer.name}! A ${entry.service.name} slot opened up on ${slotDisplay}${staffDisplay}. Would you like to book it?`,
+        };
+
         // Create action card with top matches
         await this.actionCardService.create({
           businessId,
@@ -145,6 +159,8 @@ export class WaitlistAgentService implements BackgroundAgent, OnModuleInit {
             serviceId: entry.serviceId,
             slotsFound: matchedSlots.length,
             source: 'waitlist-agent',
+            suggestedMessages,
+            recommendedChannel: 'WHATSAPP',
           },
         });
 
