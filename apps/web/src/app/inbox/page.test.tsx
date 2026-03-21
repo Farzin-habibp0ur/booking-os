@@ -86,7 +86,9 @@ jest.mock('@/components/feature-discovery', () => ({
   FeatureDiscovery: () => null,
 }));
 jest.mock('@/components/inbox/channel-badge', () => ({
-  ChannelBadge: ({ channel }: any) => <span data-testid={`channel-badge-${channel?.toLowerCase()}`} />,
+  ChannelBadge: ({ channel }: any) => (
+    <span data-testid={`channel-badge-${channel?.toLowerCase()}`} />
+  ),
 }));
 jest.mock('@/components/inbox/reply-channel-switcher', () => ({
   getDefaultReplyChannel: (conv: string, avail: string[]) => avail[0] || conv,

@@ -1,7 +1,17 @@
 'use client';
 
 import { useState, useRef, useCallback } from 'react';
-import { Paperclip, X, Image, FileText, Mic, Upload, Loader2, AlertTriangle, Mail } from 'lucide-react';
+import {
+  Paperclip,
+  X,
+  Image,
+  FileText,
+  Mic,
+  Upload,
+  Loader2,
+  AlertTriangle,
+  Mail,
+} from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { api } from '@/lib/api';
 import { useToast } from '@/lib/toast';
@@ -102,7 +112,12 @@ function getFileIcon(type: string) {
   return FileText;
 }
 
-export function MediaComposer({ conversationId, onUploadComplete, channel, onSwitchToEmail }: MediaComposerProps) {
+export function MediaComposer({
+  conversationId,
+  onUploadComplete,
+  channel,
+  onSwitchToEmail,
+}: MediaComposerProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -113,28 +128,34 @@ export function MediaComposer({ conversationId, onUploadComplete, channel, onSwi
 
   const channelStyle = CHANNEL_STYLES[channel || 'EMAIL'];
 
-  const validateFile = useCallback((file: File): string | null => {
-    if (!isFileTypeValid(file, channel)) {
-      return `${file.name} is not supported on ${channelStyle?.label || channel}`;
-    }
-    if (!isFileSizeValid(file, channel)) {
-      return `${file.name} exceeds ${getSizeLimitMB(channel)}MB limit for ${channelStyle?.label || channel}`;
-    }
-    return null;
-  }, [channel, channelStyle]);
+  const validateFile = useCallback(
+    (file: File): string | null => {
+      if (!isFileTypeValid(file, channel)) {
+        return `${file.name} is not supported on ${channelStyle?.label || channel}`;
+      }
+      if (!isFileSizeValid(file, channel)) {
+        return `${file.name} exceeds ${getSizeLimitMB(channel)}MB limit for ${channelStyle?.label || channel}`;
+      }
+      return null;
+    },
+    [channel, channelStyle],
+  );
 
-  const handleFileSelect = useCallback((file: File) => {
-    const error = validateFile(file);
-    setValidationError(error);
-    setSelectedFile(file);
-    if (file.type.startsWith('image/') && !error) {
-      const reader = new FileReader();
-      reader.onload = (e) => setPreview(e.target?.result as string);
-      reader.readAsDataURL(file);
-    } else {
-      setPreview(null);
-    }
-  }, [validateFile]);
+  const handleFileSelect = useCallback(
+    (file: File) => {
+      const error = validateFile(file);
+      setValidationError(error);
+      setSelectedFile(file);
+      if (file.type.startsWith('image/') && !error) {
+        const reader = new FileReader();
+        reader.onload = (e) => setPreview(e.target?.result as string);
+        reader.readAsDataURL(file);
+      } else {
+        setPreview(null);
+      }
+    },
+    [validateFile],
+  );
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -209,7 +230,9 @@ export function MediaComposer({ conversationId, onUploadComplete, channel, onSwi
           className={cn(
             'p-2 rounded transition-colors',
             dragOver
-              ? channelStyle ? `${channelStyle.text} ${channelStyle.bg}` : 'text-sage-600 bg-sage-50'
+              ? channelStyle
+                ? `${channelStyle.text} ${channelStyle.bg}`
+                : 'text-sage-600 bg-sage-50'
               : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100',
           )}
           title="Attach file"
@@ -248,7 +271,10 @@ export function MediaComposer({ conversationId, onUploadComplete, channel, onSwi
           </div>
           {/* Validation error with "Switch to Email" action */}
           {validationError && (
-            <div className="flex items-center gap-1.5 text-[10px] text-red-600 bg-red-50 rounded px-2 py-1" role="alert">
+            <div
+              className="flex items-center gap-1.5 text-[10px] text-red-600 bg-red-50 rounded px-2 py-1"
+              role="alert"
+            >
               <AlertTriangle size={10} className="flex-shrink-0" />
               <span className="flex-1">{validationError}</span>
               {channel !== 'EMAIL' && onSwitchToEmail && (

@@ -205,7 +205,16 @@ export class InboxGateway implements OnGatewayConnection, OnGatewayDisconnect, O
     this.emitToBusinessRoom(businessId, 'ai:suggestions', data);
   }
 
-  notifyMessageStatus(businessId: string, data: { conversationId: string; messageId: string; deliveryStatus: string; deliveredAt?: string; readAt?: string }) {
+  notifyMessageStatus(
+    businessId: string,
+    data: {
+      conversationId: string;
+      messageId: string;
+      deliveryStatus: string;
+      deliveredAt?: string;
+      readAt?: string;
+    },
+  ) {
     this.emitToBusinessRoom(businessId, 'message:status', data);
   }
 

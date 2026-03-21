@@ -3,7 +3,15 @@
 import { useMemo } from 'react';
 import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/cn';
-import { Clock, AlertTriangle, Mail, MessageCircle, CheckCircle, MessageSquare, FileText } from 'lucide-react';
+import {
+  Clock,
+  AlertTriangle,
+  Mail,
+  MessageCircle,
+  CheckCircle,
+  MessageSquare,
+  FileText,
+} from 'lucide-react';
 
 interface ConversationContextBarProps {
   channel: string;
