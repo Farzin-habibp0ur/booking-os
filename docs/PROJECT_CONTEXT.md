@@ -2,7 +2,7 @@
 
 > **Purpose:** This document gives full context on the Booking OS platform — what it is, what's been built, how it's structured, and what's left to build. Share this with an AI assistant or new developer to get productive immediately.
 >
-> **Last updated:** March 19, 2026 (All phases COMPLETE — A through E + Phases 1-4 & 6 polish + QA Fixes + Sprints 1-4 + Prompts 4A-4C + Prompt 1C + Prompt 1A + Prompt 1B + Prompt 1D + Prompt 2A + Prompt 2B + Prompt 2C + Prompt 3A + Prompt 3C + QA Bug Fix Sprint (10 bugs) + Growth Engine Agents (15 prompts) + Marketing Command Center Phases 1-6 (14 prompts) COMPLETE + Admin Console Extraction (4 phases — scaffold, migrate, remove from web, infrastructure) + Internal/External Separation (3 phases — marketing tools removed from customer app, migrated to admin app, API endpoints gated behind SUPER_ADMIN) + Launch QA fixes (SUPER_ADMIN guards, AutonomyConfig scope constraint, test timeouts) + Omnichannel Phases 0-5 COMPLETE + Omnichannel Gap Fix (16 issues) — 6 channels fully implemented (WhatsApp, Instagram, Facebook, SMS, Email, Web Chat) — 92 Prisma models, 64 migrations, 4100+ tests)
+> **Last updated:** March 21, 2026 (All phases COMPLETE — A through E + Phases 1-4 & 6 polish + QA Fixes + Sprints 1-4 + Prompts 4A-4C + Prompt 1C + Prompt 1A + Prompt 1B + Prompt 1D + Prompt 2A + Prompt 2B + Prompt 2C + Prompt 3A + Prompt 3C + QA Bug Fix Sprint (10 bugs) + Growth Engine Agents (15 prompts) + Marketing Command Center Phases 1-6 (14 prompts) COMPLETE + Admin Console Extraction (4 phases — scaffold, migrate, remove from web, infrastructure) + Internal/External Separation (3 phases — marketing tools removed from customer app, migrated to admin app, API endpoints gated behind SUPER_ADMIN) + Launch QA fixes (SUPER_ADMIN guards, AutonomyConfig scope constraint, test timeouts) + Omnichannel Phases 0-5 COMPLETE + Omnichannel Gap Fix (16 issues) + Inbox UX v3 (13 prompts) + **AI Agent Integration Fix (10 prompts)** — 6 channels fully implemented (WhatsApp, Instagram, Facebook, SMS, Email, Web Chat) — 92 Prisma models, 65 migrations, 4104 tests)
 
 ---
 
@@ -832,6 +832,21 @@ Key groups (full list in `.env.example`):
 - **Milestone 4: Background Agents** — COMPLETE. 5 background agents (WaitlistAgent, RetentionAgent, DataHygieneAgent, SchedulingOptimizerAgent, QuoteFollowupAgent), AgentFeedback API module, /settings/agents page, retention-card + duplicate-merge-card + agent-feedback-buttons + agent-performance frontend components.
 - **Milestone 5: Vertical Pack Agents** — COMPLETE. AgentSkills API module (per-pack skill catalog with business overrides), pack-specific agent behaviors, skill-card + vertical-launch-checklist + waitlist-match-card + quote-followup-card + ai-state-indicator frontend components.
 - **Final counts:** 3,158 tests total (1,937 API + 1,221 web)
+
+### AI Agent Integration Fix (10 Prompts) — COMPLETE
+
+Fixed 7 critical integration gaps between the AI pipeline, messaging infrastructure, and background agents:
+- **Prompt 1:** Draft Pipeline — AI creates OutboundDraft records (source/intent/confidence/metadata) + Socket.IO `draft:created`
+- **Prompt 2:** Channel-Aware AI — 24h window validation (IG/FB/WA), SMS opt-out/length check, channel-specific LLM context, per-channel auto-reply toggles (`channelOverrides`)
+- **Prompt 3:** BullMQ Reliable Processing — Replaced fire-and-forget with 3-retry exponential backoff, DLQ + ActionCard on failure, `ai:processing`/`ai:draft-ready`/`ai:processing-failed` Socket.IO events
+- **Prompt 4:** Action Card CTA Execution — `ActionCardExecutorService` bridges send_followup/offer_slot/retry_ai/reply_manually to messaging pipeline
+- **Prompt 5:** Pre-Generated Messages — Retention, Quote, Waitlist agents generate channel-specific `suggestedMessages` in card metadata
+- **Prompt 6:** Inbox AI Draft UX — Processing indicator, draft bubbles with approve/edit/reject/regenerate, `POST /outbound/:id/send`, `POST /ai/conversations/:id/regenerate-draft`
+- **Prompt 7:** Card Dashboard → Inbox Flow — Message preview in ActionCardPreview, channel tabs, bulk follow-up (`POST /action-cards/bulk-followup`)
+- **Prompt 8:** AI Settings + Stats — Per-channel toggles, `GET /ai/stats` endpoint, processing dashboard with 7-day chart
+- **Prompt 9:** AI × Inbox UX — Draft-to-composer integration, channel-switch regenerate prompt, AI draft in quick replies, confidence indicators
+- **Prompt 10:** QA (55-item checklist PASS) — 229 test suites, 4104 tests passing
+- **Files changed:** 26 files, ~1940 insertions. New files: `action-card-executor.service.ts`, migration `20260321000000_add_ai_fields_to_outbound_draft`
 
 ### Phase 5: Engagement OS + Benchmarking + Marketplace (NOT STARTED)
 

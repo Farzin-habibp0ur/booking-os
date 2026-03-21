@@ -197,7 +197,7 @@ modules/
 - `PrismaService` is a global NestJS provider — inject it in constructors
 - All queries **must filter by `businessId`** for tenant isolation
 - JSON fields (customFields, metadata, aiSettings, packConfig, etc.) — use `Prisma.JsonValue` type
-- Key JSON fields to be aware of: `Business.packConfig` (vertical config), `Business.aiSettings` (AI behavior), `Business.policySettings` (cancellation/reschedule), `Business.channelSettings` (omnichannel config), `Conversation.metadata` (AI state for multi-turn flows), `ActionCard.preview` (diff data), `ActionCard.ctaConfig` (button config), `AutomationRule.filters`/`.actions` (rule definitions), `Location.facebookConfig`/`.smsConfig`/`.emailConfig`/`.webChatConfig` (per-location channel configs)
+- Key JSON fields to be aware of: `Business.packConfig` (vertical config), `Business.aiSettings` (AI behavior, includes `autoReply.channelOverrides` for per-channel auto-reply control), `Business.policySettings` (cancellation/reschedule), `Business.channelSettings` (omnichannel config), `Conversation.metadata` (AI state for multi-turn flows), `ActionCard.preview` (diff data), `ActionCard.ctaConfig` (button config), `ActionCard.metadata` (agent context, `suggestedMessages` for pre-generated follow-ups, `recommendedChannel`), `OutboundDraft.metadata` (AI generation context, intent, entities), `AutomationRule.filters`/`.actions` (rule definitions), `Location.facebookConfig`/`.smsConfig`/`.emailConfig`/`.webChatConfig` (per-location channel configs)
 
 ### Key Enums
 
@@ -224,7 +224,7 @@ Channel:            WHATSAPP, INSTAGRAM, FACEBOOK, SMS, EMAIL, WEB_CHAT
 
 ### BullMQ Queues (8)
 
-- `AI_PROCESSING` — AI task processing
+- `AI_PROCESSING` — AI task processing (3 retries, exponential backoff 1s/4s/16s, creates ActionCard on final failure)
 - `MESSAGING` — WhatsApp/SMS message dispatch
 - `REMINDERS` — Booking reminders
 - `NOTIFICATIONS` — Notification delivery (including scheduled report emails)
@@ -239,7 +239,7 @@ Channel:            WHATSAPP, INSTAGRAM, FACEBOOK, SMS, EMAIL, WEB_CHAT
 
 ### Real-Time (Socket.io)
 
-Key events: `message:new`, `conversation:updated`, `ai:suggestion`, `ai:auto-replied`, `ai:transfer-to-human`, `booking:updated`, `ai:booking-state`, `action-card:created`, `action-card:updated`, `message:status`, `viewing:start`/`viewing:stop`, `presence:update`, `circuit:state-change`
+Key events: `message:new`, `conversation:updated`, `ai:suggestions`, `ai:auto-replied`, `ai:transfer-to-human`, `booking:updated`, `ai:booking-state`, `action-card:created`, `action-card:updated`, `message:status`, `viewing:start`/`viewing:stop`, `presence:update`, `circuit:state-change`, `draft:created`, `draft:review-requested`, `conversation:focus`, `ai:processing`, `ai:draft-ready`, `ai:processing-failed`
 
 - `InboxGateway.emitToAll()` for system-wide broadcasts (circuit breaker state changes)
 - WebChat gateway on `/web-chat` namespace — visitor sessions (Redis-backed with in-memory fallback, 24h TTL), pre-chat forms, real-time messaging bridge to staff inbox. Supports `session:identify` (link visitor to customer), `history:request` (paginated message history), `file:upload-request` (stub). Offline visitors with email get notification logging.
@@ -286,6 +286,8 @@ BookingOS supports 6 messaging channels: **WhatsApp**, **Instagram DM**, **Faceb
 - **Compact mode** — `isCompact` at screen height <800px (reduced padding, 35vh max), pills collapse to `<select>` dropdown at composer width <640px via ResizeObserver
 - **Conversation list sorting** — Web Chat LIVE sessions sorted to top, then urgency (expiring IG/FB windows), then server order
 - **ARIA accessibility** — `role="tablist"`/`role="tab"` on pills, `aria-live="assertive"` for channel switch announcements, `role="separator"` on channel transition dividers, `role="alert"` on failed sends, `role="alertdialog"` on discard modal with `aria-labelledby`/`aria-describedby`
+- **AI draft display** — OutboundDraft bubbles (bg-indigo-50, dashed border) with Approve & Send / Edit / Reject / Regenerate buttons. "AI is thinking..." indicator during processing. Source badges (AI Draft / Agent Draft). Confidence dot (green/amber/red). Regenerate-with-context input.
+- **AI × composer integration** — Edit loads draft into composer with correct channel + editing banner ("Editing AI draft — intent: X") + confidence indicator. Channel switch prompts "Regenerate for [channel]?" when editing AI draft. AI draft appears as first option in quick replies picker.
 
 ---
 
@@ -737,18 +739,39 @@ Confirm: `Domain=.businesscommandcentre.com`, `SameSite=Lax`, `Secure`, `Path=/`
 
 ## AI Architecture
 
-| Component             | Purpose                                                                                                      |
-| --------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `ClaudeClient`        | API wrapper with error handling, graceful degradation                                                        |
-| `IntentDetector`      | Classifies: GENERAL_INQUIRY, BOOK_APPOINTMENT, CANCEL_APPOINTMENT, RESCHEDULE_APPOINTMENT, TRANSFER_TO_HUMAN |
-| `ReplyGenerator`      | Contextual reply drafts using conversation history + business context                                        |
-| `BookingAssistant`    | Multi-step booking: service → date → time → confirm                                                          |
-| `CancelAssistant`     | Identifies and cancels bookings from conversation                                                            |
-| `RescheduleAssistant` | Identifies and reschedules bookings                                                                          |
-| `ProfileCollector`    | Conversationally collects missing required profile fields                                                    |
-| `AiService`           | Orchestrator: routes intents, manages state, handles auto-reply                                              |
+| Component                  | Purpose                                                                                                      |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `ClaudeClient`             | API wrapper with error handling, graceful degradation                                                        |
+| `IntentDetector`           | Classifies: GENERAL_INQUIRY, BOOK_APPOINTMENT, CANCEL_APPOINTMENT, RESCHEDULE_APPOINTMENT, TRANSFER_TO_HUMAN |
+| `ReplyGenerator`           | Channel-aware reply drafts using conversation history + business context + channel-specific LLM guidance     |
+| `BookingAssistant`         | Multi-step booking: service → date → time → confirm                                                          |
+| `CancelAssistant`          | Identifies and cancels bookings from conversation                                                            |
+| `RescheduleAssistant`      | Identifies and reschedules bookings                                                                          |
+| `ProfileCollector`         | Conversationally collects missing required profile fields                                                    |
+| `AiService`                | Orchestrator: routes intents, manages state, channel validation, auto-reply, OutboundDraft creation          |
+| `OutboundService`          | Creates/manages OutboundDraft records (DRAFT→APPROVED→SENT/REJECTED), emits `draft:created` Socket.IO       |
+| `ActionCardExecutorService`| Bridges Action Card CTAs to messaging: send_followup, offer_slot, retry_ai, reply_manually                  |
 
 AI state persisted in `conversation.metadata` JSON for stateful multi-turn flows.
+
+### AI Draft Pipeline
+
+When AI generates a response, it creates an `OutboundDraft` record (source: `AI` or `AGENT`) with channel, intent, confidence, and metadata. Drafts appear inline in the inbox conversation thread for staff to approve, edit, reject, or regenerate. The old `message.metadata.ai.draftText` is still populated for backward compatibility.
+
+**Channel-aware auto-reply flow:**
+1. Inbound message → BullMQ `AI_PROCESSING` queue (3 retries, exponential backoff)
+2. AI generates draft → validates channel constraints (24h windows for IG/FB/WA, SMS opt-out/length, per-channel overrides)
+3. If validation passes → auto-reply sent. If fails → OutboundDraft created for manual review
+4. Socket.IO events: `ai:processing` → `ai:draft-ready` or `ai:processing-failed`
+5. Staff actions: Approve & Send (`POST /outbound/:id/send`), Edit (loads into composer), Reject, Regenerate (`POST /ai/conversations/:id/regenerate-draft`)
+
+**Key endpoints:**
+- `GET /ai/stats` — Today's AI processing metrics + 7-day history
+- `GET /ai/settings` / `PATCH /ai/settings` — AI config including `autoReply.channelOverrides`
+- `POST /ai/conversations/:id/regenerate-draft` — Re-run AI for latest inbound message
+- `POST /outbound/:id/send` — Approve and send an OutboundDraft
+- `PATCH /action-cards/:id/execute` with `{ ctaAction }` — Execute specific CTA action
+- `POST /action-cards/bulk-followup` — Batch create follow-up drafts from retention/quote cards
 
 ### In-App Agents — Customer-Facing (5 operational + 12 marketing)
 
@@ -756,11 +779,13 @@ These run inside the NestJS API for each customer's business. Code in `apps/api/
 
 **5 Operational Agents:**
 
-- `WaitlistAgent` — Auto-match waitlist entries to cancelled slots
-- `RetentionAgent` — Detect at-risk customers, generate win-back action cards
+- `WaitlistAgent` — Auto-match waitlist entries to cancelled slots; pre-generates slot offer messages in card metadata
+- `RetentionAgent` — Detect at-risk customers, generate win-back action cards; pre-generates channel-specific follow-up messages (SMS/Email/WhatsApp/DEFAULT)
 - `DataHygieneAgent` — Duplicate detection, incomplete profile flagging
 - `SchedulingOptimizerAgent` — Gap detection, optimal slot suggestions
-- `QuoteFollowupAgent` — Expired quote reminders, follow-up action cards
+- `QuoteFollowupAgent` — Expired quote reminders, follow-up action cards; pre-generates channel-specific follow-up messages
+
+Agents with pre-generated messages store `suggestedMessages`, `customerChannels`, and `recommendedChannel` in `ActionCard.metadata`. The `ActionCardExecutorService` reads these to create channel-appropriate `OutboundDraft` records when staff clicks "Send Follow-up".
 
 **12 Marketing Agents** (6 content, 2 distribution, 4 analytics) — **internal BookingOS growth engine only, NOT shown to customers:**
 
