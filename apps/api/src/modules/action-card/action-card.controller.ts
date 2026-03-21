@@ -67,7 +67,11 @@ export class ActionCardController {
         results.push({ cardId, ...result });
       }
     }
-    return { created: results.filter((r) => r.success).length, total: body.cardIds.length, results };
+    return {
+      created: results.filter((r) => r.success).length,
+      total: body.cardIds.length,
+      results,
+    };
   }
 
   @Post('bulk-update')

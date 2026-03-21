@@ -225,10 +225,7 @@ export class ActionCardExecutorService {
     }
   }
 
-  private async handleRetryAi(
-    businessId: string,
-    actionCard: any,
-  ): Promise<ExecutionResult> {
+  private async handleRetryAi(businessId: string, actionCard: any): Promise<ExecutionResult> {
     const metadata = (actionCard.metadata as any) || {};
     const messageId = metadata.messageId;
     const conversationId = actionCard.conversationId;
@@ -280,10 +277,7 @@ export class ActionCardExecutorService {
     }
   }
 
-  private async handleReplyManually(
-    businessId: string,
-    actionCard: any,
-  ): Promise<ExecutionResult> {
+  private async handleReplyManually(businessId: string, actionCard: any): Promise<ExecutionResult> {
     const conversationId = actionCard.conversationId;
     if (conversationId) {
       this.inboxGateway.emitToBusinessRoom(businessId, 'conversation:focus', {
@@ -293,10 +287,7 @@ export class ActionCardExecutorService {
     return { success: true, action: 'reply_manually', conversationId };
   }
 
-  private async determineBestChannel(
-    businessId: string,
-    customerId: string,
-  ): Promise<string> {
+  private async determineBestChannel(businessId: string, customerId: string): Promise<string> {
     // Find the most recent conversation channel for this customer
     const recentConversation = await this.prisma.conversation.findFirst({
       where: { businessId, customerId, status: { in: ['OPEN', 'WAITING'] } },
@@ -358,9 +349,7 @@ export class ActionCardExecutorService {
 
     if (type === 'STALLED_QUOTE') {
       const metadata = (actionCard.metadata as any) || {};
-      const amount = metadata.totalAmount
-        ? `$${(metadata.totalAmount / 100).toFixed(2)}`
-        : '';
+      const amount = metadata.totalAmount ? `$${(metadata.totalAmount / 100).toFixed(2)}` : '';
       return `Hi ${name}, just following up on your quote${amount ? ` for ${amount}` : ''}. Would you like to proceed? Let me know if you have any questions.`;
     }
 

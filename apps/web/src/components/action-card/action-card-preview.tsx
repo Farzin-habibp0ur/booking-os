@@ -33,11 +33,12 @@ export function ActionCardPreview({
   const recommendedChannel: string = metadata.recommendedChannel || '';
 
   // Filter channels: only show those the customer has, or all if no info
-  const availableChannels = customerChannels.length > 0
-    ? CHANNEL_LIST.filter((ch) => customerChannels.includes(ch))
-    : suggestedMessages
-      ? CHANNEL_LIST.filter((ch) => suggestedMessages[ch])
-      : [];
+  const availableChannels =
+    customerChannels.length > 0
+      ? CHANNEL_LIST.filter((ch) => customerChannels.includes(ch))
+      : suggestedMessages
+        ? CHANNEL_LIST.filter((ch) => suggestedMessages[ch])
+        : [];
 
   const [selectedChannel, setSelectedChannel] = useState(
     recommendedChannel || availableChannels[0] || 'WHATSAPP',

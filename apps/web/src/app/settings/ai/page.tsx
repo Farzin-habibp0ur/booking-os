@@ -378,34 +378,31 @@ export default function AiSettingsPage() {
                 <div>
                   <p className="text-sm font-medium mb-1">Per-Channel Auto-Reply</p>
                   <p className="text-xs text-slate-500 mb-3">
-                    Override auto-reply for specific channels. Unchecked channels will create drafts instead of auto-replying.
+                    Override auto-reply for specific channels. Unchecked channels will create drafts
+                    instead of auto-replying.
                   </p>
                   <div className="space-y-2">
-                    {['WHATSAPP', 'INSTAGRAM', 'FACEBOOK', 'SMS', 'EMAIL', 'WEB_CHAT'].map(
-                      (ch) => (
-                        <div key={ch} className="flex items-center justify-between py-1.5">
-                          <span className="text-sm text-slate-700">
-                            {ch.replace(/_/g, ' ')}
-                          </span>
-                          <button
-                            onClick={() => toggleChannelOverride(ch)}
+                    {['WHATSAPP', 'INSTAGRAM', 'FACEBOOK', 'SMS', 'EMAIL', 'WEB_CHAT'].map((ch) => (
+                      <div key={ch} className="flex items-center justify-between py-1.5">
+                        <span className="text-sm text-slate-700">{ch.replace(/_/g, ' ')}</span>
+                        <button
+                          onClick={() => toggleChannelOverride(ch)}
+                          className={cn(
+                            'relative w-9 h-5 rounded-full transition-colors',
+                            isChannelEnabled(ch) ? 'bg-sage-500' : 'bg-slate-200',
+                          )}
+                          role="switch"
+                          aria-checked={isChannelEnabled(ch)}
+                        >
+                          <span
                             className={cn(
-                              'relative w-9 h-5 rounded-full transition-colors',
-                              isChannelEnabled(ch) ? 'bg-sage-500' : 'bg-slate-200',
+                              'absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform',
+                              isChannelEnabled(ch) ? 'translate-x-4' : 'translate-x-0',
                             )}
-                            role="switch"
-                            aria-checked={isChannelEnabled(ch)}
-                          >
-                            <span
-                              className={cn(
-                                'absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform',
-                                isChannelEnabled(ch) ? 'translate-x-4' : 'translate-x-0',
-                              )}
-                            />
-                          </button>
-                        </div>
-                      ),
-                    )}
+                          />
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </>
@@ -468,10 +465,12 @@ export default function AiSettingsPage() {
                 <p className="text-xs text-slate-500 mt-1">Drafts Created</p>
               </div>
               <div className="text-center">
-                <p className={cn(
-                  'text-2xl font-serif font-bold',
-                  aiStats.today.failed > 0 ? 'text-red-600' : 'text-slate-400',
-                )}>
+                <p
+                  className={cn(
+                    'text-2xl font-serif font-bold',
+                    aiStats.today.failed > 0 ? 'text-red-600' : 'text-slate-400',
+                  )}
+                >
                   {aiStats.today.failed}
                 </p>
                 <p className="text-xs text-slate-500 mt-1">Failed</p>

@@ -266,7 +266,13 @@ export class RetentionAgentService implements BackgroundAgent, OnModuleInit {
           where: { id: customerId },
           select: { phone: true, email: true },
         });
-        if (customer?.phone && !customer.phone.startsWith('fb:') && !customer.phone.startsWith('ig:') && !customer.phone.startsWith('web:') && !customer.phone.startsWith('email:')) {
+        if (
+          customer?.phone &&
+          !customer.phone.startsWith('fb:') &&
+          !customer.phone.startsWith('ig:') &&
+          !customer.phone.startsWith('web:') &&
+          !customer.phone.startsWith('email:')
+        ) {
           channels.push('WHATSAPP', 'SMS');
         }
         if (customer?.email) channels.push('EMAIL');

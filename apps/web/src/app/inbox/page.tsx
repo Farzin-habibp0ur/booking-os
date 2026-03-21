@@ -393,32 +393,41 @@ function InboxPage() {
         loadMessages(selectedRef.current.id);
       }
     }, []),
-    'draft:review-requested': useCallback((data: any) => {
-      // Auto-navigate to conversation with draft loaded
-      if (data.conversationId) {
-        const conv = conversations.find((c: any) => c.id === data.conversationId);
-        if (conv) {
-          setSelected(conv);
-          loadMessages(conv.id);
-        } else {
-          // Conversation not in current list — reload and select
-          loadConversations().then(() => {
-            loadMessages(data.conversationId);
-          });
+    'draft:review-requested': useCallback(
+      (data: any) => {
+        // Auto-navigate to conversation with draft loaded
+        if (data.conversationId) {
+          const conv = conversations.find((c: any) => c.id === data.conversationId);
+          if (conv) {
+            setSelected(conv);
+            loadMessages(conv.id);
+          } else {
+            // Conversation not in current list — reload and select
+            loadConversations().then(() => {
+              loadMessages(data.conversationId);
+            });
+          }
+          const name = data.customerName || 'customer';
+          toast(
+            t('ai.draft_review_requested') || `Draft ready for ${name}. Review and send.`,
+            'info',
+          );
         }
-        const name = data.customerName || 'customer';
-        toast(t('ai.draft_review_requested') || `Draft ready for ${name}. Review and send.`, 'info');
-      }
-    }, [conversations]),
-    'conversation:focus': useCallback((data: any) => {
-      if (data.conversationId) {
-        const conv = conversations.find((c: any) => c.id === data.conversationId);
-        if (conv) {
-          setSelected(conv);
-          loadMessages(conv.id);
+      },
+      [conversations],
+    ),
+    'conversation:focus': useCallback(
+      (data: any) => {
+        if (data.conversationId) {
+          const conv = conversations.find((c: any) => c.id === data.conversationId);
+          if (conv) {
+            setSelected(conv);
+            loadMessages(conv.id);
+          }
         }
-      }
-    }, [conversations]),
+      },
+      [conversations],
+    ),
     'presence:update': useCallback((data: any) => {
       if (selectedRef.current && data.conversationId === selectedRef.current.id) {
         setViewers(data.viewers || []);
@@ -989,8 +998,11 @@ function InboxPage() {
 
     // If editing an AI draft and switching channel, offer to regenerate
     if (editingDraft && editingDraft.channel && editingDraft.channel !== newChannel) {
-      const fromLabel = CHANNEL_STYLES[editingDraft.channel as keyof typeof CHANNEL_STYLES]?.label || editingDraft.channel;
-      const toLabel = CHANNEL_STYLES[newChannel as keyof typeof CHANNEL_STYLES]?.label || newChannel;
+      const fromLabel =
+        CHANNEL_STYLES[editingDraft.channel as keyof typeof CHANNEL_STYLES]?.label ||
+        editingDraft.channel;
+      const toLabel =
+        CHANNEL_STYLES[newChannel as keyof typeof CHANNEL_STYLES]?.label || newChannel;
       if (confirm(`AI generated this for ${fromLabel}. Regenerate for ${toLabel}?`)) {
         setReplyChannel(newChannel);
         setEditingDraft(null);
@@ -1809,92 +1821,109 @@ function InboxPage() {
               )}
 
               {/* OutboundDraft Bubbles (from AI or Agent) */}
-              {pendingDrafts.length > 0 && pendingDrafts.map((draft: any) => {
-                const conf = draft.confidence != null ? draft.confidence * 100 : null;
-                const confColor = conf != null
-                  ? conf > 85 ? 'bg-green-500' : conf > 60 ? 'bg-amber-500' : 'bg-red-500'
-                  : '';
-                const confLabel = conf != null
-                  ? conf > 85 ? 'AI is confident' : conf > 60 ? 'Review recommended' : 'Significant editing recommended'
-                  : '';
-                return (
-                  <div
-                    key={draft.id}
-                    className="mx-3 my-2 px-3 py-3 bg-indigo-50 border border-dashed border-indigo-200 rounded-xl"
-                  >
-                    <div className="flex items-center gap-2 mb-2">
-                      <Sparkles size={14} className="text-indigo-600 flex-shrink-0" />
-                      <span className="text-xs font-medium text-indigo-700">
-                        {draft.source === 'AGENT' ? 'Agent Draft' : 'AI Draft'}
-                      </span>
-                      {draft.channel && (
-                        <span className="text-[10px] bg-indigo-100 text-indigo-600 px-1.5 py-0.5 rounded-full">
-                          {draft.channel}
+              {pendingDrafts.length > 0 &&
+                pendingDrafts.map((draft: any) => {
+                  const conf = draft.confidence != null ? draft.confidence * 100 : null;
+                  const confColor =
+                    conf != null
+                      ? conf > 85
+                        ? 'bg-green-500'
+                        : conf > 60
+                          ? 'bg-amber-500'
+                          : 'bg-red-500'
+                      : '';
+                  const confLabel =
+                    conf != null
+                      ? conf > 85
+                        ? 'AI is confident'
+                        : conf > 60
+                          ? 'Review recommended'
+                          : 'Significant editing recommended'
+                      : '';
+                  return (
+                    <div
+                      key={draft.id}
+                      className="mx-3 my-2 px-3 py-3 bg-indigo-50 border border-dashed border-indigo-200 rounded-xl"
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        <Sparkles size={14} className="text-indigo-600 flex-shrink-0" />
+                        <span className="text-xs font-medium text-indigo-700">
+                          {draft.source === 'AGENT' ? 'Agent Draft' : 'AI Draft'}
                         </span>
-                      )}
-                      {draft.intent && (
-                        <span className="text-[10px] text-indigo-500">
-                          Intent: {draft.intent.replace(/_/g, ' ')}
-                        </span>
-                      )}
-                      {conf != null && (
-                        <span className="flex items-center gap-1 text-[10px] text-indigo-400" title={confLabel}>
-                          <span className={cn('w-1.5 h-1.5 rounded-full', confColor)} />
-                          {Math.round(conf)}%
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-sm text-slate-800 mb-3 whitespace-pre-wrap">{draft.content}</p>
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        onClick={() => handleApproveDraft(draft.id)}
-                        className="flex items-center gap-1 bg-sage-600 text-white px-2.5 py-1 rounded-lg text-xs hover:bg-sage-700 transition-colors"
-                      >
-                        <Check size={12} /> Approve & Send
-                      </button>
-                      <button
-                        onClick={() => handleEditDraft(draft)}
-                        className="flex items-center gap-1 text-slate-600 px-2.5 py-1 rounded-lg text-xs border border-slate-200 hover:bg-slate-50 transition-colors"
-                      >
-                        <Edit2 size={12} /> Edit
-                      </button>
-                      <button
-                        onClick={() => handleRejectDraft(draft.id)}
-                        className="flex items-center gap-1 text-slate-400 px-2.5 py-1 rounded-lg text-xs hover:text-red-500 transition-colors"
-                      >
-                        <X size={12} /> Reject
-                      </button>
-                      <button
-                        onClick={() => setShowRegenerateInput((v) => !v)}
-                        className="flex items-center gap-1 text-indigo-500 px-2.5 py-1 rounded-lg text-xs hover:text-indigo-700 transition-colors"
-                      >
-                        <RefreshCw size={12} /> Regenerate
-                      </button>
-                    </div>
-                    {/* Regenerate with context input */}
-                    {showRegenerateInput && (
-                      <div className="flex gap-2 mt-2">
-                        <input
-                          type="text"
-                          value={regenerateContext}
-                          onChange={(e) => setRegenerateContext(e.target.value)}
-                          placeholder="Additional context (optional)"
-                          className="flex-1 text-xs border border-indigo-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-indigo-400"
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') handleRegenerateDraft(regenerateContext || undefined);
-                          }}
-                        />
+                        {draft.channel && (
+                          <span className="text-[10px] bg-indigo-100 text-indigo-600 px-1.5 py-0.5 rounded-full">
+                            {draft.channel}
+                          </span>
+                        )}
+                        {draft.intent && (
+                          <span className="text-[10px] text-indigo-500">
+                            Intent: {draft.intent.replace(/_/g, ' ')}
+                          </span>
+                        )}
+                        {conf != null && (
+                          <span
+                            className="flex items-center gap-1 text-[10px] text-indigo-400"
+                            title={confLabel}
+                          >
+                            <span className={cn('w-1.5 h-1.5 rounded-full', confColor)} />
+                            {Math.round(conf)}%
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-slate-800 mb-3 whitespace-pre-wrap">
+                        {draft.content}
+                      </p>
+                      <div className="flex flex-wrap gap-2">
                         <button
-                          onClick={() => handleRegenerateDraft(regenerateContext || undefined)}
-                          className="text-xs bg-indigo-600 text-white px-2.5 py-1 rounded-lg hover:bg-indigo-700 transition-colors"
+                          onClick={() => handleApproveDraft(draft.id)}
+                          className="flex items-center gap-1 bg-sage-600 text-white px-2.5 py-1 rounded-lg text-xs hover:bg-sage-700 transition-colors"
                         >
-                          Go
+                          <Check size={12} /> Approve & Send
+                        </button>
+                        <button
+                          onClick={() => handleEditDraft(draft)}
+                          className="flex items-center gap-1 text-slate-600 px-2.5 py-1 rounded-lg text-xs border border-slate-200 hover:bg-slate-50 transition-colors"
+                        >
+                          <Edit2 size={12} /> Edit
+                        </button>
+                        <button
+                          onClick={() => handleRejectDraft(draft.id)}
+                          className="flex items-center gap-1 text-slate-400 px-2.5 py-1 rounded-lg text-xs hover:text-red-500 transition-colors"
+                        >
+                          <X size={12} /> Reject
+                        </button>
+                        <button
+                          onClick={() => setShowRegenerateInput((v) => !v)}
+                          className="flex items-center gap-1 text-indigo-500 px-2.5 py-1 rounded-lg text-xs hover:text-indigo-700 transition-colors"
+                        >
+                          <RefreshCw size={12} /> Regenerate
                         </button>
                       </div>
-                    )}
-                  </div>
-                );
-              })}
+                      {/* Regenerate with context input */}
+                      {showRegenerateInput && (
+                        <div className="flex gap-2 mt-2">
+                          <input
+                            type="text"
+                            value={regenerateContext}
+                            onChange={(e) => setRegenerateContext(e.target.value)}
+                            placeholder="Additional context (optional)"
+                            className="flex-1 text-xs border border-indigo-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter')
+                                handleRegenerateDraft(regenerateContext || undefined);
+                            }}
+                          />
+                          <button
+                            onClick={() => handleRegenerateDraft(regenerateContext || undefined)}
+                            className="text-xs bg-indigo-600 text-white px-2.5 py-1 rounded-lg hover:bg-indigo-700 transition-colors"
+                          >
+                            Go
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
 
               {/* AI Suggestions Ghost Bubble (legacy metadata-based) — above composer */}
               {aiDraftText && pendingDrafts.length === 0 && (
@@ -2032,22 +2061,38 @@ function InboxPage() {
                     <span className="text-[11px] text-lavender-700 flex-1">
                       Editing AI draft
                       {editingDraft.intent && (
-                        <> &mdash; intent: <strong>{editingDraft.intent.replace(/_/g, ' ')}</strong></>
+                        <>
+                          {' '}
+                          &mdash; intent: <strong>{editingDraft.intent.replace(/_/g, ' ')}</strong>
+                        </>
                       )}
                     </span>
-                    {editingDraft.confidence != null && (() => {
-                      const c = editingDraft.confidence * 100;
-                      const color = c > 85 ? 'bg-green-500' : c > 60 ? 'bg-amber-500' : 'bg-red-500';
-                      const label = c > 85 ? 'AI is confident' : c > 60 ? 'Review before sending' : 'Significant editing recommended';
-                      return (
-                        <span className="flex items-center gap-1 text-[10px] text-slate-500" title={label}>
-                          <span className={cn('w-1.5 h-1.5 rounded-full', color)} />
-                          {label}
-                        </span>
-                      );
-                    })()}
+                    {editingDraft.confidence != null &&
+                      (() => {
+                        const c = editingDraft.confidence * 100;
+                        const color =
+                          c > 85 ? 'bg-green-500' : c > 60 ? 'bg-amber-500' : 'bg-red-500';
+                        const label =
+                          c > 85
+                            ? 'AI is confident'
+                            : c > 60
+                              ? 'Review before sending'
+                              : 'Significant editing recommended';
+                        return (
+                          <span
+                            className="flex items-center gap-1 text-[10px] text-slate-500"
+                            title={label}
+                          >
+                            <span className={cn('w-1.5 h-1.5 rounded-full', color)} />
+                            {label}
+                          </span>
+                        );
+                      })()}
                     <button
-                      onClick={() => { setEditingDraft(null); setNewMessage(''); }}
+                      onClick={() => {
+                        setEditingDraft(null);
+                        setNewMessage('');
+                      }}
                       className="text-lavender-400 hover:text-lavender-600"
                     >
                       <X size={12} />

@@ -78,7 +78,9 @@ Return ONLY valid JSON, no markdown or explanation.`;
 
       // SMS post-generation check: re-prompt if over 160 chars
       if (channel?.toUpperCase() === 'SMS' && draftText.length > 160) {
-        this.logger.debug(`SMS draft is ${draftText.length} chars, re-prompting for shorter version`);
+        this.logger.debug(
+          `SMS draft is ${draftText.length} chars, re-prompting for shorter version`,
+        );
         try {
           const shortenResponse = await this.claude.complete(
             'haiku',

@@ -144,11 +144,21 @@ export class AiService {
       const withinWindow = await this.isWithinMessagingWindow(conversationId);
       if (!withinWindow) {
         this.logger.log(`Channel validation: INSTAGRAM window expired for ${conversationId}`);
-        return { allowed: false, reason: 'Instagram 24h messaging window expired', fallbackToDraft: true };
+        return {
+          allowed: false,
+          reason: 'Instagram 24h messaging window expired',
+          fallbackToDraft: true,
+        };
       }
       if (draftText.length > 1000) {
-        this.logger.log(`Channel validation: INSTAGRAM message too long (${draftText.length} chars)`);
-        return { allowed: false, reason: 'Instagram message exceeds 1000 characters', fallbackToDraft: true };
+        this.logger.log(
+          `Channel validation: INSTAGRAM message too long (${draftText.length} chars)`,
+        );
+        return {
+          allowed: false,
+          reason: 'Instagram message exceeds 1000 characters',
+          fallbackToDraft: true,
+        };
       }
     }
 
@@ -156,7 +166,11 @@ export class AiService {
       const withinWindow = await this.isWithinMessagingWindow(conversationId);
       if (!withinWindow) {
         this.logger.log(`Channel validation: FACEBOOK window expired for ${conversationId}`);
-        return { allowed: false, reason: 'Facebook 24h messaging window expired', fallbackToDraft: true };
+        return {
+          allowed: false,
+          reason: 'Facebook 24h messaging window expired',
+          fallbackToDraft: true,
+        };
       }
     }
 
@@ -164,7 +178,11 @@ export class AiService {
       const withinWindow = await this.isWithinMessagingWindow(conversationId);
       if (!withinWindow) {
         this.logger.log(`Channel validation: WHATSAPP window expired for ${conversationId}`);
-        return { allowed: false, reason: 'WhatsApp 24h window expired — template required', fallbackToDraft: true };
+        return {
+          allowed: false,
+          reason: 'WhatsApp 24h window expired — template required',
+          fallbackToDraft: true,
+        };
       }
     }
 
@@ -175,8 +193,14 @@ export class AiService {
         return { allowed: false, reason: 'Customer opted out of SMS', fallbackToDraft: false };
       }
       if (draftText.length > 320) {
-        this.logger.log(`Channel validation: SMS too long (${draftText.length} chars), switching to draft`);
-        return { allowed: false, reason: 'SMS exceeds 2-segment limit (320 chars)', fallbackToDraft: true };
+        this.logger.log(
+          `Channel validation: SMS too long (${draftText.length} chars), switching to draft`,
+        );
+        return {
+          allowed: false,
+          reason: 'SMS exceeds 2-segment limit (320 chars)',
+          fallbackToDraft: true,
+        };
       }
     }
 
@@ -191,8 +215,7 @@ export class AiService {
       select: { createdAt: true },
     });
     if (!lastInbound) return false;
-    const hoursSinceLastInbound =
-      (Date.now() - lastInbound.createdAt.getTime()) / (1000 * 60 * 60);
+    const hoursSinceLastInbound = (Date.now() - lastInbound.createdAt.getTime()) / (1000 * 60 * 60);
     return hoursSinceLastInbound < 24;
   }
 
@@ -898,9 +921,7 @@ export class AiService {
             this.logger.warn(`Failed to create fallback OutboundDraft: ${err.message}`);
           }
         } else {
-          this.logger.log(
-            `Auto-reply skipped for ${conversationChannel}: ${validation.reason}`,
-          );
+          this.logger.log(`Auto-reply skipped for ${conversationChannel}: ${validation.reason}`);
         }
       }
 
@@ -1790,14 +1811,16 @@ export class AiService {
           createdAt: { gte: todayStart, lt: todayEnd },
         },
       }),
-      this.prisma.message.count({
-        where: {
-          conversation: { businessId },
-          direction: 'OUTBOUND',
-          createdAt: { gte: todayStart, lt: todayEnd },
-          metadata: { path: ['ai', 'autoReplied'], equals: true },
-        },
-      }).catch(() => 0),
+      this.prisma.message
+        .count({
+          where: {
+            conversation: { businessId },
+            direction: 'OUTBOUND',
+            createdAt: { gte: todayStart, lt: todayEnd },
+            metadata: { path: ['ai', 'autoReplied'], equals: true },
+          },
+        })
+        .catch(() => 0),
     ]);
 
     // Last 7 days stats

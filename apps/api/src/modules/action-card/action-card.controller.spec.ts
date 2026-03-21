@@ -17,10 +17,7 @@ describe('ActionCardController', () => {
       snooze: jest.fn(),
       execute: jest.fn(),
     };
-    controller = new ActionCardController(
-      mockService as unknown as ActionCardService,
-      {} as any,
-    );
+    controller = new ActionCardController(mockService as unknown as ActionCardService, {} as any);
   });
 
   it('findAll delegates to service with businessId and filters', async () => {

@@ -128,10 +128,7 @@ export class AiController {
   }
 
   @Post('conversations/:id/regenerate-draft')
-  async regenerateDraft(
-    @BusinessId() businessId: string,
-    @Param('id') conversationId: string,
-  ) {
+  async regenerateDraft(@BusinessId() businessId: string, @Param('id') conversationId: string) {
     return this.aiService.regenerateDraft(businessId, conversationId);
   }
 

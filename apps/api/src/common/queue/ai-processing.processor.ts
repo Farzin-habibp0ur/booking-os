@@ -20,7 +20,7 @@ export class AiProcessingProcessor extends WorkerHost {
   async process(job: Job<AiProcessingJobData>): Promise<void> {
     const { businessId, conversationId, messageId, messageBody } = job.data;
     this.logger.log(
-      `Processing AI job ${job.id} for conversation ${conversationId} (attempt ${job.attemptsMade + 1}/${(job.opts?.attempts || 1)})`,
+      `Processing AI job ${job.id} for conversation ${conversationId} (attempt ${job.attemptsMade + 1}/${job.opts?.attempts || 1})`,
     );
 
     // Emit "AI is processing" event
@@ -88,14 +88,9 @@ export class AiProcessingProcessor extends WorkerHost {
     }
   }
 
-  private async createFailureActionCard(
-    data: AiProcessingJobData,
-    error: Error,
-  ): Promise<void> {
+  private async createFailureActionCard(data: AiProcessingJobData, error: Error): Promise<void> {
     try {
-      const { ActionCardService } = await import(
-        '../../modules/action-card/action-card.service'
-      );
+      const { ActionCardService } = await import('../../modules/action-card/action-card.service');
       const actionCardService = (this as any).moduleRef?.get(ActionCardService);
 
       if (!actionCardService) {
@@ -130,9 +125,7 @@ export class AiProcessingProcessor extends WorkerHost {
         `Created AI_PROCESSING_FAILED action card for conversation ${data.conversationId}`,
       );
     } catch (cardErr) {
-      this.logger.error(
-        `Failed to create AI failure action card: ${(cardErr as Error).message}`,
-      );
+      this.logger.error(`Failed to create AI failure action card: ${(cardErr as Error).message}`);
     }
   }
 
