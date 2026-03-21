@@ -2,6 +2,7 @@ import { Processor, WorkerHost, OnWorkerEvent } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
 import { QUEUE_NAMES } from './queue.module';
+import { InboxGateway } from '../inbox.gateway';
 
 export interface AiProcessingJobData {
   businessId: string;
@@ -134,10 +135,8 @@ export class AiProcessingProcessor extends WorkerHost {
       const moduleRef = (this as any).moduleRef;
       if (!moduleRef) return null;
 
-      // Dynamic imports to avoid circular deps
       if (serviceName === 'InboxGateway') {
-        const { InboxGateway } = require('../../common/inbox.gateway');
-        return moduleRef.get(InboxGateway, { strict: false });
+        return moduleRef.get(InboxGateway, { strict: false }) ?? null;
       }
       return null;
     } catch {
