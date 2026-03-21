@@ -245,6 +245,16 @@ function InboxPage() {
   const [showDiscardDialog, setShowDiscardDialog] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Compute whether the messaging window is expired (WA/IG/FB 24h rule)
+  const isWindowExpired = (() => {
+    const ch = (replyChannel || selected?.channel || '').toUpperCase();
+    if (!['WHATSAPP', 'INSTAGRAM', 'FACEBOOK'].includes(ch)) return false;
+    const lastInbound = messages?.filter((m: any) => m.direction === 'INBOUND').pop();
+    if (!lastInbound) return true;
+    const elapsed = Date.now() - new Date(lastInbound.createdAt).getTime();
+    return elapsed >= 24 * 60 * 60 * 1000;
+  })();
+
   const currentFilters = {
     predefined: activeFilter,
     search: searchQuery,
@@ -2339,10 +2349,18 @@ function InboxPage() {
                           sendMessage();
                         }
                       }}
-                      placeholder={t('inbox.type_message')}
+                      placeholder={
+                        isWindowExpired
+                          ? 'Messaging window expired — use a template'
+                          : t('inbox.type_message')
+                      }
+                      disabled={isWindowExpired}
                       rows={1}
                       maxLength={replyChannel === 'INSTAGRAM' ? 1000 : undefined}
-                      className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sage-500 resize-none min-h-[38px] max-h-24"
+                      className={cn(
+                        'w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sage-500 resize-none min-h-[38px] max-h-24',
+                        isWindowExpired && 'opacity-50 cursor-not-allowed bg-slate-50',
+                      )}
                       style={{ height: 'auto' }}
                       onInput={(e) => {
                         const el = e.currentTarget;
@@ -2398,7 +2416,7 @@ function InboxPage() {
                   />
                   <button
                     onClick={() => sendMessage()}
-                    disabled={sending || !newMessage.trim()}
+                    disabled={sending || !newMessage.trim() || isWindowExpired}
                     className="bg-sage-600 text-white p-2 rounded-md hover:bg-sage-700 disabled:opacity-50 flex-shrink-0"
                   >
                     {scheduledFor ? <Clock size={18} /> : <Send size={18} />}

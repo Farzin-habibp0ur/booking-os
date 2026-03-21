@@ -31,7 +31,7 @@ const CHANNELS: { key: ChannelFilter; label: string; icon: any }[] = [
 export function ChannelFilterBar({ selected, onChange, unreadCounts }: ChannelFilterProps) {
   return (
     <div
-      className="flex items-center gap-1 px-3 py-1.5 border-b border-slate-100"
+      className="flex items-center gap-1 px-3 py-1.5 border-b border-slate-100 overflow-x-auto"
       role="tablist"
       aria-label="Filter by channel"
     >
@@ -45,7 +45,7 @@ export function ChannelFilterBar({ selected, onChange, unreadCounts }: ChannelFi
             role="tab"
             aria-selected={selected === key}
             className={cn(
-              'inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg transition-colors',
+              'inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap',
               selected === key
                 ? 'bg-sage-50 text-sage-700 font-medium'
                 : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700',
