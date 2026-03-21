@@ -24,7 +24,7 @@ export default function SimulatorPage() {
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const pollTimerRef = useRef<NodeJS.Timeout>();
+  const pollTimerRef = useRef<NodeJS.Timeout>(undefined);
   const lastPollRef = useRef<string>(new Date(0).toISOString());
 
   useEffect(() => {

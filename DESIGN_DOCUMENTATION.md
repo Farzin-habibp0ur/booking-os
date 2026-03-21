@@ -121,6 +121,23 @@
 - **Drag-and-Drop Reschedule + Recommended Slots** (Batch 1g) — `GET /availability/recommended-slots` (top 5 scored by proximity + staff balance), `RecommendedSlots` component, HTML5 DnD (draggable cards, drop targets, 30-min snap, conflict detection, confirmation popover). 7 tests.
 - **Final counts:** 3,227 tests total (1,982 API + 1,245 web), +69 new tests
 
+### Inbox UX v3 — 13-Prompt Overhaul (Complete)
+
+- **Conversation list indicators** — `ChannelBadge` on every card, multi-channel "+N" badge, urgency dots (amber/red) for IG/FB windows, "LIVE" pulse badge for Web Chat sessions, LIVE+urgency sort-to-top
+- **Message thread enhancements** — Per-message channel icon next to timestamp (40% opacity when same channel, 100% when mixed), "Sent via / Received via" tooltips, `role="separator"` channel transition dividers with channel color
+- **Adaptive composer** — Email subject line, SMS char counter + segment calculator, Instagram 1000-char limit, WhatsApp template mode with "Use template" CTA when 24h window expired, Web Chat online/offline indicator
+- **Visual polish + height management** — Channel pills with colored ring/grayscale/keyboard nav (ArrowLeft/Right), `max-h-[45vh]` composer (35vh compact), compact mode at <800px height, pills collapse to `<select>` at <640px width (ResizeObserver)
+- **Draft persistence** — Per-channel drafts keyed by `conversationId:channel`, email preserves subject+body, blue dot indicators on pills, discard confirmation dialog (`role="alertdialog"`)
+- **Media validation** — Per-channel file type/size limits in MediaComposer, inline validation errors, "Switch to Email" fallback, drag-drop with channel-colored feedback, re-validation on channel switch
+- **Backend** — `notifyMessageStatus()` on InboxGateway for real-time delivery/read receipt events, channel-aware send payload
+- **Smart suggestions + recovery** — Proactive nudges (opted-out, window expiring, no response), failed send recovery with Retry + "Send via [alt channel]", health dots (amber=degraded, red=down) with aria-labels
+- **Channels on File** — ChannelsOnFile wired into customer sidebar with inline add-contact (`onAddIdentifier` handler)
+- **Canned responses** — Channel-specific template variants with channel badge, unresolved `{{variable}}` detection + warning
+- **Channel pinning** — Pin icon on active pill, persisted to localStorage, auto-select priority: pinned > lastInbound > conversation > first
+- **ARIA accessibility** — `role="tablist"`/`role="tab"` on pills, `aria-selected`/`aria-disabled`, `aria-live="assertive"` announcements, `role="separator"` on dividers, `role="alert"` on failed sends + DeliveryStatus FAILED, `role="alertdialog"` on discard dialog
+- **i18n** — 28 new keys in en.json + es.json (channel switch, draft discard, SMS counter, template required, smart suggestions, pinning, media validation, failed send)
+- **Final counts:** 75-item QA checklist all PASS, 6800+ tests, build 8/8 tasks successful
+
 ### UX Upgrade Pack — Release 2 (Batches 2a–2g) (Complete)
 
 - **CSV Export API** (Batch 2a) — New Export module with `GET /customers/export`, `GET /bookings/export`, streaming CSV response (RFC 4180), field selection, date range filters, 10k row cap. 20 tests.
@@ -505,43 +522,66 @@ The dashboard layout adapts based on the active mode (admin/agent/provider).
 
 ### 3.6 Inbox (`/inbox`) — 4-Panel Layout
 
-**Panel 1: Filter Sidebar (w-48)**
+**Panel 1: Filter Bar (horizontal chips)**
 
-- Title "Inbox"
-- Filter items with counts: All, Unassigned (orange badge), Mine, Overdue (red badge), Waiting, Snoozed (purple badge), Closed
+- Filter chips: All, Unassigned, Mine, Overdue, Waiting, Snoozed, Closed — each with count badge
+- `ChannelFilterBar` below: 7 tabs (ALL + 6 channels) with `role="tablist"`, unread counts
+- Saved view picker
 
 **Panel 2: Conversation List (w-80)**
 
 - Search box with clear button
-- Per conversation: overdue red dot, customer name, "New" blue badge, last message preview, status badge, assigned staff, time ago, first 3 tags
+- Per conversation: overdue red dot, **channel icon** (`ChannelBadge` showLabel=false), customer name, **multi-channel "+N" badge**, **"LIVE" badge** (Web Chat sessions, green pulse), **urgency dots** (amber <4h, red expired for IG/FB windows), "New" badge, snoozed icon, last message preview, status badge, assigned staff, location, time ago, first 3 tags
+- **Sort order:** LIVE Web Chat first → expiring windows → server order
+- Swipe gestures (mobile): right=resolve, left=snooze
+- Bulk selection with checkbox + bulk action bar (close, assign, tag, mark read)
 
 **Panel 3: Message Thread (flex-1)**
 
-- **Header:** Customer name + phone, snooze button, "Resume auto-reply" (purple), close conversation, "+ New Booking", presence pills (who else is viewing)
-- **Messages:** Inbound (left, white/border), Outbound (right, blue bg/white text), timestamps, staff name labels, delivery status indicators (sent/delivered/read checkmarks), media attachments (inline images, document links, audio players)
-- **AI Suggestions section:** Purple-to-blue gradient bg, intent badge (color-coded), editable textarea, Send/Dismiss buttons
-- **Composer:** Template menu (Files icon), quick replies toggle (Zap icon), media attachment button (paperclip icon, `MediaComposer`), auto-expanding textarea, Send button
+- **Header:** Customer name + **channel badge** (all 6 channels, not just IG/WA), **Web Chat online/offline indicator**, phone/identifier, location, snooze button, "Resume auto-reply" (purple), close conversation, "New Message" outbound button, "+ New Booking", presence pills (who else is viewing), info sidebar toggle
+- **Messages:** Inbound (left, white/shadow), Outbound (right, sage bg/white text), **per-message channel icon** next to timestamp (full opacity when mixed channels, 40% when same), tooltip "Sent via / Received via [channel]", staff name labels, delivery status indicators (✓ sent, ✓✓ delivered, blue ✓✓ read, red ✗ failed with `role="alert"`), media attachments, Instagram context (story reply, ad referral, ice breaker)
+- **Channel transition dividers:** `role="separator"` with channel icon + color, "Switched to [channel]" label between hr lines
+- **AI Suggestions section:** Purple-to-blue gradient bg, intent badge, editable textarea, Send/Dismiss buttons
+- **Instagram messaging window indicator:** Hours remaining countdown, amber when <2h, red when expired
+
+**Composer Area** (stacked layers, `max-h-[45vh]`, `max-h-[35vh]` in compact mode):
+
+- **Smart suggestions bar:** Proactive nudges (opted-out, window expiring, no response, read-no-reply), dismissible with X
+- **Failed send recovery panel:** `role="alert"`, error message, Retry + "Send via [alt channel]" buttons
+- **Channel pills** (`role="tablist"`): Rounded pills per available channel, active=colored bg + ring, disabled=grayscale + tooltip reason, keyboard nav (ArrowLeft/Right), health dots (amber=degraded, red=down), blue draft dots, pin icon on pinned channel, pin/unpin button. Collapses to `<select>` dropdown at width <640px. `aria-live="assertive"` for channel switch announcements
+- **Context bar:** `ConversationContextBar` — WA template required (with "Use template" CTA), IG/FB window countdown, email subject, SMS opt-in/out
+- **Template picker:** Channel-specific variant display with channel badge, unresolved `{{variable}}` detection + warning toast
+- **Email subject input** (EMAIL channel only)
+- **Toolbar:** Template menu (FileText), **MediaComposer** (Paperclip — per-channel file type/size validation, drag-drop with channel coloring, "Switch to Email" fallback on validation error), quick replies toggle (Zap)
+- **Textarea:** Auto-expanding, **SMS char counter + segment calculator**, **Instagram 1000-char counter**, **unresolved variable warning** (amber AlertCircle)
+- **Scheduled message picker** + **Send button**
+- Scheduled messages list (amber, with cancel)
 
 **Panel 4: Info Sidebar (w-72)**
 Two tabs: **Info** | **Notes**
 
 **Info tab:**
 
-- Customer avatar circle + name + phone + email
+- Customer avatar circle + name link + phone/identifier + email
 - Customer tags (removable badges + add input)
+- **Channels on File** (`ChannelsOnFile`): Lists all customer channels with icons + identifiers, "Add email"/"Add phone" inline forms with validation
+- Action Card Badge (when count > 0)
 - AI Summary (purple sparkles icon, refresh button)
 - AI Booking/Cancel/Reschedule Panel (step progress, confirm/dismiss)
 - Conversation tags (editable)
 - Assigned To dropdown ("Assign to me" link)
-- Snoozed Until display
-- Upcoming Bookings (max 3)
+- Snoozed Until display (lavender bg)
+- Vertical-specific intake card
+- Upcoming Bookings (max 3, with deposit request button)
 
 **Notes tab:**
 
 - Notes list (yellow sticky style: content + staff name + timestamp + delete)
 - Add note textarea + "Add Note" button
 
-**Real-time events via Socket.io:** new messages, conversation updates, AI suggestions, auto-replies, booking updates, AI transfer to human
+**Real-time events via Socket.io:** new messages, conversation updates, AI suggestions, auto-replies, booking updates, AI transfer to human, **message:status** (delivery/read receipt updates), presence:update
+
+**Accessibility:** All interactive elements have ARIA roles, `role="tablist"` on channel pills and filter bar, `role="separator"` on dividers, `role="alert"` on failed sends, `role="alertdialog"` with `aria-labelledby`/`aria-describedby` + `autoFocus` on discard draft dialog
 
 ---
 

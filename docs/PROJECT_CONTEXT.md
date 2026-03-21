@@ -197,6 +197,23 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 - **Integration + Documentation** (Batch 1h) — Code formatting and documentation updates.
 - **Final counts:** 3,227 tests total (1,982 API + 1,245 web), +69 new tests
 
+### Inbox UX v3 — 13-Prompt Overhaul — COMPLETE
+
+Comprehensive inbox redesign covering adaptive composer, smart suggestions, draft persistence, media validation, channel pinning, canned responses, read receipts, and full WCAG accessibility. 75-item QA checklist, all PASS.
+
+- **Conversation list** — Channel badges on cards, multi-channel "+N" badges, urgency dots for IG/FB windows, LIVE badge for Web Chat, LIVE+urgency sort-to-top
+- **Message thread** — Per-message channel icons (40%/100% opacity), channel transition dividers with `role="separator"`
+- **Adaptive composer** — Email subject, SMS char/segment counter, IG 1000-char limit, WA template mode, Web Chat online/offline, channel pills (`role="tablist"`) with ring/grayscale/keyboard nav/health dots/draft dots/pin icon, compact mode (<800px), dropdown collapse (<640px)
+- **Draft persistence** — Per-channel drafts, blue dot indicators, discard confirmation (`role="alertdialog"`)
+- **Media validation** — Per-channel type/size limits in MediaComposer, "Switch to Email" fallback, channel-colored drag-drop
+- **Backend** — `notifyMessageStatus()` on InboxGateway, channel-aware send payload
+- **Smart suggestions** — Opted-out/window/no-reply nudges, failed send recovery with "Send via alt channel"
+- **Channels on File** — Wired into sidebar with inline add-contact
+- **Channel pinning** — localStorage persistence, auto-select priority override
+- **Accessibility** — Full ARIA: tablist/tab/separator/alert/alertdialog, aria-live announcements, keyboard navigation
+- **i18n** — 28 new keys in en.json + es.json
+- **Final counts:** 6,800+ tests total, build 8/8 tasks successful
+
 ### UX Upgrade Pack — Release 2 (Batches 2a–2g) — COMPLETE
 
 - **CSV Export API** (Batch 2a) — New Export module (`export.service.ts`, `export.controller.ts`), endpoints: `GET /customers/export`, `GET /bookings/export` with streaming CSV response (RFC 4180), field selection, date range filters, 10k row cap. 20 tests.

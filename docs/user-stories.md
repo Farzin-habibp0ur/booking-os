@@ -333,6 +333,17 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 | 7.40a | Switch reply channel when customer has multiple channels on file                      | All staff | ReplyChannelSwitcher dropdown in compose area                          |
 | 7.41a | View all channels available for a customer in the sidebar                             | All staff | ChannelsOnFile component in customer sidebar                           |
 | 7.42a | Use live chat widget on website to communicate with visitors in real-time             | All staff | Web Chat channel via Socket.IO `/web-chat` namespace                   |
+| 7.43a | Adaptive composer that morphs per channel (email subject, SMS counter, IG limit)     | All staff | Channel-specific fields appear/hide based on replyChannel (Inbox UX v3)        |
+| 7.44a | Draft persistence when switching between channels                                     | All staff | Per-channel drafts with blue dot indicators, discard confirmation dialog       |
+| 7.45a | Media file validation before upload (type + size per channel)                         | All staff | MediaComposer validates against channel limits, "Switch to Email" fallback     |
+| 7.46a | Pin a preferred reply channel for a customer                                          | All staff | Pin icon on pill, persisted to localStorage, overrides auto-select priority    |
+| 7.47a | Smart channel suggestions when customer opts out or window expires                    | All staff | Proactive nudges: opted-out, window expiring, no response, read-no-reply       |
+| 7.48a | Failed send recovery with retry and "Send via alt channel"                            | All staff | Error panel with Retry + alt channel buttons, message text preserved           |
+| 7.49a | Compact composer mode on small screens                                                | All staff | Composer collapses at height <800px, pills become dropdown at width <640px     |
+| 7.50a | See multi-channel "+N" badge and urgency dots on conversation cards                   | All staff | Multi-channel count badge, amber/red dots for expiring IG/FB windows           |
+| 7.51a | See LIVE badge on Web Chat sessions with priority sorting                             | All staff | Green pulsing LIVE badge, sorted to top of conversation list                   |
+| 7.52a | See channel transition dividers in message thread                                     | All staff | Divider with channel icon/color when messages switch between channels          |
+| 7.53a | Full ARIA accessibility on channel pills, dividers, and error panels                  | All staff | role=tablist/tab/separator/alert/alertdialog, aria-live, keyboard navigation   |
 
 ### What Users CANNOT Do
 
@@ -342,13 +353,13 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 | 7.31 | Forward or share a conversation                               | Not implemented                                                                                                                      |
 | 7.32 | Mark a conversation as read/unread manually                   | Auto-marked on view                                                                                                                  |
 | 7.33 | ~~Create a conversation manually (staff-initiated outbound)~~ | **DONE** — Outbound compose modal creates drafts via POST /outbound/draft                                                            |
-| 7.34 | Bulk close conversations                                      | No bulk operations                                                                                                                   |
-| 7.35 | Bulk assign conversations                                     | No bulk operations                                                                                                                   |
+| 7.34 | ~~Bulk close conversations~~                                  | **DONE** — Bulk action bar with Close Selected, POST /conversations/bulk-close                                                       |
+| 7.35 | ~~Bulk assign conversations~~                                 | **DONE** — Bulk action bar with Assign dropdown, POST /conversations/bulk-assign                                                     |
 | 7.36 | Edit a sent message                                           | Messages are immutable                                                                                                               |
 | 7.37 | Delete a message                                              | Messages are immutable                                                                                                               |
 | 7.38 | ~~See message delivery/read receipts~~                        | **DONE** — DeliveryStatus component (sent/delivered/read check icons), WebSocket `message:status` event (UX Upgrade Pack R1)         |
-| 7.39 | Schedule a message for later                                  | Not implemented                                                                                                                      |
-| 7.40 | Use canned responses / saved replies beyond templates         | Templates only                                                                                                                       |
+| 7.39 | ~~Schedule a message for later~~                              | **DONE** — ScheduledMessage component with datetime picker, POST with scheduledFor, cancel/list scheduled                            |
+| 7.40 | Use canned responses / saved replies beyond templates         | Channel-aware template picker with per-channel variants, unresolved variable warnings                                                |
 | 7.41 | See typing indicators                                         | Not implemented                                                                                                                      |
 | 7.42 | Pin a conversation                                            | Not implemented                                                                                                                      |
 | 7.43 | Export conversation history                                   | Not implemented                                                                                                                      |

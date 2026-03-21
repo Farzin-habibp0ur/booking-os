@@ -267,11 +267,25 @@ BookingOS supports 6 messaging channels: **WhatsApp**, **Instagram DM**, **Faceb
 
 **UI components** (in `apps/web/src/components/inbox/`):
 
-- `ChannelBadge` — colored icon+label badge per channel
+- `ChannelBadge` — colored icon+label badge per channel, used on conversation cards and thread headers
 - `ReplyChannelSwitcher` — dropdown to switch reply channel with disabled channel support (tooltip reasons) and `getDefaultReplyChannel()` helper
-- `ChannelsOnFile` — sidebar listing customer's available channels with inline "Add email"/"Add phone" forms (E.164 and email format validation)
-- `ChannelFilterBar` — 7-tab filter (ALL + 6 channels) with unread count badges
-- `ConversationContextBar` — compact bar showing FB/IG messaging window countdown, email subject, SMS opt-in/out status
+- `ChannelsOnFile` — sidebar listing customer's available channels with inline "Add email"/"Add phone" forms (E.164 and email format validation), wired into inbox right sidebar
+- `ChannelFilterBar` — 7-tab filter (ALL + 6 channels) with unread count badges, `role="tablist"` accessibility
+- `ConversationContextBar` — compact bar showing FB/IG/WA messaging window countdown, email subject, SMS opt-in/out status, WhatsApp "Use template" CTA when window expired
+- `MediaComposer` — file attachment with per-channel type/size validation, drag-drop with channel-colored feedback, "Switch to Email" fallback on validation errors, inline error alerts
+- `DeliveryStatus` — message delivery status indicators (sent=single check, delivered=double check, read=blue double check, failed=red alert with `role="alert"`)
+
+**Inbox UX features** (implemented in `apps/web/src/app/inbox/page.tsx`):
+
+- **Adaptive composer** — morphs per channel: email subject line, SMS char counter + segment calculator, Instagram 1000-char limit, WhatsApp template mode when window expired, Web Chat online/offline indicator
+- **Channel pills** — `role="tablist"` with `aria-selected`/`aria-disabled`, keyboard nav (ArrowLeft/ArrowRight), colored active ring, grayscale disabled state, health dots (amber=degraded, red=down), blue draft dots, pin icon
+- **Draft persistence** — per-channel drafts keyed by `conversationId:channel`, email preserves subject+body, blue dot indicators on pills, discard confirmation dialog (`role="alertdialog"`) on conversation switch, cleared on send
+- **Channel pinning** — pin icon on active pill, persisted to `localStorage('bookingos:pinnedChannel')`, auto-select priority: pinned > lastInbound > conversation channel > first available
+- **Smart suggestions** — proactive nudges between context bar and pills: SMS opted-out, IG/FB window expiring, no response >24h; dismissible with X
+- **Failed send recovery** — `role="alert"` error panel with Retry + "Send via [alt channel]" buttons
+- **Compact mode** — `isCompact` at screen height <800px (reduced padding, 35vh max), pills collapse to `<select>` dropdown at composer width <640px via ResizeObserver
+- **Conversation list sorting** — Web Chat LIVE sessions sorted to top, then urgency (expiring IG/FB windows), then server order
+- **ARIA accessibility** — `role="tablist"`/`role="tab"` on pills, `aria-live="assertive"` for channel switch announcements, `role="separator"` on channel transition dividers, `role="alert"` on failed sends, `role="alertdialog"` on discard modal with `aria-labelledby`/`aria-describedby`
 
 ---
 

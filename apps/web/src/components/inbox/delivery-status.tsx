@@ -15,6 +15,7 @@ export function DeliveryStatus({ status, className }: DeliveryStatusProps) {
         <span
           className={cn('inline-flex items-center', className)}
           title="Sent"
+          aria-label="Sent"
           data-testid="delivery-sent"
         >
           <Check size={12} className="text-sage-300" />
@@ -25,6 +26,7 @@ export function DeliveryStatus({ status, className }: DeliveryStatusProps) {
         <span
           className={cn('inline-flex items-center', className)}
           title="Delivered"
+          aria-label="Delivered"
           data-testid="delivery-delivered"
         >
           <CheckCheck size={12} className="text-sage-300" />
@@ -35,6 +37,7 @@ export function DeliveryStatus({ status, className }: DeliveryStatusProps) {
         <span
           className={cn('inline-flex items-center', className)}
           title="Read"
+          aria-label="Read"
           data-testid="delivery-read"
         >
           <CheckCheck size={12} className="text-blue-400" />
@@ -44,7 +47,9 @@ export function DeliveryStatus({ status, className }: DeliveryStatusProps) {
       return (
         <span
           className={cn('inline-flex items-center', className)}
-          title="Failed"
+          title="Failed to send"
+          aria-label="Failed to send"
+          role="alert"
           data-testid="delivery-failed"
         >
           <AlertCircle size={12} className="text-red-400" />

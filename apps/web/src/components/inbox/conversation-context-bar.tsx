@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/cn';
-import { Clock, AlertTriangle, Mail, MessageCircle, CheckCircle } from 'lucide-react';
+import { Clock, AlertTriangle, Mail, MessageCircle, CheckCircle, MessageSquare, FileText } from 'lucide-react';
 
 interface ConversationContextBarProps {
   channel: string;
@@ -13,6 +13,7 @@ interface ConversationContextBarProps {
     smsOptOut?: boolean;
     [key: string]: any;
   };
+  onUseTemplate?: () => void;
 }
 
 function formatCountdown(ms: number): string {
@@ -30,12 +31,38 @@ export function ConversationContextBar({
   channel,
   lastCustomerMessageAt,
   conversationMetadata,
+  onUseTemplate,
 }: ConversationContextBarProps) {
   const { t } = useI18n();
 
   const contextInfo = useMemo(() => {
     const lastMsg = lastCustomerMessageAt ? new Date(lastCustomerMessageAt).getTime() : 0;
     const now = Date.now();
+
+    if (channel === 'WHATSAPP') {
+      const windowMs24 = 24 * 60 * 60 * 1000;
+      const elapsed = now - lastMsg;
+
+      if (!lastMsg || elapsed >= windowMs24) {
+        return {
+          icon: MessageSquare,
+          text: t('inbox.wa_template_required'),
+          variant: 'warning' as const,
+          showTemplateAction: true,
+        };
+      }
+
+      if (elapsed >= windowMs24 * 0.8) {
+        return {
+          icon: Clock,
+          text: `WhatsApp window closing: ${formatCountdown(windowMs24 - elapsed)}`,
+          variant: 'warning' as const,
+          showTemplateAction: false,
+        };
+      }
+
+      return null;
+    }
 
     if (channel === 'FACEBOOK' || channel === 'INSTAGRAM') {
       const windowMs24 = 24 * 60 * 60 * 1000;
@@ -47,6 +74,7 @@ export function ConversationContextBar({
           icon: AlertTriangle,
           text: t('inbox.context_no_window'),
           variant: 'warning' as const,
+          showTemplateAction: false,
         };
       }
 
@@ -55,6 +83,7 @@ export function ConversationContextBar({
           icon: Clock,
           text: `${t('inbox.context_messaging_window')}: ${formatCountdown(windowMs24 - elapsed)}`,
           variant: 'info' as const,
+          showTemplateAction: false,
         };
       }
 
@@ -63,6 +92,7 @@ export function ConversationContextBar({
           icon: AlertTriangle,
           text: `${t('inbox.context_human_agent_window')}: ${formatCountdown(windowMs7d - elapsed)}`,
           variant: 'warning' as const,
+          showTemplateAction: false,
         };
       }
 
@@ -70,6 +100,7 @@ export function ConversationContextBar({
         icon: AlertTriangle,
         text: t('inbox.context_window_expired'),
         variant: 'error' as const,
+        showTemplateAction: false,
       };
     }
 
@@ -78,6 +109,7 @@ export function ConversationContextBar({
         icon: Mail,
         text: `${t('inbox.context_subject')}: ${conversationMetadata.subject}`,
         variant: 'info' as const,
+        showTemplateAction: false,
       };
     }
 
@@ -87,12 +119,14 @@ export function ConversationContextBar({
           icon: AlertTriangle,
           text: t('inbox.context_sms_opted_out'),
           variant: 'error' as const,
+          showTemplateAction: false,
         };
       }
       return {
         icon: CheckCircle,
         text: t('inbox.context_sms_opted_in'),
         variant: 'success' as const,
+        showTemplateAction: false,
       };
     }
 
@@ -101,12 +135,12 @@ export function ConversationContextBar({
 
   if (!contextInfo) return null;
 
-  const { icon: Icon, text, variant } = contextInfo;
+  const { icon: Icon, text, variant, showTemplateAction } = contextInfo;
 
   return (
     <div
       className={cn(
-        'flex items-center gap-2 px-3 py-1.5 text-xs rounded-lg',
+        'flex items-center gap-2 px-3 py-1.5 text-xs rounded-lg mb-1.5',
         variant === 'info' && 'bg-blue-50 text-blue-700',
         variant === 'warning' && 'bg-amber-50 text-amber-700',
         variant === 'error' && 'bg-red-50 text-red-700',
@@ -115,7 +149,17 @@ export function ConversationContextBar({
       data-testid="conversation-context-bar"
     >
       <Icon size={14} className="shrink-0" />
-      <span className="truncate">{text}</span>
+      <span className="truncate flex-1">{text}</span>
+      {showTemplateAction && onUseTemplate && (
+        <button
+          onClick={onUseTemplate}
+          className="flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded bg-amber-100 hover:bg-amber-200 text-amber-800 flex-shrink-0"
+          data-testid="use-template-btn"
+        >
+          <FileText size={10} />
+          Use template
+        </button>
+      )}
     </div>
   );
 }

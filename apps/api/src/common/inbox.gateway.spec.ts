@@ -68,4 +68,40 @@ describe('InboxGateway', () => {
       expect(roomEmit).toHaveBeenCalledWith('message:new', { id: 'msg1' });
     });
   });
+
+  describe('notifyMessageStatus', () => {
+    it('should emit message:status event to the correct business room', () => {
+      const roomEmit = jest.fn();
+      mockServer.to.mockReturnValue({ emit: roomEmit });
+
+      const data = {
+        conversationId: 'conv1',
+        messageId: 'msg1',
+        deliveryStatus: 'DELIVERED',
+        deliveredAt: '2026-03-20T10:00:00Z',
+      };
+
+      gateway.notifyMessageStatus('biz1', data);
+
+      expect(mockServer.to).toHaveBeenCalledWith('business:biz1');
+      expect(roomEmit).toHaveBeenCalledWith('message:status', data);
+    });
+
+    it('should handle data with optional readAt field', () => {
+      const roomEmit = jest.fn();
+      mockServer.to.mockReturnValue({ emit: roomEmit });
+
+      const data = {
+        conversationId: 'conv1',
+        messageId: 'msg1',
+        deliveryStatus: 'READ',
+        deliveredAt: '2026-03-20T10:00:00Z',
+        readAt: '2026-03-20T10:05:00Z',
+      };
+
+      gateway.notifyMessageStatus('biz1', data);
+
+      expect(roomEmit).toHaveBeenCalledWith('message:status', data);
+    });
+  });
 });

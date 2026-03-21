@@ -10,7 +10,6 @@ import {
   Send,
   Plus,
   User,
-  Phone,
   Tag,
   Search,
   MessageSquare,
@@ -30,6 +29,12 @@ import {
   Info,
   MapPin,
   Instagram,
+  Facebook,
+  Mail,
+  MessageCircle,
+  Globe,
+  Pin,
+  PinOff,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import BookingFormModal from '@/components/booking-form-modal';
@@ -45,10 +50,57 @@ import { MediaComposer } from '@/components/inbox/media-composer';
 import { MediaMessage } from '@/components/inbox/media-message';
 import { DeliveryStatus } from '@/components/inbox/delivery-status';
 import { ChannelFilterBar, type ChannelFilter } from '@/components/inbox/channel-filter';
-import { InstagramChannelBadge, InstagramContext } from '@/components/inbox/instagram-context';
+import { ChannelBadge } from '@/components/inbox/channel-badge';
+import { getDefaultReplyChannel } from '@/components/inbox/reply-channel-switcher';
+import { ChannelsOnFile } from '@/components/inbox/channels-on-file';
+import { ConversationContextBar } from '@/components/inbox/conversation-context-bar';
+import { InstagramContext } from '@/components/inbox/instagram-context';
 import { FeatureDiscovery } from '@/components/feature-discovery';
 import ScheduledMessage from '@/components/scheduled-message';
 import { captureEvent } from '@/lib/posthog';
+import { CHANNEL_STYLES } from '@/lib/design-tokens';
+
+// Channel icon map for message badges and conversation cards
+const CHANNEL_ICONS: Record<string, any> = {
+  WHATSAPP: MessageSquare,
+  INSTAGRAM: Instagram,
+  FACEBOOK: Facebook,
+  SMS: MessageCircle,
+  EMAIL: Mail,
+  WEB_CHAT: Globe,
+};
+
+// SMS segment calculator
+function smsSegmentInfo(text: string): { chars: number; segments: number } {
+  const chars = text.length;
+  // GSM-7: 160 chars per segment, 153 for multi; UCS-2: 70/67
+  // eslint-disable-next-line no-control-regex
+  const hasUnicode = /[^\u0000-\u007F]/.test(text);
+  const singleLimit = hasUnicode ? 70 : 160;
+  const multiLimit = hasUnicode ? 67 : 153;
+  const segments = chars <= singleLimit ? 1 : Math.ceil(chars / multiLimit);
+  return { chars, segments };
+}
+
+// Channel-specific file size limits (MB)
+const CHANNEL_FILE_LIMITS: Record<string, number> = {
+  WHATSAPP: 16,
+  INSTAGRAM: 8,
+  FACEBOOK: 25,
+  SMS: 5,
+  EMAIL: 25,
+  WEB_CHAT: 10,
+};
+
+// Channel-specific accepted MIME types
+const CHANNEL_ACCEPTED_TYPES: Record<string, string[]> = {
+  WHATSAPP: ['image/*', 'video/*', 'audio/*', 'application/pdf', 'application/msword'],
+  INSTAGRAM: ['image/*', 'video/mp4', 'audio/*'],
+  FACEBOOK: ['image/*', 'video/*', 'audio/*', 'application/pdf'],
+  SMS: ['image/*', 'video/*'],
+  EMAIL: ['image/*', 'video/*', 'audio/*', 'application/pdf', 'application/msword', 'text/*'],
+  WEB_CHAT: ['image/*', 'video/*', 'audio/*', 'application/pdf'],
+};
 
 type Filter = 'all' | 'unassigned' | 'mine' | 'overdue' | 'waiting' | 'snoozed' | 'closed';
 
@@ -148,6 +200,33 @@ function InboxPage() {
   const [channelFilter, setChannelFilter] = useState<ChannelFilter>('ALL');
   const [swipingConvoId, setSwipingConvoId] = useState<string | null>(null);
   const [swipeDelta, setSwipeDelta] = useState(0);
+  // Reply channel switcher state
+  const [replyChannel, setReplyChannel] = useState<string>('');
+  const [availableChannels, setAvailableChannels] = useState<string[]>([]);
+  const [disabledChannels, setDisabledChannels] = useState<Record<string, string>>({});
+  // Draft persistence per channel
+  const [drafts, setDrafts] = useState<Record<string, { text: string; subject?: string }>>({});
+  const [emailSubject, setEmailSubject] = useState('');
+  // Channel pinning — persisted to localStorage
+  const [pinnedChannel, setPinnedChannel] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('bookingos:pinnedChannel') || null;
+    }
+    return null;
+  });
+  // Compact mode detection
+  const [isCompact, setIsCompact] = useState(false);
+  const [isNarrowComposer, setIsNarrowComposer] = useState(false);
+  const composerRef = useRef<HTMLDivElement>(null);
+  // Channel health
+  const [channelHealth, setChannelHealth] = useState<Record<string, 'UP' | 'DEGRADED' | 'DOWN'>>({});
+  // Smart suggestions
+  const [smartSuggestions, setSmartSuggestions] = useState<Array<{ type: string; message: string; action?: string }>>([]);
+  // Failed sends
+  const [failedSends, setFailedSends] = useState<Array<{ id: string; content: string; channel: string; error: string }>>([]);
+  // Discard draft confirmation
+  const [pendingConversationSwitch, setPendingConversationSwitch] = useState<any>(null);
+  const [showDiscardDialog, setShowDiscardDialog] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const currentFilters = {
@@ -283,6 +362,26 @@ function InboxPage() {
     }, []),
   });
 
+  // Compact mode: detect screen height < 800px
+  useEffect(() => {
+    const checkHeight = () => setIsCompact(window.innerHeight < 800);
+    checkHeight();
+    window.addEventListener('resize', checkHeight);
+    return () => window.removeEventListener('resize', checkHeight);
+  }, []);
+
+  // Narrow composer: detect width < 640px for pill collapse to dropdown
+  useEffect(() => {
+    if (!composerRef.current) return;
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setIsNarrowComposer(entry.contentRect.width < 640);
+      }
+    });
+    observer.observe(composerRef.current);
+    return () => observer.disconnect();
+  }, [selected?.id]);
+
   // Auto-select conversation from URL param
   useEffect(() => {
     if (conversationIdParam && conversations.length > 0 && !selected) {
@@ -336,6 +435,30 @@ function InboxPage() {
       setAiDraftText('');
       setAiIntent(undefined);
       setAiConfidence(undefined);
+      // Set reply channel: pinned > lastInboundChannel > conversation channel
+      const convChannel = selected.channel || 'WHATSAPP';
+      const lastInbound = meta.lastInboundChannel;
+      const custChannels = selected.customer?.channels || [];
+      const avail = custChannels.length > 0 ? custChannels : [convChannel];
+      setAvailableChannels(avail);
+      const defaultCh = pinnedChannel && avail.includes(pinnedChannel)
+        ? pinnedChannel
+        : getDefaultReplyChannel(convChannel, avail, lastInbound);
+      setReplyChannel(defaultCh);
+      // Restore draft for this channel if exists
+      const draftKey = `${selected.id}:${defaultCh}`;
+      const saved = drafts[draftKey];
+      if (saved) {
+        setNewMessage(saved.text);
+        if (defaultCh === 'EMAIL') setEmailSubject(saved.subject || '');
+      } else {
+        setNewMessage('');
+        setEmailSubject('');
+      }
+      // Load smart suggestions
+      loadSmartSuggestions(selected);
+      // Reset failed sends
+      setFailedSends([]);
       msgPollRef.current = setInterval(() => loadMessages(selected.id), 15000);
     }
     return () => {
@@ -489,20 +612,33 @@ function InboxPage() {
     if (!text || !selected) return;
     setSending(true);
     try {
-      const payload: any = { content: text };
+      const payload: any = { content: text, channel: replyChannel || selected.channel };
+      if (replyChannel === 'EMAIL' && emailSubject) {
+        payload.subject = emailSubject;
+      }
       if (scheduledFor) {
         payload.scheduledFor = scheduledFor.toISOString();
       }
       await api.post(`/conversations/${selected.id}/messages`, payload);
       captureEvent('message_sent', {
-        channel: selected.channel || 'WHATSAPP',
+        channel: replyChannel || selected.channel || 'WHATSAPP',
         scheduled: !!scheduledFor,
       });
       setNewMessage('');
+      setEmailSubject('');
       setAiDraftText('');
       setAiIntent(undefined);
       setAiConfidence(undefined);
       setShowQuickReplies(false);
+      // Clear draft for this channel
+      if (selected) {
+        const draftKey = `${selected.id}:${replyChannel}`;
+        setDrafts((prev) => {
+          const next = { ...prev };
+          delete next[draftKey];
+          return next;
+        });
+      }
       if (scheduledFor) {
         setScheduledFor(null);
         toast('Message scheduled successfully');
@@ -679,8 +815,91 @@ function InboxPage() {
     }
   };
 
+  // Smart suggestions based on conversation state
+  const loadSmartSuggestions = (conv: any) => {
+    const suggestions: Array<{ type: string; message: string; action?: string }> = [];
+    const meta = conv.metadata || {};
+    if (meta.smsOptOut) {
+      suggestions.push({ type: 'opted-out', message: t('inbox.smart_suggest_opted_out') });
+    }
+    if (conv.channel === 'INSTAGRAM' || conv.channel === 'FACEBOOK') {
+      const lastMsg = conv.lastCustomerMessageAt ? new Date(conv.lastCustomerMessageAt).getTime() : 0;
+      const elapsed = Date.now() - lastMsg;
+      const hoursLeft = 24 - elapsed / (1000 * 60 * 60);
+      if (hoursLeft > 0 && hoursLeft < 4) {
+        suggestions.push({ type: 'window', message: t('inbox.smart_suggest_window') });
+      }
+    }
+    if (conv.lastMessageDirection === 'OUTBOUND' && conv.lastMessageAt) {
+      const hoursSince = (Date.now() - new Date(conv.lastMessageAt).getTime()) / (1000 * 60 * 60);
+      if (hoursSince > 24) {
+        suggestions.push({
+          type: 'no-reply',
+          message: t('inbox.smart_suggest_no_reply', { hours: Math.floor(hoursSince).toString() }),
+        });
+      }
+    }
+    setSmartSuggestions(suggestions);
+  };
+
+  // Handle reply channel change with draft persistence
+  const handleReplyChannelChange = (newChannel: string) => {
+    if (!selected) return;
+    // Save current draft
+    const currentKey = `${selected.id}:${replyChannel}`;
+    if (newMessage.trim() || emailSubject.trim()) {
+      setDrafts((prev) => ({
+        ...prev,
+        [currentKey]: { text: newMessage, subject: replyChannel === 'EMAIL' ? emailSubject : undefined },
+      }));
+    }
+    // Restore draft for new channel
+    const newKey = `${selected.id}:${newChannel}`;
+    const saved = drafts[newKey];
+    setNewMessage(saved?.text || '');
+    setEmailSubject(newChannel === 'EMAIL' ? (saved?.subject || '') : '');
+    setReplyChannel(newChannel);
+    toast(t('inbox.channel_switched', { channel: CHANNEL_STYLES[newChannel]?.label || newChannel }));
+  };
+
+  // Handle conversation switch with draft discard confirmation
+  const handleConversationSelect = (conv: any) => {
+    if (selected && newMessage.trim() && selected.id !== conv.id) {
+      setPendingConversationSwitch(conv);
+      setShowDiscardDialog(true);
+      return;
+    }
+    captureEvent('conversation_selected');
+    setSelected(conv);
+    setMobileView('thread');
+  };
+
+  // Pin/unpin channel — persisted to localStorage
+  const togglePinChannel = () => {
+    if (pinnedChannel === replyChannel) {
+      setPinnedChannel(null);
+      localStorage.removeItem('bookingos:pinnedChannel');
+    } else {
+      setPinnedChannel(replyChannel);
+      localStorage.setItem('bookingos:pinnedChannel', replyChannel);
+    }
+  };
+
+  // Add customer identifier (for ChannelsOnFile)
+  const handleAddIdentifier = async (type: 'email' | 'phone', value: string) => {
+    if (!customer) return;
+    try {
+      const updated = await api.patch<any>(`/customers/${customer.id}`, { [type]: value });
+      setCustomer(updated);
+      toast(`${type === 'email' ? 'Email' : 'Phone'} added successfully`);
+    } catch (e: any) {
+      toast(e?.message || `Failed to add ${type}`, 'error');
+    }
+  };
+
   const insertTemplate = (template: any) => {
-    let text = template.body;
+    // Use channel-specific variant if available, fall back to base body
+    let text = template.variants?.[replyChannel]?.body || template.body;
     if (customer) text = text.replace(/\{\{customerName\}\}/g, customer.name || '');
     if (customerBookings.length > 0) {
       const next = customerBookings.find((b: any) => ['PENDING', 'CONFIRMED'].includes(b.status));
@@ -693,6 +912,11 @@ function InboxPage() {
           new Date(next.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         );
       }
+    }
+    // Warn if unresolved variables remain
+    const unresolvedVars = text.match(/\{\{[^}]+\}\}/g);
+    if (unresolvedVars && unresolvedVars.length > 0) {
+      toast(`Template has unresolved variables: ${unresolvedVars.join(', ')}`, 'info');
     }
     setNewMessage(text);
     setShowTemplates(false);
@@ -868,6 +1092,21 @@ function InboxPage() {
           <div className="flex-1 overflow-auto">
             {conversations
               .filter((c) => channelFilter === 'ALL' || c.channel === channelFilter)
+              .sort((a, b) => {
+                // Web Chat LIVE sessions sorted to top (Prompt 11)
+                const aLive = a.channel === 'WEB_CHAT' && a.metadata?.sessionActive ? 1 : 0;
+                const bLive = b.channel === 'WEB_CHAT' && b.metadata?.sessionActive ? 1 : 0;
+                if (aLive !== bLive) return bLive - aLive;
+                // High urgency (expiring windows) next
+                const aUrgent = (a.channel === 'INSTAGRAM' || a.channel === 'FACEBOOK') && a.lastCustomerMessageAt
+                  ? Math.max(0, 24 - (Date.now() - new Date(a.lastCustomerMessageAt).getTime()) / 3600000) < 4 ? 1 : 0
+                  : 0;
+                const bUrgent = (b.channel === 'INSTAGRAM' || b.channel === 'FACEBOOK') && b.lastCustomerMessageAt
+                  ? Math.max(0, 24 - (Date.now() - new Date(b.lastCustomerMessageAt).getTime()) / 3600000) < 4 ? 1 : 0
+                  : 0;
+                if (aUrgent !== bUrgent) return bUrgent - aUrgent;
+                return 0; // preserve server order otherwise
+              })
               .map((c) => (
                 <div
                   key={c.id}
@@ -944,24 +1183,46 @@ function InboxPage() {
                         className="rounded text-sage-600 mt-1 flex-shrink-0"
                       />
                       <div
-                        onClick={() => {
-                          captureEvent('conversation_selected');
-                          setSelected(c);
-                          setMobileView('thread');
-                        }}
+                        onClick={() => handleConversationSelect(c)}
                         className="flex-1 cursor-pointer min-w-0"
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-1.5 min-w-0">
                             {c.isOverdue && (
-                              <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" />
+                              <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" title="Overdue" />
                             )}
+                            {/* Channel icon on conversation card (Prompt 1) */}
+                            <ChannelBadge channel={c.channel || 'WHATSAPP'} size="sm" showLabel={false} />
                             <p className="text-sm font-medium truncate">
                               {c.customer?.name || t('common.unknown')}
                             </p>
-                            {c.channel === 'INSTAGRAM' && <InstagramChannelBadge />}
+                            {/* Multi-channel badge (Prompt 1) */}
+                            {c.customer?.channels && c.customer.channels.length > 1 && (
+                              <span className="text-[8px] px-1 py-0.5 rounded-full bg-slate-200 text-slate-600 font-medium flex-shrink-0">
+                                +{c.customer.channels.length - 1}
+                              </span>
+                            )}
                           </div>
                           <div className="flex items-center gap-1 flex-shrink-0">
+                            {/* Web Chat LIVE badge (Prompt 1) */}
+                            {c.channel === 'WEB_CHAT' && c.metadata?.sessionActive && (
+                              <span className="text-[8px] px-1.5 py-0.5 rounded-full bg-emerald-500 text-white font-bold animate-pulse">
+                                {t('inbox.live')}
+                              </span>
+                            )}
+                            {/* Urgency dot for expiring windows (Prompt 1) */}
+                            {(c.channel === 'INSTAGRAM' || c.channel === 'FACEBOOK') &&
+                              c.lastCustomerMessageAt && (() => {
+                                const elapsed = Date.now() - new Date(c.lastCustomerMessageAt).getTime();
+                                const hoursLeft = 24 - elapsed / (1000 * 60 * 60);
+                                if (hoursLeft > 0 && hoursLeft < 4) {
+                                  return <span className="w-2 h-2 rounded-full bg-amber-500 flex-shrink-0 animate-pulse" title={`${Math.floor(hoursLeft)}h left`} />;
+                                }
+                                if (hoursLeft <= 0) {
+                                  return <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" title="Window expired" />;
+                                }
+                                return null;
+                              })()}
                             {c.isNew && (
                               <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-sage-100 text-sage-700 font-medium">
                                 {t('inbox.new_badge')}
@@ -1070,16 +1331,17 @@ function InboxPage() {
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5">
                       <p className="font-medium truncate">{selected.customer?.name}</p>
-                      {selected.channel === 'INSTAGRAM' && (
-                        <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-gradient-to-r from-purple-50 to-pink-50 text-purple-700 flex-shrink-0">
-                          <Instagram size={10} />
-                          Instagram
-                        </span>
-                      )}
-                      {selected.channel === 'WHATSAPP' && (
-                        <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 flex-shrink-0">
-                          <MessageSquare size={10} />
-                          WhatsApp
+                      {/* Channel badge for all channels (Prompt 1) */}
+                      <ChannelBadge channel={selected.channel || 'WHATSAPP'} size="md" />
+                      {/* Web Chat online/offline indicator (Prompt 3) */}
+                      {selected.channel === 'WEB_CHAT' && (
+                        <span className={cn(
+                          'text-[9px] px-1.5 py-0.5 rounded-full font-medium',
+                          selected.metadata?.sessionActive
+                            ? 'bg-emerald-100 text-emerald-700'
+                            : 'bg-slate-100 text-slate-500',
+                        )}>
+                          {selected.metadata?.sessionActive ? t('inbox.online') : t('inbox.offline')}
                         </span>
                       )}
                     </div>
@@ -1192,67 +1454,109 @@ function InboxPage() {
 
               {/* Messages */}
               <div className="flex-1 overflow-auto p-4 space-y-3" aria-live="polite">
-                {messages.map((m) => (
-                  <div
-                    key={m.id}
-                    className={cn(
-                      'flex',
-                      m.direction === 'OUTBOUND' ? 'justify-end' : 'justify-start',
-                    )}
-                  >
-                    <div
-                      className={cn(
-                        'max-w-[70%] p-3 rounded-lg text-sm',
-                        m.direction === 'OUTBOUND'
-                          ? 'bg-sage-600 text-white rounded-br-none'
-                          : 'bg-white shadow-soft-sm rounded-xl rounded-bl-none',
-                      )}
-                    >
-                      {m.senderStaff && (
-                        <p
-                          className={cn(
-                            'text-[10px] mb-1',
-                            m.direction === 'OUTBOUND' ? 'text-sage-200' : 'text-slate-400',
-                          )}
-                        >
-                          {m.senderStaff.name}
-                        </p>
-                      )}
-                      {m.direction === 'INBOUND' &&
-                        m.metadata &&
-                        selected?.channel === 'INSTAGRAM' && (
-                          <InstagramContext metadata={m.metadata} className="mb-1.5" />
-                        )}
-                      {m.attachments?.length > 0 && (
-                        <MediaMessage attachments={m.attachments} direction={m.direction} />
-                      )}
-                      {m.contentType === 'TEXT' && (
-                        <p className="whitespace-pre-wrap">{m.content}</p>
-                      )}
-                      {m.contentType !== 'TEXT' && !m.attachments?.length && (
-                        <p className="whitespace-pre-wrap">{m.content}</p>
-                      )}
+                {messages.map((m, idx) => {
+                  const prevMsg = idx > 0 ? messages[idx - 1] : null;
+                  const msgChannel = m.channel || selected?.channel || 'WHATSAPP';
+                  const prevChannel = prevMsg ? (prevMsg.channel || selected?.channel || 'WHATSAPP') : null;
+                  const channelChanged = prevChannel && prevChannel !== msgChannel;
+                  const sameChannel = prevChannel === msgChannel;
+                  const channelStyle = CHANNEL_STYLES[msgChannel];
+                  const MsgChannelIcon = CHANNEL_ICONS[msgChannel];
+                  const tooltipText = m.direction === 'OUTBOUND'
+                    ? `Sent via ${channelStyle?.label || msgChannel}`
+                    : `Received via ${channelStyle?.label || msgChannel}`;
+
+                  return (
+                    <div key={m.id}>
+                      {/* Channel transition divider (Prompt 2) */}
+                      {channelChanged && (() => {
+                        const newStyle = CHANNEL_STYLES[msgChannel];
+                        const NewIcon = CHANNEL_ICONS[msgChannel];
+                        return (
+                          <div
+                            className="flex items-center gap-2 py-2"
+                            role="separator"
+                            aria-label={`Conversation switched to ${newStyle?.label || msgChannel}`}
+                          >
+                            <div className="flex-1 h-px bg-slate-200" />
+                            <span className={cn('inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full', newStyle?.bg, newStyle?.text)}>
+                              {NewIcon && <NewIcon size={10} />}
+                              Switched to {newStyle?.label || msgChannel}
+                            </span>
+                            <div className="flex-1 h-px bg-slate-200" />
+                          </div>
+                        );
+                      })()}
                       <div
                         className={cn(
-                          'flex items-center gap-1 mt-1',
-                          m.direction === 'OUTBOUND'
-                            ? 'text-sage-200 justify-end'
-                            : 'text-slate-400',
+                          'flex',
+                          m.direction === 'OUTBOUND' ? 'justify-end' : 'justify-start',
                         )}
                       >
-                        <span className="text-[10px]">
-                          {new Date(m.createdAt).toLocaleTimeString([], {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
-                        </span>
-                        {m.direction === 'OUTBOUND' && m.deliveryStatus && (
-                          <DeliveryStatus status={m.deliveryStatus} />
-                        )}
+                        <div
+                          className={cn(
+                            'max-w-[70%] p-3 rounded-lg text-sm',
+                            m.direction === 'OUTBOUND'
+                              ? 'bg-sage-600 text-white rounded-br-none'
+                              : 'bg-white shadow-soft-sm rounded-xl rounded-bl-none',
+                          )}
+                        >
+                          {m.senderStaff && (
+                            <p
+                              className={cn(
+                                'text-[10px] mb-1',
+                                m.direction === 'OUTBOUND' ? 'text-sage-200' : 'text-slate-400',
+                              )}
+                            >
+                              {m.senderStaff.name}
+                            </p>
+                          )}
+                          {m.direction === 'INBOUND' &&
+                            m.metadata &&
+                            selected?.channel === 'INSTAGRAM' && (
+                              <InstagramContext metadata={m.metadata} className="mb-1.5" />
+                            )}
+                          {m.attachments?.length > 0 && (
+                            <MediaMessage attachments={m.attachments} direction={m.direction} />
+                          )}
+                          {m.contentType === 'TEXT' && (
+                            <p className="whitespace-pre-wrap">{m.content}</p>
+                          )}
+                          {m.contentType !== 'TEXT' && !m.attachments?.length && (
+                            <p className="whitespace-pre-wrap">{m.content}</p>
+                          )}
+                          <div
+                            className={cn(
+                              'flex items-center gap-1 mt-1',
+                              m.direction === 'OUTBOUND'
+                                ? 'text-sage-200 justify-end'
+                                : 'text-slate-400',
+                            )}
+                          >
+                            {/* Channel icon next to timestamp (Prompt 2) */}
+                            {MsgChannelIcon && (
+                              <span
+                                title={tooltipText}
+                                className={cn(sameChannel ? 'opacity-40' : 'opacity-100')}
+                              >
+                                <MsgChannelIcon size={10} />
+                              </span>
+                            )}
+                            <span className="text-[10px]">
+                              {new Date(m.createdAt).toLocaleTimeString([], {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </span>
+                            {m.direction === 'OUTBOUND' && m.deliveryStatus && (
+                              <DeliveryStatus status={m.deliveryStatus} />
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
                 <div ref={messagesEndRef} />
               </div>
 
@@ -1325,8 +1629,186 @@ function InboxPage() {
                   );
                 })()}
 
+              {/* Smart Suggestions (Prompt 8) */}
+              {smartSuggestions.length > 0 && (
+                <div className="px-3 py-1.5 bg-amber-50 border-t border-amber-100">
+                  {smartSuggestions.map((s, i) => (
+                    <div key={i} className="flex items-center justify-between text-xs text-amber-700 py-0.5">
+                      <span>{s.message}</span>
+                      <button
+                        onClick={() => setSmartSuggestions((prev) => prev.filter((_, j) => j !== i))}
+                        className="text-amber-400 hover:text-amber-600 ml-2"
+                        aria-label="Dismiss suggestion"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Failed Send Recovery (Prompt 8) */}
+              {failedSends.length > 0 && (
+                <div className="px-3 py-1.5 bg-red-50 border-t border-red-100" role="alert">
+                  {failedSends.map((fs) => {
+                    // Find an alternative channel to suggest
+                    const altChannel = availableChannels.find(
+                      (ch) => ch !== fs.channel && !disabledChannels[ch] && channelHealth[ch] !== 'DOWN'
+                    );
+                    return (
+                      <div key={fs.id} className="flex items-center justify-between text-xs text-red-700 py-0.5">
+                        <span className="truncate flex-1">{fs.error}</span>
+                        <div className="flex gap-1 ml-2 flex-shrink-0">
+                          <button
+                            onClick={() => {
+                              setNewMessage(fs.content);
+                              setFailedSends((prev) => prev.filter((f) => f.id !== fs.id));
+                            }}
+                            className="text-[10px] px-1.5 py-0.5 rounded bg-red-100 hover:bg-red-200"
+                          >
+                            {t('inbox.failed_send_retry')}
+                          </button>
+                          {altChannel && (
+                            <button
+                              onClick={() => {
+                                setNewMessage(fs.content);
+                                handleReplyChannelChange(altChannel);
+                                setFailedSends((prev) => prev.filter((f) => f.id !== fs.id));
+                              }}
+                              className="text-[10px] px-1.5 py-0.5 rounded bg-red-100 hover:bg-red-200"
+                            >
+                              {t('inbox.failed_send_alt', { channel: CHANNEL_STYLES[altChannel]?.label || altChannel })}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
               {/* Composer */}
-              <div className="p-3 border-t bg-white">
+              <div
+                ref={composerRef}
+                className={cn(
+                  'border-t bg-white overflow-auto',
+                  isCompact ? 'p-2 max-h-[35vh]' : 'p-3 max-h-[45vh]',
+                )}
+              >
+                {/* Reply channel pills with tablist (Prompt 3, 4, 12) */}
+                {availableChannels.length > 1 && !isNarrowComposer && (
+                  <div
+                    className="flex items-center gap-1 mb-2 flex-wrap"
+                    role="tablist"
+                    aria-label="Reply channel"
+                  >
+                    {availableChannels.map((ch) => {
+                      const style = CHANNEL_STYLES[ch];
+                      const Icon = CHANNEL_ICONS[ch];
+                      const isActive = ch === replyChannel;
+                      const isDisabled = !!disabledChannels[ch] || channelHealth[ch] === 'DOWN';
+                      const healthStatus = channelHealth[ch];
+                      const draftKey = selected ? `${selected.id}:${ch}` : '';
+                      const hasDraft = !!drafts[draftKey]?.text;
+                      const disabledReason = disabledChannels[ch] || (channelHealth[ch] === 'DOWN' ? t('inbox.channel_down', { channel: style?.label || ch }) : '');
+
+                      return (
+                        <button
+                          key={ch}
+                          role="tab"
+                          aria-selected={isActive}
+                          aria-disabled={isDisabled}
+                          tabIndex={isActive ? 0 : -1}
+                          title={isDisabled ? disabledReason : style?.label || ch}
+                          onClick={() => !isDisabled && handleReplyChannelChange(ch)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+                              e.preventDefault();
+                              const dir = e.key === 'ArrowRight' ? 1 : -1;
+                              const currentIdx = availableChannels.indexOf(ch);
+                              const nextIdx = (currentIdx + dir + availableChannels.length) % availableChannels.length;
+                              const nextCh = availableChannels[nextIdx];
+                              if (!disabledChannels[nextCh] && channelHealth[nextCh] !== 'DOWN') {
+                                handleReplyChannelChange(nextCh);
+                              }
+                            }
+                          }}
+                          className={cn(
+                            'relative inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full border transition-all',
+                            isActive
+                              ? `${style?.bg} ${style?.text} ${style?.border} ring-2 ring-offset-1 ring-current font-medium`
+                              : isDisabled
+                                ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed grayscale'
+                                : `bg-white ${style?.text} border-slate-200 hover:${style?.bg}`,
+                          )}
+                          data-testid={`reply-pill-${ch.toLowerCase()}`}
+                        >
+                          {Icon && <Icon size={11} />}
+                          <span className="hidden sm:inline">{style?.label || ch}</span>
+                          {/* Health dot (Prompt 8) */}
+                          {healthStatus === 'DEGRADED' && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" aria-label="Degraded" />
+                          )}
+                          {healthStatus === 'DOWN' && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-red-500" aria-label="Down" />
+                          )}
+                          {/* Draft dot (Prompt 5) */}
+                          {hasDraft && !isActive && (
+                            <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-blue-500" />
+                          )}
+                          {/* Pin icon (Prompt 11) */}
+                          {isActive && pinnedChannel === ch && (
+                            <Pin size={8} className="text-current" />
+                          )}
+                        </button>
+                      );
+                    })}
+                    {/* Pin/unpin button */}
+                    <button
+                      onClick={togglePinChannel}
+                      className="text-slate-400 hover:text-slate-600 p-0.5"
+                      title={pinnedChannel === replyChannel ? t('inbox.unpin_channel') : t('inbox.pin_channel')}
+                    >
+                      {pinnedChannel === replyChannel ? <PinOff size={12} /> : <Pin size={12} />}
+                    </button>
+                    {/* Screen reader announcement for channel switch (Prompt 12) */}
+                    <span className="sr-only" aria-live="assertive">
+                      {replyChannel ? `Replying via ${CHANNEL_STYLES[replyChannel]?.label || replyChannel}` : ''}
+                    </span>
+                  </div>
+                )}
+                {/* Narrow mode: collapse pills to dropdown (Prompt 4) */}
+                {availableChannels.length > 1 && isNarrowComposer && (
+                  <div className="mb-2">
+                    <select
+                      value={replyChannel}
+                      onChange={(e) => handleReplyChannelChange(e.target.value)}
+                      className="w-full text-xs border rounded-lg px-2 py-1.5 bg-white focus:ring-2 focus:ring-sage-500 focus:outline-none"
+                      aria-label="Reply channel"
+                    >
+                      {availableChannels.map((ch) => {
+                        const style = CHANNEL_STYLES[ch];
+                        const isDisabled = !!disabledChannels[ch] || channelHealth[ch] === 'DOWN';
+                        return (
+                          <option key={ch} value={ch} disabled={isDisabled}>
+                            {style?.label || ch}
+                            {isDisabled ? ` (${disabledChannels[ch] || 'unavailable'})` : ''}
+                            {pinnedChannel === ch ? ' (pinned)' : ''}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+                )}
+
+                {/* Context bar for current channel (Prompt 3) */}
+                <ConversationContextBar
+                  channel={replyChannel || selected?.channel || 'WHATSAPP'}
+                  lastCustomerMessageAt={selected?.lastCustomerMessageAt}
+                  conversationMetadata={selected?.metadata}
+                  onUseTemplate={() => setShowTemplates(true)}
+                />
+
                 {showTemplates && (
                   <div className="mb-2 border rounded-md bg-white shadow-lg max-h-48 overflow-auto">
                     <div className="px-3 py-2 border-b bg-slate-50 flex items-center justify-between">
@@ -1340,18 +1822,48 @@ function InboxPage() {
                         <X size={14} />
                       </button>
                     </div>
-                    {templates.map((tpl) => (
-                      <button
-                        key={tpl.id}
-                        onClick={() => insertTemplate(tpl)}
-                        className="w-full text-left px-3 py-2 hover:bg-slate-50 border-b last:border-0"
-                      >
-                        <p className="text-sm font-medium">{tpl.name}</p>
-                        <p className="text-xs text-slate-500 truncate">{tpl.body}</p>
-                      </button>
-                    ))}
+                    {templates.map((tpl) => {
+                      const hasVariant = tpl.variants?.[replyChannel];
+                      const displayBody = hasVariant?.body || tpl.body;
+                      return (
+                        <button
+                          key={tpl.id}
+                          onClick={() => insertTemplate(tpl)}
+                          className="w-full text-left px-3 py-2 hover:bg-slate-50 border-b last:border-0"
+                        >
+                          <div className="flex items-center gap-1.5">
+                            <p className="text-sm font-medium">{tpl.name}</p>
+                            {hasVariant && (
+                              <span className={cn(
+                                'text-[8px] px-1 py-0.5 rounded',
+                                CHANNEL_STYLES[replyChannel]?.bg,
+                                CHANNEL_STYLES[replyChannel]?.text,
+                              )}>
+                                {CHANNEL_STYLES[replyChannel]?.label}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-slate-500 truncate">{displayBody}</p>
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
+
+                {/* Email subject line (Prompt 3) */}
+                {replyChannel === 'EMAIL' && (
+                  <div className="mb-2">
+                    <input
+                      type="text"
+                      value={emailSubject}
+                      onChange={(e) => setEmailSubject(e.target.value)}
+                      placeholder="Subject..."
+                      className="w-full border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-sage-500"
+                      data-testid="email-subject-input"
+                    />
+                  </div>
+                )}
+
                 <div className="flex gap-2 items-end">
                   <div className="flex gap-0.5">
                     <button
@@ -1364,7 +1876,8 @@ function InboxPage() {
                     <MediaComposer
                       conversationId={selected.id}
                       onUploadComplete={() => loadMessages(selected.id)}
-                      channel={selected.channel}
+                      channel={replyChannel || selected.channel}
+                      onSwitchToEmail={availableChannels.includes('EMAIL') ? () => handleReplyChannelChange('EMAIL') : undefined}
                     />
                     <button
                       onClick={() => setShowQuickReplies(!showQuickReplies)}
@@ -1383,10 +1896,8 @@ function InboxPage() {
                     <textarea
                       value={newMessage}
                       onChange={(e) => {
-                        const val =
-                          selected?.channel === 'INSTAGRAM'
-                            ? e.target.value.slice(0, 1000)
-                            : e.target.value;
+                        let val = e.target.value;
+                        if (replyChannel === 'INSTAGRAM') val = val.slice(0, 1000);
                         setNewMessage(val);
                       }}
                       onKeyDown={(e) => {
@@ -1401,7 +1912,7 @@ function InboxPage() {
                       }}
                       placeholder={t('inbox.type_message')}
                       rows={1}
-                      maxLength={selected?.channel === 'INSTAGRAM' ? 1000 : undefined}
+                      maxLength={replyChannel === 'INSTAGRAM' ? 1000 : undefined}
                       className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sage-500 resize-none min-h-[38px] max-h-24"
                       style={{ height: 'auto' }}
                       onInput={(e) => {
@@ -1410,7 +1921,8 @@ function InboxPage() {
                         el.style.height = Math.min(el.scrollHeight, 96) + 'px';
                       }}
                     />
-                    {selected?.channel === 'INSTAGRAM' && newMessage.length > 0 && (
+                    {/* Instagram char counter (Prompt 3) */}
+                    {replyChannel === 'INSTAGRAM' && newMessage.length > 0 && (
                       <span
                         className={cn(
                           'absolute right-2 bottom-1 text-[10px]',
@@ -1420,6 +1932,31 @@ function InboxPage() {
                         {newMessage.length}/1000
                       </span>
                     )}
+                    {/* Unresolved template variables warning (Prompt 10) */}
+                    {newMessage.includes('{{') && (() => {
+                      const vars = newMessage.match(/\{\{[^}]+\}\}/g);
+                      if (!vars || vars.length === 0) return null;
+                      return (
+                        <span className="absolute left-2 bottom-1 text-[10px] text-amber-500 flex items-center gap-0.5">
+                          <AlertCircle size={9} />
+                          {vars.length} unresolved variable{vars.length > 1 ? 's' : ''}
+                        </span>
+                      );
+                    })()}
+                    {/* SMS char counter + segment calculator (Prompt 3) */}
+                    {replyChannel === 'SMS' && newMessage.length > 0 && (() => {
+                      const info = smsSegmentInfo(newMessage);
+                      return (
+                        <span
+                          className={cn(
+                            'absolute right-2 bottom-1 text-[10px]',
+                            info.segments > 1 ? 'text-amber-500' : 'text-slate-400',
+                          )}
+                        >
+                          {info.chars} chars · {info.segments} segment{info.segments !== 1 ? 's' : ''}
+                        </span>
+                      );
+                    })()}
                   </div>
                   <ScheduledMessage
                     onSchedule={(date) => setScheduledFor(date)}
@@ -1561,6 +2098,20 @@ function InboxPage() {
                       ))}
                     </div>
                   )}
+                </div>
+
+                {/* Channels on File (Prompt 9) */}
+                <div className="px-4 py-3 border-b">
+                  <ChannelsOnFile
+                    channels={{
+                      phone: customer.phone,
+                      email: customer.email,
+                      instagramUserId: customer.instagramUserId,
+                      facebookPsid: customer.facebookPsid,
+                      webChatSessionId: customer.webChatSessionId,
+                    }}
+                    onAddIdentifier={handleAddIdentifier}
+                  />
                 </div>
 
                 {/* Action Card Badge */}
@@ -1975,6 +2526,53 @@ function InboxPage() {
                 className="px-3 py-2 text-sm border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
               >
                 Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Discard draft dialog (Prompt 5, 12) */}
+      {showDiscardDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center" aria-modal="true">
+          <div className="absolute inset-0 bg-black/30 animate-backdrop" onClick={() => setShowDiscardDialog(false)} />
+          <div
+            className="relative bg-white rounded-2xl shadow-soft-lg p-6 max-w-sm mx-4 animate-modal-enter"
+            role="alertdialog"
+            aria-labelledby="discard-title"
+            aria-describedby="discard-desc"
+          >
+            <h3 id="discard-title" className="text-sm font-semibold text-slate-900 mb-1">
+              {t('inbox.discard_draft_title')}
+            </h3>
+            <p id="discard-desc" className="text-xs text-slate-500 mb-4">
+              {t('inbox.discard_draft_message')}
+            </p>
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => {
+                  setShowDiscardDialog(false);
+                  setPendingConversationSwitch(null);
+                }}
+                className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50"
+                autoFocus
+              >
+                {t('inbox.keep_editing')}
+              </button>
+              <button
+                onClick={() => {
+                  setNewMessage('');
+                  setEmailSubject('');
+                  setShowDiscardDialog(false);
+                  if (pendingConversationSwitch) {
+                    captureEvent('conversation_selected');
+                    setSelected(pendingConversationSwitch);
+                    setMobileView('thread');
+                    setPendingConversationSwitch(null);
+                  }
+                }}
+                className="text-xs px-3 py-1.5 rounded-lg bg-red-600 text-white hover:bg-red-700"
+              >
+                {t('inbox.discard')}
               </button>
             </div>
           </div>

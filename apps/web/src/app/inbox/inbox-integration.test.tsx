@@ -93,6 +93,18 @@ jest.mock('@/components/inbox/delivery-status', () => ({
 jest.mock('@/components/feature-discovery', () => ({
   FeatureDiscovery: () => null,
 }));
+jest.mock('@/components/inbox/channel-badge', () => ({
+  ChannelBadge: () => null,
+}));
+jest.mock('@/components/inbox/reply-channel-switcher', () => ({
+  getDefaultReplyChannel: (conv: string, avail: string[]) => avail[0] || conv,
+}));
+jest.mock('@/components/inbox/channels-on-file', () => ({
+  ChannelsOnFile: () => null,
+}));
+jest.mock('@/components/inbox/conversation-context-bar', () => ({
+  ConversationContextBar: () => null,
+}));
 jest.mock('@/lib/posthog', () => ({
   captureEvent: jest.fn(),
 }));
@@ -103,6 +115,11 @@ jest.mock('@/components/scheduled-message', () => ({
 
 // Needed by jsdom
 Element.prototype.scrollIntoView = jest.fn();
+global.ResizeObserver = class ResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+} as any;
 
 import { render, screen, waitFor, fireEvent, act } from '@testing-library/react';
 import { api } from '@/lib/api';
@@ -114,11 +131,13 @@ const mockConversation = {
   id: 'conv-1',
   customerId: 'cust-1',
   customer: { id: 'cust-1', name: 'Emma Wilson', phone: '+1234' },
+  channel: 'WHATSAPP',
   status: 'OPEN',
   lastMessageAt: '2026-02-18T10:00:00Z',
   tags: [],
   assignedTo: null,
   messages: [{ content: 'Hello' }],
+  metadata: {},
 };
 
 function setupMocks(actionCardCount = 5) {

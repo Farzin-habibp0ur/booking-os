@@ -5,7 +5,7 @@ import { ConversationContextBar } from './conversation-context-bar';
 jest.mock('@/lib/i18n', () => ({
   useI18n: () => ({
     t: (key: string) => {
-      const map = {
+      const map: Record<string, string> = {
         'inbox.context_messaging_window': 'Messaging window',
         'inbox.context_human_agent_window': 'Human agent window',
         'inbox.context_window_expired': 'Messaging window expired',
@@ -13,8 +13,9 @@ jest.mock('@/lib/i18n', () => ({
         'inbox.context_subject': 'Subject',
         'inbox.context_sms_opted_in': 'SMS — Customer opted in',
         'inbox.context_sms_opted_out': 'SMS — Customer has opted out',
+        'inbox.wa_template_required': 'Outside 24h window — use a template',
       };
-      return map[key as keyof typeof map] || key;
+      return map[key] || key;
     },
   }),
 }));
@@ -105,12 +106,46 @@ describe('ConversationContextBar', () => {
     });
   });
 
-  describe('Other channels', () => {
-    it('renders nothing for WHATSAPP', () => {
-      const { container } = render(<ConversationContextBar channel="WHATSAPP" />);
+  describe('WhatsApp context', () => {
+    it('shows template required when no customer message exists', () => {
+      render(<ConversationContextBar channel="WHATSAPP" />);
+      const bar = screen.getByTestId('conversation-context-bar');
+      expect(bar).toHaveTextContent('Outside 24h window — use a template');
+      expect(bar).toHaveClass('bg-amber-50');
+    });
+
+    it('shows template required when window expired', () => {
+      const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString();
+      render(<ConversationContextBar channel="WHATSAPP" lastCustomerMessageAt={twoDaysAgo} />);
+      const bar = screen.getByTestId('conversation-context-bar');
+      expect(bar).toHaveTextContent('Outside 24h window — use a template');
+    });
+
+    it('shows window closing warning when near expiry', () => {
+      // 20h ago = 80% of 24h
+      const twentyHoursAgo = new Date(Date.now() - 20 * 60 * 60 * 1000).toISOString();
+      render(<ConversationContextBar channel="WHATSAPP" lastCustomerMessageAt={twentyHoursAgo} />);
+      const bar = screen.getByTestId('conversation-context-bar');
+      expect(bar).toHaveTextContent('WhatsApp window closing');
+    });
+
+    it('renders nothing when WhatsApp window is well open', () => {
+      const fiveHoursAgo = new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString();
+      const { container } = render(
+        <ConversationContextBar channel="WHATSAPP" lastCustomerMessageAt={fiveHoursAgo} />,
+      );
       expect(container.firstChild).toBeNull();
     });
 
+    it('shows "Use template" button when onUseTemplate provided and window expired', () => {
+      const mockFn = jest.fn();
+      render(<ConversationContextBar channel="WHATSAPP" onUseTemplate={mockFn} />);
+      const btn = screen.getByTestId('use-template-btn');
+      expect(btn).toBeInTheDocument();
+    });
+  });
+
+  describe('Other channels', () => {
     it('renders nothing for WEB_CHAT', () => {
       const { container } = render(<ConversationContextBar channel="WEB_CHAT" />);
       expect(container.firstChild).toBeNull();

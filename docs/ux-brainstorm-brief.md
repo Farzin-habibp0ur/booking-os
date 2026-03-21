@@ -314,15 +314,15 @@ Organized by theme for brainstorming.
 
 #### Missing Communication Features
 
-- Cannot send images, documents, or audio from inbox (text-only in UI)
-- Cannot initiate outbound conversations (staff can't message first)
-- No bulk close or bulk assign conversations
+- ~~Cannot send images, documents, or audio from inbox (text-only in UI)~~ — **DONE** (MediaComposer with per-channel validation, Inbox UX v3)
+- ~~Cannot initiate outbound conversations (staff can't message first)~~ — **DONE** (OutboundCompose modal)
+- ~~No bulk close or bulk assign conversations~~ — **DONE** (Bulk action bar with close/assign/tag/mark-read)
 - Cannot edit or delete sent messages
-- No message delivery/read receipts shown
-- No scheduled messages
+- ~~No message delivery/read receipts shown~~ — **DONE** (DeliveryStatus: sent/delivered/read/failed checks, Inbox UX v3)
+- ~~No scheduled messages~~ — **DONE** (ScheduledMessage component with datetime picker)
 - No typing indicators
 - Cannot pin or archive conversations
-- No presence indicators (who's viewing what)
+- ~~No presence indicators (who's viewing what)~~ — **DONE** (Presence pills in thread header via WebSocket, Inbox UX v3)
 - ~~No email as a messaging channel (WhatsApp only)~~ — **DONE** (Omnichannel Phase 3)
 - ~~No SMS channel~~ — **DONE** (Omnichannel Phase 1)
 

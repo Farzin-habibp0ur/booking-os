@@ -85,6 +85,18 @@ jest.mock('@/components/inbox/delivery-status', () => ({
 jest.mock('@/components/feature-discovery', () => ({
   FeatureDiscovery: () => null,
 }));
+jest.mock('@/components/inbox/channel-badge', () => ({
+  ChannelBadge: ({ channel }: any) => <span data-testid={`channel-badge-${channel?.toLowerCase()}`} />,
+}));
+jest.mock('@/components/inbox/reply-channel-switcher', () => ({
+  getDefaultReplyChannel: (conv: string, avail: string[]) => avail[0] || conv,
+}));
+jest.mock('@/components/inbox/channels-on-file', () => ({
+  ChannelsOnFile: () => null,
+}));
+jest.mock('@/components/inbox/conversation-context-bar', () => ({
+  ConversationContextBar: () => null,
+}));
 jest.mock('@/lib/posthog', () => ({
   captureEvent: jest.fn(),
 }));
@@ -103,11 +115,19 @@ import InboxPage from './page';
 // Mock scrollIntoView
 Element.prototype.scrollIntoView = jest.fn();
 
+// Mock ResizeObserver for jsdom
+global.ResizeObserver = class ResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+} as any;
+
 const mockConversations = [
   {
     id: 'conv-1',
     customerId: 'cust-1',
     customer: { id: 'cust-1', name: 'Emma Wilson', phone: '+1234' },
+    channel: 'WHATSAPP',
     status: 'OPEN',
     lastMessageAt: '2026-01-15T10:00:00Z',
     tags: [],
@@ -118,6 +138,7 @@ const mockConversations = [
     id: 'conv-2',
     customerId: 'cust-2',
     customer: { id: 'cust-2', name: 'Bob Smith', phone: '+5678' },
+    channel: 'WHATSAPP',
     status: 'OPEN',
     lastMessageAt: '2026-01-14T10:00:00Z',
     tags: [],
