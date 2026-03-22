@@ -64,6 +64,8 @@ import { FeatureDiscovery } from '@/components/feature-discovery';
 import ScheduledMessage from '@/components/scheduled-message';
 import { captureEvent } from '@/lib/posthog';
 import { CHANNEL_STYLES } from '@/lib/design-tokens';
+import { useAuth } from '@/lib/auth';
+import { useDraftAutosave } from '@/hooks/use-draft-autosave';
 
 // Channel icon map for message badges and conversation cards
 const CHANNEL_ICONS: Record<string, any> = {
@@ -148,6 +150,7 @@ export default function InboxPageWrapper() {
 function InboxPage() {
   const { t } = useI18n();
   const pack = usePack();
+  const { user } = useAuth();
   const searchParams = useSearchParams();
   const router = useRouter();
   const conversationIdParam = searchParams.get('conversationId');
@@ -224,6 +227,8 @@ function InboxPage() {
     }
     return null;
   });
+  // Draft auto-save to backend
+  const { save: autosaveDraft, load: loadDrafts, clear: clearDraft } = useDraftAutosave(selected?.id, user?.id);
   // Compact mode detection
   const [isCompact, setIsCompact] = useState(false);
   const [isNarrowComposer, setIsNarrowComposer] = useState(false);
@@ -236,6 +241,8 @@ function InboxPage() {
   const [smartSuggestions, setSmartSuggestions] = useState<
     Array<{ type: string; message: string; action?: string }>
   >([]);
+  // Track dismissed suggestions per conversation (session-level)
+  const [dismissedSuggestions, setDismissedSuggestions] = useState<Record<string, Set<string>>>({});
   // Failed sends
   const [failedSends, setFailedSends] = useState<
     Array<{ id: string; content: string; channel: string; error: string }>
@@ -520,7 +527,7 @@ function InboxPage() {
       setAiConfidence(undefined);
       // Set reply channel: pinned > lastInboundChannel > conversation channel
       const convChannel = selected.channel || 'WHATSAPP';
-      const lastInbound = meta.lastInboundChannel;
+      const lastInbound = selected.lastInboundChannel || meta.lastInboundChannel;
       const custChannels = selected.customer?.channels || [];
       const avail = custChannels.length > 0 ? custChannels : [convChannel];
       setAvailableChannels(avail);
@@ -529,7 +536,7 @@ function InboxPage() {
           ? pinnedChannel
           : getDefaultReplyChannel(convChannel, avail, lastInbound);
       setReplyChannel(defaultCh);
-      // Restore draft for this channel if exists
+      // Restore draft for this channel: try local first, then load from backend
       const draftKey = `${selected.id}:${defaultCh}`;
       const saved = drafts[draftKey];
       if (saved) {
@@ -538,6 +545,17 @@ function InboxPage() {
       } else {
         setNewMessage('');
         setEmailSubject('');
+        // Load auto-saved drafts from backend
+        loadDrafts().then((backendDrafts) => {
+          if (Object.keys(backendDrafts).length > 0) {
+            setDrafts((prev) => ({ ...prev, ...backendDrafts }));
+            const backendSaved = backendDrafts[draftKey];
+            if (backendSaved) {
+              setNewMessage(backendSaved.text);
+              if (defaultCh === 'EMAIL') setEmailSubject(backendSaved.subject || '');
+            }
+          }
+        });
       }
       // Load smart suggestions
       loadSmartSuggestions(selected);
@@ -788,7 +806,7 @@ function InboxPage() {
       setAiConfidence(undefined);
       setEditingDraft(null);
       setShowQuickReplies(false);
-      // Clear draft for this channel
+      // Clear draft for this channel (local + backend)
       if (selected) {
         const draftKey = `${selected.id}:${replyChannel}`;
         setDrafts((prev) => {
@@ -796,6 +814,7 @@ function InboxPage() {
           delete next[draftKey];
           return next;
         });
+        clearDraft(replyChannel || selected.channel);
       }
       if (scheduledFor) {
         setScheduledFor(null);
@@ -1021,7 +1040,7 @@ function InboxPage() {
       }
     }
 
-    // Save current draft
+    // Save current draft (local + backend)
     const currentKey = `${selected.id}:${replyChannel}`;
     if (newMessage.trim() || emailSubject.trim()) {
       setDrafts((prev) => ({
@@ -1031,6 +1050,7 @@ function InboxPage() {
           subject: replyChannel === 'EMAIL' ? emailSubject : undefined,
         },
       }));
+      autosaveDraft(replyChannel, newMessage, replyChannel === 'EMAIL' ? emailSubject : undefined);
     }
     // Restore draft for new channel
     const newKey = `${selected.id}:${newChannel}`;
@@ -1039,6 +1059,14 @@ function InboxPage() {
     setEmailSubject(newChannel === 'EMAIL' ? saved?.subject || '' : '');
     setReplyChannel(newChannel);
     if (editingDraft) setEditingDraft(null);
+    // Clear suggestion dismissals so new channel-specific suggestions can appear
+    if (selected) {
+      setDismissedSuggestions((prev) => {
+        const next = { ...prev };
+        delete next[selected.id];
+        return next;
+      });
+    }
     toast(
       t('inbox.channel_switched', { channel: CHANNEL_STYLES[newChannel]?.label || newChannel }),
     );
@@ -1988,27 +2016,40 @@ function InboxPage() {
                 })()}
 
               {/* Smart Suggestions (Prompt 8) */}
-              {smartSuggestions.length > 0 && (
-                <div className="px-3 py-1.5 bg-amber-50 border-t border-amber-100">
-                  {smartSuggestions.map((s, i) => (
-                    <div
-                      key={i}
-                      className="flex items-center justify-between text-xs text-amber-700 py-0.5"
-                    >
-                      <span>{s.message}</span>
-                      <button
-                        onClick={() =>
-                          setSmartSuggestions((prev) => prev.filter((_, j) => j !== i))
-                        }
-                        className="text-amber-400 hover:text-amber-600 ml-2"
-                        aria-label="Dismiss suggestion"
+              {(() => {
+                const convDismissed = selected ? dismissedSuggestions[selected.id] : undefined;
+                const visible = smartSuggestions.filter(
+                  (s) => !convDismissed?.has(s.message),
+                );
+                if (visible.length === 0) return null;
+                return (
+                  <div className="px-3 py-1.5 bg-amber-50 border-t border-amber-100">
+                    {visible.map((s) => (
+                      <div
+                        key={s.message}
+                        className="flex items-center justify-between text-xs text-amber-700 py-0.5"
                       >
-                        <X size={12} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
+                        <span>{s.message}</span>
+                        <button
+                          onClick={() => {
+                            if (!selected) return;
+                            setDismissedSuggestions((prev) => {
+                              const existing = prev[selected.id] || new Set<string>();
+                              const next = new Set(existing);
+                              next.add(s.message);
+                              return { ...prev, [selected.id]: next };
+                            });
+                          }}
+                          className="text-amber-400 hover:text-amber-600 ml-2"
+                          aria-label="Dismiss suggestion"
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
 
               {/* Failed Send Recovery (Prompt 8) */}
               {failedSends.length > 0 && (
@@ -2338,6 +2379,7 @@ function InboxPage() {
                         let val = e.target.value;
                         if (replyChannel === 'INSTAGRAM') val = val.slice(0, 1000);
                         setNewMessage(val);
+                        autosaveDraft(replyChannel || selected?.channel || 'WHATSAPP', val, replyChannel === 'EMAIL' ? emailSubject : undefined);
                       }}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' && !e.shiftKey) {

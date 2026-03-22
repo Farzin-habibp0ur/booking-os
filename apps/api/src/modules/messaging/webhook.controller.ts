@@ -308,7 +308,7 @@ export class WebhookController {
 
     const updatedConversation = await this.prisma.conversation.update({
       where: { id: conversation.id },
-      data: { lastMessageAt: new Date(), status: 'OPEN' },
+      data: { lastMessageAt: new Date(), status: 'OPEN', lastInboundChannel: channel },
       include: {
         customer: true,
         assignedTo: { select: { id: true, name: true } },

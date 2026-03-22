@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   Patch,
   Param,
   Query,
@@ -42,6 +43,24 @@ export class OutboundController {
       channel: body.channel,
       content: body.content,
     });
+  }
+
+  @Put('draft/auto-save')
+  autoSaveDraft(
+    @BusinessId() businessId: string,
+    @CurrentUser('sub') staffId: string,
+    @Body() body: { conversationId: string; channel: string; content: string; subject?: string },
+  ) {
+    return this.outboundService.autoSaveDraft(businessId, staffId, body);
+  }
+
+  @Get('draft/auto-save')
+  getAutoSaveDrafts(
+    @BusinessId() businessId: string,
+    @CurrentUser('sub') staffId: string,
+    @Query('conversationId') conversationId: string,
+  ) {
+    return this.outboundService.getAutoSaveDrafts(businessId, staffId, conversationId);
   }
 
   @Get()

@@ -324,8 +324,9 @@ model Conversation {
   locationId    String?
   channel       String    @default("WHATSAPP")
   status        String    @default("OPEN")
-  lastMessageAt DateTime?
-  snoozedUntil  DateTime?
+  lastMessageAt      DateTime?
+  lastInboundChannel String?
+  snoozedUntil       DateTime?
   tags          String[]  @default([])
   metadata      Json      @default("{}")
   createdAt     DateTime  @default(now())
@@ -1044,6 +1045,7 @@ model OutboundDraft {
   staffId         String
   channel         String    @default("WHATSAPP")
   content         String
+  subject         String?
   status          String    @default("DRAFT") // DRAFT, APPROVED, SENT, REJECTED
   approvedById    String?
   sentAt          DateTime?
@@ -1064,6 +1066,7 @@ model OutboundDraft {
 
   @@index([businessId, status])
   @@index([businessId, customerId])
+  @@unique([conversationId, channel, staffId])
   @@index([businessId, conversationId, status])
   @@map("outbound_drafts")
 }

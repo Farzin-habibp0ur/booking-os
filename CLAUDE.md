@@ -47,7 +47,7 @@ booking-os/
 │   │   └── next.config.js      # Stricter CSP (no analytics), X-Robots-Tag: noindex
 │   └── whatsapp-simulator/     # WhatsApp testing tool (port 3002)
 ├── packages/
-│   ├── db/                     # Prisma schema (92 models), migrations, seed scripts
+│   ├── db/                     # Prisma schema (92 models), 66 migrations, seed scripts
 │   │   ├── prisma/schema.prisma
 │   │   ├── src/seed.ts         # Base seed (aesthetic + dealership + wellness, idempotent)
 │   │   ├── src/seed-demo.ts    # Rich demo data (idempotent, dedup-safe)
@@ -191,7 +191,7 @@ modules/
 
 ### Database (Prisma)
 
-- Schema at `packages/db/prisma/schema.prisma` — **92 models**, 64 migrations
+- Schema at `packages/db/prisma/schema.prisma` — **92 models**, 66 migrations
 - Generate client: `npx prisma generate --schema=packages/db/prisma/schema.prisma`
 - Create migration: `npx prisma migrate dev --name your_name --schema=packages/db/prisma/schema.prisma`
 - `PrismaService` is a global NestJS provider — inject it in constructors
@@ -259,6 +259,7 @@ BookingOS supports 6 messaging channels: **WhatsApp**, **Instagram DM**, **Faceb
 **Key patterns:**
 
 - `Message.channel` is denormalized from `Conversation.channel` — set at creation time for query efficiency
+- `Conversation.lastInboundChannel` tracks the channel of the most recent inbound message — persisted by `processInboundMessage()` in webhook controller, used by `getDefaultReplyChannel()` for smart reply channel selection
 - Each channel gets its own conversation by default. `CustomerIdentityService.findConversation()` enables unified thread lookup across channels for future cross-channel merging.
 - `Business.channelSettings` JSON stores enabled channels, default reply channel, and autoDetectChannel flag
 - `Location` has per-channel config JSON fields: `whatsappConfig`, `instagramConfig`, `facebookConfig`, `smsConfig`, `emailConfig`, `webChatConfig`
@@ -268,7 +269,7 @@ BookingOS supports 6 messaging channels: **WhatsApp**, **Instagram DM**, **Faceb
 **UI components** (in `apps/web/src/components/inbox/`):
 
 - `ChannelBadge` — colored icon+label badge per channel, used on conversation cards and thread headers
-- `ReplyChannelSwitcher` — dropdown to switch reply channel with disabled channel support (tooltip reasons) and `getDefaultReplyChannel()` helper
+- `ReplyChannelSwitcher` — dropdown to switch reply channel with disabled channel support (custom styled tooltips with fixable reason CTAs: "Add email"/"Add phone"), `getDefaultReplyChannel()` helper, `onAddContact` callback for inline contact addition
 - `ChannelsOnFile` — sidebar listing customer's available channels with inline "Add email"/"Add phone" forms (E.164 and email format validation), wired into inbox right sidebar
 - `ChannelFilterBar` — 7-tab filter (ALL + 6 channels) with unread count badges, `role="tablist"` accessibility
 - `ConversationContextBar` — compact bar showing FB/IG/WA messaging window countdown, email subject, SMS opt-in/out status, WhatsApp "Use template" CTA when window expired
@@ -279,9 +280,9 @@ BookingOS supports 6 messaging channels: **WhatsApp**, **Instagram DM**, **Faceb
 
 - **Adaptive composer** — morphs per channel: email subject line, SMS char counter + segment calculator, Instagram 1000-char limit, WhatsApp template mode when window expired, Web Chat online/offline indicator
 - **Channel pills** — `role="tablist"` with `aria-selected`/`aria-disabled`, keyboard nav (ArrowLeft/ArrowRight), colored active ring, grayscale disabled state, health dots (amber=degraded, red=down), blue draft dots, pin icon
-- **Draft persistence** — per-channel drafts keyed by `conversationId:channel`, email preserves subject+body, blue dot indicators on pills, discard confirmation dialog (`role="alertdialog"`) on conversation switch, cleared on send
+- **Draft persistence** — per-channel drafts keyed by `conversationId:channel`, email preserves subject+body, blue dot indicators on pills, discard confirmation dialog (`role="alertdialog"`) on conversation switch, cleared on send. Debounced auto-save to backend `OutboundDraft` (1.5s) via `PUT /outbound/draft/auto-save`; restored from backend on conversation select for cross-session persistence
 - **Channel pinning** — pin icon on active pill, persisted to `localStorage('bookingos:pinnedChannel')`, auto-select priority: pinned > lastInbound > conversation channel > first available
-- **Smart suggestions** — proactive nudges between context bar and pills: SMS opted-out, IG/FB window expiring, no response >24h; dismissible with X
+- **Smart suggestions** — proactive nudges between context bar and pills: SMS opted-out, IG/FB window expiring, no response >24h; dismissible with X (per-conversation, persists across conversation switches within session)
 - **Failed send recovery** — `role="alert"` error panel with Retry + "Send via [alt channel]" buttons
 - **Compact mode** — `isCompact` at screen height <800px (reduced padding, 35vh max), pills collapse to `<select>` dropdown at composer width <640px via ResizeObserver
 - **Conversation list sorting** — Web Chat LIVE sessions sorted to top, then urgency (expiring IG/FB windows), then server order
@@ -324,6 +325,7 @@ BookingOS supports 6 messaging channels: **WhatsApp**, **Instagram DM**, **Faceb
 - Data fetching via the API client in `useEffect` or event handlers
 - Real-time updates via Socket.io client at `apps/web/src/lib/socket.ts`
 - i18n via custom `useTranslation` hook reading from `locales/en.json` and `locales/es.json`
+- Feature hooks in `apps/web/src/hooks/` — `useDraftAutosave` (debounced draft save/load/clear via backend API)
 
 ### Component Patterns
 
@@ -770,6 +772,8 @@ When AI generates a response, it creates an `OutboundDraft` record (source: `AI`
 - `GET /ai/settings` / `PATCH /ai/settings` — AI config including `autoReply.channelOverrides`
 - `POST /ai/conversations/:id/regenerate-draft` — Re-run AI for latest inbound message
 - `POST /outbound/:id/send` — Approve and send an OutboundDraft
+- `PUT /outbound/draft/auto-save` — Upsert draft by conversationId+channel+staffId (delete if empty content)
+- `GET /outbound/draft/auto-save?conversationId=X` — Load auto-saved drafts for conversation+staff
 - `PATCH /action-cards/:id/execute` with `{ ctaAction }` — Execute specific CTA action
 - `POST /action-cards/bulk-followup` — Batch create follow-up drafts from retention/quote cards
 

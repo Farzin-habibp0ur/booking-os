@@ -184,4 +184,74 @@ export class OutboundService {
       data: { status: 'SENT', sentAt: new Date(), conversationId },
     });
   }
+
+  async autoSaveDraft(
+    businessId: string,
+    staffId: string,
+    dto: { conversationId: string; channel: string; content: string; subject?: string },
+  ) {
+    // If content and subject are both empty, delete the draft
+    if (!dto.content.trim() && !dto.subject?.trim()) {
+      await this.prisma.outboundDraft.deleteMany({
+        where: {
+          businessId,
+          conversationId: dto.conversationId,
+          channel: dto.channel,
+          staffId,
+          status: 'DRAFT',
+        },
+      });
+      return { deleted: true };
+    }
+
+    // Find the conversation to get customerId
+    const conversation = await this.prisma.conversation.findFirst({
+      where: { id: dto.conversationId, businessId },
+      select: { customerId: true },
+    });
+    if (!conversation) throw new NotFoundException('Conversation not found');
+
+    return this.prisma.outboundDraft.upsert({
+      where: {
+        conversationId_channel_staffId: {
+          conversationId: dto.conversationId,
+          channel: dto.channel,
+          staffId,
+        },
+      },
+      create: {
+        businessId,
+        customerId: conversation.customerId,
+        staffId,
+        conversationId: dto.conversationId,
+        channel: dto.channel,
+        content: dto.content,
+        subject: dto.subject,
+        status: 'DRAFT',
+        source: 'MANUAL',
+      },
+      update: {
+        content: dto.content,
+        subject: dto.subject,
+        updatedAt: new Date(),
+      },
+    });
+  }
+
+  async getAutoSaveDrafts(businessId: string, staffId: string, conversationId: string) {
+    return this.prisma.outboundDraft.findMany({
+      where: {
+        businessId,
+        conversationId,
+        staffId,
+        status: 'DRAFT',
+        source: 'MANUAL',
+      },
+      select: {
+        channel: true,
+        content: true,
+        subject: true,
+      },
+    });
+  }
 }

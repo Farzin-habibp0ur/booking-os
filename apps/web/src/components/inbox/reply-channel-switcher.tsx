@@ -43,11 +43,17 @@ const CHANNEL_ICONS: Record<string, any> = {
   WEB_CHAT: Globe,
 };
 
+const FIXABLE_REASONS: Record<string, { label: string; field: 'email' | 'phone' }> = {
+  'No email on file': { label: 'Add email', field: 'email' },
+  'No phone on file': { label: 'Add phone', field: 'phone' },
+};
+
 interface ReplyChannelSwitcherProps {
   currentChannel: string;
   availableChannels: string[];
   onChannelChange: (channel: string) => void;
   disabledChannels?: Record<string, string>;
+  onAddContact?: (field: 'email' | 'phone') => void;
 }
 
 export function ReplyChannelSwitcher({
@@ -55,15 +61,18 @@ export function ReplyChannelSwitcher({
   availableChannels,
   onChannelChange,
   disabledChannels,
+  onAddContact,
 }: ReplyChannelSwitcherProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(-1);
+  const [hoveredDisabled, setHoveredDisabled] = useState<string | null>(null);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) {
         setIsOpen(false);
+        setHoveredDisabled(null);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
@@ -74,6 +83,8 @@ export function ReplyChannelSwitcher({
   useEffect(() => {
     if (isOpen) {
       setFocusedIndex(-1);
+    } else {
+      setHoveredDisabled(null);
     }
   }, [isOpen]);
 
@@ -143,36 +154,66 @@ export function ReplyChannelSwitcher({
             const Icon = CHANNEL_ICONS[ch];
             const disabledReason = disabledChannels?.[ch];
             const isDisabled = !!disabledReason;
+            const fixable = disabledReason ? FIXABLE_REASONS[disabledReason] : undefined;
 
             return (
-              <button
-                key={ch}
-                onClick={() => {
-                  if (!isDisabled) {
-                    onChannelChange(ch);
-                    setIsOpen(false);
-                  }
-                }}
-                role="option"
-                aria-selected={ch === currentChannel}
-                aria-disabled={isDisabled}
-                title={isDisabled ? disabledReason : undefined}
-                className={cn(
-                  'w-full flex items-center gap-2 px-3 py-1.5 text-xs transition-colors',
-                  isDisabled
-                    ? 'opacity-40 cursor-not-allowed text-slate-400'
-                    : ch === currentChannel
-                      ? 'bg-slate-50 font-medium text-slate-900'
-                      : 'text-slate-600 hover:bg-slate-50',
-                  focusedIndex === index && !isDisabled && 'ring-2 ring-inset ring-sage-500',
+              <div key={ch} className="relative">
+                <button
+                  onClick={() => {
+                    if (!isDisabled) {
+                      onChannelChange(ch);
+                      setIsOpen(false);
+                    }
+                  }}
+                  onMouseEnter={() => isDisabled && setHoveredDisabled(ch)}
+                  onMouseLeave={() => setHoveredDisabled(null)}
+                  role="option"
+                  aria-selected={ch === currentChannel}
+                  aria-disabled={isDisabled}
+                  title={isDisabled ? disabledReason : undefined}
+                  className={cn(
+                    'w-full flex items-center gap-2 px-3 py-1.5 text-xs transition-colors',
+                    isDisabled
+                      ? 'opacity-40 cursor-not-allowed text-slate-400'
+                      : ch === currentChannel
+                        ? 'bg-slate-50 font-medium text-slate-900'
+                        : 'text-slate-600 hover:bg-slate-50',
+                    focusedIndex === index && !isDisabled && 'ring-2 ring-inset ring-sage-500',
+                  )}
+                  data-testid={`reply-channel-option-${ch.toLowerCase()}`}
+                >
+                  {Icon && (
+                    <Icon size={12} className={isDisabled ? 'text-slate-300' : style?.text || ''} />
+                  )}
+                  <span>{style?.label || ch}</span>
+                </button>
+
+                {/* Custom tooltip for disabled channels */}
+                {hoveredDisabled === ch && disabledReason && (
+                  <div
+                    className="absolute left-full top-0 ml-1 z-50 whitespace-nowrap"
+                    onMouseEnter={() => setHoveredDisabled(ch)}
+                    onMouseLeave={() => setHoveredDisabled(null)}
+                  >
+                    <div className="bg-gray-900 text-white text-xs rounded-md px-2.5 py-1.5 shadow-lg flex items-center gap-2">
+                      <span>{disabledReason}</span>
+                      {fixable && onAddContact && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onAddContact(fixable.field);
+                            setIsOpen(false);
+                            setHoveredDisabled(null);
+                          }}
+                          className="underline text-white/80 hover:text-white font-medium"
+                        >
+                          {fixable.label}
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 )}
-                data-testid={`reply-channel-option-${ch.toLowerCase()}`}
-              >
-                {Icon && (
-                  <Icon size={12} className={isDisabled ? 'text-slate-300' : style?.text || ''} />
-                )}
-                <span>{style?.label || ch}</span>
-              </button>
+              </div>
             );
           })}
         </div>
