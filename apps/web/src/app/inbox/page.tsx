@@ -228,7 +228,11 @@ function InboxPage() {
     return null;
   });
   // Draft auto-save to backend
-  const { save: autosaveDraft, load: loadDrafts, clear: clearDraft } = useDraftAutosave(selected?.id, user?.id);
+  const {
+    save: autosaveDraft,
+    load: loadDrafts,
+    clear: clearDraft,
+  } = useDraftAutosave(selected?.id, user?.id);
   // Compact mode detection
   const [isCompact, setIsCompact] = useState(false);
   const [isNarrowComposer, setIsNarrowComposer] = useState(false);
@@ -2018,9 +2022,7 @@ function InboxPage() {
               {/* Smart Suggestions (Prompt 8) */}
               {(() => {
                 const convDismissed = selected ? dismissedSuggestions[selected.id] : undefined;
-                const visible = smartSuggestions.filter(
-                  (s) => !convDismissed?.has(s.message),
-                );
+                const visible = smartSuggestions.filter((s) => !convDismissed?.has(s.message));
                 if (visible.length === 0) return null;
                 return (
                   <div className="px-3 py-1.5 bg-amber-50 border-t border-amber-100">
@@ -2379,7 +2381,11 @@ function InboxPage() {
                         let val = e.target.value;
                         if (replyChannel === 'INSTAGRAM') val = val.slice(0, 1000);
                         setNewMessage(val);
-                        autosaveDraft(replyChannel || selected?.channel || 'WHATSAPP', val, replyChannel === 'EMAIL' ? emailSubject : undefined);
+                        autosaveDraft(
+                          replyChannel || selected?.channel || 'WHATSAPP',
+                          val,
+                          replyChannel === 'EMAIL' ? emailSubject : undefined,
+                        );
                       }}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' && !e.shiftKey) {

@@ -1,10 +1,7 @@
 import { useCallback, useRef } from 'react';
 import { api } from '@/lib/api';
 
-export function useDraftAutosave(
-  conversationId: string | undefined,
-  staffId: string | undefined,
-) {
+export function useDraftAutosave(conversationId: string | undefined, staffId: string | undefined) {
   const timerRef = useRef<NodeJS.Timeout>(undefined);
 
   const save = useCallback(
