@@ -78,7 +78,7 @@ export function Shell({ children }: { children: ReactNode }) {
 function ShellInner({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, logout } = useAuth();
+  const { user, loading: authLoading, logout } = useAuth();
   const pack = usePack();
   const { t } = useI18n();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -153,7 +153,9 @@ function ShellInner({ children }: { children: ReactNode }) {
 
   // Redirect when current pathname is not allowed for the active mode
   useEffect(() => {
-    if (!modeDef || !user) return;
+    if (authLoading || !modeDef || !user) return;
+    // Skip redirect while mode is re-deriving after user load
+    if (!modeDef.allowedRoles.includes(user.role)) return;
     const s = modeDef.sections;
     const allowed = new Set([
       ...s.workspace,
@@ -171,7 +173,7 @@ function ShellInner({ children }: { children: ReactNode }) {
     if (!isAllowed) {
       router.replace(modeDef.defaultLandingPath);
     }
-  }, [pathname, modeDef, user, router]);
+  }, [pathname, modeDef, user, authLoading, router]);
 
   // Load sidebar-pinned saved views
   const loadPinnedViews = useCallback(async () => {

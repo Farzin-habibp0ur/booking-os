@@ -141,6 +141,7 @@ jest.mock('@/lib/use-mode', () => ({
         insights: ['/dashboard', '/reports'],
       },
       defaultLandingPath: '/inbox',
+      allowedRoles: ['ADMIN', 'AGENT'],
     },
   }),
 }));

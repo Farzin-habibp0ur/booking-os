@@ -153,6 +153,7 @@ jest.mock('@/lib/use-mode', () => ({
         },
       },
       defaultLandingPath: '/dashboard',
+      allowedRoles: ['ADMIN'],
     },
   }),
 }));

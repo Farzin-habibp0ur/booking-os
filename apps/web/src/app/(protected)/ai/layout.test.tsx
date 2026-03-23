@@ -8,13 +8,6 @@ jest.mock('next/link', () => ({ children, href, ...rest }: any) => (
     {children}
   </a>
 ));
-jest.mock('@/lib/auth', () => ({
-  AuthProvider: ({ children }: any) => <div>{children}</div>,
-  useAuth: () => ({ user: { sub: 'staff1', businessId: 'biz1', role: 'ADMIN' }, loading: false }),
-}));
-jest.mock('@/components/shell', () => ({
-  Shell: ({ children }: any) => <div data-testid="shell">{children}</div>,
-}));
 jest.mock('@/lib/cn', () => ({
   cn: (...args: any[]) => args.filter(Boolean).join(' '),
 }));
