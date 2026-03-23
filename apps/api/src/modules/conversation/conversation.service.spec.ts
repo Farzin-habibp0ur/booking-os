@@ -182,9 +182,27 @@ describe('ConversationService', () => {
 
     it('deduplicates conversations by id', async () => {
       const duped = [
-        { id: 'conv1', status: 'OPEN', lastMessageAt: new Date(), assignedToId: null, messages: [] },
-        { id: 'conv1', status: 'OPEN', lastMessageAt: new Date(), assignedToId: null, messages: [] },
-        { id: 'conv2', status: 'OPEN', lastMessageAt: new Date(), assignedToId: null, messages: [] },
+        {
+          id: 'conv1',
+          status: 'OPEN',
+          lastMessageAt: new Date(),
+          assignedToId: null,
+          messages: [],
+        },
+        {
+          id: 'conv1',
+          status: 'OPEN',
+          lastMessageAt: new Date(),
+          assignedToId: null,
+          messages: [],
+        },
+        {
+          id: 'conv2',
+          status: 'OPEN',
+          lastMessageAt: new Date(),
+          assignedToId: null,
+          messages: [],
+        },
       ];
       prisma.conversation.findMany.mockResolvedValue(duped as any);
       prisma.conversation.count.mockResolvedValue(3);

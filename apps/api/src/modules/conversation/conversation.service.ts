@@ -122,7 +122,9 @@ export class ConversationService {
       return true;
     });
     if (deduped.length !== data.length) {
-      this.logger.warn(`Removed ${data.length - deduped.length} duplicate conversation(s) from findAll`);
+      this.logger.warn(
+        `Removed ${data.length - deduped.length} duplicate conversation(s) from findAll`,
+      );
     }
 
     // Compute overdue flag on each conversation
