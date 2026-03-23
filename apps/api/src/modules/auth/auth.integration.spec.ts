@@ -5,6 +5,7 @@ import { AuthController } from './auth.controller';
 import { JwtStrategy } from './jwt.strategy';
 import { TokenService } from '../../common/token.service';
 import { JwtBlacklistService } from '../../common/jwt-blacklist.service';
+import { PortalRedisService } from '../../common/portal-redis.service';
 import { EmailService } from '../email/email.service';
 import {
   createIntegrationApp,
@@ -55,6 +56,31 @@ describe('Auth Integration', () => {
         AuthService,
         JwtStrategy,
         JwtBlacklistService,
+        {
+          provide: PortalRedisService,
+          useValue: (() => {
+            const store = new Map<string, { value: string; expiresAt: number }>();
+            return {
+              get: jest.fn(async (key: string) => {
+                const entry = store.get(key);
+                if (!entry) return null;
+                if (Date.now() > entry.expiresAt) { store.delete(key); return null; }
+                return entry.value;
+              }),
+              set: jest.fn(async (key: string, value: string, ttlMs: number) => {
+                store.set(key, { value, expiresAt: Date.now() + ttlMs });
+              }),
+              del: jest.fn(async (key: string) => { store.delete(key); }),
+              exists: jest.fn(async (key: string) => {
+                const entry = store.get(key);
+                if (!entry) return false;
+                if (Date.now() > entry.expiresAt) { store.delete(key); return false; }
+                return true;
+              }),
+              clearMemory: jest.fn(() => store.clear()),
+            };
+          })(),
+        },
         { provide: TokenService, useValue: tokenService },
         { provide: EmailService, useValue: emailService },
         {
@@ -88,6 +114,9 @@ describe('Auth Integration', () => {
     // H5: Clear blacklist state between tests to prevent leaking from logout/change-password tests
     const blacklist = ctx.app.get(JwtBlacklistService);
     blacklist.clear();
+    // Clear mock Redis store to prevent token blacklist leaking between tests
+    const redis = ctx.app.get(PortalRedisService);
+    redis.clearMemory();
   });
 
   // ---- Existing login tests ----
