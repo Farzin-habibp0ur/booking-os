@@ -64,17 +64,25 @@ describe('Auth Integration', () => {
               get: jest.fn(async (key: string) => {
                 const entry = store.get(key);
                 if (!entry) return null;
-                if (Date.now() > entry.expiresAt) { store.delete(key); return null; }
+                if (Date.now() > entry.expiresAt) {
+                  store.delete(key);
+                  return null;
+                }
                 return entry.value;
               }),
               set: jest.fn(async (key: string, value: string, ttlMs: number) => {
                 store.set(key, { value, expiresAt: Date.now() + ttlMs });
               }),
-              del: jest.fn(async (key: string) => { store.delete(key); }),
+              del: jest.fn(async (key: string) => {
+                store.delete(key);
+              }),
               exists: jest.fn(async (key: string) => {
                 const entry = store.get(key);
                 if (!entry) return false;
-                if (Date.now() > entry.expiresAt) { store.delete(key); return false; }
+                if (Date.now() > entry.expiresAt) {
+                  store.delete(key);
+                  return false;
+                }
                 return true;
               }),
               clearMemory: jest.fn(() => store.clear()),
