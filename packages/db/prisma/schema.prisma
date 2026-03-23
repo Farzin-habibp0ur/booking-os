@@ -200,6 +200,7 @@ model Customer {
   @@unique([businessId, webChatSessionId])
   @@index([businessId])
   @@index([businessId, email])
+  @@index([businessId, phone])
   @@map("customers")
 }
 
@@ -345,6 +346,8 @@ model Conversation {
   @@index([businessId])
   @@index([businessId, status])
   @@index([locationId])
+  @@index([customerId, businessId])
+  @@index([businessId, lastMessageAt])
   @@map("conversations")
 }
 
@@ -371,6 +374,7 @@ model Message {
   attachments  MessageAttachment[]
 
   @@index([conversationId])
+  @@index([conversationId, createdAt])
   @@map("messages")
 }
 
@@ -1108,6 +1112,7 @@ model AgentRun {
 
   @@index([businessId, agentType])
   @@index([businessId, startedAt])
+  @@index([businessId, agentType, status])
   @@map("agent_runs")
 }
 
