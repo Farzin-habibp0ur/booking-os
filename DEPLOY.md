@@ -1007,3 +1007,42 @@ DATABASE_URL="postgresql://..." bash scripts/restore-db.sh backups/bookingos-bac
 ### Migration Timeout
 
 The Docker entrypoint (`scripts/docker-entrypoint.sh`) wraps `prisma migrate deploy` with a 120-second timeout. If migrations take longer than 2 minutes, the container exits with code 1 instead of hanging indefinitely.
+
+---
+
+## Pre-Launch Checklist
+
+Run the automated verification script:
+
+```bash
+bash scripts/verify-production.sh
+```
+
+This checks all critical environment variables and connectivity. The full checklist:
+
+- [ ] **DATABASE_URL** set and connectable
+- [ ] **REDIS_URL** set and connectable
+- [ ] **JWT_SECRET** is at least 32 characters
+- [ ] **JWT_REFRESH_SECRET** is at least 32 characters and differs from JWT_SECRET
+- [ ] **STRIPE_SECRET_KEY** is a live key (not `sk_test_`)
+- [ ] **STRIPE_WEBHOOK_SECRET** is set
+- [ ] **CORS_ORIGINS** contains the production domain
+- [ ] **MESSAGING_PROVIDER** is NOT `mock`
+- [ ] **SENTRY_DSN** is set
+- [ ] No demo credentials in the database (`sarah@glowclinic.com`, etc.)
+- [ ] **RAILWAY_PROJECT_ID** added as a GitHub repository secret
+- [ ] Backup workflow tested: `gh workflow run backup.yml`
+- [ ] SSL certificates valid (check via browser or `curl -vI https://businesscommandcentre.com`)
+- [ ] Cookie auth verified: `curl -D - -X POST https://api.businesscommandcentre.com/api/v1/auth/login ...`
+
+### Operational Runbooks
+
+Incident response runbooks are in `docs/runbooks/`:
+
+| Runbook | When to Use |
+|---|---|
+| [DATABASE-DOWN.md](docs/runbooks/DATABASE-DOWN.md) | Database unreachable or corrupted |
+| [REDIS-DOWN.md](docs/runbooks/REDIS-DOWN.md) | Redis outage affecting queues, WebSocket, auth |
+| [DEPLOYMENT-ROLLBACK.md](docs/runbooks/DEPLOYMENT-ROLLBACK.md) | Bad deploy needs reverting |
+| [MESSAGING-FAILURE.md](docs/runbooks/MESSAGING-FAILURE.md) | WhatsApp/SMS/email delivery failures |
+| [AUTH-INCIDENT.md](docs/runbooks/AUTH-INCIDENT.md) | Unauthorized access, token theft, secret rotation |
