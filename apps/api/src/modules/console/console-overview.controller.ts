@@ -1,4 +1,5 @@
 import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard, Roles } from '../../common/roles.guard';
@@ -8,6 +9,7 @@ import { ConsoleOverviewService } from './console-overview.service';
 @Controller('admin/overview')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @Roles('SUPER_ADMIN')
+@Throttle({ default: { ttl: 60000, limit: 10 } })
 export class ConsoleOverviewController {
   constructor(private overviewService: ConsoleOverviewService) {}
 

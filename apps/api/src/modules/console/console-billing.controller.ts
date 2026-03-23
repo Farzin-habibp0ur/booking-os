@@ -1,4 +1,5 @@
 import { Controller, Get, Post, Param, Query, Body, UseGuards } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard, Roles } from '../../common/roles.guard';
@@ -16,6 +17,7 @@ import {
 @Controller('admin/billing')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @Roles('SUPER_ADMIN')
+@Throttle({ default: { ttl: 60000, limit: 10 } })
 export class ConsoleBillingController {
   constructor(
     private billingService: ConsoleBillingService,
@@ -59,6 +61,7 @@ export class ConsoleBillingController {
 @Controller('admin/businesses')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @Roles('SUPER_ADMIN')
+@Throttle({ default: { ttl: 60000, limit: 10 } })
 export class ConsoleBusinessBillingController {
   constructor(
     private billingService: ConsoleBillingService,

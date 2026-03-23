@@ -15,6 +15,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
+import { Throttle } from '@nestjs/throttler';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CustomerService } from './customer.service';
 import { CustomerMergeService } from './customer-merge.service';
@@ -106,11 +107,13 @@ export class CustomerController {
   }
 
   @Post()
+  @Throttle({ default: { ttl: 60000, limit: 30 } })
   create(@BusinessId() businessId: string, @Body() body: CreateCustomerDto) {
     return this.customerService.create(businessId, body);
   }
 
   @Patch(':id')
+  @Throttle({ default: { ttl: 60000, limit: 30 } })
   update(
     @BusinessId() businessId: string,
     @Param('id') id: string,

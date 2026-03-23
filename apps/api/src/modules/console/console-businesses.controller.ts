@@ -1,4 +1,5 @@
 import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard, Roles } from '../../common/roles.guard';
@@ -11,6 +12,7 @@ import { ConsoleBusinessQueryDto } from '../../common/dto';
 @Controller('admin/businesses')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @Roles('SUPER_ADMIN')
+@Throttle({ default: { ttl: 60000, limit: 10 } })
 export class ConsoleBusinessesController {
   constructor(
     private businessesService: ConsoleBusinessesService,

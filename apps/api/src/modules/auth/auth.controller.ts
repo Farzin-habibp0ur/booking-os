@@ -173,6 +173,7 @@ export class AuthController {
 
   @Post('change-password')
   @UseGuards(AuthGuard('jwt'))
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
   async changePassword(
     @Req() req: Request,
     @CurrentUser('sub') staffId: string,

@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
+import { Throttle } from '@nestjs/throttler';
 import { ReportsService } from './reports.service';
 import { ReportScheduleService } from './report-schedule.service';
 import { BusinessId } from '../../common/decorators';
@@ -21,6 +22,7 @@ import { UpdateReportScheduleDto } from './dto/update-report-schedule.dto';
 @ApiTags('Reports')
 @Controller('reports')
 @UseGuards(AuthGuard('jwt'), TenantGuard)
+@Throttle({ default: { ttl: 3600000, limit: 10 } })
 export class ReportsController {
   constructor(
     private reportsService: ReportsService,

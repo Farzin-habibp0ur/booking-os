@@ -1,4 +1,5 @@
 import { Controller, Get, Post, Param, UseGuards } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard, Roles } from '../../common/roles.guard';
@@ -11,6 +12,7 @@ import { PrismaService } from '../../common/prisma.service';
 @Controller('admin/messaging-console')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @Roles('SUPER_ADMIN')
+@Throttle({ default: { ttl: 60000, limit: 10 } })
 export class ConsoleMessagingController {
   constructor(
     private messagingService: ConsoleMessagingService,

@@ -1,6 +1,7 @@
 import { Controller, Post, Get, Delete, Param, Body, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
+import { Throttle } from '@nestjs/throttler';
 import { MessageService } from './message.service';
 import { MessagingService } from '../messaging/messaging.service';
 import { PrismaService } from '../../common/prisma.service';
@@ -18,6 +19,7 @@ export class MessageController {
   ) {}
 
   @Post(':id/messages')
+  @Throttle({ default: { ttl: 60000, limit: 60 } })
   async sendMessage(
     @BusinessId() businessId: string,
     @Param('id') conversationId: string,

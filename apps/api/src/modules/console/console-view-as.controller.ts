@@ -1,4 +1,5 @@
 import { Controller, Post, Get, Param, Body, UseGuards, Res } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { Response } from 'express';
@@ -11,6 +12,7 @@ import { ViewAsReasonDto } from '../../common/dto';
 @ApiTags('Console - View As')
 @Controller('admin')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
+@Throttle({ default: { ttl: 60000, limit: 10 } })
 export class ConsoleViewAsController {
   constructor(
     private viewAsService: ConsoleViewAsService,

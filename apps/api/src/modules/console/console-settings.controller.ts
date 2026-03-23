@@ -1,4 +1,5 @@
 import { Controller, Get, Put, Post, Param, Body, UseGuards } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard, Roles } from '../../common/roles.guard';
@@ -11,6 +12,7 @@ import { ConsoleSettingUpdateDto, ConsoleSettingsBulkUpdateDto } from '../../com
 @Controller('admin/settings')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @Roles('SUPER_ADMIN')
+@Throttle({ default: { ttl: 60000, limit: 10 } })
 export class ConsoleSettingsController {
   constructor(
     private settingsService: ConsoleSettingsService,

@@ -8,6 +8,7 @@ import {
   UseGuards,
   ParseIntPipe,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard, Roles } from '../../common/roles.guard';
@@ -20,6 +21,7 @@ import { ConsoleRolloutDto, ConsoleRollbackDto, ConsolePinDto } from '../../comm
 @Controller('admin/packs-console')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @Roles('SUPER_ADMIN')
+@Throttle({ default: { ttl: 60000, limit: 10 } })
 export class ConsolePacksController {
   constructor(
     private packsService: ConsolePacksService,

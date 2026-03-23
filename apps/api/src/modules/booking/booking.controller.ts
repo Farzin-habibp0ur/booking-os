@@ -75,7 +75,7 @@ export class BookingController {
   }
 
   @Post()
-  @Throttle({ default: { ttl: 60000, limit: 10 } })
+  @Throttle({ default: { ttl: 60000, limit: 30 } })
   create(
     @BusinessId() businessId: string,
     @Body() body: CreateBookingDto,
@@ -92,6 +92,7 @@ export class BookingController {
   }
 
   @Patch(':id')
+  @Throttle({ default: { ttl: 60000, limit: 30 } })
   update(
     @BusinessId() businessId: string,
     @Param('id') id: string,
