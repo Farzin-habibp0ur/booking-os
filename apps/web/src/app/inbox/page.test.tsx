@@ -261,6 +261,36 @@ describe('InboxPage', () => {
     expect(mockPush).toHaveBeenCalledWith('/customers/cust-1');
   });
 
+  it('deduplicates conversations by id', async () => {
+    const dupedConversations = [
+      ...mockConversations,
+      { ...mockConversations[0] }, // duplicate of conv-1
+    ];
+    mockApi.get.mockImplementation((path: string) => {
+      if (path.startsWith('/conversations?')) return Promise.resolve({ data: dupedConversations });
+      if (path === '/conversations/counts')
+        return Promise.resolve({
+          all: 3,
+          unassigned: 0,
+          mine: 0,
+          overdue: 0,
+          waiting: 0,
+          snoozed: 0,
+          closed: 0,
+        });
+      if (path === '/staff') return Promise.resolve([]);
+      if (path === '/templates') return Promise.resolve([]);
+      if (path === '/locations') return Promise.resolve([]);
+      return Promise.resolve([]);
+    });
+    render(<InboxPage />);
+    await waitFor(() => {
+      // Emma Wilson (conv-1) should appear only once despite duplicate
+      expect(screen.getAllByText('Emma Wilson')).toHaveLength(1);
+      expect(screen.getByText('Bob Smith')).toBeInTheDocument();
+    });
+  });
+
   it('shows empty state when no conversations', async () => {
     mockApi.get.mockImplementation((path: string) => {
       if (path.startsWith('/conversations?')) return Promise.resolve({ data: [] });

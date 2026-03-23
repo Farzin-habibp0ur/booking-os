@@ -6,8 +6,17 @@ import { PrismaService } from '../../common/prisma.service';
 export class SavedViewService {
   constructor(private prisma: PrismaService) {}
 
+  private dedupeById<T extends { id: string }>(items: T[]): T[] {
+    const seen = new Set<string>();
+    return items.filter((item) => {
+      if (seen.has(item.id)) return false;
+      seen.add(item.id);
+      return true;
+    });
+  }
+
   async findByPage(businessId: string, staffId: string, page: string) {
-    return this.prisma.savedView.findMany({
+    const views = await this.prisma.savedView.findMany({
       where: {
         businessId,
         page,
@@ -15,10 +24,11 @@ export class SavedViewService {
       },
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
     });
+    return this.dedupeById(views);
   }
 
   async findPinned(businessId: string, staffId: string) {
-    return this.prisma.savedView.findMany({
+    const views = await this.prisma.savedView.findMany({
       where: {
         businessId,
         isPinned: true,
@@ -26,6 +36,7 @@ export class SavedViewService {
       },
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
     });
+    return this.dedupeById(views);
   }
 
   async findDashboard(businessId: string, staffId: string) {

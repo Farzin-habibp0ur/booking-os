@@ -197,6 +197,20 @@ describe('ViewPicker', () => {
     expect(api.del).toHaveBeenCalledWith('/saved-views/v1');
   });
 
+  it('deduplicates views by id', async () => {
+    (api.get as jest.Mock).mockResolvedValue([
+      ...mockViews,
+      { ...mockViews[0] }, // duplicate of v1
+    ]);
+
+    render(<ViewPicker {...defaultProps} />);
+
+    await screen.findByText('Active Only');
+    // "Active Only" (v1) should appear only once despite duplicate in response
+    expect(screen.getAllByText('Active Only')).toHaveLength(1);
+    expect(screen.getByText('Shared View')).toBeInTheDocument();
+  });
+
   it('opens save modal when save button clicked', async () => {
     (api.get as jest.Mock).mockResolvedValue(mockViews);
     const user = userEvent.setup();

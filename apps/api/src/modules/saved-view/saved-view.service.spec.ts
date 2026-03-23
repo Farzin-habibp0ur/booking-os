@@ -59,6 +59,15 @@ describe('SavedViewService', () => {
 
       expect(result).toEqual([]);
     });
+
+    it('deduplicates views by id', async () => {
+      prisma.savedView.findMany.mockResolvedValue([mockView, mockView, { ...mockView, id: 'sv2' }]);
+
+      const result = await service.findByPage('biz1', 'staff1', 'bookings');
+
+      expect(result).toHaveLength(2);
+      expect(result.map((v: any) => v.id)).toEqual(['sv1', 'sv2']);
+    });
   });
 
   describe('findPinned', () => {
@@ -74,6 +83,15 @@ describe('SavedViewService', () => {
           where: expect.objectContaining({ isPinned: true }),
         }),
       );
+    });
+
+    it('deduplicates pinned views by id', async () => {
+      const pinned = { ...mockView, isPinned: true };
+      prisma.savedView.findMany.mockResolvedValue([pinned, pinned]);
+
+      const result = await service.findPinned('biz1', 'staff1');
+
+      expect(result).toHaveLength(1);
     });
   });
 

@@ -316,6 +316,25 @@ describe('Shell', () => {
     expect(screen.getByTestId('pinned-views-section')).toBeInTheDocument();
   });
 
+  it('deduplicates pinned views by id', async () => {
+    mockApi.get.mockResolvedValue([
+      { id: 'v1', name: 'Pending Deposits', page: 'bookings', icon: 'flag', isPinned: true },
+      { id: 'v1', name: 'Pending Deposits', page: 'bookings', icon: 'flag', isPinned: true },
+      { id: 'v2', name: 'Overdue Replies', page: 'inbox', icon: 'bell', isPinned: true },
+    ]);
+
+    render(
+      <Shell>
+        <div>Content</div>
+      </Shell>,
+    );
+
+    expect(await screen.findByText('Pending Deposits')).toBeInTheDocument();
+    expect(screen.getByText('Overdue Replies')).toBeInTheDocument();
+    // "Pending Deposits" should appear only once (deduped)
+    expect(screen.getAllByText('Pending Deposits')).toHaveLength(1);
+  });
+
   it('does not render pinned views section when no views', async () => {
     mockApi.get.mockResolvedValue([]);
 

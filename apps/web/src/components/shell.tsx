@@ -151,11 +151,34 @@ function ShellInner({ children }: { children: ReactNode }) {
     }
   }, [pathname, landingPath, router]);
 
+  // Redirect when current pathname is not allowed for the active mode
+  useEffect(() => {
+    if (!modeDef || !user) return;
+    const s = modeDef.sections;
+    const allowed = new Set([
+      ...s.workspace,
+      ...s.tools,
+      ...s.insights,
+      ...(s.aiAgents || []),
+      '/settings',
+    ]);
+    const isAllowed =
+      pathname === '/' ||
+      pathname.startsWith('/settings') ||
+      pathname.startsWith('/admin/') ||
+      allowed.has(pathname) ||
+      [...allowed].some((p) => pathname.startsWith(p + '/'));
+    if (!isAllowed) {
+      router.replace(modeDef.defaultLandingPath);
+    }
+  }, [pathname, modeDef, user, router]);
+
   // Load sidebar-pinned saved views
   const loadPinnedViews = useCallback(async () => {
     try {
       const views = await api.get<any[]>('/saved-views/pinned');
-      setPinnedViews(views || []);
+      const unique = views ? [...new Map(views.map((v) => [v.id, v])).values()] : [];
+      setPinnedViews(unique);
     } catch {
       // Silently handle
     }
@@ -221,15 +244,18 @@ function ShellInner({ children }: { children: ReactNode }) {
   const hasOverflow =
     overflowToolsNav.length > 0 || overflowInsightsNav.length > 0 || overflowAiAgentsNav.length > 0;
 
-  // Items not in any section (e.g. pack-builder for SUPER_ADMIN)
+  // All paths allowed in the current mode (union of primary + overflow)
   const allSectionPaths = [
     ...sections.workspace,
     ...sections.tools,
     ...sections.insights,
     ...(sections.aiAgents || []),
   ];
+  const modeAllowedHrefs = new Set(allSectionPaths);
+
+  // Only truly global items outside any mode (e.g. SUPER_ADMIN pack-builder)
   const extraNav = nav.filter(
-    (item) => item.href !== '/settings' && !allSectionPaths.includes(item.href),
+    (item) => !modeAllowedHrefs.has(item.href) && item.href.startsWith('/admin/'),
   );
 
   // Mobile tab bar: pick up to 4 tabs from workspace, prioritizing key paths.

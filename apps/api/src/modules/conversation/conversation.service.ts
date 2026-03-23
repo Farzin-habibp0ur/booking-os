@@ -114,8 +114,19 @@ export class ConversationService {
       this.prisma.conversation.count({ where }),
     ]);
 
+    // Deduplicate by id (defensive — Prisma should not return duplicates, but guards UI)
+    const seen = new Set<string>();
+    const deduped = data.filter((c: any) => {
+      if (seen.has(c.id)) return false;
+      seen.add(c.id);
+      return true;
+    });
+    if (deduped.length !== data.length) {
+      this.logger.warn(`Removed ${data.length - deduped.length} duplicate conversation(s) from findAll`);
+    }
+
     // Compute overdue flag on each conversation
-    const enriched = data.map((c: any) => ({
+    const enriched = deduped.map((c: any) => ({
       ...c,
       isOverdue: this.isOverdue(c),
       isNew: this.isNew(c),

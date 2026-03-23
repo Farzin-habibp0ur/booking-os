@@ -374,6 +374,7 @@ BookingOS supports 6 messaging channels: **WhatsApp**, **Instagram DM**, **Faceb
 - **SUPER_ADMIN login** redirects to the admin app (`NEXT_PUBLIC_ADMIN_URL`) via `window.location.href` — no admin/console nav items in the customer app sidebar
 - **Mobile tab bar** is mode + role aware: admin/agent → Inbox, Calendar, Customers, Home + More; provider → Calendar, Bookings, Home + More (no Inbox/Customers). Labels are i18n/pack-aware
 - **Post-login redirect:** Agent → `/inbox`, Provider → `/calendar`, Admin → stays on `/dashboard`. One-time redirect via `sessionStorage` flag + `router.replace()`
+- **Mode route guard:** If the current URL is outside the active mode's section paths, shell redirects to `defaultLandingPath`. Exempt: `/settings/*`, `/admin/*`, `/`. Only `/admin/*` paths appear in `extraNav` (SUPER_ADMIN pack-builder)
 - **Command palette** (⌘K): searches all navigable pages (including overflow) grouped by sidebar section, plus API entity search. Footer hint: "All pages searchable"
 - **Chord shortcuts:** G then B/C/I/D/S/A/Q/R/J/W → bookings/customers/inbox/dashboard/services/automations/actions/reports/ai/waitlist
 - Mobile swipe gestures: `useSwipeGesture` hook in `apps/web/src/lib/use-swipe-gesture.ts` for touch swipe detection with threshold, vertical rejection, and `onSwiping` callback

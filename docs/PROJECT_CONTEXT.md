@@ -2,7 +2,7 @@
 
 > **Purpose:** This document gives full context on the Booking OS platform — what it is, what's been built, how it's structured, and what's left to build. Share this with an AI assistant or new developer to get productive immediately.
 >
-> **Last updated:** March 21, 2026 (All phases COMPLETE — A through E + Phases 1-4 & 6 polish + QA Fixes + Sprints 1-4 + Prompts 4A-4C + Prompt 1C + Prompt 1A + Prompt 1B + Prompt 1D + Prompt 2A + Prompt 2B + Prompt 2C + Prompt 3A + Prompt 3C + QA Bug Fix Sprint (10 bugs) + Growth Engine Agents (15 prompts) + Marketing Command Center Phases 1-6 (14 prompts) COMPLETE + Admin Console Extraction (4 phases — scaffold, migrate, remove from web, infrastructure) + Internal/External Separation (3 phases — marketing tools removed from customer app, migrated to admin app, API endpoints gated behind SUPER_ADMIN) + Launch QA fixes (SUPER_ADMIN guards, AutonomyConfig scope constraint, test timeouts) + Omnichannel Phases 0-5 COMPLETE + Omnichannel Gap Fix (16 issues) + Inbox UX v3 (13 prompts) + **AI Agent Integration Fix (10 prompts)** — 6 channels fully implemented (WhatsApp, Instagram, Facebook, SMS, Email, Web Chat) — 92 Prisma models, 65 migrations, 4104 tests)
+> **Last updated:** March 23, 2026 (All phases COMPLETE — A through E + Phases 1-4 & 6 polish + QA Fixes + Sprints 1-4 + Prompts 4A-4C + Prompt 1C + Prompt 1A + Prompt 1B + Prompt 1D + Prompt 2A + Prompt 2B + Prompt 2C + Prompt 3A + Prompt 3C + QA Bug Fix Sprint (10 bugs) + Growth Engine Agents (15 prompts) + Marketing Command Center Phases 1-6 (14 prompts) COMPLETE + Admin Console Extraction (4 phases — scaffold, migrate, remove from web, infrastructure) + Internal/External Separation (3 phases — marketing tools removed from customer app, migrated to admin app, API endpoints gated behind SUPER_ADMIN) + Launch QA fixes (SUPER_ADMIN guards, AutonomyConfig scope constraint, test timeouts) + Omnichannel Phases 0-5 COMPLETE + Omnichannel Gap Fix (16 issues) + Inbox UX v3 (13 prompts) + **AI Agent Integration Fix (10 prompts)** — 6 channels fully implemented (WhatsApp, Instagram, Facebook, SMS, Email, Web Chat) — 92 Prisma models, 65 migrations, 4104 tests)
 
 ---
 
@@ -121,7 +121,7 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 
 - **Role-based Modes** — Mode switcher (admin/agent/provider), mode-grouped sidebar nav with primary + overflow split, role-appropriate landing pages, vertical-aware labels. See **Navigation UX** section below for full details
 - **Mission Control Dashboard** — KPI strip for agent/provider modes, "My Work" section (personal bookings + assigned conversations), AttentionCards component, mode-adaptive layout
-- **Saved Views** — SavedView database model, full CRUD API (7 endpoints), ViewPicker + SaveViewModal on inbox/bookings/customers/waitlist, sidebar-pinned views, dashboard-pinned view cards
+- **Saved Views** — SavedView database model, full CRUD API (7 endpoints), ViewPicker + SaveViewModal on inbox/bookings/customers/waitlist, sidebar-pinned views, dashboard-pinned view cards. All view lists are deduplicated by `id` on both client (shell pinned views, ViewPicker pills) and API (`findByPage`, `findPinned`). Inbox conversation lists are also deduplicated by `id` on both client and API (`findAll`).
 - **Staff preferences** — JSON column on Staff model for mode/landing path persistence
 - **Final counts:** 2,533 tests total (972 web + 1,561 API)
 
@@ -677,7 +677,7 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 
 All nav route definitions live in `apps/web/src/lib/nav-config.ts` (single source of truth for shell sidebar, mobile tab bar, and command palette).
 
-**Desktop sidebar** — 4 sections (Workspace / Tools / Insights / AI & Agents) per mode via `mode-config.ts`. Admin mode splits each section into **primary** (always visible) and **overflow** (under a collapsible "More" toggle, `aria-expanded`, collapsed by default, persisted in `localStorage`). Agent and provider modes show all paths as primary (no overflow toggle).
+**Desktop sidebar** — 4 sections (Workspace / Tools / Insights / AI & Agents) per mode via `mode-config.ts`. Admin mode splits each section into **primary** (always visible) and **overflow** (under a collapsible "More" toggle, `aria-expanded`, collapsed by default, persisted in `localStorage`). Agent and provider modes show all paths as primary (no overflow toggle). Only routes defined in the active mode's sections are rendered — items outside the mode's allowlist are hidden (not dumped into an unsectioned block). The only exception is `/admin/*` paths for SUPER_ADMIN users.
 
 | Mode | Primary Tools | Overflow Tools | Primary Insights | Overflow Insights | Primary AI | Overflow AI |
 |------|--------------|---------------|-----------------|-------------------|-----------|------------|
@@ -693,6 +693,8 @@ All nav route definitions live in `apps/web/src/lib/nav-config.ts` (single sourc
 **Command palette** (⌘K) — searches all navigable pages (including overflow routes) grouped by sidebar section, plus API search for customers/bookings/services/staff/conversations. Footer hint: "All pages searchable".
 
 **Post-login redirect** — On login, shell redirects once to `modeDef.defaultLandingPath` (admin→`/dashboard`, agent→`/inbox`, provider→`/calendar`) via `sessionStorage` flag handshake. Uses `router.replace()` to avoid back-button loop.
+
+**Mode route guard** — If the current URL is not in the active mode's section paths (e.g. `/inbox` while in provider mode), the shell redirects to `modeDef.defaultLandingPath`. Exempt: `/settings/*`, `/admin/*`, `/` root.
 
 **Keyboard shortcuts** — `⌘K` command palette, `N` new booking, `G then B/C/I/D/S/A/Q/R/J/W` chord navigation to bookings/customers/inbox/dashboard/services/automations/actions/reports/ai/waitlist.
 

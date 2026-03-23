@@ -180,6 +180,21 @@ describe('ConversationService', () => {
       );
     });
 
+    it('deduplicates conversations by id', async () => {
+      const duped = [
+        { id: 'conv1', status: 'OPEN', lastMessageAt: new Date(), assignedToId: null, messages: [] },
+        { id: 'conv1', status: 'OPEN', lastMessageAt: new Date(), assignedToId: null, messages: [] },
+        { id: 'conv2', status: 'OPEN', lastMessageAt: new Date(), assignedToId: null, messages: [] },
+      ];
+      prisma.conversation.findMany.mockResolvedValue(duped as any);
+      prisma.conversation.count.mockResolvedValue(3);
+
+      const result = await service.findAll('biz1', {});
+
+      expect(result.data).toHaveLength(2);
+      expect(result.data.map((c: any) => c.id)).toEqual(['conv1', 'conv2']);
+    });
+
     it('enriches conversations with isOverdue and isNew flags', async () => {
       const oldDate = new Date(Date.now() - 20 * 60 * 1000); // 20 mins ago
       prisma.conversation.findMany.mockResolvedValue([

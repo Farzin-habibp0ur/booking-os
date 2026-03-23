@@ -624,7 +624,9 @@ function InboxPage() {
       if (searchQuery) params.set('search', searchQuery);
       if (selectedLocationId) params.set('locationId', selectedLocationId);
       const res = await api.get<any>(`/conversations?${params}`);
-      setConversations(res.data || []);
+      const raw = res.data || [];
+      const unique = [...new Map(raw.map((c: any) => [c.id, c])).values()];
+      setConversations(unique);
     } catch (e) {
       console.error(e);
     }
