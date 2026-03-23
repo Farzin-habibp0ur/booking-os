@@ -60,7 +60,10 @@ export function MyWork({
                 className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50/60 dark:bg-slate-800/40"
               >
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <p className="text-xs font-medium text-slate-700 dark:text-slate-300 min-w-[48px]">
+                  <p
+                    className="text-xs font-medium text-slate-700 dark:text-slate-300 min-w-[48px]"
+                    suppressHydrationWarning
+                  >
                     {new Date(b.startTime).toLocaleTimeString('en-US', {
                       hour: 'numeric',
                       minute: '2-digit',

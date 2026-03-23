@@ -215,7 +215,7 @@ export function AttentionCards({ attentionNeeded }: AttentionCardsProps) {
                     <span className="text-slate-700 dark:text-slate-300 truncate">
                       {b.customer?.name}
                     </span>
-                    <span className="text-slate-400">
+                    <span className="text-slate-400" suppressHydrationWarning>
                       {new Date(b.startTime).toLocaleTimeString('en-US', {
                         hour: 'numeric',
                         minute: '2-digit',

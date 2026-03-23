@@ -40,9 +40,27 @@ export class PublicBookingController {
   }
 
   private async resolveBusiness(slug: string) {
+    // Exact match first
     const business = await this.prisma.business.findFirst({ where: { slug } });
-    if (!business) throw new NotFoundException('Business not found');
-    return business;
+    if (business) return business;
+
+    // Fuzzy fallback: try startsWith match for slug variations
+    const candidates = await this.prisma.business.findMany({
+      where: { slug: { startsWith: slug } },
+      take: 2,
+    });
+    if (candidates.length === 1) return candidates[0];
+
+    // Try with common suffixes stripped (clinic, spa, studio, salon, group)
+    const stripped = slug.replace(/-(clinic|spa|studio|salon|group|center|centre)$/i, '');
+    if (stripped !== slug) {
+      const strippedMatch = await this.prisma.business.findFirst({
+        where: { slug: { startsWith: stripped } },
+      });
+      if (strippedMatch) return strippedMatch;
+    }
+
+    throw new NotFoundException('Business not found');
   }
 
   @Get(':slug')

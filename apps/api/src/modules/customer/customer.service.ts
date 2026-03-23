@@ -44,15 +44,62 @@ export class CustomerService {
       const dir = query.sortOrder === 'asc' ? 'asc' : 'desc';
       orderBy = { [query.sortBy]: dir };
     }
-    const [data, total] = await Promise.all([
+    const [customers, total] = await Promise.all([
       this.prisma.customer.findMany({
         where,
         skip: (page - 1) * pageSize,
         take: pageSize,
         orderBy,
+        include: {
+          _count: { select: { bookings: true } },
+          bookings: {
+            where: { status: { in: ['COMPLETED', 'CONFIRMED', 'IN_PROGRESS'] } },
+            orderBy: { startTime: 'desc' },
+            take: 1,
+            select: { startTime: true, service: { select: { price: true } } },
+          },
+        },
       }),
       this.prisma.customer.count({ where }),
     ]);
+
+    // Compute totalSpent per customer (sum of service prices for completed bookings)
+    const customerIds = customers.map((c) => c.id);
+    const spentResults =
+      customerIds.length > 0
+        ? await this.prisma.booking.groupBy({
+            by: ['customerId'],
+            where: {
+              businessId,
+              customerId: { in: customerIds },
+              status: 'COMPLETED',
+            },
+            _count: { id: true },
+          })
+        : [];
+
+    // Get actual totals via raw aggregation on service prices
+    const spentTotals =
+      customerIds.length > 0
+        ? await this.prisma.$queryRaw<Array<{ customerId: string; total: number }>>`
+            SELECT b."customerId", COALESCE(SUM(s.price), 0) as total
+            FROM bookings b
+            JOIN services s ON b."serviceId" = s.id
+            WHERE b."businessId" = ${businessId}
+              AND b."customerId" = ANY(${customerIds}::text[])
+              AND b.status = 'COMPLETED'
+            GROUP BY b."customerId"
+          `
+        : [];
+
+    const spentMap = new Map(spentTotals.map((r) => [r.customerId, Number(r.total)]));
+
+    const data = customers.map((c) => ({
+      ...c,
+      bookingsCount: c._count.bookings,
+      totalSpent: spentMap.get(c.id) ?? 0,
+    }));
+
     return { data, total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
   }
 

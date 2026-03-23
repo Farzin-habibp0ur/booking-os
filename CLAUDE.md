@@ -243,6 +243,7 @@ Key events: `message:new`, `conversation:updated`, `ai:suggestions`, `ai:auto-re
 
 - `InboxGateway.emitToAll()` for system-wide broadcasts (circuit breaker state changes)
 - WebChat gateway on `/web-chat` namespace — visitor sessions (Redis-backed with in-memory fallback, 24h TTL), pre-chat forms, real-time messaging bridge to staff inbox. Supports `session:identify` (link visitor to customer), `history:request` (paginated message history), `file:upload-request` (stub). Offline visitors with email get notification logging.
+- `PublicBookingController` at `GET /public/:slug` — unauthenticated booking portal with fuzzy slug resolution: exact match → `startsWith` fallback (single candidate) → suffix-stripped match (strips `-clinic`, `-spa`, `-studio`, `-salon`, `-group`, `-center`, `-centre`). Returns 404 only when no match or multiple ambiguous matches
 - `PublicChatController` at `GET /public/chat/config/:businessSlug` — unauthenticated endpoint for widget bootstrapping (greeting, theme, preChatFields, offlineMessage)
 
 ### Omnichannel Messaging Infrastructure
@@ -358,15 +359,23 @@ BookingOS supports 6 messaging channels: **WhatsApp**, **Instagram DM**, **Faceb
 
 ### Navigation Structure
 
+- **Single source of truth:** All nav routes defined in `apps/web/src/lib/nav-config.ts`, consumed by shell sidebar, mobile tab bar, and command palette
 - Sidebar uses 4 sections: **Workspace** / **Tools** / **Insights** / **AI & Agents** (defined per mode in `apps/web/src/lib/mode-config.ts`)
+- Admin mode splits sections into **primary** (always visible) and **overflow** (collapsible "More" toggle, collapsed by default, `localStorage` persisted). Agent/provider modes show all paths as primary
 - Admin workspace includes: Inbox, Calendar, Customers, Bookings, Waitlist
-- Admin tools includes: Services, Staff, Invoices, Packages (wellness), Campaigns, Automations, Testimonials
-- AI & Agents section (admin only): AI & Agents, Action Triage, Agent Status, Performance — shows only the 5 core operational agents, not marketing agents
+- Admin primary tools: Services, Staff, Invoices. Admin overflow tools: Packages (wellness), Campaigns, Automations, Testimonials
+- Admin primary insights: Dashboard, Reports. Admin overflow insights: Monthly Review, ROI
+- Admin primary AI: AI & Agents. Admin overflow AI: Action Triage, Agent Status, Performance
+- Every nav item has a distinct lucide-react icon — no duplicates across sections
+- All nav labels use i18n keys (`locales/en.json` + `es.json`)
 - Section labels use `.nav-section-label` CSS class from `globals.css`
 - Settings link is in the sidebar footer area, not in the main nav
 - **Marketing pages** (`/marketing/*`) exist but have no sidebar nav — they are internal BookingOS tools, not customer-facing
 - **SUPER_ADMIN login** redirects to the admin app (`NEXT_PUBLIC_ADMIN_URL`) via `window.location.href` — no admin/console nav items in the customer app sidebar
-- Mobile uses bottom tab bar (Calendar, Inbox, Clients, Home) + "More" sheet for overflow items
+- **Mobile tab bar** is mode + role aware: admin/agent → Inbox, Calendar, Customers, Home + More; provider → Calendar, Bookings, Home + More (no Inbox/Customers). Labels are i18n/pack-aware
+- **Post-login redirect:** Agent → `/inbox`, Provider → `/calendar`, Admin → stays on `/dashboard`. One-time redirect via `sessionStorage` flag + `router.replace()`
+- **Command palette** (⌘K): searches all navigable pages (including overflow) grouped by sidebar section, plus API entity search. Footer hint: "All pages searchable"
+- **Chord shortcuts:** G then B/C/I/D/S/A/Q/R/J/W → bookings/customers/inbox/dashboard/services/automations/actions/reports/ai/waitlist
 - Mobile swipe gestures: `useSwipeGesture` hook in `apps/web/src/lib/use-swipe-gesture.ts` for touch swipe detection with threshold, vertical rejection, and `onSwiping` callback
 - Mobile calendar: `DateScroller` component (`apps/web/src/components/date-scroller.tsx`) for horizontal scrollable date picker, forced day view on mobile, stacked booking cards, FAB for new booking
 
@@ -592,16 +601,16 @@ Full reference at `.env.example` in the repo root. Key groups:
 
 All seed scripts are in `packages/db/src/`. They are **idempotent** (safe to re-run) and use dedup checks.
 
-| Script                     | Command                                            | Purpose                                                                                     | When to Use                   |
-| -------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------- | ----------------------------- |
-| `seed.ts`                  | `npx tsx packages/db/src/seed.ts`                  | Base data: 3 businesses (aesthetic + dealership + wellness), staff, services, working hours | Fresh database setup, CI      |
-| `seed-demo.ts`             | `npx tsx packages/db/src/seed-demo.ts`             | Rich demo data: bookings, customers, conversations, action cards                            | Demo environments, testing    |
-| `seed-agentic.ts`          | `npx tsx packages/db/src/seed-agentic.ts`          | Agentic framework data: agent configs, agent runs, action cards, autonomy configs           | One-time production fill      |
-| `seed-wellness.ts`         | `npx tsx packages/db/src/seed-wellness.ts`         | Wellness vertical: packages, memberships, intake data                                       | Also called from seed.ts      |
-| `seed-console.ts`          | `npx tsx packages/db/src/seed-console.ts`          | Console base data: platform settings, agent defaults                                        | Super Admin setup             |
-| `seed-console-showcase.ts` | `npx tsx packages/db/src/seed-console-showcase.ts` | Console demo data: support cases, audit logs                                                | Console demos                 |
-| `seed-content.ts`          | `npx tsx packages/db/src/seed-content.ts`          | 12 blog posts across 5 content pillars → ContentDraft records                               | Marketing content setup       |
-| `seed-instagram.ts`        | `npx tsx packages/db/src/seed-instagram.ts`        | 4 Instagram DM conversations (story reply, ad referral, ice breaker, expiring window)       | Instagram integration testing |
+| Script                     | Command                                            | Purpose                                                                                                                                                                      | When to Use                   |
+| -------------------------- | -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| `seed.ts`                  | `npx tsx packages/db/src/seed.ts`                  | Base data: 3 businesses (aesthetic + dealership + wellness), staff, services, working hours                                                                                  | Fresh database setup, CI      |
+| `seed-demo.ts`             | `npx tsx packages/db/src/seed-demo.ts`             | Rich demo data: bookings, customers, conversations, action cards                                                                                                             | Demo environments, testing    |
+| `seed-agentic.ts`          | `npx tsx packages/db/src/seed-agentic.ts`          | Agentic framework data: agent configs, agent runs, action cards, autonomy configs                                                                                            | One-time production fill      |
+| `seed-wellness.ts`         | `npx tsx packages/db/src/seed-wellness.ts`         | Wellness vertical: packages, memberships, intake data                                                                                                                        | Also called from seed.ts      |
+| `seed-console.ts`          | `npx tsx packages/db/src/seed-console.ts`          | Console base data: platform settings, agent defaults                                                                                                                         | Super Admin setup             |
+| `seed-console-showcase.ts` | `npx tsx packages/db/src/seed-console-showcase.ts` | Console demo data: support cases, audit logs                                                                                                                                 | Console demos                 |
+| `seed-content.ts`          | `npx tsx packages/db/src/seed-content.ts`          | 12 blog posts across 5 content pillars → ContentDraft records                                                                                                                | Marketing content setup       |
+| `seed-instagram.ts`        | `npx tsx packages/db/src/seed-instagram.ts`        | 4 Instagram DM conversations (story reply, ad referral, ice breaker, expiring window)                                                                                        | Instagram integration testing |
 | `seed-omnichannel.ts`      | `npx tsx packages/db/src/seed-omnichannel.ts`      | Multi-channel customers, conversations + messages (Alex: WA+IG, Jordan: email threaded, Taylor: web chat offline), MessageUsage with segments/cost (7 days), channelSettings | Omnichannel foundation setup  |
 
 ---
@@ -741,18 +750,18 @@ Confirm: `Domain=.businesscommandcentre.com`, `SameSite=Lax`, `Secure`, `Path=/`
 
 ## AI Architecture
 
-| Component                  | Purpose                                                                                                      |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `ClaudeClient`             | API wrapper with error handling, graceful degradation                                                        |
-| `IntentDetector`           | Classifies: GENERAL_INQUIRY, BOOK_APPOINTMENT, CANCEL_APPOINTMENT, RESCHEDULE_APPOINTMENT, TRANSFER_TO_HUMAN |
-| `ReplyGenerator`           | Channel-aware reply drafts using conversation history + business context + channel-specific LLM guidance     |
-| `BookingAssistant`         | Multi-step booking: service → date → time → confirm                                                          |
-| `CancelAssistant`          | Identifies and cancels bookings from conversation                                                            |
-| `RescheduleAssistant`      | Identifies and reschedules bookings                                                                          |
-| `ProfileCollector`         | Conversationally collects missing required profile fields                                                    |
-| `AiService`                | Orchestrator: routes intents, manages state, channel validation, auto-reply, OutboundDraft creation          |
-| `OutboundService`          | Creates/manages OutboundDraft records (DRAFT→APPROVED→SENT/REJECTED), emits `draft:created` Socket.IO       |
-| `ActionCardExecutorService`| Bridges Action Card CTAs to messaging: send_followup, offer_slot, retry_ai, reply_manually                  |
+| Component                   | Purpose                                                                                                      |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `ClaudeClient`              | API wrapper with error handling, graceful degradation                                                        |
+| `IntentDetector`            | Classifies: GENERAL_INQUIRY, BOOK_APPOINTMENT, CANCEL_APPOINTMENT, RESCHEDULE_APPOINTMENT, TRANSFER_TO_HUMAN |
+| `ReplyGenerator`            | Channel-aware reply drafts using conversation history + business context + channel-specific LLM guidance     |
+| `BookingAssistant`          | Multi-step booking: service → date → time → confirm                                                          |
+| `CancelAssistant`           | Identifies and cancels bookings from conversation                                                            |
+| `RescheduleAssistant`       | Identifies and reschedules bookings                                                                          |
+| `ProfileCollector`          | Conversationally collects missing required profile fields                                                    |
+| `AiService`                 | Orchestrator: routes intents, manages state, channel validation, auto-reply, OutboundDraft creation          |
+| `OutboundService`           | Creates/manages OutboundDraft records (DRAFT→APPROVED→SENT/REJECTED), emits `draft:created` Socket.IO        |
+| `ActionCardExecutorService` | Bridges Action Card CTAs to messaging: send_followup, offer_slot, retry_ai, reply_manually                   |
 
 AI state persisted in `conversation.metadata` JSON for stateful multi-turn flows.
 
@@ -761,6 +770,7 @@ AI state persisted in `conversation.metadata` JSON for stateful multi-turn flows
 When AI generates a response, it creates an `OutboundDraft` record (source: `AI` or `AGENT`) with channel, intent, confidence, and metadata. Drafts appear inline in the inbox conversation thread for staff to approve, edit, reject, or regenerate. The old `message.metadata.ai.draftText` is still populated for backward compatibility.
 
 **Channel-aware auto-reply flow:**
+
 1. Inbound message → BullMQ `AI_PROCESSING` queue (3 retries, exponential backoff)
 2. AI generates draft → validates channel constraints (24h windows for IG/FB/WA, SMS opt-out/length, per-channel overrides)
 3. If validation passes → auto-reply sent. If fails → OutboundDraft created for manual review
@@ -768,6 +778,7 @@ When AI generates a response, it creates an `OutboundDraft` record (source: `AI`
 5. Staff actions: Approve & Send (`POST /outbound/:id/send`), Edit (loads into composer), Reject, Regenerate (`POST /ai/conversations/:id/regenerate-draft`)
 
 **Key endpoints:**
+
 - `GET /ai/stats` — Today's AI processing metrics + 7-day history
 - `GET /ai/settings` / `PATCH /ai/settings` — AI config including `autoReply.channelOverrides`
 - `POST /ai/conversations/:id/regenerate-draft` — Re-run AI for latest inbound message

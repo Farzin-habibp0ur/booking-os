@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { cn } from '@/lib/cn';
 
 interface DateScrollerProps {
@@ -31,8 +31,11 @@ function generateDays(center: Date, range: number): Date[] {
 export function DateScroller({ currentDate, onDateSelect }: DateScrollerProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const centerRef = useRef<HTMLButtonElement>(null);
-  const today = new Date();
-  const days = generateDays(today, 7);
+  const [today, setToday] = useState<Date | null>(null);
+
+  useEffect(() => {
+    setToday(new Date());
+  }, []);
 
   useEffect(() => {
     if (centerRef.current && scrollRef.current) {
@@ -41,7 +44,19 @@ export function DateScroller({ currentDate, onDateSelect }: DateScrollerProps) {
       const scrollLeft = el.offsetLeft - container.offsetWidth / 2 + el.offsetWidth / 2;
       container.scrollTo({ left: scrollLeft, behavior: 'instant' });
     }
-  }, []);
+  }, [today]);
+
+  if (!today) {
+    return (
+      <div className="flex overflow-x-auto gap-2 px-4 py-2 scrollbar-hide">
+        {Array.from({ length: 15 }, (_, i) => (
+          <div key={i} className="flex-shrink-0 w-12 h-16 rounded-xl bg-slate-100 animate-pulse" />
+        ))}
+      </div>
+    );
+  }
+
+  const days = generateDays(today, 7);
 
   return (
     <div

@@ -236,7 +236,10 @@ export function TodayTimeline({ todayBookings, onBookingUpdate }: TodayTimelineP
                 >
                   <div className="flex items-start gap-3 min-w-0 flex-1">
                     <div className="text-center min-w-[48px] shrink-0">
-                      <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                      <p
+                        className="text-sm font-semibold text-slate-900 dark:text-slate-100"
+                        suppressHydrationWarning
+                      >
                         {new Date(booking.startTime).toLocaleTimeString('en-US', {
                           hour: 'numeric',
                           minute: '2-digit',

@@ -92,7 +92,12 @@ export function CalendarSidebar({ currentDate, onClose }: CalendarSidebarProps) 
     <div className="w-72 lg:w-80 border-l border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col h-full overflow-y-auto animate-slide-in-right">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800">
-        <h3 className="text-sm font-semibold text-slate-900 dark:text-white">{dateLabel}</h3>
+        <h3
+          className="text-sm font-semibold text-slate-900 dark:text-white"
+          suppressHydrationWarning
+        >
+          {dateLabel}
+        </h3>
         <button
           onClick={onClose}
           className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"

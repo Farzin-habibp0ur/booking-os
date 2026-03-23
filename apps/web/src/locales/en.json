@@ -61,14 +61,34 @@
     "staff": "Staff",
     "reports": "Reports",
     "roi": "ROI",
+    "waitlist": "Waitlist",
+    "invoices": "Invoices",
+    "campaigns": "Campaigns",
+    "automations": "Automations",
+    "packages": "Packages",
+    "testimonials": "Testimonials",
+    "inventory": "Inventory",
+    "pipeline": "Pipeline",
+    "service_board": "Service Board",
+    "ai": "AI & Agents",
+    "ai_actions": "Action Triage",
+    "ai_agents": "Agent Status",
+    "ai_performance": "Performance",
     "settings": "Settings",
+    "home": "Home",
     "logout": "Logout",
     "more": "More",
     "views": "Views",
     "section_workspace": "Workspace",
     "section_tools": "Tools",
     "section_insights": "Insights",
-    "section_ai_agents": "AI & Agents"
+    "section_ai_agents": "AI & Agents",
+    "section_more": "More"
+  },
+
+  "cmdk": {
+    "placeholder": "Search pages, customers, bookings...",
+    "hint": "All pages searchable"
   },
 
   "mode": {
@@ -975,6 +995,7 @@
     "completed": "Completed",
     "no_show": "No-Show",
     "cancelled": "Cancelled",
+    "rescheduled": "Rescheduled",
     "pending_deposit": "Pending Deposit",
     "open": "Open",
     "waiting": "Waiting",

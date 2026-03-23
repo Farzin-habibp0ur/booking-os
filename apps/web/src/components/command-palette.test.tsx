@@ -15,6 +15,47 @@ jest.mock('@/lib/vertical-pack', () => ({
   }),
 }));
 
+jest.mock('@/lib/auth', () => ({
+  useAuth: () => ({
+    user: {
+      id: '1',
+      role: 'ADMIN',
+      businessId: 'b1',
+      business: { id: 'b1', verticalPack: 'aesthetic', packConfig: {} },
+    },
+    logout: jest.fn(),
+  }),
+}));
+
+jest.mock('@/lib/i18n', () => ({
+  useI18n: () => ({
+    t: (key: string, params?: Record<string, string>) => {
+      if (key === 'cmdk.placeholder') return 'Search pages, customers, bookings...';
+      if (key === 'cmdk.hint') return 'All pages searchable';
+      if (key === 'nav.section_workspace') return 'Workspace';
+      if (key === 'nav.section_tools') return 'Tools';
+      if (key === 'nav.section_insights') return 'Insights';
+      if (key === 'nav.section_ai_agents') return 'AI & Agents';
+      return key;
+    },
+  }),
+}));
+
+jest.mock('@/lib/use-mode', () => ({
+  useMode: () => ({
+    mode: 'admin',
+    modeDef: {
+      key: 'admin',
+      sections: {
+        workspace: ['/dashboard', '/inbox', '/calendar', '/customers', '/bookings', '/waitlist'],
+        tools: ['/services', '/staff', '/invoices', '/campaigns', '/automations', '/testimonials'],
+        insights: ['/dashboard', '/reports', '/reports/monthly-review', '/roi'],
+        aiAgents: ['/ai', '/ai/agents', '/ai/actions', '/ai/performance'],
+      },
+    },
+  }),
+}));
+
 const mockGet = jest.fn();
 jest.mock('@/lib/api', () => ({
   api: {
@@ -71,9 +112,7 @@ describe('CommandPalette', () => {
 
   test('renders search input when open', () => {
     render(<CommandPalette {...defaultProps} />);
-    expect(
-      screen.getByPlaceholderText('Search customers, bookings, services...'),
-    ).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Search pages, customers, bookings...')).toBeInTheDocument();
   });
 
   // ─── Search debounce ──────────────────────────────────────────────
@@ -82,7 +121,7 @@ describe('CommandPalette', () => {
     mockGet.mockResolvedValue(mockSearchResults);
     render(<CommandPalette {...defaultProps} />);
 
-    const input = screen.getByPlaceholderText('Search customers, bookings, services...');
+    const input = screen.getByPlaceholderText('Search pages, customers, bookings...');
     fireEvent.change(input, { target: { value: 'Alice' } });
 
     expect(mockGet).not.toHaveBeenCalled();
@@ -102,7 +141,7 @@ describe('CommandPalette', () => {
     mockGet.mockResolvedValue(mockSearchResults);
     render(<CommandPalette {...defaultProps} />);
 
-    const input = screen.getByPlaceholderText('Search customers, bookings, services...');
+    const input = screen.getByPlaceholderText('Search pages, customers, bookings...');
     fireEvent.change(input, { target: { value: 'Alice' } });
 
     act(() => {
@@ -123,7 +162,7 @@ describe('CommandPalette', () => {
     mockGet.mockResolvedValue(mockSearchResults);
     render(<CommandPalette {...defaultProps} />);
 
-    const input = screen.getByPlaceholderText('Search customers, bookings, services...');
+    const input = screen.getByPlaceholderText('Search pages, customers, bookings...');
     fireEvent.change(input, { target: { value: 'Alice' } });
 
     act(() => {
@@ -144,7 +183,7 @@ describe('CommandPalette', () => {
     mockGet.mockResolvedValue(mockSearchResults);
     render(<CommandPalette {...defaultProps} />);
 
-    const input = screen.getByPlaceholderText('Search customers, bookings, services...');
+    const input = screen.getByPlaceholderText('Search pages, customers, bookings...');
     fireEvent.change(input, { target: { value: 'Alice' } });
 
     act(() => {
@@ -178,7 +217,7 @@ describe('CommandPalette', () => {
     });
     render(<CommandPalette {...defaultProps} />);
 
-    const input = screen.getByPlaceholderText('Search customers, bookings, services...');
+    const input = screen.getByPlaceholderText('Search pages, customers, bookings...');
     fireEvent.change(input, { target: { value: 'Alice' } });
 
     act(() => {
@@ -200,7 +239,7 @@ describe('CommandPalette', () => {
     const onClose = jest.fn();
     render(<CommandPalette isOpen={true} onClose={onClose} />);
 
-    const input = screen.getByPlaceholderText('Search customers, bookings, services...');
+    const input = screen.getByPlaceholderText('Search pages, customers, bookings...');
     fireEvent.keyDown(input, { key: 'Escape' });
 
     expect(onClose).toHaveBeenCalled();
@@ -210,7 +249,7 @@ describe('CommandPalette', () => {
     mockGet.mockResolvedValue(mockSearchResults);
     render(<CommandPalette {...defaultProps} />);
 
-    const input = screen.getByPlaceholderText('Search customers, bookings, services...');
+    const input = screen.getByPlaceholderText('Search pages, customers, bookings...');
     fireEvent.change(input, { target: { value: 'Alice' } });
 
     act(() => {
@@ -233,7 +272,7 @@ describe('CommandPalette', () => {
     mockGet.mockResolvedValue(mockSearchResults);
     render(<CommandPalette {...defaultProps} />);
 
-    const input = screen.getByPlaceholderText('Search customers, bookings, services...');
+    const input = screen.getByPlaceholderText('Search pages, customers, bookings...');
     fireEvent.change(input, { target: { value: 'Alice' } });
 
     act(() => {
@@ -262,7 +301,7 @@ describe('CommandPalette', () => {
     });
     render(<CommandPalette {...defaultProps} />);
 
-    const input = screen.getByPlaceholderText('Search customers, bookings, services...');
+    const input = screen.getByPlaceholderText('Search pages, customers, bookings...');
     fireEvent.change(input, { target: { value: 'zzzzz' } });
 
     act(() => {
@@ -300,7 +339,7 @@ describe('CommandPalette', () => {
     mockGet.mockResolvedValue(mockSearchResults);
     render(<CommandPalette {...defaultProps} />);
 
-    const input = screen.getByPlaceholderText('Search customers, bookings, services...');
+    const input = screen.getByPlaceholderText('Search pages, customers, bookings...');
     fireEvent.change(input, { target: { value: 'Alice' } });
 
     act(() => {
@@ -323,7 +362,7 @@ describe('CommandPalette', () => {
     mockGet.mockResolvedValue(mockSearchResults);
     render(<CommandPalette {...defaultProps} />);
 
-    const input = screen.getByPlaceholderText('Search customers, bookings, services...');
+    const input = screen.getByPlaceholderText('Search pages, customers, bookings...');
     fireEvent.change(input, { target: { value: 'Alice' } });
 
     act(() => {
@@ -339,7 +378,7 @@ describe('CommandPalette', () => {
     mockGet.mockResolvedValue(mockSearchResults);
     render(<CommandPalette {...defaultProps} />);
 
-    const input = screen.getByPlaceholderText('Search customers, bookings, services...');
+    const input = screen.getByPlaceholderText('Search pages, customers, bookings...');
     fireEvent.change(input, { target: { value: 'Alice' } });
 
     act(() => {
@@ -366,7 +405,7 @@ describe('CommandPalette', () => {
     });
     render(<CommandPalette {...defaultProps} />);
 
-    const input = screen.getByPlaceholderText('Search customers, bookings, services...');
+    const input = screen.getByPlaceholderText('Search pages, customers, bookings...');
     fireEvent.change(input, { target: { value: 'zzzzz' } });
 
     act(() => {
@@ -414,7 +453,7 @@ describe('CommandPalette', () => {
     mockGet.mockResolvedValue(mockSearchResults);
     render(<CommandPalette {...defaultProps} />);
 
-    const input = screen.getByPlaceholderText('Search customers, bookings, services...');
+    const input = screen.getByPlaceholderText('Search pages, customers, bookings...');
     fireEvent.change(input, { target: { value: 'Alice' } });
 
     act(() => {
@@ -434,7 +473,7 @@ describe('CommandPalette', () => {
     mockGet.mockResolvedValue(mockSearchResults);
     render(<CommandPalette {...defaultProps} />);
 
-    const input = screen.getByPlaceholderText('Search customers, bookings, services...');
+    const input = screen.getByPlaceholderText('Search pages, customers, bookings...');
     fireEvent.change(input, { target: { value: 'Sarah' } });
 
     act(() => {
@@ -447,5 +486,64 @@ describe('CommandPalette', () => {
 
     expect(screen.getByTestId('group-staff')).toBeInTheDocument();
     expect(screen.getByText('Staff')).toBeInTheDocument();
+  });
+
+  // ─── Page navigation ─────────────────────────────────────────────
+
+  test('shows matching pages when typing a page name', () => {
+    render(<CommandPalette {...defaultProps} />);
+
+    const input = screen.getByPlaceholderText('Search pages, customers, bookings...');
+    fireEvent.change(input, { target: { value: 'cal' } });
+
+    expect(screen.getByTestId('pages-section')).toBeInTheDocument();
+    expect(screen.getByText('nav.calendar')).toBeInTheDocument();
+  });
+
+  test('page results are grouped by section', () => {
+    render(<CommandPalette {...defaultProps} />);
+
+    const input = screen.getByPlaceholderText('Search pages, customers, bookings...');
+    // "automations" matches the /automations href
+    fireEvent.change(input, { target: { value: 'automations' } });
+
+    const pagesSection = screen.getByTestId('pages-section');
+    expect(pagesSection).toBeInTheDocument();
+    // t() returns the key string
+    expect(screen.getByText('nav.automations')).toBeInTheDocument();
+  });
+
+  test('page results include overflow routes (e.g. AI sub-routes)', () => {
+    render(<CommandPalette {...defaultProps} />);
+
+    const input = screen.getByPlaceholderText('Search pages, customers, bookings...');
+    // "ai/actions" matches the /ai/actions href
+    fireEvent.change(input, { target: { value: 'ai/actions' } });
+
+    // t() returns the key string
+    expect(screen.getByText('nav.ai_actions')).toBeInTheDocument();
+  });
+
+  test('clicking a page result navigates and closes', () => {
+    const onClose = jest.fn();
+    render(<CommandPalette isOpen={true} onClose={onClose} />);
+
+    const input = screen.getByPlaceholderText('Search pages, customers, bookings...');
+    // "campaigns" matches the /campaigns href
+    fireEvent.change(input, { target: { value: 'campaigns' } });
+
+    // t() returns the key string
+    fireEvent.click(screen.getByText('nav.campaigns'));
+
+    expect(mockPush).toHaveBeenCalledWith('/campaigns');
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  // ─── Footer hint ─────────────────────────────────────────────────
+
+  test('shows "All pages searchable" hint in footer', () => {
+    render(<CommandPalette {...defaultProps} />);
+
+    expect(screen.getByTestId('cmdk-hint')).toHaveTextContent('All pages searchable');
   });
 });

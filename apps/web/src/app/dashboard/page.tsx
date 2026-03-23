@@ -300,7 +300,7 @@ export default function DashboardPage() {
           <h1 className="text-3xl font-serif font-semibold text-slate-900 dark:text-slate-100">
             {t('dashboard.title')}
           </h1>
-          <p className="text-sm text-slate-400 mt-1">
+          <p className="text-sm text-slate-400 mt-1" suppressHydrationWarning>
             {new Date().toLocaleDateString('en-US', {
               weekday: 'long',
               month: 'long',
@@ -1029,7 +1029,10 @@ function TodaySchedule({
               >
                 <div className="flex items-center gap-3">
                   <div className="text-center min-w-[48px]">
-                    <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                    <p
+                      className="text-sm font-semibold text-slate-900 dark:text-slate-100"
+                      suppressHydrationWarning
+                    >
                       {new Date(b.startTime).toLocaleTimeString('en-US', {
                         hour: 'numeric',
                         minute: '2-digit',

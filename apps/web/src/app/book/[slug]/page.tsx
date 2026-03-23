@@ -452,11 +452,12 @@ export default function BookingPortalPage() {
 
   if (error || !business) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
+      <div className="flex flex-col items-center justify-center min-h-[400px] text-center px-4">
         <div className="text-6xl mb-4">404</div>
-        <h1 className="text-xl font-semibold text-slate-800 mb-2">Business not found</h1>
-        <p className="text-slate-500 text-sm">
-          The booking page you&apos;re looking for doesn&apos;t exist.
+        <h1 className="text-xl font-semibold text-slate-800 mb-2">Booking page not found</h1>
+        <p className="text-slate-500 text-sm max-w-md">
+          The booking page you&apos;re looking for doesn&apos;t exist. Please check the URL or
+          contact the business directly for the correct booking link.
         </p>
       </div>
     );

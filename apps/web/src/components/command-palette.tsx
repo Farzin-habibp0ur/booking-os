@@ -1,10 +1,14 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { usePack } from '@/lib/vertical-pack';
+import { useAuth } from '@/lib/auth';
+import { useI18n } from '@/lib/i18n';
+import { useMode } from '@/lib/use-mode';
+import { getNavItems } from '@/lib/nav-config';
 import {
   Search,
   Users,
@@ -145,6 +149,13 @@ const QUICK_ACTIONS: QuickAction[] = [
   { id: 'qa-new-customer', label: 'New Customer', href: '/customers?new=true', icon: UserPlus },
 ];
 
+interface PageItem {
+  href: string;
+  label: string;
+  icon: typeof Search;
+  section: string;
+}
+
 export default function CommandPalette({
   isOpen,
   onClose,
@@ -160,6 +171,9 @@ export default function CommandPalette({
   const listRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const pack = usePack();
+  const { user } = useAuth();
+  const { t } = useI18n();
+  const { modeDef } = useMode();
 
   const typeLabels: Record<string, string> = {
     customer: pack.labels?.customer ? `${pack.labels.customer}s` : defaultTypeLabels.customer,
@@ -168,6 +182,54 @@ export default function CommandPalette({
     staff: defaultTypeLabels.staff,
     conversation: defaultTypeLabels.conversation,
   };
+
+  // Build page items from shared nav config, filtered by role
+  const pageItems: PageItem[] = useMemo(() => {
+    const role = user?.role;
+    const navItems = getNavItems({
+      t,
+      packName: pack.name,
+      packLabels: pack.labels,
+      kanbanEnabled: !!(user?.business?.packConfig as any)?.kanbanEnabled,
+    });
+
+    const sections = modeDef?.sections;
+    const allSectionPaths = sections
+      ? [
+          ...sections.workspace,
+          ...sections.tools,
+          ...sections.insights,
+          ...(sections.aiAgents || []),
+        ]
+      : [];
+
+    return navItems
+      .filter((item) => !role || item.roles.includes(role))
+      .filter((item) => allSectionPaths.includes(item.href))
+      .map((item) => {
+        let section = 'Pages';
+        if (sections) {
+          if (sections.workspace.includes(item.href))
+            section = t('nav.section_workspace', undefined) || 'Workspace';
+          else if (sections.tools.includes(item.href))
+            section = t('nav.section_tools', undefined) || 'Tools';
+          else if (sections.insights.includes(item.href))
+            section = t('nav.section_insights', undefined) || 'Insights';
+          else if (sections.aiAgents?.includes(item.href))
+            section = t('nav.section_ai_agents', undefined) || 'AI & Agents';
+        }
+        return { href: item.href, label: item.label, icon: item.icon, section };
+      });
+  }, [user, pack, t, modeDef]);
+
+  // Filter pages by query
+  const matchingPages = useMemo(() => {
+    if (query.length < 1) return [];
+    const q = query.toLowerCase();
+    return pageItems.filter(
+      (p) => p.label.toLowerCase().includes(q) || p.href.toLowerCase().includes(q),
+    );
+  }, [query, pageItems]);
 
   useEffect(() => {
     if (isOpen) {
@@ -199,6 +261,14 @@ export default function CommandPalette({
     return () => clearTimeout(timeout);
   }, [query]);
 
+  const navigateTo = useCallback(
+    (href: string) => {
+      onClose();
+      router.push(href);
+    },
+    [onClose, router],
+  );
+
   const navigate = useCallback(
     (item: ResultItem) => {
       // Save to recent searches
@@ -210,22 +280,31 @@ export default function CommandPalette({
         // localStorage may be unavailable
       }
 
-      onClose();
-      router.push(item.href);
+      navigateTo(item.href);
     },
-    [onClose, router],
+    [navigateTo],
   );
+
+  // Total selectable items: pages + API results (for keyboard nav)
+  const totalSelectableItems = matchingPages.length + results.length;
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      setActiveIndex((i) => Math.min(i + 1, results.length - 1));
+      setActiveIndex((i) => Math.min(i + 1, totalSelectableItems - 1));
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
       setActiveIndex((i) => Math.max(i - 1, 0));
-    } else if (e.key === 'Enter' && results[activeIndex]) {
+    } else if (e.key === 'Enter') {
       e.preventDefault();
-      navigate(results[activeIndex]);
+      if (activeIndex < matchingPages.length) {
+        navigateTo(matchingPages[activeIndex].href);
+      } else {
+        const resultIndex = activeIndex - matchingPages.length;
+        if (results[resultIndex]) {
+          navigate(results[resultIndex]);
+        }
+      }
     } else if (e.key === 'Escape') {
       onClose();
     }
@@ -254,6 +333,8 @@ export default function CommandPalette({
   const displayItems = query.length >= 2 ? results : recentItems;
   const showRecent = query.length < 2 && recentItems.length > 0;
   const showQuickActions = query.length < 2;
+  const hasNoResults =
+    query.length >= 2 && !loading && results.length === 0 && matchingPages.length === 0;
 
   // Group results by type for section headers
   const groupedTypes =
@@ -262,6 +343,22 @@ export default function CommandPalette({
           displayItems.some((item) => item.type === type),
         )
       : [];
+
+  // Group matching pages by section
+  const pageSections = useMemo(() => {
+    const sectionOrder = ['Workspace', 'Tools', 'Insights', 'AI & Agents', 'Pages'];
+    const groups: Record<string, PageItem[]> = {};
+    for (const page of matchingPages) {
+      if (!groups[page.section]) groups[page.section] = [];
+      groups[page.section].push(page);
+    }
+    return Object.entries(groups).sort(([a], [b]) => {
+      // Sort by known section order, falling back to end
+      const idxA = sectionOrder.findIndex((s) => a.includes(s));
+      const idxB = sectionOrder.findIndex((s) => b.includes(s));
+      return (idxA === -1 ? 99 : idxA) - (idxB === -1 ? 99 : idxB);
+    });
+  }, [matchingPages]);
 
   let flatIndex = 0;
 
@@ -284,7 +381,7 @@ export default function CommandPalette({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Search customers, bookings, services..."
+            placeholder={t('cmdk.placeholder', undefined) || 'Search pages, customers, bookings...'}
             className="flex-1 text-sm bg-transparent outline-none placeholder:text-slate-400"
           />
           {query && (
@@ -303,7 +400,7 @@ export default function CommandPalette({
             <div className="px-4 py-8 text-center text-sm text-slate-400">Searching...</div>
           )}
 
-          {!loading && query.length >= 2 && results.length === 0 && (
+          {hasNoResults && (
             <div className="px-4 py-8 text-center text-sm text-slate-400">
               No results for &ldquo;{query}&rdquo;
             </div>
@@ -317,7 +414,42 @@ export default function CommandPalette({
             </div>
           )}
 
-          {/* Grouped results by type */}
+          {/* Page navigation results (shown when query matches pages) */}
+          {query.length >= 1 && matchingPages.length > 0 && (
+            <div data-testid="pages-section">
+              {pageSections.map(([sectionName, pages]) => (
+                <div key={sectionName}>
+                  <div className="px-4 pt-3 pb-1">
+                    <p className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">
+                      {sectionName}
+                    </p>
+                  </div>
+                  {pages.map((page) => {
+                    const currentIndex = flatIndex++;
+                    const Icon = page.icon;
+                    return (
+                      <button
+                        key={page.href}
+                        data-index={currentIndex}
+                        onClick={() => navigateTo(page.href)}
+                        className={cn(
+                          'w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors',
+                          activeIndex === currentIndex
+                            ? 'bg-sage-50 text-sage-900'
+                            : 'hover:bg-slate-50 text-slate-700',
+                        )}
+                      >
+                        <Icon size={16} className="text-slate-400 flex-shrink-0" />
+                        <span className="font-medium">{page.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Grouped API results by type */}
           {!loading &&
             query.length >= 2 &&
             groupedTypes.map((type) => {
@@ -400,10 +532,7 @@ export default function CommandPalette({
                 return (
                   <button
                     key={action.id}
-                    onClick={() => {
-                      onClose();
-                      router.push(action.href);
-                    }}
+                    onClick={() => navigateTo(action.href)}
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm hover:bg-slate-50 text-slate-700 transition-colors"
                     data-testid={action.id}
                   >
@@ -419,10 +548,7 @@ export default function CommandPalette({
         {/* View all results link */}
         {!loading && query.length >= 2 && results.length > 0 && (
           <button
-            onClick={() => {
-              onClose();
-              router.push(`/search?q=${encodeURIComponent(query)}`);
-            }}
+            onClick={() => navigateTo(`/search?q=${encodeURIComponent(query)}`)}
             className="w-full flex items-center justify-center gap-1 px-4 py-2.5 text-sm text-sage-600 hover:bg-sage-50 border-t border-slate-100 transition-colors"
             data-testid="view-all-results"
           >
@@ -431,19 +557,26 @@ export default function CommandPalette({
         )}
 
         {/* Footer */}
-        <div className="px-4 py-2 border-t border-slate-100 flex items-center gap-4 text-[10px] text-slate-400">
-          <span>
-            <kbd className="px-1 py-0.5 bg-slate-100 rounded border border-slate-200 mr-1">↑↓</kbd>
-            Navigate
-          </span>
-          <span>
-            <kbd className="px-1 py-0.5 bg-slate-100 rounded border border-slate-200 mr-1">↵</kbd>
-            Open
-          </span>
-          <span>
-            <kbd className="px-1 py-0.5 bg-slate-100 rounded border border-slate-200 mr-1">ESC</kbd>
-            Close
-          </span>
+        <div className="px-4 py-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400">
+          <div className="flex items-center gap-4">
+            <span>
+              <kbd className="px-1 py-0.5 bg-slate-100 rounded border border-slate-200 mr-1">
+                ↑↓
+              </kbd>
+              Navigate
+            </span>
+            <span>
+              <kbd className="px-1 py-0.5 bg-slate-100 rounded border border-slate-200 mr-1">↵</kbd>
+              Open
+            </span>
+            <span>
+              <kbd className="px-1 py-0.5 bg-slate-100 rounded border border-slate-200 mr-1">
+                ESC
+              </kbd>
+              Close
+            </span>
+          </div>
+          <span data-testid="cmdk-hint">{t('cmdk.hint', undefined) || 'All pages searchable'}</span>
         </div>
       </div>
     </div>

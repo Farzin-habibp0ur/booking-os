@@ -119,7 +119,7 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 
 ### UX Phase 1: "Role-based Modes + Mission Control + Saved Views" — COMPLETE (6/6 batches)
 
-- **Role-based Modes** — Mode switcher (admin/agent/provider), mode-grouped sidebar nav with "More" toggle, role-appropriate landing pages, vertical-aware labels
+- **Role-based Modes** — Mode switcher (admin/agent/provider), mode-grouped sidebar nav with primary + overflow split, role-appropriate landing pages, vertical-aware labels. See **Navigation UX** section below for full details
 - **Mission Control Dashboard** — KPI strip for agent/provider modes, "My Work" section (personal bookings + assigned conversations), AttentionCards component, mode-adaptive layout
 - **Saved Views** — SavedView database model, full CRUD API (7 endpoints), ViewPicker + SaveViewModal on inbox/bookings/customers/waitlist, sidebar-pinned views, dashboard-pinned view cards
 - **Staff preferences** — JSON column on Staff model for mode/landing path persistence
@@ -239,25 +239,25 @@ Comprehensive inbox redesign covering adaptive composer, smart suggestions, draf
 
 ## 3. Tech Stack
 
-| Layer       | Technology                                                                              | Version               |
-| ----------- | --------------------------------------------------------------------------------------- | --------------------- |
-| Frontend    | Next.js, React, TypeScript                                                              | 15.x, 19.x            |
-| Styling     | Tailwind CSS                                                                            | 4.x                   |
-| Icons       | lucide-react                                                                            | 0.468                 |
-| Charts      | Recharts                                                                                | 2.15                  |
-| Real-time   | Socket.io                                                                               | 4.x                   |
-| Backend     | NestJS, TypeScript                                                                      | 11.x                  |
-| ORM         | Prisma                                                                                  | 6.x                   |
-| Database    | PostgreSQL                                                                              | 16                    |
-| AI          | Anthropic Claude API                                                                    | claude-sonnet         |
-| Payments    | Stripe                                                                                  | stripe-node           |
-| Email       | Resend                                                                                  | -                     |
+| Layer       | Technology                                                                                                               | Version               |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------ | --------------------- |
+| Frontend    | Next.js, React, TypeScript                                                                                               | 15.x, 19.x            |
+| Styling     | Tailwind CSS                                                                                                             | 4.x                   |
+| Icons       | lucide-react                                                                                                             | 0.468                 |
+| Charts      | Recharts                                                                                                                 | 2.15                  |
+| Real-time   | Socket.io                                                                                                                | 4.x                   |
+| Backend     | NestJS, TypeScript                                                                                                       | 11.x                  |
+| ORM         | Prisma                                                                                                                   | 6.x                   |
+| Database    | PostgreSQL                                                                                                               | 16                    |
+| AI          | Anthropic Claude API                                                                                                     | claude-sonnet         |
+| Payments    | Stripe                                                                                                                   | stripe-node           |
+| Email       | Resend                                                                                                                   | -                     |
 | Messaging   | WhatsApp Cloud, Instagram DM, Facebook Messenger, Email (Resend/SendGrid), SMS (Twilio + MMS), Live Web Chat (Socket.IO) | 6-channel omnichannel |
-| Cache/Queue | Redis 7 + BullMQ                                                                        | -                     |
-| Monorepo    | Turborepo                                                                               | 2.x                   |
-| CI/CD       | GitHub Actions → Railway                                                                | -                     |
-| Monitoring  | Sentry                                                                                  | -                     |
-| Linting     | ESLint 9 + Prettier                                                                     | -                     |
+| Cache/Queue | Redis 7 + BullMQ                                                                                                         | -                     |
+| Monorepo    | Turborepo                                                                                                                | 2.x                   |
+| CI/CD       | GitHub Actions → Railway                                                                                                 | -                     |
+| Monitoring  | Sentry                                                                                                                   | -                     |
+| Linting     | ESLint 9 + Prettier                                                                                                      | -                     |
 
 ---
 
@@ -397,7 +397,7 @@ VerticalPack:       AESTHETIC, SALON, TUTORING, GENERAL, DEALERSHIP, WELLNESS
 | **Location**             | name, address, isBookable, whatsappConfig (JSON), instagramConfig (JSON), facebookConfig (JSON), smsConfig (JSON), emailConfig (JSON), webChatConfig (JSON), isActive                                                                                                                                                                                                                                                                                            | Multi-location (per-channel configs)                                               |
 | **Resource**             | locationId, type, metadata (JSON), isActive                                                                                                                                                                                                                                                                                                                                                                                                                      | Equipment/bays                                                                     |
 | **Quote**                | bookingId, totalAmount, status (PENDING/APPROVED/REJECTED), approverIp                                                                                                                                                                                                                                                                                                                                                                                           | Service quotes                                                                     |
-| **Conversation**         | channel (WHATSAPP/INSTAGRAM/FACEBOOK/SMS/EMAIL/WEB_CHAT), status, lastInboundChannel?, tags[], metadata (JSON for AI state), locationId                                                                                                                                                                                                                                                                                                                                               | Messaging (6-channel omnichannel)                                                  |
+| **Conversation**         | channel (WHATSAPP/INSTAGRAM/FACEBOOK/SMS/EMAIL/WEB_CHAT), status, lastInboundChannel?, tags[], metadata (JSON for AI state), locationId                                                                                                                                                                                                                                                                                                                          | Messaging (6-channel omnichannel)                                                  |
 | **WaitlistEntry**        | status (ACTIVE/OFFERED/BOOKED/EXPIRED/CANCELLED), offeredSlot (JSON)                                                                                                                                                                                                                                                                                                                                                                                             | Smart waitlist                                                                     |
 | **AutomationRule**       | trigger (6 types), filters (JSON), actions (JSON), quietStart/End                                                                                                                                                                                                                                                                                                                                                                                                | Automation engine                                                                  |
 | **Campaign**             | filters (JSON), throttlePerMinute, stats (JSON)                                                                                                                                                                                                                                                                                                                                                                                                                  | Bulk messaging                                                                     |
@@ -405,7 +405,7 @@ VerticalPack:       AESTHETIC, SALON, TUTORING, GENERAL, DEALERSHIP, WELLNESS
 | **ActionCard**           | businessId, type (DEPOSIT_PENDING/OVERDUE_REPLY/OPEN_SLOT/etc.), category (URGENT_TODAY/NEEDS_APPROVAL/OPPORTUNITY/HYGIENE), priority (0-100 int), title, description ("Because..." text), suggestedAction, preview (JSON diff), ctaConfig (JSON buttons), status (PENDING/APPROVED/DISMISSED/SNOOZED/EXECUTED/EXPIRED), autonomyLevel (OFF/ASSISTED/AUTO), snoozedUntil, expiresAt, bookingId?, customerId?, conversationId?, staffId?, resolvedById?, metadata | Agentic action recommendations with approve/dismiss/snooze/execute                 |
 | **ActionHistory**        | businessId, actorType (STAFF/AI/SYSTEM/CUSTOMER), actorId?, actorName?, action (BOOKING_CREATED/CARD_APPROVED/etc.), entityType (BOOKING/CONVERSATION/CUSTOMER/ACTION_CARD/SETTING), entityId, description?, diff (JSON before/after), metadata                                                                                                                                                                                                                  | Unified polymorphic audit trail                                                    |
 | **AutonomyConfig**       | businessId, actionType (unique per biz), autonomyLevel (OFF/ASSISTED/AUTO), requiredRole?, constraints (JSON {maxPerDay, maxAmount, etc.})                                                                                                                                                                                                                                                                                                                       | Per-action-type autonomy level configuration                                       |
-| **OutboundDraft**        | businessId, customerId (FK), staffId (FK), channel (WHATSAPP), content, subject?, status (DRAFT/APPROVED/SENT/REJECTED), approvedById?, sentAt?, conversationId?, @@unique(conversationId+channel+staffId)                                                                                                                                                                                                                                                                                                           | Staff-initiated outbound message drafts                                            |
+| **OutboundDraft**        | businessId, customerId (FK), staffId (FK), channel (WHATSAPP), content, subject?, status (DRAFT/APPROVED/SENT/REJECTED), approvedById?, sentAt?, conversationId?, @@unique(conversationId+channel+staffId)                                                                                                                                                                                                                                                       | Staff-initiated outbound message drafts                                            |
 | **AgentConfig**          | businessId, agentType (WAITLIST/RETENTION/DATA_HYGIENE/SCHEDULING_OPTIMIZER/QUOTE_FOLLOWUP), isEnabled, autonomyLevel (AUTO/SUGGEST/REQUIRE_APPROVAL), config (JSON), roleVisibility (String[])                                                                                                                                                                                                                                                                  | Per-business agent configuration                                                   |
 | **AgentRun**             | businessId, agentType, status (RUNNING/COMPLETED/FAILED), cardsCreated (Int), error?, startedAt, completedAt                                                                                                                                                                                                                                                                                                                                                     | Agent execution run tracking                                                       |
 | **AgentFeedback**        | businessId, actionCardId (FK), staffId (FK), rating (HELPFUL/NOT_HELPFUL), comment?                                                                                                                                                                                                                                                                                                                                                                              | Staff feedback on agent suggestions                                                |
@@ -524,24 +524,24 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 
 ### Public Pages
 
-| Page             | Route                        | Description                                                                          |
-| ---------------- | ---------------------------- | ------------------------------------------------------------------------------------ |
-| Login            | `/login`                     | Email + password auth                                                                |
-| Sign Up          | `/signup`                    | New business registration                                                            |
-| Forgot Password  | `/forgot-password`           | Password reset email                                                                 |
-| Reset Password   | `/reset-password?token=`     | Set new password                                                                     |
-| Verify Email     | `/verify-email?token=`       | Email verification                                                                   |
-| Accept Invite    | `/accept-invite?token=`      | Staff invitation acceptance                                                          |
-| Public Booking   | `/book/[slug]`               | Customer booking portal (5-step wizard)                                              |
-| Reschedule       | `/manage/reschedule/[token]` | Customer reschedule page                                                             |
-| Cancel           | `/manage/cancel/[token]`     | Customer cancel page                                                                 |
-| Claim            | `/manage/claim/[token]`      | Waitlist claim page                                                                  |
-| Quote            | `/manage/quote/[token]`      | Quote approval page                                                                  |
-| Portal Login     | `/portal/[slug]`             | Customer portal login (phone OTP + email magic link)                                 |
-| Portal Dashboard | `/portal/[slug]/dashboard`   | Customer welcome page, upcoming bookings, quick actions                              |
-| Portal Bookings  | `/portal/[slug]/bookings`    | Customer booking history with status filters, pagination, cancel & reschedule modals |
-| Portal Profile   | `/portal/[slug]/profile`     | Customer profile editor with stats and notification prefs                            |
-| Portal Intake    | `/portal/[slug]/intake`      | Digital intake form with 4 sections (personal, medical, consent, emergency)          |
+| Page             | Route                        | Description                                                                                             |
+| ---------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Login            | `/login`                     | Email + password auth                                                                                   |
+| Sign Up          | `/signup`                    | New business registration                                                                               |
+| Forgot Password  | `/forgot-password`           | Password reset email                                                                                    |
+| Reset Password   | `/reset-password?token=`     | Set new password                                                                                        |
+| Verify Email     | `/verify-email?token=`       | Email verification                                                                                      |
+| Accept Invite    | `/accept-invite?token=`      | Staff invitation acceptance                                                                             |
+| Public Booking   | `/book/[slug]`               | Customer booking portal (5-step wizard), fuzzy slug resolution (startsWith + suffix-stripping fallback) |
+| Reschedule       | `/manage/reschedule/[token]` | Customer reschedule page                                                                                |
+| Cancel           | `/manage/cancel/[token]`     | Customer cancel page                                                                                    |
+| Claim            | `/manage/claim/[token]`      | Waitlist claim page                                                                                     |
+| Quote            | `/manage/quote/[token]`      | Quote approval page                                                                                     |
+| Portal Login     | `/portal/[slug]`             | Customer portal login (phone OTP + email magic link)                                                    |
+| Portal Dashboard | `/portal/[slug]/dashboard`   | Customer welcome page, upcoming bookings, quick actions                                                 |
+| Portal Bookings  | `/portal/[slug]/bookings`    | Customer booking history with status filters, pagination, cancel & reschedule modals                    |
+| Portal Profile   | `/portal/[slug]/profile`     | Customer profile editor with stats and notification prefs                                               |
+| Portal Intake    | `/portal/[slug]/intake`      | Digital intake form with 4 sections (personal, medical, consent, emergency)                             |
 
 ### Protected Pages
 
@@ -615,7 +615,7 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 - `Shell` — Sidebar nav with mode-grouped items + "More" toggle, pinned saved views, i18n, pack provider, dark mode, tour trigger
 - `BookingFormModal` / `BookingDetailModal` — Create/view/reschedule bookings
 - `AiSuggestions` / `AiBookingPanel` / `AiSummary` — AI features in inbox
-- `CommandPalette` — Cmd+K global search with grouped results, vertical-aware labels, deep links
+- `CommandPalette` — Cmd+K global search with grouped results, vertical-aware labels, deep links, page navigation (all routes including overflow items searchable, grouped by Workspace/Tools/Insights/AI sections). Nav items shared via `lib/nav-config.ts` (single source of truth for shell + command palette)
 - `CustomerTimeline` — Unified activity timeline (6 event types) with filters, pagination, deep links
 - `IntakeCard` — Vertical-specific customer fields card (aesthetic clinic intake)
 - `BulkActionBar` — Multi-select action bar
@@ -670,6 +670,31 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 - `AftercareEnrollmentCard` — Enrollment summary with progress bar and message timeline (Prompt 1D)
 - `AftercarePortalView` — Customer-facing aftercare timeline with step progress (Prompt 1D)
 - `CustomerJourneyBoard` — Horizontal journey visualization with stage timeline, stats, vehicles, active deals (Prompt 2C)
+
+---
+
+## 7b. Navigation UX
+
+All nav route definitions live in `apps/web/src/lib/nav-config.ts` (single source of truth for shell sidebar, mobile tab bar, and command palette).
+
+**Desktop sidebar** — 4 sections (Workspace / Tools / Insights / AI & Agents) per mode via `mode-config.ts`. Admin mode splits each section into **primary** (always visible) and **overflow** (under a collapsible "More" toggle, `aria-expanded`, collapsed by default, persisted in `localStorage`). Agent and provider modes show all paths as primary (no overflow toggle).
+
+| Mode | Primary Tools | Overflow Tools | Primary Insights | Overflow Insights | Primary AI | Overflow AI |
+|------|--------------|---------------|-----------------|-------------------|-----------|------------|
+| Admin | services, staff, invoices | packages, campaigns, automations, testimonials | dashboard, reports | monthly-review, roi | /ai | actions, agents, performance |
+| Agent | services | — | dashboard, reports | — | — | — |
+| Provider | services, service-board | — | dashboard | — | — | — |
+
+**Mobile tab bar** — mode + role aware, max 4 link tabs + "More" button:
+- Admin/Agent: Inbox, Calendar, Customers, Home
+- Provider: Calendar, Bookings, Home (no Inbox/Customers)
+- Labels are i18n/pack-aware (e.g. "Clients" for aesthetic, "Customers" for general)
+
+**Command palette** (⌘K) — searches all navigable pages (including overflow routes) grouped by sidebar section, plus API search for customers/bookings/services/staff/conversations. Footer hint: "All pages searchable".
+
+**Post-login redirect** — On login, shell redirects once to `modeDef.defaultLandingPath` (admin→`/dashboard`, agent→`/inbox`, provider→`/calendar`) via `sessionStorage` flag handshake. Uses `router.replace()` to avoid back-button loop.
+
+**Keyboard shortcuts** — `⌘K` command palette, `N` new booking, `G then B/C/I/D/S/A/Q/R/J/W` chord navigation to bookings/customers/inbox/dashboard/services/automations/actions/reports/ai/waitlist.
 
 ---
 
@@ -836,6 +861,7 @@ Key groups (full list in `.env.example`):
 ### AI Agent Integration Fix (10 Prompts) — COMPLETE
 
 Fixed 7 critical integration gaps between the AI pipeline, messaging infrastructure, and background agents:
+
 - **Prompt 1:** Draft Pipeline — AI creates OutboundDraft records (source/intent/confidence/metadata) + Socket.IO `draft:created`
 - **Prompt 2:** Channel-Aware AI — 24h window validation (IG/FB/WA), SMS opt-out/length check, channel-specific LLM context, per-channel auto-reply toggles (`channelOverrides`)
 - **Prompt 3:** BullMQ Reliable Processing — Replaced fire-and-forget with 3-retry exponential backoff, DLQ + ActionCard on failure, `ai:processing`/`ai:draft-ready`/`ai:processing-failed` Socket.IO events
@@ -909,7 +935,7 @@ Fixed 7 critical integration gaps between the AI pipeline, messaging infrastruct
 ### Phase A: Product Polish — COMPLETE
 
 - **A1: Design Tokens & Visual Consistency** — COMPLETE. Centralized `design-tokens.ts` with `BOOKING_STATUS_STYLES` (7 statuses), `CONVERSATION_STATUS_STYLES` (4 statuses), `ELEVATION` constants, helper functions (`statusBadgeClasses`, `statusCalendarClasses`, `statusHex`). CSS utilities (`.status-dot`, `.btn-press`, `.nav-section-label`). Booking form modal inputs updated to design system pattern. 17 tests.
-- **A2: Navigation Simplification** — COMPLETE. 3-section sidebar nav (Workspace/Tools/Insights) per role mode via `mode-config.ts` sections. Settings in footer area. Mobile bottom tab bar + "More" sheet for overflow. 8 new section tests in mode-config, 4 new shell tests. 55 total tests across design-tokens, mode-config, and shell.
+- **A2: Navigation Simplification** — COMPLETE. 3-section sidebar nav (Workspace/Tools/Insights) per role mode via `mode-config.ts` sections. Settings in footer area. **Primary vs overflow per mode:** Admin mode declares overflow paths per section (tools: packages/campaigns/automations/testimonials; insights: monthly-review/roi; aiAgents: actions/agents/performance). Desktop sidebar renders primary items in each section; overflow items appear under a collapsible "More" toggle (`aria-expanded`, ChevronDown icon) with subheaded groups per section. Collapsed by default, state persisted in `localStorage('bookingos-nav-more-open')`. Agent and provider modes have no overflow (all paths primary, no toggle). `splitSectionPaths()` helper splits any `NavSections` into `{primary, overflow}` per section. **Mobile tab bar is mode + role aware:** admin/agent → Inbox, Calendar, Customers, Home + More; provider → Calendar, Bookings, Home + More (no Inbox/Customers). Tab labels are i18n/pack-aware (`pack.labels.customer`). Dashboard relabeled "Home" on mobile. **Icon + label polish:** Every nav item has a distinct lucide-react icon (Waitlist=ListChecks, Action Triage=ListFilter, Agent Status=Bot, Performance=Gauge, Pack Builder=Blocks). All nav labels use i18n keys (13 new keys in en.json/es.json). Chord shortcuts expanded: G then R=reports, J=AI hub, W=waitlist. **Post-login landing redirect:** After login, shell checks `sessionStorage('booking-os-login-redirect')` flag (set by login page) and redirects once to `modeDef.defaultLandingPath` if user landed on `/dashboard` or `/` — agent→`/inbox`, provider→`/calendar`, admin stays on `/dashboard`. Uses `router.replace()` to avoid back-button loop. 41 tests in mode-config, 25 shell tests, 4 provider mobile nav tests, 3 redirect tests.
 - **A3: Onboarding Overhaul** — COMPLETE. Setup wizard consolidated to 6 steps with skip options and time estimates. Celebration UI with CSS confetti animation on final step. First-week checklist (5 items: send message, create booking, invite team, customize template, enable AI). Persistent sidebar onboarding checklist widget with "Complete Setup" CTA and server-side dismiss via API. 18 tests (8 setup wizard + 10 checklist widget).
 - **A4: Payment Recording & POS** — COMPLETE. Extended Payment model with manual payment fields (method, reference, notes, recordedById, businessId, customerId). New `payments` API module (51st module) with 5 endpoints: record, list, get, summary, update. RecordPaymentModal component with amount/method/reference/notes. Booking detail modal shows payment history and "Record Payment" button. Dashboard KPI strip shows "Revenue Today" with monthly subtitle. Migration `20260309004612_add_manual_payment_fields`. 40 tests (26 API + 14 web).
 - **A5: In-App Refunds** — COMPLETE. New Refund model with Stripe integration. Refunds API module (52nd module) with 3 endpoints: create refund, list refunds by payment, get refund. Stripe refund processing when payment has stripePaymentIntentId, graceful fallback for manual payments. Validates refund amount against remaining refundable balance. Updates payment status to REFUNDED or PARTIAL_REFUND. ActionHistory audit logging. RefundModal component with two-step confirmation flow (form → red-themed warning). Booking detail shows refund status badges and per-payment "Refund" button for admins. Migration `20260309_add_refund_model`. 30 tests (18 API + 12 web).
@@ -1212,16 +1238,16 @@ npm run dev                    # Starts all apps via Turborepo
 
 ### Key Commands
 
-| Command                 | Description                    |
-| ----------------------- | ------------------------------ |
-| `npm run dev`           | Start all apps                 |
-| `npm run build`         | Build all                      |
-| `npm run lint`          | Lint all (ESLint + TypeScript) |
+| Command                 | Description                      |
+| ----------------------- | -------------------------------- |
+| `npm run dev`           | Start all apps                   |
+| `npm run build`         | Build all                        |
+| `npm run lint`          | Lint all (ESLint + TypeScript)   |
 | `npm test`              | Run all tests (4,100+ API tests) |
-| `npm run test:coverage` | Tests with coverage thresholds |
-| `npm run db:generate`   | Generate Prisma client         |
-| `npm run db:migrate`    | Run migrations                 |
-| `npm run db:seed`       | Seed demo data (idempotent)    |
-| `npm run db:studio`     | Prisma Studio GUI              |
-| `npm run format`        | Format with Prettier           |
-| `npm run format:check`  | Check formatting               |
+| `npm run test:coverage` | Tests with coverage thresholds   |
+| `npm run db:generate`   | Generate Prisma client           |
+| `npm run db:migrate`    | Run migrations                   |
+| `npm run db:seed`       | Seed demo data (idempotent)      |
+| `npm run db:studio`     | Prisma Studio GUI                |
+| `npm run format`        | Format with Prettier             |
+| `npm run format:check`  | Check formatting                 |

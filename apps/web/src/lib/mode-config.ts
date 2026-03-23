@@ -5,6 +5,23 @@ export interface NavSections {
   tools: string[];
   insights: string[];
   aiAgents?: string[];
+  overflow?: {
+    tools?: string[];
+    insights?: string[];
+    aiAgents?: string[];
+  };
+}
+
+export interface SplitSection {
+  primary: string[];
+  overflow: string[];
+}
+
+export interface SplitSections {
+  workspace: SplitSection;
+  tools: SplitSection;
+  insights: SplitSection;
+  aiAgents: SplitSection;
 }
 
 export interface ModeDefinition {
@@ -43,6 +60,11 @@ function getAdminSections(packName?: string): NavSections {
     ],
     insights: ['/dashboard', '/reports', '/reports/monthly-review', '/roi'],
     aiAgents: ['/ai', '/ai/agents', '/ai/actions', '/ai/performance'],
+    overflow: {
+      tools: ['/packages', '/campaigns', '/automations', '/testimonials'],
+      insights: ['/reports/monthly-review', '/roi'],
+      aiAgents: ['/ai/actions', '/ai/agents', '/ai/performance'],
+    },
   };
 }
 
@@ -108,6 +130,36 @@ function getModes(packName?: string): ModeDefinition[] {
       allowedRoles: ['ADMIN', 'SERVICE_PROVIDER'],
     },
   ];
+}
+
+/**
+ * Splits each section's paths into primary (shown in sidebar) and overflow
+ * (shown under a collapsible "More" section). If no overflow is declared,
+ * all paths are primary — backward compatible.
+ */
+export function splitSectionPaths(sections: NavSections): SplitSections {
+  const overflowTools = new Set(sections.overflow?.tools ?? []);
+  const overflowInsights = new Set(sections.overflow?.insights ?? []);
+  const overflowAiAgents = new Set(sections.overflow?.aiAgents ?? []);
+
+  return {
+    workspace: {
+      primary: sections.workspace,
+      overflow: [],
+    },
+    tools: {
+      primary: sections.tools.filter((p) => !overflowTools.has(p)),
+      overflow: sections.tools.filter((p) => overflowTools.has(p)),
+    },
+    insights: {
+      primary: sections.insights.filter((p) => !overflowInsights.has(p)),
+      overflow: sections.insights.filter((p) => overflowInsights.has(p)),
+    },
+    aiAgents: {
+      primary: (sections.aiAgents ?? []).filter((p) => !overflowAiAgents.has(p)),
+      overflow: (sections.aiAgents ?? []).filter((p) => overflowAiAgents.has(p)),
+    },
+  };
 }
 
 export function getModeDefinitions(packName?: string): ModeDefinition[] {

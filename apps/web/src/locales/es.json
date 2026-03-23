@@ -61,12 +61,32 @@
     "staff": "Personal",
     "reports": "Reportes",
     "roi": "ROI",
+    "waitlist": "Lista de espera",
+    "invoices": "Facturas",
+    "campaigns": "Campañas",
+    "automations": "Automatizaciones",
+    "packages": "Paquetes",
+    "testimonials": "Testimonios",
+    "inventory": "Inventario",
+    "pipeline": "Pipeline",
+    "service_board": "Tablero de servicio",
+    "ai": "IA y Agentes",
+    "ai_actions": "Triaje de acciones",
+    "ai_agents": "Estado de agentes",
+    "ai_performance": "Rendimiento",
     "settings": "Configuración",
+    "home": "Inicio",
     "logout": "Cerrar sesión",
     "section_workspace": "Espacio de trabajo",
     "section_tools": "Herramientas",
     "section_insights": "Análisis",
-    "section_ai_agents": "IA y Agentes"
+    "section_ai_agents": "IA y Agentes",
+    "section_more": "Más"
+  },
+
+  "cmdk": {
+    "placeholder": "Buscar páginas, clientes, reservas...",
+    "hint": "Todas las páginas buscables"
   },
 
   "login": {
@@ -923,6 +943,7 @@
     "completed": "Completada",
     "no_show": "Ausencia",
     "cancelled": "Cancelada",
+    "rescheduled": "Reprogramado",
     "pending_deposit": "Depósito Pendiente",
     "open": "Abierta",
     "waiting": "En espera",

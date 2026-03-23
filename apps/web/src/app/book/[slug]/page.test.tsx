@@ -263,7 +263,10 @@ describe('BookingPortalPage', () => {
 
       await waitFor(() => {
         expect(screen.getByText('404')).toBeInTheDocument();
-        expect(screen.getByText('Business not found')).toBeInTheDocument();
+        expect(screen.getByText('Booking page not found')).toBeInTheDocument();
+        expect(
+          screen.getByText(/check the URL or contact the business directly/i),
+        ).toBeInTheDocument();
       });
     });
 

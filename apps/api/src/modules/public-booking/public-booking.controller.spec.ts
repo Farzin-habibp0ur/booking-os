@@ -95,9 +95,41 @@ describe('PublicBookingController', () => {
       expect(result.reschedulePolicyText).toBe('No reschedules within 24h');
     });
 
-    it('throws 404 for invalid slug', async () => {
+    it('throws 404 for invalid slug with no fuzzy matches', async () => {
       prisma.business.findFirst.mockResolvedValue(null);
+      prisma.business.findMany.mockResolvedValue([]);
       await expect(controller.getBusiness('not-real')).rejects.toThrow(NotFoundException);
+    });
+
+    it('resolves slug via startsWith fallback when exact match fails', async () => {
+      prisma.business.findFirst.mockResolvedValueOnce(null); // exact match fails
+      prisma.business.findMany.mockResolvedValue([mockBusiness] as any); // startsWith finds one
+      prisma.subscription.findFirst.mockResolvedValue(null);
+
+      const result = await controller.getBusiness('glow');
+      expect(result.slug).toBe('glow-clinic');
+    });
+
+    it('throws 404 when startsWith returns multiple candidates', async () => {
+      prisma.business.findFirst.mockResolvedValue(null);
+      prisma.business.findMany.mockResolvedValue([
+        { ...mockBusiness, id: 'biz1' },
+        { ...mockBusiness, id: 'biz2', slug: 'glow-spa' },
+      ] as any);
+      await expect(controller.getBusiness('glow')).rejects.toThrow(NotFoundException);
+    });
+
+    it('resolves slug with common suffix stripped (e.g. -clinic)', async () => {
+      prisma.business.findFirst
+        .mockResolvedValueOnce(null) // exact match fails
+        .mockResolvedValueOnce(mockBusiness as any); // stripped match
+      prisma.business.findMany.mockResolvedValue([]); // startsWith returns nothing
+
+      prisma.subscription.findFirst.mockResolvedValue(null);
+
+      const result = await controller.getBusiness('glow-clinic-clinic');
+      // After stripping "-clinic", tries startsWith "glow-clinic" which matches
+      expect(result.slug).toBe('glow-clinic');
     });
   });
 

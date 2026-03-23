@@ -1,9 +1,11 @@
 'use client';
 
-import { ReactNode, useState, useEffect, useCallback } from 'react';
+import { ReactNode, useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useKeyboardShortcut, useChordShortcut } from '@/lib/use-keyboard-shortcut';
+import { splitSectionPaths } from '@/lib/mode-config';
+import { getNavItems } from '@/lib/nav-config';
 import { useAuth } from '@/lib/auth';
 import { usePack, VerticalPackProvider } from '@/lib/vertical-pack';
 import { I18nProvider, useI18n } from '@/lib/i18n';
@@ -13,27 +15,14 @@ import { LanguagePicker } from '@/components/language-picker';
 import { cn } from '@/lib/cn';
 import { api } from '@/lib/api';
 import {
-  LayoutDashboard,
-  MessageSquare,
-  ClipboardList,
-  Calendar,
-  Users,
-  BookOpen,
-  Scissors,
-  UserCog,
-  BarChart3,
-  TrendingUp,
   Settings,
   LogOut,
   Menu,
   Search,
-  Megaphone,
   Zap,
   Sun,
   Moon,
   X,
-  Package,
-  Kanban,
   Compass,
   Pin,
   Bookmark,
@@ -43,8 +32,7 @@ import {
   Eye,
   Bell,
   Sparkles,
-  Receipt,
-  Car,
+  ChevronDown,
 } from 'lucide-react';
 import CommandPalette from '@/components/command-palette';
 import NotificationBell from '@/components/notification-bell';
@@ -97,14 +85,71 @@ function ShellInner({ children }: { children: ReactNode }) {
   const [cmdkOpen, setCmdkOpen] = useState(false);
   const { theme, toggle: toggleTheme } = useTheme();
   const { state: tourState, startTour } = useDemoTour();
-  const { modeDef } = useMode();
+  const { modeDef, landingPath } = useMode();
   const [pinnedViews, setPinnedViews] = useState<any[]>([]);
   const [moreSheetOpen, setMoreSheetOpen] = useState(false);
+  const [overflowOpen, setOverflowOpen] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    try {
+      return localStorage.getItem('bookingos-nav-more-open') === 'true';
+    } catch {
+      return false;
+    }
+  });
+  const navRef = useRef<HTMLElement>(null);
+  const [navCanScroll, setNavCanScroll] = useState(false);
+  const [navAtBottom, setNavAtBottom] = useState(false);
+
+  const toggleOverflow = useCallback(() => {
+    setOverflowOpen((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('bookingos-nav-more-open', String(next));
+      } catch {
+        // Silently handle
+      }
+      return next;
+    });
+  }, []);
+
+  // Track nav scroll state for fade indicator
+  useEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+    const check = () => {
+      const canScroll = nav.scrollHeight > nav.clientHeight;
+      setNavCanScroll(canScroll);
+      setNavAtBottom(!canScroll || nav.scrollTop + nav.clientHeight >= nav.scrollHeight - 2);
+    };
+    check();
+    nav.addEventListener('scroll', check, { passive: true });
+    const observer = new ResizeObserver(check);
+    observer.observe(nav);
+    return () => {
+      nav.removeEventListener('scroll', check);
+      observer.disconnect();
+    };
+  }, []);
 
   // Close sidebar on route change (mobile)
   useEffect(() => {
     setSidebarOpen(false);
   }, [pathname]);
+
+  // Post-login redirect: land on mode-specific default page once
+  useEffect(() => {
+    if (pathname !== '/dashboard' && pathname !== '/') return;
+    try {
+      const flag = sessionStorage.getItem('booking-os-login-redirect');
+      if (!flag) return;
+      sessionStorage.removeItem('booking-os-login-redirect');
+      if (landingPath && landingPath !== '/dashboard') {
+        router.replace(landingPath);
+      }
+    } catch {
+      // sessionStorage unavailable
+    }
+  }, [pathname, landingPath, router]);
 
   // Load sidebar-pinned saved views
   const loadPinnedViews = useCallback(async () => {
@@ -144,100 +189,65 @@ function ShellInner({ children }: { children: ReactNode }) {
     s: () => router.push('/services'),
     a: () => router.push('/automations'),
     q: () => router.push('/ai/actions'),
+    r: () => router.push('/reports'),
+    j: () => router.push('/ai'),
+    w: () => router.push('/waitlist'),
   });
 
   const role = user?.role;
 
-  const allNav = [
-    {
-      href: '/dashboard',
-      label: t('nav.dashboard'),
-      icon: LayoutDashboard,
-      roles: ['ADMIN', 'AGENT', 'SERVICE_PROVIDER'],
-    },
-    { href: '/inbox', label: t('nav.inbox'), icon: MessageSquare, roles: ['ADMIN', 'AGENT'] },
-    { href: '/waitlist', label: 'Waitlist', icon: ClipboardList, roles: ['ADMIN', 'AGENT'] },
-    {
-      href: '/calendar',
-      label: t('nav.calendar'),
-      icon: Calendar,
-      roles: ['ADMIN', 'AGENT', 'SERVICE_PROVIDER'],
-    },
-    {
-      href: '/customers',
-      label: t('nav.customers', { entity: pack.labels.customer }),
-      icon: Users,
-      roles: ['ADMIN', 'AGENT'],
-    },
-    {
-      href: '/bookings',
-      label: t('nav.bookings', { entity: pack.labels.booking }),
-      icon: BookOpen,
-      roles: ['ADMIN', 'AGENT', 'SERVICE_PROVIDER'],
-    },
-    {
-      href: '/services',
-      label: t('nav.services', { entity: pack.labels.service }),
-      icon: Scissors,
-      roles: ['ADMIN', 'AGENT', 'SERVICE_PROVIDER'],
-    },
-    { href: '/staff', label: t('nav.staff'), icon: UserCog, roles: ['ADMIN'] },
-    ...(pack.name === 'dealership'
-      ? [
-          { href: '/inventory', label: 'Inventory', icon: Car, roles: ['ADMIN', 'AGENT'] },
-          { href: '/pipeline', label: 'Pipeline', icon: Compass, roles: ['ADMIN', 'AGENT'] },
-        ]
-      : []),
-    { href: '/invoices', label: 'Invoices', icon: Receipt, roles: ['ADMIN'] },
-    { href: '/campaigns', label: 'Campaigns', icon: Megaphone, roles: ['ADMIN'] },
-    { href: '/automations', label: 'Automations', icon: Zap, roles: ['ADMIN'] },
-    ...(pack.name === 'wellness'
-      ? [{ href: '/packages', label: 'Packages', icon: Package, roles: ['ADMIN'] }]
-      : []),
-    { href: '/testimonials', label: 'Testimonials', icon: Star, roles: ['ADMIN'] },
-    ...((user?.business?.packConfig as any)?.kanbanEnabled
-      ? [
-          {
-            href: '/service-board',
-            label: 'Service Board',
-            icon: Kanban,
-            roles: ['ADMIN', 'AGENT', 'SERVICE_PROVIDER'],
-          },
-        ]
-      : []),
-    { href: '/reports', label: t('nav.reports'), icon: BarChart3, roles: ['ADMIN', 'AGENT'] },
-    ...(pack.name !== 'general'
-      ? [{ href: '/roi', label: t('nav.roi'), icon: TrendingUp, roles: ['ADMIN'] }]
-      : []),
-    { href: '/ai', label: 'AI & Agents', icon: Sparkles, roles: ['ADMIN'] },
-    { href: '/ai/actions', label: 'Action Triage', icon: ClipboardList, roles: ['ADMIN'] },
-    { href: '/ai/agents', label: 'Agent Status', icon: Zap, roles: ['ADMIN'] },
-    { href: '/ai/performance', label: 'Performance', icon: TrendingUp, roles: ['ADMIN'] },
-    {
-      href: '/admin/pack-builder',
-      label: 'Pack Builder',
-      icon: Package,
-      roles: ['SUPER_ADMIN'],
-    },
-  ];
+  const allNav = getNavItems({
+    t,
+    packName: pack.name,
+    packLabels: pack.labels,
+    kanbanEnabled: !!(user?.business?.packConfig as any)?.kanbanEnabled,
+  });
 
   const nav = allNav.filter((item) => !role || item.roles.includes(role));
 
-  // 3-section nav model: Workspace / Tools / Insights
+  // 3-section nav model: Workspace / Tools / Insights — split into primary + overflow
   const sections = modeDef?.sections ?? { workspace: [], tools: [], insights: [] };
-  const workspaceNav = nav.filter((item) => sections.workspace.includes(item.href));
-  const toolsNav = nav.filter((item) => sections.tools.includes(item.href));
-  const insightsNav = nav.filter((item) => sections.insights.includes(item.href));
-  const aiAgentsNav = nav.filter((item) => sections.aiAgents?.includes(item.href));
+  const split = splitSectionPaths(sections);
+
+  const workspaceNav = nav.filter((item) => split.workspace.primary.includes(item.href));
+  const toolsNav = nav.filter((item) => split.tools.primary.includes(item.href));
+  const insightsNav = nav.filter((item) => split.insights.primary.includes(item.href));
+  const aiAgentsNav = nav.filter((item) => split.aiAgents.primary.includes(item.href));
+
+  // Overflow items grouped by section
+  const overflowToolsNav = nav.filter((item) => split.tools.overflow.includes(item.href));
+  const overflowInsightsNav = nav.filter((item) => split.insights.overflow.includes(item.href));
+  const overflowAiAgentsNav = nav.filter((item) => split.aiAgents.overflow.includes(item.href));
+  const hasOverflow =
+    overflowToolsNav.length > 0 || overflowInsightsNav.length > 0 || overflowAiAgentsNav.length > 0;
+
   // Items not in any section (e.g. pack-builder for SUPER_ADMIN)
+  const allSectionPaths = [
+    ...sections.workspace,
+    ...sections.tools,
+    ...sections.insights,
+    ...(sections.aiAgents || []),
+  ];
   const extraNav = nav.filter(
-    (item) =>
-      item.href !== '/settings' &&
-      !sections.workspace.includes(item.href) &&
-      !sections.tools.includes(item.href) &&
-      !sections.insights.includes(item.href) &&
-      !sections.aiAgents?.includes(item.href),
+    (item) => item.href !== '/settings' && !allSectionPaths.includes(item.href),
   );
+
+  // Mobile tab bar: pick up to 4 tabs from workspace, prioritizing key paths.
+  // Preferred order per mode: admin/agent → inbox, calendar, customers, dashboard
+  //                           provider   → calendar, bookings, dashboard, services
+  const mobileTabPriority: string[] =
+    modeDef?.key === 'provider'
+      ? ['/calendar', '/bookings', '/dashboard', '/services']
+      : ['/inbox', '/calendar', '/customers', '/dashboard'];
+  const mobileTabs = mobileTabPriority
+    .map((href) => nav.find((n) => n.href === href))
+    .filter((item): item is (typeof nav)[0] => !!item)
+    .slice(0, 4)
+    .map((item) => ({
+      ...item,
+      // Override label for /dashboard to "Home" on mobile
+      label: item.href === '/dashboard' ? t('nav.home', undefined) || 'Home' : item.label,
+    }));
 
   const renderNavLink = ({ href, label, icon: Icon }: (typeof nav)[0]) => (
     <Link
@@ -294,61 +304,122 @@ function ShellInner({ children }: { children: ReactNode }) {
         </button>
         <NotificationBell />
       </div>
-      <nav
-        role="navigation"
-        aria-label="Main navigation"
-        className="flex-1 p-2 space-y-1 overflow-y-auto"
-      >
-        {/* WORKSPACE section */}
-        {workspaceNav.length > 0 && (
-          <>
-            <p className="nav-section-label">
-              {t('nav.section_workspace', undefined) || 'Workspace'}
-            </p>
-            {workspaceNav.map(renderNavLink)}
-          </>
-        )}
+      <div className="flex-1 min-h-0 relative">
+        <nav
+          ref={navRef}
+          role="navigation"
+          aria-label="Main navigation"
+          className="h-full p-2 space-y-1 overflow-y-auto"
+        >
+          {/* WORKSPACE section */}
+          {workspaceNav.length > 0 && (
+            <>
+              <p className="nav-section-label">
+                {t('nav.section_workspace', undefined) || 'Workspace'}
+              </p>
+              {workspaceNav.map(renderNavLink)}
+            </>
+          )}
 
-        {/* TOOLS section */}
-        {toolsNav.length > 0 && (
-          <>
-            <div className="my-2 border-t border-slate-100 dark:border-slate-800" />
-            <p className="nav-section-label">{t('nav.section_tools', undefined) || 'Tools'}</p>
-            {toolsNav.map(renderNavLink)}
-          </>
-        )}
+          {/* TOOLS section */}
+          {toolsNav.length > 0 && (
+            <>
+              <div className="my-2 border-t border-slate-100 dark:border-slate-800" />
+              <p className="nav-section-label">{t('nav.section_tools', undefined) || 'Tools'}</p>
+              {toolsNav.map(renderNavLink)}
+            </>
+          )}
 
-        {/* INSIGHTS section */}
-        {insightsNav.length > 0 && (
-          <>
-            <div className="my-2 border-t border-slate-100 dark:border-slate-800" />
-            <p className="nav-section-label">
-              {t('nav.section_insights', undefined) || 'Insights'}
-            </p>
-            {insightsNav.map(renderNavLink)}
-          </>
-        )}
+          {/* INSIGHTS section */}
+          {insightsNav.length > 0 && (
+            <>
+              <div className="my-2 border-t border-slate-100 dark:border-slate-800" />
+              <p className="nav-section-label">
+                {t('nav.section_insights', undefined) || 'Insights'}
+              </p>
+              {insightsNav.map(renderNavLink)}
+            </>
+          )}
 
-        {/* AI & AGENTS section */}
-        {aiAgentsNav.length > 0 && (
-          <>
-            <div className="my-2 border-t border-slate-100 dark:border-slate-800" />
-            <p className="nav-section-label flex items-center gap-1">
-              <Sparkles size={12} />
-              {t('nav.section_ai_agents', undefined) || 'AI & Agents'}
-            </p>
-            {aiAgentsNav.map(renderNavLink)}
-          </>
-        )}
+          {/* AI & AGENTS section */}
+          {aiAgentsNav.length > 0 && (
+            <>
+              <div className="my-2 border-t border-slate-100 dark:border-slate-800" />
+              <p className="nav-section-label flex items-center gap-1">
+                <Sparkles size={12} />
+                {t('nav.section_ai_agents', undefined) || 'AI & Agents'}
+              </p>
+              {aiAgentsNav.map(renderNavLink)}
+            </>
+          )}
 
-        {/* Extra items (SUPER_ADMIN pack-builder, etc.) */}
-        {extraNav.length > 0 && (
-          <>
-            <div className="my-2 border-t border-slate-100 dark:border-slate-800" />
-            {extraNav.map(renderNavLink)}
-          </>
+          {/* Overflow "More" section — collapsible */}
+          {hasOverflow && (
+            <>
+              <div className="my-2 border-t border-slate-100 dark:border-slate-800" />
+              <button
+                onClick={toggleOverflow}
+                aria-expanded={overflowOpen}
+                className="flex items-center justify-between w-full px-3 py-1.5 text-[10px] font-semibold text-slate-400 uppercase tracking-wider hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                data-testid="sidebar-more-toggle"
+              >
+                <span>{t('nav.section_more', undefined) || 'More'}</span>
+                <ChevronDown
+                  size={12}
+                  className={cn(
+                    'transition-transform duration-200',
+                    overflowOpen ? 'rotate-180' : '',
+                  )}
+                />
+              </button>
+              {overflowOpen && (
+                <div className="space-y-1" data-testid="sidebar-overflow-items">
+                  {overflowToolsNav.length > 0 && (
+                    <>
+                      <p className="nav-section-label text-slate-300 dark:text-slate-600">
+                        {t('nav.section_tools', undefined) || 'Tools'}
+                      </p>
+                      {overflowToolsNav.map(renderNavLink)}
+                    </>
+                  )}
+                  {overflowInsightsNav.length > 0 && (
+                    <>
+                      <p className="nav-section-label text-slate-300 dark:text-slate-600">
+                        {t('nav.section_insights', undefined) || 'Insights'}
+                      </p>
+                      {overflowInsightsNav.map(renderNavLink)}
+                    </>
+                  )}
+                  {overflowAiAgentsNav.length > 0 && (
+                    <>
+                      <p className="nav-section-label text-slate-300 dark:text-slate-600 flex items-center gap-1">
+                        <Sparkles size={10} />
+                        {t('nav.section_ai_agents', undefined) || 'AI & Agents'}
+                      </p>
+                      {overflowAiAgentsNav.map(renderNavLink)}
+                    </>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Extra items (SUPER_ADMIN pack-builder, etc.) */}
+          {extraNav.length > 0 && (
+            <>
+              <div className="my-2 border-t border-slate-100 dark:border-slate-800" />
+              {extraNav.map(renderNavLink)}
+            </>
+          )}
+        </nav>
+        {/* Scroll fade indicator */}
+        {navCanScroll && !navAtBottom && (
+          <div
+            className="absolute bottom-0 left-0 right-0 h-6 pointer-events-none bg-gradient-to-t from-white dark:from-slate-900 to-transparent"
+            aria-hidden="true"
+          />
         )}
-      </nav>
+      </div>
       {/* Onboarding Checklist — shown until setup is complete */}
       {(user?.business as Record<string, unknown>)?.onboardingComplete !== true ? (
         <OnboardingChecklist />
@@ -470,75 +541,32 @@ function ShellInner({ children }: { children: ReactNode }) {
         </div>
       </main>
 
-      {/* Mobile bottom tab bar */}
+      {/* Mobile bottom tab bar — mode + role aware */}
       <nav
         className="fixed bottom-0 left-0 right-0 z-30 md:hidden bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 flex items-center justify-around safe-bottom"
         role="tablist"
         aria-label="Mobile navigation"
       >
-        {/* Calendar */}
-        <Link
-          href="/calendar"
-          className={cn(
-            'flex-1 flex flex-col items-center justify-center py-3 px-2 transition-colors relative',
-            pathname.startsWith('/calendar')
-              ? 'text-sage-600 dark:text-sage-400 tab-active'
-              : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300',
-          )}
-          aria-current={pathname.startsWith('/calendar') ? 'page' : undefined}
-          role="tab"
-        >
-          <Calendar size={24} />
-          <span className="text-[10px] mt-1">Calendar</span>
-        </Link>
-
-        {/* Inbox */}
-        <Link
-          href="/inbox"
-          className={cn(
-            'flex-1 flex flex-col items-center justify-center py-3 px-2 transition-colors relative',
-            pathname.startsWith('/inbox')
-              ? 'text-sage-600 dark:text-sage-400 tab-active'
-              : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300',
-          )}
-          aria-current={pathname.startsWith('/inbox') ? 'page' : undefined}
-          role="tab"
-        >
-          <MessageSquare size={24} />
-          <span className="text-[10px] mt-1">Inbox</span>
-        </Link>
-
-        {/* Clients/Customers */}
-        <Link
-          href="/customers"
-          className={cn(
-            'flex-1 flex flex-col items-center justify-center py-3 px-2 transition-colors relative',
-            pathname.startsWith('/customers')
-              ? 'text-sage-600 dark:text-sage-400 tab-active'
-              : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300',
-          )}
-          aria-current={pathname.startsWith('/customers') ? 'page' : undefined}
-          role="tab"
-        >
-          <Users size={24} />
-          <span className="text-[10px] mt-1">Clients</span>
-        </Link>
-
-        {/* Home/Dashboard */}
-        <Link
-          href="/dashboard"
-          className={cn(
-            'flex-1 flex flex-col items-center justify-center py-3 px-2 transition-colors relative',
-            pathname.startsWith('/dashboard')
-              ? 'text-sage-600 dark:text-sage-400 tab-active'
-              : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300',
-          )}
-          aria-current={pathname.startsWith('/dashboard') ? 'page' : undefined}
-          role="tab"
-        >
-          <LayoutDashboard size={24} />
-          <span className="text-[10px] mt-1">Home</span>
-        </Link>
+        {mobileTabs.map((tab) => {
+          const Icon = tab.icon;
+          return (
+            <Link
+              key={tab.href}
+              href={tab.href}
+              className={cn(
+                'flex-1 flex flex-col items-center justify-center py-3 px-2 transition-colors relative',
+                pathname.startsWith(tab.href)
+                  ? 'text-sage-600 dark:text-sage-400 tab-active'
+                  : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300',
+              )}
+              aria-current={pathname.startsWith(tab.href) ? 'page' : undefined}
+              role="tab"
+            >
+              <Icon size={24} />
+              <span className="text-[10px] mt-1">{tab.label}</span>
+            </Link>
+          );
+        })}
 
         {/* More */}
         <button
@@ -553,7 +581,7 @@ function ShellInner({ children }: { children: ReactNode }) {
           role="tab"
         >
           <Menu size={24} />
-          <span className="text-[10px] mt-1">More</span>
+          <span className="text-[10px] mt-1">{t('nav.more', undefined) || 'More'}</span>
         </button>
       </nav>
 

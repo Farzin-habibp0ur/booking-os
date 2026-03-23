@@ -83,6 +83,14 @@ export const BOOKING_STATUS_STYLES: Record<string, StatusStyle> = {
     label: 'Cancelled',
     hex: '#64748b',
   },
+  RESCHEDULED: {
+    bg: 'bg-blue-50',
+    text: 'text-blue-700',
+    border: 'border-l-blue-400',
+    dot: 'bg-blue-500',
+    label: 'Rescheduled',
+    hex: '#3b82f6',
+  },
 };
 
 // ---------------------------------------------------------------------------

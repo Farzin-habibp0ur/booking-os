@@ -50,6 +50,7 @@ const STATUS_CHIPS = [
   { value: 'COMPLETED', label: 'Completed' },
   { value: 'CANCELLED', label: 'Cancelled' },
   { value: 'NO_SHOW', label: 'No-Show' },
+  { value: 'RESCHEDULED', label: 'Rescheduled' },
 ] as const;
 
 type SortableColumn = 'startTime' | 'customerName' | 'serviceName' | 'status' | 'amount';

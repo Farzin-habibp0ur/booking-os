@@ -1,10 +1,38 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+// @ts-nocheck
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
+// Mock ResizeObserver for nav scroll tracking
+global.ResizeObserver = class {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+} as any;
+
+// Mock localStorage
+const localStorageMock = (() => {
+  let store = {};
+  return {
+    getItem: (key) => store[key] || null,
+    setItem: (key, value) => {
+      store[key] = String(value);
+    },
+    removeItem: (key) => {
+      delete store[key];
+    },
+    clear: () => {
+      store = {};
+    },
+  };
+})();
+Object.defineProperty(window, 'localStorage', { value: localStorageMock });
+
 // Mock next/navigation
 const mockPush = jest.fn();
+const mockReplace = jest.fn();
 jest.mock('next/navigation', () => ({
-  useRouter: () => ({ push: mockPush }),
+  useRouter: () => ({ push: mockPush, replace: mockReplace }),
   usePathname: () => '/dashboard',
   useSearchParams: () => new URLSearchParams(),
 }));
@@ -41,8 +69,9 @@ jest.mock('@/lib/auth', () => ({
 
 jest.mock('@/lib/i18n', () => ({
   useI18n: () => ({
-    t: (key: string, params?: any) => {
+    t: (key, params) => {
       if (key === 'nav.more') return 'More';
+      if (key === 'nav.home') return 'Home';
       return key;
     },
   }),
@@ -117,6 +146,11 @@ jest.mock('@/lib/use-mode', () => ({
         tools: ['/services', '/campaigns', '/automations', '/service-board'],
         insights: ['/reports', '/reports/monthly-review', '/roi'],
         aiAgents: ['/ai', '/ai/agents', '/ai/actions', '/ai/performance'],
+        overflow: {
+          tools: ['/campaigns', '/automations'],
+          insights: ['/reports/monthly-review', '/roi'],
+          aiAgents: ['/ai/agents', '/ai/actions', '/ai/performance'],
+        },
       },
       defaultLandingPath: '/dashboard',
     },
@@ -150,6 +184,8 @@ describe('Shell', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockApi.get.mockResolvedValue([]);
+    localStorage.clear();
+    sessionStorage.clear();
   });
 
   it('renders the shell with mode switcher', () => {
@@ -185,6 +221,34 @@ describe('Shell', () => {
 
     const moreBtn = screen.getByRole('tab', { name: 'More options' });
     expect(moreBtn).toBeInTheDocument();
+  });
+
+  it('mobile tab bar shows mode-appropriate tabs for admin', () => {
+    render(
+      <Shell>
+        <div>Content</div>
+      </Shell>,
+    );
+
+    const mobileNav = screen.getByRole('tablist', { name: 'Mobile navigation' });
+    // Admin mode: Inbox, Calendar, Customers, Home + More
+    expect(within(mobileNav).getByText('nav.inbox')).toBeInTheDocument();
+    expect(within(mobileNav).getByText('nav.calendar')).toBeInTheDocument();
+    expect(within(mobileNav).getByText('nav.customers')).toBeInTheDocument();
+    expect(within(mobileNav).getByText('Home')).toBeInTheDocument();
+  });
+
+  it('mobile tab bar has exactly 4 link tabs plus More button', () => {
+    render(
+      <Shell>
+        <div>Content</div>
+      </Shell>,
+    );
+
+    const mobileNav = screen.getByRole('tablist', { name: 'Mobile navigation' });
+    const tabs = within(mobileNav).getAllByRole('tab');
+    // 4 link tabs + 1 More button = 5
+    expect(tabs).toHaveLength(5);
   });
 
   it('opens more sheet when "More" button is clicked on mobile', async () => {
@@ -309,7 +373,35 @@ describe('Shell', () => {
     expect(screen.getAllByText('nav.settings').length).toBeGreaterThan(0);
   });
 
-  it('does not have a "More" toggle in the sidebar (only in mobile tab bar)', () => {
+  it('renders "More" toggle in the sidebar when overflow items exist', () => {
+    render(
+      <Shell>
+        <div>Content</div>
+      </Shell>,
+    );
+
+    const toggle = screen.getByTestId('sidebar-more-toggle');
+    expect(toggle).toBeInTheDocument();
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('expands overflow section when "More" toggle is clicked', async () => {
+    render(
+      <Shell>
+        <div>Content</div>
+      </Shell>,
+    );
+
+    const toggle = screen.getByTestId('sidebar-more-toggle');
+    expect(screen.queryByTestId('sidebar-overflow-items')).not.toBeInTheDocument();
+
+    await userEvent.click(toggle);
+
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByTestId('sidebar-overflow-items')).toBeInTheDocument();
+  });
+
+  it('overflow section contains items not in primary nav', async () => {
     render(
       <Shell>
         <div>Content</div>
@@ -317,9 +409,17 @@ describe('Shell', () => {
     );
 
     const nav = screen.getByRole('navigation', { name: 'Main navigation' });
-    // No "More" or "Show More" button inside the sidebar nav
-    expect(within(nav).queryByText('More')).not.toBeInTheDocument();
-    expect(within(nav).queryByText(/show more/i)).not.toBeInTheDocument();
+
+    // Campaigns & Automations should NOT be in primary nav (t() returns keys)
+    expect(within(nav).queryByText('nav.campaigns')).not.toBeInTheDocument();
+    expect(within(nav).queryByText('nav.automations')).not.toBeInTheDocument();
+
+    // Click More to expand
+    await userEvent.click(screen.getByTestId('sidebar-more-toggle'));
+
+    // Now they should appear in the overflow section
+    expect(within(nav).getByText('nav.campaigns')).toBeInTheDocument();
+    expect(within(nav).getByText('nav.automations')).toBeInTheDocument();
   });
 
   it('does not render marketing nav links (Content Queue, Marketing Agents, etc.)', () => {
@@ -336,7 +436,7 @@ describe('Shell', () => {
     expect(within(nav).queryByText('Rejection Analytics')).not.toBeInTheDocument();
   });
 
-  it('renders AI sub-route nav links', () => {
+  it('renders AI sub-route nav links in overflow when expanded', async () => {
     render(
       <Shell>
         <div>Content</div>
@@ -344,9 +444,73 @@ describe('Shell', () => {
     );
 
     const nav = screen.getByRole('navigation', { name: 'Main navigation' });
-    expect(within(nav).getByText('Action Triage')).toBeInTheDocument();
-    expect(within(nav).getByText('Agent Status')).toBeInTheDocument();
-    expect(within(nav).getByText('Performance')).toBeInTheDocument();
+    // AI sub-routes are overflow — hidden by default (t() returns keys)
+    expect(within(nav).queryByText('nav.ai_actions')).not.toBeInTheDocument();
+    expect(within(nav).queryByText('nav.ai_agents')).not.toBeInTheDocument();
+    expect(within(nav).queryByText('nav.ai_performance')).not.toBeInTheDocument();
+
+    // Expand overflow
+    await userEvent.click(screen.getByTestId('sidebar-more-toggle'));
+
+    expect(within(nav).getByText('nav.ai_actions')).toBeInTheDocument();
+    expect(within(nav).getByText('nav.ai_agents')).toBeInTheDocument();
+    expect(within(nav).getByText('nav.ai_performance')).toBeInTheDocument();
+  });
+
+  it('nav container has min-h-0 to allow flex shrinking on short viewports', () => {
+    render(
+      <Shell>
+        <div>Content</div>
+      </Shell>,
+    );
+
+    const nav = screen.getByRole('navigation', { name: 'Main navigation' });
+    // The nav's parent wrapper must have min-h-0 for flex shrinking
+    const navWrapper = nav.parentElement;
+    expect(navWrapper?.className).toContain('min-h-0');
+  });
+
+  it('nav element has overflow-y-auto for scrolling', () => {
+    render(
+      <Shell>
+        <div>Content</div>
+      </Shell>,
+    );
+
+    const nav = screen.getByRole('navigation', { name: 'Main navigation' });
+    expect(nav.className).toContain('overflow-y-auto');
+  });
+
+  it('renders primary nav items in tools, insights, and AI sections', () => {
+    render(
+      <Shell>
+        <div>Content</div>
+      </Shell>,
+    );
+
+    const nav = screen.getByRole('navigation', { name: 'Main navigation' });
+    // Primary TOOLS items (not overflow)
+    expect(within(nav).getByText('nav.services')).toBeInTheDocument();
+    // Primary INSIGHTS item
+    expect(within(nav).getByText('nav.reports')).toBeInTheDocument();
+    // Primary AI item (t() returns key)
+    expect(within(nav).getByText('nav.ai')).toBeInTheDocument();
+    // Overflow items should NOT show until expanded
+    expect(within(nav).queryByText('nav.campaigns')).not.toBeInTheDocument();
+    expect(within(nav).queryByText('nav.automations')).not.toBeInTheDocument();
+  });
+
+  it('sidebar footer stays outside scrollable nav', () => {
+    render(
+      <Shell>
+        <div>Content</div>
+      </Shell>,
+    );
+
+    const nav = screen.getByRole('navigation', { name: 'Main navigation' });
+    // Settings and logout must be OUTSIDE the nav
+    expect(within(nav).queryByText('nav.logout')).not.toBeInTheDocument();
+    expect(within(nav).queryByText('Start Tour')).not.toBeInTheDocument();
   });
 
   it('renders pinned view as link to page with viewId', async () => {
@@ -362,5 +526,20 @@ describe('Shell', () => {
 
     const link = await screen.findByText('Pending Deposits');
     expect(link.closest('a')).toHaveAttribute('href', '/bookings?viewId=v1');
+  });
+
+  it('does not redirect admin mode on login (landingPath is /dashboard)', () => {
+    sessionStorage.setItem('booking-os-login-redirect', '1');
+
+    render(
+      <Shell>
+        <div>Content</div>
+      </Shell>,
+    );
+
+    // Admin landingPath is /dashboard, pathname is /dashboard — no redirect
+    expect(mockReplace).not.toHaveBeenCalled();
+    // Flag should be consumed
+    expect(sessionStorage.getItem('booking-os-login-redirect')).toBeNull();
   });
 });

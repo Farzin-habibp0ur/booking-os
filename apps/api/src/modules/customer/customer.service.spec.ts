@@ -29,20 +29,44 @@ describe('CustomerService', () => {
 
   describe('findAll', () => {
     beforeEach(() => {
-      prisma.customer.findMany.mockResolvedValue([{ id: 'c1', name: 'Emma' }] as any);
+      prisma.customer.findMany.mockResolvedValue([
+        { id: 'c1', name: 'Emma', _count: { bookings: 2 }, bookings: [] },
+      ] as any);
       prisma.customer.count.mockResolvedValue(1);
+      prisma.$queryRaw.mockResolvedValue([]);
     });
 
-    it('returns paginated customers', async () => {
+    it('returns paginated customers with bookingsCount and totalSpent', async () => {
+      prisma.$queryRaw.mockResolvedValue([{ customerId: 'c1', total: 300 }]);
+
       const result = await service.findAll('biz1', {});
 
-      expect(result).toEqual({
-        data: [{ id: 'c1', name: 'Emma' }],
-        total: 1,
-        page: 1,
-        pageSize: 20,
-        totalPages: 1,
-      });
+      expect(result.total).toBe(1);
+      expect(result.page).toBe(1);
+      expect(result.data[0].bookingsCount).toBe(2);
+      expect(result.data[0].totalSpent).toBe(300);
+    });
+
+    it('defaults totalSpent to 0 when no completed bookings', async () => {
+      const result = await service.findAll('biz1', {});
+
+      expect(result.data[0].totalSpent).toBe(0);
+    });
+
+    it('includes _count and latest booking in query', async () => {
+      await service.findAll('biz1', {});
+
+      expect(prisma.customer.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          include: expect.objectContaining({
+            _count: { select: { bookings: true } },
+            bookings: expect.objectContaining({
+              orderBy: { startTime: 'desc' },
+              take: 1,
+            }),
+          }),
+        }),
+      );
     });
 
     it('applies search filter on name, phone, email', async () => {
@@ -826,6 +850,10 @@ describe('CustomerService', () => {
   // ─── Security: Pagination Cap ──────────────────────────────────────
 
   describe('input validation (security)', () => {
+    beforeEach(() => {
+      prisma.$queryRaw.mockResolvedValue([]);
+    });
+
     it('caps pageSize at 100', async () => {
       prisma.customer.findMany.mockResolvedValue([]);
       prisma.customer.count.mockResolvedValue(0);
