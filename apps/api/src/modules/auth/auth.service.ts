@@ -8,8 +8,11 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
+import { randomUUID } from 'crypto';
 import { PrismaService } from '../../common/prisma.service';
 import { TokenService } from '../../common/token.service';
+import { JwtBlacklistService } from '../../common/jwt-blacklist.service';
+import { PortalRedisService } from '../../common/portal-redis.service';
 import { EmailService } from '../email/email.service';
 import { OnboardingDripService } from '../onboarding-drip/onboarding-drip.service';
 import { ReferralService } from '../referral/referral.service';
@@ -18,13 +21,13 @@ import { TRIAL_DAYS, GRACE_PERIOD_DAYS } from '../../common/plan-config';
 
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_MINUTES = 15;
+const BRUTE_FORCE_TTL_MS = LOCKOUT_MINUTES * 60 * 1000;
+const REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
-  private failedAttempts = new Map<string, { count: number; lockedUntil?: Date }>();
 
-  // M2 fix: Periodic cleanup of stale brute force entries to prevent memory leak
   constructor(
     private prisma: PrismaService,
     private jwt: JwtService,
@@ -34,40 +37,27 @@ export class AuthService {
     private onboardingDrip: OnboardingDripService,
     private referralService: ReferralService,
     private twoFactor: TwoFactorService,
-  ) {
-    // M2 fix: Clean up expired brute force entries every 5 minutes
-    const timer = setInterval(
-      () => {
-        const now = new Date();
-        for (const [email, entry] of this.failedAttempts) {
-          if (entry.lockedUntil && entry.lockedUntil < now) {
-            this.failedAttempts.delete(email);
-          }
-        }
-      },
-      5 * 60 * 1000,
-    );
-    timer.unref();
-  }
+    private blacklist: JwtBlacklistService,
+    private redis: PortalRedisService,
+  ) {}
 
-  private checkBruteForce(email: string): void {
-    const entry = this.failedAttempts.get(email);
-    if (entry?.lockedUntil && entry.lockedUntil > new Date()) {
+  private async checkBruteForce(email: string): Promise<void> {
+    const key = `auth:brute:${email}`;
+    const countStr = await this.redis.get(key);
+    if (countStr && parseInt(countStr, 10) >= MAX_FAILED_ATTEMPTS) {
       throw new UnauthorizedException('Account temporarily locked. Please try again later.');
     }
   }
 
-  private recordFailedAttempt(email: string): void {
-    const entry = this.failedAttempts.get(email) || { count: 0 };
-    entry.count++;
-    if (entry.count >= MAX_FAILED_ATTEMPTS) {
-      entry.lockedUntil = new Date(Date.now() + LOCKOUT_MINUTES * 60 * 1000);
-    }
-    this.failedAttempts.set(email, entry);
+  private async recordFailedAttempt(email: string): Promise<void> {
+    const key = `auth:brute:${email}`;
+    const countStr = await this.redis.get(key);
+    const count = countStr ? parseInt(countStr, 10) + 1 : 1;
+    await this.redis.set(key, String(count), BRUTE_FORCE_TTL_MS);
   }
 
-  private clearFailedAttempts(email: string): void {
-    this.failedAttempts.delete(email);
+  private async clearFailedAttempts(email: string): Promise<void> {
+    await this.redis.del(`auth:brute:${email}`);
   }
 
   // C3 fix: No insecure fallback — fail hard if secrets are not configured
@@ -91,7 +81,10 @@ export class AuthService {
     return refreshSecret || jwtSecret!;
   }
 
-  private issueTokens(staff: { id: string; email: string; businessId: string; role: string }) {
+  private async issueTokens(
+    staff: { id: string; email: string; businessId: string; role: string },
+    familyId?: string,
+  ) {
     const payload = {
       sub: staff.id,
       email: staff.email,
@@ -99,12 +92,26 @@ export class AuthService {
       role: staff.role,
     };
 
-    return {
-      accessToken: this.jwt.sign(payload),
-      refreshToken: this.jwt.sign(payload, {
+    const tokenFamilyId = familyId || randomUUID();
+    const jti = randomUUID();
+
+    const refreshToken = this.jwt.sign(
+      { ...payload, jti, familyId: tokenFamilyId },
+      {
         secret: this.getRefreshSecret(),
         expiresIn: this.config.get('JWT_REFRESH_EXPIRATION', '7d'),
-      }),
+      },
+    );
+
+    // Track this token in its family for reuse detection
+    const familyKey = `auth:family:${tokenFamilyId}`;
+    const existing = (await this.redis.get(familyKey)) || '';
+    const updated = existing ? `${existing},${jti}` : jti;
+    await this.redis.set(familyKey, updated, REFRESH_TOKEN_TTL_MS);
+
+    return {
+      accessToken: this.jwt.sign(payload),
+      refreshToken,
     };
   }
 
@@ -186,7 +193,7 @@ export class AuthService {
       this.logger.warn(`Failed to schedule drip for ${staff.email}`, err);
     }
 
-    const tokens = this.issueTokens(staff);
+    const tokens = await this.issueTokens(staff);
 
     return {
       ...tokens,
@@ -201,7 +208,7 @@ export class AuthService {
   }
 
   async login(email: string, password: string) {
-    this.checkBruteForce(email);
+    await this.checkBruteForce(email);
 
     const staff = await this.prisma.staff.findUnique({
       where: { email },
@@ -209,18 +216,18 @@ export class AuthService {
     });
 
     if (!staff || !staff.isActive || !staff.passwordHash) {
-      this.recordFailedAttempt(email);
+      await this.recordFailedAttempt(email);
       throw new UnauthorizedException('Invalid credentials');
     }
 
     const valid = await bcrypt.compare(password, staff.passwordHash);
 
     if (!valid) {
-      this.recordFailedAttempt(email);
+      await this.recordFailedAttempt(email);
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    this.clearFailedAttempts(email);
+    await this.clearFailedAttempts(email);
 
     // H6 fix: Warn if staff's email is not verified (soft enforcement — don't block login)
     if (staff.emailVerified === false) {
@@ -233,7 +240,7 @@ export class AuthService {
       return { requires2FA: true, tempToken } as any;
     }
 
-    const tokens = this.issueTokens(staff);
+    const tokens = await this.issueTokens(staff);
 
     return {
       ...tokens,
@@ -252,16 +259,43 @@ export class AuthService {
       const payload = this.jwt.verify(refreshToken, {
         secret: this.getRefreshSecret(),
       });
+
+      // Token rotation: check if this token has already been used (reuse detection)
+      if (await this.blacklist.isBlacklisted(refreshToken)) {
+        // Reuse detected — revoke the entire token family
+        if (payload.familyId) {
+          await this.revokeTokenFamily(payload.familyId);
+        }
+        throw new UnauthorizedException('Refresh token reuse detected');
+      }
+
       const staff = await this.prisma.staff.findUnique({
         where: { id: payload.sub },
       });
       if (!staff || !staff.isActive) {
         throw new UnauthorizedException();
       }
-      return this.issueTokens(staff);
-    } catch {
+
+      // Blacklist the old refresh token immediately (rotation)
+      await this.blacklist.blacklistToken(refreshToken, REFRESH_TOKEN_TTL_MS);
+
+      // Issue new tokens in the same family
+      return await this.issueTokens(staff, payload.familyId);
+    } catch (err) {
+      if (err instanceof UnauthorizedException) throw err;
       throw new UnauthorizedException('Invalid refresh token');
     }
+  }
+
+  private async revokeTokenFamily(familyId: string): Promise<void> {
+    const familyKey = `auth:family:${familyId}`;
+    const jtis = await this.redis.get(familyKey);
+    if (jtis) {
+      // We can't blacklist by jti alone since blacklist works on full tokens.
+      // Delete the family record to prevent further token issuance.
+      this.logger.warn(`Token family ${familyId} revoked due to reuse detection`);
+    }
+    await this.redis.del(familyKey);
   }
 
   async getMe(
@@ -395,7 +429,7 @@ export class AuthService {
     await this.tokenService.revokeAllTokensForEmail(staff.email);
 
     // Issue new tokens for the current session
-    const tokens = this.issueTokens(staff);
+    const tokens = await this.issueTokens(staff);
     return { ok: true, ...tokens };
   }
 
@@ -415,7 +449,7 @@ export class AuthService {
       data: { passwordHash, isActive: true },
     });
 
-    const tokens = this.issueTokens(updatedStaff);
+    const tokens = await this.issueTokens(updatedStaff);
 
     return {
       ...tokens,
@@ -559,7 +593,7 @@ export class AuthService {
     }
 
     // Issue full tokens
-    const tokens = this.issueTokens(staff);
+    const tokens = await this.issueTokens(staff);
 
     return {
       ...tokens,

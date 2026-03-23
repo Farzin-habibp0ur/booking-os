@@ -7,6 +7,8 @@ import { AuthService } from './auth.service';
 import { TwoFactorService } from './two-factor.service';
 import { PrismaService } from '../../common/prisma.service';
 import { TokenService } from '../../common/token.service';
+import { JwtBlacklistService } from '../../common/jwt-blacklist.service';
+import { PortalRedisService } from '../../common/portal-redis.service';
 import { EmailService } from '../email/email.service';
 import { OnboardingDripService } from '../onboarding-drip/onboarding-drip.service';
 import { ReferralService } from '../referral/referral.service';
@@ -25,6 +27,8 @@ describe('AuthService', () => {
   let jwtService: { sign: jest.Mock; verify: jest.Mock };
   let tokenService: ReturnType<typeof createMockTokenService>;
   let emailService: ReturnType<typeof createMockEmailService>;
+  let blacklistService: { blacklistToken: jest.Mock; isBlacklisted: jest.Mock; clear: jest.Mock };
+  let redisService: { get: jest.Mock; set: jest.Mock; del: jest.Mock; exists: jest.Mock };
   let twoFactorService: {
     generateSetup: jest.Mock;
     verifyCode: jest.Mock;
@@ -60,6 +64,17 @@ describe('AuthService', () => {
     };
     tokenService = createMockTokenService();
     emailService = createMockEmailService();
+    blacklistService = {
+      blacklistToken: jest.fn().mockResolvedValue(undefined),
+      isBlacklisted: jest.fn().mockResolvedValue(false),
+      clear: jest.fn(),
+    };
+    redisService = {
+      get: jest.fn().mockResolvedValue(null),
+      set: jest.fn().mockResolvedValue(undefined),
+      del: jest.fn().mockResolvedValue(undefined),
+      exists: jest.fn().mockResolvedValue(false),
+    };
     twoFactorService = {
       generateSetup: jest.fn().mockReturnValue({
         secret: 'TESTSECRET',
@@ -81,6 +96,8 @@ describe('AuthService', () => {
         { provide: TokenService, useValue: tokenService },
         { provide: EmailService, useValue: emailService },
         { provide: TwoFactorService, useValue: twoFactorService },
+        { provide: JwtBlacklistService, useValue: blacklistService },
+        { provide: PortalRedisService, useValue: redisService },
         {
           provide: OnboardingDripService,
           useValue: { scheduleDrip: jest.fn(), cancelDrip: jest.fn() },
@@ -456,6 +473,8 @@ describe('AuthService', () => {
           { provide: TokenService, useValue: tokenService },
           { provide: EmailService, useValue: emailService },
           { provide: TwoFactorService, useValue: twoFactorService },
+          { provide: JwtBlacklistService, useValue: blacklistService },
+          { provide: PortalRedisService, useValue: redisService },
           {
             provide: OnboardingDripService,
             useValue: { scheduleDrip: jest.fn(), cancelDrip: jest.fn() },
@@ -490,10 +509,21 @@ describe('AuthService', () => {
     });
   });
 
-  describe('brute-force protection', () => {
+  describe('brute-force protection (Redis-backed)', () => {
     it('locks account after 5 failed attempts', async () => {
       prisma.staff.findUnique.mockResolvedValue(mockStaff as any);
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
+
+      // Simulate incrementing count in Redis
+      let count = 0;
+      redisService.get.mockImplementation((key: string) => {
+        if (key.startsWith('auth:brute:')) return Promise.resolve(count > 0 ? String(count) : null);
+        return Promise.resolve(null);
+      });
+      redisService.set.mockImplementation((key: string, value: string) => {
+        if (key.startsWith('auth:brute:')) count = parseInt(value, 10);
+        return Promise.resolve(undefined);
+      });
 
       // Fail 5 times
       for (let i = 0; i < 5; i++) {
@@ -514,21 +544,54 @@ describe('AuthService', () => {
       (bcrypt.compare as jest.Mock).mockResolvedValueOnce(false);
       (bcrypt.compare as jest.Mock).mockResolvedValueOnce(true);
 
+      let count = 0;
+      redisService.get.mockImplementation((key: string) => {
+        if (key.startsWith('auth:brute:')) return Promise.resolve(count > 0 ? String(count) : null);
+        return Promise.resolve(null);
+      });
+      redisService.set.mockImplementation((key: string, value: string) => {
+        if (key.startsWith('auth:brute:')) count = parseInt(value, 10);
+        return Promise.resolve(undefined);
+      });
+      redisService.del.mockImplementation((key: string) => {
+        if (key.startsWith('auth:brute:')) count = 0;
+        return Promise.resolve(undefined);
+      });
+
       // Fail twice
       await expect(authService.login('sarah@glowclinic.com', 'wrong')).rejects.toThrow();
       await expect(authService.login('sarah@glowclinic.com', 'wrong')).rejects.toThrow();
 
-      // Succeed
+      // Succeed — clears brute force counter
       const result = await authService.login('sarah@glowclinic.com', 'password123');
       expect(result.accessToken).toBeDefined();
+      expect(redisService.del).toHaveBeenCalledWith('auth:brute:sarah@glowclinic.com');
+    });
+  });
 
-      // After success, fail again should count from 0
-      (bcrypt.compare as jest.Mock).mockResolvedValue(false);
-      for (let i = 0; i < 4; i++) {
-        await expect(authService.login('sarah@glowclinic.com', 'wrong')).rejects.toThrow(
-          'Invalid credentials',
-        );
-      }
+  describe('refresh token rotation', () => {
+    it('blacklists old token and issues new tokens on refresh', async () => {
+      jwtService.verify.mockReturnValue({ sub: 'staff1', familyId: 'fam-1', jti: 'jti-1' });
+      prisma.staff.findUnique.mockResolvedValue(mockStaff as any);
+
+      const result = await authService.refresh('valid-refresh-token');
+
+      expect(result.accessToken).toBe('mock-token');
+      expect(result.refreshToken).toBe('mock-token');
+      expect(blacklistService.blacklistToken).toHaveBeenCalledWith(
+        'valid-refresh-token',
+        7 * 24 * 60 * 60 * 1000,
+      );
+    });
+
+    it('detects token reuse and revokes family', async () => {
+      jwtService.verify.mockReturnValue({ sub: 'staff1', familyId: 'fam-1', jti: 'jti-old' });
+      blacklistService.isBlacklisted.mockResolvedValue(true);
+
+      await expect(authService.refresh('reused-token')).rejects.toThrow(
+        'Refresh token reuse detected',
+      );
+      expect(redisService.del).toHaveBeenCalledWith('auth:family:fam-1');
     });
   });
 
