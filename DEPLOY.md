@@ -967,3 +967,43 @@ Bcrypt with 12 salt rounds. Passwords are never stored or logged in plaintext.
 | `packages/db/src/seed-demo.ts`                 | Rich demo data seed                                   |
 | `.env.example`                                 | Environment variable template                         |
 | `.env.production`                              | Production env template                               |
+
+---
+
+## Backup & Recovery
+
+### Automated Backups
+
+A GitHub Actions workflow (`.github/workflows/backup.yml`) runs daily at 3:00 AM UTC and:
+1. Creates a custom-format `pg_dump` backup using `DATABASE_URL`
+2. Uploads the backup as a GitHub Actions artifact (30-day retention)
+3. Creates a GitHub issue with `backup-failure` label if the backup fails
+
+Trigger manually: `gh workflow run backup.yml`
+
+### Manual Backup
+
+```bash
+# Via DATABASE_URL (Railway, remote DB)
+DATABASE_URL="postgresql://..." bash scripts/backup-db.sh
+
+# Via Docker container (self-hosted)
+bash scripts/backup-db.sh
+```
+
+### Restore
+
+```bash
+# Validate a backup without restoring
+bash scripts/restore-db.sh backups/bookingos-backup-20260323-030000.dump --dry-run
+
+# Restore (will prompt for confirmation)
+DATABASE_URL="postgresql://..." bash scripts/restore-db.sh backups/bookingos-backup-20260323-030000.dump
+
+# Restore without prompt (CI / scripts)
+DATABASE_URL="postgresql://..." bash scripts/restore-db.sh backups/bookingos-backup-20260323-030000.dump --force
+```
+
+### Migration Timeout
+
+The Docker entrypoint (`scripts/docker-entrypoint.sh`) wraps `prisma migrate deploy` with a 120-second timeout. If migrations take longer than 2 minutes, the container exits with code 1 instead of hanging indefinitely.
