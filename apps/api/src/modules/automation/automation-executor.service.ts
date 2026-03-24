@@ -1,13 +1,24 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional, Inject, forwardRef } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 import { PrismaService } from '../../common/prisma.service';
+import { UsageService } from '../usage/usage.service';
+import { TestimonialsService } from '../testimonials/testimonials.service';
+import { QUEUE_NAMES } from '../../common/queue/queue.module';
 
 @Injectable()
 export class AutomationExecutorService {
   private readonly logger = new Logger(AutomationExecutorService.name);
   private processing = false;
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private usageService: UsageService,
+    @Inject(forwardRef(() => TestimonialsService))
+    private testimonialsService: TestimonialsService,
+    @Optional() @InjectQueue(QUEUE_NAMES.NOTIFICATIONS) private notificationQueue?: Queue,
+  ) {}
 
   // H5 fix: Paginated execution with time limit to prevent resource exhaustion
   private static readonly PAGE_SIZE = 50;
@@ -56,8 +67,15 @@ export class AutomationExecutorService {
   }
 
   private async processRule(rule: any) {
-    // Check quiet hours
-    if (this.isQuietHours(rule.quietStart, rule.quietEnd)) return;
+    // Fetch business timezone for quiet hours check
+    const business = await this.prisma.business.findUnique({
+      where: { id: rule.businessId },
+      select: { timezone: true },
+    });
+    const timezone = business?.timezone || 'UTC';
+
+    // Check quiet hours using business timezone
+    if (this.isQuietHours(rule.quietStart, rule.quietEnd, timezone)) return;
 
     const now = new Date();
     const twoMinutesAgo = new Date(now.getTime() - 2 * 60 * 1000);
@@ -435,6 +453,7 @@ export class AutomationExecutorService {
         where: {
           automationRuleId: rule.id,
           customerId,
+          outcome: 'SENT',
           createdAt: { gte: today },
         },
       });
@@ -480,7 +499,112 @@ export class AutomationExecutorService {
 
     for (const action of actions) {
       try {
-        // For now, log the action; real implementation would call notification service
+        if (action.type === 'SEND_MESSAGE' && this.notificationQueue) {
+          // Resolve customer info for message delivery
+          const customer = customerId
+            ? await this.prisma.customer.findUnique({
+                where: { id: customerId },
+                select: { id: true, name: true, phone: true, email: true },
+              })
+            : null;
+
+          if (customer) {
+            const channel = await this.resolveChannel(customer, businessId);
+            const address =
+              channel === 'EMAIL' ? customer.email : customer.phone;
+
+            if (address) {
+              // Render message template with customer data
+              const messageContent = this.renderTemplate(
+                action.body || action.message || '',
+                { customerName: customer.name || 'there' },
+              );
+
+              await this.notificationQueue.add('automation-send', {
+                to: address,
+                channel,
+                content: messageContent,
+                businessId,
+                customerId: customer.id,
+                automationRuleId: rule.id,
+                bookingId: bookingId || null,
+              });
+
+              // Record usage for billing
+              this.usageService
+                .recordUsage(businessId, channel, 'OUTBOUND')
+                .catch((err) =>
+                  this.logger.error(`Usage recording failed: ${err.message}`),
+                );
+            }
+          }
+        }
+
+        // HIGH-06: REQUEST_TESTIMONIAL — send testimonial request to customer
+        if (action.type === 'REQUEST_TESTIMONIAL' && customerId) {
+          try {
+            await this.testimonialsService.sendRequest(businessId, customerId);
+          } catch (err: any) {
+            this.logger.warn(`Testimonial request failed for customer ${customerId}: ${err.message}`);
+          }
+        }
+
+        // HIGH-06: SEND_EMAIL — send via EMAIL channel specifically
+        if (action.type === 'SEND_EMAIL' && action.subject && action.body && this.notificationQueue) {
+          const customer = customerId
+            ? await this.prisma.customer.findUnique({
+                where: { id: customerId },
+                select: { id: true, email: true, name: true },
+              })
+            : null;
+          if (customer?.email) {
+            await this.notificationQueue.add('automation-email', {
+              to: customer.email,
+              subject: this.renderTemplate(action.subject, { customerName: customer.name || 'there' }),
+              body: this.renderTemplate(action.body, { customerName: customer.name || 'there' }),
+              businessId,
+              customerId: customer.id,
+            });
+            this.usageService
+              .recordUsage(businessId, 'EMAIL', 'OUTBOUND')
+              .catch((err) => this.logger.error(`Usage recording failed: ${err.message}`));
+          }
+        }
+
+        // HIGH-06: UPDATE_CUSTOMER_FIELD — safe field updates
+        if (action.type === 'UPDATE_CUSTOMER_FIELD' && action.field && action.value && customerId) {
+          const allowedFields = ['tags', 'notes', 'customFields'];
+          if (allowedFields.includes(action.field)) {
+            await this.prisma.customer.update({
+              where: { id: customerId },
+              data: { [action.field]: action.value },
+            });
+          }
+        }
+
+        // HIGH-06: WEBHOOK — call external URL with event data
+        if (action.type === 'WEBHOOK' && action.url) {
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 5000);
+          try {
+            await fetch(action.url, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                event: rule.trigger,
+                businessId,
+                customerId: customerId || null,
+                bookingId: bookingId || null,
+                timestamp: new Date().toISOString(),
+                ...(action.payload || {}),
+              }),
+              signal: controller.signal,
+            });
+          } finally {
+            clearTimeout(timeout);
+          }
+        }
+
         await this.logAction(rule, businessId, bookingId, customerId, action.type, 'SENT');
       } catch (err: any) {
         await this.logAction(
@@ -494,6 +618,70 @@ export class AutomationExecutorService {
         );
       }
     }
+  }
+
+  // HIGH-05: Event-based trigger evaluation (called by other services)
+  async evaluateTrigger(trigger: string, context: Record<string, any>) {
+    const rules = await this.prisma.automationRule.findMany({
+      where: {
+        businessId: context.businessId,
+        trigger,
+        isActive: true,
+      },
+    });
+
+    for (const rule of rules) {
+      try {
+        // Fetch business timezone for quiet hours
+        const business = await this.prisma.business.findUnique({
+          where: { id: rule.businessId },
+          select: { timezone: true },
+        });
+        const timezone = business?.timezone || 'UTC';
+
+        if (this.isQuietHours(rule.quietStart, rule.quietEnd, timezone)) {
+          await this.logAction(
+            rule,
+            context.businessId,
+            context.bookingId,
+            context.customerId,
+            trigger,
+            'SKIPPED',
+            'Quiet hours',
+          );
+          continue;
+        }
+
+        // Check filters match context
+        const filters = (rule.filters || {}) as Record<string, any>;
+        if (!this.matchesFilters(filters, context)) continue;
+
+        const actions = (rule.actions || []) as any[];
+        await this.executeActions(
+          rule,
+          actions,
+          context.businessId,
+          context.bookingId,
+          context.customerId,
+        );
+      } catch (err: any) {
+        this.logger.error(
+          `Event trigger ${trigger} rule ${rule.id} failed: ${err.message}`,
+        );
+      }
+    }
+  }
+
+  private matchesFilters(
+    filters: Record<string, any>,
+    context: Record<string, any>,
+  ): boolean {
+    for (const [key, value] of Object.entries(filters)) {
+      if (context[key] !== undefined && context[key] !== value) {
+        return false;
+      }
+    }
+    return true;
   }
 
   private async logAction(
@@ -518,10 +706,12 @@ export class AutomationExecutorService {
     });
   }
 
-  isQuietHours(quietStart?: string | null, quietEnd?: string | null): boolean {
+  isQuietHours(quietStart?: string | null, quietEnd?: string | null, timezone: string = 'UTC'): boolean {
     if (!quietStart || !quietEnd) return false;
+    // Convert current UTC time to business local time
     const now = new Date();
-    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    const localTime = new Date(now.toLocaleString('en-US', { timeZone: timezone }));
+    const currentMinutes = localTime.getHours() * 60 + localTime.getMinutes();
     const [startH, startM] = quietStart.split(':').map(Number);
     const [endH, endM] = quietEnd.split(':').map(Number);
     const startMinutes = startH * 60 + startM;
@@ -532,5 +722,33 @@ export class AutomationExecutorService {
     }
     // Overnight quiet hours (e.g., 21:00 - 09:00)
     return currentMinutes >= startMinutes || currentMinutes < endMinutes;
+  }
+
+  private async resolveChannel(
+    customer: { phone: string | null; email: string | null },
+    businessId: string,
+  ): Promise<string> {
+    // Check business default channel
+    const business = await this.prisma.business.findUnique({
+      where: { id: businessId },
+      select: { channelSettings: true },
+    });
+    const settings = business?.channelSettings as any;
+    if (settings?.defaultReplyChannel) return settings.defaultReplyChannel;
+
+    // Fallback to available channel
+    if (customer.phone) return 'WHATSAPP';
+    if (customer.email) return 'EMAIL';
+    return 'WHATSAPP';
+  }
+
+  private renderTemplate(
+    template: string,
+    vars: Record<string, string>,
+  ): string {
+    return template.replace(
+      /\{\{(\w+)\}\}/g,
+      (_, key) => vars[key] || '',
+    );
   }
 }

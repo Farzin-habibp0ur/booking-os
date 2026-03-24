@@ -29,6 +29,7 @@ import {
   ChevronDown,
   DollarSign,
   Camera,
+  Star,
 } from 'lucide-react';
 import BookingFormModal from '@/components/booking-form-modal';
 import IntakeCard from '@/components/intake-card';
@@ -87,6 +88,10 @@ export default function CustomerDetailPage() {
   // Action history state
   const [recentChanges, setRecentChanges] = useState<any[]>([]);
 
+  // Testimonials state
+  const [testimonials, setTestimonials] = useState<any[]>([]);
+  const [requestingTestimonial, setRequestingTestimonial] = useState(false);
+
   // Medical record state
   const [medicalRecord, setMedicalRecord] = useState<any>(null);
 
@@ -143,6 +148,12 @@ export default function CustomerDetailPage() {
       setCustomerNotes(notes || []);
       setWaitlistCount((wlEntries || []).length);
       setRecentChanges(changes || []);
+
+      // Fetch testimonials for this customer
+      api
+        .get<any>(`/testimonials?customerId=${id}`)
+        .then((res: any) => setTestimonials(res?.data || []))
+        .catch(() => {});
       setEditName(cust.name);
       setEditEmail(cust.email || '');
       setEditTags((cust.tags || []).join(', '));
@@ -1116,6 +1127,95 @@ export default function CustomerDetailPage() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Testimonials Section */}
+      {customer && (
+        <div className="bg-white rounded-2xl shadow-soft p-5 mt-6">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Star size={16} className="text-amber-400" />
+              <h3 className="text-sm font-semibold text-slate-900">Testimonials</h3>
+              {testimonials.length > 0 && (
+                <span className="text-xs bg-sage-50 text-sage-700 px-1.5 py-0.5 rounded-full">
+                  {testimonials.length}
+                </span>
+              )}
+            </div>
+            <button
+              onClick={async () => {
+                setRequestingTestimonial(true);
+                try {
+                  await api.post('/testimonials/request', { customerId: customer.id });
+                  toast('Testimonial request sent!');
+                  // Refresh testimonials
+                  const res = await api.get<any>(`/testimonials?customerId=${customer.id}`);
+                  setTestimonials(res?.data || []);
+                } catch (e: any) {
+                  toast(e?.message || 'Failed to send request', 'error');
+                } finally {
+                  setRequestingTestimonial(false);
+                }
+              }}
+              disabled={requestingTestimonial}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-sage-600 text-white rounded-lg hover:bg-sage-700 transition-colors disabled:opacity-50"
+            >
+              <Send size={12} />
+              {requestingTestimonial ? 'Sending...' : 'Request Testimonial'}
+            </button>
+          </div>
+          {testimonials.length === 0 ? (
+            <p className="text-sm text-slate-400">
+              No testimonials yet. Send a request to collect feedback from this customer.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {testimonials.map((t: any) => (
+                <div
+                  key={t.id}
+                  className={cn(
+                    'p-3 rounded-xl border transition-colors',
+                    t.status === 'FEATURED'
+                      ? 'border-lavender-200 bg-lavender-50/30'
+                      : 'border-slate-100',
+                  )}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star
+                          key={i}
+                          size={12}
+                          className={i < (t.rating || 0) ? 'text-amber-400 fill-amber-400' : 'text-slate-200'}
+                        />
+                      ))}
+                    </div>
+                    <span
+                      className={cn(
+                        'text-xs px-1.5 py-0.5 rounded-full',
+                        t.status === 'PENDING' && 'bg-amber-50 text-amber-700',
+                        t.status === 'APPROVED' && 'bg-sage-50 text-sage-700',
+                        t.status === 'FEATURED' && 'bg-lavender-50 text-lavender-700',
+                        t.status === 'REJECTED' && 'bg-red-50 text-red-700',
+                      )}
+                    >
+                      {t.status}
+                    </span>
+                  </div>
+                  {t.content ? (
+                    <p className="text-sm text-slate-700 line-clamp-3">{t.content}</p>
+                  ) : (
+                    <p className="text-sm text-slate-400 italic">Awaiting response...</p>
+                  )}
+                  <p className="text-xs text-slate-400 mt-1">
+                    {t.source === 'REQUESTED' ? 'Requested' : 'Manual'} ·{' '}
+                    {new Date(t.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

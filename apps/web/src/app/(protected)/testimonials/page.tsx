@@ -9,12 +9,12 @@ import { TestimonialCard, type Testimonial } from '@/components/testimonial-card
 import { Skeleton, EmptyState } from '@/components/skeleton';
 
 const STATUS_TABS = ['All', 'PENDING', 'APPROVED', 'FEATURED', 'REJECTED'] as const;
-const TAB_LABELS: Record<string, string> = {
-  All: 'All',
-  PENDING: 'Pending',
-  APPROVED: 'Approved',
-  FEATURED: 'Featured',
-  REJECTED: 'Rejected',
+const TAB_LABEL_KEYS: Record<string, string> = {
+  All: 'testimonials.tab_all',
+  PENDING: 'testimonials.tab_pending',
+  APPROVED: 'testimonials.tab_approved',
+  FEATURED: 'testimonials.tab_featured',
+  REJECTED: 'testimonials.tab_rejected',
 };
 
 interface Customer {
@@ -61,7 +61,7 @@ export default function TestimonialsPage() {
   const handleApprove = async (id: string) => {
     try {
       await api.post(`/testimonials/${id}/approve`, {});
-      toast('Testimonial approved', 'success');
+      toast(t('testimonials.approve_success' as any), 'success');
       fetchTestimonials();
     } catch {
       toast('Failed to approve', 'error');
@@ -71,7 +71,7 @@ export default function TestimonialsPage() {
   const handleReject = async (id: string) => {
     try {
       await api.post(`/testimonials/${id}/reject`, {});
-      toast('Testimonial rejected', 'success');
+      toast(t('testimonials.reject_success' as any), 'success');
       fetchTestimonials();
     } catch {
       toast('Failed to reject', 'error');
@@ -81,7 +81,7 @@ export default function TestimonialsPage() {
   const handleFeature = async (id: string) => {
     try {
       await api.post(`/testimonials/${id}/feature`, {});
-      toast('Testimonial featured', 'success');
+      toast(t('testimonials.feature_success' as any), 'success');
       fetchTestimonials();
     } catch {
       toast('Failed to feature', 'error');
@@ -91,7 +91,7 @@ export default function TestimonialsPage() {
   const handleDelete = async (id: string) => {
     try {
       await api.del(`/testimonials/${id}`);
-      toast('Testimonial deleted', 'success');
+      toast(t('testimonials.delete_success' as any), 'success');
       fetchTestimonials();
     } catch {
       toast('Failed to delete', 'error');
@@ -115,7 +115,7 @@ export default function TestimonialsPage() {
     setSending(true);
     try {
       await api.post('/testimonials/request', { customerId: selectedCustomer.id });
-      toast('Testimonial request sent!', 'success');
+      toast(t('testimonials.request_success' as any), 'success');
       setShowRequestModal(false);
       fetchTestimonials();
     } catch {
@@ -163,7 +163,7 @@ export default function TestimonialsPage() {
                 : 'bg-slate-50 text-slate-500 hover:bg-slate-100'
             }`}
           >
-            {TAB_LABELS[tab]}
+            {t(TAB_LABEL_KEYS[tab] as any)}
           </button>
         ))}
       </div>
@@ -182,18 +182,18 @@ export default function TestimonialsPage() {
       ) : testimonials.length === 0 ? (
         <EmptyState
           icon={MessageSquareQuote}
-          title="No testimonials yet"
-          description="Request testimonials from your customers to showcase their experience."
+          title={t('testimonials.empty_title' as any)}
+          description={t('testimonials.empty_description' as any)}
         />
       ) : (
         <div
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
           data-testid="testimonials-grid"
         >
-          {testimonials.map((t) => (
+          {testimonials.map((item) => (
             <TestimonialCard
-              key={t.id}
-              testimonial={t}
+              key={item.id}
+              testimonial={item}
               onApprove={handleApprove}
               onReject={handleReject}
               onFeature={handleFeature}

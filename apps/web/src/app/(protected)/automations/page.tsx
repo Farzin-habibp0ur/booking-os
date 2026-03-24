@@ -31,6 +31,14 @@ type Tab = 'playbooks' | 'rules' | 'logs';
 
 const OUTCOME_OPTIONS = ['SENT', 'SKIPPED', 'FAILED'] as const;
 
+/** Format "22:00" → "10:00 PM" */
+function formatTime12h(time: string): string {
+  const [h, m] = time.split(':').map(Number);
+  const suffix = h >= 12 ? 'PM' : 'AM';
+  const hour12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+  return `${hour12}:${String(m).padStart(2, '0')} ${suffix}`;
+}
+
 export default function AutomationsPage() {
   const [tab, setTab] = useState<Tab>('playbooks');
   const [playbooks, setPlaybooks] = useState<any[]>([]);
@@ -212,14 +220,32 @@ export default function AutomationsPage() {
               <Clock size={14} className="text-slate-400" />
               <span className="text-xs text-slate-600">Quiet hours:</span>
               <span className="text-xs px-2 py-0.5 rounded-full bg-sage-50 text-sage-700">
-                Active (10pm–8am)
+                {(() => {
+                  const allRules = [...playbooks, ...rules];
+                  const withQuiet = allRules.filter((r: any) => r.quietStart && r.quietEnd);
+                  if (withQuiet.length === 0) return 'Not configured';
+                  const starts = new Set(withQuiet.map((r: any) => r.quietStart));
+                  const ends = new Set(withQuiet.map((r: any) => r.quietEnd));
+                  if (starts.size === 1 && ends.size === 1) {
+                    return `Active (${formatTime12h(withQuiet[0].quietStart)} – ${formatTime12h(withQuiet[0].quietEnd)})`;
+                  }
+                  return 'Active (varies by rule)';
+                })()}
               </span>
             </div>
             <div className="flex items-center gap-1.5">
               <Users size={14} className="text-slate-400" />
               <span className="text-xs text-slate-600">Frequency cap:</span>
               <span className="text-xs px-2 py-0.5 rounded-full bg-sage-50 text-sage-700">
-                3 per customer/day
+                {(() => {
+                  const allRules = [...playbooks, ...rules];
+                  const caps = allRules
+                    .map((r: any) => r.maxPerCustomerPerDay)
+                    .filter((c: any) => c != null && c > 0);
+                  if (caps.length === 0) return '3 per customer/day';
+                  const minCap = Math.min(...caps);
+                  return `${minCap} per customer/day`;
+                })()}
               </span>
             </div>
           </div>

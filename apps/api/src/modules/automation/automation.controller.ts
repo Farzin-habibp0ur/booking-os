@@ -8,8 +8,10 @@ import {
   Param,
   Body,
   Query,
+  Res,
   UseGuards,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { Throttle } from '@nestjs/throttler';
 import { TenantGuard } from '../../common/tenant.guard';
@@ -101,5 +103,45 @@ export class AutomationController {
   @Get('logs')
   getLogs(@BusinessId() businessId: string, @Query() query: any) {
     return this.automationService.getLogs(businessId, query);
+  }
+
+  @Get('activity/export')
+  async exportActivityLog(
+    @BusinessId() businessId: string,
+    @Query() query: any,
+    @Res() res: Response,
+  ) {
+    const csv = await this.automationService.exportActivityLog(businessId, query);
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename=automation-activity.csv');
+    res.send(csv);
+  }
+
+  @Post('check-conflicts')
+  checkConflicts(
+    @BusinessId() businessId: string,
+    @Body() body: { trigger: string; filters: any; excludeRuleId?: string },
+  ) {
+    return this.automationService.checkConflicts(
+      businessId,
+      body.trigger,
+      body.filters,
+      body.excludeRuleId,
+    );
+  }
+
+  @Get('analytics/overview')
+  getAnalyticsOverview(@BusinessId() businessId: string) {
+    return this.automationService.getAnalyticsOverview(businessId);
+  }
+
+  @Get('analytics/timeline')
+  getAnalyticsTimeline(@BusinessId() businessId: string, @Query('days') days?: string) {
+    return this.automationService.getAnalyticsTimeline(businessId, Number(days) || 30);
+  }
+
+  @Get('analytics/by-rule')
+  getAnalyticsByRule(@BusinessId() businessId: string) {
+    return this.automationService.getAnalyticsByRule(businessId);
   }
 }

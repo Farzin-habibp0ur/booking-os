@@ -36,6 +36,7 @@ describe('CampaignService', () => {
   describe('create', () => {
     it('creates a draft campaign', async () => {
       const campaign = { id: 'camp1', name: 'Re-engagement', status: 'DRAFT' };
+      prisma.campaign.findFirst.mockResolvedValue(null); // No duplicate
       prisma.campaign.create.mockResolvedValue(campaign as any);
 
       const result = await campaignService.create('biz1', { name: 'Re-engagement' });
@@ -48,6 +49,15 @@ describe('CampaignService', () => {
           status: 'DRAFT',
         }),
       });
+    });
+
+    it('rejects duplicate campaign name within same business', async () => {
+      prisma.campaign.findFirst.mockResolvedValue({ id: 'existing', name: 'Promo' } as any);
+
+      await expect(campaignService.create('biz1', { name: 'Promo' })).rejects.toThrow(
+        BadRequestException,
+      );
+      expect(prisma.campaign.create).not.toHaveBeenCalled();
     });
   });
 
@@ -171,9 +181,11 @@ describe('CampaignService', () => {
       expect(prisma.customer.count).toHaveBeenCalledWith({
         where: expect.objectContaining({
           businessId: 'biz1',
-          NOT: expect.objectContaining({
-            bookings: { some: { startTime: { gte: expect.any(Date) } } },
-          }),
+          NOT: expect.arrayContaining([
+            expect.objectContaining({
+              bookings: { some: { startTime: { gte: expect.any(Date) } } },
+            }),
+          ]),
         }),
       });
     });
@@ -311,12 +323,49 @@ describe('CampaignService', () => {
       expect(where.createdAt.lte).toBeInstanceOf(Date);
     });
 
-    it('applies lastVisitDaysAgo filter', () => {
+    it('applies lastVisitDaysAgo filter using none + gte', () => {
       const where = campaignService.buildAudienceWhere('biz1', {
         lastVisitDaysAgo: 30,
       });
 
-      expect(where.bookings?.every?.startTime?.lt).toBeInstanceOf(Date);
+      // Should use none: { startTime: { gte: cutoff } } — "no bookings after cutoff"
+      expect(where.bookings?.none?.startTime?.gte).toBeInstanceOf(Date);
+      // Verify cutoff is approximately 30 days ago
+      const cutoff = where.bookings.none.startTime.gte as Date;
+      const expectedCutoff = new Date();
+      expectedCutoff.setDate(expectedCutoff.getDate() - 30);
+      expect(Math.abs(cutoff.getTime() - expectedCutoff.getTime())).toBeLessThan(5000);
+    });
+
+    it('lastVisitDaysAgo: includes customer with only old bookings', () => {
+      // Customer visited 90 days ago, filter is 30 days → should be included
+      const where = campaignService.buildAudienceWhere('biz1', {
+        lastVisitDaysAgo: 30,
+      });
+      // The none predicate means: no bookings with startTime >= cutoff (30 days ago)
+      // A booking 90 days ago has startTime < cutoff, so it does NOT satisfy gte,
+      // meaning none: true → customer IS included. Correct.
+      expect(where.bookings?.none).toBeDefined();
+      expect(where.bookings?.every).toBeUndefined();
+    });
+
+    it('lastVisitDaysAgo: does not use every (the bug case)', () => {
+      // The old buggy logic used `every` which broke for customers with
+      // mixed old+recent bookings. Verify `every` is not used.
+      const where = campaignService.buildAudienceWhere('biz1', {
+        lastVisitDaysAgo: 30,
+      });
+      expect(where.bookings?.every).toBeUndefined();
+      expect(where.bookings?.none).toBeDefined();
+    });
+
+    it('lastVisitDaysAgo: includes customers with no bookings', () => {
+      // Customers with zero bookings satisfy none: { ... } vacuously → included
+      const where = campaignService.buildAudienceWhere('biz1', {
+        lastVisitDaysAgo: 30,
+      });
+      // none: { startTime: { gte: cutoff } } is true when there are zero bookings
+      expect(where.bookings?.none).toBeDefined();
     });
   });
 

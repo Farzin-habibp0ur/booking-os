@@ -1,23 +1,42 @@
 import { Test } from '@nestjs/testing';
+import { getQueueToken } from '@nestjs/bullmq';
 import { AutomationExecutorService } from './automation-executor.service';
 import { PrismaService } from '../../common/prisma.service';
+import { UsageService } from '../usage/usage.service';
+import { TestimonialsService } from '../testimonials/testimonials.service';
+import { QUEUE_NAMES } from '../../common/queue/queue.module';
 import { createMockPrisma } from '../../test/mocks';
 
 describe('AutomationExecutorService', () => {
   let executorService: AutomationExecutorService;
   let prisma: ReturnType<typeof createMockPrisma>;
+  let notificationQueue: { add: jest.Mock };
+  let usageService: { recordUsage: jest.Mock };
+  let testimonialsService: { sendRequest: jest.Mock };
 
   beforeEach(async () => {
     prisma = createMockPrisma();
+    notificationQueue = { add: jest.fn().mockResolvedValue({}) };
+    usageService = { recordUsage: jest.fn().mockResolvedValue(undefined) };
+    testimonialsService = { sendRequest: jest.fn().mockResolvedValue({}) };
 
     const module = await Test.createTestingModule({
-      providers: [AutomationExecutorService, { provide: PrismaService, useValue: prisma }],
+      providers: [
+        AutomationExecutorService,
+        { provide: PrismaService, useValue: prisma },
+        { provide: UsageService, useValue: usageService },
+        { provide: TestimonialsService, useValue: testimonialsService },
+        { provide: getQueueToken(QUEUE_NAMES.NOTIFICATIONS), useValue: notificationQueue },
+      ],
     }).compile();
 
     executorService = module.get(AutomationExecutorService);
 
     // Default mock: processWaitingExecutions() iterates over this result
     prisma.automationExecution.findMany.mockResolvedValue([]);
+
+    // Default mock: processRule() fetches business timezone
+    prisma.business.findUnique.mockResolvedValue({ timezone: 'UTC' } as any);
   });
 
   describe('isQuietHours', () => {
@@ -44,9 +63,49 @@ describe('AutomationExecutorService', () => {
     it('handles daytime quiet hours (start < end)', () => {
       // Daytime range e.g. 12:00-14:00
       const now = new Date();
-      const currentMinutes = now.getHours() * 60 + now.getMinutes();
-      const result = executorService.isQuietHours('12:00', '14:00');
+      const localTime = new Date(now.toLocaleString('en-US', { timeZone: 'UTC' }));
+      const currentMinutes = localTime.getHours() * 60 + localTime.getMinutes();
+      const result = executorService.isQuietHours('12:00', '14:00', 'UTC');
       const expected = currentMinutes >= 720 && currentMinutes < 840;
+      expect(result).toBe(expected);
+    });
+
+    it('defaults to UTC when no timezone provided', () => {
+      const result = executorService.isQuietHours(null, null);
+      expect(result).toBe(false);
+    });
+
+    it('respects business timezone for quiet hours', () => {
+      const now = new Date();
+      const pacificLocalTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
+      const pacificMinutes = pacificLocalTime.getHours() * 60 + pacificLocalTime.getMinutes();
+
+      // Quiet hours 00:00-23:59 in Pacific should always be true
+      const alwaysQuiet = executorService.isQuietHours('00:00', '23:59', 'America/Los_Angeles');
+      expect(alwaysQuiet).toBe(true);
+
+      // Use the current Pacific time to construct a window that IS quiet
+      const startH = String(pacificLocalTime.getHours()).padStart(2, '0');
+      const startM = String(pacificLocalTime.getMinutes()).padStart(2, '0');
+      const endMinutes = pacificMinutes + 60;
+      const endH = String(Math.floor(endMinutes / 60) % 24).padStart(2, '0');
+      const endMStr = String(endMinutes % 60).padStart(2, '0');
+
+      const inQuietPacific = executorService.isQuietHours(
+        `${startH}:${startM}`,
+        `${endH}:${endMStr}`,
+        'America/Los_Angeles',
+      );
+      expect(inQuietPacific).toBe(true);
+    });
+
+    it('overnight quiet hours with timezone work correctly', () => {
+      // Quiet 22:00-08:00 in New York
+      const now = new Date();
+      const nyTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+      const nyMinutes = nyTime.getHours() * 60 + nyTime.getMinutes();
+      const result = executorService.isQuietHours('22:00', '08:00', 'America/New_York');
+      const expected = nyMinutes >= 1320 || nyMinutes < 480;
       expect(result).toBe(expected);
     });
   });
@@ -267,7 +326,9 @@ describe('AutomationExecutorService', () => {
 
     it('skips rule during quiet hours', async () => {
       const now = new Date();
-      const currentHour = now.getHours();
+      // Use UTC hours since business timezone defaults to UTC in our mock
+      const utcTime = new Date(now.toLocaleString('en-US', { timeZone: 'UTC' }));
+      const currentHour = utcTime.getHours();
       const quietStart = `${String(currentHour).padStart(2, '0')}:00`;
       const quietEndHour = (currentHour + 2) % 24;
       const quietEnd = `${String(quietEndHour).padStart(2, '0')}:00`;
@@ -575,6 +636,127 @@ describe('AutomationExecutorService', () => {
         data: expect.objectContaining({
           outcome: 'SKIPPED',
           reason: 'Daily limit reached',
+        }),
+      });
+    });
+
+    it('per-rule frequency cap only counts SENT outcomes', async () => {
+      prisma.automationRule.findMany.mockResolvedValue([
+        {
+          id: 'rule1',
+          businessId: 'biz1',
+          trigger: 'BOOKING_CREATED',
+          filters: {},
+          actions: [{ type: 'SEND_TEMPLATE' }],
+          isActive: true,
+          quietStart: null,
+          quietEnd: null,
+          maxPerCustomerPerDay: 3,
+        },
+      ] as any);
+
+      prisma.booking.findMany.mockResolvedValue([
+        { id: 'b1', businessId: 'biz1', customerId: 'c1' },
+      ] as any);
+
+      // Per-rule cap: 0 SENT (FAILED ones should not count)
+      // Global cap: 0 SENT
+      prisma.automationLog.count.mockResolvedValue(0);
+      prisma.automationLog.create.mockResolvedValue({} as any);
+
+      await executorService.executeRules();
+
+      // Per-rule cap query should include outcome: 'SENT' filter
+      expect(prisma.automationLog.count).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            automationRuleId: 'rule1',
+            customerId: 'c1',
+            outcome: 'SENT',
+          }),
+        }),
+      );
+    });
+
+    it('SEND_MESSAGE action enqueues to notification queue', async () => {
+      prisma.automationRule.findMany.mockResolvedValue([
+        {
+          id: 'rule1',
+          businessId: 'biz1',
+          trigger: 'BOOKING_CREATED',
+          filters: {},
+          actions: [{ type: 'SEND_MESSAGE', body: 'Hi {{customerName}}!' }],
+          isActive: true,
+          quietStart: null,
+          quietEnd: null,
+          maxPerCustomerPerDay: 0,
+        },
+      ] as any);
+
+      prisma.booking.findMany.mockResolvedValue([
+        { id: 'b1', businessId: 'biz1', customerId: 'c1' },
+      ] as any);
+
+      prisma.customer.findUnique.mockResolvedValue({
+        id: 'c1',
+        name: 'Alice',
+        phone: '+1234567890',
+        email: null,
+      } as any);
+
+      // For resolveChannel — business with no default channel
+      prisma.business.findUnique.mockResolvedValue({
+        timezone: 'UTC',
+        channelSettings: null,
+      } as any);
+
+      prisma.automationLog.count.mockResolvedValue(0);
+      prisma.automationLog.create.mockResolvedValue({} as any);
+
+      await executorService.executeRules();
+
+      expect(notificationQueue.add).toHaveBeenCalledWith(
+        'automation-send',
+        expect.objectContaining({
+          to: '+1234567890',
+          channel: 'WHATSAPP',
+          content: 'Hi Alice!',
+          businessId: 'biz1',
+          customerId: 'c1',
+        }),
+      );
+      expect(usageService.recordUsage).toHaveBeenCalledWith('biz1', 'WHATSAPP', 'OUTBOUND');
+    });
+
+    it('FAILED and SKIPPED logs do not count toward per-rule cap', async () => {
+      prisma.automationRule.findMany.mockResolvedValue([
+        {
+          id: 'rule1',
+          businessId: 'biz1',
+          trigger: 'BOOKING_CREATED',
+          filters: {},
+          actions: [{ type: 'SEND_TEMPLATE' }],
+          isActive: true,
+          quietStart: null,
+          quietEnd: null,
+          maxPerCustomerPerDay: 3,
+        },
+      ] as any);
+
+      prisma.booking.findMany.mockResolvedValue([
+        { id: 'b1', businessId: 'biz1', customerId: 'c1' },
+      ] as any);
+
+      // 0 SENT logs (3 FAILED ones exist but aren't counted with outcome: 'SENT')
+      prisma.automationLog.count.mockResolvedValue(0);
+      prisma.automationLog.create.mockResolvedValue({} as any);
+
+      await executorService.executeRules();
+
+      // Should proceed to execute (not be capped) since SENT count is 0
+      expect(prisma.automationLog.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          outcome: 'SENT',
         }),
       });
     });

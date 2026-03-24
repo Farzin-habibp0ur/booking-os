@@ -18,6 +18,14 @@ import {
 import CampaignFilterBuilder from '@/components/campaign-filter-builder';
 
 const STEPS = ['Audience', 'Message', 'Schedule', 'Review'];
+
+const MERGE_VARIABLES = [
+  { label: 'Customer Name', value: '{{name}}' },
+  { label: 'Service Name', value: '{{service}}' },
+  { label: 'Business Name', value: '{{business}}' },
+  { label: 'Next Booking Date', value: '{{date}}' },
+  { label: 'Staff Name', value: '{{staff}}' },
+];
 const stepIcons = [Users, MessageSquare, Clock, CheckCircle];
 
 export default function NewCampaignPage() {
@@ -34,12 +42,14 @@ export default function NewCampaignPage() {
   const [preview, setPreview] = useState<any>(null);
   const [templates, setTemplates] = useState<any[]>([]);
   const [saving, setSaving] = useState(false);
+  const [costEstimate, setCostEstimate] = useState<any>(null);
   const [isABTest, setIsABTest] = useState(false);
   const [variants, setVariants] = useState<any[]>([
     { id: crypto.randomUUID(), name: 'Variant A', content: '', percentage: 50 },
     { id: crypto.randomUUID(), name: 'Variant B', content: '', percentage: 50 },
   ]);
   const [activeVariant, setActiveVariant] = useState(0);
+  const [channel, setChannel] = useState('WHATSAPP');
   const router = useRouter();
 
   const variantPercentageSum = variants.reduce((s, v) => s + Number(v.percentage || 0), 0);
@@ -89,7 +99,14 @@ export default function NewCampaignPage() {
         .then(setPreview)
         .catch(() => {});
     }
-  }, [step]);
+    if (step === 3) {
+      api
+        .post<any>('/campaigns/estimate-cost', { filters, channel })
+        .then(setCostEstimate)
+        .catch(() => {});
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, channel]);
 
   const handleCreate = async () => {
     setSaving(true);
@@ -101,6 +118,7 @@ export default function NewCampaignPage() {
         scheduledAt: scheduleType === 'later' ? scheduledAt : undefined,
         throttlePerMinute: throttle,
         recurrenceRule: recurrenceRule !== 'NONE' ? recurrenceRule : undefined,
+        channel,
         ...(isABTest && { isABTest: true, variants }),
       });
       router.push(`/campaigns/${campaign.id}`);
@@ -284,14 +302,63 @@ export default function NewCampaignPage() {
                       </button>
                     )}
                   </div>
-                  <textarea
-                    value={variants[activeVariant].content}
-                    onChange={(e) => updateVariant(activeVariant, 'content', e.target.value)}
-                    placeholder="Message content for this variant..."
-                    rows={4}
-                    data-testid="variant-content"
-                    className="w-full text-sm bg-slate-50 border-transparent rounded-xl px-3 py-2 focus:bg-white focus:ring-2 focus:ring-lavender-500 resize-none"
-                  />
+                  <div className="relative">
+                    <textarea
+                      id={`variant-content-${activeVariant}`}
+                      value={variants[activeVariant].content}
+                      onChange={(e) => updateVariant(activeVariant, 'content', e.target.value)}
+                      placeholder="Message content for this variant... Use {{name}} for personalization"
+                      rows={4}
+                      data-testid="variant-content"
+                      className="w-full text-sm bg-slate-50 border-transparent rounded-xl px-3 py-2 focus:bg-white focus:ring-2 focus:ring-lavender-500 resize-none"
+                    />
+                    <div className="flex items-center gap-1 mt-1">
+                      <span className="text-xs text-slate-400">Insert:</span>
+                      {MERGE_VARIABLES.map((mv) => (
+                        <button
+                          key={mv.value}
+                          type="button"
+                          onClick={() => {
+                            const ta = document.getElementById(
+                              `variant-content-${activeVariant}`,
+                            ) as HTMLTextAreaElement | null;
+                            if (ta) {
+                              const start = ta.selectionStart;
+                              const end = ta.selectionEnd;
+                              const current = variants[activeVariant].content;
+                              const newContent =
+                                current.substring(0, start) + mv.value + current.substring(end);
+                              updateVariant(activeVariant, 'content', newContent);
+                            } else {
+                              updateVariant(
+                                activeVariant,
+                                'content',
+                                variants[activeVariant].content + mv.value,
+                              );
+                            }
+                          }}
+                          className="px-1.5 py-0.5 text-xs bg-lavender-50 text-lavender-700 rounded hover:bg-lavender-100 transition-colors"
+                        >
+                          {mv.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  {/* Live preview */}
+                  {variants[activeVariant].content &&
+                    variants[activeVariant].content.includes('{{') && (
+                      <div className="bg-sage-50 rounded-xl px-3 py-2">
+                        <p className="text-xs text-slate-500 mb-1">Preview:</p>
+                        <p className="text-sm text-slate-700">
+                          {variants[activeVariant].content
+                            .replace(/\{\{name\}\}/gi, 'Sarah')
+                            .replace(/\{\{service\}\}/gi, 'Facial Treatment')
+                            .replace(/\{\{business\}\}/gi, 'Glow Clinic')
+                            .replace(/\{\{date\}\}/gi, 'March 28, 2026')
+                            .replace(/\{\{staff\}\}/gi, 'Dr. Chen')}
+                        </p>
+                      </div>
+                    )}
                   <div>
                     <label className="text-xs text-slate-500 mb-1 block">Audience percentage</label>
                     <input
@@ -359,6 +426,38 @@ export default function NewCampaignPage() {
       {/* Step 2: Schedule */}
       {step === 2 && (
         <div className="bg-white rounded-2xl shadow-soft p-5 space-y-4">
+          {/* Channel Selection */}
+          <div>
+            <h2 className="text-sm font-semibold text-slate-900 mb-3">Delivery Channel</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {[
+                { value: 'WHATSAPP', label: 'WhatsApp', active: 'border-sage-400 bg-sage-50 text-sage-700' },
+                { value: 'SMS', label: 'SMS', active: 'border-blue-400 bg-blue-50 text-blue-700' },
+                { value: 'EMAIL', label: 'Email', active: 'border-lavender-400 bg-lavender-50 text-lavender-700' },
+                { value: 'MULTI', label: 'Multi-channel', active: 'border-amber-400 bg-amber-50 text-amber-700' },
+              ].map((ch) => (
+                <button
+                  key={ch.value}
+                  type="button"
+                  onClick={() => setChannel(ch.value)}
+                  className={cn(
+                    'px-3 py-2 rounded-xl text-sm font-medium border transition-colors text-center',
+                    channel === ch.value
+                      ? ch.active
+                      : 'border-slate-100 text-slate-500 hover:bg-slate-50',
+                  )}
+                >
+                  {ch.label}
+                </button>
+              ))}
+            </div>
+            {channel === 'MULTI' && (
+              <p className="text-xs text-slate-400 mt-2">
+                Messages will be sent via each customer&apos;s preferred or available channel.
+              </p>
+            )}
+          </div>
+
           <h2 className="text-sm font-semibold text-slate-900 mb-3">When to send</h2>
           <div className="space-y-2">
             <label className="flex items-center gap-2 text-sm">
@@ -455,6 +554,14 @@ export default function NewCampaignPage() {
                 </dd>
               </div>
               <div className="flex justify-between">
+                <dt className="text-slate-500">Channel</dt>
+                <dd className="font-medium">
+                  {{ WHATSAPP: 'WhatsApp', SMS: 'SMS', EMAIL: 'Email', MULTI: 'Multi-channel' }[
+                    channel
+                  ] || channel}
+                </dd>
+              </div>
+              <div className="flex justify-between">
                 <dt className="text-slate-500">Schedule</dt>
                 <dd className="font-medium">
                   {scheduleType === 'now' ? 'Immediately' : new Date(scheduledAt).toLocaleString()}
@@ -481,6 +588,23 @@ export default function NewCampaignPage() {
               )}
             </dl>
           </div>
+
+          {/* Cost estimation */}
+          {costEstimate && (
+            <div className="bg-white rounded-2xl shadow-soft p-5">
+              <h2 className="text-sm font-semibold text-slate-900 mb-2">Estimated Cost</h2>
+              {costEstimate.isFree ? (
+                <p className="text-sm text-sage-700">No additional cost (included in plan)</p>
+              ) : (
+                <p className="text-sm text-slate-700">
+                  <span className="text-lg font-serif font-bold">${costEstimate.estimatedCost}</span>
+                  <span className="text-slate-500 ml-1">
+                    for {costEstimate.audienceSize} messages via {costEstimate.channel}
+                  </span>
+                </p>
+              )}
+            </div>
+          )}
 
           {preview?.count > 100 && (
             <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 text-sm text-amber-700">

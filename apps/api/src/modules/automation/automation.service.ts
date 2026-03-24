@@ -29,6 +29,75 @@ const BUILT_IN_PLAYBOOKS = [
     actions: [{ type: 'SEND_TEMPLATE', category: 'RE_ENGAGEMENT' }],
     playbook: 're-engagement',
   },
+  {
+    id: 'playbook-welcome-new-customer',
+    name: 'Welcome New Customer',
+    description: 'Send a welcome message when a new customer is created',
+    trigger: 'CUSTOMER_CREATED',
+    filters: {},
+    actions: [
+      {
+        type: 'SEND_MESSAGE',
+        body: 'Welcome to {{business}}! We\'re excited to have you. Book your first appointment today.',
+      },
+    ],
+    playbook: 'welcome-new-customer',
+  },
+  {
+    id: 'playbook-post-treatment-testimonial',
+    name: 'Post-Treatment Testimonial Request',
+    description: 'Request a testimonial 3 days after treatment completion',
+    trigger: 'STATUS_CHANGED',
+    filters: { newStatus: 'COMPLETED', serviceKind: 'TREATMENT' },
+    actions: [{ type: 'REQUEST_TESTIMONIAL', delayHours: 72 }],
+    playbook: 'post-treatment-testimonial',
+    vertical: 'AESTHETIC',
+  },
+  {
+    id: 'playbook-package-expiry-reminder',
+    name: 'Package Expiry Reminder',
+    description: 'Remind customers when their package is about to expire',
+    trigger: 'BOOKING_UPCOMING',
+    filters: { hoursBefore: 168 },
+    actions: [
+      {
+        type: 'SEND_MESSAGE',
+        body: 'Hi {{name}}, your package expires soon. You have remaining sessions — book now to use them!',
+      },
+    ],
+    playbook: 'package-expiry-reminder',
+    vertical: 'WELLNESS',
+  },
+  {
+    id: 'playbook-service-completed-survey',
+    name: 'Service Completed Survey',
+    description: 'Send satisfaction survey 24h after service completion',
+    trigger: 'STATUS_CHANGED',
+    filters: { newStatus: 'READY_FOR_PICKUP' },
+    actions: [
+      {
+        type: 'SEND_MESSAGE',
+        body: 'Hi {{name}}, how was your experience at {{business}}? Reply with 1-5 to rate us.',
+        delayHours: 24,
+      },
+    ],
+    playbook: 'service-completed-survey',
+    vertical: 'DEALERSHIP',
+  },
+  {
+    id: 'playbook-birthday-greeting',
+    name: 'Birthday / Anniversary',
+    description: 'Send birthday greeting with a special offer',
+    trigger: 'CUSTOMER_CREATED',
+    filters: { isBirthday: true },
+    actions: [
+      {
+        type: 'SEND_MESSAGE',
+        body: 'Happy birthday {{name}}! Enjoy 15% off your next visit as our gift. Book now!',
+      },
+    ],
+    playbook: 'birthday-greeting',
+  },
 ];
 
 @Injectable()
@@ -93,6 +162,14 @@ export class AutomationService {
       maxPerCustomerPerDay?: number;
     },
   ) {
+    // Check for duplicate rule name within business
+    const existing = await this.prisma.automationRule.findFirst({
+      where: { businessId, name: data.name },
+    });
+    if (existing) {
+      throw new BadRequestException(`An automation rule named "${data.name}" already exists`);
+    }
+
     return this.prisma.automationRule.create({
       data: {
         businessId,
@@ -185,6 +262,43 @@ export class AutomationService {
     ]);
 
     return { data, total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
+  }
+
+  // MED-13: Export activity log as CSV
+  async exportActivityLog(
+    businessId: string,
+    query: { ruleId?: string; outcome?: string; dateFrom?: string; dateTo?: string },
+  ): Promise<string> {
+    const where: any = { businessId };
+    if (query.ruleId) where.automationRuleId = query.ruleId;
+    if (query.outcome) where.outcome = query.outcome;
+    if (query.dateFrom || query.dateTo) {
+      where.createdAt = {};
+      if (query.dateFrom) where.createdAt.gte = new Date(query.dateFrom);
+      if (query.dateTo) where.createdAt.lte = new Date(query.dateTo);
+    }
+
+    const logs = await this.prisma.automationLog.findMany({
+      where,
+      take: 10000,
+      orderBy: { createdAt: 'desc' },
+      include: { rule: { select: { name: true } } },
+    });
+
+    const header = 'Date,Rule,Action,Outcome,Reason,Customer ID,Booking ID\n';
+    const rows = logs.map((log) =>
+      [
+        log.createdAt.toISOString(),
+        `"${(log.rule?.name || '').replace(/"/g, '""')}"`,
+        log.action,
+        log.outcome,
+        `"${(log.reason || '').replace(/"/g, '""')}"`,
+        log.customerId || '',
+        log.bookingId || '',
+      ].join(','),
+    );
+
+    return header + rows.join('\n');
   }
 
   async getPlaybookStats(businessId: string, playbookId: string) {
@@ -394,5 +508,154 @@ export class AutomationService {
           ? `Rule "${rule.name}" would match ${matchedBookings.length} booking(s) in the last 24 hours`
           : `Rule "${rule.name}" would not match any bookings right now`,
     };
+  }
+
+  // MED-12: Conflict detection
+  async checkConflicts(
+    businessId: string,
+    trigger: string,
+    filters: any,
+    excludeRuleId?: string,
+  ) {
+    const existingRules = await this.prisma.automationRule.findMany({
+      where: {
+        businessId,
+        trigger,
+        isActive: true,
+        ...(excludeRuleId ? { id: { not: excludeRuleId } } : {}),
+      },
+      select: { id: true, name: true, trigger: true, filters: true },
+    });
+
+    const conflicts = existingRules.filter((rule) => {
+      const ruleFilters = (rule.filters || {}) as Record<string, any>;
+      const newFilters = filters || {};
+      // Overlap: same trigger with no distinguishing filter values
+      const ruleKeys = Object.keys(ruleFilters);
+      const newKeys = Object.keys(newFilters);
+      if (ruleKeys.length === 0 && newKeys.length === 0) return true;
+      // If either has no filters, it catches everything
+      if (ruleKeys.length === 0 || newKeys.length === 0) return true;
+      // Check for matching filter values
+      for (const key of newKeys) {
+        if (ruleFilters[key] !== undefined && ruleFilters[key] === newFilters[key]) {
+          return true;
+        }
+      }
+      return false;
+    });
+
+    return conflicts.map((r) => ({
+      id: r.id,
+      name: r.name,
+      trigger: r.trigger,
+      overlap: 'Same trigger with overlapping filters',
+    }));
+  }
+
+  // HIGH-07: Analytics overview
+  async getAnalyticsOverview(businessId: string) {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const [totalRulesActive, outcomes, topRule] = await Promise.all([
+      this.prisma.automationRule.count({ where: { businessId, isActive: true } }),
+      this.prisma.automationLog.groupBy({
+        by: ['outcome'],
+        where: { businessId, createdAt: { gte: sevenDaysAgo } },
+        _count: true,
+      }),
+      this.prisma.automationLog.groupBy({
+        by: ['automationRuleId'],
+        where: { businessId, outcome: 'SENT', createdAt: { gte: sevenDaysAgo } },
+        _count: true,
+        orderBy: { _count: { automationRuleId: 'desc' } },
+        take: 1,
+      }),
+    ]);
+
+    const outcomeMap: Record<string, number> = {};
+    for (const o of outcomes) {
+      outcomeMap[o.outcome || 'UNKNOWN'] = o._count;
+    }
+
+    const sent = outcomeMap['SENT'] || 0;
+    const skipped = outcomeMap['SKIPPED'] || 0;
+    const failed = outcomeMap['FAILED'] || 0;
+
+    let topPerformingRule = null;
+    if (topRule.length > 0) {
+      const rule = await this.prisma.automationRule.findUnique({
+        where: { id: topRule[0].automationRuleId },
+        select: { id: true, name: true },
+      });
+      topPerformingRule = { ...rule, sentCount: topRule[0]._count };
+    }
+
+    return {
+      totalRulesActive,
+      totalMessagesSent7d: sent,
+      totalMessagesSkipped7d: skipped,
+      totalMessagesFailed7d: failed,
+      deliveryRate: sent + failed > 0 ? Math.round((sent / (sent + failed)) * 100) : 0,
+      topPerformingRule,
+    };
+  }
+
+  // HIGH-07: Analytics timeline
+  async getAnalyticsTimeline(businessId: string, days: number = 30) {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    const logs = await this.prisma.automationLog.findMany({
+      where: { businessId, createdAt: { gte: startDate } },
+      select: { createdAt: true, outcome: true },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    // Group by day
+    const daily: Record<string, { sent: number; skipped: number; failed: number }> = {};
+    for (const log of logs) {
+      const day = log.createdAt.toISOString().split('T')[0];
+      if (!daily[day]) daily[day] = { sent: 0, skipped: 0, failed: 0 };
+      const outcome = (log.outcome || '').toLowerCase();
+      if (outcome === 'sent') daily[day].sent++;
+      else if (outcome === 'skipped') daily[day].skipped++;
+      else if (outcome === 'failed') daily[day].failed++;
+    }
+
+    return Object.entries(daily).map(([date, counts]) => ({ date, ...counts }));
+  }
+
+  // HIGH-07: Analytics by rule
+  async getAnalyticsByRule(businessId: string) {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const rules = await this.prisma.automationRule.findMany({
+      where: { businessId },
+      select: { id: true, name: true, trigger: true },
+    });
+
+    const logs = await this.prisma.automationLog.groupBy({
+      by: ['automationRuleId', 'outcome'],
+      where: { businessId, createdAt: { gte: sevenDaysAgo } },
+      _count: true,
+    });
+
+    const ruleMap: Record<string, any> = {};
+    for (const rule of rules) {
+      ruleMap[rule.id] = { ruleId: rule.id, ruleName: rule.name, trigger: rule.trigger, sent: 0, skipped: 0, failed: 0 };
+    }
+    for (const log of logs) {
+      const r = ruleMap[log.automationRuleId];
+      if (!r) continue;
+      const outcome = (log.outcome || '').toLowerCase();
+      if (outcome === 'sent') r.sent += log._count;
+      else if (outcome === 'skipped') r.skipped += log._count;
+      else if (outcome === 'failed') r.failed += log._count;
+    }
+
+    return Object.values(ruleMap);
   }
 }

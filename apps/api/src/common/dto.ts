@@ -1060,6 +1060,10 @@ export class CreateCampaignDto {
   @IsArray()
   @IsOptional()
   variants?: any[];
+
+  @IsIn(['WHATSAPP', 'SMS', 'EMAIL', 'MULTI'])
+  @IsOptional()
+  channel?: string;
 }
 
 export class UpdateCampaignDto {
@@ -1138,7 +1142,10 @@ export class UpdateSavedSegmentDto {
 export class AutomationActionDto {
   @IsString()
   @IsNotEmpty()
-  @IsIn(['SEND_TEMPLATE', 'UPDATE_STATUS', 'ASSIGN_STAFF', 'ADD_TAG', 'SEND_NOTIFICATION'])
+  @IsIn([
+    'SEND_TEMPLATE', 'UPDATE_STATUS', 'ASSIGN_STAFF', 'ADD_TAG', 'SEND_NOTIFICATION',
+    'SEND_MESSAGE', 'REQUEST_TESTIMONIAL', 'SEND_EMAIL', 'UPDATE_CUSTOMER_FIELD', 'WEBHOOK',
+  ])
   type!: string;
 
   @IsString()
@@ -1163,12 +1170,16 @@ export class CreateAutomationRuleDto {
   @MaxLength(200)
   name!: string;
 
-  // H4 fix: Validate trigger against known values
+  // H4 fix: Validate trigger against known values (expanded in HIGH-05)
   @IsString()
   @IsNotEmpty()
-  @IsIn(['BOOKING_CREATED', 'BOOKING_UPCOMING', 'STATUS_CHANGED', 'BOOKING_CANCELLED'], {
+  @IsIn([
+    'BOOKING_CREATED', 'BOOKING_UPCOMING', 'STATUS_CHANGED', 'BOOKING_CANCELLED',
+    'MESSAGE_RECEIVED', 'CUSTOMER_CREATED', 'PAYMENT_RECEIVED',
+    'TESTIMONIAL_SUBMITTED', 'CAMPAIGN_SENT',
+  ], {
     message:
-      'trigger must be one of: BOOKING_CREATED, BOOKING_UPCOMING, STATUS_CHANGED, BOOKING_CANCELLED',
+      'trigger must be one of: BOOKING_CREATED, BOOKING_UPCOMING, STATUS_CHANGED, BOOKING_CANCELLED, MESSAGE_RECEIVED, CUSTOMER_CREATED, PAYMENT_RECEIVED, TESTIMONIAL_SUBMITTED, CAMPAIGN_SENT',
   })
   trigger!: string;
 
@@ -1207,12 +1218,16 @@ export class UpdateAutomationRuleDto {
   @MaxLength(200)
   name?: string;
 
-  // H4 fix: Validate trigger against known values
+  // H4 fix: Validate trigger against known values (expanded in HIGH-05)
   @IsString()
   @IsOptional()
-  @IsIn(['BOOKING_CREATED', 'BOOKING_UPCOMING', 'STATUS_CHANGED', 'BOOKING_CANCELLED'], {
+  @IsIn([
+    'BOOKING_CREATED', 'BOOKING_UPCOMING', 'STATUS_CHANGED', 'BOOKING_CANCELLED',
+    'MESSAGE_RECEIVED', 'CUSTOMER_CREATED', 'PAYMENT_RECEIVED',
+    'TESTIMONIAL_SUBMITTED', 'CAMPAIGN_SENT',
+  ], {
     message:
-      'trigger must be one of: BOOKING_CREATED, BOOKING_UPCOMING, STATUS_CHANGED, BOOKING_CANCELLED',
+      'trigger must be one of: BOOKING_CREATED, BOOKING_UPCOMING, STATUS_CHANGED, BOOKING_CANCELLED, MESSAGE_RECEIVED, CUSTOMER_CREATED, PAYMENT_RECEIVED, TESTIMONIAL_SUBMITTED, CAMPAIGN_SENT',
   })
   trigger?: string;
 

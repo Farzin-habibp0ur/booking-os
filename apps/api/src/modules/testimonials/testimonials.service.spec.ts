@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { getQueueToken } from '@nestjs/bullmq';
 import { TestimonialsService } from './testimonials.service';
 import { PrismaService } from '../../common/prisma.service';
@@ -16,9 +16,13 @@ describe('TestimonialsService', () => {
         create: jest.fn(),
         findMany: jest.fn(),
         findFirst: jest.fn(),
+        findUnique: jest.fn(),
         count: jest.fn(),
         update: jest.fn(),
+        updateMany: jest.fn(),
         delete: jest.fn(),
+        deleteMany: jest.fn(),
+        aggregate: jest.fn(),
       },
       customer: { findFirst: jest.fn() },
       business: { findUnique: jest.fn() },
@@ -74,6 +78,19 @@ describe('TestimonialsService', () => {
         }),
       });
     });
+
+    it('sets submittedAt to current timestamp on manual creation', async () => {
+      const dto = { name: 'Alice', content: 'Great service!' };
+      prisma.testimonial.create.mockResolvedValue({ id: 't1', ...dto });
+
+      await service.create('b1', dto);
+
+      expect(prisma.testimonial.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          submittedAt: expect.any(Date),
+        }),
+      });
+    });
   });
 
   describe('findAll', () => {
@@ -126,6 +143,60 @@ describe('TestimonialsService', () => {
       prisma.testimonial.findFirst.mockResolvedValue(null);
 
       await expect(service.findOne('b1', 'missing')).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('update', () => {
+    it('sets submittedAt when content first provided on REQUESTED testimonial', async () => {
+      prisma.testimonial.findFirst.mockResolvedValue({
+        id: 't1',
+        businessId: 'b1',
+        content: '',
+        submittedAt: null,
+        source: 'REQUESTED',
+      });
+      prisma.testimonial.update.mockResolvedValue({ id: 't1' });
+
+      await service.update('b1', 't1', { content: 'Loved it!' });
+
+      expect(prisma.testimonial.update).toHaveBeenCalledWith({
+        where: { id: 't1' },
+        data: expect.objectContaining({
+          content: 'Loved it!',
+          submittedAt: expect.any(Date),
+        }),
+      });
+    });
+
+    it('does not overwrite existing submittedAt on subsequent edits', async () => {
+      const existingDate = new Date('2026-01-01');
+      prisma.testimonial.findFirst.mockResolvedValue({
+        id: 't1',
+        businessId: 'b1',
+        content: 'Original review',
+        submittedAt: existingDate,
+      });
+      prisma.testimonial.update.mockResolvedValue({ id: 't1' });
+
+      await service.update('b1', 't1', { content: 'Updated review' });
+
+      const updateData = prisma.testimonial.update.mock.calls[0][0].data;
+      expect(updateData.submittedAt).toBeUndefined();
+    });
+
+    it('does not set submittedAt when only name is updated', async () => {
+      prisma.testimonial.findFirst.mockResolvedValue({
+        id: 't1',
+        businessId: 'b1',
+        content: '',
+        submittedAt: null,
+      });
+      prisma.testimonial.update.mockResolvedValue({ id: 't1' });
+
+      await service.update('b1', 't1', { name: 'Jane Doe' });
+
+      const updateData = prisma.testimonial.update.mock.calls[0][0].data;
+      expect(updateData.submittedAt).toBeUndefined();
     });
   });
 
@@ -228,8 +299,13 @@ describe('TestimonialsService', () => {
           source: 'REQUESTED',
           customerId: 'c1',
           name: 'Alice',
+          submissionToken: expect.any(String),
+          requestedAt: expect.any(Date),
         }),
       });
+      // Token should be a 64-char hex string (32 bytes)
+      const createCall = prisma.testimonial.create.mock.calls[0][0];
+      expect(createCall.data.submissionToken).toHaveLength(64);
       expect(queue.add).toHaveBeenCalledWith(
         'testimonial-request',
         expect.objectContaining({
@@ -282,6 +358,133 @@ describe('TestimonialsService', () => {
       prisma.business.findUnique.mockResolvedValue(null);
 
       await expect(service.findPublic('nonexistent')).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('verifyToken', () => {
+    it('returns business info for valid token', async () => {
+      prisma.testimonial.findUnique.mockResolvedValue({
+        id: 't1',
+        name: 'Alice',
+        submittedAt: null,
+        business: { name: 'Glow Clinic', slug: 'glow' },
+      });
+
+      const result = await service.verifyToken('valid-token');
+
+      expect(result.businessName).toBe('Glow Clinic');
+      expect(result.customerName).toBe('Alice');
+    });
+
+    it('throws NotFoundException for invalid token', async () => {
+      prisma.testimonial.findUnique.mockResolvedValue(null);
+
+      await expect(service.verifyToken('bad-token')).rejects.toThrow(NotFoundException);
+    });
+
+    it('throws BadRequestException for already submitted token', async () => {
+      prisma.testimonial.findUnique.mockResolvedValue({
+        id: 't1',
+        submittedAt: new Date(),
+        business: { name: 'Clinic' },
+      });
+
+      await expect(service.verifyToken('used-token')).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('submitByToken', () => {
+    it('updates testimonial and nullifies token', async () => {
+      prisma.testimonial.findUnique.mockResolvedValue({
+        id: 't1',
+        name: 'Alice',
+        submittedAt: null,
+      });
+      prisma.testimonial.update.mockResolvedValue({ id: 't1', status: 'PENDING' });
+
+      await service.submitByToken({
+        token: 'valid-token',
+        content: 'Great experience with the clinic!',
+        rating: 5,
+      });
+
+      expect(prisma.testimonial.update).toHaveBeenCalledWith({
+        where: { id: 't1' },
+        data: expect.objectContaining({
+          content: 'Great experience with the clinic!',
+          rating: 5,
+          status: 'PENDING',
+          submittedAt: expect.any(Date),
+          submissionToken: null,
+        }),
+      });
+    });
+
+    it('throws NotFoundException for invalid token', async () => {
+      prisma.testimonial.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.submitByToken({ token: 'bad', content: 'text', rating: 5 }),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('throws BadRequestException if already submitted', async () => {
+      prisma.testimonial.findUnique.mockResolvedValue({
+        id: 't1',
+        submittedAt: new Date(),
+      });
+
+      await expect(
+        service.submitByToken({ token: 'used', content: 'text', rating: 5 }),
+      ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('bulkAction', () => {
+    it('approves multiple testimonials', async () => {
+      prisma.testimonial.updateMany.mockResolvedValue({ count: 3 });
+
+      const result = await service.bulkAction('b1', ['t1', 't2', 't3'], 'approve');
+
+      expect(prisma.testimonial.updateMany).toHaveBeenCalledWith({
+        where: { id: { in: ['t1', 't2', 't3'] }, businessId: 'b1' },
+        data: { status: 'APPROVED' },
+      });
+      expect(result.processed).toBe(3);
+    });
+
+    it('deletes multiple testimonials', async () => {
+      prisma.testimonial.deleteMany.mockResolvedValue({ count: 2 });
+
+      const result = await service.bulkAction('b1', ['t1', 't2'], 'delete');
+
+      expect(prisma.testimonial.deleteMany).toHaveBeenCalledWith({
+        where: { id: { in: ['t1', 't2'] }, businessId: 'b1' },
+      });
+      expect(result.action).toBe('delete');
+    });
+  });
+
+  describe('getDashboardStats', () => {
+    it('returns aggregated testimonial stats', async () => {
+      prisma.testimonial.count
+        .mockResolvedValueOnce(3)  // pending
+        .mockResolvedValueOnce(10) // approved
+        .mockResolvedValueOnce(2)  // featured
+        .mockResolvedValueOnce(15); // total
+      prisma.testimonial.aggregate.mockResolvedValue({
+        _avg: { rating: 4.5 },
+      });
+
+      const result = await service.getDashboardStats('b1');
+
+      expect(result).toEqual({
+        pending: 3,
+        approved: 10,
+        featured: 2,
+        total: 15,
+        avgRating: 4.5,
+      });
     });
   });
 });

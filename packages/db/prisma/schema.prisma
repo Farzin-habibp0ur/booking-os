@@ -41,8 +41,9 @@ model Business {
   roiBaselines         RoiBaseline[]
   waitlistEntries      WaitlistEntry[]
   automationRules      AutomationRule[]
-  campaigns            Campaign[]
-  offers               Offer[]
+  campaigns              Campaign[]
+  campaignUnsubscribes   CampaignUnsubscribe[]
+  offers                 Offer[]
   locations            Location[]
   quotes               Quote[]
   verticalPackVersions VerticalPackVersion[]
@@ -185,10 +186,11 @@ model Customer {
   duplicatesAsCustomer1 DuplicateCandidate[] @relation("DuplicateCustomer1")
   duplicatesAsCustomer2 DuplicateCandidate[] @relation("DuplicateCustomer2")
   payments              Payment[]
-  testimonials          Testimonial[]
-  invoices              Invoice[]
-  medicalRecords        MedicalRecord[]
-  clinicalPhotos        ClinicalPhoto[]
+  testimonials            Testimonial[]
+  campaignUnsubscribes    CampaignUnsubscribe[]
+  invoices                Invoice[]
+  medicalRecords          MedicalRecord[]
+  clinicalPhotos          ClinicalPhoto[]
   photoComparisons      PhotoComparison[]
   treatmentPlans            TreatmentPlan[]
   aftercareEnrollments      AftercareEnrollment[]
@@ -685,6 +687,7 @@ model AutomationRule {
   steps      AutomationStep[]
   executions AutomationExecution[]
 
+  @@unique([businessId, name])
   @@index([businessId, isActive])
   @@map("automation_rules")
 }
@@ -727,14 +730,17 @@ model Campaign {
   variants          Json      @default("[]")
   winnerVariantId   String?
   winnerSelectedAt  DateTime?
+  channel           String?   @default("WHATSAPP") // WHATSAPP, SMS, EMAIL, MULTI
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
-  business       Business       @relation(fields: [businessId], references: [id])
+  business       Business              @relation(fields: [businessId], references: [id])
   sends          CampaignSend[]
-  parentCampaign Campaign?      @relation("CampaignRecurrence", fields: [parentCampaignId], references: [id])
-  childCampaigns Campaign[]     @relation("CampaignRecurrence")
+  unsubscribes   CampaignUnsubscribe[]
+  parentCampaign Campaign?             @relation("CampaignRecurrence", fields: [parentCampaignId], references: [id])
+  childCampaigns Campaign[]            @relation("CampaignRecurrence")
 
+  @@unique([businessId, name])
   @@index([businessId])
   @@index([parentCampaignId])
   @@map("campaigns")
@@ -748,12 +754,31 @@ model CampaignSend {
   sentAt     DateTime?
   bookingId  String?
   variantId  String?
+  channel    String?   // WHATSAPP, SMS, EMAIL — actual channel used for this send
   createdAt  DateTime  @default(now())
 
   campaign Campaign @relation(fields: [campaignId], references: [id])
 
   @@index([campaignId, status])
   @@map("campaign_sends")
+}
+
+model CampaignUnsubscribe {
+  id         String    @id @default(cuid())
+  businessId String
+  customerId String
+  campaignId String?   // Null = global unsubscribe from all campaigns
+  token      String    @unique
+  createdAt  DateTime  @default(now())
+
+  business   Business  @relation(fields: [businessId], references: [id])
+  customer   Customer  @relation(fields: [customerId], references: [id])
+  campaign   Campaign? @relation(fields: [campaignId], references: [id])
+
+  @@unique([businessId, customerId, campaignId])
+  @@index([businessId, customerId])
+  @@index([token])
+  @@map("campaign_unsubscribes")
 }
 
 model Offer {
@@ -1397,21 +1422,23 @@ model EmailSequenceEnrollment {
 }
 
 model Testimonial {
-  id          String    @id @default(cuid())
-  businessId  String
-  customerId  String?
-  name        String
-  role        String?
-  company     String?
-  content     String    @db.Text
-  rating      Int?
-  status      String    @default("PENDING")
-  source      String    @default("MANUAL")
-  requestedAt DateTime?
-  submittedAt DateTime?
-  avatarUrl   String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id              String    @id @default(cuid())
+  businessId      String
+  customerId      String?
+  name            String
+  role            String?
+  company         String?
+  content         String    @db.Text
+  rating          Int?
+  status          String    @default("PENDING")
+  source          String    @default("MANUAL")
+  requestedAt     DateTime?
+  submittedAt     DateTime?
+  submissionToken String?   @unique
+  reminderSentAt  DateTime?
+  avatarUrl       String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   business Business  @relation(fields: [businessId], references: [id])
   customer Customer? @relation(fields: [customerId], references: [id])

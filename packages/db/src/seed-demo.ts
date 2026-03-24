@@ -1254,8 +1254,10 @@ async function main() {
     console.log('✅ 6 waitlist entries created');
 
     // ── 12. Campaigns ─────────────────────────────────────────────────────────
-    const campaign1 = await prisma.campaign.create({
-      data: {
+    const campaign1 = await prisma.campaign.upsert({
+      where: { businessId_name: { businessId: bizId, name: 'February Glow-Up Special' } },
+      update: {},
+      create: {
         businessId: bizId,
         name: 'February Glow-Up Special',
         status: 'SENT',
@@ -1302,8 +1304,10 @@ async function main() {
       })),
     });
 
-    await prisma.campaign.create({
-      data: {
+    await prisma.campaign.upsert({
+      where: { businessId_name: { businessId: bizId, name: 'Spring Skincare Launch' } },
+      update: {},
+      create: {
         businessId: bizId,
         name: 'Spring Skincare Launch',
         status: 'DRAFT',
@@ -1312,8 +1316,10 @@ async function main() {
       },
     });
 
-    await prisma.campaign.create({
-      data: {
+    await prisma.campaign.upsert({
+      where: { businessId_name: { businessId: bizId, name: 'March Loyalty Rewards' } },
+      update: {},
+      create: {
         businessId: bizId,
         name: 'March Loyalty Rewards',
         status: 'SCHEDULED',
@@ -1326,8 +1332,10 @@ async function main() {
     console.log('✅ 3 campaigns created (1 SENT with 12 sends, 1 DRAFT, 1 SCHEDULED)');
 
     // ── 13. Automation rules + logs ───────────────────────────────────────────
-    const rule1 = await prisma.automationRule.create({
-      data: {
+    const rule1 = await prisma.automationRule.upsert({
+      where: { businessId_name: { businessId: bizId, name: '24h Appointment Reminder' } },
+      update: {},
+      create: {
         businessId: bizId,
         name: '24h Appointment Reminder',
         trigger: 'BOOKING_UPCOMING',
@@ -1340,8 +1348,10 @@ async function main() {
       },
     });
 
-    const rule2 = await prisma.automationRule.create({
-      data: {
+    const rule2 = await prisma.automationRule.upsert({
+      where: { businessId_name: { businessId: bizId, name: 'Post-Treatment Aftercare' } },
+      update: {},
+      create: {
         businessId: bizId,
         name: 'Post-Treatment Aftercare',
         trigger: 'STATUS_CHANGED',
@@ -1352,8 +1362,10 @@ async function main() {
       },
     });
 
-    const rule3 = await prisma.automationRule.create({
-      data: {
+    const rule3 = await prisma.automationRule.upsert({
+      where: { businessId_name: { businessId: bizId, name: 'No-Show Follow-up' } },
+      update: {},
+      create: {
         businessId: bizId,
         name: 'No-Show Follow-up',
         trigger: 'STATUS_CHANGED',

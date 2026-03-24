@@ -1,6 +1,8 @@
 'use client';
 
 import { Star, Quote, Check, X, Sparkles, Pencil, Trash2 } from 'lucide-react';
+import { useI18n } from '@/lib/i18n';
+import { TESTIMONIAL_STATUS_STYLES } from '@/lib/design-tokens';
 
 export interface Testimonial {
   id: string;
@@ -24,12 +26,8 @@ interface TestimonialCardProps {
   showActions?: boolean;
 }
 
-const STATUS_BADGES: Record<string, { bg: string; text: string; label: string }> = {
-  PENDING: { bg: 'bg-amber-50', text: 'text-amber-700', label: 'Pending' },
-  APPROVED: { bg: 'bg-sage-50', text: 'text-sage-700', label: 'Approved' },
-  REJECTED: { bg: 'bg-red-50', text: 'text-red-700', label: 'Rejected' },
-  FEATURED: { bg: 'bg-lavender-50', text: 'text-lavender-700', label: 'Featured' },
-};
+// Status badges now imported from centralized design tokens
+const STATUS_BADGES = TESTIMONIAL_STATUS_STYLES;
 
 export function TestimonialCard({
   testimonial,
@@ -40,6 +38,7 @@ export function TestimonialCard({
   onDelete,
   showActions = true,
 }: TestimonialCardProps) {
+  const { t } = useI18n();
   const badge = STATUS_BADGES[testimonial.status] || STATUS_BADGES.PENDING;
   const isFeatured = testimonial.status === 'FEATURED';
   const truncated =
@@ -103,7 +102,7 @@ export function TestimonialCard({
               className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg bg-sage-50 text-sage-700 hover:bg-sage-100 transition-colors"
               data-testid="btn-approve"
             >
-              <Check size={12} /> Approve
+              <Check size={12} /> {t('testimonials.action_approve' as any)}
             </button>
           )}
           {testimonial.status !== 'REJECTED' && onReject && (
@@ -112,7 +111,7 @@ export function TestimonialCard({
               className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg bg-red-50 text-red-700 hover:bg-red-100 transition-colors"
               data-testid="btn-reject"
             >
-              <X size={12} /> Reject
+              <X size={12} /> {t('testimonials.action_reject' as any)}
             </button>
           )}
           {testimonial.status !== 'FEATURED' && onFeature && (
@@ -121,7 +120,7 @@ export function TestimonialCard({
               className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg bg-lavender-50 text-lavender-700 hover:bg-lavender-100 transition-colors"
               data-testid="btn-feature"
             >
-              <Sparkles size={12} /> Feature
+              <Sparkles size={12} /> {t('testimonials.action_feature' as any)}
             </button>
           )}
           {onEdit && (
@@ -130,7 +129,7 @@ export function TestimonialCard({
               className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg bg-slate-50 text-slate-600 hover:bg-slate-100 transition-colors"
               data-testid="btn-edit"
             >
-              <Pencil size={12} /> Edit
+              <Pencil size={12} /> {t('testimonials.action_edit' as any)}
             </button>
           )}
           {onDelete && (
@@ -139,7 +138,7 @@ export function TestimonialCard({
               className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
               data-testid="btn-delete"
             >
-              <Trash2 size={12} /> Delete
+              <Trash2 size={12} /> {t('testimonials.action_delete' as any)}
             </button>
           )}
         </div>

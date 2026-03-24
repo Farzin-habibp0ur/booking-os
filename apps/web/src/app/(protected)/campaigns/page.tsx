@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
-import { Megaphone, Plus, Repeat } from 'lucide-react';
+import { Megaphone, Plus, Repeat, Copy } from 'lucide-react';
+import { useToast } from '@/lib/toast';
 import { TableRowSkeleton, EmptyState } from '@/components/skeleton';
 import TooltipNudge from '@/components/tooltip-nudge';
 
@@ -27,6 +28,18 @@ export default function CampaignsPage() {
   const [campaigns, setCampaigns] = useState<any>({ data: [], total: 0 });
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const { toast } = useToast();
+
+  const handleClone = async (e: React.MouseEvent, campaignId: string) => {
+    e.stopPropagation();
+    try {
+      const cloned = await api.post<any>(`/campaigns/${campaignId}/clone`);
+      toast('Campaign cloned as draft');
+      router.push(`/campaigns/${cloned.id}`);
+    } catch {
+      toast('Failed to clone campaign', 'error');
+    }
+  };
 
   useEffect(() => {
     api
@@ -70,6 +83,7 @@ export default function CampaignsPage() {
                 <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
                   Created
                 </th>
+                <th className="p-3 text-xs font-medium text-slate-500 uppercase w-12"></th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -120,6 +134,15 @@ export default function CampaignsPage() {
                       </td>
                       <td className="p-3 text-sm text-slate-600">
                         {new Date(c.createdAt).toLocaleDateString('en-US', { dateStyle: 'medium' })}
+                      </td>
+                      <td className="p-3">
+                        <button
+                          onClick={(e) => handleClone(e, c.id)}
+                          title="Clone campaign"
+                          className="p-1.5 text-slate-400 hover:text-sage-600 transition-colors rounded-lg hover:bg-sage-50"
+                        >
+                          <Copy size={14} />
+                        </button>
                       </td>
                     </tr>
                   ))}

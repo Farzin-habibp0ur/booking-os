@@ -1,7 +1,13 @@
-import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
+import { Injectable, Logger, Inject, forwardRef, Optional } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 import { PrismaService } from '../../common/prisma.service';
 import { CampaignService } from './campaign.service';
+import { UsageService } from '../usage/usage.service';
+import { DeadLetterQueueService } from '../../common/queue/dead-letter.service';
+import { AutomationExecutorService } from '../automation/automation-executor.service';
+import { QUEUE_NAMES } from '../../common/queue/queue.module';
 
 @Injectable()
 export class CampaignDispatchService {
@@ -12,6 +18,11 @@ export class CampaignDispatchService {
     private prisma: PrismaService,
     @Inject(forwardRef(() => CampaignService))
     private campaignService: CampaignService,
+    private usageService: UsageService,
+    private deadLetterQueueService: DeadLetterQueueService,
+    @Optional() @Inject(forwardRef(() => AutomationExecutorService))
+    private automationExecutor?: AutomationExecutorService,
+    @Optional() @InjectQueue(QUEUE_NAMES.NOTIFICATIONS) private notificationQueue?: Queue,
   ) {}
 
   @Cron(CronExpression.EVERY_MINUTE)
@@ -53,18 +64,118 @@ export class CampaignDispatchService {
       return;
     }
 
+    // Fetch business info for message rendering
+    const business = await this.prisma.business.findUnique({
+      where: { id: campaign.businessId },
+      select: { id: true, name: true },
+    });
+    const channel = campaign.channel || 'WHATSAPP';
+
     for (const send of pendingSends) {
       try {
-        // Mark as sent (actual delivery would be via notification service)
+        // Fetch customer for contact info and personalization
+        const customer = await this.prisma.customer.findUnique({
+          where: { id: send.customerId },
+          select: { id: true, name: true, phone: true, email: true },
+        });
+
+        if (!customer) {
+          await this.prisma.campaignSend.update({
+            where: { id: send.id },
+            data: { status: 'FAILED', channel },
+          });
+          continue;
+        }
+
+        // Resolve recipient address for channel
+        const address = this.resolveAddress(customer, channel);
+        if (!address) {
+          await this.prisma.campaignSend.update({
+            where: { id: send.id },
+            data: { status: 'FAILED', channel },
+          });
+          this.logger.warn(`No ${channel} address for customer ${customer.id}`);
+          continue;
+        }
+
+        // Resolve variant content and render merge variables
+        const variants = (campaign.variants || []) as any[];
+        const variant = send.variantId
+          ? variants.find((v: any) => v.id === send.variantId)
+          : variants[0];
+        const rawContent = variant?.content || '';
+
+        // Fetch customer's last booking for merge variable context
+        const lastBooking = rawContent.includes('{{')
+          ? await this.prisma.booking.findFirst({
+              where: { customerId: customer.id },
+              orderBy: { startTime: 'desc' },
+              include: { service: true, staff: true },
+            })
+          : null;
+
+        const messageContent = this.renderTemplate(rawContent, {
+          customerName: customer.name || 'there',
+          serviceName: lastBooking?.service?.name || 'your service',
+          businessName: business?.name || 'us',
+          nextBookingDate: lastBooking?.startTime
+            ? lastBooking.startTime.toLocaleDateString()
+            : '',
+          staffName: lastBooking?.staff?.name || 'our team',
+        });
+
+        // Enqueue delivery via notification queue
+        if (this.notificationQueue) {
+          await this.notificationQueue.add('campaign-send', {
+            to: address,
+            channel,
+            content: messageContent,
+            businessId: campaign.businessId,
+            businessName: business?.name || '',
+            customerId: customer.id,
+            customerName: customer.name,
+            campaignId: campaign.id,
+            campaignSendId: send.id,
+          });
+        }
+
+        // Mark as sent
         await this.prisma.campaignSend.update({
           where: { id: send.id },
-          data: { status: 'SENT', sentAt: new Date() },
+          data: { status: 'SENT', sentAt: new Date(), channel },
         });
+
+        // Record usage for billing
+        this.usageService
+          .recordUsage(campaign.businessId, channel, 'OUTBOUND')
+          .catch((err) => this.logger.error(`Usage recording failed: ${err.message}`));
+
+        // Fire CAMPAIGN_SENT trigger for automation rules
+        if (this.automationExecutor) {
+          this.automationExecutor
+            .evaluateTrigger('CAMPAIGN_SENT', {
+              businessId: campaign.businessId,
+              customerId: customer.id,
+              campaignId: campaign.id,
+              campaignName: campaign.name,
+            })
+            .catch((err) =>
+              this.logger.warn(`Campaign trigger evaluation failed: ${err.message}`),
+            );
+        }
       } catch (err: any) {
         await this.prisma.campaignSend.update({
           where: { id: send.id },
-          data: { status: 'FAILED' },
+          data: { status: 'FAILED', channel },
         });
+
+        // Capture to DLQ for retry capability
+        await this.deadLetterQueueService.capture(
+          { campaignSendId: send.id, campaignId: campaign.id, customerId: send.customerId },
+          err,
+          'campaign',
+        );
+
         this.logger.error(`Campaign send failed: ${err.message}`);
       }
     }
@@ -202,5 +313,41 @@ export class CampaignDispatchService {
     this.logger.log(
       `Scheduled next ${campaign.recurrenceRule} occurrence of campaign "${campaign.name}" for ${nextRunAt.toISOString()}`,
     );
+  }
+
+  renderTemplate(
+    template: string,
+    context: {
+      customerName?: string;
+      serviceName?: string;
+      businessName?: string;
+      nextBookingDate?: string;
+      staffName?: string;
+    },
+  ): string {
+    return template
+      .replace(/\{\{name\}\}/gi, context.customerName || 'there')
+      .replace(/\{\{service\}\}/gi, context.serviceName || 'your service')
+      .replace(/\{\{business\}\}/gi, context.businessName || 'us')
+      .replace(/\{\{date\}\}/gi, context.nextBookingDate || '')
+      .replace(/\{\{staff\}\}/gi, context.staffName || 'our team');
+  }
+
+  private resolveAddress(
+    customer: { phone: string | null; email: string | null },
+    channel: string,
+  ): string | null {
+    switch (channel) {
+      case 'EMAIL':
+        return customer.email || null;
+      case 'SMS':
+      case 'WHATSAPP':
+        return customer.phone || null;
+      case 'MULTI':
+        // Prefer phone (WhatsApp/SMS), fall back to email
+        return customer.phone || customer.email || null;
+      default:
+        return customer.phone || null;
+    }
   }
 }

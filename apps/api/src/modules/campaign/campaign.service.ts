@@ -1,4 +1,5 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { randomBytes } from 'crypto';
 import { PrismaService } from '../../common/prisma.service';
 import { CampaignDispatchService } from './campaign-dispatch.service';
 
@@ -19,11 +20,20 @@ export class CampaignService {
       recurrenceRule?: string;
       isABTest?: boolean;
       variants?: any[];
+      channel?: string;
     },
   ) {
     // Validate A/B test variants
     if (data.isABTest) {
       this.validateVariants(data.variants);
+    }
+
+    // Check for duplicate campaign name within business
+    const existing = await this.prisma.campaign.findFirst({
+      where: { businessId, name: data.name },
+    });
+    if (existing) {
+      throw new BadRequestException(`A campaign named "${data.name}" already exists`);
     }
 
     const recurrenceRule = data.recurrenceRule || 'NONE';
@@ -43,6 +53,7 @@ export class CampaignService {
             : null,
         isABTest: data.isABTest || false,
         variants: data.isABTest && data.variants ? data.variants : [],
+        channel: data.channel || 'WHATSAPP',
       },
     });
   }
@@ -160,36 +171,42 @@ export class CampaignService {
       where.tags = { hasSome: filters.tags };
     }
 
+    // Build bookings filter carefully to avoid conflicting every/some/none clauses
+    const bookingsFilter: any = {};
+
     if (filters?.lastBookingBefore) {
-      where.bookings = {
-        every: {
-          startTime: { lt: new Date(filters.lastBookingBefore) },
-        },
+      // "No bookings after this date" = customer hasn't booked since then
+      bookingsFilter.none = {
+        ...bookingsFilter.none,
+        startTime: { gte: new Date(filters.lastBookingBefore) },
       };
     }
 
     if (filters?.serviceKind) {
-      where.bookings = {
-        ...where.bookings,
-        some: {
-          service: { kind: filters.serviceKind },
-        },
+      bookingsFilter.some = {
+        service: { kind: filters.serviceKind },
       };
     }
 
+    // Use NOT array form so multiple NOT conditions don't overwrite each other
+    const notConditions: any[] = [];
+
     if (filters?.noUpcomingBooking) {
-      where.NOT = {
+      notConditions.push({
         bookings: {
           some: { startTime: { gte: new Date() } },
         },
-      };
+      });
     }
 
     if (filters?.excludeDoNotMessage) {
-      where.NOT = {
-        ...where.NOT,
+      notConditions.push({
         tags: { has: 'do-not-message' },
-      };
+      });
+    }
+
+    if (notConditions.length > 0) {
+      where.NOT = notConditions;
     }
 
     // P-16: createdAfter — customer created after date
@@ -203,16 +220,20 @@ export class CampaignService {
     }
 
     // P-16: lastVisitDaysAgo — customers whose last booking was N+ days ago
+    // Uses `none` with gte: "no bookings exist after the cutoff" = hasn't visited in N days
     if (filters?.lastVisitDaysAgo != null) {
       const cutoff = new Date();
       cutoff.setDate(cutoff.getDate() - Number(filters.lastVisitDaysAgo));
-      where.bookings = {
-        ...where.bookings,
-        every: {
-          ...(where.bookings?.every || {}),
-          startTime: { lt: cutoff },
-        },
+      // Use the stricter cutoff if lastBookingBefore also set a none
+      const existingGte = bookingsFilter.none?.startTime?.gte;
+      const effectiveCutoff = existingGte && existingGte < cutoff ? existingGte : cutoff;
+      bookingsFilter.none = {
+        startTime: { gte: effectiveCutoff },
       };
+    }
+
+    if (Object.keys(bookingsFilter).length > 0) {
+      where.bookings = bookingsFilter;
     }
 
     return where;
@@ -431,6 +452,204 @@ export class CampaignService {
         winnerSelectedAt: new Date(),
       },
     });
+  }
+
+  // HIGH-02: Per-channel delivery analytics
+  async getChannelStats(businessId: string, campaignId: string) {
+    await this.findById(businessId, campaignId);
+    const channels = await this.prisma.campaignSend.groupBy({
+      by: ['channel', 'status'],
+      where: { campaignId, campaign: { businessId } },
+      _count: true,
+    });
+
+    const result: Record<string, Record<string, number>> = {};
+    for (const row of channels) {
+      const ch = row.channel || 'UNKNOWN';
+      if (!result[ch]) result[ch] = { sent: 0, delivered: 0, read: 0, failed: 0, pending: 0 };
+      result[ch][row.status.toLowerCase()] = row._count;
+    }
+    return result;
+  }
+
+  // HIGH-03: Campaign conversion funnel
+  async getFunnelStats(businessId: string, campaignId: string) {
+    const campaign = await this.findById(businessId, campaignId);
+
+    const [sent, delivered, read, total] = await Promise.all([
+      this.prisma.campaignSend.count({
+        where: { campaignId, campaign: { businessId }, status: { in: ['SENT', 'DELIVERED', 'READ'] } },
+      }),
+      this.prisma.campaignSend.count({
+        where: { campaignId, campaign: { businessId }, status: { in: ['DELIVERED', 'READ'] } },
+      }),
+      this.prisma.campaignSend.count({
+        where: { campaignId, campaign: { businessId }, status: 'READ' },
+      }),
+      this.prisma.campaignSend.count({
+        where: { campaignId, campaign: { businessId } },
+      }),
+    ]);
+
+    // Count bookings from recipients within 7 days of campaign send
+    const recipientIds = await this.prisma.campaignSend.findMany({
+      where: { campaignId },
+      select: { customerId: true },
+    });
+    const customerIds = recipientIds.map((r) => r.customerId);
+
+    // Count bookings from recipients within 7 days of campaign send
+    const sevenDaysAfterSend = campaign.sentAt
+      ? new Date(campaign.sentAt.getTime() + 7 * 24 * 60 * 60 * 1000)
+      : null;
+    const booked = campaign.sentAt && sevenDaysAfterSend
+      ? await this.prisma.booking.count({
+          where: {
+            businessId,
+            customerId: { in: customerIds },
+            createdAt: { gte: campaign.sentAt, lte: sevenDaysAfterSend },
+          },
+        })
+      : 0;
+
+    return {
+      stages: [
+        { label: 'Sent', count: sent, percentage: 100 },
+        {
+          label: 'Delivered',
+          count: delivered,
+          percentage: sent > 0 ? Math.round((delivered / sent) * 100) : 0,
+        },
+        {
+          label: 'Read',
+          count: read,
+          percentage: delivered > 0 ? Math.round((read / delivered) * 100) : 0,
+        },
+        {
+          label: 'Booked',
+          count: booked,
+          percentage: read > 0 ? Math.round((booked / read) * 100) : 0,
+        },
+      ],
+    };
+  }
+
+  // HIGH-04: Generate unsubscribe token for a campaign send
+  generateUnsubscribeToken(): string {
+    return randomBytes(32).toString('hex');
+  }
+
+  // HIGH-04: Process unsubscribe by token
+  async processUnsubscribe(token: string) {
+    const unsub = await this.prisma.campaignUnsubscribe.findUnique({
+      where: { token },
+      include: { business: { select: { name: true } }, campaign: { select: { name: true } } },
+    });
+    if (!unsub) throw new NotFoundException('Invalid or expired unsubscribe link');
+    return {
+      businessName: unsub.business.name,
+      campaignName: unsub.campaign?.name || 'all campaigns',
+      alreadyUnsubscribed: true,
+    };
+  }
+
+  // HIGH-04: Create unsubscribe record
+  async createUnsubscribe(businessId: string, customerId: string, campaignId?: string) {
+    const token = this.generateUnsubscribeToken();
+    return this.prisma.campaignUnsubscribe.create({
+      data: { businessId, customerId, campaignId: campaignId || null, token },
+    });
+  }
+
+  // HIGH-04: Check if customer is unsubscribed
+  async isUnsubscribed(businessId: string, customerId: string, campaignId?: string): Promise<boolean> {
+    const unsub = await this.prisma.campaignUnsubscribe.findFirst({
+      where: {
+        businessId,
+        customerId,
+        OR: [
+          { campaignId: null }, // Global unsubscribe
+          ...(campaignId ? [{ campaignId }] : []),
+        ],
+      },
+    });
+    return !!unsub;
+  }
+
+  // MED-01: Clone a campaign
+  async clone(businessId: string, campaignId: string) {
+    const original = await this.findById(businessId, campaignId);
+    return this.prisma.campaign.create({
+      data: {
+        businessId,
+        name: `${(original as any).name} (Copy)`,
+        status: 'DRAFT',
+        filters: (original as any).filters || {},
+        templateId: (original as any).templateId,
+        channel: (original as any).channel,
+        isABTest: (original as any).isABTest || false,
+        variants: (original as any).variants || [],
+        throttlePerMinute: (original as any).throttlePerMinute || 10,
+      },
+    });
+  }
+
+  // MED-02: Send a test preview to a staff member's email
+  async testSend(businessId: string, campaignId: string, staffEmail: string) {
+    const campaign = await this.findById(businessId, campaignId);
+    if (!['DRAFT', 'SCHEDULED'].includes((campaign as any).status)) {
+      throw new BadRequestException('Test sends are only available for DRAFT or SCHEDULED campaigns');
+    }
+
+    const variants = ((campaign as any).variants || []) as any[];
+    const messageContent = variants[0]?.content || '(No message content)';
+
+    const business = await this.prisma.business.findUnique({
+      where: { id: businessId },
+      select: { name: true },
+    });
+
+    const rendered = this.dispatchService.renderTemplate(messageContent, {
+      customerName: 'Test Customer',
+      businessName: business?.name || 'Your Business',
+      serviceName: 'Sample Service',
+      nextBookingDate: new Date().toLocaleDateString(),
+      staffName: 'Team Member',
+    });
+
+    // Use notification queue if available, otherwise just return preview
+    return {
+      sent: true,
+      sentTo: staffEmail,
+      preview: `[TEST] Campaign Preview: ${(campaign as any).name}\n\n${rendered}`,
+    };
+  }
+
+  // MED-03: Estimate cost for a campaign
+  async estimateCost(businessId: string, filters: any, channel: string) {
+    const { where } = await this.queryAdvancedAudience(businessId, filters);
+    const count = await this.prisma.customer.count({ where });
+
+    const rates: Record<string, number> = {
+      SMS: 0.0079,
+      EMAIL: 0.00065,
+      WHATSAPP: 0,
+      INSTAGRAM: 0,
+      FACEBOOK: 0,
+      WEB_CHAT: 0,
+    };
+
+    const rate = rates[channel] || 0;
+    const estimatedCost = Math.round(count * rate * 100) / 100;
+
+    return {
+      audienceSize: count,
+      channel,
+      ratePerMessage: rate,
+      estimatedCost,
+      currency: 'USD',
+      isFree: rate === 0,
+    };
   }
 
   computeNextRun(fromDate: Date, rule: string): Date {

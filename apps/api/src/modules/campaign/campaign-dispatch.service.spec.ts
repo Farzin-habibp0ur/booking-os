@@ -1,7 +1,12 @@
 import { Test } from '@nestjs/testing';
+import { getQueueToken } from '@nestjs/bullmq';
 import { CampaignDispatchService } from './campaign-dispatch.service';
 import { CampaignService } from './campaign.service';
 import { PrismaService } from '../../common/prisma.service';
+import { UsageService } from '../usage/usage.service';
+import { DeadLetterQueueService } from '../../common/queue/dead-letter.service';
+import { AutomationExecutorService } from '../automation/automation-executor.service';
+import { QUEUE_NAMES } from '../../common/queue/queue.module';
 import { createMockPrisma } from '../../test/mocks';
 
 function createMockCampaignService() {
@@ -35,20 +40,35 @@ describe('CampaignDispatchService', () => {
   let dispatchService: CampaignDispatchService;
   let prisma: ReturnType<typeof createMockPrisma>;
   let campaignService: ReturnType<typeof createMockCampaignService>;
+  let notificationQueue: { add: jest.Mock };
+  let usageService: { recordUsage: jest.Mock };
+  let dlqService: { capture: jest.Mock };
+  let automationExecutor: { evaluateTrigger: jest.Mock };
 
   beforeEach(async () => {
     prisma = createMockPrisma();
     campaignService = createMockCampaignService();
+    notificationQueue = { add: jest.fn().mockResolvedValue({}) };
+    usageService = { recordUsage: jest.fn().mockResolvedValue(undefined) };
+    dlqService = { capture: jest.fn().mockResolvedValue('dlq-1') };
+    automationExecutor = { evaluateTrigger: jest.fn().mockResolvedValue(undefined) };
 
     const module = await Test.createTestingModule({
       providers: [
         CampaignDispatchService,
         { provide: PrismaService, useValue: prisma },
         { provide: CampaignService, useValue: campaignService },
+        { provide: UsageService, useValue: usageService },
+        { provide: DeadLetterQueueService, useValue: dlqService },
+        { provide: AutomationExecutorService, useValue: automationExecutor },
+        { provide: getQueueToken(QUEUE_NAMES.NOTIFICATIONS), useValue: notificationQueue },
       ],
     }).compile();
 
     dispatchService = module.get(CampaignDispatchService);
+
+    // Default mock for business fetch
+    prisma.business.findUnique.mockResolvedValue({ id: 'biz1', name: 'Test Biz' } as any);
   });
 
   describe('prepareSends', () => {
@@ -97,13 +117,18 @@ describe('CampaignDispatchService', () => {
       );
     });
 
-    it('processes pending sends with throttle', async () => {
-      prisma.campaign.findMany.mockResolvedValue([{ id: 'camp1', throttlePerMinute: 2 }] as any);
+    it('processes pending sends and enqueues to notification queue', async () => {
+      prisma.campaign.findMany.mockResolvedValue([
+        { id: 'camp1', businessId: 'biz1', throttlePerMinute: 2, channel: 'WHATSAPP', variants: [{ id: 'v1', content: 'Hello!' }] },
+      ] as any);
       const pendingSends = [
-        { id: 's1', campaign: {} },
-        { id: 's2', campaign: {} },
+        { id: 's1', customerId: 'c1', campaign: {} },
+        { id: 's2', customerId: 'c2', campaign: {} },
       ];
       prisma.campaignSend.findMany.mockResolvedValue(pendingSends as any);
+      prisma.customer.findUnique
+        .mockResolvedValueOnce({ id: 'c1', name: 'Alice', phone: '+1234567890', email: null } as any)
+        .mockResolvedValueOnce({ id: 'c2', name: 'Bob', phone: '+0987654321', email: null } as any);
       prisma.campaignSend.update.mockResolvedValue({} as any);
       prisma.campaignSend.groupBy.mockResolvedValue([]);
       prisma.campaignSend.count.mockResolvedValue(0);
@@ -114,8 +139,55 @@ describe('CampaignDispatchService', () => {
       expect(prisma.campaignSend.update).toHaveBeenCalledTimes(2);
       expect(prisma.campaignSend.update).toHaveBeenCalledWith({
         where: { id: 's1' },
-        data: { status: 'SENT', sentAt: expect.any(Date) },
+        data: { status: 'SENT', sentAt: expect.any(Date), channel: 'WHATSAPP' },
       });
+      expect(notificationQueue.add).toHaveBeenCalledTimes(2);
+      expect(usageService.recordUsage).toHaveBeenCalledWith('biz1', 'WHATSAPP', 'OUTBOUND');
+    });
+
+    it('marks send as FAILED when customer has no contact info for channel', async () => {
+      prisma.campaign.findMany.mockResolvedValue([
+        { id: 'camp1', businessId: 'biz1', throttlePerMinute: 10, channel: 'WHATSAPP', variants: [] },
+      ] as any);
+      prisma.campaignSend.findMany.mockResolvedValue([
+        { id: 's1', customerId: 'c1', campaign: {} },
+      ] as any);
+      prisma.customer.findUnique.mockResolvedValue({ id: 'c1', name: 'NoPhone', phone: null, email: null } as any);
+      prisma.campaignSend.update.mockResolvedValue({} as any);
+      prisma.campaignSend.groupBy.mockResolvedValue([]);
+      prisma.campaignSend.count.mockResolvedValue(0);
+      prisma.campaign.update.mockResolvedValue({} as any);
+
+      await dispatchService.processSendingCampaigns();
+
+      expect(prisma.campaignSend.update).toHaveBeenCalledWith({
+        where: { id: 's1' },
+        data: { status: 'FAILED', channel: 'WHATSAPP' },
+      });
+      expect(notificationQueue.add).not.toHaveBeenCalled();
+    });
+
+    it('captures failed sends to DLQ', async () => {
+      prisma.campaign.findMany.mockResolvedValue([
+        { id: 'camp1', businessId: 'biz1', throttlePerMinute: 10, channel: 'SMS', variants: [{ id: 'v1', content: 'Hi' }] },
+      ] as any);
+      prisma.campaignSend.findMany.mockResolvedValue([
+        { id: 's1', customerId: 'c1', campaign: {} },
+      ] as any);
+      prisma.customer.findUnique.mockResolvedValue({ id: 'c1', name: 'Alice', phone: '+123', email: null } as any);
+      notificationQueue.add.mockRejectedValue(new Error('Queue error'));
+      prisma.campaignSend.update.mockResolvedValue({} as any);
+      prisma.campaignSend.groupBy.mockResolvedValue([]);
+      prisma.campaignSend.count.mockResolvedValue(0);
+      prisma.campaign.update.mockResolvedValue({} as any);
+
+      await dispatchService.processSendingCampaigns();
+
+      expect(prisma.campaignSend.update).toHaveBeenCalledWith({
+        where: { id: 's1' },
+        data: { status: 'FAILED', channel: 'SMS' },
+      });
+      expect(dlqService.capture).toHaveBeenCalled();
     });
 
     it('schedules next recurrence when campaign with WEEKLY rule completes', async () => {

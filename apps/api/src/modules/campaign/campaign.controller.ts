@@ -26,6 +26,18 @@ import {
   SelectWinnerDto,
 } from '../../common/dto';
 
+// Public endpoint — no auth required
+@Controller('campaigns/unsubscribe')
+export class CampaignUnsubscribeController {
+  constructor(private campaignService: CampaignService) {}
+
+  @Get(':token')
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
+  async unsubscribe(@Param('token') token: string) {
+    return this.campaignService.processUnsubscribe(token);
+  }
+}
+
 @Controller('campaigns')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard, PlanGuard)
 @RequiresFeature('campaigns')
@@ -125,6 +137,16 @@ export class CampaignController {
     return this.campaignService.getVariantStats(businessId, id);
   }
 
+  @Get(':id/channel-stats')
+  channelStats(@BusinessId() businessId: string, @Param('id') id: string) {
+    return this.campaignService.getChannelStats(businessId, id);
+  }
+
+  @Get(':id/funnel')
+  funnel(@BusinessId() businessId: string, @Param('id') id: string) {
+    return this.campaignService.getFunnelStats(businessId, id);
+  }
+
   @Post(':id/select-winner')
   @Roles('ADMIN')
   selectWinner(
@@ -133,5 +155,27 @@ export class CampaignController {
     @Body() body: SelectWinnerDto,
   ) {
     return this.campaignService.selectWinner(businessId, id, body.variantId);
+  }
+
+  @Post(':id/clone')
+  @Roles('ADMIN')
+  clone(@BusinessId() businessId: string, @Param('id') id: string) {
+    return this.campaignService.clone(businessId, id);
+  }
+
+  @Post(':id/test-send')
+  @Roles('ADMIN')
+  testSend(
+    @BusinessId() businessId: string,
+    @Param('id') id: string,
+    @Body() body: { email: string },
+  ) {
+    return this.campaignService.testSend(businessId, id, body.email);
+  }
+
+  @Post('estimate-cost')
+  @Roles('ADMIN')
+  estimateCost(@BusinessId() businessId: string, @Body() body: { filters: any; channel: string }) {
+    return this.campaignService.estimateCost(businessId, body.filters, body.channel);
   }
 }

@@ -5,6 +5,8 @@ import {
   Logger,
   Optional,
 } from '@nestjs/common';
+import { randomBytes } from 'crypto';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { PrismaService } from '../../common/prisma.service';
@@ -36,23 +38,44 @@ export class TestimonialsService {
         avatarUrl: dto.avatarUrl ?? null,
         source: 'MANUAL',
         status: 'PENDING',
+        submittedAt: new Date(),
       },
     });
   }
 
-  async findAll(businessId: string, query: { status?: string; page?: number; pageSize?: number }) {
+  async findAll(businessId: string, query: {
+    status?: string;
+    customerId?: string;
+    search?: string;
+    sortBy?: string;
+    sortOrder?: string;
+    page?: number;
+    pageSize?: number;
+  }) {
     const where: any = { businessId };
     if (query.status) where.status = query.status;
+    if (query.customerId) where.customerId = query.customerId;
+    if (query.search) {
+      where.OR = [
+        { name: { contains: query.search, mode: 'insensitive' } },
+        { content: { contains: query.search, mode: 'insensitive' } },
+        { company: { contains: query.search, mode: 'insensitive' } },
+      ];
+    }
 
     const page = query.page && query.page > 0 ? query.page : 1;
     const pageSize = query.pageSize && query.pageSize > 0 ? Math.min(query.pageSize, 100) : 20;
     const skip = (page - 1) * pageSize;
 
+    const sortBy = query.sortBy || 'createdAt';
+    const sortOrder = query.sortOrder === 'asc' ? 'asc' : 'desc';
+    const orderBy = { [sortBy]: sortOrder };
+
     const [data, total] = await Promise.all([
       this.prisma.testimonial.findMany({
         where,
         include: { customer: { select: { id: true, name: true, email: true } } },
-        orderBy: { createdAt: 'desc' },
+        orderBy,
         skip,
         take: pageSize,
       }),
@@ -60,6 +83,25 @@ export class TestimonialsService {
     ]);
 
     return { data, total, page, pageSize };
+  }
+
+  // MED-09: Bulk action
+  async bulkAction(businessId: string, ids: string[], action: 'approve' | 'reject' | 'delete') {
+    const where = { id: { in: ids }, businessId };
+
+    switch (action) {
+      case 'approve':
+        await this.prisma.testimonial.updateMany({ where, data: { status: 'APPROVED' } });
+        break;
+      case 'reject':
+        await this.prisma.testimonial.updateMany({ where, data: { status: 'REJECTED' } });
+        break;
+      case 'delete':
+        await this.prisma.testimonial.deleteMany({ where });
+        break;
+    }
+
+    return { processed: ids.length, action };
   }
 
   async findOne(businessId: string, id: string) {
@@ -72,17 +114,25 @@ export class TestimonialsService {
   }
 
   async update(businessId: string, id: string, dto: UpdateTestimonialDto) {
-    await this.findOne(businessId, id);
+    const existing = await this.findOne(businessId, id);
+
+    const data: any = {
+      ...(dto.name !== undefined && { name: dto.name }),
+      ...(dto.content !== undefined && { content: dto.content }),
+      ...(dto.rating !== undefined && { rating: dto.rating }),
+      ...(dto.role !== undefined && { role: dto.role }),
+      ...(dto.company !== undefined && { company: dto.company }),
+      ...(dto.avatarUrl !== undefined && { avatarUrl: dto.avatarUrl }),
+    };
+
+    // Set submittedAt if this is the first time content is being provided
+    if (dto.content && !existing.submittedAt) {
+      data.submittedAt = new Date();
+    }
+
     return this.prisma.testimonial.update({
       where: { id },
-      data: {
-        ...(dto.name !== undefined && { name: dto.name }),
-        ...(dto.content !== undefined && { content: dto.content }),
-        ...(dto.rating !== undefined && { rating: dto.rating }),
-        ...(dto.role !== undefined && { role: dto.role }),
-        ...(dto.company !== undefined && { company: dto.company }),
-        ...(dto.avatarUrl !== undefined && { avatarUrl: dto.avatarUrl }),
-      },
+      data,
     });
   }
 
@@ -144,6 +194,8 @@ export class TestimonialsService {
       where: { id: businessId },
     });
 
+    const submissionToken = randomBytes(32).toString('hex');
+
     const testimonial = await this.prisma.testimonial.create({
       data: {
         businessId,
@@ -153,15 +205,17 @@ export class TestimonialsService {
         source: 'REQUESTED',
         status: 'PENDING',
         requestedAt: new Date(),
+        submissionToken,
       },
     });
 
     if (customer.email && this.notificationQueue) {
+      const submitUrl = `${process.env.NEXT_PUBLIC_URL || 'https://businesscommandcentre.com'}/testimonials/submit/${submissionToken}`;
       try {
         await this.notificationQueue.add('testimonial-request', {
           to: customer.email,
           subject: `${business?.name || 'We'} would love your feedback!`,
-          html: `<p>Hi ${customer.name},</p><p>We hope you enjoyed your experience with ${business?.name || 'us'}. We'd love to hear your feedback!</p><p>Please take a moment to share your thoughts — it means a lot to us.</p><p>Thank you!</p>`,
+          html: `<p>Hi ${customer.name},</p><p>We hope you enjoyed your experience with ${business?.name || 'us'}. We'd love to hear your feedback!</p><p><a href="${submitUrl}" style="display:inline-block;padding:12px 24px;background:#71907C;color:white;border-radius:12px;text-decoration:none;font-weight:500;">Share Your Experience</a></p><p>Thank you!</p>`,
         });
       } catch (err) {
         this.logger.warn(`Failed to enqueue testimonial request email: ${(err as Error).message}`);
@@ -169,6 +223,116 @@ export class TestimonialsService {
     }
 
     return testimonial;
+  }
+
+  // HIGH-08: Verify submission token (public, no auth)
+  async verifyToken(token: string) {
+    const testimonial = await this.prisma.testimonial.findUnique({
+      where: { submissionToken: token },
+      include: { business: { select: { name: true, slug: true } } },
+    });
+    if (!testimonial) throw new NotFoundException('Invalid or expired link');
+    // Defensive: token is nullified on submit, but guard against race conditions
+    if (testimonial.submittedAt) throw new BadRequestException('Already submitted');
+
+    return {
+      businessName: testimonial.business.name,
+      customerName: testimonial.name,
+    };
+  }
+
+  // HIGH-08: Submit testimonial by token (public, no auth)
+  async submitByToken(dto: {
+    token: string;
+    content: string;
+    rating: number;
+    name?: string;
+  }) {
+    const testimonial = await this.prisma.testimonial.findUnique({
+      where: { submissionToken: dto.token },
+    });
+    if (!testimonial) throw new NotFoundException('Invalid or expired link');
+    if (testimonial.submittedAt) throw new BadRequestException('Already submitted');
+
+    return this.prisma.testimonial.update({
+      where: { id: testimonial.id },
+      data: {
+        content: dto.content,
+        rating: dto.rating,
+        name: dto.name || testimonial.name,
+        status: 'PENDING',
+        submittedAt: new Date(),
+        submissionToken: null, // Invalidate token after use
+      },
+    });
+  }
+
+  // MED-10: Send reminders for unanswered testimonial requests
+  @Cron(CronExpression.EVERY_DAY_AT_10AM)
+  async sendPendingReminders() {
+    const defaultReminderDays = 5;
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - defaultReminderDays);
+
+    const pendingRequests = await this.prisma.testimonial.findMany({
+      where: {
+        source: 'REQUESTED',
+        submittedAt: null,
+        requestedAt: { lte: cutoff },
+        status: 'PENDING',
+        reminderSentAt: null,
+        submissionToken: { not: null },
+      },
+      include: {
+        customer: { select: { email: true, name: true } },
+        business: { select: { name: true } },
+      },
+    });
+
+    for (const testimonial of pendingRequests) {
+      if (!testimonial.customer?.email || !this.notificationQueue) continue;
+
+      try {
+        const submitUrl = `${process.env.NEXT_PUBLIC_URL || 'https://businesscommandcentre.com'}/testimonials/submit/${testimonial.submissionToken}`;
+        await this.notificationQueue.add('testimonial-reminder', {
+          to: testimonial.customer.email,
+          subject: `Reminder: ${testimonial.business.name} would love your feedback!`,
+          html: `<p>Hi ${testimonial.customer.name},</p><p>We sent you a review request a few days ago. We'd still love to hear about your experience with ${testimonial.business.name}!</p><p><a href="${submitUrl}" style="display:inline-block;padding:12px 24px;background:#71907C;color:white;border-radius:12px;text-decoration:none;font-weight:500;">Share Your Experience</a></p>`,
+        });
+
+        await this.prisma.testimonial.update({
+          where: { id: testimonial.id },
+          data: { reminderSentAt: new Date() },
+        });
+      } catch (err) {
+        this.logger.warn(`Failed to send testimonial reminder: ${(err as Error).message}`);
+      }
+    }
+
+    if (pendingRequests.length > 0) {
+      this.logger.log(`Sent ${pendingRequests.length} testimonial reminder(s)`);
+    }
+  }
+
+  // MED-06: Dashboard stats
+  async getDashboardStats(businessId: string) {
+    const [pending, approved, featured, total, avgRating] = await Promise.all([
+      this.prisma.testimonial.count({ where: { businessId, status: 'PENDING' } }),
+      this.prisma.testimonial.count({ where: { businessId, status: 'APPROVED' } }),
+      this.prisma.testimonial.count({ where: { businessId, status: 'FEATURED' } }),
+      this.prisma.testimonial.count({ where: { businessId } }),
+      this.prisma.testimonial.aggregate({
+        where: { businessId, status: { in: ['APPROVED', 'FEATURED'] }, rating: { not: null } },
+        _avg: { rating: true },
+      }),
+    ]);
+    return {
+      pending,
+      approved,
+      featured,
+      total,
+      avgRating: avgRating._avg.rating || 0,
+    };
   }
 
   async findPublic(businessSlug: string) {
@@ -194,7 +358,7 @@ export class TestimonialsService {
         createdAt: true,
       },
       orderBy: [
-        { status: 'desc' }, // FEATURED sorts after APPROVED alphabetically — we handle in code
+        { status: 'desc' }, // Desc: REJECTED > PENDING > FEATURED > APPROVED — FEATURED appears before APPROVED
         { rating: { sort: 'desc', nulls: 'last' } },
         { createdAt: 'desc' },
       ],

@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
-import { ArrowLeft, Send, Repeat, StopCircle, Trophy } from 'lucide-react';
+import { ArrowLeft, Send, Repeat, StopCircle, Trophy, BarChart3, Copy } from 'lucide-react';
+import { useToast } from '@/lib/toast';
 
 const statusColors: Record<string, string> = {
   DRAFT: 'bg-slate-100 text-slate-600',
@@ -19,8 +20,21 @@ export default function CampaignDetailPage() {
   const [campaign, setCampaign] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [variantStats, setVariantStats] = useState<any>(null);
+  const [funnelStats, setFunnelStats] = useState<any>(null);
+  const [channelStats, setChannelStats] = useState<any>(null);
   const [selectingWinner, setSelectingWinner] = useState(false);
   const router = useRouter();
+  const { toast } = useToast();
+
+  const handleClone = async () => {
+    try {
+      const cloned = await api.post<any>(`/campaigns/${id}/clone`);
+      toast('Campaign cloned as draft');
+      router.push(`/campaigns/${cloned.id}`);
+    } catch {
+      toast('Failed to clone campaign', 'error');
+    }
+  };
 
   useEffect(() => {
     api
@@ -32,6 +46,10 @@ export default function CampaignDetailPage() {
             .get<any>(`/campaigns/${id}/variant-stats`)
             .then(setVariantStats)
             .catch(() => {});
+        }
+        if (c.status === 'SENT' || c.status === 'SENDING') {
+          api.get<any>(`/campaigns/${id}/funnel`).then(setFunnelStats).catch(() => {});
+          api.get<any>(`/campaigns/${id}/channel-stats`).then(setChannelStats).catch(() => {});
         }
       })
       .catch(() => router.push('/campaigns'))
@@ -157,6 +175,13 @@ export default function CampaignDetailPage() {
               </button>
             </>
           )}
+          <button
+            onClick={handleClone}
+            className="flex items-center gap-1.5 px-3 py-2 text-sm text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors"
+          >
+            <Copy size={14} />
+            Clone
+          </button>
           {campaign.recurrenceRule && campaign.recurrenceRule !== 'NONE' && (
             <button
               onClick={handleStopRecurrence}
@@ -185,6 +210,81 @@ export default function CampaignDetailPage() {
           ))}
         </div>
       ) : null}
+
+      {/* Conversion Funnel */}
+      {funnelStats?.stages && (
+        <div className="bg-white rounded-2xl shadow-soft p-5 mb-6" data-testid="campaign-funnel">
+          <div className="flex items-center gap-2 mb-4">
+            <BarChart3 size={16} className="text-sage-600" />
+            <h2 className="text-sm font-semibold text-slate-900">Conversion Funnel</h2>
+          </div>
+          <div className="space-y-3">
+            {funnelStats.stages.map((stage: any, i: number) => {
+              const maxCount = funnelStats.stages[0]?.count || 1;
+              const widthPct = Math.max(8, (stage.count / maxCount) * 100);
+              const prevStage = i > 0 ? funnelStats.stages[i - 1] : null;
+              const dropOff =
+                prevStage && prevStage.count > 0
+                  ? Math.round(((prevStage.count - stage.count) / prevStage.count) * 100)
+                  : 0;
+              const colors = ['bg-sage-500', 'bg-sage-400', 'bg-sage-300', 'bg-lavender-500'];
+              return (
+                <div key={stage.label}>
+                  {i > 0 && dropOff > 0 && (
+                    <p className="text-xs text-slate-400 ml-2 mb-1">
+                      ↓ {dropOff}% drop-off
+                    </p>
+                  )}
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-slate-500 w-16 text-right">{stage.label}</span>
+                    <div className="flex-1 h-7 bg-slate-50 rounded-lg overflow-hidden">
+                      <div
+                        className={cn('h-full rounded-lg flex items-center px-2 transition-all', colors[i] || 'bg-sage-400')}
+                        style={{ width: `${widthPct}%` }}
+                      >
+                        <span className="text-xs font-medium text-white">
+                          {stage.count} ({stage.percentage}%)
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Channel Breakdown */}
+      {channelStats && Object.keys(channelStats).length > 0 && (
+        <div className="bg-white rounded-2xl shadow-soft p-5 mb-6" data-testid="channel-breakdown">
+          <h2 className="text-sm font-semibold text-slate-900 mb-3">Channel Breakdown</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-xs text-slate-500 border-b border-slate-100">
+                  <th className="text-left py-2 font-medium">Channel</th>
+                  <th className="text-right py-2 font-medium">Sent</th>
+                  <th className="text-right py-2 font-medium">Delivered</th>
+                  <th className="text-right py-2 font-medium">Read</th>
+                  <th className="text-right py-2 font-medium">Failed</th>
+                </tr>
+              </thead>
+              <tbody>
+                {Object.entries(channelStats).map(([ch, counts]: [string, any]) => (
+                  <tr key={ch} className="border-b border-slate-50">
+                    <td className="py-2 font-medium">{ch}</td>
+                    <td className="py-2 text-right">{counts.sent || 0}</td>
+                    <td className="py-2 text-right">{counts.delivered || 0}</td>
+                    <td className="py-2 text-right">{counts.read || 0}</td>
+                    <td className="py-2 text-right text-red-600">{counts.failed || 0}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* A/B Test Results */}
       {campaign.isABTest && variantStats?.variants?.length > 0 && (
