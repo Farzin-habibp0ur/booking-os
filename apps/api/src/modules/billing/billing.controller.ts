@@ -102,4 +102,11 @@ export class BillingController {
       interval,
     }));
   }
+
+  @Get('health')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('SUPER_ADMIN')
+  getBillingHealth() {
+    return this.billingService.checkBillingHealth();
+  }
 }

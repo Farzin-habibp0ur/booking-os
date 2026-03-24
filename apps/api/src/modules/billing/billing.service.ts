@@ -635,6 +635,58 @@ export class BillingService implements OnModuleInit {
     return interval === 'year' ? 'annual' : 'monthly';
   }
 
+  /** Health check: verify Stripe key and price configuration */
+  async checkBillingHealth() {
+    const priceEnvKeys = [
+      'STRIPE_PRICE_ID_STARTER_MONTHLY',
+      'STRIPE_PRICE_ID_STARTER_ANNUAL',
+      'STRIPE_PRICE_ID_PROFESSIONAL_MONTHLY',
+      'STRIPE_PRICE_ID_PROFESSIONAL_ANNUAL',
+      'STRIPE_PRICE_ID_ENTERPRISE_MONTHLY',
+      'STRIPE_PRICE_ID_ENTERPRISE_ANNUAL',
+    ];
+
+    const configuredPrices: string[] = [];
+    const missingPrices: string[] = [];
+
+    for (const key of priceEnvKeys) {
+      if (this.configService.get<string>(key)) {
+        configuredPrices.push(key);
+      } else {
+        missingPrices.push(key);
+      }
+    }
+
+    let stripeKeyValid = false;
+    let stripeError: string | null = null;
+
+    if (this.stripe) {
+      try {
+        await this.stripe.balance.retrieve();
+        stripeKeyValid = true;
+      } catch (err) {
+        stripeError = (err as Error).message;
+      }
+    } else {
+      stripeError = 'STRIPE_SECRET_KEY not configured';
+    }
+
+    const status =
+      stripeKeyValid && missingPrices.length === 0
+        ? 'ready'
+        : stripeKeyValid
+          ? 'partial'
+          : 'not_configured';
+
+    return {
+      status,
+      stripeKeyValid,
+      stripeError,
+      configuredPrices,
+      missingPrices,
+    };
+  }
+
   /** Start a free trial for a business */
   async startTrial(businessId: string) {
     const trialEndsAt = new Date(Date.now() + TRIAL_DAYS * 24 * 60 * 60 * 1000);
