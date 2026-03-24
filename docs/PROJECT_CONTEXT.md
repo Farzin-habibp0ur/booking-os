@@ -2,7 +2,7 @@
 
 > **Purpose:** This document gives full context on the Booking OS platform — what it is, what's been built, how it's structured, and what's left to build. Share this with an AI assistant or new developer to get productive immediately.
 >
-> **Last updated:** March 23, 2026 (All phases COMPLETE — A through E + Phases 1-4 & 6 polish + QA Fixes + Sprints 1-4 + Prompts 4A-4C + Prompt 1C + Prompt 1A + Prompt 1B + Prompt 1D + Prompt 2A + Prompt 2B + Prompt 2C + Prompt 3A + Prompt 3C + QA Bug Fix Sprint (10 bugs) + Growth Engine Agents (15 prompts) + Marketing Command Center Phases 1-6 (14 prompts) COMPLETE + Admin Console Extraction (4 phases — scaffold, migrate, remove from web, infrastructure) + Internal/External Separation (3 phases — marketing tools removed from customer app, migrated to admin app, API endpoints gated behind SUPER_ADMIN) + Launch QA fixes (SUPER_ADMIN guards, AutonomyConfig scope constraint, test timeouts) + Omnichannel Phases 0-5 COMPLETE + Omnichannel Gap Fix (16 issues) + Inbox UX v3 (13 prompts) + **AI Agent Integration Fix (10 prompts)** — 6 channels fully implemented (WhatsApp, Instagram, Facebook, SMS, Email, Web Chat) — 92 Prisma models, 65 migrations, 4104 tests)
+> **Last updated:** March 23, 2026 (All phases COMPLETE — A through E + Phases 1-4 & 6 polish + QA Fixes + Sprints 1-4 + Prompts 4A-4C + Prompt 1C + Prompt 1A + Prompt 1B + Prompt 1D + Prompt 2A + Prompt 2B + Prompt 2C + Prompt 3A + Prompt 3C + QA Bug Fix Sprint (10 bugs) + Growth Engine Agents (15 prompts) + Marketing Command Center Phases 1-6 (14 prompts) COMPLETE + Admin Console Extraction (4 phases — scaffold, migrate, remove from web, infrastructure) + Internal/External Separation (3 phases — marketing tools removed from customer app, migrated to admin app, API endpoints gated behind SUPER_ADMIN) + Launch QA fixes (SUPER_ADMIN guards, AutonomyConfig scope constraint, test timeouts) + Omnichannel Phases 0-5 COMPLETE + Omnichannel Gap Fix (16 issues) + Inbox UX v3 (13 prompts) + **AI Agent Integration Fix (10 prompts)** + **Phase 2 Go-Live Configuration (Sessions 4-6)** — 6 channels fully implemented (WhatsApp, Instagram, Facebook, SMS, Email, Web Chat) — 92 Prisma models, 66 migrations, 4150 tests)
 
 ---
 
@@ -288,15 +288,26 @@ booking-os/
 │   │   ├── src/seed-demo.ts    # Rich demo data (idempotent, dedup-safe)
 │   │   ├── src/seed-agentic.ts # One-time agentic data fill (production)
 │   │   ├── src/seed-wellness.ts # Standalone wellness seed (also called from seed.ts)
-│   │   └── src/seed-content.ts # Content pillar seeding (12 blog posts → ContentDraft)
+│   │   ├── src/seed-console.ts # Platform console base data (super admin user)
+│   │   ├── src/seed-console-showcase.ts # Console demo data (6 diverse businesses)
+│   │   ├── src/seed-content.ts # Content pillar seeding (12 blog posts → ContentDraft)
+│   │   ├── src/seed-instagram.ts # Instagram DM test conversations
+│   │   ├── src/seed-omnichannel.ts # Multi-channel customers + messages + usage
+│   │   └── src/seed-production.ts # Production-only: PlatformSettings + PlatformAgentDefaults
 │   ├── messaging-provider/     # 6-channel messaging provider abstraction (WhatsApp, Instagram, Facebook, Email, SMS)
 │   ├── web-chat-widget/        # Embeddable live chat widget (shadow DOM, Socket.IO, esbuild IIFE bundle)
 │   └── shared/                 # Shared types, DTOs, enums, profile field definitions
 ├── docs/
 │   ├── PROJECT_CONTEXT.md      # This file
+│   ├── STRIPE-SETUP.md         # Stripe dashboard configuration guide (products, prices, webhooks)
+│   ├── CHANNEL-SETUP.md        # Channel configuration guide (all 6 channels, env vars, webhooks)
+│   ├── URLS.md                 # All domains, services, DNS, third-party dashboards
+│   ├── DEPLOY.md               # Deployment operations guide
 │   ├── cicd.md                 # CI/CD pipeline documentation
 │   ├── user-stories.md         # Complete user stories (386 capabilities, 196 gaps)
-│   └── ux-brainstorm-brief.md  # UX improvement brainstorm brief
+│   ├── ux-brainstorm-brief.md  # UX improvement brainstorm brief
+│   └── runbooks/
+│       └── MESSAGING-FAILURE.md # Messaging failure troubleshooting runbook
 ├── agents/                     # 15 internal growth engine agent prompts (P9-P23: research → ops)
 ├── system/                     # Growth engine config (launch, gates, budget, testing, escalation, MCP fallback)
 ├── data/                       # Founder-maintained inputs (customer signals, evergreen trends, daily metrics)
@@ -747,8 +758,8 @@ Pull request → lint-and-test → docker-build (no deploy, no smoke test)
 
 - **lint-and-test:** PostgreSQL 16 service, Prisma generate + migrate, format check, lint, test
 - **smoke-test:** Post-deploy production verification (20 checks: health, DB, auth, security headers, CORS, public endpoints)
-- **docker-build:** Multi-stage Docker builds for API and web
-- **deploy:** `railway up --service api/web --detach` (async — takes 2-5 min after CI)
+- **docker-build:** Multi-stage Docker builds for API, web, and admin
+- **deploy:** `railway up --service api/web/admin --detach` (async — takes 2-5 min after CI)
 - **Migrations:** Auto-run via `scripts/docker-entrypoint.sh` on container startup
 - **Full docs:** `docs/cicd.md` and `DEPLOY.md`
 
@@ -756,10 +767,11 @@ Pull request → lint-and-test → docker-build (no deploy, no smoke test)
 
 | Property   | Value                                  |
 | ---------- | -------------------------------------- |
-| Project ID | `37eeca20-7dfe-45d9-8d29-e902a545f475` |
-| API domain | `api.businesscommandcentre.com`        |
-| Web domain | `businesscommandcentre.com`            |
-| Services   | api, web, postgres, redis              |
+| Project ID   | `37eeca20-7dfe-45d9-8d29-e902a545f475` |
+| API domain   | `api.businesscommandcentre.com`        |
+| Web domain   | `businesscommandcentre.com`            |
+| Admin domain | `admin.businesscommandcentre.com`      |
+| Services     | api, web, admin, postgres, redis       |
 
 ---
 
@@ -811,6 +823,24 @@ Multiple scripts, all idempotent:
 - Covers 5 pillars: Industry Insights, Product Education, Customer Success, Thought Leadership, Technical
 - Idempotent (checks title+businessId before inserting)
 - Run: `npx tsx packages/db/src/seed-content.ts`
+
+**`packages/db/src/seed-instagram.ts`** — Instagram DM test data:
+
+- 4 Instagram DM conversations (story reply, ad referral, ice breaker, expiring window)
+- Run: `npx tsx packages/db/src/seed-instagram.ts`
+
+**`packages/db/src/seed-omnichannel.ts`** — Multi-channel foundation data:
+
+- Multi-channel customers (Alex: WA+IG, Jordan: email threaded, Taylor: web chat offline)
+- MessageUsage records with segments/cost (7 days), channelSettings
+- Run: `npx tsx packages/db/src/seed-omnichannel.ts`
+
+**`packages/db/src/seed-production.ts`** — Production-only seed (no demo data):
+
+- 10 PlatformSetting records (platform, security, notifications, regional categories)
+- 5 PlatformAgentDefault records (WAITLIST, RETENTION, DATA_HYGIENE, SCHEDULING_OPTIMIZER, QUOTE_FOLLOWUP) with conservative defaults
+- Idempotent (upsert by key/agentType). Safe for production re-runs.
+- Run: `npx tsx packages/db/src/seed-production.ts`
 
 ---
 
@@ -873,7 +903,7 @@ Fixed 7 critical integration gaps between the AI pipeline, messaging infrastruct
 - **Prompt 7:** Card Dashboard → Inbox Flow — Message preview in ActionCardPreview, channel tabs, bulk follow-up (`POST /action-cards/bulk-followup`)
 - **Prompt 8:** AI Settings + Stats — Per-channel toggles, `GET /ai/stats` endpoint, processing dashboard with 7-day chart
 - **Prompt 9:** AI × Inbox UX — Draft-to-composer integration, channel-switch regenerate prompt, AI draft in quick replies, confidence indicators
-- **Prompt 10:** QA (55-item checklist PASS) — 229 test suites, 4104 tests passing
+- **Prompt 10:** QA (55-item checklist PASS) — 229 test suites, 4104 tests passing (now 4150 with admin + billing health tests)
 - **Files changed:** 26 files, ~1940 insertions. New files: `action-card-executor.service.ts`, migration `20260321000000_add_ai_fields_to_outbound_draft`
 
 ### Phase 5: Engagement OS + Benchmarking + Marketplace (NOT STARTED)
@@ -1197,6 +1227,12 @@ Fixed 7 critical integration gaps between the AI pipeline, messaging infrastruct
 - **Gap Fix (16 issues)** — Security: timing-safe Twilio signature + email webhook verification. Wiring: UsageService + CircuitBreakerService wired into actual message flow (inbound in webhook controller, outbound in MessageService). Missing methods: mergeCustomers() + findConversation() on CustomerIdentityService. Infrastructure: Stripe metered billing via Meter Events API, Redis-backed webchat sessions (24h TTL), per-provider circuit breaker config (twilio-sms: 3/30s/20s, default: 5/60s/30s). Schema: MessageUsage segments + cost fields, Customer email index. UI: ConversationContextBar (FB/IG window countdown, email subject, SMS opt-in), unread count badges, disabled channels with tooltips, inline add-email/phone with validation, getDefaultReplyChannel() helper. Providers: Facebook verifyWebhookSignature() + quick_reply parsing, email delivery status endpoint, SMS location routing fix, identifier format validation (E.164/email). 4100+ tests passing.
 - **All omnichannel phases + gap fix complete** — 6 channels fully implemented with production-grade security, billing, and reliability
 
+### Phase 2: Go-Live Configuration (Sessions 4-6) — COMPLETE
+
+- **Session 4 (Stripe Configuration):** Created `docs/STRIPE-SETUP.md` (products, prices, webhooks, go-live checklist). Verified raw body handling (`rawBody: true` in main.ts) and checkout flow end-to-end. Added `GET /billing/health` endpoint (SUPER_ADMIN) that verifies Stripe key + checks all 6 price env vars. 5 new tests.
+- **Session 5 (Channel Configuration):** Created `docs/CHANNEL-SETUP.md` (all 6 channels with exact webhook URLs, env vars, prerequisites, signature verification, priority order). Verified web chat widget build (28.7KB IIFE bundle). Documented MESSAGING_PROVIDER switching mechanism.
+- **Session 6 (Admin Tests + Production Seed):** Set up Jest test infrastructure for `apps/admin` (jest.config.ts, jest.setup.ts, shared test helpers). Created tests for all 20 admin routes (41 tests). Created `seed-production.ts` (10 PlatformSettings + 5 PlatformAgentDefaults, idempotent upserts).
+
 ### Do Not Build (Yet)
 
 - Don't chase additional verticals beyond the current 4 (aesthetic, dealership, wellness, general) before ROI is repeatable
@@ -1207,16 +1243,20 @@ Fixed 7 critical integration gaps between the AI pipeline, messaging infrastruct
 
 ## 15. Key Documentation
 
-| Document                         | Path                          | Purpose                                     |
-| -------------------------------- | ----------------------------- | ------------------------------------------- |
-| Design system + deployment rules | `CLAUDE.md`                   | Active project guidelines for AI assistants |
-| Deployment & operations          | `DEPLOY.md`                   | Railway, Docker, cookies, troubleshooting   |
-| CI/CD pipeline                   | `docs/cicd.md`                | Pipeline details and Railway config         |
-| User stories                     | `docs/user-stories.md`        | 280 can-do + 215 gaps by feature area       |
-| UX brainstorm brief              | `docs/ux-brainstorm-brief.md` | Self-contained brief for LLM brainstorming  |
-| This file                        | `docs/PROJECT_CONTEXT.md`     | Full project context                        |
-| Env template                     | `.env.example`                | All environment variables                   |
-| Production env                   | `.env.production`             | Production env template                     |
+| Document                         | Path                               | Purpose                                                    |
+| -------------------------------- | ---------------------------------- | ---------------------------------------------------------- |
+| Design system + deployment rules | `CLAUDE.md`                        | Active project guidelines for AI assistants                |
+| Deployment & operations          | `DEPLOY.md`                        | Railway, Docker, cookies, troubleshooting                  |
+| Stripe setup guide               | `docs/STRIPE-SETUP.md`            | Stripe dashboard config, products, prices, webhooks        |
+| Channel setup guide              | `docs/CHANNEL-SETUP.md`           | All 6 channels: env vars, webhook URLs, priority order     |
+| URLs & services                  | `docs/URLS.md`                     | All domains, services, DNS, third-party dashboards         |
+| CI/CD pipeline                   | `docs/cicd.md`                     | Pipeline details and Railway config                        |
+| User stories                     | `docs/user-stories.md`             | 280 can-do + 215 gaps by feature area                      |
+| UX brainstorm brief              | `docs/ux-brainstorm-brief.md`      | Self-contained brief for LLM brainstorming                 |
+| Messaging failure runbook        | `docs/runbooks/MESSAGING-FAILURE.md` | Troubleshooting messaging issues                         |
+| This file                        | `docs/PROJECT_CONTEXT.md`          | Full project context                                       |
+| Env template                     | `.env.example`                     | All environment variables                                  |
+| Production env                   | `.env.production`                  | Production env template                                    |
 
 ---
 
