@@ -136,6 +136,7 @@ export class WaitlistAgentService implements BackgroundAgent, OnModuleInit {
           category: 'OPPORTUNITY',
           priority: 70,
           title: `Waitlist match for ${entry.customer.name}`,
+          expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000),
           description: `Because ${entry.customer.name} is waiting for ${entry.service.name}. ${matchedSlots.length} available slot${matchedSlots.length > 1 ? 's' : ''} found in the next ${lookAheadDays} days.`,
           suggestedAction: 'Offer the best matching slot to the customer',
           customerId: entry.customerId,

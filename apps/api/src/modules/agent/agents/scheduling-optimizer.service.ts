@@ -102,6 +102,7 @@ export class SchedulingOptimizerService implements BackgroundAgent, OnModuleInit
           category: 'OPPORTUNITY',
           priority: this.calculatePriority(totalGapMins, group.gaps.length),
           title: `Schedule gaps for ${group.staffName} on ${this.formatDate(group.date)}`,
+          expiresAt: new Date(new Date(group.date).getTime() + 24 * 60 * 60 * 1000),
           description: `Because ${group.staffName} has ${group.gaps.length} gap${group.gaps.length > 1 ? 's' : ''} totaling ${totalGapMins} minutes on ${this.formatDate(group.date)}. Consider filling with waitlist customers or walk-ins.`,
           suggestedAction: 'Check waitlist for matching customers or open for walk-ins',
           staffId: group.staffId,

@@ -109,6 +109,7 @@ export class QuoteFollowupAgentService implements BackgroundAgent, OnModuleInit 
           category: 'OPPORTUNITY',
           priority: this.calculatePriority(quote.totalAmount, quote.daysSinceCreated),
           title: `Quote pending: ${quote.customerName}`,
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
           description: `Because ${quote.customerName}'s quote for ${quote.serviceName} (${amount}) has been pending for ${quote.daysSinceCreated} days. Follow up to convert.`,
           suggestedAction: `Send a follow-up message about their ${quote.serviceName} quote`,
           customerId: quote.customerId,

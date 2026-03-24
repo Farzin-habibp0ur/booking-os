@@ -2561,7 +2561,17 @@ describe('BookingService', () => {
   });
 
   describe('getCalendar', () => {
-    it('filters by date range and includes PENDING_DEPOSIT in status filter', async () => {
+    it('throws BadRequestException when dateFrom or dateTo is missing', async () => {
+      await expect(bookingService.getCalendar('biz1', '', '2026-03-07')).rejects.toThrow(BadRequestException);
+      await expect(bookingService.getCalendar('biz1', '2026-03-01', '')).rejects.toThrow(BadRequestException);
+      await expect(bookingService.getCalendar('biz1', undefined as any, undefined as any)).rejects.toThrow(BadRequestException);
+    });
+
+    it('throws BadRequestException for invalid date strings', async () => {
+      await expect(bookingService.getCalendar('biz1', 'not-a-date', '2026-03-07')).rejects.toThrow(BadRequestException);
+    });
+
+    it('filters by date range using interval overlap and includes PENDING_DEPOSIT in status filter', async () => {
       prisma.booking.findMany.mockResolvedValue([]);
 
       await bookingService.getCalendar('biz1', '2026-03-01', '2026-03-07');
@@ -2571,8 +2581,8 @@ describe('BookingService', () => {
           where: expect.objectContaining({
             businessId: 'biz1',
             status: { in: ['PENDING', 'PENDING_DEPOSIT', 'CONFIRMED', 'IN_PROGRESS'] },
-            startTime: { gte: new Date('2026-03-01') },
-            endTime: { lte: new Date('2026-03-07') },
+            startTime: { lt: new Date('2026-03-07') },
+            endTime: { gt: new Date('2026-03-01') },
           }),
         }),
       );

@@ -129,6 +129,7 @@ export class RetentionAgentService implements BackgroundAgent, OnModuleInit {
           description: `Because ${customer.customerName} typically books every ${Math.round(customer.avgDaysBetween)} days, but it's been ${customer.daysSinceLastBooking} days since their last visit. Their last service was ${customer.lastServiceName}.`,
           suggestedAction: `Send a personalized follow-up about ${customer.lastServiceName} and offer to book their next appointment`,
           customerId: customer.customerId,
+          expiresAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
           preview: {
             avgDaysBetween: Math.round(customer.avgDaysBetween),
             daysSinceLastBooking: customer.daysSinceLastBooking,

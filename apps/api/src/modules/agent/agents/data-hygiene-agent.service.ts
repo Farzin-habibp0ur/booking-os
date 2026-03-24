@@ -101,6 +101,7 @@ export class DataHygieneAgentService implements BackgroundAgent, OnModuleInit {
           category: 'HYGIENE',
           priority: this.calculatePriority(pair.confidence),
           title: `Possible duplicate: ${pair.customer1.name}`,
+          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
           description: `Because ${pair.customer1.name} and ${pair.customer2.name} share ${pair.matchFields.join(' and ')}. Review and merge if they are the same person.`,
           suggestedAction: 'Review customer profiles and merge if duplicate',
           preview: {

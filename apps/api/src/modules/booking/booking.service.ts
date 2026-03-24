@@ -1204,11 +1204,20 @@ export class BookingService {
     staffId?: string,
     locationId?: string,
   ) {
+    if (!dateFrom || !dateTo) {
+      throw new BadRequestException('dateFrom and dateTo query params are required');
+    }
+    const from = new Date(dateFrom);
+    const to = new Date(dateTo);
+    if (isNaN(from.getTime()) || isNaN(to.getTime())) {
+      throw new BadRequestException('dateFrom and dateTo must be valid ISO date strings');
+    }
+
     const where: any = {
       businessId,
       status: { in: ['PENDING', 'PENDING_DEPOSIT', 'CONFIRMED', 'IN_PROGRESS'] },
-      startTime: { gte: new Date(dateFrom) },
-      endTime: { lte: new Date(dateTo) },
+      startTime: { lt: to },
+      endTime: { gt: from },
     };
     if (staffId) where.staffId = staffId;
     if (locationId) where.locationId = locationId;

@@ -84,14 +84,21 @@ export class AgentFrameworkService {
     try {
       const result = await agent.execute(businessId, config.config);
 
-      const completed = await this.prisma.agentRun.update({
-        where: { id: run.id },
-        data: {
-          status: 'COMPLETED',
-          cardsCreated: result.cardsCreated,
-          completedAt: new Date(),
-        },
-      });
+      const now = new Date();
+      const [completed] = await Promise.all([
+        this.prisma.agentRun.update({
+          where: { id: run.id },
+          data: {
+            status: 'COMPLETED',
+            cardsCreated: result.cardsCreated,
+            completedAt: now,
+          },
+        }),
+        this.prisma.agentConfig.update({
+          where: { businessId_agentType: { businessId, agentType } },
+          data: { lastRunAt: now },
+        }),
+      ]);
 
       this.logger.log(
         `Agent ${agentType} completed for business ${businessId}: ${result.cardsCreated} cards created`,
@@ -99,14 +106,21 @@ export class AgentFrameworkService {
 
       return completed;
     } catch (err: any) {
-      const failed = await this.prisma.agentRun.update({
-        where: { id: run.id },
-        data: {
-          status: 'FAILED',
-          error: err.message,
-          completedAt: new Date(),
-        },
-      });
+      const failedAt = new Date();
+      const [failed] = await Promise.all([
+        this.prisma.agentRun.update({
+          where: { id: run.id },
+          data: {
+            status: 'FAILED',
+            error: err.message,
+            completedAt: failedAt,
+          },
+        }),
+        this.prisma.agentConfig.update({
+          where: { businessId_agentType: { businessId, agentType } },
+          data: { lastRunAt: failedAt },
+        }),
+      ]);
 
       this.logger.error(`Agent ${agentType} failed for business ${businessId}: ${err.message}`);
 
