@@ -203,6 +203,14 @@ else
 fi
 
 # ──────────────────────────────────────────────
+# 9. Admin Console
+# ──────────────────────────────────────────────
+echo ""
+echo "── 9. Admin Console ──"
+ADMIN_URL="${WEB_URL/businesscommandcentre/admin.businesscommandcentre}"
+check "Admin health" "$ADMIN_URL/api/v1/health" "200"
+
+# ──────────────────────────────────────────────
 # Summary
 # ──────────────────────────────────────────────
 echo ""

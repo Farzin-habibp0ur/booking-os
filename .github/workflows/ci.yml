@@ -186,12 +186,126 @@ jobs:
 
       - name: Install Railway CLI
         run: npm install -g @railway/cli
+
+      # Stage 1: Deploy API
       - name: Deploy API
         run: railway up --service api -p ${{ secrets.RAILWAY_PROJECT_ID }} -e production --detach
+
+      - name: Wait for API health
+        run: |
+          echo "Polling API health..."
+          TIMEOUT=300
+          INTERVAL=5
+          ELAPSED=0
+          until [ "$ELAPSED" -ge "$TIMEOUT" ]; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://api.businesscommandcentre.com/api/v1/health 2>/dev/null || echo "000")
+            if [ "$STATUS" = "200" ]; then
+              BODY=$(curl -s https://api.businesscommandcentre.com/api/v1/health 2>/dev/null)
+              HEALTH=$(echo "$BODY" | jq -r '.status' 2>/dev/null || echo "unknown")
+              if [ "$HEALTH" = "healthy" ] || [ "$HEALTH" = "degraded" ]; then
+                echo "API healthy after ${ELAPSED}s (status=$HEALTH)"
+                exit 0
+              fi
+            fi
+            echo "Waiting... (${ELAPSED}s, HTTP $STATUS)"
+            sleep $INTERVAL
+            ELAPSED=$((ELAPSED + INTERVAL))
+          done
+          echo "ERROR: API did not become healthy within ${TIMEOUT}s"
+          exit 1
+
+      # Stage 2: Deploy Web (only if API is healthy)
       - name: Deploy Web
         run: railway up --service web -p ${{ secrets.RAILWAY_PROJECT_ID }} -e production --detach
+
+      - name: Wait for Web health
+        run: |
+          echo "Polling Web health..."
+          TIMEOUT=300
+          INTERVAL=5
+          ELAPSED=0
+          until [ "$ELAPSED" -ge "$TIMEOUT" ]; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://businesscommandcentre.com/api/v1/health 2>/dev/null || echo "000")
+            if [ "$STATUS" = "200" ]; then
+              echo "Web healthy after ${ELAPSED}s (HTTP $STATUS)"
+              exit 0
+            fi
+            echo "Waiting... (${ELAPSED}s, HTTP $STATUS)"
+            sleep $INTERVAL
+            ELAPSED=$((ELAPSED + INTERVAL))
+          done
+          echo "ERROR: Web did not become healthy within ${TIMEOUT}s"
+          exit 1
+
+      # Stage 3: Deploy Admin (only if Web is healthy)
       - name: Deploy Admin
         run: railway up --service admin -p ${{ secrets.RAILWAY_PROJECT_ID }} -e production --detach
+
+      - name: Wait for Admin health
+        run: |
+          echo "Polling Admin health..."
+          TIMEOUT=300
+          INTERVAL=5
+          ELAPSED=0
+          until [ "$ELAPSED" -ge "$TIMEOUT" ]; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://admin.businesscommandcentre.com/api/v1/health 2>/dev/null || echo "000")
+            if [ "$STATUS" = "200" ]; then
+              echo "Admin healthy after ${ELAPSED}s (HTTP $STATUS)"
+              exit 0
+            fi
+            echo "Waiting... (${ELAPSED}s, HTTP $STATUS)"
+            sleep $INTERVAL
+            ELAPSED=$((ELAPSED + INTERVAL))
+          done
+          echo "ERROR: Admin did not become healthy within ${TIMEOUT}s"
+          exit 1
+
+  bundle-check:
+    runs-on: ubuntu-latest
+    needs: lint-and-test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate --schema=packages/db/prisma/schema.prisma
+
+      - name: Build web-chat widget
+        run: cd packages/web-chat-widget && node build.mjs
+
+      - name: Build Web app
+        run: npx turbo run build --filter=web
+        env:
+          NEXT_PUBLIC_API_URL: https://api.businesscommandcentre.com
+          NEXT_PUBLIC_WS_URL: wss://api.businesscommandcentre.com
+          NEXT_PUBLIC_APP_URL: https://businesscommandcentre.com
+          NEXT_PUBLIC_ADMIN_URL: https://admin.businesscommandcentre.com
+
+      - name: Report bundle size
+        run: |
+          SIZE=$(du -sb apps/web/.next/ | awk '{print $1}')
+          SIZE_MB=$(echo "scale=2; $SIZE / 1048576" | bc)
+          echo "## Web Bundle Size" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Total .next/ | ${SIZE_MB} MB |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          LIMIT=62914560
+          if [ "$SIZE" -gt "$LIMIT" ]; then
+            echo "::error::Web bundle size ${SIZE_MB}MB exceeds 60MB limit"
+            exit 1
+          else
+            echo "Bundle size ${SIZE_MB}MB is within 60MB limit"
+          fi
 
   smoke-test:
     name: Production Smoke Test
@@ -205,35 +319,7 @@ jobs:
       - name: Install jq
         run: sudo apt-get install -y jq
 
-      - name: Wait for API to become healthy
-        run: |
-          echo "Polling API health endpoint..."
-          TIMEOUT=300
-          INTERVAL=5
-          ELAPSED=0
-          until [ "$ELAPSED" -ge "$TIMEOUT" ]; do
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://api.businesscommandcentre.com/api/v1/health 2>/dev/null || echo "000")
-            if [ "$STATUS" = "200" ]; then
-              echo "API healthy after ${ELAPSED}s (HTTP $STATUS)"
-              exit 0
-            fi
-            echo "Waiting... (${ELAPSED}s elapsed, HTTP $STATUS)"
-            sleep $INTERVAL
-            ELAPSED=$((ELAPSED + INTERVAL))
-          done
-          echo "ERROR: API did not become healthy within ${TIMEOUT}s"
-          exit 1
-
       - name: Run smoke tests
         run: |
           chmod +x scripts/smoke-test.sh
           ./scripts/smoke-test.sh https://businesscommandcentre.com
-
-      - name: Smoke test admin console
-        run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://admin.businesscommandcentre.com/api/v1/health)
-          if [ "$STATUS" -ne 200 ]; then
-            echo "Admin console health check returned HTTP $STATUS"
-            exit 1
-          fi
-          echo "Admin console healthy (HTTP $STATUS)"
