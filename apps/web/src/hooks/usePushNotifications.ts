@@ -58,9 +58,11 @@ export function usePushNotifications() {
     setup();
 
     return () => {
-      import('@capacitor/push-notifications').then(({ PushNotifications }) => {
-        PushNotifications.removeAllListeners();
-      }).catch(() => {});
+      import('@capacitor/push-notifications')
+        .then(({ PushNotifications }) => {
+          PushNotifications.removeAllListeners();
+        })
+        .catch(() => {});
     };
   }, [isNative, platform]);
 }

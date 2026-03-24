@@ -16,10 +16,7 @@ describe('DeviceTokenService', () => {
     };
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        DeviceTokenService,
-        { provide: PrismaService, useValue: prisma },
-      ],
+      providers: [DeviceTokenService, { provide: PrismaService, useValue: prisma }],
     }).compile();
 
     service = module.get(DeviceTokenService);
@@ -71,10 +68,7 @@ describe('DeviceTokenService', () => {
 
   describe('findActiveByBusiness', () => {
     it('should return all active tokens for a business', async () => {
-      prisma.deviceToken.findMany.mockResolvedValue([
-        { id: 'dt-1' },
-        { id: 'dt-2' },
-      ]);
+      prisma.deviceToken.findMany.mockResolvedValue([{ id: 'dt-1' }, { id: 'dt-2' }]);
 
       const result = await service.findActiveByBusiness('b1');
 

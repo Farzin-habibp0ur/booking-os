@@ -20,9 +20,8 @@ export class CalendarSyncProcessor extends WorkerHost {
       `Processing calendar sync job ${job.id}: ${action} booking ${bookingId} for staff ${staffId}`,
     );
 
-    const { CalendarSyncService } = await import(
-      '../../modules/calendar-sync/calendar-sync.service'
-    );
+    const { CalendarSyncService } =
+      await import('../../modules/calendar-sync/calendar-sync.service');
     const calendarSyncService = (this as any).moduleRef?.get(CalendarSyncService);
 
     if (!calendarSyncService) {

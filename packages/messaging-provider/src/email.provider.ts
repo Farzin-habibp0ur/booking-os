@@ -171,7 +171,10 @@ export class EmailChannelProvider implements MessagingProvider {
 
   private static domainCache = new Map<
     string,
-    { result: { valid: boolean; checks: Array<{ type: string; status: string }> }; timestamp: number }
+    {
+      result: { valid: boolean; checks: Array<{ type: string; status: string }> };
+      timestamp: number;
+    }
   >();
   private static readonly CACHE_TTL = 60 * 60 * 1000; // 1 hour
 

@@ -110,8 +110,6 @@ describe('CalendarSyncProcessor', () => {
 
     await processor.onFailed(job, new Error('timeout'));
 
-    expect(logSpy).toHaveBeenCalledWith(
-      expect.stringContaining('Calendar sync job job-1 failed'),
-    );
+    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('Calendar sync job job-1 failed'));
   });
 });

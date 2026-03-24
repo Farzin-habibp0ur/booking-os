@@ -19,9 +19,7 @@ export class AgentProcessingProcessor extends WorkerHost {
       `Processing agent job ${job.id}: ${agentType} for business ${businessId}${triggeredManually ? ' (manual trigger)' : ''}`,
     );
 
-    const { AgentFrameworkService } = await import(
-      '../../modules/agent/agent-framework.service'
-    );
+    const { AgentFrameworkService } = await import('../../modules/agent/agent-framework.service');
     const agentFrameworkService = (this as any).moduleRef?.get(AgentFrameworkService);
 
     if (!agentFrameworkService) {

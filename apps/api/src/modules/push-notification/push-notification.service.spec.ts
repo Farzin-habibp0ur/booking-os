@@ -41,9 +41,7 @@ describe('PushNotificationService', () => {
       await service.sendToStaff('s1', { title: 'New Message', body: 'You have a new message' });
 
       expect(deviceTokenService.findActiveByStaff).toHaveBeenCalledWith('s1');
-      expect(logSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[Push - dry run]'),
-      );
+      expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('[Push - dry run]'));
     });
 
     it('should do nothing when no active tokens', async () => {
