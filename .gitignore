@@ -26,6 +26,10 @@ test-results/
 playwright-report/
 .DS_Store
 
+# Uploaded files (generated at runtime)
+uploads/
+apps/api/uploads/
+
 # Capacitor native projects (generated)
 apps/web/ios/
 apps/web/android/

@@ -145,7 +145,7 @@ export class PushNotificationService {
       throw new Error(`Failed to get FCM access token: ${await response.text()}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as { access_token: string; expires_in: number };
     this.cachedToken = { token: data.access_token, expiresAt: Date.now() + data.expires_in * 1000 };
     return data.access_token;
   }
