@@ -292,7 +292,7 @@ jobs:
         run: cd packages/web-chat-widget && node build.mjs
 
       - name: Build Web app
-        run: npx turbo run build --filter=web
+        run: npx turbo run build --filter=@booking-os/web
         env:
           NEXT_PUBLIC_API_URL: https://api.businesscommandcentre.com
           NEXT_PUBLIC_WS_URL: wss://api.businesscommandcentre.com

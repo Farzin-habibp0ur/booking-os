@@ -65,8 +65,10 @@ test.describe('Workflow Tests', () => {
 
     // Find a deposit-required service (Botox) or use first service
     const depositService =
-      services.find((s: any) => s.customFields?.depositRequired || s.name === 'Botox') ||
-      services[0];
+      services.find(
+        (s: Record<string, unknown>) =>
+          (s.customFields as Record<string, unknown>)?.depositRequired || s.name === 'Botox',
+      ) || services[0];
 
     await createBookingViaApi(page, {
       serviceId: depositService.id,
@@ -90,7 +92,8 @@ test.describe('Workflow Tests', () => {
     const customers = await getCustomersViaApi(page);
 
     // Find consult service or use first
-    const consultService = services.find((s: any) => s.kind === 'CONSULT') || services[0];
+    const consultService =
+      services.find((s: Record<string, unknown>) => s.kind === 'CONSULT') || services[0];
 
     const booking = await createBookingViaApi(page, {
       serviceId: consultService.id,
@@ -195,7 +198,7 @@ test.describe('Workflow Tests', () => {
     // Verify no raw unresolved {{variable}} syntax in preview area
     // (resolved variables should not show double-braces in rendered preview)
     const pageContent = await page.locator('body').textContent();
-    const unresolvedMatches = pageContent?.match(/\{\{[a-zA-Z]+\}\}/g) || [];
+    const _unresolvedMatches = pageContent?.match(/\{\{[a-zA-Z]+\}\}/g) || [];
     // Template editing area and "Insert variable" section may show {{var}} syntax,
     // so we just check the page loads and has template content
     expect(pageContent).toBeTruthy();

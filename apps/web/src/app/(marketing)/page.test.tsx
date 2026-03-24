@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import Home from './page';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 jest.mock('next/link', () => ({ children, href, ...rest }: any) => (
   <a href={href} {...rest}>
     {children}

@@ -7,6 +7,7 @@ jest.mock('next/navigation', () => ({
   useRouter: () => ({ push: mockPush }),
   useSearchParams: () => new URLSearchParams(),
 }));
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 jest.mock('next/link', () => ({ children, href, ...rest }: any) => (
   <a href={href} {...rest}>
     {children}
@@ -14,6 +15,7 @@ jest.mock('next/link', () => ({ children, href, ...rest }: any) => (
 ));
 jest.mock('@/lib/i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   I18nProvider: ({ children }: any) => children,
 }));
 jest.mock('@/lib/vertical-pack', () => ({
