@@ -46,11 +46,18 @@ function addMinutes(date: Date, mins: number): Date {
 async function main() {
   console.log('🌱 Seeding demo data...\n');
 
-  // ── 1. Look up existing business ──────────────────────────────────────────
-  const business = await prisma.business.findFirst();
+  // ── 1. Look up existing business (Glow Aesthetic Clinic, not platform) ────
+  const business = await prisma.business.findFirst({
+    where: { verticalPack: 'AESTHETIC' },
+  }) ?? await prisma.business.findFirst({
+    where: { name: { contains: 'Glow' } },
+  }) ?? await prisma.business.findFirst({
+    where: { NOT: { slug: 'platform' } },
+  });
   if (!business) {
     throw new Error('No business found. Run the base seed first.');
   }
+  console.log(`📍 Target business: ${business.name} (${business.id})`)
 
   // Idempotency guard
   const config = business.packConfig as Record<string, unknown>;
@@ -104,8 +111,10 @@ async function main() {
 
     let emily = allStaff.find((s) => s.email === 'emily@glowclinic.com');
     if (!emily) {
-      emily = await prisma.staff.create({
-        data: {
+      emily = await prisma.staff.upsert({
+        where: { email: 'emily@glowclinic.com' },
+        update: { businessId: bizId, name: 'Dr. Emily Park', role: 'SERVICE_PROVIDER' },
+        create: {
           businessId: bizId,
           name: 'Dr. Emily Park',
           email: 'emily@glowclinic.com',
@@ -113,50 +122,73 @@ async function main() {
           role: 'SERVICE_PROVIDER',
         },
       });
-      // Create working hours for Emily (Mon-Fri 10am-6pm)
-      for (const day of [0, 1, 2, 3, 4, 5, 6]) {
-        await prisma.workingHours.create({
-          data: {
-            staffId: emily.id,
-            dayOfWeek: day,
-            startTime: '10:00',
-            endTime: '18:00',
-            isOff: ![1, 2, 3, 4, 5].includes(day),
-          },
-        });
+      // Create working hours for Emily (Mon-Fri 10am-6pm) if none exist
+      const emilyHours = await prisma.workingHours.findMany({ where: { staffId: emily.id } });
+      if (emilyHours.length === 0) {
+        for (const day of [0, 1, 2, 3, 4, 5, 6]) {
+          await prisma.workingHours.create({
+            data: {
+              staffId: emily.id,
+              dayOfWeek: day,
+              startTime: '10:00',
+              endTime: '18:00',
+              isOff: ![1, 2, 3, 4, 5].includes(day),
+            },
+          });
+        }
       }
-      console.log('✅ Created missing staff: Dr. Emily Park');
+      console.log('✅ Created/found staff: Dr. Emily Park');
     }
 
     // ── 4. Fix service kinds (production may have all "OTHER") ────────────────
-    const allServices = await prisma.service.findMany({ where: { businessId: bizId } });
-    const kindMap: Record<string, string> = {
-      'Botox Treatment': 'TREATMENT',
-      'Dermal Filler': 'TREATMENT',
-      'Chemical Peel': 'TREATMENT',
-      Microneedling: 'TREATMENT',
-      Consultation: 'CONSULT',
-    };
-    for (const svc of allServices) {
-      const expected = kindMap[svc.name];
-      if (expected && svc.kind !== expected) {
-        await prisma.service.update({ where: { id: svc.id }, data: { kind: expected } });
+    let allServices = await prisma.service.findMany({ where: { businessId: bizId } });
+
+    // Fuzzy finder: match by prefix or contains (handles "Botox" vs "Botox Treatment")
+    const findSvc = (names: string[]) =>
+      allServices.find((s) => names.some((n) => s.name.toLowerCase().includes(n.toLowerCase())));
+
+    const kindPatterns: Array<{ names: string[]; kind: string }> = [
+      { names: ['Botox'], kind: 'TREATMENT' },
+      { names: ['Filler', 'Dermal'], kind: 'TREATMENT' },
+      { names: ['Chemical Peel', 'Peel'], kind: 'TREATMENT' },
+      { names: ['Microneedling'], kind: 'TREATMENT' },
+      { names: ['Consultation', 'Consult'], kind: 'CONSULT' },
+    ];
+    for (const { names, kind } of kindPatterns) {
+      const svc = findSvc(names);
+      if (svc && svc.kind !== kind) {
+        await prisma.service.update({ where: { id: svc.id }, data: { kind } });
       }
-      // Also fix deposit settings for Botox
-      if (svc.name === 'Botox Treatment' && !svc.depositRequired) {
-        await prisma.service.update({
-          where: { id: svc.id },
-          data: { depositRequired: true, depositAmount: 100 },
-        });
-      }
+    }
+    // Fix deposit for Botox
+    const botoxSvc = findSvc(['Botox']);
+    if (botoxSvc && !botoxSvc.depositRequired) {
+      await prisma.service.update({
+        where: { id: botoxSvc.id },
+        data: { depositRequired: true, depositAmount: 100 },
+      });
+    }
+    // Ensure Consultation service exists
+    if (!findSvc(['Consultation', 'Consult'])) {
+      await prisma.service.create({
+        data: {
+          businessId: bizId,
+          name: 'Consultation',
+          durationMins: 20,
+          price: 0,
+          kind: 'CONSULT',
+          isActive: true,
+        },
+      });
+      allServices = await prisma.service.findMany({ where: { businessId: bizId } });
     }
     console.log('✅ Service kinds verified/fixed');
 
-    const svcBotox = allServices.find((s) => s.name === 'Botox Treatment')!;
-    const svcFiller = allServices.find((s) => s.name === 'Dermal Filler')!;
-    const svcPeel = allServices.find((s) => s.name === 'Chemical Peel')!;
-    const svcMicro = allServices.find((s) => s.name === 'Microneedling')!;
-    const svcConsult = allServices.find((s) => s.name === 'Consultation')!;
+    const svcBotox = findSvc(['Botox'])!;
+    const svcFiller = findSvc(['Filler', 'Dermal'])!;
+    const svcPeel = findSvc(['Peel', 'Chemical'])!;
+    const svcMicro = findSvc(['Microneedling'])!;
+    const svcConsult = findSvc(['Consultation', 'Consult'])!;
 
     // ── 5. Ensure message templates exist ─────────────────────────────────────
     const existingTemplates = await prisma.messageTemplate.findMany({
@@ -817,7 +849,7 @@ async function main() {
           data: {
             businessId: bizId,
             bookingId: bk.id,
-            stripePaymentIntentId: `pi_demo_${bk.id.slice(-8)}_${i}`,
+            stripePaymentIntentId: `pi_demo_${bk.id.slice(-8)}_${i}_${Date.now()}`,
             amount: 100,
             currency: 'usd',
             status: 'succeeded',
@@ -1558,6 +1590,7 @@ async function main() {
           constraints: {},
         },
       ],
+      skipDuplicates: true,
     });
     console.log('✅ 3 autonomy configs created');
 
@@ -1797,10 +1830,13 @@ async function main() {
   // ════════════════════════════════════════════════════════════════════════════
   // ██ DEALERSHIP VERTICAL — Metro Auto Group ██
   // ════════════════════════════════════════════════════════════════════════════
+  try {
   console.log('\n🚗 Seeding dealership demo data (Metro Auto Group)...\n');
 
-  const dealership = await prisma.business.create({
-    data: {
+  const dealership = await prisma.business.upsert({
+    where: { slug: 'metro-auto' },
+    update: {},
+    create: {
       name: 'Metro Auto Group',
       slug: 'metro-auto',
       phone: '+14155559000',
@@ -1823,7 +1859,7 @@ async function main() {
     },
   });
   const dBizId = dealership.id;
-  console.log('✅ Metro Auto Group business created');
+  console.log('✅ Metro Auto Group business found/created');
 
   // ── D1. Locations ──────────────────────────────────────────────────────────
   const showroom = await prisma.location.create({
@@ -2617,6 +2653,9 @@ async function main() {
   console.log('\n🎉 Metro Auto Group demo data seeded!');
   console.log('  - 15 customers, 25 bookings (with kanban), 4 conversations');
   console.log('  - 3 quotes, 2 automation rules, 1 deposit payment');
+  } catch (dealerErr) {
+    console.log('⏭️  Dealership data already exists, skipping. (' + (dealerErr as Error).message?.slice(0, 80) + ')');
+  }
   console.log('\n✨ All demo data seeded successfully!');
 }
 
