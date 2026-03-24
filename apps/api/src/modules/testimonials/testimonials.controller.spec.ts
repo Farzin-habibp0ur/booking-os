@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { TestimonialsController } from './testimonials.controller';
 import { TestimonialsService } from './testimonials.service';
+import { AutomationExecutorService } from '../automation/automation-executor.service';
 
 describe('TestimonialsController', () => {
   let controller: TestimonialsController;
@@ -18,11 +19,21 @@ describe('TestimonialsController', () => {
       delete: jest.fn(),
       sendRequest: jest.fn(),
       findPublic: jest.fn(),
+      verifyToken: jest.fn(),
+      submitByToken: jest.fn(),
+      bulkAction: jest.fn(),
+      getDashboardStats: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [TestimonialsController],
-      providers: [{ provide: TestimonialsService, useValue: service }],
+      providers: [
+        { provide: TestimonialsService, useValue: service },
+        {
+          provide: AutomationExecutorService,
+          useValue: { evaluateTrigger: jest.fn().mockResolvedValue(undefined) },
+        },
+      ],
     }).compile();
 
     controller = module.get(TestimonialsController);
@@ -41,10 +52,22 @@ describe('TestimonialsController', () => {
   it('GET /testimonials — calls findAll with query params', async () => {
     service.findAll.mockResolvedValue({ data: [], total: 0, page: 1, pageSize: 20 });
 
-    const result = await controller.findAll('b1', 'APPROVED', '2', '10');
+    const result = await controller.findAll(
+      'b1',
+      'APPROVED',
+      undefined,
+      undefined,
+      undefined,
+      '2',
+      '10',
+    );
 
     expect(service.findAll).toHaveBeenCalledWith('b1', {
       status: 'APPROVED',
+      customerId: undefined,
+      search: undefined,
+      sortBy: undefined,
+      sortOrder: undefined,
       page: 2,
       pageSize: 10,
     });
