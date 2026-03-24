@@ -473,7 +473,6 @@ describe('Shell', () => {
     expect(within(nav).queryByText('Start Tour')).not.toBeInTheDocument();
   });
 
-
   it('does not redirect admin mode on login (landingPath is /dashboard)', () => {
     sessionStorage.setItem('booking-os-login-redirect', '1');
 
