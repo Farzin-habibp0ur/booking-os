@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
+import { cn } from '@/lib/cn';
 import { publicApi } from '@/lib/public-api';
 import { Skeleton } from '@/components/skeleton';
 import { AddToCalendar } from '@/components/add-to-calendar';
