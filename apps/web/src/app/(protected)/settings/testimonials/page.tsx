@@ -74,9 +74,7 @@ export default function TestimonialSettingsPage() {
 
       <div className="flex items-center gap-2 mb-6">
         <Star size={20} className="text-amber-400" />
-        <h1 className="text-2xl font-serif font-semibold text-slate-900">
-          Testimonial Settings
-        </h1>
+        <h1 className="text-2xl font-serif font-semibold text-slate-900">Testimonial Settings</h1>
       </div>
 
       <div className="space-y-6">
@@ -112,9 +110,7 @@ export default function TestimonialSettingsPage() {
               <input
                 type="checkbox"
                 checked={settings.autoApprove5Star}
-                onChange={(e) =>
-                  setSettings({ ...settings, autoApprove5Star: e.target.checked })
-                }
+                onChange={(e) => setSettings({ ...settings, autoApprove5Star: e.target.checked })}
                 className="rounded text-sage-600"
               />
             </label>
@@ -125,9 +121,7 @@ export default function TestimonialSettingsPage() {
               <input
                 type="checkbox"
                 checked={settings.autoApproveRepeat}
-                onChange={(e) =>
-                  setSettings({ ...settings, autoApproveRepeat: e.target.checked })
-                }
+                onChange={(e) => setSettings({ ...settings, autoApproveRepeat: e.target.checked })}
                 className="rounded text-sage-600"
               />
             </label>
@@ -139,17 +133,13 @@ export default function TestimonialSettingsPage() {
           <h2 className="text-sm font-semibold text-slate-900 mb-3">Display Preferences</h2>
           <div className="space-y-3">
             <div>
-              <label className="text-xs text-slate-500 mb-1 block">
-                Max featured testimonials
-              </label>
+              <label className="text-xs text-slate-500 mb-1 block">Max featured testimonials</label>
               <input
                 type="number"
                 min={1}
                 max={12}
                 value={settings.maxFeatured}
-                onChange={(e) =>
-                  setSettings({ ...settings, maxFeatured: Number(e.target.value) })
-                }
+                onChange={(e) => setSettings({ ...settings, maxFeatured: Number(e.target.value) })}
                 className="w-20 text-sm bg-slate-50 border-transparent rounded-xl px-3 py-2 focus:bg-white focus:ring-2 focus:ring-sage-500"
               />
             </div>
@@ -167,9 +157,7 @@ export default function TestimonialSettingsPage() {
               <input
                 type="checkbox"
                 checked={settings.showAuthorInfo}
-                onChange={(e) =>
-                  setSettings({ ...settings, showAuthorInfo: e.target.checked })
-                }
+                onChange={(e) => setSettings({ ...settings, showAuthorInfo: e.target.checked })}
                 className="rounded text-sage-600"
               />
             </label>
@@ -189,9 +177,7 @@ export default function TestimonialSettingsPage() {
                 min={0}
                 max={14}
                 value={settings.reminderDays}
-                onChange={(e) =>
-                  setSettings({ ...settings, reminderDays: Number(e.target.value) })
-                }
+                onChange={(e) => setSettings({ ...settings, reminderDays: Number(e.target.value) })}
                 className="w-20 text-sm bg-slate-50 border-transparent rounded-xl px-3 py-2 focus:bg-white focus:ring-2 focus:ring-sage-500"
               />
             </div>

@@ -431,10 +431,22 @@ export default function NewCampaignPage() {
             <h2 className="text-sm font-semibold text-slate-900 mb-3">Delivery Channel</h2>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {[
-                { value: 'WHATSAPP', label: 'WhatsApp', active: 'border-sage-400 bg-sage-50 text-sage-700' },
+                {
+                  value: 'WHATSAPP',
+                  label: 'WhatsApp',
+                  active: 'border-sage-400 bg-sage-50 text-sage-700',
+                },
                 { value: 'SMS', label: 'SMS', active: 'border-blue-400 bg-blue-50 text-blue-700' },
-                { value: 'EMAIL', label: 'Email', active: 'border-lavender-400 bg-lavender-50 text-lavender-700' },
-                { value: 'MULTI', label: 'Multi-channel', active: 'border-amber-400 bg-amber-50 text-amber-700' },
+                {
+                  value: 'EMAIL',
+                  label: 'Email',
+                  active: 'border-lavender-400 bg-lavender-50 text-lavender-700',
+                },
+                {
+                  value: 'MULTI',
+                  label: 'Multi-channel',
+                  active: 'border-amber-400 bg-amber-50 text-amber-700',
+                },
               ].map((ch) => (
                 <button
                   key={ch.value}
@@ -597,7 +609,9 @@ export default function NewCampaignPage() {
                 <p className="text-sm text-sage-700">No additional cost (included in plan)</p>
               ) : (
                 <p className="text-sm text-slate-700">
-                  <span className="text-lg font-serif font-bold">${costEstimate.estimatedCost}</span>
+                  <span className="text-lg font-serif font-bold">
+                    ${costEstimate.estimatedCost}
+                  </span>
                   <span className="text-slate-500 ml-1">
                     for {costEstimate.audienceSize} messages via {costEstimate.channel}
                   </span>

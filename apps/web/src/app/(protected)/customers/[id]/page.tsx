@@ -1187,7 +1187,9 @@ export default function CustomerDetailPage() {
                         <Star
                           key={i}
                           size={12}
-                          className={i < (t.rating || 0) ? 'text-amber-400 fill-amber-400' : 'text-slate-200'}
+                          className={
+                            i < (t.rating || 0) ? 'text-amber-400 fill-amber-400' : 'text-slate-200'
+                          }
                         />
                       ))}
                     </div>

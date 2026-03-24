@@ -43,15 +43,18 @@ export class TestimonialsService {
     });
   }
 
-  async findAll(businessId: string, query: {
-    status?: string;
-    customerId?: string;
-    search?: string;
-    sortBy?: string;
-    sortOrder?: string;
-    page?: number;
-    pageSize?: number;
-  }) {
+  async findAll(
+    businessId: string,
+    query: {
+      status?: string;
+      customerId?: string;
+      search?: string;
+      sortBy?: string;
+      sortOrder?: string;
+      page?: number;
+      pageSize?: number;
+    },
+  ) {
     const where: any = { businessId };
     if (query.status) where.status = query.status;
     if (query.customerId) where.customerId = query.customerId;
@@ -242,12 +245,7 @@ export class TestimonialsService {
   }
 
   // HIGH-08: Submit testimonial by token (public, no auth)
-  async submitByToken(dto: {
-    token: string;
-    content: string;
-    rating: number;
-    name?: string;
-  }) {
+  async submitByToken(dto: { token: string; content: string; rating: number; name?: string }) {
     const testimonial = await this.prisma.testimonial.findUnique({
       where: { submissionToken: dto.token },
     });

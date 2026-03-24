@@ -1270,13 +1270,15 @@ export default function BookingPortalPage() {
           {/* Aggregate stats */}
           {(() => {
             const rated = publicTestimonials.filter((t) => t.rating);
-            const avgRating = rated.length > 0
-              ? rated.reduce((sum, t) => sum + (t.rating || 0), 0) / rated.length
-              : 0;
+            const avgRating =
+              rated.length > 0
+                ? rated.reduce((sum, t) => sum + (t.rating || 0), 0) / rated.length
+                : 0;
             return avgRating > 0 ? (
               <div className="text-center mb-4">
                 <div className="text-3xl font-serif font-bold text-slate-800">
-                  {avgRating.toFixed(1)} <Star size={24} className="inline text-amber-400 fill-amber-400 -mt-1" />
+                  {avgRating.toFixed(1)}{' '}
+                  <Star size={24} className="inline text-amber-400 fill-amber-400 -mt-1" />
                 </div>
                 <p className="text-sm text-slate-500">
                   Based on {rated.length} review{rated.length !== 1 ? 's' : ''}

@@ -478,7 +478,11 @@ export class CampaignService {
 
     const [sent, delivered, read, total] = await Promise.all([
       this.prisma.campaignSend.count({
-        where: { campaignId, campaign: { businessId }, status: { in: ['SENT', 'DELIVERED', 'READ'] } },
+        where: {
+          campaignId,
+          campaign: { businessId },
+          status: { in: ['SENT', 'DELIVERED', 'READ'] },
+        },
       }),
       this.prisma.campaignSend.count({
         where: { campaignId, campaign: { businessId }, status: { in: ['DELIVERED', 'READ'] } },
@@ -502,15 +506,16 @@ export class CampaignService {
     const sevenDaysAfterSend = campaign.sentAt
       ? new Date(campaign.sentAt.getTime() + 7 * 24 * 60 * 60 * 1000)
       : null;
-    const booked = campaign.sentAt && sevenDaysAfterSend
-      ? await this.prisma.booking.count({
-          where: {
-            businessId,
-            customerId: { in: customerIds },
-            createdAt: { gte: campaign.sentAt, lte: sevenDaysAfterSend },
-          },
-        })
-      : 0;
+    const booked =
+      campaign.sentAt && sevenDaysAfterSend
+        ? await this.prisma.booking.count({
+            where: {
+              businessId,
+              customerId: { in: customerIds },
+              createdAt: { gte: campaign.sentAt, lte: sevenDaysAfterSend },
+            },
+          })
+        : 0;
 
     return {
       stages: [
@@ -562,7 +567,11 @@ export class CampaignService {
   }
 
   // HIGH-04: Check if customer is unsubscribed
-  async isUnsubscribed(businessId: string, customerId: string, campaignId?: string): Promise<boolean> {
+  async isUnsubscribed(
+    businessId: string,
+    customerId: string,
+    campaignId?: string,
+  ): Promise<boolean> {
     const unsub = await this.prisma.campaignUnsubscribe.findFirst({
       where: {
         businessId,
@@ -598,7 +607,9 @@ export class CampaignService {
   async testSend(businessId: string, campaignId: string, staffEmail: string) {
     const campaign = await this.findById(businessId, campaignId);
     if (!['DRAFT', 'SCHEDULED'].includes((campaign as any).status)) {
-      throw new BadRequestException('Test sends are only available for DRAFT or SCHEDULED campaigns');
+      throw new BadRequestException(
+        'Test sends are only available for DRAFT or SCHEDULED campaigns',
+      );
     }
 
     const variants = ((campaign as any).variants || []) as any[];

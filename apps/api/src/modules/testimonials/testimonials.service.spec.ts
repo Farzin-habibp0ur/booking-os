@@ -468,9 +468,9 @@ describe('TestimonialsService', () => {
   describe('getDashboardStats', () => {
     it('returns aggregated testimonial stats', async () => {
       prisma.testimonial.count
-        .mockResolvedValueOnce(3)  // pending
+        .mockResolvedValueOnce(3) // pending
         .mockResolvedValueOnce(10) // approved
-        .mockResolvedValueOnce(2)  // featured
+        .mockResolvedValueOnce(2) // featured
         .mockResolvedValueOnce(15); // total
       prisma.testimonial.aggregate.mockResolvedValue({
         _avg: { rating: 4.5 },

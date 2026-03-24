@@ -20,7 +20,8 @@ export class CampaignDispatchService {
     private campaignService: CampaignService,
     private usageService: UsageService,
     private deadLetterQueueService: DeadLetterQueueService,
-    @Optional() @Inject(forwardRef(() => AutomationExecutorService))
+    @Optional()
+    @Inject(forwardRef(() => AutomationExecutorService))
     private automationExecutor?: AutomationExecutorService,
     @Optional() @InjectQueue(QUEUE_NAMES.NOTIFICATIONS) private notificationQueue?: Queue,
   ) {}
@@ -118,9 +119,7 @@ export class CampaignDispatchService {
           customerName: customer.name || 'there',
           serviceName: lastBooking?.service?.name || 'your service',
           businessName: business?.name || 'us',
-          nextBookingDate: lastBooking?.startTime
-            ? lastBooking.startTime.toLocaleDateString()
-            : '',
+          nextBookingDate: lastBooking?.startTime ? lastBooking.startTime.toLocaleDateString() : '',
           staffName: lastBooking?.staff?.name || 'our team',
         });
 
@@ -159,9 +158,7 @@ export class CampaignDispatchService {
               campaignId: campaign.id,
               campaignName: campaign.name,
             })
-            .catch((err) =>
-              this.logger.warn(`Campaign trigger evaluation failed: ${err.message}`),
-            );
+            .catch((err) => this.logger.warn(`Campaign trigger evaluation failed: ${err.message}`));
         }
       } catch (err: any) {
         await this.prisma.campaignSend.update({

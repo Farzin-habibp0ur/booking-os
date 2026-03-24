@@ -37,9 +37,7 @@ export default function UnsubscribePage() {
             <div className="w-12 h-12 bg-sage-50 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle size={24} className="text-sage-600" />
             </div>
-            <h1 className="text-xl font-serif font-semibold text-slate-900 mb-2">
-              Unsubscribed
-            </h1>
+            <h1 className="text-xl font-serif font-semibold text-slate-900 mb-2">Unsubscribed</h1>
             <p className="text-sm text-slate-500 mb-4">
               You have been unsubscribed from{' '}
               <span className="font-medium text-slate-700">
@@ -47,7 +45,8 @@ export default function UnsubscribePage() {
               </span>
               {data?.businessName && (
                 <>
-                  {' '}by <span className="font-medium text-slate-700">{data.businessName}</span>
+                  {' '}
+                  by <span className="font-medium text-slate-700">{data.businessName}</span>
                 </>
               )}
               .
@@ -63,9 +62,7 @@ export default function UnsubscribePage() {
             <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
               <AlertCircle size={24} className="text-red-500" />
             </div>
-            <h1 className="text-xl font-serif font-semibold text-slate-900 mb-2">
-              Invalid Link
-            </h1>
+            <h1 className="text-xl font-serif font-semibold text-slate-900 mb-2">Invalid Link</h1>
             <p className="text-sm text-slate-500">
               This unsubscribe link is invalid or has expired.
             </p>

@@ -46,9 +46,19 @@ const STEP_TYPE_OPTIONS = [
     icon: ArrowRight,
   },
   { type: 'ACTION' as const, actionType: 'ADD_TAG', label: 'Add Tag', icon: Tag },
-  { type: 'ACTION' as const, actionType: 'REQUEST_TESTIMONIAL', label: 'Request Testimonial', icon: Star },
+  {
+    type: 'ACTION' as const,
+    actionType: 'REQUEST_TESTIMONIAL',
+    label: 'Request Testimonial',
+    icon: Star,
+  },
   { type: 'ACTION' as const, actionType: 'SEND_EMAIL', label: 'Send Email', icon: Mail },
-  { type: 'ACTION' as const, actionType: 'UPDATE_CUSTOMER_FIELD', label: 'Update Customer', icon: UserCog },
+  {
+    type: 'ACTION' as const,
+    actionType: 'UPDATE_CUSTOMER_FIELD',
+    label: 'Update Customer',
+    icon: UserCog,
+  },
   { type: 'ACTION' as const, actionType: 'WEBHOOK', label: 'Webhook', icon: Globe },
 ];
 

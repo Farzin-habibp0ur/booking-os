@@ -510,15 +510,13 @@ export class AutomationExecutorService {
 
           if (customer) {
             const channel = await this.resolveChannel(customer, businessId);
-            const address =
-              channel === 'EMAIL' ? customer.email : customer.phone;
+            const address = channel === 'EMAIL' ? customer.email : customer.phone;
 
             if (address) {
               // Render message template with customer data
-              const messageContent = this.renderTemplate(
-                action.body || action.message || '',
-                { customerName: customer.name || 'there' },
-              );
+              const messageContent = this.renderTemplate(action.body || action.message || '', {
+                customerName: customer.name || 'there',
+              });
 
               await this.notificationQueue.add('automation-send', {
                 to: address,
@@ -533,9 +531,7 @@ export class AutomationExecutorService {
               // Record usage for billing
               this.usageService
                 .recordUsage(businessId, channel, 'OUTBOUND')
-                .catch((err) =>
-                  this.logger.error(`Usage recording failed: ${err.message}`),
-                );
+                .catch((err) => this.logger.error(`Usage recording failed: ${err.message}`));
             }
           }
         }
@@ -545,12 +541,19 @@ export class AutomationExecutorService {
           try {
             await this.testimonialsService.sendRequest(businessId, customerId);
           } catch (err: any) {
-            this.logger.warn(`Testimonial request failed for customer ${customerId}: ${err.message}`);
+            this.logger.warn(
+              `Testimonial request failed for customer ${customerId}: ${err.message}`,
+            );
           }
         }
 
         // HIGH-06: SEND_EMAIL — send via EMAIL channel specifically
-        if (action.type === 'SEND_EMAIL' && action.subject && action.body && this.notificationQueue) {
+        if (
+          action.type === 'SEND_EMAIL' &&
+          action.subject &&
+          action.body &&
+          this.notificationQueue
+        ) {
           const customer = customerId
             ? await this.prisma.customer.findUnique({
                 where: { id: customerId },
@@ -560,7 +563,9 @@ export class AutomationExecutorService {
           if (customer?.email) {
             await this.notificationQueue.add('automation-email', {
               to: customer.email,
-              subject: this.renderTemplate(action.subject, { customerName: customer.name || 'there' }),
+              subject: this.renderTemplate(action.subject, {
+                customerName: customer.name || 'there',
+              }),
               body: this.renderTemplate(action.body, { customerName: customer.name || 'there' }),
               businessId,
               customerId: customer.id,
@@ -665,17 +670,12 @@ export class AutomationExecutorService {
           context.customerId,
         );
       } catch (err: any) {
-        this.logger.error(
-          `Event trigger ${trigger} rule ${rule.id} failed: ${err.message}`,
-        );
+        this.logger.error(`Event trigger ${trigger} rule ${rule.id} failed: ${err.message}`);
       }
     }
   }
 
-  private matchesFilters(
-    filters: Record<string, any>,
-    context: Record<string, any>,
-  ): boolean {
+  private matchesFilters(filters: Record<string, any>, context: Record<string, any>): boolean {
     for (const [key, value] of Object.entries(filters)) {
       if (context[key] !== undefined && context[key] !== value) {
         return false;
@@ -706,7 +706,11 @@ export class AutomationExecutorService {
     });
   }
 
-  isQuietHours(quietStart?: string | null, quietEnd?: string | null, timezone: string = 'UTC'): boolean {
+  isQuietHours(
+    quietStart?: string | null,
+    quietEnd?: string | null,
+    timezone: string = 'UTC',
+  ): boolean {
     if (!quietStart || !quietEnd) return false;
     // Convert current UTC time to business local time
     const now = new Date();
@@ -742,13 +746,7 @@ export class AutomationExecutorService {
     return 'WHATSAPP';
   }
 
-  private renderTemplate(
-    template: string,
-    vars: Record<string, string>,
-  ): string {
-    return template.replace(
-      /\{\{(\w+)\}\}/g,
-      (_, key) => vars[key] || '',
-    );
+  private renderTemplate(template: string, vars: Record<string, string>): string {
+    return template.replace(/\{\{(\w+)\}\}/g, (_, key) => vars[key] || '');
   }
 }

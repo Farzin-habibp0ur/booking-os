@@ -7,7 +7,9 @@ import { cn } from '@/lib/cn';
 
 export default function TestimonialSubmitPage() {
   const { token } = useParams<{ token: string }>();
-  const [status, setStatus] = useState<'loading' | 'form' | 'submitted' | 'error' | 'already'>('loading');
+  const [status, setStatus] = useState<'loading' | 'form' | 'submitted' | 'error' | 'already'>(
+    'loading',
+  );
   const [info, setInfo] = useState<any>(null);
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
@@ -117,9 +119,7 @@ export default function TestimonialSubmitPage() {
               Share Your Experience
             </h1>
             {info?.businessName && (
-              <p className="text-sm text-slate-500 text-center mb-6">
-                with {info.businessName}
-              </p>
+              <p className="text-sm text-slate-500 text-center mb-6">with {info.businessName}</p>
             )}
 
             {/* Star rating */}

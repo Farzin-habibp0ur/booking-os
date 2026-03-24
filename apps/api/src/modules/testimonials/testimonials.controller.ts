@@ -29,7 +29,8 @@ export class TestimonialsController {
 
   constructor(
     private testimonialsService: TestimonialsService,
-    @Optional() @Inject(forwardRef(() => AutomationExecutorService))
+    @Optional()
+    @Inject(forwardRef(() => AutomationExecutorService))
     private automationExecutor?: AutomationExecutorService,
   ) {}
 
@@ -128,7 +129,9 @@ export class TestimonialsController {
   }
 
   @Post('public/submit')
-  async submitByToken(@Body() body: { token: string; content: string; rating: number; name?: string }) {
+  async submitByToken(
+    @Body() body: { token: string; content: string; rating: number; name?: string },
+  ) {
     const result = await this.testimonialsService.submitByToken(body);
 
     // Fire TESTIMONIAL_SUBMITTED trigger for automation rules

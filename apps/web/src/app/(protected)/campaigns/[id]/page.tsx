@@ -48,8 +48,14 @@ export default function CampaignDetailPage() {
             .catch(() => {});
         }
         if (c.status === 'SENT' || c.status === 'SENDING') {
-          api.get<any>(`/campaigns/${id}/funnel`).then(setFunnelStats).catch(() => {});
-          api.get<any>(`/campaigns/${id}/channel-stats`).then(setChannelStats).catch(() => {});
+          api
+            .get<any>(`/campaigns/${id}/funnel`)
+            .then(setFunnelStats)
+            .catch(() => {});
+          api
+            .get<any>(`/campaigns/${id}/channel-stats`)
+            .then(setChannelStats)
+            .catch(() => {});
         }
       })
       .catch(() => router.push('/campaigns'))
@@ -231,15 +237,16 @@ export default function CampaignDetailPage() {
               return (
                 <div key={stage.label}>
                   {i > 0 && dropOff > 0 && (
-                    <p className="text-xs text-slate-400 ml-2 mb-1">
-                      ↓ {dropOff}% drop-off
-                    </p>
+                    <p className="text-xs text-slate-400 ml-2 mb-1">↓ {dropOff}% drop-off</p>
                   )}
                   <div className="flex items-center gap-3">
                     <span className="text-xs text-slate-500 w-16 text-right">{stage.label}</span>
                     <div className="flex-1 h-7 bg-slate-50 rounded-lg overflow-hidden">
                       <div
-                        className={cn('h-full rounded-lg flex items-center px-2 transition-all', colors[i] || 'bg-sage-400')}
+                        className={cn(
+                          'h-full rounded-lg flex items-center px-2 transition-all',
+                          colors[i] || 'bg-sage-400',
+                        )}
                         style={{ width: `${widthPct}%` }}
                       >
                         <span className="text-xs font-medium text-white">

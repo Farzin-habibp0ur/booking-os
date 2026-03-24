@@ -119,7 +119,13 @@ describe('CampaignDispatchService', () => {
 
     it('processes pending sends and enqueues to notification queue', async () => {
       prisma.campaign.findMany.mockResolvedValue([
-        { id: 'camp1', businessId: 'biz1', throttlePerMinute: 2, channel: 'WHATSAPP', variants: [{ id: 'v1', content: 'Hello!' }] },
+        {
+          id: 'camp1',
+          businessId: 'biz1',
+          throttlePerMinute: 2,
+          channel: 'WHATSAPP',
+          variants: [{ id: 'v1', content: 'Hello!' }],
+        },
       ] as any);
       const pendingSends = [
         { id: 's1', customerId: 'c1', campaign: {} },
@@ -127,7 +133,12 @@ describe('CampaignDispatchService', () => {
       ];
       prisma.campaignSend.findMany.mockResolvedValue(pendingSends as any);
       prisma.customer.findUnique
-        .mockResolvedValueOnce({ id: 'c1', name: 'Alice', phone: '+1234567890', email: null } as any)
+        .mockResolvedValueOnce({
+          id: 'c1',
+          name: 'Alice',
+          phone: '+1234567890',
+          email: null,
+        } as any)
         .mockResolvedValueOnce({ id: 'c2', name: 'Bob', phone: '+0987654321', email: null } as any);
       prisma.campaignSend.update.mockResolvedValue({} as any);
       prisma.campaignSend.groupBy.mockResolvedValue([]);
@@ -147,12 +158,23 @@ describe('CampaignDispatchService', () => {
 
     it('marks send as FAILED when customer has no contact info for channel', async () => {
       prisma.campaign.findMany.mockResolvedValue([
-        { id: 'camp1', businessId: 'biz1', throttlePerMinute: 10, channel: 'WHATSAPP', variants: [] },
+        {
+          id: 'camp1',
+          businessId: 'biz1',
+          throttlePerMinute: 10,
+          channel: 'WHATSAPP',
+          variants: [],
+        },
       ] as any);
       prisma.campaignSend.findMany.mockResolvedValue([
         { id: 's1', customerId: 'c1', campaign: {} },
       ] as any);
-      prisma.customer.findUnique.mockResolvedValue({ id: 'c1', name: 'NoPhone', phone: null, email: null } as any);
+      prisma.customer.findUnique.mockResolvedValue({
+        id: 'c1',
+        name: 'NoPhone',
+        phone: null,
+        email: null,
+      } as any);
       prisma.campaignSend.update.mockResolvedValue({} as any);
       prisma.campaignSend.groupBy.mockResolvedValue([]);
       prisma.campaignSend.count.mockResolvedValue(0);
@@ -169,12 +191,23 @@ describe('CampaignDispatchService', () => {
 
     it('captures failed sends to DLQ', async () => {
       prisma.campaign.findMany.mockResolvedValue([
-        { id: 'camp1', businessId: 'biz1', throttlePerMinute: 10, channel: 'SMS', variants: [{ id: 'v1', content: 'Hi' }] },
+        {
+          id: 'camp1',
+          businessId: 'biz1',
+          throttlePerMinute: 10,
+          channel: 'SMS',
+          variants: [{ id: 'v1', content: 'Hi' }],
+        },
       ] as any);
       prisma.campaignSend.findMany.mockResolvedValue([
         { id: 's1', customerId: 'c1', campaign: {} },
       ] as any);
-      prisma.customer.findUnique.mockResolvedValue({ id: 'c1', name: 'Alice', phone: '+123', email: null } as any);
+      prisma.customer.findUnique.mockResolvedValue({
+        id: 'c1',
+        name: 'Alice',
+        phone: '+123',
+        email: null,
+      } as any);
       notificationQueue.add.mockRejectedValue(new Error('Queue error'));
       prisma.campaignSend.update.mockResolvedValue({} as any);
       prisma.campaignSend.groupBy.mockResolvedValue([]);

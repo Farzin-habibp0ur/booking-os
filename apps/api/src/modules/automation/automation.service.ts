@@ -38,7 +38,7 @@ const BUILT_IN_PLAYBOOKS = [
     actions: [
       {
         type: 'SEND_MESSAGE',
-        body: 'Welcome to {{business}}! We\'re excited to have you. Book your first appointment today.',
+        body: "Welcome to {{business}}! We're excited to have you. Book your first appointment today.",
       },
     ],
     playbook: 'welcome-new-customer',
@@ -511,12 +511,7 @@ export class AutomationService {
   }
 
   // MED-12: Conflict detection
-  async checkConflicts(
-    businessId: string,
-    trigger: string,
-    filters: any,
-    excludeRuleId?: string,
-  ) {
+  async checkConflicts(businessId: string, trigger: string, filters: any, excludeRuleId?: string) {
     const existingRules = await this.prisma.automationRule.findMany({
       where: {
         businessId,
@@ -645,7 +640,14 @@ export class AutomationService {
 
     const ruleMap: Record<string, any> = {};
     for (const rule of rules) {
-      ruleMap[rule.id] = { ruleId: rule.id, ruleName: rule.name, trigger: rule.trigger, sent: 0, skipped: 0, failed: 0 };
+      ruleMap[rule.id] = {
+        ruleId: rule.id,
+        ruleName: rule.name,
+        trigger: rule.trigger,
+        sent: 0,
+        skipped: 0,
+        failed: 0,
+      };
     }
     for (const log of logs) {
       const r = ruleMap[log.automationRuleId];

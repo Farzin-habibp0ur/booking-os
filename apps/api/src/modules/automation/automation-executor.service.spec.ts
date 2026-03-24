@@ -77,7 +77,9 @@ describe('AutomationExecutorService', () => {
 
     it('respects business timezone for quiet hours', () => {
       const now = new Date();
-      const pacificLocalTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
+      const pacificLocalTime = new Date(
+        now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }),
+      );
       const pacificMinutes = pacificLocalTime.getHours() * 60 + pacificLocalTime.getMinutes();
 
       // Quiet hours 00:00-23:59 in Pacific should always be true
