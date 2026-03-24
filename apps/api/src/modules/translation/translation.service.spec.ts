@@ -11,10 +11,7 @@ describe('TranslationService', () => {
     prisma = createMockPrisma();
 
     const module = await Test.createTestingModule({
-      providers: [
-        TranslationService,
-        { provide: PrismaService, useValue: prisma },
-      ],
+      providers: [TranslationService, { provide: PrismaService, useValue: prisma }],
     }).compile();
 
     service = module.get(TranslationService);
@@ -80,7 +77,14 @@ describe('TranslationService', () => {
 
   describe('upsert', () => {
     it('should call prisma.translation.upsert with composite key', async () => {
-      const mockTranslation = { id: 't1', businessId: 'biz1', locale: 'es', key: 'greeting', value: 'Hola', updatedAt: new Date() };
+      const mockTranslation = {
+        id: 't1',
+        businessId: 'biz1',
+        locale: 'es',
+        key: 'greeting',
+        value: 'Hola',
+        updatedAt: new Date(),
+      };
       (prisma.translation.upsert as jest.Mock).mockResolvedValue(mockTranslation);
 
       const result = await service.upsert('biz1', 'es', 'greeting', 'Hola');

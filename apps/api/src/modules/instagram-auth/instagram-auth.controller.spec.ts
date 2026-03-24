@@ -14,10 +14,17 @@ describe('InstagramAuthController', () => {
 
   beforeEach(async () => {
     mockService = {
-      getAuthorizeUrl: jest.fn().mockReturnValue('https://www.facebook.com/v21.0/dialog/oauth?client_id=app-id'),
+      getAuthorizeUrl: jest
+        .fn()
+        .mockReturnValue('https://www.facebook.com/v21.0/dialog/oauth?client_id=app-id'),
       handleCallback: jest.fn().mockResolvedValue({ pageName: 'Test Page', pageId: 'page-1' }),
       disconnect: jest.fn().mockResolvedValue(undefined),
-      getStatus: jest.fn().mockResolvedValue({ connected: true, pageName: 'Test Page', pageId: 'page-1', tokenExpiresAt: '2026-05-01' }),
+      getStatus: jest.fn().mockResolvedValue({
+        connected: true,
+        pageName: 'Test Page',
+        pageId: 'page-1',
+        tokenExpiresAt: '2026-05-01',
+      }),
       getLocationConfig: jest.fn().mockResolvedValue({ pageId: 'page-1', pageAccessToken: 'tok' }),
     };
 
@@ -79,7 +86,9 @@ describe('InstagramAuthController', () => {
   // ─── callback ──────────────────────────────────────────────
 
   describe('callback', () => {
-    const validState = Buffer.from(JSON.stringify({ businessId: 'biz1', locationId: 'loc1' })).toString('base64');
+    const validState = Buffer.from(
+      JSON.stringify({ businessId: 'biz1', locationId: 'loc1' }),
+    ).toString('base64');
 
     it('should decode state, call handleCallback, and redirect to frontend', async () => {
       await controller.callback('auth-code', validState, mockRes as any);
@@ -155,9 +164,9 @@ describe('InstagramAuthController', () => {
     });
 
     it('should throw when prompts array is empty', async () => {
-      await expect(
-        controller.setIceBreakers('biz1', 'loc1', { prompts: [] }),
-      ).rejects.toThrow(BadRequestException);
+      await expect(controller.setIceBreakers('biz1', 'loc1', { prompts: [] })).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should throw when prompts array has more than 4 items', async () => {
@@ -176,17 +185,17 @@ describe('InstagramAuthController', () => {
     it('should throw when Instagram is not connected', async () => {
       mockService.getStatus.mockResolvedValue({ connected: false });
 
-      await expect(
-        controller.setIceBreakers('biz1', 'loc1', validPrompts),
-      ).rejects.toThrow(BadRequestException);
+      await expect(controller.setIceBreakers('biz1', 'loc1', validPrompts)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should throw when provider is not available', async () => {
       mockMessagingService.getProviderForLocationInstagramConfig.mockReturnValue(null);
 
-      await expect(
-        controller.setIceBreakers('biz1', 'loc1', validPrompts),
-      ).rejects.toThrow(BadRequestException);
+      await expect(controller.setIceBreakers('biz1', 'loc1', validPrompts)).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 });

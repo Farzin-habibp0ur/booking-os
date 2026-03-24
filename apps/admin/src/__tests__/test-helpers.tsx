@@ -25,8 +25,20 @@ jest.mock('next/navigation', () => ({
 jest.mock('next/link', () => {
   return {
     __esModule: true,
-    default: ({ children, href, ...props }: { children: React.ReactNode; href: string; [key: string]: unknown }) => {
-      return <a href={href} {...props}>{children}</a>;
+    default: ({
+      children,
+      href,
+      ...props
+    }: {
+      children: React.ReactNode;
+      href: string;
+      [key: string]: unknown;
+    }) => {
+      return (
+        <a href={href} {...props}>
+          {children}
+        </a>
+      );
     },
   };
 });
@@ -65,17 +77,27 @@ global.IntersectionObserver = class IntersectionObserver {
   observe() {}
   unobserve() {}
   disconnect() {}
-  takeRecords() { return []; }
+  takeRecords() {
+    return [];
+  }
 } as unknown as typeof IntersectionObserver;
 
 // Mock recharts (it doesn't render well in jsdom)
 jest.mock('recharts', () => ({
-  ResponsiveContainer: ({ children }: { children: React.ReactNode }) => <div data-testid="responsive-container">{children}</div>,
-  BarChart: ({ children }: { children: React.ReactNode }) => <div data-testid="bar-chart">{children}</div>,
+  ResponsiveContainer: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="responsive-container">{children}</div>
+  ),
+  BarChart: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="bar-chart">{children}</div>
+  ),
   Bar: () => <div data-testid="bar" />,
-  LineChart: ({ children }: { children: React.ReactNode }) => <div data-testid="line-chart">{children}</div>,
+  LineChart: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="line-chart">{children}</div>
+  ),
   Line: () => <div data-testid="line" />,
-  PieChart: ({ children }: { children: React.ReactNode }) => <div data-testid="pie-chart">{children}</div>,
+  PieChart: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="pie-chart">{children}</div>
+  ),
   Pie: () => <div data-testid="pie" />,
   Cell: () => <div />,
   XAxis: () => <div />,

@@ -48,7 +48,11 @@ describe('Business 360', () => {
         defaultLocale: 'en',
         createdAt: '2025-01-01T00:00:00Z',
         owner: { name: 'John Doe', email: 'john@test.com' },
-        subscription: { plan: 'starter', status: 'active', currentPeriodEnd: '2025-12-01T00:00:00Z' },
+        subscription: {
+          plan: 'starter',
+          status: 'active',
+          currentPeriodEnd: '2025-12-01T00:00:00Z',
+        },
         health: 'green',
         lastActive: '2025-06-01T00:00:00Z',
         counts: {

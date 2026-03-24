@@ -144,9 +144,7 @@ describe('BillingService — checkBillingHealth', () => {
   });
 
   it('should return "not_configured" when Stripe balance.retrieve fails', async () => {
-    mockStripeInstance.balance.retrieve.mockRejectedValue(
-      new Error('Invalid API Key provided'),
-    );
+    mockStripeInstance.balance.retrieve.mockRejectedValue(new Error('Invalid API Key provided'));
 
     await createService();
 

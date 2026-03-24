@@ -47,17 +47,20 @@ async function main() {
   console.log('🌱 Seeding demo data...\n');
 
   // ── 1. Look up existing business (Glow Aesthetic Clinic, not platform) ────
-  const business = await prisma.business.findFirst({
-    where: { verticalPack: 'AESTHETIC' },
-  }) ?? await prisma.business.findFirst({
-    where: { name: { contains: 'Glow' } },
-  }) ?? await prisma.business.findFirst({
-    where: { NOT: { slug: 'platform' } },
-  });
+  const business =
+    (await prisma.business.findFirst({
+      where: { verticalPack: 'AESTHETIC' },
+    })) ??
+    (await prisma.business.findFirst({
+      where: { name: { contains: 'Glow' } },
+    })) ??
+    (await prisma.business.findFirst({
+      where: { NOT: { slug: 'platform' } },
+    }));
   if (!business) {
     throw new Error('No business found. Run the base seed first.');
   }
-  console.log(`📍 Target business: ${business.name} (${business.id})`)
+  console.log(`📍 Target business: ${business.name} (${business.id})`);
 
   // Idempotency guard
   const config = business.packConfig as Record<string, unknown>;
@@ -1831,830 +1834,858 @@ async function main() {
   // ██ DEALERSHIP VERTICAL — Metro Auto Group ██
   // ════════════════════════════════════════════════════════════════════════════
   try {
-  console.log('\n🚗 Seeding dealership demo data (Metro Auto Group)...\n');
+    console.log('\n🚗 Seeding dealership demo data (Metro Auto Group)...\n');
 
-  const dealership = await prisma.business.upsert({
-    where: { slug: 'metro-auto' },
-    update: {},
-    create: {
-      name: 'Metro Auto Group',
-      slug: 'metro-auto',
-      phone: '+14155559000',
-      timezone: 'America/Los_Angeles',
-      verticalPack: 'dealership',
-      packConfig: {
-        setupComplete: true,
-        kanbanEnabled: true,
-        quoteApproval: true,
-        dealership: {
-          serviceTracking: true,
-          vehicleInspections: true,
-          pickupReminders: true,
+    const dealership = await prisma.business.upsert({
+      where: { slug: 'metro-auto' },
+      update: {},
+      create: {
+        name: 'Metro Auto Group',
+        slug: 'metro-auto',
+        phone: '+14155559000',
+        timezone: 'America/Los_Angeles',
+        verticalPack: 'dealership',
+        packConfig: {
+          setupComplete: true,
+          kanbanEnabled: true,
+          quoteApproval: true,
+          dealership: {
+            serviceTracking: true,
+            vehicleInspections: true,
+            pickupReminders: true,
+          },
+        },
+        notificationSettings: {
+          channels: 'both',
+          followUpDelayHours: 4,
         },
       },
-      notificationSettings: {
-        channels: 'both',
-        followUpDelayHours: 4,
+    });
+    const dBizId = dealership.id;
+    console.log('✅ Metro Auto Group business found/created');
+
+    // ── D1. Locations ──────────────────────────────────────────────────────────
+    const showroom = await prisma.location.create({
+      data: {
+        businessId: dBizId,
+        name: 'Main Showroom',
+        address: '1200 Auto Boulevard, San Francisco, CA 94107',
+        isBookable: true,
       },
-    },
-  });
-  const dBizId = dealership.id;
-  console.log('✅ Metro Auto Group business found/created');
+    });
+    const serviceCenter = await prisma.location.create({
+      data: {
+        businessId: dBizId,
+        name: 'Service Center',
+        address: '1210 Auto Boulevard, San Francisco, CA 94107',
+        isBookable: true,
+      },
+    });
+    console.log('✅ 2 locations created (Main Showroom, Service Center)');
 
-  // ── D1. Locations ──────────────────────────────────────────────────────────
-  const showroom = await prisma.location.create({
-    data: {
-      businessId: dBizId,
-      name: 'Main Showroom',
-      address: '1200 Auto Boulevard, San Francisco, CA 94107',
-      isBookable: true,
-    },
-  });
-  const serviceCenter = await prisma.location.create({
-    data: {
-      businessId: dBizId,
-      name: 'Service Center',
-      address: '1210 Auto Boulevard, San Francisco, CA 94107',
-      isBookable: true,
-    },
-  });
-  console.log('✅ 2 locations created (Main Showroom, Service Center)');
+    // ── D2. Resources ──────────────────────────────────────────────────────────
+    const paintBooth = await prisma.resource.create({
+      data: {
+        locationId: serviceCenter.id,
+        name: 'Paint Booth',
+        type: 'BAY',
+        metadata: { capacity: 1 },
+      },
+    });
+    const liftBay1 = await prisma.resource.create({
+      data: {
+        locationId: serviceCenter.id,
+        name: 'Lift Bay 1',
+        type: 'BAY',
+        metadata: { liftType: 'two-post' },
+      },
+    });
+    const liftBay2 = await prisma.resource.create({
+      data: {
+        locationId: serviceCenter.id,
+        name: 'Lift Bay 2',
+        type: 'BAY',
+        metadata: { liftType: 'four-post' },
+      },
+    });
+    console.log('✅ 3 resources created (Paint Booth, Lift Bay 1, Lift Bay 2)');
 
-  // ── D2. Resources ──────────────────────────────────────────────────────────
-  const paintBooth = await prisma.resource.create({
-    data: {
-      locationId: serviceCenter.id,
-      name: 'Paint Booth',
-      type: 'BAY',
-      metadata: { capacity: 1 },
-    },
-  });
-  const liftBay1 = await prisma.resource.create({
-    data: {
-      locationId: serviceCenter.id,
-      name: 'Lift Bay 1',
-      type: 'BAY',
-      metadata: { liftType: 'two-post' },
-    },
-  });
-  const liftBay2 = await prisma.resource.create({
-    data: {
-      locationId: serviceCenter.id,
-      name: 'Lift Bay 2',
-      type: 'BAY',
-      metadata: { liftType: 'four-post' },
-    },
-  });
-  console.log('✅ 3 resources created (Paint Booth, Lift Bay 1, Lift Bay 2)');
+    // ── D3. Staff ──────────────────────────────────────────────────────────────
+    const passHash = await bcrypt.hash('password123', 12);
 
-  // ── D3. Staff ──────────────────────────────────────────────────────────────
-  const passHash = await bcrypt.hash('password123', 12);
+    const mike = await prisma.staff.create({
+      data: {
+        businessId: dBizId,
+        name: 'Mike Torres',
+        email: 'mike@metroauto.com',
+        passwordHash: passHash,
+        role: 'ADMIN',
+      },
+    });
+    const jen = await prisma.staff.create({
+      data: {
+        businessId: dBizId,
+        name: 'Jen Davis',
+        email: 'jen@metroauto.com',
+        passwordHash: passHash,
+        role: 'AGENT',
+      },
+    });
+    const carlos = await prisma.staff.create({
+      data: {
+        businessId: dBizId,
+        name: 'Carlos Ruiz',
+        email: 'carlos@metroauto.com',
+        passwordHash: passHash,
+        role: 'SERVICE_PROVIDER',
+      },
+    });
+    const priya = await prisma.staff.create({
+      data: {
+        businessId: dBizId,
+        name: 'Priya Shah',
+        email: 'priya@metroauto.com',
+        passwordHash: passHash,
+        role: 'SERVICE_PROVIDER',
+      },
+    });
 
-  const mike = await prisma.staff.create({
-    data: {
-      businessId: dBizId,
-      name: 'Mike Torres',
-      email: 'mike@metroauto.com',
-      passwordHash: passHash,
-      role: 'ADMIN',
-    },
-  });
-  const jen = await prisma.staff.create({
-    data: {
-      businessId: dBizId,
-      name: 'Jen Davis',
-      email: 'jen@metroauto.com',
-      passwordHash: passHash,
-      role: 'AGENT',
-    },
-  });
-  const carlos = await prisma.staff.create({
-    data: {
-      businessId: dBizId,
-      name: 'Carlos Ruiz',
-      email: 'carlos@metroauto.com',
-      passwordHash: passHash,
-      role: 'SERVICE_PROVIDER',
-    },
-  });
-  const priya = await prisma.staff.create({
-    data: {
-      businessId: dBizId,
-      name: 'Priya Shah',
-      email: 'priya@metroauto.com',
-      passwordHash: passHash,
-      role: 'SERVICE_PROVIDER',
-    },
-  });
+    // Working hours for dealership staff (Mon-Sat)
+    for (const s of [mike, jen, carlos, priya]) {
+      for (const day of [0, 1, 2, 3, 4, 5, 6]) {
+        await prisma.workingHours.create({
+          data: {
+            staffId: s.id,
+            dayOfWeek: day,
+            startTime: '08:00',
+            endTime: '17:00',
+            isOff: ![1, 2, 3, 4, 5, 6].includes(day),
+          },
+        });
+      }
+    }
 
-  // Working hours for dealership staff (Mon-Sat)
-  for (const s of [mike, jen, carlos, priya]) {
-    for (const day of [0, 1, 2, 3, 4, 5, 6]) {
-      await prisma.workingHours.create({
+    // Staff-Location mappings
+    await prisma.staffLocation.createMany({
+      data: [
+        { staffId: mike.id, locationId: showroom.id },
+        { staffId: jen.id, locationId: showroom.id },
+        { staffId: jen.id, locationId: serviceCenter.id },
+        { staffId: carlos.id, locationId: serviceCenter.id },
+        { staffId: priya.id, locationId: serviceCenter.id },
+      ],
+    });
+    console.log('✅ 4 staff + StaffLocation mappings created');
+
+    // ── D4. Services ───────────────────────────────────────────────────────────
+    const svcOilChange = await prisma.service.create({
+      data: {
+        businessId: dBizId,
+        name: 'Oil Change',
+        description: 'Full synthetic oil change with filter replacement',
+        durationMins: 30,
+        price: 79.99,
+        category: 'Maintenance',
+        kind: 'OTHER',
+      },
+    });
+    const svcDetailing = await prisma.service.create({
+      data: {
+        businessId: dBizId,
+        name: 'Full Detailing',
+        description: 'Interior & exterior deep clean, wax, tire shine',
+        durationMins: 180,
+        price: 249.99,
+        category: 'Detailing',
+        kind: 'OTHER',
+      },
+    });
+    const svcPaintProtection = await prisma.service.create({
+      data: {
+        businessId: dBizId,
+        name: 'Paint Protection Film',
+        description: 'Clear PPF wrap for front bumper, hood, and fenders',
+        durationMins: 480,
+        price: 1499.99,
+        category: 'Protection',
+        kind: 'OTHER',
+        depositRequired: true,
+        depositAmount: 300,
+      },
+    });
+    const svcInspection = await prisma.service.create({
+      data: {
+        businessId: dBizId,
+        name: 'Pre-Purchase Inspection',
+        description: '150-point vehicle inspection with detailed report',
+        durationMins: 90,
+        price: 149.99,
+        category: 'Inspection',
+        kind: 'CONSULT',
+      },
+    });
+    const svcBrakes = await prisma.service.create({
+      data: {
+        businessId: dBizId,
+        name: 'Brake Service',
+        description: 'Brake pad replacement and rotor inspection',
+        durationMins: 120,
+        price: 299.99,
+        category: 'Maintenance',
+        kind: 'OTHER',
+      },
+    });
+    console.log('✅ 5 dealership services created');
+
+    // ── D5. Customers (15) ─────────────────────────────────────────────────────
+    async function ensureDealerCustomer(data: {
+      name: string;
+      phone: string;
+      email?: string;
+      tags: string[];
+      customFields: Record<string, string | number | boolean>;
+    }) {
+      return prisma.customer.upsert({
+        where: { businessId_phone: { businessId: dBizId, phone: data.phone } },
+        update: {},
+        create: { businessId: dBizId, ...data },
+      });
+    }
+
+    const dCust1 = await ensureDealerCustomer({
+      name: 'Robert Chen',
+      phone: '+14155559101',
+      email: 'robert.c@example.com',
+      tags: ['Fleet'],
+      customFields: { vehicle: '2023 BMW X5', vin: 'WBA5A7C50ED123456', mileage: 12500 },
+    });
+    const dCust2 = await ensureDealerCustomer({
+      name: 'Sarah Kim',
+      phone: '+14155559102',
+      email: 'sarah.k@example.com',
+      tags: ['VIP'],
+      customFields: { vehicle: '2024 Mercedes GLE', vin: 'W1N1B4EB5RF234567', mileage: 3200 },
+    });
+    const dCust3 = await ensureDealerCustomer({
+      name: 'Tom Bradley',
+      phone: '+14155559103',
+      email: 'tom.b@example.com',
+      tags: ['Regular'],
+      customFields: { vehicle: '2022 Toyota Camry', vin: 'JTDKN3DU5N0345678', mileage: 28000 },
+    });
+    const dCust4 = await ensureDealerCustomer({
+      name: 'Lisa Nguyen',
+      phone: '+14155559104',
+      email: 'lisa.n@example.com',
+      tags: ['New'],
+      customFields: { vehicle: '2023 Honda CR-V', vin: '7FARW2H53PE456789', mileage: 15600 },
+    });
+    const dCust5 = await ensureDealerCustomer({
+      name: 'Mark Johnson',
+      phone: '+14155559105',
+      email: 'mark.j@example.com',
+      tags: ['Fleet'],
+      customFields: { vehicle: '2024 Ford F-150', vin: '1FTFW1E55NF567890', mileage: 8900 },
+    });
+    const dCust6 = await ensureDealerCustomer({
+      name: 'Angela Ross',
+      phone: '+14155559106',
+      email: 'angela.r@example.com',
+      tags: ['VIP'],
+      customFields: { vehicle: '2023 Porsche Cayenne', vin: 'WP1AA2AY8PD678901', mileage: 11200 },
+    });
+    const dCust7 = await ensureDealerCustomer({
+      name: 'David Park',
+      phone: '+14155559107',
+      email: 'david.p@example.com',
+      tags: ['Regular'],
+      customFields: { vehicle: '2021 Subaru Outback', vin: '4S4BTACC3M3789012', mileage: 42000 },
+    });
+    const dCust8 = await ensureDealerCustomer({
+      name: 'Rachel Green',
+      phone: '+14155559108',
+      email: 'rachel.g@example.com',
+      tags: ['New'],
+      customFields: { vehicle: '2024 Tesla Model Y', vin: '7SAYGDEE5RF890123', mileage: 1200 },
+    });
+    const dCust9 = await ensureDealerCustomer({
+      name: 'James Wu',
+      phone: '+14155559109',
+      email: 'james.w@example.com',
+      tags: ['Regular'],
+      customFields: { vehicle: '2022 Lexus RX 350', vin: '2T2HZMDA8NC901234', mileage: 33400 },
+    });
+    const dCust10 = await ensureDealerCustomer({
+      name: 'Maria Santos',
+      phone: '+14155559110',
+      email: 'maria.s@example.com',
+      tags: ['VIP'],
+      customFields: { vehicle: '2023 Audi Q7', vin: 'WA1LAAF71PD012345', mileage: 9800 },
+    });
+    const dCust11 = await ensureDealerCustomer({
+      name: "Kevin O'Brien",
+      phone: '+14155559111',
+      email: 'kevin.o@example.com',
+      tags: ['Regular'],
+      customFields: {
+        vehicle: '2020 Chevrolet Silverado',
+        vin: '3GCUYDED8LG123450',
+        mileage: 55000,
+      },
+    });
+    const dCust12 = await ensureDealerCustomer({
+      name: 'Nina Patel',
+      phone: '+14155559112',
+      email: 'nina.p@example.com',
+      tags: ['New'],
+      customFields: { vehicle: '2024 Hyundai Tucson', vin: '5NMJFDAE5RH234561', mileage: 2100 },
+    });
+    const dCust13 = await ensureDealerCustomer({
+      name: 'Chris Taylor',
+      phone: '+14155559113',
+      email: 'chris.t@example.com',
+      tags: ['Fleet'],
+      customFields: { vehicle: '2023 Ram 1500', vin: '1C6SRFFT3PN345672', mileage: 18700 },
+    });
+    const dCust14 = await ensureDealerCustomer({
+      name: 'Amy Zhang',
+      phone: '+14155559114',
+      email: 'amy.z@example.com',
+      tags: ['Regular'],
+      customFields: { vehicle: '2022 Mazda CX-5', vin: 'JM3KFBCM9N0456783', mileage: 25100 },
+    });
+    const dCust15 = await ensureDealerCustomer({
+      name: 'Brian Miller',
+      phone: '+14155559115',
+      email: 'brian.m@example.com',
+      tags: ['New'],
+      customFields: { vehicle: '2024 Volkswagen ID.4', vin: '1V2KR2CA5RC567894', mileage: 800 },
+    });
+
+    console.log('✅ 15 dealership customers created');
+
+    // ── D6. Bookings (25) — with Service Kanban statuses ───────────────────────
+    async function dBook(
+      customerId: string,
+      serviceId: string,
+      staffId: string,
+      status: string,
+      start: Date,
+      durationMins: number,
+      opts?: { locationId?: string; resourceId?: string; kanbanStatus?: string; notes?: string },
+    ) {
+      return prisma.booking.create({
         data: {
-          staffId: s.id,
-          dayOfWeek: day,
-          startTime: '08:00',
-          endTime: '17:00',
-          isOff: ![1, 2, 3, 4, 5, 6].includes(day),
+          businessId: dBizId,
+          customerId,
+          serviceId,
+          staffId,
+          status,
+          startTime: start,
+          endTime: addMinutes(start, durationMins),
+          locationId: opts?.locationId || serviceCenter.id,
+          resourceId: opts?.resourceId,
+          kanbanStatus: opts?.kanbanStatus,
+          notes: opts?.notes,
         },
       });
     }
-  }
 
-  // Staff-Location mappings
-  await prisma.staffLocation.createMany({
-    data: [
-      { staffId: mike.id, locationId: showroom.id },
-      { staffId: jen.id, locationId: showroom.id },
-      { staffId: jen.id, locationId: serviceCenter.id },
-      { staffId: carlos.id, locationId: serviceCenter.id },
-      { staffId: priya.id, locationId: serviceCenter.id },
-    ],
-  });
-  console.log('✅ 4 staff + StaffLocation mappings created');
-
-  // ── D4. Services ───────────────────────────────────────────────────────────
-  const svcOilChange = await prisma.service.create({
-    data: {
-      businessId: dBizId,
-      name: 'Oil Change',
-      description: 'Full synthetic oil change with filter replacement',
-      durationMins: 30,
-      price: 79.99,
-      category: 'Maintenance',
-      kind: 'OTHER',
-    },
-  });
-  const svcDetailing = await prisma.service.create({
-    data: {
-      businessId: dBizId,
-      name: 'Full Detailing',
-      description: 'Interior & exterior deep clean, wax, tire shine',
-      durationMins: 180,
-      price: 249.99,
-      category: 'Detailing',
-      kind: 'OTHER',
-    },
-  });
-  const svcPaintProtection = await prisma.service.create({
-    data: {
-      businessId: dBizId,
-      name: 'Paint Protection Film',
-      description: 'Clear PPF wrap for front bumper, hood, and fenders',
-      durationMins: 480,
-      price: 1499.99,
-      category: 'Protection',
-      kind: 'OTHER',
-      depositRequired: true,
-      depositAmount: 300,
-    },
-  });
-  const svcInspection = await prisma.service.create({
-    data: {
-      businessId: dBizId,
-      name: 'Pre-Purchase Inspection',
-      description: '150-point vehicle inspection with detailed report',
-      durationMins: 90,
-      price: 149.99,
-      category: 'Inspection',
-      kind: 'CONSULT',
-    },
-  });
-  const svcBrakes = await prisma.service.create({
-    data: {
-      businessId: dBizId,
-      name: 'Brake Service',
-      description: 'Brake pad replacement and rotor inspection',
-      durationMins: 120,
-      price: 299.99,
-      category: 'Maintenance',
-      kind: 'OTHER',
-    },
-  });
-  console.log('✅ 5 dealership services created');
-
-  // ── D5. Customers (15) ─────────────────────────────────────────────────────
-  async function ensureDealerCustomer(data: {
-    name: string;
-    phone: string;
-    email?: string;
-    tags: string[];
-    customFields: Record<string, string | number | boolean>;
-  }) {
-    return prisma.customer.upsert({
-      where: { businessId_phone: { businessId: dBizId, phone: data.phone } },
-      update: {},
-      create: { businessId: dBizId, ...data },
-    });
-  }
-
-  const dCust1 = await ensureDealerCustomer({
-    name: 'Robert Chen',
-    phone: '+14155559101',
-    email: 'robert.c@example.com',
-    tags: ['Fleet'],
-    customFields: { vehicle: '2023 BMW X5', vin: 'WBA5A7C50ED123456', mileage: 12500 },
-  });
-  const dCust2 = await ensureDealerCustomer({
-    name: 'Sarah Kim',
-    phone: '+14155559102',
-    email: 'sarah.k@example.com',
-    tags: ['VIP'],
-    customFields: { vehicle: '2024 Mercedes GLE', vin: 'W1N1B4EB5RF234567', mileage: 3200 },
-  });
-  const dCust3 = await ensureDealerCustomer({
-    name: 'Tom Bradley',
-    phone: '+14155559103',
-    email: 'tom.b@example.com',
-    tags: ['Regular'],
-    customFields: { vehicle: '2022 Toyota Camry', vin: 'JTDKN3DU5N0345678', mileage: 28000 },
-  });
-  const dCust4 = await ensureDealerCustomer({
-    name: 'Lisa Nguyen',
-    phone: '+14155559104',
-    email: 'lisa.n@example.com',
-    tags: ['New'],
-    customFields: { vehicle: '2023 Honda CR-V', vin: '7FARW2H53PE456789', mileage: 15600 },
-  });
-  const dCust5 = await ensureDealerCustomer({
-    name: 'Mark Johnson',
-    phone: '+14155559105',
-    email: 'mark.j@example.com',
-    tags: ['Fleet'],
-    customFields: { vehicle: '2024 Ford F-150', vin: '1FTFW1E55NF567890', mileage: 8900 },
-  });
-  const dCust6 = await ensureDealerCustomer({
-    name: 'Angela Ross',
-    phone: '+14155559106',
-    email: 'angela.r@example.com',
-    tags: ['VIP'],
-    customFields: { vehicle: '2023 Porsche Cayenne', vin: 'WP1AA2AY8PD678901', mileage: 11200 },
-  });
-  const dCust7 = await ensureDealerCustomer({
-    name: 'David Park',
-    phone: '+14155559107',
-    email: 'david.p@example.com',
-    tags: ['Regular'],
-    customFields: { vehicle: '2021 Subaru Outback', vin: '4S4BTACC3M3789012', mileage: 42000 },
-  });
-  const dCust8 = await ensureDealerCustomer({
-    name: 'Rachel Green',
-    phone: '+14155559108',
-    email: 'rachel.g@example.com',
-    tags: ['New'],
-    customFields: { vehicle: '2024 Tesla Model Y', vin: '7SAYGDEE5RF890123', mileage: 1200 },
-  });
-  const dCust9 = await ensureDealerCustomer({
-    name: 'James Wu',
-    phone: '+14155559109',
-    email: 'james.w@example.com',
-    tags: ['Regular'],
-    customFields: { vehicle: '2022 Lexus RX 350', vin: '2T2HZMDA8NC901234', mileage: 33400 },
-  });
-  const dCust10 = await ensureDealerCustomer({
-    name: 'Maria Santos',
-    phone: '+14155559110',
-    email: 'maria.s@example.com',
-    tags: ['VIP'],
-    customFields: { vehicle: '2023 Audi Q7', vin: 'WA1LAAF71PD012345', mileage: 9800 },
-  });
-  const dCust11 = await ensureDealerCustomer({
-    name: "Kevin O'Brien",
-    phone: '+14155559111',
-    email: 'kevin.o@example.com',
-    tags: ['Regular'],
-    customFields: { vehicle: '2020 Chevrolet Silverado', vin: '3GCUYDED8LG123450', mileage: 55000 },
-  });
-  const dCust12 = await ensureDealerCustomer({
-    name: 'Nina Patel',
-    phone: '+14155559112',
-    email: 'nina.p@example.com',
-    tags: ['New'],
-    customFields: { vehicle: '2024 Hyundai Tucson', vin: '5NMJFDAE5RH234561', mileage: 2100 },
-  });
-  const dCust13 = await ensureDealerCustomer({
-    name: 'Chris Taylor',
-    phone: '+14155559113',
-    email: 'chris.t@example.com',
-    tags: ['Fleet'],
-    customFields: { vehicle: '2023 Ram 1500', vin: '1C6SRFFT3PN345672', mileage: 18700 },
-  });
-  const dCust14 = await ensureDealerCustomer({
-    name: 'Amy Zhang',
-    phone: '+14155559114',
-    email: 'amy.z@example.com',
-    tags: ['Regular'],
-    customFields: { vehicle: '2022 Mazda CX-5', vin: 'JM3KFBCM9N0456783', mileage: 25100 },
-  });
-  const dCust15 = await ensureDealerCustomer({
-    name: 'Brian Miller',
-    phone: '+14155559115',
-    email: 'brian.m@example.com',
-    tags: ['New'],
-    customFields: { vehicle: '2024 Volkswagen ID.4', vin: '1V2KR2CA5RC567894', mileage: 800 },
-  });
-
-  console.log('✅ 15 dealership customers created');
-
-  // ── D6. Bookings (25) — with Service Kanban statuses ───────────────────────
-  async function dBook(
-    customerId: string,
-    serviceId: string,
-    staffId: string,
-    status: string,
-    start: Date,
-    durationMins: number,
-    opts?: { locationId?: string; resourceId?: string; kanbanStatus?: string; notes?: string },
-  ) {
-    return prisma.booking.create({
-      data: {
-        businessId: dBizId,
-        customerId,
-        serviceId,
-        staffId,
-        status,
-        startTime: start,
-        endTime: addMinutes(start, durationMins),
-        locationId: opts?.locationId || serviceCenter.id,
-        resourceId: opts?.resourceId,
-        kanbanStatus: opts?.kanbanStatus,
-        notes: opts?.notes,
+    // Completed bookings
+    const db1 = await dBook(
+      dCust1.id,
+      svcOilChange.id,
+      carlos.id,
+      'COMPLETED',
+      daysAgo(20, 8, 0),
+      30,
+      { resourceId: liftBay1.id, kanbanStatus: 'DELIVERED', notes: 'Synthetic 5W-30' },
+    );
+    const db2 = await dBook(
+      dCust2.id,
+      svcDetailing.id,
+      priya.id,
+      'COMPLETED',
+      daysAgo(18, 9, 0),
+      180,
+      { kanbanStatus: 'DELIVERED', notes: 'VIP ceramic coat add-on' },
+    );
+    const db3 = await dBook(
+      dCust3.id,
+      svcOilChange.id,
+      carlos.id,
+      'COMPLETED',
+      daysAgo(15, 10, 0),
+      30,
+      { resourceId: liftBay2.id, kanbanStatus: 'DELIVERED' },
+    );
+    const db4 = await dBook(
+      dCust5.id,
+      svcInspection.id,
+      carlos.id,
+      'COMPLETED',
+      daysAgo(14, 13, 0),
+      90,
+      {
+        resourceId: liftBay1.id,
+        kanbanStatus: 'DELIVERED',
+        notes: 'Fleet vehicle — passed all checks',
       },
-    });
-  }
+    );
+    const db5 = await dBook(
+      dCust7.id,
+      svcBrakes.id,
+      carlos.id,
+      'COMPLETED',
+      daysAgo(12, 8, 0),
+      120,
+      {
+        resourceId: liftBay1.id,
+        kanbanStatus: 'DELIVERED',
+        notes: 'Front pads replaced, rotors resurfaced',
+      },
+    );
+    const db6 = await dBook(
+      dCust9.id,
+      svcOilChange.id,
+      priya.id,
+      'COMPLETED',
+      daysAgo(10, 9, 0),
+      30,
+      { resourceId: liftBay2.id, kanbanStatus: 'DELIVERED' },
+    );
+    const db7 = await dBook(
+      dCust11.id,
+      svcBrakes.id,
+      carlos.id,
+      'COMPLETED',
+      daysAgo(8, 8, 0),
+      120,
+      {
+        resourceId: liftBay1.id,
+        kanbanStatus: 'DELIVERED',
+        notes: 'All four corners replaced',
+      },
+    );
+    const db8 = await dBook(
+      dCust6.id,
+      svcPaintProtection.id,
+      priya.id,
+      'COMPLETED',
+      daysAgo(7, 8, 0),
+      480,
+      { resourceId: paintBooth.id, kanbanStatus: 'DELIVERED', notes: 'Full front-end PPF' },
+    );
+    const db9 = await dBook(
+      dCust14.id,
+      svcOilChange.id,
+      carlos.id,
+      'COMPLETED',
+      daysAgo(5, 10, 0),
+      30,
+      { resourceId: liftBay2.id, kanbanStatus: 'DELIVERED' },
+    );
+    const db10 = await dBook(
+      dCust4.id,
+      svcDetailing.id,
+      priya.id,
+      'COMPLETED',
+      daysAgo(3, 9, 0),
+      180,
+      { kanbanStatus: 'DELIVERED', notes: 'Interior shampoo + exterior polish' },
+    );
 
-  // Completed bookings
-  const db1 = await dBook(
-    dCust1.id,
-    svcOilChange.id,
-    carlos.id,
-    'COMPLETED',
-    daysAgo(20, 8, 0),
-    30,
-    { resourceId: liftBay1.id, kanbanStatus: 'DELIVERED', notes: 'Synthetic 5W-30' },
-  );
-  const db2 = await dBook(
-    dCust2.id,
-    svcDetailing.id,
-    priya.id,
-    'COMPLETED',
-    daysAgo(18, 9, 0),
-    180,
-    { kanbanStatus: 'DELIVERED', notes: 'VIP ceramic coat add-on' },
-  );
-  const db3 = await dBook(
-    dCust3.id,
-    svcOilChange.id,
-    carlos.id,
-    'COMPLETED',
-    daysAgo(15, 10, 0),
-    30,
-    { resourceId: liftBay2.id, kanbanStatus: 'DELIVERED' },
-  );
-  const db4 = await dBook(
-    dCust5.id,
-    svcInspection.id,
-    carlos.id,
-    'COMPLETED',
-    daysAgo(14, 13, 0),
-    90,
-    {
+    // Service Kanban in-progress bookings
+    const db11 = await dBook(
+      dCust10.id,
+      svcDetailing.id,
+      priya.id,
+      'CONFIRMED',
+      daysFromNow(0, 8, 0),
+      180,
+      { kanbanStatus: 'IN_PROGRESS', notes: 'Ceramic coating refresh' },
+    );
+    const db12 = await dBook(
+      dCust13.id,
+      svcBrakes.id,
+      carlos.id,
+      'CONFIRMED',
+      daysFromNow(0, 9, 0),
+      120,
+      {
+        resourceId: liftBay1.id,
+        kanbanStatus: 'DIAGNOSED',
+        notes: 'Rear brakes grinding — needs rotors',
+      },
+    );
+    const db13 = await dBook(
+      dCust1.id,
+      svcInspection.id,
+      carlos.id,
+      'CONFIRMED',
+      daysFromNow(0, 13, 0),
+      90,
+      {
+        resourceId: liftBay2.id,
+        kanbanStatus: 'RECEIVED',
+        notes: 'Fleet vehicle #2 — annual check',
+      },
+    );
+
+    // Ready for pickup
+    const db14 = await dBook(
+      dCust7.id,
+      svcOilChange.id,
+      priya.id,
+      'CONFIRMED',
+      daysAgo(1, 8, 0),
+      30,
+      { resourceId: liftBay2.id, kanbanStatus: 'READY', notes: 'Done — awaiting pickup' },
+    );
+    const db15 = await dBook(
+      dCust9.id,
+      svcDetailing.id,
+      carlos.id,
+      'CONFIRMED',
+      daysAgo(1, 10, 0),
+      180,
+      { kanbanStatus: 'READY', notes: 'Complete — customer notified' },
+    );
+
+    // Upcoming confirmed
+    await dBook(dCust2.id, svcOilChange.id, carlos.id, 'CONFIRMED', daysFromNow(1, 9, 0), 30, {
       resourceId: liftBay1.id,
+      notes: 'Regular maintenance',
+    });
+    await dBook(dCust12.id, svcInspection.id, priya.id, 'CONFIRMED', daysFromNow(2, 10, 0), 90, {
+      resourceId: liftBay2.id,
+      notes: 'Used car pre-purchase',
+    });
+    await dBook(dCust8.id, svcDetailing.id, priya.id, 'CONFIRMED', daysFromNow(3, 9, 0), 180, {
+      notes: 'New vehicle prep detail',
+    });
+    await dBook(dCust5.id, svcBrakes.id, carlos.id, 'CONFIRMED', daysFromNow(4, 8, 0), 120, {
+      resourceId: liftBay1.id,
+      notes: 'Fleet scheduled maintenance',
+    });
+
+    // Pending deposit (PPF requires deposit)
+    await dBook(
+      dCust15.id,
+      svcPaintProtection.id,
+      priya.id,
+      'PENDING_DEPOSIT',
+      daysFromNow(5, 8, 0),
+      480,
+      { resourceId: paintBooth.id, notes: 'Full front + side mirrors' },
+    );
+    await dBook(
+      dCust3.id,
+      svcPaintProtection.id,
+      priya.id,
+      'PENDING_DEPOSIT',
+      daysFromNow(7, 8, 0),
+      480,
+      { resourceId: paintBooth.id, notes: 'Hood and bumper only' },
+    );
+
+    // No-shows & cancellations
+    await dBook(dCust11.id, svcOilChange.id, carlos.id, 'NO_SHOW', daysAgo(6, 10, 0), 30, {
+      resourceId: liftBay1.id,
+    });
+    await dBook(dCust4.id, svcBrakes.id, priya.id, 'CANCELLED', daysAgo(9, 14, 0), 120, {
+      resourceId: liftBay2.id,
+      notes: 'Customer chose different shop',
+    });
+
+    // One more completed for count
+    await dBook(dCust6.id, svcOilChange.id, carlos.id, 'COMPLETED', daysAgo(25, 9, 0), 30, {
+      resourceId: liftBay2.id,
       kanbanStatus: 'DELIVERED',
-      notes: 'Fleet vehicle — passed all checks',
-    },
-  );
-  const db5 = await dBook(dCust7.id, svcBrakes.id, carlos.id, 'COMPLETED', daysAgo(12, 8, 0), 120, {
-    resourceId: liftBay1.id,
-    kanbanStatus: 'DELIVERED',
-    notes: 'Front pads replaced, rotors resurfaced',
-  });
-  const db6 = await dBook(
-    dCust9.id,
-    svcOilChange.id,
-    priya.id,
-    'COMPLETED',
-    daysAgo(10, 9, 0),
-    30,
-    { resourceId: liftBay2.id, kanbanStatus: 'DELIVERED' },
-  );
-  const db7 = await dBook(dCust11.id, svcBrakes.id, carlos.id, 'COMPLETED', daysAgo(8, 8, 0), 120, {
-    resourceId: liftBay1.id,
-    kanbanStatus: 'DELIVERED',
-    notes: 'All four corners replaced',
-  });
-  const db8 = await dBook(
-    dCust6.id,
-    svcPaintProtection.id,
-    priya.id,
-    'COMPLETED',
-    daysAgo(7, 8, 0),
-    480,
-    { resourceId: paintBooth.id, kanbanStatus: 'DELIVERED', notes: 'Full front-end PPF' },
-  );
-  const db9 = await dBook(
-    dCust14.id,
-    svcOilChange.id,
-    carlos.id,
-    'COMPLETED',
-    daysAgo(5, 10, 0),
-    30,
-    { resourceId: liftBay2.id, kanbanStatus: 'DELIVERED' },
-  );
-  const db10 = await dBook(
-    dCust4.id,
-    svcDetailing.id,
-    priya.id,
-    'COMPLETED',
-    daysAgo(3, 9, 0),
-    180,
-    { kanbanStatus: 'DELIVERED', notes: 'Interior shampoo + exterior polish' },
-  );
+    });
 
-  // Service Kanban in-progress bookings
-  const db11 = await dBook(
-    dCust10.id,
-    svcDetailing.id,
-    priya.id,
-    'CONFIRMED',
-    daysFromNow(0, 8, 0),
-    180,
-    { kanbanStatus: 'IN_PROGRESS', notes: 'Ceramic coating refresh' },
-  );
-  const db12 = await dBook(
-    dCust13.id,
-    svcBrakes.id,
-    carlos.id,
-    'CONFIRMED',
-    daysFromNow(0, 9, 0),
-    120,
-    {
-      resourceId: liftBay1.id,
-      kanbanStatus: 'DIAGNOSED',
-      notes: 'Rear brakes grinding — needs rotors',
-    },
-  );
-  const db13 = await dBook(
-    dCust1.id,
-    svcInspection.id,
-    carlos.id,
-    'CONFIRMED',
-    daysFromNow(0, 13, 0),
-    90,
-    { resourceId: liftBay2.id, kanbanStatus: 'RECEIVED', notes: 'Fleet vehicle #2 — annual check' },
-  );
+    console.log('✅ 25 dealership bookings created (with kanban statuses)');
 
-  // Ready for pickup
-  const db14 = await dBook(
-    dCust7.id,
-    svcOilChange.id,
-    priya.id,
-    'CONFIRMED',
-    daysAgo(1, 8, 0),
-    30,
-    { resourceId: liftBay2.id, kanbanStatus: 'READY', notes: 'Done — awaiting pickup' },
-  );
-  const db15 = await dBook(
-    dCust9.id,
-    svcDetailing.id,
-    carlos.id,
-    'CONFIRMED',
-    daysAgo(1, 10, 0),
-    180,
-    { kanbanStatus: 'READY', notes: 'Complete — customer notified' },
-  );
+    // ── D7. Quotes (3) ─────────────────────────────────────────────────────────
+    await prisma.quote.create({
+      data: {
+        bookingId: db12.id,
+        businessId: dBizId,
+        description: 'Rear brake rotors (2x) + ceramic pads + labor',
+        totalAmount: 485.0,
+        status: 'PENDING',
+      },
+    });
+    await prisma.quote.create({
+      data: {
+        bookingId: db5.id,
+        businessId: dBizId,
+        description: 'Front brake pads + rotor resurface + labor',
+        totalAmount: 320.0,
+        status: 'APPROVED',
+        approvedAt: daysAgo(12, 9, 0),
+      },
+    });
+    await prisma.quote.create({
+      data: {
+        bookingId: db7.id,
+        businessId: dBizId,
+        description: 'All four brake rotors + premium ceramic pads + labor',
+        totalAmount: 890.0,
+        status: 'REJECTED',
+      },
+    });
+    console.log('✅ 3 quotes created (pending, approved, rejected)');
 
-  // Upcoming confirmed
-  await dBook(dCust2.id, svcOilChange.id, carlos.id, 'CONFIRMED', daysFromNow(1, 9, 0), 30, {
-    resourceId: liftBay1.id,
-    notes: 'Regular maintenance',
-  });
-  await dBook(dCust12.id, svcInspection.id, priya.id, 'CONFIRMED', daysFromNow(2, 10, 0), 90, {
-    resourceId: liftBay2.id,
-    notes: 'Used car pre-purchase',
-  });
-  await dBook(dCust8.id, svcDetailing.id, priya.id, 'CONFIRMED', daysFromNow(3, 9, 0), 180, {
-    notes: 'New vehicle prep detail',
-  });
-  await dBook(dCust5.id, svcBrakes.id, carlos.id, 'CONFIRMED', daysFromNow(4, 8, 0), 120, {
-    resourceId: liftBay1.id,
-    notes: 'Fleet scheduled maintenance',
-  });
+    // ── D8. Conversations (4) ──────────────────────────────────────────────────
+    async function createDealerConvo(
+      customerId: string,
+      assignedToId: string | null,
+      status: string,
+      lastMsgAt: Date,
+      tags: string[],
+      messages: Array<{ direction: string; content: string; staffId?: string; at: Date }>,
+    ) {
+      const convo = await prisma.conversation.create({
+        data: {
+          businessId: dBizId,
+          customerId,
+          assignedToId,
+          channel: 'WHATSAPP',
+          status,
+          lastMessageAt: lastMsgAt,
+          tags,
+          locationId: serviceCenter.id,
+        },
+      });
+      await prisma.message.createMany({
+        data: messages.map((m) => ({
+          conversationId: convo.id,
+          direction: m.direction,
+          senderStaffId: m.staffId || null,
+          content: m.content,
+          contentType: 'TEXT',
+          createdAt: m.at,
+        })),
+      });
+      return convo;
+    }
 
-  // Pending deposit (PPF requires deposit)
-  await dBook(
-    dCust15.id,
-    svcPaintProtection.id,
-    priya.id,
-    'PENDING_DEPOSIT',
-    daysFromNow(5, 8, 0),
-    480,
-    { resourceId: paintBooth.id, notes: 'Full front + side mirrors' },
-  );
-  await dBook(
-    dCust3.id,
-    svcPaintProtection.id,
-    priya.id,
-    'PENDING_DEPOSIT',
-    daysFromNow(7, 8, 0),
-    480,
-    { resourceId: paintBooth.id, notes: 'Hood and bumper only' },
-  );
+    await createDealerConvo(
+      dCust10.id,
+      jen.id,
+      'OPEN',
+      minutesAgo(30),
+      ['in-service'],
+      [
+        {
+          direction: 'INBOUND',
+          content: 'Hi, just dropping off my Q7 for the ceramic refresh. How long will it take?',
+          at: minutesAgo(45),
+        },
+        {
+          direction: 'OUTBOUND',
+          content:
+            "Hi Maria! Thanks for coming in. Ceramic coating refresh typically takes about 3 hours. We'll text you when it's ready!",
+          staffId: jen.id,
+          at: minutesAgo(30),
+        },
+      ],
+    );
 
-  // No-shows & cancellations
-  await dBook(dCust11.id, svcOilChange.id, carlos.id, 'NO_SHOW', daysAgo(6, 10, 0), 30, {
-    resourceId: liftBay1.id,
-  });
-  await dBook(dCust4.id, svcBrakes.id, priya.id, 'CANCELLED', daysAgo(9, 14, 0), 120, {
-    resourceId: liftBay2.id,
-    notes: 'Customer chose different shop',
-  });
+    await createDealerConvo(
+      dCust13.id,
+      carlos.id,
+      'OPEN',
+      hoursAgo(2),
+      ['quote-sent'],
+      [
+        {
+          direction: 'OUTBOUND',
+          content:
+            "Hi Chris, we diagnosed the grinding noise on your Ram — rear rotors need replacing. I've sent a quote for $485 including parts and labor.",
+          staffId: carlos.id,
+          at: hoursAgo(3),
+        },
+        {
+          direction: 'INBOUND',
+          content: 'That seems reasonable. Does the quote include the ceramic pads?',
+          at: hoursAgo(2),
+        },
+        {
+          direction: 'OUTBOUND',
+          content:
+            'Yes, ceramic pads are included in the $485. Want me to go ahead and start the work?',
+          staffId: carlos.id,
+          at: hoursAgo(1.5),
+        },
+      ],
+    );
 
-  // One more completed for count
-  await dBook(dCust6.id, svcOilChange.id, carlos.id, 'COMPLETED', daysAgo(25, 9, 0), 30, {
-    resourceId: liftBay2.id,
-    kanbanStatus: 'DELIVERED',
-  });
+    await createDealerConvo(
+      dCust7.id,
+      jen.id,
+      'OPEN',
+      hoursAgo(4),
+      ['pickup-ready'],
+      [
+        {
+          direction: 'OUTBOUND',
+          content:
+            'Hi David! Your Outback is all done — oil changed and topped off. Ready for pickup anytime today.',
+          staffId: jen.id,
+          at: hoursAgo(5),
+        },
+        {
+          direction: 'INBOUND',
+          content: "Great, I'll swing by around 4pm. Thanks!",
+          at: hoursAgo(4),
+        },
+      ],
+    );
 
-  console.log('✅ 25 dealership bookings created (with kanban statuses)');
+    await createDealerConvo(
+      dCust2.id,
+      mike.id,
+      'SNOOZED',
+      daysAgo(2),
+      ['VIP'],
+      [
+        {
+          direction: 'INBOUND',
+          content:
+            "Mike, I'd like to schedule the ceramic coating for my GLE. What days do you have open next month?",
+          at: daysAgo(3),
+        },
+        {
+          direction: 'OUTBOUND',
+          content:
+            'Hi Sarah! We have openings on the 10th and 15th. The full ceramic coat takes about 2 days. Which date works better for you?',
+          staffId: mike.id,
+          at: daysAgo(2),
+        },
+      ],
+    );
 
-  // ── D7. Quotes (3) ─────────────────────────────────────────────────────────
-  await prisma.quote.create({
-    data: {
-      bookingId: db12.id,
-      businessId: dBizId,
-      description: 'Rear brake rotors (2x) + ceramic pads + labor',
-      totalAmount: 485.0,
-      status: 'PENDING',
-    },
-  });
-  await prisma.quote.create({
-    data: {
-      bookingId: db5.id,
-      businessId: dBizId,
-      description: 'Front brake pads + rotor resurface + labor',
-      totalAmount: 320.0,
-      status: 'APPROVED',
-      approvedAt: daysAgo(12, 9, 0),
-    },
-  });
-  await prisma.quote.create({
-    data: {
-      bookingId: db7.id,
-      businessId: dBizId,
-      description: 'All four brake rotors + premium ceramic pads + labor',
-      totalAmount: 890.0,
-      status: 'REJECTED',
-    },
-  });
-  console.log('✅ 3 quotes created (pending, approved, rejected)');
+    console.log('✅ 4 dealership conversations created');
 
-  // ── D8. Conversations (4) ──────────────────────────────────────────────────
-  async function createDealerConvo(
-    customerId: string,
-    assignedToId: string | null,
-    status: string,
-    lastMsgAt: Date,
-    tags: string[],
-    messages: Array<{ direction: string; content: string; staffId?: string; at: Date }>,
-  ) {
-    const convo = await prisma.conversation.create({
+    // ── D9. Automation rules (2) ───────────────────────────────────────────────
+    const dRule1 = await prisma.automationRule.create({
       data: {
         businessId: dBizId,
-        customerId,
-        assignedToId,
-        channel: 'WHATSAPP',
-        status,
-        lastMessageAt: lastMsgAt,
-        tags,
-        locationId: serviceCenter.id,
+        name: 'Post-Service Follow-up',
+        trigger: 'STATUS_CHANGED',
+        filters: { toStatus: 'COMPLETED' },
+        actions: [
+          {
+            type: 'SEND_MESSAGE',
+            body: 'Hi {{customerName}}, your {{serviceName}} is complete! How was your experience at Metro Auto?',
+          },
+        ],
+        isActive: true,
+        playbook: 'service_followup',
       },
     });
-    await prisma.message.createMany({
-      data: messages.map((m) => ({
-        conversationId: convo.id,
-        direction: m.direction,
-        senderStaffId: m.staffId || null,
-        content: m.content,
-        contentType: 'TEXT',
-        createdAt: m.at,
-      })),
+    const dRule2 = await prisma.automationRule.create({
+      data: {
+        businessId: dBizId,
+        name: 'Overdue Pickup Reminder',
+        trigger: 'STATUS_CHANGED',
+        filters: { toKanbanStatus: 'READY' },
+        actions: [
+          {
+            type: 'SEND_MESSAGE',
+            body: "Hi {{customerName}}, your vehicle is ready for pickup at Metro Auto Group! We're open until 5 PM.",
+          },
+        ],
+        isActive: true,
+        playbook: 'pickup_reminder',
+        quietStart: '20:00',
+        quietEnd: '07:00',
+      },
     });
-    return convo;
-  }
 
-  await createDealerConvo(
-    dCust10.id,
-    jen.id,
-    'OPEN',
-    minutesAgo(30),
-    ['in-service'],
-    [
-      {
-        direction: 'INBOUND',
-        content: 'Hi, just dropping off my Q7 for the ceramic refresh. How long will it take?',
-        at: minutesAgo(45),
-      },
-      {
-        direction: 'OUTBOUND',
-        content:
-          "Hi Maria! Thanks for coming in. Ceramic coating refresh typically takes about 3 hours. We'll text you when it's ready!",
-        staffId: jen.id,
-        at: minutesAgo(30),
-      },
-    ],
-  );
-
-  await createDealerConvo(
-    dCust13.id,
-    carlos.id,
-    'OPEN',
-    hoursAgo(2),
-    ['quote-sent'],
-    [
-      {
-        direction: 'OUTBOUND',
-        content:
-          "Hi Chris, we diagnosed the grinding noise on your Ram — rear rotors need replacing. I've sent a quote for $485 including parts and labor.",
-        staffId: carlos.id,
-        at: hoursAgo(3),
-      },
-      {
-        direction: 'INBOUND',
-        content: 'That seems reasonable. Does the quote include the ceramic pads?',
-        at: hoursAgo(2),
-      },
-      {
-        direction: 'OUTBOUND',
-        content:
-          'Yes, ceramic pads are included in the $485. Want me to go ahead and start the work?',
-        staffId: carlos.id,
-        at: hoursAgo(1.5),
-      },
-    ],
-  );
-
-  await createDealerConvo(
-    dCust7.id,
-    jen.id,
-    'OPEN',
-    hoursAgo(4),
-    ['pickup-ready'],
-    [
-      {
-        direction: 'OUTBOUND',
-        content:
-          'Hi David! Your Outback is all done — oil changed and topped off. Ready for pickup anytime today.',
-        staffId: jen.id,
-        at: hoursAgo(5),
-      },
-      {
-        direction: 'INBOUND',
-        content: "Great, I'll swing by around 4pm. Thanks!",
-        at: hoursAgo(4),
-      },
-    ],
-  );
-
-  await createDealerConvo(
-    dCust2.id,
-    mike.id,
-    'SNOOZED',
-    daysAgo(2),
-    ['VIP'],
-    [
-      {
-        direction: 'INBOUND',
-        content:
-          "Mike, I'd like to schedule the ceramic coating for my GLE. What days do you have open next month?",
-        at: daysAgo(3),
-      },
-      {
-        direction: 'OUTBOUND',
-        content:
-          'Hi Sarah! We have openings on the 10th and 15th. The full ceramic coat takes about 2 days. Which date works better for you?',
-        staffId: mike.id,
-        at: daysAgo(2),
-      },
-    ],
-  );
-
-  console.log('✅ 4 dealership conversations created');
-
-  // ── D9. Automation rules (2) ───────────────────────────────────────────────
-  const dRule1 = await prisma.automationRule.create({
-    data: {
-      businessId: dBizId,
-      name: 'Post-Service Follow-up',
-      trigger: 'STATUS_CHANGED',
-      filters: { toStatus: 'COMPLETED' },
-      actions: [
+    await prisma.automationLog.createMany({
+      data: [
         {
-          type: 'SEND_MESSAGE',
-          body: 'Hi {{customerName}}, your {{serviceName}} is complete! How was your experience at Metro Auto?',
+          automationRuleId: dRule1.id,
+          businessId: dBizId,
+          bookingId: db1.id,
+          customerId: dCust1.id,
+          action: 'SEND_MESSAGE',
+          outcome: 'SENT',
+          createdAt: daysAgo(20, 9, 0),
+        },
+        {
+          automationRuleId: dRule1.id,
+          businessId: dBizId,
+          bookingId: db2.id,
+          customerId: dCust2.id,
+          action: 'SEND_MESSAGE',
+          outcome: 'SENT',
+          createdAt: daysAgo(18, 12, 0),
+        },
+        {
+          automationRuleId: dRule1.id,
+          businessId: dBizId,
+          bookingId: db3.id,
+          customerId: dCust3.id,
+          action: 'SEND_MESSAGE',
+          outcome: 'SENT',
+          createdAt: daysAgo(15, 11, 0),
+        },
+        {
+          automationRuleId: dRule2.id,
+          businessId: dBizId,
+          bookingId: db14.id,
+          customerId: dCust7.id,
+          action: 'SEND_MESSAGE',
+          outcome: 'SENT',
+          createdAt: daysAgo(1, 9, 0),
+        },
+        {
+          automationRuleId: dRule2.id,
+          businessId: dBizId,
+          bookingId: db15.id,
+          customerId: dCust9.id,
+          action: 'SEND_MESSAGE',
+          outcome: 'SENT',
+          createdAt: daysAgo(1, 13, 0),
         },
       ],
-      isActive: true,
-      playbook: 'service_followup',
-    },
-  });
-  const dRule2 = await prisma.automationRule.create({
-    data: {
-      businessId: dBizId,
-      name: 'Overdue Pickup Reminder',
-      trigger: 'STATUS_CHANGED',
-      filters: { toKanbanStatus: 'READY' },
-      actions: [
-        {
-          type: 'SEND_MESSAGE',
-          body: "Hi {{customerName}}, your vehicle is ready for pickup at Metro Auto Group! We're open until 5 PM.",
-        },
-      ],
-      isActive: true,
-      playbook: 'pickup_reminder',
-      quietStart: '20:00',
-      quietEnd: '07:00',
-    },
-  });
+    });
+    console.log('✅ 2 dealership automation rules + 5 logs created');
 
-  await prisma.automationLog.createMany({
-    data: [
-      {
-        automationRuleId: dRule1.id,
+    // ── D10. Payments ──────────────────────────────────────────────────────────
+    await prisma.payment.create({
+      data: {
         businessId: dBizId,
-        bookingId: db1.id,
-        customerId: dCust1.id,
-        action: 'SEND_MESSAGE',
-        outcome: 'SENT',
-        createdAt: daysAgo(20, 9, 0),
+        bookingId: db8.id,
+        stripePaymentIntentId: `pi_demo_dealer_${db8.id.slice(-8)}`,
+        amount: 300,
+        currency: 'usd',
+        status: 'succeeded',
       },
-      {
-        automationRuleId: dRule1.id,
-        businessId: dBizId,
-        bookingId: db2.id,
-        customerId: dCust2.id,
-        action: 'SEND_MESSAGE',
-        outcome: 'SENT',
-        createdAt: daysAgo(18, 12, 0),
-      },
-      {
-        automationRuleId: dRule1.id,
-        businessId: dBizId,
-        bookingId: db3.id,
-        customerId: dCust3.id,
-        action: 'SEND_MESSAGE',
-        outcome: 'SENT',
-        createdAt: daysAgo(15, 11, 0),
-      },
-      {
-        automationRuleId: dRule2.id,
-        businessId: dBizId,
-        bookingId: db14.id,
-        customerId: dCust7.id,
-        action: 'SEND_MESSAGE',
-        outcome: 'SENT',
-        createdAt: daysAgo(1, 9, 0),
-      },
-      {
-        automationRuleId: dRule2.id,
-        businessId: dBizId,
-        bookingId: db15.id,
-        customerId: dCust9.id,
-        action: 'SEND_MESSAGE',
-        outcome: 'SENT',
-        createdAt: daysAgo(1, 13, 0),
-      },
-    ],
-  });
-  console.log('✅ 2 dealership automation rules + 5 logs created');
+    });
+    console.log('✅ 1 dealership deposit payment created');
 
-  // ── D10. Payments ──────────────────────────────────────────────────────────
-  await prisma.payment.create({
-    data: {
-      businessId: dBizId,
-      bookingId: db8.id,
-      stripePaymentIntentId: `pi_demo_dealer_${db8.id.slice(-8)}`,
-      amount: 300,
-      currency: 'usd',
-      status: 'succeeded',
-    },
-  });
-  console.log('✅ 1 dealership deposit payment created');
+    // ── D11. Mark dealership as demo-seeded ────────────────────────────────────
+    await prisma.business.update({
+      where: { id: dBizId },
+      data: {
+        packConfig: { ...(dealership.packConfig as Record<string, unknown>), demoSeeded: true },
+      },
+    });
 
-  // ── D11. Mark dealership as demo-seeded ────────────────────────────────────
-  await prisma.business.update({
-    where: { id: dBizId },
-    data: {
-      packConfig: { ...(dealership.packConfig as Record<string, unknown>), demoSeeded: true },
-    },
-  });
-
-  console.log('\n🎉 Metro Auto Group demo data seeded!');
-  console.log('  - 15 customers, 25 bookings (with kanban), 4 conversations');
-  console.log('  - 3 quotes, 2 automation rules, 1 deposit payment');
+    console.log('\n🎉 Metro Auto Group demo data seeded!');
+    console.log('  - 15 customers, 25 bookings (with kanban), 4 conversations');
+    console.log('  - 3 quotes, 2 automation rules, 1 deposit payment');
   } catch (dealerErr) {
-    console.log('⏭️  Dealership data already exists, skipping. (' + (dealerErr as Error).message?.slice(0, 80) + ')');
+    console.log(
+      '⏭️  Dealership data already exists, skipping. (' +
+        (dealerErr as Error).message?.slice(0, 80) +
+        ')',
+    );
   }
   console.log('\n✨ All demo data seeded successfully!');
 }

@@ -13,18 +13,10 @@ describe('SettingsPage', () => {
 
   it('renders page content after data loads', async () => {
     mockApi.get.mockResolvedValue({
-      security: [
-        { key: 'maxLoginAttempts', value: 5, isDefault: true },
-      ],
-      notifications: [
-        { key: 'emailNotifications', value: true, isDefault: true },
-      ],
-      regional: [
-        { key: 'defaultTimezone', value: 'UTC', isDefault: true },
-      ],
-      platform: [
-        { key: 'maintenanceMode', value: false, isDefault: true },
-      ],
+      security: [{ key: 'maxLoginAttempts', value: 5, isDefault: true }],
+      notifications: [{ key: 'emailNotifications', value: true, isDefault: true }],
+      regional: [{ key: 'defaultTimezone', value: 'UTC', isDefault: true }],
+      platform: [{ key: 'maintenanceMode', value: false, isDefault: true }],
     });
 
     render(<SettingsPage />);

@@ -9,9 +9,9 @@ describe('TranslationController', () => {
   beforeEach(async () => {
     mockService = {
       getOverrides: jest.fn().mockResolvedValue({ greeting: 'Hello' }),
-      getAllKeys: jest.fn().mockResolvedValue([
-        { id: 't1', key: 'greeting', value: 'Hello', updatedAt: new Date() },
-      ]),
+      getAllKeys: jest
+        .fn()
+        .mockResolvedValue([{ id: 't1', key: 'greeting', value: 'Hello', updatedAt: new Date() }]),
       upsert: jest.fn().mockResolvedValue({
         id: 't1',
         businessId: 'biz1',
