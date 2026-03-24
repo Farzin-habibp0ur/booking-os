@@ -72,6 +72,8 @@ jest.mock('lucide-react', () => ({
   Repeat: () => <div data-testid="repeat-icon" />,
   StopCircle: () => <div data-testid="stop-icon" />,
   Trophy: () => <div data-testid="trophy-icon" />,
+  BarChart3: () => <div data-testid="barchart-icon" />,
+  Copy: () => <div data-testid="copy-icon" />,
 }));
 
 import { api } from '@/lib/api';
