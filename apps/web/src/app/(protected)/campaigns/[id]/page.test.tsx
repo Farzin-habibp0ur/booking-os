@@ -152,18 +152,21 @@ describe('CampaignDetailPage', () => {
   // ─── Metrics Display for SENT Campaigns ─────────────────────
 
   it('displays metrics for SENT campaign', async () => {
-    mockApi.get.mockResolvedValue(
-      createCampaignDetail({
-        status: 'SENT',
-        sentAt: '2026-02-01T12:00:00Z',
-        stats: {
-          sent: 120,
-          delivered: 115,
-          read: 80,
-          bookings: 12,
-        },
-      }),
-    );
+    const campaign = createCampaignDetail({
+      status: 'SENT',
+      sentAt: '2026-02-01T12:00:00Z',
+      stats: {
+        sent: 120,
+        delivered: 115,
+        read: 80,
+        bookings: 12,
+      },
+    });
+    // First get returns campaign, subsequent gets (funnel, channel-stats) return null
+    mockApi.get
+      .mockResolvedValueOnce(campaign)
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(null);
 
     render(<CampaignDetailPage />);
 
@@ -212,7 +215,9 @@ describe('CampaignDetailPage', () => {
   });
 
   it('does not show Send Now for SENT campaign', async () => {
-    mockApi.get.mockResolvedValue(createCampaignDetail({ status: 'SENT' }));
+    mockApi.get
+      .mockResolvedValueOnce(createCampaignDetail({ status: 'SENT' }))
+      .mockResolvedValue(null);
 
     render(<CampaignDetailPage />);
 
@@ -383,7 +388,9 @@ describe('CampaignDetailPage', () => {
   });
 
   it('does not render A/B results for non-AB campaign', async () => {
-    mockApi.get.mockResolvedValue(createCampaignDetail({ status: 'SENT', isABTest: false }));
+    mockApi.get
+      .mockResolvedValueOnce(createCampaignDetail({ status: 'SENT', isABTest: false }))
+      .mockResolvedValue(null);
 
     render(<CampaignDetailPage />);
 
