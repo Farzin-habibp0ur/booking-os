@@ -671,7 +671,7 @@ model AutomationRule {
   id                   String   @id @default(cuid())
   businessId           String
   name                 String
-  trigger              String // BOOKING_CREATED, BOOKING_UPCOMING, STATUS_CHANGED, NO_RESPONSE, TAG_APPLIED, BOOKING_CANCELLED
+  trigger              String // BOOKING_CREATED, BOOKING_UPCOMING, STATUS_CHANGED, BOOKING_CANCELLED, MESSAGE_RECEIVED, CUSTOMER_CREATED, PAYMENT_RECEIVED, TESTIMONIAL_SUBMITTED, CAMPAIGN_SENT
   filters              Json     @default("{}")
   actions              Json     @default("[]")
   isActive             Boolean  @default(true)

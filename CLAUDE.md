@@ -47,7 +47,7 @@ booking-os/
 │   │   └── next.config.js      # Stricter CSP (no analytics), X-Robots-Tag: noindex
 │   └── whatsapp-simulator/     # WhatsApp testing tool (port 3002)
 ├── packages/
-│   ├── db/                     # Prisma schema (93 models), 67 migrations, seed scripts
+│   ├── db/                     # Prisma schema (94 models), 69 migrations, seed scripts
 │   │   ├── prisma/schema.prisma
 │   │   ├── src/seed.ts         # Base seed (aesthetic + dealership + wellness, idempotent)
 │   │   ├── src/seed-demo.ts    # Rich demo data (idempotent, dedup-safe)
@@ -195,13 +195,13 @@ modules/
 
 ### Database (Prisma)
 
-- Schema at `packages/db/prisma/schema.prisma` — **93 models**, 67 migrations
+- Schema at `packages/db/prisma/schema.prisma` — **94 models**, 69 migrations
 - Generate client: `npx prisma generate --schema=packages/db/prisma/schema.prisma`
 - Create migration: `npx prisma migrate dev --name your_name --schema=packages/db/prisma/schema.prisma`
 - `PrismaService` is a global NestJS provider — inject it in constructors
 - All queries **must filter by `businessId`** for tenant isolation
 - JSON fields (customFields, metadata, aiSettings, packConfig, etc.) — use `Prisma.JsonValue` type
-- Key JSON fields to be aware of: `Business.packConfig` (vertical config), `Business.aiSettings` (AI behavior, includes `autoReply.channelOverrides` for per-channel auto-reply control), `Business.policySettings` (cancellation/reschedule), `Business.channelSettings` (omnichannel config), `Conversation.metadata` (AI state for multi-turn flows), `ActionCard.preview` (diff data), `ActionCard.ctaConfig` (button config), `ActionCard.metadata` (agent context, `suggestedMessages` for pre-generated follow-ups, `recommendedChannel`), `OutboundDraft.metadata` (AI generation context, intent, entities), `AutomationRule.filters`/`.actions` (rule definitions), `Location.facebookConfig`/`.smsConfig`/`.emailConfig`/`.webChatConfig` (per-location channel configs)
+- Key JSON fields to be aware of: `Business.packConfig` (vertical config), `Business.aiSettings` (AI behavior, includes `autoReply.channelOverrides` for per-channel auto-reply control), `Business.policySettings` (cancellation/reschedule), `Business.channelSettings` (omnichannel config), `Conversation.metadata` (AI state for multi-turn flows), `ActionCard.preview` (diff data), `ActionCard.ctaConfig` (button config), `ActionCard.metadata` (agent context, `suggestedMessages` for pre-generated follow-ups, `recommendedChannel`), `OutboundDraft.metadata` (AI generation context, intent, entities), `AutomationRule.filters`/`.actions` (rule definitions), `Campaign.variants` (A/B test variant content with merge variables), `Campaign.stats`/`.filters` (audience filters and delivery stats), `Business.packConfig.testimonials` (testimonial settings: auto-approve, reminders, display prefs), `Location.facebookConfig`/`.smsConfig`/`.emailConfig`/`.webChatConfig` (per-location channel configs)
 
 ### Key Enums
 
@@ -224,6 +224,12 @@ ActionCardCategory: URGENT_TODAY, NEEDS_APPROVAL, OPPORTUNITY, HYGIENE
 AutonomyLevel:      OFF, SUGGEST, AUTO_WITH_REVIEW, FULL_AUTO
 AgentType:          WAITLIST, RETENTION, DATA_HYGIENE, SCHEDULING_OPTIMIZER, QUOTE_FOLLOWUP (+ 12 marketing agents)
 Channel:            WHATSAPP, INSTAGRAM, FACEBOOK, SMS, EMAIL, WEB_CHAT
+CampaignStatus:     DRAFT, SCHEDULED, SENDING, SENT, CANCELLED
+CampaignChannel:    WHATSAPP, SMS, EMAIL, MULTI
+AutomationTrigger:  BOOKING_CREATED, BOOKING_UPCOMING, STATUS_CHANGED, BOOKING_CANCELLED, MESSAGE_RECEIVED, CUSTOMER_CREATED, PAYMENT_RECEIVED, TESTIMONIAL_SUBMITTED, CAMPAIGN_SENT
+AutomationAction:   SEND_TEMPLATE, SEND_MESSAGE, SEND_EMAIL, UPDATE_STATUS, ADD_TAG, ASSIGN_STAFF, SEND_NOTIFICATION, REQUEST_TESTIMONIAL, UPDATE_CUSTOMER_FIELD, WEBHOOK
+TestimonialStatus:  PENDING, APPROVED, FEATURED, REJECTED
+TestimonialSource:  MANUAL, REQUESTED
 ```
 
 ### BullMQ Queues (8)
@@ -305,16 +311,16 @@ BookingOS supports 6 messaging channels: **WhatsApp**, **Instagram DM**, **Faceb
 
 - Pages are in `apps/web/src/app/` using Next.js App Router (not Pages Router)
 - Protected pages check `access_token` + `refresh_token` cookies in `middleware.ts` (redirects to /login only when both are missing)
-- **87 pages** in `apps/web/` (~17 public, ~54 protected, ~16 portal/marketing site) + **20 admin pages** in `apps/admin/` (15 core + 5 marketing)
+- **91 pages** in `apps/web/` (~19 public, ~56 protected, ~16 portal/marketing site) + **20 admin pages** in `apps/admin/` (15 core + 5 marketing)
 - Client components use `'use client'` directive
 
 ### Page Categories
 
-**Public pages:** `/login`, `/signup`, `/forgot-password`, `/reset-password`, `/verify-email`, `/accept-invite`, `/book/[slug]` (booking portal), `/manage/*` (self-serve links), `/portal/[slug]/*` (customer portal with OTP auth)
+**Public pages:** `/login`, `/signup`, `/forgot-password`, `/reset-password`, `/verify-email`, `/accept-invite`, `/book/[slug]` (booking portal), `/manage/*` (self-serve links), `/portal/[slug]/*` (customer portal with OTP auth), `/unsubscribe/[token]` (campaign unsubscribe), `/testimonials/submit/[token]` (customer self-submission portal)
 
 **Marketing pages:** `/` (landing page with hero, features, pricing), `/blog`, `/blog/[slug]` (JSON-LD, OpenGraph), `/pricing`, `/faq`
 
-**Protected pages (tenant):** `/dashboard`, `/bookings`, `/calendar`, `/inbox`, `/customers`, `/customers/[id]`, `/services`, `/staff`, `/waitlist`, `/campaigns`, `/automations`, `/reports`, `/roi`, `/service-board` (dealership kanban), `/settings/*` (17 sub-pages including `/channels`, `/sms`, `/facebook`, `/email-channel`, `/web-chat`), `/packages` (wellness), `/testimonials`, `/marketing/*` (internal only — no sidebar nav), `/ai/*` (command center: overview, actions, agents, performance), `/search`, `/notifications`, `/help`
+**Protected pages (tenant):** `/dashboard`, `/bookings`, `/calendar`, `/inbox`, `/customers`, `/customers/[id]`, `/services`, `/staff`, `/waitlist`, `/campaigns`, `/campaigns/new` (4-step wizard), `/campaigns/[id]` (detail with funnel + channel stats), `/automations`, `/automations/analytics` (performance dashboard), `/reports`, `/roi`, `/service-board` (dealership kanban), `/settings/*` (18 sub-pages including `/channels`, `/sms`, `/facebook`, `/email-channel`, `/web-chat`, `/testimonials`), `/packages` (wellness), `/testimonials`, `/marketing/*` (internal only — no sidebar nav), `/ai/*` (command center: overview, actions, agents, performance), `/search`, `/notifications`, `/help`
 
 **Console pages (Super Admin):** These pages live in the **separate `apps/admin/` app** (port 3002), not in `apps/web/`. Routes: `/` (overview), `/businesses` (directory), `/businesses/[id]` (Business 360), `/audit`, `/health`, `/support`, `/billing`, `/billing/past-due`, `/billing/subscriptions`, `/packs`, `/packs/[slug]`, `/packs/skills`, `/agents`, `/messaging`, `/settings`, `/marketing` (landing), `/marketing/queue` (content approval), `/marketing/agents` (12 marketing agents), `/marketing/sequences` (email sequences), `/marketing/rejection-analytics`
 
@@ -623,7 +629,7 @@ All seed scripts are in `packages/db/src/`. They are **idempotent** (safe to re-
 | Script                     | Command                                            | Purpose                                                                                                                                                                      | When to Use                   |
 | -------------------------- | -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
 | `seed.ts`                  | `npx tsx packages/db/src/seed.ts`                  | Base data: 3 businesses (aesthetic + dealership + wellness), staff, services, working hours                                                                                  | Fresh database setup, CI      |
-| `seed-demo.ts`             | `npx tsx packages/db/src/seed-demo.ts`             | Rich demo data: bookings, customers, conversations, action cards                                                                                                             | Demo environments, testing    |
+| `seed-demo.ts`             | `npx tsx packages/db/src/seed-demo.ts`             | Rich demo data: bookings, customers, conversations, action cards, campaigns (3), automation rules (3) with logs                                                              | Demo environments, testing    |
 | `seed-agentic.ts`          | `npx tsx packages/db/src/seed-agentic.ts`          | Agentic framework data: agent configs, agent runs, action cards, autonomy configs                                                                                            | One-time production fill      |
 | `seed-wellness.ts`         | `npx tsx packages/db/src/seed-wellness.ts`         | Wellness vertical: packages, memberships, intake data                                                                                                                        | Also called from seed.ts      |
 | `seed-console.ts`          | `npx tsx packages/db/src/seed-console.ts`          | Console base data: platform settings, agent defaults                                                                                                                         | Super Admin setup             |
