@@ -589,7 +589,9 @@ DATABASE_URL="<public-db-url>" npx tsx packages/db/src/seed-demo.ts
 DATABASE_URL="<public-db-url>" npx tsx packages/db/src/seed-wellness.ts
 ```
 
-Both scripts are idempotent — they check for existing data before inserting.
+All seed scripts are idempotent — they check for existing data before inserting.
+
+**Seed data maintenance:** Some seeded records use relative dates (e.g., `Date.now() + 30 days`). If seed data goes stale (e.g., subscription `currentPeriodEnd` in the past, demo credentials not working), re-run the relevant seed script against production. Known staleness-prone data: Subscription periods (30-day window from seed time), demo staff passwords (re-run seed if login fails).
 
 **One-time agentic data fill** (only needed if seed-demo.ts was run before agentic tables existed):
 

@@ -168,8 +168,8 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 
 ### Agentic-First Transformation — Milestone 4: "Background Agents" — COMPLETE
 
-- **5 Background Agents** — WaitlistAgent (auto-match waitlist entries to cancelled slots), RetentionAgent (detect at-risk customers, generate win-back action cards), DataHygieneAgent (duplicate detection, incomplete profile flagging), SchedulingOptimizerAgent (gap detection, optimal slot suggestions), QuoteFollowupAgent (expired quote reminders, follow-up action cards)
-- **Agent Scheduler** — Cron-driven scheduler runs agents per their AgentConfig schedule, tracks AgentRun status/results/errors
+- **5 Background Agents** — WaitlistAgent (auto-match waitlist entries to cancelled slots, 48h card expiry), RetentionAgent (detect at-risk customers, generate win-back action cards, 14d card expiry), DataHygieneAgent (duplicate detection, incomplete profile flagging, 30d card expiry), SchedulingOptimizerAgent (gap detection, optimal slot suggestions, 1d card expiry), QuoteFollowupAgent (expired quote reminders, follow-up action cards, 7d card expiry). All agents set `expiresAt` on created ActionCards; the `@Cron(EVERY_MINUTE)` expiry job auto-transitions expired PENDING cards to EXPIRED status.
+- **Agent Scheduler** — Cron-driven scheduler runs agents per their AgentConfig schedule, tracks AgentRun status/results/errors. `triggerAgent()` updates `AgentConfig.lastRunAt` after each execution for observability.
 - **Agent Feedback** — New AgentFeedback API module with staff feedback CRUD and aggregation stats for agent run outcomes
 - **Frontend components** — agent-feedback-buttons (thumbs up/down + comment), agent-performance (run history, success rates, feedback summary)
 - **Settings page** — `/settings/agents` page for enabling/disabling agents, configuring schedules and autonomy levels per agent type
@@ -191,7 +191,7 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 - **Delivery/Read Receipts** (Batch 1b) — New fields on Message model (`deliveryStatus`, `deliveredAt`, `readAt`, `failureReason`), `updateDeliveryStatus()` in MessageService, WebSocket `message:status` event, `POST /webhook/whatsapp/status` endpoint. 7 tests.
 - **Inbox Media UI + Receipt Indicators** (Batch 1c) — New components: `delivery-status.tsx`, `media-message.tsx`, `media-composer.tsx` integrated into inbox page. 14 tests.
 - **Outbound Initiation + Collision Detection** (Batch 1d) — `POST /outbound/send-direct` endpoint, presence tracking in InboxGateway (`viewing:start`/`viewing:stop`/`presence:update`), "Send Message" button on customer detail page, presence pills in inbox. 4 tests.
-- **Calendar Month View** (Batch 1e) — `GET /bookings/calendar/month-summary` endpoint, month view with 6x7 CSS grid, colored dots (sage=confirmed, lavender=pending, red=cancelled), click-to-drill (day), prev/next month navigation. 13 tests.
+- **Calendar Month View** (Batch 1e) — `GET /bookings/calendar/month-summary` endpoint, month view with 6x7 CSS grid, colored dots (sage=confirmed, lavender=pending, red=cancelled), click-to-drill (day), prev/next month navigation. `GET /bookings/calendar?dateFrom=&dateTo=` returns bookings using interval overlap query (`startTime < dateTo AND endTime > dateFrom`); requires both params as valid ISO dates. 13 tests.
 - **Working Hours + Time-Off Visualization** (Batch 1f) — `GET /availability/calendar-context` endpoint, non-working hours shading (gray), time-off shading (red with "Time Off" badge). 6 tests.
 - **Drag-and-Drop Reschedule + Recommended Slots** (Batch 1g) — `GET /availability/recommended-slots` endpoint (top 5 scored by proximity + staff balance), `RecommendedSlots` component, HTML5 DnD on calendar (draggable cards, drop targets, 30-min snap, conflict detection, confirmation popover). 7 tests.
 - **Integration + Documentation** (Batch 1h) — Code formatting and documentation updates.
@@ -651,10 +651,10 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 - `DepositCard` — Deposit-related action card component with policy compliance (Milestone 3)
 - `HumanTakeoverBanner` — AI-to-human escalation banner with clarification flow (Milestone 3)
 - `AgentFeedbackButtons` / `AgentPerformance` — Staff feedback on agent runs (thumbs up/down, comments), agent run history and success rate stats (Milestone 4)
-- `RetentionCard` — Win-back action card for at-risk customers detected by RetentionAgent (Milestone 4)
-- `DuplicateMergeCard` — Duplicate customer merge/dismiss card from DataHygieneAgent (Milestone 4)
-- `WaitlistMatchCard` — Waitlist auto-match opportunity card from WaitlistAgent (Milestone 5)
-- `QuoteFollowupCard` — Expired/pending quote follow-up card from QuoteFollowupAgent (Milestone 5)
+- `RetentionCard` — Win-back action card for at-risk customers detected by RetentionAgent, 14-day expiry (Milestone 4)
+- `DuplicateMergeCard` — Duplicate customer merge/dismiss card from DataHygieneAgent, 30-day expiry (Milestone 4)
+- `WaitlistMatchCard` — Waitlist auto-match opportunity card from WaitlistAgent, 48-hour expiry (Milestone 5)
+- `QuoteFollowupCard` — Expired/pending quote follow-up card from QuoteFollowupAgent, 7-day expiry (Milestone 5)
 - `SkillCard` — Agent skill catalog display with enable/disable per business (Milestone 5)
 - `VerticalLaunchChecklist` — Vertical-specific agent readiness checklist (Milestone 5)
 - `AiStateIndicator` — Real-time agent processing status indicator (Milestone 5)
@@ -892,7 +892,7 @@ Key groups (full list in `.env.example`):
 - **Milestone 1: Agentic Foundations & Trust Rails** — COMPLETE (commit d8be527). 4 new models (ActionCard, ActionHistory, AutonomyConfig, OutboundDraft), 4 new API modules, 14 new frontend components, /settings/autonomy page. +170 tests.
 - **Milestone 2: Daily Briefing Agent** — COMPLETE. OpportunityDetectorService (cron-based scanner), BriefingService (grouped ActionCard feed), BriefingController (GET /briefing, GET /briefing/opportunities), 3 frontend components (BriefingCard, OpportunityCard, BriefingFeed), dashboard integration. +58 tests.
 - **Milestone 3: Inbox-as-OS** — COMPLETE. Agent framework (AgentConfig, AgentRun, AgentFeedback, DuplicateCandidate models), AgentFrameworkService + AgentSchedulerService + AGENT_PROCESSING queue, ConversationActionHandler, PolicyComplianceService, DepositCardHandler, HumanTakeoverService, ClarificationHandler, VerticalActionHandler, 3 frontend components (ActionCardInline, DepositCard, HumanTakeoverBanner). +158 tests.
-- **Milestone 4: Background Agents** — COMPLETE. 5 background agents (WaitlistAgent, RetentionAgent, DataHygieneAgent, SchedulingOptimizerAgent, QuoteFollowupAgent), AgentFeedback API module, /settings/agents page, retention-card + duplicate-merge-card + agent-feedback-buttons + agent-performance frontend components.
+- **Milestone 4: Background Agents** — COMPLETE. 5 background agents (WaitlistAgent, RetentionAgent, DataHygieneAgent, SchedulingOptimizerAgent, QuoteFollowupAgent) with agent-type-specific card expiry (48h/14d/30d/1d/7d), `AgentConfig.lastRunAt` tracking, AgentFeedback API module, /settings/agents page, retention-card + duplicate-merge-card + agent-feedback-buttons + agent-performance frontend components.
 - **Milestone 5: Vertical Pack Agents** — COMPLETE. AgentSkills API module (per-pack skill catalog with business overrides), pack-specific agent behaviors, skill-card + vertical-launch-checklist + waitlist-match-card + quote-followup-card + ai-state-indicator frontend components.
 - **Final counts:** 3,158 tests total (1,937 API + 1,221 web)
 

@@ -828,11 +828,13 @@ These run inside the NestJS API for each customer's business. Code in `apps/api/
 
 **5 Operational Agents:**
 
-- `WaitlistAgent` — Auto-match waitlist entries to cancelled slots; pre-generates slot offer messages in card metadata
-- `RetentionAgent` — Detect at-risk customers, generate win-back action cards; pre-generates channel-specific follow-up messages (SMS/Email/WhatsApp/DEFAULT)
-- `DataHygieneAgent` — Duplicate detection, incomplete profile flagging
-- `SchedulingOptimizerAgent` — Gap detection, optimal slot suggestions
-- `QuoteFollowupAgent` — Expired quote reminders, follow-up action cards; pre-generates channel-specific follow-up messages
+- `WaitlistAgent` — Auto-match waitlist entries to cancelled slots; pre-generates slot offer messages in card metadata. Cards expire after **48 hours**
+- `RetentionAgent` — Detect at-risk customers, generate win-back action cards; pre-generates channel-specific follow-up messages (SMS/Email/WhatsApp/DEFAULT). Cards expire after **14 days**
+- `DataHygieneAgent` — Duplicate detection, incomplete profile flagging. Cards expire after **30 days**
+- `SchedulingOptimizerAgent` — Gap detection, optimal slot suggestions. Cards expire **1 day after the gap date**
+- `QuoteFollowupAgent` — Expired quote reminders, follow-up action cards; pre-generates channel-specific follow-up messages. Cards expire after **7 days**
+
+All agents set `expiresAt` on created `ActionCard` records. The `@Cron(EVERY_MINUTE)` expiry job in `ActionCardService` auto-transitions expired PENDING cards to EXPIRED status. Each agent also stores its identity in `ActionCard.metadata.source` (e.g., `'retention-agent'`).
 
 Agents with pre-generated messages store `suggestedMessages`, `customerChannels`, and `recommendedChannel` in `ActionCard.metadata`. The `ActionCardExecutorService` reads these to create channel-appropriate `OutboundDraft` records when staff clicks "Send Follow-up".
 
@@ -844,7 +846,7 @@ Agents with pre-generated messages store `suggestedMessages`, `customerChannels`
 
 Marketing agents are filtered out of the customer-facing `GET /agent-config` API response. The `/ai/agents` page shows only the 5 core operational agents. Marketing agent DB records may still exist from prior seeds but are excluded via `agentType: { notIn: MARKETING_AGENT_TYPES }`.
 
-Agents run via `AgentSchedulerService` cron → `AGENT_PROCESSING` BullMQ queue → `AgentFrameworkService`. Per-agent `runIntervalMinutes` configurable via `AgentConfig.config` JSON. The customer-facing AI Command Center (`/ai`) shows only core agents. Marketing pages (`/marketing/*`) still exist but have no sidebar navigation.
+Agents run via `AgentSchedulerService` cron → `AGENT_PROCESSING` BullMQ queue → `AgentFrameworkService`. Per-agent `runIntervalMinutes` configurable via `AgentConfig.config` JSON. `triggerAgent()` updates `AgentConfig.lastRunAt` after each execution (success or failure) for observability. The customer-facing AI Command Center (`/ai`) shows only core agents. Marketing pages (`/marketing/*`) still exist but have no sidebar navigation.
 
 **Autonomy levels** (per-action-type via `AutonomyConfig`): OFF → SUGGEST → AUTO_WITH_REVIEW → FULL_AUTO. Start conservative, increase as trust builds.
 
