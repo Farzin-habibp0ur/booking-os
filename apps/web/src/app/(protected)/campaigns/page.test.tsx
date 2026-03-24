@@ -100,6 +100,7 @@ jest.mock('lucide-react', () => ({
   Megaphone: () => <div data-testid="megaphone-icon" />,
   Plus: () => <div data-testid="plus-icon" />,
   Repeat: () => <div data-testid="repeat-icon" />,
+  Copy: () => <div data-testid="copy-icon" />,
 }));
 
 import { api } from '@/lib/api';
