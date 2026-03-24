@@ -71,10 +71,11 @@ booking-os/
 ├── engagement/                 # Daily engagement reports from Community Manager
 ├── logs/                       # Publishing log and operational logs
 ├── assets/recordings/          # Screen recordings for video content
-├── docs/                       # PROJECT_CONTEXT.md, cicd.md, user-stories.md, ux-brainstorm-brief.md
+├── docs/                       # PROJECT_CONTEXT.md, cicd.md, user-stories.md, STRIPE-SETUP.md, CHANNEL-SETUP.md
 ├── docker-compose.yml          # Local development
 ├── docker-compose.prod.yml     # Production (Nginx + SSL)
 ├── docker-compose.demo.yml     # Demo quick-start (auto-seeds)
+├── archive/                    # Superseded/completed docs (prompts, old audits, brainstorms)
 ├── DEPLOY.md                   # Deployment & operations guide (READ BEFORE INFRA CHANGES)
 ├── .github/workflows/ci.yml   # CI/CD pipeline
 └── .github/workflows/mobile.yml # Mobile build pipeline (iOS + Android)
@@ -901,7 +902,7 @@ The app includes a public-facing marketing site at the root domain:
 | DEPLOY.md                             | `DEPLOY.md`                                  | Deployment operations guide with critical rules               |
 | cicd.md                               | `docs/cicd.md`                               | CI/CD pipeline details                                        |
 | user-stories.md                       | `docs/user-stories.md`                       | Complete user stories (386 capabilities, 196 gaps)            |
-| ux-brainstorm-brief.md                | `docs/ux-brainstorm-brief.md`                | UX improvement brainstorm                                     |
+| CHANNEL-SETUP.md                      | `docs/CHANNEL-SETUP.md`                      | 6-channel messaging setup (WhatsApp, Instagram, FB, SMS, Email, Web Chat) |
 | URLS.md                               | `docs/URLS.md`                               | All domains, services, DNS, third-party dashboards            |
 | AI_MARKETING_AGENTS_DAILY_WORKFLOW.md | `docs/AI_MARKETING_AGENTS_DAILY_WORKFLOW.md` | In-app marketing agent operator guide                         |
 | DESIGN_DOCUMENTATION.md               | `DESIGN_DOCUMENTATION.md`                    | Comprehensive design system documentation                     |
