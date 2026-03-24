@@ -78,7 +78,7 @@ function getAgentSections(packName?: string): NavSections {
 }
 
 const providerSections: NavSections = {
-  workspace: ['/calendar', '/bookings'],
+  workspace: ['/inbox', '/calendar', '/customers', '/bookings'],
   tools: ['/services', '/service-board'],
   insights: ['/dashboard'],
 };

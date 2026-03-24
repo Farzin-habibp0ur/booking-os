@@ -162,7 +162,7 @@ describe('Shell — provider mobile nav', () => {
     localStorage.clear();
   });
 
-  it('does NOT show Inbox tab for SERVICE_PROVIDER', () => {
+  it('shows Inbox tab for SERVICE_PROVIDER', () => {
     render(
       <Shell>
         <div>Content</div>
@@ -170,10 +170,10 @@ describe('Shell — provider mobile nav', () => {
     );
 
     const mobileNav = screen.getByRole('tablist', { name: 'Mobile navigation' });
-    expect(within(mobileNav).queryByText('nav.inbox')).not.toBeInTheDocument();
+    expect(within(mobileNav).getByText('nav.inbox')).toBeInTheDocument();
   });
 
-  it('shows Calendar, Bookings, Home, and More for provider mode', () => {
+  it('shows Inbox, Calendar, Customers, and More for provider mode', () => {
     render(
       <Shell>
         <div>Content</div>
@@ -181,13 +181,12 @@ describe('Shell — provider mobile nav', () => {
     );
 
     const mobileNav = screen.getByRole('tablist', { name: 'Mobile navigation' });
+    expect(within(mobileNav).getByText('nav.inbox')).toBeInTheDocument();
     expect(within(mobileNav).getByText('nav.calendar')).toBeInTheDocument();
-    expect(within(mobileNav).getByText('Bookings')).toBeInTheDocument();
-    expect(within(mobileNav).getByText('Home')).toBeInTheDocument();
     expect(within(mobileNav).getByText('More')).toBeInTheDocument();
   });
 
-  it('does NOT show Customers tab for SERVICE_PROVIDER', () => {
+  it('shows Customers tab for SERVICE_PROVIDER', () => {
     render(
       <Shell>
         <div>Content</div>
@@ -195,11 +194,10 @@ describe('Shell — provider mobile nav', () => {
     );
 
     const mobileNav = screen.getByRole('tablist', { name: 'Mobile navigation' });
-    expect(within(mobileNav).queryByText('Clients')).not.toBeInTheDocument();
-    expect(within(mobileNav).queryByText('nav.customers')).not.toBeInTheDocument();
+    expect(within(mobileNav).getByText('nav.customers')).toBeInTheDocument();
   });
 
-  it('provider mobile tab bar has fewer link tabs than admin', () => {
+  it('provider mobile tab bar matches admin/agent tab count', () => {
     render(
       <Shell>
         <div>Content</div>
@@ -208,8 +206,8 @@ describe('Shell — provider mobile nav', () => {
 
     const mobileNav = screen.getByRole('tablist', { name: 'Mobile navigation' });
     const tabs = within(mobileNav).getAllByRole('tab');
-    // Calendar, Bookings, Home + More = 4 (provider has fewer workspace paths)
-    expect(tabs.length).toBeLessThanOrEqual(5);
+    // Inbox, Calendar, Customers, Home + More = 5
     expect(tabs.length).toBeGreaterThanOrEqual(4);
+    expect(tabs.length).toBeLessThanOrEqual(5);
   });
 });

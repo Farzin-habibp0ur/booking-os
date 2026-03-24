@@ -1513,61 +1513,71 @@ async function main() {
     });
     console.log('✅ Staff preferences set (admin/agent/provider modes)');
 
-    // Sample saved views
-    await prisma.savedView.createMany({
-      data: [
-        {
-          businessId: bizId,
-          staffId: sarah.id,
-          page: 'bookings',
-          name: 'Pending Deposits',
-          filters: { status: 'PENDING_DEPOSIT' },
-          icon: 'flag',
-          color: 'amber',
-          isPinned: true,
-          isDashboard: true,
-          sortOrder: 0,
-        },
-        {
-          businessId: bizId,
-          staffId: sarah.id,
-          page: 'inbox',
-          name: 'Overdue Replies',
-          filters: { predefined: 'overdue', search: '', locationId: '' },
-          icon: 'bell',
-          color: 'lavender',
-          isPinned: true,
-          isDashboard: false,
-          sortOrder: 1,
-        },
-        {
-          businessId: bizId,
-          staffId: null,
-          page: 'bookings',
-          name: 'Confirmed Today',
-          filters: { status: 'CONFIRMED' },
-          icon: 'star',
-          color: 'sage',
-          isPinned: false,
-          isDashboard: true,
-          isShared: true,
-          sortOrder: 0,
-        },
-        {
-          businessId: bizId,
-          staffId: maria.id,
-          page: 'inbox',
-          name: 'My Queue',
-          filters: { predefined: 'mine', search: '', locationId: '' },
-          icon: 'bookmark',
-          color: 'sage',
-          isPinned: true,
-          isDashboard: false,
-          sortOrder: 0,
-        },
-      ],
+    // Sample saved views (with dedup guard)
+    const existingViews = await prisma.savedView.findMany({
+      where: { businessId: bizId },
+      select: { name: true, staffId: true },
     });
-    console.log('✅ 4 sample saved views created (2 pinned, 2 on dashboard, 1 shared)');
+    const existingViewKey = new Set(existingViews.map((v) => `${v.name}:${v.staffId ?? 'shared'}`));
+
+    const viewsToCreate = [
+      {
+        businessId: bizId,
+        staffId: sarah.id,
+        page: 'bookings',
+        name: 'Pending Deposits',
+        filters: { status: 'PENDING_DEPOSIT' },
+        icon: 'flag',
+        color: 'amber',
+        isPinned: false,
+        isDashboard: true,
+        sortOrder: 0,
+      },
+      {
+        businessId: bizId,
+        staffId: sarah.id,
+        page: 'inbox',
+        name: 'Overdue Replies',
+        filters: { predefined: 'overdue', search: '', locationId: '' },
+        icon: 'bell',
+        color: 'lavender',
+        isPinned: false,
+        isDashboard: false,
+        sortOrder: 1,
+      },
+      {
+        businessId: bizId,
+        staffId: null as string | null,
+        page: 'bookings',
+        name: 'Confirmed Today',
+        filters: { status: 'CONFIRMED' },
+        icon: 'star',
+        color: 'sage',
+        isPinned: false,
+        isDashboard: true,
+        isShared: true,
+        sortOrder: 0,
+      },
+      {
+        businessId: bizId,
+        staffId: maria.id,
+        page: 'inbox',
+        name: 'My Queue',
+        filters: { predefined: 'mine', search: '', locationId: '' },
+        icon: 'bookmark',
+        color: 'sage',
+        isPinned: false,
+        isDashboard: false,
+        sortOrder: 0,
+      },
+    ].filter((v) => !existingViewKey.has(`${v.name}:${v.staffId ?? 'shared'}`));
+
+    if (viewsToCreate.length > 0) {
+      await prisma.savedView.createMany({ data: viewsToCreate });
+    }
+    console.log(
+      `✅ ${viewsToCreate.length} saved views created (dedup-safe, sidebar pinning removed)`,
+    );
 
     // ── 18. Agentic Foundation Data ───────────────────────────────────────────
 

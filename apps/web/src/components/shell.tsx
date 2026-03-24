@@ -25,12 +25,6 @@ import {
   X,
   Compass,
   Pin,
-  Bookmark,
-  Star,
-  Flag,
-  Heart,
-  Eye,
-  Bell,
   Sparkles,
   ChevronDown,
 } from 'lucide-react';
@@ -47,17 +41,6 @@ import { ActivationWidget } from '@/components/activation-widget';
 import { NpsSurvey } from '@/components/nps-survey';
 import { HelpButton } from '@/components/help-button';
 import { InstallPrompt } from '@/components/install-prompt';
-
-const SAVED_VIEW_ICONS: Record<string, any> = {
-  filter: Search,
-  star: Star,
-  flag: Flag,
-  bookmark: Bookmark,
-  heart: Heart,
-  eye: Eye,
-  bell: Bell,
-  zap: Zap,
-};
 
 export function Shell({ children }: { children: ReactNode }) {
   return (
@@ -86,7 +69,7 @@ function ShellInner({ children }: { children: ReactNode }) {
   const { theme, toggle: toggleTheme } = useTheme();
   const { state: tourState, startTour } = useDemoTour();
   const { modeDef, landingPath } = useMode();
-  const [pinnedViews, setPinnedViews] = useState<any[]>([]);
+
   const [moreSheetOpen, setMoreSheetOpen] = useState(false);
   const [overflowOpen, setOverflowOpen] = useState(() => {
     if (typeof window === 'undefined') return false;
@@ -175,21 +158,6 @@ function ShellInner({ children }: { children: ReactNode }) {
     }
   }, [pathname, modeDef, user, authLoading, router]);
 
-  // Load sidebar-pinned saved views
-  const loadPinnedViews = useCallback(async () => {
-    try {
-      const views = await api.get<any[]>('/saved-views/pinned');
-      const unique = views ? [...new Map(views.map((v) => [v.id, v])).values()] : [];
-      setPinnedViews(unique);
-    } catch {
-      // Silently handle
-    }
-  }, []);
-
-  useEffect(() => {
-    loadPinnedViews();
-  }, [loadPinnedViews]);
-
   // Global keyboard shortcuts
   useKeyboardShortcut('k', () => setCmdkOpen((prev) => !prev), {
     meta: true,
@@ -263,10 +231,7 @@ function ShellInner({ children }: { children: ReactNode }) {
   // Mobile tab bar: pick up to 4 tabs from workspace, prioritizing key paths.
   // Preferred order per mode: admin/agent → inbox, calendar, customers, dashboard
   //                           provider   → calendar, bookings, dashboard, services
-  const mobileTabPriority: string[] =
-    modeDef?.key === 'provider'
-      ? ['/calendar', '/bookings', '/dashboard', '/services']
-      : ['/inbox', '/calendar', '/customers', '/dashboard'];
+  const mobileTabPriority: string[] = ['/inbox', '/calendar', '/customers', '/dashboard'];
   const mobileTabs = mobileTabPriority
     .map((href) => nav.find((n) => n.href === href))
     .filter((item): item is (typeof nav)[0] => !!item)
@@ -454,35 +419,6 @@ function ShellInner({ children }: { children: ReactNode }) {
       ) : (
         /* Activation Widget — shown only after onboarding is complete */
         <ActivationWidget />
-      )}
-      {/* Sidebar Pinned Views */}
-      {pinnedViews.length > 0 && (
-        <div
-          className="px-2 pb-2 border-t border-slate-100 dark:border-slate-800 pt-2"
-          data-testid="pinned-views-section"
-        >
-          <p className="px-3 py-1 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
-            {t('saved_views.views_label')}
-          </p>
-          {pinnedViews.map((view) => {
-            const ViewIcon = SAVED_VIEW_ICONS[view.icon] || Bookmark;
-            return (
-              <Link
-                key={view.id}
-                href={`/${view.page}?viewId=${view.id}`}
-                className={cn(
-                  'flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm transition-colors',
-                  pathname === `/${view.page}`
-                    ? 'text-sage-700 dark:text-sage-400'
-                    : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800',
-                )}
-              >
-                <ViewIcon size={14} />
-                <span className="truncate text-xs">{view.name}</span>
-              </Link>
-            );
-          })}
-        </div>
       )}
       <div className="p-2 border-t border-slate-100 dark:border-slate-800 space-y-1">
         {/* Settings — moved from nav to footer for cleanliness */}

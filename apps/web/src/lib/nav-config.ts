@@ -51,7 +51,12 @@ export function getNavItems(opts: NavConfigOptions): NavItem[] {
       icon: LayoutDashboard,
       roles: ['ADMIN', 'AGENT', 'SERVICE_PROVIDER'],
     },
-    { href: '/inbox', label: t('nav.inbox'), icon: MessageSquare, roles: ['ADMIN', 'AGENT'] },
+    {
+      href: '/inbox',
+      label: t('nav.inbox'),
+      icon: MessageSquare,
+      roles: ['ADMIN', 'AGENT', 'SERVICE_PROVIDER'],
+    },
     { href: '/waitlist', label: t('nav.waitlist'), icon: ListChecks, roles: ['ADMIN', 'AGENT'] },
     {
       href: '/calendar',
@@ -63,7 +68,7 @@ export function getNavItems(opts: NavConfigOptions): NavItem[] {
       href: '/customers',
       label: t('nav.customers', { entity: packLabels.customer }),
       icon: Users,
-      roles: ['ADMIN', 'AGENT'],
+      roles: ['ADMIN', 'AGENT', 'SERVICE_PROVIDER'],
     },
     {
       href: '/bookings',
