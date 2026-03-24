@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { api } from '@/lib/api';
 import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/lib/toast';
-import { Sparkles, ArrowLeft, Bot, Bell, Shield } from 'lucide-react';
+import { Sparkles, ArrowLeft } from 'lucide-react';
 import { captureEvent } from '@/lib/posthog';
 import { cn } from '@/lib/cn';
 import { FormSkeleton } from '@/components/skeleton';
@@ -33,53 +33,12 @@ interface AiStats {
   last7Days: Array<{ date: string; processed: number; draftsCreated: number }>;
 }
 
-interface MarketingAutonomy {
-  actionType: string;
-  autonomyLevel: string;
-  description?: string;
-  scope?: string;
-}
-
 const INTENT_OPTIONS = [
   { key: 'GENERAL', labelKey: 'ai.intent_general' },
   { key: 'BOOK_APPOINTMENT', labelKey: 'ai.intent_book_appointment' },
   { key: 'CANCEL', labelKey: 'ai.intent_cancel' },
   { key: 'RESCHEDULE', labelKey: 'ai.intent_reschedule' },
   { key: 'INQUIRY', labelKey: 'ai.intent_inquiry' },
-];
-
-const AUTONOMY_LEVELS = [
-  { value: 'OFF', label: 'Off', description: 'All actions require manual approval' },
-  { value: 'SUGGEST', label: 'Suggest', description: 'AI suggests, you decide' },
-  { value: 'AUTO_WITH_REVIEW', label: 'Auto + Review', description: 'AI acts, you review after' },
-  { value: 'FULL_AUTO', label: 'Full Auto', description: 'AI acts autonomously' },
-];
-
-const REVIEW_MODES = [
-  {
-    value: 'STRICT',
-    label: 'Strict',
-    description: 'All content requires manual review before publishing',
-  },
-  {
-    value: 'NORMAL',
-    label: 'Normal',
-    description: 'Tier-based: GREEN auto-publishes, YELLOW/RED need review',
-  },
-  {
-    value: 'RELAXED',
-    label: 'Relaxed',
-    description: 'GREEN auto-publishes, YELLOW auto-publishes with review window',
-  },
-];
-
-const NOTIFICATION_EVENTS = [
-  { key: 'CONTENT_READY', label: 'Content ready for review', defaultOn: true },
-  { key: 'AGENT_ERROR', label: 'Agent run failures', defaultOn: true },
-  { key: 'BUDGET_THRESHOLD', label: 'Budget threshold reached', defaultOn: true },
-  { key: 'ESCALATION', label: 'Escalation events', defaultOn: true },
-  { key: 'CONTENT_PUBLISHED', label: 'Content published', defaultOn: false },
-  { key: 'WEEKLY_DIGEST', label: 'Weekly performance digest', defaultOn: true },
 ];
 
 export default function AiSettingsPage() {
@@ -101,40 +60,14 @@ export default function AiSettingsPage() {
   const [loading, setLoading] = useState(true);
   const [aiStats, setAiStats] = useState<AiStats | null>(null);
 
-  // Marketing AI state
-  const [marketingAutonomy, setMarketingAutonomy] = useState<MarketingAutonomy[]>([]);
-  const [marketingEnabled, setMarketingEnabled] = useState(true);
-  const [defaultAutonomy, setDefaultAutonomy] = useState('SUGGEST');
-  const [reviewMode, setReviewMode] = useState('NORMAL');
-  const [notifications, setNotifications] = useState<Record<string, boolean>>(
-    Object.fromEntries(NOTIFICATION_EVENTS.map((e) => [e.key, e.defaultOn])),
-  );
-  const [marketingSaved, setMarketingSaved] = useState(false);
-
   useEffect(() => {
     captureEvent('ai_settings_viewed');
     Promise.all([
       api.get<AiSettings>('/ai/settings').catch(() => null),
-      api.get<MarketingAutonomy[]>('/autonomy-settings').catch(() => []),
       api.get<AiStats>('/ai/stats').catch(() => null),
     ])
-      .then(([aiRes, autonomyRes, statsRes]) => {
+      .then(([aiRes, statsRes]) => {
         if (aiRes) setSettings(aiRes);
-        const autonomyList = Array.isArray(autonomyRes) ? autonomyRes : [];
-        setMarketingAutonomy(autonomyList);
-        // Derive defaults from autonomy settings
-        if (autonomyList.length > 0) {
-          const levels = autonomyList.map((a) => a.autonomyLevel);
-          const allOff = levels.every((l) => l === 'OFF');
-          setMarketingEnabled(!allOff);
-          // Most common level as default
-          const counts: Record<string, number> = {};
-          levels.forEach((l) => {
-            counts[l] = (counts[l] || 0) + 1;
-          });
-          const mostCommon = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0];
-          if (mostCommon) setDefaultAutonomy(mostCommon);
-        }
         if (statsRes) setAiStats(statsRes as AiStats);
       })
       .finally(() => setLoading(false));
@@ -179,41 +112,6 @@ export default function AiSettingsPage() {
   const isChannelEnabled = (channel: string): boolean => {
     const override = settings.autoReply.channelOverrides?.[channel];
     return override?.enabled ?? true; // default: inherit global
-  };
-
-  const handleMarketingToggle = async (enabled: boolean) => {
-    setMarketingEnabled(enabled);
-    const level = enabled ? defaultAutonomy : 'OFF';
-    try {
-      for (const a of marketingAutonomy) {
-        await api.patch(`/autonomy-settings/${a.actionType}`, { autonomyLevel: level });
-      }
-      toast(enabled ? 'Marketing agents enabled' : 'Marketing agents disabled', 'success');
-    } catch {
-      toast('Failed to update', 'error');
-    }
-  };
-
-  const handleDefaultAutonomyChange = async (level: string) => {
-    setDefaultAutonomy(level);
-    try {
-      for (const a of marketingAutonomy) {
-        await api.patch(`/autonomy-settings/${a.actionType}`, { autonomyLevel: level });
-      }
-      setMarketingAutonomy((prev) => prev.map((a) => ({ ...a, autonomyLevel: level })));
-      toast('Default autonomy updated', 'success');
-    } catch {
-      toast('Failed to update autonomy', 'error');
-    }
-  };
-
-  const handleNotificationToggle = (key: string) => {
-    setNotifications((prev) => ({ ...prev, [key]: !prev[key] }));
-  };
-
-  const handleSaveMarketing = async () => {
-    setMarketingSaved(true);
-    setTimeout(() => setMarketingSaved(false), 2000);
   };
 
   if (loading) return <FormSkeleton rows={4} />;
@@ -502,153 +400,6 @@ export default function AiSettingsPage() {
           </div>
         </div>
       )}
-
-      {/* Marketing AI Settings */}
-      <div className="mt-8" data-testid="marketing-ai-section">
-        <div className="flex items-center gap-2 mb-4">
-          <Bot size={20} className="text-lavender-600" />
-          <h2 className="text-lg font-serif font-semibold text-slate-900">Marketing AI</h2>
-        </div>
-
-        <div className="bg-white rounded-2xl shadow-soft p-6 space-y-6">
-          {/* Marketing Master Toggle */}
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium">Marketing Agents</p>
-              <p className="text-xs text-slate-500">
-                Enable or disable all 12 marketing AI agents at once
-              </p>
-            </div>
-            <button
-              onClick={() => handleMarketingToggle(!marketingEnabled)}
-              className={cn(
-                'relative w-11 h-6 rounded-full transition-colors',
-                marketingEnabled ? 'bg-sage-500' : 'bg-slate-200',
-              )}
-              data-testid="marketing-master-toggle"
-              role="switch"
-              aria-checked={marketingEnabled}
-            >
-              <span
-                className={cn(
-                  'absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform',
-                  marketingEnabled ? 'translate-x-5' : 'translate-x-0',
-                )}
-              />
-            </button>
-          </div>
-
-          <hr />
-
-          {/* Default Autonomy Level */}
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <Shield size={16} className="text-lavender-600" />
-              <p className="text-sm font-medium">Default Autonomy Level</p>
-            </div>
-            <p className="text-xs text-slate-500 mb-3">
-              Set the default autonomy level for all marketing actions
-            </p>
-            <div className="grid grid-cols-2 gap-2" data-testid="autonomy-level-selector">
-              {AUTONOMY_LEVELS.map((level) => (
-                <button
-                  key={level.value}
-                  onClick={() => handleDefaultAutonomyChange(level.value)}
-                  className={cn(
-                    'p-3 rounded-xl border text-left transition-all',
-                    defaultAutonomy === level.value
-                      ? 'border-lavender-300 bg-lavender-50 ring-2 ring-lavender-200'
-                      : 'border-slate-200 hover:border-slate-300',
-                  )}
-                  data-testid={`autonomy-${level.value}`}
-                >
-                  <p className="text-sm font-medium text-slate-900">{level.label}</p>
-                  <p className="text-xs text-slate-500 mt-0.5">{level.description}</p>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <hr />
-
-          {/* Content Review Mode */}
-          <div>
-            <p className="text-sm font-medium mb-3">Content Review Mode</p>
-            <div className="space-y-2" data-testid="review-mode-selector">
-              {REVIEW_MODES.map((mode) => (
-                <label
-                  key={mode.value}
-                  className={cn(
-                    'flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all',
-                    reviewMode === mode.value
-                      ? 'border-lavender-300 bg-lavender-50'
-                      : 'border-slate-200 hover:border-slate-300',
-                  )}
-                >
-                  <input
-                    type="radio"
-                    name="reviewMode"
-                    value={mode.value}
-                    checked={reviewMode === mode.value}
-                    onChange={() => setReviewMode(mode.value)}
-                    className="mt-0.5 text-lavender-600"
-                    data-testid={`review-${mode.value}`}
-                  />
-                  <div>
-                    <p className="text-sm font-medium text-slate-900">{mode.label}</p>
-                    <p className="text-xs text-slate-500">{mode.description}</p>
-                  </div>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          <hr />
-
-          {/* Notification Preferences */}
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <Bell size={16} className="text-lavender-600" />
-              <p className="text-sm font-medium">Notification Preferences</p>
-            </div>
-            <div className="space-y-3" data-testid="notification-preferences">
-              {NOTIFICATION_EVENTS.map((event) => (
-                <div key={event.key} className="flex items-center justify-between">
-                  <span className="text-sm text-slate-700">{event.label}</span>
-                  <button
-                    onClick={() => handleNotificationToggle(event.key)}
-                    className={cn(
-                      'relative w-9 h-5 rounded-full transition-colors',
-                      notifications[event.key] ? 'bg-sage-500' : 'bg-slate-200',
-                    )}
-                    data-testid={`notif-${event.key}`}
-                    role="switch"
-                    aria-checked={notifications[event.key]}
-                  >
-                    <span
-                      className={cn(
-                        'absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform',
-                        notifications[event.key] ? 'translate-x-4' : 'translate-x-0',
-                      )}
-                    />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleSaveMarketing}
-              className="bg-lavender-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-lavender-700 transition-colors"
-              data-testid="save-marketing-btn"
-            >
-              Save Marketing Settings
-            </button>
-            {marketingSaved && <span className="text-sage-600 text-sm">Saved!</span>}
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
