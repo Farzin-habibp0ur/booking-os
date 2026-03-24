@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException, ForbiddenException } from '@nestjs/common';
 import { AgentConfigService } from './agent-config.service';
 import { createMockPrisma, MockPrisma } from '../../test/mocks';
 
@@ -68,10 +68,10 @@ describe('AgentConfigService', () => {
       });
     });
 
-    it('throws NotFoundException for marketing agent types', async () => {
-      await expect(service.findOne('biz1', 'BlogWriter')).rejects.toThrow(NotFoundException);
-      await expect(service.findOne('biz1', 'SocialCreator')).rejects.toThrow(NotFoundException);
-      await expect(service.findOne('biz1', 'ContentROI')).rejects.toThrow(NotFoundException);
+    it('throws ForbiddenException for marketing agent types', async () => {
+      await expect(service.findOne('biz1', 'BlogWriter')).rejects.toThrow(ForbiddenException);
+      await expect(service.findOne('biz1', 'SocialCreator')).rejects.toThrow(ForbiddenException);
+      await expect(service.findOne('biz1', 'ContentROI')).rejects.toThrow(ForbiddenException);
     });
 
     it('throws NotFoundException when not found', async () => {

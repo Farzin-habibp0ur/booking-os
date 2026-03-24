@@ -1,4 +1,10 @@
-import { Injectable, NotFoundException, Logger, Optional } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  Logger,
+  Optional,
+} from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { PrismaService } from '../../common/prisma.service';
@@ -56,7 +62,7 @@ export class AgentConfigService {
 
   async findOne(businessId: string, agentType: string) {
     if (MARKETING_AGENT_TYPES.includes(agentType)) {
-      throw new NotFoundException(`Agent config for ${agentType} not found`);
+      throw new ForbiddenException(`Marketing agents are managed via admin endpoints`);
     }
 
     const config = await this.prisma.agentConfig.findFirst({

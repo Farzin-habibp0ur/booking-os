@@ -29,7 +29,7 @@ describe('AutonomyService', () => {
 
       expect(result).toHaveLength(2);
       expect(prisma.autonomyConfig.findMany).toHaveBeenCalledWith({
-        where: { businessId: 'biz1' },
+        where: { businessId: 'biz1', scope: 'OPERATIONAL' },
         orderBy: { actionType: 'asc' },
       });
     });

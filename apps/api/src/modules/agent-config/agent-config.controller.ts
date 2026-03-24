@@ -1,11 +1,13 @@
 import { Controller, Get, Patch, Post, Param, Body, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { Throttle } from '@nestjs/throttler';
 import { TenantGuard } from '../../common/tenant.guard';
 import { RolesGuard, Roles } from '../../common/roles.guard';
 import { BusinessId } from '../../common/decorators';
 import { AgentConfigService } from './agent-config.service';
 import { UpdateAgentConfigDto } from './dto';
 
+@Throttle({ default: { limit: 30, ttl: 60000 } })
 @Controller('agent-config')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
 export class AgentConfigController {
@@ -35,6 +37,24 @@ export class AgentConfigController {
   @Roles('SUPER_ADMIN')
   getPerformanceSummaryAdmin(@BusinessId() businessId: string) {
     return this.service.getPerformanceSummaryUnfiltered(businessId);
+  }
+
+  /** Admin: update any agent including marketing */
+  @Patch('admin/:agentType')
+  @Roles('SUPER_ADMIN')
+  updateAdmin(
+    @BusinessId() businessId: string,
+    @Param('agentType') agentType: string,
+    @Body() body: UpdateAgentConfigDto,
+  ) {
+    return this.service.updateUnfiltered(businessId, agentType, body);
+  }
+
+  /** Admin: run any agent including marketing */
+  @Post('admin/:agentType/run-now')
+  @Roles('SUPER_ADMIN')
+  runNowAdmin(@BusinessId() businessId: string, @Param('agentType') agentType: string) {
+    return this.service.runNowUnfiltered(businessId, agentType);
   }
 
   @Get(':agentType')

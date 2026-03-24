@@ -188,7 +188,7 @@ export default function MarketingAgentsPage() {
 
   const handleToggle = async (agentType: string, isEnabled: boolean) => {
     try {
-      await api.patch(`/agent-config/${agentType}`, { isEnabled: !isEnabled });
+      await api.patch(`/agent-config/admin/${agentType}`, { isEnabled: !isEnabled });
       toast(`Agent ${!isEnabled ? 'enabled' : 'disabled'}`, 'success');
       fetchData();
     } catch {
@@ -199,7 +199,7 @@ export default function MarketingAgentsPage() {
   const handleTrigger = async (agentType: string) => {
     try {
       setTriggeringAgent(agentType);
-      await api.post(`/agent-config/${agentType}/run-now`, {});
+      await api.post(`/agent-config/admin/${agentType}/run-now`, {});
       toast('Agent triggered successfully', 'success');
       fetchData();
     } catch {

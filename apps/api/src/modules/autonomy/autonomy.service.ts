@@ -11,7 +11,7 @@ export class AutonomyService {
 
   async getConfigs(businessId: string) {
     return this.prisma.autonomyConfig.findMany({
-      where: { businessId },
+      where: { businessId, scope: 'OPERATIONAL' },
       orderBy: { actionType: 'asc' },
     });
   }
