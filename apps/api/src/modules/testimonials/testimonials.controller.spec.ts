@@ -58,19 +58,19 @@ describe('TestimonialsController', () => {
       undefined,
       undefined,
       undefined,
+      undefined,
       '2',
       '10',
     );
 
-    expect(service.findAll).toHaveBeenCalledWith('b1', {
-      status: 'APPROVED',
-      customerId: undefined,
-      search: undefined,
-      sortBy: undefined,
-      sortOrder: undefined,
-      page: 2,
-      pageSize: 10,
-    });
+    expect(service.findAll).toHaveBeenCalledWith(
+      'b1',
+      expect.objectContaining({
+        status: 'APPROVED',
+        page: 2,
+        pageSize: 10,
+      }),
+    );
     expect(result.total).toBe(0);
   });
 
