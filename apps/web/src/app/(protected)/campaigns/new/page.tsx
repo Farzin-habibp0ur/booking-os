@@ -105,7 +105,6 @@ export default function NewCampaignPage() {
         .then(setCostEstimate)
         .catch(() => {});
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step, channel]);
 
   const handleCreate = async () => {
