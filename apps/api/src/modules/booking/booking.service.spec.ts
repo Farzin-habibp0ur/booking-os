@@ -2562,13 +2562,21 @@ describe('BookingService', () => {
 
   describe('getCalendar', () => {
     it('throws BadRequestException when dateFrom or dateTo is missing', async () => {
-      await expect(bookingService.getCalendar('biz1', '', '2026-03-07')).rejects.toThrow(BadRequestException);
-      await expect(bookingService.getCalendar('biz1', '2026-03-01', '')).rejects.toThrow(BadRequestException);
-      await expect(bookingService.getCalendar('biz1', undefined as any, undefined as any)).rejects.toThrow(BadRequestException);
+      await expect(bookingService.getCalendar('biz1', '', '2026-03-07')).rejects.toThrow(
+        BadRequestException,
+      );
+      await expect(bookingService.getCalendar('biz1', '2026-03-01', '')).rejects.toThrow(
+        BadRequestException,
+      );
+      await expect(
+        bookingService.getCalendar('biz1', undefined as any, undefined as any),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('throws BadRequestException for invalid date strings', async () => {
-      await expect(bookingService.getCalendar('biz1', 'not-a-date', '2026-03-07')).rejects.toThrow(BadRequestException);
+      await expect(bookingService.getCalendar('biz1', 'not-a-date', '2026-03-07')).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('filters by date range using interval overlap and includes PENDING_DEPOSIT in status filter', async () => {
