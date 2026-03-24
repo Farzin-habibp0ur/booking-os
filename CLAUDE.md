@@ -668,14 +668,16 @@ gh workflow run ci.yml
 ## CI/CD Pipeline
 
 ```
-Push to main → lint-and-test → docker-build → deploy (Railway) → smoke-test
+Push to main → lint-and-test → docker-build → deploy (staged) → smoke-test
+                              ↘ bundle-check (parallel, 60MB limit)
 Pull request → lint-and-test → docker-build + e2e-test (Playwright)
 ```
 
 - **lint-and-test:** PostgreSQL 16 service container, `npm ci`, Prisma generate, web-chat widget build, migrate, format check, lint, test
-- **docker-build:** Multi-stage Docker builds for API, web, and admin images
-- **deploy:** `railway up --service api/web/admin --detach` (async — Railway build takes 2-5 min after CI passes)
-- **smoke-test:** Runs `scripts/smoke-test.sh` against production + curl check on `admin.businesscommandcentre.com`
+- **docker-build:** Multi-stage Docker builds for API, web, and admin images + Trivy security scanning
+- **bundle-check:** Builds web app, reports `.next/` size to GitHub step summary, fails if >60MB
+- **deploy:** Staged sequential: API → health check → Web → health check → Admin → health check (5s poll, 5-min timeout per stage)
+- **smoke-test:** Runs `scripts/smoke-test.sh` against production (24 checks across 9 categories)
 - **e2e-test:** Playwright tests (auth, booking, customer, portal, settings, accessibility) — PR only
 - **Migrations:** Auto-run via `scripts/docker-entrypoint.sh` on container startup
 

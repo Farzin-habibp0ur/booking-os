@@ -752,14 +752,16 @@ AI state persisted in `conversation.metadata` JSON for stateful multi-turn flows
 ## 10. CI/CD Pipeline
 
 ```
-Push to main → lint-and-test → docker-build → deploy (Railway) → smoke-test
-Pull request → lint-and-test → docker-build (no deploy, no smoke test)
+Push to main → lint-and-test → docker-build → deploy (staged) → smoke-test
+                              ↘ bundle-check (parallel, 60MB limit)
+Pull request → lint-and-test → docker-build + e2e-test (no deploy, no smoke test)
 ```
 
 - **lint-and-test:** PostgreSQL 16 service, Prisma generate + migrate, format check, lint, test
-- **smoke-test:** Post-deploy production verification (20 checks: health, DB, auth, security headers, CORS, public endpoints)
-- **docker-build:** Multi-stage Docker builds for API, web, and admin
-- **deploy:** `railway up --service api/web/admin --detach` (async — takes 2-5 min after CI)
+- **docker-build:** Multi-stage Docker builds for API, web, and admin + Trivy security scanning
+- **bundle-check:** Builds web app, reports `.next/` size to GitHub step summary, fails if >60MB
+- **deploy:** Staged sequential deployment: API → health check → Web → health check → Admin → health check. Each stage polls the health endpoint every 5s with a 5-minute timeout. Failure at any stage stops the pipeline.
+- **smoke-test:** Post-deploy production verification (24 checks across 9 categories: health, DB, web, auth, API, public endpoints, security headers, cookies, CORS, admin console)
 - **Migrations:** Auto-run via `scripts/docker-entrypoint.sh` on container startup
 - **Full docs:** `docs/cicd.md` and `DEPLOY.md`
 

@@ -141,27 +141,23 @@ The build step passes dummy values for required env vars (JWT secrets, API keys,
 
 ---
 
-## Job 4: deploy
+## Job 4: deploy (staged)
 
 **Runner:** `ubuntu-latest`
 **Depends on:** `docker-build`
 **Condition:** Only runs on pushes to `main` (not on pull requests)
-**Duration:** ~10 seconds
+**Duration:** ~5-15 minutes (includes health polling per service)
 
 ### What it does
 
+Deploys services **sequentially** with health checks between each stage. If any service fails its health check, the pipeline stops — preventing broken cascading deploys.
+
 1. Installs the Railway CLI (`npm install -g @railway/cli`)
-2. Deploys the **API** service to Railway production
-3. Deploys the **Web** service to Railway production
-4. Deploys the **Admin** service to Railway production
+2. **Stage 1:** Deploy API → poll `api.businesscommandcentre.com/api/v1/health` every 5s (5-min timeout). Verifies HTTP 200 AND JSON `.status` is `healthy` or `degraded`.
+3. **Stage 2:** Deploy Web → poll `businesscommandcentre.com/api/v1/health` every 5s (5-min timeout). Verifies HTTP 200.
+4. **Stage 3:** Deploy Admin → poll `admin.businesscommandcentre.com/api/v1/health` every 5s (5-min timeout). Verifies HTTP 200.
 
-```bash
-railway up --service api -p 37eeca20-7dfe-45d9-8d29-e902a545f475 -e production --detach
-railway up --service web -p 37eeca20-7dfe-45d9-8d29-e902a545f475 -e production --detach
-railway up --service admin -p 37eeca20-7dfe-45d9-8d29-e902a545f475 -e production --detach
-```
-
-The `--detach` flag means the CI job doesn't wait for Railway's own build to finish. Railway receives the source code and handles the Docker build + deploy asynchronously.
+Each `railway up` uses `--detach` so Railway receives the code and builds asynchronously. The health polling waits for the new version to go live before proceeding.
 
 ### Railway project
 
@@ -189,16 +185,33 @@ exec node dist/apps/api/src/main
 
 ---
 
-## Job 5: smoke-test
+## Job 5: bundle-check
+
+**Runner:** `ubuntu-latest`
+**Depends on:** `lint-and-test`
+**Condition:** Runs on every push and PR (parallel with `docker-build`, does not block deploy)
+
+### What it does
+
+Builds the web app natively and reports the `.next/` bundle size to GitHub step summary. Fails the job if the bundle exceeds 60MB.
+
+1. `npm ci` + Prisma generate + web-chat widget build
+2. `npx turbo run build --filter=web` with production `NEXT_PUBLIC_*` env vars
+3. Measures `du -sb apps/web/.next/` and posts a markdown table to `$GITHUB_STEP_SUMMARY`
+4. Fails if size > 62,914,560 bytes (60MB)
+
+---
+
+## Job 6: smoke-test
 
 **Runner:** `ubuntu-latest`
 **Depends on:** `deploy`
 **Condition:** Only runs on pushes to `main` (not on pull requests)
-**Duration:** ~2 minutes (includes 120s wait for Railway deploy)
+**Duration:** ~30 seconds (health checks already done in deploy job)
 
 ### What it does
 
-Runs `scripts/smoke-test.sh` against production to verify the deploy is healthy, plus a separate curl check for the admin console (`admin.businesscommandcentre.com`). The smoke test script performs 20 checks across 8 categories:
+Runs `scripts/smoke-test.sh` against production. Since the deploy job already verified all three services are healthy, the smoke test focuses on functional verification. The script performs 24 checks across 9 categories:
 
 1. **Health & Infrastructure** — API health endpoint, database connectivity, Redis status
 2. **Web Application** — Homepage, Next.js health route
@@ -208,8 +221,7 @@ Runs `scripts/smoke-test.sh` against production to verify the deploy is healthy,
 6. **Security Headers** — HSTS, X-Frame-Options, no server framework leak
 7. **Cookie Security** — HttpOnly, SameSite=Lax on auth cookies
 8. **CORS** — Access-Control headers present
-
-The job waits 120 seconds after deploy to allow Railway's async build to go live before running checks.
+9. **Admin Console** — Admin app health endpoint
 
 ```bash
 ./scripts/smoke-test.sh https://businesscommandcentre.com
