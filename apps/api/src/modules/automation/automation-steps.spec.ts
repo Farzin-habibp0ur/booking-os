@@ -143,9 +143,18 @@ describe('AutomationExecutorService — Step Execution (P-13)', () => {
       providers: [
         AutomationExecutorService,
         { provide: PrismaService, useValue: prisma },
-        { provide: UsageService, useValue: { recordUsage: jest.fn().mockResolvedValue(undefined) } },
-        { provide: TestimonialsService, useValue: { sendRequest: jest.fn().mockResolvedValue({}) } },
-        { provide: getQueueToken(QUEUE_NAMES.NOTIFICATIONS), useValue: { add: jest.fn().mockResolvedValue({}) } },
+        {
+          provide: UsageService,
+          useValue: { recordUsage: jest.fn().mockResolvedValue(undefined) },
+        },
+        {
+          provide: TestimonialsService,
+          useValue: { sendRequest: jest.fn().mockResolvedValue({}) },
+        },
+        {
+          provide: getQueueToken(QUEUE_NAMES.NOTIFICATIONS),
+          useValue: { add: jest.fn().mockResolvedValue({}) },
+        },
       ],
     }).compile();
     executor = testModule.get(AutomationExecutorService);
