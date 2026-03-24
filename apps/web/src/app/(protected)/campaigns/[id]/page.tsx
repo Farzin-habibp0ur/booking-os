@@ -218,7 +218,7 @@ export default function CampaignDetailPage() {
       ) : null}
 
       {/* Conversion Funnel */}
-      {funnelStats?.stages && (
+      {funnelStats?.stages?.length > 0 && (
         <div className="bg-white rounded-2xl shadow-soft p-5 mb-6" data-testid="campaign-funnel">
           <div className="flex items-center gap-2 mb-4">
             <BarChart3 size={16} className="text-sage-600" />
@@ -263,7 +263,7 @@ export default function CampaignDetailPage() {
       )}
 
       {/* Channel Breakdown */}
-      {channelStats && Object.keys(channelStats).length > 0 && (
+      {channelStats && typeof channelStats === 'object' && Object.keys(channelStats).length > 0 && (
         <div className="bg-white rounded-2xl shadow-soft p-5 mb-6" data-testid="channel-breakdown">
           <h2 className="text-sm font-semibold text-slate-900 mb-3">Channel Breakdown</h2>
           <div className="overflow-x-auto">

@@ -1,8 +1,12 @@
 import { Test } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
+import { getQueueToken } from '@nestjs/bullmq';
 import { AutomationService } from './automation.service';
 import { AutomationExecutorService } from './automation-executor.service';
 import { PrismaService } from '../../common/prisma.service';
+import { UsageService } from '../usage/usage.service';
+import { TestimonialsService } from '../testimonials/testimonials.service';
+import { QUEUE_NAMES } from '../../common/queue/queue.module';
 import { createMockPrisma } from '../../test/mocks';
 
 describe('AutomationService — Step Management (P-13)', () => {
@@ -136,7 +140,13 @@ describe('AutomationExecutorService — Step Execution (P-13)', () => {
   beforeEach(async () => {
     prisma = createMockPrisma();
     testModule = await Test.createTestingModule({
-      providers: [AutomationExecutorService, { provide: PrismaService, useValue: prisma }],
+      providers: [
+        AutomationExecutorService,
+        { provide: PrismaService, useValue: prisma },
+        { provide: UsageService, useValue: { recordUsage: jest.fn().mockResolvedValue(undefined) } },
+        { provide: TestimonialsService, useValue: { sendRequest: jest.fn().mockResolvedValue({}) } },
+        { provide: getQueueToken(QUEUE_NAMES.NOTIFICATIONS), useValue: { add: jest.fn().mockResolvedValue({}) } },
+      ],
     }).compile();
     executor = testModule.get(AutomationExecutorService);
 
