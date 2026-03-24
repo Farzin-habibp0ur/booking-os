@@ -111,9 +111,13 @@ html.dark body {
   @apply px-3 py-1.5 text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider select-none;
 }
 
-/* Safe area utility for notch/safe zones */
-.safe-bottom {
-  padding-bottom: env(safe-area-inset-bottom);
+/* Capacitor safe area insets for notched devices */
+@supports (padding: env(safe-area-inset-top)) {
+  .mobile-safe-top { padding-top: env(safe-area-inset-top); }
+  .mobile-safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+  .mobile-safe-left { padding-left: env(safe-area-inset-left); }
+  .mobile-safe-right { padding-right: env(safe-area-inset-right); }
+  .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
 }
 
 /* Bottom tab active indicator */

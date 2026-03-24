@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Patch, Param, Query, Body, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { Throttle } from '@nestjs/throttler';
 import { TenantGuard } from '../../common/tenant.guard';
 import { RolesGuard, Roles } from '../../common/roles.guard';
 import { BusinessId, CurrentUser } from '../../common/decorators';
@@ -7,6 +8,7 @@ import { ActionCardService } from './action-card.service';
 import { ActionCardExecutorService } from './action-card-executor.service';
 import { BulkUpdateActionCardsDto } from './dto';
 
+@Throttle({ default: { limit: 30, ttl: 60000 } })
 @Controller('action-cards')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
 export class ActionCardController {

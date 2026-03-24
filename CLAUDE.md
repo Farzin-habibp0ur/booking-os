@@ -26,7 +26,7 @@ booking-os/
 ├── apps/
 │   ├── api/                    # NestJS REST API (port 3001)
 │   │   ├── src/
-│   │   │   ├── modules/        # 83 feature modules (one dir per domain)
+│   │   │   ├── modules/        # 85 feature modules (one dir per domain)
 │   │   │   ├── common/         # Guards, decorators, filters, DTOs, PrismaService
 │   │   │   └── main.ts         # Bootstrap, Swagger, CORS, cookies, validation
 │   │   └── Dockerfile          # Multi-stage production build
@@ -47,7 +47,7 @@ booking-os/
 │   │   └── next.config.js      # Stricter CSP (no analytics), X-Robots-Tag: noindex
 │   └── whatsapp-simulator/     # WhatsApp testing tool (port 3002)
 ├── packages/
-│   ├── db/                     # Prisma schema (92 models), 66 migrations, seed scripts
+│   ├── db/                     # Prisma schema (93 models), 67 migrations, seed scripts
 │   │   ├── prisma/schema.prisma
 │   │   ├── src/seed.ts         # Base seed (aesthetic + dealership + wellness, idempotent)
 │   │   ├── src/seed-demo.ts    # Rich demo data (idempotent, dedup-safe)
@@ -76,7 +76,8 @@ booking-os/
 ├── docker-compose.prod.yml     # Production (Nginx + SSL)
 ├── docker-compose.demo.yml     # Demo quick-start (auto-seeds)
 ├── DEPLOY.md                   # Deployment & operations guide (READ BEFORE INFRA CHANGES)
-└── .github/workflows/ci.yml   # CI/CD pipeline
+├── .github/workflows/ci.yml   # CI/CD pipeline
+└── .github/workflows/mobile.yml # Mobile build pipeline (iOS + Android)
 ```
 
 ---
@@ -98,8 +99,10 @@ booking-os/
 | Email       | Resend                                                                                                                          | -             |
 | Messaging   | WhatsApp Cloud, Instagram DM, SMS (Twilio + MMS), Facebook Messenger, Email (Resend/SendGrid), Live Web Chat (Socket.IO widget) | -             |
 | Cache/Queue | Redis 7 + BullMQ                                                                                                                | -             |
+| Mobile      | Capacitor (server-mode, loads live web app)                                                                                     | 8.x           |
+| Push        | Firebase Cloud Messaging (FCM HTTP v1)                                                                                          | -             |
 | Monorepo    | Turborepo                                                                                                                       | 2.x           |
-| CI/CD       | GitHub Actions → Railway                                                                                                        | -             |
+| CI/CD       | GitHub Actions → Railway (+ mobile.yml for iOS/Android builds)                                                                  | -             |
 | Monitoring  | Sentry                                                                                                                          | -             |
 | Analytics   | PostHog                                                                                                                         | -             |
 | Linting     | ESLint 9 + Prettier                                                                                                             | -             |
@@ -144,7 +147,7 @@ Each vertical customizes fields, templates, automations, and workflows. The pack
 
 ### Module Structure
 
-Every feature is a NestJS module in `apps/api/src/modules/` (83 modules). Each module follows this pattern:
+Every feature is a NestJS module in `apps/api/src/modules/` (85 modules). Each module follows this pattern:
 
 ```
 modules/
@@ -168,7 +171,7 @@ modules/
 - Staff roles: `OWNER`, `ADMIN`, `AGENT`, `SERVICE_PROVIDER`, `SUPER_ADMIN`
 - Brute force protection: 5 failed attempts = 15-min lockout
 - Token blacklisting on logout and password change
-- Rate limiting per endpoint (signup: 3/min, login: 10/min, etc.)
+- Rate limiting via `@Throttle()` decorator — 34+ controllers have explicit limits. Key limits: auth (signup: 3/min, login: 10/min), AI (20/min), billing (20/min), webhooks (200/min), messaging (60/min). Global default: 100/60s for undecorated endpoints
 
 ### API Patterns
 
@@ -191,7 +194,7 @@ modules/
 
 ### Database (Prisma)
 
-- Schema at `packages/db/prisma/schema.prisma` — **92 models**, 66 migrations
+- Schema at `packages/db/prisma/schema.prisma` — **93 models**, 67 migrations
 - Generate client: `npx prisma generate --schema=packages/db/prisma/schema.prisma`
 - Create migration: `npx prisma migrate dev --name your_name --schema=packages/db/prisma/schema.prisma`
 - `PrismaService` is a global NestJS provider — inject it in constructors
@@ -228,8 +231,8 @@ Channel:            WHATSAPP, INSTAGRAM, FACEBOOK, SMS, EMAIL, WEB_CHAT
 - `MESSAGING` — WhatsApp/SMS message dispatch
 - `REMINDERS` — Booking reminders
 - `NOTIFICATIONS` — Notification delivery (including scheduled report emails)
-- `CALENDAR_SYNC` — Calendar sync jobs
-- `AGENT_PROCESSING` — Background agent job processing
+- `CALENDAR_SYNC` — Calendar sync jobs (syncs bookings to/from Google Calendar and Outlook via CalendarSyncService)
+- `AGENT_PROCESSING` — Background agent job processing (runs operational agents via AgentFrameworkService.triggerAgent)
 - `ONBOARDING_DRIP` — 13-email onboarding sequence
 - `DUNNING` — 3-email payment failure sequence with auto-downgrade after 14 days
 - Queue processors are in `apps/api/src/common/queue/`
@@ -242,7 +245,8 @@ Channel:            WHATSAPP, INSTAGRAM, FACEBOOK, SMS, EMAIL, WEB_CHAT
 Key events: `message:new`, `conversation:updated`, `ai:suggestions`, `ai:auto-replied`, `ai:transfer-to-human`, `booking:updated`, `ai:booking-state`, `action-card:created`, `action-card:updated`, `message:status`, `viewing:start`/`viewing:stop`, `presence:update`, `circuit:state-change`, `draft:created`, `draft:review-requested`, `conversation:focus`, `ai:processing`, `ai:draft-ready`, `ai:processing-failed`
 
 - `InboxGateway.emitToAll()` for system-wide broadcasts (circuit breaker state changes)
-- WebChat gateway on `/web-chat` namespace — visitor sessions (Redis-backed with in-memory fallback, 24h TTL), pre-chat forms, real-time messaging bridge to staff inbox. Supports `session:identify` (link visitor to customer), `history:request` (paginated message history), `file:upload-request` (stub). Offline visitors with email get notification logging.
+- **Push notification fallback:** `PushNotificationService` sends FCM push to staff with active device tokens but no active WebSocket connection. Graceful degradation when FCM is unconfigured (logs only). Device tokens registered via `POST /device-tokens` and managed by `DeviceTokenService`.
+- WebChat gateway on `/web-chat` namespace — visitor sessions (Redis-backed with in-memory fallback, 24h TTL), pre-chat forms, real-time messaging bridge to staff inbox. Supports `session:identify` (link visitor to customer), `history:request` (paginated message history), `file:upload-request` (base64 upload with validation: 5MB max, PNG/JPEG/GIF/PDF, local filesystem storage). Offline visitors with email get notification logging.
 - `PublicBookingController` at `GET /public/:slug` — unauthenticated booking portal with fuzzy slug resolution: exact match → `startsWith` fallback (single candidate) → suffix-stripped match (strips `-clinic`, `-spa`, `-studio`, `-salon`, `-group`, `-center`, `-centre`). Returns 404 only when no match or multiple ambiguous matches
 - `PublicChatController` at `GET /public/chat/config/:businessSlug` — unauthenticated endpoint for widget bootstrapping (greeting, theme, preChatFields, offlineMessage)
 
@@ -266,6 +270,7 @@ BookingOS supports 6 messaging channels: **WhatsApp**, **Instagram DM**, **Faceb
 - `Location` has per-channel config JSON fields: `whatsappConfig`, `instagramConfig`, `facebookConfig`, `smsConfig`, `emailConfig`, `webChatConfig`
 - All webhook endpoints verify provider signatures (HMAC-SHA256 for WhatsApp/Instagram/Facebook/Email, HMAC-SHA1 for Twilio SMS) using timing-safe comparison
 - All 6 channels have delivery status callback endpoints (WhatsApp, SMS, Instagram, Facebook, Email via Resend webhooks)
+- `EmailChannelProvider.validateDomain()` performs real DNS validation (MX records, SPF via TXT, DMARC via `_dmarc.` TXT) with 1-hour cache. Soft validation — logs warnings but never blocks message sending. Timeout returns `valid: true` with "timeout" status
 
 **UI components** (in `apps/web/src/components/inbox/`):
 
@@ -326,7 +331,17 @@ BookingOS supports 6 messaging channels: **WhatsApp**, **Instagram DM**, **Faceb
 - Data fetching via the API client in `useEffect` or event handlers
 - Real-time updates via Socket.io client at `apps/web/src/lib/socket.ts`
 - i18n via custom `useTranslation` hook reading from `locales/en.json` and `locales/es.json`
-- Feature hooks in `apps/web/src/hooks/` — `useDraftAutosave` (debounced draft save/load/clear via backend API)
+- Feature hooks in `apps/web/src/hooks/` — `useDraftAutosave` (debounced draft save/load/clear via backend API), `useCapacitor` (platform detection: isNative, platform), `usePushNotifications` (Capacitor push registration + FCM token sync)
+
+### Mobile App (Capacitor)
+
+- **Capacitor config:** `apps/web/capacitor.config.ts` — server-mode loading from `https://businesscommandcentre.com` (zero code duplication, web updates deploy instantly)
+- **Platforms:** iOS (`@capacitor/ios`) and Android (`@capacitor/android`) — native directories in `apps/web/ios/` and `apps/web/android/` (gitignored, generated via `npx cap add`)
+- **Platform detection:** `useCapacitor()` hook returns `{ isNative, platform }` — use for conditional native-only behavior
+- **Push notifications:** `usePushNotifications()` hook registers device tokens on native platforms, handles foreground/background notification routing
+- **Safe area CSS:** `.mobile-safe-top`, `.mobile-safe-bottom`, `.mobile-safe-left`, `.mobile-safe-right` classes in `globals.css` for notched devices
+- **Build scripts:** `npm run build:mobile` (static export), `npm run cap:sync`, `npm run cap:ios`, `npm run cap:android`
+- **Output mode:** `next.config.js` supports `NEXT_OUTPUT=export` for Capacitor static builds; defaults to `standalone` for production
 
 ### Component Patterns
 
@@ -489,6 +504,7 @@ The Console is a **standalone Next.js app** at `apps/admin/` for platform-wide a
 - `PlatformSetting` — Key-value platform settings by category
 - `SupportCase` / `SupportCaseNote` — Support ticket tracking
 - `BillingCredit` — Platform-issued billing credits
+- `DeviceToken` — Push notification device registration (staff+token unique, cascades on staff/business delete)
 
 ---
 
@@ -590,6 +606,7 @@ Full reference at `.env.example` in the repo root. Key groups:
 | Email      | `EMAIL_PROVIDER`, `EMAIL_API_KEY`, `EMAIL_FROM`, `SENDGRID_INBOUND_WEBHOOK_SECRET`      | Provider: `resend`, `sendgrid`, or `none` (default, logs only). Webhook secret for email inbound signature verification       |
 | Stripe     | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID_*`                       | 3-tier pricing (Starter/Professional/Enterprise) × monthly/annual                                                             |
 | Calendar   | `GOOGLE_CLIENT_ID/SECRET`, `MICROSOFT_CLIENT_ID/SECRET`, `CALENDAR_ENCRYPTION_KEY`      | OAuth for Google Calendar + Outlook                                                                                           |
+| Push       | `FCM_PROJECT_ID`, `FCM_SERVICE_ACCOUNT_KEY`                                             | Firebase Cloud Messaging for mobile push notifications (graceful degradation if unset)                                        |
 | Redis      | `REDIS_URL`                                                                             | Required for BullMQ queues, WebSocket, caching                                                                                |
 | Monitoring | `SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_DSN`                                                  | Error tracking for API + web                                                                                                  |
 | Analytics  | `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST`                                   | Product analytics (web only)                                                                                                  |
@@ -661,6 +678,12 @@ gh workflow run ci.yml
 
 # Production smoke test
 ./scripts/smoke-test.sh [BASE_URL]
+
+# Capacitor (mobile)
+cd apps/web && npx cap sync         # Sync web to native projects
+cd apps/web && npx cap open ios     # Open in Xcode
+cd apps/web && npx cap open android # Open in Android Studio
+node scripts/generate-app-icon.js   # Generate app icons for iOS/Android
 ```
 
 ---
@@ -673,13 +696,20 @@ Push to main → lint-and-test → docker-build → deploy (staged) → smoke-te
 Pull request → lint-and-test → docker-build + e2e-test (Playwright)
 ```
 
-- **lint-and-test:** PostgreSQL 16 service container, `npm ci`, Prisma generate, web-chat widget build, migrate, format check, lint, test
-- **docker-build:** Multi-stage Docker builds for API, web, and admin images + Trivy security scanning
+- **lint-and-test:** PostgreSQL 16 service container, `npm ci`, Prisma generate, web-chat widget build, migrate, format check, lint, test. Security audit: `npm audit --audit-level=critical` blocks the build; `--audit-level=high` runs informational-only
+- **docker-build:** Multi-stage Docker builds for API, web, and admin images + Trivy security scanning. API image scan blocks on CRITICAL (`exit-code: 1`); web/admin scans are informational (`exit-code: 0`)
 - **bundle-check:** Builds web app, reports `.next/` size to GitHub step summary, fails if >60MB
 - **deploy:** Staged sequential: API → health check → Web → health check → Admin → health check (5s poll, 5-min timeout per stage)
 - **smoke-test:** Runs `scripts/smoke-test.sh` against production (24 checks across 9 categories)
 - **e2e-test:** Playwright tests (auth, booking, customer, portal, settings, accessibility) — PR only
 - **Migrations:** Auto-run via `scripts/docker-entrypoint.sh` on container startup
+
+**Mobile CI/CD** (`.github/workflows/mobile.yml`):
+- Triggered by `mobile-v*` tags or manual `workflow_dispatch`
+- **build-android:** Ubuntu, JDK 17, signed AAB via Gradle
+- **build-ios:** macOS, Xcode, signed IPA via xcodebuild
+- Both jobs run in parallel; artifacts uploaded with 30-day retention
+- See DEPLOY.md "Mobile App Releases" section for required secrets
 
 ### Railway Production
 

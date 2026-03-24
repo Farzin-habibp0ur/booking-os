@@ -369,13 +369,15 @@ describe('EmailChannelProvider', () => {
   // ─── validateDomain ────────────────────────────────────────────────
 
   describe('validateDomain', () => {
-    it('should return check results for a domain', () => {
-      const result = EmailChannelProvider.validateDomain('example.com');
+    it('should return check results for a domain', async () => {
+      const result = await EmailChannelProvider.validateDomain('example.com');
 
-      expect(result.valid).toBe(true);
       expect(result.checks).toHaveLength(4);
       expect(result.checks.map((c) => c.type)).toEqual(['MX', 'SPF', 'DKIM', 'DMARC']);
-      expect(result.checks.every((c) => c.status === 'pending')).toBe(true);
+      result.checks.forEach((check) => {
+        expect(check.type).toBeDefined();
+        expect(check.status).toBeDefined();
+      });
     });
   });
 });

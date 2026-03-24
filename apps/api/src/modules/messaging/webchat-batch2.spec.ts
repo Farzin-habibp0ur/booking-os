@@ -341,16 +341,57 @@ describe('WebChat Batch 2 — New Handlers', () => {
   // ─── file:upload-request ──────────────────────────────────────────────────────
 
   describe('file:upload-request', () => {
-    it('should respond with unsupported message', async () => {
+    it('should reject upload when no active conversation', async () => {
       const { client } = await connectVisitor();
 
       jest.clearAllMocks();
 
-      gateway.handleFileUploadRequest(client);
+      await gateway.handleFileUploadRequest(client, {
+        fileName: 'test.png',
+        mimeType: 'image/png',
+        size: 1024,
+        data: 'aGVsbG8=',
+      });
 
       expect(client.emit).toHaveBeenCalledWith('file:upload-response', {
-        supported: false,
-        message: 'File uploads are not yet supported in web chat. Please share files via email.',
+        supported: true,
+        success: false,
+        message: 'No active conversation. Please start a chat first.',
+      });
+    });
+
+    it('should reject upload with missing fields', async () => {
+      const { client } = await connectVisitor();
+      await startChat(client, { name: 'Alice', message: 'hi' });
+
+      jest.clearAllMocks();
+
+      await gateway.handleFileUploadRequest(client, {} as any);
+
+      expect(client.emit).toHaveBeenCalledWith('file:upload-response', {
+        supported: true,
+        success: false,
+        message: 'Missing required fields: fileName, mimeType, data.',
+      });
+    });
+
+    it('should reject unsupported file types', async () => {
+      const { client } = await connectVisitor();
+      await startChat(client, { name: 'Alice', message: 'hi' });
+
+      jest.clearAllMocks();
+
+      await gateway.handleFileUploadRequest(client, {
+        fileName: 'test.exe',
+        mimeType: 'application/x-msdownload',
+        size: 1024,
+        data: 'aGVsbG8=',
+      });
+
+      expect(client.emit).toHaveBeenCalledWith('file:upload-response', {
+        supported: true,
+        success: false,
+        message: expect.stringContaining('Unsupported file type'),
       });
     });
   });

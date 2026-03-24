@@ -869,7 +869,7 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 | ----- | ------------------------------------------- | ------------------------------------------------------------------------------- |
 | 22.8  | Customize sidebar navigation order          | Fixed order                                                                     |
 | 22.9  | ~~Set a default landing page~~              | **DONE** — Staff preferences persist mode + landing path                        |
-| 22.10 | Receive browser push notifications          | Not implemented                                                                 |
+| 22.10 | Receive browser push notifications          | **DONE** — FCM push via DeviceToken API + Capacitor native (iOS/Android)        |
 | 22.11 | Use keyboard shortcuts for common actions   | Only Cmd+K and tour keys                                                        |
 | 22.12 | Customize date/time format                  | Follows locale                                                                  |
 | 22.13 | ~~View a global activity feed / audit log~~ | **DONE** — ActionHistory model + ActivityFeed component on customer detail page |

@@ -1,10 +1,12 @@
 import { Controller, Get, Post, Patch, Body, Param, Query, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { Throttle } from '@nestjs/throttler';
 import { TenantGuard } from '../../common/tenant.guard';
 import { RolesGuard, Roles } from '../../common/roles.guard';
 import { BusinessId, CurrentUser } from '../../common/decorators';
 import { AgentFrameworkService } from './agent-framework.service';
 
+@Throttle({ default: { limit: 30, ttl: 60000 } })
 @Controller('agents')
 @UseGuards(AuthGuard('jwt'), TenantGuard)
 export class AgentController {

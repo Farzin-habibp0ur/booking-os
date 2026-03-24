@@ -2,7 +2,7 @@
 
 > **Purpose:** This document gives full context on the Booking OS platform — what it is, what's been built, how it's structured, and what's left to build. Share this with an AI assistant or new developer to get productive immediately.
 >
-> **Last updated:** March 23, 2026 (All phases COMPLETE — A through E + Phases 1-4 & 6 polish + QA Fixes + Sprints 1-4 + Prompts 4A-4C + Prompt 1C + Prompt 1A + Prompt 1B + Prompt 1D + Prompt 2A + Prompt 2B + Prompt 2C + Prompt 3A + Prompt 3C + QA Bug Fix Sprint (10 bugs) + Growth Engine Agents (15 prompts) + Marketing Command Center Phases 1-6 (14 prompts) COMPLETE + Admin Console Extraction (4 phases — scaffold, migrate, remove from web, infrastructure) + Internal/External Separation (3 phases — marketing tools removed from customer app, migrated to admin app, API endpoints gated behind SUPER_ADMIN) + Launch QA fixes (SUPER_ADMIN guards, AutonomyConfig scope constraint, test timeouts) + Omnichannel Phases 0-5 COMPLETE + Omnichannel Gap Fix (16 issues) + Inbox UX v3 (13 prompts) + **AI Agent Integration Fix (10 prompts)** + **Phase 2 Go-Live Configuration (Sessions 4-6)** — 6 channels fully implemented (WhatsApp, Instagram, Facebook, SMS, Email, Web Chat) — 92 Prisma models, 66 migrations, 4150 tests)
+> **Last updated:** March 23, 2026 (All phases COMPLETE — A through E + Phases 1-4 & 6 polish + QA Fixes + Sprints 1-4 + Prompts 4A-4C + Prompt 1C + Prompt 1A + Prompt 1B + Prompt 1D + Prompt 2A + Prompt 2B + Prompt 2C + Prompt 3A + Prompt 3C + QA Bug Fix Sprint (10 bugs) + Growth Engine Agents (15 prompts) + Marketing Command Center Phases 1-6 (14 prompts) COMPLETE + Admin Console Extraction (4 phases — scaffold, migrate, remove from web, infrastructure) + Internal/External Separation (3 phases — marketing tools removed from customer app, migrated to admin app, API endpoints gated behind SUPER_ADMIN) + Launch QA fixes (SUPER_ADMIN guards, AutonomyConfig scope constraint, test timeouts) + Omnichannel Phases 0-5 COMPLETE + Omnichannel Gap Fix (16 issues) + Inbox UX v3 (13 prompts) + **AI Agent Integration Fix (10 prompts)** + **Phase 2 Go-Live Configuration (Sessions 4-6)** + **Phase 2-3 Post-Audit (Sessions 4-9)** — queue processors complete (8/8), CI security hardened (Trivy blocking, npm audit split), rate limiting expanded (34+ controllers), web chat file upload implemented, email domain DNS validation, Capacitor mobile app (iOS/Android), push notifications (FCM + DeviceToken), mobile CI/CD pipeline — 6 channels fully implemented (WhatsApp, Instagram, Facebook, SMS, Email, Web Chat) — 93 Prisma models, 67 migrations, 4191 tests)
 
 ---
 
@@ -268,7 +268,7 @@ booking-os/
 ├── apps/
 │   ├── api/                    # NestJS REST API (port 3001)
 │   │   ├── src/
-│   │   │   ├── modules/        # 83 feature modules
+│   │   │   ├── modules/        # 85 feature modules
 │   │   │   ├── common/         # Guards, decorators, filters, DTOs, Prisma service
 │   │   │   └── main.ts         # Bootstrap, Swagger, CORS, cookies, validation
 │   │   └── Dockerfile          # Multi-stage production build
@@ -282,7 +282,7 @@ booking-os/
 │   │   └── Dockerfile          # Multi-stage production build
 │   └── whatsapp-simulator/     # WhatsApp testing tool (port 3002)
 ├── packages/
-│   ├── db/                     # Prisma schema (92 models), 66 migrations, seed scripts
+│   ├── db/                     # Prisma schema (93 models), 67 migrations, seed scripts
 │   │   ├── prisma/schema.prisma
 │   │   ├── src/seed.ts         # Base seed (aesthetic + dealership + wellness, idempotent)
 │   │   ├── src/seed-demo.ts    # Rich demo data (idempotent, dedup-safe)
@@ -381,6 +381,7 @@ ViewAsSession ──── Staff (superAdmin) + Business (target)
 PlatformAuditLog (standalone)
 PlatformAgentDefault (standalone — platform-wide agent governance)
 PlatformSetting (standalone — platform-wide configuration)
+DeviceToken ──── Staff + Business (push notification device registration, @@unique staffId+token)
 ```
 
 ### Key Enums
@@ -517,6 +518,8 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 | **Email Sequences**   | `/email-sequences`                                                                | Email drip campaigns: CRUD, stats, enroll, enrollments, cancel/pause/resume, seed (12 endpoints). 7 default sequences                                                                                                                                                 |
 | **Portal**            | `/portal`                                                                         | Customer self-service portal: OTP auth (WhatsApp), magic link auth (email), profile, bookings (paginated), upcoming, cancel & reschedule with policy checks. OTP/blacklist backed by Redis with in-memory fallback. PortalGuard with portal JWT (24h, type: 'portal') |
 | **Export**            | `/customers/export`, `/bookings/export`, `/staff/export`, `/reports/:type/export` | CSV/PDF export for customers, bookings, staff, and all 10 report types                                                                                                                                                                                                |
+| **Device Token**      | `/device-tokens`                                                                  | Push notification device registration: register (POST), unregister (DELETE). Upsert by staff+token unique. JWT + TenantGuard protected. @Throttle(10/60s)                                                                                                            |
+| **Push Notification** | — (internal)                                                                      | FCM HTTP v1 push notifications to iOS/Android. Sends to staff or business tokens. Graceful degradation when FCM unconfigured (logs only). Auto-deactivates invalid/stale tokens                                                                                       |
 
 ### Auth & Multi-tenancy
 
@@ -758,7 +761,8 @@ Pull request → lint-and-test → docker-build + e2e-test (no deploy, no smoke 
 ```
 
 - **lint-and-test:** PostgreSQL 16 service, Prisma generate + migrate, format check, lint, test
-- **docker-build:** Multi-stage Docker builds for API, web, and admin + Trivy security scanning
+- **docker-build:** Multi-stage Docker builds for API, web, and admin + Trivy security scanning (API: CRITICAL blocks build; web/admin: informational only)
+- **mobile:** Capacitor-based iOS/Android build pipeline (`.github/workflows/mobile.yml`) — triggered by `mobile-v*` tags, builds signed AAB + IPA artifacts
 - **bundle-check:** Builds web app, reports `.next/` size to GitHub step summary, fails if >60MB
 - **deploy:** Staged sequential deployment: API → health check → Web → health check → Admin → health check. Each stage polls the health endpoint every 5s with a 5-minute timeout. Failure at any stage stops the pipeline.
 - **smoke-test:** Post-deploy production verification (24 checks across 9 categories: health, DB, web, auth, API, public endpoints, security headers, cookies, CORS, admin console)

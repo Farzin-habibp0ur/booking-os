@@ -1046,3 +1046,95 @@ Incident response runbooks are in `docs/runbooks/`:
 | [DEPLOYMENT-ROLLBACK.md](docs/runbooks/DEPLOYMENT-ROLLBACK.md) | Bad deploy needs reverting |
 | [MESSAGING-FAILURE.md](docs/runbooks/MESSAGING-FAILURE.md) | WhatsApp/SMS/email delivery failures |
 | [AUTH-INCIDENT.md](docs/runbooks/AUTH-INCIDENT.md) | Unauthorized access, token theft, secret rotation |
+
+---
+
+## 13. Mobile App Releases
+
+The mobile apps are Capacitor wrappers around the live web app at `https://businesscommandcentre.com`. Web updates deploy instantly without app store review.
+
+### Manual Build Process
+
+**iOS:**
+```bash
+cd apps/web
+npx cap sync ios
+npx cap open ios  # Opens Xcode
+# In Xcode: Product → Archive → Distribute App → TestFlight → App Store
+```
+
+**Android:**
+```bash
+cd apps/web
+npx cap sync android
+npx cap open android  # Opens Android Studio
+# In Android Studio: Build → Generate Signed Bundle/APK → Android App Bundle → Upload to Play Console
+```
+
+### Required Accounts
+
+| Account | Cost | Purpose |
+|---|---|---|
+| Apple Developer Program | $99/year | iOS App Store distribution |
+| Google Play Console | $25 one-time | Android Play Store distribution |
+
+### Required Secrets (for CI — see Session 9)
+
+| Secret | Description |
+|---|---|
+| `ANDROID_KEYSTORE` | Base64-encoded Android signing keystore |
+| `ANDROID_KEYSTORE_PASSWORD` | Keystore password |
+| `ANDROID_KEY_ALIAS` | Signing key alias |
+| `ANDROID_KEY_PASSWORD` | Key password |
+| `IOS_SIGNING_CERTIFICATE` | Base64-encoded .p12 signing certificate |
+| `IOS_SIGNING_PASSWORD` | Certificate password |
+| `IOS_PROVISIONING_PROFILE` | Base64-encoded .mobileprovision |
+
+### Keystore Generation
+
+```bash
+# Android
+keytool -genkeypair -v -keystore bookingos.jks -keyalg RSA -keysize 2048 -validity 10000 -alias bookingos
+
+# Base64 encode for GitHub Secrets
+base64 -i bookingos.jks | pbcopy
+```
+
+### App Icon Generation
+
+```bash
+node scripts/generate-app-icon.js
+```
+
+Generates icons for all Android densities (mdpi through xxxhdpi) and iOS sizes. Requires `sharp` npm package.
+
+### Automated Builds (GitHub Actions)
+
+The `.github/workflows/mobile.yml` workflow builds signed Android (AAB) and iOS (IPA) artifacts.
+
+**Triggering a build:**
+```bash
+# Via git tag
+git tag mobile-v1.0.0
+git push origin mobile-v1.0.0
+
+# Or via GitHub Actions → Mobile Build → Run workflow
+```
+
+**Required GitHub Secrets:**
+- `ANDROID_KEYSTORE` — base64-encoded `.jks` file
+- `ANDROID_KEYSTORE_PASSWORD` — keystore password
+- `ANDROID_KEY_ALIAS` — signing key alias (e.g., `bookingos`)
+- `ANDROID_KEY_PASSWORD` — key password
+- `IOS_SIGNING_CERTIFICATE` — base64-encoded `.p12` file
+- `IOS_SIGNING_PASSWORD` — certificate password
+- `IOS_PROVISIONING_PROFILE` — base64-encoded `.mobileprovision`
+
+**Encoding secrets:**
+```bash
+base64 -i bookingos.jks | pbcopy           # Android keystore
+base64 -i certificate.p12 | pbcopy         # iOS certificate
+base64 -i profile.mobileprovision | pbcopy # iOS provisioning profile
+```
+
+**iOS setup:** Update `apps/web/ios/ExportOptions.plist` with your actual Team ID and provisioning profile name before the first build.

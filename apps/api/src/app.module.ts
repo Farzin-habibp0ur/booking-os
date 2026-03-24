@@ -88,6 +88,8 @@ import { InstagramAuthModule } from './modules/instagram-auth/instagram-auth.mod
 import { UsageModule } from './modules/usage/usage.module';
 import { CustomerIdentityModule } from './modules/customer-identity/customer-identity.module';
 import { CircuitBreakerModule } from './common/circuit-breaker';
+import { DeviceTokenModule } from './modules/device-token/device-token.module';
+import { PushNotificationModule } from './modules/push-notification/push-notification.module';
 
 @Module({
   imports: [
@@ -192,6 +194,8 @@ import { CircuitBreakerModule } from './common/circuit-breaker';
     UsageModule,
     CustomerIdentityModule,
     CircuitBreakerModule,
+    DeviceTokenModule,
+    PushNotificationModule,
     process.env.REDIS_URL ? QueueModule.forRootWithRedis() : QueueModule.forRoot(),
   ],
 })

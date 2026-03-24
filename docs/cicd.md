@@ -139,6 +139,22 @@ Multi-stage build:
 
 The build step passes dummy values for required env vars (JWT secrets, API keys, etc.) since they're only needed at runtime, not build time. Actual production values are configured in Railway.
 
+### Security scanning (Trivy)
+
+After building, all three Docker images are scanned for vulnerabilities using [Trivy](https://github.com/aquasecurity/trivy):
+
+- **API image (blocking):** Scans for CRITICAL vulnerabilities with `exit-code: 1` — CRITICAL vulns fail the build
+- **API image (informational):** Separate scan for CRITICAL+HIGH with `exit-code: 0` — reports but does not block
+- **Web image (informational):** CRITICAL+HIGH scan, `exit-code: 0`
+- **Admin image (informational):** CRITICAL+HIGH scan, `exit-code: 0`
+
+### Security audit (npm)
+
+The `lint-and-test` job includes two npm audit steps:
+
+1. **Blocking:** `npm audit --audit-level=critical --omit=dev` — fails the build on CRITICAL vulnerabilities
+2. **Informational:** `npm audit --audit-level=high --omit=dev` with `continue-on-error: true` — reports HIGH vulnerabilities without blocking
+
 ---
 
 ## Job 4: deploy (staged)
@@ -370,3 +386,63 @@ Usually a Next.js page using client-side hooks (e.g., `useSearchParams`) without
 ### "Table does not exist" errors after deploying new models
 
 If new Prisma models were added during development using `prisma db push` instead of `prisma migrate dev`, no migration file exists. Production runs `prisma migrate deploy` which only applies migration files. Create the migration SQL manually, mark it as applied locally with `prisma migrate resolve --applied`, and push. See `DEPLOY.md` troubleshooting for details.
+
+---
+
+## Mobile CI/CD Pipeline
+
+Defined in [`.github/workflows/mobile.yml`](../.github/workflows/mobile.yml). Builds signed native app artifacts for iOS and Android distribution.
+
+### Triggers
+
+| Trigger | Runs |
+|---|---|
+| Push tag `mobile-v*` (e.g., `mobile-v1.0.0`) | build-android + build-ios (parallel) |
+| Manual (`workflow_dispatch`) with version input | build-android + build-ios (parallel) |
+
+### Job: build-android
+
+**Runner:** `ubuntu-latest`
+
+1. Checkout, setup Node 22, `npm ci`
+2. Generate Prisma client
+3. `npx cap sync android`
+4. Setup JDK 17 (Temurin)
+5. Decode `ANDROID_KEYSTORE` secret from base64
+6. Build signed release AAB: `./gradlew bundleRelease` with signing parameters
+7. Upload AAB as artifact (30-day retention)
+
+### Job: build-ios
+
+**Runner:** `macos-latest`
+
+1. Checkout, setup Node 22, `npm ci`
+2. Generate Prisma client
+3. `npx cap sync ios`
+4. Setup Xcode (latest-stable)
+5. Create keychain, import signing certificate + provisioning profile
+6. Build archive: `xcodebuild archive` with `CODE_SIGN_STYLE=Manual`
+7. Export IPA via `ExportOptions.plist`
+8. Upload IPA as artifact (30-day retention)
+9. Clean up keychain
+
+### Required GitHub Secrets
+
+| Secret | Description |
+|---|---|
+| `ANDROID_KEYSTORE` | Base64-encoded `.jks` signing keystore |
+| `ANDROID_KEYSTORE_PASSWORD` | Keystore password |
+| `ANDROID_KEY_ALIAS` | Signing key alias |
+| `ANDROID_KEY_PASSWORD` | Key password |
+| `IOS_SIGNING_CERTIFICATE` | Base64-encoded `.p12` signing certificate |
+| `IOS_SIGNING_PASSWORD` | Certificate password |
+| `IOS_PROVISIONING_PROFILE` | Base64-encoded `.mobileprovision` |
+
+### How to trigger
+
+```bash
+git tag mobile-v1.0.0
+git push origin mobile-v1.0.0
+```
+
+Or via GitHub Actions UI → Mobile Build → Run workflow.

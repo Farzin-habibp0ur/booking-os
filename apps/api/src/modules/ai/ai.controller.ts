@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
+import { Throttle } from '@nestjs/throttler';
 import { TenantGuard } from '../../common/tenant.guard';
 import { PlanGuard, RequiresFeature } from '../../common/plan.guard';
 import { BusinessId, CurrentUser } from '../../common/decorators';
@@ -17,6 +18,7 @@ import { BusinessService } from '../business/business.service';
 import { AiService } from './ai.service';
 
 @ApiTags('AI')
+@Throttle({ default: { limit: 20, ttl: 60000 } })
 @Controller('ai')
 @UseGuards(AuthGuard('jwt'), TenantGuard, PlanGuard)
 @RequiresFeature('aiAutoReplies')

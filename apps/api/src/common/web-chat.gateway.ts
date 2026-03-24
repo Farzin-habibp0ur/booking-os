@@ -557,15 +557,130 @@ export class WebChatGateway implements OnGatewayConnection, OnGatewayDisconnect,
     }
   }
 
-  /**
-   * File upload request handler (stub — actual file upload is future work).
-   */
+  private static readonly UPLOAD_ALLOWED_TYPES = [
+    'image/png',
+    'image/jpeg',
+    'image/gif',
+    'application/pdf',
+  ];
+  private static readonly UPLOAD_MAX_SIZE = 5 * 1024 * 1024; // 5MB
+
   @SubscribeMessage('file:upload-request')
-  handleFileUploadRequest(@ConnectedSocket() client: Socket) {
-    client.emit('file:upload-response', {
-      supported: false,
-      message: 'File uploads are not yet supported in web chat. Please share files via email.',
-    });
+  async handleFileUploadRequest(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() payload: { fileName?: string; mimeType?: string; size?: number; data?: string },
+  ) {
+    const session = (client as any).webChatSession as WebChatSession | undefined;
+    if (!session?.conversationId || !session?.businessId) {
+      client.emit('file:upload-response', {
+        supported: true,
+        success: false,
+        message: 'No active conversation. Please start a chat first.',
+      });
+      return;
+    }
+
+    if (!payload?.fileName || !payload?.mimeType || !payload?.data) {
+      client.emit('file:upload-response', {
+        supported: true,
+        success: false,
+        message: 'Missing required fields: fileName, mimeType, data.',
+      });
+      return;
+    }
+
+    if (!WebChatGateway.UPLOAD_ALLOWED_TYPES.includes(payload.mimeType)) {
+      client.emit('file:upload-response', {
+        supported: true,
+        success: false,
+        message: `Unsupported file type: ${payload.mimeType}. Allowed: PNG, JPEG, GIF, PDF.`,
+      });
+      return;
+    }
+
+    const buffer = Buffer.from(payload.data, 'base64');
+    if (buffer.length > WebChatGateway.UPLOAD_MAX_SIZE) {
+      client.emit('file:upload-response', {
+        supported: true,
+        success: false,
+        message: `File too large (${(buffer.length / 1024 / 1024).toFixed(1)}MB). Maximum: 5MB.`,
+      });
+      return;
+    }
+
+    try {
+      const fs = await import('fs');
+      const path = await import('path');
+
+      const uploadDir = path.resolve(process.env.UPLOAD_DIR || './uploads');
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+
+      const ext = path.extname(payload.fileName) || this.mimeToExt(payload.mimeType);
+      const fileKey = `${crypto.randomUUID()}${ext}`;
+      const filePath = path.join(uploadDir, fileKey);
+      fs.writeFileSync(filePath, buffer);
+
+      // TODO: Move to S3/CloudFront for production scale
+      const fileUrl = `/uploads/${fileKey}`;
+
+      const message = await this.prisma.message.create({
+        data: {
+          conversationId: session.conversationId,
+          content: `[File: ${payload.fileName}]`,
+          direction: 'INBOUND',
+          channel: 'WEB_CHAT',
+          contentType: 'MEDIA',
+          metadata: {
+            attachment: {
+              fileName: payload.fileName,
+              mimeType: payload.mimeType,
+              size: buffer.length,
+              url: fileUrl,
+            },
+          },
+        },
+      });
+
+      // Emit to conversation for staff to see
+      this.inboxGateway.emitToBusinessRoom(session.businessId, 'message:new', {
+        conversationId: session.conversationId,
+        message: {
+          id: message.id,
+          content: message.content,
+          direction: 'INBOUND',
+          channel: 'WEB_CHAT',
+          contentType: 'MEDIA',
+          createdAt: message.createdAt,
+          metadata: message.metadata,
+        },
+      });
+
+      client.emit('file:upload-response', {
+        supported: true,
+        success: true,
+        messageId: message.id,
+        fileName: payload.fileName,
+      });
+    } catch (err: any) {
+      this.logger.error(`File upload failed: ${err.message}`, err.stack);
+      client.emit('file:upload-response', {
+        supported: true,
+        success: false,
+        message: 'File upload failed. Please try again.',
+      });
+    }
+  }
+
+  private mimeToExt(mimeType: string): string {
+    const map: Record<string, string> = {
+      'image/png': '.png',
+      'image/jpeg': '.jpg',
+      'image/gif': '.gif',
+      'application/pdf': '.pdf',
+    };
+    return map[mimeType] || '';
   }
 
   getActiveSessions(businessId: string): WebChatSession[] {

@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
+import { Throttle } from '@nestjs/throttler';
 import { Request } from 'express';
 import { BillingService } from './billing.service';
 import { BusinessId } from '../../common/decorators';
@@ -19,6 +20,7 @@ import { RolesGuard, Roles } from '../../common/roles.guard';
 import { PlanTier, PLAN_TIERS } from '../../common/plan-config';
 
 @ApiTags('Billing')
+@Throttle({ default: { limit: 20, ttl: 60000 } })
 @Controller('billing')
 export class BillingController {
   constructor(private billingService: BillingService) {}

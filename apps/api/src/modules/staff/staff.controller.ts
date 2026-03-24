@@ -14,6 +14,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
+import { Throttle } from '@nestjs/throttler';
 import { StaffService } from './staff.service';
 import { AvailabilityService } from '../availability/availability.service';
 import { BusinessId, CurrentUser } from '../../common/decorators';
@@ -30,6 +31,7 @@ import {
 } from '../../common/dto';
 
 @ApiTags('Staff')
+@Throttle({ default: { limit: 30, ttl: 60000 } })
 @Controller('staff')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
 export class StaffController {

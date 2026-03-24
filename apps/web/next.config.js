@@ -3,7 +3,7 @@ const { withSentryConfig } = require('@sentry/nextjs');
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   transpilePackages: ['@booking-os/shared'],
-  output: 'standalone',
+  output: process.env.NEXT_OUTPUT === 'export' ? 'export' : 'standalone',
   poweredByHeader: false,
   async redirects() {
     return [

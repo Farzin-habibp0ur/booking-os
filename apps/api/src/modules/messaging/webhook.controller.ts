@@ -19,6 +19,7 @@ import { Queue } from 'bullmq';
 import { Response } from 'express';
 import { ApiTags } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
+import { Throttle } from '@nestjs/throttler';
 import * as crypto from 'crypto';
 import { PrismaService } from '../../common/prisma.service';
 import { CustomerService } from '../customer/customer.service';
@@ -41,6 +42,7 @@ import {
 } from '@booking-os/messaging-provider';
 
 @ApiTags('Messaging Webhooks')
+@Throttle({ default: { limit: 200, ttl: 60000 } })
 @Controller('webhook')
 export class WebhookController {
   private readonly logger = new Logger(WebhookController.name);

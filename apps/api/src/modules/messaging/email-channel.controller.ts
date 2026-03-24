@@ -102,7 +102,7 @@ export class EmailChannelController {
     }
 
     try {
-      const result = EmailChannelProvider.validateDomain(domain);
+      const result = await EmailChannelProvider.validateDomain(domain);
 
       this.logger.log(`DNS check for domain ${domain}: valid=${result.valid}`);
 

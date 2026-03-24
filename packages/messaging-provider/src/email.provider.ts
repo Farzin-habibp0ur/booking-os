@@ -169,19 +169,70 @@ export class EmailChannelProvider implements MessagingProvider {
     return crypto.timingSafeEqual(sigBuf, expBuf);
   }
 
-  static validateDomain(domain: string): {
+  private static domainCache = new Map<
+    string,
+    { result: { valid: boolean; checks: Array<{ type: string; status: string }> }; timestamp: number }
+  >();
+  private static readonly CACHE_TTL = 60 * 60 * 1000; // 1 hour
+
+  static async validateDomain(domain: string): Promise<{
     valid: boolean;
     checks: Array<{ type: string; status: string }>;
-  } {
-    // Stub -- in production, perform actual DNS lookups
-    return {
-      valid: true,
-      checks: [
-        { type: 'MX', status: 'pending' },
-        { type: 'SPF', status: 'pending' },
-        { type: 'DKIM', status: 'pending' },
-        { type: 'DMARC', status: 'pending' },
-      ],
-    };
+  }> {
+    const cached = EmailChannelProvider.domainCache.get(domain);
+    if (cached && Date.now() - cached.timestamp < EmailChannelProvider.CACHE_TTL) {
+      return cached.result;
+    }
+
+    const dns = await import('dns');
+    const checks: Array<{ type: string; status: string }> = [];
+    let valid = true;
+
+    // Check MX records
+    try {
+      const mx = await dns.promises.resolveMx(domain);
+      checks.push({ type: 'MX', status: mx.length > 0 ? 'pass' : 'fail' });
+      if (mx.length === 0) valid = false;
+    } catch (err: any) {
+      if (err.code === 'ETIMEOUT' || err.code === 'EAI_AGAIN') {
+        checks.push({ type: 'MX', status: 'timeout' });
+      } else {
+        checks.push({ type: 'MX', status: 'fail' });
+        valid = false;
+      }
+    }
+
+    // Check SPF records
+    try {
+      const txt = await dns.promises.resolveTxt(domain);
+      const flat = txt.map((r) => r.join('')).filter((r) => r.startsWith('v=spf1'));
+      checks.push({ type: 'SPF', status: flat.length > 0 ? 'pass' : 'missing' });
+    } catch (err: any) {
+      if (err.code === 'ETIMEOUT' || err.code === 'EAI_AGAIN') {
+        checks.push({ type: 'SPF', status: 'timeout' });
+      } else {
+        checks.push({ type: 'SPF', status: 'missing' });
+      }
+    }
+
+    // Check DKIM (cannot fully verify without selector, mark as informational)
+    checks.push({ type: 'DKIM', status: 'not-checked' });
+
+    // Check DMARC
+    try {
+      const txt = await dns.promises.resolveTxt(`_dmarc.${domain}`);
+      const flat = txt.map((r) => r.join('')).filter((r) => r.startsWith('v=DMARC1'));
+      checks.push({ type: 'DMARC', status: flat.length > 0 ? 'pass' : 'missing' });
+    } catch (err: any) {
+      if (err.code === 'ETIMEOUT' || err.code === 'EAI_AGAIN') {
+        checks.push({ type: 'DMARC', status: 'timeout' });
+      } else {
+        checks.push({ type: 'DMARC', status: 'missing' });
+      }
+    }
+
+    const result = { valid, checks };
+    EmailChannelProvider.domainCache.set(domain, { result, timestamp: Date.now() });
+    return result;
   }
 }

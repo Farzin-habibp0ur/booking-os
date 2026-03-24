@@ -25,3 +25,7 @@ coverage-web/
 test-results/
 playwright-report/
 .DS_Store
+
+# Capacitor native projects (generated)
+apps/web/ios/
+apps/web/android/

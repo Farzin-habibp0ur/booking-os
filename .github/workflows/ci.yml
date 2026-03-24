@@ -43,7 +43,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Security audit
+      - name: Security audit (critical - blocking)
+        run: npm audit --audit-level=critical --omit=dev
+
+      - name: Security audit (high - informational)
         run: npm audit --audit-level=high --omit=dev
         continue-on-error: true
 
@@ -152,7 +155,14 @@ jobs:
           WHATSAPP_ACCESS_TOKEN: dummy
           WHATSAPP_VERIFY_TOKEN: dummy
 
-      - name: Scan API image
+      - name: Scan API image (critical - blocking)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: booking-os-api:latest
+          severity: 'CRITICAL'
+          exit-code: '1'
+
+      - name: Scan API image (high - informational)
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: booking-os-api:latest

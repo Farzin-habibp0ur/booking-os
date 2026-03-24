@@ -11,6 +11,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { Throttle } from '@nestjs/throttler';
 import { TenantGuard } from '../../common/tenant.guard';
 import { BusinessId, CurrentUser } from '../../common/decorators';
 import { OutboundService } from './outbound.service';
@@ -18,6 +19,7 @@ import { MessageService } from '../message/message.service';
 import { ConversationService } from '../conversation/conversation.service';
 import { MessagingService } from '../messaging/messaging.service';
 
+@Throttle({ default: { limit: 60, ttl: 60000 } })
 @Controller('outbound')
 @UseGuards(AuthGuard('jwt'), TenantGuard)
 export class OutboundController {

@@ -95,6 +95,7 @@ model Business {
   platformConfigs            PlatformConfig[]
   budgetEntries              BudgetEntry[]
   escalationEvents           EscalationEvent[]
+  deviceTokens               DeviceToken[]
 
   @@map("businesses")
 }
@@ -151,6 +152,7 @@ model Staff {
   recurringClasses        RecurringClass[]
   rejectionLogReviews     RejectionLog[]      @relation("RejectionLogReviewer")
   resolvedEscalations     EscalationEvent[]   @relation("EscalationResolver")
+  deviceTokens            DeviceToken[]
 
   @@index([businessId])
   @@map("staff")
@@ -2180,4 +2182,23 @@ model MessageUsage {
   @@index([businessId])
   @@index([businessId, date])
   @@map("message_usage")
+}
+
+model DeviceToken {
+  id         String   @id @default(cuid())
+  staffId    String
+  businessId String
+  token      String
+  platform   String   // 'ios' | 'android' | 'web'
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  staff    Staff    @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@unique([staffId, token])
+  @@index([businessId])
+  @@index([staffId, isActive])
+  @@map("device_tokens")
 }

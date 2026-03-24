@@ -1,0 +1,127 @@
+name: Mobile Build
+
+on:
+  push:
+    tags:
+      - 'mobile-v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version (e.g., 1.0.0)'
+        required: false
+        default: '1.0.0'
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate --schema=packages/db/prisma/schema.prisma
+
+      - name: Sync Capacitor Android
+        run: cd apps/web && npx cap sync android
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Decode keystore
+        run: echo "${{ secrets.ANDROID_KEYSTORE }}" | base64 -d > apps/web/android/keystore.jks
+
+      - name: Build release AAB
+        run: |
+          cd apps/web/android
+          ./gradlew bundleRelease \
+            -Pandroid.injected.signing.store.file=${{ github.workspace }}/apps/web/android/keystore.jks \
+            -Pandroid.injected.signing.store.password=${{ secrets.ANDROID_KEYSTORE_PASSWORD }} \
+            -Pandroid.injected.signing.key.alias=${{ secrets.ANDROID_KEY_ALIAS }} \
+            -Pandroid.injected.signing.key.password=${{ secrets.ANDROID_KEY_PASSWORD }}
+
+      - name: Upload AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-release
+          path: apps/web/android/app/build/outputs/bundle/release/*.aab
+          retention-days: 30
+
+  build-ios:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate --schema=packages/db/prisma/schema.prisma
+
+      - name: Sync Capacitor iOS
+        run: cd apps/web && npx cap sync ios
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Create keychain
+        run: |
+          security create-keychain -p "" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "" build.keychain
+          security set-keychain-settings -t 3600 -u build.keychain
+
+      - name: Import signing certificate
+        run: |
+          echo "${{ secrets.IOS_SIGNING_CERTIFICATE }}" | base64 -d > certificate.p12
+          security import certificate.p12 -k build.keychain -P "${{ secrets.IOS_SIGNING_PASSWORD }}" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain
+
+      - name: Import provisioning profile
+        run: |
+          echo "${{ secrets.IOS_PROVISIONING_PROFILE }}" | base64 -d > profile.mobileprovision
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
+
+      - name: Build archive
+        run: |
+          xcodebuild -workspace apps/web/ios/App/App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -archivePath build/App.xcarchive \
+            archive \
+            CODE_SIGN_STYLE=Manual
+
+      - name: Export IPA
+        run: |
+          xcodebuild -exportArchive \
+            -archivePath build/App.xcarchive \
+            -exportOptionsPlist apps/web/ios/ExportOptions.plist \
+            -exportPath build/ipa
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-release
+          path: build/ipa/*.ipa
+          retention-days: 30
+
+      - name: Clean up keychain
+        if: always()
+        run: security delete-keychain build.keychain || true
