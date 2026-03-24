@@ -278,15 +278,18 @@ export default function CampaignDetailPage() {
                 </tr>
               </thead>
               <tbody>
-                {Object.entries(channelStats).map(([ch, counts]: [string, any]) => (
-                  <tr key={ch} className="border-b border-slate-50">
-                    <td className="py-2 font-medium">{ch}</td>
-                    <td className="py-2 text-right">{counts.sent || 0}</td>
-                    <td className="py-2 text-right">{counts.delivered || 0}</td>
-                    <td className="py-2 text-right">{counts.read || 0}</td>
-                    <td className="py-2 text-right text-red-600">{counts.failed || 0}</td>
-                  </tr>
-                ))}
+                {Object.entries(channelStats).map(([ch, counts]: [string, any]) => {
+                  if (!counts || typeof counts !== 'object') return null;
+                  return (
+                    <tr key={ch} className="border-b border-slate-50">
+                      <td className="py-2 font-medium">{ch}</td>
+                      <td className="py-2 text-right">{counts.sent || 0}</td>
+                      <td className="py-2 text-right">{counts.delivered || 0}</td>
+                      <td className="py-2 text-right">{counts.read || 0}</td>
+                      <td className="py-2 text-right text-red-600">{counts.failed || 0}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
