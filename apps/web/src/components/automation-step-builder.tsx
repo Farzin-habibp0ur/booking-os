@@ -10,7 +10,6 @@ import {
   Plus,
   X,
   ChevronDown,
-  Star,
   Mail,
   Globe,
   UserCog,
@@ -46,12 +45,6 @@ const STEP_TYPE_OPTIONS = [
     icon: ArrowRight,
   },
   { type: 'ACTION' as const, actionType: 'ADD_TAG', label: 'Add Tag', icon: Tag },
-  {
-    type: 'ACTION' as const,
-    actionType: 'REQUEST_TESTIMONIAL',
-    label: 'Request Testimonial',
-    icon: Star,
-  },
   { type: 'ACTION' as const, actionType: 'SEND_EMAIL', label: 'Send Email', icon: Mail },
   {
     type: 'ACTION' as const,
@@ -68,7 +61,6 @@ function getStepIcon(step: AutomationStepData) {
   const actionType = step.config?.actionType;
   if (actionType === 'ADD_TAG') return Tag;
   if (actionType === 'UPDATE_STATUS') return ArrowRight;
-  if (actionType === 'REQUEST_TESTIMONIAL') return Star;
   if (actionType === 'SEND_EMAIL') return Mail;
   if (actionType === 'UPDATE_CUSTOMER_FIELD') return UserCog;
   if (actionType === 'WEBHOOK') return Globe;

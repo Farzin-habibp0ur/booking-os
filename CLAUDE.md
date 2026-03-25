@@ -931,3 +931,22 @@ Platform launch config, quality gates, budget tracker, rejection tracker, A/B te
 - Don't create new Prisma JSON fields when a proper relation would work — JSON fields are hard to query and validate
 - Don't add dependencies to `packages/shared` without checking bundle size impact on both API and web
 - Don't build features that only work for one vertical unless explicitly vertical-specific — the core should be vertical-agnostic
+
+---
+
+## Pre-Commit Checklist (MANDATORY)
+
+Before creating any git commit, you MUST run these checks in order and fix ALL failures before committing:
+
+1. `npm run format` — auto-fix formatting
+2. `npm run format:check` — verify no formatting issues remain
+3. `npm run lint` — ESLint + type-check (catches missing imports, unused variables, type errors)
+4. `npm test` — all tests must pass
+
+**Rules:**
+- Do NOT commit until all four pass
+- If a test fails because of your changes, fix it before committing — add missing mocks, update test assertions, remove unused imports
+- Get it right in ONE commit — do not push broken code and fix it in follow-up commits
+- If you add a new lucide-react icon to a component, add it to the mock in the corresponding `.test.tsx` file
+- If you remove a feature from the UI, check if tests reference it and update them
+- If you change a service method signature, update the corresponding `.spec.ts` file

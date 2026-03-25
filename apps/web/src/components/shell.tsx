@@ -185,6 +185,7 @@ function ShellInner({ children }: { children: ReactNode }) {
     r: () => router.push('/reports'),
     j: () => router.push('/ai'),
     w: () => router.push('/waitlist'),
+    m: () => router.push('/marketing'),
   });
 
   const role = user?.role;

@@ -20,7 +20,6 @@ import {
   Bell,
   FileText,
   Hourglass,
-  Star,
   Megaphone,
   Globe,
   UserCog,
@@ -42,7 +41,6 @@ const TRIGGER_BLOCKS: BlockDefinition[] = [
   { type: 'TRIGGER', subtype: 'STATUS_CHANGED', label: 'Status Changed', icon: RefreshCw },
   { type: 'TRIGGER', subtype: 'BOOKING_UPCOMING', label: 'Time-Based', icon: Timer },
   { type: 'TRIGGER', subtype: 'PAYMENT_RECEIVED', label: 'Payment Received', icon: DollarSign },
-  { type: 'TRIGGER', subtype: 'TESTIMONIAL_SUBMITTED', label: 'Testimonial Submitted', icon: Star },
   { type: 'TRIGGER', subtype: 'CAMPAIGN_SENT', label: 'Campaign Sent', icon: Megaphone },
 ];
 
@@ -63,7 +61,6 @@ const ACTION_BLOCKS: BlockDefinition[] = [
   { type: 'ACTION', subtype: 'ASSIGN_STAFF', label: 'Assign Staff', icon: Users },
   { type: 'ACTION', subtype: 'ADD_TAG', label: 'Add Tag', icon: Tag },
   { type: 'ACTION', subtype: 'SEND_NOTIFICATION', label: 'Send WhatsApp', icon: Bell },
-  { type: 'ACTION', subtype: 'REQUEST_TESTIMONIAL', label: 'Request Testimonial', icon: Star },
   { type: 'ACTION', subtype: 'UPDATE_CUSTOMER_FIELD', label: 'Update Customer', icon: UserCog },
   { type: 'ACTION', subtype: 'WEBHOOK', label: 'Webhook', icon: Globe },
 ];

@@ -11,6 +11,7 @@ import {
   Bot,
   ClipboardList,
   Gift,
+  Clock,
   CreditCard,
   Palette,
   Puzzle,
@@ -73,11 +74,11 @@ export const SETTINGS_CATEGORIES: SettingsCategory[] = [
   },
   {
     key: 'growth',
-    label: 'Waitlist & Offers',
-    description: 'Waitlist settings and promotional offers',
-    icon: Gift,
+    label: 'Waitlist',
+    description: 'Manage waitlist settings',
+    icon: Clock,
     accent: 'lavender',
-    pages: ['waitlist', 'offers'],
+    pages: ['waitlist'],
     roles: ['ADMIN'],
   },
   {

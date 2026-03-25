@@ -681,33 +681,3 @@ export function channelBadgeClasses(channel: string): string {
   if (!s) return 'bg-slate-100 text-slate-600';
   return `${s.bg} ${s.text}`;
 }
-
-// ─── Testimonial Status ──────────────────────────────────────────────────────
-
-export const TESTIMONIAL_STATUS_STYLES: Record<
-  string,
-  { bg: string; text: string; border?: string; label: string }
-> = {
-  PENDING: { bg: 'bg-amber-50', text: 'text-amber-700', label: 'Pending' },
-  APPROVED: { bg: 'bg-sage-50', text: 'text-sage-700', label: 'Approved' },
-  FEATURED: {
-    bg: 'bg-lavender-50',
-    text: 'text-lavender-700',
-    border: 'border-lavender-200',
-    label: 'Featured',
-  },
-  REJECTED: { bg: 'bg-red-50', text: 'text-red-700', label: 'Rejected' },
-};
-
-export const TESTIMONIAL_SOURCE_STYLES: Record<
-  string,
-  { bg: string; text: string; label: string }
-> = {
-  MANUAL: { bg: 'bg-slate-50', text: 'text-slate-600', label: 'Manual' },
-  REQUESTED: { bg: 'bg-blue-50', text: 'text-blue-700', label: 'Requested' },
-};
-
-export function testimonialStatusBadgeClasses(status: string): string {
-  const style = TESTIMONIAL_STATUS_STYLES[status];
-  return style ? `${style.bg} ${style.text}` : 'bg-gray-50 text-gray-600';
-}

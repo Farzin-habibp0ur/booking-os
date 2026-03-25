@@ -149,8 +149,7 @@ describe('mode-config', () => {
       expect(admin.sections.workspace).toContain('/waitlist');
       expect(admin.sections.tools).toContain('/services');
       expect(admin.sections.tools).toContain('/staff');
-      expect(admin.sections.tools).toContain('/campaigns');
-      expect(admin.sections.tools).toContain('/automations');
+      expect(admin.sections.tools).toContain('/marketing');
       expect(admin.sections.insights).toContain('/dashboard');
       expect(admin.sections.insights).toContain('/reports');
       expect(admin.sections.insights).toContain('/roi');
@@ -228,12 +227,12 @@ describe('mode-config', () => {
       expect(split.workspace.overflow).toEqual([]);
     });
 
-    it('primary tools = services, staff, invoices', () => {
-      expect(split.tools.primary).toEqual(['/services', '/staff', '/invoices']);
+    it('primary tools = services, staff, invoices, marketing', () => {
+      expect(split.tools.primary).toEqual(['/services', '/staff', '/invoices', '/marketing']);
     });
 
-    it('overflow tools = packages, campaigns, automations', () => {
-      expect(split.tools.overflow).toEqual(['/packages', '/campaigns', '/automations']);
+    it('overflow tools = packages', () => {
+      expect(split.tools.overflow).toEqual(['/packages']);
     });
 
     it('primary insights = dashboard + reports', () => {
@@ -273,8 +272,8 @@ describe('mode-config', () => {
       expect(split.tools.primary).toContain('/pipeline');
     });
 
-    it('overflow tools still includes packages, campaigns, automations', () => {
-      expect(split.tools.overflow).toEqual(['/packages', '/campaigns', '/automations']);
+    it('overflow tools still includes packages', () => {
+      expect(split.tools.overflow).toEqual(['/packages']);
     });
   });
 

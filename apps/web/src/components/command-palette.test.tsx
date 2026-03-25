@@ -48,7 +48,7 @@ jest.mock('@/lib/use-mode', () => ({
       key: 'admin',
       sections: {
         workspace: ['/dashboard', '/inbox', '/calendar', '/customers', '/bookings', '/waitlist'],
-        tools: ['/services', '/staff', '/invoices', '/campaigns', '/automations', '/testimonials'],
+        tools: ['/services', '/staff', '/invoices', '/marketing', '/packages'],
         insights: ['/dashboard', '/reports', '/reports/monthly-review', '/roi'],
         aiAgents: ['/ai', '/ai/agents', '/ai/actions', '/ai/performance'],
       },
@@ -504,13 +504,13 @@ describe('CommandPalette', () => {
     render(<CommandPalette {...defaultProps} />);
 
     const input = screen.getByPlaceholderText('Search pages, customers, bookings...');
-    // "automations" matches the /automations href
-    fireEvent.change(input, { target: { value: 'automations' } });
+    // "marketing" matches the /marketing href
+    fireEvent.change(input, { target: { value: 'marketing' } });
 
     const pagesSection = screen.getByTestId('pages-section');
     expect(pagesSection).toBeInTheDocument();
     // t() returns the key string
-    expect(screen.getByText('nav.automations')).toBeInTheDocument();
+    expect(screen.getByText('nav.marketing')).toBeInTheDocument();
   });
 
   test('page results include overflow routes (e.g. AI sub-routes)', () => {
@@ -529,13 +529,13 @@ describe('CommandPalette', () => {
     render(<CommandPalette isOpen={true} onClose={onClose} />);
 
     const input = screen.getByPlaceholderText('Search pages, customers, bookings...');
-    // "campaigns" matches the /campaigns href
-    fireEvent.change(input, { target: { value: 'campaigns' } });
+    // "marketing" matches the /marketing href
+    fireEvent.change(input, { target: { value: 'marketing' } });
 
     // t() returns the key string
-    fireEvent.click(screen.getByText('nav.campaigns'));
+    fireEvent.click(screen.getByText('nav.marketing'));
 
-    expect(mockPush).toHaveBeenCalledWith('/campaigns');
+    expect(mockPush).toHaveBeenCalledWith('/marketing');
     expect(onClose).toHaveBeenCalled();
   });
 

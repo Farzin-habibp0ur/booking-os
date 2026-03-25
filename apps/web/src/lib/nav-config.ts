@@ -13,8 +13,7 @@ import {
   UserCog,
   BarChart3,
   TrendingUp,
-  Megaphone,
-  Zap,
+  Target,
   Package,
   Kanban,
   Compass,
@@ -89,8 +88,7 @@ export function getNavItems(opts: NavConfigOptions): NavItem[] {
         ]
       : []),
     { href: '/invoices', label: t('nav.invoices'), icon: Receipt, roles: ['ADMIN'] },
-    { href: '/campaigns', label: t('nav.campaigns'), icon: Megaphone, roles: ['ADMIN'] },
-    { href: '/automations', label: t('nav.automations'), icon: Zap, roles: ['ADMIN'] },
+    { href: '/marketing', label: t('nav.marketing'), icon: Target, roles: ['ADMIN'] },
     ...(packName === 'wellness'
       ? [{ href: '/packages', label: t('nav.packages'), icon: Package, roles: ['ADMIN'] }]
       : []),

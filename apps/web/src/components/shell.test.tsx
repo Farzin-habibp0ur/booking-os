@@ -121,7 +121,7 @@ jest.mock('@/lib/use-mode', () => ({
       {
         key: 'admin',
         labels: { general: 'Admin' },
-        primaryNavPaths: ['/dashboard', '/reports', '/staff', '/campaigns', '/automations'],
+        primaryNavPaths: ['/dashboard', '/reports', '/staff', '/marketing'],
         allowedRoles: ['ADMIN'],
       },
       {
@@ -143,11 +143,11 @@ jest.mock('@/lib/use-mode', () => ({
       key: 'admin',
       sections: {
         workspace: ['/dashboard', '/inbox', '/calendar', '/customers', '/bookings', '/waitlist'],
-        tools: ['/services', '/campaigns', '/automations', '/service-board'],
+        tools: ['/services', '/marketing', '/service-board'],
         insights: ['/reports', '/reports/monthly-review', '/roi'],
         aiAgents: ['/ai', '/ai/agents', '/ai/actions', '/ai/performance'],
         overflow: {
-          tools: ['/campaigns', '/automations'],
+          tools: [],
           insights: ['/reports/monthly-review', '/roi'],
           aiAgents: ['/ai/agents', '/ai/actions', '/ai/performance'],
         },
@@ -370,16 +370,13 @@ describe('Shell', () => {
 
     const nav = screen.getByRole('navigation', { name: 'Main navigation' });
 
-    // Campaigns & Automations should NOT be in primary nav (t() returns keys)
-    expect(within(nav).queryByText('nav.campaigns')).not.toBeInTheDocument();
-    expect(within(nav).queryByText('nav.automations')).not.toBeInTheDocument();
+    // Marketing should be in primary nav (not overflow)
+    expect(within(nav).getByText('nav.marketing')).toBeInTheDocument();
 
-    // Click More to expand
+    // Click More to expand — overflow sections still have insights/AI items
     await userEvent.click(screen.getByTestId('sidebar-more-toggle'));
 
-    // Now they should appear in the overflow section
-    expect(within(nav).getByText('nav.campaigns')).toBeInTheDocument();
-    expect(within(nav).getByText('nav.automations')).toBeInTheDocument();
+    expect(screen.getByTestId('sidebar-overflow-items')).toBeInTheDocument();
   });
 
   it('does not render marketing nav links (Content Queue, Marketing Agents, etc.)', () => {
@@ -455,9 +452,8 @@ describe('Shell', () => {
     expect(within(nav).getByText('nav.reports')).toBeInTheDocument();
     // Primary AI item (t() returns key)
     expect(within(nav).getByText('nav.ai')).toBeInTheDocument();
-    // Overflow items should NOT show until expanded
-    expect(within(nav).queryByText('nav.campaigns')).not.toBeInTheDocument();
-    expect(within(nav).queryByText('nav.automations')).not.toBeInTheDocument();
+    // Marketing should be in primary tools
+    expect(within(nav).getByText('nav.marketing')).toBeInTheDocument();
   });
 
   it('sidebar footer stays outside scrollable nav', () => {
