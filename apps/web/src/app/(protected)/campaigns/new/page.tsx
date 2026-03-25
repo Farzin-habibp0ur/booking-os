@@ -35,6 +35,8 @@ export default function NewCampaignPage() {
     excludeDoNotMessage: true,
   });
   const [templateId, setTemplateId] = useState('');
+  const [messageMode, setMessageMode] = useState<'template' | 'custom'>('template');
+  const [customMessage, setCustomMessage] = useState('');
   const [scheduleType, setScheduleType] = useState<'now' | 'later'>('now');
   const [scheduledAt, setScheduledAt] = useState('');
   const [throttle, setThrottle] = useState(10);
@@ -50,6 +52,8 @@ export default function NewCampaignPage() {
   ]);
   const [activeVariant, setActiveVariant] = useState(0);
   const [channel, setChannel] = useState('WHATSAPP');
+  const [audienceSearchQuery, setAudienceSearchQuery] = useState('');
+  const [showAudienceModal, setShowAudienceModal] = useState(false);
   const router = useRouter();
 
   const variantPercentageSum = variants.reduce((s, v) => s + Number(v.percentage || 0), 0);
@@ -110,16 +114,34 @@ export default function NewCampaignPage() {
   const handleCreate = async () => {
     setSaving(true);
     try {
-      const campaign = await api.post<any>('/campaigns', {
+      const campaignData: any = {
         name,
-        templateId: templateId || undefined,
         filters,
         scheduledAt: scheduleType === 'later' ? scheduledAt : undefined,
         throttlePerMinute: throttle,
         recurrenceRule: recurrenceRule !== 'NONE' ? recurrenceRule : undefined,
         channel,
-        ...(isABTest && { isABTest: true, variants }),
-      });
+      };
+
+      if (isABTest) {
+        campaignData.isABTest = true;
+        campaignData.variants = variants;
+      } else if (messageMode === 'template') {
+        campaignData.templateId = templateId;
+      } else {
+        // Custom message mode: store as single variant
+        campaignData.isABTest = false;
+        campaignData.variants = [
+          {
+            id: crypto.randomUUID(),
+            name: 'Default',
+            content: customMessage,
+            percentage: 100,
+          },
+        ];
+      }
+
+      const campaign = await api.post<any>('/campaigns', campaignData);
       router.push(`/campaigns/${campaign.id}`);
     } catch (err) {
       console.error(err);
@@ -132,7 +154,7 @@ export default function NewCampaignPage() {
     if (step === 1) {
       if (isABTest)
         return variantPercentageSum === 100 && variants.every((v) => v.name && v.content);
-      return !!templateId;
+      return messageMode === 'template' ? !!templateId : !!customMessage.trim();
     }
     if (step === 2) return scheduleType === 'now' || !!scheduledAt;
     if (step === 3) return !!name;
@@ -207,7 +229,12 @@ export default function NewCampaignPage() {
                     </p>
                   ))}
                   {preview.count > 5 && (
-                    <p className="text-xs text-slate-400">and {preview.count - 5} more...</p>
+                    <button
+                      onClick={() => setShowAudienceModal(true)}
+                      className="text-xs text-sage-600 hover:text-sage-700 transition-colors"
+                    >
+                      and {preview.count - 5} more...
+                    </button>
                   )}
                 </div>
               )}
@@ -388,34 +415,120 @@ export default function NewCampaignPage() {
             </div>
           )}
 
-          {/* Template selection (used when NOT A/B testing, or for non-AB campaigns) */}
+          {/* Message mode selection (used when NOT A/B testing) */}
           {!isABTest && (
-            <div className="bg-white rounded-2xl shadow-soft p-5">
-              <h2 className="text-sm font-semibold text-slate-900 mb-3">Select Template</h2>
-              {templates.length === 0 ? (
-                <p className="text-sm text-slate-400">
-                  No templates found. Create one in Settings → Templates first.
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  {templates.map((t: any) => (
-                    <button
-                      key={t.id}
-                      onClick={() => setTemplateId(t.id)}
-                      className={cn(
-                        'w-full text-left px-4 py-3 rounded-xl text-sm border transition-colors',
-                        templateId === t.id
-                          ? 'border-sage-400 bg-sage-50 text-sage-900'
-                          : 'border-slate-100 hover:bg-slate-50',
-                      )}
-                    >
-                      <p className="font-medium">{t.name}</p>
-                      <p className="text-xs text-slate-500 mt-0.5 truncate">
-                        {t.body?.substring(0, 80)}
-                      </p>
-                    </button>
-                  ))}
+            <div className="bg-white rounded-2xl shadow-soft p-5 space-y-4">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setMessageMode('template')}
+                    className={cn(
+                      'px-3 py-1.5 rounded-lg text-xs font-medium transition-colors',
+                      messageMode === 'template'
+                        ? 'bg-sage-100 text-sage-700'
+                        : 'bg-slate-100 text-slate-500 hover:bg-slate-200',
+                    )}
+                  >
+                    Select Template
+                  </button>
+                  <button
+                    onClick={() => setMessageMode('custom')}
+                    className={cn(
+                      'px-3 py-1.5 rounded-lg text-xs font-medium transition-colors',
+                      messageMode === 'custom'
+                        ? 'bg-sage-100 text-sage-700'
+                        : 'bg-slate-100 text-slate-500 hover:bg-slate-200',
+                    )}
+                  >
+                    Write Custom Message
+                  </button>
                 </div>
+              </div>
+
+              {messageMode === 'template' ? (
+                <>
+                  <h2 className="text-sm font-semibold text-slate-900">Select Template</h2>
+                  {templates.length === 0 ? (
+                    <p className="text-sm text-slate-400">
+                      No templates found. Create one in Settings → Templates first.
+                    </p>
+                  ) : (
+                    <div className="space-y-2">
+                      {templates.map((t: any) => (
+                        <button
+                          key={t.id}
+                          onClick={() => setTemplateId(t.id)}
+                          className={cn(
+                            'w-full text-left px-4 py-3 rounded-xl text-sm border transition-colors',
+                            templateId === t.id
+                              ? 'border-sage-400 bg-sage-50 text-sage-900'
+                              : 'border-slate-100 hover:bg-slate-50',
+                          )}
+                        >
+                          <p className="font-medium">{t.name}</p>
+                          <p className="text-xs text-slate-500 mt-0.5 truncate">
+                            {t.body?.substring(0, 80)}
+                          </p>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  <h2 className="text-sm font-semibold text-slate-900">Message Content</h2>
+                  <div className="relative">
+                    <textarea
+                      id="custom-message"
+                      value={customMessage}
+                      onChange={(e) => setCustomMessage(e.target.value)}
+                      placeholder="Write your message here... Use {{name}}, {{service}}, {{business}}, {{date}}, {{staff}} for personalization"
+                      rows={4}
+                      className="w-full text-sm bg-slate-50 border-transparent rounded-xl px-3 py-2 focus:bg-white focus:ring-2 focus:ring-sage-500 resize-none"
+                    />
+                    <div className="flex items-center gap-1 mt-1 flex-wrap">
+                      <span className="text-xs text-slate-400">Insert:</span>
+                      {MERGE_VARIABLES.map((mv) => (
+                        <button
+                          key={mv.value}
+                          type="button"
+                          onClick={() => {
+                            const ta = document.getElementById(
+                              'custom-message',
+                            ) as HTMLTextAreaElement | null;
+                            if (ta) {
+                              const start = ta.selectionStart;
+                              const end = ta.selectionEnd;
+                              const current = customMessage;
+                              const newContent =
+                                current.substring(0, start) + mv.value + current.substring(end);
+                              setCustomMessage(newContent);
+                            } else {
+                              setCustomMessage(customMessage + mv.value);
+                            }
+                          }}
+                          className="px-1.5 py-0.5 text-xs bg-sage-50 text-sage-600 rounded hover:bg-sage-100 transition-colors"
+                        >
+                          {mv.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  {/* Live preview */}
+                  {customMessage && customMessage.includes('{{') && (
+                    <div className="bg-sage-50 rounded-xl px-3 py-2">
+                      <p className="text-xs text-slate-500 mb-1">Preview:</p>
+                      <p className="text-sm text-slate-700">
+                        {customMessage
+                          .replace(/\{\{name\}\}/gi, 'Sarah')
+                          .replace(/\{\{service\}\}/gi, 'Facial Treatment')
+                          .replace(/\{\{business\}\}/gi, 'Glow Clinic')
+                          .replace(/\{\{date\}\}/gi, 'March 28, 2026')
+                          .replace(/\{\{staff\}\}/gi, 'Dr. Chen')}
+                      </p>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           )}
@@ -624,6 +737,58 @@ export default function NewCampaignPage() {
               This campaign will reach {preview.count} customers. Make sure your template is ready.
             </div>
           )}
+        </div>
+      )}
+
+      {/* Audience Modal */}
+      {showAudienceModal && preview?.samples && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-soft w-full max-w-md max-h-96 flex flex-col">
+            <div className="p-5 border-b border-slate-100">
+              <h2 className="text-sm font-semibold text-slate-900">
+                Audience Preview ({preview.count} customers)
+              </h2>
+              <input
+                type="text"
+                placeholder="Search by name or phone..."
+                value={audienceSearchQuery}
+                onChange={(e) => setAudienceSearchQuery(e.target.value)}
+                className="mt-3 w-full text-sm bg-slate-50 border-transparent rounded-xl px-3 py-2 focus:bg-white focus:ring-2 focus:ring-sage-500"
+              />
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 space-y-2">
+              {preview.samples
+                .filter(
+                  (s: any) =>
+                    s.name?.toLowerCase().includes(audienceSearchQuery.toLowerCase()) ||
+                    s.phone?.includes(audienceSearchQuery),
+                )
+                .map((s: any) => (
+                  <div key={s.id} className="px-3 py-2 bg-slate-50 rounded-lg">
+                    <p className="text-sm font-medium text-slate-900">{s.name}</p>
+                    <p className="text-xs text-slate-500">{s.phone}</p>
+                  </div>
+                ))}
+              {preview.samples.filter(
+                (s: any) =>
+                  s.name?.toLowerCase().includes(audienceSearchQuery.toLowerCase()) ||
+                  s.phone?.includes(audienceSearchQuery),
+              ).length === 0 && (
+                <p className="text-sm text-slate-400 text-center py-4">No customers match your search</p>
+              )}
+            </div>
+            <div className="p-4 border-t border-slate-100 flex justify-end">
+              <button
+                onClick={() => {
+                  setShowAudienceModal(false);
+                  setAudienceSearchQuery('');
+                }}
+                className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-xl transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

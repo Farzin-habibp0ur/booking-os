@@ -23,6 +23,7 @@ export default function CampaignDetailPage() {
   const [funnelStats, setFunnelStats] = useState<any>(null);
   const [channelStats, setChannelStats] = useState<any>(null);
   const [selectingWinner, setSelectingWinner] = useState(false);
+  const [templates, setTemplates] = useState<any[]>([]);
   const router = useRouter();
   const { toast } = useToast();
 
@@ -35,6 +36,13 @@ export default function CampaignDetailPage() {
       toast('Failed to clone campaign', 'error');
     }
   };
+
+  useEffect(() => {
+    api
+      .get<any>('/templates')
+      .then((t) => setTemplates(Array.isArray(t) ? t : t.data || []))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     api
@@ -370,7 +378,7 @@ export default function CampaignDetailPage() {
       )}
 
       {/* Campaign details */}
-      <div className="bg-white rounded-2xl shadow-soft p-5">
+      <div className="bg-white rounded-2xl shadow-soft p-5 mb-6">
         <h2 className="text-sm font-semibold text-slate-900 mb-3">Details</h2>
         <dl className="space-y-2 text-sm">
           <div className="flex justify-between">
@@ -402,6 +410,23 @@ export default function CampaignDetailPage() {
                   timeStyle: 'short',
                 })}
               </dd>
+            </div>
+          )}
+          <div className="flex justify-between">
+            <dt className="text-slate-500">Channel</dt>
+            <dd>
+              {{
+                WHATSAPP: 'WhatsApp',
+                SMS: 'SMS',
+                EMAIL: 'Email',
+                MULTI: 'Multi-channel',
+              }[campaign.channel] || campaign.channel || 'WhatsApp'}
+            </dd>
+          </div>
+          {stats.sent !== undefined && (
+            <div className="flex justify-between">
+              <dt className="text-slate-500">Audience</dt>
+              <dd>{stats.sent} customers</dd>
             </div>
           )}
           <div className="flex justify-between">
@@ -463,6 +488,35 @@ export default function CampaignDetailPage() {
             </div>
           )}
         </dl>
+      </div>
+
+      {/* Message section */}
+      <div className="bg-white rounded-2xl shadow-soft p-5">
+        <h2 className="text-sm font-semibold text-slate-900 mb-3">Message</h2>
+        {campaign.isABTest && campaign.variants?.length > 0 ? (
+          <div className="space-y-3">
+            {campaign.variants.map((v: any, i: number) => (
+              <div key={v.id} className="bg-slate-50 rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-xs font-medium text-slate-600">{v.name}</span>
+                  <span className="text-xs text-slate-400">({v.percentage}%)</span>
+                </div>
+                <p className="text-sm text-slate-700 whitespace-pre-wrap">{v.content}</p>
+              </div>
+            ))}
+          </div>
+        ) : campaign.templateId ? (
+          <div className="bg-slate-50 rounded-xl p-4">
+            <p className="text-sm font-medium text-slate-600 mb-2">
+              {templates.find((t: any) => t.id === campaign.templateId)?.name || 'Template'}
+            </p>
+            <p className="text-sm text-slate-700 whitespace-pre-wrap">
+              {templates.find((t: any) => t.id === campaign.templateId)?.body || '—'}
+            </p>
+          </div>
+        ) : (
+          <p className="text-sm text-slate-500">No message content available</p>
+        )}
       </div>
     </div>
   );

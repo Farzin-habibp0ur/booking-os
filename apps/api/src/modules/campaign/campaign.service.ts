@@ -588,10 +588,20 @@ export class CampaignService {
   // MED-01: Clone a campaign
   async clone(businessId: string, campaignId: string) {
     const original = await this.findById(businessId, campaignId);
+
+    // Generate unique name
+    let baseName = `${(original as any).name} (Copy)`;
+    let name = baseName;
+    let counter = 1;
+    while (await this.prisma.campaign.findFirst({ where: { businessId, name } })) {
+      counter++;
+      name = `${(original as any).name} (Copy ${counter})`;
+    }
+
     return this.prisma.campaign.create({
       data: {
         businessId,
-        name: `${(original as any).name} (Copy)`,
+        name,
         status: 'DRAFT',
         filters: (original as any).filters || {},
         templateId: (original as any).templateId,
