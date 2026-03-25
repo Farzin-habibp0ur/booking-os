@@ -590,8 +590,7 @@ export class CampaignService {
     const original = await this.findById(businessId, campaignId);
 
     // Generate unique name
-    let baseName = `${(original as any).name} (Copy)`;
-    let name = baseName;
+    let name = `${(original as any).name} (Copy)`;
     let counter = 1;
     while (await this.prisma.campaign.findFirst({ where: { businessId, name } })) {
       counter++;
