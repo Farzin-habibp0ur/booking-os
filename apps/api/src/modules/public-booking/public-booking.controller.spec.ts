@@ -332,4 +332,35 @@ describe('PublicBookingController', () => {
       ).rejects.toThrow(BadRequestException);
     });
   });
+
+  describe('getReferralInfo', () => {
+    it('returns credit amount and business name for valid code', async () => {
+      prisma.business.findUnique.mockResolvedValue({
+        name: 'Acme Corp',
+        packConfig: { referral: { creditAmount: 75 } },
+      } as any);
+
+      const result = await controller.getReferralInfo('VALIDCODE');
+      expect(result).toEqual({ creditAmount: 75, businessName: 'Acme Corp' });
+    });
+
+    it('returns default credit amount when no packConfig.referral', async () => {
+      prisma.business.findUnique.mockResolvedValue({
+        name: 'Beta Corp',
+        packConfig: {},
+      } as any);
+
+      const result = await controller.getReferralInfo('CODE2');
+      expect(result).toEqual({ creditAmount: 50, businessName: 'Beta Corp' });
+    });
+
+    it('throws NotFoundException for invalid code', async () => {
+      prisma.business.findUnique.mockResolvedValue(null);
+      await expect(controller.getReferralInfo('INVALID')).rejects.toThrow();
+    });
+
+    it('throws BadRequestException when no code provided', async () => {
+      await expect(controller.getReferralInfo('')).rejects.toThrow();
+    });
+  });
 });

@@ -118,15 +118,6 @@ describe('SettingsPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockApi.get.mockImplementation((url: string) => {
-      if (url === '/referral/stats') {
-        return Promise.resolve({
-          referralLink: 'https://example.com/ref/abc',
-          totalInvites: 0,
-          successfulReferrals: 0,
-          totalCreditsEarned: 0,
-          referrals: [],
-        });
-      }
       return Promise.resolve(mockBusiness);
     });
   });
@@ -280,15 +271,6 @@ describe('SettingsPage', () => {
 
   test('does not show booking link when slug is missing', async () => {
     mockApi.get.mockImplementation((url: string) => {
-      if (url === '/referral/stats') {
-        return Promise.resolve({
-          referralLink: '',
-          totalInvites: 0,
-          successfulReferrals: 0,
-          totalCreditsEarned: 0,
-          referrals: [],
-        });
-      }
       return Promise.resolve({ ...mockBusiness, slug: undefined });
     });
     render(<SettingsPage />);

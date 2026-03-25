@@ -135,6 +135,6 @@ describe('SettingsHub', () => {
     render(<SettingsHub />);
 
     const chevrons = screen.getAllByTestId('icon-chevron');
-    expect(chevrons).toHaveLength(13); // 13 cards for ADMIN
+    expect(chevrons).toHaveLength(14); // 14 cards for ADMIN
   });
 });

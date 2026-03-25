@@ -7,12 +7,16 @@ describe('ReferralController', () => {
   let referralService: {
     getReferralStats: jest.Mock;
     getReferralLink: jest.Mock;
+    getReferralSettings: jest.Mock;
+    updateReferralSettings: jest.Mock;
   };
 
   beforeEach(async () => {
     referralService = {
       getReferralStats: jest.fn(),
       getReferralLink: jest.fn(),
+      getReferralSettings: jest.fn(),
+      updateReferralSettings: jest.fn(),
     };
 
     const module = await Test.createTestingModule({
@@ -48,6 +52,37 @@ describe('ReferralController', () => {
 
       const result = await controller.getLink('biz1');
       expect(result).toEqual({ link: 'http://localhost:3000/signup?ref=CODE1' });
+    });
+  });
+
+  describe('getSettings', () => {
+    it('returns referral settings for the business', async () => {
+      const mockSettings = {
+        creditAmount: 50,
+        messageTemplate: 'Hello',
+        sharingMethod: 'manual',
+        emailSubject: '',
+      };
+      referralService.getReferralSettings.mockResolvedValue(mockSettings);
+
+      const result = await controller.getSettings('biz1');
+      expect(result).toEqual(mockSettings);
+      expect(referralService.getReferralSettings).toHaveBeenCalledWith('biz1');
+    });
+  });
+
+  describe('updateSettings', () => {
+    it('updates referral settings for the business', async () => {
+      const dto = { creditAmount: 100 };
+      referralService.updateReferralSettings.mockResolvedValue({
+        creditAmount: 100,
+        messageTemplate: 'Hello',
+        sharingMethod: 'manual',
+        emailSubject: '',
+      });
+
+      const result = await controller.updateSettings('biz1', dto as any);
+      expect(referralService.updateReferralSettings).toHaveBeenCalledWith('biz1', dto);
     });
   });
 });

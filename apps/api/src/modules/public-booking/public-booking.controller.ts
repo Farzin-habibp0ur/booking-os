@@ -319,4 +319,23 @@ export class PublicBookingController {
       businessName: business.name,
     };
   }
+
+  @Get('referral-info')
+  @Throttle({ default: { limit: 20, ttl: 60000 } })
+  async getReferralInfo(@Query('code') code: string) {
+    if (!code) throw new BadRequestException('Referral code is required');
+    const business = await this.prisma.business.findUnique({
+      where: { referralCode: code },
+      select: { name: true, packConfig: true },
+    });
+    if (!business) throw new NotFoundException('Invalid referral code');
+    const config =
+      typeof business.packConfig === 'object' && business.packConfig
+        ? (business.packConfig as any)
+        : {};
+    return {
+      creditAmount: config.referral?.creditAmount ?? 50,
+      businessName: business.name,
+    };
+  }
 }

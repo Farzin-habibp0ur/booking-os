@@ -7,8 +7,8 @@ import {
 
 describe('settings-config', () => {
   describe('SETTINGS_CATEGORIES', () => {
-    it('defines exactly 13 categories', () => {
-      expect(SETTINGS_CATEGORIES).toHaveLength(13);
+    it('defines exactly 14 categories', () => {
+      expect(SETTINGS_CATEGORIES).toHaveLength(14);
     });
 
     it('has the expected category keys', () => {
@@ -26,6 +26,7 @@ describe('settings-config', () => {
         'web-chat',
         'integrations',
         'billing',
+        'referral',
         'appearance',
       ]);
     });
@@ -69,9 +70,9 @@ describe('settings-config', () => {
   });
 
   describe('getSettingsCategoriesForRole', () => {
-    it('returns all 13 categories for ADMIN', () => {
+    it('returns all 14 categories for ADMIN', () => {
       const categories = getSettingsCategoriesForRole('ADMIN');
-      expect(categories).toHaveLength(13);
+      expect(categories).toHaveLength(14);
     });
 
     it('returns only categories with AGENT in roles for AGENT', () => {

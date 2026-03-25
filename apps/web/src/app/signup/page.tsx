@@ -31,10 +31,23 @@ function SignupPage() {
   const searchParams = useSearchParams();
   const referralCode = searchParams.get('ref') || undefined;
   const { t } = useI18n();
+  const [referralInfo, setReferralInfo] = useState<{
+    creditAmount: number;
+    businessName: string;
+  } | null>(null);
 
   useEffect(() => {
     if (user) router.push('/dashboard');
   }, [user, router]);
+
+  useEffect(() => {
+    if (referralCode) {
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/public/referral-info?code=${referralCode}`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then(setReferralInfo)
+        .catch(() => {});
+    }
+  }, [referralCode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,7 +84,8 @@ function SignupPage() {
         {referralCode && (
           <div className="bg-sage-50 border border-sage-100 rounded-xl p-3 mb-4 text-center">
             <p className="text-sm text-sage-800 font-medium">
-              You&apos;ve been referred! Sign up and get $50 credit after your first payment.
+              You&apos;ve been referred! Sign up and get ${referralInfo?.creditAmount ?? 50} credit
+              after your first payment.
             </p>
           </div>
         )}

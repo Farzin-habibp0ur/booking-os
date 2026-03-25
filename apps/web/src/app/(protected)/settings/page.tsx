@@ -11,7 +11,6 @@ import {
   Sparkles,
   Upload,
   Settings2,
-  ClipboardCheck,
   CreditCard,
   Bell,
   Link2,
@@ -23,11 +22,7 @@ import {
   Shield,
   Bot,
   Star,
-  Gift,
-  Users,
-  DollarSign,
   Clock,
-  Check,
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { useTheme } from '@/lib/use-theme';
@@ -55,8 +50,6 @@ export default function SettingsPage() {
   const [copied, setCopied] = useState(false);
   const [googleReviewUrl, setGoogleReviewUrl] = useState('');
   const [reviewSaved, setReviewSaved] = useState(false);
-  const [referralStats, setReferralStats] = useState<any>(null);
-  const [referralCopied, setReferralCopied] = useState(false);
 
   useEffect(() => {
     api.get<any>('/business').then((b) => {
@@ -66,12 +59,6 @@ export default function SettingsPage() {
       setTimezone(b.timezone);
       setGoogleReviewUrl(b.packConfig?.googleReviewUrl || '');
     });
-    if (role === 'ADMIN') {
-      api
-        .get<any>('/referral/stats')
-        .then(setReferralStats)
-        .catch(() => {});
-    }
   }, [role]);
 
   const handleSave = async () => {
@@ -282,109 +269,6 @@ export default function SettingsPage() {
             </button>
           </div>
         </div>
-
-        {/* Referral Program */}
-        {role === 'ADMIN' && referralStats && (
-          <div className="bg-white rounded-2xl shadow-soft p-6 mt-6">
-            <div className="flex items-center gap-2 mb-1">
-              <Gift size={18} className="text-sage-600" />
-              <h3 className="font-semibold text-slate-800">Referral Program</h3>
-            </div>
-            <p className="text-sm text-slate-500 mt-1">
-              Give $50, Get $50 — Share your referral link with other businesses. When they
-              subscribe, you both get $50 credit.
-            </p>
-
-            {/* Referral link */}
-            <div className="flex items-center gap-2 mt-4">
-              <input
-                readOnly
-                value={referralStats.referralLink}
-                className="flex-1 bg-slate-50 rounded-xl px-3 py-2 text-sm border border-slate-200"
-              />
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(referralStats.referralLink);
-                  setReferralCopied(true);
-                  trackEvent('referral_link_copied');
-                  setTimeout(() => setReferralCopied(false), 2000);
-                }}
-                className="bg-sage-600 hover:bg-sage-700 text-white rounded-xl px-4 py-2 text-sm transition-colors whitespace-nowrap"
-              >
-                {referralCopied ? 'Copied!' : 'Copy Link'}
-              </button>
-            </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-4 mt-5">
-              <div className="bg-slate-50 rounded-xl p-3 text-center">
-                <div className="flex items-center justify-center gap-1 text-slate-400 mb-1">
-                  <Users size={14} />
-                  <span className="text-xs">Invites</span>
-                </div>
-                <p className="text-xl font-serif font-semibold text-slate-900">
-                  {referralStats.totalInvites}
-                </p>
-              </div>
-              <div className="bg-slate-50 rounded-xl p-3 text-center">
-                <div className="flex items-center justify-center gap-1 text-slate-400 mb-1">
-                  <Check size={14} />
-                  <span className="text-xs">Converted</span>
-                </div>
-                <p className="text-xl font-serif font-semibold text-sage-600">
-                  {referralStats.successfulReferrals}
-                </p>
-              </div>
-              <div className="bg-slate-50 rounded-xl p-3 text-center">
-                <div className="flex items-center justify-center gap-1 text-slate-400 mb-1">
-                  <DollarSign size={14} />
-                  <span className="text-xs">Credits</span>
-                </div>
-                <p className="text-xl font-serif font-semibold text-sage-600">
-                  ${referralStats.totalCreditsEarned}
-                </p>
-              </div>
-            </div>
-
-            {/* Recent referrals */}
-            {referralStats.referrals.length > 0 && (
-              <div className="mt-5">
-                <h4 className="text-sm font-medium text-slate-700 mb-2">Recent Referrals</h4>
-                <div className="space-y-2">
-                  {referralStats.referrals.slice(0, 5).map((r: any) => (
-                    <div
-                      key={r.id}
-                      className="flex items-center justify-between bg-slate-50 rounded-xl px-3 py-2"
-                    >
-                      <div>
-                        <p className="text-sm font-medium text-slate-800">{r.businessName}</p>
-                        <p className="text-xs text-slate-400">
-                          {new Date(r.createdAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <span
-                        className={cn(
-                          'text-xs px-2 py-1 rounded-full font-medium',
-                          r.status === 'CREDITED'
-                            ? 'bg-sage-50 text-sage-900'
-                            : r.status === 'CONVERTED'
-                              ? 'bg-amber-50 text-amber-700'
-                              : 'bg-lavender-50 text-lavender-900',
-                        )}
-                      >
-                        {r.status === 'CREDITED'
-                          ? `+$${r.creditAmount}`
-                          : r.status === 'CONVERTED'
-                            ? 'Processing'
-                            : 'Pending'}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
       </div>
     </div>
   );

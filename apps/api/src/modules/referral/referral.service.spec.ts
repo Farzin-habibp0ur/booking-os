@@ -69,7 +69,9 @@ describe('ReferralService', () => {
 
   describe('trackReferral', () => {
     it('creates a PENDING referral record', async () => {
-      prisma.business.findUnique.mockResolvedValue({ id: 'referrer-biz' } as any);
+      prisma.business.findUnique
+        .mockResolvedValueOnce({ id: 'referrer-biz' } as any)
+        .mockResolvedValueOnce({ packConfig: { referral: { creditAmount: 75 } } } as any);
       prisma.referral.findFirst.mockResolvedValue(null);
       prisma.referral.create.mockResolvedValue({} as any);
 
@@ -81,7 +83,7 @@ describe('ReferralService', () => {
           referredBusinessId: 'referred-biz',
           referralCode: 'CODE1',
           status: 'PENDING',
-          creditAmount: 50,
+          creditAmount: 75,
         },
       });
     });
@@ -143,7 +145,7 @@ describe('ReferralService', () => {
       expect(mockStripe.customers.createBalanceTransaction).toHaveBeenCalledWith('cus_referred', {
         amount: -5000,
         currency: 'usd',
-        description: 'Referral credit — Welcome bonus from referral',
+        description: 'Referral credit — Welcome bonus ($50)',
       });
       expect(prisma.referral.update).toHaveBeenCalledWith({
         where: { id: 'ref1' },
@@ -191,6 +193,121 @@ describe('ReferralService', () => {
         data: {
           status: 'CONVERTED',
           convertedAt: expect.any(Date),
+        },
+      });
+    });
+
+    it('uses dynamic creditAmount from referral record', async () => {
+      const mockStripe = {
+        customers: {
+          createBalanceTransaction: jest.fn().mockResolvedValue({}),
+        },
+      };
+
+      prisma.referral.findFirst.mockResolvedValue({
+        id: 'ref1',
+        referrerBusinessId: 'referrer-biz',
+        referredBusinessId: 'referred-biz',
+        status: 'PENDING',
+        creditAmount: 75,
+        referrerBusiness: {
+          subscription: { stripeCustomerId: 'cus_referrer' },
+        },
+        referredBusiness: {
+          subscription: { stripeCustomerId: 'cus_referred' },
+        },
+      } as any);
+      prisma.referral.update.mockResolvedValue({} as any);
+
+      await service.convertReferral('referred-biz', mockStripe);
+
+      expect(mockStripe.customers.createBalanceTransaction).toHaveBeenCalledWith('cus_referrer', {
+        amount: -7500,
+        currency: 'usd',
+        description: 'Referral credit — Give $75, Get $75',
+      });
+      expect(mockStripe.customers.createBalanceTransaction).toHaveBeenCalledWith('cus_referred', {
+        amount: -7500,
+        currency: 'usd',
+        description: 'Referral credit — Welcome bonus ($75)',
+      });
+    });
+  });
+
+  describe('getCreditAmount', () => {
+    it('returns configured credit amount from packConfig', async () => {
+      prisma.business.findUnique.mockResolvedValue({
+        packConfig: { referral: { creditAmount: 100 } },
+      } as any);
+
+      const amount = await service.getCreditAmount('biz1');
+      expect(amount).toBe(100);
+    });
+
+    it('returns default 50 when no packConfig.referral exists', async () => {
+      prisma.business.findUnique.mockResolvedValue({
+        packConfig: {},
+      } as any);
+
+      const amount = await service.getCreditAmount('biz1');
+      expect(amount).toBe(50);
+    });
+  });
+
+  describe('getReferralSettings', () => {
+    it('returns defaults when no referral config exists', async () => {
+      prisma.business.findUnique.mockResolvedValue({
+        packConfig: {},
+      } as any);
+
+      const settings = await service.getReferralSettings('biz1');
+      expect(settings.creditAmount).toBe(50);
+      expect(settings.sharingMethod).toBe('manual');
+      expect(settings.emailSubject).toBe('');
+      expect(settings.messageTemplate).toContain('{businessName}');
+    });
+
+    it('returns configured values from packConfig', async () => {
+      prisma.business.findUnique.mockResolvedValue({
+        packConfig: {
+          referral: {
+            creditAmount: 100,
+            messageTemplate: 'Custom message',
+            sharingMethod: 'email',
+            emailSubject: 'Join us!',
+          },
+        },
+      } as any);
+
+      const settings = await service.getReferralSettings('biz1');
+      expect(settings.creditAmount).toBe(100);
+      expect(settings.messageTemplate).toBe('Custom message');
+      expect(settings.sharingMethod).toBe('email');
+      expect(settings.emailSubject).toBe('Join us!');
+    });
+  });
+
+  describe('updateReferralSettings', () => {
+    it('deep merges referral settings into packConfig', async () => {
+      prisma.business.findUnique.mockResolvedValue({
+        packConfig: {
+          existingKey: 'keep',
+          referral: { creditAmount: 50, messageTemplate: 'old' },
+        },
+      } as any);
+      prisma.business.update.mockResolvedValue({} as any);
+
+      const result = await service.updateReferralSettings('biz1', { creditAmount: 100 });
+
+      expect(result.creditAmount).toBe(100);
+      expect(result.messageTemplate).toBe('old');
+      expect(prisma.business.update).toHaveBeenCalledWith({
+        where: { id: 'biz1' },
+        data: {
+          packConfig: {
+            existingKey: 'keep',
+            referral: { creditAmount: 100, messageTemplate: 'old' },
+          },
         },
       });
     });

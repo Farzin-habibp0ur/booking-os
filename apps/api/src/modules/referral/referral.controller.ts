@@ -1,10 +1,11 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get, Patch, Body, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { ReferralService } from './referral.service';
 import { BusinessId } from '../../common/decorators';
 import { TenantGuard } from '../../common/tenant.guard';
 import { RolesGuard, Roles } from '../../common/roles.guard';
+import { UpdateReferralSettingsDto } from './dto/update-referral-settings.dto';
 
 @ApiTags('Referral')
 @Controller('referral')
@@ -23,5 +24,19 @@ export class ReferralController {
   @Roles('ADMIN')
   getLink(@BusinessId() businessId: string) {
     return this.referralService.getReferralLink(businessId).then((link) => ({ link }));
+  }
+
+  @Get('settings')
+  @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+  @Roles('ADMIN')
+  getSettings(@BusinessId() businessId: string) {
+    return this.referralService.getReferralSettings(businessId);
+  }
+
+  @Patch('settings')
+  @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+  @Roles('ADMIN')
+  updateSettings(@BusinessId() businessId: string, @Body() dto: UpdateReferralSettingsDto) {
+    return this.referralService.updateReferralSettings(businessId, dto);
   }
 }

@@ -3,8 +3,6 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../common/prisma.service';
 import { randomBytes } from 'crypto';
 
-const REFERRAL_CREDIT_AMOUNT = 50;
-
 @Injectable()
 export class ReferralService {
   private readonly logger = new Logger(ReferralService.name);
@@ -92,13 +90,14 @@ export class ReferralService {
       return;
     }
 
+    const creditAmount = await this.getCreditAmount(referrer.id);
     await this.prisma.referral.create({
       data: {
         referrerBusinessId: referrer.id,
         referredBusinessId,
         referralCode,
         status: 'PENDING',
-        creditAmount: REFERRAL_CREDIT_AMOUNT,
+        creditAmount,
       },
     });
 
@@ -136,17 +135,17 @@ export class ReferralService {
 
       if (referrerSub?.stripeCustomerId && stripe) {
         await stripe.customers.createBalanceTransaction(referrerSub.stripeCustomerId, {
-          amount: -REFERRAL_CREDIT_AMOUNT * 100, // Negative = credit in Stripe (cents)
+          amount: -referral.creditAmount * 100, // Negative = credit in Stripe (cents)
           currency: 'usd',
-          description: 'Referral credit — Give $50, Get $50',
+          description: `Referral credit — Give $${referral.creditAmount}, Get $${referral.creditAmount}`,
         });
       }
 
       if (referredSub?.stripeCustomerId && stripe) {
         await stripe.customers.createBalanceTransaction(referredSub.stripeCustomerId, {
-          amount: -REFERRAL_CREDIT_AMOUNT * 100,
+          amount: -referral.creditAmount * 100,
           currency: 'usd',
-          description: 'Referral credit — Welcome bonus from referral',
+          description: `Referral credit — Welcome bonus ($${referral.creditAmount})`,
         });
       }
 
@@ -161,7 +160,7 @@ export class ReferralService {
       });
 
       this.logger.log(
-        `Referral credited: referrer=${referral.referrerBusinessId}, referred=${referredBusinessId}, amount=$${REFERRAL_CREDIT_AMOUNT} each`,
+        `Referral credited: referrer=${referral.referrerBusinessId}, referred=${referredBusinessId}, amount=$${referral.creditAmount} each`,
       );
     } catch (err) {
       // Mark as converted even if Stripe credit fails — can be retried
@@ -228,6 +227,63 @@ export class ReferralService {
         creditedAt: r.creditedAt?.toISOString() || null,
       })),
     };
+  }
+
+  async getCreditAmount(businessId: string): Promise<number> {
+    const business = await this.prisma.business.findUnique({
+      where: { id: businessId },
+      select: { packConfig: true },
+    });
+    const config =
+      typeof business?.packConfig === 'object' && business.packConfig
+        ? (business.packConfig as any)
+        : {};
+    return config.referral?.creditAmount ?? 50;
+  }
+
+  async getReferralSettings(businessId: string) {
+    const business = await this.prisma.business.findUnique({
+      where: { id: businessId },
+      select: { packConfig: true },
+    });
+    const config =
+      typeof business?.packConfig === 'object' && business.packConfig
+        ? (business.packConfig as any)
+        : {};
+    return {
+      creditAmount: config.referral?.creditAmount ?? 50,
+      messageTemplate:
+        config.referral?.messageTemplate ??
+        "Hey! I've been using {businessName} to manage my appointments and it's been amazing. Sign up with my link and we both get ${creditAmount} credit: {referralLink}",
+      sharingMethod: config.referral?.sharingMethod ?? 'manual',
+      emailSubject: config.referral?.emailSubject ?? '',
+    };
+  }
+
+  async updateReferralSettings(
+    businessId: string,
+    settings: {
+      creditAmount?: number;
+      messageTemplate?: string;
+      sharingMethod?: string;
+      emailSubject?: string;
+    },
+  ) {
+    const business = await this.prisma.business.findUnique({
+      where: { id: businessId },
+      select: { packConfig: true },
+    });
+    const currentConfig =
+      typeof business?.packConfig === 'object' && business.packConfig
+        ? (business.packConfig as any)
+        : {};
+    const currentReferral = currentConfig.referral || {};
+    const mergedReferral = { ...currentReferral, ...settings };
+    await this.prisma.business.update({
+      where: { id: businessId },
+      data: { packConfig: { ...currentConfig, referral: mergedReferral } },
+    });
+    return mergedReferral;
   }
 
   private generateCode(): string {

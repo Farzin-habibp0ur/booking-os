@@ -599,7 +599,33 @@
     "booking_link": "Tu enlace de reservas",
     "booking_link_desc": "Comparte este enlace para que los clientes reserven citas directamente.",
     "copy_link": "Copiar",
-    "copied": "¡Copiado!"
+    "copied": "¡Copiado!",
+    "referral": {
+      "title": "Programa de Referidos",
+      "description": "Configura recompensas, personaliza mensajes de invitación y rastrea referidos",
+      "link_title": "Tu Enlace de Referido",
+      "link_desc": "Comparte este enlace con otros negocios. Cuando se suscriban, ambos obtienen créditos.",
+      "reward_title": "Configuración de Recompensa",
+      "reward_desc": "Establece cuánto crédito reciben ambas partes",
+      "credit_label": "Monto del Crédito (por parte)",
+      "credit_help": "Tanto tú como el negocio referido reciben este monto como crédito en Stripe cuando realizan su primer pago.",
+      "message_title": "Mensaje de Invitación",
+      "message_desc": "Personaliza el mensaje que aparece al compartir tu referido. Se usa para copiar al portapapeles e invitaciones enviadas.",
+      "char_count": "{count} caracteres",
+      "sms_friendly": "Longitud compatible con SMS",
+      "sms_multi_segment": "El SMS puede usar múltiples segmentos",
+      "preview": "Vista Previa",
+      "sharing_title": "Método de Envío",
+      "sharing_desc": "Elige cómo quieres compartir las invitaciones de referido. Siempre puedes copiar el enlace manualmente.",
+      "manual": "Manual (Copiar Enlace)",
+      "manual_desc": "El dueño del negocio copia y comparte el enlace",
+      "coming_soon": "Próximamente",
+      "channel_note": "Las invitaciones enviadas por el sistema usarán tu infraestructura de mensajería existente y contarán en tu uso del canal.",
+      "recent": "Referidos Recientes",
+      "info_note": "Ambas recompensas se aplican como créditos en Stripe cuando el negocio referido realiza su primer pago. El banner de registro mostrará el monto del crédito dinámicamente.",
+      "save": "Guardar Cambios",
+      "saved": "Configuración de referidos actualizada"
+    }
   },
 
   "portal": {

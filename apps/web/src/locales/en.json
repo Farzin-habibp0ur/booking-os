@@ -633,7 +633,33 @@
     "booking_link": "Your Booking Link",
     "booking_link_desc": "Share this link so customers can book appointments directly.",
     "copy_link": "Copy",
-    "copied": "Copied!"
+    "copied": "Copied!",
+    "referral": {
+      "title": "Referral Program",
+      "description": "Configure rewards, customize invite messages, and track referrals",
+      "link_title": "Your Referral Link",
+      "link_desc": "Share this link with other businesses. When they subscribe, you both earn credits.",
+      "reward_title": "Reward Settings",
+      "reward_desc": "Set how much credit both parties receive",
+      "credit_label": "Credit Amount (per party)",
+      "credit_help": "Both you and the referred business receive this amount as a Stripe balance credit when they make their first payment.",
+      "message_title": "Invite Message",
+      "message_desc": "Customize the message that appears when sharing your referral. Used for copy-to-clipboard and sent invites.",
+      "char_count": "{count} characters",
+      "sms_friendly": "SMS-friendly length",
+      "sms_multi_segment": "SMS may use multiple segments",
+      "preview": "Live Preview",
+      "sharing_title": "Sharing Method",
+      "sharing_desc": "Choose how you want to share referral invites. You can always copy the link manually regardless of this setting.",
+      "manual": "Manual (Copy Link)",
+      "manual_desc": "Business owner copies and shares the link themselves",
+      "coming_soon": "Coming Soon",
+      "channel_note": "System-sent referral invites will use your existing messaging infrastructure and count toward your channel usage.",
+      "recent": "Recent Referrals",
+      "info_note": "Both rewards are applied as Stripe balance credits when the referred business makes their first payment. The signup banner will display the credit amount dynamically.",
+      "save": "Save Changes",
+      "saved": "Referral settings updated"
+    }
   },
 
   "portal": {

@@ -144,6 +144,15 @@ export const SETTINGS_CATEGORIES: SettingsCategory[] = [
     roles: ['ADMIN'],
   },
   {
+    key: 'referral',
+    label: 'Referral Program',
+    description: 'Reward amount, invite messages, and referral tracking',
+    icon: Gift,
+    accent: 'sage',
+    pages: ['referral'],
+    roles: ['ADMIN'],
+  },
+  {
     key: 'appearance',
     label: 'Branding',
     description: 'Theme, branding, colors, and display preferences',
