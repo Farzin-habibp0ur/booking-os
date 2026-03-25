@@ -18,7 +18,6 @@ import {
   Package,
   Kanban,
   Compass,
-  Star,
   Sparkles,
   Receipt,
   Car,
@@ -95,7 +94,6 @@ export function getNavItems(opts: NavConfigOptions): NavItem[] {
     ...(packName === 'wellness'
       ? [{ href: '/packages', label: t('nav.packages'), icon: Package, roles: ['ADMIN'] }]
       : []),
-    { href: '/testimonials', label: t('nav.testimonials'), icon: Star, roles: ['ADMIN'] },
     ...(kanbanEnabled
       ? [
           {

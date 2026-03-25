@@ -111,7 +111,6 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [resending, setResending] = useState(false);
   const [dashboardViews, setDashboardViews] = useState<any[]>([]);
-  const [testimonialStats, setTestimonialStats] = useState<any>(null);
   const [wizardOpen, setWizardOpen] = useState(false);
   const [bannerDismissed, setBannerDismissed] = useState(true);
   const [onboardingIncomplete, setOnboardingIncomplete] = useState(false);
@@ -183,12 +182,6 @@ export default function DashboardPage() {
     api
       .get<any>('/invoices/stats')
       .then((stats) => setInvoiceStats(stats))
-      .catch(() => {});
-
-    // Load testimonial stats
-    api
-      .get<any>('/testimonials/stats')
-      .then(setTestimonialStats)
       .catch(() => {});
   };
 
@@ -427,48 +420,6 @@ export default function DashboardPage() {
 
       {/* Attention Cards — all modes */}
       <AttentionCards attentionNeeded={data.attentionNeeded} />
-
-      {/* Testimonial Stats Widget */}
-      {testimonialStats && testimonialStats.total > 0 && (
-        <div
-          className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-5 cursor-pointer hover:shadow-md transition-shadow"
-          onClick={() => router.push('/testimonials')}
-        >
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <Star size={16} className="text-amber-400" />
-              <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                Testimonials
-              </h3>
-            </div>
-            {testimonialStats.pending > 0 && (
-              <span className="flex items-center gap-1 text-xs bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full">
-                {testimonialStats.pending} pending
-              </span>
-            )}
-          </div>
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <p className="text-2xl font-serif font-bold text-slate-900 dark:text-slate-100">
-                {testimonialStats.avgRating ? testimonialStats.avgRating.toFixed(1) : '—'}
-              </p>
-              <p className="text-xs text-slate-500">Avg Rating</p>
-            </div>
-            <div>
-              <p className="text-2xl font-serif font-bold text-slate-900 dark:text-slate-100">
-                {testimonialStats.featured}/6
-              </p>
-              <p className="text-xs text-slate-500">Featured</p>
-            </div>
-            <div>
-              <p className="text-2xl font-serif font-bold text-slate-900 dark:text-slate-100">
-                {testimonialStats.total}
-              </p>
-              <p className="text-xs text-slate-500">Total</p>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Dashboard-pinned Saved Views */}
       {dashboardViews.length > 0 && (

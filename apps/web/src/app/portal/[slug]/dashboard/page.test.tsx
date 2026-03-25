@@ -109,15 +109,6 @@ describe('PortalDashboardPage', () => {
     expect(screen.getByText('My Profile')).toBeInTheDocument();
   });
 
-  it('renders testimonial CTA', async () => {
-    render(<PortalDashboardPage />);
-
-    await waitFor(() => {
-      expect(screen.getByTestId('testimonial-cta')).toBeInTheDocument();
-    });
-    expect(screen.getByText('Share Your Experience')).toBeInTheDocument();
-  });
-
   it('renders recent bookings', async () => {
     render(<PortalDashboardPage />);
 

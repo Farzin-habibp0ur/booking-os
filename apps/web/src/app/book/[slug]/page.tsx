@@ -18,8 +18,6 @@ import {
   ShieldCheck,
   FileText,
   ClipboardList,
-  Star,
-  Quote,
   CreditCard,
   Loader2,
   AlertCircle,
@@ -207,19 +205,6 @@ export default function BookingPortalPage() {
   const [paymentError, setPaymentError] = useState('');
   const [payAtVisit, setPayAtVisit] = useState(false);
 
-  // Testimonials
-  const [publicTestimonials, setPublicTestimonials] = useState<
-    {
-      id: string;
-      name: string;
-      role?: string;
-      company?: string;
-      content: string;
-      rating?: number;
-      status: string;
-    }[]
-  >([]);
-
   // Waitlist state
   const [showWaitlistForm, setShowWaitlistForm] = useState(false);
   const [waitlistName, setWaitlistName] = useState('');
@@ -253,11 +238,6 @@ export default function BookingPortalPage() {
         ]);
         setBusiness(biz);
         setServices(svcs);
-        // Fetch public testimonials (non-blocking)
-        publicApi
-          .get<any[]>(`/testimonials/public/${slug}`)
-          .then((t) => setPublicTestimonials(t.slice(0, 3)))
-          .catch(() => {});
         trackEvent('booking_page_viewed', { business_slug: slug });
         if (!biz.whiteLabel) {
           trackEvent('plg_impression', { source: slug });
@@ -1262,77 +1242,6 @@ export default function BookingPortalPage() {
               )}
             </div>
           )}
-        </div>
-      )}
-
-      {/* Testimonials */}
-      {publicTestimonials.length > 0 && (
-        <div className="mt-8" data-testid="testimonials-section">
-          {/* Aggregate stats */}
-          {(() => {
-            const rated = publicTestimonials.filter((t) => t.rating);
-            const avgRating =
-              rated.length > 0
-                ? rated.reduce((sum, t) => sum + (t.rating || 0), 0) / rated.length
-                : 0;
-            return avgRating > 0 ? (
-              <div className="text-center mb-4">
-                <div className="text-3xl font-serif font-bold text-slate-800">
-                  {avgRating.toFixed(1)}{' '}
-                  <Star size={24} className="inline text-amber-400 fill-amber-400 -mt-1" />
-                </div>
-                <p className="text-sm text-slate-500">
-                  Based on {rated.length} review{rated.length !== 1 ? 's' : ''}
-                </p>
-              </div>
-            ) : null;
-          })()}
-
-          <h3 className="text-lg font-serif font-semibold text-slate-800 text-center mb-4">
-            What Our Clients Say
-          </h3>
-          <div className="space-y-3">
-            {publicTestimonials.map((t) => {
-              const isFeatured = t.status === 'FEATURED';
-              return (
-                <div
-                  key={t.id}
-                  className={cn(
-                    'bg-white rounded-2xl shadow-soft p-4',
-                    isFeatured && 'ring-1 ring-amber-200 bg-amber-50/20',
-                  )}
-                  data-testid={`public-testimonial-${t.id}`}
-                >
-                  {isFeatured && (
-                    <span className="inline-flex items-center gap-1 text-[10px] bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded-full mb-2">
-                      <Star size={10} className="fill-amber-400 text-amber-400" /> Top Review
-                    </span>
-                  )}
-                  <Quote size={18} className="text-sage-200 mb-2" />
-                  <p className="text-sm text-slate-700 mb-2">{t.content}</p>
-                  {t.rating && (
-                    <div className="flex gap-0.5 mb-2">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Star
-                          key={i}
-                          size={12}
-                          className={
-                            i < t.rating! ? 'text-amber-400 fill-amber-400' : 'text-slate-200'
-                          }
-                        />
-                      ))}
-                    </div>
-                  )}
-                  <p className="text-xs font-medium text-slate-800">{t.name}</p>
-                  {(t.role || t.company) && (
-                    <p className="text-xs text-slate-400">
-                      {[t.role, t.company].filter(Boolean).join(' at ')}
-                    </p>
-                  )}
-                </div>
-              );
-            })}
-          </div>
         </div>
       )}
 

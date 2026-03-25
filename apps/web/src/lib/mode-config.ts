@@ -56,12 +56,11 @@ function getAdminSections(packName?: string): NavSections {
       '/packages',
       '/campaigns',
       '/automations',
-      '/testimonials',
     ],
     insights: ['/dashboard', '/reports', '/reports/monthly-review', '/roi'],
     aiAgents: ['/ai', '/ai/agents', '/ai/actions', '/ai/performance'],
     overflow: {
-      tools: ['/packages', '/campaigns', '/automations', '/testimonials'],
+      tools: ['/packages', '/campaigns', '/automations'],
       insights: ['/reports/monthly-review', '/roi'],
       aiAgents: ['/ai/actions', '/ai/agents', '/ai/performance'],
     },

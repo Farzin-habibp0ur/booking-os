@@ -7,8 +7,6 @@ import {
   Clock,
   User,
   MessageSquare,
-  Star,
-  ChevronRight,
   X,
   ClipboardList,
   FileText,
@@ -439,25 +437,6 @@ export default function PortalDashboardPage() {
             <p className="text-sm font-medium text-slate-900">My Profile</p>
             <p className="text-xs text-slate-500 mt-0.5">Update your details</p>
           </button>
-        </div>
-      </section>
-
-      {/* Testimonial CTA */}
-      <section>
-        <div
-          className="bg-lavender-50 border border-lavender-200 rounded-2xl p-5 flex items-center justify-between"
-          data-testid="testimonial-cta"
-        >
-          <div className="flex items-center gap-3">
-            <Star size={20} className="text-lavender-600" />
-            <div>
-              <p className="text-sm font-medium text-lavender-900">Share Your Experience</p>
-              <p className="text-xs text-lavender-700 mt-0.5">
-                Help others discover this business by leaving a testimonial.
-              </p>
-            </div>
-          </div>
-          <ChevronRight size={16} className="text-lavender-400" />
         </div>
       </section>
 

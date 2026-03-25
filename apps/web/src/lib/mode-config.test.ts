@@ -232,13 +232,8 @@ describe('mode-config', () => {
       expect(split.tools.primary).toEqual(['/services', '/staff', '/invoices']);
     });
 
-    it('overflow tools = packages, campaigns, automations, testimonials', () => {
-      expect(split.tools.overflow).toEqual([
-        '/packages',
-        '/campaigns',
-        '/automations',
-        '/testimonials',
-      ]);
+    it('overflow tools = packages, campaigns, automations', () => {
+      expect(split.tools.overflow).toEqual(['/packages', '/campaigns', '/automations']);
     });
 
     it('primary insights = dashboard + reports', () => {
@@ -278,13 +273,8 @@ describe('mode-config', () => {
       expect(split.tools.primary).toContain('/pipeline');
     });
 
-    it('overflow tools still includes packages, campaigns, automations, testimonials', () => {
-      expect(split.tools.overflow).toEqual([
-        '/packages',
-        '/campaigns',
-        '/automations',
-        '/testimonials',
-      ]);
+    it('overflow tools still includes packages, campaigns, automations', () => {
+      expect(split.tools.overflow).toEqual(['/packages', '/campaigns', '/automations']);
     });
   });
 
