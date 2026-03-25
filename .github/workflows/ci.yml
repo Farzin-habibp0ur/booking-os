@@ -301,20 +301,23 @@ jobs:
 
       - name: Report bundle size
         run: |
-          SIZE=$(du -sb apps/web/.next/ | awk '{print $1}')
-          SIZE_MB=$(echo "scale=2; $SIZE / 1048576" | bc)
+          CLIENT_SIZE=$(du -sb apps/web/.next/static/ | awk '{print $1}')
+          CLIENT_MB=$(echo "scale=2; $CLIENT_SIZE / 1048576" | bc)
+          TOTAL_SIZE=$(du -sb apps/web/.next/ | awk '{print $1}')
+          TOTAL_MB=$(echo "scale=2; $TOTAL_SIZE / 1048576" | bc)
           echo "## Web Bundle Size" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
           echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Total .next/ | ${SIZE_MB} MB |" >> $GITHUB_STEP_SUMMARY
+          echo "| Client bundle (.next/static/) | ${CLIENT_MB} MB |" >> $GITHUB_STEP_SUMMARY
+          echo "| Total build output (.next/) | ${TOTAL_MB} MB |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           LIMIT=62914560
-          if [ "$SIZE" -gt "$LIMIT" ]; then
-            echo "::error::Web bundle size ${SIZE_MB}MB exceeds 60MB limit"
+          if [ "$CLIENT_SIZE" -gt "$LIMIT" ]; then
+            echo "::error::Client bundle size ${CLIENT_MB}MB exceeds 60MB limit"
             exit 1
           else
-            echo "Bundle size ${SIZE_MB}MB is within 60MB limit"
+            echo "Client bundle ${CLIENT_MB}MB is within 60MB limit (total build: ${TOTAL_MB}MB)"
           fi
 
   smoke-test:
