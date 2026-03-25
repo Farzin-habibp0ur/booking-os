@@ -774,7 +774,9 @@ export default function NewCampaignPage() {
                   s.name?.toLowerCase().includes(audienceSearchQuery.toLowerCase()) ||
                   s.phone?.includes(audienceSearchQuery),
               ).length === 0 && (
-                <p className="text-sm text-slate-400 text-center py-4">No customers match your search</p>
+                <p className="text-sm text-slate-400 text-center py-4">
+                  No customers match your search
+                </p>
               )}
             </div>
             <div className="p-4 border-t border-slate-100 flex justify-end">

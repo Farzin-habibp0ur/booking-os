@@ -420,7 +420,9 @@ export default function CampaignDetailPage() {
                 SMS: 'SMS',
                 EMAIL: 'Email',
                 MULTI: 'Multi-channel',
-              }[campaign.channel] || campaign.channel || 'WhatsApp'}
+              }[campaign.channel] ||
+                campaign.channel ||
+                'WhatsApp'}
             </dd>
           </div>
           {stats.sent !== undefined && (
