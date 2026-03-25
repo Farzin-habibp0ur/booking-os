@@ -1,88 +1,70 @@
-import { Test } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 import { ReferralController } from './referral.controller';
 import { ReferralService } from './referral.service';
+import { CreditService } from './credit.service';
+
+const mockReferralService = {
+  getReferralStats: jest.fn().mockResolvedValue({ totalReferrals: 10 }),
+  getReferralSettings: jest.fn().mockResolvedValue({ enabled: true, referrerCredit: 25 }),
+  updateReferralSettings: jest.fn().mockResolvedValue({ enabled: true, referrerCredit: 50 }),
+  getCustomerReferralInfo: jest.fn().mockResolvedValue({ referralCode: 'ABC123' }),
+};
+
+const mockCreditService = {
+  getAvailableCredits: jest.fn().mockResolvedValue({ total: 50, credits: [] }),
+};
 
 describe('ReferralController', () => {
   let controller: ReferralController;
-  let referralService: {
-    getReferralStats: jest.Mock;
-    getReferralLink: jest.Mock;
-    getReferralSettings: jest.Mock;
-    updateReferralSettings: jest.Mock;
-  };
 
   beforeEach(async () => {
-    referralService = {
-      getReferralStats: jest.fn(),
-      getReferralLink: jest.fn(),
-      getReferralSettings: jest.fn(),
-      updateReferralSettings: jest.fn(),
-    };
+    jest.clearAllMocks();
 
-    const module = await Test.createTestingModule({
+    const module: TestingModule = await Test.createTestingModule({
       controllers: [ReferralController],
-      providers: [{ provide: ReferralService, useValue: referralService }],
+      providers: [
+        { provide: ReferralService, useValue: mockReferralService },
+        { provide: CreditService, useValue: mockCreditService },
+      ],
     }).compile();
 
-    controller = module.get(ReferralController);
+    controller = module.get<ReferralController>(ReferralController);
+  });
+
+  it('should be defined', () => {
+    expect(controller).toBeDefined();
   });
 
   describe('getStats', () => {
-    it('returns referral stats for the business', async () => {
-      const mockStats = {
-        referralCode: 'CODE1',
-        referralLink: 'http://localhost:3000/signup?ref=CODE1',
-        totalInvites: 3,
-        successfulReferrals: 1,
-        pendingReferrals: 2,
-        totalCreditsEarned: 50,
-        referrals: [],
-      };
-      referralService.getReferralStats.mockResolvedValue(mockStats);
-
-      const result = await controller.getStats('biz1');
-      expect(result).toEqual(mockStats);
-      expect(referralService.getReferralStats).toHaveBeenCalledWith('biz1');
-    });
-  });
-
-  describe('getLink', () => {
-    it('returns referral link wrapped in object', async () => {
-      referralService.getReferralLink.mockResolvedValue('http://localhost:3000/signup?ref=CODE1');
-
-      const result = await controller.getLink('biz1');
-      expect(result).toEqual({ link: 'http://localhost:3000/signup?ref=CODE1' });
+    it('should return referral stats', async () => {
+      const result = await controller.getStats('biz-1');
+      expect(result.totalReferrals).toBe(10);
+      expect(mockReferralService.getReferralStats).toHaveBeenCalledWith('biz-1');
     });
   });
 
   describe('getSettings', () => {
-    it('returns referral settings for the business', async () => {
-      const mockSettings = {
-        creditAmount: 50,
-        messageTemplate: 'Hello',
-        sharingMethod: 'manual',
-        emailSubject: '',
-      };
-      referralService.getReferralSettings.mockResolvedValue(mockSettings);
-
-      const result = await controller.getSettings('biz1');
-      expect(result).toEqual(mockSettings);
-      expect(referralService.getReferralSettings).toHaveBeenCalledWith('biz1');
+    it('should return referral settings', async () => {
+      const result = await controller.getSettings('biz-1');
+      expect(result.enabled).toBe(true);
+      expect(mockReferralService.getReferralSettings).toHaveBeenCalledWith('biz-1');
     });
   });
 
   describe('updateSettings', () => {
-    it('updates referral settings for the business', async () => {
-      const dto = { creditAmount: 100 };
-      referralService.updateReferralSettings.mockResolvedValue({
-        creditAmount: 100,
-        messageTemplate: 'Hello',
-        sharingMethod: 'manual',
-        emailSubject: '',
-      });
+    it('should update referral settings', async () => {
+      const dto = { referrerCredit: 50 };
+      const result = await controller.updateSettings('biz-1', dto);
+      expect(result.referrerCredit).toBe(50);
+      expect(mockReferralService.updateReferralSettings).toHaveBeenCalledWith('biz-1', dto);
+    });
+  });
 
-      const result = await controller.updateSettings('biz1', dto as any);
-      expect(referralService.updateReferralSettings).toHaveBeenCalledWith('biz1', dto);
+  describe('getCustomerReferralInfo', () => {
+    it('should return customer referral info', async () => {
+      const result = await controller.getCustomerReferralInfo('biz-1', 'cust-1');
+      expect(result.referralCode).toBe('ABC123');
+      expect(mockReferralService.getCustomerReferralInfo).toHaveBeenCalledWith('cust-1', 'biz-1');
     });
   });
 });

@@ -120,6 +120,7 @@ describe('Tenant Isolation', () => {
         createdAt: new Date(),
         updatedAt: new Date(),
         deletedAt: null,
+        referralCode: null,
       });
 
       await request(ctx.app.getHttpServer())

@@ -3,10 +3,9 @@ import { BillingController } from './billing.controller';
 import { BillingService } from './billing.service';
 import { BillingLifecycleService } from './billing-lifecycle.service';
 import { EmailModule } from '../email/email.module';
-import { ReferralModule } from '../referral/referral.module';
 
 @Module({
-  imports: [EmailModule, ReferralModule],
+  imports: [EmailModule],
   controllers: [BillingController],
   providers: [BillingService, BillingLifecycleService],
   exports: [BillingService],

@@ -28,6 +28,8 @@ import {
   ChevronDown,
   DollarSign,
   Camera,
+  Gift,
+  Copy,
 } from 'lucide-react';
 import BookingFormModal from '@/components/booking-form-modal';
 import IntakeCard from '@/components/intake-card';
@@ -102,6 +104,11 @@ export default function CustomerDetailPage() {
 
   // Dealership journey state
   const [journey, setJourney] = useState<any>(null);
+
+  // Referral credits state
+  const [referralData, setReferralData] = useState<any>(null);
+  const [referralLoading, setReferralLoading] = useState(false);
+  const [referralCopied, setReferralCopied] = useState(false);
 
   // AI Chat state
   const [chatMessages, setChatMessages] = useState<Array<{ role: 'user' | 'ai'; text: string }>>(
@@ -190,6 +197,14 @@ export default function CustomerDetailPage() {
         .get<any>(`/customers/${id}/journey`)
         .then(setJourney)
         .catch(() => setJourney(null));
+    }
+    if (pack.slug === 'aesthetic' || pack.slug === 'wellness') {
+      setReferralLoading(true);
+      api
+        .get<any>(`/referral/customers/${id}`)
+        .then(setReferralData)
+        .catch(() => setReferralData(null))
+        .finally(() => setReferralLoading(false));
     }
   }, [id]);
 
@@ -755,6 +770,69 @@ export default function CustomerDetailPage() {
             </div>
           </div>
         )}
+
+        {/* Referral Credits — Aesthetic & Wellness only */}
+        {(pack.slug === 'aesthetic' || pack.slug === 'wellness') &&
+          (referralLoading ? (
+            <div className={cn(ELEVATION.card, 'bg-white p-5 mb-6')}>
+              <div className="animate-pulse space-y-3">
+                <div className="h-4 bg-slate-100 rounded w-1/3" />
+                <div className="h-8 bg-slate-100 rounded w-1/4" />
+                <div className="h-3 bg-slate-100 rounded w-1/2" />
+              </div>
+            </div>
+          ) : referralData ? (
+            <div
+              className={cn(ELEVATION.card, 'bg-white p-5 mb-6')}
+              data-testid="referral-credits-section"
+            >
+              <h2 className="text-sm font-semibold text-slate-900 uppercase flex items-center gap-2 mb-4">
+                <Gift size={14} className="text-sage-600" />
+                Referral Credits
+              </h2>
+              <div className="flex items-baseline gap-1 mb-4">
+                <span className="text-3xl font-serif font-semibold text-sage-700">
+                  ${(referralData.creditsRemaining ?? 0).toFixed(2)}
+                </span>
+                <span className="text-sm text-slate-500">available</span>
+              </div>
+              <div className="flex items-center gap-4 mb-4 text-sm text-slate-600">
+                <div className="flex items-center gap-1.5">
+                  <User size={14} className="text-slate-400" />
+                  <span>
+                    <span className="font-medium text-slate-900">
+                      {referralData.totalReferrals ?? 0}
+                    </span>{' '}
+                    successful referral{(referralData.totalReferrals ?? 0) !== 1 ? 's' : ''}
+                  </span>
+                </div>
+              </div>
+              {referralData.referralLink && (
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 bg-slate-50 rounded-xl px-3 py-2 text-xs text-slate-600 truncate font-mono">
+                    {referralData.referralLink}
+                  </div>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(referralData.referralLink).then(() => {
+                        setReferralCopied(true);
+                        setTimeout(() => setReferralCopied(false), 2000);
+                      });
+                    }}
+                    className={cn(
+                      'flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-colors shrink-0',
+                      referralCopied
+                        ? 'bg-sage-50 text-sage-700'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200',
+                    )}
+                  >
+                    {referralCopied ? <Check size={12} /> : <Copy size={12} />}
+                    {referralCopied ? 'Copied' : 'Copy'}
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : null)}
 
         {/* Treatment Plans — Aesthetic only */}
         {pack.slug === 'aesthetic' && treatmentPlans.length > 0 && (

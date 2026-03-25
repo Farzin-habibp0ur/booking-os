@@ -23,6 +23,7 @@ import {
   Megaphone,
   Globe,
   UserCog,
+  Gift,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 
@@ -42,6 +43,8 @@ const TRIGGER_BLOCKS: BlockDefinition[] = [
   { type: 'TRIGGER', subtype: 'BOOKING_UPCOMING', label: 'Time-Based', icon: Timer },
   { type: 'TRIGGER', subtype: 'PAYMENT_RECEIVED', label: 'Payment Received', icon: DollarSign },
   { type: 'TRIGGER', subtype: 'CAMPAIGN_SENT', label: 'Campaign Sent', icon: Megaphone },
+  { type: 'TRIGGER', subtype: 'REFERRAL_EARNED', label: 'Referral Credit Earned', icon: Gift },
+  { type: 'TRIGGER', subtype: 'REFERRAL_REDEEMED', label: 'Referral Credit Redeemed', icon: Gift },
 ];
 
 const CONDITION_BLOCKS: BlockDefinition[] = [

@@ -1835,6 +1835,166 @@ async function main() {
     });
     console.log('✅ 2 outbound drafts created');
 
+    // -- Patient Referral Seed Data --
+    const existingReferrals = await prisma.customerReferral.count({ where: { businessId: bizId } });
+    if (existingReferrals === 0) {
+      // Set referral codes on referrer customers
+      await prisma.customer.update({ where: { id: emma.id }, data: { referralCode: 'EMMA2026' } });
+      await prisma.customer.update({ where: { id: sofia.id }, data: { referralCode: 'SOFI2026' } });
+
+      // Referral 1: Emma referred James → COMPLETED
+      const ref1 = await prisma.customerReferral.create({
+        data: {
+          businessId: bizId,
+          referrerCustomerId: emma.id,
+          referredCustomerId: james.id,
+          referralCode: 'EMMA2026',
+          status: 'COMPLETED',
+          referrerCreditAmount: 25,
+          refereeCreditAmount: 25,
+          completedAt: daysAgo(10),
+        },
+      });
+
+      // Referral 2: Emma referred Olivia → COMPLETED
+      const ref2 = await prisma.customerReferral.create({
+        data: {
+          businessId: bizId,
+          referrerCustomerId: emma.id,
+          referredCustomerId: olivia.id,
+          referralCode: 'EMMA2026',
+          status: 'COMPLETED',
+          referrerCreditAmount: 25,
+          refereeCreditAmount: 25,
+          completedAt: daysAgo(5),
+        },
+      });
+
+      // Referral 3: Sofia referred Noah → PENDING
+      await prisma.customerReferral.create({
+        data: {
+          businessId: bizId,
+          referrerCustomerId: sofia.id,
+          referredCustomerId: noah.id,
+          referralCode: 'SOFI2026',
+          status: 'PENDING',
+          referrerCreditAmount: 25,
+          refereeCreditAmount: 25,
+        },
+      });
+
+      // Referral 4: Emma referred Liam → EXPIRED
+      await prisma.customerReferral.create({
+        data: {
+          businessId: bizId,
+          referrerCustomerId: emma.id,
+          referredCustomerId: liam.id,
+          referralCode: 'EMMA2026',
+          status: 'EXPIRED',
+          referrerCreditAmount: 25,
+          refereeCreditAmount: 25,
+          expiresAt: daysAgo(1),
+        },
+      });
+
+      // Credits for completed referrals
+      // Emma earned $25 × 2 (referrer credits)
+      const credit1 = await prisma.customerCredit.create({
+        data: {
+          businessId: bizId,
+          customerId: emma.id,
+          amount: 25,
+          remainingAmount: 15, // partially redeemed
+          source: 'REFERRAL_GIVEN',
+          referralId: ref1.id,
+          expiresAt: daysFromNow(150),
+        },
+      });
+      await prisma.customerCredit.create({
+        data: {
+          businessId: bizId,
+          customerId: emma.id,
+          amount: 25,
+          remainingAmount: 25,
+          source: 'REFERRAL_GIVEN',
+          referralId: ref2.id,
+          expiresAt: daysFromNow(170),
+        },
+      });
+
+      // James earned $25 (referee credit)
+      await prisma.customerCredit.create({
+        data: {
+          businessId: bizId,
+          customerId: james.id,
+          amount: 25,
+          remainingAmount: 25,
+          source: 'REFERRAL_RECEIVED',
+          referralId: ref1.id,
+          expiresAt: daysFromNow(150),
+        },
+      });
+
+      // Olivia earned $25 (referee credit)
+      await prisma.customerCredit.create({
+        data: {
+          businessId: bizId,
+          customerId: olivia.id,
+          amount: 25,
+          remainingAmount: 25,
+          source: 'REFERRAL_RECEIVED',
+          referralId: ref2.id,
+          expiresAt: daysFromNow(170),
+        },
+      });
+
+      // Expired credit for Emma (from the expired referral attempt)
+      await prisma.customerCredit.create({
+        data: {
+          businessId: bizId,
+          customerId: emma.id,
+          amount: 25,
+          remainingAmount: 0,
+          source: 'REFERRAL_GIVEN',
+          expiresAt: daysAgo(1),
+        },
+      });
+
+      // Redemption: Emma used $10 of credit1 on a booking
+      const someBooking = await prisma.booking.findFirst({
+        where: { businessId: bizId, customerId: emma.id },
+      });
+      if (someBooking) {
+        await prisma.creditRedemption.create({
+          data: {
+            creditId: credit1.id,
+            bookingId: someBooking.id,
+            amount: 10,
+          },
+        });
+      }
+
+      // Set referral settings in packConfig
+      const cfg = (await prisma.business.findUnique({ where: { id: bizId } }))!
+        .packConfig as Record<string, unknown>;
+      await prisma.business.update({
+        where: { id: bizId },
+        data: {
+          packConfig: {
+            ...cfg,
+            referral: {
+              enabled: true,
+              referrerCredit: 25,
+              refereeCredit: 25,
+              creditExpiryMonths: 6,
+            },
+          },
+        },
+      });
+
+      console.log('✅ Patient referral demo data created (4 referrals, 5 credits, 1 redemption)');
+    }
+
     // ── 17. Mark demo as seeded ───────────────────────────────────────────────
     const latestConfig = (await prisma.business.findUnique({ where: { id: bizId } }))!
       .packConfig as Record<string, unknown>;
@@ -1850,6 +2010,7 @@ async function main() {
     console.log('  - 6 waitlist entries, 3 campaigns, 3 automation rules');
     console.log('  - 2 offers, 5 deposits, 19 reminders');
     console.log('  - 7 action cards, 6 action history, 3 autonomy configs, 2 outbound drafts');
+    console.log('  - 4 patient referrals, 5 credits, 1 redemption');
   } // end if (!skipClinic)
 
   // ════════════════════════════════════════════════════════════════════════════

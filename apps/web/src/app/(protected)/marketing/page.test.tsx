@@ -7,8 +7,6 @@ jest.mock('lucide-react', () => ({
   Gift: () => <span data-testid="gift-icon" />,
   Users: () => <span data-testid="users-icon" />,
   ArrowRight: () => <span data-testid="arrow-right-icon" />,
-  Copy: () => <span data-testid="copy-icon" />,
-  Check: () => <span data-testid="check-icon" />,
 }));
 
 const mockApi = { get: jest.fn() };
@@ -33,12 +31,11 @@ jest.mock('@/components/skeleton', () => ({
 }));
 
 const mockStats = {
-  referralCode: 'REF123',
-  referralLink: 'https://example.com/ref/REF123',
-  totalInvites: 10,
-  successfulReferrals: 5,
+  totalReferrals: 10,
+  completedReferrals: 5,
   pendingReferrals: 3,
-  totalCreditsEarned: 50,
+  totalCreditsIssued: 50,
+  totalCreditsRedeemed: 20,
 };
 
 describe('MarketingHubPage', () => {
@@ -81,12 +78,10 @@ describe('MarketingHubPage', () => {
       expect(screen.getByTestId('referral-stats-section')).toBeInTheDocument();
     });
 
-    expect(screen.getByText('REF123')).toBeInTheDocument();
-    expect(screen.getByText('https://example.com/ref/REF123')).toBeInTheDocument();
     expect(screen.getByText('10')).toBeInTheDocument();
     expect(screen.getByText('5')).toBeInTheDocument();
     expect(screen.getByText('3')).toBeInTheDocument();
-    expect(screen.getByText('50')).toBeInTheDocument();
+    expect(screen.getByText('$50')).toBeInTheDocument();
   });
 
   it('handles referral stats API error gracefully', async () => {

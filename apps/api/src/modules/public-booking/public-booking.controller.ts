@@ -324,18 +324,22 @@ export class PublicBookingController {
   @Throttle({ default: { limit: 20, ttl: 60000 } })
   async getReferralInfo(@Query('code') code: string) {
     if (!code) throw new BadRequestException('Referral code is required');
-    const business = await this.prisma.business.findUnique({
+    const customer = await this.prisma.customer.findFirst({
       where: { referralCode: code },
-      select: { name: true, packConfig: true },
+      select: {
+        name: true,
+        business: { select: { name: true, packConfig: true } },
+      },
     });
-    if (!business) throw new NotFoundException('Invalid referral code');
+    if (!customer) throw new NotFoundException('Invalid referral code');
     const config =
-      typeof business.packConfig === 'object' && business.packConfig
-        ? (business.packConfig as any)
+      typeof customer.business.packConfig === 'object' && customer.business.packConfig
+        ? (customer.business.packConfig as any)
         : {};
     return {
-      creditAmount: config.referral?.creditAmount ?? 50,
-      businessName: business.name,
+      creditAmount: config.referral?.refereeCredit ?? 25,
+      businessName: customer.business.name,
+      referrerName: customer.name,
     };
   }
 }

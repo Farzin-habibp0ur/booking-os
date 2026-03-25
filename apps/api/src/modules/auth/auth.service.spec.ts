@@ -11,7 +11,7 @@ import { JwtBlacklistService } from '../../common/jwt-blacklist.service';
 import { PortalRedisService } from '../../common/portal-redis.service';
 import { EmailService } from '../email/email.service';
 import { OnboardingDripService } from '../onboarding-drip/onboarding-drip.service';
-import { ReferralService } from '../referral/referral.service';
+
 import {
   createMockPrisma,
   createMockConfigService,
@@ -101,18 +101,6 @@ describe('AuthService', () => {
         {
           provide: OnboardingDripService,
           useValue: { scheduleDrip: jest.fn(), cancelDrip: jest.fn() },
-        },
-        {
-          provide: ReferralService,
-          useValue: {
-            trackReferral: jest.fn().mockResolvedValue(undefined),
-            getOrCreateReferralCode: jest.fn().mockResolvedValue('TESTCODE'),
-            getReferralLink: jest
-              .fn()
-              .mockResolvedValue('http://localhost:3000/signup?ref=TESTCODE'),
-            getReferralStats: jest.fn().mockResolvedValue({}),
-            convertReferral: jest.fn().mockResolvedValue(undefined),
-          },
         },
       ],
     }).compile();
@@ -478,10 +466,6 @@ describe('AuthService', () => {
           {
             provide: OnboardingDripService,
             useValue: { scheduleDrip: jest.fn(), cancelDrip: jest.fn() },
-          },
-          {
-            provide: ReferralService,
-            useValue: { trackReferral: jest.fn().mockResolvedValue(undefined) },
           },
         ],
       }).compile();

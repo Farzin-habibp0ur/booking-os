@@ -15,7 +15,6 @@ import { JwtBlacklistService } from '../../common/jwt-blacklist.service';
 import { PortalRedisService } from '../../common/portal-redis.service';
 import { EmailService } from '../email/email.service';
 import { OnboardingDripService } from '../onboarding-drip/onboarding-drip.service';
-import { ReferralService } from '../referral/referral.service';
 import { TwoFactorService } from './two-factor.service';
 import { TRIAL_DAYS, GRACE_PERIOD_DAYS } from '../../common/plan-config';
 
@@ -35,7 +34,6 @@ export class AuthService {
     private tokenService: TokenService,
     private emailService: EmailService,
     private onboardingDrip: OnboardingDripService,
-    private referralService: ReferralService,
     private twoFactor: TwoFactorService,
     private blacklist: JwtBlacklistService,
     private redis: PortalRedisService,
@@ -157,17 +155,6 @@ export class AuthService {
         emailVerified: false,
       },
     });
-
-    // Track referral if a referral code was provided
-    if (data.referralCode) {
-      try {
-        await this.referralService.trackReferral(data.referralCode, business.id);
-      } catch (err) {
-        this.logger.warn(
-          `Failed to track referral for code ${data.referralCode}: ${(err as Error).message}`,
-        );
-      }
-    }
 
     // M16 fix: Send email verification on signup
     await this.sendVerificationEmail(staff.id, staff.email, staff.name, staff.businessId);

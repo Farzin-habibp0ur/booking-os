@@ -9,12 +9,10 @@ import { JwtStrategy } from './jwt.strategy';
 import { TokenService } from '../../common/token.service';
 import { JwtBlacklistService } from '../../common/jwt-blacklist.service';
 import { PortalRedisService } from '../../common/portal-redis.service';
-import { ReferralModule } from '../referral/referral.module';
 
 @Module({
   imports: [
     ConfigModule,
-    ReferralModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],

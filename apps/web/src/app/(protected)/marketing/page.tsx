@@ -1,18 +1,17 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Megaphone, Zap, Gift, Users, ArrowRight, Copy, Check } from 'lucide-react';
+import { Megaphone, Zap, Gift, Users, ArrowRight } from 'lucide-react';
 import { api } from '@/lib/api';
 import { ListSkeleton } from '@/components/skeleton';
 
 interface ReferralStats {
-  referralCode: string;
-  referralLink: string;
-  totalInvites: number;
-  successfulReferrals: number;
+  totalReferrals: number;
+  completedReferrals: number;
   pendingReferrals: number;
-  totalCreditsEarned: number;
+  totalCreditsIssued: number;
+  totalCreditsRedeemed: number;
 }
 
 const CARDS = [
@@ -37,30 +36,10 @@ const CARDS = [
   {
     icon: Users,
     title: 'Referrals',
-    description: 'Track your referral program performance',
+    description: 'Patient referral program',
     href: '/settings/referral',
   },
 ] as const;
-
-function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false);
-
-  const handleCopy = useCallback(async () => {
-    await navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }, [text]);
-
-  return (
-    <button
-      onClick={handleCopy}
-      className="ml-2 rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
-      aria-label="Copy to clipboard"
-    >
-      {copied ? <Check className="h-4 w-4 text-sage-600" /> : <Copy className="h-4 w-4" />}
-    </button>
-  );
-}
 
 export default function MarketingHubPage() {
   const [stats, setStats] = useState<ReferralStats | null>(null);
@@ -110,35 +89,12 @@ export default function MarketingHubPage() {
         <div className="space-y-4" data-testid="referral-stats-section">
           <h2 className="text-lg font-semibold text-slate-800">Referral Program</h2>
 
-          <div className="rounded-2xl bg-white p-6 shadow-soft">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-500">Referral Code</span>
-                <div className="flex items-center">
-                  <code className="rounded-lg bg-slate-50 px-3 py-1 text-sm font-medium text-slate-800">
-                    {stats.referralCode}
-                  </code>
-                  <CopyButton text={stats.referralCode} />
-                </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-500">Referral Link</span>
-                <div className="flex items-center">
-                  <code className="max-w-xs truncate rounded-lg bg-slate-50 px-3 py-1 text-sm text-slate-800">
-                    {stats.referralLink}
-                  </code>
-                  <CopyButton text={stats.referralLink} />
-                </div>
-              </div>
-            </div>
-          </div>
-
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             {[
-              { label: 'Total Invites', value: stats.totalInvites },
-              { label: 'Successful', value: stats.successfulReferrals },
+              { label: 'Total Referrals', value: stats.totalReferrals },
+              { label: 'Completed', value: stats.completedReferrals },
               { label: 'Pending', value: stats.pendingReferrals },
-              { label: 'Credits Earned', value: stats.totalCreditsEarned },
+              { label: 'Credits Issued', value: `$${stats.totalCreditsIssued}` },
             ].map((item) => (
               <div key={item.label} className="rounded-2xl bg-white p-4 text-center shadow-soft">
                 <p className="font-serif text-2xl font-bold text-slate-800">{item.value}</p>

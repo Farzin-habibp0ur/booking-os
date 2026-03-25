@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/cn';
 import { publicApi } from '@/lib/public-api';
 import { Skeleton } from '@/components/skeleton';
@@ -21,6 +21,7 @@ import {
   CreditCard,
   Loader2,
   AlertCircle,
+  Gift,
 } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
@@ -217,6 +218,33 @@ export default function BookingPortalPage() {
   const [waitlistError, setWaitlistError] = useState('');
   const [staffList, setStaffList] = useState<{ id: string; name: string }[]>([]);
 
+  // Referral state
+  const searchParams = useSearchParams();
+  const [referralCode, setReferralCode] = useState<string | null>(null);
+  const [referralBanner, setReferralBanner] = useState<{
+    referrerName: string;
+    creditAmount: number;
+  } | null>(null);
+
+  useEffect(() => {
+    const ref = searchParams.get('ref');
+    if (!ref || !slug) return;
+    publicApi
+      .get<{ valid: boolean; referrerName?: string; creditAmount?: number }>(
+        `/public/referral/validate/${ref}?slug=${slug}`,
+      )
+      .then((data) => {
+        if (data.valid && data.referrerName) {
+          setReferralCode(ref);
+          setReferralBanner({
+            referrerName: data.referrerName,
+            creditAmount: data.creditAmount ?? 25,
+          });
+        }
+      })
+      .catch(() => {});
+  }, [searchParams, slug]);
+
   // Determine if payment step is needed
   const needsPayment =
     !!business?.paymentEnabled &&
@@ -329,6 +357,7 @@ export default function BookingPortalPage() {
         customerEmail: customerEmail || undefined,
         notes: customerNotes || undefined,
         ...(paymentIntentId && { paymentIntentId }),
+        ...(referralCode && { referralCode }),
       });
       setBookingResult(result);
       trackEvent('booking_completed', {
@@ -448,6 +477,18 @@ export default function BookingPortalPage() {
 
   return (
     <div>
+      {/* Referral Banner */}
+      {referralBanner && (
+        <div className="bg-sage-50 border border-sage-200 rounded-xl p-3 mb-4 flex items-center gap-2">
+          <Gift size={16} className="text-sage-600 shrink-0" />
+          <p className="text-sm text-sage-800">
+            Referred by <span className="font-medium">{referralBanner.referrerName}</span> —
+            You&apos;ll get <span className="font-medium">${referralBanner.creditAmount}</span> off
+            your first visit!
+          </p>
+        </div>
+      )}
+
       {/* Header */}
       <div className="text-center mb-6">
         {business.logoUrl ? (

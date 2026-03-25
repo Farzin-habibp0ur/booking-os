@@ -1,23 +1,39 @@
-import { IsOptional, IsNumber, Min, Max, IsString, MaxLength, IsIn } from 'class-validator';
+import { IsOptional, IsBoolean, IsNumber, IsString, Min, Max } from 'class-validator';
 
 export class UpdateReferralSettingsDto {
+  @IsOptional()
+  @IsBoolean()
+  enabled?: boolean;
+
   @IsOptional()
   @IsNumber()
   @Min(5)
   @Max(500)
-  creditAmount?: number;
+  referrerCredit?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(5)
+  @Max(500)
+  refereeCredit?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  maxReferralsPerCustomer?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  @Max(12)
+  creditExpiryMonths?: number;
 
   @IsOptional()
   @IsString()
-  @MaxLength(2000)
   messageTemplate?: string;
 
   @IsOptional()
-  @IsIn(['manual', 'whatsapp', 'sms', 'email'])
-  sharingMethod?: string;
-
-  @IsOptional()
   @IsString()
-  @MaxLength(200)
   emailSubject?: string;
 }

@@ -1,42 +1,41 @@
-import { Controller, Get, Patch, Body, UseGuards } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { Controller, Get, Patch, Param, Body, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { ReferralService } from './referral.service';
-import { BusinessId } from '../../common/decorators';
 import { TenantGuard } from '../../common/tenant.guard';
 import { RolesGuard, Roles } from '../../common/roles.guard';
+import { BusinessId } from '../../common/decorators';
+import { ReferralService } from './referral.service';
+import { CreditService } from './credit.service';
 import { UpdateReferralSettingsDto } from './dto/update-referral-settings.dto';
 
-@ApiTags('Referral')
 @Controller('referral')
+@UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+@Roles('ADMIN')
 export class ReferralController {
-  constructor(private referralService: ReferralService) {}
+  constructor(
+    private referralService: ReferralService,
+    private creditService: CreditService,
+  ) {}
 
   @Get('stats')
-  @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
-  @Roles('ADMIN')
-  getStats(@BusinessId() businessId: string) {
+  async getStats(@BusinessId() businessId: string) {
     return this.referralService.getReferralStats(businessId);
   }
 
-  @Get('link')
-  @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
-  @Roles('ADMIN')
-  getLink(@BusinessId() businessId: string) {
-    return this.referralService.getReferralLink(businessId).then((link) => ({ link }));
-  }
-
   @Get('settings')
-  @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
-  @Roles('ADMIN')
-  getSettings(@BusinessId() businessId: string) {
+  async getSettings(@BusinessId() businessId: string) {
     return this.referralService.getReferralSettings(businessId);
   }
 
   @Patch('settings')
-  @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
-  @Roles('ADMIN')
-  updateSettings(@BusinessId() businessId: string, @Body() dto: UpdateReferralSettingsDto) {
+  async updateSettings(@BusinessId() businessId: string, @Body() dto: UpdateReferralSettingsDto) {
     return this.referralService.updateReferralSettings(businessId, dto);
+  }
+
+  @Get('customers/:customerId')
+  async getCustomerReferralInfo(
+    @BusinessId() businessId: string,
+    @Param('customerId') customerId: string,
+  ) {
+    return this.referralService.getCustomerReferralInfo(customerId, businessId);
   }
 }

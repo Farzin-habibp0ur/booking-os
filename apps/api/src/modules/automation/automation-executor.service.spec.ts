@@ -763,4 +763,86 @@ describe('AutomationExecutorService', () => {
       });
     });
   });
+
+  describe('REFERRAL_EARNED trigger', () => {
+    it('should execute actions for matching credits', async () => {
+      prisma.automationRule.findMany.mockResolvedValue([
+        {
+          id: 'rule-ref',
+          businessId: 'biz-1',
+          trigger: 'REFERRAL_EARNED',
+          isActive: true,
+          actions: [{ type: 'SEND_NOTIFICATION', config: {} }],
+          filters: {},
+          steps: [],
+          quietHoursStart: null,
+          quietHoursEnd: null,
+          cooldownMinutes: null,
+          maxExecutionsPerCustomer: null,
+        },
+      ] as any);
+      prisma.customerCredit.findMany.mockResolvedValue([
+        {
+          id: 'credit-1',
+          businessId: 'biz-1',
+          customerId: 'cust-1',
+          source: 'REFERRAL_GIVEN',
+          customer: { id: 'cust-1' },
+        },
+      ] as any);
+      prisma.automationLog.count.mockResolvedValue(0);
+      prisma.automationLog.create.mockResolvedValue({} as any);
+
+      await executorService.executeRules();
+
+      expect(prisma.customerCredit.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            businessId: 'biz-1',
+            source: { in: ['REFERRAL_GIVEN', 'REFERRAL_RECEIVED'] },
+          }),
+        }),
+      );
+    });
+  });
+
+  describe('REFERRAL_REDEEMED trigger', () => {
+    it('should execute actions for matching redemptions', async () => {
+      prisma.automationRule.findMany.mockResolvedValue([
+        {
+          id: 'rule-red',
+          businessId: 'biz-1',
+          trigger: 'REFERRAL_REDEEMED',
+          isActive: true,
+          actions: [{ type: 'SEND_NOTIFICATION', config: {} }],
+          filters: {},
+          steps: [],
+          quietHoursStart: null,
+          quietHoursEnd: null,
+          cooldownMinutes: null,
+          maxExecutionsPerCustomer: null,
+        },
+      ] as any);
+      prisma.creditRedemption.findMany.mockResolvedValue([
+        {
+          id: 'red-1',
+          bookingId: 'book-1',
+          credit: { businessId: 'biz-1', customerId: 'cust-1', customer: { id: 'cust-1' } },
+          booking: { id: 'book-1' },
+        },
+      ] as any);
+      prisma.automationLog.count.mockResolvedValue(0);
+      prisma.automationLog.create.mockResolvedValue({} as any);
+
+      await executorService.executeRules();
+
+      expect(prisma.creditRedemption.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            credit: { businessId: 'biz-1' },
+          }),
+        }),
+      );
+    });
+  });
 });

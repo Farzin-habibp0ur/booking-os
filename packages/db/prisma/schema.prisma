@@ -65,11 +65,10 @@ model Business {
   trialEndsAt          DateTime?
   graceEndsAt          DateTime?
   channelSettings      Json     @default("{}")
-  referralCode         String?   @unique
 
   messageUsage         MessageUsage[]
-  referralsGiven       Referral[] @relation("ReferrerBusiness")
-  referralsReceived    Referral[] @relation("ReferredBusiness")
+  customerReferrals    CustomerReferral[]
+  customerCredits      CustomerCredit[]
   staffServicePrices   StaffServicePrice[]
   payments             Payment[]
   refunds              Refund[]
@@ -197,6 +196,10 @@ model Customer {
   testDrives                TestDrive[]
   deals                     Deal[]
   packagePurchases          PackagePurchase[]
+  referralCode              String?   @unique
+  referralsGiven            CustomerReferral[] @relation("ReferrerCustomer")
+  referralsReceived         CustomerReferral[] @relation("ReferredCustomer")
+  credits                   CustomerCredit[]
 
   @@unique([businessId, phone])
   @@unique([businessId, instagramUserId])
@@ -285,6 +288,8 @@ model Booking {
   aftercareEnrollment  AftercareEnrollment?
   testDrive            TestDrive?
   packageRedemption    PackageRedemption?
+  referral             CustomerReferral?
+  creditRedemptions    CreditRedemption[]
 
   @@index([businessId])
   @@index([businessId, startTime])
@@ -1301,26 +1306,6 @@ model PlatformSetting {
   @@map("platform_settings")
 }
 
-model Referral {
-  id                  String    @id @default(cuid())
-  referrerBusinessId  String
-  referredBusinessId  String?
-  referralCode        String
-  status              String    @default("PENDING") // PENDING, CONVERTED, CREDITED
-  creditAmount        Float     @default(50)
-  createdAt           DateTime  @default(now())
-  convertedAt         DateTime?
-  creditedAt          DateTime?
-
-  referrerBusiness    Business  @relation("ReferrerBusiness", fields: [referrerBusinessId], references: [id])
-  referredBusiness    Business? @relation("ReferredBusiness", fields: [referredBusinessId], references: [id])
-
-  @@unique([referrerBusinessId, referredBusinessId])
-  @@index([referrerBusinessId])
-  @@index([referredBusinessId])
-  @@index([referralCode])
-  @@map("referrals")
-}
 
 model StaffServicePrice {
   id         String   @id @default(cuid())
@@ -2228,4 +2213,73 @@ model DeviceToken {
   @@index([businessId])
   @@index([staffId, isActive])
   @@map("device_tokens")
+}
+
+model CustomerReferral {
+  id                  String    @id @default(cuid())
+  businessId          String
+  referrerCustomerId  String
+  referredCustomerId  String?
+  referralCode        String
+  status              String    @default("PENDING") // PENDING, COMPLETED, EXPIRED, CANCELLED
+  referrerCreditAmount Float
+  refereeCreditAmount  Float
+  completedAt         DateTime?
+  expiresAt           DateTime?
+  bookingId           String?   @unique
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  business            Business  @relation(fields: [businessId], references: [id])
+  referrerCustomer    Customer  @relation("ReferrerCustomer", fields: [referrerCustomerId], references: [id])
+  referredCustomer    Customer? @relation("ReferredCustomer", fields: [referredCustomerId], references: [id])
+  booking             Booking?  @relation(fields: [bookingId], references: [id])
+
+  credits             CustomerCredit[]
+
+  @@unique([businessId, referrerCustomerId, referredCustomerId])
+  @@index([businessId])
+  @@index([referrerCustomerId])
+  @@index([referredCustomerId])
+  @@index([referralCode])
+  @@index([businessId, status])
+  @@map("customer_referrals")
+}
+
+model CustomerCredit {
+  id              String    @id @default(cuid())
+  businessId      String
+  customerId      String
+  amount          Float
+  remainingAmount Float
+  source          String    // REFERRAL_GIVEN, REFERRAL_RECEIVED, MANUAL
+  referralId      String?
+  expiresAt       DateTime?
+  redeemedAt      DateTime?
+  createdAt       DateTime  @default(now())
+
+  business        Business  @relation(fields: [businessId], references: [id])
+  customer        Customer  @relation(fields: [customerId], references: [id])
+  referral        CustomerReferral? @relation(fields: [referralId], references: [id])
+  redemptions     CreditRedemption[]
+
+  @@index([businessId, customerId])
+  @@index([customerId, source])
+  @@index([expiresAt])
+  @@map("customer_credits")
+}
+
+model CreditRedemption {
+  id              String    @id @default(cuid())
+  creditId        String
+  bookingId       String
+  amount          Float
+  createdAt       DateTime  @default(now())
+
+  credit          CustomerCredit @relation(fields: [creditId], references: [id])
+  booking         Booking        @relation(fields: [bookingId], references: [id])
+
+  @@index([creditId])
+  @@index([bookingId])
+  @@map("credit_redemptions")
 }

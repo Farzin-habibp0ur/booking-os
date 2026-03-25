@@ -19,6 +19,8 @@ describe('WorkflowSidebar', () => {
     expect(screen.getByTestId('block-MESSAGE_RECEIVED')).toBeInTheDocument();
     expect(screen.getByTestId('block-STATUS_CHANGED')).toBeInTheDocument();
     expect(screen.getByTestId('block-BOOKING_UPCOMING')).toBeInTheDocument();
+    expect(screen.getByTestId('block-REFERRAL_EARNED')).toBeInTheDocument();
+    expect(screen.getByTestId('block-REFERRAL_REDEEMED')).toBeInTheDocument();
   });
 
   it('renders all condition blocks', () => {

@@ -13,7 +13,7 @@ import {
   IntegrationTestContext,
 } from '../../test/integration-setup';
 import { OnboardingDripService } from '../onboarding-drip/onboarding-drip.service';
-import { ReferralService } from '../referral/referral.service';
+
 import { TwoFactorService } from './two-factor.service';
 import { createMockTokenService, createMockEmailService } from '../../test/mocks';
 import { BadRequestException } from '@nestjs/common';
@@ -94,10 +94,6 @@ describe('Auth Integration', () => {
         {
           provide: OnboardingDripService,
           useValue: { scheduleDrip: jest.fn(), cancelDrip: jest.fn() },
-        },
-        {
-          provide: ReferralService,
-          useValue: { trackReferral: jest.fn() },
         },
         {
           provide: TwoFactorService,

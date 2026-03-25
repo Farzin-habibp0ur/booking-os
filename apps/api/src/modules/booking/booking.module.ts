@@ -12,6 +12,7 @@ import { TreatmentPlanModule } from '../treatment-plan/treatment-plan.module';
 import { AftercareModule } from '../aftercare/aftercare.module';
 import { DealModule } from '../deal/deal.module';
 import { PackageModule } from '../package/package.module';
+import { ReferralModule } from '../referral/referral.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { PackageModule } from '../package/package.module';
     AftercareModule,
     DealModule,
     PackageModule,
+    ReferralModule,
   ],
   controllers: [RecurringController, BookingController],
   providers: [BookingService, RecurringService],

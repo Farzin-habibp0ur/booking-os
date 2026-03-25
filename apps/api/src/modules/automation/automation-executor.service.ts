@@ -212,6 +212,67 @@ export class AutomationExecutorService {
         }
         break;
       }
+      case 'REFERRAL_EARNED': {
+        const credits = await this.prisma.customerCredit.findMany({
+          where: {
+            businessId: rule.businessId,
+            createdAt: { gte: twoMinutesAgo },
+            source: { in: ['REFERRAL_GIVEN', 'REFERRAL_RECEIVED'] },
+          },
+          include: { customer: true },
+        });
+        for (const credit of credits) {
+          if (hasSteps) {
+            await this.startStepExecution(
+              rule,
+              steps,
+              credit.businessId,
+              undefined,
+              credit.customerId,
+              credit,
+            );
+          } else {
+            await this.executeActions(
+              rule,
+              actions,
+              credit.businessId,
+              undefined,
+              credit.customerId,
+            );
+          }
+        }
+        break;
+      }
+      case 'REFERRAL_REDEEMED': {
+        const redemptions = await this.prisma.creditRedemption.findMany({
+          where: {
+            createdAt: { gte: twoMinutesAgo },
+            credit: { businessId: rule.businessId },
+          },
+          include: { credit: { include: { customer: true } }, booking: true },
+        });
+        for (const redemption of redemptions) {
+          if (hasSteps) {
+            await this.startStepExecution(
+              rule,
+              steps,
+              redemption.credit.businessId,
+              redemption.bookingId,
+              redemption.credit.customerId,
+              redemption,
+            );
+          } else {
+            await this.executeActions(
+              rule,
+              actions,
+              redemption.credit.businessId,
+              redemption.bookingId,
+              redemption.credit.customerId,
+            );
+          }
+        }
+        break;
+      }
       default:
         break;
     }

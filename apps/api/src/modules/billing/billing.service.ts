@@ -4,7 +4,6 @@ import { PrismaService } from '../../common/prisma.service';
 import { EmailService } from '../email/email.service';
 import { OnboardingDripService } from '../onboarding-drip/onboarding-drip.service';
 import { DunningService } from '../dunning/dunning.service';
-import { ReferralService } from '../referral/referral.service';
 import Stripe from 'stripe';
 import {
   PlanTier,
@@ -25,7 +24,6 @@ export class BillingService implements OnModuleInit {
     private emailService: EmailService,
     private onboardingDrip: OnboardingDripService,
     private dunningService: DunningService,
-    private referralService: ReferralService,
   ) {
     const secretKey = this.configService.get<string>('STRIPE_SECRET_KEY');
     if (secretKey) {
@@ -238,15 +236,6 @@ export class BillingService implements OnModuleInit {
       }
     } catch (err) {
       this.logger.warn(`Failed to send welcome-to-paid email for business ${businessId}`, err);
-    }
-
-    // Convert referral if this is a referred business making their first payment
-    try {
-      await this.referralService.convertReferral(businessId, stripe);
-    } catch (err) {
-      this.logger.warn(
-        `Failed to process referral conversion for business ${businessId}: ${(err as Error).message}`,
-      );
     }
 
     this.logger.log(`Subscription created for business ${businessId}: ${plan}`);

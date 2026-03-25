@@ -5,7 +5,7 @@ import { PrismaService } from '../../common/prisma.service';
 import { EmailService } from '../email/email.service';
 import { OnboardingDripService } from '../onboarding-drip/onboarding-drip.service';
 import { DunningService } from '../dunning/dunning.service';
-import { ReferralService } from '../referral/referral.service';
+
 import { createMockPrisma } from '../../test/mocks';
 
 const mockStripeInstance = {
@@ -45,10 +45,6 @@ describe('BillingService — checkBillingHealth', () => {
         {
           provide: DunningService,
           useValue: { scheduleDunning: jest.fn(), cancelDunning: jest.fn() },
-        },
-        {
-          provide: ReferralService,
-          useValue: { convertReferral: jest.fn() },
         },
         {
           provide: ConfigService,
@@ -122,7 +118,6 @@ describe('BillingService — checkBillingHealth', () => {
           provide: DunningService,
           useValue: { scheduleDunning: jest.fn(), cancelDunning: jest.fn() },
         },
-        { provide: ReferralService, useValue: { convertReferral: jest.fn() } },
         {
           provide: ConfigService,
           useValue: {

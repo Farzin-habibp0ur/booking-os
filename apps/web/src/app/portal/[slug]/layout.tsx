@@ -4,13 +4,14 @@ import { ReactNode } from 'react';
 import { useParams, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { cn } from '@/lib/cn';
-import { LayoutDashboard, CalendarPlus, Receipt, FolderOpen, UserCircle } from 'lucide-react';
+import { LayoutDashboard, CalendarPlus, Receipt, FolderOpen, UserCircle, Gift } from 'lucide-react';
 
 const NAV_ITEMS = [
   { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { key: 'book', label: 'Book', icon: CalendarPlus },
   { key: 'invoices', label: 'Invoices', icon: Receipt },
   { key: 'documents', label: 'Documents', icon: FolderOpen },
+  { key: 'referrals', label: 'Referrals', icon: Gift },
   { key: 'profile', label: 'Profile', icon: UserCircle },
 ];
 

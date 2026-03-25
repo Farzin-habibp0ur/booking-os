@@ -2,7 +2,6 @@ import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import ReferralSettingsPage from './page';
 
-// Mock next/link
 jest.mock('next/link', () => {
   return ({ children, href, ...props }: any) => (
     <a href={href} {...props}>
@@ -11,7 +10,6 @@ jest.mock('next/link', () => {
   );
 });
 
-// Mock lucide-react icons
 jest.mock('lucide-react', () => {
   return new Proxy(
     {},
@@ -29,13 +27,17 @@ jest.mock('lucide-react', () => {
 });
 
 jest.mock('@/lib/auth', () => ({
-  useAuth: () => ({ user: { role: 'ADMIN', name: 'Sarah' } }),
+  useAuth: () => ({
+    user: {
+      role: 'ADMIN',
+      name: 'Sarah',
+      business: { name: 'Glow Clinic', verticalPack: 'AESTHETIC' },
+    },
+  }),
 }));
 
 jest.mock('@/lib/i18n', () => ({
-  useI18n: () => ({
-    t: (key: string) => key,
-  }),
+  useI18n: () => ({ t: (key: string) => key }),
 }));
 
 jest.mock('@/lib/cn', () => ({
@@ -64,60 +66,55 @@ jest.mock('@/components/skeleton', () => ({
   ),
 }));
 
+const mockSettings = {
+  enabled: true,
+  referrerCredit: 25,
+  refereeCredit: 25,
+  maxReferralsPerCustomer: 0,
+  creditExpiryMonths: 6,
+  messageTemplate: 'Hey! I love {businessName}. Book with my link: {referralLink}',
+  emailSubject: "You've been referred to {businessName}!",
+};
+
 const mockStats = {
-  referralCode: 'ABC123',
-  referralLink: 'https://example.com/signup?ref=ABC123',
-  totalInvites: 5,
-  successfulReferrals: 2,
+  totalReferrals: 10,
+  completedReferrals: 7,
   pendingReferrals: 3,
-  totalCreditsEarned: 100,
-  referrals: [
+  totalCreditsIssued: 350,
+  totalCreditsRedeemed: 100,
+  recentReferrals: [
     {
-      id: 'ref1',
-      status: 'CREDITED',
-      creditAmount: 50,
-      businessName: 'Acme Inc',
-      createdAt: '2026-01-15T12:00:00Z',
-      convertedAt: '2026-01-20T12:00:00Z',
-      creditedAt: '2026-01-20T12:00:00Z',
+      id: 'ref-1',
+      referrerName: 'Jane Doe',
+      referredName: 'John Smith',
+      status: 'COMPLETED',
+      referrerCreditAmount: 25,
+      refereeCreditAmount: 25,
+      createdAt: '2026-03-01T12:00:00Z',
+      completedAt: '2026-03-05T12:00:00Z',
     },
     {
-      id: 'ref2',
+      id: 'ref-2',
+      referrerName: 'Alice Brown',
+      referredName: 'Pending',
       status: 'PENDING',
-      creditAmount: 50,
-      businessName: 'Beta Corp',
-      createdAt: '2026-02-01T12:00:00Z',
-      convertedAt: null,
-      creditedAt: null,
+      referrerCreditAmount: 25,
+      refereeCreditAmount: 25,
+      createdAt: '2026-03-10T12:00:00Z',
+      completedAt: null,
     },
   ],
 };
-
-const mockSettings = {
-  creditAmount: 50,
-  messageTemplate: 'Hey! Check out {businessName}',
-  sharingMethod: 'manual',
-  emailSubject: '',
-};
-
-const mockBusiness = { name: 'Glow Clinic' };
 
 describe('ReferralSettingsPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockApi.get.mockImplementation((url: string) => {
-      if (url === '/referral/stats') return Promise.resolve(mockStats);
       if (url === '/referral/settings') return Promise.resolve(mockSettings);
-      if (url === '/business') return Promise.resolve(mockBusiness);
+      if (url === '/referral/stats') return Promise.resolve(mockStats);
       return Promise.resolve({});
     });
     mockApi.patch.mockResolvedValue({});
-
-    Object.defineProperty(navigator, 'clipboard', {
-      value: { writeText: jest.fn().mockResolvedValue(undefined) },
-      writable: true,
-      configurable: true,
-    });
   });
 
   it('shows loading skeleton initially', () => {
@@ -126,86 +123,49 @@ describe('ReferralSettingsPage', () => {
     expect(screen.getByTestId('form-skeleton')).toBeInTheDocument();
   });
 
-  it('renders all 5 sections after loading', async () => {
+  it('renders page header after loading', async () => {
     render(<ReferralSettingsPage />);
-
     await waitFor(() => {
-      expect(screen.getByText('settings.referral.link_title')).toBeInTheDocument();
-    });
-    expect(screen.getByText('settings.referral.reward_title')).toBeInTheDocument();
-    expect(screen.getByText('settings.referral.message_title')).toBeInTheDocument();
-    expect(screen.getByText('settings.referral.sharing_title')).toBeInTheDocument();
-    expect(screen.getByText('settings.referral.recent')).toBeInTheDocument();
-  });
-
-  it('displays referral stats', async () => {
-    render(<ReferralSettingsPage />);
-
-    await waitFor(() => {
-      expect(screen.getByText('5')).toBeInTheDocument();
-    });
-    expect(screen.getByText('2')).toBeInTheDocument();
-    expect(screen.getByText('$100')).toBeInTheDocument();
-  });
-
-  it('copy link button renders and is clickable', async () => {
-    render(<ReferralSettingsPage />);
-
-    await waitFor(() => {
-      expect(screen.getByText('settings.copy_link')).toBeInTheDocument();
-    });
-
-    // Verify the referral link input shows the URL
-    expect(screen.getByDisplayValue('https://example.com/signup?ref=ABC123')).toBeInTheDocument();
-  });
-
-  it('credit amount input renders with correct value', async () => {
-    render(<ReferralSettingsPage />);
-
-    await waitFor(() => {
-      expect(screen.getByDisplayValue('50')).toBeInTheDocument();
-    });
-
-    const input = screen.getByDisplayValue('50') as HTMLInputElement;
-    expect(input.type).toBe('number');
-    expect(input.min).toBe('5');
-    expect(input.max).toBe('500');
-  });
-
-  it('message template textarea editing works', async () => {
-    const user = userEvent.setup();
-    render(<ReferralSettingsPage />);
-
-    await waitFor(() => {
-      expect(screen.getByDisplayValue('Hey! Check out {businessName}')).toBeInTheDocument();
+      expect(screen.getByText('Patient Referral Program')).toBeInTheDocument();
     });
   });
 
-  it('merge variable buttons exist', async () => {
+  it('renders reward configuration section', async () => {
     render(<ReferralSettingsPage />);
-
     await waitFor(() => {
-      expect(screen.getByText('{businessName}')).toBeInTheDocument();
+      expect(screen.getByText('Reward Configuration')).toBeInTheDocument();
     });
+    expect(screen.getByText('Referrer earns')).toBeInTheDocument();
+    expect(screen.getByText('Friend earns')).toBeInTheDocument();
+  });
+
+  it('renders message template section with merge vars', async () => {
+    render(<ReferralSettingsPage />);
+    await waitFor(() => {
+      expect(screen.getByText('Referral Message')).toBeInTheDocument();
+    });
+    expect(screen.getByText('{businessName}')).toBeInTheDocument();
     expect(screen.getByText('{creditAmount}')).toBeInTheDocument();
     expect(screen.getByText('{referralLink}')).toBeInTheDocument();
-    expect(screen.getByText('{ownerName}')).toBeInTheDocument();
+    expect(screen.getByText('{customerName}')).toBeInTheDocument();
   });
 
-  it('sharing method radio buttons toggle', async () => {
-    const user = userEvent.setup();
+  it('renders referral activity stats', async () => {
     render(<ReferralSettingsPage />);
-
     await waitFor(() => {
-      expect(screen.getByText('Manual (Copy Link)')).toBeInTheDocument();
+      expect(screen.getByText('Referral Activity')).toBeInTheDocument();
     });
+    expect(screen.getByText('10')).toBeInTheDocument();
+    expect(screen.getByText('7')).toBeInTheDocument();
+  });
 
-    const whatsappRadio = screen.getByDisplayValue('whatsapp');
-    await act(async () => {
-      await user.click(whatsappRadio);
+  it('renders recent referrals table', async () => {
+    render(<ReferralSettingsPage />);
+    await waitFor(() => {
+      expect(screen.getByText('Jane Doe')).toBeInTheDocument();
     });
-
-    expect(whatsappRadio).toBeChecked();
+    expect(screen.getByText('John Smith')).toBeInTheDocument();
+    expect(screen.getByText('Alice Brown')).toBeInTheDocument();
   });
 
   it('save button calls PATCH /referral/settings', async () => {
@@ -213,41 +173,40 @@ describe('ReferralSettingsPage', () => {
     render(<ReferralSettingsPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('settings.referral.save')).toBeInTheDocument();
+      expect(screen.getByText('Save Changes')).toBeInTheDocument();
     });
 
     await act(async () => {
-      await user.click(screen.getByText('settings.referral.save'));
+      await user.click(screen.getByText('Save Changes'));
     });
 
     expect(mockApi.patch).toHaveBeenCalledWith(
       '/referral/settings',
       expect.objectContaining({
-        creditAmount: 50,
-        sharingMethod: 'manual',
+        enabled: true,
+        referrerCredit: 25,
+        refereeCredit: 25,
       }),
     );
-  });
-
-  it('renders recent referrals with status badges', async () => {
-    render(<ReferralSettingsPage />);
-
-    await waitFor(() => {
-      expect(screen.getByText('Acme Inc')).toBeInTheDocument();
-    });
-    expect(screen.getByText('Beta Corp')).toBeInTheDocument();
-    expect(screen.getByText('+$50')).toBeInTheDocument();
-    expect(screen.getByText('Pending')).toBeInTheDocument();
+    expect(mockToast).toHaveBeenCalledWith('Referral settings saved', 'success');
   });
 
   it('back link navigates to /marketing', async () => {
     render(<ReferralSettingsPage />);
-
     await waitFor(() => {
       expect(screen.getByText('Back to Marketing')).toBeInTheDocument();
     });
-
     const backLink = screen.getByText('Back to Marketing').closest('a');
     expect(backLink).toHaveAttribute('href', '/marketing');
+  });
+
+  it('renders live preview with channel tabs', async () => {
+    render(<ReferralSettingsPage />);
+    await waitFor(() => {
+      expect(screen.getByText('Live Preview')).toBeInTheDocument();
+    });
+    expect(screen.getByText('whatsapp')).toBeInTheDocument();
+    expect(screen.getByText('sms')).toBeInTheDocument();
+    expect(screen.getByText('email')).toBeInTheDocument();
   });
 });

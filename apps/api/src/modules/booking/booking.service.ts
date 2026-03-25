@@ -21,6 +21,7 @@ import { TreatmentPlanService } from '../treatment-plan/treatment-plan.service';
 import { AftercareService } from '../aftercare/aftercare.service';
 import { DealService } from '../deal/deal.service';
 import { PackageService } from '../package/package.service';
+import { ReferralService } from '../referral/referral.service';
 
 @Injectable()
 export class BookingService {
@@ -48,6 +49,8 @@ export class BookingService {
     private dealService?: DealService,
     @Optional()
     private packageService?: PackageService,
+    @Optional()
+    private referralService?: ReferralService,
   ) {}
 
   private static readonly VALID_SORT_FIELDS = [
@@ -904,6 +907,16 @@ export class BookingService {
           this.logger.warn(`Failed to advance deal after test drive completion for booking ${id}`, {
             bookingId: id,
             error: err.message,
+          }),
+        );
+      }
+
+      // Complete referral if this booking was referred
+      if (this.referralService) {
+        this.referralService.completeReferral(id).catch((err) =>
+          this.logger.warn(`Failed to process referral completion for booking ${id}`, {
+            bookingId: id,
+            error: (err as Error).message,
           }),
         );
       }
