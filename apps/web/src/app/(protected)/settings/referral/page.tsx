@@ -369,10 +369,12 @@ export default function ReferralSettingsPage() {
           className="w-full bg-slate-50 border-transparent focus:bg-white focus:ring-2 focus:ring-sage-500 rounded-xl px-3 py-2 text-sm resize-none"
         />
         <div className="flex items-center justify-between mt-1">
-          <span className="text-xs text-slate-400">{settings.messageTemplate.length} / 2000</span>
-          {settings.messageTemplate.length <= 160 ? (
+          <span className="text-xs text-slate-400">
+            {(settings.messageTemplate || '').length} / 2000
+          </span>
+          {(settings.messageTemplate || '').length <= 160 ? (
             <span className="text-xs text-sage-600">SMS friendly</span>
-          ) : settings.messageTemplate.length > 1600 ? (
+          ) : (settings.messageTemplate || '').length > 1600 ? (
             <span className="text-xs text-amber-600">Long — may span multiple SMS segments</span>
           ) : null}
         </div>
