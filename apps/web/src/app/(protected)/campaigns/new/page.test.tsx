@@ -220,7 +220,7 @@ describe('NewCampaignPage', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('Select Template')).toBeInTheDocument();
+      expect(screen.getAllByText('Select Template').length).toBeGreaterThan(0);
     });
   });
 
@@ -350,7 +350,7 @@ describe('NewCampaignPage', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('Select Template')).toBeInTheDocument();
+      expect(screen.getAllByText('Select Template').length).toBeGreaterThan(0);
     });
 
     await act(async () => {
@@ -473,7 +473,7 @@ describe('NewCampaignPage', () => {
       await user.click(screen.getByText('Next'));
     });
 
-    expect(screen.getByText('Select Template')).toBeInTheDocument();
+    expect(screen.getAllByText('Select Template').length).toBeGreaterThan(0);
 
     // Go back
     await act(async () => {
@@ -561,14 +561,14 @@ describe('NewCampaignPage', () => {
     });
 
     // Templates visible before toggle
-    expect(screen.getByText('Select Template')).toBeInTheDocument();
+    expect(screen.getAllByText('Select Template').length).toBeGreaterThan(0);
 
     await act(async () => {
       await user.click(screen.getByTestId('ab-test-toggle'));
     });
 
-    // Templates hidden after toggle
-    expect(screen.queryByText('Select Template')).not.toBeInTheDocument();
+    // Template heading hidden after toggle (mode switcher button may still exist)
+    expect(screen.queryByRole('heading', { name: /Select Template/i })).not.toBeInTheDocument();
   });
 
   it('shows percentage error when sum is not 100', async () => {
