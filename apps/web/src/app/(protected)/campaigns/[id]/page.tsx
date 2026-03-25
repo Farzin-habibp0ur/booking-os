@@ -415,12 +415,14 @@ export default function CampaignDetailPage() {
           <div className="flex justify-between">
             <dt className="text-slate-500">Channel</dt>
             <dd>
-              {{
-                WHATSAPP: 'WhatsApp',
-                SMS: 'SMS',
-                EMAIL: 'Email',
-                MULTI: 'Multi-channel',
-              }[campaign.channel] ||
+              {(
+                {
+                  WHATSAPP: 'WhatsApp',
+                  SMS: 'SMS',
+                  EMAIL: 'Email',
+                  MULTI: 'Multi-channel',
+                } as Record<string, string>
+              )[campaign.channel] ||
                 campaign.channel ||
                 'WhatsApp'}
             </dd>
