@@ -59,10 +59,10 @@ export default function OffersSettingsPage() {
   return (
     <div className="p-6 max-w-2xl mx-auto">
       <button
-        onClick={() => router.push('/settings')}
+        onClick={() => router.push('/marketing')}
         className="flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 mb-4"
       >
-        <ArrowLeft size={16} /> Back to Settings
+        <ArrowLeft size={16} /> Back to Marketing
       </button>
 
       <div className="flex items-center justify-between mb-4">

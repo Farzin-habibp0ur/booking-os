@@ -143,7 +143,7 @@ jest.mock('@/lib/use-mode', () => ({
       key: 'admin',
       sections: {
         workspace: ['/dashboard', '/inbox', '/calendar', '/customers', '/bookings', '/waitlist'],
-        tools: ['/services', '/marketing', '/service-board'],
+        tools: ['/services', '/marketing', '/campaigns', '/automations', '/service-board'],
         insights: ['/reports', '/reports/monthly-review', '/roi'],
         aiAgents: ['/ai', '/ai/agents', '/ai/actions', '/ai/performance'],
         overflow: {

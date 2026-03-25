@@ -46,6 +46,11 @@ jest.mock('@/lib/posthog', () => ({
   trackEvent: jest.fn(),
 }));
 
+const mockToast = jest.fn();
+jest.mock('@/lib/toast', () => ({
+  useToast: () => ({ toast: mockToast }),
+}));
+
 jest.mock('@/lib/api', () => ({
   api: { get: jest.fn(), post: jest.fn(), patch: jest.fn(), del: jest.fn(), upload: jest.fn() },
 }));
@@ -235,14 +240,14 @@ describe('ReferralSettingsPage', () => {
     expect(screen.getByText('Pending')).toBeInTheDocument();
   });
 
-  it('back link navigates to /settings', async () => {
+  it('back link navigates to /marketing', async () => {
     render(<ReferralSettingsPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('Back to Settings')).toBeInTheDocument();
+      expect(screen.getByText('Back to Marketing')).toBeInTheDocument();
     });
 
-    const backLink = screen.getByText('Back to Settings').closest('a');
-    expect(backLink).toHaveAttribute('href', '/settings');
+    const backLink = screen.getByText('Back to Marketing').closest('a');
+    expect(backLink).toHaveAttribute('href', '/marketing');
   });
 });

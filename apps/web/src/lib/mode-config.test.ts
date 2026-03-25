@@ -227,8 +227,15 @@ describe('mode-config', () => {
       expect(split.workspace.overflow).toEqual([]);
     });
 
-    it('primary tools = services, staff, invoices, marketing', () => {
-      expect(split.tools.primary).toEqual(['/services', '/staff', '/invoices', '/marketing']);
+    it('primary tools = services, staff, invoices, marketing, campaigns, automations', () => {
+      expect(split.tools.primary).toEqual([
+        '/services',
+        '/staff',
+        '/invoices',
+        '/marketing',
+        '/campaigns',
+        '/automations',
+      ]);
     });
 
     it('overflow tools = packages', () => {

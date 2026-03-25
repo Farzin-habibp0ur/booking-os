@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { useI18n } from '@/lib/i18n';
+import { useToast } from '@/lib/toast';
 import { cn } from '@/lib/cn';
 import { FormSkeleton } from '@/components/skeleton';
 import { trackEvent } from '@/lib/posthog';
@@ -82,6 +83,7 @@ const MERGE_VARS = ['{businessName}', '{creditAmount}', '{referralLink}', '{owne
 
 export default function ReferralSettingsPage() {
   const { t } = useI18n();
+  const { toast } = useToast();
   const { user } = useAuth();
   const [stats, setStats] = useState<ReferralStats | null>(null);
   const [settings, setSettings] = useState<ReferralSettings>({
@@ -113,9 +115,14 @@ export default function ReferralSettingsPage() {
   }, []);
 
   const handleSave = async () => {
-    await api.patch('/referral/settings', settings);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    try {
+      await api.patch('/referral/settings', settings);
+      setSaved(true);
+      trackEvent('referral_settings_saved');
+      setTimeout(() => setSaved(false), 2000);
+    } catch {
+      toast('Failed to save referral settings', 'error');
+    }
   };
 
   const handleCopyLink = () => {
@@ -146,11 +153,11 @@ export default function ReferralSettingsPage() {
   return (
     <div className="p-6 max-w-2xl">
       <Link
-        href="/settings"
+        href="/marketing"
         className="inline-flex items-center gap-1 text-sm text-sage-600 hover:text-sage-700 dark:text-sage-400 dark:hover:text-sage-300 mb-3 transition-colors"
       >
         <ArrowLeft size={14} />
-        Back to Settings
+        Back to Marketing
       </Link>
       <div className="flex items-center gap-2 mb-6">
         <Gift size={24} className="text-sage-600" />

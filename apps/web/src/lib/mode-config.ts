@@ -54,6 +54,8 @@ function getAdminSections(packName?: string): NavSections {
       ...(isDealership ? ['/inventory', '/pipeline'] : []),
       '/invoices',
       '/marketing',
+      '/campaigns',
+      '/automations',
       '/packages',
     ],
     insights: ['/dashboard', '/reports', '/reports/monthly-review', '/roi'],
