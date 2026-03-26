@@ -172,14 +172,38 @@ describe('ReferralService', () => {
       const result = await service.trackReferralClick('INVALID', 'glow');
       expect(result).toEqual({ valid: false });
     });
+
+    it('should return valid=false when referral program is disabled', async () => {
+      mockPrisma.business.findUnique.mockResolvedValue({
+        id: 'biz-1',
+        name: 'Glow Clinic',
+        packConfig: { referral: { enabled: false } },
+      });
+
+      const result = await service.trackReferralClick('ABC123', 'glow-clinic');
+      expect(result).toEqual({ valid: false });
+      expect(mockPrisma.customer.findFirst).not.toHaveBeenCalled();
+    });
   });
 
   describe('createPendingReferral', () => {
     beforeEach(() => {
+      // Called twice: once for assertReferralVertical, once for packConfig
       mockPrisma.business.findUnique.mockResolvedValue({
         verticalPack: 'AESTHETIC',
-        packConfig: { referral: { referrerCredit: 25, refereeCredit: 25 } },
+        packConfig: { referral: { enabled: true, referrerCredit: 25, refereeCredit: 25 } },
       });
+    });
+
+    it('should throw when referral program is disabled', async () => {
+      mockPrisma.business.findUnique.mockResolvedValue({
+        verticalPack: 'AESTHETIC',
+        packConfig: { referral: { enabled: false } },
+      });
+
+      await expect(service.createPendingReferral('CODE1', 'referred-1', 'biz-1')).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should create a PENDING referral', async () => {

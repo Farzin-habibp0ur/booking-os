@@ -2870,6 +2870,124 @@ async function main() {
         ')',
     );
   }
+  // ══════════════════════════════════════════════════════════════════════
+  // ═ Wellness Spa — Referral Seed Data
+  // ══════════════════════════════════════════════════════════════════════
+  try {
+    const wellnessBiz = await prisma.business.findFirst({
+      where: { slug: 'serenity-wellness-spa' },
+    });
+    if (wellnessBiz) {
+      const wBizId = wellnessBiz.id;
+      const existingWellnessReferrals = await prisma.customerReferral.count({
+        where: { businessId: wBizId },
+      });
+
+      if (existingWellnessReferrals === 0) {
+        // Find 3 wellness customers
+        const wellnessCustomers = await prisma.customer.findMany({
+          where: { businessId: wBizId },
+          take: 3,
+          orderBy: { createdAt: 'asc' },
+        });
+
+        if (wellnessCustomers.length >= 3) {
+          const [wc1, wc2, wc3] = wellnessCustomers;
+
+          // Set referral codes
+          if (!wc1.referralCode) {
+            await prisma.customer.update({
+              where: { id: wc1.id },
+              data: { referralCode: 'WELL2026' },
+            });
+          }
+          if (!wc2.referralCode) {
+            await prisma.customer.update({
+              where: { id: wc2.id },
+              data: { referralCode: 'SPA2026' },
+            });
+          }
+
+          // Referral 1: wc1 referred wc3 → COMPLETED
+          const wRef1 = await prisma.customerReferral.create({
+            data: {
+              businessId: wBizId,
+              referrerCustomerId: wc1.id,
+              referredCustomerId: wc3.id,
+              referralCode: 'WELL2026',
+              status: 'COMPLETED',
+              referrerCreditAmount: 25,
+              refereeCreditAmount: 25,
+              completedAt: daysAgo(8),
+            },
+          });
+
+          // Referral 2: wc2 referred wc1 → PENDING
+          await prisma.customerReferral.create({
+            data: {
+              businessId: wBizId,
+              referrerCustomerId: wc2.id,
+              referredCustomerId: wc1.id,
+              referralCode: 'SPA2026',
+              status: 'PENDING',
+              referrerCreditAmount: 25,
+              refereeCreditAmount: 25,
+            },
+          });
+
+          // Credits for completed referral
+          await prisma.customerCredit.create({
+            data: {
+              businessId: wBizId,
+              customerId: wc1.id,
+              amount: 25,
+              remainingAmount: 25,
+              source: 'REFERRAL_GIVEN',
+              referralId: wRef1.id,
+              expiresAt: daysFromNow(180),
+            },
+          });
+          await prisma.customerCredit.create({
+            data: {
+              businessId: wBizId,
+              customerId: wc3.id,
+              amount: 25,
+              remainingAmount: 25,
+              source: 'REFERRAL_RECEIVED',
+              referralId: wRef1.id,
+              expiresAt: daysFromNow(180),
+            },
+          });
+
+          // Enable referral program in packConfig
+          const wCfg = wellnessBiz.packConfig as Record<string, unknown>;
+          await prisma.business.update({
+            where: { id: wBizId },
+            data: {
+              packConfig: {
+                ...wCfg,
+                referral: {
+                  enabled: true,
+                  referrerCredit: 25,
+                  refereeCredit: 25,
+                  creditExpiryMonths: 6,
+                },
+              },
+            },
+          });
+
+          console.log('✅ Wellness spa referral data created (2 referrals, 2 credits)');
+        }
+      }
+    }
+  } catch (wellnessRefErr) {
+    console.log(
+      '⏭️  Wellness referral data already exists, skipping. (' +
+        (wellnessRefErr as Error).message?.slice(0, 80) +
+        ')',
+    );
+  }
+
   console.log('\n✨ All demo data seeded successfully!');
 }
 

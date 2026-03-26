@@ -218,6 +218,11 @@ export default function BookingPortalPage() {
   const [waitlistError, setWaitlistError] = useState('');
   const [staffList, setStaffList] = useState<{ id: string; name: string }[]>([]);
 
+  // Credit redemption state
+  const [availableCredits, setAvailableCredits] = useState<number>(0);
+  const [applyCredit, setApplyCredit] = useState(false);
+  const [creditLoading, setCreditLoading] = useState(false);
+
   // Referral state
   const searchParams = useSearchParams();
   const [referralCode, setReferralCode] = useState<string | null>(null);
@@ -244,6 +249,25 @@ export default function BookingPortalPage() {
       })
       .catch(() => {});
   }, [searchParams, slug]);
+
+  // Check available credits when phone is validated
+  const checkCredits = useCallback(
+    async (phone: string) => {
+      if (!phone || phone.length < 10 || !slug) return;
+      setCreditLoading(true);
+      try {
+        const data = await publicApi.get<{ total: number }>(
+          `/public/${slug}/credits?phone=${encodeURIComponent(phone)}`,
+        );
+        setAvailableCredits(data.total);
+      } catch {
+        setAvailableCredits(0);
+      } finally {
+        setCreditLoading(false);
+      }
+    },
+    [slug],
+  );
 
   // Determine if payment step is needed
   const needsPayment =
@@ -358,6 +382,10 @@ export default function BookingPortalPage() {
         notes: customerNotes || undefined,
         ...(paymentIntentId && { paymentIntentId }),
         ...(referralCode && { referralCode }),
+        ...(applyCredit &&
+          availableCredits > 0 && {
+            creditAmount: Math.min(availableCredits, selectedService!.price),
+          }),
       });
       setBookingResult(result);
       trackEvent('booking_completed', {
@@ -878,7 +906,10 @@ export default function BookingPortalPage() {
                 if (touched.phone)
                   setFieldErrors((prev) => ({ ...prev, phone: validatePhone(e.target.value) }));
               }}
-              onBlur={() => handleBlur('phone')}
+              onBlur={() => {
+                handleBlur('phone');
+                checkCredits(customerPhone);
+              }}
               placeholder="+1 (555) 123-4567"
               type="tel"
               aria-required="true"
@@ -1110,6 +1141,41 @@ export default function BookingPortalPage() {
                   {selectedService.price > 0 ? `$${selectedService.price}` : 'Free'}
                 </span>
               </div>
+              {availableCredits > 0 && (
+                <div className="border-t border-lavender-100 pt-2 mt-1" data-testid="credit-toggle">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Gift size={14} className="text-lavender-600" />
+                      <span className="text-sm text-lavender-800">
+                        Apply credit (${Math.min(availableCredits, selectedService.price)})
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={applyCredit}
+                      onClick={() => setApplyCredit(!applyCredit)}
+                      className={cn(
+                        'relative inline-flex h-5 w-9 items-center rounded-full transition-colors',
+                        applyCredit ? 'bg-lavender-500' : 'bg-slate-200',
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          'inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform',
+                          applyCredit ? 'translate-x-4.5' : 'translate-x-0.5',
+                        )}
+                      />
+                    </button>
+                  </div>
+                  {applyCredit && (
+                    <p className="text-xs text-lavender-600 mt-1">
+                      You have ${availableCredits} in credits. $
+                      {Math.min(availableCredits, selectedService.price)} will be applied.
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 

@@ -294,7 +294,7 @@ export const DEFAULT_SEQUENCES = [
         headline: 'Start sharing and earning',
         body: 'Thanks for referring a friend! Share your unique referral link and earn rewards when they sign up and subscribe.',
         ctaLabel: 'Share Link',
-        ctaPath: '/settings/referrals',
+        ctaPath: '/marketing/referrals',
       },
       {
         step: 2,
@@ -303,7 +303,7 @@ export const DEFAULT_SEQUENCES = [
         headline: "Don't forget to share",
         body: 'You have a referral link waiting. Each successful referral earns you a reward. The more you share, the more you earn.',
         ctaLabel: 'Share Now',
-        ctaPath: '/settings/referrals',
+        ctaPath: '/marketing/referrals',
       },
     ],
   },

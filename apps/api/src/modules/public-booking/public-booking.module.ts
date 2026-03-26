@@ -5,9 +5,17 @@ import { AvailabilityModule } from '../availability/availability.module';
 import { CustomerModule } from '../customer/customer.module';
 import { BookingModule } from '../booking/booking.module';
 import { WaitlistModule } from '../waitlist/waitlist.module';
+import { ReferralModule } from '../referral/referral.module';
 
 @Module({
-  imports: [ConfigModule, AvailabilityModule, CustomerModule, BookingModule, WaitlistModule],
+  imports: [
+    ConfigModule,
+    AvailabilityModule,
+    CustomerModule,
+    BookingModule,
+    WaitlistModule,
+    ReferralModule,
+  ],
   controllers: [PublicBookingController],
 })
 export class PublicBookingModule {}

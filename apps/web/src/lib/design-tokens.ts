@@ -243,6 +243,17 @@ export const CONVERSATION_STATUS_STYLES: Record<string, ConversationStatusStyle>
 };
 
 // ---------------------------------------------------------------------------
+// Referral status styles
+// ---------------------------------------------------------------------------
+
+export const REFERRAL_STATUS_STYLES: Record<string, { bg: string; text: string; label: string }> = {
+  PENDING: { bg: 'bg-lavender-50', text: 'text-lavender-700', label: 'Pending' },
+  COMPLETED: { bg: 'bg-sage-50', text: 'text-sage-700', label: 'Completed' },
+  EXPIRED: { bg: 'bg-slate-100', text: 'text-slate-500', label: 'Expired' },
+  CANCELLED: { bg: 'bg-red-50', text: 'text-red-600', label: 'Cancelled' },
+};
+
+// ---------------------------------------------------------------------------
 // Clinical photo type styles
 // ---------------------------------------------------------------------------
 

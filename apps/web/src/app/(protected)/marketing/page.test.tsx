@@ -30,18 +30,20 @@ jest.mock('@/components/skeleton', () => ({
   ),
 }));
 
-const mockStats = {
+const mockSummary = {
+  supported: true,
+  enabled: true,
   totalReferrals: 10,
   completedReferrals: 5,
   pendingReferrals: 3,
-  totalCreditsIssued: 50,
-  totalCreditsRedeemed: 20,
+  conversionRate: 50,
+  totalCreditsIssued: 250,
 };
 
 describe('MarketingHubPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockApi.get.mockResolvedValue(mockStats);
+    mockApi.get.mockResolvedValue(mockSummary);
   });
 
   it('renders page title "Marketing"', async () => {
@@ -53,22 +55,23 @@ describe('MarketingHubPage', () => {
     await waitFor(() => expect(mockApi.get).toHaveBeenCalled());
   });
 
-  it('renders all 4 hub cards with correct links', async () => {
+  it('renders referrals card with correct link when supported', async () => {
     render(<MarketingHubPage />);
 
-    const campaignsLink = screen.getByTestId('hub-card-campaigns');
-    expect(campaignsLink).toHaveAttribute('href', '/campaigns');
+    await waitFor(() => {
+      const referralsLink = screen.getByTestId('hub-card-referrals');
+      expect(referralsLink).toHaveAttribute('href', '/marketing/referrals');
+    });
+  });
 
-    const automationsLink = screen.getByTestId('hub-card-automations');
-    expect(automationsLink).toHaveAttribute('href', '/automations');
+  it('hides referrals card when not supported', async () => {
+    mockApi.get.mockResolvedValue({ supported: false });
 
-    const offersLink = screen.getByTestId('hub-card-offers');
-    expect(offersLink).toHaveAttribute('href', '/settings/offers');
+    render(<MarketingHubPage />);
 
-    const referralsLink = screen.getByTestId('hub-card-referrals');
-    expect(referralsLink).toHaveAttribute('href', '/settings/referral');
-
-    await waitFor(() => expect(mockApi.get).toHaveBeenCalled());
+    await waitFor(() => {
+      expect(screen.queryByTestId('hub-card-referrals')).not.toBeInTheDocument();
+    });
   });
 
   it('renders referral stats on successful API call', async () => {
@@ -81,7 +84,8 @@ describe('MarketingHubPage', () => {
     expect(screen.getByText('10')).toBeInTheDocument();
     expect(screen.getByText('5')).toBeInTheDocument();
     expect(screen.getByText('3')).toBeInTheDocument();
-    expect(screen.getByText('$50')).toBeInTheDocument();
+    expect(screen.getByText('50%')).toBeInTheDocument();
+    expect(screen.getByText('$250')).toBeInTheDocument();
   });
 
   it('handles referral stats API error gracefully', async () => {
@@ -94,7 +98,14 @@ describe('MarketingHubPage', () => {
     });
 
     expect(screen.queryByTestId('referral-stats-section')).not.toBeInTheDocument();
-    // Page still renders without crashing
     expect(screen.getByTestId('marketing-hub-page')).toBeInTheDocument();
+  });
+
+  it('calls stats/summary endpoint', async () => {
+    render(<MarketingHubPage />);
+
+    await waitFor(() => {
+      expect(mockApi.get).toHaveBeenCalledWith('/referral/stats/summary');
+    });
   });
 });

@@ -92,13 +92,15 @@ export class ReferralService {
     });
     if (!business) return { valid: false };
 
+    const settings = this.parseSettings(business.packConfig);
+    if (!settings.enabled) return { valid: false };
+
     const customer = await this.prisma.customer.findFirst({
       where: { referralCode, businessId: business.id },
       select: { name: true },
     });
     if (!customer) return { valid: false };
 
-    const settings = this.parseSettings(business.packConfig);
     return {
       valid: true,
       referrerName: customer.name,
@@ -114,6 +116,15 @@ export class ReferralService {
   ) {
     await this.assertReferralVertical(businessId);
 
+    const business = await this.prisma.business.findUnique({
+      where: { id: businessId },
+      select: { packConfig: true },
+    });
+    const settings = this.parseSettings(business?.packConfig);
+    if (!settings.enabled) {
+      throw new BadRequestException('Referral program is not active');
+    }
+
     const referrer = await this.prisma.customer.findFirst({
       where: { referralCode, businessId },
     });
@@ -121,13 +132,6 @@ export class ReferralService {
     if (referrer.id === referredCustomerId) {
       throw new BadRequestException('Cannot refer yourself');
     }
-
-    const settings = this.parseSettings(
-      (await this.prisma.business.findUnique({
-        where: { id: businessId },
-        select: { packConfig: true },
-      }))!.packConfig,
-    );
 
     // Check max referrals cap
     if (settings.maxReferralsPerCustomer > 0) {
@@ -360,6 +364,32 @@ export class ReferralService {
     };
   }
 
+  async getTopReferrers(businessId: string, limit = 5) {
+    const referrals = await this.prisma.customerReferral.groupBy({
+      by: ['referrerCustomerId'],
+      where: { businessId },
+      _count: { id: true },
+      _sum: { referrerCreditAmount: true },
+      orderBy: { _count: { id: 'desc' } },
+      take: limit,
+    });
+
+    if (referrals.length === 0) return [];
+
+    const customers = await this.prisma.customer.findMany({
+      where: { id: { in: referrals.map((r) => r.referrerCustomerId) } },
+      select: { id: true, name: true },
+    });
+    const nameMap = new Map(customers.map((c) => [c.id, c.name]));
+
+    return referrals.map((r) => ({
+      customerId: r.referrerCustomerId,
+      name: nameMap.get(r.referrerCustomerId) ?? 'Unknown',
+      totalReferrals: r._count.id,
+      totalCreditsEarned: r._sum.referrerCreditAmount ?? 0,
+    }));
+  }
+
   private getWebUrl(): string {
     const webUrl = this.config.get<string>('WEB_URL');
     if (webUrl) return webUrl;
@@ -368,7 +398,7 @@ export class ReferralService {
     return corsOrigins.split(',')[0].trim();
   }
 
-  private parseSettings(packConfig: unknown) {
+  parseSettings(packConfig: unknown) {
     const config =
       typeof packConfig === 'object' && packConfig !== null
         ? (packConfig as Record<string, unknown>)

@@ -9,6 +9,8 @@ describe('PublicBookingController', () => {
   let customerService: any;
   let bookingService: any;
   let configService: any;
+  let referralService: any;
+  let creditService: any;
 
   const mockBusiness = {
     id: 'biz1',
@@ -51,6 +53,11 @@ describe('PublicBookingController', () => {
     bookingService = { create: jest.fn() };
     waitlistService = { joinWaitlist: jest.fn() };
     configService = { get: jest.fn().mockReturnValue(undefined) };
+    referralService = { createPendingReferral: jest.fn().mockResolvedValue({ id: 'ref1' }) };
+    creditService = {
+      getAvailableCredits: jest.fn().mockResolvedValue({ total: 0, credits: [] }),
+      redeemCredit: jest.fn().mockResolvedValue([]),
+    };
 
     controller = new PublicBookingController(
       prisma as any,
@@ -59,6 +66,8 @@ describe('PublicBookingController', () => {
       bookingService,
       waitlistService,
       configService,
+      referralService,
+      creditService,
     );
   });
 
@@ -287,6 +296,116 @@ describe('PublicBookingController', () => {
       expect(result.depositRequired).toBe(false);
     });
 
+    it('calls createPendingReferral when referralCode provided', async () => {
+      prisma.business.findFirst.mockResolvedValue(mockBusiness as any);
+      customerService.findOrCreateByPhone.mockResolvedValue(mockCustomer);
+      bookingService.create.mockResolvedValue(mockBooking);
+
+      await controller.createBooking('glow-clinic', {
+        serviceId: 'svc1',
+        startTime: '2026-03-01T10:00:00Z',
+        customerName: 'Jane',
+        customerPhone: '+1234567890',
+        referralCode: 'VALIDCODE',
+      });
+
+      expect(referralService.createPendingReferral).toHaveBeenCalledWith(
+        'VALIDCODE',
+        'cust1',
+        'biz1',
+      );
+    });
+
+    it('sets source to REFERRAL when referralCode provided', async () => {
+      prisma.business.findFirst.mockResolvedValue(mockBusiness as any);
+      customerService.findOrCreateByPhone.mockResolvedValue(mockCustomer);
+      bookingService.create.mockResolvedValue(mockBooking);
+
+      await controller.createBooking('glow-clinic', {
+        serviceId: 'svc1',
+        startTime: '2026-03-01T10:00:00Z',
+        customerName: 'Jane',
+        customerPhone: '+1234567890',
+        referralCode: 'VALIDCODE',
+      });
+
+      expect(bookingService.create).toHaveBeenCalledWith(
+        'biz1',
+        expect.objectContaining({ source: 'REFERRAL' }),
+      );
+    });
+
+    it('booking succeeds even when createPendingReferral throws', async () => {
+      prisma.business.findFirst.mockResolvedValue(mockBusiness as any);
+      customerService.findOrCreateByPhone.mockResolvedValue(mockCustomer);
+      bookingService.create.mockResolvedValue(mockBooking);
+      referralService.createPendingReferral.mockRejectedValue(
+        new Error('Referral program is not active'),
+      );
+
+      const result = await controller.createBooking('glow-clinic', {
+        serviceId: 'svc1',
+        startTime: '2026-03-01T10:00:00Z',
+        customerName: 'Jane',
+        customerPhone: '+1234567890',
+        referralCode: 'VALIDCODE',
+      });
+
+      expect(result.id).toBe('book1');
+    });
+
+    it('does not call createPendingReferral without referralCode', async () => {
+      prisma.business.findFirst.mockResolvedValue(mockBusiness as any);
+      customerService.findOrCreateByPhone.mockResolvedValue(mockCustomer);
+      bookingService.create.mockResolvedValue(mockBooking);
+
+      await controller.createBooking('glow-clinic', {
+        serviceId: 'svc1',
+        startTime: '2026-03-01T10:00:00Z',
+        customerName: 'Jane',
+        customerPhone: '+1234567890',
+      });
+
+      expect(referralService.createPendingReferral).not.toHaveBeenCalled();
+    });
+
+    it('redeems credits when creditAmount provided', async () => {
+      prisma.business.findFirst.mockResolvedValue(mockBusiness as any);
+      customerService.findOrCreateByPhone.mockResolvedValue(mockCustomer);
+      bookingService.create.mockResolvedValue(mockBooking);
+
+      await controller.createBooking('glow-clinic', {
+        serviceId: 'svc1',
+        startTime: '2026-03-01T10:00:00Z',
+        customerName: 'Jane',
+        customerPhone: '+1234567890',
+        creditAmount: 25,
+      });
+
+      expect(creditService.redeemCredit).toHaveBeenCalledWith({
+        customerId: 'cust1',
+        businessId: 'biz1',
+        bookingId: 'book1',
+        amount: 25,
+      });
+    });
+
+    it('does not redeem credits when creditAmount is 0', async () => {
+      prisma.business.findFirst.mockResolvedValue(mockBusiness as any);
+      customerService.findOrCreateByPhone.mockResolvedValue(mockCustomer);
+      bookingService.create.mockResolvedValue(mockBooking);
+
+      await controller.createBooking('glow-clinic', {
+        serviceId: 'svc1',
+        startTime: '2026-03-01T10:00:00Z',
+        customerName: 'Jane',
+        customerPhone: '+1234567890',
+        creditAmount: 0,
+      });
+
+      expect(creditService.redeemCredit).not.toHaveBeenCalled();
+    });
+
     it('rejects booking with missing required fields', async () => {
       await expect(
         controller.createBooking('glow-clinic', {
@@ -308,6 +427,30 @@ describe('PublicBookingController', () => {
     });
   });
 
+  describe('checkCredits', () => {
+    it('returns zero when no phone provided', async () => {
+      const result = await controller.checkCredits('glow-clinic', '');
+      expect(result).toEqual({ total: 0, credits: [] });
+    });
+
+    it('returns zero when customer not found', async () => {
+      prisma.business.findFirst.mockResolvedValue(mockBusiness as any);
+      prisma.customer.findFirst.mockResolvedValue(null);
+
+      const result = await controller.checkCredits('glow-clinic', '+1234567890');
+      expect(result).toEqual({ total: 0, credits: [] });
+    });
+
+    it('returns credits for known customer', async () => {
+      prisma.business.findFirst.mockResolvedValue(mockBusiness as any);
+      prisma.customer.findFirst.mockResolvedValue(mockCustomer as any);
+      creditService.getAvailableCredits.mockResolvedValue({ total: 50, credits: [] });
+
+      const result = await controller.checkCredits('glow-clinic', '+1234567890');
+      expect(result).toEqual({ total: 50, credits: [] });
+    });
+  });
+
   describe('createPaymentIntent', () => {
     it('throws when Stripe is not configured', async () => {
       await expect(
@@ -325,6 +468,8 @@ describe('PublicBookingController', () => {
         bookingService,
         waitlistService,
         configService,
+        referralService,
+        creditService,
       );
 
       await expect(

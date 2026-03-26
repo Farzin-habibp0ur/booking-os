@@ -8,6 +8,7 @@ import {
   NotFoundException,
   BadRequestException,
   Logger,
+  Optional,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
@@ -17,6 +18,8 @@ import { AvailabilityService } from '../availability/availability.service';
 import { CustomerService } from '../customer/customer.service';
 import { BookingService } from '../booking/booking.service';
 import { WaitlistService } from '../waitlist/waitlist.service';
+import { ReferralService } from '../referral/referral.service';
+import { CreditService } from '../referral/credit.service';
 import Stripe from 'stripe';
 
 @ApiTags('Public Booking')
@@ -32,6 +35,10 @@ export class PublicBookingController {
     private bookingService: BookingService,
     private waitlistService: WaitlistService,
     private configService: ConfigService,
+    @Optional()
+    private referralService?: ReferralService,
+    @Optional()
+    private creditService?: CreditService,
   ) {
     const secretKey = this.configService.get<string>('STRIPE_SECRET_KEY');
     if (secretKey) {
@@ -61,6 +68,19 @@ export class PublicBookingController {
     }
 
     throw new NotFoundException('Business not found');
+  }
+
+  @Get(':slug/credits')
+  @Throttle({ default: { limit: 20, ttl: 60000 } })
+  async checkCredits(@Param('slug') slug: string, @Query('phone') phone: string) {
+    if (!phone) return { total: 0, credits: [] };
+    const business = await this.resolveBusiness(slug);
+    const customer = await this.prisma.customer.findFirst({
+      where: { businessId: business.id, phone },
+    });
+    if (!customer) return { total: 0, credits: [] };
+    if (!this.creditService) return { total: 0, credits: [] };
+    return this.creditService.getAvailableCredits(customer.id, business.id);
   }
 
   @Get(':slug')
@@ -187,7 +207,8 @@ export class PublicBookingController {
       customerName: string;
       customerPhone: string;
       customerEmail?: string;
-      ref?: string;
+      referralCode?: string;
+      creditAmount?: number;
       paymentIntentId?: string;
     },
   ) {
@@ -216,7 +237,7 @@ export class PublicBookingController {
 
     // Create booking with optional referral source
     const customFields: any = {};
-    if (body.ref) customFields.referralSource = body.ref;
+    if (body.referralCode) customFields.referralSource = body.referralCode;
 
     const booking = await this.bookingService.create(business.id, {
       customerId: customer.id,
@@ -224,8 +245,31 @@ export class PublicBookingController {
       staffId: body.staffId,
       startTime: body.startTime,
       customFields: Object.keys(customFields).length > 0 ? customFields : undefined,
-      source: body.ref ? 'REFERRAL' : 'PORTAL',
+      source: body.referralCode ? 'REFERRAL' : 'PORTAL',
     });
+
+    // Create pending referral for credit tracking (non-blocking)
+    if (body.referralCode && this.referralService) {
+      this.referralService
+        .createPendingReferral(body.referralCode, customer.id, business.id)
+        .catch((err) =>
+          this.logger.warn(`Referral creation failed for booking ${booking.id}: ${err.message}`),
+        );
+    }
+
+    // Redeem credits if requested (non-blocking)
+    if (body.creditAmount && body.creditAmount > 0 && this.creditService) {
+      this.creditService
+        .redeemCredit({
+          customerId: customer.id,
+          businessId: business.id,
+          bookingId: booking.id,
+          amount: body.creditAmount,
+        })
+        .catch((err) =>
+          this.logger.warn(`Credit redemption failed for booking ${booking.id}: ${err.message}`),
+        );
+    }
 
     // Link payment to booking if paymentIntentId was provided
     if (body.paymentIntentId) {

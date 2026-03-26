@@ -6,15 +6,17 @@ import { Megaphone, Zap, Gift, Users, ArrowRight } from 'lucide-react';
 import { api } from '@/lib/api';
 import { ListSkeleton } from '@/components/skeleton';
 
-interface ReferralStats {
-  totalReferrals: number;
-  completedReferrals: number;
-  pendingReferrals: number;
-  totalCreditsIssued: number;
-  totalCreditsRedeemed: number;
+interface ReferralSummary {
+  supported: boolean;
+  enabled?: boolean;
+  totalReferrals?: number;
+  completedReferrals?: number;
+  pendingReferrals?: number;
+  conversionRate?: number;
+  totalCreditsIssued?: number;
 }
 
-const CARDS = [
+const BASE_CARDS = [
   {
     icon: Megaphone,
     title: 'Campaigns',
@@ -33,26 +35,37 @@ const CARDS = [
     description: 'Configure special offers and promotions',
     href: '/settings/offers',
   },
-  {
-    icon: Users,
-    title: 'Referrals',
-    description: 'Patient referral program',
-    href: '/settings/referral',
-  },
 ] as const;
 
 export default function MarketingHubPage() {
-  const [stats, setStats] = useState<ReferralStats | null>(null);
+  const [summary, setSummary] = useState<ReferralSummary | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
   const [statsError, setStatsError] = useState(false);
 
   useEffect(() => {
     api
-      .get<ReferralStats>('/referral/stats')
-      .then((data) => setStats(data))
+      .get<ReferralSummary>('/referral/stats/summary')
+      .then((data) => setSummary(data))
       .catch(() => setStatsError(true))
       .finally(() => setStatsLoading(false));
   }, []);
+
+  // Build cards: include Referrals card only when supported
+  const showReferrals = summary?.supported !== false;
+  const CARDS = showReferrals
+    ? [
+        ...BASE_CARDS,
+        {
+          icon: Users,
+          title: 'Referrals',
+          description:
+            summary?.enabled === false
+              ? 'Set up your referral program'
+              : 'Patient referral program',
+          href: '/marketing/referrals',
+        },
+      ]
+    : [...BASE_CARDS];
 
   return (
     <div className="space-y-8" data-testid="marketing-hub-page">
@@ -85,16 +98,17 @@ export default function MarketingHubPage() {
 
       {statsLoading && !statsError && <ListSkeleton rows={1} />}
 
-      {stats && !statsError && (
+      {summary?.supported && summary.enabled && !statsError && (
         <div className="space-y-4" data-testid="referral-stats-section">
           <h2 className="text-lg font-semibold text-slate-800">Referral Program</h2>
 
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
             {[
-              { label: 'Total Referrals', value: stats.totalReferrals },
-              { label: 'Completed', value: stats.completedReferrals },
-              { label: 'Pending', value: stats.pendingReferrals },
-              { label: 'Credits Issued', value: `$${stats.totalCreditsIssued}` },
+              { label: 'Total Referrals', value: summary.totalReferrals ?? 0 },
+              { label: 'Completed', value: summary.completedReferrals ?? 0 },
+              { label: 'Pending', value: summary.pendingReferrals ?? 0 },
+              { label: 'Conversion', value: `${summary.conversionRate ?? 0}%` },
+              { label: 'Credits Issued', value: `$${summary.totalCreditsIssued ?? 0}` },
             ].map((item) => (
               <div key={item.label} className="rounded-2xl bg-white p-4 text-center shadow-soft">
                 <p className="font-serif text-2xl font-bold text-slate-800">{item.value}</p>
