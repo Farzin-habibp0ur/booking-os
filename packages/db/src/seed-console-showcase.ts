@@ -196,7 +196,7 @@ async function main() {
         data: {
           name: `${firstName} ${lastName}`,
           email,
-          passwordHash: await hashPassword('password123'),
+          passwordHash: await hashPassword('Bk0s!DemoSecure#2026'),
           role,
           businessId: business.id,
           emailVerified: true,

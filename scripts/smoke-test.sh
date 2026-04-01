@@ -189,7 +189,7 @@ fi
 # ──────────────────────────────────────────────
 echo ""
 echo "── 8. CORS ──"
-CORS_HEADERS=$(curl -s -D - -o /dev/null --max-time 10 "$API_URL/health" 2>/dev/null || echo "")
+CORS_HEADERS=$(curl -s -D - -o /dev/null --max-time 10 -H "Origin: $WEB_URL" "$API_URL/health" 2>/dev/null || echo "")
 if echo "$CORS_HEADERS" | grep -qi "access-control"; then
   pass "CORS headers present"
 else

@@ -13,9 +13,9 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses (aes
 
 | Business              | Email                     | Password    | Vertical   |
 | --------------------- | ------------------------- | ----------- | ---------- |
-| Glow Aesthetic Clinic | sarah@glowclinic.com      | password123 | Aesthetic  |
-| Metro Auto Group      | mike@metroauto.com        | password123 | Dealership |
-| Serenity Wellness Spa | maya@serenitywellness.com | password123 | Wellness   |
+| Glow Aesthetic Clinic | sarah@glowclinic.com      | Bk0s!DemoSecure#2026 | Aesthetic  |
+| Metro Auto Group      | mike@metroauto.com        | Bk0s!DemoSecure#2026 | Dealership |
+| Serenity Wellness Spa | maya@serenitywellness.com | Bk0s!DemoSecure#2026 | Wellness   |
 
 ---
 
@@ -781,7 +781,7 @@ Verify with:
 ```bash
 curl -s -D - -o /dev/null -X POST https://api.businesscommandcentre.com/api/v1/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"sarah@glowclinic.com","password":"password123"}' 2>&1 | grep -i set-cookie
+  -d '{"email":"sarah@glowclinic.com","password":"Bk0s!DemoSecure#2026"}' 2>&1 | grep -i set-cookie
 ```
 
 Confirm: `Domain=.businesscommandcentre.com`, `SameSite=Lax`, `Secure`, `Path=/`.

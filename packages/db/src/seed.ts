@@ -65,7 +65,7 @@ async function main() {
       businessId: business.id,
       name: 'Dr. Sarah Chen',
       email: 'sarah@glowclinic.com',
-      passwordHash: await hashPassword('password123'),
+      passwordHash: await hashPassword('Bk0s!DemoSecure#2026'),
       role: 'ADMIN',
     },
   });
@@ -75,7 +75,7 @@ async function main() {
       businessId: business.id,
       name: 'Maria Garcia',
       email: 'maria@glowclinic.com',
-      passwordHash: await hashPassword('password123'),
+      passwordHash: await hashPassword('Bk0s!DemoSecure#2026'),
       role: 'AGENT',
     },
   });
@@ -85,7 +85,7 @@ async function main() {
       businessId: business.id,
       name: 'Dr. Emily Park',
       email: 'emily@glowclinic.com',
-      passwordHash: await hashPassword('password123'),
+      passwordHash: await hashPassword('Bk0s!DemoSecure#2026'),
       role: 'SERVICE_PROVIDER',
     },
   });
@@ -630,7 +630,7 @@ async function seedWellness() {
       data: {
         name: s.name,
         email: s.email,
-        passwordHash: await hashPassword('password123'),
+        passwordHash: await hashPassword('Bk0s!DemoSecure#2026'),
         role: s.role,
         businessId: business.id,
         emailVerified: true,
@@ -675,7 +675,7 @@ async function seedWellness() {
   console.log('✅ 6 wellness services created');
 
   console.log('✅ Serenity Wellness Spa seed complete');
-  console.log('  Login: maya@serenitywellness.com / password123');
+  console.log('  Login: maya@serenitywellness.com / Bk0s!DemoSecure#2026');
 }
 
 async function seedDealership() {
@@ -833,7 +833,7 @@ async function seedDealership() {
         businessId: dealership.id,
         name: 'Mike Johnson',
         email: 'mike@metroauto.com',
-        passwordHash: await hashPassword('password123'),
+        passwordHash: await hashPassword('Bk0s!DemoSecure#2026'),
         role: 'ADMIN',
       },
     });
@@ -843,7 +843,7 @@ async function seedDealership() {
         businessId: dealership.id,
         name: 'Alex Rivera',
         email: 'alex@metroauto.com',
-        passwordHash: await hashPassword('password123'),
+        passwordHash: await hashPassword('Bk0s!DemoSecure#2026'),
         role: 'AGENT',
       },
     });
@@ -853,7 +853,7 @@ async function seedDealership() {
         businessId: dealership.id,
         name: 'Dana Kim',
         email: 'dana@metroauto.com',
-        passwordHash: await hashPassword('password123'),
+        passwordHash: await hashPassword('Bk0s!DemoSecure#2026'),
         role: 'AGENT',
       },
     });
@@ -863,7 +863,7 @@ async function seedDealership() {
         businessId: dealership.id,
         name: 'Carlos Mendez',
         email: 'carlos@metroauto.com',
-        passwordHash: await hashPassword('password123'),
+        passwordHash: await hashPassword('Bk0s!DemoSecure#2026'),
         role: 'SERVICE_PROVIDER',
       },
     });
@@ -873,7 +873,7 @@ async function seedDealership() {
         businessId: dealership.id,
         name: 'James Wright',
         email: 'james@metroauto.com',
-        passwordHash: await hashPassword('password123'),
+        passwordHash: await hashPassword('Bk0s!DemoSecure#2026'),
         role: 'SERVICE_PROVIDER',
       },
     });
@@ -883,7 +883,7 @@ async function seedDealership() {
         businessId: dealership.id,
         name: 'Priya Patel',
         email: 'priya@metroauto.com',
-        passwordHash: await hashPassword('password123'),
+        passwordHash: await hashPassword('Bk0s!DemoSecure#2026'),
         role: 'SERVICE_PROVIDER',
       },
     });
@@ -893,7 +893,7 @@ async function seedDealership() {
         businessId: dealership.id,
         name: 'Tom Baker',
         email: 'tom@metroauto.com',
-        passwordHash: await hashPassword('password123'),
+        passwordHash: await hashPassword('Bk0s!DemoSecure#2026'),
         role: 'SERVICE_PROVIDER',
       },
     });

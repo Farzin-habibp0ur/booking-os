@@ -121,7 +121,7 @@ async function main() {
           businessId: bizId,
           name: 'Dr. Emily Park',
           email: 'emily@glowclinic.com',
-          passwordHash: await bcrypt.hash('password123', 12),
+          passwordHash: await bcrypt.hash('Bk0s!DemoSecure#2026', 12),
           role: 'SERVICE_PROVIDER',
         },
       });
@@ -2094,7 +2094,7 @@ async function main() {
     console.log('✅ 3 resources created (Paint Booth, Lift Bay 1, Lift Bay 2)');
 
     // ── D3. Staff ──────────────────────────────────────────────────────────────
-    const passHash = await bcrypt.hash('password123', 12);
+    const passHash = await bcrypt.hash('Bk0s!DemoSecure#2026', 12);
 
     const mike = await prisma.staff.create({
       data: {

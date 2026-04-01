@@ -322,8 +322,8 @@ docker compose -f docker-compose.demo.yml logs -f
 
 | Business              | Email                | Password    | Role  |
 | --------------------- | -------------------- | ----------- | ----- |
-| Glow Aesthetic Clinic | sarah@glowclinic.com | password123 | Admin |
-| Metro Auto Group      | mike@metroauto.com   | password123 | Admin |
+| Glow Aesthetic Clinic | sarah@glowclinic.com | Bk0s!DemoSecure#2026 | Admin |
+| Metro Auto Group      | mike@metroauto.com   | Bk0s!DemoSecure#2026 | Admin |
 
 **Reseed manually:**
 
@@ -919,7 +919,7 @@ Before going live, verify:
 - [ ] `NODE_ENV=production` is set on the API service
 - [ ] `CORS_ORIGINS` is set to your actual domain(s), not `localhost`
 - [ ] Both API and Web have valid SSL certificates
-- [ ] Default seed passwords (`password123`) are changed for real users
+- [ ] Default seed passwords (`Bk0s!DemoSecure#2026`) are changed for real users
 - [ ] Swagger docs are disabled (automatic when `NODE_ENV=production`)
 - [ ] `WEBHOOK_SECRET` is set if using inbound webhooks
 - [ ] Database is not publicly accessible (use Railway internal URL, not public URL)

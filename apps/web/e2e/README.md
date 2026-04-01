@@ -126,7 +126,7 @@ npx playwright test --grep "bookings"
 Default test user credentials:
 
 - **Email:** sarah@glowclinic.com
-- **Password:** password123
+- **Password:** Bk0s!DemoSecure#2026
 
 These credentials are seeded in the database via the seed script at `packages/db/src/seed.ts`.
 

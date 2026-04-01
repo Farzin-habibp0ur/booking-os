@@ -97,7 +97,7 @@ Verify no production data is accessible via demo credentials:
 ```bash
 curl -s -X POST https://api.businesscommandcentre.com/api/v1/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"sarah@glowclinic.com","password":"password123"}' \
+  -d '{"email":"sarah@glowclinic.com","password":"Bk0s!DemoSecure#2026"}' \
   | jq '.staff.businessId'
 ```
 If this returns a real business ID in production, demo data must be removed.

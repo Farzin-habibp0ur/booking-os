@@ -11,7 +11,7 @@ test.describe('Login', () => {
   });
 
   test('login with valid credentials redirects to dashboard', async ({ page }) => {
-    await loginViaUi(page, 'sarah@glowclinic.com', 'password123');
+    await loginViaUi(page, 'sarah@glowclinic.com', 'Bk0s!DemoSecure#2026');
 
     await expect(page).toHaveURL(/\/(dashboard|setup)/);
   });
@@ -29,7 +29,7 @@ test.describe('Login', () => {
 
   test('logout returns to login page', async ({ page }) => {
     // Log in first
-    await loginViaUi(page, 'sarah@glowclinic.com', 'password123');
+    await loginViaUi(page, 'sarah@glowclinic.com', 'Bk0s!DemoSecure#2026');
 
     // Look for a logout link or button in the sidebar/header
     const logoutLink = page

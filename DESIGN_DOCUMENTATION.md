@@ -183,14 +183,14 @@
 
 **Glow Aesthetic Clinic** (slug: glow-aesthetic)
 
-- **Login:** sarah@glowclinic.com / password123
+- **Login:** sarah@glowclinic.com / Bk0s!DemoSecure#2026
 - **Staff:** Dr. Sarah Chen (Admin), Maria Garcia (Agent), Dr. Emily Park (Service Provider)
 - **Services:** Botox ($350/30min, deposit $100), Dermal Filler ($500/45min), Chemical Peel ($200/60min), Microneedling ($275/45min), Consultation (Free/20min)
 - **Customers:** 20+ including Emma Wilson (VIP), James Thompson, Sofia Rodriguez, Liam Parker
 
 **Metro Auto Group** (slug: metro-auto)
 
-- **Login:** mike@metroauto.com / password123
+- **Login:** mike@metroauto.com / Bk0s!DemoSecure#2026
 - **Staff:** Mike Torres (Admin), Jen Davis (Agent), Carlos Ruiz (Service Provider), Priya Shah (Service Provider)
 - **Services:** Oil Change, Full Detailing, Brake Service, Tire Rotation, Pre-Purchase Inspection
 

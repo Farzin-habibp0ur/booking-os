@@ -91,7 +91,7 @@ Runs Playwright E2E tests against a local development server with seeded test da
 | Variable       | Value                  |
 | -------------- | ---------------------- |
 | `E2E_EMAIL`    | `sarah@glowclinic.com` |
-| `E2E_PASSWORD` | `password123`          |
+| `E2E_PASSWORD` | `Bk0s!DemoSecure#2026`          |
 
 ---
 

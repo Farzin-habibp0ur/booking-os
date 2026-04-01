@@ -9,7 +9,7 @@ const API_URL = 'http://localhost:3001/api/v1';
 export async function loginViaApi(
   page: Page,
   email = 'sarah@glowclinic.com',
-  password = 'password123',
+  password = 'Bk0s!DemoSecure#2026',
 ) {
   // Call the login endpoint directly
   const response = await page.request.post(`${API_URL}/auth/login`, {
@@ -42,7 +42,7 @@ export async function loginViaApi(
 export async function loginViaUi(
   page: Page,
   email = 'sarah@glowclinic.com',
-  password = 'password123',
+  password = 'Bk0s!DemoSecure#2026',
 ) {
   await page.goto('/login');
   await page.locator('input[type="email"]').fill(email);

@@ -68,7 +68,7 @@ async function main() {
       data: {
         name: s.name,
         email: s.email,
-        passwordHash: await hashPassword('password123'),
+        passwordHash: await hashPassword('Bk0s!DemoSecure#2026'),
         role: s.role,
         businessId: business.id,
         emailVerified: true,
@@ -255,7 +255,7 @@ async function main() {
   console.log(`✓ ${bookingCount} bookings created`);
 
   console.log('\n🧘 Serenity Wellness Spa seed complete!');
-  console.log('\nLogin: maya@serenitywellness.com / password123');
+  console.log('\nLogin: maya@serenitywellness.com / Bk0s!DemoSecure#2026');
 }
 
 main()

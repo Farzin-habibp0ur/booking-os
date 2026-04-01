@@ -97,7 +97,7 @@ booking-os/
    - Admin Console: [http://localhost:3002](http://localhost:3002) (requires SUPER_ADMIN role)
    - API: [http://localhost:3001/api/v1](http://localhost:3001/api/v1)
    - API Docs (Swagger): [http://localhost:3001/api/docs](http://localhost:3001/api/docs)
-   - Login: `sarah@glowclinic.com` / `password123`
+   - Login: `sarah@glowclinic.com` / `Bk0s!DemoSecure#2026`
    - Admin Console (SUPER_ADMIN): `admin@businesscommandcentre.com` / `superadmin123` — login redirects to admin app
 
 ## Available Scripts

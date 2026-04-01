@@ -2,7 +2,7 @@ import { test as base, expect, Page } from '@playwright/test';
 import { loginViaUi } from './helpers/auth';
 
 const TEST_EMAIL = process.env.E2E_EMAIL || 'sarah@glowclinic.com';
-const TEST_PASSWORD = process.env.E2E_PASSWORD || 'password123';
+const TEST_PASSWORD = process.env.E2E_PASSWORD || 'Bk0s!DemoSecure#2026';
 const PORTAL_SLUG = process.env.E2E_PORTAL_SLUG || 'glow-clinic';
 
 export const test = base.extend<{ authenticatedPage: Page }>({

@@ -36,8 +36,8 @@
 
 | Business              | Email                | Password    | Role  | Best for                 |
 | --------------------- | -------------------- | ----------- | ----- | ------------------------ |
-| Glow Aesthetic Clinic | sarah@glowclinic.com | password123 | Admin | Parts 1-28, 30-31        |
-| Metro Auto Group      | mike@metroauto.com   | password123 | Admin | Part 29 (multi-vertical) |
+| Glow Aesthetic Clinic | sarah@glowclinic.com | Bk0s!DemoSecure#2026 | Admin | Parts 1-28, 30-31        |
+| Metro Auto Group      | mike@metroauto.com   | Bk0s!DemoSecure#2026 | Admin | Part 29 (multi-vertical) |
 
 ---
 
@@ -46,7 +46,7 @@
 ### Scene: Login
 
 1. Open http://localhost:3000 — you'll be redirected to the login page
-2. Enter: `sarah@glowclinic.com` / `password123`
+2. Enter: `sarah@glowclinic.com` / `Bk0s!DemoSecure#2026`
 3. Click **Sign In** — automatically redirected to the **Setup Wizard** (first-time onboarding)
 
 ### Scene: Onboarding Wizard
@@ -925,7 +925,7 @@ Roberto Silva,+14155551005,roberto@example.com,regular;returning
 ### Scene: Switch to Dealership
 
 1. Log out of Glow Clinic
-2. Log in as: **mike@metroauto.com** / **password123**
+2. Log in as: **mike@metroauto.com** / **Bk0s!DemoSecure#2026**
 3. Show the dashboard — notice different branding and terminology
 
 **Talk through:**

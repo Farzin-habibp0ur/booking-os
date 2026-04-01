@@ -17,9 +17,9 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 
 | Business              | Email                     | Password    | Vertical   |
 | --------------------- | ------------------------- | ----------- | ---------- |
-| Glow Aesthetic Clinic | sarah@glowclinic.com      | password123 | Aesthetic  |
-| Metro Auto Group      | mike@metroauto.com        | password123 | Dealership |
-| Serenity Wellness Spa | maya@serenitywellness.com | password123 | Wellness   |
+| Glow Aesthetic Clinic | sarah@glowclinic.com      | Bk0s!DemoSecure#2026 | Aesthetic  |
+| Metro Auto Group      | mike@metroauto.com        | Bk0s!DemoSecure#2026 | Dealership |
+| Serenity Wellness Spa | maya@serenitywellness.com | Bk0s!DemoSecure#2026 | Wellness   |
 
 ### Supported Verticals
 
@@ -1283,7 +1283,7 @@ npm run dev                    # Starts all apps via Turborepo
 - Dashboard: http://localhost:3000
 - API: http://localhost:3001/api/v1
 - Swagger: http://localhost:3001/api/docs
-- Login: sarah@glowclinic.com / password123
+- Login: sarah@glowclinic.com / Bk0s!DemoSecure#2026
 
 ### Key Commands
 
