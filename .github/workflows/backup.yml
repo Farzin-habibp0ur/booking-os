@@ -26,7 +26,9 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           BACKUP_DIR: ./backups
+          PATH: /usr/lib/postgresql/17/bin:${{ env.PATH }}
         run: |
+          pg_dump --version
           chmod +x scripts/backup-db.sh
           bash scripts/backup-db.sh
 
