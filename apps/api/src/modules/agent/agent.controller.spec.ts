@@ -2,6 +2,7 @@ import { Test } from '@nestjs/testing';
 import { AgentController } from './agent.controller';
 import { AgentFrameworkService } from './agent-framework.service';
 import { PrismaService } from '../../common/prisma.service';
+import { DistributedLockService } from '../../common/distributed-lock.service';
 import { createMockPrisma } from '../../test/mocks';
 
 describe('AgentController', () => {
@@ -12,7 +13,14 @@ describe('AgentController', () => {
     const prisma = createMockPrisma();
     const module = await Test.createTestingModule({
       controllers: [AgentController],
-      providers: [AgentFrameworkService, { provide: PrismaService, useValue: prisma }],
+      providers: [
+        AgentFrameworkService,
+        { provide: PrismaService, useValue: prisma },
+        {
+          provide: DistributedLockService,
+          useValue: { acquire: jest.fn().mockResolvedValue(jest.fn()) },
+        },
+      ],
     }).compile();
 
     controller = module.get(AgentController);

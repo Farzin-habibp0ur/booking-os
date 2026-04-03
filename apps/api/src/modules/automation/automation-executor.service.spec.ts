@@ -808,7 +808,7 @@ describe('AutomationExecutorService', () => {
       );
     });
 
-    it('ASSIGN_STAFF updates conversation assignedStaffId', async () => {
+    it('ASSIGN_STAFF updates conversation assignedToId', async () => {
       prisma.automationRule.findMany.mockResolvedValue([
         { ...baseRule, actions: [{ type: 'ASSIGN_STAFF', staffId: 'staff1' }] },
       ] as any);
@@ -819,7 +819,7 @@ describe('AutomationExecutorService', () => {
 
       expect(prisma.conversation.update).toHaveBeenCalledWith({
         where: { id: 'conv1' },
-        data: { assignedStaffId: 'staff1' },
+        data: { assignedToId: 'staff1' },
       });
     });
 

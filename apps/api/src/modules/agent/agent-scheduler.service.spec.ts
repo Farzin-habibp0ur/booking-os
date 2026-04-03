@@ -2,6 +2,7 @@ import { Test } from '@nestjs/testing';
 import { AgentSchedulerService } from './agent-scheduler.service';
 import { AgentFrameworkService } from './agent-framework.service';
 import { PrismaService } from '../../common/prisma.service';
+import { DistributedLockService } from '../../common/distributed-lock.service';
 import { createMockPrisma } from '../../test/mocks';
 
 describe('AgentSchedulerService', () => {
@@ -16,6 +17,10 @@ describe('AgentSchedulerService', () => {
         AgentSchedulerService,
         AgentFrameworkService,
         { provide: PrismaService, useValue: prisma },
+        {
+          provide: DistributedLockService,
+          useValue: { acquire: jest.fn().mockResolvedValue(jest.fn()) },
+        },
       ],
     }).compile();
 
@@ -83,6 +88,7 @@ describe('AgentSchedulerService', () => {
       isEnabled: true,
       config: {},
     } as any);
+    prisma.actionCard.count.mockResolvedValue(0);
     prisma.agentRun.create.mockResolvedValue({ id: 'run1', status: 'RUNNING' } as any);
     prisma.agentRun.update.mockResolvedValue({
       id: 'run1',
@@ -112,6 +118,7 @@ describe('AgentSchedulerService', () => {
       isEnabled: true,
       config: {},
     } as any);
+    prisma.actionCard.count.mockResolvedValue(0);
     prisma.agentRun.create.mockResolvedValue({ id: 'run2', status: 'RUNNING' } as any);
     prisma.agentRun.update.mockResolvedValue({
       id: 'run2',
@@ -167,6 +174,7 @@ describe('AgentSchedulerService', () => {
       isEnabled: true,
       config: {},
     } as any);
+    prisma.actionCard.count.mockResolvedValue(0);
     prisma.agentRun.create.mockResolvedValue({ id: 'run1', status: 'RUNNING' } as any);
     prisma.agentRun.update.mockResolvedValue({ id: 'run1', status: 'COMPLETED' } as any);
 
