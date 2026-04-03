@@ -28,6 +28,7 @@ interface ModeContextType {
   modeLabel: string;
   landingPath: string;
   modeDef: ModeDefinition | undefined;
+  modeReady: boolean;
 }
 
 const ModeContext = createContext<ModeContextType>({
@@ -37,6 +38,7 @@ const ModeContext = createContext<ModeContextType>({
   modeLabel: 'Admin',
   landingPath: '/dashboard',
   modeDef: undefined,
+  modeReady: false,
 });
 
 export function ModeProvider({ children }: { children: ReactNode }) {
@@ -61,28 +63,34 @@ export function ModeProvider({ children }: { children: ReactNode }) {
   };
 
   const [mode, setModeState] = useState<AppMode>(getInitialMode);
+  const [modeReady, setModeReady] = useState(false);
 
   // Re-derive mode if user changes (e.g. login/logout)
   useEffect(() => {
     const initial = getInitialMode();
     setModeState(initial);
+    setModeReady(true);
   }, [user?.id, user?.role]);
 
   // Debounced API call ref
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  const setMode = useCallback((newMode: AppMode) => {
-    setModeState(newMode);
-    // Instant localStorage update
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('app-mode', newMode);
-    }
-    // Debounced API persistence
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      api.patch('/staff/me/preferences', { mode: newMode }).catch(() => {});
-    }, 300);
-  }, []);
+  const setMode = useCallback(
+    (newMode: AppMode) => {
+      if (!getAvailableModes(role, packName).some((m) => m.key === newMode)) return;
+      setModeState(newMode);
+      // Instant localStorage update
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('app-mode', newMode);
+      }
+      // Debounced API persistence
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => {
+        api.patch('/staff/me/preferences', { mode: newMode }).catch(() => {});
+      }, 300);
+    },
+    [role, packName],
+  );
 
   const modeDef = getModeByKey(mode, packName);
   const modeLabel = getModeLabel(mode, pack.name);
@@ -90,7 +98,7 @@ export function ModeProvider({ children }: { children: ReactNode }) {
 
   return (
     <ModeContext.Provider
-      value={{ mode, setMode, availableModes, modeLabel, landingPath, modeDef }}
+      value={{ mode, setMode, availableModes, modeLabel, landingPath, modeDef, modeReady }}
     >
       {children}
     </ModeContext.Provider>

@@ -4,7 +4,7 @@ import { ReactNode, useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useKeyboardShortcut, useChordShortcut } from '@/lib/use-keyboard-shortcut';
-import { splitSectionPaths } from '@/lib/mode-config';
+import { splitSectionPaths, getDefaultMode } from '@/lib/mode-config';
 import { getNavItems } from '@/lib/nav-config';
 import { useAuth } from '@/lib/auth';
 import { usePack, VerticalPackProvider } from '@/lib/vertical-pack';
@@ -68,7 +68,7 @@ function ShellInner({ children }: { children: ReactNode }) {
   const [cmdkOpen, setCmdkOpen] = useState(false);
   const { theme, toggle: toggleTheme } = useTheme();
   const { state: tourState, startTour } = useDemoTour();
-  const { modeDef, landingPath } = useMode();
+  const { modeDef, landingPath, modeReady, setMode } = useMode();
 
   const [moreSheetOpen, setMoreSheetOpen] = useState(false);
   const [overflowOpen, setOverflowOpen] = useState(() => {
@@ -137,8 +137,12 @@ function ShellInner({ children }: { children: ReactNode }) {
   // Redirect when current pathname is not allowed for the active mode
   useEffect(() => {
     if (authLoading || !modeDef || !user) return;
-    // Skip redirect while mode is re-deriving after user load
-    if (!modeDef.allowedRoles.includes(user.role)) return;
+    if (!modeReady) return;
+    // Recover stale localStorage mode that doesn't match user's role
+    if (!modeDef.allowedRoles.includes(user.role)) {
+      setMode(getDefaultMode(user.role));
+      return;
+    }
     const s = modeDef.sections;
     const allowed = new Set([
       ...s.workspace,
@@ -156,7 +160,7 @@ function ShellInner({ children }: { children: ReactNode }) {
     if (!isAllowed) {
       router.replace(modeDef.defaultLandingPath);
     }
-  }, [pathname, modeDef, user, authLoading, router]);
+  }, [pathname, modeDef, user, authLoading, router, modeReady, setMode]);
 
   // Global keyboard shortcuts
   useKeyboardShortcut('k', () => setCmdkOpen((prev) => !prev), {
