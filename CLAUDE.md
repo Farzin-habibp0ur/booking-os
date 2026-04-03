@@ -746,35 +746,30 @@ Before creating any git commit, you MUST run these checks in order and fix ALL f
 - If you remove a feature from the UI, check if tests reference it and update them
 - If you change a service method signature, update the corresponding `.spec.ts` file
 
-> **Note:** This is Step 4 of the Self-Validation Protocol below. Complete all 5 steps before considering work done.
+> **Note:** These checks are part of the Self-Validation Protocol below. They run after the self-review loop passes clean.
 
 ---
 
 ## Self-Validation Protocol (MANDATORY)
 
-After completing ANY task (feature, bugfix, refactor, doc update), perform this validation loop:
+After completing ANY task (feature, bugfix, refactor, doc update, plan, analysis, report), run the **self-review-loop** skill (`.claude/skills/self-review-loop/SKILL.md`). This is non-negotiable — no work is considered complete until it passes.
 
-### Step 1: Re-read your changes
-- Re-read every file you modified. Check for: typos, inconsistencies, missing imports, incomplete implementations.
-- If you find issues, fix them before proceeding.
+The self-review loop requires you to: review your output against source material using tools (Read, Grep — not memory), fix all issues found, then re-review from scratch. Repeat until a full pass finds **zero issues**. Report the pass count and issues found per pass to the user.
 
-### Step 2: Verify cross-cutting concerns
-- Did you add a new component? Check: tests exist, translations added, design tokens used (not inline colors).
-- Did you change an API endpoint? Check: DTOs have validators, controller has guards, tests cover success AND error paths.
-- Did you modify the schema? Check: migration created, Prisma client regenerated, seed scripts still valid.
-- Did you change auth or cookies? Run the curl verification command from Deployment Rules.
+After the self-review loop passes with zero issues, run the project-specific checks:
 
-### Step 3: Documentation check
+### Cross-Cutting Concerns
+- New component? → tests exist, translations added, design tokens used (not inline colors)
+- Changed API endpoint? → DTOs have validators, controller has guards, tests cover success AND error paths
+- Modified schema? → migration created, Prisma client regenerated, seed scripts still valid
+- Changed auth or cookies? → Run the curl verification command from Deployment Rules
+
+### Documentation Check
 - Consult the Documentation Dependency Map above. Update every doc that your change affects.
 - If you changed CLAUDE.md, verify it's under the target line count (see version header).
 
-### Step 4: Run pre-commit checks
+### Pre-Commit Checks
 - `npm run format` → `npm run format:check` → `npm run lint` → `npm test`
-- If ANY step fails, fix it and restart from Step 1 (not just Step 4).
+- If ANY step fails, fix it and restart the self-review loop from the beginning (not just this step).
 
-### Step 5: Final review
-- Re-read the complete diff of all changes one more time.
-- Ask yourself: "If someone reviews this PR tomorrow, will anything surprise them?"
-- If yes, fix it or add a comment explaining why.
-
-Do NOT consider work complete until all 5 steps pass with zero issues. Loop as many times as needed.
+Do NOT consider work complete until the self-review loop passes clean AND all project checks pass.
