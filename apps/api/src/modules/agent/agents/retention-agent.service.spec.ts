@@ -327,4 +327,50 @@ describe('RetentionAgentService', () => {
       expect(result[0].customerName).toBe('More Overdue');
     });
   });
+
+  describe('FIX-09: dedup includes SNOOZED and APPROVED cards', () => {
+    it('skips card creation when a SNOOZED card already exists for same customer', async () => {
+      const dates = bookingDates(30, 3, 90);
+      prisma.customer.findMany.mockResolvedValue([
+        {
+          id: 'c1',
+          name: 'Alice',
+          bookings: dates.map((d) => ({ startTime: d, service: { name: 'Facial' } })),
+        },
+      ] as any);
+
+      // Return a SNOOZED existing card — should prevent duplicate creation
+      prisma.actionCard.findFirst.mockResolvedValue({
+        id: 'existing-card',
+        status: 'SNOOZED',
+      } as any);
+
+      await service.execute('biz1', {});
+
+      expect(actionCardService.create).not.toHaveBeenCalled();
+    });
+
+    it('dedup query includes PENDING, SNOOZED, and APPROVED statuses', async () => {
+      const dates = bookingDates(30, 3, 90);
+      prisma.customer.findMany.mockResolvedValue([
+        {
+          id: 'c1',
+          name: 'Bob',
+          bookings: dates.map((d) => ({ startTime: d, service: { name: 'Cut' } })),
+        },
+      ] as any);
+      prisma.actionCard.findFirst.mockResolvedValue(null);
+      actionCardService.create.mockResolvedValue({ id: 'new-card' });
+
+      await service.execute('biz1', {});
+
+      expect(prisma.actionCard.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            status: { in: ['PENDING', 'SNOOZED', 'APPROVED'] },
+          }),
+        }),
+      );
+    });
+  });
 });

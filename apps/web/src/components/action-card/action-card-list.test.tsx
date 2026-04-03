@@ -1,9 +1,31 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { ActionCardList } from './action-card-list';
 import { ActionCardData } from './action-card';
 
 jest.mock('@/lib/cn', () => ({
   cn: (...args: any[]) => args.filter(Boolean).join(' '),
+}));
+
+jest.mock('@/components/bulk-action-bar', () => ({
+  __esModule: true,
+  default: ({ count, actions, onClear }: any) =>
+    count > 0 ? (
+      <div data-testid="bulk-action-bar">
+        <span>{count} selected</span>
+        {actions.map((a: any) => (
+          <button
+            key={a.label}
+            onClick={a.onClick}
+            data-testid={`bulk-${a.label.toLowerCase().replace(/\s+/g, '-')}`}
+          >
+            {a.label}
+          </button>
+        ))}
+        <button onClick={onClear} data-testid="bulk-clear">
+          Clear
+        </button>
+      </div>
+    ) : null,
 }));
 
 const mockCards: ActionCardData[] = [
@@ -115,5 +137,65 @@ describe('ActionCardList', () => {
     fireEvent.click(screen.getByTestId('approve-card1'));
 
     expect(onApprove).toHaveBeenCalledWith('card1');
+  });
+
+  it('filter buttons have aria-label attributes', () => {
+    render(<ActionCardList cards={mockCards} />);
+
+    expect(screen.getByTestId('filter-all')).toHaveAttribute('aria-label', 'Show all action cards');
+    expect(screen.getByTestId('filter-URGENT_TODAY')).toHaveAttribute(
+      'aria-label',
+      'Filter by Urgent Today cards',
+    );
+  });
+
+  it('filter group has role=radiogroup', () => {
+    render(<ActionCardList cards={mockCards} />);
+
+    expect(
+      screen.getByRole('radiogroup', { name: 'Filter action cards by category' }),
+    ).toBeInTheDocument();
+  });
+
+  describe('FIX-20: multi-select bulk actions', () => {
+    it('shows checkboxes when onBulkDismiss provided', () => {
+      render(<ActionCardList cards={mockCards} onBulkDismiss={jest.fn()} />);
+
+      expect(screen.getByTestId('select-card1')).toBeInTheDocument();
+      expect(screen.getByTestId('select-card2')).toBeInTheDocument();
+    });
+
+    it('BulkActionBar appears after selecting a card', () => {
+      render(<ActionCardList cards={mockCards} onBulkDismiss={jest.fn()} />);
+
+      expect(screen.queryByTestId('bulk-action-bar')).not.toBeInTheDocument();
+
+      fireEvent.click(screen.getByTestId('select-card1'));
+      expect(screen.getByTestId('bulk-action-bar')).toBeInTheDocument();
+      expect(screen.getByText('1 selected')).toBeInTheDocument();
+    });
+
+    it('calls onBulkDismiss with selected ids', async () => {
+      const onBulkDismiss = jest.fn().mockResolvedValue(undefined);
+      render(<ActionCardList cards={mockCards} onBulkDismiss={onBulkDismiss} />);
+
+      fireEvent.click(screen.getByTestId('select-card1'));
+      fireEvent.click(screen.getByTestId('select-card2'));
+      fireEvent.click(screen.getByTestId('bulk-dismiss-selected'));
+
+      expect(onBulkDismiss).toHaveBeenCalledWith(expect.arrayContaining(['card1', 'card2']));
+    });
+
+    it('clears selection after dismiss', async () => {
+      const onBulkDismiss = jest.fn().mockResolvedValue(undefined);
+      render(<ActionCardList cards={mockCards} onBulkDismiss={onBulkDismiss} />);
+
+      fireEvent.click(screen.getByTestId('select-card1'));
+      fireEvent.click(screen.getByTestId('bulk-dismiss-selected'));
+
+      await waitFor(() => {
+        expect(screen.queryByTestId('bulk-action-bar')).not.toBeInTheDocument();
+      });
+    });
   });
 });

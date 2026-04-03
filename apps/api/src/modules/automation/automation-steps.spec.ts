@@ -313,6 +313,45 @@ describe('AutomationExecutorService — Step Execution (P-13)', () => {
       });
     });
 
+    it('should complete execution when DELAY is the last step', async () => {
+      const execution = {
+        id: 'e1',
+        automationRuleId: 'r1',
+        businessId: 'biz1',
+        bookingId: null,
+        customerId: null,
+        status: 'PENDING',
+        context: {},
+        step: {
+          id: 's1',
+          type: 'DELAY',
+          config: { delayMinutes: 60 },
+          order: 0,
+          parentStepId: null,
+        },
+        automationRule: {
+          steps: [
+            { id: 's1', type: 'DELAY', config: { delayMinutes: 60 }, order: 0, parentStepId: null },
+          ],
+        },
+      };
+      prisma.automationExecution.findUnique.mockResolvedValue(execution as any);
+      prisma.automationExecution.update.mockResolvedValue({} as any);
+
+      await executor.advanceExecution('e1');
+
+      // Terminal DELAY — should set COMPLETED, not re-schedule itself
+      expect(prisma.automationExecution.update).toHaveBeenCalledWith({
+        where: { id: 'e1' },
+        data: expect.objectContaining({ status: 'COMPLETED', completedAt: expect.any(Date) }),
+      });
+      // Must NOT schedule itself (stepId: 's1') with WAITING status
+      const wasCalled = (prisma.automationExecution.update as jest.Mock).mock.calls.some(
+        ([call]) => call?.data?.status === 'WAITING' && call?.data?.stepId === 's1',
+      );
+      expect(wasCalled).toBe(false);
+    });
+
     it('follows correct branch for BRANCH step', async () => {
       const execution = {
         id: 'e1',
@@ -711,6 +750,67 @@ describe('AutomationExecutorService — Step Execution (P-13)', () => {
 
       // Should not call customer.update since tag already exists
       expect(prisma.customer.update).not.toHaveBeenCalled();
+    });
+
+    it('FIX-07: SEND_MESSAGE step delegates to executeActions and enqueues notification', async () => {
+      const notificationQueue = testModule.get('BullQueue_notifications');
+      const execution = {
+        id: 'e1',
+        automationRuleId: 'r1',
+        businessId: 'biz1',
+        bookingId: null,
+        customerId: 'c1',
+        status: 'PENDING',
+        context: {},
+        step: {
+          id: 's1',
+          type: 'ACTION',
+          config: { actionType: 'SEND_MESSAGE', body: 'Hello {{customerName}}!' },
+          order: 0,
+          parentStepId: null,
+        },
+        automationRule: {
+          steps: [
+            {
+              id: 's1',
+              type: 'ACTION',
+              config: { actionType: 'SEND_MESSAGE', body: 'Hello {{customerName}}!' },
+              order: 0,
+              parentStepId: null,
+            },
+          ],
+        },
+      };
+
+      prisma.automationExecution.findUnique.mockResolvedValue(execution as any);
+      prisma.automationExecution.update.mockResolvedValue({} as any);
+      prisma.automationRule.findUnique.mockResolvedValue({
+        id: 'r1',
+        businessId: 'biz1',
+        trigger: 'BOOKING_CREATED',
+        maxPerCustomerPerDay: 0,
+        actions: [],
+      } as any);
+      prisma.customer.findUnique.mockResolvedValue({
+        id: 'c1',
+        name: 'Alice',
+        phone: '+1555000111',
+        email: null,
+      } as any);
+      prisma.business.findUnique.mockResolvedValue({
+        timezone: 'UTC',
+        channelSettings: null,
+      } as any);
+      prisma.automationLog.count.mockResolvedValue(0);
+      prisma.automationLog.create.mockResolvedValue({} as any);
+
+      await executor.advanceExecution('e1');
+
+      // Should delegate to executeActions which calls notificationQueue.add
+      expect(notificationQueue.add).toHaveBeenCalledWith(
+        'automation-send',
+        expect.objectContaining({ to: '+1555000111', businessId: 'biz1', customerId: 'c1' }),
+      );
     });
   });
 });

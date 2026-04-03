@@ -14,6 +14,7 @@ import { LocationModule } from '../location/location.module';
 import { MessageModule } from '../message/message.module';
 import { AiModule } from '../ai/ai.module';
 import { CustomerIdentityModule } from '../customer-identity/customer-identity.module';
+import { AutomationModule } from '../automation/automation.module';
 
 @Global()
 @Module({
@@ -24,6 +25,7 @@ import { CustomerIdentityModule } from '../customer-identity/customer-identity.m
     CustomerIdentityModule,
     forwardRef(() => MessageModule),
     forwardRef(() => AiModule),
+    forwardRef(() => AutomationModule),
   ],
   controllers: [
     WebhookController,

@@ -2,17 +2,24 @@ import { Test } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { PaymentsService } from './payments.service';
 import { PrismaService } from '../../common/prisma.service';
+import { AutomationExecutorService } from '../automation/automation-executor.service';
 import { createMockPrisma, MockPrisma } from '../../test/mocks';
 
 describe('PaymentsService', () => {
   let service: PaymentsService;
   let prisma: MockPrisma;
+  let mockAutomationExecutor: { evaluateTrigger: jest.Mock };
 
   beforeEach(async () => {
     prisma = createMockPrisma();
+    mockAutomationExecutor = { evaluateTrigger: jest.fn().mockResolvedValue(undefined) };
 
     const module = await Test.createTestingModule({
-      providers: [PaymentsService, { provide: PrismaService, useValue: prisma }],
+      providers: [
+        PaymentsService,
+        { provide: PrismaService, useValue: prisma },
+        { provide: AutomationExecutorService, useValue: mockAutomationExecutor },
+      ],
     }).compile();
 
     service = module.get(PaymentsService);
@@ -347,6 +354,36 @@ describe('PaymentsService', () => {
 
       expect(prisma.payment.findFirst).toHaveBeenCalledWith({
         where: { id: 'p1', businessId: 'biz1' },
+      });
+    });
+  });
+
+  describe('PAYMENT_RECEIVED trigger (FIX-03)', () => {
+    it('fires PAYMENT_RECEIVED trigger after creating payment', async () => {
+      const payment = {
+        id: 'p1',
+        businessId: 'biz1',
+        customerId: 'c1',
+        bookingId: 'b1',
+        amount: 150,
+        method: 'CARD',
+      };
+      prisma.payment.create.mockResolvedValue(payment as any);
+
+      await service.create(
+        'biz1',
+        { customerId: 'c1', bookingId: 'b1', amount: 150, method: 'CARD' },
+        'staff1',
+      );
+
+      await Promise.resolve();
+
+      expect(mockAutomationExecutor.evaluateTrigger).toHaveBeenCalledWith('PAYMENT_RECEIVED', {
+        businessId: 'biz1',
+        customerId: 'c1',
+        bookingId: 'b1',
+        amount: 150,
+        paymentMethod: 'CARD',
       });
     });
   });

@@ -3,22 +3,26 @@ import { BadRequestException, NotFoundException, ForbiddenException } from '@nes
 import { CustomerService } from './customer.service';
 import { PrismaService } from '../../common/prisma.service';
 import { ProfileExtractor } from '../ai/profile-extractor';
+import { AutomationExecutorService } from '../automation/automation-executor.service';
 import { createMockPrisma } from '../../test/mocks';
 
 describe('CustomerService', () => {
   let service: CustomerService;
   let prisma: ReturnType<typeof createMockPrisma>;
   let mockExtractor: { extract: jest.Mock };
+  let mockAutomationExecutor: { evaluateTrigger: jest.Mock };
 
   beforeEach(async () => {
     prisma = createMockPrisma();
     mockExtractor = { extract: jest.fn() };
+    mockAutomationExecutor = { evaluateTrigger: jest.fn().mockResolvedValue(undefined) };
 
     const module = await Test.createTestingModule({
       providers: [
         CustomerService,
         { provide: PrismaService, useValue: prisma },
         { provide: ProfileExtractor, useValue: mockExtractor },
+        { provide: AutomationExecutorService, useValue: mockAutomationExecutor },
       ],
     }).compile();
 
@@ -880,6 +884,51 @@ describe('CustomerService', () => {
       const result = await service.findAll('biz1', { page: 0 });
 
       expect(result.page).toBe(1);
+    });
+  });
+
+  describe('create — CUSTOMER_CREATED trigger (FIX-03)', () => {
+    it('fires CUSTOMER_CREATED trigger after creating customer', async () => {
+      const created = {
+        id: 'c1',
+        businessId: 'biz1',
+        name: 'Alice',
+        phone: '+1555000111',
+        email: 'alice@example.com',
+      };
+      prisma.customer.create.mockResolvedValue(created as any);
+
+      await service.create('biz1', {
+        name: 'Alice',
+        phone: '+1555000111',
+        email: 'alice@example.com',
+      });
+
+      // Allow fire-and-forget to execute
+      await Promise.resolve();
+
+      expect(mockAutomationExecutor.evaluateTrigger).toHaveBeenCalledWith('CUSTOMER_CREATED', {
+        businessId: 'biz1',
+        customerId: 'c1',
+        customerName: 'Alice',
+        customerEmail: 'alice@example.com',
+        customerPhone: '+1555000111',
+      });
+    });
+
+    it('still returns created customer when trigger is not wired', async () => {
+      const created = {
+        id: 'c2',
+        businessId: 'biz1',
+        name: 'Bob',
+        phone: '+1555000222',
+        email: null,
+      };
+      prisma.customer.create.mockResolvedValue(created as any);
+
+      const result = await service.create('biz1', { name: 'Bob', phone: '+1555000222' });
+
+      expect(result.id).toBe('c2');
     });
   });
 });

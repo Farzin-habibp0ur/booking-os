@@ -252,4 +252,46 @@ describe('DataHygieneAgentService', () => {
       }
     });
   });
+
+  describe('FIX-11: O(n) phone-grouping optimization', () => {
+    it('correctly identifies customers that share a phone number', async () => {
+      const sharedPhone = '5551234567';
+      const customers = [
+        { id: 'a1', name: 'Alice', phone: sharedPhone, email: null },
+        { id: 'a2', name: 'Alice Smith', phone: sharedPhone, email: null },
+        { id: 'a3', name: 'Alice S', phone: sharedPhone, email: null },
+        { id: 'a4', name: 'Alicia', phone: sharedPhone, email: null },
+        { id: 'a5', name: 'A Smith', phone: sharedPhone, email: null },
+        ...Array.from({ length: 20 }, (_, i) => ({
+          id: `u${i}`,
+          name: `Unique ${i}`,
+          phone: `999000${String(i).padStart(4, '0')}`,
+          email: null,
+        })),
+      ];
+      prisma.customer.findMany.mockResolvedValue(customers as any);
+
+      const result = await service.findDuplicates('biz1', 100);
+
+      // All matches should be among the 5 shared-phone customers
+      for (const pair of result) {
+        expect(['a1', 'a2', 'a3', 'a4', 'a5']).toContain(pair.customer1.id);
+        expect(['a1', 'a2', 'a3', 'a4', 'a5']).toContain(pair.customer2.id);
+      }
+    });
+
+    it('finds email-based duplicates when phones differ', async () => {
+      const sharedEmail = 'bob@example.com';
+      prisma.customer.findMany.mockResolvedValue([
+        { id: 'b1', name: 'Bob Jones', phone: '1111111111', email: sharedEmail },
+        { id: 'b2', name: 'Bob Jones', phone: '2222222222', email: sharedEmail },
+        { id: 'c1', name: 'Carol', phone: '3333333333', email: 'carol@example.com' },
+      ] as any);
+
+      const result = await service.findDuplicates('biz1', 10);
+
+      expect(result.some((p) => p.customer1.id === 'b1' && p.customer2.id === 'b2')).toBe(true);
+      expect(result.every((p) => p.customer1.id !== 'c1' && p.customer2.id !== 'c1')).toBe(true);
+    });
+  });
 });

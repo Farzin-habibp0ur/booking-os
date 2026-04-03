@@ -83,7 +83,7 @@ export class SchedulingOptimizerService implements BackgroundAgent, OnModuleInit
           where: {
             businessId,
             type: 'SCHEDULE_GAP',
-            status: 'PENDING',
+            status: { in: ['PENDING', 'SNOOZED', 'APPROVED'] },
             staffId: group.staffId,
             metadata: {
               path: ['date'],
@@ -149,6 +149,13 @@ export class SchedulingOptimizerService implements BackgroundAgent, OnModuleInit
     lookAheadDays: number,
     gapThresholdMins: number,
   ): Promise<ScheduleGap[]> {
+    // FIX-10: Use business timezone for date calculation to avoid UTC midnight boundary bugs
+    const business = await this.prisma.business.findUnique({
+      where: { id: businessId },
+      select: { timezone: true },
+    });
+    const timezone = business?.timezone || 'UTC';
+
     const today = new Date();
     const gaps: ScheduleGap[] = [];
 
@@ -160,8 +167,9 @@ export class SchedulingOptimizerService implements BackgroundAgent, OnModuleInit
     for (let dayOffset = 0; dayOffset < lookAheadDays; dayOffset++) {
       const checkDate = new Date(today);
       checkDate.setDate(checkDate.getDate() + dayOffset);
-      const dateStr = checkDate.toISOString().split('T')[0];
-      const dayOfWeek = checkDate.getDay();
+      // en-CA locale produces YYYY-MM-DD format in the business's local timezone
+      const dateStr = checkDate.toLocaleDateString('en-CA', { timeZone: timezone });
+      const dayOfWeek = new Date(dateStr + 'T12:00:00').getDay();
 
       for (const s of staff) {
         try {
@@ -221,6 +229,11 @@ export class SchedulingOptimizerService implements BackgroundAgent, OnModuleInit
       select: { startTime: true, endTime: true },
       orderBy: { startTime: 'asc' },
     });
+
+    // TODO (FIX-14): StaffBreak model does not yet exist in schema.prisma.
+    // Once added via migration, query breaks here and subtract them from the schedule:
+    // const breaks = await this.prisma.staffBreak.findMany({ where: { staffId, date: dateStr } });
+    // Then filter bookings to account for break slots before calling findGapsInSchedule().
 
     return {
       date: dateStr,

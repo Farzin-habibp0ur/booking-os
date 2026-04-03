@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { useToast } from '@/lib/toast';
@@ -26,6 +26,7 @@ interface AgentRun {
   startedAt: string;
   completedAt?: string;
   cardsCreated: number;
+  error?: string;
   errors?: any;
 }
 
@@ -45,18 +46,27 @@ export default function AIAgentsPage() {
   const [loading, setLoading] = useState(true);
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [runningId, setRunningId] = useState<string | null>(null);
+  const mountedRef = useRef(true);
+  const refreshTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    loadAgents();
+    mountedRef.current = true;
+    loadAgents(() => !mountedRef.current);
+    return () => {
+      mountedRef.current = false;
+      if (refreshTimeoutRef.current) clearTimeout(refreshTimeoutRef.current);
+    };
   }, []);
 
-  const loadAgents = async () => {
+  const loadAgents = async (isAborted?: () => boolean) => {
     setLoading(true);
     try {
       const [configs, agentRuns] = await Promise.all([
         api.get<AgentConfig[]>('/agent-config').catch(() => []),
         api.get<any>('/agent-runs?take=100').catch(() => ({ data: [] })),
       ]);
+
+      if (isAborted?.()) return;
 
       setAgents(Array.isArray(configs) ? configs : []);
 
@@ -65,7 +75,7 @@ export default function AIAgentsPage() {
     } catch {
       // Graceful fallback
     } finally {
-      setLoading(false);
+      if (!isAborted?.()) setLoading(false);
     }
   };
 
@@ -89,7 +99,9 @@ export default function AIAgentsPage() {
     try {
       await api.post(`/agent-config/${agentType}/run-now`, {});
       toast(`${formatAgentName(agentType)} triggered`);
-      setTimeout(() => loadAgents(), 3000);
+      refreshTimeoutRef.current = setTimeout(() => {
+        if (mountedRef.current) loadAgents(() => !mountedRef.current);
+      }, 3000);
     } catch {
       toast('Failed to trigger agent', 'error');
     } finally {
@@ -340,39 +352,51 @@ function AgentCard({
           ) : (
             <div className="space-y-2 max-h-48 overflow-y-auto">
               {runs.map((run) => (
-                <div key={run.id} className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-1.5">
-                    {run.status === 'SUCCESS' ? (
-                      <CheckCircle size={12} className="text-green-500" />
-                    ) : run.status === 'FAILURE' ? (
-                      <XCircle size={12} className="text-red-500" />
-                    ) : (
-                      <Clock size={12} className="text-amber-500" />
-                    )}
-                    <span className="text-slate-600 dark:text-slate-300">
-                      {new Date(run.startedAt).toLocaleString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {run.cardsCreated > 0 && (
-                      <span className="text-slate-400">{run.cardsCreated} cards</span>
-                    )}
-                    {run.completedAt && run.startedAt && (
-                      <span className="text-slate-400">
-                        {Math.round(
-                          (new Date(run.completedAt).getTime() -
-                            new Date(run.startedAt).getTime()) /
-                            1000,
-                        )}
-                        s
+                <div key={run.id}>
+                  <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-1.5">
+                      {run.status === 'SUCCESS' ? (
+                        <CheckCircle size={12} className="text-green-500" />
+                      ) : run.status === 'FAILURE' ? (
+                        <XCircle size={12} className="text-red-500" />
+                      ) : (
+                        <Clock size={12} className="text-amber-500" />
+                      )}
+                      <span className="text-slate-600 dark:text-slate-300">
+                        {new Date(run.startedAt).toLocaleString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
                       </span>
-                    )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {run.cardsCreated > 0 && (
+                        <span className="text-slate-400">{run.cardsCreated} cards</span>
+                      )}
+                      {run.completedAt && run.startedAt && (
+                        <span className="text-slate-400">
+                          {Math.round(
+                            (new Date(run.completedAt).getTime() -
+                              new Date(run.startedAt).getTime()) /
+                              1000,
+                          )}
+                          s
+                        </span>
+                      )}
+                    </div>
                   </div>
+                  {run.status === 'FAILURE' && (run.error || run.errors) && (
+                    <div
+                      className="mt-1.5 bg-red-50 dark:bg-red-900/20 rounded-lg px-3 py-2 text-xs text-red-700 dark:text-red-400"
+                      data-testid={`run-error-${run.id}`}
+                    >
+                      <span className="font-medium">Error: </span>
+                      {run.error ||
+                        (typeof run.errors === 'string' ? run.errors : JSON.stringify(run.errors))}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

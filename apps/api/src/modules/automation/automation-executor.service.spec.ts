@@ -4,6 +4,7 @@ import { AutomationExecutorService } from './automation-executor.service';
 import { PrismaService } from '../../common/prisma.service';
 import { UsageService } from '../usage/usage.service';
 import { TestimonialsService } from '../testimonials/testimonials.service';
+import { DistributedLockService } from '../../common/distributed-lock.service';
 import { QUEUE_NAMES } from '../../common/queue/queue.module';
 import { createMockPrisma } from '../../test/mocks';
 
@@ -13,12 +14,17 @@ describe('AutomationExecutorService', () => {
   let notificationQueue: { add: jest.Mock };
   let usageService: { recordUsage: jest.Mock };
   let testimonialsService: { sendRequest: jest.Mock };
+  let mockLockService: { acquire: jest.Mock };
 
   beforeEach(async () => {
     prisma = createMockPrisma();
     notificationQueue = { add: jest.fn().mockResolvedValue({}) };
     usageService = { recordUsage: jest.fn().mockResolvedValue(undefined) };
     testimonialsService = { sendRequest: jest.fn().mockResolvedValue({}) };
+    // Default: lock always acquired (returns unlock fn)
+    mockLockService = {
+      acquire: jest.fn().mockResolvedValue(jest.fn().mockResolvedValue(undefined)),
+    };
 
     const module = await Test.createTestingModule({
       providers: [
@@ -27,6 +33,7 @@ describe('AutomationExecutorService', () => {
         { provide: UsageService, useValue: usageService },
         { provide: TestimonialsService, useValue: testimonialsService },
         { provide: getQueueToken(QUEUE_NAMES.NOTIFICATIONS), useValue: notificationQueue },
+        { provide: DistributedLockService, useValue: mockLockService },
       ],
     }).compile();
 
@@ -140,19 +147,14 @@ describe('AutomationExecutorService', () => {
       expect(prisma.automationLog.create).toHaveBeenCalled();
     });
 
-    it('skips when already processing', async () => {
-      // Set processing to true via first call that resolves slowly
-      (prisma.automationRule.findMany as any).mockImplementation(
-        () => new Promise((resolve) => setTimeout(() => resolve([]), 100)),
-      );
+    it('skips when distributed lock is already held', async () => {
+      // Simulate lock already held by another pod
+      mockLockService.acquire.mockResolvedValue(null);
 
-      const p1 = executorService.executeRules();
-      const p2 = executorService.executeRules();
+      await executorService.executeRules();
 
-      await Promise.all([p1, p2]);
-
-      // Only called once because second call was skipped
-      expect(prisma.automationRule.findMany).toHaveBeenCalledTimes(1);
+      // Should exit immediately — no rules processed
+      expect(prisma.automationRule.findMany).not.toHaveBeenCalled();
     });
 
     it('handles rule processing error gracefully', async () => {
@@ -764,6 +766,214 @@ describe('AutomationExecutorService', () => {
     });
   });
 
+  describe('FIX-04: Missing automation action handlers', () => {
+    const baseRule = {
+      id: 'rule1',
+      businessId: 'biz1',
+      trigger: 'BOOKING_CREATED',
+      filters: {},
+      isActive: true,
+      quietStart: null,
+      quietEnd: null,
+      maxPerCustomerPerDay: 0,
+    };
+    const baseBooking = [{ id: 'b1', businessId: 'biz1', customerId: 'c1' }];
+
+    beforeEach(() => {
+      prisma.booking.findMany.mockResolvedValue(baseBooking as any);
+      prisma.automationLog.count.mockResolvedValue(0);
+      prisma.automationLog.create.mockResolvedValue({} as any);
+      prisma.business.findUnique.mockResolvedValue({
+        timezone: 'UTC',
+        channelSettings: null,
+      } as any);
+    });
+
+    it('SEND_TEMPLATE enqueues automation-template job', async () => {
+      prisma.automationRule.findMany.mockResolvedValue([
+        { ...baseRule, actions: [{ type: 'SEND_TEMPLATE', templateId: 'tpl1' }] },
+      ] as any);
+      prisma.customer.findUnique.mockResolvedValue({
+        id: 'c1',
+        name: 'Alice',
+        phone: '+1234567890',
+        email: null,
+      } as any);
+
+      await executorService.executeRules();
+
+      expect(notificationQueue.add).toHaveBeenCalledWith(
+        'automation-template',
+        expect.objectContaining({ templateId: 'tpl1', businessId: 'biz1', customerId: 'c1' }),
+      );
+    });
+
+    it('ASSIGN_STAFF updates conversation assignedStaffId', async () => {
+      prisma.automationRule.findMany.mockResolvedValue([
+        { ...baseRule, actions: [{ type: 'ASSIGN_STAFF', staffId: 'staff1' }] },
+      ] as any);
+      prisma.conversation.findFirst.mockResolvedValue({ id: 'conv1' } as any);
+      prisma.conversation.update.mockResolvedValue({} as any);
+
+      await executorService.executeRules();
+
+      expect(prisma.conversation.update).toHaveBeenCalledWith({
+        where: { id: 'conv1' },
+        data: { assignedStaffId: 'staff1' },
+      });
+    });
+
+    it('SEND_NOTIFICATION enqueues automation-notification job', async () => {
+      prisma.automationRule.findMany.mockResolvedValue([
+        {
+          ...baseRule,
+          actions: [
+            {
+              type: 'SEND_NOTIFICATION',
+              message: 'New booking for {{customerName}}',
+              staffId: 'staff1',
+            },
+          ],
+        },
+      ] as any);
+
+      await executorService.executeRules();
+
+      expect(notificationQueue.add).toHaveBeenCalledWith(
+        'automation-notification',
+        expect.objectContaining({
+          businessId: 'biz1',
+          targetStaffId: 'staff1',
+          automationRuleId: 'rule1',
+        }),
+      );
+    });
+  });
+
+  describe('FIX-08: Advanced filter operators via evaluateTrigger', () => {
+    const makeRule = (filters: any) => ({
+      id: 'r1',
+      businessId: 'biz1',
+      trigger: 'PAYMENT_RECEIVED',
+      filters,
+      actions: [{ type: 'SEND_MESSAGE', body: 'Hi!' }],
+      isActive: true,
+      quietStart: null,
+      quietEnd: null,
+      maxPerCustomerPerDay: 0,
+      steps: [],
+    });
+
+    beforeEach(() => {
+      prisma.automationLog.count.mockResolvedValue(0);
+      prisma.automationLog.create.mockResolvedValue({} as any);
+      prisma.customer.findUnique.mockResolvedValue({
+        id: 'c1',
+        name: 'Alice',
+        phone: '+1',
+        email: null,
+      } as any);
+      prisma.business.findUnique.mockResolvedValue({
+        timezone: 'UTC',
+        channelSettings: null,
+      } as any);
+    });
+
+    it('backward compatible: plain value equality passes', async () => {
+      prisma.automationRule.findMany.mockResolvedValue([makeRule({ amount: 100 })] as any);
+
+      await executorService.evaluateTrigger('PAYMENT_RECEIVED', {
+        businessId: 'biz1',
+        amount: 100,
+        customerId: 'c1',
+      });
+
+      expect(prisma.automationLog.create).toHaveBeenCalled();
+    });
+
+    it('backward compatible: plain value equality fails', async () => {
+      prisma.automationRule.findMany.mockResolvedValue([makeRule({ amount: 200 })] as any);
+
+      await executorService.evaluateTrigger('PAYMENT_RECEIVED', {
+        businessId: 'biz1',
+        amount: 100,
+        customerId: 'c1',
+      });
+
+      expect(prisma.automationLog.create).not.toHaveBeenCalled();
+    });
+
+    it('gt operator: passes when actual > value', async () => {
+      prisma.automationRule.findMany.mockResolvedValue([
+        makeRule({ amount: { operator: 'gt', value: 50 } }),
+      ] as any);
+
+      await executorService.evaluateTrigger('PAYMENT_RECEIVED', {
+        businessId: 'biz1',
+        amount: 100,
+        customerId: 'c1',
+      });
+
+      expect(prisma.automationLog.create).toHaveBeenCalled();
+    });
+
+    it('gt operator: fails when actual <= value', async () => {
+      prisma.automationRule.findMany.mockResolvedValue([
+        makeRule({ amount: { operator: 'gt', value: 100 } }),
+      ] as any);
+
+      await executorService.evaluateTrigger('PAYMENT_RECEIVED', {
+        businessId: 'biz1',
+        amount: 100,
+        customerId: 'c1',
+      });
+
+      expect(prisma.automationLog.create).not.toHaveBeenCalled();
+    });
+
+    it('contains operator: passes when string includes value (case-insensitive)', async () => {
+      prisma.automationRule.findMany.mockResolvedValue([
+        makeRule({ serviceName: { operator: 'contains', value: 'facial' } }),
+      ] as any);
+
+      await executorService.evaluateTrigger('PAYMENT_RECEIVED', {
+        businessId: 'biz1',
+        serviceName: 'Deep Facial Treatment',
+        customerId: 'c1',
+      });
+
+      expect(prisma.automationLog.create).toHaveBeenCalled();
+    });
+
+    it('in operator: passes when actual is in array', async () => {
+      prisma.automationRule.findMany.mockResolvedValue([
+        makeRule({ paymentMethod: { operator: 'in', value: ['CARD', 'CASH'] } }),
+      ] as any);
+
+      await executorService.evaluateTrigger('PAYMENT_RECEIVED', {
+        businessId: 'biz1',
+        paymentMethod: 'CARD',
+        customerId: 'c1',
+      });
+
+      expect(prisma.automationLog.create).toHaveBeenCalled();
+    });
+
+    it('not_in operator: fails when actual is in excluded array', async () => {
+      prisma.automationRule.findMany.mockResolvedValue([
+        makeRule({ paymentMethod: { operator: 'not_in', value: ['STRIPE'] } }),
+      ] as any);
+
+      await executorService.evaluateTrigger('PAYMENT_RECEIVED', {
+        businessId: 'biz1',
+        paymentMethod: 'STRIPE',
+        customerId: 'c1',
+      });
+
+      expect(prisma.automationLog.create).not.toHaveBeenCalled();
+    });
+  });
+
   describe('REFERRAL_EARNED trigger', () => {
     it('should execute actions for matching credits', async () => {
       prisma.automationRule.findMany.mockResolvedValue([
@@ -843,6 +1053,46 @@ describe('AutomationExecutorService', () => {
           }),
         }),
       );
+    });
+  });
+
+  describe('FIX-13: enhanced template engine with dot notation', () => {
+    it('renders {{name}} (simple key)', () => {
+      const result = (executorService as any).renderTemplate('Hello {{name}}!', { name: 'Alice' });
+      expect(result).toBe('Hello Alice!');
+    });
+
+    it('renders {{customer.name}} (nested dot path)', () => {
+      const result = (executorService as any).renderTemplate('Hi {{customer.name}}', {
+        customer: { name: 'Bob', email: 'b@test.com' },
+      });
+      expect(result).toBe('Hi Bob');
+    });
+
+    it('renders {{a.b.c}} (deep nested)', () => {
+      const result = (executorService as any).renderTemplate('{{a.b.c}}', {
+        a: { b: { c: 'deep' } },
+      });
+      expect(result).toBe('deep');
+    });
+
+    it('replaces missing key with empty string', () => {
+      const result = (executorService as any).renderTemplate('Hello {{missing}}!', {});
+      expect(result).toBe('Hello !');
+    });
+
+    it('replaces missing nested key with empty string', () => {
+      const result = (executorService as any).renderTemplate('{{customer.phone}}', {
+        customer: { name: 'Carol' },
+      });
+      expect(result).toBe('');
+    });
+
+    it('is backward-compatible with plain {{customerName}}', () => {
+      const result = (executorService as any).renderTemplate('Hi {{customerName}}', {
+        customerName: 'Dave',
+      });
+      expect(result).toBe('Hi Dave');
     });
   });
 });

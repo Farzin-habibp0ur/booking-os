@@ -4,9 +4,13 @@ import {
   BadRequestException,
   NotFoundException,
   ForbiddenException,
+  Optional,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma.service';
 import { ProfileExtractor } from '../ai/profile-extractor';
+import { AutomationExecutorService } from '../automation/automation-executor.service';
 
 @Injectable()
 export class CustomerService {
@@ -15,6 +19,9 @@ export class CustomerService {
   constructor(
     private prisma: PrismaService,
     private profileExtractor: ProfileExtractor,
+    @Optional()
+    @Inject(forwardRef(() => AutomationExecutorService))
+    private automationExecutor?: AutomationExecutorService,
   ) {}
 
   private static readonly VALID_SORT_FIELDS = ['name', 'email', 'phone', 'createdAt'];
@@ -187,7 +194,21 @@ export class CustomerService {
     businessId: string,
     data: { name: string; phone: string; email?: string; tags?: string[]; customFields?: any },
   ) {
-    return this.prisma.customer.create({ data: { businessId, ...data } });
+    const created = await this.prisma.customer.create({ data: { businessId, ...data } });
+
+    if (this.automationExecutor) {
+      this.automationExecutor
+        .evaluateTrigger('CUSTOMER_CREATED', {
+          businessId: created.businessId,
+          customerId: created.id,
+          customerName: created.name,
+          customerEmail: created.email,
+          customerPhone: created.phone,
+        })
+        .catch((err) => this.logger.warn(`CUSTOMER_CREATED trigger failed: ${err.message}`));
+    }
+
+    return created;
   }
 
   async update(

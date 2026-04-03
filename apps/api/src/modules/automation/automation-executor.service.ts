@@ -6,11 +6,11 @@ import { PrismaService } from '../../common/prisma.service';
 import { UsageService } from '../usage/usage.service';
 import { TestimonialsService } from '../testimonials/testimonials.service';
 import { QUEUE_NAMES } from '../../common/queue/queue.module';
+import { DistributedLockService } from '../../common/distributed-lock.service';
 
 @Injectable()
 export class AutomationExecutorService {
   private readonly logger = new Logger(AutomationExecutorService.name);
-  private processing = false;
 
   constructor(
     private prisma: PrismaService,
@@ -18,6 +18,7 @@ export class AutomationExecutorService {
     @Inject(forwardRef(() => TestimonialsService))
     private testimonialsService: TestimonialsService,
     @Optional() @InjectQueue(QUEUE_NAMES.NOTIFICATIONS) private notificationQueue?: Queue,
+    @Optional() private lockService?: DistributedLockService,
   ) {}
 
   // H5 fix: Paginated execution with time limit to prevent resource exhaustion
@@ -26,8 +27,10 @@ export class AutomationExecutorService {
 
   @Cron(CronExpression.EVERY_MINUTE)
   async executeRules() {
-    if (this.processing) return;
-    this.processing = true;
+    const lockKey = 'automation-executor-lock';
+    const unlock = await this.lockService?.acquire(lockKey, 55_000); // 55s TTL (< 60s cron interval)
+    if (unlock === null) return; // Another instance is already processing
+
     const startTime = Date.now();
     try {
       // P-13: Process waiting step executions first
@@ -62,7 +65,7 @@ export class AutomationExecutorService {
         if (rules.length < AutomationExecutorService.PAGE_SIZE) break;
       }
     } finally {
-      this.processing = false;
+      await unlock?.();
     }
   }
 
@@ -110,6 +113,7 @@ export class AutomationExecutorService {
               booking.businessId,
               booking.id,
               booking.customerId,
+              timezone,
             );
           }
         }
@@ -144,6 +148,7 @@ export class AutomationExecutorService {
               booking.businessId,
               booking.id,
               booking.customerId,
+              timezone,
             );
           }
         }
@@ -176,6 +181,7 @@ export class AutomationExecutorService {
               booking.businessId,
               booking.id,
               booking.customerId,
+              timezone,
             );
           }
         }
@@ -207,6 +213,7 @@ export class AutomationExecutorService {
               booking.businessId,
               booking.id,
               booking.customerId,
+              timezone,
             );
           }
         }
@@ -238,6 +245,7 @@ export class AutomationExecutorService {
               credit.businessId,
               undefined,
               credit.customerId,
+              timezone,
             );
           }
         }
@@ -268,6 +276,7 @@ export class AutomationExecutorService {
               redemption.credit.businessId,
               redemption.bookingId,
               redemption.credit.customerId,
+              timezone,
             );
           }
         }
@@ -354,17 +363,21 @@ export class AutomationExecutorService {
           });
         }
       } else if (step.type === 'DELAY') {
-        const delayMinutes = stepConfig.delayMinutes || 0;
-        const scheduledAt = new Date(Date.now() + delayMinutes * 60 * 1000);
         const nextStep = this.findNextStep(allSteps, step);
-        await this.prisma.automationExecution.update({
-          where: { id: executionId },
-          data: {
-            status: 'WAITING',
-            scheduledAt,
-            stepId: nextStep?.id || step.id,
-          },
-        });
+        if (!nextStep) {
+          // Terminal DELAY — mark execution as completed
+          await this.prisma.automationExecution.update({
+            where: { id: executionId },
+            data: { status: 'COMPLETED', completedAt: new Date() },
+          });
+        } else {
+          const delayMinutes = stepConfig.delayMinutes || 0;
+          const scheduledAt = new Date(Date.now() + delayMinutes * 60 * 1000);
+          await this.prisma.automationExecution.update({
+            where: { id: executionId },
+            data: { status: 'WAITING', scheduledAt, stepId: nextStep.id },
+          });
+        }
       } else if (step.type === 'BRANCH') {
         const branchResult = this.evaluateBranch(stepConfig, context);
         const childSteps = allSteps.filter(
@@ -430,7 +443,27 @@ export class AutomationExecutorService {
       }
     }
 
-    // Log all actions to AutomationLog
+    if (actionType !== 'UPDATE_STATUS' && actionType !== 'ADD_TAG') {
+      // FIX-07: Delegate unhandled action types to executeActions() instead of
+      // silently logging SENT. executeActions() handles SEND_MESSAGE, SEND_EMAIL,
+      // REQUEST_TESTIMONIAL, UPDATE_CUSTOMER_FIELD, WEBHOOK, SEND_TEMPLATE,
+      // ASSIGN_STAFF, and SEND_NOTIFICATION with proper delivery logic.
+      const rule = await this.prisma.automationRule.findUnique({
+        where: { id: execution.automationRuleId },
+      });
+      if (rule) {
+        await this.executeActions(
+          rule,
+          [{ type: actionType, ...config }],
+          execution.businessId,
+          execution.bookingId,
+          execution.customerId,
+        );
+        return; // executeActions handles its own logging
+      }
+    }
+
+    // Log only UPDATE_STATUS and ADD_TAG (handled directly above)
     await this.prisma.automationLog.create({
       data: {
         automationRuleId: execution.automationRuleId,
@@ -505,17 +538,22 @@ export class AutomationExecutorService {
     businessId: string,
     bookingId?: string,
     customerId?: string,
+    timezone: string = 'UTC',
   ) {
+    // FIX-10: Compute local midnight in the business's timezone (not server timezone)
+    const localMidnight = (() => {
+      const nowLocal = new Date(new Date().toLocaleString('en-US', { timeZone: timezone }));
+      return new Date(nowLocal.getFullYear(), nowLocal.getMonth(), nowLocal.getDate());
+    })();
+
     // Check per-rule frequency cap
     if (customerId && rule.maxPerCustomerPerDay > 0) {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
       const todayCount = await this.prisma.automationLog.count({
         where: {
           automationRuleId: rule.id,
           customerId,
           outcome: 'SENT',
-          createdAt: { gte: today },
+          createdAt: { gte: localMidnight },
         },
       });
       if (todayCount >= rule.maxPerCustomerPerDay) {
@@ -534,14 +572,12 @@ export class AutomationExecutorService {
 
     // M14 fix: Global per-customer cap across all rules
     if (customerId) {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
       const globalTodayCount = await this.prisma.automationLog.count({
         where: {
           customerId,
           businessId,
           outcome: 'SENT',
-          createdAt: { gte: today },
+          createdAt: { gte: localMidnight },
         },
       });
       if (globalTodayCount >= AutomationExecutorService.GLOBAL_MAX_PER_CUSTOMER_PER_DAY) {
@@ -577,6 +613,11 @@ export class AutomationExecutorService {
               // Render message template with customer data
               const messageContent = this.renderTemplate(action.body || action.message || '', {
                 customerName: customer.name || 'there',
+                customer: {
+                  name: customer.name || 'there',
+                  email: customer.email || '',
+                  phone: customer.phone || '',
+                },
               });
 
               await this.notificationQueue.add('automation-send', {
@@ -626,8 +667,12 @@ export class AutomationExecutorService {
               to: customer.email,
               subject: this.renderTemplate(action.subject, {
                 customerName: customer.name || 'there',
+                customer: { name: customer.name || 'there', email: customer.email || '' },
               }),
-              body: this.renderTemplate(action.body, { customerName: customer.name || 'there' }),
+              body: this.renderTemplate(action.body, {
+                customerName: customer.name || 'there',
+                customer: { name: customer.name || 'there', email: customer.email || '' },
+              }),
               businessId,
               customerId: customer.id,
             });
@@ -669,6 +714,65 @@ export class AutomationExecutorService {
           } finally {
             clearTimeout(timeout);
           }
+        }
+
+        // FIX-04: SEND_TEMPLATE — send a pre-approved message template
+        if (action.type === 'SEND_TEMPLATE' && action.templateId && this.notificationQueue) {
+          const customer = customerId
+            ? await this.prisma.customer.findUnique({
+                where: { id: customerId },
+                select: { id: true, name: true, phone: true, email: true },
+              })
+            : null;
+          if (customer) {
+            const channel = await this.resolveChannel(customer, businessId);
+            const address = channel === 'EMAIL' ? customer.email : customer.phone;
+            if (address) {
+              await this.notificationQueue.add('automation-template', {
+                to: address,
+                channel,
+                templateId: action.templateId,
+                variables: { customerName: customer.name || 'there', ...(action.variables || {}) },
+                businessId,
+                customerId: customer.id,
+                automationRuleId: rule.id,
+              });
+              this.usageService
+                .recordUsage(businessId, channel, 'OUTBOUND')
+                .catch((err) => this.logger.error(`Usage recording failed: ${err.message}`));
+            }
+          }
+        }
+
+        // FIX-04: ASSIGN_STAFF — assign a staff member to the customer's active conversation
+        if (action.type === 'ASSIGN_STAFF' && action.staffId) {
+          const conversation = customerId
+            ? await this.prisma.conversation.findFirst({
+                where: {
+                  businessId,
+                  customerId,
+                  status: { in: ['OPEN', 'WAITING'] },
+                },
+                orderBy: { lastMessageAt: 'desc' },
+              })
+            : null;
+          if (conversation) {
+            await this.prisma.conversation.update({
+              where: { id: conversation.id },
+              data: { assignedToId: action.staffId },
+            });
+          }
+        }
+
+        // FIX-04: SEND_NOTIFICATION — push notification to staff
+        if (action.type === 'SEND_NOTIFICATION' && action.message && this.notificationQueue) {
+          await this.notificationQueue.add('automation-notification', {
+            businessId,
+            title: action.title || 'Automation Notification',
+            message: this.renderTemplate(action.message, { customerName: 'Customer' }),
+            targetStaffId: action.staffId || null,
+            automationRuleId: rule.id,
+          });
         }
 
         await this.logAction(rule, businessId, bookingId, customerId, action.type, 'SENT');
@@ -729,6 +833,7 @@ export class AutomationExecutorService {
           context.businessId,
           context.bookingId,
           context.customerId,
+          timezone,
         );
       } catch (err: any) {
         this.logger.error(`Event trigger ${trigger} rule ${rule.id} failed: ${err.message}`);
@@ -737,9 +842,51 @@ export class AutomationExecutorService {
   }
 
   private matchesFilters(filters: Record<string, any>, context: Record<string, any>): boolean {
-    for (const [key, value] of Object.entries(filters)) {
-      if (context[key] !== undefined && context[key] !== value) {
-        return false;
+    for (const [key, filterValue] of Object.entries(filters)) {
+      const actual = context[key];
+      if (actual === undefined) continue; // Skip fields not present in context
+
+      // FIX-08: Support operator objects: { operator: 'gt', value: 100 }
+      if (typeof filterValue === 'object' && filterValue !== null && filterValue.operator) {
+        const { operator, value } = filterValue;
+        switch (operator) {
+          case 'eq':
+            if (actual !== value) return false;
+            break;
+          case 'neq':
+            if (actual === value) return false;
+            break;
+          case 'gt':
+            if (actual <= value) return false;
+            break;
+          case 'gte':
+            if (actual < value) return false;
+            break;
+          case 'lt':
+            if (actual >= value) return false;
+            break;
+          case 'lte':
+            if (actual > value) return false;
+            break;
+          case 'contains':
+            if (
+              typeof actual !== 'string' ||
+              !actual.toLowerCase().includes(String(value).toLowerCase())
+            )
+              return false;
+            break;
+          case 'in':
+            if (!Array.isArray(value) || !value.includes(actual)) return false;
+            break;
+          case 'not_in':
+            if (Array.isArray(value) && value.includes(actual)) return false;
+            break;
+          default:
+            if (actual !== value) return false; // Fallback to equality for unknown operators
+        }
+      } else {
+        // Backward compatible: plain value = strict equality
+        if (actual !== filterValue) return false;
       }
     }
     return true;
@@ -807,7 +954,12 @@ export class AutomationExecutorService {
     return 'WHATSAPP';
   }
 
-  private renderTemplate(template: string, vars: Record<string, string>): string {
-    return template.replace(/\{\{(\w+)\}\}/g, (_, key) => vars[key] || '');
+  private renderTemplate(template: string, vars: Record<string, any>): string {
+    return template.replace(/\{\{([\w.]+)\}\}/g, (_, path: string) => {
+      const value = path
+        .split('.')
+        .reduce((obj: any, key: string) => (obj != null ? obj[key] : undefined), vars);
+      return value != null ? String(value) : '';
+    });
   }
 }

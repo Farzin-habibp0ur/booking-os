@@ -86,7 +86,7 @@ export class RetentionAgentService implements BackgroundAgent, OnModuleInit {
           where: {
             businessId,
             type: 'RETENTION_DUE',
-            status: 'PENDING',
+            status: { in: ['PENDING', 'SNOOZED', 'APPROVED'] },
             customerId: customer.customerId,
           },
         });

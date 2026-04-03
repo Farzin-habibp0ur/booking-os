@@ -31,6 +31,11 @@ type Tab = 'playbooks' | 'rules' | 'logs';
 
 const OUTCOME_OPTIONS = ['SENT', 'SKIPPED', 'FAILED'] as const;
 
+// FIX-18: Triggers/actions that are not yet fully implemented.
+// Keep these arrays empty when the feature is live; add an entry to surface a warning in the UI.
+const UNIMPLEMENTED_TRIGGERS: string[] = [];
+const UNIMPLEMENTED_ACTIONS: string[] = [];
+
 /** Format "22:00" → "10:00 PM" */
 function formatTime12h(time: string): string {
   const [h, m] = time.split(':').map(Number);
@@ -276,6 +281,28 @@ export default function AutomationsPage() {
         </div>
       )}
 
+      {/* FIX-18: Warn about rules using unimplemented triggers or actions */}
+      {tab === 'rules' &&
+        !loading &&
+        rules.some(
+          (r) =>
+            UNIMPLEMENTED_TRIGGERS.includes(r.trigger) ||
+            (Array.isArray(r.actions) &&
+              r.actions.some((a: any) => UNIMPLEMENTED_ACTIONS.includes(a.type))),
+        ) && (
+          <div
+            className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800 flex items-start gap-2"
+            data-testid="unimplemented-warning"
+            role="alert"
+          >
+            <span className="text-amber-500 flex-shrink-0 mt-0.5">⚠</span>
+            <span>
+              One or more of your rules use triggers or actions that are not yet fully implemented.
+              These rules will be skipped at runtime until the feature is available.
+            </span>
+          </div>
+        )}
+
       {/* Custom Rules */}
       {tab === 'rules' && (
         <div className="bg-white rounded-2xl shadow-soft overflow-hidden">
@@ -510,18 +537,50 @@ export default function AutomationsPage() {
                           <td className="p-3 text-sm font-medium">{log.rule?.name || '—'}</td>
                           <td className="p-3 text-sm text-slate-600">{log.action}</td>
                           <td className="p-3">
-                            <span
-                              className={cn(
-                                'text-xs px-2 py-0.5 rounded-full',
-                                log.outcome === 'SENT'
-                                  ? 'bg-sage-50 text-sage-700'
+                            <div className="flex items-center gap-2">
+                              <span
+                                className={cn(
+                                  'text-xs px-2 py-0.5 rounded-full',
+                                  log.outcome === 'SENT'
+                                    ? 'bg-sage-50 text-sage-700'
+                                    : log.outcome === 'SKIPPED'
+                                      ? 'bg-amber-50 text-amber-700'
+                                      : 'bg-red-50 text-red-700',
+                                )}
+                              >
+                                {log.outcome === 'SENT'
+                                  ? '✓'
                                   : log.outcome === 'SKIPPED'
-                                    ? 'bg-amber-50 text-amber-700'
-                                    : 'bg-red-50 text-red-700',
+                                    ? '⏭'
+                                    : '✗'}{' '}
+                                {log.outcome}
+                              </span>
+                              {/* Step progress dots for multi-step automations */}
+                              {log.rule?.steps?.length > 1 && (
+                                <div
+                                  className="flex items-center gap-0.5"
+                                  aria-label="Step progress"
+                                >
+                                  {log.rule.steps.map((step: any, idx: number) => {
+                                    const isLast = idx === log.rule.steps.length - 1;
+                                    const dotClass = isLast
+                                      ? log.outcome === 'SENT'
+                                        ? 'bg-sage-500'
+                                        : log.outcome === 'SKIPPED'
+                                          ? 'bg-amber-400'
+                                          : 'bg-red-500'
+                                      : 'bg-sage-500';
+                                    return (
+                                      <span
+                                        key={step.id}
+                                        className={cn('w-2 h-2 rounded-full', dotClass)}
+                                        title={step.type}
+                                      />
+                                    );
+                                  })}
+                                </div>
                               )}
-                            >
-                              {log.outcome}
-                            </span>
+                            </div>
                             {log.reason && (
                               <span className="text-xs text-slate-400 ml-1">{log.reason}</span>
                             )}

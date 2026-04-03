@@ -94,7 +94,7 @@ export class WaitlistAgentService implements BackgroundAgent, OnModuleInit {
           where: {
             businessId,
             type: 'WAITLIST_MATCH',
-            status: 'PENDING',
+            status: { in: ['PENDING', 'SNOOZED', 'APPROVED'] },
             customerId: entry.customerId,
             metadata: {
               path: ['waitlistEntryId'],

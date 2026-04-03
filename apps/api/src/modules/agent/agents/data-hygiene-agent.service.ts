@@ -151,7 +151,7 @@ export class DataHygieneAgentService implements BackgroundAgent, OnModuleInit {
 
   async findDuplicates(businessId: string, batchSize: number): Promise<DuplicatePair[]> {
     const customers = await this.prisma.customer.findMany({
-      where: { businessId },
+      where: { businessId, deletedAt: null },
       select: { id: true, name: true, phone: true, email: true },
       orderBy: { createdAt: 'asc' },
       take: batchSize,
@@ -159,19 +159,48 @@ export class DataHygieneAgentService implements BackgroundAgent, OnModuleInit {
 
     const duplicates: DuplicatePair[] = [];
 
-    // Compare each pair for potential duplicates
-    for (let i = 0; i < customers.length; i++) {
-      for (let j = i + 1; j < customers.length; j++) {
-        const match = this.compareCustomers(customers[i], customers[j]);
-        if (match) {
-          duplicates.push(match);
+    // FIX-11: Phase 1 — Group by normalized phone (O(n) vs O(n²)) and compare within groups
+    const phoneGroups = new Map<string, typeof customers>();
+    for (const c of customers) {
+      if (c.phone) {
+        const key = this.normalizePhone(c.phone);
+        const group = phoneGroups.get(key) || [];
+        group.push(c);
+        phoneGroups.set(key, group);
+      }
+    }
+    for (const group of phoneGroups.values()) {
+      if (group.length < 2) continue;
+      for (let i = 0; i < group.length; i++) {
+        for (let j = i + 1; j < group.length; j++) {
+          const match = this.compareCustomers(group[i], group[j]);
+          if (match) duplicates.push(match);
         }
       }
     }
 
-    // Sort by confidence (highest first)
-    duplicates.sort((a, b) => b.confidence - a.confidence);
+    // Phase 2 — Email-based grouping for customers not already matched
+    const alreadyMatched = new Set(duplicates.flatMap((d) => [d.customer1.id, d.customer2.id]));
+    const emailGroups = new Map<string, typeof customers>();
+    for (const c of customers) {
+      if (c.email && !alreadyMatched.has(c.id)) {
+        const key = c.email.toLowerCase();
+        const group = emailGroups.get(key) || [];
+        group.push(c);
+        emailGroups.set(key, group);
+      }
+    }
+    for (const group of emailGroups.values()) {
+      if (group.length < 2) continue;
+      for (let i = 0; i < group.length; i++) {
+        for (let j = i + 1; j < group.length; j++) {
+          const match = this.compareCustomers(group[i], group[j]);
+          if (match) duplicates.push(match);
+        }
+      }
+    }
 
+    duplicates.sort((a, b) => b.confidence - a.confidence);
     return duplicates;
   }
 

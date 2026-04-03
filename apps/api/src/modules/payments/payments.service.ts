@@ -1,13 +1,28 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  Optional,
+  Inject,
+  forwardRef,
+} from '@nestjs/common';
 import { PrismaService } from '../../common/prisma.service';
 import { CreatePaymentDto, ListPaymentsDto, UpdatePaymentDto } from './dto';
+import { AutomationExecutorService } from '../automation/automation-executor.service';
 
 @Injectable()
 export class PaymentsService {
-  constructor(private prisma: PrismaService) {}
+  private readonly logger = new Logger(PaymentsService.name);
+
+  constructor(
+    private prisma: PrismaService,
+    @Optional()
+    @Inject(forwardRef(() => AutomationExecutorService))
+    private automationExecutor?: AutomationExecutorService,
+  ) {}
 
   async create(businessId: string, data: CreatePaymentDto, recordedById: string) {
-    return this.prisma.payment.create({
+    const payment = await this.prisma.payment.create({
       data: {
         businessId,
         bookingId: data.bookingId,
@@ -23,6 +38,20 @@ export class PaymentsService {
         customer: true,
       },
     });
+
+    if (this.automationExecutor) {
+      this.automationExecutor
+        .evaluateTrigger('PAYMENT_RECEIVED', {
+          businessId,
+          customerId: data.customerId,
+          bookingId: data.bookingId,
+          amount: payment.amount,
+          paymentMethod: payment.method,
+        })
+        .catch((err) => this.logger.warn(`PAYMENT_RECEIVED trigger failed: ${err.message}`));
+    }
+
+    return payment;
   }
 
   async findAll(businessId: string, query: ListPaymentsDto) {

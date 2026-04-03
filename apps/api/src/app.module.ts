@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { DistributedLockModule } from './common/distributed-lock.module';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule } from '@nestjs/throttler';
@@ -197,6 +198,7 @@ import { PushNotificationModule } from './modules/push-notification/push-notific
     DeviceTokenModule,
     PushNotificationModule,
     process.env.REDIS_URL ? QueueModule.forRootWithRedis() : QueueModule.forRoot(),
+    DistributedLockModule,
   ],
 })
 export class AppModule {}

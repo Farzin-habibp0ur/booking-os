@@ -20,10 +20,16 @@ export default function AILayout({ children }: { children: React.ReactNode }) {
   const [actionCount, setActionCount] = useState<number>(0);
 
   useEffect(() => {
+    let aborted = false;
     api
       .get<{ count: number }>('/action-cards/count')
-      .then((data) => setActionCount(data.count ?? 0))
+      .then((data) => {
+        if (!aborted) setActionCount(data.count ?? 0);
+      })
       .catch(() => {});
+    return () => {
+      aborted = true;
+    };
   }, []);
 
   return (

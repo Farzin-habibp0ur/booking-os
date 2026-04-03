@@ -46,6 +46,10 @@ export class ActionCardExecutorService {
         return this.handleRetryAi(businessId, actionCard);
       case 'reply_manually':
         return this.handleReplyManually(businessId, actionCard);
+      case 'check_waitlist':
+        return this.handleCheckWaitlist(businessId, actionCard);
+      case 'merge':
+        return this.handleMerge(businessId, actionCard);
       case 'dismiss':
         return { success: true, action: 'dismiss' };
       default:
@@ -336,6 +340,110 @@ export class ActionCardExecutorService {
       this.logger.error(`Failed to create conversation: ${err.message}`);
       return null;
     }
+  }
+
+  // FIX-05: check_waitlist — find ACTIVE waitlist entries that match a scheduling gap
+  private async handleCheckWaitlist(businessId: string, actionCard: any): Promise<ExecutionResult> {
+    const metadata = (actionCard.metadata as any) || {};
+    const gapDate = metadata.date;
+    const gapStaffId = metadata.staffId;
+
+    if (!gapDate) {
+      return { success: false, action: 'check_waitlist', error: 'No date in card metadata' };
+    }
+
+    const entries = await this.prisma.waitlistEntry.findMany({
+      where: {
+        businessId,
+        status: 'ACTIVE',
+        AND: [
+          ...(gapStaffId ? [{ OR: [{ staffId: gapStaffId }, { staffId: null }] }] : []),
+          {
+            OR: [
+              { dateFrom: null },
+              { dateFrom: { lte: new Date(gapDate) }, dateTo: { gte: new Date(gapDate) } },
+            ],
+          },
+        ],
+      },
+      include: { customer: true, service: true },
+      take: 10,
+    });
+
+    if (entries.length === 0) {
+      return {
+        success: true,
+        action: 'check_waitlist',
+        error: 'No matching waitlist entries found',
+      };
+    }
+
+    this.inboxGateway.emitToBusinessRoom(businessId, 'action-card:updated', {
+      actionCardId: actionCard.id,
+      waitlistMatches: entries.map((e: any) => ({
+        id: e.id,
+        customerName: e.customer.name,
+        serviceName: e.service.name,
+        customerId: e.customerId,
+      })),
+    });
+
+    return { success: true, action: 'check_waitlist' };
+  }
+
+  // FIX-06: merge — re-point all relations from secondary customer to primary, then soft-delete
+  private async handleMerge(businessId: string, actionCard: any): Promise<ExecutionResult> {
+    const preview = (actionCard.preview as any) || {};
+    const primaryId = preview.customer1?.id;
+    const secondaryId = preview.customer2?.id;
+
+    if (!primaryId || !secondaryId) {
+      return { success: false, action: 'merge', error: 'Missing customer IDs for merge' };
+    }
+
+    const [primary, secondary] = await Promise.all([
+      this.prisma.customer.findFirst({ where: { id: primaryId, businessId } }),
+      this.prisma.customer.findFirst({ where: { id: secondaryId, businessId } }),
+    ]);
+
+    if (!primary || !secondary) {
+      return { success: false, action: 'merge', error: 'One or both customers not found' };
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.booking.updateMany({
+        where: { customerId: secondaryId, businessId },
+        data: { customerId: primaryId },
+      });
+      await tx.conversation.updateMany({
+        where: { customerId: secondaryId, businessId },
+        data: { customerId: primaryId },
+      });
+      await tx.actionCard.updateMany({
+        where: { customerId: secondaryId, businessId },
+        data: { customerId: primaryId },
+      });
+
+      const primaryTags = (primary.tags || []) as string[];
+      const secondaryTags = (secondary.tags || []) as string[];
+      const mergedTags = [...new Set([...primaryTags, ...secondaryTags])];
+
+      await tx.customer.update({
+        where: { id: primaryId },
+        data: {
+          tags: mergedTags,
+          ...(!primary.email && secondary.email && { email: secondary.email }),
+          ...(!primary.phone && secondary.phone && { phone: secondary.phone }),
+        },
+      });
+
+      await tx.customer.update({
+        where: { id: secondaryId },
+        data: { deletedAt: new Date() },
+      });
+    });
+
+    return { success: true, action: 'merge' };
   }
 
   private generateFallbackMessage(actionCard: any, customer: any): string {

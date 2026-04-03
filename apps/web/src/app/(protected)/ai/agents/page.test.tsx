@@ -75,6 +75,7 @@ const mockRuns = {
       startedAt: '2026-03-09T09:00:00Z',
       completedAt: '2026-03-09T09:00:02Z',
       cardsCreated: 0,
+      error: 'Database connection timeout',
     },
   ],
 };
@@ -176,6 +177,49 @@ describe('AIAgentsPage', () => {
     render(<AIAgentsPage />);
     await waitFor(() => {
       expect(screen.getByText('No Core Agents')).toBeInTheDocument();
+    });
+  });
+
+  describe('FIX-16: agent run error details', () => {
+    it('shows error message for failed run in history', async () => {
+      render(<AIAgentsPage />);
+      await waitFor(() => screen.getByTestId('expand-WAITLIST'));
+
+      fireEvent.click(screen.getByTestId('expand-WAITLIST'));
+
+      await waitFor(() => {
+        expect(screen.getByTestId('run-error-run-2')).toBeInTheDocument();
+        expect(screen.getByText(/Database connection timeout/)).toBeInTheDocument();
+      });
+    });
+
+    it('does not show error div for successful run', async () => {
+      render(<AIAgentsPage />);
+      await waitFor(() => screen.getByTestId('expand-WAITLIST'));
+
+      fireEvent.click(screen.getByTestId('expand-WAITLIST'));
+
+      await waitFor(() => {
+        expect(screen.queryByTestId('run-error-run-1')).not.toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('FIX-12: no state updates after unmount', () => {
+    it('unmounts without errors when data is loading', () => {
+      // Delay the mock so state would be set after unmount
+      let resolve: (val: any) => void;
+      mockGet.mockImplementation(
+        () =>
+          new Promise((r) => {
+            resolve = r;
+          }),
+      );
+
+      const { unmount } = render(<AIAgentsPage />);
+      unmount();
+      // Resolve after unmount — should not trigger setState warnings
+      resolve!(mockCoreAgents);
     });
   });
 });

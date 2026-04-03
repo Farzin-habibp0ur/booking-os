@@ -1,12 +1,14 @@
 import { Test } from '@nestjs/testing';
 import { AgentFrameworkService, BackgroundAgent } from './agent-framework.service';
 import { PrismaService } from '../../common/prisma.service';
+import { DistributedLockService } from '../../common/distributed-lock.service';
 import { createMockPrisma } from '../../test/mocks';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 
 describe('AgentFrameworkService', () => {
   let service: AgentFrameworkService;
   let prisma: ReturnType<typeof createMockPrisma>;
+  let mockLockService: { acquire: jest.Mock };
 
   const mockAgent: BackgroundAgent = {
     agentType: 'WAITLIST',
@@ -16,8 +18,16 @@ describe('AgentFrameworkService', () => {
 
   beforeEach(async () => {
     prisma = createMockPrisma();
+    // Default: lock is always acquired successfully (returns unlock fn)
+    mockLockService = {
+      acquire: jest.fn().mockResolvedValue(jest.fn().mockResolvedValue(undefined)),
+    };
     const module = await Test.createTestingModule({
-      providers: [AgentFrameworkService, { provide: PrismaService, useValue: prisma }],
+      providers: [
+        AgentFrameworkService,
+        { provide: PrismaService, useValue: prisma },
+        { provide: DistributedLockService, useValue: mockLockService },
+      ],
     }).compile();
 
     service = module.get(AgentFrameworkService);
@@ -137,6 +147,7 @@ describe('AgentFrameworkService', () => {
         isEnabled: true,
         config: { maxCards: 5 },
       } as any);
+      prisma.actionCard.count.mockResolvedValue(0); // under daily cap
       prisma.agentRun.create.mockResolvedValue({ id: 'run1', status: 'RUNNING' } as any);
       prisma.agentRun.update.mockResolvedValue({
         id: 'run1',
@@ -163,6 +174,7 @@ describe('AgentFrameworkService', () => {
         isEnabled: true,
         config: {},
       } as any);
+      prisma.actionCard.count.mockResolvedValue(0);
       prisma.agentRun.create.mockResolvedValue({ id: 'run1', status: 'RUNNING' } as any);
       prisma.agentRun.update.mockResolvedValue({
         id: 'run1',
@@ -174,6 +186,103 @@ describe('AgentFrameworkService', () => {
 
       expect(result.status).toBe('FAILED');
       expect(result.error).toBe('Agent crashed');
+    });
+
+    it('throws BadRequestException when distributed lock is already held', async () => {
+      service.registerAgent(mockAgent);
+      prisma.agentConfig.findUnique.mockResolvedValue({
+        id: 'ac1',
+        isEnabled: true,
+        config: {},
+      } as any);
+      prisma.actionCard.count.mockResolvedValue(0);
+      // Simulate lock already held by another instance
+      mockLockService.acquire.mockResolvedValue(null);
+
+      await expect(service.triggerAgent('biz1', 'WAITLIST')).rejects.toThrow(BadRequestException);
+      // Should not create a run record if lock was not acquired
+      expect(prisma.agentRun.create).not.toHaveBeenCalled();
+    });
+
+    it('releases lock even when agent execution fails', async () => {
+      const failingAgent: BackgroundAgent = {
+        agentType: 'CRASHING',
+        execute: jest.fn().mockRejectedValue(new Error('crash')),
+        validateConfig: jest.fn().mockReturnValue(true),
+      };
+      service.registerAgent(failingAgent);
+      prisma.agentConfig.findUnique.mockResolvedValue({
+        id: 'ac1',
+        isEnabled: true,
+        config: {},
+      } as any);
+      prisma.actionCard.count.mockResolvedValue(0);
+      prisma.agentRun.create.mockResolvedValue({ id: 'run1' } as any);
+      prisma.agentRun.update.mockResolvedValue({ id: 'run1', status: 'FAILED' } as any);
+      const unlock = jest.fn().mockResolvedValue(undefined);
+      mockLockService.acquire.mockResolvedValue(unlock);
+
+      await service.triggerAgent('biz1', 'CRASHING');
+
+      expect(unlock).toHaveBeenCalled();
+    });
+
+    describe('FIX-19: daily card cap', () => {
+      it('throws BadRequestException when daily cap reached', async () => {
+        service.registerAgent(mockAgent);
+        prisma.agentConfig.findUnique.mockResolvedValue({
+          id: 'ac1',
+          isEnabled: true,
+          config: { dailyCardCap: 10 },
+        } as any);
+        // Exactly at cap
+        prisma.actionCard.count.mockResolvedValue(10);
+
+        await expect(service.triggerAgent('biz1', 'WAITLIST')).rejects.toThrow(BadRequestException);
+        expect(prisma.agentRun.create).not.toHaveBeenCalled();
+      });
+
+      it('uses default cap of 50 when not configured', async () => {
+        service.registerAgent(mockAgent);
+        prisma.agentConfig.findUnique.mockResolvedValue({
+          id: 'ac1',
+          isEnabled: true,
+          config: {},
+        } as any);
+        // 49 is under the default cap of 50
+        prisma.actionCard.count.mockResolvedValue(49);
+        prisma.agentRun.create.mockResolvedValue({ id: 'run1' } as any);
+        prisma.agentRun.update.mockResolvedValue({
+          id: 'run1',
+          status: 'COMPLETED',
+          cardsCreated: 1,
+        } as any);
+
+        await expect(service.triggerAgent('biz1', 'WAITLIST')).resolves.toBeDefined();
+      });
+
+      it('does not cap unknown agent types (no card type mapping)', async () => {
+        const unknownAgent: BackgroundAgent = {
+          agentType: 'CUSTOM_AGENT',
+          execute: jest.fn().mockResolvedValue({ cardsCreated: 0 }),
+          validateConfig: jest.fn().mockReturnValue(true),
+        };
+        service.registerAgent(unknownAgent);
+        prisma.agentConfig.findUnique.mockResolvedValue({
+          id: 'ac1',
+          isEnabled: true,
+          config: {},
+        } as any);
+        // count would throw if called (we don't set it up)
+        prisma.agentRun.create.mockResolvedValue({ id: 'run1' } as any);
+        prisma.agentRun.update.mockResolvedValue({
+          id: 'run1',
+          status: 'COMPLETED',
+          cardsCreated: 0,
+        } as any);
+
+        await expect(service.triggerAgent('biz1', 'CUSTOM_AGENT')).resolves.toBeDefined();
+      });
     });
   });
 

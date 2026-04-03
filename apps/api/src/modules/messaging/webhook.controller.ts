@@ -31,6 +31,7 @@ import { MessagingService } from './messaging.service';
 import { MessageService } from '../message/message.service';
 import { AiService } from '../ai/ai.service';
 import { UsageService } from '../usage/usage.service';
+import { AutomationExecutorService } from '../automation/automation-executor.service';
 import { QUEUE_NAMES } from '../../common/queue/queue.module';
 import { WebhookInboundDto } from '../../common/dto';
 import {
@@ -60,6 +61,9 @@ export class WebhookController {
     @Inject(forwardRef(() => AiService)) private aiService: AiService,
     private usageService: UsageService,
     @Optional() @InjectQueue(QUEUE_NAMES.AI_PROCESSING) private aiQueue?: Queue,
+    @Optional()
+    @Inject(forwardRef(() => AutomationExecutorService))
+    private automationExecutor?: AutomationExecutorService,
   ) {}
 
   private verifyHmac(body: string, signature: string | undefined): boolean {
@@ -353,6 +357,18 @@ export class WebhookController {
     this.usageService
       .recordUsage(business.id, channel, 'INBOUND')
       .catch((err) => this.logger.error(`Usage recording failed: ${err.message}`));
+
+    if (this.automationExecutor) {
+      this.automationExecutor
+        .evaluateTrigger('MESSAGE_RECEIVED', {
+          businessId: business.id,
+          customerId: customer.id,
+          conversationId: conversation.id,
+          messageId: message.id,
+          channel,
+        })
+        .catch((err) => this.logger.warn(`MESSAGE_RECEIVED trigger failed: ${err.message}`));
+    }
 
     return { conversationId: conversation.id, messageId: message.id };
   }

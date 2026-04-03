@@ -157,6 +157,7 @@ export function ActionCard({
               onClick={() => onSnooze(card.id)}
               className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
               title="Snooze"
+              aria-label={card.customer ? `Snooze card for ${card.customer.name}` : 'Snooze card'}
               data-testid={`snooze-${card.id}`}
             >
               <Clock size={14} />
@@ -167,6 +168,7 @@ export function ActionCard({
               onClick={() => onDismiss(card.id)}
               className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
               title="Dismiss"
+              aria-label={card.customer ? `Dismiss card for ${card.customer.name}` : 'Dismiss card'}
               data-testid={`dismiss-${card.id}`}
             >
               <X size={14} />
@@ -175,6 +177,9 @@ export function ActionCard({
           {onApprove && (
             <button
               onClick={() => onApprove(card.id)}
+              aria-label={
+                card.customer ? `Approve action for ${card.customer.name}` : 'Approve action'
+              }
               className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-xl bg-sage-600 text-white hover:bg-sage-700 transition-colors"
               data-testid={`approve-${card.id}`}
             >
@@ -184,6 +189,9 @@ export function ActionCard({
           {hasSuggestedMessages && onExecuteCta && (
             <button
               onClick={() => onExecuteCta(card.id, 'send_followup')}
+              aria-label={
+                card.customer ? `Send follow-up to ${card.customer.name}` : 'Send follow-up'
+              }
               className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-xl bg-sage-600 text-white hover:bg-sage-700 transition-colors"
               data-testid={`send-followup-${card.id}`}
             >
@@ -193,6 +201,9 @@ export function ActionCard({
           {onExecute && !hasSuggestedMessages && (
             <button
               onClick={() => onExecute(card.id)}
+              aria-label={
+                card.customer ? `Execute action for ${card.customer.name}` : 'Execute action'
+              }
               className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-xl bg-lavender-600 text-white hover:bg-lavender-700 transition-colors"
               data-testid={`execute-${card.id}`}
             >

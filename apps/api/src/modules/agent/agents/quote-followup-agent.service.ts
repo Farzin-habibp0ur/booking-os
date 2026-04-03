@@ -73,7 +73,7 @@ export class QuoteFollowupAgentService implements BackgroundAgent, OnModuleInit 
           where: {
             businessId,
             type: 'STALLED_QUOTE',
-            status: 'PENDING',
+            status: { in: ['PENDING', 'SNOOZED', 'APPROVED'] },
             metadata: {
               path: ['quoteId'],
               equals: quote.id,

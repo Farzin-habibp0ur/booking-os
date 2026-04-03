@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Send } from 'lucide-react';
 import { ActionCard, ActionCardData } from './action-card';
+import BulkActionBar from '@/components/bulk-action-bar';
 
 const CATEGORY_ORDER = ['URGENT_TODAY', 'NEEDS_APPROVAL', 'OPPORTUNITY', 'HYGIENE'];
 const CATEGORY_LABELS: Record<string, string> = {
@@ -21,6 +22,8 @@ interface ActionCardListProps {
   onExecuteCta?: (id: string, ctaAction: string) => Promise<void>;
   onPreview?: (card: ActionCardData) => void;
   onBulkFollowUp?: (cardIds: string[]) => Promise<void>;
+  onBulkDismiss?: (cardIds: string[]) => Promise<void>;
+  onBulkSnooze?: (cardIds: string[]) => Promise<void>;
   filterCategory?: string;
   grouped?: boolean;
   compact?: boolean;
@@ -35,6 +38,8 @@ export function ActionCardList({
   onExecuteCta,
   onPreview,
   onBulkFollowUp,
+  onBulkDismiss,
+  onBulkSnooze,
   filterCategory,
   grouped = true,
   compact = false,
@@ -42,6 +47,7 @@ export function ActionCardList({
   const [activeFilter, setActiveFilter] = useState<string | undefined>(filterCategory);
   const [bulkSending, setBulkSending] = useState(false);
   const [showBulkConfirm, setShowBulkConfirm] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const filtered = activeFilter ? cards.filter((c) => c.category === activeFilter) : cards;
 
@@ -64,6 +70,43 @@ export function ActionCardList({
     }
   };
 
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const clearSelection = () => setSelectedIds(new Set());
+
+  const bulkActions = [
+    ...(onBulkDismiss
+      ? [
+          {
+            label: 'Dismiss Selected',
+            onClick: async () => {
+              await onBulkDismiss(Array.from(selectedIds));
+              clearSelection();
+            },
+            variant: 'danger' as const,
+          },
+        ]
+      : []),
+    ...(onBulkSnooze
+      ? [
+          {
+            label: 'Snooze Selected',
+            onClick: async () => {
+              await onBulkSnooze(Array.from(selectedIds));
+              clearSelection();
+            },
+          },
+        ]
+      : []),
+  ];
+
   if (grouped) {
     const groups = CATEGORY_ORDER.map((cat) => ({
       category: cat,
@@ -74,9 +117,16 @@ export function ActionCardList({
     return (
       <div data-testid="action-card-list" className="space-y-6">
         {/* Filter chips */}
-        <div className="flex items-center gap-2 flex-wrap">
+        <div
+          className="flex items-center gap-2 flex-wrap"
+          role="radiogroup"
+          aria-label="Filter action cards by category"
+        >
           <button
             onClick={() => setActiveFilter(undefined)}
+            role="radio"
+            aria-checked={!activeFilter}
+            aria-label="Show all action cards"
             className={`text-xs px-3 py-1 rounded-full transition-colors ${
               !activeFilter
                 ? 'bg-slate-900 text-white'
@@ -93,6 +143,9 @@ export function ActionCardList({
               <button
                 key={cat}
                 onClick={() => setActiveFilter(activeFilter === cat ? undefined : cat)}
+                role="radio"
+                aria-checked={activeFilter === cat}
+                aria-label={`Filter by ${CATEGORY_LABELS[cat]} cards`}
                 className={`text-xs px-3 py-1 rounded-full transition-colors ${
                   activeFilter === cat
                     ? 'bg-slate-900 text-white'
@@ -147,17 +200,30 @@ export function ActionCardList({
             </h3>
             <div className="space-y-3">
               {group.items.map((card) => (
-                <ActionCard
-                  key={card.id}
-                  card={card}
-                  onApprove={onApprove}
-                  onDismiss={onDismiss}
-                  onSnooze={onSnooze}
-                  onExecute={onExecute}
-                  onExecuteCta={onExecuteCta}
-                  onPreview={onPreview}
-                  compact={compact}
-                />
+                <div key={card.id} className="flex items-start gap-2">
+                  {(onBulkDismiss || onBulkSnooze) && card.status === 'PENDING' && (
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(card.id)}
+                      onChange={() => toggleSelect(card.id)}
+                      aria-label={`Select card: ${card.title}`}
+                      className="mt-4 rounded border-slate-300 text-sage-600 focus:ring-sage-500"
+                      data-testid={`select-${card.id}`}
+                    />
+                  )}
+                  <div className="flex-1">
+                    <ActionCard
+                      card={card}
+                      onApprove={onApprove}
+                      onDismiss={onDismiss}
+                      onSnooze={onSnooze}
+                      onExecute={onExecute}
+                      onExecuteCta={onExecuteCta}
+                      onPreview={onPreview}
+                      compact={compact}
+                    />
+                  </div>
+                </div>
               ))}
             </div>
           </div>
@@ -168,6 +234,8 @@ export function ActionCardList({
             No action cards
           </p>
         )}
+
+        <BulkActionBar count={selectedIds.size} onClear={clearSelection} actions={bulkActions} />
       </div>
     );
   }
@@ -175,23 +243,37 @@ export function ActionCardList({
   return (
     <div data-testid="action-card-list" className="space-y-3">
       {filtered.map((card) => (
-        <ActionCard
-          key={card.id}
-          card={card}
-          onApprove={onApprove}
-          onDismiss={onDismiss}
-          onSnooze={onSnooze}
-          onExecute={onExecute}
-          onExecuteCta={onExecuteCta}
-          onPreview={onPreview}
-          compact={compact}
-        />
+        <div key={card.id} className="flex items-start gap-2">
+          {(onBulkDismiss || onBulkSnooze) && card.status === 'PENDING' && (
+            <input
+              type="checkbox"
+              checked={selectedIds.has(card.id)}
+              onChange={() => toggleSelect(card.id)}
+              aria-label={`Select card: ${card.title}`}
+              className="mt-4 rounded border-slate-300 text-sage-600 focus:ring-sage-500"
+              data-testid={`select-${card.id}`}
+            />
+          )}
+          <div className="flex-1">
+            <ActionCard
+              card={card}
+              onApprove={onApprove}
+              onDismiss={onDismiss}
+              onSnooze={onSnooze}
+              onExecute={onExecute}
+              onExecuteCta={onExecuteCta}
+              onPreview={onPreview}
+              compact={compact}
+            />
+          </div>
+        </div>
       ))}
       {filtered.length === 0 && (
         <p className="text-sm text-slate-400 text-center py-8" data-testid="empty-state">
           No action cards
         </p>
       )}
+      <BulkActionBar count={selectedIds.size} onClear={clearSelection} actions={bulkActions} />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma.service';
+import { DistributedLockService } from '../../common/distributed-lock.service';
 
 export interface BackgroundAgent {
   agentType: string;
@@ -12,7 +13,10 @@ export class AgentFrameworkService {
   private readonly logger = new Logger(AgentFrameworkService.name);
   private readonly agents = new Map<string, BackgroundAgent>();
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private lockService: DistributedLockService,
+  ) {}
 
   registerAgent(agent: BackgroundAgent) {
     this.agents.set(agent.agentType, agent);
@@ -77,6 +81,35 @@ export class AgentFrameworkService {
       throw new BadRequestException(`Agent ${agentType} is not enabled for this business`);
     }
 
+    // FIX-19: Daily card cap — prevent agents from creating unbounded cards per day
+    const AGENT_CARD_TYPE_MAP: Record<string, string> = {
+      WAITLIST: 'WAITLIST_MATCH',
+      RETENTION: 'RETENTION_DUE',
+      DATA_HYGIENE: 'DUPLICATE_CUSTOMER',
+      SCHEDULING_OPTIMIZER: 'SCHEDULE_GAP',
+      QUOTE_FOLLOWUP: 'STALLED_QUOTE',
+    };
+    const cardType = AGENT_CARD_TYPE_MAP[agentType];
+    if (cardType) {
+      const dailyCardCap: number = (config.config as any)?.dailyCardCap ?? 50;
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      const todayCount = await this.prisma.actionCard.count({
+        where: { businessId, type: cardType, createdAt: { gte: todayStart } },
+      });
+      if (todayCount >= dailyCardCap) {
+        throw new BadRequestException(
+          `Agent ${agentType} has reached its daily card cap of ${dailyCardCap}`,
+        );
+      }
+    }
+
+    const lockKey = `agent-lock:${businessId}:${agentType}`;
+    const unlock = await this.lockService.acquire(lockKey, 120_000); // 2-minute TTL
+    if (!unlock) {
+      throw new BadRequestException(`Agent ${agentType} is already running for this business`);
+    }
+
     const run = await this.prisma.agentRun.create({
       data: { businessId, agentType, status: 'RUNNING' },
     });
@@ -125,6 +158,8 @@ export class AgentFrameworkService {
       this.logger.error(`Agent ${agentType} failed for business ${businessId}: ${err.message}`);
 
       return failed;
+    } finally {
+      await unlock();
     }
   }
 

@@ -255,7 +255,12 @@ export class AutomationService {
         take: pageSize,
         orderBy: { createdAt: 'desc' },
         include: {
-          rule: { select: { name: true } },
+          rule: {
+            select: {
+              name: true,
+              steps: { select: { id: true, type: true, order: true }, orderBy: { order: 'asc' } },
+            },
+          },
         },
       }),
       this.prisma.automationLog.count({ where }),
