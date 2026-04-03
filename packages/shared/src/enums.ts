@@ -72,17 +72,5 @@ export enum ServiceKind {
 
 export enum VerticalPack {
   AESTHETIC = 'aesthetic',
-  SALON = 'salon',
-  TUTORING = 'tutoring',
   GENERAL = 'general',
-  DEALERSHIP = 'dealership',
-  WELLNESS = 'wellness',
-}
-
-export enum KanbanStatus {
-  CHECKED_IN = 'CHECKED_IN',
-  DIAGNOSING = 'DIAGNOSING',
-  AWAITING_APPROVAL = 'AWAITING_APPROVAL',
-  IN_PROGRESS = 'IN_PROGRESS',
-  READY_FOR_PICKUP = 'READY_FOR_PICKUP',
 }
