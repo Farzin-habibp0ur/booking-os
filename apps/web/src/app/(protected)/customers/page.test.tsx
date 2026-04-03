@@ -719,6 +719,35 @@ describe('CustomersPage', () => {
 
       expect(mockPush).toHaveBeenCalledWith('/customers/c2');
     });
+
+    it('clicking the row (outside name) also triggers navigation', async () => {
+      const user = userEvent.setup();
+      setupApiWithCustomers();
+      render(<CustomersPage />);
+
+      await waitFor(() => {
+        expect(screen.getByText('emma@test.com')).toBeInTheDocument();
+      });
+
+      // Click the email cell (plain td, no separate onClick — relies on row handler)
+      await user.click(screen.getByText('emma@test.com'));
+      expect(mockPush).toHaveBeenCalledWith('/customers/c1');
+    });
+
+    it('clicking the checkbox does NOT trigger row navigation', async () => {
+      const user = userEvent.setup();
+      setupApiWithCustomers();
+      render(<CustomersPage />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Emma Stone')).toBeInTheDocument();
+      });
+
+      const checkboxes = screen.getAllByRole('checkbox');
+      // First checkbox is "select all", second is the first customer row
+      await user.click(checkboxes[1]);
+      expect(mockPush).not.toHaveBeenCalled();
+    });
   });
 
   // =============================

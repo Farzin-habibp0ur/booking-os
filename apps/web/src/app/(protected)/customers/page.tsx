@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useToast } from '@/lib/toast';
@@ -377,6 +378,7 @@ export default function CustomersPage() {
                 : sortedCustomerList.map((c: any, idx: number) => (
                     <tr
                       key={c.id}
+                      onClick={() => router.push(`/customers/${c.id}`)}
                       className={cn(
                         'hover:bg-slate-50 cursor-pointer',
                         selectedIds.has(c.id) && 'bg-sage-50/50',
@@ -391,25 +393,14 @@ export default function CustomersPage() {
                           className="rounded text-sage-600"
                         />
                       </td>
-                      <td
-                        className="p-3 text-sm font-medium"
-                        onClick={() => router.push(`/customers/${c.id}`)}
-                      >
-                        {c.name}
+                      <td className="p-3 text-sm font-medium">
+                        <Link href={`/customers/${c.id}`} className="hover:underline">
+                          {c.name}
+                        </Link>
                       </td>
-                      <td
-                        className="p-3 text-sm text-slate-600"
-                        onClick={() => router.push(`/customers/${c.id}`)}
-                      >
-                        {c.phone}
-                      </td>
-                      <td
-                        className="p-3 text-sm text-slate-600"
-                        onClick={() => router.push(`/customers/${c.id}`)}
-                      >
-                        {c.email || '—'}
-                      </td>
-                      <td className="p-3" onClick={() => router.push(`/customers/${c.id}`)}>
+                      <td className="p-3 text-sm text-slate-600">{c.phone}</td>
+                      <td className="p-3 text-sm text-slate-600">{c.email || '—'}</td>
+                      <td className="p-3">
                         <div className="flex gap-1">
                           {c.tags?.map((tg: string) => (
                             <span
@@ -421,33 +412,21 @@ export default function CustomersPage() {
                           ))}
                         </div>
                       </td>
-                      <td
-                        className="p-3 text-sm text-slate-500"
-                        onClick={() => router.push(`/customers/${c.id}`)}
-                      >
+                      <td className="p-3 text-sm text-slate-500">
                         {c.bookings?.[0]?.startTime
                           ? new Date(c.bookings[0].startTime).toLocaleDateString()
                           : '—'}
                       </td>
-                      <td
-                        className="p-3 text-sm text-slate-500"
-                        onClick={() => router.push(`/customers/${c.id}`)}
-                      >
+                      <td className="p-3 text-sm text-slate-500">
                         {c.totalSpent != null ? `$${Number(c.totalSpent).toFixed(2)}` : '—'}
                       </td>
-                      <td
-                        className="p-3 text-sm text-slate-500"
-                        onClick={() => router.push(`/customers/${c.id}`)}
-                      >
+                      <td className="p-3 text-sm text-slate-500">
                         {c.bookingsCount ?? c._count?.bookings ?? '—'}
                       </td>
-                      <td
-                        className="p-3 text-sm text-slate-500"
-                        onClick={() => router.push(`/customers/${c.id}`)}
-                      >
+                      <td className="p-3 text-sm text-slate-500">
                         {new Date(c.createdAt).toLocaleDateString()}
                       </td>
-                      <td className="p-3" onClick={() => router.push(`/customers/${c.id}`)}>
+                      <td className="p-3">
                         <ChevronRight size={14} className="text-slate-400" />
                       </td>
                     </tr>
