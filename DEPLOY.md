@@ -519,7 +519,7 @@ Pull request ──► lint-and-test ──► docker-build
 
 **1. lint-and-test** (~2 min)
 
-- Spins up PostgreSQL 16 service container
+- Spins up PostgreSQL 17 service container
 - Runs: `npm ci` → Prisma generate → Prisma migrate → format check → lint → test
 
 **2. docker-build** (~2 min)

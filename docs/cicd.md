@@ -28,13 +28,13 @@ The workflow is defined in [`.github/workflows/ci.yml`](../.github/workflows/ci.
 **Runner:** `ubuntu-latest`
 **Duration:** ~2 minutes
 
-Spins up a PostgreSQL 16 service container and runs the full quality gate.
+Spins up a PostgreSQL 17 service container and runs the full quality gate.
 
 ### Service containers
 
 | Service    | Image                | Port | Database          |
 | ---------- | -------------------- | ---- | ----------------- |
-| PostgreSQL | `postgres:16-alpine` | 5432 | `booking_os_test` |
+| PostgreSQL | `postgres:17-alpine` | 5432 | `booking_os_test` |
 
 ### Environment variables
 
@@ -69,7 +69,7 @@ Runs Playwright E2E tests against a local development server with seeded test da
 
 ### What it does
 
-1. Sets up PostgreSQL 16, installs dependencies, generates Prisma client
+1. Sets up PostgreSQL 17, installs dependencies, generates Prisma client
 2. Runs database migrations and seeds test data
 3. Installs Playwright Chromium browser
 4. Runs `npm run test:e2e` in `apps/web` (starts API + web dev servers, runs Playwright)
@@ -289,7 +289,7 @@ The `docker-compose.prod.yml` file defines the full production stack for self-ho
 
 | Service    | Image/Build             | Port   | Health check                                    |
 | ---------- | ----------------------- | ------ | ----------------------------------------------- |
-| `postgres` | `postgres:16-alpine`    | 5432   | `pg_isready`                                    |
+| `postgres` | `postgres:17-alpine`    | 5432   | `pg_isready`                                    |
 | `redis`    | `redis:7-alpine`        | 6379   | `redis-cli ping`                                |
 | `api`      | `apps/api/Dockerfile`   | 3001   | `wget -qO- http://localhost:3001/api/v1/health` |
 | `web`      | `apps/web/Dockerfile`   | 3000   | —                                               |

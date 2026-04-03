@@ -33,21 +33,39 @@ jobs:
           bash scripts/backup-db.sh
 
       - name: Upload backup artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: db-backup-${{ github.run_id }}
           path: backups/
           retention-days: 30
+          if-no-files-found: ignore
 
       - name: Create issue on failure
         if: failure()
         uses: actions/github-script@v8
         with:
           script: |
+            const today = new Date().toISOString().slice(0, 10);
+            const title = `Database backup failed — ${today}`;
+
+            // Check if an issue for today already exists (avoid duplicates from retries)
+            const { data: existing } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'backup-failure',
+              state: 'open',
+              per_page: 5
+            });
+            if (existing.some(i => i.title === title)) {
+              console.log('Issue for today already exists, skipping');
+              return;
+            }
+
             await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: `Database backup failed — ${new Date().toISOString().slice(0, 10)}`,
+              title,
               body: `The daily database backup workflow failed.\n\nRun: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}\n\nPlease investigate immediately.`,
               labels: ['backup-failure']
             });

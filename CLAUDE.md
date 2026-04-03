@@ -547,7 +547,7 @@ cd apps/web && npm run test:e2e
 - Test files are co-located: `feature.service.spec.ts` next to `feature.service.ts`
 - Use `Test.createTestingModule()` to set up the NestJS testing module
 - Mock `PrismaService` — never hit a real database in unit tests
-- Integration tests in CI use a real PostgreSQL 16 service container
+- Integration tests in CI use a real PostgreSQL 17 service container
 - Mock external services (Claude API, WhatsApp, Stripe, Resend)
 - Test both success paths and error paths (403, 404, 400)
 - Test tenant isolation — verify queries filter by businessId
@@ -703,7 +703,7 @@ Push to main → lint-and-test → docker-build → deploy (staged) → smoke-te
 Pull request → lint-and-test → docker-build + e2e-test (Playwright)
 ```
 
-- **lint-and-test:** PostgreSQL 16 service container, `npm ci`, Prisma generate, web-chat widget build, migrate, format check, lint, test. Security audit: `npm audit --audit-level=critical` blocks the build; `--audit-level=high` runs informational-only
+- **lint-and-test:** PostgreSQL 17 service container, `npm ci`, Prisma generate, web-chat widget build, migrate, format check, lint, test. Security audit: `npm audit --audit-level=critical` blocks the build; `--audit-level=high` runs informational-only
 - **docker-build:** Multi-stage Docker builds for API, web, and admin images + Trivy security scanning. API image scan blocks on CRITICAL (`exit-code: 1`); web/admin scans are informational (`exit-code: 0`)
 - **bundle-check:** Builds web app, reports `.next/` size to GitHub step summary, fails if >60MB
 - **deploy:** Staged sequential: API → health check → Web → health check → Admin → health check (5s poll, 5-min timeout per stage)

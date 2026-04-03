@@ -134,6 +134,6 @@ railway up --service <name> --detach
 | Image                | Purpose                     |
 | -------------------- | --------------------------- |
 | `node:20-alpine`     | Node.js runtime (API & Web) |
-| `postgres:16-alpine` | PostgreSQL database         |
+| `postgres:17-alpine` | PostgreSQL database         |
 | `redis:7-alpine`     | Redis cache                 |
 | `nginx:alpine`       | Reverse proxy               |
