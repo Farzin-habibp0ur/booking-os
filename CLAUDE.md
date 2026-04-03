@@ -756,7 +756,9 @@ After completing ANY task (feature, bugfix, refactor, doc update, plan, analysis
 
 The self-review loop requires you to: review your output against source material using tools (Read, Grep — not memory), fix all issues found, then re-review from scratch. Repeat until a full pass finds **zero issues**. Report the pass count and issues found per pass to the user.
 
-After the self-review loop passes with zero issues, run the project-specific checks:
+After the self-review loop passes with zero issues, run the **security-review** skill (`.claude/skills/security-review/SKILL.md`). This is mandatory for ANY code change — it checks for multi-tenancy violations, missing transaction wrappers, auth guard gaps, webhook verification, AI safety, and 6 other production risk categories. Work is not complete until it reports zero findings. See `references/checklist.md` inside the skill for detailed code patterns.
+
+After both the self-review loop and security review pass clean, run the project-specific checks:
 
 ### Cross-Cutting Concerns
 - New component? → tests exist, translations added, design tokens used (not inline colors)

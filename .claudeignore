@@ -1,0 +1,27 @@
+# Generated outputs (reports, briefings, logs — not source code)
+reports/
+briefings/
+queue/
+logs/
+engagement/
+calendar/
+
+# Archive (superseded docs)
+archive/
+
+# Media assets
+assets/recordings/
+
+# Build artifacts
+node_modules/
+.next/
+dist/
+apps/web/ios/
+apps/web/android/
+
+# Growth engine (file-based agent prompts, not NestJS code)
+agents/
+system/
+data/
+briefs/
+design-specs/

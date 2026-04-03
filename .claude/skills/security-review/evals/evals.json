@@ -1,0 +1,20 @@
+{
+  "skill_name": "security-review",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I just added a new endpoint to the customer controller that lets staff export a customer's full history as CSV. Here's what I wrote:\n\n```typescript\n@Get(':id/export')\nasync exportHistory(@Param('id') id: string, @BusinessId() businessId: string) {\n  const bookings = await this.prisma.booking.findMany({ where: { customerId: id } });\n  const conversations = await this.prisma.conversation.findMany({ where: { customerId: id } });\n  const payments = await this.prisma.payment.findMany({ where: { customerId: id } });\n  return { bookings, conversations, payments };\n}\n```\n\nLooks good right? Can I commit this?",
+      "expected_output": "Should flag: (1) Missing businessId in all 3 queries — multi-tenancy violation, (2) Missing @Roles() decorator — open to all auth users, (3) No @Throttle() on export endpoint, (4) No pagination on findMany — could OOM on large customers, (5) No transaction needed (read-only) so that's fine"
+    },
+    {
+      "id": 2,
+      "prompt": "I'm adding a new webhook handler for a payment provider. Here's the controller method:\n\n```typescript\n@Post('payments/webhook')\nasync handlePaymentWebhook(@Body() body: any) {\n  const event = body;\n  if (event.type === 'payment.completed') {\n    const booking = await this.prisma.booking.findFirst({ where: { stripePaymentIntentId: event.paymentIntentId } });\n    await this.prisma.booking.update({ where: { id: booking.id }, data: { status: 'CONFIRMED' } });\n    await this.prisma.payment.create({ data: { bookingId: booking.id, amount: event.amount, status: 'COMPLETED' } });\n  }\n  return { received: true };\n}\n```",
+      "expected_output": "Should flag: (1) No webhook signature verification — CRITICAL, (2) No transaction around booking update + payment create, (3) booking could be null (findFirst might return null), (4) No idempotency — replayed webhook creates duplicate payment, (5) Missing businessId on payment create, (6) No rate limiting"
+    },
+    {
+      "id": 3,
+      "prompt": "I updated the AI service to add a new customer-facing chat feature. The key change is in ai.service.ts:\n\n```typescript\nasync customerChat(businessId: string, customerId: string, question: string) {\n  const customer = await this.prisma.customer.findUnique({ where: { id: customerId, businessId } });\n  const business = await this.prisma.business.findUnique({ where: { id: businessId } });\n  const history = await this.prisma.message.findMany({ where: { conversationId: customer.lastConversationId } });\n  \n  const prompt = `You are a helpful assistant for ${business.name}. Customer ${customer.name} asks: ${question}. Previous messages: ${history.map(m => m.content).join('\\n')}`;\n  \n  const response = await this.claudeClient.complete(prompt);\n  const parsed = JSON.parse(response);\n  \n  this.dailyCalls.set(businessId, { count: (this.dailyCalls.get(businessId)?.count || 0) + 1, date: new Date().toISOString().split('T')[0] });\n  \n  return { answer: parsed.answer, suggestions: parsed.suggestions };\n}\n```",
+      "expected_output": "Should flag: (1) Prompt injection — customer name and question embedded directly, (2) Unbounded history (no take limit on findMany), (3) No try/catch on claudeClient.complete, (4) JSON.parse without validation — parsed.answer could be undefined, (5) dailyCalls uses in-memory Map not Redis, (6) No @MaxLength on question input, (7) Missing businessId on message query, (8) customer.lastConversationId could be null"
+    }
+  ]
+}
