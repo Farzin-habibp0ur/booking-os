@@ -20,7 +20,13 @@ jest.mock('next/link', () => ({ children, href, ...rest }: any) => (
 jest.mock('@/lib/auth', () => ({
   useAuth: () => ({
     login: jest.fn(),
-    user: { id: '1', name: 'Sarah', role: 'ADMIN', businessId: 'b1' },
+    user: {
+      id: '1',
+      name: 'Sarah',
+      role: 'ADMIN',
+      businessId: 'b1',
+      business: { id: 'b1', name: 'Glow Clinic', timezone: 'UTC' },
+    },
     loading: false,
   }),
   AuthProvider: ({ children }: any) => children,

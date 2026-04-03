@@ -14,6 +14,7 @@ import {
   X,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { useAuth } from '@/lib/auth';
 import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/lib/toast';
 import BookingFormModal from '@/components/booking-form-modal';
@@ -51,8 +52,10 @@ const STATUS_COLORS = new Proxy(
 );
 
 export default function CalendarPage() {
+  const { user } = useAuth();
   const { t } = useI18n();
   const { toast } = useToast();
+  const businessTimezone = user?.business?.timezone || 'UTC';
   const [bookings, setBookings] = useState<any[]>([]);
   const [staff, setStaff] = useState<any[]>([]);
   const [locations, setLocations] = useState<any[]>([]);
@@ -337,11 +340,21 @@ export default function CalendarPage() {
     });
   };
 
+  const getBusinessHour = (iso: string): number => {
+    const parts = new Intl.DateTimeFormat('en', {
+      hour: 'numeric',
+      minute: 'numeric',
+      hour12: false,
+      timeZone: businessTimezone,
+    }).formatToParts(new Date(iso));
+    const h = parseInt(parts.find((p) => p.type === 'hour')!.value, 10);
+    const m = parseInt(parts.find((p) => p.type === 'minute')!.value, 10);
+    return h + m / 60;
+  };
+
   const getBookingPosition = (booking: any) => {
-    const start = new Date(booking.startTime);
-    const end = new Date(booking.endTime);
-    const startHour = start.getHours() + start.getMinutes() / 60;
-    const endHour = end.getHours() + end.getMinutes() / 60;
+    const startHour = getBusinessHour(booking.startTime);
+    const endHour = getBusinessHour(booking.endTime);
     const top = (startHour - 8) * SLOT_HEIGHT;
     const height = Math.max((endHour - startHour) * SLOT_HEIGHT, 20);
     return { top, height };
@@ -492,7 +505,7 @@ export default function CalendarPage() {
         staffId: dropTarget.staffId,
       });
       toast(
-        `Moved ${dragBooking.service?.name || 'booking'} to ${newStartTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+        `Moved ${dragBooking.service?.name || 'booking'} to ${newStartTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZone: businessTimezone })}`,
         'success',
       );
       loadBookings();
@@ -892,11 +905,13 @@ export default function CalendarPage() {
                                 {new Date(b.startTime).toLocaleTimeString([], {
                                   hour: '2-digit',
                                   minute: '2-digit',
+                                  timeZone: businessTimezone,
                                 })}
                                 {' – '}
                                 {new Date(b.endTime).toLocaleTimeString([], {
                                   hour: '2-digit',
                                   minute: '2-digit',
+                                  timeZone: businessTimezone,
                                 })}
                               </p>
                               <p className="text-xs font-medium truncate">{b.customer?.name}</p>
@@ -937,11 +952,13 @@ export default function CalendarPage() {
                                     {new Date(b.startTime).toLocaleTimeString([], {
                                       hour: '2-digit',
                                       minute: '2-digit',
+                                      timeZone: businessTimezone,
                                     })}
                                     {' – '}
                                     {new Date(b.endTime).toLocaleTimeString([], {
                                       hour: '2-digit',
                                       minute: '2-digit',
+                                      timeZone: businessTimezone,
                                     })}
                                   </p>
                                   <p className="text-xs text-slate-400 mt-1">
@@ -993,11 +1010,13 @@ export default function CalendarPage() {
                               {new Date(b.startTime).toLocaleTimeString([], {
                                 hour: '2-digit',
                                 minute: '2-digit',
+                                timeZone: businessTimezone,
                               })}
                               {' – '}
                               {new Date(b.endTime).toLocaleTimeString([], {
                                 hour: '2-digit',
                                 minute: '2-digit',
+                                timeZone: businessTimezone,
                               })}
                             </span>
                             <span
@@ -1139,6 +1158,7 @@ export default function CalendarPage() {
                                 {new Date(b.startTime).toLocaleTimeString([], {
                                   hour: '2-digit',
                                   minute: '2-digit',
+                                  timeZone: businessTimezone,
                                 })}
                               </p>
                             </div>

@@ -26,6 +26,8 @@ describe('AvailabilityService', () => {
     }).compile();
 
     service = module.get(AvailabilityService);
+    // Default to UTC so slot generation is deterministic across all test environments
+    prisma.business.findUnique.mockResolvedValue({ timezone: 'UTC' } as any);
   });
 
   // ─── getAvailableSlots ────────────────────────────────────────────────
@@ -243,8 +245,8 @@ describe('AvailabilityService', () => {
     });
 
     it('marks slots as unavailable when they conflict with existing bookings', async () => {
-      const bookingStart = new Date(FUTURE_DATE + 'T10:00:00');
-      const bookingEnd = new Date(FUTURE_DATE + 'T11:00:00');
+      const bookingStart = new Date(FUTURE_DATE + 'T10:00:00Z');
+      const bookingEnd = new Date(FUTURE_DATE + 'T11:00:00Z');
 
       prisma.service.findFirst.mockResolvedValue({
         id: 'svc1',
@@ -281,8 +283,8 @@ describe('AvailabilityService', () => {
     });
 
     it('marks slots as unavailable when they conflict with external calendar events', async () => {
-      const eventStart = new Date(FUTURE_DATE + 'T14:00:00');
-      const eventEnd = new Date(FUTURE_DATE + 'T15:00:00');
+      const eventStart = new Date(FUTURE_DATE + 'T14:00:00Z');
+      const eventEnd = new Date(FUTURE_DATE + 'T15:00:00Z');
 
       prisma.service.findFirst.mockResolvedValue({
         id: 'svc1',
@@ -317,8 +319,8 @@ describe('AvailabilityService', () => {
     });
 
     it('marks slot unavailable when both internal and external conflicts exist', async () => {
-      const start = new Date(FUTURE_DATE + 'T10:00:00');
-      const end = new Date(FUTURE_DATE + 'T10:30:00');
+      const start = new Date(FUTURE_DATE + 'T10:00:00Z');
+      const end = new Date(FUTURE_DATE + 'T10:30:00Z');
 
       prisma.service.findFirst.mockResolvedValue({
         id: 'svc1',
@@ -553,8 +555,8 @@ describe('AvailabilityService', () => {
 
     it('detects partial overlap at slot start boundary', async () => {
       // Booking from 09:45-10:15 should conflict with 09:30 slot (09:30-10:00)
-      const bookingStart = new Date(FUTURE_DATE + 'T09:45:00');
-      const bookingEnd = new Date(FUTURE_DATE + 'T10:15:00');
+      const bookingStart = new Date(FUTURE_DATE + 'T09:45:00Z');
+      const bookingEnd = new Date(FUTURE_DATE + 'T10:15:00Z');
 
       prisma.service.findFirst.mockResolvedValue({
         id: 'svc1',
@@ -592,8 +594,8 @@ describe('AvailabilityService', () => {
 
     it('adjacent booking does not conflict (booking ends exactly when slot starts)', async () => {
       // Booking 09:00-09:30 should NOT conflict with 09:30 slot
-      const bookingStart = new Date(FUTURE_DATE + 'T09:00:00');
-      const bookingEnd = new Date(FUTURE_DATE + 'T09:30:00');
+      const bookingStart = new Date(FUTURE_DATE + 'T09:00:00Z');
+      const bookingEnd = new Date(FUTURE_DATE + 'T09:30:00Z');
 
       prisma.service.findFirst.mockResolvedValue({
         id: 'svc1',
@@ -821,8 +823,8 @@ describe('AvailabilityService', () => {
     // ─── Resource conflict detection ────────────────────────────────────
 
     it('marks slots unavailable when resource has conflicting bookings', async () => {
-      const resourceBookingStart = new Date(FUTURE_DATE + 'T10:00:00');
-      const resourceBookingEnd = new Date(FUTURE_DATE + 'T11:00:00');
+      const resourceBookingStart = new Date(FUTURE_DATE + 'T10:00:00Z');
+      const resourceBookingEnd = new Date(FUTURE_DATE + 'T11:00:00Z');
 
       prisma.service.findFirst.mockResolvedValue({
         id: 'svc1',
@@ -894,8 +896,8 @@ describe('AvailabilityService', () => {
     });
 
     it('combines location filtering with resource conflict detection', async () => {
-      const resourceBookingStart = new Date(FUTURE_DATE + 'T09:00:00');
-      const resourceBookingEnd = new Date(FUTURE_DATE + 'T09:30:00');
+      const resourceBookingStart = new Date(FUTURE_DATE + 'T09:00:00Z');
+      const resourceBookingEnd = new Date(FUTURE_DATE + 'T09:30:00Z');
 
       prisma.service.findFirst.mockResolvedValue({
         id: 'svc1',
@@ -1469,6 +1471,38 @@ describe('AvailabilityService', () => {
       expect(result.length).toBeGreaterThan(0);
       expect(result[0].spotsRemaining).toBe(10);
       expect(result[0].available).toBe(true);
+    });
+
+    it('generates slot times in business timezone (America/Los_Angeles 14:00 → UTC 21:00)', async () => {
+      // 14:00 local Los_Angeles on 2026-04-03 = 21:00 UTC (PDT = UTC-7)
+      const LA_DATE = '2026-04-03';
+      const LA_DATE_DOW = 5; // Friday
+
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        businessId: 'biz1',
+        durationMins: 30,
+      } as any);
+      prisma.business.findUnique.mockResolvedValue({ timezone: 'America/Los_Angeles' } as any);
+      prisma.staff.findMany.mockResolvedValue([{ id: 'staff1', name: 'Dr. Chen' }] as any);
+      prisma.staffServicePrice.findMany.mockResolvedValue([]);
+      prisma.workingHours.findUnique.mockResolvedValue({
+        staffId: 'staff1',
+        dayOfWeek: LA_DATE_DOW,
+        startTime: '14:00',
+        endTime: '15:00',
+        isOff: false,
+      } as any);
+      prisma.timeOff.findFirst.mockResolvedValue(null);
+      prisma.booking.findMany.mockResolvedValue([]);
+      mockCalendarSyncService.pullExternalEvents.mockResolvedValue([]);
+
+      const result = await service.getAvailableSlots('biz1', LA_DATE, 'svc1');
+
+      // 14:00 Los_Angeles (PDT = UTC-7) → 21:00 UTC
+      expect(result).toHaveLength(2); // 14:00 and 14:30 fit in the 14:00-15:00 window
+      expect(result[0].time).toBe('2026-04-03T21:00:00.000Z');
+      expect(result[0].display).toBe('14:00');
     });
   });
 });

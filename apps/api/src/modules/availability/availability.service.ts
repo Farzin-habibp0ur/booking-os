@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { fromZonedTime } from 'date-fns-tz';
 import { PrismaService } from '../../common/prisma.service';
 import { CalendarSyncService } from '../calendar-sync/calendar-sync.service';
 
@@ -38,6 +39,13 @@ export class AvailabilityService {
     const durationMins = service.durationMins;
     const isGroupClass = (service as any).maxParticipants > 1;
     const maxParticipants = (service as any).maxParticipants || 1;
+
+    // Fetch business timezone for correct slot generation
+    const business = await this.prisma.business.findUnique({
+      where: { id: businessId },
+      select: { timezone: true },
+    });
+    const tz = business?.timezone || 'UTC';
 
     // Get staff to check
     const staffWhere: any = { businessId, isActive: true };
@@ -87,8 +95,12 @@ export class AvailabilityService {
       staffList = staffList.filter((s) => assignedStaffIds.has(s.id));
     }
 
-    const targetDate = new Date(date + 'T00:00:00');
-    const dayOfWeek = targetDate.getDay();
+    const targetDate = fromZonedTime(date + 'T00:00:00', tz);
+    // Compute day-of-week in the business timezone (0=Sun … 6=Sat)
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const dayOfWeek = dayNames.indexOf(
+      new Intl.DateTimeFormat('en-US', { weekday: 'long', timeZone: tz }).format(targetDate),
+    );
 
     // Auto-find matching resource if service requires a specific type
     let effectiveResourceId = resourceId;
@@ -108,8 +120,8 @@ export class AvailabilityService {
     // Pre-fetch resource bookings for conflict detection
     let resourceBookings: { startTime: Date; endTime: Date }[] = [];
     if (effectiveResourceId) {
-      const dayStart = new Date(date + 'T00:00:00');
-      const dayEnd = new Date(date + 'T23:59:59');
+      const dayStart = fromZonedTime(date + 'T00:00:00', tz);
+      const dayEnd = fromZonedTime(date + 'T23:59:59', tz);
       resourceBookings = await this.prisma.booking.findMany({
         where: {
           businessId,
@@ -136,15 +148,15 @@ export class AvailabilityService {
       const timeOff = await this.prisma.timeOff.findFirst({
         where: {
           staffId: staff.id,
-          startDate: { lte: new Date(date + 'T23:59:59') },
-          endDate: { gte: new Date(date + 'T00:00:00') },
+          startDate: { lte: fromZonedTime(date + 'T23:59:59', tz) },
+          endDate: { gte: fromZonedTime(date + 'T00:00:00', tz) },
         },
       });
       if (timeOff) continue;
 
       // Get existing bookings for this staff on this date
-      const dayStart = new Date(date + 'T00:00:00');
-      const dayEnd = new Date(date + 'T23:59:59');
+      const dayStart = fromZonedTime(date + 'T00:00:00', tz);
+      const dayEnd = fromZonedTime(date + 'T23:59:59', tz);
       const existingBookings = await this.prisma.booking.findMany({
         where: {
           businessId,
@@ -174,8 +186,9 @@ export class AvailabilityService {
       // Generate 30-min increment slots
       const slotIncrement = 30;
       for (let mins = workStart; mins + durationMins <= workEnd; mins += slotIncrement) {
-        const slotStart = new Date(targetDate);
-        slotStart.setHours(Math.floor(mins / 60), mins % 60, 0, 0);
+        const hh = String(Math.floor(mins / 60)).padStart(2, '0');
+        const mm = String(mins % 60).padStart(2, '0');
+        const slotStart = fromZonedTime(`${date}T${hh}:${mm}:00`, tz);
 
         const slotEnd = new Date(slotStart);
         slotEnd.setMinutes(slotEnd.getMinutes() + durationMins);

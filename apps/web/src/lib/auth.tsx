@@ -21,6 +21,7 @@ interface User {
     defaultLocale: string;
     packConfig: Record<string, unknown> | null;
     createdAt: string;
+    timezone?: string;
   };
   trial?: {
     isTrial: boolean;
