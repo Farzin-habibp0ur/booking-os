@@ -181,7 +181,7 @@ Each `railway up` uses `--detach` so Railway receives the code and builds asynch
 | ------------ | ------------------------------------------ |
 | Project ID   | `37eeca20-7dfe-45d9-8d29-e902a545f475`     |
 | Environment  | `production`                               |
-| Services     | `api`, `web`, `admin`, `postgres`, `redis` |
+| Services     | `api`, `web`, `admin`, `postgres`          |
 | API domain   | `api.businesscommandcentre.com`            |
 | Web domain   | `businesscommandcentre.com`                |
 | Admin domain | `admin.businesscommandcentre.com`          |

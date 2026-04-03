@@ -117,10 +117,11 @@ Complete reference for deploying, configuring, and operating Booking OS in produ
 | ------------ | --------------------------------------------------------------------------------------------------------- |
 | Project ID   | `37eeca20-7dfe-45d9-8d29-e902a545f475`                                                                    |
 | Environment  | `production`                                                                                              |
-| Services     | `api`, `web`, `postgres` (Redis removed — see [Cost Optimization](#cost-optimization-pre-customer-phase)) |
-| API domain   | `api.businesscommandcentre.com`                                                                           |
-| Web domain   | `businesscommandcentre.com`                                                                               |
-| CORS_ORIGINS | `https://businesscommandcentre.com,https://www.businesscommandcentre.com`                                 |
+| Services     | `api`, `web`, `admin`, `postgres` (Redis removed — see [Cost Optimization](#cost-optimization-pre-customer-phase)) |
+| API domain   | `api.businesscommandcentre.com`                                                                                    |
+| Web domain   | `businesscommandcentre.com`                                                                                        |
+| Admin domain | `admin.businesscommandcentre.com`                                                                                  |
+| CORS_ORIGINS | `https://businesscommandcentre.com,https://www.businesscommandcentre.com,https://admin.businesscommandcentre.com`  |
 
 ### How Deployment Works
 

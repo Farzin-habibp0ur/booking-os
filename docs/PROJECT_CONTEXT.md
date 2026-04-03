@@ -2,7 +2,7 @@
 
 > **Purpose:** This document gives full context on the Booking OS platform — what it is, what's been built, how it's structured, and what's left to build. Share this with an AI assistant or new developer to get productive immediately.
 >
-> **Last updated:** March 23, 2026 (All phases COMPLETE — A through E + Phases 1-4 & 6 polish + QA Fixes + Sprints 1-4 + Prompts 4A-4C + Prompt 1C + Prompt 1A + Prompt 1B + Prompt 1D + Prompt 2A + Prompt 2B + Prompt 2C + Prompt 3A + Prompt 3C + QA Bug Fix Sprint (10 bugs) + Growth Engine Agents (15 prompts) + Marketing Command Center Phases 1-6 (14 prompts) COMPLETE + Admin Console Extraction (4 phases — scaffold, migrate, remove from web, infrastructure) + Internal/External Separation (3 phases — marketing tools removed from customer app, migrated to admin app, API endpoints gated behind SUPER_ADMIN) + Launch QA fixes (SUPER_ADMIN guards, AutonomyConfig scope constraint, test timeouts) + Omnichannel Phases 0-5 COMPLETE + Omnichannel Gap Fix (16 issues) + Inbox UX v3 (13 prompts) + **AI Agent Integration Fix (10 prompts)** + **Phase 2 Go-Live Configuration (Sessions 4-6)** + **Phase 2-3 Post-Audit (Sessions 4-9)** — queue processors complete (8/8), CI security hardened (Trivy blocking, npm audit split), rate limiting expanded (34+ controllers), web chat file upload implemented, email domain DNS validation, Capacitor mobile app (iOS/Android), push notifications (FCM + DeviceToken), mobile CI/CD pipeline — 6 channels fully implemented (WhatsApp, Instagram, Facebook, SMS, Email, Web Chat) — 93 Prisma models, 69 migrations, 4191 tests)
+> **Last updated:** March 23, 2026 (All phases COMPLETE — A through E + Phases 1-4 & 6 polish + QA Fixes + Sprints 1-4 + Prompts 4A-4C + Prompt 1C + Prompt 1A + Prompt 1B + Prompt 1D + Prompt 2A + Prompt 2B + Prompt 2C + Prompt 3A + Prompt 3C + QA Bug Fix Sprint (10 bugs) + Growth Engine Agents (15 prompts) + Marketing Command Center Phases 1-6 (14 prompts) COMPLETE + Admin Console Extraction (4 phases — scaffold, migrate, remove from web, infrastructure) + Internal/External Separation (3 phases — marketing tools removed from customer app, migrated to admin app, API endpoints gated behind SUPER_ADMIN) + Launch QA fixes (SUPER_ADMIN guards, AutonomyConfig scope constraint, test timeouts) + Omnichannel Phases 0-5 COMPLETE + Omnichannel Gap Fix (16 issues) + Inbox UX v3 (13 prompts) + **AI Agent Integration Fix (10 prompts)** + **Phase 2 Go-Live Configuration (Sessions 4-6)** + **Phase 2-3 Post-Audit (Sessions 4-9)** — queue processors complete (8/8), CI security hardened (Trivy blocking, npm audit split), rate limiting expanded (34+ controllers), web chat file upload implemented, email domain DNS validation, Capacitor mobile app (iOS/Android), push notifications (FCM + DeviceToken), mobile CI/CD pipeline — 6 channels fully implemented (WhatsApp, Instagram, Facebook, SMS, Email, Web Chat) — 96 Prisma models, 70 migrations, 7039 tests)
 
 ---
 
@@ -248,7 +248,7 @@ Comprehensive inbox redesign covering adaptive composer, smart suggestions, draf
 | Real-time   | Socket.io                                                                                                                | 4.x                   |
 | Backend     | NestJS, TypeScript                                                                                                       | 11.x                  |
 | ORM         | Prisma                                                                                                                   | 6.x                   |
-| Database    | PostgreSQL                                                                                                               | 16                    |
+| Database    | PostgreSQL                                                                                                               | 17                    |
 | AI          | Anthropic Claude API                                                                                                     | claude-sonnet         |
 | Payments    | Stripe                                                                                                                   | stripe-node           |
 | Email       | Resend                                                                                                                   | -                     |
@@ -282,7 +282,7 @@ booking-os/
 │   │   └── Dockerfile          # Multi-stage production build
 │   └── whatsapp-simulator/     # WhatsApp testing tool (port 3002)
 ├── packages/
-│   ├── db/                     # Prisma schema (94 models), 69 migrations, seed scripts
+│   ├── db/                     # Prisma schema (96 models), 70 migrations, seed scripts
 │   │   ├── prisma/schema.prisma
 │   │   ├── src/seed.ts         # Base seed (aesthetic + dealership + wellness, idempotent)
 │   │   ├── src/seed-demo.ts    # Rich demo data (idempotent, dedup-safe)

@@ -172,7 +172,7 @@
 | Charts     | Recharts v2.15                   |
 | Real-time  | Socket.io                        |
 | Backend    | NestJS 11, TypeScript            |
-| Database   | PostgreSQL 16 + Prisma 6 ORM     |
+| Database   | PostgreSQL 17 + Prisma 6 ORM     |
 | AI         | Claude API (Anthropic)           |
 | Payments   | Stripe                           |
 | Email      | Resend                           |

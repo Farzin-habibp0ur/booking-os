@@ -47,7 +47,7 @@ booking-os/
 │   │   └── next.config.js      # Stricter CSP (no analytics), X-Robots-Tag: noindex
 │   └── whatsapp-simulator/     # WhatsApp testing tool (port 3002)
 ├── packages/
-│   ├── db/                     # Prisma schema (94 models), 69 migrations, seed scripts
+│   ├── db/                     # Prisma schema (96 models), 70 migrations, seed scripts
 │   │   ├── prisma/schema.prisma
 │   │   ├── src/seed.ts         # Base seed (aesthetic + dealership + wellness, idempotent)
 │   │   ├── src/seed-demo.ts    # Rich demo data (idempotent, dedup-safe)
@@ -94,7 +94,7 @@ booking-os/
 | Real-time   | Socket.io                                                                                                                       | 4.x           |
 | Backend     | NestJS, TypeScript                                                                                                              | 11.x          |
 | ORM         | Prisma                                                                                                                          | 6.x           |
-| Database    | PostgreSQL                                                                                                                      | 16            |
+| Database    | PostgreSQL                                                                                                                      | 17            |
 | AI          | Anthropic Claude API                                                                                                            | claude-sonnet |
 | Payments    | Stripe                                                                                                                          | stripe-node   |
 | Email       | Resend                                                                                                                          | -             |
@@ -195,7 +195,7 @@ modules/
 
 ### Database (Prisma)
 
-- Schema at `packages/db/prisma/schema.prisma` — **94 models**, 69 migrations
+- Schema at `packages/db/prisma/schema.prisma` — **96 models**, 70 migrations
 - Generate client: `npx prisma generate --schema=packages/db/prisma/schema.prisma`
 - Create migration: `npx prisma migrate dev --name your_name --schema=packages/db/prisma/schema.prisma`
 - `PrismaService` is a global NestJS provider — inject it in constructors
@@ -726,7 +726,7 @@ Pull request → lint-and-test → docker-build + e2e-test (Playwright)
 | API domain   | `api.businesscommandcentre.com`        |
 | Web domain   | `businesscommandcentre.com`            |
 | Admin domain | `admin.businesscommandcentre.com`      |
-| Services     | api, web, admin, postgres, redis       |
+| Services     | api, web, admin, postgres              |
 
 ---
 

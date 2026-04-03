@@ -8,7 +8,7 @@ A modern, full-featured appointment booking and business management platform bui
 | --------- | --------------------------------------------- |
 | Frontend  | Next.js 15, React 19, Tailwind CSS 4          |
 | Backend   | NestJS 11, Prisma ORM                         |
-| Database  | PostgreSQL 16                                 |
+| Database  | PostgreSQL 17                                 |
 | AI        | Anthropic Claude (smart scheduling, insights) |
 | Payments  | Stripe (subscriptions, invoicing)             |
 | Messaging | WhatsApp Business API, email (Resend)         |
