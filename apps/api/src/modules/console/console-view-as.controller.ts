@@ -4,7 +4,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
-import { RolesGuard, Roles } from '../../common/roles.guard';
+import { RolesGuard, Roles, AllowAnyRole } from '../../common/roles.guard';
 import { CurrentUser } from '../../common/decorators';
 import { ConsoleViewAsService } from './console-view-as.service';
 import { ViewAsReasonDto } from '../../common/dto';
@@ -12,6 +12,7 @@ import { ViewAsReasonDto } from '../../common/dto';
 @ApiTags('Console - View As')
 @Controller('admin')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
+@AllowAnyRole()
 @Throttle({ default: { ttl: 60000, limit: 10 } })
 export class ConsoleViewAsController {
   constructor(

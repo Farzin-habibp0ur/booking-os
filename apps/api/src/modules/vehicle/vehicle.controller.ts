@@ -11,13 +11,14 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { TenantGuard } from '../../common/tenant.guard';
-import { RolesGuard } from '../../common/roles.guard';
+import { RolesGuard, AllowAnyRole } from '../../common/roles.guard';
 import { BusinessId, CurrentUser } from '../../common/decorators';
 import { VehicleService } from './vehicle.service';
 import { CreateVehicleDto, UpdateVehicleDto, ListVehiclesDto } from './dto';
 
 @Controller('vehicles')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+@AllowAnyRole()
 export class VehicleController {
   constructor(private readonly vehicleService: VehicleService) {}
 

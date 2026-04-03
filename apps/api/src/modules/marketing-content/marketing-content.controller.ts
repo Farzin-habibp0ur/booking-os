@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { TenantGuard } from '../../common/tenant.guard';
-import { RolesGuard, Roles } from '../../common/roles.guard';
+import { RolesGuard, Roles, AllowAnyRole } from '../../common/roles.guard';
 import { BusinessId, CurrentUser } from '../../common/decorators';
 import { MarketingContentService } from './marketing-content.service';
 import {
@@ -24,6 +24,7 @@ import {
 
 @Controller('marketing/content')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+@AllowAnyRole()
 @Roles('SUPER_ADMIN')
 export class MarketingContentController {
   constructor(private readonly service: MarketingContentService) {}

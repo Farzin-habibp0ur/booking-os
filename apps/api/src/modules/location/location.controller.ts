@@ -4,7 +4,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { LocationService } from './location.service';
 import { BusinessId } from '../../common/decorators';
 import { TenantGuard } from '../../common/tenant.guard';
-import { RolesGuard, Roles } from '../../common/roles.guard';
+import { RolesGuard, Roles, AllowAnyRole } from '../../common/roles.guard';
 import {
   CreateLocationDto,
   UpdateLocationDto,
@@ -16,6 +16,7 @@ import {
 @ApiTags('Locations')
 @Controller('locations')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+@AllowAnyRole()
 export class LocationController {
   constructor(private locationService: LocationService) {}
 

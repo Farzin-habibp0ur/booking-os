@@ -2,13 +2,14 @@ import { Controller, Get, Post, Delete, Query, Body, Param, UseGuards } from '@n
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { TenantGuard } from '../../common/tenant.guard';
-import { RolesGuard, Roles } from '../../common/roles.guard';
+import { RolesGuard, Roles, AllowAnyRole } from '../../common/roles.guard';
 import { BusinessId } from '../../common/decorators';
 import { TranslationService } from './translation.service';
 
 @ApiTags('Translations')
 @Controller('translations')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+@AllowAnyRole()
 export class TranslationController {
   constructor(private translationService: TranslationService) {}
 

@@ -2,13 +2,14 @@ import { Controller, Get, Put, Body, UseGuards, Logger } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { TenantGuard } from '../../common/tenant.guard';
-import { RolesGuard, Roles } from '../../common/roles.guard';
+import { RolesGuard, Roles, AllowAnyRole } from '../../common/roles.guard';
 import { BusinessId } from '../../common/decorators';
 import { PrismaService } from '../../common/prisma.service';
 
 @ApiTags('Messaging - Web Chat')
 @Controller('messaging/web-chat')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+@AllowAnyRole()
 @Roles('OWNER', 'ADMIN')
 export class WebChatController {
   private readonly logger = new Logger(WebChatController.name);

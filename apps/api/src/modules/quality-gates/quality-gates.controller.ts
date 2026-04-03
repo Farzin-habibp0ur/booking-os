@@ -1,12 +1,13 @@
 import { Controller, Get, Post, Param, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { TenantGuard } from '../../common/tenant.guard';
-import { RolesGuard, Roles } from '../../common/roles.guard';
+import { RolesGuard, Roles, AllowAnyRole } from '../../common/roles.guard';
 import { BusinessId } from '../../common/decorators';
 import { QualityGateService } from './quality-gates.service';
 
 @Controller('quality-gates')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+@AllowAnyRole()
 @Roles('SUPER_ADMIN')
 export class QualityGateController {
   constructor(private readonly service: QualityGateService) {}

@@ -1,13 +1,14 @@
 import { Controller, Get, Post, Patch, Param, Body, Query, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { TenantGuard } from '../../common/tenant.guard';
-import { RolesGuard } from '../../common/roles.guard';
+import { RolesGuard, AllowAnyRole } from '../../common/roles.guard';
 import { BusinessId, CurrentUser } from '../../common/decorators';
 import { PaymentsService } from './payments.service';
 import { CreatePaymentDto, ListPaymentsDto, UpdatePaymentDto } from './dto';
 
 @Controller('payments')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+@AllowAnyRole()
 export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
 

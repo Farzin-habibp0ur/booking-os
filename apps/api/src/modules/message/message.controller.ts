@@ -29,13 +29,24 @@ export class MessageController {
     // Resolve the correct provider based on conversation channel + location config
     const conversation = await this.prisma.conversation.findFirst({
       where: { id: conversationId, businessId },
-      include: { location: { select: { whatsappConfig: true, instagramConfig: true } } },
+      include: {
+        location: {
+          select: {
+            whatsappConfig: true,
+            instagramConfig: true,
+            facebookConfig: true,
+            emailConfig: true,
+          },
+        },
+      },
     });
 
     const provider = this.messagingService.getProviderForConversation(
       conversation?.channel || 'WHATSAPP',
       conversation?.location?.instagramConfig as Record<string, any> | null,
       conversation?.location?.whatsappConfig as Record<string, any> | null,
+      conversation?.location?.facebookConfig as Record<string, any> | null,
+      conversation?.location?.emailConfig as Record<string, any> | null,
     );
 
     const scheduledFor = body.scheduledFor ? new Date(body.scheduledFor) : undefined;

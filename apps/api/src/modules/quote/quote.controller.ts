@@ -5,7 +5,7 @@ import { Throttle } from '@nestjs/throttler';
 import { QuoteService } from './quote.service';
 import { BusinessId } from '../../common/decorators';
 import { TenantGuard } from '../../common/tenant.guard';
-import { RolesGuard } from '../../common/roles.guard';
+import { RolesGuard, AllowAnyRole } from '../../common/roles.guard';
 import { CreateQuoteDto } from '../../common/dto';
 
 @ApiTags('Quotes')
@@ -16,6 +16,7 @@ export class QuoteController {
   // Authenticated endpoints
   @Post()
   @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+  @AllowAnyRole()
   @Throttle({ default: { ttl: 60000, limit: 10 } })
   create(@BusinessId() businessId: string, @Body() body: CreateQuoteDto) {
     return this.quoteService.create(businessId, body);
@@ -23,12 +24,14 @@ export class QuoteController {
 
   @Get(':id')
   @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+  @AllowAnyRole()
   findById(@BusinessId() businessId: string, @Param('id') id: string) {
     return this.quoteService.findById(businessId, id);
   }
 
   @Get('booking/:bookingId')
   @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+  @AllowAnyRole()
   findByBooking(@BusinessId() businessId: string, @Param('bookingId') bookingId: string) {
     return this.quoteService.findByBooking(businessId, bookingId);
   }

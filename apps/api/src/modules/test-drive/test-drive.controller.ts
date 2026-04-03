@@ -1,13 +1,14 @@
 import { Controller, Get, Post, Patch, Param, Body, Query, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { TenantGuard } from '../../common/tenant.guard';
-import { RolesGuard } from '../../common/roles.guard';
+import { RolesGuard, AllowAnyRole } from '../../common/roles.guard';
 import { BusinessId } from '../../common/decorators';
 import { TestDriveService } from './test-drive.service';
 import { CreateTestDriveDto, UpdateTestDriveDto } from './dto';
 
 @Controller('test-drives')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+@AllowAnyRole()
 export class TestDriveController {
   constructor(private readonly testDriveService: TestDriveService) {}
 

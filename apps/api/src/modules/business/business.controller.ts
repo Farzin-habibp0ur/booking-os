@@ -14,13 +14,14 @@ import { AuthGuard } from '@nestjs/passport';
 import { BusinessService } from './business.service';
 import { BusinessId } from '../../common/decorators';
 import { TenantGuard } from '../../common/tenant.guard';
-import { RolesGuard, Roles } from '../../common/roles.guard';
+import { RolesGuard, Roles, AllowAnyRole } from '../../common/roles.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UpdateBusinessDto, UpdatePolicySettingsDto, UpdateBrandingDto } from '../../common/dto';
 
 @ApiTags('Business')
 @Controller('business')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+@AllowAnyRole()
 export class BusinessController {
   constructor(private businessService: BusinessService) {}
 

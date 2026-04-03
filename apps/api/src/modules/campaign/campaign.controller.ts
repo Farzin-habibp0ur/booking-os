@@ -12,7 +12,7 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { Throttle } from '@nestjs/throttler';
 import { TenantGuard } from '../../common/tenant.guard';
-import { RolesGuard, Roles } from '../../common/roles.guard';
+import { RolesGuard, Roles, AllowAnyRole } from '../../common/roles.guard';
 import { PlanGuard, RequiresFeature } from '../../common/plan.guard';
 import { BusinessId } from '../../common/decorators';
 import { CampaignService } from './campaign.service';
@@ -40,6 +40,7 @@ export class CampaignUnsubscribeController {
 
 @Controller('campaigns')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard, PlanGuard)
+@AllowAnyRole()
 @RequiresFeature('campaigns')
 export class CampaignController {
   constructor(

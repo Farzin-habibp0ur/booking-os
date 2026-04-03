@@ -6,7 +6,7 @@ import { Response } from 'express';
 import { ExportService, ReportType } from './export.service';
 import { BusinessId } from '../../common/decorators';
 import { TenantGuard } from '../../common/tenant.guard';
-import { RolesGuard } from '../../common/roles.guard';
+import { RolesGuard, AllowAnyRole } from '../../common/roles.guard';
 import { ReportsService } from '../reports/reports.service';
 
 const VALID_REPORT_TYPES: ReportType[] = [
@@ -25,6 +25,7 @@ const VALID_REPORT_TYPES: ReportType[] = [
 @ApiTags('Export')
 @Controller()
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+@AllowAnyRole()
 export class ExportController {
   constructor(
     private exportService: ExportService,

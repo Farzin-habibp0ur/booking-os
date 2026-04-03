@@ -1,12 +1,13 @@
 import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
-import { RolesGuard, Roles } from '../../common/roles.guard';
+import { RolesGuard, Roles, AllowAnyRole } from '../../common/roles.guard';
 import { UsageService } from './usage.service';
 
 @ApiTags('Admin - Usage')
 @Controller('admin/usage')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
+@AllowAnyRole()
 @Roles('SUPER_ADMIN')
 export class UsageController {
   constructor(private readonly usageService: UsageService) {}

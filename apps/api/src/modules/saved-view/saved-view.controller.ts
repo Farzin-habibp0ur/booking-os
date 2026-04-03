@@ -15,7 +15,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { SavedViewService } from './saved-view.service';
 import { BusinessId } from '../../common/decorators';
 import { TenantGuard } from '../../common/tenant.guard';
-import { RolesGuard, Roles } from '../../common/roles.guard';
+import { RolesGuard, Roles, AllowAnyRole } from '../../common/roles.guard';
 import { CreateSavedViewDto, UpdateSavedViewDto, ShareSavedViewDto } from '../../common/dto';
 
 @ApiTags('Saved Views')
@@ -61,6 +61,7 @@ export class SavedViewController {
 
   @Patch(':id/share')
   @UseGuards(RolesGuard)
+  @AllowAnyRole()
   @Roles('ADMIN')
   share(
     @BusinessId() businessId: string,

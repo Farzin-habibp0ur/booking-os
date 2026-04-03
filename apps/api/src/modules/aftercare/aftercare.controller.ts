@@ -11,13 +11,14 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { TenantGuard } from '../../common/tenant.guard';
-import { RolesGuard } from '../../common/roles.guard';
+import { RolesGuard, AllowAnyRole } from '../../common/roles.guard';
 import { BusinessId } from '../../common/decorators';
 import { AftercareService } from './aftercare.service';
 import { CreateProtocolDto, UpdateProtocolDto } from './dto';
 
 @Controller('aftercare-protocols')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+@AllowAnyRole()
 export class AftercareController {
   constructor(private readonly aftercareService: AftercareService) {}
 

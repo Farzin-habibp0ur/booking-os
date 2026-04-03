@@ -1,13 +1,14 @@
 import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { TenantGuard } from '../../common/tenant.guard';
-import { RolesGuard } from '../../common/roles.guard';
+import { RolesGuard, AllowAnyRole } from '../../common/roles.guard';
 import { BusinessId } from '../../common/decorators';
 import { AgentRunsService } from './agent-runs.service';
 import { QueryAgentRunsDto } from './dto';
 
 @Controller('agent-runs')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+@AllowAnyRole()
 export class AgentRunsController {
   constructor(private readonly service: AgentRunsService) {}
 

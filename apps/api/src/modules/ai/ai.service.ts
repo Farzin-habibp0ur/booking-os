@@ -17,6 +17,7 @@ import { MessageService } from '../message/message.service';
 import { MessagingService } from '../messaging/messaging.service';
 import { ConversationActionHandler } from './conversation-action-handler';
 import { OutboundService } from '../outbound/outbound.service';
+import { PortalRedisService } from '../../common/portal-redis.service';
 
 interface ChannelOverride {
   enabled: boolean;
@@ -72,7 +73,6 @@ const MAX_AI_CALLS_PER_DAY = 500;
 @Injectable()
 export class AiService {
   private readonly logger = new Logger(AiService.name);
-  private dailyCalls = new Map<string, { count: number; date: string }>();
 
   constructor(
     private prisma: PrismaService,
@@ -92,17 +92,30 @@ export class AiService {
     private messagingService: MessagingService,
     private conversationActionHandler: ConversationActionHandler,
     private outboundService: OutboundService,
+    private redis: PortalRedisService,
   ) {}
 
   private async getProviderForConversation(conversationId: string) {
     const conv = await this.prisma.conversation.findUnique({
       where: { id: conversationId },
-      include: { location: { select: { whatsappConfig: true, instagramConfig: true } } },
+      include: {
+        location: {
+          select: {
+            whatsappConfig: true,
+            instagramConfig: true,
+            facebookConfig: true,
+            emailConfig: true,
+          },
+        },
+      },
     });
+    const loc = conv?.location as any;
     return this.messagingService.getProviderForConversation(
       conv?.channel || 'WHATSAPP',
-      (conv?.location as any)?.instagramConfig || null,
-      (conv?.location as any)?.whatsappConfig || null,
+      loc?.instagramConfig || null,
+      loc?.whatsappConfig || null,
+      loc?.facebookConfig || null,
+      loc?.emailConfig || null,
     );
   }
 
@@ -221,34 +234,18 @@ export class AiService {
 
   private async checkRateLimit(businessId: string): Promise<boolean> {
     const today = new Date().toISOString().split('T')[0];
-    const entry = this.dailyCalls.get(businessId);
+    const redisKey = `ai:daily:${businessId}:${today}`;
 
-    // Cache miss or stale date — load from DB
-    if (!entry || entry.date !== today) {
-      const dbRecord = await this.prisma.aiUsage.findUnique({
-        where: { businessId_date: { businessId, date: today } },
-      });
-      const currentCount = dbRecord?.count ?? 0;
-      this.dailyCalls.set(businessId, { count: currentCount, date: today });
+    // Atomic increment — shared across all instances, survives restarts
+    const count = await this.redis.incr(redisKey, 86400000);
 
-      if (currentCount >= MAX_AI_CALLS_PER_DAY) {
-        this.logger.warn(`Business ${businessId} exceeded daily AI call limit`);
-        return false;
-      }
-
-      const newCount = currentCount + 1;
-      this.dailyCalls.set(businessId, { count: newCount, date: today });
-      this.persistAiUsage(businessId, newCount, today);
-      return true;
-    }
-
-    if (entry.count >= MAX_AI_CALLS_PER_DAY) {
+    if (count > MAX_AI_CALLS_PER_DAY) {
       this.logger.warn(`Business ${businessId} exceeded daily AI call limit`);
       return false;
     }
 
-    entry.count++;
-    this.persistAiUsage(businessId, entry.count, today);
+    // Persist to DB for historical reporting (fire-and-forget)
+    this.persistAiUsage(businessId, count, today);
     return true;
   }
 
@@ -267,23 +264,20 @@ export class AiService {
 
   async getAiUsage(businessId: string): Promise<{ count: number; date: string; limit: number }> {
     const today = new Date().toISOString().split('T')[0];
+    const redisKey = `ai:daily:${businessId}:${today}`;
 
-    // Try in-memory cache first
-    const entry = this.dailyCalls.get(businessId);
-    if (entry && entry.date === today) {
-      return { count: entry.count, date: today, limit: MAX_AI_CALLS_PER_DAY };
+    // Try Redis first (shared counter)
+    const redisVal = await this.redis.get(redisKey);
+    if (redisVal !== null) {
+      return { count: parseInt(redisVal, 10), date: today, limit: MAX_AI_CALLS_PER_DAY };
     }
 
     // Fallback to DB
     const dbRecord = await this.prisma.aiUsage.findUnique({
       where: { businessId_date: { businessId, date: today } },
     });
-    const count = dbRecord?.count ?? 0;
 
-    // Populate cache
-    this.dailyCalls.set(businessId, { count, date: today });
-
-    return { count, date: today, limit: MAX_AI_CALLS_PER_DAY };
+    return { count: dbRecord?.count ?? 0, date: today, limit: MAX_AI_CALLS_PER_DAY };
   }
 
   private async getCustomerUpcomingBookings(customerId: string, businessId: string) {

@@ -16,7 +16,7 @@ import { Request } from 'express';
 import { BillingService } from './billing.service';
 import { BusinessId } from '../../common/decorators';
 import { TenantGuard } from '../../common/tenant.guard';
-import { RolesGuard, Roles } from '../../common/roles.guard';
+import { RolesGuard, Roles, AllowAnyRole } from '../../common/roles.guard';
 import { PlanTier, PLAN_TIERS } from '../../common/plan-config';
 
 @ApiTags('Billing')
@@ -27,6 +27,7 @@ export class BillingController {
 
   @Post('checkout')
   @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+  @AllowAnyRole()
   @Roles('ADMIN')
   createCheckout(
     @BusinessId() businessId: string,
@@ -41,6 +42,7 @@ export class BillingController {
 
   @Post('portal')
   @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+  @AllowAnyRole()
   @Roles('ADMIN')
   createPortal(@BusinessId() businessId: string) {
     return this.billingService.createPortalSession(businessId);
@@ -48,6 +50,7 @@ export class BillingController {
 
   @Get('subscription')
   @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+  @AllowAnyRole()
   @Roles('ADMIN')
   getSubscription(@BusinessId() businessId: string) {
     return this.billingService.getSubscription(businessId);
@@ -70,6 +73,7 @@ export class BillingController {
 
   @Post('deposit')
   @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+  @AllowAnyRole()
   @Roles('ADMIN')
   createDeposit(@BusinessId() businessId: string, @Body() body: { bookingId: string }) {
     return this.billingService.createDepositPaymentIntent(businessId, body.bookingId);
@@ -77,6 +81,7 @@ export class BillingController {
 
   @Post('switch-annual')
   @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+  @AllowAnyRole()
   @Roles('ADMIN')
   switchToAnnual(@BusinessId() businessId: string) {
     return this.billingService.switchToAnnual(businessId);
@@ -84,6 +89,7 @@ export class BillingController {
 
   @Post('switch-monthly')
   @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+  @AllowAnyRole()
   @Roles('ADMIN')
   switchToMonthly(@BusinessId() businessId: string) {
     return this.billingService.switchToMonthly(businessId);
@@ -107,6 +113,7 @@ export class BillingController {
 
   @Get('health')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @AllowAnyRole()
   @Roles('SUPER_ADMIN')
   getBillingHealth() {
     return this.billingService.checkBillingHealth();

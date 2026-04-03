@@ -12,12 +12,13 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { BusinessId } from '../../common/decorators';
 import { TenantGuard } from '../../common/tenant.guard';
-import { RolesGuard } from '../../common/roles.guard';
+import { RolesGuard, AllowAnyRole } from '../../common/roles.guard';
 import { MedicalRecordService } from './medical-record.service';
 import { CreateMedicalRecordDto } from './dto';
 
 @Controller('medical-records')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+@AllowAnyRole()
 export class MedicalRecordController {
   constructor(private readonly medicalRecordService: MedicalRecordService) {}
 

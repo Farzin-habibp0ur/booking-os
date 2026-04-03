@@ -1,13 +1,14 @@
 import { Controller, Get, Post, Patch, Param, Body, Query, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { TenantGuard } from '../../common/tenant.guard';
-import { RolesGuard } from '../../common/roles.guard';
+import { RolesGuard, AllowAnyRole } from '../../common/roles.guard';
 import { BusinessId, CurrentUser } from '../../common/decorators';
 import { DealService } from './deal.service';
 import { CreateDealDto, UpdateDealDto, ChangeStageDto, CreateActivityDto } from './dto';
 
 @Controller('deals')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+@AllowAnyRole()
 export class DealController {
   constructor(private readonly dealService: DealService) {}
 

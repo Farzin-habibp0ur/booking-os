@@ -1,13 +1,14 @@
 import { Controller, Get, Post, Param, Body, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { TenantGuard } from '../../common/tenant.guard';
-import { RolesGuard, Roles } from '../../common/roles.guard';
+import { RolesGuard, Roles, AllowAnyRole } from '../../common/roles.guard';
 import { BusinessId } from '../../common/decorators';
 import { CurrentUser } from '../../common/decorators';
 import { DashboardBriefingService } from './dashboard-briefing.service';
 
 @Controller('dashboard')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+@AllowAnyRole()
 export class DashboardBriefingController {
   constructor(private readonly service: DashboardBriefingService) {}
 

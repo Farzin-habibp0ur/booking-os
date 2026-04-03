@@ -100,6 +100,30 @@ export class PortalRedisService implements OnModuleInit {
     return true;
   }
 
+  async incr(key: string, ttlMs?: number): Promise<number> {
+    if (this.useRedis && this.client) {
+      try {
+        const val = await this.client.incr(key);
+        if (ttlMs && val === 1) {
+          await this.client.pExpire(key, ttlMs);
+        }
+        return val;
+      } catch {
+        this.logger.warn('Redis INCR failed, falling back to memory');
+      }
+    }
+    const entry = this.memoryStore.get(key);
+    const now = Date.now();
+    if (entry && now <= entry.expiresAt) {
+      const newVal = parseInt(entry.value, 10) + 1;
+      entry.value = String(newVal);
+      return newVal;
+    }
+    const expiresAt = ttlMs ? now + ttlMs : now + 86400000;
+    this.memoryStore.set(key, { value: '1', expiresAt });
+    return 1;
+  }
+
   isRedisConnected(): boolean {
     return this.useRedis;
   }

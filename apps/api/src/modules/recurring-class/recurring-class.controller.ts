@@ -15,11 +15,12 @@ import { RecurringClassService } from './recurring-class.service';
 import { CreateRecurringClassDto, UpdateRecurringClassDto } from './dto';
 import { BusinessId } from '../../common/decorators';
 import { TenantGuard } from '../../common/tenant.guard';
-import { RolesGuard, Roles } from '../../common/roles.guard';
+import { RolesGuard, Roles, AllowAnyRole } from '../../common/roles.guard';
 
 @ApiTags('Recurring Classes')
 @Controller('recurring-classes')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+@AllowAnyRole()
 export class RecurringClassController {
   constructor(private service: RecurringClassService) {}
 

@@ -11,13 +11,14 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { TenantGuard } from '../../common/tenant.guard';
-import { RolesGuard } from '../../common/roles.guard';
+import { RolesGuard, AllowAnyRole } from '../../common/roles.guard';
 import { BusinessId } from '../../common/decorators';
 import { PackageService } from './package.service';
 import { CreatePackageDto, UpdatePackageDto, PurchasePackageDto, RedeemPackageDto } from './dto';
 
 @Controller('packages')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+@AllowAnyRole()
 export class PackageController {
   constructor(private readonly packageService: PackageService) {}
 

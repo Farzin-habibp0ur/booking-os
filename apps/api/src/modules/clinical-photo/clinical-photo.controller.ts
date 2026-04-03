@@ -20,12 +20,13 @@ import { Response } from 'express';
 import { ClinicalPhotoService } from './clinical-photo.service';
 import { BusinessId } from '../../common/decorators';
 import { TenantGuard } from '../../common/tenant.guard';
-import { RolesGuard } from '../../common/roles.guard';
+import { RolesGuard, AllowAnyRole } from '../../common/roles.guard';
 import { CreateComparisonDto } from './dto';
 
 @ApiTags('Clinical Photos')
 @Controller('clinical-photos')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+@AllowAnyRole()
 export class ClinicalPhotoController {
   constructor(private readonly clinicalPhotoService: ClinicalPhotoService) {}
 

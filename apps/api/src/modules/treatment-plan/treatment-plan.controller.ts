@@ -2,7 +2,7 @@ import { Controller, Get, Post, Patch, Param, Body, Query, UseGuards } from '@ne
 import { AuthGuard } from '@nestjs/passport';
 import { ApiTags } from '@nestjs/swagger';
 import { TenantGuard } from '../../common/tenant.guard';
-import { RolesGuard } from '../../common/roles.guard';
+import { RolesGuard, AllowAnyRole } from '../../common/roles.guard';
 import { BusinessId, CurrentUser } from '../../common/decorators';
 import { TreatmentPlanService } from './treatment-plan.service';
 import { CreateTreatmentPlanDto } from './dto/create-treatment-plan.dto';
@@ -15,6 +15,7 @@ import {
 @ApiTags('Treatment Plans')
 @Controller('treatment-plans')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+@AllowAnyRole()
 export class TreatmentPlanController {
   constructor(private readonly service: TreatmentPlanService) {}
 

@@ -11,13 +11,14 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { TenantGuard } from '../../common/tenant.guard';
-import { RolesGuard, Roles } from '../../common/roles.guard';
+import { RolesGuard, Roles, AllowAnyRole } from '../../common/roles.guard';
 import { BusinessId } from '../../common/decorators';
 import { EmailSequenceService } from './email-sequences.service';
 import { CreateSequenceDto, UpdateSequenceDto, EnrollSequenceDto } from './dto';
 
 @Controller('email-sequences')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+@AllowAnyRole()
 @Roles('SUPER_ADMIN')
 export class EmailSequenceController {
   constructor(private readonly service: EmailSequenceService) {}

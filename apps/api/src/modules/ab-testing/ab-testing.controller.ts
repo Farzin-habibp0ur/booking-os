@@ -1,13 +1,14 @@
 import { Controller, Get, Post, Patch, Param, Body, Query, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { TenantGuard } from '../../common/tenant.guard';
-import { RolesGuard, Roles } from '../../common/roles.guard';
+import { RolesGuard, Roles, AllowAnyRole } from '../../common/roles.guard';
 import { BusinessId } from '../../common/decorators';
 import { AbTestingService } from './ab-testing.service';
 import { CreateAbTestDto, UpdateAbTestDto, QueryAbTestsDto } from './dto';
 
 @Controller('ab-testing')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+@AllowAnyRole()
 @Roles('SUPER_ADMIN')
 export class AbTestingController {
   constructor(private readonly service: AbTestingService) {}

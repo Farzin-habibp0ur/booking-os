@@ -1,7 +1,7 @@
 import { Controller, Get, Patch, Param, Body, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { TenantGuard } from '../../common/tenant.guard';
-import { RolesGuard, Roles } from '../../common/roles.guard';
+import { RolesGuard, Roles, AllowAnyRole } from '../../common/roles.guard';
 import { BusinessId } from '../../common/decorators';
 import { AgentSkillsService } from './agent-skills.service';
 
@@ -22,6 +22,7 @@ export class AgentSkillsController {
 
   @Patch(':agentType/enable')
   @UseGuards(RolesGuard)
+  @AllowAnyRole()
   @Roles('ADMIN')
   enableSkill(@BusinessId() businessId: string, @Param('agentType') agentType: string) {
     return this.agentSkillsService.enableSkill(businessId, agentType);
@@ -29,6 +30,7 @@ export class AgentSkillsController {
 
   @Patch(':agentType/disable')
   @UseGuards(RolesGuard)
+  @AllowAnyRole()
   @Roles('ADMIN')
   disableSkill(@BusinessId() businessId: string, @Param('agentType') agentType: string) {
     return this.agentSkillsService.disableSkill(businessId, agentType);
@@ -36,6 +38,7 @@ export class AgentSkillsController {
 
   @Patch(':agentType/config')
   @UseGuards(RolesGuard)
+  @AllowAnyRole()
   @Roles('ADMIN')
   updateConfig(
     @BusinessId() businessId: string,

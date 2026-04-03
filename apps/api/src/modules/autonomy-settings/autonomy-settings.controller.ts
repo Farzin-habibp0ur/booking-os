@@ -1,13 +1,14 @@
 import { Controller, Get, Patch, Post, Param, Body, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { TenantGuard } from '../../common/tenant.guard';
-import { RolesGuard, Roles } from '../../common/roles.guard';
+import { RolesGuard, Roles, AllowAnyRole } from '../../common/roles.guard';
 import { BusinessId } from '../../common/decorators';
 import { AutonomySettingsService } from './autonomy-settings.service';
 import { UpdateAutonomySettingDto } from './dto';
 
 @Controller('autonomy-settings')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+@AllowAnyRole()
 @Roles('SUPER_ADMIN')
 export class AutonomySettingsController {
   constructor(private readonly service: AutonomySettingsService) {}

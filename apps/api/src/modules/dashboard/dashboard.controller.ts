@@ -15,7 +15,7 @@ import { DashboardService } from './dashboard.service';
 import { AiService } from '../ai/ai.service';
 import { BusinessId } from '../../common/decorators';
 import { TenantGuard } from '../../common/tenant.guard';
-import { RolesGuard, Roles } from '../../common/roles.guard';
+import { RolesGuard, Roles, AllowAnyRole } from '../../common/roles.guard';
 import { DismissNudgeDto } from '../../common/dto';
 
 @ApiTags('Dashboard')
@@ -34,6 +34,7 @@ export class DashboardController {
 
   @Patch('dismiss-nudge')
   @UseGuards(RolesGuard)
+  @AllowAnyRole()
   @Roles('ADMIN')
   dismissNudge(@BusinessId() businessId: string, @Body() dto: DismissNudgeDto) {
     return this.dashboardService.dismissNudge(businessId, dto.nudgeId);

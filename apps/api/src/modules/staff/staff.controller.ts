@@ -19,7 +19,7 @@ import { StaffService } from './staff.service';
 import { AvailabilityService } from '../availability/availability.service';
 import { BusinessId, CurrentUser } from '../../common/decorators';
 import { TenantGuard } from '../../common/tenant.guard';
-import { RolesGuard, Roles } from '../../common/roles.guard';
+import { RolesGuard, Roles, AllowAnyRole } from '../../common/roles.guard';
 import {
   CreateStaffDto,
   UpdateStaffDto,
@@ -34,6 +34,7 @@ import {
 @Throttle({ default: { limit: 30, ttl: 60000 } })
 @Controller('staff')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+@AllowAnyRole()
 export class StaffController {
   constructor(
     private staffService: StaffService,

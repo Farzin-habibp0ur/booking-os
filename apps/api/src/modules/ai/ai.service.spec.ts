@@ -17,6 +17,7 @@ import { MessageService } from '../message/message.service';
 import { MessagingService } from '../messaging/messaging.service';
 import { ConversationActionHandler } from './conversation-action-handler';
 import { OutboundService } from '../outbound/outbound.service';
+import { PortalRedisService } from '../../common/portal-redis.service';
 import { createMockPrisma } from '../../test/mocks';
 
 describe('AiService', () => {
@@ -36,6 +37,7 @@ describe('AiService', () => {
   let bookingService: jest.Mocked<BookingService>;
   let messageService: jest.Mocked<MessageService>;
   let messagingService: jest.Mocked<MessagingService>;
+  let redis: jest.Mocked<PortalRedisService>;
 
   beforeEach(async () => {
     prisma = createMockPrisma();
@@ -120,6 +122,15 @@ describe('AiService', () => {
       getProviderForConversation: jest.fn().mockReturnValue('whatsapp'),
     } as any;
 
+    redis = {
+      get: jest.fn().mockResolvedValue(null),
+      set: jest.fn().mockResolvedValue(undefined),
+      del: jest.fn().mockResolvedValue(undefined),
+      incr: jest.fn().mockResolvedValue(1),
+      exists: jest.fn().mockResolvedValue(false),
+      isRedisConnected: jest.fn().mockReturnValue(false),
+    } as any;
+
     const module = await Test.createTestingModule({
       providers: [
         AiService,
@@ -155,6 +166,7 @@ describe('AiService', () => {
             findByConversation: jest.fn().mockResolvedValue([]),
           },
         },
+        { provide: PortalRedisService, useValue: redis },
       ],
     }).compile();
 
@@ -164,22 +176,9 @@ describe('AiService', () => {
   describe('getAiUsage', () => {
     const today = new Date().toISOString().split('T')[0];
 
-    it('returns cached count when available', async () => {
-      // Pre-populate cache
-      prisma.aiUsage.findUnique.mockResolvedValue({
-        id: '1',
-        businessId: 'biz1',
-        date: today,
-        count: 50,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      } as any);
+    it('returns Redis count when available', async () => {
+      redis.get.mockResolvedValue('50');
 
-      // First call to populate cache
-      await aiService.getAiUsage('biz1');
-
-      // Second call should use cache
-      prisma.aiUsage.findUnique.mockClear();
       const result = await aiService.getAiUsage('biz1');
 
       expect(result).toEqual({
@@ -190,7 +189,8 @@ describe('AiService', () => {
       expect(prisma.aiUsage.findUnique).not.toHaveBeenCalled();
     });
 
-    it('returns DB count on cache miss', async () => {
+    it('falls back to DB when Redis has no value', async () => {
+      redis.get.mockResolvedValue(null);
       prisma.aiUsage.findUnique.mockResolvedValue({
         id: '1',
         businessId: 'biz1',
@@ -212,7 +212,8 @@ describe('AiService', () => {
       });
     });
 
-    it('returns 0 when no record exists', async () => {
+    it('returns 0 when neither Redis nor DB has a record', async () => {
+      redis.get.mockResolvedValue(null);
       prisma.aiUsage.findUnique.mockResolvedValue(null);
 
       const result = await aiService.getAiUsage('biz1');
@@ -222,27 +223,6 @@ describe('AiService', () => {
         date: today,
         limit: 500,
       });
-    });
-
-    it('populates cache after DB query', async () => {
-      prisma.aiUsage.findUnique.mockResolvedValue({
-        id: '1',
-        businessId: 'biz1',
-        date: today,
-        count: 75,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      } as any);
-
-      // First call
-      await aiService.getAiUsage('biz1');
-
-      // Clear mock and call again
-      prisma.aiUsage.findUnique.mockClear();
-      const result = await aiService.getAiUsage('biz1');
-
-      expect(result.count).toBe(75);
-      expect(prisma.aiUsage.findUnique).not.toHaveBeenCalled();
     });
   });
 
@@ -309,15 +289,7 @@ describe('AiService', () => {
     });
 
     it('skips processing when rate limit exceeded', async () => {
-      const today = new Date().toISOString().split('T')[0];
-      prisma.aiUsage.findUnique.mockResolvedValue({
-        id: '1',
-        businessId: 'biz1',
-        date: today,
-        count: 500, // At limit
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      } as any);
+      redis.incr.mockResolvedValue(501); // Over the 500 limit
 
       await aiService.processInboundMessage('biz1', 'conv1', 'msg1', 'Hello');
 

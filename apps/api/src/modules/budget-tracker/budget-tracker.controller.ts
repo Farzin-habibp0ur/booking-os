@@ -1,13 +1,14 @@
 import { Controller, Get, Post, Patch, Param, Body, Query, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { TenantGuard } from '../../common/tenant.guard';
-import { RolesGuard, Roles } from '../../common/roles.guard';
+import { RolesGuard, Roles, AllowAnyRole } from '../../common/roles.guard';
 import { BusinessId } from '../../common/decorators';
 import { BudgetTrackerService } from './budget-tracker.service';
 import { CreateBudgetEntryDto, QueryBudgetEntriesDto } from './dto';
 
 @Controller('budget')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+@AllowAnyRole()
 @Roles('SUPER_ADMIN')
 export class BudgetTrackerController {
   constructor(private readonly service: BudgetTrackerService) {}

@@ -1,13 +1,14 @@
 import { Controller, Get, Post, Patch, Delete, Param, Body, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
-import { RolesGuard, Roles } from '../../common/roles.guard';
+import { RolesGuard, Roles, AllowAnyRole } from '../../common/roles.guard';
 import { PackBuilderService } from './pack-builder.service';
 import { CreatePackDto, UpdatePackDto } from '../../common/dto';
 
 @ApiTags('Pack Builder')
 @Controller('admin/packs')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
+@AllowAnyRole()
 @Roles('SUPER_ADMIN')
 export class PackBuilderController {
   constructor(private packBuilderService: PackBuilderService) {}

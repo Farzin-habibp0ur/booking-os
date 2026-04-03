@@ -16,6 +16,7 @@ import { PolicyComplianceService } from './policy-compliance.service';
 import { HumanTakeoverService } from './human-takeover.service';
 import { ClarificationHandler } from './clarification-handler';
 import { VerticalActionHandler } from './vertical-action-handler';
+import { PortalRedisService } from '../../common/portal-redis.service';
 import { BusinessModule } from '../business/business.module';
 import { ServiceModule } from '../service/service.module';
 import { AvailabilityModule } from '../availability/availability.module';
@@ -54,6 +55,7 @@ import { OutboundModule } from '../outbound/outbound.module';
     HumanTakeoverService,
     ClarificationHandler,
     VerticalActionHandler,
+    PortalRedisService,
   ],
   exports: [
     AiService,

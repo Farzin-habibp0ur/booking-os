@@ -15,7 +15,7 @@ import { Throttle } from '@nestjs/throttler';
 import { BookingService } from './booking.service';
 import { BusinessId, CurrentUser } from '../../common/decorators';
 import { TenantGuard } from '../../common/tenant.guard';
-import { RolesGuard } from '../../common/roles.guard';
+import { RolesGuard, AllowAnyRole } from '../../common/roles.guard';
 import {
   CreateBookingDto,
   UpdateBookingDto,
@@ -27,6 +27,7 @@ import {
 @ApiTags('Bookings')
 @Controller('bookings')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+@AllowAnyRole()
 export class BookingController {
   constructor(private bookingService: BookingService) {}
 

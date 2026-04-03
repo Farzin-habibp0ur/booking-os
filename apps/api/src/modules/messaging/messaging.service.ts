@@ -197,6 +197,7 @@ export class MessagingService {
     locationInstagramConfig?: Record<string, any> | null,
     locationWhatsappConfig?: Record<string, any> | null,
     locationFacebookConfig?: Record<string, any> | null,
+    locationEmailConfig?: Record<string, any> | null,
   ): MessagingProvider {
     if (channel === 'INSTAGRAM') {
       const igProvider = this.getProviderForLocationInstagramConfig(
@@ -220,8 +221,7 @@ export class MessagingService {
     }
 
     if (channel === 'EMAIL') {
-      // Email: look up by a key from location config, fallback to null (not implemented yet)
-      const emailKey = locationWhatsappConfig?.emailProviderKey;
+      const emailKey = locationEmailConfig?.emailProviderKey;
       if (emailKey) {
         const emailProvider = this.getEmailProvider(emailKey);
         if (emailProvider) return emailProvider;

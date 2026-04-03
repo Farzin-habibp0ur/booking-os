@@ -2,7 +2,7 @@ import { Controller, Get, Post, Patch, Body, Param, Query, UseGuards } from '@ne
 import { AuthGuard } from '@nestjs/passport';
 import { Throttle } from '@nestjs/throttler';
 import { TenantGuard } from '../../common/tenant.guard';
-import { RolesGuard, Roles } from '../../common/roles.guard';
+import { RolesGuard, Roles, AllowAnyRole } from '../../common/roles.guard';
 import { BusinessId, CurrentUser } from '../../common/decorators';
 import { AgentFrameworkService } from './agent-framework.service';
 
@@ -24,6 +24,7 @@ export class AgentController {
 
   @Patch('config/:agentType')
   @UseGuards(RolesGuard)
+  @AllowAnyRole()
   @Roles('ADMIN')
   upsertConfig(
     @BusinessId() businessId: string,
@@ -36,6 +37,7 @@ export class AgentController {
 
   @Post(':agentType/trigger')
   @UseGuards(RolesGuard)
+  @AllowAnyRole()
   @Roles('ADMIN')
   triggerAgent(@BusinessId() businessId: string, @Param('agentType') agentType: string) {
     return this.agentFramework.triggerAgent(businessId, agentType);

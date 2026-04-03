@@ -2,13 +2,14 @@ import { Controller, Post, Body, UseGuards, BadRequestException, Logger } from '
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { TenantGuard } from '../../common/tenant.guard';
-import { RolesGuard, Roles } from '../../common/roles.guard';
+import { RolesGuard, Roles, AllowAnyRole } from '../../common/roles.guard';
 import { BusinessId } from '../../common/decorators';
 import { MessagingService } from './messaging.service';
 
 @ApiTags('SMS')
 @Controller('messaging')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+@AllowAnyRole()
 export class SmsController {
   private readonly logger = new Logger(SmsController.name);
 

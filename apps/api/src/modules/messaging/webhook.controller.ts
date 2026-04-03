@@ -397,7 +397,19 @@ export class WebhookController {
   @Post('whatsapp/status')
   async whatsappStatusCallback(
     @Body() payload: { externalId: string; status: string; errorMessage?: string },
+    @Headers('x-hub-signature-256') signature?: string,
   ) {
+    const secret = this.configService.get<string>('WHATSAPP_APP_SECRET');
+    if (secret) {
+      const raw = JSON.stringify(payload);
+      const expected = crypto.createHmac('sha256', secret).update(raw).digest('hex');
+      const sig = (signature || '').replace('sha256=', '');
+      const sigBuf = Buffer.from(sig);
+      const expBuf = Buffer.from(expected);
+      if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
+        throw new ForbiddenException('Invalid WhatsApp status webhook signature');
+      }
+    }
     const statusMap: Record<string, 'DELIVERED' | 'READ' | 'FAILED'> = {
       delivered: 'DELIVERED',
       read: 'READ',
@@ -526,7 +538,25 @@ export class WebhookController {
    * Receives delivery status updates (delivered, failed, undelivered, etc.)
    */
   @Post('sms/status')
-  async smsStatusCallback(@Body() body: Record<string, string>) {
+  async smsStatusCallback(
+    @Body() body: Record<string, string>,
+    @Headers('x-twilio-signature') twilioSignature?: string,
+  ) {
+    const authToken = this.configService.get<string>('TWILIO_AUTH_TOKEN');
+    const apiUrl = this.configService.get<string>('API_URL');
+    if (authToken && apiUrl && twilioSignature) {
+      const statusUrl = `${apiUrl}/api/v1/webhook/sms/status`;
+      const isValid = TwilioSmsProvider.validateSignature(
+        authToken,
+        twilioSignature,
+        statusUrl,
+        body,
+      );
+      if (!isValid) {
+        throw new ForbiddenException('Invalid Twilio status webhook signature');
+      }
+    }
+
     const parsed = TwilioSmsProvider.parseStatusWebhook(body);
     if (!parsed) {
       return { ok: true, skipped: true, reason: 'Invalid status payload' };
@@ -838,7 +868,27 @@ export class WebhookController {
 
   /** Email delivery status webhook (Resend events) */
   @Post('email/status')
-  async emailStatusCallback(@Body() body: any) {
+  async emailStatusCallback(
+    @Body() body: any,
+    @Headers('webhook-signature') webhookSignature?: string,
+    @RawBody() rawBody?: Buffer,
+  ) {
+    const emailWebhookSecret = this.configService.get<string>('SENDGRID_INBOUND_WEBHOOK_SECRET');
+    if (emailWebhookSecret && rawBody) {
+      if (webhookSignature) {
+        const isValid = EmailChannelProvider.verifyWebhookIntegrity(
+          rawBody.toString(),
+          webhookSignature,
+          emailWebhookSecret,
+        );
+        if (!isValid) {
+          throw new ForbiddenException('Invalid email status webhook signature');
+        }
+      } else {
+        this.logger.warn('Email status webhook received without signature header');
+      }
+    }
+
     const { type, data } = body || {};
     if (!data?.email_id) return { ok: true, status: 'ignored' };
 

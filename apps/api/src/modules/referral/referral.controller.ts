@@ -1,7 +1,7 @@
 import { Controller, Get, Patch, Param, Body, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { TenantGuard } from '../../common/tenant.guard';
-import { RolesGuard, Roles } from '../../common/roles.guard';
+import { RolesGuard, Roles, AllowAnyRole } from '../../common/roles.guard';
 import { BusinessId } from '../../common/decorators';
 import { PrismaService } from '../../common/prisma.service';
 import { ReferralService } from './referral.service';
@@ -10,6 +10,7 @@ import { UpdateReferralSettingsDto } from './dto/update-referral-settings.dto';
 
 @Controller('referral')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+@AllowAnyRole()
 @Roles('ADMIN')
 export class ReferralController {
   constructor(

@@ -12,12 +12,13 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
-import { RolesGuard, Roles } from '../../common/roles.guard';
+import { RolesGuard, Roles, AllowAnyRole } from '../../common/roles.guard';
 import { DeadLetterQueueService } from './dead-letter.service';
 
 @ApiTags('Admin - DLQ')
 @Controller('admin/dlq')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
+@AllowAnyRole()
 @Roles('SUPER_ADMIN')
 export class DeadLetterController {
   constructor(private readonly dlqService: DeadLetterQueueService) {}

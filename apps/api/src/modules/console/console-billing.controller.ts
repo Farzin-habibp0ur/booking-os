@@ -2,7 +2,7 @@ import { Controller, Get, Post, Param, Query, Body, UseGuards } from '@nestjs/co
 import { Throttle } from '@nestjs/throttler';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
-import { RolesGuard, Roles } from '../../common/roles.guard';
+import { RolesGuard, Roles, AllowAnyRole } from '../../common/roles.guard';
 import { ConsoleBillingService } from './console-billing.service';
 import { PlatformAuditService } from './platform-audit.service';
 import { CurrentUser } from '../../common/decorators';
@@ -16,6 +16,7 @@ import {
 @ApiTags('Console - Billing')
 @Controller('admin/billing')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
+@AllowAnyRole()
 @Roles('SUPER_ADMIN')
 @Throttle({ default: { ttl: 60000, limit: 10 } })
 export class ConsoleBillingController {
@@ -60,6 +61,7 @@ export class ConsoleBillingController {
 @ApiTags('Console - Business Billing')
 @Controller('admin/businesses')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
+@AllowAnyRole()
 @Roles('SUPER_ADMIN')
 @Throttle({ default: { ttl: 60000, limit: 10 } })
 export class ConsoleBusinessBillingController {

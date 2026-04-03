@@ -1,13 +1,14 @@
 import { Controller, Get, Patch, Param, Body, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { TenantGuard } from '../../common/tenant.guard';
-import { RolesGuard, Roles } from '../../common/roles.guard';
+import { RolesGuard, Roles, AllowAnyRole } from '../../common/roles.guard';
 import { BusinessId } from '../../common/decorators';
 import { PlatformConfigService } from './platform-config.service';
 import { UpdatePlatformConfigDto } from './dto';
 
 @Controller('platform-config')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+@AllowAnyRole()
 export class PlatformConfigController {
   constructor(private readonly service: PlatformConfigService) {}
 

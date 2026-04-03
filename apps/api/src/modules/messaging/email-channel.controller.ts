@@ -11,7 +11,7 @@ import {
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { TenantGuard } from '../../common/tenant.guard';
-import { RolesGuard, Roles } from '../../common/roles.guard';
+import { RolesGuard, Roles, AllowAnyRole } from '../../common/roles.guard';
 import { BusinessId } from '../../common/decorators';
 import { ConfigService } from '@nestjs/config';
 import { MessagingService } from './messaging.service';
@@ -21,6 +21,7 @@ import { PrismaService } from '../../common/prisma.service';
 @ApiTags('Messaging - Email')
 @Controller('messaging/email')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+@AllowAnyRole()
 @Roles('OWNER', 'ADMIN')
 export class EmailChannelController {
   private readonly logger = new Logger(EmailChannelController.name);

@@ -2,7 +2,7 @@ import { Controller, Get, Post, Param, UseGuards } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
-import { RolesGuard, Roles } from '../../common/roles.guard';
+import { RolesGuard, Roles, AllowAnyRole } from '../../common/roles.guard';
 import { ConsoleMessagingService } from './console-messaging.service';
 import { PlatformAuditService } from './platform-audit.service';
 import { CurrentUser } from '../../common/decorators';
@@ -11,6 +11,7 @@ import { PrismaService } from '../../common/prisma.service';
 @ApiTags('Console - Messaging')
 @Controller('admin/messaging-console')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
+@AllowAnyRole()
 @Roles('SUPER_ADMIN')
 @Throttle({ default: { ttl: 60000, limit: 10 } })
 export class ConsoleMessagingController {

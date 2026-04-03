@@ -2,13 +2,14 @@ import { Controller, Get, UseGuards, Logger } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { TenantGuard } from '../../common/tenant.guard';
-import { RolesGuard, Roles } from '../../common/roles.guard';
+import { RolesGuard, Roles, AllowAnyRole } from '../../common/roles.guard';
 import { BusinessId } from '../../common/decorators';
 import { PrismaService } from '../../common/prisma.service';
 
 @ApiTags('Messaging - Channel Status')
 @Controller('messaging/channels')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+@AllowAnyRole()
 @Roles('OWNER', 'ADMIN')
 export class ChannelStatusController {
   private readonly logger = new Logger(ChannelStatusController.name);

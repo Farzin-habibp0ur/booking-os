@@ -11,7 +11,7 @@ import {
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { TenantGuard } from '../../common/tenant.guard';
-import { RolesGuard, Roles } from '../../common/roles.guard';
+import { RolesGuard, Roles, AllowAnyRole } from '../../common/roles.guard';
 import { BusinessId } from '../../common/decorators';
 import { MessagingService } from './messaging.service';
 import { FacebookProvider } from '@booking-os/messaging-provider';
@@ -19,6 +19,7 @@ import { FacebookProvider } from '@booking-os/messaging-provider';
 @ApiTags('Messaging - Facebook')
 @Controller('messaging/facebook')
 @UseGuards(AuthGuard('jwt'), TenantGuard, RolesGuard)
+@AllowAnyRole()
 @Roles('OWNER', 'ADMIN')
 export class FacebookController {
   private readonly logger = new Logger(FacebookController.name);
