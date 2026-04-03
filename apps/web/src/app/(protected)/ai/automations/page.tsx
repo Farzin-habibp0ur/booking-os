@@ -40,6 +40,7 @@ function formatTime12h(time: string): string {
 }
 
 export default function AutomationsPage() {
+  const [mounted, setMounted] = useState(false);
   const [tab, setTab] = useState<Tab>('playbooks');
   const [playbooks, setPlaybooks] = useState<any[]>([]);
   const [rules, setRules] = useState<any[]>([]);
@@ -86,6 +87,7 @@ export default function AutomationsPage() {
   );
 
   useEffect(() => {
+    setMounted(true);
     setLoading(true);
     Promise.all([loadPlaybooks(), loadRules(), loadLogs({})]).finally(() => setLoading(false));
   }, []);
@@ -181,10 +183,11 @@ export default function AutomationsPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-4 bg-slate-100 rounded-xl p-1 w-fit">
+      <div className="relative z-10 flex gap-1 mb-4 bg-slate-100 rounded-xl p-1 w-fit">
         {tabs.map((t) => (
           <button
             key={t.key}
+            type="button"
             onClick={() => setTab(t.key)}
             className={cn(
               'px-4 py-1.5 text-sm rounded-lg transition-colors',
@@ -206,7 +209,7 @@ export default function AutomationsPage() {
       />
 
       {/* Safety Controls Summary */}
-      {(tab === 'playbooks' || tab === 'rules') && (
+      {mounted && (tab === 'playbooks' || tab === 'rules') && (
         <div
           className="mb-4 bg-white rounded-2xl shadow-soft p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4"
           data-testid="safety-controls-panel"
