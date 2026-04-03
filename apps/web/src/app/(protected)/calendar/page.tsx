@@ -995,7 +995,10 @@ export default function CalendarPage() {
                         <button
                           key={b.id}
                           type="button"
-                          onClick={(e) => handleBookingClick(b, e)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleBookingClick(b, e);
+                          }}
                           className={cn(
                             'w-full text-left rounded-xl p-3 shadow-soft-sm transition-shadow hover:shadow-md',
                             colors.bg,
