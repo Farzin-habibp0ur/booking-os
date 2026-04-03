@@ -278,8 +278,13 @@ export default function AIActionsPage() {
         data-testid="actions-empty"
       >
         <Sparkles className="mx-auto mb-4 text-lavender-400" size={48} />
-        <h3 className="font-serif text-lg text-slate-900 dark:text-white mb-2">All caught up!</h3>
-        <p className="text-slate-600 dark:text-slate-400">No pending actions.</p>
+        <h3 className="font-serif text-lg text-slate-900 dark:text-white mb-2">
+          No action items right now
+        </h3>
+        <p className="text-slate-600 dark:text-slate-400">
+          Your AI agents will create suggestions here as they identify opportunities for your
+          business.
+        </p>
       </div>
     );
   }

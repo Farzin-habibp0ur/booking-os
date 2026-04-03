@@ -42,6 +42,36 @@ const nextConfig = {
         destination: '/bookings/:path*',
         permanent: true,
       },
+      {
+        source: '/automations',
+        destination: '/ai/automations',
+        permanent: true,
+      },
+      {
+        source: '/automations/analytics',
+        destination: '/ai/performance',
+        permanent: true,
+      },
+      {
+        source: '/settings/ai',
+        destination: '/ai/settings',
+        permanent: true,
+      },
+      {
+        source: '/automations/new',
+        destination: '/ai/automations/new',
+        permanent: true,
+      },
+      {
+        source: '/automations/builder',
+        destination: '/ai/automations/builder',
+        permanent: true,
+      },
+      {
+        source: '/automations/:path*',
+        destination: '/ai/automations/:path*',
+        permanent: true,
+      },
     ];
   },
   async headers() {

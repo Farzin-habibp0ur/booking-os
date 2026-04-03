@@ -74,6 +74,8 @@
     "ai_actions": "Action Triage",
     "ai_agents": "Agent Status",
     "ai_performance": "Performance",
+    "ai_automations": "Automations",
+    "ai_settings": "AI Settings",
     "settings": "Settings",
     "home": "Home",
     "logout": "Logout",

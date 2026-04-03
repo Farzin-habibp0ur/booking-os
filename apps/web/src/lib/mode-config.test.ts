@@ -227,14 +227,13 @@ describe('mode-config', () => {
       expect(split.workspace.overflow).toEqual([]);
     });
 
-    it('primary tools = services, staff, invoices, marketing, campaigns, automations', () => {
+    it('primary tools = services, staff, invoices, marketing, campaigns', () => {
       expect(split.tools.primary).toEqual([
         '/services',
         '/staff',
         '/invoices',
         '/marketing',
         '/campaigns',
-        '/automations',
       ]);
     });
 
@@ -254,8 +253,14 @@ describe('mode-config', () => {
       expect(split.aiAgents.primary).toEqual(['/ai']);
     });
 
-    it('overflow aiAgents = actions, agents, performance', () => {
-      expect(split.aiAgents.overflow).toEqual(['/ai/agents', '/ai/actions', '/ai/performance']);
+    it('overflow aiAgents = agents, actions, automations, settings, performance', () => {
+      expect(split.aiAgents.overflow).toEqual([
+        '/ai/agents',
+        '/ai/actions',
+        '/ai/automations',
+        '/ai/settings',
+        '/ai/performance',
+      ]);
     });
 
     it('primary + overflow = full section (no paths lost)', () => {

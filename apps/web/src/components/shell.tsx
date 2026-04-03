@@ -180,7 +180,7 @@ function ShellInner({ children }: { children: ReactNode }) {
     i: () => router.push('/inbox'),
     d: () => router.push('/dashboard'),
     s: () => router.push('/services'),
-    a: () => router.push('/automations'),
+    a: () => router.push('/ai/automations'),
     q: () => router.push('/ai/actions'),
     r: () => router.push('/reports'),
     j: () => router.push('/ai'),

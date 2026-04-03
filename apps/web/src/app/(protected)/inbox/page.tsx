@@ -1894,6 +1894,14 @@ function InboxPage() {
                         <span className="text-xs font-medium text-indigo-700">
                           {draft.source === 'AGENT' ? 'Agent Draft' : 'AI Draft'}
                         </span>
+                        <a
+                          href="/ai"
+                          className="ml-auto text-lavender-400 hover:text-lavender-600 transition-colors flex-shrink-0"
+                          title="Manage AI"
+                          data-testid="manage-ai-link"
+                        >
+                          <Sparkles size={12} />
+                        </a>
                         {draft.channel && (
                           <span className="text-[10px] bg-indigo-100 text-indigo-600 px-1.5 py-0.5 rounded-full">
                             {draft.channel}

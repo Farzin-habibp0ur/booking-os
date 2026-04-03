@@ -108,6 +108,42 @@ export default function AIAgentsPage() {
     );
   }
 
+  const allDisabled = agents.length > 0 && agents.every((a) => !a.isEnabled);
+
+  if (allDisabled) {
+    return (
+      <div
+        className="rounded-2xl bg-white dark:bg-slate-900 p-12 shadow-soft text-center"
+        data-testid="agents-all-disabled"
+      >
+        <Bot className="mx-auto mb-4 text-slate-300" size={48} />
+        <h3 className="font-serif text-lg font-semibold text-slate-900 dark:text-white mb-2">
+          No agents enabled yet
+        </h3>
+        <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm mx-auto mb-6">
+          AI agents work behind the scenes to find opportunities. We recommend starting with the
+          Waitlist Agent.
+        </p>
+        <button
+          onClick={async () => {
+            try {
+              await api.patch('/agent-config/WAITLIST', { isEnabled: true });
+              setAgents((prev) =>
+                prev.map((a) => (a.agentType === 'WAITLIST' ? { ...a, isEnabled: true } : a)),
+              );
+            } catch {
+              // ignore
+            }
+          }}
+          className="bg-sage-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-sage-700 transition-colors"
+          data-testid="enable-waitlist-btn"
+        >
+          Enable Waitlist Agent
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8" data-testid="agents-page">
       {/* Core Agents */}
@@ -250,6 +286,14 @@ function AgentCard({
             </div>
           </div>
         )}
+
+        <a
+          href={`/ai/actions?agent=${agent.agentType}`}
+          className="text-xs text-lavender-600 hover:text-lavender-700 transition-colors"
+          data-testid={`view-cards-${agent.agentType}`}
+        >
+          View cards →
+        </a>
 
         <div className="flex items-center justify-between text-xs text-slate-500">
           <span>

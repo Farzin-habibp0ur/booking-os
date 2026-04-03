@@ -55,15 +55,21 @@ function getAdminSections(packName?: string): NavSections {
       '/invoices',
       '/marketing',
       '/campaigns',
-      '/automations',
       '/packages',
     ],
     insights: ['/dashboard', '/reports', '/reports/monthly-review', '/roi'],
-    aiAgents: ['/ai', '/ai/agents', '/ai/actions', '/ai/performance'],
+    aiAgents: [
+      '/ai',
+      '/ai/agents',
+      '/ai/actions',
+      '/ai/automations',
+      '/ai/settings',
+      '/ai/performance',
+    ],
     overflow: {
       tools: ['/packages'],
       insights: ['/reports/monthly-review', '/roi'],
-      aiAgents: ['/ai/actions', '/ai/agents', '/ai/performance'],
+      aiAgents: ['/ai/actions', '/ai/agents', '/ai/automations', '/ai/settings', '/ai/performance'],
     },
   };
 }

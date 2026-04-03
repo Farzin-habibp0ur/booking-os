@@ -24,6 +24,8 @@ import {
   Bot,
   Gauge,
   Blocks,
+  Zap,
+  Settings as SettingsIcon,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -107,8 +109,10 @@ export function getNavItems(opts: NavConfigOptions): NavItem[] {
       ? [{ href: '/roi', label: t('nav.roi'), icon: TrendingUp, roles: ['ADMIN'] }]
       : []),
     { href: '/ai', label: t('nav.ai'), icon: Sparkles, roles: ['ADMIN'] },
-    { href: '/ai/actions', label: t('nav.ai_actions'), icon: ListFilter, roles: ['ADMIN'] },
     { href: '/ai/agents', label: t('nav.ai_agents'), icon: Bot, roles: ['ADMIN'] },
+    { href: '/ai/actions', label: t('nav.ai_actions'), icon: ListFilter, roles: ['ADMIN'] },
+    { href: '/ai/automations', label: t('nav.ai_automations'), icon: Zap, roles: ['ADMIN'] },
+    { href: '/ai/settings', label: t('nav.ai_settings'), icon: SettingsIcon, roles: ['ADMIN'] },
     { href: '/ai/performance', label: t('nav.ai_performance'), icon: Gauge, roles: ['ADMIN'] },
     {
       href: '/admin/pack-builder',

@@ -27,7 +27,7 @@ const BASE_CARDS = [
     icon: Zap,
     title: 'Automations',
     description: 'Set up automated workflows and triggers',
-    href: '/automations',
+    href: '/ai/automations',
   },
   {
     icon: Gift,

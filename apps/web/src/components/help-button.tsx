@@ -36,7 +36,7 @@ const SHORTCUT_CATEGORIES = [
       { keys: ['G', 'then', 'C'], description: 'Go to Customers' },
       { keys: ['G', 'then', 'I'], description: 'Go to Inbox' },
       { keys: ['G', 'then', 'S'], description: 'Go to Services' },
-      { keys: ['G', 'then', 'A'], description: 'Go to Automations' },
+      { keys: ['G', 'then', 'A'], description: 'Go to AI Automations' },
     ],
   },
   {

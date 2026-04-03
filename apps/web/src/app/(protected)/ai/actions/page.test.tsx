@@ -134,7 +134,7 @@ describe('AIActionsPage', () => {
     render(<AIActionsPage />);
     await waitFor(() => {
       expect(screen.getByTestId('actions-empty')).toBeInTheDocument();
-      expect(screen.getByText('All caught up!')).toBeInTheDocument();
+      expect(screen.getByText('No action items right now')).toBeInTheDocument();
     });
   });
 

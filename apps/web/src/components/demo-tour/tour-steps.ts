@@ -79,7 +79,7 @@ export const TOUR_STEPS: TourStep[] = [
     title: 'Set it and forget it',
     description:
       'Automate reminders, follow-ups, and no-show handling. Runs 24/7 with quiet hours respected.',
-    page: '/automations',
+    page: '/ai/automations',
     position: 'top',
   },
   {

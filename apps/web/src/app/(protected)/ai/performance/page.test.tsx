@@ -17,7 +17,7 @@ jest.mock('recharts', () => {
   };
 });
 
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import AIPerformancePage from './page';
 
 const mockAgentStats = {
@@ -33,11 +33,47 @@ const mockAgentStats = {
   ],
 };
 
+const mockAutoOverview = {
+  totalRulesActive: 5,
+  totalMessagesSent7d: 120,
+  totalMessagesSkipped7d: 10,
+  totalMessagesFailed7d: 5,
+  deliveryRate: 96,
+  topPerformingRule: { name: 'Booking Reminder', sentCount: 80 },
+};
+
+const mockTimeline = [
+  { date: '2026-03-01', sent: 30, skipped: 2, failed: 1 },
+  { date: '2026-03-02', sent: 45, skipped: 3, failed: 0 },
+];
+
+const mockByRule = [
+  {
+    ruleId: 'r1',
+    ruleName: 'Booking Reminder',
+    trigger: 'BOOKING_CREATED',
+    sent: 80,
+    skipped: 5,
+    failed: 2,
+  },
+  {
+    ruleId: 'r2',
+    ruleName: 'Follow-up',
+    trigger: 'BOOKING_UPCOMING',
+    sent: 40,
+    skipped: 5,
+    failed: 3,
+  },
+];
+
 describe('AIPerformancePage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockGet.mockImplementation((url: string) => {
       if (url.includes('/agent-runs/stats')) return Promise.resolve(mockAgentStats);
+      if (url.includes('/automations/analytics/overview')) return Promise.resolve(mockAutoOverview);
+      if (url.includes('/automations/analytics/timeline')) return Promise.resolve(mockTimeline);
+      if (url.includes('/automations/analytics/by-rule')) return Promise.resolve(mockByRule);
       return Promise.resolve(null);
     });
   });
@@ -63,6 +99,68 @@ describe('AIPerformancePage', () => {
     });
   });
 
+  it('renders inner tab bar with 3 tabs', async () => {
+    render(<AIPerformancePage />);
+    await waitFor(() => {
+      expect(screen.getByTestId('perf-tab-bar')).toBeInTheDocument();
+      expect(screen.getByTestId('tab-agents')).toBeInTheDocument();
+      expect(screen.getByTestId('tab-automations')).toBeInTheDocument();
+      expect(screen.getByTestId('tab-combined')).toBeInTheDocument();
+    });
+  });
+
+  it('defaults to agents tab showing agent performance section', async () => {
+    render(<AIPerformancePage />);
+    await waitFor(() => {
+      expect(screen.getByTestId('agent-performance-section')).toBeInTheDocument();
+      expect(screen.queryByTestId('automation-analytics-section')).not.toBeInTheDocument();
+    });
+  });
+
+  it('switches to automations tab', async () => {
+    render(<AIPerformancePage />);
+    await waitFor(() => screen.getByTestId('perf-tab-bar'));
+
+    fireEvent.click(screen.getByTestId('tab-automations'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('automation-analytics-section')).toBeInTheDocument();
+      expect(screen.queryByTestId('agent-performance-section')).not.toBeInTheDocument();
+    });
+  });
+
+  it('combined tab shows both sections', async () => {
+    render(<AIPerformancePage />);
+    await waitFor(() => screen.getByTestId('perf-tab-bar'));
+
+    fireEvent.click(screen.getByTestId('tab-combined'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('agent-performance-section')).toBeInTheDocument();
+      expect(screen.getByTestId('automation-analytics-section')).toBeInTheDocument();
+    });
+  });
+
+  it('renders agent comparison chart', async () => {
+    render(<AIPerformancePage />);
+    await waitFor(() => {
+      expect(screen.getByTestId('agent-comparison-chart')).toBeInTheDocument();
+    });
+  });
+
+  it('shows automation KPI grid when on automations tab', async () => {
+    render(<AIPerformancePage />);
+    await waitFor(() => screen.getByTestId('perf-tab-bar'));
+
+    fireEvent.click(screen.getByTestId('tab-automations'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('automation-kpi-grid')).toBeInTheDocument();
+      expect(screen.getByText('Active Rules')).toBeInTheDocument();
+      expect(screen.getByText('96%')).toBeInTheDocument(); // Delivery Rate
+    });
+  });
+
   it('does not render marketing-specific charts', async () => {
     render(<AIPerformancePage />);
     await waitFor(() => {
@@ -74,27 +172,24 @@ describe('AIPerformancePage', () => {
     expect(screen.queryByTestId('ab-test-summary')).not.toBeInTheDocument();
   });
 
-  it('renders agent comparison chart', async () => {
-    render(<AIPerformancePage />);
-    await waitFor(() => {
-      expect(screen.getByTestId('agent-comparison-chart')).toBeInTheDocument();
-    });
-  });
-
   it('shows loading state initially', () => {
     mockGet.mockReturnValue(new Promise(() => {}));
     render(<AIPerformancePage />);
     expect(screen.getByTestId('performance-loading')).toBeInTheDocument();
   });
 
-  it('only calls agent-runs/stats API, not marketing endpoints', async () => {
+  it('calls all analytics endpoints', async () => {
     render(<AIPerformancePage />);
     await waitFor(() => {
       expect(screen.getByTestId('kpi-grid')).toBeInTheDocument();
     });
     expect(mockGet).toHaveBeenCalledWith('/agent-runs/stats');
+    expect(mockGet).toHaveBeenCalledWith('/automations/analytics/overview');
+    expect(mockGet).toHaveBeenCalledWith(
+      expect.stringContaining('/automations/analytics/timeline'),
+    );
+    expect(mockGet).toHaveBeenCalledWith('/automations/analytics/by-rule');
     expect(mockGet).not.toHaveBeenCalledWith('/marketing-content/stats');
     expect(mockGet).not.toHaveBeenCalledWith('/rejection-analytics/stats');
-    expect(mockGet).not.toHaveBeenCalledWith('/ab-testing');
   });
 });

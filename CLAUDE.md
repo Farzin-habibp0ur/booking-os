@@ -1,3 +1,5 @@
+<!-- Version: 2.0 | Last optimized: 2026-04-03 | Target: <800 lines -->
+
 # Booking OS — Project Guidelines
 
 ## What This Project Is
@@ -253,55 +255,14 @@ Key events: `message:new`, `conversation:updated`, `ai:suggestions`, `ai:auto-re
 
 - `InboxGateway.emitToAll()` for system-wide broadcasts (circuit breaker state changes)
 - **Push notification fallback:** `PushNotificationService` sends FCM push to staff with active device tokens but no active WebSocket connection. Graceful degradation when FCM is unconfigured (logs only). Device tokens registered via `POST /device-tokens` and managed by `DeviceTokenService`.
-- WebChat gateway on `/web-chat` namespace — visitor sessions (Redis-backed with in-memory fallback, 24h TTL), pre-chat forms, real-time messaging bridge to staff inbox. Supports `session:identify` (link visitor to customer), `history:request` (paginated message history), `file:upload-request` (base64 upload with validation: 5MB max, PNG/JPEG/GIF/PDF, local filesystem storage). Offline visitors with email get notification logging.
-- `PublicBookingController` at `GET /public/:slug` — unauthenticated booking portal with fuzzy slug resolution: exact match → `startsWith` fallback (single candidate) → suffix-stripped match (strips `-clinic`, `-spa`, `-studio`, `-salon`, `-group`, `-center`, `-centre`). Returns 404 only when no match or multiple ambiguous matches
-- `PublicChatController` at `GET /public/chat/config/:businessSlug` — unauthenticated endpoint for widget bootstrapping (greeting, theme, preChatFields, offlineMessage)
 
-### Omnichannel Messaging Infrastructure
+### Omnichannel Messaging
 
-BookingOS supports 6 messaging channels: **WhatsApp**, **Instagram DM**, **Facebook Messenger**, **SMS**, **Email**, **Web Chat**. All 6 channels are fully implemented.
-
-**Key services:**
-
-- `CustomerIdentityService` (`modules/customer-identity/`) — resolves customers across channels by priority (phone → email → facebookPsid → instagramUserId → webChatSessionId), links identifiers, reports available channels, merges duplicate customers (`mergeCustomers`), finds open conversations across channels (`findConversation`). Validates phone (E.164) and email format before lookup.
-- `CircuitBreakerService` (`common/circuit-breaker/`) — wraps all outbound provider.sendMessage() calls with CLOSED→OPEN→HALF_OPEN state machine. Per-provider configurable thresholds (twilio-sms: 3 failures/30s, default: 5/60s). Emits `circuit:state-change` WebSocket events. Redis-backed with in-memory fallback. On CircuitOpenException, messages are stored as FAILED and captured to DLQ.
-- `DeadLetterQueueService` (`common/queue/dead-letter.service.ts`) — captures failed messaging jobs in Redis hash keys `dlq:msg:{id}` with 7-day TTL. Admin API at `/admin/dlq/*`
-- `UsageService` (`modules/usage/`) — tracks per-channel message counts in `MessageUsage` model (with `segments` and `cost` fields) for billing. Records inbound usage in webhook controller, outbound usage in MessageService. Reports to Stripe via `billing.meterEvents.create()`. Cross-business aggregation via `getAllBusinessUsage()`. Rates: SMS $0.0079/segment out, $0.0075 in; MMS $0.02; Email $0.00065; WA/IG/FB/Web $0
-
-**Key patterns:**
-
-- `Message.channel` is denormalized from `Conversation.channel` — set at creation time for query efficiency
-- `Conversation.lastInboundChannel` tracks the channel of the most recent inbound message — persisted by `processInboundMessage()` in webhook controller, used by `getDefaultReplyChannel()` for smart reply channel selection
-- Each channel gets its own conversation by default. `CustomerIdentityService.findConversation()` enables unified thread lookup across channels for future cross-channel merging.
-- `Business.channelSettings` JSON stores enabled channels, default reply channel, and autoDetectChannel flag
-- `Location` has per-channel config JSON fields: `whatsappConfig`, `instagramConfig`, `facebookConfig`, `smsConfig`, `emailConfig`, `webChatConfig`
-- All webhook endpoints verify provider signatures (HMAC-SHA256 for WhatsApp/Instagram/Facebook/Email, HMAC-SHA1 for Twilio SMS) using timing-safe comparison
-- All 6 channels have delivery status callback endpoints (WhatsApp, SMS, Instagram, Facebook, Email via Resend webhooks)
-- `EmailChannelProvider.validateDomain()` performs real DNS validation (MX records, SPF via TXT, DMARC via `_dmarc.` TXT) with 1-hour cache. Soft validation — logs warnings but never blocks message sending. Timeout returns `valid: true` with "timeout" status
-
-**UI components** (in `apps/web/src/components/inbox/`):
-
-- `ChannelBadge` — colored icon+label badge per channel, used on conversation cards and thread headers
-- `ReplyChannelSwitcher` — dropdown to switch reply channel with disabled channel support (custom styled tooltips with fixable reason CTAs: "Add email"/"Add phone"), `getDefaultReplyChannel()` helper, `onAddContact` callback for inline contact addition
-- `ChannelsOnFile` — sidebar listing customer's available channels with inline "Add email"/"Add phone" forms (E.164 and email format validation), wired into inbox right sidebar
-- `ChannelFilterBar` — 7-tab filter (ALL + 6 channels) with unread count badges, `role="tablist"` accessibility
-- `ConversationContextBar` — compact bar showing FB/IG/WA messaging window countdown, email subject, SMS opt-in/out status, WhatsApp "Use template" CTA when window expired
-- `MediaComposer` — file attachment with per-channel type/size validation, drag-drop with channel-colored feedback, "Switch to Email" fallback on validation errors, inline error alerts
-- `DeliveryStatus` — message delivery status indicators (sent=single check, delivered=double check, read=blue double check, failed=red alert with `role="alert"`)
-
-**Inbox UX features** (implemented in `apps/web/src/app/inbox/page.tsx`):
-
-- **Adaptive composer** — morphs per channel: email subject line, SMS char counter + segment calculator, Instagram 1000-char limit, WhatsApp template mode when window expired, Web Chat online/offline indicator
-- **Channel pills** — `role="tablist"` with `aria-selected`/`aria-disabled`, keyboard nav (ArrowLeft/ArrowRight), colored active ring, grayscale disabled state, health dots (amber=degraded, red=down), blue draft dots, pin icon
-- **Draft persistence** — per-channel drafts keyed by `conversationId:channel`, email preserves subject+body, blue dot indicators on pills, discard confirmation dialog (`role="alertdialog"`) on conversation switch, cleared on send. Debounced auto-save to backend `OutboundDraft` (1.5s) via `PUT /outbound/draft/auto-save`; restored from backend on conversation select for cross-session persistence
-- **Channel pinning** — pin icon on active pill, persisted to `localStorage('bookingos:pinnedChannel')`, auto-select priority: pinned > lastInbound > conversation channel > first available
-- **Smart suggestions** — proactive nudges between context bar and pills: SMS opted-out, IG/FB window expiring, no response >24h; dismissible with X (per-conversation, persists across conversation switches within session)
-- **Failed send recovery** — `role="alert"` error panel with Retry + "Send via [alt channel]" buttons
-- **Compact mode** — `isCompact` at screen height <800px (reduced padding, 35vh max), pills collapse to `<select>` dropdown at composer width <640px via ResizeObserver
-- **Conversation list sorting** — Web Chat LIVE sessions sorted to top, then urgency (expiring IG/FB windows), then server order
-- **ARIA accessibility** — `role="tablist"`/`role="tab"` on pills, `aria-live="assertive"` for channel switch announcements, `role="separator"` on channel transition dividers, `role="alert"` on failed sends, `role="alertdialog"` on discard modal with `aria-labelledby`/`aria-describedby`
-- **AI draft display** — OutboundDraft bubbles (bg-indigo-50, dashed border) with Approve & Send / Edit / Reject / Regenerate buttons. "AI is thinking..." indicator during processing. Source badges (AI Draft / Agent Draft). Confidence dot (green/amber/red). Regenerate-with-context input.
-- **AI × composer integration** — Edit loads draft into composer with correct channel + editing banner ("Editing AI draft — intent: X") + confidence indicator. Channel switch prompts "Regenerate for [channel]?" when editing AI draft. AI draft appears as first option in quick replies picker.
+BookingOS supports 6 channels: WhatsApp, Instagram DM, Facebook Messenger, SMS, Email, Web Chat. All fully implemented.
+- Customer identity resolution: `CustomerIdentityService` (phone → email → social IDs)
+- Circuit breaker on all outbound calls: `CircuitBreakerService`
+- All webhooks verify provider signatures (HMAC-SHA256/SHA1, timing-safe comparison)
+> For service architecture, UI components, and inbox UX patterns: see `docs/CHANNEL-SETUP.md` § Messaging Architecture.
 
 ---
 
@@ -316,13 +277,7 @@ BookingOS supports 6 messaging channels: **WhatsApp**, **Instagram DM**, **Faceb
 
 ### Page Categories
 
-**Public pages:** `/login`, `/signup`, `/forgot-password`, `/reset-password`, `/verify-email`, `/accept-invite`, `/book/[slug]` (booking portal), `/manage/*` (self-serve links), `/portal/[slug]/*` (customer portal with OTP auth), `/unsubscribe/[token]` (campaign unsubscribe), `/testimonials/submit/[token]` (customer self-submission portal)
-
-**Marketing pages:** `/` (landing page with hero, features, pricing), `/blog`, `/blog/[slug]` (JSON-LD, OpenGraph), `/pricing`, `/faq`
-
-**Protected pages (tenant):** `/dashboard`, `/bookings`, `/calendar`, `/inbox`, `/customers`, `/customers/[id]`, `/services`, `/staff`, `/waitlist`, `/campaigns`, `/campaigns/new` (4-step wizard), `/campaigns/[id]` (detail with funnel + channel stats), `/automations`, `/automations/analytics` (performance dashboard), `/reports`, `/roi`, `/service-board` (dealership kanban), `/settings/*` (18 sub-pages including `/channels`, `/sms`, `/facebook`, `/email-channel`, `/web-chat`, `/testimonials`), `/packages` (wellness), `/testimonials`, `/marketing/*` (internal only — no sidebar nav), `/ai/*` (command center: overview, actions, agents, performance), `/search`, `/notifications`, `/help`
-
-**Console pages (Super Admin):** These pages live in the **separate `apps/admin/` app** (port 3002), not in `apps/web/`. Routes: `/` (overview), `/businesses` (directory), `/businesses/[id]` (Business 360), `/audit`, `/health`, `/support`, `/billing`, `/billing/past-due`, `/billing/subscriptions`, `/packs`, `/packs/[slug]`, `/packs/skills`, `/agents`, `/messaging`, `/settings`, `/marketing` (landing), `/marketing/queue` (content approval), `/marketing/agents` (12 marketing agents), `/marketing/sequences` (email sequences), `/marketing/rejection-analytics`
+> 91+ pages across public, protected, and console. See `docs/REFERENCE.md` for the full listing.
 
 ### API Client
 
@@ -370,37 +325,12 @@ BookingOS supports 6 messaging channels: **WhatsApp**, **Instagram DM**, **Faceb
 ### Design Tokens
 
 - **Centralized in `apps/web/src/lib/design-tokens.ts`** — all status colors, elevation constants, and shared style maps
-- `BOOKING_STATUS_STYLES` — map of all 7 booking statuses to `{ bg, text, border, dot, label, hex }`
-- `BOOKING_SOURCE_STYLES` — map of 6 booking sources (MANUAL, PORTAL, WHATSAPP, AI, REFERRAL, WALK_IN) to `{ bg, text, label, hex }`
-- `CONVERSATION_STATUS_STYLES` — map of 4 conversation statuses (OPEN, WAITING, RESOLVED, SNOOZED)
-- `ELEVATION` — shadow + radius tokens: `card`, `modal`, `dropdown`, `cardSm`, `fab`
-- `CHANNEL_STYLES` — map of 6 messaging channels (WHATSAPP, INSTAGRAM, FACEBOOK, SMS, EMAIL, WEB_CHAT) to `{ bg, text, border, label, hex }`
-- Marketing tokens: `CONTENT_TYPE_STYLES` (6 types), `TIER_STYLES` (GREEN/YELLOW/RED), `ACTION_CARD_PRIORITY_STYLES` (4 priorities), `AGENT_CATEGORY_STYLES` (3 categories), `AUTONOMY_LEVEL_STYLES` (4 levels), `PIPELINE_STAGE_STYLES` (6 stages)
-- Helper functions: `statusBadgeClasses(status)`, `statusCalendarClasses(status)`, `statusHex(status)`, `channelBadgeClasses(channel)`, `contentTypeBadgeClasses(type)`, `tierBadgeClasses(tier)`, `priorityBadgeClasses(priority)`, `agentCategoryBadgeClasses(category)`, `autonomyBadgeClasses(level)`
 - **Always import from design-tokens.ts** — never define inline status color objects
 
 ### Navigation Structure
 
-- **Single source of truth:** All nav routes defined in `apps/web/src/lib/nav-config.ts`, consumed by shell sidebar, mobile tab bar, and command palette
-- Sidebar uses 4 sections: **Workspace** / **Tools** / **Insights** / **AI & Agents** (defined per mode in `apps/web/src/lib/mode-config.ts`)
-- Admin mode splits sections into **primary** (always visible) and **overflow** (collapsible "More" toggle, collapsed by default, `localStorage` persisted). Agent/provider modes show all paths as primary
-- Admin workspace includes: Inbox, Calendar, Customers, Bookings, Waitlist
-- Admin primary tools: Services, Staff, Invoices. Admin overflow tools: Packages (wellness), Campaigns, Automations, Testimonials
-- Admin primary insights: Dashboard, Reports. Admin overflow insights: Monthly Review, ROI
-- Admin primary AI: AI & Agents. Admin overflow AI: Action Triage, Agent Status, Performance
-- Every nav item has a distinct lucide-react icon — no duplicates across sections
-- All nav labels use i18n keys (`locales/en.json` + `es.json`)
-- Section labels use `.nav-section-label` CSS class from `globals.css`
-- Settings link is in the sidebar footer area, not in the main nav
-- **Marketing pages** (`/marketing/*`) exist but have no sidebar nav — they are internal BookingOS tools, not customer-facing
-- **SUPER_ADMIN login** redirects to the admin app (`NEXT_PUBLIC_ADMIN_URL`) via `window.location.href` — no admin/console nav items in the customer app sidebar
-- **Mobile tab bar** is mode + role aware: admin/agent → Inbox, Calendar, Customers, Home + More; provider → Calendar, Bookings, Home + More (no Inbox/Customers). Labels are i18n/pack-aware
-- **Post-login redirect:** Agent → `/inbox`, Provider → `/calendar`, Admin → stays on `/dashboard`. One-time redirect via `sessionStorage` flag + `router.replace()`
-- **Mode route guard:** If the current URL is outside the active mode's section paths, shell redirects to `defaultLandingPath`. Exempt: `/settings/*`, `/admin/*`, `/`. Only `/admin/*` paths appear in `extraNav` (SUPER_ADMIN pack-builder)
-- **Command palette** (⌘K): searches all navigable pages (including overflow) grouped by sidebar section, plus API entity search. Footer hint: "All pages searchable"
-- **Chord shortcuts:** G then B/C/I/D/S/A/Q/R/J/W → bookings/customers/inbox/dashboard/services/automations/actions/reports/ai/waitlist
-- Mobile swipe gestures: `useSwipeGesture` hook in `apps/web/src/lib/use-swipe-gesture.ts` for touch swipe detection with threshold, vertical rejection, and `onSwiping` callback
-- Mobile calendar: `DateScroller` component (`apps/web/src/components/date-scroller.tsx`) for horizontal scrollable date picker, forced day view on mobile, stacked booking cards, FAB for new booking
+Single source of truth at `nav-config.ts` + `mode-config.ts`. 4 sidebar sections: Workspace / Tools / Insights / AI & Agents. Command palette (⌘K) searches all pages.
+> For detailed nav implementation (mode splits, overflow, chord shortcuts, mobile): see `docs/REFERENCE.md`.
 
 ---
 
@@ -453,18 +383,9 @@ BookingOS supports 6 messaging channels: **WhatsApp**, **Instagram DM**, **Faceb
 - `.nav-section-label` — sidebar nav section headings (10px uppercase tracking-wider)
 - `.celebration-confetti` — CSS-only confetti animation for setup wizard completion (respects `prefers-reduced-motion`)
 
-### Micro-Animation Utilities (`globals.css` — DS V2 §10)
+### Micro-Animations
 
-- `.animate-slide-up`, `.animate-fade-in`, `.animate-scale-in`, `.animate-slide-in-right`, `.animate-slide-in-from-bottom` — entrance animations (200–300ms)
-- `.animate-badge-flash` — brief white pulse on status badge change (400ms, use with `key={status}` to re-trigger)
-- `.animate-card-hover` — translateY(-2px) + shadow lift on hover (200ms)
-- `.animate-dropdown-open` — scaleY from top origin (150ms)
-- `.animate-page-fade` — content fadeIn on page transition (150ms)
-- `.animate-toast-enter` — slideUp entrance for toasts (200ms)
-- `.animate-modal-enter` — scale+opacity entrance for modal content (200ms)
-- `.animate-backdrop` — fade entrance for modal overlays (150ms)
-- `.animate-sidebar-active` — border scaleY slide-in for active nav (200ms)
-- All animations respect `prefers-reduced-motion` via blanket media query rule
+> For all CSS animation utility classes, see `DESIGN_DOCUMENTATION.md`. All animations respect `prefers-reduced-motion`.
 
 ### AI Feature Styling
 
@@ -474,44 +395,8 @@ All AI-related UI elements use the **lavender** palette: `bg-lavender-50 border 
 
 ## Platform Console (Super Admin)
 
-The Console is a **standalone Next.js app** at `apps/admin/` for platform-wide administration, accessible only to `SUPER_ADMIN` users. It runs on port 3002 and will be deployed to `admin.businesscommandcentre.com`. All console API calls use `/admin` prefixes.
-
-### Admin App Architecture
-
-- **Separate app:** `apps/admin/` — independent from `apps/web/`, with its own auth, middleware, and layout
-- **20 routes** across 11 sections: `/`, `/businesses`, `/businesses/[id]`, `/billing`, `/billing/past-due`, `/billing/subscriptions`, `/agents`, `/messaging`, `/health`, `/packs`, `/packs/[slug]`, `/packs/skills`, `/support`, `/settings`, `/audit`, `/marketing`, `/marketing/queue`, `/marketing/agents`, `/marketing/sequences`, `/marketing/rejection-analytics`
-- **Dark sidebar theme:** `bg-slate-900` with red "ADMIN" badge — visually distinct from the customer app's sage/lavender theme
-- **Auth flow:** Users authenticate via the customer app; the admin app checks for auth cookies and validates `SUPER_ADMIN` role. Non-admin users are redirected to `businesscommandcentre.com`
-- **No analytics:** No PostHog, no service worker, `X-Robots-Tag: noindex, nofollow`
-- **API client:** Same `ApiClient` class as the web app (auto token refresh, retry logic) — on 401, redirects to customer app login instead of local `/login`
-- **View-As:** `ViewAsBanner` component shows a sticky amber bar when impersonating a business, with countdown timer and exit button. Triggered from the Business 360 page (`/businesses/[id]`)
-
-### Console Features
-
-- **Overview** (`/`) — Platform KPIs (businesses, bookings, staff, agents, support, security), billing breakdown, audit feed
-- **Business Directory** (`/businesses`) — Search, filter by plan/billing/health, paginated table
-- **Business 360** (`/businesses/[id]`) — Summary, People, and Billing tabs (subscription info, plan changes, credits, cancel/reactivate, invoices)
-- **View-as** — `ViewAsSession` model for time-limited tenant impersonation with reason and action logging
-- **Security & Audit** (`/audit`) — Platform-level `PlatformAuditLog` (separate from per-tenant `ActionHistory`)
-- **System Health** (`/health`) — DB, business activity, agents, calendar, messaging health checks
-- **Support Cases** (`/support`) — Full CRUD with `SupportCase` + `SupportCaseNote` models
-- **Billing Dashboard** (`/billing`) — MRR, churn rate, plan distribution, past-due businesses, `BillingCredit` management
-- **Pack Registry** (`/packs`) — Vertical pack management with version history and install counts
-- **AI & Agents Governance** (`/agents`) — Agent performance dashboard, action card funnel, `PlatformAgentDefault` model for platform-wide governance defaults
-- **Messaging Ops** (`/messaging`) — Delivery rates, webhook health, failure analysis, per-tenant fix checklists, omnichannel seed endpoint
-- **Dead Letter Queue** (`/admin/dlq/*`) — DLQ management API (list, retry, purge failed messages)
-- **Usage Tracking** (`/admin/usage/*`) — Per-channel message usage and billing rates
-- **Platform Settings** (`/settings`) — `PlatformSetting` model (security, notifications, regional, platform categories) with bulk save
-
-### Console-Specific Models
-
-- `ViewAsSession` — Super Admin tenant impersonation with expiry and action logging
-- `PlatformAuditLog` — Platform-level audit trail (separate from per-tenant ActionHistory)
-- `PlatformAgentDefault` — Platform-wide agent governance defaults per agent type
-- `PlatformSetting` — Key-value platform settings by category
-- `SupportCase` / `SupportCaseNote` — Support ticket tracking
-- `BillingCredit` — Platform-issued billing credits
-- `DeviceToken` — Push notification device registration (staff+token unique, cascades on staff/business delete)
+The Console is a standalone Next.js app at `apps/admin/` (port 3002) for SUPER_ADMIN users. Dark sidebar theme, 20 routes across 11 sections. Auth flows through the customer app.
+> For full console documentation (architecture, features, models): see `docs/REFERENCE.md`.
 
 ---
 
@@ -590,6 +475,40 @@ When building a new feature end-to-end, follow this order:
 11. **Web tests** — `component-name.test.tsx` co-located with components
 12. **Navigation** — Update `mode-config.ts` if adding a new nav item
 13. **Seed data** — Update relevant seed script if the feature needs demo data
+14. **Documentation** — Consult the Documentation Dependency Map and update all affected docs
+
+---
+
+## Documentation Maintenance (MANDATORY)
+
+When you modify code, you MUST update the corresponding documentation. This is not optional.
+
+### Dependency Map — What to Update When
+
+| When you change...                     | Update these                                                                                      |
+|----------------------------------------|---------------------------------------------------------------------------------------------------|
+| New Prisma model                       | CLAUDE.md model count, seed script if demo data needed                                            |
+| New/changed enum value                 | CLAUDE.md Key Enums section (this is the primary reference — not in Prisma schema)                |
+| New API module                         | Register in `app.module.ts`, CLAUDE.md module count if stated                                     |
+| New page or route                      | `docs/REFERENCE.md` page categories, `nav-config.ts`, `mode-config.ts`, `locales/*.json`          |
+| New environment variable               | CLAUDE.md env vars table, `.env.example` with comment                                             |
+| Design system change (colors/tokens)   | `design-tokens.ts`, CLAUDE.md Design System section, `DESIGN_DOCUMENTATION.md`                    |
+| New BullMQ queue                       | CLAUDE.md BullMQ section (and discuss consolidation — 8 is already a lot)                         |
+| New messaging channel or provider      | `docs/CHANNEL-SETUP.md`, CLAUDE.md omnichannel summary                                           |
+| New agent type                         | CLAUDE.md Key Enums (AgentType), `docs/PROJECT_CONTEXT.md`                                        |
+| New seed script                        | `docs/REFERENCE.md` seed table                                                                    |
+| Auth, cookie, or CORS change           | `DEPLOY.md`, then verify with the curl command in CLAUDE.md § Deployment Rules                    |
+| New Socket.IO event                    | CLAUDE.md Real-Time event list                                                                    |
+| Deployment or infrastructure change    | `DEPLOY.md` (read it first — it documents hard-won lessons)                                       |
+| New vertical pack                      | CLAUDE.md Vertical Pack System, `docs/PROJECT_CONTEXT.md`, seed scripts                           |
+
+### Rules
+- **What belongs in CLAUDE.md:** Rules, conventions, guardrails, frequently-referenced data (enums, env vars), and short pointers to other docs. If a coding assistant needs it almost every session, it belongs here.
+- **What belongs in reference docs:** Lookup tables, implementation details, per-feature specs, and anything longer than ~10 lines that's only needed occasionally. Use `docs/REFERENCE.md` for general lookups, extend the relevant existing doc (CHANNEL-SETUP.md, PROJECT_CONTEXT.md, cicd.md, DEPLOY.md) for domain-specific content.
+- If you're unsure whether a doc needs updating, check. It's faster to verify than to fix stale docs later.
+- Never update CLAUDE.md model/module/page counts with approximate numbers — count the actual items.
+- When extracting content to a reference doc, always leave a pointer in CLAUDE.md.
+- After updating any doc, re-read the section you changed to confirm it's consistent with surrounding content.
 
 ---
 
@@ -624,73 +543,22 @@ Full reference at `.env.example` in the repo root. Key groups:
 
 ## Seed Data
 
-All seed scripts are in `packages/db/src/`. They are **idempotent** (safe to re-run) and use dedup checks.
-
-| Script                     | Command                                            | Purpose                                                                                                                                                                      | When to Use                   |
-| -------------------------- | -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
-| `seed.ts`                  | `npx tsx packages/db/src/seed.ts`                  | Base data: 3 businesses (aesthetic + dealership + wellness), staff, services, working hours                                                                                  | Fresh database setup, CI      |
-| `seed-demo.ts`             | `npx tsx packages/db/src/seed-demo.ts`             | Rich demo data: bookings, customers, conversations, action cards, campaigns (3), automation rules (3) with logs                                                              | Demo environments, testing    |
-| `seed-agentic.ts`          | `npx tsx packages/db/src/seed-agentic.ts`          | Agentic framework data: agent configs, agent runs, action cards, autonomy configs                                                                                            | One-time production fill      |
-| `seed-wellness.ts`         | `npx tsx packages/db/src/seed-wellness.ts`         | Wellness vertical: packages, memberships, intake data                                                                                                                        | Also called from seed.ts      |
-| `seed-console.ts`          | `npx tsx packages/db/src/seed-console.ts`          | Console base data: platform settings, agent defaults                                                                                                                         | Super Admin setup             |
-| `seed-console-showcase.ts` | `npx tsx packages/db/src/seed-console-showcase.ts` | Console demo data: support cases, audit logs                                                                                                                                 | Console demos                 |
-| `seed-content.ts`          | `npx tsx packages/db/src/seed-content.ts`          | 12 blog posts across 5 content pillars → ContentDraft records                                                                                                                | Marketing content setup       |
-| `seed-instagram.ts`        | `npx tsx packages/db/src/seed-instagram.ts`        | 4 Instagram DM conversations (story reply, ad referral, ice breaker, expiring window)                                                                                        | Instagram integration testing |
-| `seed-omnichannel.ts`      | `npx tsx packages/db/src/seed-omnichannel.ts`      | Multi-channel customers, conversations + messages (Alex: WA+IG, Jordan: email threaded, Taylor: web chat offline), MessageUsage with segments/cost (7 days), channelSettings | Omnichannel foundation setup  |
+All seed scripts in `packages/db/src/`. Idempotent (safe to re-run).
+> For the full seed script table with commands: see `docs/REFERENCE.md`.
 
 ---
 
 ## Common Commands
 
 ```bash
-# Install dependencies
-npm install
-
-# Start local development (API + Web + Admin)
-npm run dev
-
-# Format check (Prettier)
-npm run format:check
-
-# Auto-fix formatting
-npm run format
-
-# Lint + type-check (ESLint via Turborepo)
-npm run lint
-
-# Run all tests
-npm test
-
-# Generate Prisma client
-npx prisma generate --schema=packages/db/prisma/schema.prisma
-
-# Create new migration
-npx prisma migrate dev --name your_name --schema=packages/db/prisma/schema.prisma
-
-# Apply migrations (production)
-npx prisma migrate deploy --schema=packages/db/prisma/schema.prisma
-
-# Open Prisma Studio
-npx prisma studio --schema=packages/db/prisma/schema.prisma
-
-# Seed database
-npx tsx packages/db/src/seed.ts
-npx tsx packages/db/src/seed-demo.ts
-
-# Docker build (validates production images)
-docker compose -f docker-compose.prod.yml build
-
-# Manual CI trigger
-gh workflow run ci.yml
-
-# Production smoke test
-./scripts/smoke-test.sh [BASE_URL]
-
-# Capacitor (mobile)
-cd apps/web && npx cap sync         # Sync web to native projects
-cd apps/web && npx cap open ios     # Open in Xcode
-cd apps/web && npx cap open android # Open in Android Studio
-node scripts/generate-app-icon.js   # Generate app icons for iOS/Android
+npm install                          # Install dependencies
+npm run dev                          # Start local dev (API + Web + Admin)
+npm run format && npm run format:check  # Format + verify
+npm run lint                         # ESLint + type-check
+npm test                             # All tests
+npx prisma generate --schema=packages/db/prisma/schema.prisma   # Generate client
+npx prisma migrate dev --name your_name --schema=packages/db/prisma/schema.prisma  # New migration
+npx tsx packages/db/src/seed.ts      # Seed database
 ```
 
 ---
@@ -703,20 +571,7 @@ Push to main → lint-and-test → docker-build → deploy (staged) → smoke-te
 Pull request → lint-and-test → docker-build + e2e-test (Playwright)
 ```
 
-- **lint-and-test:** PostgreSQL 17 service container, `npm ci`, Prisma generate, web-chat widget build, migrate, format check, lint, test. Security audit: `npm audit --audit-level=critical` blocks the build; `--audit-level=high` runs informational-only
-- **docker-build:** Multi-stage Docker builds for API, web, and admin images + Trivy security scanning. API image scan blocks on CRITICAL (`exit-code: 1`); web/admin scans are informational (`exit-code: 0`)
-- **bundle-check:** Builds web app, reports `.next/` size to GitHub step summary, fails if >60MB
-- **deploy:** Staged sequential: API → health check → Web → health check → Admin → health check (5s poll, 5-min timeout per stage)
-- **smoke-test:** Runs `scripts/smoke-test.sh` against production (24 checks across 9 categories)
-- **e2e-test:** Playwright tests (auth, booking, customer, portal, settings, accessibility) — PR only
-- **Migrations:** Auto-run via `scripts/docker-entrypoint.sh` on container startup
-
-**Mobile CI/CD** (`.github/workflows/mobile.yml`):
-- Triggered by `mobile-v*` tags or manual `workflow_dispatch`
-- **build-android:** Ubuntu, JDK 17, signed AAB via Gradle
-- **build-ios:** macOS, Xcode, signed IPA via xcodebuild
-- Both jobs run in parallel; artifacts uploaded with 30-day retention
-- See DEPLOY.md "Mobile App Releases" section for required secrets
+> For full job details (lint-and-test, docker-build, e2e, mobile CI): see `docs/cicd.md`.
 
 ### Railway Production
 
@@ -805,86 +660,25 @@ Confirm: `Domain=.businesscommandcentre.com`, `SameSite=Lax`, `Secure`, `Path=/`
 
 AI state persisted in `conversation.metadata` JSON for stateful multi-turn flows.
 
-### AI Draft Pipeline
+### 5 Operational Agents (customer-facing)
 
-When AI generates a response, it creates an `OutboundDraft` record (source: `AI` or `AGENT`) with channel, intent, confidence, and metadata. Drafts appear inline in the inbox conversation thread for staff to approve, edit, reject, or regenerate. The old `message.metadata.ai.draftText` is still populated for backward compatibility.
+Code in `apps/api/src/modules/agent-framework/`:
 
-**Channel-aware auto-reply flow:**
+- `WaitlistAgent` — Auto-match waitlist entries to cancelled slots. Cards expire **48 hours**
+- `RetentionAgent` — Detect at-risk customers, generate win-back cards. Cards expire **14 days**
+- `DataHygieneAgent` — Duplicate detection, incomplete profiles. Cards expire **30 days**
+- `SchedulingOptimizerAgent` — Gap detection, optimal slots. Cards expire **1 day after gap date**
+- `QuoteFollowupAgent` — Expired quote reminders. Cards expire **7 days**
 
-1. Inbound message → BullMQ `AI_PROCESSING` queue (3 retries, exponential backoff)
-2. AI generates draft → validates channel constraints (24h windows for IG/FB/WA, SMS opt-out/length, per-channel overrides)
-3. If validation passes → auto-reply sent. If fails → OutboundDraft created for manual review
-4. Socket.IO events: `ai:processing` → `ai:draft-ready` or `ai:processing-failed`
-5. Staff actions: Approve & Send (`POST /outbound/:id/send`), Edit (loads into composer), Reject, Regenerate (`POST /ai/conversations/:id/regenerate-draft`)
-
-**Key endpoints:**
-
-- `GET /ai/stats` — Today's AI processing metrics + 7-day history
-- `GET /ai/settings` / `PATCH /ai/settings` — AI config including `autoReply.channelOverrides`
-- `POST /ai/conversations/:id/regenerate-draft` — Re-run AI for latest inbound message
-- `POST /outbound/:id/send` — Approve and send an OutboundDraft
-- `PUT /outbound/draft/auto-save` — Upsert draft by conversationId+channel+staffId (delete if empty content)
-- `GET /outbound/draft/auto-save?conversationId=X` — Load auto-saved drafts for conversation+staff
-- `PATCH /action-cards/:id/execute` with `{ ctaAction }` — Execute specific CTA action
-- `POST /action-cards/bulk-followup` — Batch create follow-up drafts from retention/quote cards
-
-### In-App Agents — Customer-Facing (5 operational + 12 marketing)
-
-These run inside the NestJS API for each customer's business. Code in `apps/api/src/modules/agent-framework/`.
-
-**5 Operational Agents:**
-
-- `WaitlistAgent` — Auto-match waitlist entries to cancelled slots; pre-generates slot offer messages in card metadata. Cards expire after **48 hours**
-- `RetentionAgent` — Detect at-risk customers, generate win-back action cards; pre-generates channel-specific follow-up messages (SMS/Email/WhatsApp/DEFAULT). Cards expire after **14 days**
-- `DataHygieneAgent` — Duplicate detection, incomplete profile flagging. Cards expire after **30 days**
-- `SchedulingOptimizerAgent` — Gap detection, optimal slot suggestions. Cards expire **1 day after the gap date**
-- `QuoteFollowupAgent` — Expired quote reminders, follow-up action cards; pre-generates channel-specific follow-up messages. Cards expire after **7 days**
-
-All agents set `expiresAt` on created `ActionCard` records. The `@Cron(EVERY_MINUTE)` expiry job in `ActionCardService` auto-transitions expired PENDING cards to EXPIRED status. Each agent also stores its identity in `ActionCard.metadata.source` (e.g., `'retention-agent'`).
-
-Agents with pre-generated messages store `suggestedMessages`, `customerChannels`, and `recommendedChannel` in `ActionCard.metadata`. The `ActionCardExecutorService` reads these to create channel-appropriate `OutboundDraft` records when staff clicks "Send Follow-up".
-
-**12 Marketing Agents** (6 content, 2 distribution, 4 analytics) — **internal BookingOS growth engine only, NOT shown to customers:**
-
-- Content: BlogWriter, SocialCreator, EmailComposer, CaseStudy, VideoScript, Newsletter
-- Distribution: ContentScheduler, ContentPublisher
-- Analytics: PerformanceTracker, TrendAnalyzer, ContentCalendar, ContentROI
-
-Marketing agents are filtered out of the customer-facing `GET /agent-config` API response. The `/ai/agents` page shows only the 5 core operational agents. Marketing agent DB records may still exist from prior seeds but are excluded via `agentType: { notIn: MARKETING_AGENT_TYPES }`.
-
-Agents run via `AgentSchedulerService` cron → `AGENT_PROCESSING` BullMQ queue → `AgentFrameworkService`. Per-agent `runIntervalMinutes` configurable via `AgentConfig.config` JSON. `triggerAgent()` updates `AgentConfig.lastRunAt` after each execution (success or failure) for observability. The customer-facing AI Command Center (`/ai`) shows only core agents. Marketing pages (`/marketing/*`) still exist but have no sidebar navigation.
+All agents set `expiresAt` on `ActionCard` records. Agents store `suggestedMessages`, `customerChannels`, and `recommendedChannel` in card metadata for channel-appropriate follow-ups.
 
 **Autonomy levels** (per-action-type via `AutonomyConfig`): OFF → SUGGEST → AUTO_WITH_REVIEW → FULL_AUTO. Start conservative, increase as trust builds.
 
-### Internal Growth Engine — BookingOS's Own Marketing
+### AI Draft Pipeline & Agents
 
-These are **prompt files** in `agents/` that define how BookingOS markets itself. They are NOT NestJS code — they are operational AI prompts run by Claude to generate content for BookingOS's own social media, blog, and outreach.
+> For the full auto-reply flow, key endpoints, marketing agents, and internal/external boundary: see `docs/PROJECT_CONTEXT.md`.
 
-15 agent prompts covering: research (Trend Scout, Keyword Strategist), planning (Content Strategist), creation (Blog Writer, Social Creator, Visual Designer, Video Producer), distribution (Publisher, Community Manager), analytics (Performance Analyst, Learning Engine), expansion (Spanish Localization, Outbound Prospecting), and ops (Master Orchestrator, Weekly Maintenance).
-
-Output goes to file-based folders (`queue/pending/`, `briefings/`, `reports/`, etc.). Reviewed by founder manually. Config in `system/` directory. See `docs/AI_MARKETING_AGENTS_DAILY_WORKFLOW.md` for the daily operator workflow.
-
-**These three systems are completely separate.** Operational agents serve customers in the web app; in-app marketing agents are managed via the admin app; internal growth engine agents operate in the file system.
-
-### Internal vs External Boundary
-
-The platform enforces a strict separation between customer-facing and internal tools:
-
-| Layer             | Customer App (`businesscommandcentre.com`)                                      | Admin App (`admin.businesscommandcentre.com`)        |
-| ----------------- | ------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| **Agents**        | 5 core: Waitlist, Retention, Data Hygiene, Scheduling Optimizer, Quote Followup | All 17 agents (5 core + 12 marketing)                |
-| **AI pages**      | `/ai` overview, agents, actions, performance — core agents only                 | `/marketing/agents` — full marketing agent dashboard |
-| **Content**       | No content queue or pipeline UI                                                 | `/marketing/queue` — content approval workflow       |
-| **Autonomy**      | No autonomy settings visible                                                    | `/marketing` autonomy settings (SUPER_ADMIN)         |
-| **API filtering** | `GET /agent-config` excludes marketing types via `notIn`                        | `GET /agent-config/admin/all` returns everything     |
-| **API auth**      | Marketing API endpoints return 403 for non-SUPER_ADMIN                          | Full access for SUPER_ADMIN users                    |
-| **Navigation**    | No `/marketing/*` sidebar links; routes redirect to `/ai`                       | Marketing section in admin sidebar                   |
-
-**Key constants:**
-
-- `MARKETING_AGENT_TYPES` in `agent-config.service.ts` — 12 marketing agent type strings filtered from customer queries
-- `MARKETING_AGENT_TYPES` in `ai/actions/page.tsx` — same list for frontend action card filtering
-- E2E boundary tests in `apps/web/e2e/internal-external-boundary.spec.ts`
+**Three AI systems exist and are completely separate:** operational agents (NestJS, customer-facing), marketing agents (NestJS, admin-only via SUPER_ADMIN), growth engine (file-based prompts in `agents/`). Do not confuse them.
 
 ---
 
@@ -910,7 +704,8 @@ The app includes a public-facing marketing site at the root domain:
 | DEPLOY.md                             | `DEPLOY.md`                                  | Deployment operations guide with critical rules               |
 | cicd.md                               | `docs/cicd.md`                               | CI/CD pipeline details                                        |
 | user-stories.md                       | `docs/user-stories.md`                       | Complete user stories (386 capabilities, 196 gaps)            |
-| CHANNEL-SETUP.md                      | `docs/CHANNEL-SETUP.md`                      | 6-channel messaging setup (WhatsApp, Instagram, FB, SMS, Email, Web Chat) |
+| REFERENCE.md                          | `docs/REFERENCE.md`                          | Lookup tables: page categories, navigation, console, seed data            |
+| CHANNEL-SETUP.md                      | `docs/CHANNEL-SETUP.md`                      | 6-channel messaging setup + messaging architecture                        |
 | URLS.md                               | `docs/URLS.md`                               | All domains, services, DNS, third-party dashboards            |
 | AI_MARKETING_AGENTS_DAILY_WORKFLOW.md | `docs/AI_MARKETING_AGENTS_DAILY_WORKFLOW.md` | In-app marketing agent operator guide                         |
 | DESIGN_DOCUMENTATION.md               | `DESIGN_DOCUMENTATION.md`                    | Comprehensive design system documentation                     |
@@ -950,3 +745,36 @@ Before creating any git commit, you MUST run these checks in order and fix ALL f
 - If you add a new lucide-react icon to a component, add it to the mock in the corresponding `.test.tsx` file
 - If you remove a feature from the UI, check if tests reference it and update them
 - If you change a service method signature, update the corresponding `.spec.ts` file
+
+> **Note:** This is Step 4 of the Self-Validation Protocol below. Complete all 5 steps before considering work done.
+
+---
+
+## Self-Validation Protocol (MANDATORY)
+
+After completing ANY task (feature, bugfix, refactor, doc update), perform this validation loop:
+
+### Step 1: Re-read your changes
+- Re-read every file you modified. Check for: typos, inconsistencies, missing imports, incomplete implementations.
+- If you find issues, fix them before proceeding.
+
+### Step 2: Verify cross-cutting concerns
+- Did you add a new component? Check: tests exist, translations added, design tokens used (not inline colors).
+- Did you change an API endpoint? Check: DTOs have validators, controller has guards, tests cover success AND error paths.
+- Did you modify the schema? Check: migration created, Prisma client regenerated, seed scripts still valid.
+- Did you change auth or cookies? Run the curl verification command from Deployment Rules.
+
+### Step 3: Documentation check
+- Consult the Documentation Dependency Map above. Update every doc that your change affects.
+- If you changed CLAUDE.md, verify it's under the target line count (see version header).
+
+### Step 4: Run pre-commit checks
+- `npm run format` → `npm run format:check` → `npm run lint` → `npm test`
+- If ANY step fails, fix it and restart from Step 1 (not just Step 4).
+
+### Step 5: Final review
+- Re-read the complete diff of all changes one more time.
+- Ask yourself: "If someone reviews this PR tomorrow, will anything surprise them?"
+- If yes, fix it or add a comment explaining why.
+
+Do NOT consider work complete until all 5 steps pass with zero issues. Loop as many times as needed.

@@ -137,7 +137,12 @@ export function AIActivityFeed() {
                   {run.status.toLowerCase()}
                 </span>
                 {run.cardsCreated > 0 && (
-                  <span className="text-xs text-slate-500">{run.cardsCreated} cards created</span>
+                  <a
+                    href={`/ai/actions?agent=${run.agentType}`}
+                    className="text-xs text-lavender-600 hover:text-lavender-700 transition-colors"
+                  >
+                    {run.cardsCreated} cards → View
+                  </a>
                 )}
                 {run.completedAt && run.startedAt && (
                   <span className="text-xs text-slate-400">

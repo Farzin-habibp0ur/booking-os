@@ -708,6 +708,10 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 | 17.20a | Approve/reject outbound draft messages                                  | Admin     | Draft approval flow                 |
 | 17.21a | See AI-detected opportunities (open slots, waitlist matches, retention) | Admin     | Briefing Opportunity cards          |
 | 17.22a | Give feedback on agent suggestions (helpful/not helpful)                | All staff | AgentFeedback model                 |
+| 17.23a | Access all AI features from unified AI Hub at /ai (5 tabs: Overview, Agents, Actions, Automations, Performance) | Admin | Consolidated hub with gear icon to /ai/settings |
+| 17.24a | Complete AI onboarding wizard (3 steps: Enable AI, Set voice, Choose channels) | Admin | Shown when AI disabled + not dismissed; saved to PATCH /ai/settings |
+| 17.25a | View combined Agent + Automation performance in one place via inner tab bar | Admin | Performance page: Agent Performance / Automation Analytics / Combined tabs |
+| 17.26a | Click "Manage AI" link from inbox AI draft bubbles to reach AI Hub | All staff | Sparkles icon in draft bubble header links to /ai |
 
 ### What Users CANNOT Do
 
@@ -720,7 +724,7 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 | 17.17 | Override AI intent detection rules                          | Not implemented                                               |
 | 17.18 | Use AI for report generation or insights                    | Not implemented                                               |
 | 17.19 | Set per-agent scheduling frequency                          | Fixed cron schedule                                           |
-| 17.20 | View agent run history with details                         | AgentRun model exists but no UI page                          |
+| 17.20 | View agent run history with details per agent               | Expandable history panel per agent card on /ai/agents         |
 | 17.21 | Customize agent detection thresholds (confidence, lookback) | Config exists in DB but no UI editor                          |
 
 ---
