@@ -394,3 +394,59 @@ MESSAGING_PROVIDER=whatsapp-cloud
 - [ ] **SMS:** Twilio phone purchased, A2P 10DLC approved, webhook configured, test SMS received
 - [ ] **Instagram:** App Review approved, OAuth flow works, test DM received in inbox
 - [ ] **Facebook:** App Review approved, page subscribed to webhooks, test message received
+
+---
+
+## Messaging Architecture
+
+> This section documents how BookingOS's omnichannel messaging system works internally. For channel *setup*, see the sections above.
+
+### Key Services
+
+- `CustomerIdentityService` (`modules/customer-identity/`) — resolves customers across channels by priority (phone → email → facebookPsid → instagramUserId → webChatSessionId), links identifiers, reports available channels, merges duplicate customers (`mergeCustomers`), finds open conversations across channels (`findConversation`). Validates phone (E.164) and email format before lookup.
+- `CircuitBreakerService` (`common/circuit-breaker/`) — wraps all outbound provider.sendMessage() calls with CLOSED→OPEN→HALF_OPEN state machine. Per-provider configurable thresholds (twilio-sms: 3 failures/30s, default: 5/60s). Emits `circuit:state-change` WebSocket events. Redis-backed with in-memory fallback. On CircuitOpenException, messages are stored as FAILED and captured to DLQ.
+- `DeadLetterQueueService` (`common/queue/dead-letter.service.ts`) — captures failed messaging jobs in Redis hash keys `dlq:msg:{id}` with 7-day TTL. Admin API at `/admin/dlq/*`
+- `UsageService` (`modules/usage/`) — tracks per-channel message counts in `MessageUsage` model (with `segments` and `cost` fields) for billing. Records inbound usage in webhook controller, outbound usage in MessageService. Reports to Stripe via `billing.meterEvents.create()`. Cross-business aggregation via `getAllBusinessUsage()`. Rates: SMS $0.0079/segment out, $0.0075 in; MMS $0.02; Email $0.00065; WA/IG/FB/Web $0
+
+### Key Patterns
+
+- `Message.channel` is denormalized from `Conversation.channel` — set at creation time for query efficiency
+- `Conversation.lastInboundChannel` tracks the channel of the most recent inbound message — persisted by `processInboundMessage()` in webhook controller, used by `getDefaultReplyChannel()` for smart reply channel selection
+- Each channel gets its own conversation by default. `CustomerIdentityService.findConversation()` enables unified thread lookup across channels for future cross-channel merging.
+- `Business.channelSettings` JSON stores enabled channels, default reply channel, and autoDetectChannel flag
+- `Location` has per-channel config JSON fields: `whatsappConfig`, `instagramConfig`, `facebookConfig`, `smsConfig`, `emailConfig`, `webChatConfig`
+- All webhook endpoints verify provider signatures (HMAC-SHA256 for WhatsApp/Instagram/Facebook/Email, HMAC-SHA1 for Twilio SMS) using timing-safe comparison
+- All 6 channels have delivery status callback endpoints (WhatsApp, SMS, Instagram, Facebook, Email via Resend webhooks)
+- `EmailChannelProvider.validateDomain()` performs real DNS validation (MX records, SPF via TXT, DMARC via `_dmarc.` TXT) with 1-hour cache. Soft validation — logs warnings but never blocks message sending. Timeout returns `valid: true` with "timeout" status
+
+### WebChat Gateway
+
+- WebChat gateway on `/web-chat` namespace — visitor sessions (Redis-backed with in-memory fallback, 24h TTL), pre-chat forms, real-time messaging bridge to staff inbox
+- Supports `session:identify` (link visitor to customer), `history:request` (paginated message history), `file:upload-request` (base64 upload with validation: 5MB max, PNG/JPEG/GIF/PDF, local filesystem storage)
+- Offline visitors with email get notification logging
+- `PublicBookingController` at `GET /public/:slug` — unauthenticated booking portal with fuzzy slug resolution: exact match → `startsWith` fallback (single candidate) → suffix-stripped match (strips `-clinic`, `-spa`, `-studio`, `-salon`, `-group`, `-center`, `-centre`). Returns 404 only when no match or multiple ambiguous matches
+- `PublicChatController` at `GET /public/chat/config/:businessSlug` — unauthenticated endpoint for widget bootstrapping (greeting, theme, preChatFields, offlineMessage)
+
+### UI Components (in `apps/web/src/components/inbox/`)
+
+- `ChannelBadge` — colored icon+label badge per channel, used on conversation cards and thread headers
+- `ReplyChannelSwitcher` — dropdown to switch reply channel with disabled channel support (custom styled tooltips with fixable reason CTAs: "Add email"/"Add phone"), `getDefaultReplyChannel()` helper, `onAddContact` callback for inline contact addition
+- `ChannelsOnFile` — sidebar listing customer's available channels with inline "Add email"/"Add phone" forms (E.164 and email format validation), wired into inbox right sidebar
+- `ChannelFilterBar` — 7-tab filter (ALL + 6 channels) with unread count badges, `role="tablist"` accessibility
+- `ConversationContextBar` — compact bar showing FB/IG/WA messaging window countdown, email subject, SMS opt-in/out status, WhatsApp "Use template" CTA when window expired
+- `MediaComposer` — file attachment with per-channel type/size validation, drag-drop with channel-colored feedback, "Switch to Email" fallback on validation errors, inline error alerts
+- `DeliveryStatus` — message delivery status indicators (sent=single check, delivered=double check, read=blue double check, failed=red alert with `role="alert"`)
+
+### Inbox UX Features (in `apps/web/src/app/inbox/page.tsx`)
+
+- **Adaptive composer** — morphs per channel: email subject line, SMS char counter + segment calculator, Instagram 1000-char limit, WhatsApp template mode when window expired, Web Chat online/offline indicator
+- **Channel pills** — `role="tablist"` with `aria-selected`/`aria-disabled`, keyboard nav (ArrowLeft/ArrowRight), colored active ring, grayscale disabled state, health dots (amber=degraded, red=down), blue draft dots, pin icon
+- **Draft persistence** — per-channel drafts keyed by `conversationId:channel`, email preserves subject+body, blue dot indicators on pills, discard confirmation dialog (`role="alertdialog"`) on conversation switch, cleared on send. Debounced auto-save to backend `OutboundDraft` (1.5s) via `PUT /outbound/draft/auto-save`; restored from backend on conversation select for cross-session persistence
+- **Channel pinning** — pin icon on active pill, persisted to `localStorage('bookingos:pinnedChannel')`, auto-select priority: pinned > lastInbound > conversation channel > first available
+- **Smart suggestions** — proactive nudges between context bar and pills: SMS opted-out, IG/FB window expiring, no response >24h; dismissible with X (per-conversation, persists across conversation switches within session)
+- **Failed send recovery** — `role="alert"` error panel with Retry + "Send via [alt channel]" buttons
+- **Compact mode** — `isCompact` at screen height <800px (reduced padding, 35vh max), pills collapse to `<select>` dropdown at composer width <640px via ResizeObserver
+- **Conversation list sorting** — Web Chat LIVE sessions sorted to top, then urgency (expiring IG/FB windows), then server order
+- **ARIA accessibility** — `role="tablist"`/`role="tab"` on pills, `aria-live="assertive"` for channel switch announcements, `role="separator"` on channel transition dividers, `role="alert"` on failed sends, `role="alertdialog"` on discard modal with `aria-labelledby`/`aria-describedby`
+- **AI draft display** — OutboundDraft bubbles (bg-indigo-50, dashed border) with Approve & Send / Edit / Reject / Regenerate buttons. "AI is thinking..." indicator during processing. Source badges (AI Draft / Agent Draft). Confidence dot (green/amber/red). Regenerate-with-context input.
+- **AI × composer integration** — Edit loads draft into composer with correct channel + editing banner ("Editing AI draft — intent: X") + confidence indicator. Channel switch prompts "Regenerate for [channel]?" when editing AI draft. AI draft appears as first option in quick replies picker.
