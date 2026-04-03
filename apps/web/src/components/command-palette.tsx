@@ -190,7 +190,6 @@ export default function CommandPalette({
       t,
       packName: pack.name,
       packLabels: pack.labels,
-      kanbanEnabled: !!(user?.business?.packConfig as any)?.kanbanEnabled,
     });
 
     const sections = modeDef?.sections;

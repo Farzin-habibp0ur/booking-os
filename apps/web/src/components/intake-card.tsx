@@ -16,9 +16,6 @@ interface IntakeCardProps {
 
 const INTAKE_LABELS: Record<string, string> = {
   aesthetic: 'CLINIC INTAKE',
-  dealership: 'VEHICLE INTAKE',
-  wellness: 'CLIENT INTAKE',
-  general: 'INTAKE',
 };
 
 export default function IntakeCard({ customer, fields, onUpdated }: IntakeCardProps) {
@@ -146,7 +143,7 @@ export default function IntakeCard({ customer, fields, onUpdated }: IntakeCardPr
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <span className="text-xs font-semibold text-slate-500 uppercase">
-            {INTAKE_LABELS[pack.name] || INTAKE_LABELS.general}
+            {INTAKE_LABELS[pack.name] || 'CLINIC INTAKE'}
           </span>
           <span
             className={cn(

@@ -44,18 +44,15 @@ function flattenSections(s: NavSections): { primary: string[]; secondary: string
   };
 }
 
-function getAdminSections(packName?: string): NavSections {
-  const isDealership = packName === 'dealership';
+function getAdminSections(): NavSections {
   return {
     workspace: ['/inbox', '/calendar', '/customers', '/bookings', '/waitlist'],
     tools: [
       '/services',
       '/staff',
-      ...(isDealership ? ['/inventory', '/pipeline'] : []),
       '/invoices',
       '/marketing',
       '/campaigns',
-      '/packages',
     ],
     insights: ['/dashboard', '/reports', '/reports/monthly-review', '/roi'],
     aiAgents: [
@@ -67,39 +64,35 @@ function getAdminSections(packName?: string): NavSections {
       '/ai/performance',
     ],
     overflow: {
-      tools: ['/packages'],
       insights: ['/reports/monthly-review', '/roi'],
       aiAgents: ['/ai/actions', '/ai/agents', '/ai/automations', '/ai/settings', '/ai/performance'],
     },
   };
 }
 
-function getAgentSections(packName?: string): NavSections {
-  const isDealership = packName === 'dealership';
+function getAgentSections(): NavSections {
   return {
     workspace: ['/inbox', '/calendar', '/customers', '/bookings', '/waitlist'],
-    tools: ['/services', ...(isDealership ? ['/inventory', '/pipeline'] : [])],
+    tools: ['/services'],
     insights: ['/dashboard', '/reports'],
   };
 }
 
 const providerSections: NavSections = {
   workspace: ['/inbox', '/calendar', '/customers', '/bookings'],
-  tools: ['/services', '/service-board'],
+  tools: ['/services'],
   insights: ['/dashboard'],
 };
 
 function getModes(packName?: string): ModeDefinition[] {
-  const adminSections = getAdminSections(packName);
-  const agentSections = getAgentSections(packName);
+  const adminSections = getAdminSections();
+  const agentSections = getAgentSections();
   return [
     {
       key: 'admin',
       labels: {
         general: 'Admin',
         aesthetic: 'Clinic Manager',
-        dealership: 'Service Manager',
-        wellness: 'Studio Manager',
       },
       sections: adminSections,
       primaryNavPaths: flattenSections(adminSections).primary,
@@ -112,8 +105,6 @@ function getModes(packName?: string): ModeDefinition[] {
       labels: {
         general: 'Agent',
         aesthetic: 'Reception',
-        dealership: 'Service Advisor',
-        wellness: 'Front Desk',
       },
       sections: agentSections,
       primaryNavPaths: flattenSections(agentSections).primary,
@@ -126,8 +117,6 @@ function getModes(packName?: string): ModeDefinition[] {
       labels: {
         general: 'Provider',
         aesthetic: 'Provider',
-        dealership: 'Technician',
-        wellness: 'Practitioner',
       },
       sections: providerSections,
       primaryNavPaths: flattenSections(providerSections).primary,

@@ -43,7 +43,7 @@ describe('Business 360', () => {
         name: 'Test Business',
         slug: 'test',
         timezone: 'America/New_York',
-        verticalPack: 'general',
+        verticalPack: 'aesthetic',
         packConfig: {},
         defaultLocale: 'en',
         createdAt: '2025-01-01T00:00:00Z',

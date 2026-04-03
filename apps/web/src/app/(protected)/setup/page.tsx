@@ -28,8 +28,6 @@ import {
   Mail,
   RefreshCw,
   Sparkles,
-  Stethoscope,
-  Calendar,
 } from 'lucide-react';
 import { PROFILE_FIELDS } from '@booking-os/shared';
 
@@ -512,68 +510,9 @@ function SetupPage() {
                         <p className="font-medium text-sm text-slate-900">
                           {t('setup.clinic_type_aesthetic')}
                         </p>
-                        <span className="text-[10px] bg-sage-50 text-sage-700 px-2 py-0.5 rounded-full font-medium">
-                          Recommended
-                        </span>
                       </div>
                       <p className="text-xs text-slate-500 mt-1">
                         {t('setup.clinic_type_aesthetic_desc')}
-                      </p>
-                    </div>
-                  </div>
-                </button>
-
-                <button
-                  onClick={() => {
-                    setSelectedPack('wellness');
-                    installPack('wellness');
-                  }}
-                  disabled={packInstalling}
-                  className={cn(
-                    'w-full bg-white rounded-2xl shadow-soft p-6 text-left transition-all',
-                    selectedPack === 'wellness'
-                      ? 'ring-2 ring-sage-500 bg-sage-50'
-                      : 'hover:ring-2 hover:ring-sage-500',
-                  )}
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-sage-50 flex items-center justify-center flex-shrink-0">
-                      <Stethoscope size={20} className="text-sage-600" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-sm text-slate-900">
-                        {t('setup.clinic_type_wellness')}
-                      </p>
-                      <p className="text-xs text-slate-500 mt-1">
-                        {t('setup.clinic_type_wellness_desc')}
-                      </p>
-                    </div>
-                  </div>
-                </button>
-
-                <button
-                  onClick={() => {
-                    setSelectedPack('general');
-                    installPack('general');
-                  }}
-                  disabled={packInstalling}
-                  className={cn(
-                    'w-full bg-white rounded-2xl shadow-soft p-6 text-left transition-all',
-                    selectedPack === 'general'
-                      ? 'ring-2 ring-slate-400 bg-slate-50'
-                      : 'hover:ring-2 hover:ring-slate-300',
-                  )}
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center flex-shrink-0">
-                      <Calendar size={20} className="text-slate-600" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-sm text-slate-900">
-                        {t('setup.clinic_type_general')}
-                      </p>
-                      <p className="text-xs text-slate-500 mt-1">
-                        {t('setup.clinic_type_general_desc')}
                       </p>
                     </div>
                   </div>
@@ -585,15 +524,6 @@ function SetupPage() {
                     {t('setup.clinic_type_installing')}
                   </div>
                 )}
-
-                <div className="text-center mt-6 pt-4 border-t border-slate-100">
-                  <button
-                    onClick={handleSkip}
-                    className="text-xs text-slate-400 hover:text-slate-600 transition-colors"
-                  >
-                    {t('setup.skip_for_now')} →
-                  </button>
-                </div>
               </>
             )}
           </div>

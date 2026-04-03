@@ -48,21 +48,6 @@ const aestheticFields = [
   { key: 'isMedicalFlagged', type: 'boolean', label: 'Medical Flag' },
 ];
 
-// ─── Dealership fields (vehicle dossier) ────────────────────────────────
-
-const dealershipFields = [
-  { key: 'make', type: 'text', label: 'Make', required: true },
-  { key: 'model', type: 'text', label: 'Model', required: true },
-  { key: 'year', type: 'number', label: 'Year' },
-  { key: 'vin', type: 'text', label: 'VIN' },
-  { key: 'mileage', type: 'number', label: 'Mileage' },
-  {
-    key: 'interestType',
-    type: 'select',
-    label: 'Interest Type',
-    options: ['New', 'Used', 'Trade-in', 'Service'],
-  },
-];
 
 describe('IntakeCard', () => {
   beforeEach(() => {
@@ -232,94 +217,6 @@ describe('IntakeCard', () => {
     expect(screen.getByText('Yes')).toBeInTheDocument();
   });
 
-  // ─── Dealership-specific tests ──────────────────────────────────────
-
-  it('renders dealership vehicle dossier fields', () => {
-    render(
-      <IntakeCard
-        customer={{ id: 'c1', customFields: {} }}
-        fields={dealershipFields}
-        onUpdated={jest.fn()}
-      />,
-    );
-    expect(screen.getByText('Make')).toBeInTheDocument();
-    expect(screen.getByText('Model')).toBeInTheDocument();
-    expect(screen.getByText('Year')).toBeInTheDocument();
-    expect(screen.getByText('VIN')).toBeInTheDocument();
-    expect(screen.getByText('Mileage')).toBeInTheDocument();
-    expect(screen.getByText('Interest Type')).toBeInTheDocument();
-  });
-
-  it('renders number input for number-type fields in edit mode', () => {
-    render(
-      <IntakeCard
-        customer={{ id: 'c1', customFields: {} }}
-        fields={dealershipFields}
-        onUpdated={jest.fn()}
-      />,
-    );
-    fireEvent.click(screen.getByLabelText('Edit'));
-
-    const numberInputs = screen.getAllByRole('spinbutton');
-    expect(numberInputs.length).toBe(2); // year and mileage
-  });
-
-  it('renders select input for interest type', () => {
-    render(
-      <IntakeCard
-        customer={{ id: 'c1', customFields: {} }}
-        fields={dealershipFields}
-        onUpdated={jest.fn()}
-      />,
-    );
-    fireEvent.click(screen.getByLabelText('Edit'));
-
-    const selectInputs = screen.getAllByRole('combobox');
-    expect(selectInputs.length).toBe(1);
-    expect(screen.getByText('New')).toBeInTheDocument();
-    expect(screen.getByText('Used')).toBeInTheDocument();
-    expect(screen.getByText('Trade-in')).toBeInTheDocument();
-    expect(screen.getByText('Service')).toBeInTheDocument();
-  });
-
-  it('shows completion count for dealership fields', () => {
-    render(
-      <IntakeCard
-        customer={{
-          id: 'c1',
-          customFields: { make: 'Toyota', model: 'Camry', year: '2022' },
-        }}
-        fields={dealershipFields}
-        onUpdated={jest.fn()}
-      />,
-    );
-    expect(screen.getByText('3/6 complete')).toBeInTheDocument();
-  });
-
-  it('displays filled dealership values', () => {
-    render(
-      <IntakeCard
-        customer={{
-          id: 'c1',
-          customFields: {
-            make: 'Honda',
-            model: 'Civic',
-            year: '2024',
-            mileage: '15000',
-            interestType: 'Service',
-          },
-        }}
-        fields={dealershipFields}
-        onUpdated={jest.fn()}
-      />,
-    );
-    expect(screen.getByText('Honda')).toBeInTheDocument();
-    expect(screen.getByText('Civic')).toBeInTheDocument();
-    expect(screen.getByText('2024')).toBeInTheDocument();
-    expect(screen.getByText('15000')).toBeInTheDocument();
-    expect(screen.getByText('Service')).toBeInTheDocument();
-  });
-
   // ─── Additional tests ─────────────────────────────────────────────────
 
   it('reverts draft changes on cancel', () => {
@@ -381,34 +278,18 @@ describe('IntakeCard', () => {
     expect(screen.getByText('0/0 complete')).toBeInTheDocument();
   });
 
-  it('renders required indicator for required fields in edit mode', () => {
-    render(
-      <IntakeCard
-        customer={{ id: 'c1', customFields: {} }}
-        fields={dealershipFields}
-        onUpdated={jest.fn()}
-      />,
-    );
-    fireEvent.click(screen.getByLabelText('Edit'));
-
-    // Make and Model have required: true - they should have text inputs
-    // Verify the required fields are present with their labels
-    expect(screen.getByText('Make')).toBeInTheDocument();
-    expect(screen.getByText('Model')).toBeInTheDocument();
-  });
-
   it('preserves existing custom field values when saving new ones', async () => {
     const updatedCustomer = {
       id: 'c1',
-      customFields: { make: 'Toyota', model: 'Corolla' },
+      customFields: { concernArea: 'Fine lines', desiredTreatment: 'Botox' },
     };
     mockPatch.mockResolvedValue(updatedCustomer);
     const onUpdated = jest.fn();
 
     render(
       <IntakeCard
-        customer={{ id: 'c1', customFields: { make: 'Toyota' } }}
-        fields={dealershipFields}
+        customer={{ id: 'c1', customFields: { concernArea: 'Fine lines' } }}
+        fields={aestheticFields}
         onUpdated={onUpdated}
       />,
     );
@@ -416,9 +297,9 @@ describe('IntakeCard', () => {
     // Enter edit mode
     fireEvent.click(screen.getByLabelText('Edit'));
 
-    // Change model field
-    const modelInput = screen.getByPlaceholderText('Model');
-    fireEvent.change(modelInput, { target: { value: 'Corolla' } });
+    // Change desired treatment field
+    const treatmentInput = screen.getByPlaceholderText('Desired Treatment');
+    fireEvent.change(treatmentInput, { target: { value: 'Botox' } });
 
     // Save
     fireEvent.click(screen.getByText('Save'));
@@ -426,8 +307,8 @@ describe('IntakeCard', () => {
     await waitFor(() => {
       expect(mockPatch).toHaveBeenCalledWith('/customers/c1', {
         customFields: expect.objectContaining({
-          make: 'Toyota',
-          model: 'Corolla',
+          concernArea: 'Fine lines',
+          desiredTreatment: 'Botox',
         }),
       });
     });

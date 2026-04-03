@@ -26,7 +26,6 @@ import {
   StickyNote,
   Trash2,
   ChevronDown,
-  DollarSign,
   Camera,
   Gift,
   Copy,
@@ -45,8 +44,6 @@ import { PhotoTimeline } from '@/components/aesthetic/photo-timeline';
 import { TreatmentPlanCard } from '@/components/aesthetic/treatment-plan-card';
 import { TreatmentPlanTimeline } from '@/components/aesthetic/treatment-plan-timeline';
 import { AftercareEnrollmentCard } from '@/components/aesthetic/aftercare-enrollment-card';
-import { CustomerJourneyBoard } from '@/components/dealership/customer-journey-board';
-import { DEAL_STAGE_STYLES, dealStageBadgeClasses } from '@/lib/design-tokens';
 
 export default function CustomerDetailPage() {
   const { id } = useParams();
@@ -101,9 +98,6 @@ export default function CustomerDetailPage() {
 
   // Aftercare enrollments state
   const [aftercareEnrollments, setAftercareEnrollments] = useState<any[]>([]);
-
-  // Dealership journey state
-  const [journey, setJourney] = useState<any>(null);
 
   // Referral credits state
   const [referralData, setReferralData] = useState<any>(null);
@@ -192,13 +186,7 @@ export default function CustomerDetailPage() {
         .then(setAftercareEnrollments)
         .catch(() => setAftercareEnrollments([]));
     }
-    if (pack.slug === 'dealership') {
-      api
-        .get<any>(`/customers/${id}/journey`)
-        .then(setJourney)
-        .catch(() => setJourney(null));
-    }
-    if (pack.slug === 'aesthetic' || pack.slug === 'wellness') {
+    if (pack.slug === 'aesthetic') {
       setReferralLoading(true);
       api
         .get<any>(`/referral/customers/${id}`)
@@ -771,8 +759,8 @@ export default function CustomerDetailPage() {
           </div>
         )}
 
-        {/* Referral Credits — Aesthetic & Wellness only */}
-        {(pack.slug === 'aesthetic' || pack.slug === 'wellness') &&
+        {/* Referral Credits — Aesthetic only */}
+        {pack.slug === 'aesthetic' &&
           (referralLoading ? (
             <div className={cn(ELEVATION.card, 'bg-white p-5 mb-6')}>
               <div className="animate-pulse space-y-3">
@@ -948,15 +936,8 @@ export default function CustomerDetailPage() {
           </div>
         )}
 
-        {/* Dealership Journey Board */}
-        {pack.slug === 'dealership' && journey && (
-          <div className="mb-6" data-testid="journey-board">
-            <CustomerJourneyBoard journey={journey} />
-          </div>
-        )}
-
         {/* Vertical Modules */}
-        {(pack.slug === 'aesthetic' || pack.slug === 'dealership') && (
+        {pack.slug === 'aesthetic' && (
           <div className="mb-6">
             <button
               onClick={() => setVerticalOpen(!verticalOpen)}
@@ -967,11 +948,11 @@ export default function CustomerDetailPage() {
                 size={14}
                 className={cn('transition-transform', verticalOpen ? '' : '-rotate-90')}
               />
-              {pack.slug === 'aesthetic' ? t('customer_detail.clinic_intake') : 'Sales Overview'}
+              {t('customer_detail.clinic_intake')}
             </button>
             {verticalOpen && (
               <div className={cn(ELEVATION.card, 'bg-white')} data-testid="vertical-content">
-                {pack.slug === 'aesthetic' && pack.customerFields.length > 0 && (
+                {pack.customerFields.length > 0 && (
                   <IntakeCard
                     customer={customer}
                     fields={pack.customerFields}
@@ -979,100 +960,6 @@ export default function CustomerDetailPage() {
                       setCustomer(updated);
                     }}
                   />
-                )}
-                {pack.slug === 'dealership' && (
-                  <div className="p-5" data-testid="dealership-summary">
-                    {/* Active Deals */}
-                    {journey?.deals?.filter(
-                      (d: any) => !['CLOSED_WON', 'CLOSED_LOST'].includes(d.stage),
-                    ).length > 0 ? (
-                      <div className="mb-5">
-                        <h4 className="text-xs font-semibold text-slate-500 uppercase mb-3">
-                          Active Deals
-                        </h4>
-                        <div className="space-y-2">
-                          {journey.deals
-                            .filter((d: any) => !['CLOSED_WON', 'CLOSED_LOST'].includes(d.stage))
-                            .map((deal: any) => (
-                              <a
-                                key={deal.id}
-                                href={`/pipeline/${deal.id}`}
-                                className="flex items-center justify-between p-3 rounded-xl bg-slate-50/80 hover:bg-slate-50 transition-colors"
-                                data-testid="deal-row"
-                              >
-                                <div className="flex items-center gap-3 min-w-0">
-                                  <span
-                                    className={cn(
-                                      'text-[10px] px-2 py-0.5 rounded-lg font-medium shrink-0',
-                                      dealStageBadgeClasses(deal.stage),
-                                    )}
-                                  >
-                                    {DEAL_STAGE_STYLES[deal.stage]?.label || deal.stage}
-                                  </span>
-                                  {deal.vehicle && (
-                                    <span className="text-sm text-slate-600 truncate">
-                                      {deal.vehicle.year} {deal.vehicle.make} {deal.vehicle.model}
-                                    </span>
-                                  )}
-                                </div>
-                                <div className="flex items-center gap-3 shrink-0">
-                                  {deal.dealValue != null && (
-                                    <span className="text-sm font-semibold text-sage-700">
-                                      ${Number(deal.dealValue).toLocaleString()}
-                                    </span>
-                                  )}
-                                  {deal.assignedTo && (
-                                    <span className="text-[10px] text-slate-400">
-                                      {deal.assignedTo.name}
-                                    </span>
-                                  )}
-                                </div>
-                              </a>
-                            ))}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="text-center py-4 mb-4">
-                        <DollarSign size={28} className="mx-auto mb-2 text-slate-300" />
-                        <p className="text-sm text-slate-400">No active deals</p>
-                        <a
-                          href="/pipeline"
-                          className="text-xs text-sage-600 hover:underline mt-1 inline-block"
-                        >
-                          Open Pipeline →
-                        </a>
-                      </div>
-                    )}
-
-                    {/* Vehicles of Interest */}
-                    {journey?.vehiclesOfInterest?.length > 0 && (
-                      <div>
-                        <h4 className="text-xs font-semibold text-slate-500 uppercase mb-3">
-                          Vehicles of Interest
-                        </h4>
-                        <div className="flex flex-wrap gap-2">
-                          {journey.vehiclesOfInterest.map((v: any) => (
-                            <a
-                              key={v.id}
-                              href={`/inventory/${v.id}`}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs transition-colors"
-                              data-testid="vehicle-chip"
-                            >
-                              <span className="font-medium text-slate-700">
-                                {v.year} {v.make} {v.model}
-                              </span>
-                              <span className="text-slate-400">#{v.stockNumber}</span>
-                              {v.askingPrice != null && (
-                                <span className="text-sage-600 font-semibold">
-                                  ${Number(v.askingPrice).toLocaleString()}
-                                </span>
-                              )}
-                            </a>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
                 )}
               </div>
             )}

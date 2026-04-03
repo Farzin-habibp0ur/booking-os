@@ -741,12 +741,7 @@ export default function DashboardPage() {
             <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6">
               <div className="flex items-center justify-between">
                 <p className="text-sm text-slate-500">
-                  {(() => {
-                    const vp = user?.business?.verticalPack;
-                    if (vp === 'dealership') return 'Quote → Service';
-                    if (vp === 'wellness') return 'Booking → Session';
-                    return 'Consult → Treatment';
-                  })()}
+                  Consult → Treatment
                 </p>
               </div>
               <p className="text-2xl font-serif font-bold mt-1">
@@ -755,7 +750,7 @@ export default function DashboardPage() {
               <p className="text-xs text-slate-400 mt-1">
                 {data.consultConversion?.converted ?? 0} of{' '}
                 {data.consultConversion?.consultCustomers ?? 0}{' '}
-                {user?.business?.verticalPack === 'dealership' ? 'quotes' : 'consults'} converted
+                consults converted
               </p>
             </div>
 
