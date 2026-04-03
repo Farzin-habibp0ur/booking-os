@@ -1525,12 +1525,11 @@ async function main() {
     });
     console.log('✅ Staff preferences set (admin/agent/provider modes)');
 
-    // Sample saved views (with dedup guard)
-    const existingViews = await prisma.savedView.findMany({
-      where: { businessId: bizId },
-      select: { name: true, staffId: true },
+    // Sample saved views — delete any existing duplicates by name first, then recreate fresh
+    const viewNames = ['Pending Deposits', 'Overdue Replies', 'Confirmed Today', 'My Queue'];
+    await prisma.savedView.deleteMany({
+      where: { businessId: bizId, name: { in: viewNames } },
     });
-    const existingViewKey = new Set(existingViews.map((v) => `${v.name}:${v.staffId ?? 'shared'}`));
 
     const viewsToCreate = [
       {
@@ -1582,11 +1581,9 @@ async function main() {
         isDashboard: false,
         sortOrder: 0,
       },
-    ].filter((v) => !existingViewKey.has(`${v.name}:${v.staffId ?? 'shared'}`));
+    ];
 
-    if (viewsToCreate.length > 0) {
-      await prisma.savedView.createMany({ data: viewsToCreate });
-    }
+    await prisma.savedView.createMany({ data: viewsToCreate });
     console.log(
       `✅ ${viewsToCreate.length} saved views created (dedup-safe, sidebar pinning removed)`,
     );

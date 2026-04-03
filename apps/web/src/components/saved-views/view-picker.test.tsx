@@ -197,16 +197,51 @@ describe('ViewPicker', () => {
     expect(api.del).toHaveBeenCalledWith('/saved-views/v1');
   });
 
-  it('deduplicates views by id', async () => {
+  it('deduplicates views by name and page', async () => {
     (api.get as jest.Mock).mockResolvedValue([
       ...mockViews,
-      { ...mockViews[0] }, // duplicate of v1
+      { ...mockViews[0] }, // same name + page as v1
     ]);
 
     render(<ViewPicker {...defaultProps} />);
 
     await screen.findByText('Active Only');
-    // "Active Only" (v1) should appear only once despite duplicate in response
+    // "Active Only" should appear only once despite duplicate in response
+    expect(screen.getAllByText('Active Only')).toHaveLength(1);
+    expect(screen.getByText('Shared View')).toBeInTheDocument();
+  });
+
+  it('deduplicates views with same name but different IDs (database duplicates)', async () => {
+    (api.get as jest.Mock).mockResolvedValue([
+      {
+        id: 'v1',
+        name: 'Active Only',
+        filters: {},
+        isPinned: false,
+        isDashboard: false,
+        isShared: false,
+      },
+      {
+        id: 'v99',
+        name: 'Active Only',
+        filters: {},
+        isPinned: false,
+        isDashboard: false,
+        isShared: false,
+      }, // same name, different id
+      {
+        id: 'v2',
+        name: 'Shared View',
+        filters: {},
+        isPinned: false,
+        isDashboard: false,
+        isShared: true,
+      },
+    ]);
+
+    render(<ViewPicker {...defaultProps} />);
+
+    await screen.findByText('Active Only');
     expect(screen.getAllByText('Active Only')).toHaveLength(1);
     expect(screen.getByText('Shared View')).toBeInTheDocument();
   });

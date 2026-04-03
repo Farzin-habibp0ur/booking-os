@@ -112,6 +112,7 @@ jest.mock('@/lib/use-mode', () => ({
   useMode: () => ({
     mode: 'provider',
     setMode: jest.fn(),
+    modeReady: true,
     availableModes: [],
     modeLabel: 'Provider',
     landingPath: '/calendar',

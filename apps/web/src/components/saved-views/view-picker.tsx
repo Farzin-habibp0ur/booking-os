@@ -34,7 +34,9 @@ export function ViewPicker({
   const loadViews = useCallback(async () => {
     try {
       const data = await api.get<any[]>(`/saved-views?page=${page}`);
-      const unique = [...new Map((data || []).map((v) => [v.id, v])).values()];
+      const unique = [
+        ...new Map((data || []).map((v) => [v.name + ':' + (v.page || ''), v])).values(),
+      ];
       setViews(unique);
     } catch {
       // Silently handle
