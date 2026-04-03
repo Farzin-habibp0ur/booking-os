@@ -475,8 +475,6 @@ describe('CustomerService', () => {
       );
       prisma.invoice.findMany.mockResolvedValue(overrides.invoices ?? []);
       prisma.clinicalPhoto.findMany.mockResolvedValue(overrides.clinicalPhotos ?? []);
-      prisma.deal.findMany.mockResolvedValue(overrides.deals ?? []);
-      prisma.testDrive.findMany.mockResolvedValue(overrides.testDrives ?? []);
     }
 
     it('returns events from all 6 sources', async () => {
@@ -517,8 +515,6 @@ describe('CustomerService', () => {
       prisma.campaignSend.findMany.mockResolvedValue([]);
       prisma.invoice.findMany.mockResolvedValue([]);
       prisma.clinicalPhoto.findMany.mockResolvedValue([]);
-      prisma.deal.findMany.mockResolvedValue([]);
-      prisma.testDrive.findMany.mockResolvedValue([]);
 
       const result = await service.getTimeline('biz1', 'c1');
 

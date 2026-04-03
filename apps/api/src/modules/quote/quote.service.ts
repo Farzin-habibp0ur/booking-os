@@ -3,7 +3,6 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../common/prisma.service';
 import { TokenService } from '../../common/token.service';
 import { NotificationService } from '../notification/notification.service';
-import { BookingService } from '../booking/booking.service';
 
 @Injectable()
 export class QuoteService {
@@ -13,7 +12,6 @@ export class QuoteService {
     private prisma: PrismaService,
     private tokenService: TokenService,
     private notificationService: NotificationService,
-    private bookingService: BookingService,
     private configService: ConfigService,
   ) {}
 
@@ -60,9 +58,6 @@ export class QuoteService {
       where: { id: quote.id },
       data: { tokenId: token },
     });
-
-    // Move kanban status to AWAITING_APPROVAL
-    await this.bookingService.updateKanbanStatus(businessId, data.bookingId, 'AWAITING_APPROVAL');
 
     // Send notification with approval link
     const webUrl = this.configService.get('WEB_URL', 'http://localhost:3000');
@@ -185,16 +180,6 @@ export class QuoteService {
         approverIp: approverIp || null,
       },
     });
-
-    // Move kanban status to IN_PROGRESS
-    const booking = await this.prisma.booking.findFirst({
-      where: { id: record.bookingId },
-      include: { customer: true, service: true, staff: true, business: true },
-    });
-
-    if (booking) {
-      await this.bookingService.updateKanbanStatus(booking.businessId, booking.id, 'IN_PROGRESS');
-    }
 
     this.logger.log(`Quote approved: quote=${quote.id} booking=${record.bookingId}`);
 

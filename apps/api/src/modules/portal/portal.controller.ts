@@ -161,12 +161,6 @@ export class PortalController {
     return this.portalService.getPackages(req.portalUser.customerId, req.portalUser.businessId);
   }
 
-  @Get('class-schedule')
-  @UseGuards(PortalGuard)
-  getClassSchedule(@Req() req: any, @Query('week') week: string) {
-    return this.portalService.getClassSchedule(req.portalUser.businessId, week);
-  }
-
   @Get('practitioners')
   @UseGuards(PortalGuard)
   getPractitioners(@Req() req: any) {

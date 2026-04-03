@@ -1363,47 +1363,6 @@ describe('AvailabilityService', () => {
     });
   });
 
-  // ─── Certification filtering (Prompt 3C) ────────────────────────────
-
-  describe('certification filtering', () => {
-    it('filters out staff without required certification', async () => {
-      prisma.service.findFirst.mockResolvedValue({
-        id: 'svc1',
-        businessId: 'biz1',
-        durationMins: 60,
-        requiresCertification: 'RMT',
-        maxParticipants: 1,
-        requiredResourceType: null,
-      } as any);
-
-      prisma.staff.findMany.mockResolvedValue([
-        { id: 's1', name: 'Alice' },
-        { id: 's2', name: 'Bob' },
-      ] as any);
-
-      prisma.staffServicePrice.findMany.mockResolvedValue([]);
-
-      // Only Alice has valid RMT cert
-      prisma.staffCertification.findMany.mockResolvedValue([{ staffId: 's1' }] as any);
-
-      prisma.workingHours.findUnique.mockResolvedValue({
-        staffId: 's1',
-        dayOfWeek: FUTURE_DATE_DOW,
-        startTime: '09:00',
-        endTime: '10:00',
-        isOff: false,
-      } as any);
-      prisma.timeOff.findFirst.mockResolvedValue(null);
-      prisma.booking.findMany.mockResolvedValue([]);
-      mockCalendarSyncService.pullExternalEvents.mockResolvedValue([]);
-
-      const result = await service.getAvailableSlots('biz1', FUTURE_DATE, 'svc1');
-      const staffIds = new Set(result.map((s) => s.staffId));
-      expect(staffIds.has('s1')).toBe(true);
-      expect(staffIds.has('s2')).toBe(false);
-    });
-  });
-
   // ─── Resource auto-filtering (Prompt 3C) ─────────────────────────────
 
   describe('resource auto-filtering', () => {

@@ -286,38 +286,6 @@ export class DashboardService {
       dismissedNudges,
     };
 
-    // Deal pipeline metrics (dealership only)
-    let dealPipelineMetrics: any = null;
-    if ((business as any)?.verticalPack === 'dealership' || (packConfig as any)?.kanbanEnabled) {
-      try {
-        const [openDeals, recentWon] = await Promise.all([
-          this.prisma.deal.findMany({
-            where: { businessId, stage: { notIn: ['CLOSED_WON', 'CLOSED_LOST'] } },
-            select: { dealValue: true, probability: true, stage: true },
-          }),
-          this.prisma.deal.count({
-            where: { businessId, stage: 'CLOSED_WON', actualCloseDate: { gte: monthAgo } },
-          }),
-        ]);
-        const pipelineValue = openDeals.reduce(
-          (sum, d) => sum + (d.dealValue ? Number(d.dealValue) : 0),
-          0,
-        );
-        const weightedValue = openDeals.reduce(
-          (sum, d) => sum + (d.dealValue ? Number(d.dealValue) * ((d.probability || 0) / 100) : 0),
-          0,
-        );
-        dealPipelineMetrics = {
-          openDeals: openDeals.length,
-          pipelineValue: Math.round(pipelineValue * 100) / 100,
-          weightedValue: Math.round(weightedValue * 100) / 100,
-          wonThisMonth: recentWon,
-        };
-      } catch {
-        /* deal table may not exist yet */
-      }
-    }
-
     // Waitlist backfill stats
     const waitlistMetrics = await this.waitlistService.getMetrics(businessId, 30).catch(() => ({
       totalEntries: 0,
@@ -353,7 +321,6 @@ export class DashboardService {
       },
       goLiveChecklist,
       milestoneProgress,
-      dealPipelineMetrics,
       // Mission Control: staff-scoped data
       myBookingsToday,
       myAssignedConversations,
@@ -382,63 +349,6 @@ export class DashboardService {
     });
 
     return { success: true };
-  }
-
-  async getCertificationAlerts(businessId: string) {
-    const biz = await this.prisma.business.findUnique({
-      where: { id: businessId },
-      select: { verticalPack: true },
-    });
-    if (!biz || biz.verticalPack !== 'wellness') return [];
-
-    const thirtyDaysFromNow = new Date();
-    thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
-
-    const expiringCerts = await this.prisma.staffCertification.findMany({
-      where: {
-        staff: { businessId, isActive: true },
-        expiryDate: {
-          lte: thirtyDaysFromNow,
-          gte: new Date(),
-        },
-      },
-      include: {
-        staff: { select: { id: true, name: true } },
-      },
-      orderBy: { expiryDate: 'asc' },
-    });
-
-    const expiredCerts = await this.prisma.staffCertification.findMany({
-      where: {
-        staff: { businessId, isActive: true },
-        expiryDate: { lt: new Date() },
-      },
-      include: {
-        staff: { select: { id: true, name: true } },
-      },
-      orderBy: { expiryDate: 'desc' },
-      take: 10,
-    });
-
-    return {
-      expiringSoon: expiringCerts.map((c) => ({
-        id: c.id,
-        staffId: c.staff.id,
-        staffName: c.staff.name,
-        certName: c.name,
-        expiryDate: c.expiryDate,
-        daysUntilExpiry: Math.ceil(
-          (new Date(c.expiryDate!).getTime() - Date.now()) / (1000 * 60 * 60 * 24),
-        ),
-      })),
-      expired: expiredCerts.map((c) => ({
-        id: c.id,
-        staffId: c.staff.id,
-        staffName: c.staff.name,
-        certName: c.name,
-        expiryDate: c.expiryDate,
-      })),
-    };
   }
 
   async getMessagingChannelBreakdown(businessId: string) {

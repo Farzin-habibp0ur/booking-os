@@ -5,7 +5,6 @@ import { QuoteService } from './quote.service';
 import { PrismaService } from '../../common/prisma.service';
 import { TokenService } from '../../common/token.service';
 import { NotificationService } from '../notification/notification.service';
-import { BookingService } from '../booking/booking.service';
 import {
   createMockPrisma,
   createMockTokenService,
@@ -18,14 +17,12 @@ describe('QuoteService', () => {
   let prisma: ReturnType<typeof createMockPrisma>;
   let mockTokenService: ReturnType<typeof createMockTokenService>;
   let mockNotificationService: ReturnType<typeof createMockNotificationService>;
-  let mockBookingService: any;
   let mockConfigService: ReturnType<typeof createMockConfigService>;
 
   const mockBooking = {
     id: 'b1',
     businessId: 'biz1',
     status: 'CONFIRMED',
-    kanbanStatus: 'DIAGNOSING',
     customer: { id: 'c1', name: 'John Smith', phone: '+1234567890', email: 'john@test.com' },
     service: { id: 's1', name: 'Brake Service', durationMins: 90, price: 250 },
     staff: { id: 'st1', name: 'Mike M.' },
@@ -54,9 +51,6 @@ describe('QuoteService', () => {
     mockTokenService = createMockTokenService();
     mockNotificationService = createMockNotificationService();
     mockConfigService = createMockConfigService();
-    mockBookingService = {
-      updateKanbanStatus: jest.fn().mockResolvedValue({}),
-    };
 
     const module = await Test.createTestingModule({
       providers: [
@@ -64,7 +58,6 @@ describe('QuoteService', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: TokenService, useValue: mockTokenService },
         { provide: NotificationService, useValue: mockNotificationService },
-        { provide: BookingService, useValue: mockBookingService },
         { provide: ConfigService, useValue: mockConfigService },
       ],
     }).compile();
@@ -115,24 +108,6 @@ describe('QuoteService', () => {
         undefined,
         48,
         'b1',
-      );
-    });
-
-    it('moves kanban status to AWAITING_APPROVAL', async () => {
-      prisma.booking.findFirst.mockResolvedValue(mockBooking as any);
-      prisma.quote.create.mockResolvedValue(mockQuote as any);
-      prisma.quote.update.mockResolvedValue(mockQuote as any);
-
-      await service.create('biz1', {
-        bookingId: 'b1',
-        description: 'Test',
-        totalAmount: 100,
-      });
-
-      expect(mockBookingService.updateKanbanStatus).toHaveBeenCalledWith(
-        'biz1',
-        'b1',
-        'AWAITING_APPROVAL',
       );
     });
 
@@ -323,16 +298,6 @@ describe('QuoteService', () => {
       const markUsedOrder = mockTokenService.markUsed.mock.invocationCallOrder[0];
       const updateOrder = (prisma.quote.update as jest.Mock).mock.invocationCallOrder[0];
       expect(markUsedOrder).toBeLessThan(updateOrder);
-    });
-
-    it('moves kanban status to IN_PROGRESS', async () => {
-      await service.approveQuote('abc123');
-
-      expect(mockBookingService.updateKanbanStatus).toHaveBeenCalledWith(
-        'biz1',
-        'b1',
-        'IN_PROGRESS',
-      );
     });
 
     it('stores approver IP', async () => {

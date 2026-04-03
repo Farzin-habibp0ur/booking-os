@@ -1,7 +1,6 @@
 import {
   Injectable,
   Logger,
-  ForbiddenException,
   BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
@@ -32,22 +31,7 @@ export class ReferralService {
     private creditService: CreditService,
   ) {}
 
-  private async assertReferralVertical(businessId: string) {
-    const business = await this.prisma.business.findUnique({
-      where: { id: businessId },
-      select: { verticalPack: true },
-    });
-    if (!business) throw new NotFoundException('Business not found');
-    const allowed = ['AESTHETIC', 'WELLNESS'];
-    if (!allowed.includes(business.verticalPack.toUpperCase())) {
-      throw new ForbiddenException(
-        'Referral program is only available for Aesthetic and Wellness verticals',
-      );
-    }
-  }
-
   async getOrCreateReferralCode(customerId: string, businessId: string): Promise<string> {
-    await this.assertReferralVertical(businessId);
 
     const customer = await this.prisma.customer.findFirst({
       where: { id: customerId, businessId },
@@ -114,7 +98,6 @@ export class ReferralService {
     referredCustomerId: string,
     businessId: string,
   ) {
-    await this.assertReferralVertical(businessId);
 
     const business = await this.prisma.business.findUnique({
       where: { id: businessId },
@@ -226,7 +209,6 @@ export class ReferralService {
   }
 
   async getReferralSettings(businessId: string) {
-    await this.assertReferralVertical(businessId);
 
     const business = await this.prisma.business.findUnique({
       where: { id: businessId },
@@ -238,7 +220,6 @@ export class ReferralService {
   }
 
   async updateReferralSettings(businessId: string, dto: UpdateReferralSettingsDto) {
-    await this.assertReferralVertical(businessId);
 
     const business = await this.prisma.business.findUnique({
       where: { id: businessId },
@@ -268,7 +249,6 @@ export class ReferralService {
   }
 
   async getReferralStats(businessId: string) {
-    await this.assertReferralVertical(businessId);
 
     const [totalReferrals, completedReferrals, pendingReferrals] = await Promise.all([
       this.prisma.customerReferral.count({ where: { businessId } }),
@@ -321,7 +301,6 @@ export class ReferralService {
   }
 
   async getCustomerReferralInfo(customerId: string, businessId: string) {
-    await this.assertReferralVertical(businessId);
 
     const code = await this.getOrCreateReferralCode(customerId, businessId);
     const link = await this.getReferralLink(customerId, businessId);

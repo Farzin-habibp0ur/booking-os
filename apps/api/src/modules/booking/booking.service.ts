@@ -19,8 +19,6 @@ import { ActionHistoryService } from '../action-history/action-history.service';
 import { InvoiceService } from '../invoice/invoice.service';
 import { TreatmentPlanService } from '../treatment-plan/treatment-plan.service';
 import { AftercareService } from '../aftercare/aftercare.service';
-import { DealService } from '../deal/deal.service';
-import { PackageService } from '../package/package.service';
 import { ReferralService } from '../referral/referral.service';
 
 @Injectable()
@@ -45,10 +43,6 @@ export class BookingService {
     private treatmentPlanService?: TreatmentPlanService,
     @Optional()
     private aftercareService?: AftercareService,
-    @Optional()
-    private dealService?: DealService,
-    @Optional()
-    private packageService?: PackageService,
     @Optional()
     private referralService?: ReferralService,
   ) {}
@@ -743,15 +737,6 @@ export class BookingService {
             }),
           );
         }
-        // Unredeem package session if booking was linked to a package redemption
-        if (this.packageService) {
-          this.packageService.unredeemOnCancel(id, businessId).catch((err) =>
-            this.logger.warn(`Failed to unredeem package session for booking ${id}`, {
-              bookingId: id,
-              error: (err as Error).message,
-            }),
-          );
-        }
       }
     }
 
@@ -901,16 +886,6 @@ export class BookingService {
         );
       }
 
-      // Auto-advance deal pipeline on test drive completion (dealership)
-      if (this.dealService && booking.service?.kind === 'CONSULT') {
-        this.dealService.advanceDealOnTestDriveCompletion(booking.customerId, id).catch((err) =>
-          this.logger.warn(`Failed to advance deal after test drive completion for booking ${id}`, {
-            bookingId: id,
-            error: err.message,
-          }),
-        );
-      }
-
       // Complete referral if this booking was referred
       if (this.referralService) {
         this.referralService.completeReferral(id).catch((err) =>
@@ -953,72 +928,6 @@ export class BookingService {
     );
 
     return booking;
-  }
-
-  async updateKanbanStatus(businessId: string, id: string, kanbanStatus: string) {
-    const booking = await this.prisma.booking.findFirst({
-      where: { id, businessId },
-      include: { customer: true, service: true, staff: true },
-    });
-    if (!booking) throw new NotFoundException('Booking not found');
-
-    const updated = await this.prisma.booking.update({
-      where: { id, businessId },
-      data: { kanbanStatus },
-      include: { customer: true, service: true, staff: true },
-    });
-
-    // Fire-and-forget kanban status notification
-    this.notificationService.sendKanbanStatusUpdate(updated, kanbanStatus).catch((err) =>
-      this.logger.warn(`Failed to send kanban status notification for booking ${id}`, {
-        bookingId: id,
-        kanbanStatus,
-        error: err.message,
-      }),
-    );
-
-    this.logger.log(`Kanban status updated: booking=${id} status=${kanbanStatus}`);
-
-    return updated;
-  }
-
-  async getKanbanBoard(
-    businessId: string,
-    query: {
-      locationId?: string;
-      staffId?: string;
-      dateFrom?: string;
-      dateTo?: string;
-    },
-  ) {
-    const where: any = {
-      businessId,
-      kanbanStatus: { not: null },
-      status: { in: ['CONFIRMED', 'IN_PROGRESS'] },
-    };
-    if (query.locationId) where.locationId = query.locationId;
-    if (query.staffId) where.staffId = query.staffId;
-    if (query.dateFrom || query.dateTo) {
-      where.startTime = {};
-      if (query.dateFrom) {
-        const from = new Date(query.dateFrom);
-        if (!isNaN(from.getTime())) where.startTime.gte = from;
-      }
-      if (query.dateTo) {
-        const to = new Date(query.dateTo);
-        if (!isNaN(to.getTime())) where.startTime.lte = to;
-      }
-    }
-
-    return this.prisma.booking.findMany({
-      where,
-      include: {
-        customer: true,
-        service: true,
-        staff: true,
-      },
-      orderBy: { startTime: 'asc' },
-    });
   }
 
   async sendDepositRequest(businessId: string, id: string) {

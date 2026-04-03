@@ -50,15 +50,6 @@ describe('ReferralController', () => {
   });
 
   describe('getStatsSummary', () => {
-    it('returns supported:false for non-aesthetic/wellness verticals', async () => {
-      mockPrisma.business.findUnique.mockResolvedValue({
-        verticalPack: 'DEALERSHIP',
-        packConfig: {},
-      });
-      const result = await controller.getStatsSummary('biz-1');
-      expect(result).toEqual({ supported: false });
-    });
-
     it('returns enabled:false when referral program is disabled', async () => {
       mockPrisma.business.findUnique.mockResolvedValue({
         verticalPack: 'AESTHETIC',

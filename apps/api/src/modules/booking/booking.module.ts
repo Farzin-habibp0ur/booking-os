@@ -10,8 +10,6 @@ import { WaitlistModule } from '../waitlist/waitlist.module';
 import { InvoiceModule } from '../invoice/invoice.module';
 import { TreatmentPlanModule } from '../treatment-plan/treatment-plan.module';
 import { AftercareModule } from '../aftercare/aftercare.module';
-import { DealModule } from '../deal/deal.module';
-import { PackageModule } from '../package/package.module';
 import { ReferralModule } from '../referral/referral.module';
 
 @Module({
@@ -23,8 +21,6 @@ import { ReferralModule } from '../referral/referral.module';
     InvoiceModule,
     TreatmentPlanModule,
     AftercareModule,
-    DealModule,
-    PackageModule,
     ReferralModule,
   ],
   controllers: [RecurringController, BookingController],

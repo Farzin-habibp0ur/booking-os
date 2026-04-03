@@ -2521,66 +2521,6 @@ describe('NotificationService', () => {
   });
 
   // ==========================================
-  // NEW: sendKanbanStatusUpdate
-  // ==========================================
-  describe('sendKanbanStatusUpdate', () => {
-    beforeEach(async () => {
-      const module = await createModule(false);
-      notificationService = module.get(NotificationService);
-    });
-
-    it('sends known kanban status update via both channels', async () => {
-      prisma.messageTemplate.findMany.mockResolvedValue([]);
-      setupLogMocks();
-
-      await notificationService.sendKanbanStatusUpdate(mockBooking, 'READY_FOR_PICKUP');
-
-      expect(mockProvider.sendMessage).toHaveBeenCalledWith({
-        to: '+1234567890',
-        body: expect.stringContaining('ready for pickup'),
-        businessId: 'biz1',
-      });
-
-      expect(emailService.send).toHaveBeenCalledWith({
-        to: 'jane@example.com',
-        subject: 'Service Update - Glow Clinic',
-        html: expect.stringContaining('ready for pickup'),
-      });
-    });
-
-    it('uses fallback message for unknown kanban status', async () => {
-      prisma.messageTemplate.findMany.mockResolvedValue([]);
-      setupLogMocks();
-
-      await notificationService.sendKanbanStatusUpdate(mockBooking, 'SOME_CUSTOM_STATUS');
-
-      expect(mockProvider.sendMessage).toHaveBeenCalledWith({
-        to: '+1234567890',
-        body: expect.stringContaining('Status updated to SOME_CUSTOM_STATUS'),
-        businessId: 'biz1',
-      });
-    });
-
-    it('skips email when customer has no email', async () => {
-      prisma.messageTemplate.findMany.mockResolvedValue([]);
-      setupLogMocks();
-
-      await notificationService.sendKanbanStatusUpdate(mockBookingNoEmail, 'CHECKED_IN');
-
-      expect(mockProvider.sendMessage).toHaveBeenCalled();
-      expect(emailService.send).not.toHaveBeenCalled();
-    });
-
-    it('handles error gracefully', async () => {
-      prisma.messageTemplate.findMany.mockRejectedValue(new Error('DB error'));
-
-      await expect(
-        notificationService.sendKanbanStatusUpdate(mockBooking, 'IN_PROGRESS'),
-      ).resolves.toBeUndefined();
-    });
-  });
-
-  // ==========================================
   // NEW: sendQuoteApprovalRequest
   // ==========================================
   describe('sendQuoteApprovalRequest', () => {

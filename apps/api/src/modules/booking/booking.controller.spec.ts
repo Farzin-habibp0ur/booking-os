@@ -17,8 +17,6 @@ describe('BookingController', () => {
       getMonthSummary: jest.fn(),
       checkPolicyAllowed: jest.fn(),
       getAuditLog: jest.fn(),
-      getKanbanBoard: jest.fn(),
-      updateKanbanStatus: jest.fn(),
       bulkUpdate: jest.fn(),
       sendDepositRequest: jest.fn(),
       sendRescheduleLink: jest.fn(),
@@ -166,36 +164,6 @@ describe('BookingController', () => {
 
     expect(mockService.checkPolicyAllowed).toHaveBeenCalledWith('biz1', 'b1', 'cancel');
     expect(result).toEqual({ allowed: false });
-  });
-
-  it('kanbanBoard delegates to service.getKanbanBoard', async () => {
-    mockService.getKanbanBoard.mockResolvedValue({ columns: [] });
-
-    const result = await controller.kanbanBoard(
-      'biz1',
-      'loc1',
-      'staff1',
-      '2026-03-01',
-      '2026-03-07',
-    );
-
-    expect(mockService.getKanbanBoard).toHaveBeenCalledWith('biz1', {
-      locationId: 'loc1',
-      staffId: 'staff1',
-      dateFrom: '2026-03-01',
-      dateTo: '2026-03-07',
-    });
-    expect(result).toEqual({ columns: [] });
-  });
-
-  it('updateKanbanStatus delegates to service.updateKanbanStatus', async () => {
-    const body = { kanbanStatus: 'IN_PROGRESS' } as any;
-    mockService.updateKanbanStatus.mockResolvedValue({ id: 'b1', kanbanStatus: 'IN_PROGRESS' });
-
-    const result = await controller.updateKanbanStatus('biz1', 'b1', body);
-
-    expect(mockService.updateKanbanStatus).toHaveBeenCalledWith('biz1', 'b1', 'IN_PROGRESS');
-    expect(result.kanbanStatus).toBe('IN_PROGRESS');
   });
 
   it('bulkAction delegates to service.bulkUpdate', async () => {

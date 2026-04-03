@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ForbiddenException, BadRequestException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ReferralService } from './referral.service';
 import { CreditService } from './credit.service';
@@ -60,38 +60,6 @@ describe('ReferralService', () => {
     }).compile();
 
     service = module.get<ReferralService>(ReferralService);
-  });
-
-  describe('assertReferralVertical', () => {
-    it('should allow AESTHETIC vertical', async () => {
-      mockPrisma.business.findUnique.mockResolvedValue({ verticalPack: 'AESTHETIC' });
-      mockPrisma.customer.findFirst.mockResolvedValue({ referralCode: 'ABC123' });
-
-      await expect(service.getOrCreateReferralCode('cust-1', 'biz-1')).resolves.toBe('ABC123');
-    });
-
-    it('should allow WELLNESS vertical', async () => {
-      mockPrisma.business.findUnique.mockResolvedValue({ verticalPack: 'WELLNESS' });
-      mockPrisma.customer.findFirst.mockResolvedValue({ referralCode: 'XYZ789' });
-
-      await expect(service.getOrCreateReferralCode('cust-1', 'biz-1')).resolves.toBe('XYZ789');
-    });
-
-    it('should throw ForbiddenException for DEALERSHIP vertical', async () => {
-      mockPrisma.business.findUnique.mockResolvedValue({ verticalPack: 'DEALERSHIP' });
-
-      await expect(service.getOrCreateReferralCode('cust-1', 'biz-1')).rejects.toThrow(
-        ForbiddenException,
-      );
-    });
-
-    it('should throw ForbiddenException for GENERAL vertical', async () => {
-      mockPrisma.business.findUnique.mockResolvedValue({ verticalPack: 'GENERAL' });
-
-      await expect(service.getOrCreateReferralCode('cust-1', 'biz-1')).rejects.toThrow(
-        ForbiddenException,
-      );
-    });
   });
 
   describe('getOrCreateReferralCode', () => {
@@ -314,7 +282,7 @@ describe('ReferralService', () => {
   describe('getReferralSettings', () => {
     it('should return defaults when no packConfig', async () => {
       mockPrisma.business.findUnique.mockResolvedValue({
-        verticalPack: 'WELLNESS',
+        verticalPack: 'AESTHETIC',
         packConfig: {},
       });
 
