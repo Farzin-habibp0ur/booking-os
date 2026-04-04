@@ -21,7 +21,7 @@ describe('AutomationService', () => {
   describe('getPlaybooks', () => {
     it('returns built-in playbook definitions', () => {
       const playbooks = automationService.getPlaybooks();
-      expect(playbooks.length).toBe(8);
+      expect(playbooks.length).toBe(6);
       expect(playbooks[0].name).toBe('No-Show Prevention');
     });
   });

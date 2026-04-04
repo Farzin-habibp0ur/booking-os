@@ -2,22 +2,13 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import {
-  Calendar,
-  Clock,
-  User,
-  MessageSquare,
-  X,
-  ClipboardList,
-  FileText,
-} from 'lucide-react';
+import { Calendar, Clock, User, MessageSquare, X, ClipboardList, FileText } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { statusBadgeClasses } from '@/lib/design-tokens';
 import { PageSkeleton } from '@/components/skeleton';
 import { AftercarePortalView } from '@/components/aesthetic/aftercare-portal-view';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
-
 
 function portalFetch(path: string) {
   const token = typeof window !== 'undefined' ? sessionStorage.getItem('portal-token') : null;

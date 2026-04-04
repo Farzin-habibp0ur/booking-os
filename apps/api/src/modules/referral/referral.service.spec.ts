@@ -94,9 +94,7 @@ describe('ReferralService', () => {
 
   describe('getReferralLink', () => {
     it('should return correct format', async () => {
-      mockPrisma.business.findUnique
-        .mockResolvedValueOnce({ verticalPack: 'AESTHETIC' })
-        .mockResolvedValueOnce({ slug: 'glow-clinic' });
+      mockPrisma.business.findUnique.mockResolvedValue({ slug: 'glow-clinic' });
       mockPrisma.customer.findFirst.mockResolvedValue({ referralCode: 'ABC123' });
 
       const link = await service.getReferralLink('cust-1', 'biz-1');
@@ -350,14 +348,8 @@ describe('ReferralService', () => {
 
   describe('getCustomerReferralInfo', () => {
     it('should return customer referral data', async () => {
-      // assertReferralVertical (from getCustomerReferralInfo)
-      // then getOrCreateReferralCode calls assertReferralVertical again
-      // then getReferralLink calls getOrCreateReferralCode (assertReferralVertical again) + business.findUnique for slug
-      mockPrisma.business.findUnique
-        .mockResolvedValueOnce({ verticalPack: 'AESTHETIC' }) // getCustomerReferralInfo -> assertReferralVertical
-        .mockResolvedValueOnce({ verticalPack: 'AESTHETIC' }) // getOrCreateReferralCode -> assertReferralVertical
-        .mockResolvedValueOnce({ verticalPack: 'AESTHETIC' }) // getReferralLink -> getOrCreateReferralCode -> assertReferralVertical
-        .mockResolvedValueOnce({ slug: 'glow-clinic' }); // getReferralLink -> business slug lookup
+      // getReferralLink calls business.findUnique for slug
+      mockPrisma.business.findUnique.mockResolvedValue({ slug: 'glow-clinic' });
       mockPrisma.customer.findFirst.mockResolvedValue({ referralCode: 'CODE1' });
       mockPrisma.customerReferral.findMany.mockResolvedValue([]);
       mockPrisma.customerCredit.aggregate.mockResolvedValue({ _sum: { amount: 50 } });

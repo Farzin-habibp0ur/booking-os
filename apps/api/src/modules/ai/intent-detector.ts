@@ -57,10 +57,7 @@ export class IntentDetector {
 
   constructor(private claude: ClaudeClient) {}
 
-  async detect(
-    messageContent: string,
-    recentContext?: string,
-  ): Promise<IntentResult> {
+  async detect(messageContent: string, recentContext?: string): Promise<IntentResult> {
     const userMessage = recentContext
       ? `Recent conversation context:\n${recentContext}\n\nLatest customer message:\n${messageContent}`
       : `Customer message:\n${messageContent}`;

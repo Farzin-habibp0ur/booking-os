@@ -173,5 +173,4 @@ export class StaffController {
     }
     return this.availabilityService.removeTimeOff(businessId, timeOffId);
   }
-
 }

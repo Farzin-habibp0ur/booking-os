@@ -740,17 +740,14 @@ export default function DashboardPage() {
             {/* Conversion metric — vertical-aware label */}
             <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-soft p-6">
               <div className="flex items-center justify-between">
-                <p className="text-sm text-slate-500">
-                  Consult → Treatment
-                </p>
+                <p className="text-sm text-slate-500">Consult → Treatment</p>
               </div>
               <p className="text-2xl font-serif font-bold mt-1">
                 {data.consultConversion?.rate ?? 0}%
               </p>
               <p className="text-xs text-slate-400 mt-1">
                 {data.consultConversion?.converted ?? 0} of{' '}
-                {data.consultConversion?.consultCustomers ?? 0}{' '}
-                consults converted
+                {data.consultConversion?.consultCustomers ?? 0} consults converted
               </p>
             </div>
 

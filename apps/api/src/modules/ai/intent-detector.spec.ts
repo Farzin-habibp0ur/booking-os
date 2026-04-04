@@ -161,5 +161,4 @@ describe('IntentDetector', () => {
       256,
     );
   });
-
 });

@@ -434,7 +434,6 @@ export class PortalService {
   }
 
   async getPackages(customerId: string, businessId: string) {
-    // Package purchases removed (wellness vertical deleted)
     return [];
   }
 

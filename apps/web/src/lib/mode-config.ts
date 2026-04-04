@@ -47,13 +47,7 @@ function flattenSections(s: NavSections): { primary: string[]; secondary: string
 function getAdminSections(): NavSections {
   return {
     workspace: ['/inbox', '/calendar', '/customers', '/bookings', '/waitlist'],
-    tools: [
-      '/services',
-      '/staff',
-      '/invoices',
-      '/marketing',
-      '/campaigns',
-    ],
+    tools: ['/services', '/staff', '/invoices', '/marketing', '/campaigns'],
     insights: ['/dashboard', '/reports', '/reports/monthly-review', '/roi'],
     aiAgents: [
       '/ai',

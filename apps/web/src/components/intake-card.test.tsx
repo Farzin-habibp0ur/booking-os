@@ -48,7 +48,6 @@ const aestheticFields = [
   { key: 'isMedicalFlagged', type: 'boolean', label: 'Medical Flag' },
 ];
 
-
 describe('IntakeCard', () => {
   beforeEach(() => {
     jest.clearAllMocks();

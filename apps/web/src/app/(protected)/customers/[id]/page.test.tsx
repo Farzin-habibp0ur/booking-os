@@ -25,7 +25,6 @@ jest.mock('@/lib/vertical-pack', () => ({
   VerticalPackProvider: ({ children }: any) => children,
 }));
 
-
 const aestheticPack = {
   name: 'aesthetic',
   slug: 'aesthetic',
@@ -621,4 +620,3 @@ describe('CustomerDetailPage — Aesthetic Pack', () => {
     expect(screen.getByTestId('vertical-content')).toBeInTheDocument();
   });
 });
-

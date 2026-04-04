@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  Logger,
-  BadRequestException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, Logger, BadRequestException, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { randomBytes } from 'crypto';
 import { PrismaService } from '../../common/prisma.service';
@@ -32,7 +27,6 @@ export class ReferralService {
   ) {}
 
   async getOrCreateReferralCode(customerId: string, businessId: string): Promise<string> {
-
     const customer = await this.prisma.customer.findFirst({
       where: { id: customerId, businessId },
       select: { referralCode: true },
@@ -98,7 +92,6 @@ export class ReferralService {
     referredCustomerId: string,
     businessId: string,
   ) {
-
     const business = await this.prisma.business.findUnique({
       where: { id: businessId },
       select: { packConfig: true },
@@ -209,7 +202,6 @@ export class ReferralService {
   }
 
   async getReferralSettings(businessId: string) {
-
     const business = await this.prisma.business.findUnique({
       where: { id: businessId },
       select: { packConfig: true },
@@ -220,7 +212,6 @@ export class ReferralService {
   }
 
   async updateReferralSettings(businessId: string, dto: UpdateReferralSettingsDto) {
-
     const business = await this.prisma.business.findUnique({
       where: { id: businessId },
       select: { packConfig: true },
@@ -249,7 +240,6 @@ export class ReferralService {
   }
 
   async getReferralStats(businessId: string) {
-
     const [totalReferrals, completedReferrals, pendingReferrals] = await Promise.all([
       this.prisma.customerReferral.count({ where: { businessId } }),
       this.prisma.customerReferral.count({ where: { businessId, status: 'COMPLETED' } }),
@@ -301,7 +291,6 @@ export class ReferralService {
   }
 
   async getCustomerReferralInfo(customerId: string, businessId: string) {
-
     const code = await this.getOrCreateReferralCode(customerId, businessId);
     const link = await this.getReferralLink(customerId, businessId);
     const { total: creditsRemaining } = await this.creditService.getAvailableCredits(
