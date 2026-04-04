@@ -31,7 +31,7 @@ describe('Multi-Tenancy Isolation', () => {
   const BUSINESS_B_ID = 'business-b-uuid';
 
   // Mock PrismaService
-  const mockPrisma = {
+  const mockPrisma: Record<string, any> = {
     payment: {
       findUnique: jest.fn(),
       findFirst: jest.fn(),
