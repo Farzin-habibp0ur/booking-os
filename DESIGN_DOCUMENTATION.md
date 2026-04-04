@@ -8,7 +8,7 @@
 
 ## 1. Product Overview
 
-**Booking OS** is a multi-tenant SaaS platform for service-based businesses (aesthetic clinics, car dealerships, salons, spas) to manage bookings, customer conversations, and operations — with AI-powered agentic automation.
+**Booking OS** is a multi-tenant SaaS platform for service-based businesses (aesthetic clinics, salons) to manage bookings, customer conversations, and operations — with AI-powered agentic automation.
 
 ### Core Capabilities
 
@@ -22,7 +22,7 @@
 - **Multi-language support** (English, Spanish) with customizable per-business translation overrides
 - **Billing integration** via Stripe (basic/pro plans), deposit collection
 - **Calendar sync** — Google Calendar OAuth integration, iCal feed generation
-- **Vertical packs** — industry-specific configurations (aesthetic, dealership, salon, tutoring, general)
+- **Vertical packs** — industry-specific configurations (aesthetic, salon, tutoring, general)
 - **Public booking portal** — Customer-facing booking page at `/book/{slug}` with waitlist join
 - **Setup wizard** — 10-step onboarding flow with feature readiness checklist and test booking
 - **Dark mode** — System preference detection, manual toggle, full UI coverage
@@ -63,7 +63,7 @@
 
 ### UX Phase 2: Customer Hub + Unified Timeline + Global Search (Bundle B) (Complete — 7/7 batches)
 
-- **Customer Hub** — Redesigned `/customers/{id}` with sticky header, context row (last booking, last conversation, waitlist count), notes tab, message deep link, vertical modules (IntakeCard for aesthetic, quotes for dealership)
+- **Customer Hub** — Redesigned `/customers/{id}` with sticky header, context row (last booking, last conversation, waitlist count), notes tab, message deep link, vertical modules (IntakeCard for aesthetic)
 - **Customer Notes** — New `CustomerNote` model with full CRUD, staff ownership validation
 - **Unified Timeline** — Timeline API endpoint (6 data sources: bookings, conversations, notes, waitlist, quotes, campaigns), `CustomerTimeline` component with type filtering, pagination, deep linking
 - **Enhanced Search** — Search API with offset, types filter, totals; Cmd+K fixed hrefs to detail pages, grouped results, vertical-aware labels, "View all results" link; dedicated `/search` page
@@ -93,7 +93,7 @@
 - **Conversation Action Handler** (Batch 3b) — ConversationActionHandler (`ai/conversation-action-handler.ts`) for executing conversation-level actions from action cards, ActionCardInline frontend component
 - **Policy Compliance & Deposits** (Batch 3c) — PolicyComplianceService for automated policy enforcement, DepositCardHandler for deposit-related action cards, deposit-card.tsx frontend component
 - **Human Takeover** (Batch 3d) — HumanTakeoverService for AI-to-human escalation flow, ClarificationHandler for requesting clarification from staff, human-takeover-banner.tsx frontend component
-- **Vertical Actions** (Batch 3e) — VerticalActionHandler (`ai/vertical-action-handler.ts`) for vertical-specific action execution (aesthetic, dealership workflows)
+- **Vertical Actions** (Batch 3e) — VerticalActionHandler (`ai/vertical-action-handler.ts`) for vertical-specific action execution (aesthetic workflows)
 
 ### Agentic-First Transformation — Milestone 4: Background Agents (Complete)
 
@@ -106,7 +106,7 @@
 ### Agentic-First Transformation — Milestone 5: Vertical Pack Agents (Complete)
 
 - **Agent Skills Catalog** — New AgentSkills API module providing per-pack skill definitions with business-level overrides
-- **Pack-specific agent behaviors** — Agents adapt skills and action card types based on business vertical pack (aesthetic: aftercare follow-ups, consult conversion; dealership: quote follow-up, service bay optimization)
+- **Pack-specific agent behaviors** — Agents adapt skills and action card types based on business vertical pack (aesthetic: aftercare follow-ups, consult conversion)
 - **Frontend components** — skill-card.tsx (skill catalog display with enable/disable), vertical-launch-checklist.tsx (vertical-specific agent readiness checklist), waitlist-match-card.tsx (waitlist auto-match opportunities), quote-followup-card.tsx (expired/pending quote follow-up actions), ai-state-indicator.tsx (real-time agent processing status)
 - **Final counts (all 5 milestones):** 3,158 tests total (1,937 API + 1,221 web)
 
@@ -652,7 +652,6 @@ Two tabs: **Info** | **Notes**
 
 - Collapsible section with ChevronDown toggle
 - Aesthetic pack (`pack.slug === 'aesthetic'`): `IntakeCard` with clinic intake fields
-- Dealership pack (`pack.slug === 'dealership'`): Quotes summary (pending/approved/total), quote rows with status badges
 
 ---
 
