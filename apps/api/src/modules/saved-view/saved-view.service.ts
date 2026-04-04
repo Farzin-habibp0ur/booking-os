@@ -15,6 +15,16 @@ export class SavedViewService {
     });
   }
 
+  private dedupeByNamePage<T extends { name: string; page: string }>(items: T[]): T[] {
+    const seen = new Set<string>();
+    return items.filter((item) => {
+      const key = `${item.name}::${item.page}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }
+
   async findByPage(businessId: string, staffId: string, page: string) {
     const views = await this.prisma.savedView.findMany({
       where: {
@@ -40,7 +50,7 @@ export class SavedViewService {
   }
 
   async findDashboard(businessId: string, staffId: string) {
-    return this.prisma.savedView.findMany({
+    const views = await this.prisma.savedView.findMany({
       where: {
         businessId,
         isDashboard: true,
@@ -48,6 +58,7 @@ export class SavedViewService {
       },
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
     });
+    return this.dedupeByNamePage(views);
   }
 
   async create(

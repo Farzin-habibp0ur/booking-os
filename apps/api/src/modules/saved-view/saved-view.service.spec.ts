@@ -109,6 +109,37 @@ describe('SavedViewService', () => {
         }),
       );
     });
+
+    it('deduplicates views with the same name and page', async () => {
+      const view1 = {
+        ...mockView,
+        id: 'sv1',
+        isDashboard: true,
+        name: 'Pending Deposits',
+        page: 'bookings',
+      };
+      const view2 = {
+        ...mockView,
+        id: 'sv2',
+        isDashboard: true,
+        name: 'Pending Deposits',
+        page: 'bookings',
+      };
+      const view3 = {
+        ...mockView,
+        id: 'sv3',
+        isDashboard: true,
+        name: 'Confirmed Today',
+        page: 'bookings',
+      };
+      prisma.savedView.findMany.mockResolvedValue([view1, view2, view3]);
+
+      const result = await service.findDashboard('biz1', 'staff1');
+
+      expect(result).toHaveLength(2);
+      expect(result[0].id).toBe('sv1');
+      expect(result[1].id).toBe('sv3');
+    });
   });
 
   describe('create', () => {
