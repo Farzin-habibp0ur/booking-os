@@ -26,13 +26,6 @@ describe('AgentSkillsService', () => {
       expect(skills.some((s) => s.agentType === 'RETENTION')).toBe(true);
     });
 
-    it('returns skills for dealership pack', () => {
-      const skills = service.getSkillsForPack('dealership');
-
-      expect(skills.length).toBeGreaterThan(0);
-      expect(skills.some((s) => s.agentType === 'QUOTE_FOLLOWUP')).toBe(true);
-    });
-
     it('returns skills for general pack', () => {
       const skills = service.getSkillsForPack('general');
 
@@ -64,7 +57,6 @@ describe('AgentSkillsService', () => {
       const allSkills = service.getAllPackSkills();
 
       expect(allSkills.aesthetic).toBeDefined();
-      expect(allSkills.dealership).toBeDefined();
       expect(allSkills.general).toBeDefined();
     });
   });

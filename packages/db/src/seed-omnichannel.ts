@@ -2,7 +2,7 @@ import { Prisma, PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-const DEMO_SLUGS = ['glow-aesthetic', 'metro-auto-group', 'serenity-wellness-spa'] as const;
+const DEMO_SLUGS = ['glow-aesthetic'] as const;
 
 const CHANNELS = ['WHATSAPP', 'INSTAGRAM', 'SMS', 'EMAIL', 'FACEBOOK', 'WEB_CHAT'] as const;
 const DIRECTIONS = ['INBOUND', 'OUTBOUND'] as const;

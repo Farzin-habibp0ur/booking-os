@@ -54,37 +54,6 @@ const BUILT_IN_PLAYBOOKS = [
     vertical: 'AESTHETIC',
   },
   {
-    id: 'playbook-package-expiry-reminder',
-    name: 'Package Expiry Reminder',
-    description: 'Remind customers when their package is about to expire',
-    trigger: 'BOOKING_UPCOMING',
-    filters: { hoursBefore: 168 },
-    actions: [
-      {
-        type: 'SEND_MESSAGE',
-        body: 'Hi {{name}}, your package expires soon. You have remaining sessions — book now to use them!',
-      },
-    ],
-    playbook: 'package-expiry-reminder',
-    vertical: 'WELLNESS',
-  },
-  {
-    id: 'playbook-service-completed-survey',
-    name: 'Service Completed Survey',
-    description: 'Send satisfaction survey 24h after service completion',
-    trigger: 'STATUS_CHANGED',
-    filters: { newStatus: 'READY_FOR_PICKUP' },
-    actions: [
-      {
-        type: 'SEND_MESSAGE',
-        body: 'Hi {{name}}, how was your experience at {{business}}? Reply with 1-5 to rate us.',
-        delayHours: 24,
-      },
-    ],
-    playbook: 'service-completed-survey',
-    vertical: 'DEALERSHIP',
-  },
-  {
     id: 'playbook-birthday-greeting',
     name: 'Birthday / Anniversary',
     description: 'Send birthday greeting with a special offer',

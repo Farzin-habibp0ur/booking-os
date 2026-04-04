@@ -19,10 +19,10 @@ describe('PackBuilderService', () => {
 
   const mockPack = {
     id: 'pack1',
-    slug: 'dealership',
+    slug: 'aesthetic',
     version: 1,
-    name: 'Dealership',
-    description: 'Car dealership vertical',
+    name: 'Aesthetic',
+    description: 'Aesthetic clinic vertical',
     config: { labels: { customer: 'Client' } },
     isPublished: false,
     businessId: null,
@@ -37,7 +37,7 @@ describe('PackBuilderService', () => {
       const packs = [
         { ...mockPack, slug: 'aesthetic', version: 2 },
         { ...mockPack, slug: 'aesthetic', version: 1 },
-        { ...mockPack, slug: 'dealership', version: 1 },
+        { ...mockPack, slug: 'general', version: 1 },
       ];
       prisma.verticalPackVersion.findMany.mockResolvedValue(packs as any);
 
@@ -46,7 +46,7 @@ describe('PackBuilderService', () => {
       expect(result).toHaveLength(2);
       expect(result[0].slug).toBe('aesthetic');
       expect(result[0].version).toBe(2);
-      expect(result[1].slug).toBe('dealership');
+      expect(result[1].slug).toBe('general');
     });
 
     it('returns all versions when includeAllVersions is true', async () => {
@@ -79,11 +79,11 @@ describe('PackBuilderService', () => {
     it('returns the latest version of a pack', async () => {
       prisma.verticalPackVersion.findFirst.mockResolvedValue(mockPack as any);
 
-      const result = await service.getPackBySlug('dealership');
+      const result = await service.getPackBySlug('aesthetic');
 
       expect(result).toEqual(mockPack);
       expect(prisma.verticalPackVersion.findFirst).toHaveBeenCalledWith({
-        where: { slug: 'dealership' },
+        where: { slug: 'aesthetic' },
         orderBy: { version: 'desc' },
       });
     });
@@ -126,7 +126,7 @@ describe('PackBuilderService', () => {
       ];
       prisma.verticalPackVersion.findMany.mockResolvedValue(versions as any);
 
-      const result = await service.getPackVersions('dealership');
+      const result = await service.getPackVersions('aesthetic');
 
       expect(result).toHaveLength(3);
       expect(result[0].version).toBe(3);
@@ -149,15 +149,15 @@ describe('PackBuilderService', () => {
       prisma.verticalPackVersion.create.mockResolvedValue(mockPack as any);
 
       const result = await service.createPack({
-        slug: 'dealership',
-        name: 'Dealership',
+        slug: 'aesthetic',
+        name: 'Aesthetic',
       });
 
       expect(result).toEqual(mockPack);
       expect(prisma.verticalPackVersion.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
-          slug: 'dealership',
-          name: 'Dealership',
+          slug: 'aesthetic',
+          name: 'Aesthetic',
           version: 1,
           isPublished: false,
         }),
@@ -170,12 +170,12 @@ describe('PackBuilderService', () => {
 
       const customConfig = {
         labels: { customer: 'Client', booking: 'Appointment', service: 'Service' },
-        intakeFields: [{ key: 'vin', label: 'VIN', type: 'text' }],
+        intakeFields: [{ key: 'skinType', label: 'Skin Type', type: 'text' }],
       };
 
       await service.createPack({
-        slug: 'dealership',
-        name: 'Dealership',
+        slug: 'aesthetic',
+        name: 'Aesthetic',
         config: customConfig,
       });
 
@@ -189,8 +189,8 @@ describe('PackBuilderService', () => {
     it('throws BadRequestException when slug already exists', async () => {
       prisma.verticalPackVersion.findFirst.mockResolvedValue(mockPack as any);
 
-      await expect(service.createPack({ slug: 'dealership', name: 'Dealership' })).rejects.toThrow(
-        'Pack with slug "dealership" already exists',
+      await expect(service.createPack({ slug: 'aesthetic', name: 'Aesthetic' })).rejects.toThrow(
+        'Pack with slug "aesthetic" already exists',
       );
     });
 
@@ -199,14 +199,14 @@ describe('PackBuilderService', () => {
       prisma.verticalPackVersion.create.mockResolvedValue(mockPack as any);
 
       await service.createPack({
-        slug: 'dealership',
-        name: 'Dealership',
-        description: 'Car dealership vertical',
+        slug: 'aesthetic',
+        name: 'Aesthetic',
+        description: 'Aesthetic clinic vertical',
       });
 
       expect(prisma.verticalPackVersion.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
-          description: 'Car dealership vertical',
+          description: 'Aesthetic clinic vertical',
         }),
       });
     });
@@ -314,13 +314,13 @@ describe('PackBuilderService', () => {
         isPublished: false,
       } as any);
 
-      const result = await service.createNewVersion('dealership');
+      const result = await service.createNewVersion('aesthetic');
 
       expect(result.version).toBe(3);
       expect(result.isPublished).toBe(false);
       expect(prisma.verticalPackVersion.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
-          slug: 'dealership',
+          slug: 'aesthetic',
           version: 3,
           isPublished: false,
         }),
@@ -334,7 +334,7 @@ describe('PackBuilderService', () => {
         .mockResolvedValueOnce(latest as any) // getPackBySlug
         .mockResolvedValueOnce(draft as any); // existing draft
 
-      await expect(service.createNewVersion('dealership')).rejects.toThrow(
+      await expect(service.createNewVersion('aesthetic')).rejects.toThrow(
         'An unpublished draft (v3) already exists',
       );
     });

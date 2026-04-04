@@ -20,7 +20,7 @@ const FAQ_CATEGORIES = [
       },
       {
         q: 'Who is Booking OS for?',
-        a: 'Booking OS is designed for aesthetic clinics, med-spas, salons, car dealerships, and other service-based businesses that manage appointments, clients, and communications.',
+        a: 'Booking OS is designed for aesthetic clinics and med-spas that manage appointments, patients, and communications.',
       },
       {
         q: 'How long is the free trial?',
@@ -66,7 +66,7 @@ const FAQ_CATEGORIES = [
       },
       {
         q: 'Can I customise Booking OS for my industry?',
-        a: 'Yes. Booking OS uses a Vertical Pack system tailored to your industry. Aesthetic clinics, salons, dealerships, and others each get purpose-built workflows, profile fields, and automations.',
+        a: 'Yes. Booking OS is purpose-built for aesthetic clinics with tailored workflows, profile fields, and automations designed for your practice.',
       },
       {
         q: 'Does it support multiple locations?',

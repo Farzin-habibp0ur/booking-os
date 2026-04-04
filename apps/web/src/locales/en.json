@@ -67,9 +67,6 @@
     "automations": "Automations",
     "marketing": "Marketing",
     "packages": "Packages",
-    "inventory": "Inventory",
-    "pipeline": "Pipeline",
-    "service_board": "Service Board",
     "ai": "AI & Agents",
     "ai_actions": "Action Triage",
     "ai_agents": "Agent Status",
@@ -99,10 +96,7 @@
     "provider": "Provider",
     "admin_aesthetic": "Clinic Manager",
     "agent_aesthetic": "Reception",
-    "provider_aesthetic": "Provider",
-    "admin_dealership": "Service Manager",
-    "agent_dealership": "Service Advisor",
-    "provider_dealership": "Technician"
+    "provider_aesthetic": "Provider"
   },
 
   "login": {
@@ -856,8 +850,6 @@
     "clinic_type_subtitle": "We'll install recommended defaults to get you started quickly.",
     "clinic_type_aesthetic": "Aesthetic Clinic",
     "clinic_type_aesthetic_desc": "Botox, fillers, peels, consultations. Includes deposit handling, aftercare, and follow-up templates.",
-    "clinic_type_wellness": "Wellness & Spa",
-    "clinic_type_wellness_desc": "Massage, yoga, personal training, nutrition coaching. Includes intake forms, progress tracking, and membership templates.",
     "clinic_type_general": "General Practice",
     "clinic_type_general_desc": "Standard appointment booking with reminders and confirmations.",
     "clinic_type_skip": "Skip — I'll configure manually",

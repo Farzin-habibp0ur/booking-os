@@ -23,10 +23,9 @@ export class ReferralController {
   async getStatsSummary(@BusinessId() businessId: string) {
     const business = await this.prisma.business.findUnique({
       where: { id: businessId },
-      select: { verticalPack: true, packConfig: true },
+      select: { packConfig: true },
     });
-    const allowed = ['AESTHETIC', 'WELLNESS'];
-    if (!business || !allowed.includes(business.verticalPack.toUpperCase())) {
+    if (!business) {
       return { supported: false };
     }
     const settings = this.referralService.parseSettings(business.packConfig);

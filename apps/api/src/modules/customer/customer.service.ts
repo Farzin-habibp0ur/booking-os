@@ -292,8 +292,6 @@ export class CustomerService {
       campaignSends,
       invoices,
       clinicalPhotos,
-      deals,
-      testDrives,
     ] = await Promise.all([
       !types || types.includes('booking')
         ? this.prisma.booking.findMany({
@@ -341,24 +339,6 @@ export class CustomerService {
         ? this.prisma.clinicalPhoto.findMany({
             where: { customerId, businessId, deletedAt: null },
             select: { id: true, type: true, bodyArea: true, createdAt: true },
-          })
-        : Promise.resolve([]),
-      !types || types.includes('deal')
-        ? this.prisma.deal.findMany({
-            where: { customerId, businessId },
-            include: {
-              vehicle: { select: { year: true, make: true, model: true } },
-              assignedTo: { select: { name: true } },
-            },
-          })
-        : Promise.resolve([]),
-      !types || types.includes('testDrive')
-        ? this.prisma.testDrive.findMany({
-            where: { customer: { id: customerId }, vehicle: { businessId } },
-            include: {
-              vehicle: { select: { year: true, make: true, model: true } },
-              staff: { select: { name: true } },
-            },
           })
         : Promise.resolve([]),
     ]);
@@ -487,49 +467,6 @@ export class CustomerService {
       });
     }
 
-    // Deals
-    for (const d of deals as any[]) {
-      const vehicleLabel = d.vehicle
-        ? `${d.vehicle.year} ${d.vehicle.make} ${d.vehicle.model}`
-        : '';
-      const value = d.dealValue ? ` — $${Number(d.dealValue).toLocaleString()}` : '';
-      events.push({
-        id: `deal-${d.id}`,
-        type: 'deal',
-        timestamp: d.updatedAt.toISOString(),
-        title: `Deal — ${d.stage}${value}`,
-        description: [vehicleLabel, d.assignedTo?.name ? `Assigned to ${d.assignedTo.name}` : '']
-          .filter(Boolean)
-          .join(' · '),
-        metadata: { dealId: d.id, stage: d.stage, vehicleId: d.vehicleId },
-        isSystemEvent: false,
-        deepLink: `/pipeline/${d.id}`,
-      });
-    }
-
-    // Test Drives
-    for (const td of testDrives as any[]) {
-      const vehicleLabel = td.vehicle
-        ? `${td.vehicle.year} ${td.vehicle.make} ${td.vehicle.model}`
-        : 'Vehicle';
-      events.push({
-        id: `testDrive-${td.id}`,
-        type: 'testDrive',
-        timestamp: td.createdAt.toISOString(),
-        title: `Test Drive — ${vehicleLabel}`,
-        description: [
-          td.status,
-          td.feedback ? td.feedback.substring(0, 100) : '',
-          td.staff?.name ? `with ${td.staff.name}` : '',
-        ]
-          .filter(Boolean)
-          .join(' · '),
-        metadata: { testDriveId: td.id, vehicleId: td.vehicleId, status: td.status },
-        isSystemEvent: false,
-        deepLink: null,
-      });
-    }
-
     // Filter system events
     const filtered = showSystem ? events : events.filter((e) => !e.isSystemEvent);
 
@@ -543,134 +480,6 @@ export class CustomerService {
       events: paginated,
       total,
       hasMore: offset + limit < total,
-    };
-  }
-
-  async getJourney(businessId: string, customerId: string) {
-    // Verify dealership vertical
-    const business = await this.prisma.business.findUnique({
-      where: { id: businessId },
-      select: { verticalPack: true },
-    });
-    if (business?.verticalPack !== 'dealership') {
-      return null;
-    }
-
-    const customer = await this.prisma.customer.findFirst({
-      where: { id: customerId, businessId, deletedAt: null },
-    });
-    if (!customer) return null;
-
-    const [deals, testDrives, bookings, conversations] = await Promise.all([
-      this.prisma.deal.findMany({
-        where: { customerId, businessId },
-        include: {
-          vehicle: {
-            select: {
-              id: true,
-              stockNumber: true,
-              year: true,
-              make: true,
-              model: true,
-              trim: true,
-              askingPrice: true,
-              status: true,
-              imageUrls: true,
-            },
-          },
-          assignedTo: { select: { id: true, name: true } },
-          stageHistory: {
-            include: { changedBy: { select: { id: true, name: true } } },
-            orderBy: { createdAt: 'asc' },
-          },
-          activities: {
-            include: { createdBy: { select: { id: true, name: true } } },
-            orderBy: { createdAt: 'desc' },
-            take: 10,
-          },
-        },
-        orderBy: { createdAt: 'desc' },
-      }),
-      this.prisma.testDrive.findMany({
-        where: { vehicle: { businessId }, customer: { id: customerId } },
-        include: {
-          vehicle: {
-            select: {
-              id: true,
-              stockNumber: true,
-              year: true,
-              make: true,
-              model: true,
-              trim: true,
-            },
-          },
-          staff: { select: { id: true, name: true } },
-          booking: { select: { id: true, status: true, startTime: true } },
-        },
-        orderBy: { createdAt: 'desc' },
-      }),
-      this.prisma.booking.findMany({
-        where: { customerId, businessId },
-        include: { service: true, staff: true },
-        orderBy: { createdAt: 'desc' },
-      }),
-      this.prisma.conversation.findMany({
-        where: { customerId, businessId },
-        select: { id: true, channel: true, createdAt: true, status: true },
-        orderBy: { createdAt: 'asc' },
-        take: 1,
-      }),
-    ]);
-
-    // First contact
-    const firstContact = conversations[0]
-      ? { date: conversations[0].createdAt, channel: conversations[0].channel }
-      : bookings.length > 0
-        ? { date: bookings[bookings.length - 1].createdAt, channel: 'BOOKING' }
-        : { date: customer.createdAt, channel: 'MANUAL' };
-
-    // Vehicles of interest (from deals + test drives)
-    const vehicleMap = new Map<string, any>();
-    for (const deal of deals) {
-      if (deal.vehicle) vehicleMap.set(deal.vehicle.id, deal.vehicle);
-    }
-    for (const td of testDrives) {
-      if (td.vehicle) vehicleMap.set(td.vehicle.id, td.vehicle);
-    }
-    const vehiclesOfInterest = Array.from(vehicleMap.values());
-
-    // Stats
-    const wonDeals = deals.filter((d) => d.stage === 'CLOSED_WON');
-    const totalWonValue = wonDeals.reduce(
-      (sum, d) => sum + (d.dealValue ? Number(d.dealValue) : 0),
-      0,
-    );
-    const totalVisits = bookings.length;
-    const testDriveCount = testDrives.length;
-
-    // Engagement score (simple heuristic: 0-100)
-    let engagementScore = 0;
-    engagementScore += Math.min(totalVisits * 10, 30); // up to 30 for visits
-    engagementScore += Math.min(testDriveCount * 15, 30); // up to 30 for test drives
-    engagementScore += deals.some((d) => !['CLOSED_WON', 'CLOSED_LOST'].includes(d.stage)) ? 20 : 0; // active deal
-    engagementScore += wonDeals.length > 0 ? 20 : 0; // has won deal
-    engagementScore = Math.min(engagementScore, 100);
-
-    return {
-      customerId,
-      firstContact,
-      deals,
-      testDrives,
-      vehiclesOfInterest,
-      stats: {
-        totalWonValue,
-        totalVisits,
-        testDriveCount,
-        activeDeals: deals.filter((d) => !['CLOSED_WON', 'CLOSED_LOST'].includes(d.stage)).length,
-        wonDeals: wonDeals.length,
-        lostDeals: deals.filter((d) => d.stage === 'CLOSED_LOST').length,
-        engagementScore,
-      },
     };
   }
 

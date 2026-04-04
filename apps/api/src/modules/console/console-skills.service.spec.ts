@@ -20,10 +20,9 @@ describe('ConsoleSkillsService', () => {
 
   describe('getCatalog', () => {
     it('returns skills grouped by pack with adoption stats', async () => {
-      // Business counts for each pack (aesthetic, dealership, general)
+      // Business counts for each pack (aesthetic, general)
       prisma.business.count
         .mockResolvedValueOnce(5) // aesthetic
-        .mockResolvedValueOnce(3) // dealership
         .mockResolvedValueOnce(2); // general
 
       // Agent config counts for each skill in each pack
@@ -34,12 +33,6 @@ describe('ConsoleSkillsService', () => {
         .mockResolvedValueOnce(1) // DATA_HYGIENE
         .mockResolvedValueOnce(5) // SCHEDULING_OPTIMIZER
         .mockResolvedValueOnce(2) // QUOTE_FOLLOWUP
-        // dealership: 5 skills
-        .mockResolvedValueOnce(2)
-        .mockResolvedValueOnce(3)
-        .mockResolvedValueOnce(1)
-        .mockResolvedValueOnce(2)
-        .mockResolvedValueOnce(1)
         // general: 5 skills
         .mockResolvedValueOnce(1)
         .mockResolvedValueOnce(0)
@@ -49,7 +42,7 @@ describe('ConsoleSkillsService', () => {
 
       const result = await service.getCatalog();
 
-      expect(result.packs).toHaveLength(3);
+      expect(result.packs).toHaveLength(2);
       expect(result.packs[0].slug).toBe('aesthetic');
       expect(result.packs[0].skills).toHaveLength(5);
       expect(result.packs[0].skills[0].agentType).toBe('WAITLIST');
@@ -63,7 +56,7 @@ describe('ConsoleSkillsService', () => {
 
       const result = await service.getCatalog();
 
-      expect(result.packs).toHaveLength(3);
+      expect(result.packs).toHaveLength(2);
       for (const pack of result.packs) {
         for (const skill of pack.skills) {
           expect(skill.enabledCount).toBe(0);
@@ -111,9 +104,9 @@ describe('ConsoleSkillsService', () => {
           createdAt: new Date(),
           business: {
             id: 'biz2',
-            name: 'Auto Shop',
-            slug: 'auto-shop',
-            verticalPack: 'dealership',
+            name: 'Zen Studio',
+            slug: 'zen-studio',
+            verticalPack: 'general',
           },
         },
       ] as any);

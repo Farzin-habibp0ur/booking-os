@@ -48,44 +48,6 @@ export const PACK_SKILLS: Record<string, AgentSkillDefinition[]> = {
       defaultEnabled: true,
     },
   ],
-  dealership: [
-    {
-      agentType: 'WAITLIST',
-      name: 'Service Waitlist',
-      description: 'Matches customers on the service waitlist with available bay slots',
-      category: 'proactive',
-      defaultEnabled: true,
-    },
-    {
-      agentType: 'RETENTION',
-      name: 'Service Retention',
-      description:
-        'Identifies vehicles overdue for regular service based on customer visit patterns',
-      category: 'proactive',
-      defaultEnabled: true,
-    },
-    {
-      agentType: 'DATA_HYGIENE',
-      name: 'Customer Dedup',
-      description: 'Finds duplicate customer records across sales and service databases',
-      category: 'maintenance',
-      defaultEnabled: true,
-    },
-    {
-      agentType: 'SCHEDULING_OPTIMIZER',
-      name: 'Bay Optimization',
-      description: 'Optimizes service bay utilization by identifying scheduling gaps',
-      category: 'proactive',
-      defaultEnabled: true,
-    },
-    {
-      agentType: 'QUOTE_FOLLOWUP',
-      name: 'Estimate Follow-up',
-      description: 'Tracks pending repair estimates and follows up with customers',
-      category: 'reactive',
-      defaultEnabled: true,
-    },
-  ],
   general: [
     {
       agentType: 'WAITLIST',

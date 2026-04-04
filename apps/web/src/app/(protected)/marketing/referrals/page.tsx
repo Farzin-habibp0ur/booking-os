@@ -73,8 +73,6 @@ interface ReferralStats {
 
 const MERGE_VARS = ['{businessName}', '{creditAmount}', '{referralLink}', '{customerName}'];
 
-const ALLOWED_VERTICALS = ['AESTHETIC', 'WELLNESS'];
-
 const EXPIRY_OPTIONS = Array.from({ length: 12 }, (_, i) => i + 1);
 
 const DEFAULT_SETTINGS: ReferralSettings = {
@@ -104,9 +102,7 @@ export default function ReferralSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [previewChannel, setPreviewChannel] = useState<'whatsapp' | 'sms' | 'email'>('whatsapp');
 
-  const isVerticalAllowed = ALLOWED_VERTICALS.includes(
-    (user?.business?.verticalPack || '').toUpperCase(),
-  );
+  const isVerticalAllowed = true;
 
   /* ---- Data fetching ---- */
 

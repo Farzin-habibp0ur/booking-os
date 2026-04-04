@@ -4,11 +4,11 @@
 
 ## What This Project Is
 
-Booking OS is a **multi-tenant SaaS platform** for service-based businesses (aesthetic clinics, car dealerships, wellness spas) to manage appointments, customer messaging, and operations — with AI-powered automation via Claude.
+Booking OS is a **multi-tenant SaaS platform** for service-based businesses (aesthetic clinics) to manage appointments, customer messaging, and operations — with AI-powered automation via Claude.
 
 - **Live production:** https://businesscommandcentre.com
 - **API:** https://api.businesscommandcentre.com/api/v1
-- **Verticals:** Aesthetic, Dealership, Wellness, General (extensible via Vertical Pack system)
+- **Verticals:** Aesthetic (primary), General (fallback)
 - **Target users:** Small to mid-size service businesses (1-20 staff) — owners, receptionists, service providers, and their end customers
 
 ### Demo Credentials
@@ -16,8 +16,6 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses (aes
 | Business              | Email                     | Password    | Vertical   |
 | --------------------- | ------------------------- | ----------- | ---------- |
 | Glow Aesthetic Clinic | sarah@glowclinic.com      | Bk0s!DemoSecure#2026 | Aesthetic  |
-| Metro Auto Group      | mike@metroauto.com        | Bk0s!DemoSecure#2026 | Dealership |
-| Serenity Wellness Spa | maya@serenitywellness.com | Bk0s!DemoSecure#2026 | Wellness   |
 
 ---
 
@@ -28,13 +26,13 @@ booking-os/
 ├── apps/
 │   ├── api/                    # NestJS REST API (port 3001)
 │   │   ├── src/
-│   │   │   ├── modules/        # 85 feature modules (one dir per domain)
+│   │   │   ├── modules/        # 80 feature modules (one dir per domain)
 │   │   │   ├── common/         # Guards, decorators, filters, DTOs, PrismaService
 │   │   │   └── main.ts         # Bootstrap, Swagger, CORS, cookies, validation
 │   │   └── Dockerfile          # Multi-stage production build
 │   ├── web/                    # Next.js 15 customer dashboard (port 3000)
 │   │   ├── src/
-│   │   │   ├── app/            # 83 pages (App Router) — customer-facing only, no admin/console
+│   │   │   ├── app/            # 79 pages (App Router) — customer-facing only, no admin/console
 │   │   │   ├── components/     # Shared components (briefing/, aesthetic/, skeletons, modals)
 │   │   │   ├── lib/            # API client, auth, i18n, socket, theme
 │   │   │   ├── locales/        # en.json, es.json (650+ keys each)
@@ -49,12 +47,11 @@ booking-os/
 │   │   └── next.config.js      # Stricter CSP (no analytics), X-Robots-Tag: noindex
 │   └── whatsapp-simulator/     # WhatsApp testing tool (port 3002)
 ├── packages/
-│   ├── db/                     # Prisma schema (96 models), 70 migrations, seed scripts
+│   ├── db/                     # Prisma schema (86 models), 70 migrations, seed scripts
 │   │   ├── prisma/schema.prisma
-│   │   ├── src/seed.ts         # Base seed (aesthetic + dealership + wellness, idempotent)
+│   │   ├── src/seed.ts         # Base seed (aesthetic data, idempotent)
 │   │   ├── src/seed-demo.ts    # Rich demo data (idempotent, dedup-safe)
 │   │   ├── src/seed-agentic.ts # One-time agentic data fill
-│   │   ├── src/seed-wellness.ts # Standalone wellness seed (also called from seed.ts)
 │   │   ├── src/seed-console.ts # Platform console base data
 │   │   ├── src/seed-console-showcase.ts # Console demo data
 │   │   └── src/seed-content.ts # Content pillar seeding (12 blog posts → ContentDraft)
@@ -124,25 +121,9 @@ Each vertical customizes fields, templates, automations, and workflows. The pack
 - `IntakeCard` component for customer detail
 - AI features: consult→treatment conversion tracking, aftercare follow-ups
 
-### Car Dealerships
-
-- Service kanban board: `CHECKED_IN → DIAGNOSING → AWAITING_APPROVAL → IN_PROGRESS → READY_FOR_PICKUP`
-- Vehicle inventory: VIN tracking, stock numbers, test drives (`VehicleStatus`, `VehicleCondition`, `TestDriveStatus`)
-- Sales pipeline: 7-stage deal tracking (`DealStage: INQUIRY → QUALIFIED → TEST_DRIVE → NEGOTIATION → FINANCE → CLOSED_WON → CLOSED_LOST`)
-- Quote approval via token link with IP audit
-- Resource/bay scheduling
-
-### Wellness & Spa
-
-- 7-field wellness intake (health goals, fitness level, injuries, medications, allergies, modality, membership)
-- Session packages: `ServicePackage` + `PackagePurchase` + `PackageRedemption` models
-- Auto-unredeem on booking cancel
-- Membership tiers: Drop-in, Monthly, Annual, VIP
-- Components: `WellnessIntakeCard`, `PackageTracker`, `MembershipBadge`, `PackagePurchaseModal`, `PackageRedeemSelector`
-
 ### General
 
-- Base vertical with standard booking features, no vertical-specific customizations
+- Fallback vertical with standard booking features, no vertical-specific customizations. Used when no specific vertical pack applies.
 
 ---
 
@@ -150,7 +131,7 @@ Each vertical customizes fields, templates, automations, and workflows. The pack
 
 ### Module Structure
 
-Every feature is a NestJS module in `apps/api/src/modules/` (85 modules). Each module follows this pattern:
+Every feature is a NestJS module in `apps/api/src/modules/` (80 modules). Each module follows this pattern:
 
 ```
 modules/
@@ -197,7 +178,7 @@ modules/
 
 ### Database (Prisma)
 
-- Schema at `packages/db/prisma/schema.prisma` — **96 models**, 70 migrations
+- Schema at `packages/db/prisma/schema.prisma` — **86 models**, 70 migrations
 - Generate client: `npx prisma generate --schema=packages/db/prisma/schema.prisma`
 - Create migration: `npx prisma migrate dev --name your_name --schema=packages/db/prisma/schema.prisma`
 - `PrismaService` is a global NestJS provider — inject it in constructors
@@ -211,17 +192,9 @@ modules/
 StaffRole:          OWNER, ADMIN, AGENT, SERVICE_PROVIDER, SUPER_ADMIN
 BookingStatus:      PENDING, PENDING_DEPOSIT, CONFIRMED, IN_PROGRESS, COMPLETED, CANCELLED, NO_SHOW
 BookingSource:      MANUAL, PORTAL, WHATSAPP, AI, REFERRAL, WALK_IN
-KanbanStatus:       CHECKED_IN, DIAGNOSING, AWAITING_APPROVAL, IN_PROGRESS, READY_FOR_PICKUP
 ConversationStatus: OPEN, WAITING, RESOLVED, SNOOZED
 ServiceKind:        CONSULT, TREATMENT, OTHER
-VerticalPack:       AESTHETIC, SALON, TUTORING, GENERAL, DEALERSHIP, WELLNESS
-VehicleStatus:      IN_STOCK, RESERVED, SOLD, IN_TRANSIT, TRADE_IN, ARCHIVED
-VehicleCondition:   NEW, USED, CERTIFIED_PRE_OWNED
-TestDriveStatus:    SCHEDULED, COMPLETED, NO_SHOW, CANCELLED
-DealStage:          INQUIRY, QUALIFIED, TEST_DRIVE, NEGOTIATION, FINANCE, CLOSED_WON, CLOSED_LOST
-DealActivityType:   NOTE, CALL, EMAIL, MEETING, TEST_DRIVE, FOLLOW_UP
-DealSource:         WALK_IN, PHONE, WEBSITE, WHATSAPP, REFERRAL
-DealType:           NEW_PURCHASE, USED_PURCHASE, TRADE_IN, LEASE
+VerticalPack:       AESTHETIC, GENERAL
 ActionCardCategory: URGENT_TODAY, NEEDS_APPROVAL, OPPORTUNITY, HYGIENE
 AutonomyLevel:      OFF, SUGGEST, AUTO_WITH_REVIEW, FULL_AUTO
 AgentType:          WAITLIST, RETENTION, DATA_HYGIENE, SCHEDULING_OPTIMIZER, QUOTE_FOLLOWUP (+ 12 marketing agents)
@@ -719,7 +692,6 @@ Platform launch config, quality gates, budget tracker, rejection tracker, A/B te
 
 ## Do Not Build (Yet)
 
-- Don't chase additional verticals beyond the current 4 (aesthetic, dealership, wellness, general) before ROI is repeatable
 - Don't overinvest in generic AI chatbot; keep AI tied to structured flows
 - Don't build deep enterprise features before pack-led implementation is nailed
 - Don't add new BullMQ queues without discussing queue consolidation — 8 is already a lot
@@ -756,7 +728,9 @@ After completing ANY task (feature, bugfix, refactor, doc update, plan, analysis
 
 The self-review loop requires you to: review your output against source material using tools (Read, Grep — not memory), fix all issues found, then re-review from scratch. Repeat until a full pass finds **zero issues**. Report the pass count and issues found per pass to the user.
 
-After the self-review loop passes with zero issues, run the project-specific checks:
+After the self-review loop passes with zero issues, run the **security-review** skill (`.claude/skills/security-review/SKILL.md`). This is mandatory for ANY code change — it checks for multi-tenancy violations, missing transaction wrappers, auth guard gaps, webhook verification, AI safety, and 6 other production risk categories. Work is not complete until it reports zero findings. See `references/checklist.md` inside the skill for detailed code patterns.
+
+After both the self-review loop and security review pass clean, run the project-specific checks:
 
 ### Cross-Cutting Concerns
 - New component? → tests exist, translations added, design tokens used (not inline colors)

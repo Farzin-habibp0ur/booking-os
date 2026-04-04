@@ -13,7 +13,7 @@ model Business {
   slug                 String   @unique
   phone                String?
   timezone             String   @default("UTC")
-  verticalPack         String   @default("general")
+  verticalPack         String   @default("aesthetic")
   packConfig           Json     @default("{}")
   defaultLocale        String   @default("en")
   aiSettings           Json     @default("{}")
@@ -85,11 +85,7 @@ model Business {
   photoComparisons           PhotoComparison[]
   treatmentPlans             TreatmentPlan[]
   aftercareProtocols         AftercareProtocol[]
-  vehicles                   Vehicle[]
-  deals                      Deal[]
-  servicePackages            ServicePackage[]
-  packagePurchases           PackagePurchase[]
-  recurringClasses           RecurringClass[]
+
   abTests                    ABTest[]
   rejectionLogs              RejectionLog[]
   platformConfigs            PlatformConfig[]
@@ -143,13 +139,7 @@ model Staff {
   medicalRecords      MedicalRecord[]  @relation("MedicalRecordStaff")
   clinicalPhotosTaken ClinicalPhoto[]  @relation("PhotoTakenByStaff")
   treatmentPlans      TreatmentPlan[]  @relation("TreatmentPlanCreator")
-  vehiclesAdded       Vehicle[]
-  testDrives          TestDrive[]
-  assignedDeals       Deal[]             @relation("DealAssignedTo")
-  dealStageChanges    DealStageHistory[] @relation("DealStageChangedBy")
-  dealActivities      DealActivity[]     @relation("DealActivityCreatedBy")
-  certifications          StaffCertification[]
-  recurringClasses        RecurringClass[]
+
   rejectionLogReviews     RejectionLog[]      @relation("RejectionLogReviewer")
   resolvedEscalations     EscalationEvent[]   @relation("EscalationResolver")
   deviceTokens            DeviceToken[]
@@ -193,9 +183,7 @@ model Customer {
   photoComparisons      PhotoComparison[]
   treatmentPlans            TreatmentPlan[]
   aftercareEnrollments      AftercareEnrollment[]
-  testDrives                TestDrive[]
-  deals                     Deal[]
-  packagePurchases          PackagePurchase[]
+
   referralCode              String?   @unique
   referralsGiven            CustomerReferral[] @relation("ReferrerCustomer")
   referralsReceived         CustomerReferral[] @relation("ReferredCustomer")
@@ -240,8 +228,6 @@ model Service {
   invoiceLineItems    InvoiceLineItem[]
   treatmentSessions    TreatmentSession[]
   aftercareProtocols   AftercareProtocol[]
-  servicePackages      ServicePackage[]
-  recurringClasses     RecurringClass[]
 
   @@index([businessId])
   @@map("services")
@@ -257,7 +243,7 @@ model Booking {
   recurringSeriesId       String?
   locationId              String?
   resourceId              String?
-  kanbanStatus            String?
+
   status                  String   @default("PENDING")
   startTime               DateTime
   endTime                 DateTime
@@ -286,8 +272,7 @@ model Booking {
   consultPlan          TreatmentPlan?        @relation("ConsultPlan")
   sessionBooking       TreatmentSession?     @relation("SessionBooking")
   aftercareEnrollment  AftercareEnrollment?
-  testDrive            TestDrive?
-  packageRedemption    PackageRedemption?
+
   referral             CustomerReferral?
   creditRedemptions    CreditRedemption[]
 
@@ -544,7 +529,6 @@ model Payment {
   customer        Customer?        @relation(fields: [customerId], references: [id])
   invoice         Invoice?         @relation(fields: [invoiceId], references: [id])
   refunds         Refund[]
-  packagePurchase PackagePurchase?
 
   @@index([businessId])
   @@index([bookingId])
@@ -846,8 +830,6 @@ model Location {
   resources        Resource[]
   staffLocations   StaffLocation[]
   conversations    Conversation[]
-  vehicles         Vehicle[]
-  recurringClasses RecurringClass[]
 
   @@index([businessId])
   @@map("locations")
@@ -865,7 +847,6 @@ model Resource {
 
   location         Location         @relation(fields: [locationId], references: [id])
   bookings         Booking[]
-  recurringClasses RecurringClass[]
 
   @@index([locationId])
   @@index([type])
@@ -1797,244 +1778,6 @@ model AftercareMessage {
   @@index([enrollmentId])
   @@index([status, scheduledFor])
   @@map("aftercare_messages")
-}
-
-// ---------------------------------------------------------------------------
-// Vehicle Inventory (Dealership vertical)
-// ---------------------------------------------------------------------------
-
-model Vehicle {
-  id          String   @id @default(cuid())
-  businessId  String
-  stockNumber String
-  vin         String?  @unique
-  year        Int
-  make        String
-  model       String
-  trim        String?
-  color       String?
-  mileage     Int?
-  condition   String   @default("NEW") // NEW | USED | CERTIFIED_PRE_OWNED
-  status      String   @default("IN_STOCK") // IN_STOCK | RESERVED | SOLD | IN_TRANSIT | TRADE_IN | ARCHIVED
-  askingPrice Decimal? @db.Decimal(10, 2)
-  costPrice   Decimal? @db.Decimal(10, 2)
-  description String?
-  features    String[] @default([])
-  imageUrls   String[] @default([])
-  locationId  String?
-  addedById   String?
-  soldAt      DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  business   Business    @relation(fields: [businessId], references: [id])
-  location   Location?   @relation(fields: [locationId], references: [id])
-  addedBy    Staff?      @relation(fields: [addedById], references: [id])
-  testDrives TestDrive[]
-  deals      Deal[]
-
-  @@index([businessId])
-  @@index([businessId, status])
-  @@unique([businessId, stockNumber])
-  @@map("vehicles")
-}
-
-model TestDrive {
-  id         String   @id @default(cuid())
-  vehicleId  String
-  customerId String
-  bookingId  String?  @unique
-  staffId    String?
-  status     String   @default("SCHEDULED") // SCHEDULED | COMPLETED | NO_SHOW | CANCELLED
-  feedback   String?
-  notes      String?
-  createdAt  DateTime @default(now())
-
-  vehicle  Vehicle  @relation(fields: [vehicleId], references: [id])
-  customer Customer @relation(fields: [customerId], references: [id])
-  booking  Booking? @relation(fields: [bookingId], references: [id])
-  staff    Staff?   @relation(fields: [staffId], references: [id])
-
-  @@index([vehicleId])
-  @@index([customerId])
-  @@map("test_drives")
-}
-
-// ---------------------------------------------------------------------------
-// Deal Pipeline (Dealership vertical)
-// ---------------------------------------------------------------------------
-
-model Deal {
-  id                String    @id @default(cuid())
-  businessId        String
-  customerId        String
-  vehicleId         String?
-  assignedToId      String?
-  stage             String    @default("INQUIRY") // INQUIRY | QUALIFIED | TEST_DRIVE | NEGOTIATION | FINANCE | CLOSED_WON | CLOSED_LOST
-  source            String?   // WALK_IN | PHONE | WEBSITE | WHATSAPP | REFERRAL
-  dealType          String?   // NEW_PURCHASE | USED_PURCHASE | TRADE_IN | LEASE
-  dealValue         Decimal?  @db.Decimal(10, 2)
-  tradeInValue      Decimal?  @db.Decimal(10, 2)
-  probability       Int?      @default(0)
-  expectedCloseDate DateTime?
-  actualCloseDate   DateTime?
-  lostReason        String?
-  notes             String?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-
-  business     Business           @relation(fields: [businessId], references: [id])
-  customer     Customer           @relation(fields: [customerId], references: [id])
-  vehicle      Vehicle?           @relation(fields: [vehicleId], references: [id])
-  assignedTo   Staff?             @relation("DealAssignedTo", fields: [assignedToId], references: [id])
-  stageHistory DealStageHistory[]
-  activities   DealActivity[]
-
-  @@index([businessId])
-  @@index([businessId, stage])
-  @@index([assignedToId])
-  @@map("deals")
-}
-
-model DealStageHistory {
-  id          String   @id @default(cuid())
-  dealId      String
-  fromStage   String?
-  toStage     String
-  changedById String?
-  duration    Int?
-  notes       String?
-  createdAt   DateTime @default(now())
-
-  deal      Deal   @relation(fields: [dealId], references: [id])
-  changedBy Staff? @relation("DealStageChangedBy", fields: [changedById], references: [id])
-
-  @@index([dealId])
-  @@map("deal_stage_history")
-}
-
-model DealActivity {
-  id           String    @id @default(cuid())
-  dealId       String
-  type         String    // NOTE | CALL | EMAIL | MEETING | TEST_DRIVE | FOLLOW_UP
-  description  String
-  scheduledFor DateTime?
-  completedAt  DateTime?
-  createdById  String?
-  createdAt    DateTime  @default(now())
-
-  deal      Deal   @relation(fields: [dealId], references: [id])
-  createdBy Staff? @relation("DealActivityCreatedBy", fields: [createdById], references: [id])
-
-  @@index([dealId])
-  @@map("deal_activities")
-}
-
-// ---------------------------------------------------------------------------
-// Service Packages (Wellness vertical)
-// ---------------------------------------------------------------------------
-
-model ServicePackage {
-  id                    String   @id @default(cuid())
-  businessId            String
-  name                  String
-  description           String?
-  serviceId             String?
-  totalSessions         Int
-  price                 Decimal  @db.Decimal(10, 2)
-  currency              String   @default("USD")
-  validityDays          Int      @default(365)
-  isActive              Boolean  @default(true)
-  memberOnly            Boolean  @default(false)
-  allowedMembershipTiers String[] @default([])
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
-
-  business  Business          @relation(fields: [businessId], references: [id])
-  service   Service?          @relation(fields: [serviceId], references: [id])
-  purchases PackagePurchase[]
-
-  @@index([businessId])
-  @@map("service_packages")
-}
-
-model PackagePurchase {
-  id            String   @id @default(cuid())
-  packageId     String
-  customerId    String
-  businessId    String
-  totalSessions Int
-  usedSessions  Int      @default(0)
-  status        String   @default("ACTIVE") // ACTIVE | EXHAUSTED | EXPIRED | CANCELLED | REFUNDED
-  purchasedAt   DateTime @default(now())
-  expiresAt     DateTime
-  paymentId     String?  @unique
-  notes         String?
-
-  package     ServicePackage      @relation(fields: [packageId], references: [id])
-  customer    Customer            @relation(fields: [customerId], references: [id])
-  business    Business            @relation(fields: [businessId], references: [id])
-  payment     Payment?            @relation(fields: [paymentId], references: [id])
-  redemptions PackageRedemption[]
-
-  @@index([customerId])
-  @@index([businessId])
-  @@index([status])
-  @@map("package_purchases")
-}
-
-model PackageRedemption {
-  id         String   @id @default(cuid())
-  purchaseId String
-  bookingId  String   @unique
-  redeemedAt DateTime @default(now())
-
-  purchase PackagePurchase @relation(fields: [purchaseId], references: [id])
-  booking  Booking         @relation(fields: [bookingId], references: [id])
-
-  @@index([purchaseId])
-  @@map("package_redemptions")
-}
-
-model StaffCertification {
-  id         String    @id @default(cuid())
-  staffId    String
-  name       String
-  issuedBy   String?
-  issuedDate DateTime?
-  expiryDate DateTime?
-  documentUrl String?
-  isVerified Boolean   @default(false)
-  createdAt  DateTime  @default(now())
-
-  staff Staff @relation(fields: [staffId], references: [id])
-
-  @@unique([staffId, name])
-  @@index([staffId])
-  @@map("staff_certifications")
-}
-
-model RecurringClass {
-  id              String   @id @default(cuid())
-  businessId      String
-  serviceId       String
-  staffId         String
-  resourceId      String?
-  locationId      String?
-  dayOfWeek       Int
-  startTime       String   // HH:mm
-  maxParticipants Int
-  isActive        Boolean  @default(true)
-  createdAt       DateTime @default(now())
-
-  business Business  @relation(fields: [businessId], references: [id])
-  service  Service   @relation(fields: [serviceId], references: [id])
-  staff    Staff     @relation(fields: [staffId], references: [id])
-  resource Resource? @relation(fields: [resourceId], references: [id])
-  location Location? @relation(fields: [locationId], references: [id])
-
-  @@index([businessId])
-  @@map("recurring_classes")
 }
 
 // ── Marketing Command Center Models ──────────────────────────────────

@@ -38,19 +38,16 @@ describe('mode-config', () => {
   describe('getModeLabel', () => {
     it('returns vertical-specific label for admin mode', () => {
       expect(getModeLabel('admin', 'aesthetic')).toBe('Clinic Manager');
-      expect(getModeLabel('admin', 'dealership')).toBe('Service Manager');
       expect(getModeLabel('admin', 'general')).toBe('Admin');
     });
 
     it('returns vertical-specific label for agent mode', () => {
       expect(getModeLabel('agent', 'aesthetic')).toBe('Reception');
-      expect(getModeLabel('agent', 'dealership')).toBe('Service Advisor');
       expect(getModeLabel('agent', 'general')).toBe('Agent');
     });
 
     it('returns vertical-specific label for provider mode', () => {
       expect(getModeLabel('provider', 'aesthetic')).toBe('Provider');
-      expect(getModeLabel('provider', 'dealership')).toBe('Technician');
       expect(getModeLabel('provider', 'general')).toBe('Provider');
     });
 
@@ -237,8 +234,8 @@ describe('mode-config', () => {
       ]);
     });
 
-    it('overflow tools = packages', () => {
-      expect(split.tools.overflow).toEqual(['/packages']);
+    it('overflow tools is empty', () => {
+      expect(split.tools.overflow).toEqual([]);
     });
 
     it('primary insights = dashboard + reports', () => {
@@ -272,20 +269,6 @@ describe('mode-config', () => {
 
       const allAi = [...split.aiAgents.primary, ...split.aiAgents.overflow];
       expect(allAi).toEqual(admin.sections.aiAgents);
-    });
-  });
-
-  describe('splitSectionPaths — admin overflow (dealership)', () => {
-    const admin = getModeByKey('admin', 'dealership');
-    const split = splitSectionPaths(admin.sections);
-
-    it('primary tools includes inventory + pipeline (dealership-specific)', () => {
-      expect(split.tools.primary).toContain('/inventory');
-      expect(split.tools.primary).toContain('/pipeline');
-    });
-
-    it('overflow tools still includes packages', () => {
-      expect(split.tools.overflow).toEqual(['/packages']);
     });
   });
 
@@ -347,7 +330,6 @@ describe('mode-config', () => {
     it('admin sections include overflow field', () => {
       const admin = getModeDefinitions('aesthetic').find((m) => m.key === 'admin');
       expect(admin.sections.overflow).toBeDefined();
-      expect(admin.sections.overflow.tools).toBeDefined();
       expect(admin.sections.overflow.insights).toBeDefined();
       expect(admin.sections.overflow.aiAgents).toBeDefined();
     });
@@ -355,9 +337,6 @@ describe('mode-config', () => {
     it('all overflow paths exist in their parent section array', () => {
       const admin = getModeByKey('admin', 'aesthetic');
       const overflow = admin.sections.overflow;
-      for (const path of overflow.tools) {
-        expect(admin.sections.tools).toContain(path);
-      }
       for (const path of overflow.insights) {
         expect(admin.sections.insights).toContain(path);
       }

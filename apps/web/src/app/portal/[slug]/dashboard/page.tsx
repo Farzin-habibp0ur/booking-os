@@ -2,34 +2,13 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import {
-  Calendar,
-  Clock,
-  User,
-  MessageSquare,
-  X,
-  ClipboardList,
-  FileText,
-  Package,
-  Users,
-} from 'lucide-react';
+import { Calendar, Clock, User, MessageSquare, X, ClipboardList, FileText } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { statusBadgeClasses } from '@/lib/design-tokens';
 import { PageSkeleton } from '@/components/skeleton';
 import { AftercarePortalView } from '@/components/aesthetic/aftercare-portal-view';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
-
-function getISOWeek(date: Date): string {
-  const d = new Date(date);
-  d.setHours(0, 0, 0, 0);
-  d.setDate(d.getDate() + 3 - ((d.getDay() + 6) % 7));
-  const yearStart = new Date(d.getFullYear(), 0, 4);
-  const week = Math.ceil(
-    ((d.getTime() - yearStart.getTime()) / 86400000 + yearStart.getDay() + 1 - 1) / 7,
-  );
-  return `${d.getFullYear()}-W${String(week).padStart(2, '0')}`;
-}
 
 function portalFetch(path: string) {
   const token = typeof window !== 'undefined' ? sessionStorage.getItem('portal-token') : null;
@@ -79,8 +58,6 @@ export default function PortalDashboardPage() {
   const [treatmentPlans, setTreatmentPlans] = useState<any[]>([]);
   const [acceptingPlan, setAcceptingPlan] = useState<string | null>(null);
   const [aftercareEnrollments, setAftercareEnrollments] = useState<any[]>([]);
-  const [packagePurchases, setPackagePurchases] = useState<any[]>([]);
-  const [classSchedule, setClassSchedule] = useState<any[]>([]);
 
   const loadData = useCallback(() => {
     return Promise.all([
@@ -89,17 +66,13 @@ export default function PortalDashboardPage() {
       portalFetch('/portal/bookings?page=1'),
       portalFetch('/portal/treatment-plans').catch(() => []),
       portalFetch('/portal/aftercare').catch(() => []),
-      portalFetch('/portal/packages').catch(() => []),
-      portalFetch(`/portal/class-schedule?week=${getISOWeek(new Date())}`).catch(() => []),
     ])
-      .then(([prof, up, bookings, plans, aftercare, pkgs, schedule]) => {
+      .then(([prof, up, bookings, plans, aftercare]) => {
         setProfile(prof);
         setUpcoming(up);
         setRecentBookings(bookings.data?.slice(0, 5) || []);
         setTreatmentPlans(Array.isArray(plans) ? plans : []);
         setAftercareEnrollments(Array.isArray(aftercare) ? aftercare : []);
-        setPackagePurchases(Array.isArray(pkgs) ? pkgs : []);
-        setClassSchedule(Array.isArray(schedule) ? schedule : []);
       })
       .catch(() => {});
   }, []);
@@ -308,81 +281,6 @@ export default function PortalDashboardPage() {
         <section data-testid="portal-aftercare">
           <h2 className="text-lg font-serif font-semibold text-slate-900 mb-3">Active Aftercare</h2>
           <AftercarePortalView enrollments={aftercareEnrollments} />
-        </section>
-      )}
-
-      {/* Session Packages */}
-      {packagePurchases.length > 0 && (
-        <section data-testid="portal-packages">
-          <h2 className="text-lg font-serif font-semibold text-slate-900 mb-3">
-            Your Session Packages
-          </h2>
-          <div className="space-y-3">
-            {packagePurchases.map((p: any) => {
-              const remaining = p.totalSessions - p.usedSessions;
-              const progress = p.totalSessions > 0 ? (p.usedSessions / p.totalSessions) * 100 : 0;
-              const isExpiringSoon =
-                new Date(p.expiresAt).getTime() - Date.now() < 14 * 24 * 60 * 60 * 1000;
-              return (
-                <div key={p.id} className="bg-white rounded-2xl shadow-soft p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <Package size={16} className="text-lavender-600" />
-                      <p className="text-sm font-medium text-slate-800">{p.package?.name}</p>
-                    </div>
-                    <span className="text-xs text-sage-600 font-medium">{remaining} left</span>
-                  </div>
-                  <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mb-2">
-                    <div
-                      className={cn(
-                        'h-full rounded-full transition-all',
-                        progress >= 80 ? 'bg-amber-400' : 'bg-sage-500',
-                      )}
-                      style={{ width: `${Math.min(progress, 100)}%` }}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between text-xs text-slate-500">
-                    <span>
-                      {p.usedSessions} of {p.totalSessions} sessions used
-                    </span>
-                    {isExpiringSoon && (
-                      <span className="text-amber-600">
-                        Expires {new Date(p.expiresAt).toLocaleDateString()}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-      )}
-
-      {/* Class Schedule */}
-      {classSchedule.length > 0 && (
-        <section data-testid="portal-classes">
-          <h2 className="text-lg font-serif font-semibold text-slate-900 mb-3">Upcoming Classes</h2>
-          <div className="space-y-2">
-            {classSchedule.slice(0, 5).map((cls: any) => (
-              <div key={cls.id + cls.date} className="bg-white rounded-2xl shadow-soft p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-slate-900">{cls.service?.name}</p>
-                    <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
-                      <Clock size={12} />
-                      <span>{cls.date}</span>
-                      <span>{cls.startTime}</span>
-                      <span>with {cls.staff?.name}</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-xs">
-                    <Users size={12} className="text-sage-500" />
-                    <span className="text-sage-600">{cls.spotsRemaining} spots left</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
         </section>
       )}
 

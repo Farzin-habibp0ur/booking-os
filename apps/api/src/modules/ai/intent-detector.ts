@@ -8,10 +8,7 @@ export type IntentCategory =
   | 'INQUIRY'
   | 'CONFIRMATION'
   | 'GENERAL'
-  | 'TRANSFER_TO_HUMAN'
-  | 'SALES_INQUIRY'
-  | 'SERVICE_APPOINTMENT'
-  | 'TRADE_IN_INQUIRY';
+  | 'TRANSFER_TO_HUMAN';
 
 export interface IntentResult {
   intent: IntentCategory;
@@ -24,37 +21,25 @@ export interface IntentResult {
   };
 }
 
-function buildSystemPrompt(verticalPack?: string): string {
+function buildSystemPrompt(): string {
   const today = new Date();
   const todayStr = today.toISOString().split('T')[0];
   const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const todayDay = dayNames[today.getDay()];
 
-  const isDealership = verticalPack === 'dealership';
+  const intentList =
+    'BOOK_APPOINTMENT, CANCEL, RESCHEDULE, INQUIRY, CONFIRMATION, TRANSFER_TO_HUMAN, GENERAL';
 
-  const intentList = isDealership
-    ? 'BOOK_APPOINTMENT, CANCEL, RESCHEDULE, INQUIRY, CONFIRMATION, TRANSFER_TO_HUMAN, SALES_INQUIRY, SERVICE_APPOINTMENT, TRADE_IN_INQUIRY, GENERAL'
-    : 'BOOK_APPOINTMENT, CANCEL, RESCHEDULE, INQUIRY, CONFIRMATION, TRANSFER_TO_HUMAN, GENERAL';
-
-  let rules = `Rules:
+  const rules = `Rules:
 - BOOK_APPOINTMENT: customer wants to schedule/book an appointment or service
 - CANCEL: customer wants to cancel an existing appointment
 - RESCHEDULE: customer wants to change the time of an existing appointment
 - INQUIRY: customer is asking about services, pricing, availability, or hours
 - CONFIRMATION: customer is confirming or acknowledging something (yes, ok, sure, sounds good)
-- TRANSFER_TO_HUMAN: customer wants to talk to a real person, human agent, staff member, or manager (e.g. "talk to a human", "speak to someone", "real person", "transfer me", "I want to speak with a person")`;
-
-  if (isDealership) {
-    rules += `
-- SALES_INQUIRY: customer is asking about vehicle availability, pricing, features, colors, or wants a test drive ("Do you have the 2024 Tacoma?", "What colors does the X5 come in?", "I'm looking for a used SUV", "Can I test drive the new Corolla?")
-- SERVICE_APPOINTMENT: customer needs vehicle maintenance, repair, or diagnostic service ("My brakes are squeaking", "Need an oil change", "Check engine light is on", "Car is making a noise")
-- TRADE_IN_INQUIRY: customer wants to trade in their current vehicle or get a valuation ("I want to trade in my car", "What's my car worth?", "Trade-in value for my 2020 Civic")`;
-  }
-
-  rules += `
+- TRANSFER_TO_HUMAN: customer wants to talk to a real person, human agent, staff member, or manager (e.g. "talk to a human", "speak to someone", "real person", "transfer me", "I want to speak with a person")
 - GENERAL: greetings, thanks, or anything that doesn't fit above`;
 
-  return `You are an intent classifier for a ${isDealership ? 'car dealership' : 'booking/appointment'} business. Today is ${todayDay}, ${todayStr} (year ${today.getFullYear()}).
+  return `You are an intent classifier for a booking/appointment business. Today is ${todayDay}, ${todayStr} (year ${today.getFullYear()}).
 
 Analyze the customer's message and return a JSON object with:
 - intent: one of ${intentList}
@@ -72,11 +57,7 @@ export class IntentDetector {
 
   constructor(private claude: ClaudeClient) {}
 
-  async detect(
-    messageContent: string,
-    recentContext?: string,
-    verticalPack?: string,
-  ): Promise<IntentResult> {
+  async detect(messageContent: string, recentContext?: string): Promise<IntentResult> {
     const userMessage = recentContext
       ? `Recent conversation context:\n${recentContext}\n\nLatest customer message:\n${messageContent}`
       : `Customer message:\n${messageContent}`;
@@ -84,7 +65,7 @@ export class IntentDetector {
     try {
       const response = await this.claude.complete(
         'haiku',
-        buildSystemPrompt(verticalPack),
+        buildSystemPrompt(),
         [{ role: 'user', content: userMessage }],
         256,
       );

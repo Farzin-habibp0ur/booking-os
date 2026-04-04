@@ -481,55 +481,6 @@ export class NotificationService {
     }
   }
 
-  async sendKanbanStatusUpdate(booking: BookingWithRelations, kanbanStatus: string): Promise<void> {
-    try {
-      const channels = await this.getChannelPreference(booking.businessId);
-      const business =
-        booking.business || (await this.businessService.findById(booking.businessId));
-      const businessName = business?.name || 'Our Business';
-
-      const statusMessages: Record<string, string> = {
-        CHECKED_IN: 'Your vehicle has been checked in and is in our queue.',
-        DIAGNOSING: 'Our technician is currently diagnosing your vehicle.',
-        AWAITING_APPROVAL:
-          'We have prepared a service quote for your vehicle. Please review and approve.',
-        IN_PROGRESS: 'Work on your vehicle is now in progress.',
-        READY_FOR_PICKUP: 'Your vehicle is ready for pickup!',
-      };
-
-      const statusMessage = statusMessages[kanbanStatus] || `Status updated to ${kanbanStatus}`;
-
-      const context = {
-        customerName: booking.customer.name,
-        serviceName: booking.service.name,
-        businessName,
-        statusMessage,
-      };
-
-      const body = await this.resolveTemplate(booking.businessId, 'CUSTOM', context);
-      // Use the status update message directly since CUSTOM templates may not match
-      const finalBody = `Hi ${context.customerName}, update from ${businessName}: ${statusMessage}`;
-
-      if (channels === 'whatsapp' || channels === 'both') {
-        await this.dispatchWhatsApp(booking.customer.phone, finalBody, booking.businessId);
-      }
-
-      if (channels === 'email' || channels === 'both') {
-        if (booking.customer.email) {
-          const subject = `Service Update - ${businessName}`;
-          const html = this.wrapInEmailHtml(finalBody, businessName);
-          await this.dispatchEmail(booking.customer.email, subject, html);
-        }
-      }
-
-      await this.logNotificationEvent(booking.id, 'sent', `KANBAN_${kanbanStatus}`);
-
-      this.logger.log(`Sent kanban status update (${kanbanStatus}) for ${booking.id}`);
-    } catch (error) {
-      this.logger.error(`Failed to send kanban status update for ${booking.id}:`, error);
-    }
-  }
-
   async sendQuoteApprovalRequest(
     booking: BookingWithRelations,
     totalAmount: number,

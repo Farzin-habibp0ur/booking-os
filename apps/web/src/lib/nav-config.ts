@@ -14,12 +14,8 @@ import {
   BarChart3,
   TrendingUp,
   Target,
-  Package,
-  Kanban,
-  Compass,
   Sparkles,
   Receipt,
-  Car,
   ListFilter,
   Bot,
   Gauge,
@@ -39,11 +35,10 @@ export interface NavConfigOptions {
   t: (key: string, params?: any) => string;
   packName: string;
   packLabels: { customer?: string; booking?: string; service?: string };
-  kanbanEnabled?: boolean;
 }
 
 export function getNavItems(opts: NavConfigOptions): NavItem[] {
-  const { t, packName, packLabels, kanbanEnabled } = opts;
+  const { t, packLabels } = opts;
   return [
     {
       href: '/dashboard',
@@ -83,31 +78,10 @@ export function getNavItems(opts: NavConfigOptions): NavItem[] {
       roles: ['ADMIN', 'AGENT', 'SERVICE_PROVIDER'],
     },
     { href: '/staff', label: t('nav.staff'), icon: UserCog, roles: ['ADMIN'] },
-    ...(packName === 'dealership'
-      ? [
-          { href: '/inventory', label: t('nav.inventory'), icon: Car, roles: ['ADMIN', 'AGENT'] },
-          { href: '/pipeline', label: t('nav.pipeline'), icon: Compass, roles: ['ADMIN', 'AGENT'] },
-        ]
-      : []),
     { href: '/invoices', label: t('nav.invoices'), icon: Receipt, roles: ['ADMIN'] },
     { href: '/marketing', label: t('nav.marketing'), icon: Target, roles: ['ADMIN'] },
-    ...(packName === 'wellness'
-      ? [{ href: '/packages', label: t('nav.packages'), icon: Package, roles: ['ADMIN'] }]
-      : []),
-    ...(kanbanEnabled
-      ? [
-          {
-            href: '/service-board',
-            label: t('nav.service_board'),
-            icon: Kanban,
-            roles: ['ADMIN', 'AGENT', 'SERVICE_PROVIDER'],
-          },
-        ]
-      : []),
     { href: '/reports', label: t('nav.reports'), icon: BarChart3, roles: ['ADMIN', 'AGENT'] },
-    ...(packName !== 'general'
-      ? [{ href: '/roi', label: t('nav.roi'), icon: TrendingUp, roles: ['ADMIN'] }]
-      : []),
+    { href: '/roi', label: t('nav.roi'), icon: TrendingUp, roles: ['ADMIN'] },
     { href: '/ai', label: t('nav.ai'), icon: Sparkles, roles: ['ADMIN'] },
     { href: '/ai/agents', label: t('nav.ai_agents'), icon: Bot, roles: ['ADMIN'] },
     { href: '/ai/actions', label: t('nav.ai_actions'), icon: ListFilter, roles: ['ADMIN'] },

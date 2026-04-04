@@ -262,7 +262,7 @@ function CreatePackModal({
                 setName(e.target.value);
                 if (!slug) setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-'));
               }}
-              placeholder="e.g. Dealership"
+              placeholder="e.g. Aesthetic"
               required
               className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800"
             />
@@ -272,7 +272,7 @@ function CreatePackModal({
             <input
               value={slug}
               onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))}
-              placeholder="e.g. dealership"
+              placeholder="e.g. aesthetic"
               required
               className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800"
             />
@@ -592,7 +592,7 @@ function LabelsEditor({
                 )
               }
               disabled={disabled}
-              placeholder="CHECKED_IN, DIAGNOSING, IN_PROGRESS, READY"
+              placeholder="BOOKED, IN_PROGRESS, COMPLETED"
               className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 disabled:opacity-50"
             />
           </div>
@@ -792,7 +792,7 @@ function FieldsEditor({
                           .filter(Boolean),
                       })
                     }
-                    placeholder="Comma-separated options (e.g. New, Used, Trade-in)"
+                    placeholder="Comma-separated options (e.g. Botox, Filler, Peel)"
                     disabled={disabled}
                     className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 disabled:opacity-50"
                   />

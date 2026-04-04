@@ -123,25 +123,70 @@ describe('SetupPage', () => {
   });
 
   it('shows skip link on non-final steps', async () => {
+    // Step 0 has no skip link — it has the pack install button instead.
+    // Advance to step 1 by installing the aesthetic pack, then check for skip.
+    mockPost.mockImplementation((url: string) => {
+      if (url === '/business/install-pack')
+        return Promise.resolve({ installed: { services: 5, templates: 3 } });
+      return Promise.resolve({});
+    });
+
     render(<SetupPageWrapper />);
 
+    // Wait for step 0 to render and click the aesthetic pack button
+    await waitFor(() => {
+      expect(screen.getByText('setup.clinic_type_aesthetic')).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByText('setup.clinic_type_aesthetic'));
+
+    // After pack installs, a "Next" button appears inside the installed confirmation
+    await waitFor(() => {
+      expect(screen.getByText('setup.clinic_type_installed')).toBeInTheDocument();
+    });
+
+    // Click the inline Next button to advance to step 1
+    const nextButtons = screen.getAllByText('common.next');
+    // The inline next button in the installed confirmation card
+    fireEvent.click(nextButtons[0]);
+
+    // Step 1 should now show a skip link
     await waitFor(() => {
       expect(screen.getByText(/setup\.skip_for_now/)).toBeInTheDocument();
     });
   });
 
   it('skip advances to next step', async () => {
+    // Advance past step 0 first by installing the pack
+    mockPost.mockImplementation((url: string) => {
+      if (url === '/business/install-pack')
+        return Promise.resolve({ installed: { services: 5, templates: 3 } });
+      return Promise.resolve({});
+    });
+
     render(<SetupPageWrapper />);
 
     await waitFor(() => {
-      expect(screen.getByText('setup.clinic_type_title')).toBeInTheDocument();
+      expect(screen.getByText('setup.clinic_type_aesthetic')).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByText('setup.clinic_type_aesthetic'));
+
+    await waitFor(() => {
+      expect(screen.getByText('setup.clinic_type_installed')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByText(/setup\.skip_for_now/));
+    // Click inline Next to go to step 1
+    const nextButtons = screen.getAllByText('common.next');
+    fireEvent.click(nextButtons[0]);
 
-    // Step 1 shows business info title
     await waitFor(() => {
       expect(screen.getByText('setup.business_title')).toBeInTheDocument();
+    });
+
+    // Now click skip on step 1 to advance to step 2
+    fireEvent.click(screen.getByText(/setup\.skip_for_now/));
+
+    await waitFor(() => {
+      expect(screen.getByText('setup.whatsapp_title')).toBeInTheDocument();
     });
   });
 
@@ -161,18 +206,41 @@ describe('SetupPage', () => {
   });
 
   it('final step shows celebration and first-week checklist', async () => {
-    render(<SetupPageWrapper />);
-
-    await waitFor(() => {
-      expect(screen.getByText(/setup\.skip_for_now/)).toBeInTheDocument();
+    // Advance past step 0 by installing the pack, then skip through remaining steps
+    mockPost.mockImplementation((url: string) => {
+      if (url === '/business/install-pack')
+        return Promise.resolve({ installed: { services: 5, templates: 3 } });
+      return Promise.resolve({});
     });
 
-    for (let i = 0; i < 5; i++) {
+    render(<SetupPageWrapper />);
+
+    // Step 0: install pack
+    await waitFor(() => {
+      expect(screen.getByText('setup.clinic_type_aesthetic')).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByText('setup.clinic_type_aesthetic'));
+
+    await waitFor(() => {
+      expect(screen.getByText('setup.clinic_type_installed')).toBeInTheDocument();
+    });
+
+    // Click inline Next to go to step 1
+    const nextButtons = screen.getAllByText('common.next');
+    fireEvent.click(nextButtons[0]);
+
+    await waitFor(() => {
+      expect(screen.getByText('setup.business_title')).toBeInTheDocument();
+    });
+
+    // Steps 1-4: skip or next through each
+    for (let i = 0; i < 4; i++) {
       const skipButtons = screen.queryAllByText(/setup\.skip_for_now/);
       if (skipButtons.length > 0) {
         fireEvent.click(skipButtons[0]);
       } else {
-        fireEvent.click(screen.getByText('common.next'));
+        const footerNext = screen.getAllByText('common.next');
+        fireEvent.click(footerNext[footerNext.length - 1]);
       }
     }
 
@@ -189,18 +257,41 @@ describe('SetupPage', () => {
   });
 
   it('final step has Go to Dashboard button', async () => {
-    render(<SetupPageWrapper />);
-
-    await waitFor(() => {
-      expect(screen.getByText(/setup\.skip_for_now/)).toBeInTheDocument();
+    // Advance past step 0 by installing the pack, then skip through remaining steps
+    mockPost.mockImplementation((url: string) => {
+      if (url === '/business/install-pack')
+        return Promise.resolve({ installed: { services: 5, templates: 3 } });
+      return Promise.resolve({});
     });
 
-    for (let i = 0; i < 5; i++) {
+    render(<SetupPageWrapper />);
+
+    // Step 0: install pack
+    await waitFor(() => {
+      expect(screen.getByText('setup.clinic_type_aesthetic')).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByText('setup.clinic_type_aesthetic'));
+
+    await waitFor(() => {
+      expect(screen.getByText('setup.clinic_type_installed')).toBeInTheDocument();
+    });
+
+    // Click inline Next to go to step 1
+    const nextButtons = screen.getAllByText('common.next');
+    fireEvent.click(nextButtons[0]);
+
+    await waitFor(() => {
+      expect(screen.getByText('setup.business_title')).toBeInTheDocument();
+    });
+
+    // Steps 1-4: skip or next through each
+    for (let i = 0; i < 4; i++) {
       const skipButtons = screen.queryAllByText(/setup\.skip_for_now/);
       if (skipButtons.length > 0) {
         fireEvent.click(skipButtons[0]);
       } else {
-        fireEvent.click(screen.getByText('common.next'));
+        const footerNext = screen.getAllByText('common.next');
+        fireEvent.click(footerNext[footerNext.length - 1]);
       }
     }
 

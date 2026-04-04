@@ -198,7 +198,6 @@ function ShellInner({ children }: { children: ReactNode }) {
     t,
     packName: pack.name,
     packLabels: pack.labels,
-    kanbanEnabled: !!(user?.business?.packConfig as any)?.kanbanEnabled,
   });
 
   const nav = allNav.filter((item) => !role || item.roles.includes(role));

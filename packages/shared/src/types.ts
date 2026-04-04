@@ -9,7 +9,6 @@ import {
   TemplateCategory,
   ServiceKind,
   VerticalPack,
-  KanbanStatus,
 } from './enums';
 
 // ---- Entity types ----
@@ -72,7 +71,7 @@ export interface Booking {
   conversationId: string | null;
   locationId: string | null;
   resourceId: string | null;
-  kanbanStatus: KanbanStatus | null;
+
   status: BookingStatus;
   startTime: Date;
   endTime: Date;

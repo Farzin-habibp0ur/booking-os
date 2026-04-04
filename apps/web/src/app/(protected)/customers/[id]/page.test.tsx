@@ -25,17 +25,6 @@ jest.mock('@/lib/vertical-pack', () => ({
   VerticalPackProvider: ({ children }: any) => children,
 }));
 
-const generalPack = {
-  name: 'general',
-  slug: 'general',
-  labels: { customer: 'Customer', booking: 'Booking', service: 'Service' },
-  customerFields: [
-    { key: 'skinType', label: 'Skin Type', type: 'select', options: ['Dry', 'Oily', 'Normal'] },
-    { key: 'allergies', label: 'Allergies', type: 'text' },
-    { key: 'vip', label: 'VIP', type: 'boolean' },
-  ],
-};
-
 const aestheticPack = {
   name: 'aesthetic',
   slug: 'aesthetic',
@@ -46,12 +35,6 @@ const aestheticPack = {
   ],
 };
 
-const dealershipPack = {
-  name: 'dealership',
-  slug: 'dealership',
-  labels: { customer: 'Client', booking: 'Appointment', service: 'Service' },
-  customerFields: [],
-};
 const mockToast = jest.fn();
 jest.mock('@/lib/toast', () => ({
   useToast: () => ({ toast: mockToast }),
@@ -193,7 +176,7 @@ function setupMocks(
 describe('CustomerDetailPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUsePack.mockReturnValue(generalPack);
+    mockUsePack.mockReturnValue(aestheticPack);
   });
 
   it('shows loading state initially', async () => {
@@ -590,16 +573,6 @@ describe('CustomerDetailPage', () => {
     });
   });
 
-  // ─── Vertical Modules ─────────────────────────────────────────────
-
-  it('does not show vertical modules for general pack', async () => {
-    setupMocks();
-    render(<CustomerDetailPage />);
-    await waitFor(() => screen.getAllByText('Emma Wilson'));
-
-    expect(screen.queryByTestId('vertical-toggle')).not.toBeInTheDocument();
-  });
-
   it('shows toast on note deletion error', async () => {
     setupMocks();
     mockApi.del.mockRejectedValue(new Error('Server error'));
@@ -645,75 +618,5 @@ describe('CustomerDetailPage — Aesthetic Pack', () => {
     fireEvent.click(screen.getByTestId('vertical-toggle'));
 
     expect(screen.getByTestId('vertical-content')).toBeInTheDocument();
-  });
-});
-
-describe('CustomerDetailPage — Dealership Pack', () => {
-  const mockBookingsWithQuotes = [
-    {
-      id: 'b1',
-      startTime: '2025-01-01T10:00:00Z',
-      status: 'COMPLETED',
-      service: { name: 'Oil Change', price: 60 },
-      staff: { name: 'Mike' },
-      quotes: [
-        { id: 'q1', totalAmount: 500, status: 'PENDING', description: 'Brake pads' },
-        { id: 'q2', totalAmount: 1200, status: 'APPROVED', description: 'Transmission' },
-      ],
-    },
-    {
-      id: 'b2',
-      startTime: '2025-02-01T10:00:00Z',
-      status: 'CONFIRMED',
-      service: { name: 'Inspection', price: 100 },
-      staff: { name: 'Mike' },
-      quotes: [{ id: 'q3', totalAmount: 300, status: 'PENDING', description: 'Tires' }],
-    },
-  ];
-
-  beforeEach(() => {
-    jest.clearAllMocks();
-    mockUsePack.mockReturnValue(dealershipPack);
-  });
-
-  function setupDealershipMocks(bookings = mockBookingsWithQuotes) {
-    mockApi.get.mockImplementation((path: string) => {
-      if (path === '/customers/cust-1') return Promise.resolve(mockCustomer);
-      if (path === '/customers/cust-1/bookings') return Promise.resolve(bookings);
-      if (path === '/customers/cust-1/notes') return Promise.resolve([]);
-      if (path.startsWith('/conversations')) return Promise.resolve({ data: [] });
-      if (path === '/waitlist') return Promise.resolve([]);
-      return Promise.reject(new Error('Not found'));
-    });
-  }
-
-  it('does not show IntakeCard for dealership pack', async () => {
-    setupDealershipMocks();
-    render(<CustomerDetailPage />);
-    await waitFor(() => screen.getAllByText('Emma Wilson'));
-
-    expect(screen.queryByTestId('intake-card')).not.toBeInTheDocument();
-  });
-
-  it('collapses dealership vertical module', async () => {
-    setupDealershipMocks();
-    render(<CustomerDetailPage />);
-    await waitFor(() => screen.getAllByText('Emma Wilson'));
-
-    expect(screen.getByTestId('dealership-summary')).toBeInTheDocument();
-
-    fireEvent.click(screen.getByTestId('vertical-toggle'));
-
-    expect(screen.queryByTestId('dealership-summary')).not.toBeInTheDocument();
-  });
-
-  it('does not render RecentChangesPanel (removed from layout)', async () => {
-    setupMocks();
-    render(<CustomerDetailPage />);
-    await waitFor(() => {
-      expect(screen.getAllByText('Emma Wilson').length).toBeGreaterThan(0);
-    });
-    // RecentChangesPanel is imported but not rendered in the new single-scroll layout
-    expect(screen.queryByTestId('recent-changes-panel')).not.toBeInTheDocument();
   });
 });

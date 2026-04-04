@@ -35,7 +35,7 @@ const FAQ_ITEMS = [
   },
   {
     q: 'Can I customize it for my specialty?',
-    a: 'Booking OS uses a Vertical Pack system tailored to your industry. Aesthetic clinics, salons, dealerships, and more each get purpose-built workflows, fields, and automations.',
+    a: 'Booking OS is purpose-built for aesthetic clinics with tailored workflows, profile fields, and automations designed for your practice.',
   },
   {
     q: 'What happens after the trial?',

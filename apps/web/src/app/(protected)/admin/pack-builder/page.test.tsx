@@ -43,10 +43,10 @@ import { api } from '@/lib/api';
 const mockApi = api as jest.Mocked<typeof api>;
 
 const mockPackConfig = {
-  labels: { customer: 'Client', booking: 'Appointment', service: 'Service' },
+  labels: { customer: 'Patient', booking: 'Appointment', service: 'Treatment' },
   intakeFields: [
-    { key: 'make', label: 'Make', type: 'text', required: true },
-    { key: 'model', label: 'Model', type: 'text', required: true },
+    { key: 'skin_type', label: 'Skin Type', type: 'text', required: true },
+    { key: 'concerns', label: 'Concerns', type: 'text', required: true },
   ],
   defaultServices: [],
   defaultTemplates: [],
@@ -57,10 +57,10 @@ const mockPackConfig = {
 
 const mockPack = {
   id: 'pack1',
-  slug: 'dealership',
+  slug: 'medspa',
   version: 1,
-  name: 'Dealership',
-  description: 'Car dealership vertical',
+  name: 'Medspa',
+  description: 'Medical spa vertical',
   config: mockPackConfig,
   isPublished: false,
   createdAt: '2026-01-01T00:00:00Z',
@@ -121,7 +121,7 @@ describe('PackBuilderPage', () => {
     mockApi.get.mockResolvedValue([mockPack, mockPublishedPack]);
     render(<PackBuilderPage />);
     await waitFor(() => {
-      expect(screen.getByText('Dealership')).toBeInTheDocument();
+      expect(screen.getByText('Medspa')).toBeInTheDocument();
       expect(screen.getByText('Aesthetic')).toBeInTheDocument();
     });
   });
@@ -174,15 +174,15 @@ describe('PackBuilderPage', () => {
     fireEvent.click(screen.getByText('New Pack'));
     await waitFor(() => screen.getByText('Create New Pack'));
 
-    const nameInput = screen.getByPlaceholderText('e.g. Dealership');
-    await userEvent.type(nameInput, 'Dealership');
+    const nameInput = screen.getByPlaceholderText('e.g. Aesthetic');
+    await userEvent.type(nameInput, 'Aesthetic');
 
     fireEvent.click(screen.getByText('Create'));
 
     await waitFor(() => {
       expect(mockApi.post).toHaveBeenCalledWith(
         '/admin/packs',
-        expect.objectContaining({ name: 'Dealership' }),
+        expect.objectContaining({ name: 'Aesthetic' }),
       );
     });
   });
@@ -207,25 +207,25 @@ describe('PackBuilderPage', () => {
   test('opens editor when clicking a pack card', async () => {
     mockApi.get.mockResolvedValueOnce([mockPack]).mockResolvedValueOnce(mockPack);
     render(<PackBuilderPage />);
-    await waitFor(() => screen.getByText('Dealership'));
+    await waitFor(() => screen.getByText('Medspa'));
 
-    fireEvent.click(screen.getByText('Dealership'));
+    fireEvent.click(screen.getByText('Medspa'));
 
     await waitFor(() => {
-      expect(mockApi.get).toHaveBeenCalledWith('/admin/packs/dealership');
+      expect(mockApi.get).toHaveBeenCalledWith('/admin/packs/medspa');
     });
   });
 
   test('shows labels editor tab by default', async () => {
     mockApi.get.mockResolvedValueOnce([mockPack]).mockResolvedValueOnce(mockPack);
     render(<PackBuilderPage />);
-    await waitFor(() => screen.getByText('Dealership'));
+    await waitFor(() => screen.getByText('Medspa'));
 
-    fireEvent.click(screen.getByText('Dealership'));
+    fireEvent.click(screen.getByText('Medspa'));
 
     await waitFor(() => {
       expect(screen.getByText('Entity Labels')).toBeInTheDocument();
-      expect(screen.getByDisplayValue('Client')).toBeInTheDocument();
+      expect(screen.getByDisplayValue('Patient')).toBeInTheDocument();
       expect(screen.getByDisplayValue('Appointment')).toBeInTheDocument();
     });
   });
@@ -233,26 +233,26 @@ describe('PackBuilderPage', () => {
   test('switches to fields tab', async () => {
     mockApi.get.mockResolvedValueOnce([mockPack]).mockResolvedValueOnce(mockPack);
     render(<PackBuilderPage />);
-    await waitFor(() => screen.getByText('Dealership'));
+    await waitFor(() => screen.getByText('Medspa'));
 
-    fireEvent.click(screen.getByText('Dealership'));
+    fireEvent.click(screen.getByText('Medspa'));
 
     await waitFor(() => screen.getByText('Labels'));
 
     fireEvent.click(screen.getByText('Intake Fields'));
 
     await waitFor(() => {
-      expect(screen.getByDisplayValue('Make')).toBeInTheDocument();
-      expect(screen.getByDisplayValue('Model')).toBeInTheDocument();
+      expect(screen.getByDisplayValue('Skin Type')).toBeInTheDocument();
+      expect(screen.getByDisplayValue('Concerns')).toBeInTheDocument();
     });
   });
 
   test('shows save and publish buttons for draft packs', async () => {
     mockApi.get.mockResolvedValueOnce([mockPack]).mockResolvedValueOnce(mockPack);
     render(<PackBuilderPage />);
-    await waitFor(() => screen.getByText('Dealership'));
+    await waitFor(() => screen.getByText('Medspa'));
 
-    fireEvent.click(screen.getByText('Dealership'));
+    fireEvent.click(screen.getByText('Medspa'));
 
     await waitFor(() => {
       expect(screen.getByText('Save')).toBeInTheDocument();
@@ -277,9 +277,9 @@ describe('PackBuilderPage', () => {
     mockApi.get.mockResolvedValueOnce([mockPack]).mockResolvedValueOnce(mockPack);
     mockApi.patch.mockResolvedValue(mockPack);
     render(<PackBuilderPage />);
-    await waitFor(() => screen.getByText('Dealership'));
+    await waitFor(() => screen.getByText('Medspa'));
 
-    fireEvent.click(screen.getByText('Dealership'));
+    fireEvent.click(screen.getByText('Medspa'));
     await waitFor(() => screen.getByText('Save'));
 
     fireEvent.click(screen.getByText('Save'));
@@ -297,9 +297,9 @@ describe('PackBuilderPage', () => {
     mockApi.post.mockResolvedValue({ ...mockPack, isPublished: true });
     window.confirm = jest.fn(() => true);
     render(<PackBuilderPage />);
-    await waitFor(() => screen.getByText('Dealership'));
+    await waitFor(() => screen.getByText('Medspa'));
 
-    fireEvent.click(screen.getByText('Dealership'));
+    fireEvent.click(screen.getByText('Medspa'));
     await waitFor(() => screen.getByText('Publish'));
 
     fireEvent.click(screen.getByText('Publish'));
@@ -314,16 +314,16 @@ describe('PackBuilderPage', () => {
   test('toggles preview panel', async () => {
     mockApi.get.mockResolvedValueOnce([mockPack]).mockResolvedValueOnce(mockPack);
     render(<PackBuilderPage />);
-    await waitFor(() => screen.getByText('Dealership'));
+    await waitFor(() => screen.getByText('Medspa'));
 
-    fireEvent.click(screen.getByText('Dealership'));
+    fireEvent.click(screen.getByText('Medspa'));
     await waitFor(() => screen.getByText('Preview'));
 
     fireEvent.click(screen.getByText('Preview'));
 
     await waitFor(() => {
       expect(screen.getByText('Intake Card Preview')).toBeInTheDocument();
-      expect(screen.getByText('Client Intake')).toBeInTheDocument();
+      expect(screen.getByText('Patient Intake')).toBeInTheDocument();
     });
   });
 
@@ -332,13 +332,13 @@ describe('PackBuilderPage', () => {
   test('adds a new field', async () => {
     mockApi.get.mockResolvedValueOnce([mockPack]).mockResolvedValueOnce(mockPack);
     render(<PackBuilderPage />);
-    await waitFor(() => screen.getByText('Dealership'));
+    await waitFor(() => screen.getByText('Medspa'));
 
-    fireEvent.click(screen.getByText('Dealership'));
+    fireEvent.click(screen.getByText('Medspa'));
     await waitFor(() => screen.getByText('Labels'));
 
     fireEvent.click(screen.getByText('Intake Fields'));
-    await waitFor(() => screen.getByDisplayValue('Make'));
+    await waitFor(() => screen.getByDisplayValue('Skin Type'));
 
     fireEvent.click(screen.getByText('Add Field'));
 
@@ -350,13 +350,13 @@ describe('PackBuilderPage', () => {
   test('removes a field', async () => {
     mockApi.get.mockResolvedValueOnce([mockPack]).mockResolvedValueOnce(mockPack);
     render(<PackBuilderPage />);
-    await waitFor(() => screen.getByText('Dealership'));
+    await waitFor(() => screen.getByText('Medspa'));
 
-    fireEvent.click(screen.getByText('Dealership'));
+    fireEvent.click(screen.getByText('Medspa'));
     await waitFor(() => screen.getByText('Labels'));
 
     fireEvent.click(screen.getByText('Intake Fields'));
-    await waitFor(() => screen.getByDisplayValue('Make'));
+    await waitFor(() => screen.getByDisplayValue('Skin Type'));
 
     // Click the remove button on the first field
     const removeButtons = screen.getAllByLabelText('Remove field');
@@ -372,9 +372,9 @@ describe('PackBuilderPage', () => {
   test('shows kanban settings in labels tab', async () => {
     mockApi.get.mockResolvedValueOnce([mockPack]).mockResolvedValueOnce(mockPack);
     render(<PackBuilderPage />);
-    await waitFor(() => screen.getByText('Dealership'));
+    await waitFor(() => screen.getByText('Medspa'));
 
-    fireEvent.click(screen.getByText('Dealership'));
+    fireEvent.click(screen.getByText('Medspa'));
 
     await waitFor(() => {
       expect(screen.getByText('Kanban Board')).toBeInTheDocument();
@@ -390,9 +390,9 @@ describe('PackBuilderPage', () => {
       .mockResolvedValueOnce(mockPack)
       .mockResolvedValueOnce([mockPack]); // after back
     render(<PackBuilderPage />);
-    await waitFor(() => screen.getByText('Dealership'));
+    await waitFor(() => screen.getByText('Medspa'));
 
-    fireEvent.click(screen.getByText('Dealership'));
+    fireEvent.click(screen.getByText('Medspa'));
     await waitFor(() => screen.getByLabelText('Back to packs'));
 
     fireEvent.click(screen.getByLabelText('Back to packs'));

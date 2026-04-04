@@ -60,7 +60,7 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 
 | #    | Story                                                               | Persona | Notes                                                          |
 | ---- | ------------------------------------------------------------------- | ------- | -------------------------------------------------------------- |
-| 2.1  | Choose vertical pack (Aesthetic, Wellness, or General) during setup | Admin   | Installs default services, templates, profile fields           |
+| 2.1  | Choose vertical pack (Aesthetic or General) during setup            | Admin   | Installs default services, templates, profile fields           |
 | 2.2  | Set business name, timezone, and currency                           | Admin   | —                                                              |
 | 2.3  | Connect WhatsApp (placeholder)                                      | Admin   | UI exists but actual connection requires Meta portal setup     |
 | 2.4  | Invite staff members by email during setup                          | Admin   | Sends invitation link                                          |
@@ -79,7 +79,7 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 
 | #    | Story                                                 | Notes                                                          |
 | ---- | ----------------------------------------------------- | -------------------------------------------------------------- |
-| 2.15 | Choose Dealership pack from UI setup wizard           | Only Aesthetic and General shown; dealership installed via API |
+| 2.15 | ~~Choose Dealership pack from UI setup wizard~~ [ARCHIVED — vertical removed] | Dealership vertical removed |
 | 2.16 | Re-run setup wizard after completion                  | No way to return to /setup once complete                       |
 | 2.17 | Import from external systems (Calendly, Square, etc.) | Only CSV and conversation import                               |
 | 2.18 | Preview how the booking portal looks during setup     | No preview step                                                |
@@ -164,8 +164,8 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 | 4.14 | Send reschedule link to customer                                            | All staff | Token-based self-serve link                   |
 | 4.15 | Send cancel link to customer                                                | All staff | Token-based self-serve link                   |
 | 4.16 | Check policy window (can customer still cancel/reschedule?)                 | All staff | Returns allowed/disallowed with reason        |
-| 4.17 | Update kanban status (dealership workflow)                                  | All staff | CHECKED_IN → DIAGNOSING → IN_PROGRESS → READY |
-| 4.18 | View kanban board                                                           | All staff | Filter by location, staff, date range         |
+| 4.17 | ~~Update kanban status (dealership workflow)~~ [ARCHIVED — vertical removed]    | All staff | Dealership vertical removed                   |
+| 4.18 | ~~View kanban board~~ [ARCHIVED — vertical removed]                             | All staff | Dealership vertical removed                   |
 | 4.19 | Assign booking to a location                                                | All staff | At creation time                              |
 | 4.20 | Assign booking to a resource (equipment/bay)                                | All staff | At creation time                              |
 | 4.21 | Add custom fields to a booking                                              | All staff | JSON with 3-level nesting, max 50 keys        |
@@ -257,12 +257,12 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 | 6.13  | View customer's next appointment                                                  | All staff | On detail page                                                         |
 | 6.14  | Chat with AI about a customer (summarize, show treatments, etc.)                  | All staff | AI customer chat on detail page                                        |
 | 6.15  | Create a booking directly from customer detail page                               | All staff | —                                                                      |
-| 6.16  | View and edit customer custom fields (vertical-specific)                          | All staff | E.g., allergies, vehicle info                                          |
+| 6.16  | View and edit customer custom fields (vertical-specific)                          | All staff | E.g., allergies, medical intake                                        |
 | 6.17a | Add, edit, and delete notes on a customer profile                                 | All staff | Staff ownership validation for edit/delete                             |
 | 6.18a | See customer activity timeline (all interactions in one feed)                     | All staff | 6 sources: bookings, conversations, notes, waitlist, quotes, campaigns |
 | 6.19a | View customer's conversations from their profile ("Message" button)               | All staff | Deep links to `/inbox?conversationId=X`                                |
 | 6.20a | See customer's active waitlist count in context row                               | All staff | On detail page                                                         |
-| 6.21a | View vertical-specific modules (IntakeCard for aesthetics, quotes for dealership) | All staff | Collapsible sections on detail page                                    |
+| 6.21a | View vertical-specific modules (IntakeCard for aesthetics)                        | All staff | Collapsible sections on detail page                                    |
 
 ### What Users CANNOT Do
 
@@ -794,7 +794,7 @@ Exhaustive inventory of everything each user persona can and cannot do on the pl
 
 ---
 
-## 20. Quotes (Dealership / Service)
+## 20. Quotes
 
 ### What Users CAN Do
 

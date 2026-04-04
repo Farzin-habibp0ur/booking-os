@@ -70,21 +70,6 @@ export class AvailabilityService {
       // assume all staff can perform it (backward compatibility)
     }
 
-    // Filter staff by required certification
-    const requiresCert = (service as any).requiresCertification;
-    if (requiresCert && staffList.length > 0) {
-      const certifiedStaff = await this.prisma.staffCertification.findMany({
-        where: {
-          staffId: { in: staffList.map((s) => s.id) },
-          name: requiresCert,
-          OR: [{ expiryDate: null }, { expiryDate: { gt: new Date() } }],
-        },
-        select: { staffId: true },
-      });
-      const certifiedIds = new Set(certifiedStaff.map((c) => c.staffId));
-      staffList = staffList.filter((s) => certifiedIds.has(s.id));
-    }
-
     // Filter staff by location assignment when locationId is provided
     if (locationId && staffList.length > 0) {
       const assignments = await this.prisma.staffLocation.findMany({

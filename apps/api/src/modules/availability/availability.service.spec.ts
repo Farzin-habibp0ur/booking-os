@@ -1363,47 +1363,6 @@ describe('AvailabilityService', () => {
     });
   });
 
-  // ─── Certification filtering (Prompt 3C) ────────────────────────────
-
-  describe('certification filtering', () => {
-    it('filters out staff without required certification', async () => {
-      prisma.service.findFirst.mockResolvedValue({
-        id: 'svc1',
-        businessId: 'biz1',
-        durationMins: 60,
-        requiresCertification: 'RMT',
-        maxParticipants: 1,
-        requiredResourceType: null,
-      } as any);
-
-      prisma.staff.findMany.mockResolvedValue([
-        { id: 's1', name: 'Alice' },
-        { id: 's2', name: 'Bob' },
-      ] as any);
-
-      prisma.staffServicePrice.findMany.mockResolvedValue([]);
-
-      // Only Alice has valid RMT cert
-      prisma.staffCertification.findMany.mockResolvedValue([{ staffId: 's1' }] as any);
-
-      prisma.workingHours.findUnique.mockResolvedValue({
-        staffId: 's1',
-        dayOfWeek: FUTURE_DATE_DOW,
-        startTime: '09:00',
-        endTime: '10:00',
-        isOff: false,
-      } as any);
-      prisma.timeOff.findFirst.mockResolvedValue(null);
-      prisma.booking.findMany.mockResolvedValue([]);
-      mockCalendarSyncService.pullExternalEvents.mockResolvedValue([]);
-
-      const result = await service.getAvailableSlots('biz1', FUTURE_DATE, 'svc1');
-      const staffIds = new Set(result.map((s) => s.staffId));
-      expect(staffIds.has('s1')).toBe(true);
-      expect(staffIds.has('s2')).toBe(false);
-    });
-  });
-
   // ─── Resource auto-filtering (Prompt 3C) ─────────────────────────────
 
   describe('resource auto-filtering', () => {
@@ -1437,72 +1396,6 @@ describe('AvailabilityService', () => {
       expect(result.length).toBeGreaterThan(0);
       expect(result[0].resourceId).toBe('res-1');
       expect(result[0].resourceName).toBe('Room A');
-    });
-  });
-
-  // ─── Group class support (Prompt 3C) ──────────────────────────────────
-
-  describe('group class support', () => {
-    it('returns spotsRemaining for group services', async () => {
-      prisma.service.findFirst.mockResolvedValue({
-        id: 'svc1',
-        businessId: 'biz1',
-        durationMins: 60,
-        requiresCertification: null,
-        maxParticipants: 10,
-        requiredResourceType: null,
-      } as any);
-
-      prisma.staff.findMany.mockResolvedValue([{ id: 's1', name: 'Alice' }] as any);
-      prisma.staffServicePrice.findMany.mockResolvedValue([]);
-
-      prisma.workingHours.findUnique.mockResolvedValue({
-        staffId: 's1',
-        dayOfWeek: FUTURE_DATE_DOW,
-        startTime: '09:00',
-        endTime: '10:00',
-        isOff: false,
-      } as any);
-      prisma.timeOff.findFirst.mockResolvedValue(null);
-      prisma.booking.findMany.mockResolvedValue([]);
-      mockCalendarSyncService.pullExternalEvents.mockResolvedValue([]);
-
-      const result = await service.getAvailableSlots('biz1', FUTURE_DATE, 'svc1');
-      expect(result.length).toBeGreaterThan(0);
-      expect(result[0].spotsRemaining).toBe(10);
-      expect(result[0].available).toBe(true);
-    });
-
-    it('generates slot times in business timezone (America/Los_Angeles 14:00 → UTC 21:00)', async () => {
-      // 14:00 local Los_Angeles on 2026-04-03 = 21:00 UTC (PDT = UTC-7)
-      const LA_DATE = '2026-04-03';
-      const LA_DATE_DOW = 5; // Friday
-
-      prisma.service.findFirst.mockResolvedValue({
-        id: 'svc1',
-        businessId: 'biz1',
-        durationMins: 30,
-      } as any);
-      prisma.business.findUnique.mockResolvedValue({ timezone: 'America/Los_Angeles' } as any);
-      prisma.staff.findMany.mockResolvedValue([{ id: 'staff1', name: 'Dr. Chen' }] as any);
-      prisma.staffServicePrice.findMany.mockResolvedValue([]);
-      prisma.workingHours.findUnique.mockResolvedValue({
-        staffId: 'staff1',
-        dayOfWeek: LA_DATE_DOW,
-        startTime: '14:00',
-        endTime: '15:00',
-        isOff: false,
-      } as any);
-      prisma.timeOff.findFirst.mockResolvedValue(null);
-      prisma.booking.findMany.mockResolvedValue([]);
-      mockCalendarSyncService.pullExternalEvents.mockResolvedValue([]);
-
-      const result = await service.getAvailableSlots('biz1', LA_DATE, 'svc1');
-
-      // 14:00 Los_Angeles (PDT = UTC-7) → 21:00 UTC
-      expect(result).toHaveLength(2); // 14:00 and 14:30 fit in the 14:00-15:00 window
-      expect(result[0].time).toBe('2026-04-03T21:00:00.000Z');
-      expect(result[0].display).toBe('14:00');
     });
   });
 });

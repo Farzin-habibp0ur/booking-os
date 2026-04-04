@@ -20,7 +20,6 @@ import {
   CreateBookingDto,
   UpdateBookingDto,
   UpdateBookingStatusDto,
-  UpdateKanbanStatusDto,
   BookingQueryDto,
 } from '../../common/dto';
 
@@ -115,31 +114,6 @@ export class BookingController {
       staffName: user?.name,
       role: user?.role,
     });
-  }
-
-  @Get('kanban')
-  kanbanBoard(
-    @BusinessId() businessId: string,
-    @Query('locationId') locationId?: string,
-    @Query('staffId') staffId?: string,
-    @Query('dateFrom') dateFrom?: string,
-    @Query('dateTo') dateTo?: string,
-  ) {
-    return this.bookingService.getKanbanBoard(businessId, {
-      locationId,
-      staffId,
-      dateFrom,
-      dateTo,
-    });
-  }
-
-  @Patch(':id/kanban-status')
-  updateKanbanStatus(
-    @BusinessId() businessId: string,
-    @Param('id') id: string,
-    @Body() body: UpdateKanbanStatusDto,
-  ) {
-    return this.bookingService.updateKanbanStatus(businessId, id, body.kanbanStatus);
   }
 
   @Patch('bulk')

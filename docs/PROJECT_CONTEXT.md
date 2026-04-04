@@ -18,14 +18,10 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 | Business              | Email                     | Password    | Vertical   |
 | --------------------- | ------------------------- | ----------- | ---------- |
 | Glow Aesthetic Clinic | sarah@glowclinic.com      | Bk0s!DemoSecure#2026 | Aesthetic  |
-| Metro Auto Group      | mike@metroauto.com        | Bk0s!DemoSecure#2026 | Dealership |
-| Serenity Wellness Spa | maya@serenitywellness.com | Bk0s!DemoSecure#2026 | Wellness   |
 
 ### Supported Verticals
 
 - **Aesthetic clinics** — consult → treatment → aftercare workflows, medical intake, before/after tracking
-- **Car dealerships** — service kanban board (CHECKED_IN → DIAGNOSING → IN_PROGRESS → READY), vehicle inventory management (VIN tracking, stock numbers, test drives), sales pipeline & deal tracking (7-stage Kanban: INQUIRY → QUALIFIED → TEST_DRIVE → NEGOTIATION → FINANCE → WON/LOST), customer journey board (unified deal/test drive/vehicle timeline with engagement scoring), AI deal intelligence (stalled deal detection, deal-aware action cards), quote approval, resource/bay scheduling
-- **Wellness & spa** — 7-field wellness intake (health goals, fitness level, injuries, medications, allergies, modality, membership), DB-backed session packages with purchase/redeem/expiry tracking (ServicePackage + PackagePurchase + PackageRedemption models), auto-unredeem on booking cancel, membership tiers (Drop-in/Monthly/Annual/VIP), 6 default services (massage, yoga, training, coaching)
 - **General** — base vertical with standard booking features
 - **Extensible** — Vertical Pack system customizes fields, templates, automations, and workflows per industry
 
@@ -40,7 +36,6 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 - **Service catalog** — Categories, pricing, durations, buffer times, deposit requirements, service kinds (CONSULT/TREATMENT/OTHER), soft delete
 - **Multi-location** — Multiple physical locations per business, staff-location assignments, per-location channel configs (WhatsApp, Instagram, Facebook, SMS, Email, Web Chat), location-based conversation filtering
 - **Resource management** — Equipment/bays/rooms per location with metadata, resource-level booking
-- **Service kanban** — Dealership workflow board (CHECKED_IN → DIAGNOSING → AWAITING_APPROVAL → IN_PROGRESS → READY_FOR_PICKUP)
 - **Quotes** — Create quotes for bookings, customer self-serve approval via token link with IP audit
 - **Analytics & reports** — Bookings over time, revenue, service breakdown, staff performance, no-show rates, peak hours, consult conversion, CSV/PDF export for all reports, automated scheduled report emails (daily/weekly/monthly via BullMQ)
 - **ROI dashboard** — Baseline vs current metrics, recovered revenue estimate, weekly review with email
@@ -97,7 +92,6 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 
 - **Multi-location support** — Locations with staff assignments, per-location channel configs (WhatsApp, Instagram, Facebook, SMS, Email, Web Chat), booking/conversation filtering
 - **Resource management** — Equipment/bays per location, resource-level booking
-- **Dealership vertical** — Service kanban board, quote system, vehicle-specific customer fields
 - **Pack builder** — Internal tooling for pack definitions with versioning, publish flow, slug management
 - **i18n infrastructure** — Translation overrides per locale per business
 - **Customer CSV import** — RFC 4180 compliant, max 5000 rows, preview and error reporting
@@ -113,7 +107,7 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 
 ### Demo Strategy — COMPLETE
 
-- **Rich demo data** — Realistic seed data for aesthetic clinic, dealership, and wellness verticals
+- **Rich demo data** — Realistic seed data for aesthetic clinic vertical
 - **Interactive demo tour** — 9-step guided walkthrough with spotlight + tooltip overlays
 - **Deployment docs** — Comprehensive DEPLOY.md with Railway, Docker, and troubleshooting
 
@@ -127,10 +121,10 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 
 ### UX Phase 2: "Customer Hub + Unified Timeline + Global Search" (Bundle B) — COMPLETE (7/7 batches)
 
-- **Customer Hub** — Redesigned `/customers/{id}` with sticky header, context row (last booking, last conversation, waitlist count), notes tab, message deep link, vertical modules
+- **Customer Hub** — Redesigned `/customers/{id}` with sticky header, context row (last booking, last conversation, waitlist count), notes tab, message deep link, aesthetic vertical modules
 - **Customer Notes** — New `CustomerNote` model with full CRUD, staff ownership validation
 - **Unified Timeline** — Timeline API endpoint (6 data sources: bookings, conversations, notes, waitlist, quotes, campaigns), `CustomerTimeline` component with type filtering, pagination, deep linking
-- **Vertical Modules** — IntakeCard for aesthetic pack, WellnessIntakeCard/PackageTracker/MembershipBadge/PackagePurchaseModal/PackageRedeemSelector/PractitionerProfile/ClassSchedule/CertificationManager for wellness pack, quotes summary for dealership pack, collapsible sections
+- **Vertical Modules** — IntakeCard for aesthetic pack, collapsible sections
 - **Enhanced Search** — Search API with offset, types filter, totals; Cmd+K fixed hrefs to detail pages, grouped results, vertical-aware labels, "View all results" link
 - **Search Page** — New `/search` page with URL param sync, type filter chips with counts, grouped results, load more per section
 - **Inbox Deep Linking** — `?conversationId=` URL param auto-selects conversation, customer name links to profile
@@ -163,7 +157,7 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 - **Conversation Action Handler** (Batch 3b) — ConversationActionHandler (`ai/conversation-action-handler.ts`) for executing conversation-level actions from action cards, ActionCardInline frontend component (`action-card-inline.tsx`)
 - **Policy Compliance & Deposits** (Batch 3c) — PolicyComplianceService for automated policy enforcement, DepositCardHandler for deposit-related action cards, deposit-card.tsx frontend component
 - **Human Takeover** (Batch 3d) — HumanTakeoverService for AI-to-human escalation flow, ClarificationHandler for requesting clarification from staff, human-takeover-banner.tsx frontend component
-- **Vertical Actions** (Batch 3e) — VerticalActionHandler (`ai/vertical-action-handler.ts`) for vertical-specific action execution (aesthetic, dealership workflows)
+- **Vertical Actions** (Batch 3e) — VerticalActionHandler (`ai/vertical-action-handler.ts`) for vertical-specific action execution (aesthetic workflows)
 - **Final counts:** 2,919 tests total (1,787 API + 1,132 web), +158 new tests
 
 ### Agentic-First Transformation — Milestone 4: "Background Agents" — COMPLETE
@@ -178,7 +172,7 @@ Booking OS is a **multi-tenant SaaS platform** for service-based businesses to m
 ### Agentic-First Transformation — Milestone 5: "Vertical Pack Agents" — COMPLETE
 
 - **Agent Skills Catalog** — New AgentSkills API module providing per-pack skill definitions with business-level overrides
-- **Pack-specific agent behaviors** — Agents adapt skills and action card types based on business vertical pack (aesthetic: aftercare follow-ups, consult conversion; dealership: quote follow-up, service bay optimization)
+- **Pack-specific agent behaviors** — Agents adapt skills and action card types based on business vertical pack (aesthetic: aftercare follow-ups, consult conversion)
 - **Frontend components** — skill-card.tsx (skill catalog display with enable/disable), vertical-launch-checklist.tsx (vertical-specific agent readiness checklist)
 - **Waitlist match cards** — waitlist-match-card.tsx for surfacing waitlist auto-match opportunities from WaitlistAgent
 - **Quote followup cards** — quote-followup-card.tsx for surfacing expired/pending quote follow-up actions
@@ -284,10 +278,9 @@ booking-os/
 ├── packages/
 │   ├── db/                     # Prisma schema (96 models), 70 migrations, seed scripts
 │   │   ├── prisma/schema.prisma
-│   │   ├── src/seed.ts         # Base seed (aesthetic + dealership + wellness, idempotent)
+│   │   ├── src/seed.ts         # Base seed (aesthetic, idempotent)
 │   │   ├── src/seed-demo.ts    # Rich demo data (idempotent, dedup-safe)
 │   │   ├── src/seed-agentic.ts # One-time agentic data fill (production)
-│   │   ├── src/seed-wellness.ts # Standalone wellness seed (also called from seed.ts)
 │   │   ├── src/seed-console.ts # Platform console base data (super admin user)
 │   │   ├── src/seed-console-showcase.ts # Console demo data (6 diverse businesses)
 │   │   ├── src/seed-content.ts # Content pillar seeding (12 blog posts → ContentDraft)
@@ -390,10 +383,9 @@ DeviceToken ──── Staff + Business (push notification device registration
 StaffRole:          OWNER, ADMIN, AGENT, SERVICE_PROVIDER, SUPER_ADMIN
 BookingStatus:      PENDING, PENDING_DEPOSIT, CONFIRMED, IN_PROGRESS, COMPLETED, CANCELLED, NO_SHOW
 BookingSource:      MANUAL, PORTAL, WHATSAPP, AI, REFERRAL, WALK_IN
-KanbanStatus:       CHECKED_IN, DIAGNOSING, AWAITING_APPROVAL, IN_PROGRESS, READY_FOR_PICKUP
 ConversationStatus: OPEN, WAITING, RESOLVED, SNOOZED
 ServiceKind:        CONSULT, TREATMENT, OTHER
-VerticalPack:       AESTHETIC, SALON, TUTORING, GENERAL, DEALERSHIP, WELLNESS
+VerticalPack:       AESTHETIC, SALON, TUTORING, GENERAL
 ```
 
 ### Key Models
@@ -405,7 +397,7 @@ VerticalPack:       AESTHETIC, SALON, TUTORING, GENERAL, DEALERSHIP, WELLNESS
 | **Customer**             | phone (unique per biz), tags[], customFields (JSON)                                                                                                                                                                                                                                                                                                                                                                                                              | Vertical-specific fields, has CustomerNotes                                        |
 | **CustomerNote**         | customerId (FK), staffId (FK), businessId (FK), content                                                                                                                                                                                                                                                                                                                                                                                                          | Staff ownership validation for edit/delete                                         |
 | **Service**              | kind (CONSULT/TREATMENT/OTHER), depositRequired, bufferBefore/After, isActive                                                                                                                                                                                                                                                                                                                                                                                    | Catalog item                                                                       |
-| **Booking**              | status (7 states), kanbanStatus, locationId, resourceId, recurringSeriesId, customFields (JSON)                                                                                                                                                                                                                                                                                                                                                                  | Core scheduling                                                                    |
+| **Booking**              | status (7 states), locationId, resourceId, recurringSeriesId, customFields (JSON)                                                                                                                                                                                                                                                                                                                                                                                | Core scheduling                                                                    |
 | **Location**             | name, address, isBookable, whatsappConfig (JSON), instagramConfig (JSON), facebookConfig (JSON), smsConfig (JSON), emailConfig (JSON), webChatConfig (JSON), isActive                                                                                                                                                                                                                                                                                            | Multi-location (per-channel configs)                                               |
 | **Resource**             | locationId, type, metadata (JSON), isActive                                                                                                                                                                                                                                                                                                                                                                                                                      | Equipment/bays                                                                     |
 | **Quote**                | bookingId, totalAmount, status (PENDING/APPROVED/REJECTED), approverIp                                                                                                                                                                                                                                                                                                                                                                                           | Service quotes                                                                     |
@@ -459,7 +451,7 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 | Module                | Route Prefix                                                                      | Key Operations                                                                                                                                                                                                                                                        |
 | --------------------- | --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Auth**              | `/auth`                                                                           | signup, login, refresh, logout, forgot/reset/change password, accept-invite, verify-email                                                                                                                                                                             |
-| **Bookings**          | `/bookings`                                                                       | CRUD, status change, kanban status, calendar view (day/week/month), month summary, kanban board, bulk ops, deposit/reschedule/cancel links, policy check                                                                                                              |
+| **Bookings**          | `/bookings`                                                                       | CRUD, status change, calendar view (day/week/month), month summary, bulk ops, deposit/reschedule/cancel links, policy check                                                                                                                                           |
 | **Recurring**         | `/bookings/recurring`                                                             | Create series, cancel (single/future/all)                                                                                                                                                                                                                             |
 | **Customers**         | `/customers`                                                                      | CRUD, search, bulk tag, CSV import, conversation import, notes CRUD, timeline                                                                                                                                                                                         |
 | **Services**          | `/services`                                                                       | CRUD with soft delete                                                                                                                                                                                                                                                 |
@@ -579,7 +571,6 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 | Automation New      | `/automations/new`                  | Rule builder wizard                                                                                                                                                                                                                          |
 | Reports             | `/reports`                          | 9 chart types                                                                                                                                                                                                                                |
 | ROI Dashboard       | `/roi`                              | Baseline vs current metrics                                                                                                                                                                                                                  |
-| Service Board       | `/service-board`                    | Kanban board (dealership)                                                                                                                                                                                                                    |
 | Settings            | `/settings/*`                       | 16 settings sub-pages (account, AI, AI Autonomy, Agent Skills, agents, templates, translations, calendar, billing, notifications, offers, policies, waitlist, profile fields, sms, facebook, email-channel); hub page links to all sub-pages |
 | Marketing Queue     | `/marketing/queue`                  | Content approval queue with card-based review, filter tabs, stats strip. **Internal only — no sidebar nav, not shown to customers**                                                                                                          |
 | Marketing Agents    | `/marketing/agents`                 | 12 marketing agents dashboard with tab filters (Content/Distribution/Analytics), toggle, Run Now. **Internal only — not in sidebar, agents filtered from customer API**                                                                      |
@@ -684,7 +675,7 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 - `AftercareProtocolEditor` — Form for creating/editing aftercare protocols with step management (Prompt 1D)
 - `AftercareEnrollmentCard` — Enrollment summary with progress bar and message timeline (Prompt 1D)
 - `AftercarePortalView` — Customer-facing aftercare timeline with step progress (Prompt 1D)
-- `CustomerJourneyBoard` — Horizontal journey visualization with stage timeline, stats, vehicles, active deals (Prompt 2C)
+- `CustomerJourneyBoard` — Horizontal journey visualization with stage timeline and stats (Prompt 2C)
 
 ---
 
@@ -696,9 +687,9 @@ All nav route definitions live in `apps/web/src/lib/nav-config.ts` (single sourc
 
 | Mode | Primary Tools | Overflow Tools | Primary Insights | Overflow Insights | Primary AI | Overflow AI |
 |------|--------------|---------------|-----------------|-------------------|-----------|------------|
-| Admin | services, staff, invoices | packages, campaigns, automations, testimonials | dashboard, reports | monthly-review, roi | /ai | actions, agents, performance |
+| Admin | services, staff, invoices | campaigns, automations, testimonials | dashboard, reports | monthly-review, roi | /ai | actions, agents, performance |
 | Agent | services | — | dashboard, reports | — | — | — |
-| Provider | services, service-board | — | dashboard | — | — | — |
+| Provider | services | — | dashboard | — | — | — |
 
 **Mobile tab bar** — mode + role aware, max 4 link tabs + "More" button:
 - Admin/Agent: Inbox, Calendar, Customers, Home
@@ -786,16 +777,13 @@ Pull request → lint-and-test → docker-build + e2e-test (no deploy, no smoke 
 
 Multiple scripts, all idempotent:
 
-**`packages/db/src/seed.ts`** — Base data (seeds all three verticals):
+**`packages/db/src/seed.ts`** — Base data (aesthetic vertical):
 
 - Glow Aesthetic Clinic (aesthetic pack): 3 staff, 5 services, 4 customers, 7 templates, conversations, bookings, reminders, ROI baseline
-- Metro Auto Group (dealership pack): 7 staff, 5 services, 4 locations, 10 resources, 2 customers, 5 templates
-- Serenity Wellness Spa (wellness pack): 3 staff, 6 services (called from seedWellness())
 
 **`packages/db/src/seed-demo.ts`** — Rich demo data:
 
 - Clinic: 20 customers, 36 bookings, 8 conversations, 6 waitlist entries, 3 campaigns, 3 automation rules, 5 payments, 7 action cards, 6 action history, 3 autonomy configs, 2 outbound drafts
-- Dealership: 15 customers, 25 bookings with kanban statuses, 3 quotes, 4 conversations, 2 automation rules
 
 **`packages/db/src/seed-agentic.ts`** — One-time agentic data fill (used for production):
 
@@ -810,19 +798,9 @@ Multiple scripts, all idempotent:
 
 **`packages/db/src/seed-console-showcase.ts`** — Console showcase data:
 
-- Creates 6 diverse businesses with varied health states (green/yellow/red), plans (basic/pro), billing statuses (active/past_due/canceled), verticals (general/aesthetic/wellness), and timezones
+- Creates 6 diverse businesses with varied health states (green/yellow/red), plans (basic/pro), billing statuses (active/past_due/canceled), verticals (general/aesthetic), and timezones
 - Each business gets staff, customers, services, bookings, conversations, subscriptions
-- Zen Wellness Spa uses `wellness` vertical pack
 - Used to populate the Business Directory with realistic data for demos
-
-**`packages/db/src/seed-wellness.ts`** — Wellness pack showcase data (also called from `seed.ts`):
-
-- Serenity Wellness Spa (verticalPack: `wellness`, plan: `pro`)
-- 3 staff (Maya Chen ADMIN, Jordan Rivera + Aisha Patel SERVICE_PROVIDER)
-- 6 services matching wellness pack defaults
-- 5 customers with full wellness intake data (health goals, fitness levels, injuries, allergies, memberships)
-- 15 bookings spread across recent weeks
-- Automatically seeded via `seed.ts`, or run standalone: `npx tsx packages/db/src/seed-wellness.ts`
 
 **`packages/db/src/seed-content.ts`** — Content pillar seed data:
 
@@ -919,8 +897,8 @@ Fixed 7 critical integration gaps between the AI pipeline, messaging infrastruct
 | ------------------------------ | ------------------------------------------------------------------------------------------ |
 | **Benchmarking & Coaching**    | Anonymized peer benchmarks by vertical + region, "what top performers do" recommendations  |
 | **Omnichannel Inbox**          | WhatsApp, Instagram DM, Facebook Messenger, SMS, Email, Web Chat — ALL 6 CHANNELS COMPLETE |
-| **Vertical Packs Marketplace** | Partner portal, revenue share, certification program                                       |
-| **Customer Mini-Portal**       | Booking management, receipts, memberships, referrals                                       |
+| **Vertical Packs Marketplace** | Partner portal, revenue share                                                              |
+| **Customer Mini-Portal**       | Booking management, receipts, referrals                                                    |
 
 ### UX Improvements
 
@@ -1009,7 +987,7 @@ Fixed 7 critical integration gaps between the AI pipeline, messaging infrastruct
 - **E3: AI Command Center** — COMPLETE. Expanded existing AI page into full command center with 4 route-based tab sub-pages. Layout (`layout.tsx`): horizontal tab navigation (Overview/Agents/Actions/Performance) using Next.js `Link` + `usePathname` for active state. Overview (`/ai`): core agent dashboard, AI activity feed, autonomy levels, marketing agents summary grid (12 agents with status indicators). Agents page (`/ai/agents`): core agents grid with status toggles (calls `/agents/config/:type`), "Run Now" trigger, expandable run history (last 10 runs with status/duration/cards); marketing agents grid with status badges and schedule info. Actions page (`/ai/actions`): pending action cards from `/action-cards` API grouped by 4 categories (Urgent/red, Needs Approval/amber, Opportunity/sage, Hygiene/slate), each with approve/dismiss/snooze buttons, confidence scores, checkbox selection, bulk action bar ("Approve All"/"Dismiss All"), empty state with lavender Sparkles, pagination. Performance page (`/ai/performance`): Recharts visualizations — success rate LineChart (30 days, sage line), cards created/approved/dismissed stacked AreaChart, agent comparison horizontal BarChart; staff feedback summary table (helpful/not helpful/percent); KPI cards (total runs, successful, failed, success rate); date range selector (7/30/90 days); graceful mock data fallback. 31 tests (6 layout + 8 agents + 11 actions + 7 performance). Navigation already configured in mode-config.ts and shell.tsx.
 - **E4: UX Polish Batches** — COMPLETE. Three UX improvement batches: Batch 5 (Client Profile Redesign): enlarged avatar (w-16 h-16), unified activity feed interleaving bookings/conversations/notes chronologically with typed icons (Calendar/MessageSquare/StickyNote), "Add Note" quick action button, narrowed layout to max-w-3xl, inline note input card, removed tab-based layout. Batch 6 (Inbox Simplification): restyled filter chips (active: sage-100/sage-800, inactive: white border), chip bar with gap-2 px-4 py-3 border-slate-100, info sidebar collapse toggle with `infoSidebarOpen` state. Batch 8 (Mobile): modal-content bottom sheet CSS for mobile modals. Customer list: search input restyled (bg-slate-50 border-0), ChevronUp/ChevronDown sort icons replacing text arrows, 3 new sortable columns (Last Visit, Total Spent, Bookings), improved empty state with "Import CSV" + "Add Manually" dual CTAs. 207 tests pass across 11 suites.
 - **E5: Scheduled Messages & Bulk Inbox Actions** — COMPLETE. Prisma schema: `scheduledFor DateTime?` and `scheduledJobId String?` on Message model (migration 44). Message scheduling via BullMQ delayed jobs: `message.service.ts` creates message with `deliveryStatus: 'SCHEDULED'`, adds delayed job to MESSAGING queue, stores jobId for cancellation. 3 message endpoints: POST (send with optional `scheduledFor`), GET scheduled, DELETE cancel (removes BullMQ job + sets CANCELLED). 4 bulk conversation endpoints: POST `bulk-close` (updateMany to RESOLVED), POST `bulk-assign` (validates staff, updateMany assignedToId), POST `bulk-tag` (appends tag if not present), POST `bulk-read` (marks inbound messages readAt). All bulk ops validate max 50 items. Frontend: enhanced `scheduled-message.tsx` with 5 quick presets (1h, 3h, tomorrow 9AM/12PM, Monday 9AM) and 15-min interval time picker (96 options). Inbox page: ScheduledMessage component integrated in composer area, `scheduledFor` state flows through sendMessage API call, amber scheduled messages indicator panel with cancel buttons, bulk action bar updated to use efficient single-request API endpoints, inline tag input for bulk tagging. 113 tests (25 message service + 52 conversation service + 10 scheduled-message component + 15 inbox page + 11 inbox integration).
-- **E1: Wellness Vertical Pack** — COMPLETE. New `wellness.pack.ts` definition with 7 customer intake fields (healthGoals [required], fitnessLevel [select/4], injuries, medications, allergies, preferredModality [select/6], membershipType [select/4]), 2 booking fields (sessionNotes, pressureLevel), 6 default services (Initial Wellness Consultation [free CONSULT], Swedish Massage [$90], Deep Tissue Massage [$110], Yoga Private Session [$75], Personal Training [$80], Nutrition Coaching [$65 CONSULT]), 9 default templates (24h Reminder, Session Confirmation, Post-Session Follow-up, Progress Check-in, Wellness Tip, Membership Renewal, Cancellation, Reschedule Link, Cancel Link), packConfig (trackProgress, membershipEnabled, intakeFormRequired). `WELLNESS` added to VerticalPack enum. 3 frontend components: `WellnessIntakeCard` (7-field intake form with medical alert indicator, edit/save mode, completion badge), `PackageTracker` (session package progress bar with expiry warning, percentage display), `MembershipBadge` (4 tier styles: VIP/amber Crown, Annual/sage Star, Monthly/lavender Zap, Drop-in/slate User). Setup page updated with "Wellness & Spa" option (Stethoscope icon). Mode-config labels added (Studio Manager/Front Desk/Practitioner). Seed data: `seed-wellness.ts` (Serenity Wellness Spa with 3 staff, 6 services, 5 customers with intake data, 15 bookings), console showcase Zen Wellness Spa updated to wellness pack. en.json + es.json locale strings. 62 new tests (34 backend pack + 13 intake card + 8 package tracker + 7 membership badge).
+- **E1: Wellness Vertical Pack** — ARCHIVED (vertical removed).
 
 ### Polish Sprint: Critical Bug Fixes, Feature Activation, Missing Pages, New Features — ALL COMPLETE
 
@@ -1072,11 +1050,11 @@ Fixed 7 critical integration gaps between the AI pipeline, messaging infrastruct
 - **BUG-001: P2010 Raw Query Fix** — COMPLETE (March 2026). Raw SQL `FOR UPDATE` lock queries used Prisma model names instead of `@@map` PostgreSQL table names, causing P2010 on every public portal booking. Fixed 4 raw queries across booking/billing/self-serve services. Hardened global exception filter to never expose Prisma error codes to users.
 - **BUG-002: /patients → /customers Redirect** — COMPLETE (March 2026). Added permanent 301 redirects in next.config.js for `/patients` and `/patients/:path*` to `/customers` equivalents. Preserves bookmarked/external links after the rename.
 - **QA Bug Fix Sprint (10 bugs)** — COMPLETE (March 2026). 10 bugs fixed across seed data, auth, dashboard, inbox, settings, services, routing, and integrations:
-  - BUG-010 (Critical): Wellness seed integrated into main seed.ts (was standalone-only)
+  - BUG-010 (Critical): Seed data consolidated into main seed.ts
   - BUG-001 (Critical): Booking dedup in API findAll() + idempotent seed-demo.ts book() function
   - BUG-003 (Critical): Middleware checks both access_token AND refresh_token before redirecting to /login
-  - BUG-007 (High): Dashboard "Consult → Treatment" metric now vertical-aware (dealership: "Quote → Service", wellness: "Booking → Session")
-  - BUG-009 (High): Intake card heading now vertical-aware via usePack() (aesthetic: "CLINIC INTAKE", dealership: "VEHICLE INTAKE", wellness: "CLIENT INTAKE")
+  - BUG-007 (High): Dashboard "Consult → Treatment" metric now vertical-aware
+  - BUG-009 (High): Intake card heading now vertical-aware via usePack() (aesthetic: "CLINIC INTAKE")
   - BUG-006 (Medium): Settings account card title aligned with page content
   - BUG-002 (Medium): Service category normalization ("Injectable" → "Injectables")
   - BUG-005 (Medium): Settings hub card labels updated (Account & Import, Calendar & Templates, Notifications, Branding)
@@ -1125,7 +1103,7 @@ Fixed 7 critical integration gaps between the AI pipeline, messaging infrastruct
 - Auto-flag detection: triggers on allergies, contraindications, bloodThinners, pregnant, breastfeeding → flagged=true + human-readable flagReason
 - Treatment booking gating: updateStatus checks for MedicalRecord before allowing CONFIRMED on TREATMENT services (inside existing $transaction)
 - 3 aesthetic components: MedicalHistoryForm (structured form with tag inputs, Fitzpatrick select, toggle switches, consent checkbox), MedicalAlertBanner (full/compact modes with flag reason + allergy/contraindication tags), MedicalHistoryDiff (side-by-side version comparison)
-- Integration: MedicalAlertBanner in booking detail modal + customer page, AlertTriangle icon on kanban cards for flagged customers
+- Integration: MedicalAlertBanner in booking detail modal + customer page, AlertTriangle icon for flagged customers
 - Portal intake enhanced with bloodThinners/pregnant/breastfeeding checkboxes
 - 20 tests (14 API + 6 web)
 
@@ -1165,65 +1143,15 @@ Fixed 7 critical integration gaps between the AI pipeline, messaging infrastruct
 - Integration: customer detail aftercare section, portal dashboard active aftercare
 - 53 tests (31 API + 22 web)
 
-### Prompt 2A: Vehicle Inventory Management — COMPLETE
+### Prompt 2A: Vehicle Inventory Management — ARCHIVED (vertical removed)
 
-- Vehicle + TestDrive + TestDriveBooking Prisma models (76th-78th models, migration 56): VIN tracking, stock numbers, 6 vehicle statuses, test drive scheduling
-- vehicle API module (64th module): full CRUD + search/filter, test-drive scheduling (book, complete, cancel, no-show), stats endpoint
-- 4 web pages: /inventory (searchable grid with filters), /inventory/[id] (detail with photo gallery + test drives), /inventory/new (form), /inventory/[id]/edit (form)
-- TestDriveCard component, VehicleStatusBadge, design tokens: VEHICLE_STATUS_STYLES + VEHICLE_CONDITION_STYLES
-- Customer detail integration: vehicles of interest section for dealership vertical
-- 48 tests (26 API + 22 web)
+### Prompt 2B: Sales Pipeline & Deal Tracking — ARCHIVED (vertical removed)
 
-### Prompt 2B: Sales Pipeline & Deal Tracking — COMPLETE
+### Prompt 2C: Customer Journey Enhancement — ARCHIVED (vertical removed)
 
-- Deal + DealActivity + DealStageHistory Prisma models (79th-80th models, migration 57): 7-stage pipeline (INQUIRY→QUALIFIED→TEST_DRIVE→NEGOTIATION→FINANCE→CLOSED_WON→CLOSED_LOST), activity logging, stage change tracking
-- deal API module (65th module): CRUD, stage transitions with history, activities, pipeline stats, assignment
-- 2 web pages: /pipeline (Kanban board with drag-drop, staff filter, stats), /pipeline/[id] (deal detail with stage progress, activities, stage history, sidebar)
-- PipelineStats component (weighted value, win rate, cycle time, active deals)
-- Design tokens: DEAL_STAGE_STYLES + dealStageBadgeClasses()
-- 72 tests (41 API + 31 web)
+### Prompt 3A: Treatment Package & Session Tracking System — ARCHIVED (vertical removed)
 
-### Prompt 2C: Customer Journey Enhancement — COMPLETE
-
-- Enhanced customer.service.ts getTimeline() with testDrive events (type: 'testDrive', vehicle label, status, feedback)
-- New GET /customers/:id/journey endpoint: structured journey data with deals (stageHistory + activities), testDrives, vehiclesOfInterest (deduplicated), firstContact, engagement score stats
-- CustomerJourneyBoard component: horizontal stage timeline, stats row (engagement/visits/test drives/active deals), vehicles of interest chips, active deals list with stage badges
-- Customer detail page enhanced: journey board for dealership vertical, replaced quotes section with active deals + vehicles of interest
-- AI vertical-action-handler enhanced: deal-aware SALES_INQUIRY (DEAL_UPDATE for open deals, TEST_DRIVE_FOLLOWUP for test drives without deals, SALES_LEAD fallback), checkStalledDeals (7+ day detection)
-- 34 tests (28 API + 6 web)
-
-### Prompt 3A: Treatment Package & Session Tracking System — COMPLETE
-
-- ServicePackage + PackagePurchase + PackageRedemption Prisma models (@@map: "service_packages", "package_purchases", "package_redemptions"), migration 58
-- PackageModule (67th API module): 11 endpoints (CRUD, purchase, list-purchases, purchase-detail, redeem, customer-active, stats)
-- Wellness vertical gating: all operations validate business.verticalPack === 'wellness'
-- Purchase flow: creates PackagePurchase with copied totalSessions, computed expiresAt (now + validityDays), optional Payment record
-- Redeem flow: transactional with row locking, validates status=ACTIVE + not expired + sessions available + service compatibility, auto-transitions to EXHAUSTED
-- Unredeeem on cancel: BookingService calls packageService.unredeemOnCancel() when booking is CANCELLED, restores session and reactivates EXHAUSTED packages
-- Daily @Cron: checkExpiredPackages marks ACTIVE purchases past expiresAt as EXPIRED
-- Portal: GET /portal/packages endpoint, portal dashboard "Your Session Packages" section with progress bars
-- Admin page: /packages with stats cards, packages/purchases tabs, create/edit/delete modals, sell-to-customer flow
-- Updated PackageTracker: fetches real data from API via customerId prop, falls back to static props
-- New components: PackagePurchaseModal (sell package to customer), PackageRedeemSelector (shown during booking, select session vs full price)
-- Design tokens: PACKAGE_STATUS_STYLES + packageBadgeClasses()
-- Sidebar nav: /packages under Tools section
-- 66 tests (38 API + 28 web)
-
-### Prompt 3C: Enhanced Practitioner Scheduling — COMPLETE
-
-- StaffCertification + RecurringClass Prisma models (@@map: "staff_certifications", "recurring_classes"), migration 59
-- Service model additions: requiredResourceType, maxParticipants (@default(1)), requiresCertification
-- RecurringClassModule (68th API module): CRUD, GET /recurring-classes/schedule?week=YYYY-WNN, POST /:id/enroll, daily @Cron generation
-- Availability service enhancements:
-  - Certification filtering: if service.requiresCertification set, only shows staff with valid (non-expired) certification
-  - Resource auto-filtering: if service.requiredResourceType set, auto-finds matching resource, returns resourceId/resourceName in slot
-  - Group class support: services with maxParticipants > 1 return spotsRemaining instead of boolean availability
-- Staff controller: GET/POST/DELETE /:id/certifications endpoints
-- Dashboard: GET /dashboard/certification-alerts (30-day expiring + expired certs for wellness businesses)
-- Portal: GET /portal/class-schedule, GET /portal/practitioners, dashboard "Upcoming Classes" section
-- Web components: PractitionerProfile (staff card with services, certs, weekly availability), ClassSchedule (weekly timetable with enrollment counts + Book buttons), CertificationManager (add/edit/remove with expiry tracking)
-- Wellness component barrel export updated
-- 48 new tests (25 API + 23 web)
+### Prompt 3C: Enhanced Practitioner Scheduling — ARCHIVED (vertical removed)
 
 ### Omnichannel Messaging — Phases 0-5 + Gap Fix — COMPLETE
 
@@ -1242,7 +1170,7 @@ Fixed 7 critical integration gaps between the AI pipeline, messaging infrastruct
 
 ### Do Not Build (Yet)
 
-- Don't chase additional verticals beyond the current 4 (aesthetic, dealership, wellness, general) before ROI is repeatable
+- Don't chase additional verticals beyond aesthetic and general before ROI is repeatable
 - Don't overinvest in generic AI chatbot; keep AI tied to structured flows
 - Don't build deep enterprise features before pack-led implementation is nailed
 

@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ForbiddenException, BadRequestException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ReferralService } from './referral.service';
 import { CreditService } from './credit.service';
@@ -62,38 +62,6 @@ describe('ReferralService', () => {
     service = module.get<ReferralService>(ReferralService);
   });
 
-  describe('assertReferralVertical', () => {
-    it('should allow AESTHETIC vertical', async () => {
-      mockPrisma.business.findUnique.mockResolvedValue({ verticalPack: 'AESTHETIC' });
-      mockPrisma.customer.findFirst.mockResolvedValue({ referralCode: 'ABC123' });
-
-      await expect(service.getOrCreateReferralCode('cust-1', 'biz-1')).resolves.toBe('ABC123');
-    });
-
-    it('should allow WELLNESS vertical', async () => {
-      mockPrisma.business.findUnique.mockResolvedValue({ verticalPack: 'WELLNESS' });
-      mockPrisma.customer.findFirst.mockResolvedValue({ referralCode: 'XYZ789' });
-
-      await expect(service.getOrCreateReferralCode('cust-1', 'biz-1')).resolves.toBe('XYZ789');
-    });
-
-    it('should throw ForbiddenException for DEALERSHIP vertical', async () => {
-      mockPrisma.business.findUnique.mockResolvedValue({ verticalPack: 'DEALERSHIP' });
-
-      await expect(service.getOrCreateReferralCode('cust-1', 'biz-1')).rejects.toThrow(
-        ForbiddenException,
-      );
-    });
-
-    it('should throw ForbiddenException for GENERAL vertical', async () => {
-      mockPrisma.business.findUnique.mockResolvedValue({ verticalPack: 'GENERAL' });
-
-      await expect(service.getOrCreateReferralCode('cust-1', 'biz-1')).rejects.toThrow(
-        ForbiddenException,
-      );
-    });
-  });
-
   describe('getOrCreateReferralCode', () => {
     it('should return existing code if customer already has one', async () => {
       mockPrisma.business.findUnique.mockResolvedValue({ verticalPack: 'AESTHETIC' });
@@ -126,9 +94,7 @@ describe('ReferralService', () => {
 
   describe('getReferralLink', () => {
     it('should return correct format', async () => {
-      mockPrisma.business.findUnique
-        .mockResolvedValueOnce({ verticalPack: 'AESTHETIC' })
-        .mockResolvedValueOnce({ slug: 'glow-clinic' });
+      mockPrisma.business.findUnique.mockResolvedValue({ slug: 'glow-clinic' });
       mockPrisma.customer.findFirst.mockResolvedValue({ referralCode: 'ABC123' });
 
       const link = await service.getReferralLink('cust-1', 'biz-1');
@@ -314,7 +280,7 @@ describe('ReferralService', () => {
   describe('getReferralSettings', () => {
     it('should return defaults when no packConfig', async () => {
       mockPrisma.business.findUnique.mockResolvedValue({
-        verticalPack: 'WELLNESS',
+        verticalPack: 'AESTHETIC',
         packConfig: {},
       });
 
@@ -382,14 +348,8 @@ describe('ReferralService', () => {
 
   describe('getCustomerReferralInfo', () => {
     it('should return customer referral data', async () => {
-      // assertReferralVertical (from getCustomerReferralInfo)
-      // then getOrCreateReferralCode calls assertReferralVertical again
-      // then getReferralLink calls getOrCreateReferralCode (assertReferralVertical again) + business.findUnique for slug
-      mockPrisma.business.findUnique
-        .mockResolvedValueOnce({ verticalPack: 'AESTHETIC' }) // getCustomerReferralInfo -> assertReferralVertical
-        .mockResolvedValueOnce({ verticalPack: 'AESTHETIC' }) // getOrCreateReferralCode -> assertReferralVertical
-        .mockResolvedValueOnce({ verticalPack: 'AESTHETIC' }) // getReferralLink -> getOrCreateReferralCode -> assertReferralVertical
-        .mockResolvedValueOnce({ slug: 'glow-clinic' }); // getReferralLink -> business slug lookup
+      // getReferralLink calls business.findUnique for slug
+      mockPrisma.business.findUnique.mockResolvedValue({ slug: 'glow-clinic' });
       mockPrisma.customer.findFirst.mockResolvedValue({ referralCode: 'CODE1' });
       mockPrisma.customerReferral.findMany.mockResolvedValue([]);
       mockPrisma.customerCredit.aggregate.mockResolvedValue({ _sum: { amount: 50 } });

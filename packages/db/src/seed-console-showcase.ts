@@ -48,28 +48,9 @@ async function main() {
   }
 
   // ── 2. Showcase Businesses ──
-  // Skip existing businesses (Glow Aesthetic, Metro Auto already exist)
+  // Skip existing businesses (Glow Aesthetic already exists)
 
   const businesses = [
-    {
-      slug: 'zen-wellness-spa',
-      name: 'Zen Wellness Spa',
-      phone: '+14155550201',
-      timezone: 'America/New_York',
-      verticalPack: 'wellness',
-      plan: 'pro',
-      billingStatus: 'active',
-      staffCount: 4,
-      customerCount: 85,
-      bookingDays: { recent7d: 18, recent30d: 62 },
-      services: [
-        'Swedish Massage',
-        'Deep Tissue Massage',
-        'Hot Stone Therapy',
-        'Aromatherapy',
-        'Couples Massage',
-      ],
-    },
     {
       slug: 'bright-smile-dental',
       name: 'Bright Smile Dental',
@@ -426,7 +407,7 @@ async function main() {
 
   // ── 3. Add subscriptions to existing businesses if missing ──
   const existingBusinesses = await prisma.business.findMany({
-    where: { slug: { in: ['glow-aesthetic', 'metro-auto-group'] } },
+    where: { slug: { in: ['glow-aesthetic'] } },
     include: { subscription: true },
   });
 
@@ -450,8 +431,8 @@ async function main() {
   console.log('\nLogin credentials:');
   console.log('  Super Admin: admin@businesscommandcentre.com / superadmin123');
   console.log('\nExpected Console experience:');
-  console.log('  - 8+ businesses in directory (2 existing + 6 new)');
-  console.log('  - Health: green (Zen, Bright Smile, Elite, Luxe), yellow (Paws), red (Harmony)');
+  console.log('  - 6+ businesses in directory (1 existing + 5 new)');
+  console.log('  - Health: green (Bright Smile, Elite, Luxe), yellow (Paws), red (Harmony)');
   console.log('  - Plans: mix of basic and pro');
   console.log('  - Billing: active, past_due, canceled');
   console.log('  - View-as: try any business to see their tenant UI');

@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     'AI automation',
     'client messaging',
     'service business',
-    'salon booking',
+    'med spa software',
     'practice management',
   ],
   authors: [{ name: 'Booking OS' }],

@@ -162,14 +162,6 @@ export class UpdateBookingStatusDto {
   reason?: string;
 }
 
-export class UpdateKanbanStatusDto {
-  @IsEnum(['CHECKED_IN', 'DIAGNOSING', 'AWAITING_APPROVAL', 'IN_PROGRESS', 'READY_FOR_PICKUP'], {
-    message:
-      'kanbanStatus must be one of: CHECKED_IN, DIAGNOSING, AWAITING_APPROVAL, IN_PROGRESS, READY_FOR_PICKUP',
-  })
-  kanbanStatus!: string;
-}
-
 export class BookingQueryDto {
   @IsOptional()
   @IsString()
