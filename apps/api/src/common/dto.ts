@@ -1057,6 +1057,12 @@ export class CreateCampaignDto {
   @IsOptional()
   channel?: string;
 
+  @IsInt()
+  @Min(1)
+  @Max(60)
+  @IsOptional()
+  throttlePerMinute?: number;
+
   @IsIn(['READ_RATE', 'BOOKING_RATE'])
   @IsOptional()
   winnerMetric?: string;
@@ -1104,6 +1110,12 @@ export class UpdateCampaignDto {
   @IsArray()
   @IsOptional()
   variants?: any[];
+
+  @IsInt()
+  @Min(1)
+  @Max(60)
+  @IsOptional()
+  throttlePerMinute?: number;
 
   @IsIn(['READ_RATE', 'BOOKING_RATE'])
   @IsOptional()

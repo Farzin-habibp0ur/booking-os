@@ -21,6 +21,7 @@ export class CampaignService {
       isABTest?: boolean;
       variants?: any[];
       channel?: string;
+      throttlePerMinute?: number;
       winnerMetric?: string;
       testDurationMinutes?: number;
       testAudiencePercent?: number;
@@ -57,6 +58,7 @@ export class CampaignService {
         isABTest: data.isABTest || false,
         variants: data.isABTest && data.variants ? data.variants : [],
         channel: data.channel || 'WHATSAPP',
+        throttlePerMinute: data.throttlePerMinute || 10,
         winnerMetric: data.isABTest && data.winnerMetric ? data.winnerMetric : null,
         testDurationMinutes:
           data.isABTest && data.winnerMetric ? data.testDurationMinutes || null : null,
