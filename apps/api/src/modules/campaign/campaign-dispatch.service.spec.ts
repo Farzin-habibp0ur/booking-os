@@ -690,15 +690,19 @@ describe('CampaignDispatchService', () => {
 
   describe('processCampaign quiet hours', () => {
     it('skips dispatch during quiet hours', async () => {
+      // Mock Date.now to a known time (10:00 UTC)
+      const mockDate = new Date('2026-04-05T10:00:00Z');
+      jest.useFakeTimers({ now: mockDate });
+
       prisma.campaign.findMany.mockResolvedValue([
         { id: 'camp1', businessId: 'biz1', throttlePerMinute: 10 },
       ] as any);
       prisma.campaign.findUnique.mockResolvedValue({ status: 'SENDING' } as any);
-      // Business has quiet hours covering current time
+      // Quiet hours 09:00-11:00 UTC covers the mocked time of 10:00
       prisma.business.findUnique.mockResolvedValue({
         name: 'Test Biz',
         campaignPreferences: {
-          quietHours: { start: '00:00', end: '23:59', timezone: 'UTC' },
+          quietHours: { start: '09:00', end: '11:00', timezone: 'UTC' },
         },
       } as any);
 
@@ -706,6 +710,8 @@ describe('CampaignDispatchService', () => {
 
       // Should not query for pending sends
       expect(prisma.campaignSend.findMany).not.toHaveBeenCalled();
+
+      jest.useRealTimers();
     });
 
     it('proceeds when outside quiet hours', async () => {
