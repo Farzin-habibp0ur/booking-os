@@ -92,7 +92,7 @@ describe('CampaignFilterBuilder', () => {
       render(<CampaignFilterBuilder filters={{}} onChange={mockOnChange} />);
     });
 
-    expect(screen.getByText('Audience Filters')).toBeInTheDocument();
+    expect(screen.getByText('campaigns.filter_builder.audience_filters')).toBeInTheDocument();
   });
 
   it('renders Add Filter button', async () => {
@@ -101,7 +101,7 @@ describe('CampaignFilterBuilder', () => {
     });
 
     expect(screen.getByTestId('add-rule-btn')).toBeInTheDocument();
-    expect(screen.getByText('Add Filter')).toBeInTheDocument();
+    expect(screen.getByText('campaigns.filter_builder.add_filter')).toBeInTheDocument();
   });
 
   it('adds a filter rule when Add Filter is clicked', async () => {
@@ -250,7 +250,7 @@ describe('CampaignFilterBuilder', () => {
     });
 
     expect(screen.getByTestId('segment-dropdown')).toBeInTheDocument();
-    expect(screen.getByText('No saved segments')).toBeInTheDocument();
+    expect(screen.getByText('campaigns.filter_builder.no_saved_segments')).toBeInTheDocument();
   });
 
   it('loads segments from API and displays in dropdown', async () => {

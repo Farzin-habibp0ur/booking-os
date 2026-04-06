@@ -176,6 +176,37 @@ export class BusinessService {
     });
   }
 
+  async getCampaignPreferences(id: string) {
+    const business = await this.prisma.business.findUnique({ where: { id } });
+    if (!business) return null;
+    const defaults = {
+      frequencyCap: null as { max: number; period: string } | null,
+      quietHours: null as { start: string; end: string; timezone: string } | null,
+    };
+    const raw = business.campaignPreferences || {};
+    return { ...defaults, ...(typeof raw === 'object' ? raw : {}) };
+  }
+
+  async updateCampaignPreferences(
+    id: string,
+    settings: {
+      frequencyCap?: { max: number; period: string } | null;
+      quietHours?: { start: string; end: string; timezone: string } | null;
+    },
+  ) {
+    const business = await this.prisma.business.findUnique({ where: { id } });
+    if (!business) return null;
+    const current =
+      typeof business.campaignPreferences === 'object' && business.campaignPreferences
+        ? (business.campaignPreferences as any)
+        : {};
+    const merged = { ...current, ...settings };
+    return this.prisma.business.update({
+      where: { id },
+      data: { campaignPreferences: merged },
+    });
+  }
+
   async getCalendarHours(id: string) {
     const business = await this.prisma.business.findUnique({ where: { id } });
     if (!business) return null;

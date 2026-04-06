@@ -3,20 +3,33 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
+import { useI18n } from '@/lib/i18n';
 import { Plus, Trash2, Save, FolderOpen, Users } from 'lucide-react';
 
 // P-16: Available filter fields and their compatible operators
 const FILTER_FIELDS = [
-  { key: 'tags', label: 'Tags', type: 'text' },
-  { key: 'lastVisitDaysAgo', label: 'Last Visit (days ago)', type: 'number' },
-  { key: 'bookingCountGte', label: 'Total Bookings (min)', type: 'number' },
-  { key: 'bookingCountLte', label: 'Total Bookings (max)', type: 'number' },
-  { key: 'createdAfter', label: 'Created After', type: 'date' },
-  { key: 'createdBefore', label: 'Created Before', type: 'date' },
-  { key: 'spentMoreThan', label: 'Total Spent (more than)', type: 'number' },
-  { key: 'spentLessThan', label: 'Total Spent (less than)', type: 'number' },
-  { key: 'noUpcomingBooking', label: 'No Upcoming Booking', type: 'boolean' },
-  { key: 'excludeDoNotMessage', label: 'Exclude Do-Not-Message', type: 'boolean' },
+  { key: 'tags', labelKey: 'campaigns.filter_builder.tags', type: 'text' },
+  { key: 'lastVisitDaysAgo', labelKey: 'campaigns.filter_builder.last_visit', type: 'number' },
+  {
+    key: 'bookingCountGte',
+    labelKey: 'campaigns.filter_builder.booking_count_min',
+    type: 'number',
+  },
+  {
+    key: 'bookingCountLte',
+    labelKey: 'campaigns.filter_builder.booking_count_max',
+    type: 'number',
+  },
+  { key: 'createdAfter', labelKey: 'campaigns.filter_builder.created_after', type: 'date' },
+  { key: 'createdBefore', labelKey: 'campaigns.filter_builder.created_before', type: 'date' },
+  { key: 'spentMoreThan', labelKey: 'campaigns.filter_builder.spent_more', type: 'number' },
+  { key: 'spentLessThan', labelKey: 'campaigns.filter_builder.spent_less', type: 'number' },
+  {
+    key: 'noUpcomingBooking',
+    labelKey: 'campaigns.filter_builder.no_upcoming_booking',
+    type: 'boolean',
+  },
+  { key: 'excludeDoNotMessage', labelKey: 'campaigns.filter_builder.exclude_dnd', type: 'boolean' },
 ] as const;
 
 export interface FilterRule {
@@ -37,6 +50,7 @@ interface CampaignFilterBuilderProps {
 }
 
 export default function CampaignFilterBuilder({ filters, onChange }: CampaignFilterBuilderProps) {
+  const { t } = useI18n();
   const [rules, setRules] = useState<FilterRule[]>(() => filtersToRules(filters));
   const [previewCount, setPreviewCount] = useState<number | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
@@ -165,7 +179,9 @@ export default function CampaignFilterBuilder({ filters, onChange }: CampaignFil
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-slate-900">Audience Filters</h3>
+        <h3 className="text-sm font-semibold text-slate-900">
+          {t('campaigns.filter_builder.audience_filters')}
+        </h3>
         <div className="flex items-center gap-2">
           {/* Live preview badge */}
           <div
@@ -191,10 +207,10 @@ export default function CampaignFilterBuilder({ filters, onChange }: CampaignFil
               className="flex-1 text-sm bg-slate-50 border-transparent rounded-xl px-3 py-2 focus:bg-white focus:ring-2 focus:ring-sage-500"
               aria-label="Filter field"
             >
-              <option value="">Select field...</option>
+              <option value="">{t('campaigns.filter_builder.select_field')}</option>
               {FILTER_FIELDS.map((f) => (
                 <option key={f.key} value={f.key}>
-                  {f.label}
+                  {t(f.labelKey)}
                 </option>
               ))}
             </select>
@@ -206,8 +222,8 @@ export default function CampaignFilterBuilder({ filters, onChange }: CampaignFil
                 className="flex-1 text-sm bg-slate-50 border-transparent rounded-xl px-3 py-2 focus:bg-white focus:ring-2 focus:ring-sage-500"
                 aria-label="Filter value"
               >
-                <option value="true">Yes</option>
-                <option value="false">No</option>
+                <option value="true">{t('common.yes')}</option>
+                <option value="false">{t('common.no')}</option>
               </select>
             ) : (
               <input
@@ -251,7 +267,7 @@ export default function CampaignFilterBuilder({ filters, onChange }: CampaignFil
           data-testid="add-rule-btn"
         >
           <Plus size={12} />
-          Add Filter
+          {t('campaigns.filter_builder.add_filter')}
         </button>
 
         <button
@@ -260,7 +276,7 @@ export default function CampaignFilterBuilder({ filters, onChange }: CampaignFil
           data-testid="save-segment-btn"
         >
           <Save size={12} />
-          Save as Segment
+          {t('campaigns.filter_builder.save_as_segment')}
         </button>
 
         <div className="relative">
@@ -270,7 +286,7 @@ export default function CampaignFilterBuilder({ filters, onChange }: CampaignFil
             data-testid="load-segment-btn"
           >
             <FolderOpen size={12} />
-            Load Segment
+            {t('campaigns.filter_builder.load_segment')}
           </button>
 
           {showLoadDropdown && (
@@ -279,7 +295,9 @@ export default function CampaignFilterBuilder({ filters, onChange }: CampaignFil
               data-testid="segment-dropdown"
             >
               {segments.length === 0 ? (
-                <p className="px-3 py-2 text-xs text-slate-400">No saved segments</p>
+                <p className="px-3 py-2 text-xs text-slate-400">
+                  {t('campaigns.filter_builder.no_saved_segments')}
+                </p>
               ) : (
                 segments.map((seg) => (
                   <button
@@ -303,11 +321,13 @@ export default function CampaignFilterBuilder({ filters, onChange }: CampaignFil
           data-testid="save-segment-modal"
         >
           <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm mx-4">
-            <h3 className="text-sm font-semibold text-slate-900 mb-3">Save as Segment</h3>
+            <h3 className="text-sm font-semibold text-slate-900 mb-3">
+              {t('campaigns.filter_builder.save_as_segment')}
+            </h3>
             <input
               value={segmentName}
               onChange={(e) => setSegmentName(e.target.value)}
-              placeholder="Segment name"
+              placeholder={t('campaigns.filter_builder.segment_name')}
               className="w-full text-sm bg-slate-50 border-transparent rounded-xl px-3 py-2 focus:bg-white focus:ring-2 focus:ring-sage-500 mb-4"
               data-testid="segment-name-input"
               autoFocus
@@ -317,7 +337,7 @@ export default function CampaignFilterBuilder({ filters, onChange }: CampaignFil
                 onClick={() => setShowSaveModal(false)}
                 className="px-4 py-2 text-sm text-slate-600 hover:text-slate-800 transition-colors"
               >
-                Cancel
+                {t('common.cancel')}
               </button>
               <button
                 onClick={saveSegment}
@@ -330,7 +350,7 @@ export default function CampaignFilterBuilder({ filters, onChange }: CampaignFil
                 )}
                 data-testid="confirm-save-segment"
               >
-                Save
+                {t('common.save')}
               </button>
             </div>
           </div>

@@ -270,6 +270,142 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
+
+      {/* Campaign Preferences */}
+      {role === 'ADMIN' || role === 'OWNER' ? <CampaignPreferencesSection /> : null}
+    </div>
+  );
+}
+
+function CampaignPreferencesSection() {
+  const { t } = useI18n();
+  const [capEnabled, setCapEnabled] = useState(false);
+  const [capMax, setCapMax] = useState(3);
+  const [capPeriod, setCapPeriod] = useState('week');
+  const [quietEnabled, setQuietEnabled] = useState(false);
+  const [quietStart, setQuietStart] = useState('21:00');
+  const [quietEnd, setQuietEnd] = useState('08:00');
+  const [saving, setSaving] = useState(false);
+  const [prefsSaved, setPrefsSaved] = useState(false);
+
+  useEffect(() => {
+    api
+      .get<any>('/business/campaign-preferences')
+      .then((prefs) => {
+        if (prefs?.frequencyCap) {
+          setCapEnabled(true);
+          setCapMax(prefs.frequencyCap.max || 3);
+          setCapPeriod(prefs.frequencyCap.period || 'week');
+        }
+        if (prefs?.quietHours) {
+          setQuietEnabled(true);
+          setQuietStart(prefs.quietHours.start || '21:00');
+          setQuietEnd(prefs.quietHours.end || '08:00');
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await api.patch('/business/campaign-preferences', {
+        frequencyCap: capEnabled ? { max: capMax, period: capPeriod } : null,
+        quietHours: quietEnabled
+          ? {
+              start: quietStart,
+              end: quietEnd,
+              timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            }
+          : null,
+      });
+      setPrefsSaved(true);
+      setTimeout(() => setPrefsSaved(false), 2000);
+    } catch {
+      // ignore
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-2xl shadow-soft p-5 mt-6" data-testid="campaign-preferences">
+      <h2 className="text-sm font-semibold text-slate-900 mb-4">
+        {t('campaigns.guardrails.campaign_preferences')}
+      </h2>
+
+      {/* Frequency Cap */}
+      <div className="mb-4">
+        <label className="flex items-center gap-2 text-sm cursor-pointer">
+          <input
+            type="checkbox"
+            checked={capEnabled}
+            onChange={(e) => setCapEnabled(e.target.checked)}
+            className="rounded text-sage-600"
+          />
+          {t('campaigns.guardrails.cap_toggle')}
+        </label>
+        {capEnabled && (
+          <div className="flex items-center gap-2 mt-2 ml-6">
+            <span className="text-sm text-slate-500">{t('campaigns.guardrails.max_messages')}</span>
+            <input
+              type="number"
+              min={1}
+              max={50}
+              value={capMax}
+              onChange={(e) => setCapMax(Number(e.target.value))}
+              className="w-16 text-sm bg-slate-50 border-transparent rounded-xl px-2 py-1.5 focus:bg-white focus:ring-2 focus:ring-sage-500"
+            />
+            <select
+              value={capPeriod}
+              onChange={(e) => setCapPeriod(e.target.value)}
+              className="text-sm bg-slate-50 border-transparent rounded-xl px-2 py-1.5 focus:bg-white focus:ring-2 focus:ring-sage-500"
+            >
+              <option value="week">{t('campaigns.guardrails.per_week')}</option>
+              <option value="month">{t('campaigns.guardrails.per_month')}</option>
+            </select>
+          </div>
+        )}
+      </div>
+
+      {/* Quiet Hours */}
+      <div className="mb-4">
+        <label className="flex items-center gap-2 text-sm cursor-pointer">
+          <input
+            type="checkbox"
+            checked={quietEnabled}
+            onChange={(e) => setQuietEnabled(e.target.checked)}
+            className="rounded text-sage-600"
+          />
+          {t('campaigns.guardrails.quiet_toggle')}
+        </label>
+        {quietEnabled && (
+          <div className="flex items-center gap-2 mt-2 ml-6">
+            <span className="text-sm text-slate-500">{t('campaigns.guardrails.from')}</span>
+            <input
+              type="time"
+              value={quietStart}
+              onChange={(e) => setQuietStart(e.target.value)}
+              className="text-sm bg-slate-50 border-transparent rounded-xl px-2 py-1.5 focus:bg-white focus:ring-2 focus:ring-sage-500"
+            />
+            <span className="text-sm text-slate-500">{t('campaigns.guardrails.to')}</span>
+            <input
+              type="time"
+              value={quietEnd}
+              onChange={(e) => setQuietEnd(e.target.value)}
+              className="text-sm bg-slate-50 border-transparent rounded-xl px-2 py-1.5 focus:bg-white focus:ring-2 focus:ring-sage-500"
+            />
+          </div>
+        )}
+      </div>
+
+      <button
+        onClick={handleSave}
+        disabled={saving}
+        className="bg-sage-600 hover:bg-sage-700 text-white rounded-xl px-4 py-2 text-sm transition-colors disabled:opacity-50"
+      >
+        {prefsSaved ? t('common.saved') : saving ? t('common.saving') : t('common.save')}
+      </button>
     </div>
   );
 }

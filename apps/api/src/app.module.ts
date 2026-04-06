@@ -86,6 +86,7 @@ import { CustomerIdentityModule } from './modules/customer-identity/customer-ide
 import { CircuitBreakerModule } from './common/circuit-breaker';
 import { DeviceTokenModule } from './modules/device-token/device-token.module';
 import { PushNotificationModule } from './modules/push-notification/push-notification.module';
+import { TrackingModule } from './modules/tracking/tracking.module';
 
 @Module({
   imports: [
@@ -187,6 +188,7 @@ import { PushNotificationModule } from './modules/push-notification/push-notific
     CircuitBreakerModule,
     DeviceTokenModule,
     PushNotificationModule,
+    TrackingModule,
     process.env.REDIS_URL ? QueueModule.forRootWithRedis() : QueueModule.forRoot(),
     DistributedLockModule,
   ],

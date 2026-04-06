@@ -101,6 +101,8 @@ jest.mock('lucide-react', () => ({
   Plus: () => <div data-testid="plus-icon" />,
   Repeat: () => <div data-testid="repeat-icon" />,
   Copy: () => <div data-testid="copy-icon" />,
+  ChevronLeft: () => <div data-testid="chevron-left-icon" />,
+  ChevronRight: () => <div data-testid="chevron-right-icon" />,
 }));
 
 import { api } from '@/lib/api';
@@ -140,7 +142,7 @@ describe('CampaignsPage', () => {
     render(<CampaignsPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('Campaigns')).toBeInTheDocument();
+      expect(screen.getByText('campaigns.title')).toBeInTheDocument();
     });
   });
 
@@ -150,7 +152,7 @@ describe('CampaignsPage', () => {
     render(<CampaignsPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('New Campaign')).toBeInTheDocument();
+      expect(screen.getByText('campaigns.new_campaign')).toBeInTheDocument();
     });
   });
 
@@ -161,11 +163,11 @@ describe('CampaignsPage', () => {
     render(<CampaignsPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('New Campaign')).toBeInTheDocument();
+      expect(screen.getByText('campaigns.new_campaign')).toBeInTheDocument();
     });
 
     await act(async () => {
-      await user.click(screen.getByText('New Campaign'));
+      await user.click(screen.getByText('campaigns.new_campaign'));
     });
 
     expect(mockPush).toHaveBeenCalledWith('/campaigns/new');
@@ -180,7 +182,7 @@ describe('CampaignsPage', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('empty-state')).toBeInTheDocument();
-      expect(screen.getByText('No campaigns yet')).toBeInTheDocument();
+      expect(screen.getByText('campaigns.no_campaigns')).toBeInTheDocument();
     });
   });
 
@@ -233,11 +235,11 @@ describe('CampaignsPage', () => {
     render(<CampaignsPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('Name')).toBeInTheDocument();
-      expect(screen.getByText('Status')).toBeInTheDocument();
-      expect(screen.getByText('Scheduled')).toBeInTheDocument();
-      expect(screen.getByText('Sent')).toBeInTheDocument();
-      expect(screen.getByText('Created')).toBeInTheDocument();
+      expect(screen.getByText('campaigns.table.name')).toBeInTheDocument();
+      expect(screen.getByText('campaigns.table.status')).toBeInTheDocument();
+      expect(screen.getByText('campaigns.table.scheduled')).toBeInTheDocument();
+      expect(screen.getByText('campaigns.table.sent')).toBeInTheDocument();
+      expect(screen.getByText('campaigns.table.created')).toBeInTheDocument();
     });
   });
 
@@ -321,7 +323,7 @@ describe('CampaignsPage', () => {
     render(<CampaignsPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('Campaigns')).toBeInTheDocument();
+      expect(screen.getByText('campaigns.title')).toBeInTheDocument();
     });
 
     consoleSpy.mockRestore();
@@ -367,7 +369,7 @@ describe('CampaignsPage', () => {
     render(<CampaignsPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('Weekly')).toBeInTheDocument();
+      expect(screen.getByText('campaigns.recurrence.weekly')).toBeInTheDocument();
     });
 
     // The one-off campaign should not have a recurrence badge
@@ -387,9 +389,9 @@ describe('CampaignsPage', () => {
     render(<CampaignsPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('Daily')).toBeInTheDocument();
-      expect(screen.getByText('Bi-weekly')).toBeInTheDocument();
-      expect(screen.getByText('Monthly')).toBeInTheDocument();
+      expect(screen.getByText('campaigns.recurrence.daily')).toBeInTheDocument();
+      expect(screen.getByText('campaigns.recurrence.biweekly')).toBeInTheDocument();
+      expect(screen.getByText('campaigns.recurrence.monthly')).toBeInTheDocument();
     });
   });
 
@@ -402,6 +404,37 @@ describe('CampaignsPage', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('tooltip-campaigns-intro')).toBeInTheDocument();
+    });
+  });
+
+  // ─── Calendar View ──────────────────────────────────────────
+
+  it('shows calendar view when calendar tab is selected', async () => {
+    const user = userEvent.setup();
+    mockApi.get.mockResolvedValue({
+      data: [
+        createCampaign({
+          id: 'c1',
+          name: 'March Promo',
+          status: 'SENT',
+          sentAt: new Date().toISOString(),
+        }),
+      ],
+      total: 1,
+    });
+
+    render(<CampaignsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('campaigns.title')).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      await user.click(screen.getByText('campaigns.view_calendar'));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('campaign-calendar')).toBeInTheDocument();
     });
   });
 });

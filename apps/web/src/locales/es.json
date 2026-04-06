@@ -1313,6 +1313,210 @@
     "instagram_hint": "Configurar en Integraciones"
   },
 
+  "campaigns": {
+    "title": "Campañas",
+    "new_campaign": "Nueva Campaña",
+    "back": "Volver a Campañas",
+    "no_campaigns": "Aún no hay campañas",
+    "no_campaigns_desc": "Crea una campaña para llegar a todos tus clientes a la vez.",
+    "create": "Crear Campaña",
+    "creating": "Creando...",
+    "clone_success": "Campaña clonada como borrador",
+    "clone_error": "Error al clonar campaña",
+    "cancel_confirm": "¿Cancelar esta campaña? Los mensajes ya enviados no se pueden deshacer.",
+    "cancel_success": "Campaña cancelada",
+    "cancel_error": "Error al cancelar campaña",
+    "delete_confirm": "¿Eliminar esta campaña?",
+    "stop_recurrence_confirm": "¿Detener la programación recurrente de esta campaña?",
+    "send_now": "Enviar Ahora",
+    "cancel_campaign": "Cancelar Campaña",
+    "edit": "Editar",
+    "clone": "Clonar",
+    "delete": "Eliminar",
+    "stop_recurrence": "Detener Recurrencia",
+    "scheduled": "Programado",
+    "sending_momentarily": "Enviando en breve...",
+
+    "status": {
+      "draft": "BORRADOR",
+      "scheduled": "PROGRAMADO",
+      "sending": "ENVIANDO",
+      "sent": "ENVIADO",
+      "cancelled": "CANCELADO"
+    },
+
+    "table": {
+      "name": "Nombre",
+      "status": "Estado",
+      "scheduled": "Programado",
+      "sent": "Enviado",
+      "created": "Creado"
+    },
+
+    "steps": {
+      "audience": "Audiencia",
+      "message": "Mensaje",
+      "schedule": "Programar",
+      "review": "Revisar"
+    },
+
+    "recurrence": {
+      "daily": "Diario",
+      "weekly": "Semanal",
+      "biweekly": "Quincenal",
+      "monthly": "Mensual",
+      "no_repeat": "No repetir",
+      "hint": "Se creará una nueva campaña automáticamente después de cada envío."
+    },
+
+    "channel": {
+      "whatsapp": "WhatsApp",
+      "sms": "SMS",
+      "email": "Correo",
+      "multi": "Multicanal",
+      "multi_hint": "Los mensajes se enviarán por el canal preferido o disponible de cada cliente."
+    },
+
+    "wizard": {
+      "campaign_name": "Nombre de Campaña",
+      "campaign_name_placeholder": "ej. Reactivación de febrero",
+      "summary": "Resumen",
+      "audience": "Audiencia",
+      "template": "Plantilla",
+      "schedule": "Programar",
+      "channel": "Canal",
+      "throttle": "Velocidad",
+      "recurrence": "Recurrencia",
+      "immediately": "Inmediatamente",
+      "customers": "{{count}} clientes",
+      "matching_customers": "clientes que coinciden",
+      "and_more": "y {{count}} más...",
+      "audience_preview": "Vista Previa de Audiencia",
+      "send_immediately": "Enviar inmediatamente después de crear",
+      "schedule_later": "Programar para después",
+      "throttle_label": "Velocidad (mensajes por minuto)",
+      "repeat_campaign": "Repetir campaña",
+      "delivery_channel": "Canal de Envío",
+      "when_to_send": "Cuándo enviar",
+      "sending_soon_warning": "Envío próximo — asegúrate de que tu mensaje esté listo.",
+      "large_audience_warning": "Esta campaña llegará a {{count}} clientes. Asegúrate de que tu plantilla esté lista.",
+      "sends_on": "Esta campaña se enviará el {{date}} (en {{countdown}})",
+      "estimated_cost": "Costo Estimado",
+      "no_additional_cost": "Sin costo adicional (incluido en el plan)",
+      "msg_per_min": "{{count}} msg/min"
+    },
+
+    "message": {
+      "select_template": "Seleccionar Plantilla",
+      "write_custom": "Escribir Mensaje Personalizado",
+      "message_content": "Contenido del Mensaje",
+      "message_placeholder": "Escribe tu mensaje aquí... Usa {{name}}, {{service}}, {{business}}, {{date}}, {{staff}} para personalización",
+      "no_templates": "No se encontraron plantillas. Crea una en Configuración → Plantillas primero.",
+      "preview": "Vista previa:",
+      "insert": "Insertar:",
+      "no_message": "Sin contenido de mensaje disponible"
+    },
+
+    "ab_test": {
+      "title": "Prueba A/B",
+      "description": "Prueba diferentes mensajes para encontrar cuál funciona mejor.",
+      "variant_name_placeholder": "Nombre de variante",
+      "variant_content_placeholder": "Contenido del mensaje para esta variante... Usa {{name}} para personalización",
+      "audience_percentage": "Porcentaje de audiencia",
+      "percentage_error": "Los porcentajes deben sumar 100% (actualmente {{current}}%)",
+      "add_variant": "Agregar",
+      "results_title": "Resultados de Prueba A/B",
+      "select_winner": "Seleccionar Ganador",
+      "winner": "Ganador",
+      "auto_winner": "Selección automática de ganador",
+      "auto_selected_winner": "Ganador auto-seleccionado",
+      "winner_metric": "Métrica de ganador",
+      "read_rate": "Tasa de Lectura",
+      "booking_rate": "Tasa de Reservas",
+      "test_duration": "Duración de prueba",
+      "test_audience": "Audiencia de prueba: {{percent}}%",
+      "test_explanation": "Enviaremos al {{percent}}% de tu audiencia primero. Después de {{duration}}, la variante con mejor rendimiento se enviará al {{remaining}}% restante.",
+      "test_in_progress": "Prueba A/B en progreso"
+    },
+
+    "detail": {
+      "details": "Detalles",
+      "message": "Mensaje",
+      "created": "Creado",
+      "scheduled": "Programado",
+      "sent": "Enviado",
+      "channel": "Canal",
+      "audience": "Audiencia",
+      "throttle": "Velocidad",
+      "next_run": "Próxima Ejecución",
+      "part_of_series": "Parte de Serie",
+      "view_original": "Ver original",
+      "filters": "Filtros",
+      "no_upcoming": "Sin reservas próximas",
+      "conversion_funnel": "Embudo de Conversión",
+      "channel_breakdown": "Desglose por Canal",
+      "stat_sent": "Enviados",
+      "stat_delivered": "Entregados",
+      "stat_read": "Leídos",
+      "stat_bookings": "Reservas",
+      "stat_failed": "Fallidos",
+      "stat_revenue": "Ingresos",
+      "link_performance": "Rendimiento de Enlaces",
+      "link_url": "URL",
+      "link_clicks": "Clics",
+      "link_unique": "Clics Únicos",
+      "link_ctr": "CTR%"
+    },
+
+    "view_table": "Tabla",
+    "view_performance": "Rendimiento",
+    "view_calendar": "Calendario",
+    "calendar_today": "Hoy",
+    "calendar_more": "+{{count}} más",
+
+    "guardrails": {
+      "frequency_cap": "Límite de Frecuencia",
+      "quiet_hours": "Horario de Silencio",
+      "cap_toggle": "Limitar mensajes de campaña por cliente",
+      "quiet_toggle": "Establecer horario de silencio (sin envíos de campaña)",
+      "cap_warning": "{{count}} clientes serán omitidos (límite de frecuencia alcanzado). Audiencia efectiva: {{effective}}.",
+      "max_messages": "Máximo de mensajes",
+      "per_week": "por semana",
+      "per_month": "por mes",
+      "from": "Desde",
+      "to": "Hasta",
+      "campaign_preferences": "Preferencias de Campaña"
+    },
+
+    "filter_builder": {
+      "audience_filters": "Filtros de Audiencia",
+      "select_field": "Seleccionar campo...",
+      "add_filter": "Agregar Filtro",
+      "save_as_segment": "Guardar como Segmento",
+      "load_segment": "Cargar Segmento",
+      "no_saved_segments": "Sin segmentos guardados",
+      "segment_name": "Nombre del segmento",
+      "tags": "Etiquetas",
+      "last_visit": "Última Visita (días)",
+      "booking_count_min": "Total Reservas (mín)",
+      "booking_count_max": "Total Reservas (máx)",
+      "created_after": "Creado Después de",
+      "created_before": "Creado Antes de",
+      "spent_more": "Total Gastado (más de)",
+      "spent_less": "Total Gastado (menos de)",
+      "no_upcoming_booking": "Sin Reserva Próxima",
+      "exclude_dnd": "Excluir No Molestar"
+    },
+
+    "merge_vars": {
+      "customer_name": "Nombre del Cliente",
+      "service_name": "Nombre del Servicio",
+      "business_name": "Nombre del Negocio",
+      "next_booking_date": "Fecha de Próxima Reserva",
+      "staff_name": "Nombre del Personal"
+    }
+  },
+
   "errors": {
     "something_went_wrong": "Algo salió mal",
     "unexpected_error": "Ocurrió un error inesperado.",

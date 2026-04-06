@@ -1056,6 +1056,22 @@ export class CreateCampaignDto {
   @IsIn(['WHATSAPP', 'SMS', 'EMAIL', 'MULTI'])
   @IsOptional()
   channel?: string;
+
+  @IsIn(['READ_RATE', 'BOOKING_RATE'])
+  @IsOptional()
+  winnerMetric?: string;
+
+  @IsInt()
+  @Min(30)
+  @Max(10080)
+  @IsOptional()
+  testDurationMinutes?: number;
+
+  @IsInt()
+  @Min(5)
+  @Max(50)
+  @IsOptional()
+  testAudiencePercent?: number;
 }
 
 export class UpdateCampaignDto {
@@ -1088,6 +1104,22 @@ export class UpdateCampaignDto {
   @IsArray()
   @IsOptional()
   variants?: any[];
+
+  @IsIn(['READ_RATE', 'BOOKING_RATE'])
+  @IsOptional()
+  winnerMetric?: string;
+
+  @IsInt()
+  @Min(30)
+  @Max(10080)
+  @IsOptional()
+  testDurationMinutes?: number;
+
+  @IsInt()
+  @Min(5)
+  @Max(50)
+  @IsOptional()
+  testAudiencePercent?: number;
 }
 
 export class SelectWinnerDto {

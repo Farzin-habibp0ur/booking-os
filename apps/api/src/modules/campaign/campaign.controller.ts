@@ -93,6 +93,11 @@ export class CampaignController {
     return this.savedSegmentService.delete(businessId, segmentId);
   }
 
+  @Get('performance')
+  performance(@BusinessId() businessId: string) {
+    return this.campaignService.getPerformanceSummary(businessId);
+  }
+
   // Parameterized routes below
   @Get(':id')
   findById(@BusinessId() businessId: string, @Param('id') id: string) {
@@ -113,6 +118,12 @@ export class CampaignController {
   @Roles('ADMIN')
   delete(@BusinessId() businessId: string, @Param('id') id: string) {
     return this.campaignService.delete(businessId, id);
+  }
+
+  @Post(':id/cancel')
+  @Roles('ADMIN')
+  cancel(@BusinessId() businessId: string, @Param('id') id: string) {
+    return this.campaignService.cancelCampaign(businessId, id);
   }
 
   @Post(':id/send')
@@ -146,6 +157,11 @@ export class CampaignController {
   @Get(':id/funnel')
   funnel(@BusinessId() businessId: string, @Param('id') id: string) {
     return this.campaignService.getFunnelStats(businessId, id);
+  }
+
+  @Get(':id/link-stats')
+  linkStats(@BusinessId() businessId: string, @Param('id') id: string) {
+    return this.campaignService.getLinkStats(businessId, id);
   }
 
   @Post(':id/select-winner')

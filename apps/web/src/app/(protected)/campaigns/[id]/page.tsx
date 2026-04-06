@@ -4,8 +4,36 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
-import { ArrowLeft, Send, Repeat, StopCircle, Trophy, BarChart3, Copy } from 'lucide-react';
+import {
+  ArrowLeft,
+  Send,
+  Repeat,
+  StopCircle,
+  Trophy,
+  BarChart3,
+  Copy,
+  XCircle,
+  Clock,
+  Pencil,
+  FlaskConical,
+  Eye,
+} from 'lucide-react';
 import { useToast } from '@/lib/toast';
+import { useI18n } from '@/lib/i18n';
+import CampaignPreviewModal from '@/components/campaign-preview-modal';
+
+function formatCountdown(isoDate: string): string {
+  const diff = new Date(isoDate).getTime() - Date.now();
+  if (diff <= 0) return 'Sending momentarily...';
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+  const minutes = Math.floor((diff / (1000 * 60)) % 60);
+  const parts: string[] = [];
+  if (days > 0) parts.push(`${days} day${days !== 1 ? 's' : ''}`);
+  if (hours > 0) parts.push(`${hours} hour${hours !== 1 ? 's' : ''}`);
+  if (minutes > 0) parts.push(`${minutes} minute${minutes !== 1 ? 's' : ''}`);
+  return parts.length > 0 ? `in ${parts.join(', ')}` : 'Sending momentarily...';
+}
 
 const statusColors: Record<string, string> = {
   DRAFT: 'bg-slate-100 text-slate-600',
@@ -23,17 +51,20 @@ export default function CampaignDetailPage() {
   const [funnelStats, setFunnelStats] = useState<any>(null);
   const [channelStats, setChannelStats] = useState<any>(null);
   const [selectingWinner, setSelectingWinner] = useState(false);
+  const [linkStats, setLinkStats] = useState<any[]>([]);
+  const [showPreview, setShowPreview] = useState(false);
   const [templates, setTemplates] = useState<any[]>([]);
   const router = useRouter();
   const { toast } = useToast();
+  const { t } = useI18n();
 
   const handleClone = async () => {
     try {
       const cloned = await api.post<any>(`/campaigns/${id}/clone`);
-      toast('Campaign cloned as draft');
+      toast(t('campaigns.clone_success'));
       router.push(`/campaigns/${cloned.id}`);
     } catch {
-      toast('Failed to clone campaign', 'error');
+      toast(t('campaigns.clone_error'), 'error');
     }
   };
 
@@ -64,6 +95,10 @@ export default function CampaignDetailPage() {
             .get<any>(`/campaigns/${id}/channel-stats`)
             .then(setChannelStats)
             .catch(() => {});
+          api
+            .get<any>(`/campaigns/${id}/link-stats`)
+            .then((data) => setLinkStats(Array.isArray(data) ? data : []))
+            .catch(() => {});
         }
       })
       .catch(() => router.push('/campaigns'))
@@ -80,18 +115,30 @@ export default function CampaignDetailPage() {
   };
 
   const handleDelete = async () => {
-    if (!confirm('Delete this campaign?')) return;
+    if (!confirm(t('campaigns.delete_confirm'))) return;
     await api.del(`/campaigns/${id}`);
     router.push('/campaigns');
   };
 
   const handleStopRecurrence = async () => {
-    if (!confirm('Stop recurring schedule for this campaign?')) return;
+    if (!confirm(t('campaigns.stop_recurrence_confirm'))) return;
     try {
       const updated = await api.post<any>(`/campaigns/${id}/stop-recurrence`);
       setCampaign(updated);
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handleCancel = async () => {
+    if (!confirm(t('campaigns.cancel_confirm'))) return;
+    try {
+      await api.post(`/campaigns/${id}/cancel`);
+      toast(t('campaigns.cancel_success'));
+      const updated = await api.get<any>(`/campaigns/${id}`);
+      setCampaign(updated);
+    } catch {
+      toast(t('campaigns.cancel_error'), 'error');
     }
   };
 
@@ -139,7 +186,7 @@ export default function CampaignDetailPage() {
         onClick={() => router.push('/campaigns')}
         className="flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 mb-4"
       >
-        <ArrowLeft size={16} /> Back to Campaigns
+        <ArrowLeft size={16} /> {t('campaigns.back')}
       </button>
 
       <div className="flex items-center justify-between mb-6">
@@ -179,22 +226,46 @@ export default function CampaignDetailPage() {
                 className="flex items-center gap-1.5 px-4 py-2 bg-sage-600 text-white rounded-xl text-sm hover:bg-sage-700 transition-colors"
               >
                 <Send size={14} />
-                Send Now
+                {t('campaigns.send_now')}
               </button>
               <button
                 onClick={handleDelete}
                 className="px-4 py-2 text-sm text-red-600 hover:text-red-700 transition-colors"
               >
-                Delete
+                {t('campaigns.delete')}
               </button>
             </>
+          )}
+          {(campaign.status === 'SENDING' || campaign.status === 'SCHEDULED') && (
+            <button
+              onClick={handleCancel}
+              className="flex items-center gap-1.5 px-4 py-2 text-sm text-red-600 border border-red-200 rounded-xl hover:bg-red-50 transition-colors"
+            >
+              <XCircle size={14} /> {t('campaigns.cancel_campaign')}
+            </button>
+          )}
+          {campaign.status === 'SCHEDULED' && (
+            <button
+              onClick={() => router.push(`/campaigns/new?edit=${id}`)}
+              className="flex items-center gap-1.5 px-4 py-2 text-sm text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors"
+            >
+              <Pencil size={14} /> {t('campaigns.edit')}
+            </button>
+          )}
+          {(campaign.status === 'DRAFT' || campaign.status === 'SCHEDULED') && (
+            <button
+              onClick={() => setShowPreview(true)}
+              className="flex items-center gap-1.5 px-3 py-2 text-sm text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors"
+            >
+              <Eye size={14} /> Preview
+            </button>
           )}
           <button
             onClick={handleClone}
             className="flex items-center gap-1.5 px-3 py-2 text-sm text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors"
           >
             <Copy size={14} />
-            Clone
+            {t('campaigns.clone')}
           </button>
           {campaign.recurrenceRule && campaign.recurrenceRule !== 'NONE' && (
             <button
@@ -202,26 +273,78 @@ export default function CampaignDetailPage() {
               className="flex items-center gap-1.5 px-4 py-2 text-sm text-amber-700 bg-amber-50 rounded-xl hover:bg-amber-100 transition-colors"
             >
               <StopCircle size={14} />
-              Stop Recurrence
+              {t('campaigns.stop_recurrence')}
             </button>
           )}
         </div>
       </div>
 
+      {/* Scheduled countdown banner */}
+      {campaign.status === 'SCHEDULED' && campaign.scheduledAt && (
+        <div
+          data-testid="scheduled-banner"
+          className="bg-lavender-50 border border-lavender-100 rounded-xl p-4 mb-6 flex items-center gap-3"
+        >
+          <Clock size={20} className="text-lavender-600" />
+          <div>
+            <span className="text-sm font-medium text-lavender-900">Scheduled</span>
+            <span className="text-sm text-lavender-700 ml-2">
+              Sends on{' '}
+              {new Date(campaign.scheduledAt).toLocaleString('en-US', {
+                dateStyle: 'full',
+                timeStyle: 'short',
+              })}{' '}
+              ({formatCountdown(campaign.scheduledAt)})
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* A/B Test phase banner */}
+      {campaign.isABTest && campaign.testPhaseEndsAt && !campaign.winnerVariantId && (
+        <div
+          data-testid="test-phase-banner"
+          className="bg-lavender-50 border border-lavender-100 rounded-xl p-4 mb-6 flex items-center gap-3"
+        >
+          <FlaskConical size={20} className="text-lavender-600" />
+          <div>
+            <span className="text-sm font-medium text-lavender-900">A/B Test in progress</span>
+            <p className="text-sm text-lavender-700 mt-0.5">
+              Testing {campaign.testAudiencePercent || 20}% of audience. Winner auto-selects{' '}
+              {new Date(campaign.testPhaseEndsAt) > new Date()
+                ? formatCountdown(campaign.testPhaseEndsAt)
+                : 'momentarily'}
+              {campaign.winnerMetric === 'BOOKING_RATE'
+                ? ' based on booking rate'
+                : ' based on read rate'}
+              .
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Stats grid */}
       {campaign.status === 'SENT' || campaign.status === 'SENDING' ? (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
           {[
-            { label: 'Sent', value: stats.sent || 0 },
-            { label: 'Delivered', value: stats.delivered || 0 },
-            { label: 'Read', value: stats.read || 0 },
-            { label: 'Bookings', value: stats.bookings || 0 },
+            { label: t('campaigns.detail.stat_sent'), value: stats.sent || 0 },
+            { label: t('campaigns.detail.stat_delivered'), value: stats.delivered || 0 },
+            { label: t('campaigns.detail.stat_read'), value: stats.read || 0 },
+            { label: t('campaigns.detail.stat_bookings'), value: stats.bookings || 0 },
           ].map((stat) => (
             <div key={stat.label} className="bg-white rounded-2xl shadow-soft p-4">
               <p className="text-xs text-slate-500">{stat.label}</p>
               <p className="text-2xl font-serif font-bold text-slate-900">{stat.value}</p>
             </div>
           ))}
+          {funnelStats?.revenueTotal != null && (
+            <div className="bg-white rounded-2xl shadow-soft p-4">
+              <p className="text-xs text-slate-500">{t('campaigns.detail.stat_revenue')}</p>
+              <p className="text-2xl font-serif font-bold text-sage-600">
+                ${funnelStats.revenueTotal.toLocaleString()}
+              </p>
+            </div>
+          )}
         </div>
       ) : null}
 
@@ -230,7 +353,9 @@ export default function CampaignDetailPage() {
         <div className="bg-white rounded-2xl shadow-soft p-5 mb-6" data-testid="campaign-funnel">
           <div className="flex items-center gap-2 mb-4">
             <BarChart3 size={16} className="text-sage-600" />
-            <h2 className="text-sm font-semibold text-slate-900">Conversion Funnel</h2>
+            <h2 className="text-sm font-semibold text-slate-900">
+              {t('campaigns.detail.conversion_funnel')}
+            </h2>
           </div>
           <div className="space-y-3">
             {funnelStats.stages.map((stage: any, i: number) => {
@@ -273,7 +398,9 @@ export default function CampaignDetailPage() {
       {/* Channel Breakdown */}
       {channelStats && typeof channelStats === 'object' && Object.keys(channelStats).length > 0 && (
         <div className="bg-white rounded-2xl shadow-soft p-5 mb-6" data-testid="channel-breakdown">
-          <h2 className="text-sm font-semibold text-slate-900 mb-3">Channel Breakdown</h2>
+          <h2 className="text-sm font-semibold text-slate-900 mb-3">
+            {t('campaigns.detail.channel_breakdown')}
+          </h2>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -304,10 +431,49 @@ export default function CampaignDetailPage() {
         </div>
       )}
 
+      {/* Link Performance */}
+      {linkStats.length > 0 && (
+        <div className="bg-white rounded-2xl shadow-soft p-5 mb-6" data-testid="link-performance">
+          <h2 className="text-sm font-semibold text-slate-900 mb-3">
+            {t('campaigns.detail.link_performance')}
+          </h2>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-xs text-slate-500 border-b border-slate-100">
+                  <th className="text-left py-2 font-medium">{t('campaigns.detail.link_url')}</th>
+                  <th className="text-right py-2 font-medium">
+                    {t('campaigns.detail.link_clicks')}
+                  </th>
+                  <th className="text-right py-2 font-medium">
+                    {t('campaigns.detail.link_unique')}
+                  </th>
+                  <th className="text-right py-2 font-medium">{t('campaigns.detail.link_ctr')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {linkStats.map((link: any) => (
+                  <tr key={link.url} className="border-b border-slate-50">
+                    <td className="py-2 font-medium text-sage-700 truncate max-w-[240px]">
+                      {link.url}
+                    </td>
+                    <td className="py-2 text-right">{link.totalClicks}</td>
+                    <td className="py-2 text-right">{link.uniqueClicks}</td>
+                    <td className="py-2 text-right">{link.ctr}%</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       {/* A/B Test Results */}
       {campaign.isABTest && variantStats?.variants?.length > 0 && (
         <div className="mb-6" data-testid="ab-results">
-          <h2 className="text-sm font-semibold text-slate-900 mb-3">A/B Test Results</h2>
+          <h2 className="text-sm font-semibold text-slate-900 mb-3">
+            {t('campaigns.ab_test.results_title')}
+          </h2>
           <div
             className={cn(
               'grid gap-4',
@@ -364,11 +530,15 @@ export default function CampaignDetailPage() {
                       disabled={selectingWinner}
                       className="mt-3 w-full text-xs px-3 py-1.5 bg-sage-600 text-white rounded-lg hover:bg-sage-700 transition-colors disabled:opacity-50"
                     >
-                      Select Winner
+                      {t('campaigns.ab_test.select_winner')}
                     </button>
                   )}
                   {isWinner && (
-                    <p className="mt-2 text-xs text-sage-700 font-medium text-center">Winner</p>
+                    <p className="mt-2 text-xs text-sage-700 font-medium text-center">
+                      {variantStats.autoWinnerSelected
+                        ? t('campaigns.ab_test.auto_selected_winner')
+                        : t('campaigns.ab_test.winner')}
+                    </p>
                   )}
                 </div>
               );
@@ -379,7 +549,9 @@ export default function CampaignDetailPage() {
 
       {/* Campaign details */}
       <div className="bg-white rounded-2xl shadow-soft p-5 mb-6">
-        <h2 className="text-sm font-semibold text-slate-900 mb-3">Details</h2>
+        <h2 className="text-sm font-semibold text-slate-900 mb-3">
+          {t('campaigns.detail.details')}
+        </h2>
         <dl className="space-y-2 text-sm">
           <div className="flex justify-between">
             <dt className="text-slate-500">Created</dt>
@@ -496,7 +668,9 @@ export default function CampaignDetailPage() {
 
       {/* Message section */}
       <div className="bg-white rounded-2xl shadow-soft p-5">
-        <h2 className="text-sm font-semibold text-slate-900 mb-3">Message</h2>
+        <h2 className="text-sm font-semibold text-slate-900 mb-3">
+          {t('campaigns.detail.message')}
+        </h2>
         {campaign.isABTest && campaign.variants?.length > 0 ? (
           <div className="space-y-3">
             {campaign.variants.map((v: any, i: number) => (
@@ -519,9 +693,18 @@ export default function CampaignDetailPage() {
             </p>
           </div>
         ) : (
-          <p className="text-sm text-slate-500">No message content available</p>
+          <p className="text-sm text-slate-500">{t('campaigns.message.no_message')}</p>
         )}
       </div>
+
+      {/* Preview Modal */}
+      <CampaignPreviewModal
+        isOpen={showPreview}
+        onClose={() => setShowPreview(false)}
+        content={campaign.variants?.length > 0 ? campaign.variants[0].content || '' : ''}
+        channel={campaign.channel || 'WHATSAPP'}
+        businessName="Your Business"
+      />
     </div>
   );
 }

@@ -1362,6 +1362,210 @@
     "instagram_hint": "Configure in Integrations"
   },
 
+  "campaigns": {
+    "title": "Campaigns",
+    "new_campaign": "New Campaign",
+    "back": "Back to Campaigns",
+    "no_campaigns": "No campaigns yet",
+    "no_campaigns_desc": "Create a campaign to reach all your clients at once.",
+    "create": "Create Campaign",
+    "creating": "Creating...",
+    "clone_success": "Campaign cloned as draft",
+    "clone_error": "Failed to clone campaign",
+    "cancel_confirm": "Cancel this campaign? Messages already sent cannot be undone.",
+    "cancel_success": "Campaign cancelled",
+    "cancel_error": "Failed to cancel campaign",
+    "delete_confirm": "Delete this campaign?",
+    "stop_recurrence_confirm": "Stop recurring schedule for this campaign?",
+    "send_now": "Send Now",
+    "cancel_campaign": "Cancel Campaign",
+    "edit": "Edit",
+    "clone": "Clone",
+    "delete": "Delete",
+    "stop_recurrence": "Stop Recurrence",
+    "scheduled": "Scheduled",
+    "sending_momentarily": "Sending momentarily...",
+
+    "status": {
+      "draft": "DRAFT",
+      "scheduled": "SCHEDULED",
+      "sending": "SENDING",
+      "sent": "SENT",
+      "cancelled": "CANCELLED"
+    },
+
+    "table": {
+      "name": "Name",
+      "status": "Status",
+      "scheduled": "Scheduled",
+      "sent": "Sent",
+      "created": "Created"
+    },
+
+    "steps": {
+      "audience": "Audience",
+      "message": "Message",
+      "schedule": "Schedule",
+      "review": "Review"
+    },
+
+    "recurrence": {
+      "daily": "Daily",
+      "weekly": "Weekly",
+      "biweekly": "Bi-weekly",
+      "monthly": "Monthly",
+      "no_repeat": "No repeat",
+      "hint": "A new campaign will be automatically created after each send completes."
+    },
+
+    "channel": {
+      "whatsapp": "WhatsApp",
+      "sms": "SMS",
+      "email": "Email",
+      "multi": "Multi-channel",
+      "multi_hint": "Messages will be sent via each customer's preferred or available channel."
+    },
+
+    "wizard": {
+      "campaign_name": "Campaign Name",
+      "campaign_name_placeholder": "e.g. February Re-engagement",
+      "summary": "Summary",
+      "audience": "Audience",
+      "template": "Template",
+      "schedule": "Schedule",
+      "channel": "Channel",
+      "throttle": "Throttle",
+      "recurrence": "Recurrence",
+      "immediately": "Immediately",
+      "customers": "{{count}} customers",
+      "matching_customers": "matching customers",
+      "and_more": "and {{count}} more...",
+      "audience_preview": "Audience Preview",
+      "send_immediately": "Send immediately after creation",
+      "schedule_later": "Schedule for later",
+      "throttle_label": "Throttle (messages per minute)",
+      "repeat_campaign": "Repeat campaign",
+      "delivery_channel": "Delivery Channel",
+      "when_to_send": "When to send",
+      "sending_soon_warning": "Sending soon — make sure your message is ready.",
+      "large_audience_warning": "This campaign will reach {{count}} customers. Make sure your template is ready.",
+      "sends_on": "This campaign will send on {{date}} (in {{countdown}})",
+      "estimated_cost": "Estimated Cost",
+      "no_additional_cost": "No additional cost (included in plan)",
+      "msg_per_min": "{{count}} msg/min"
+    },
+
+    "message": {
+      "select_template": "Select Template",
+      "write_custom": "Write Custom Message",
+      "message_content": "Message Content",
+      "message_placeholder": "Write your message here... Use {{name}}, {{service}}, {{business}}, {{date}}, {{staff}} for personalization",
+      "no_templates": "No templates found. Create one in Settings → Templates first.",
+      "preview": "Preview:",
+      "insert": "Insert:",
+      "no_message": "No message content available"
+    },
+
+    "ab_test": {
+      "title": "A/B Test",
+      "description": "Test different messages to find what works best.",
+      "variant_name_placeholder": "Variant name",
+      "variant_content_placeholder": "Message content for this variant... Use {{name}} for personalization",
+      "audience_percentage": "Audience percentage",
+      "percentage_error": "Percentages must sum to 100% (currently {{current}}%)",
+      "add_variant": "Add",
+      "results_title": "A/B Test Results",
+      "select_winner": "Select Winner",
+      "winner": "Winner",
+      "auto_winner": "Auto-select winner",
+      "auto_selected_winner": "Auto-selected winner",
+      "winner_metric": "Winner metric",
+      "read_rate": "Read Rate",
+      "booking_rate": "Booking Rate",
+      "test_duration": "Test duration",
+      "test_audience": "Test audience: {{percent}}%",
+      "test_explanation": "We'll send to {{percent}}% of your audience first. After {{duration}}, the best-performing variant will be sent to the remaining {{remaining}}%.",
+      "test_in_progress": "A/B Test in progress"
+    },
+
+    "detail": {
+      "details": "Details",
+      "message": "Message",
+      "created": "Created",
+      "scheduled": "Scheduled",
+      "sent": "Sent",
+      "channel": "Channel",
+      "audience": "Audience",
+      "throttle": "Throttle",
+      "next_run": "Next Run",
+      "part_of_series": "Part of Series",
+      "view_original": "View original",
+      "filters": "Filters",
+      "no_upcoming": "No upcoming bookings",
+      "conversion_funnel": "Conversion Funnel",
+      "channel_breakdown": "Channel Breakdown",
+      "stat_sent": "Sent",
+      "stat_delivered": "Delivered",
+      "stat_read": "Read",
+      "stat_bookings": "Bookings",
+      "stat_failed": "Failed",
+      "stat_revenue": "Revenue",
+      "link_performance": "Link Performance",
+      "link_url": "URL",
+      "link_clicks": "Clicks",
+      "link_unique": "Unique Clicks",
+      "link_ctr": "CTR%"
+    },
+
+    "view_table": "Table",
+    "view_performance": "Performance",
+    "view_calendar": "Calendar",
+    "calendar_today": "Today",
+    "calendar_more": "+{{count}} more",
+
+    "guardrails": {
+      "frequency_cap": "Frequency Cap",
+      "quiet_hours": "Quiet Hours",
+      "cap_toggle": "Limit campaign messages per customer",
+      "quiet_toggle": "Set quiet hours (no campaign sends)",
+      "cap_warning": "{{count}} customers will be skipped (frequency cap reached). Effective audience: {{effective}}.",
+      "max_messages": "Max messages",
+      "per_week": "per week",
+      "per_month": "per month",
+      "from": "From",
+      "to": "To",
+      "campaign_preferences": "Campaign Preferences"
+    },
+
+    "filter_builder": {
+      "audience_filters": "Audience Filters",
+      "select_field": "Select field...",
+      "add_filter": "Add Filter",
+      "save_as_segment": "Save as Segment",
+      "load_segment": "Load Segment",
+      "no_saved_segments": "No saved segments",
+      "segment_name": "Segment name",
+      "tags": "Tags",
+      "last_visit": "Last Visit (days ago)",
+      "booking_count_min": "Total Bookings (min)",
+      "booking_count_max": "Total Bookings (max)",
+      "created_after": "Created After",
+      "created_before": "Created Before",
+      "spent_more": "Total Spent (more than)",
+      "spent_less": "Total Spent (less than)",
+      "no_upcoming_booking": "No Upcoming Booking",
+      "exclude_dnd": "Exclude Do-Not-Message"
+    },
+
+    "merge_vars": {
+      "customer_name": "Customer Name",
+      "service_name": "Service Name",
+      "business_name": "Business Name",
+      "next_booking_date": "Next Booking Date",
+      "staff_name": "Staff Name"
+    }
+  },
+
   "errors": {
     "something_went_wrong": "Something went wrong",
     "unexpected_error": "An unexpected error occurred.",

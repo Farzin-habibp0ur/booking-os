@@ -6,6 +6,7 @@ import { PrismaService } from '../../common/prisma.service';
 import { UsageService } from '../usage/usage.service';
 import { DeadLetterQueueService } from '../../common/queue/dead-letter.service';
 import { AutomationExecutorService } from '../automation/automation-executor.service';
+import { TrackingService } from '../tracking/tracking.service';
 import { QUEUE_NAMES } from '../../common/queue/queue.module';
 import { createMockPrisma } from '../../test/mocks';
 
@@ -33,6 +34,16 @@ function createMockCampaignService() {
       where: { businessId: 'biz1' },
       customerIds: null,
     }),
+    sendCampaign: jest.fn().mockResolvedValue({ status: 'SENDING', audienceSize: 5 }),
+    getVariantStats: jest.fn().mockResolvedValue({
+      variants: [
+        { variantId: 'a', name: 'A', sent: 10, read: 8, bookings: 3 },
+        { variantId: 'b', name: 'B', sent: 10, read: 4, bookings: 1 },
+      ],
+    }),
+    selectWinner: jest.fn().mockResolvedValue({}),
+    rolloutWinner: jest.fn().mockResolvedValue({ total: 30 }),
+    getFrequencyCapExclusions: jest.fn().mockResolvedValue([]),
   };
 }
 
@@ -44,6 +55,7 @@ describe('CampaignDispatchService', () => {
   let usageService: { recordUsage: jest.Mock };
   let dlqService: { capture: jest.Mock };
   let automationExecutor: { evaluateTrigger: jest.Mock };
+  let trackingService: { wrapUrlsInContent: jest.Mock; generateTrackingPixel: jest.Mock };
 
   beforeEach(async () => {
     prisma = createMockPrisma();
@@ -52,6 +64,10 @@ describe('CampaignDispatchService', () => {
     usageService = { recordUsage: jest.fn().mockResolvedValue(undefined) };
     dlqService = { capture: jest.fn().mockResolvedValue('dlq-1') };
     automationExecutor = { evaluateTrigger: jest.fn().mockResolvedValue(undefined) };
+    trackingService = {
+      wrapUrlsInContent: jest.fn((content: string) => `[tracked]${content}`),
+      generateTrackingPixel: jest.fn(() => '<img tracking-pixel />'),
+    };
 
     const module = await Test.createTestingModule({
       providers: [
@@ -62,6 +78,7 @@ describe('CampaignDispatchService', () => {
         { provide: DeadLetterQueueService, useValue: dlqService },
         { provide: AutomationExecutorService, useValue: automationExecutor },
         { provide: getQueueToken(QUEUE_NAMES.NOTIFICATIONS), useValue: notificationQueue },
+        { provide: TrackingService, useValue: trackingService },
       ],
     }).compile();
 
@@ -154,6 +171,126 @@ describe('CampaignDispatchService', () => {
       });
       expect(notificationQueue.add).toHaveBeenCalledTimes(2);
       expect(usageService.recordUsage).toHaveBeenCalledWith('biz1', 'WHATSAPP', 'OUTBOUND');
+    });
+
+    it('wraps URLs in content for click tracking', async () => {
+      prisma.campaign.findMany.mockResolvedValue([
+        {
+          id: 'camp1',
+          businessId: 'biz1',
+          throttlePerMinute: 10,
+          channel: 'WHATSAPP',
+          variants: [{ id: 'v1', content: 'Visit https://example.com' }],
+        },
+      ] as any);
+      prisma.campaign.findUnique.mockResolvedValue({ status: 'SENDING' } as any);
+      prisma.campaignSend.findMany.mockResolvedValue([
+        { id: 's1', customerId: 'c1', campaign: {} },
+      ] as any);
+      prisma.customer.findUnique.mockResolvedValue({
+        id: 'c1',
+        name: 'Alice',
+        phone: '+123',
+        email: null,
+      } as any);
+      prisma.campaignSend.update.mockResolvedValue({} as any);
+      prisma.campaignSend.groupBy.mockResolvedValue([]);
+      prisma.campaignSend.count.mockResolvedValue(0);
+      prisma.campaign.update.mockResolvedValue({} as any);
+
+      await dispatchService.processSendingCampaigns();
+
+      expect(trackingService.wrapUrlsInContent).toHaveBeenCalled();
+    });
+
+    it('adds tracking pixel only for EMAIL channel', async () => {
+      prisma.campaign.findMany.mockResolvedValue([
+        {
+          id: 'camp1',
+          businessId: 'biz1',
+          throttlePerMinute: 10,
+          channel: 'EMAIL',
+          variants: [{ id: 'v1', content: 'Hello!' }],
+        },
+      ] as any);
+      prisma.campaign.findUnique.mockResolvedValue({ status: 'SENDING' } as any);
+      prisma.campaignSend.findMany.mockResolvedValue([
+        { id: 's1', customerId: 'c1', campaign: {} },
+      ] as any);
+      prisma.customer.findUnique.mockResolvedValue({
+        id: 'c1',
+        name: 'Alice',
+        phone: null,
+        email: 'alice@test.com',
+      } as any);
+      prisma.campaignSend.update.mockResolvedValue({} as any);
+      prisma.campaignSend.groupBy.mockResolvedValue([]);
+      prisma.campaignSend.count.mockResolvedValue(0);
+      prisma.campaign.update.mockResolvedValue({} as any);
+
+      await dispatchService.processSendingCampaigns();
+
+      expect(trackingService.generateTrackingPixel).toHaveBeenCalledWith('s1', expect.any(String));
+    });
+
+    it('does not add tracking pixel for non-EMAIL channels', async () => {
+      prisma.campaign.findMany.mockResolvedValue([
+        {
+          id: 'camp1',
+          businessId: 'biz1',
+          throttlePerMinute: 10,
+          channel: 'SMS',
+          variants: [{ id: 'v1', content: 'Hello!' }],
+        },
+      ] as any);
+      prisma.campaign.findUnique.mockResolvedValue({ status: 'SENDING' } as any);
+      prisma.campaignSend.findMany.mockResolvedValue([
+        { id: 's1', customerId: 'c1', campaign: {} },
+      ] as any);
+      prisma.customer.findUnique.mockResolvedValue({
+        id: 'c1',
+        name: 'Alice',
+        phone: '+123',
+        email: null,
+      } as any);
+      prisma.campaignSend.update.mockResolvedValue({} as any);
+      prisma.campaignSend.groupBy.mockResolvedValue([]);
+      prisma.campaignSend.count.mockResolvedValue(0);
+      prisma.campaign.update.mockResolvedValue({} as any);
+
+      await dispatchService.processSendingCampaigns();
+
+      expect(trackingService.generateTrackingPixel).not.toHaveBeenCalled();
+    });
+
+    it('skips processing if campaign is cancelled before send loop', async () => {
+      prisma.campaign.findMany.mockResolvedValue([{ id: 'camp1', throttlePerMinute: 10 }] as any);
+      // Re-fetch returns CANCELLED
+      prisma.campaign.findUnique.mockResolvedValue({ status: 'CANCELLED' } as any);
+
+      await dispatchService.processSendingCampaigns();
+
+      // Should not query for pending sends
+      expect(prisma.campaignSend.findMany).not.toHaveBeenCalled();
+    });
+
+    it('does not mark campaign SENT if cancelled during processing', async () => {
+      prisma.campaign.findMany.mockResolvedValue([{ id: 'camp1', throttlePerMinute: 10 }] as any);
+      // First findUnique: campaign still SENDING (race condition guard at top)
+      // Second findUnique: campaign now CANCELLED (race condition guard before SENT)
+      prisma.campaign.findUnique
+        .mockResolvedValueOnce({ status: 'SENDING' } as any)
+        .mockResolvedValueOnce({ status: 'CANCELLED' } as any);
+      prisma.campaignSend.findMany.mockResolvedValue([]); // No pending sends
+
+      await dispatchService.processSendingCampaigns();
+
+      // Should NOT update to SENT
+      expect(prisma.campaign.update).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ status: 'SENT' }),
+        }),
+      );
     });
 
     it('marks send as FAILED when customer has no contact info for channel', async () => {
@@ -352,6 +489,244 @@ describe('CampaignDispatchService', () => {
       });
 
       expect(prisma.campaign.create).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('processScheduledCampaigns', () => {
+    it('finds past-scheduled campaigns and calls sendCampaign', async () => {
+      const pastDate = new Date(Date.now() - 60000);
+      prisma.campaign.findMany.mockResolvedValue([
+        { id: 'camp1', businessId: 'biz1', name: 'Scheduled Promo', scheduledAt: pastDate },
+      ] as any);
+
+      await dispatchService.processScheduledCampaigns();
+
+      expect(prisma.campaign.findMany).toHaveBeenCalledWith({
+        where: {
+          status: 'SCHEDULED',
+          scheduledAt: { lte: expect.any(Date) },
+        },
+      });
+      expect(campaignService.sendCampaign).toHaveBeenCalledWith('biz1', 'camp1');
+    });
+
+    it('does not process future-scheduled campaigns', async () => {
+      prisma.campaign.findMany.mockResolvedValue([]);
+
+      await dispatchService.processScheduledCampaigns();
+
+      expect(campaignService.sendCampaign).not.toHaveBeenCalled();
+    });
+
+    it('continues processing when one campaign fails', async () => {
+      prisma.campaign.findMany.mockResolvedValue([
+        { id: 'camp1', businessId: 'biz1', name: 'Fail' },
+        { id: 'camp2', businessId: 'biz1', name: 'Success' },
+      ] as any);
+      campaignService.sendCampaign
+        .mockRejectedValueOnce(new Error('Send failed'))
+        .mockResolvedValueOnce({ status: 'SENDING' });
+
+      await dispatchService.processScheduledCampaigns();
+
+      expect(campaignService.sendCampaign).toHaveBeenCalledTimes(2);
+      expect(campaignService.sendCampaign).toHaveBeenCalledWith('biz1', 'camp2');
+    });
+  });
+
+  describe('prepareSendsWithVariants with testPercent', () => {
+    it('limits audience when testPercent is provided', async () => {
+      prisma.customer.findMany.mockResolvedValue(
+        Array.from({ length: 100 }, (_, i) => ({ id: `c${i}` })) as any,
+      );
+      prisma.campaignSend.createMany.mockResolvedValue({ count: 20 } as any);
+
+      const result = await dispatchService.prepareSendsWithVariants(
+        'camp1',
+        'biz1',
+        {},
+        [
+          { id: 'a', percentage: 50 },
+          { id: 'b', percentage: 50 },
+        ],
+        20,
+      );
+
+      // 20% of 100 = 20 customers
+      expect(result.total).toBe(20);
+      expect(result.totalAudience).toBe(100);
+    });
+
+    it('uses full audience when testPercent is not provided', async () => {
+      prisma.customer.findMany.mockResolvedValue([
+        { id: 'c1' },
+        { id: 'c2' },
+        { id: 'c3' },
+        { id: 'c4' },
+      ] as any);
+      prisma.campaignSend.createMany.mockResolvedValue({ count: 4 } as any);
+
+      const result = await dispatchService.prepareSendsWithVariants('camp1', 'biz1', {}, [
+        { id: 'a', percentage: 50 },
+        { id: 'b', percentage: 50 },
+      ]);
+
+      expect(result.total).toBe(4);
+      expect(result.totalAudience).toBe(4);
+    });
+  });
+
+  describe('processABTestResults', () => {
+    it('finds eligible campaigns and selects winner by READ_RATE', async () => {
+      const campaign = {
+        id: 'camp-ab',
+        businessId: 'biz1',
+        isABTest: true,
+        winnerMetric: 'READ_RATE',
+        variants: [
+          { id: 'a', name: 'A' },
+          { id: 'b', name: 'B' },
+        ],
+      };
+      prisma.campaign.findMany.mockResolvedValue([campaign] as any);
+      prisma.campaign.update.mockResolvedValue({} as any);
+      // getVariantStats returns variant 'a' with higher read rate
+      campaignService.getVariantStats.mockResolvedValue({
+        variants: [
+          { variantId: 'a', sent: 10, read: 8, bookings: 2 },
+          { variantId: 'b', sent: 10, read: 3, bookings: 1 },
+        ],
+      });
+
+      await dispatchService.processABTestResults();
+
+      expect(prisma.campaign.update).toHaveBeenCalledWith({
+        where: { id: 'camp-ab' },
+        data: { autoWinnerSelected: true },
+      });
+      expect(campaignService.selectWinner).toHaveBeenCalledWith('biz1', 'camp-ab', 'a');
+      expect(campaignService.rolloutWinner).toHaveBeenCalledWith('biz1', 'camp-ab', 'a');
+    });
+
+    it('selects winner by BOOKING_RATE', async () => {
+      const campaign = {
+        id: 'camp-ab',
+        businessId: 'biz1',
+        isABTest: true,
+        winnerMetric: 'BOOKING_RATE',
+        variants: [
+          { id: 'a', name: 'A' },
+          { id: 'b', name: 'B' },
+        ],
+      };
+      prisma.campaign.findMany.mockResolvedValue([campaign] as any);
+      prisma.campaign.update.mockResolvedValue({} as any);
+      // Variant 'b' has higher booking rate
+      campaignService.getVariantStats.mockResolvedValue({
+        variants: [
+          { variantId: 'a', sent: 10, read: 8, bookings: 1 },
+          { variantId: 'b', sent: 10, read: 3, bookings: 5 },
+        ],
+      });
+
+      await dispatchService.processABTestResults();
+
+      expect(campaignService.selectWinner).toHaveBeenCalledWith('biz1', 'camp-ab', 'b');
+    });
+
+    it('uses read count tiebreaker when rates are inconclusive', async () => {
+      const campaign = {
+        id: 'camp-ab',
+        businessId: 'biz1',
+        isABTest: true,
+        winnerMetric: 'READ_RATE',
+        variants: [
+          { id: 'a', name: 'A' },
+          { id: 'b', name: 'B' },
+        ],
+      };
+      prisma.campaign.findMany.mockResolvedValue([campaign] as any);
+      prisma.campaign.update.mockResolvedValue({} as any);
+      // Very close read rates (<5%), but 'b' has more absolute reads
+      campaignService.getVariantStats.mockResolvedValue({
+        variants: [
+          { variantId: 'a', sent: 100, read: 30, bookings: 2 },
+          { variantId: 'b', sent: 100, read: 32, bookings: 1 },
+        ],
+      });
+
+      await dispatchService.processABTestResults();
+
+      // 'b' has 32 reads vs 'a' 30 reads (tiebreaker by absolute read count)
+      expect(campaignService.selectWinner).toHaveBeenCalledWith('biz1', 'camp-ab', 'b');
+    });
+
+    it('skips when no eligible campaigns', async () => {
+      prisma.campaign.findMany.mockResolvedValue([]);
+
+      await dispatchService.processABTestResults();
+
+      expect(campaignService.selectWinner).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('prepareSends with frequency cap', () => {
+    it('excludes frequency-capped customers', async () => {
+      prisma.customer.findMany.mockResolvedValue([{ id: 'c1' }, { id: 'c2' }, { id: 'c3' }] as any);
+      campaignService.getFrequencyCapExclusions.mockResolvedValue(['c2']);
+      prisma.campaignSend.createMany.mockResolvedValue({ count: 2 } as any);
+
+      const result = await dispatchService.prepareSends('camp1', 'biz1', {});
+
+      expect(result.total).toBe(2);
+      expect(prisma.campaignSend.createMany).toHaveBeenCalledWith({
+        data: [
+          { campaignId: 'camp1', customerId: 'c1', status: 'PENDING' },
+          { campaignId: 'camp1', customerId: 'c3', status: 'PENDING' },
+        ],
+      });
+    });
+  });
+
+  describe('processCampaign quiet hours', () => {
+    it('skips dispatch during quiet hours', async () => {
+      prisma.campaign.findMany.mockResolvedValue([
+        { id: 'camp1', businessId: 'biz1', throttlePerMinute: 10 },
+      ] as any);
+      prisma.campaign.findUnique.mockResolvedValue({ status: 'SENDING' } as any);
+      // Business has quiet hours covering current time
+      prisma.business.findUnique.mockResolvedValue({
+        name: 'Test Biz',
+        campaignPreferences: {
+          quietHours: { start: '00:00', end: '23:59', timezone: 'UTC' },
+        },
+      } as any);
+
+      await dispatchService.processSendingCampaigns();
+
+      // Should not query for pending sends
+      expect(prisma.campaignSend.findMany).not.toHaveBeenCalled();
+    });
+
+    it('proceeds when outside quiet hours', async () => {
+      prisma.campaign.findMany.mockResolvedValue([
+        { id: 'camp1', businessId: 'biz1', throttlePerMinute: 10 },
+      ] as any);
+      prisma.campaign.findUnique.mockResolvedValue({ status: 'SENDING' } as any);
+      // No quiet hours configured
+      prisma.business.findUnique.mockResolvedValue({
+        name: 'Test Biz',
+        campaignPreferences: {},
+      } as any);
+      prisma.campaignSend.findMany.mockResolvedValue([]);
+      prisma.campaignSend.groupBy.mockResolvedValue([]);
+      prisma.campaignSend.count.mockResolvedValue(0);
+      prisma.campaign.update.mockResolvedValue({} as any);
+
+      await dispatchService.processSendingCampaigns();
+
+      // Should query for pending sends (normal flow)
+      expect(prisma.campaignSend.findMany).toHaveBeenCalled();
     });
   });
 });

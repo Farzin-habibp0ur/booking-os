@@ -135,6 +135,24 @@ export class BusinessController {
     return this.businessService.updateWaitlistSettings(businessId, body);
   }
 
+  @Get('campaign-preferences')
+  async getCampaignPreferences(@BusinessId() businessId: string) {
+    return this.businessService.getCampaignPreferences(businessId);
+  }
+
+  @Patch('campaign-preferences')
+  @Roles('ADMIN')
+  async updateCampaignPreferences(
+    @BusinessId() businessId: string,
+    @Body()
+    body: {
+      frequencyCap?: { max: number; period: string } | null;
+      quietHours?: { start: string; end: string; timezone: string } | null;
+    },
+  ) {
+    return this.businessService.updateCampaignPreferences(businessId, body);
+  }
+
   @Get('onboarding-status')
   async getOnboardingStatus(@BusinessId() businessId: string) {
     return this.businessService.getOnboardingStatus(businessId);

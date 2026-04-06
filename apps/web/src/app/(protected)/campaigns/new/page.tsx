@@ -14,10 +14,33 @@ import {
   FlaskConical,
   Plus,
   Trash2,
+  AlertTriangle,
+  Eye,
 } from 'lucide-react';
+import { useI18n } from '@/lib/i18n';
 import CampaignFilterBuilder from '@/components/campaign-filter-builder';
+import CampaignPreviewModal from '@/components/campaign-preview-modal';
+import CampaignEmailEditor from '@/components/campaign-email-editor';
 
-const STEPS = ['Audience', 'Message', 'Schedule', 'Review'];
+const STEP_KEYS = [
+  'campaigns.steps.audience',
+  'campaigns.steps.message',
+  'campaigns.steps.schedule',
+  'campaigns.steps.review',
+];
+
+function formatCountdown(isoDate: string): string {
+  const diff = new Date(isoDate).getTime() - Date.now();
+  if (diff <= 0) return 'now (past time)';
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+  const minutes = Math.floor((diff / (1000 * 60)) % 60);
+  const parts: string[] = [];
+  if (days > 0) parts.push(`${days}d`);
+  if (hours > 0) parts.push(`${hours}h`);
+  if (minutes > 0) parts.push(`${minutes}m`);
+  return parts.join(' ') || 'less than a minute';
+}
 
 const MERGE_VARIABLES = [
   { label: 'Customer Name', value: '{{name}}' },
@@ -46,6 +69,10 @@ export default function NewCampaignPage() {
   const [saving, setSaving] = useState(false);
   const [costEstimate, setCostEstimate] = useState<any>(null);
   const [isABTest, setIsABTest] = useState(false);
+  const [autoWinner, setAutoWinner] = useState(false);
+  const [winnerMetric, setWinnerMetric] = useState('READ_RATE');
+  const [testDurationMinutes, setTestDurationMinutes] = useState(120);
+  const [testAudiencePercent, setTestAudiencePercent] = useState(20);
   const [variants, setVariants] = useState<any[]>([
     { id: crypto.randomUUID(), name: 'Variant A', content: '', percentage: 50 },
     { id: crypto.randomUUID(), name: 'Variant B', content: '', percentage: 50 },
@@ -53,8 +80,11 @@ export default function NewCampaignPage() {
   const [activeVariant, setActiveVariant] = useState(0);
   const [channel, setChannel] = useState('WHATSAPP');
   const [audienceSearchQuery, setAudienceSearchQuery] = useState('');
+  const [showPreview, setShowPreview] = useState(false);
+  const [editorMode, setEditorMode] = useState<'simple' | 'visual'>('simple');
   const [showAudienceModal, setShowAudienceModal] = useState(false);
   const router = useRouter();
+  const { t } = useI18n();
 
   const variantPercentageSum = variants.reduce((s, v) => s + Number(v.percentage || 0), 0);
 
@@ -126,6 +156,11 @@ export default function NewCampaignPage() {
       if (isABTest) {
         campaignData.isABTest = true;
         campaignData.variants = variants;
+        if (autoWinner) {
+          campaignData.winnerMetric = winnerMetric;
+          campaignData.testDurationMinutes = testDurationMinutes;
+          campaignData.testAudiencePercent = testAudiencePercent;
+        }
       } else if (messageMode === 'template') {
         campaignData.templateId = templateId;
       } else {
@@ -167,14 +202,16 @@ export default function NewCampaignPage() {
         onClick={() => router.push('/campaigns')}
         className="flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 mb-4"
       >
-        <ArrowLeft size={16} /> Back to Campaigns
+        <ArrowLeft size={16} /> {t('campaigns.back')}
       </button>
 
-      <h1 className="text-2xl font-serif font-semibold text-slate-900 mb-6">New Campaign</h1>
+      <h1 className="text-2xl font-serif font-semibold text-slate-900 mb-6">
+        {t('campaigns.new_campaign')}
+      </h1>
 
       {/* Step indicator */}
       <div className="flex items-center gap-2 mb-8">
-        {STEPS.map((s, i) => {
+        {STEP_KEYS.map((s, i) => {
           const Icon = stepIcons[i];
           return (
             <div key={s} className="flex items-center gap-2">
@@ -192,7 +229,7 @@ export default function NewCampaignPage() {
                 )}
               >
                 <Icon size={14} />
-                {s}
+                {t(s)}
               </div>
             </div>
           );
@@ -368,6 +405,14 @@ export default function NewCampaignPage() {
                           {mv.label}
                         </button>
                       ))}
+                      <button
+                        type="button"
+                        onClick={() => setShowPreview(true)}
+                        className="flex items-center gap-1.5 px-3 py-1 text-xs text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+                      >
+                        <Eye size={12} />
+                        Preview
+                      </button>
                     </div>
                   </div>
                   {/* Live preview */}
@@ -415,8 +460,139 @@ export default function NewCampaignPage() {
             </div>
           )}
 
+          {/* Auto-winner settings (shown when A/B test is enabled) */}
+          {isABTest && (
+            <div className="bg-white rounded-2xl shadow-soft p-5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <FlaskConical size={16} className="text-lavender-600" />
+                  <span className="text-sm font-semibold text-slate-900">Auto-select winner</span>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={autoWinner}
+                  data-testid="auto-winner-toggle"
+                  onClick={() => setAutoWinner(!autoWinner)}
+                  className={cn(
+                    'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors',
+                    autoWinner ? 'bg-sage-500' : 'bg-slate-200',
+                  )}
+                >
+                  <span
+                    className={cn(
+                      'pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-sm transform transition-transform mt-0.5',
+                      autoWinner ? 'translate-x-5.5' : 'translate-x-0.5',
+                    )}
+                  />
+                </button>
+              </div>
+
+              {autoWinner && (
+                <div className="mt-4 space-y-4">
+                  <div>
+                    <label className="text-xs text-slate-500 mb-1 block">Winner metric</label>
+                    <select
+                      value={winnerMetric}
+                      onChange={(e) => setWinnerMetric(e.target.value)}
+                      data-testid="winner-metric-select"
+                      className="w-full text-sm bg-slate-50 border-transparent rounded-xl px-3 py-2 focus:bg-white focus:ring-2 focus:ring-sage-500"
+                    >
+                      <option value="READ_RATE">Read Rate</option>
+                      <option value="BOOKING_RATE">Booking Rate</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-xs text-slate-500 mb-1 block">Test duration</label>
+                    <select
+                      value={testDurationMinutes}
+                      onChange={(e) => setTestDurationMinutes(Number(e.target.value))}
+                      data-testid="test-duration-select"
+                      className="w-full text-sm bg-slate-50 border-transparent rounded-xl px-3 py-2 focus:bg-white focus:ring-2 focus:ring-sage-500"
+                    >
+                      <option value={120}>2 hours</option>
+                      <option value={360}>6 hours</option>
+                      <option value={720}>12 hours</option>
+                      <option value={1440}>24 hours</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-xs text-slate-500 mb-1 block">
+                      Test audience: {testAudiencePercent}%
+                    </label>
+                    <input
+                      type="range"
+                      min={10}
+                      max={50}
+                      step={5}
+                      value={testAudiencePercent}
+                      onChange={(e) => setTestAudiencePercent(Number(e.target.value))}
+                      data-testid="test-audience-slider"
+                      className="w-full accent-sage-500"
+                    />
+                    <div className="flex justify-between text-[10px] text-slate-400 mt-0.5">
+                      <span>10%</span>
+                      <span>50%</span>
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-slate-500 bg-slate-50 rounded-xl px-3 py-2">
+                    We&apos;ll send to {testAudiencePercent}% of your audience first. After{' '}
+                    {testDurationMinutes >= 1440
+                      ? `${Math.round(testDurationMinutes / 1440)} day(s)`
+                      : `${Math.round(testDurationMinutes / 60)} hour(s)`}
+                    , the best-performing variant will be sent to the remaining{' '}
+                    {100 - testAudiencePercent}%.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Editor mode toggle (Simple vs Visual) */}
+          {!isABTest && (channel === 'EMAIL' || channel === 'MULTI') && (
+            <div className="flex gap-2 mb-0">
+              <button
+                onClick={() => setEditorMode('simple')}
+                className={cn(
+                  'px-3 py-1.5 text-sm rounded-lg transition-colors',
+                  editorMode === 'simple'
+                    ? 'bg-sage-600 text-white'
+                    : 'text-slate-500 hover:bg-slate-100',
+                )}
+              >
+                Simple Message
+              </button>
+              <button
+                onClick={() => setEditorMode('visual')}
+                className={cn(
+                  'px-3 py-1.5 text-sm rounded-lg transition-colors',
+                  editorMode === 'visual'
+                    ? 'bg-sage-600 text-white'
+                    : 'text-slate-500 hover:bg-slate-100',
+                )}
+              >
+                Email Designer
+              </button>
+            </div>
+          )}
+
+          {/* Visual email editor */}
+          {!isABTest && editorMode === 'visual' && (channel === 'EMAIL' || channel === 'MULTI') && (
+            <div className="bg-white rounded-2xl shadow-soft p-5">
+              <CampaignEmailEditor
+                onChange={(html, design) => {
+                  setCustomMessage(html);
+                  // Store design in first variant for future editing
+                }}
+              />
+            </div>
+          )}
+
           {/* Message mode selection (used when NOT A/B testing) */}
-          {!isABTest && (
+          {!isABTest && editorMode === 'simple' && (
             <div className="bg-white rounded-2xl shadow-soft p-5 space-y-4">
               <div className="flex items-center gap-2 mb-3">
                 <div className="flex gap-2">
@@ -614,6 +790,24 @@ export default function NewCampaignPage() {
               className="w-full text-sm bg-slate-50 border-transparent rounded-xl px-3 py-2 focus:bg-white focus:ring-2 focus:ring-sage-500"
             />
           )}
+          {scheduleType === 'later' && scheduledAt && (
+            <>
+              <p className="text-sm text-slate-500 mt-2">
+                This campaign will send on{' '}
+                {new Date(scheduledAt).toLocaleString('en-US', {
+                  dateStyle: 'full',
+                  timeStyle: 'short',
+                })}{' '}
+                (in {formatCountdown(scheduledAt)})
+              </p>
+              {new Date(scheduledAt).getTime() - Date.now() < 30 * 60 * 1000 &&
+                new Date(scheduledAt).getTime() > Date.now() && (
+                  <p className="text-sm text-amber-600 mt-1">
+                    Sending soon — make sure your message is ready.
+                  </p>
+                )}
+            </>
+          )}
 
           <div>
             <label className="text-xs text-slate-500 mb-1 block">
@@ -737,6 +931,17 @@ export default function NewCampaignPage() {
               This campaign will reach {preview.count} customers. Make sure your template is ready.
             </div>
           )}
+          {preview?.skippedCount > 0 && (
+            <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 flex items-center gap-3">
+              <AlertTriangle size={18} className="text-amber-600 flex-shrink-0" />
+              <p className="text-sm text-amber-700">
+                {t('campaigns.guardrails.cap_warning', {
+                  count: preview.skippedCount,
+                  effective: preview.effectiveCount,
+                })}
+              </p>
+            </div>
+          )}
         </div>
       )}
 
@@ -794,6 +999,15 @@ export default function NewCampaignPage() {
         </div>
       )}
 
+      {/* Preview Modal */}
+      <CampaignPreviewModal
+        isOpen={showPreview}
+        onClose={() => setShowPreview(false)}
+        content={isABTest ? variants[activeVariant]?.content || '' : customMessage || ''}
+        channel={channel}
+        businessName="Your Business"
+      />
+
       {/* Navigation buttons */}
       <div className="flex justify-between mt-6">
         <button
@@ -829,7 +1043,7 @@ export default function NewCampaignPage() {
                 : 'bg-slate-100 text-slate-400 cursor-not-allowed',
             )}
           >
-            {saving ? 'Creating...' : 'Create Campaign'}
+            {saving ? t('campaigns.creating') : t('campaigns.create')}
           </button>
         )}
       </div>

@@ -76,7 +76,23 @@ jest.mock('lucide-react', () => ({
   FlaskConical: (props: any) => <div data-testid="flask-icon" {...props} />,
   Plus: (props: any) => <div data-testid="plus-icon" {...props} />,
   Trash2: (props: any) => <div data-testid="trash-icon" {...props} />,
+  AlertTriangle: (props: any) => <div data-testid="alert-triangle-icon" {...props} />,
+  Eye: (props: any) => <div data-testid="eye-icon" {...props} />,
 }));
+
+// Mock campaign-preview-modal
+jest.mock('@/components/campaign-preview-modal', () => {
+  return function MockPreviewModal({ isOpen }: any) {
+    return isOpen ? <div data-testid="preview-modal" /> : null;
+  };
+});
+
+// Mock campaign-email-editor
+jest.mock('@/components/campaign-email-editor', () => {
+  return function MockEmailEditor() {
+    return <div data-testid="email-editor" />;
+  };
+});
 
 // Mock crypto.randomUUID
 let uuidCounter = 0;
@@ -122,7 +138,7 @@ describe('NewCampaignPage', () => {
     render(<NewCampaignPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('New Campaign')).toBeInTheDocument();
+      expect(screen.getByText('campaigns.new_campaign')).toBeInTheDocument();
     });
   });
 
@@ -130,10 +146,10 @@ describe('NewCampaignPage', () => {
     render(<NewCampaignPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('Audience')).toBeInTheDocument();
-      expect(screen.getByText('Message')).toBeInTheDocument();
-      expect(screen.getByText('Schedule')).toBeInTheDocument();
-      expect(screen.getByText('Review')).toBeInTheDocument();
+      expect(screen.getByText('campaigns.steps.audience')).toBeInTheDocument();
+      expect(screen.getByText('campaigns.steps.message')).toBeInTheDocument();
+      expect(screen.getByText('campaigns.steps.schedule')).toBeInTheDocument();
+      expect(screen.getByText('campaigns.steps.review')).toBeInTheDocument();
     });
   });
 
@@ -141,7 +157,7 @@ describe('NewCampaignPage', () => {
     render(<NewCampaignPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('Back to Campaigns')).toBeInTheDocument();
+      expect(screen.getByText('campaigns.back')).toBeInTheDocument();
     });
   });
 
@@ -151,11 +167,11 @@ describe('NewCampaignPage', () => {
     render(<NewCampaignPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('Back to Campaigns')).toBeInTheDocument();
+      expect(screen.getByText('campaigns.back')).toBeInTheDocument();
     });
 
     await act(async () => {
-      await user.click(screen.getByText('Back to Campaigns'));
+      await user.click(screen.getByText('campaigns.back'));
     });
 
     expect(mockPush).toHaveBeenCalledWith('/campaigns');
@@ -372,7 +388,7 @@ describe('NewCampaignPage', () => {
     await waitFor(() => {
       expect(screen.getByText('Campaign Name')).toBeInTheDocument();
       expect(screen.getByText('Summary')).toBeInTheDocument();
-      expect(screen.getByText('Create Campaign')).toBeInTheDocument();
+      expect(screen.getByText('campaigns.create')).toBeInTheDocument();
     });
   });
 
@@ -410,7 +426,7 @@ describe('NewCampaignPage', () => {
 
     // Click Create Campaign
     await act(async () => {
-      await user.click(screen.getByText('Create Campaign'));
+      await user.click(screen.getByText('campaigns.create'));
     });
 
     await waitFor(() => {
@@ -453,7 +469,7 @@ describe('NewCampaignPage', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('Create Campaign')).toBeDisabled();
+      expect(screen.getByText('campaigns.create')).toBeDisabled();
     });
   });
 

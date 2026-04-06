@@ -7,12 +7,15 @@ import { CampaignService } from './campaign.service';
 import { UsageService } from '../usage/usage.service';
 import { DeadLetterQueueService } from '../../common/queue/dead-letter.service';
 import { AutomationExecutorService } from '../automation/automation-executor.service';
+import { TrackingService } from '../tracking/tracking.service';
 import { QUEUE_NAMES } from '../../common/queue/queue.module';
 
 @Injectable()
 export class CampaignDispatchService {
   private readonly logger = new Logger(CampaignDispatchService.name);
   private processing = false;
+  private processingScheduled = false;
+  private processingABTests = false;
 
   constructor(
     private prisma: PrismaService,
@@ -24,6 +27,7 @@ export class CampaignDispatchService {
     @Inject(forwardRef(() => AutomationExecutorService))
     private automationExecutor?: AutomationExecutorService,
     @Optional() @InjectQueue(QUEUE_NAMES.NOTIFICATIONS) private notificationQueue?: Queue,
+    @Optional() private trackingService?: TrackingService,
   ) {}
 
   @Cron(CronExpression.EVERY_MINUTE)
@@ -45,7 +49,137 @@ export class CampaignDispatchService {
     }
   }
 
+  @Cron(CronExpression.EVERY_MINUTE)
+  async processScheduledCampaigns() {
+    if (this.processingScheduled) return;
+    this.processingScheduled = true;
+    try {
+      const campaigns = await this.prisma.campaign.findMany({
+        where: {
+          status: 'SCHEDULED',
+          scheduledAt: { lte: new Date() },
+        },
+      });
+
+      for (const campaign of campaigns) {
+        try {
+          await this.campaignService.sendCampaign(campaign.businessId, campaign.id);
+          this.logger.log(`Scheduled campaign "${campaign.name}" (${campaign.id}) started sending`);
+        } catch (err: any) {
+          this.logger.error(`Failed to start scheduled campaign ${campaign.id}: ${err.message}`);
+        }
+      }
+    } catch (err: any) {
+      this.logger.error(`Scheduled campaign processing error: ${err.message}`);
+    } finally {
+      this.processingScheduled = false;
+    }
+  }
+
+  @Cron(CronExpression.EVERY_MINUTE)
+  async processABTestResults() {
+    if (this.processingABTests) return;
+    this.processingABTests = true;
+    try {
+      const campaigns = await this.prisma.campaign.findMany({
+        where: {
+          status: 'SENT',
+          isABTest: true,
+          autoWinnerSelected: false,
+          winnerVariantId: null,
+          testPhaseEndsAt: { not: null, lte: new Date() },
+        },
+      });
+
+      for (const campaign of campaigns) {
+        try {
+          await this.evaluateAndRolloutWinner(campaign);
+        } catch (err: any) {
+          this.logger.error(
+            `AB test auto-winner failed for campaign ${campaign.id}: ${err.message}`,
+          );
+        }
+      }
+    } catch (err: any) {
+      this.logger.error(`AB test result processing error: ${err.message}`);
+    } finally {
+      this.processingABTests = false;
+    }
+  }
+
+  private async evaluateAndRolloutWinner(campaign: any) {
+    const stats = await this.campaignService.getVariantStats(campaign.businessId, campaign.id);
+
+    const metric = campaign.winnerMetric || 'READ_RATE';
+    const variantRates = stats.variants.map((v: any) => {
+      const total = v.sent || 1;
+      const rate = metric === 'BOOKING_RATE' ? v.bookings / total : v.read / total;
+      return { variantId: v.variantId, rate, read: v.read };
+    });
+
+    // Sort by rate descending
+    variantRates.sort((a: any, b: any) => b.rate - a.rate);
+    const best = variantRates[0];
+
+    // If inconclusive (<5% difference), use highest absolute read count as tiebreaker
+    if (variantRates.length >= 2 && best.rate - variantRates[1].rate < 0.05) {
+      variantRates.sort((a: any, b: any) => b.read - a.read);
+      this.logger.log(`Campaign ${campaign.id}: rates inconclusive, using read count tiebreaker`);
+    }
+
+    const winnerId = variantRates[0].variantId;
+
+    // Mark as auto-selected before rollout to prevent re-entry
+    await this.prisma.campaign.update({
+      where: { id: campaign.id },
+      data: { autoWinnerSelected: true },
+    });
+
+    await this.campaignService.selectWinner(campaign.businessId, campaign.id, winnerId);
+    await this.campaignService.rolloutWinner(campaign.businessId, campaign.id, winnerId);
+
+    this.logger.log(
+      `Campaign ${campaign.id}: auto-selected winner variant ${winnerId}, rolling out`,
+    );
+  }
+
   private async processCampaign(campaign: any) {
+    // Race condition guard: re-check campaign hasn't been cancelled since query
+    const freshCampaign = await this.prisma.campaign.findUnique({
+      where: { id: campaign.id },
+      select: { status: true },
+    });
+    if (freshCampaign?.status === 'CANCELLED') return;
+
+    // Quiet hours check: skip dispatch if within quiet hours
+    const bizPrefs = await this.prisma.business.findUnique({
+      where: { id: campaign.businessId },
+      select: { campaignPreferences: true, name: true },
+    });
+    const prefs = (bizPrefs?.campaignPreferences as any) || {};
+    if (prefs.quietHours) {
+      const { start, end, timezone } = prefs.quietHours;
+      const now = new Date();
+      const formatter = new Intl.DateTimeFormat('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+        timeZone: timezone || 'UTC',
+      });
+      const currentTime = formatter.format(now);
+      // Quiet hours: if start > end, it spans midnight (e.g., 21:00-08:00)
+      const inQuietHours =
+        start <= end
+          ? currentTime >= start && currentTime < end
+          : currentTime >= start || currentTime < end;
+      if (inQuietHours) {
+        this.logger.log(
+          `Skipping campaign dispatch for ${bizPrefs?.name || campaign.businessId} during quiet hours`,
+        );
+        return;
+      }
+    }
+
     const pendingSends = await this.prisma.campaignSend.findMany({
       where: { campaignId: campaign.id, status: 'PENDING' },
       take: campaign.throttlePerMinute || 10,
@@ -53,6 +187,13 @@ export class CampaignDispatchService {
     });
 
     if (pendingSends.length === 0) {
+      // Re-check campaign status before marking SENT (may have been cancelled mid-processing)
+      const currentStatus = await this.prisma.campaign.findUnique({
+        where: { id: campaign.id },
+        select: { status: true },
+      });
+      if (currentStatus?.status === 'CANCELLED') return;
+
       // All sends complete — mark campaign as SENT
       const stats = await this.computeStats(campaign.id);
       await this.prisma.campaign.update({
@@ -123,12 +264,22 @@ export class CampaignDispatchService {
           staffName: lastBooking?.staff?.name || 'our team',
         });
 
+        // Wrap URLs for click tracking and add open tracking pixel for email
+        let finalContent = messageContent;
+        if (this.trackingService) {
+          const baseUrl = process.env.API_URL || 'https://api.businesscommandcentre.com';
+          finalContent = this.trackingService.wrapUrlsInContent(messageContent, send.id, baseUrl);
+          if (channel === 'EMAIL') {
+            finalContent += this.trackingService.generateTrackingPixel(send.id, baseUrl);
+          }
+        }
+
         // Enqueue delivery via notification queue
         if (this.notificationQueue) {
           await this.notificationQueue.add('campaign-send', {
             to: address,
             channel,
-            content: messageContent,
+            content: finalContent,
             businessId: campaign.businessId,
             businessName: business?.name || '',
             customerId: customer.id,
@@ -188,10 +339,19 @@ export class CampaignDispatchService {
   async prepareSends(campaignId: string, businessId: string, filters: any) {
     // P-16: Use advanced audience query from CampaignService for full filter support
     const { where } = await this.campaignService.queryAdvancedAudience(businessId, filters);
-    const customers = await this.prisma.customer.findMany({
+    const allCustomers = await this.prisma.customer.findMany({
       where,
       select: { id: true },
     });
+
+    // Exclude frequency-capped customers
+    const excluded = new Set(
+      await this.campaignService.getFrequencyCapExclusions(
+        businessId,
+        allCustomers.map((c) => c.id),
+      ),
+    );
+    const customers = allCustomers.filter((c) => !excluded.has(c.id));
 
     const sends = customers.map((c) => ({
       campaignId,
@@ -211,12 +371,22 @@ export class CampaignDispatchService {
     businessId: string,
     filters: any,
     variants: any[],
+    testPercent?: number,
   ) {
     const { where } = await this.campaignService.queryAdvancedAudience(businessId, filters);
-    const customers = await this.prisma.customer.findMany({
+    const allCustomers = await this.prisma.customer.findMany({
       where,
       select: { id: true },
     });
+
+    // Exclude frequency-capped customers
+    const excluded = new Set(
+      await this.campaignService.getFrequencyCapExclusions(
+        businessId,
+        allCustomers.map((c) => c.id),
+      ),
+    );
+    const customers = allCustomers.filter((c) => !excluded.has(c.id));
 
     // Shuffle audience randomly (Fisher-Yates)
     const shuffled = [...customers];
@@ -225,12 +395,20 @@ export class CampaignDispatchService {
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
 
+    // Limit audience to testPercent if provided (auto-winner A/B test)
+    const effectiveAudience = testPercent
+      ? shuffled.slice(
+          0,
+          Math.max(variants.length, Math.round((shuffled.length * testPercent) / 100)),
+        )
+      : shuffled;
+
     // Split by variant percentages
     const sends: any[] = [];
     let offset = 0;
     for (const variant of variants) {
-      const count = Math.round((Number(variant.percentage) / 100) * shuffled.length);
-      const slice = shuffled.slice(offset, offset + count);
+      const count = Math.round((Number(variant.percentage) / 100) * effectiveAudience.length);
+      const slice = effectiveAudience.slice(offset, offset + count);
       for (const c of slice) {
         sends.push({
           campaignId,
@@ -243,12 +421,12 @@ export class CampaignDispatchService {
     }
 
     // Handle any rounding remainder — assign to last variant
-    if (offset < shuffled.length) {
+    if (offset < effectiveAudience.length) {
       const lastVariant = variants[variants.length - 1];
-      for (let i = offset; i < shuffled.length; i++) {
+      for (let i = offset; i < effectiveAudience.length; i++) {
         sends.push({
           campaignId,
-          customerId: shuffled[i].id,
+          customerId: effectiveAudience[i].id,
           status: 'PENDING',
           variantId: lastVariant.id,
         });
@@ -259,7 +437,7 @@ export class CampaignDispatchService {
       await this.prisma.campaignSend.createMany({ data: sends });
     }
 
-    return { total: sends.length };
+    return { total: sends.length, totalAudience: shuffled.length };
   }
 
   private async computeStats(campaignId: string) {
@@ -269,7 +447,15 @@ export class CampaignDispatchService {
       _count: true,
     });
 
-    const stats: any = { sent: 0, delivered: 0, read: 0, failed: 0, pending: 0, bookings: 0 };
+    const stats: any = {
+      sent: 0,
+      delivered: 0,
+      read: 0,
+      failed: 0,
+      pending: 0,
+      cancelled: 0,
+      bookings: 0,
+    };
     for (const s of sends) {
       stats[s.status.toLowerCase()] = s._count;
     }

@@ -21,6 +21,9 @@ export class CampaignService {
       isABTest?: boolean;
       variants?: any[];
       channel?: string;
+      winnerMetric?: string;
+      testDurationMinutes?: number;
+      testAudiencePercent?: number;
     },
   ) {
     // Validate A/B test variants
@@ -54,6 +57,11 @@ export class CampaignService {
         isABTest: data.isABTest || false,
         variants: data.isABTest && data.variants ? data.variants : [],
         channel: data.channel || 'WHATSAPP',
+        winnerMetric: data.isABTest && data.winnerMetric ? data.winnerMetric : null,
+        testDurationMinutes:
+          data.isABTest && data.winnerMetric ? data.testDurationMinutes || null : null,
+        testAudiencePercent:
+          data.isABTest && data.winnerMetric ? data.testAudiencePercent || 20 : null,
       },
     });
   }
@@ -98,8 +106,8 @@ export class CampaignService {
     },
   ) {
     const campaign = await this.findById(businessId, id);
-    if (campaign.status !== 'DRAFT') {
-      throw new BadRequestException('Only draft campaigns can be edited');
+    if (!['DRAFT', 'SCHEDULED'].includes(campaign.status)) {
+      throw new BadRequestException('Only draft or scheduled campaigns can be edited');
     }
     // Validate A/B test variants if updating
     if (data.isABTest !== undefined || data.variants !== undefined) {
@@ -150,9 +158,70 @@ export class CampaignService {
     return { deleted: true };
   }
 
+  async cancelCampaign(businessId: string, id: string) {
+    const campaign = await this.findById(businessId, id);
+    if (!['SENDING', 'SCHEDULED'].includes(campaign.status)) {
+      throw new BadRequestException('Only sending or scheduled campaigns can be cancelled');
+    }
+
+    // Cancel all pending sends
+    const cancelledResult = await this.prisma.campaignSend.updateMany({
+      where: { campaignId: id, status: 'PENDING' },
+      data: { status: 'CANCELLED' },
+    });
+
+    // Update campaign status
+    await this.prisma.campaign.update({
+      where: { id },
+      data: { status: 'CANCELLED' },
+    });
+
+    // Count already-sent messages
+    const sentCount = await this.prisma.campaignSend.count({
+      where: { campaignId: id, status: 'SENT' },
+    });
+
+    return {
+      cancelled: true,
+      sentCount,
+      cancelledCount: cancelledResult.count,
+    };
+  }
+
+  async getFrequencyCapExclusions(businessId: string, customerIds: string[]): Promise<string[]> {
+    if (customerIds.length === 0) return [];
+
+    const business = await this.prisma.business.findUnique({
+      where: { id: businessId },
+      select: { campaignPreferences: true },
+    });
+    const prefs = (business?.campaignPreferences as any) || {};
+    if (!prefs.frequencyCap) return [];
+
+    const { max, period } = prefs.frequencyCap;
+    const cutoff = new Date();
+    if (period === 'week') {
+      cutoff.setDate(cutoff.getDate() - 7);
+    } else {
+      cutoff.setDate(cutoff.getDate() - 30);
+    }
+
+    const sendCounts = await this.prisma.campaignSend.groupBy({
+      by: ['customerId'],
+      where: {
+        customerId: { in: customerIds },
+        status: { in: ['SENT', 'DELIVERED', 'READ'] },
+        sentAt: { gte: cutoff },
+      },
+      _count: true,
+    });
+
+    return sendCounts.filter((s) => s._count >= max).map((s) => s.customerId);
+  }
+
   async previewAudience(businessId: string, filters: any) {
     const { where } = await this.queryAdvancedAudience(businessId, filters);
-    const [count, samples] = await Promise.all([
+    const [count, samples, allIds] = await Promise.all([
       this.prisma.customer.count({ where }),
       this.prisma.customer.findMany({
         where,
@@ -160,8 +229,19 @@ export class CampaignService {
         take: 5,
         orderBy: { createdAt: 'desc' },
       }),
+      this.prisma.customer.findMany({
+        where,
+        select: { id: true },
+      }),
     ]);
-    return { count, samples };
+
+    const excluded = await this.getFrequencyCapExclusions(
+      businessId,
+      allIds.map((c) => c.id),
+    );
+    const skippedCount = excluded.length;
+
+    return { count, skippedCount, effectiveCount: count - skippedCount, samples };
   }
 
   buildAudienceWhere(businessId: string, filters: any) {
@@ -327,22 +407,39 @@ export class CampaignService {
 
   async sendCampaign(businessId: string, id: string) {
     const campaign = await this.findById(businessId, id);
-    if (campaign.status !== 'DRAFT') {
-      throw new BadRequestException('Only draft campaigns can be sent');
+    if (!['DRAFT', 'SCHEDULED'].includes(campaign.status)) {
+      throw new BadRequestException('Only draft or scheduled campaigns can be sent');
     }
 
     if ((campaign as any).isABTest) {
       // A/B test: prepare sends with variant assignment
+      const testPercent = (campaign as any).winnerMetric
+        ? (campaign as any).testAudiencePercent || 20
+        : undefined;
+
       const { total } = await this.dispatchService.prepareSendsWithVariants(
         id,
         businessId,
         campaign.filters as any,
         (campaign as any).variants as any[],
+        testPercent,
       );
+
+      const updateData: any = {
+        status: 'SENDING',
+        stats: { total, sent: 0, failed: 0, pending: total },
+      };
+
+      // Calculate testPhaseEndsAt for auto-winner campaigns
+      if ((campaign as any).winnerMetric && (campaign as any).testDurationMinutes) {
+        updateData.testPhaseEndsAt = new Date(
+          Date.now() + (campaign as any).testDurationMinutes * 60 * 1000,
+        );
+      }
 
       await this.prisma.campaign.update({
         where: { id },
-        data: { status: 'SENDING', stats: { total, sent: 0, failed: 0, pending: total } },
+        data: updateData,
       });
 
       return { status: 'SENDING', audienceSize: total };
@@ -430,6 +527,8 @@ export class CampaignService {
       variants: Array.from(statsMap.values()),
       winnerVariantId: (campaign as any).winnerVariantId,
       winnerSelectedAt: (campaign as any).winnerSelectedAt,
+      autoWinnerSelected: (campaign as any).autoWinnerSelected,
+      testPhaseEndsAt: (campaign as any).testPhaseEndsAt,
     };
   }
 
@@ -454,6 +553,47 @@ export class CampaignService {
     });
   }
 
+  async rolloutWinner(businessId: string, campaignId: string, winnerVariantId: string) {
+    const campaign = await this.findById(businessId, campaignId);
+
+    // Get customer IDs that already received test messages
+    const existingSends = await this.prisma.campaignSend.findMany({
+      where: { campaignId },
+      select: { customerId: true },
+    });
+    const alreadySentIds = new Set(existingSends.map((s) => s.customerId));
+
+    // Query the full audience
+    const { where } = await this.queryAdvancedAudience(businessId, campaign.filters as any);
+    const allCustomers = await this.prisma.customer.findMany({
+      where,
+      select: { id: true },
+    });
+
+    // Filter out customers who already received test sends
+    const remaining = allCustomers.filter((c) => !alreadySentIds.has(c.id));
+
+    if (remaining.length === 0) return { total: 0 };
+
+    // Create sends for remaining audience with winner variant
+    const sends = remaining.map((c) => ({
+      campaignId,
+      customerId: c.id,
+      status: 'PENDING',
+      variantId: winnerVariantId,
+    }));
+
+    await this.prisma.campaignSend.createMany({ data: sends });
+
+    // Set campaign back to SENDING so the dispatch cron picks it up
+    await this.prisma.campaign.update({
+      where: { id: campaignId },
+      data: { status: 'SENDING' },
+    });
+
+    return { total: sends.length };
+  }
+
   // HIGH-02: Per-channel delivery analytics
   async getChannelStats(businessId: string, campaignId: string) {
     await this.findById(businessId, campaignId);
@@ -476,7 +616,7 @@ export class CampaignService {
   async getFunnelStats(businessId: string, campaignId: string) {
     const campaign = await this.findById(businessId, campaignId);
 
-    const [sent, delivered, read, total] = await Promise.all([
+    const [sent, delivered, read, opened, total] = await Promise.all([
       this.prisma.campaignSend.count({
         where: {
           campaignId,
@@ -491,9 +631,19 @@ export class CampaignService {
         where: { campaignId, campaign: { businessId }, status: 'READ' },
       }),
       this.prisma.campaignSend.count({
+        where: { campaignId, campaign: { businessId }, openedAt: { not: null } },
+      }),
+      this.prisma.campaignSend.count({
         where: { campaignId, campaign: { businessId } },
       }),
     ]);
+
+    // Count distinct sends with clicks
+    const clickedSends = await this.prisma.campaignClick.groupBy({
+      by: ['campaignSendId'],
+      where: { campaignSend: { campaignId, campaign: { businessId } } },
+    });
+    const clicked = clickedSends.length;
 
     // Count bookings from recipients within 7 days of campaign send
     const recipientIds = await this.prisma.campaignSend.findMany({
@@ -502,20 +652,24 @@ export class CampaignService {
     });
     const customerIds = recipientIds.map((r) => r.customerId);
 
-    // Count bookings from recipients within 7 days of campaign send
     const sevenDaysAfterSend = campaign.sentAt
       ? new Date(campaign.sentAt.getTime() + 7 * 24 * 60 * 60 * 1000)
       : null;
-    const booked =
+
+    // Fetch attributed bookings with service price for revenue
+    const attributedBookings =
       campaign.sentAt && sevenDaysAfterSend
-        ? await this.prisma.booking.count({
+        ? await this.prisma.booking.findMany({
             where: {
               businessId,
               customerId: { in: customerIds },
               createdAt: { gte: campaign.sentAt, lte: sevenDaysAfterSend },
             },
+            include: { service: { select: { price: true } } },
           })
-        : 0;
+        : [];
+    const booked = attributedBookings.length;
+    const revenueTotal = attributedBookings.reduce((sum, b) => sum + (b.service?.price || 0), 0);
 
     return {
       stages: [
@@ -524,6 +678,16 @@ export class CampaignService {
           label: 'Delivered',
           count: delivered,
           percentage: sent > 0 ? Math.round((delivered / sent) * 100) : 0,
+        },
+        {
+          label: 'Opened',
+          count: opened,
+          percentage: delivered > 0 ? Math.round((opened / delivered) * 100) : 0,
+        },
+        {
+          label: 'Clicked',
+          count: clicked,
+          percentage: opened > 0 ? Math.round((clicked / opened) * 100) : 0,
         },
         {
           label: 'Read',
@@ -536,7 +700,90 @@ export class CampaignService {
           percentage: read > 0 ? Math.round((booked / read) * 100) : 0,
         },
       ],
+      revenueTotal,
     };
+  }
+
+  async getLinkStats(businessId: string, campaignId: string) {
+    await this.findById(businessId, campaignId);
+
+    const clicks = await this.prisma.campaignClick.findMany({
+      where: { campaignSend: { campaignId, campaign: { businessId } } },
+      select: { url: true, campaignSendId: true },
+    });
+
+    const totalSent = await this.prisma.campaignSend.count({
+      where: {
+        campaignId,
+        campaign: { businessId },
+        status: { in: ['SENT', 'DELIVERED', 'READ'] },
+      },
+    });
+
+    // Group by URL
+    const urlMap = new Map<string, { total: number; uniqueSendIds: Set<string> }>();
+    for (const click of clicks) {
+      const entry = urlMap.get(click.url) || { total: 0, uniqueSendIds: new Set() };
+      entry.total++;
+      entry.uniqueSendIds.add(click.campaignSendId);
+      urlMap.set(click.url, entry);
+    }
+
+    return Array.from(urlMap.entries()).map(([url, data]) => ({
+      url,
+      totalClicks: data.total,
+      uniqueClicks: data.uniqueSendIds.size,
+      ctr: totalSent > 0 ? Math.round((data.uniqueSendIds.size / totalSent) * 1000) / 10 : 0,
+    }));
+  }
+
+  async getPerformanceSummary(businessId: string) {
+    const campaigns = await this.prisma.campaign.findMany({
+      where: { businessId, status: 'SENT' },
+      orderBy: { sentAt: 'desc' },
+      take: 20,
+    });
+
+    const results = [];
+    for (const campaign of campaigns) {
+      const sentCount = await this.prisma.campaignSend.count({
+        where: { campaignId: campaign.id, status: { in: ['SENT', 'DELIVERED', 'READ'] } },
+      });
+
+      const sevenDaysAfterSend = campaign.sentAt
+        ? new Date(campaign.sentAt.getTime() + 7 * 24 * 60 * 60 * 1000)
+        : null;
+
+      const recipientIds = await this.prisma.campaignSend.findMany({
+        where: { campaignId: campaign.id },
+        select: { customerId: true },
+      });
+      const customerIds = recipientIds.map((r) => r.customerId);
+
+      const attributedBookings =
+        campaign.sentAt && sevenDaysAfterSend
+          ? await this.prisma.booking.findMany({
+              where: {
+                businessId,
+                customerId: { in: customerIds },
+                createdAt: { gte: campaign.sentAt, lte: sevenDaysAfterSend },
+              },
+              include: { service: { select: { price: true } } },
+            })
+          : [];
+
+      const revenue = attributedBookings.reduce((sum, b) => sum + (b.service?.price || 0), 0);
+
+      results.push({
+        id: campaign.id,
+        name: campaign.name,
+        sentCount,
+        revenue,
+        sentAt: campaign.sentAt,
+      });
+    }
+
+    return results.sort((a, b) => b.revenue - a.revenue);
   }
 
   // HIGH-04: Generate unsubscribe token for a campaign send

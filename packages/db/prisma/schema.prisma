@@ -19,6 +19,7 @@ model Business {
   aiSettings           Json     @default("{}")
   notificationSettings Json     @default("{}")
   policySettings       Json     @default("{}")
+  campaignPreferences  Json     @default("{}")
   logoUrl              String?
   brandPrimaryColor    String?  @default("#71907C")
   brandTagline         String?
@@ -718,8 +719,13 @@ model Campaign {
   isABTest          Boolean   @default(false)
   variants          Json      @default("[]")
   winnerVariantId   String?
-  winnerSelectedAt  DateTime?
-  channel           String?   @default("WHATSAPP") // WHATSAPP, SMS, EMAIL, MULTI
+  winnerSelectedAt    DateTime?
+  winnerMetric        String?    // READ_RATE or BOOKING_RATE
+  testDurationMinutes Int?       // How long to run test phase (e.g. 120, 360, 720, 1440)
+  testAudiencePercent Int?       @default(20) // % of audience in test phase (10-50)
+  testPhaseEndsAt     DateTime?  // When the test phase window closes
+  autoWinnerSelected  Boolean    @default(false) // Whether system auto-picked the winner
+  channel             String?    @default("WHATSAPP") // WHATSAPP, SMS, EMAIL, MULTI
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
@@ -744,12 +750,27 @@ model CampaignSend {
   bookingId  String?
   variantId  String?
   channel    String?   // WHATSAPP, SMS, EMAIL — actual channel used for this send
+  openedAt   DateTime?
   createdAt  DateTime  @default(now())
 
-  campaign Campaign @relation(fields: [campaignId], references: [id])
+  campaign Campaign        @relation(fields: [campaignId], references: [id])
+  clicks   CampaignClick[]
 
   @@index([campaignId, status])
   @@map("campaign_sends")
+}
+
+model CampaignClick {
+  id             String   @id @default(cuid())
+  campaignSendId String
+  url            String
+  clickedAt      DateTime @default(now())
+  userAgent      String?
+
+  campaignSend CampaignSend @relation(fields: [campaignSendId], references: [id])
+
+  @@index([campaignSendId])
+  @@map("campaign_clicks")
 }
 
 model CampaignUnsubscribe {
