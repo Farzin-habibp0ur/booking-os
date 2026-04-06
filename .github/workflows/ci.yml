@@ -206,11 +206,11 @@ jobs:
         run: npm install prisma@latest --no-save
 
       # Run database migrations against production BEFORE deploying new code
+      # Uses `railway run` which injects all env vars (including DATABASE_URL) from the service
       - name: Run production database migrations
         run: |
-          export DATABASE_URL=$(railway variables get DATABASE_URL --service api -p ${{ secrets.RAILWAY_PROJECT_ID }} -e production)
           echo "Running migrations against production database..."
-          npx prisma migrate deploy --schema=packages/db/prisma/schema.prisma
+          railway run --service api -p ${{ secrets.RAILWAY_PROJECT_ID }} -e production -- npx prisma migrate deploy --schema=packages/db/prisma/schema.prisma
           echo "Migrations completed successfully."
 
       # Stage 1: Deploy API
