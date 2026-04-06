@@ -203,7 +203,7 @@ jobs:
           node-version: 20
 
       - name: Install Prisma CLI
-        run: npm install prisma@latest --no-save
+        run: npm install prisma@6 --no-save
 
       # Run database migrations against production BEFORE deploying new code
       # Uses `railway run` which injects all env vars (including DATABASE_URL) from the service
