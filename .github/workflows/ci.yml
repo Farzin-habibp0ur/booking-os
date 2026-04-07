@@ -208,7 +208,6 @@ jobs:
       # Run database migrations against production BEFORE deploying new code
       # Uses the public DATABASE_URL since GitHub Actions can't reach Railway's internal network
       - name: Run production database migrations
-        if: ${{ secrets.PRODUCTION_DATABASE_URL != '' }}
         env:
           DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
         run: |
