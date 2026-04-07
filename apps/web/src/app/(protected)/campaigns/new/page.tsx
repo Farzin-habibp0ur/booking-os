@@ -1003,7 +1003,13 @@ export default function NewCampaignPage() {
       <CampaignPreviewModal
         isOpen={showPreview}
         onClose={() => setShowPreview(false)}
-        content={isABTest ? variants[activeVariant]?.content || '' : customMessage || ''}
+        content={
+          isABTest
+            ? variants[activeVariant]?.content || ''
+            : messageMode === 'template'
+              ? templates.find((t: any) => t.id === templateId)?.body || ''
+              : customMessage || ''
+        }
         channel={channel}
         businessName="Your Business"
       />

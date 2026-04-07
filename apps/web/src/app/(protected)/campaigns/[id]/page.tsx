@@ -701,9 +701,13 @@ export default function CampaignDetailPage() {
       <CampaignPreviewModal
         isOpen={showPreview}
         onClose={() => setShowPreview(false)}
-        content={campaign.variants?.length > 0 ? campaign.variants[0].content || '' : ''}
+        content={
+          campaign.variants?.length > 0
+            ? campaign.variants[0].content || ''
+            : templates.find((t: any) => t.id === campaign.templateId)?.body || ''
+        }
         channel={campaign.channel || 'WHATSAPP'}
-        businessName="Your Business"
+        businessName={campaign.businessName || 'Your Business'}
       />
     </div>
   );
