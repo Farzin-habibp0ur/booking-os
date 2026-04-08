@@ -93,6 +93,7 @@ model Business {
   budgetEntries              BudgetEntry[]
   escalationEvents           EscalationEvent[]
   deviceTokens               DeviceToken[]
+  automationDefaults         Json     @default("{}")
 
   @@map("businesses")
 }
@@ -658,19 +659,20 @@ model WaitlistEntry {
 }
 
 model AutomationRule {
-  id                   String   @id @default(cuid())
-  businessId           String
-  name                 String
-  trigger              String // BOOKING_CREATED, BOOKING_UPCOMING, STATUS_CHANGED, BOOKING_CANCELLED, MESSAGE_RECEIVED, CUSTOMER_CREATED, PAYMENT_RECEIVED, TESTIMONIAL_SUBMITTED, CAMPAIGN_SENT
-  filters              Json     @default("{}")
-  actions              Json     @default("[]")
-  isActive             Boolean  @default(true)
-  playbook             String?
-  quietStart           String?
-  quietEnd             String?
-  maxPerCustomerPerDay Int      @default(3)
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  id                      String   @id @default(cuid())
+  businessId              String
+  name                    String
+  trigger                 String // BOOKING_CREATED, BOOKING_UPCOMING, STATUS_CHANGED, BOOKING_CANCELLED, MESSAGE_RECEIVED, CUSTOMER_CREATED, PAYMENT_RECEIVED, TESTIMONIAL_SUBMITTED, CAMPAIGN_SENT, REFERRAL_EARNED, REFERRAL_REDEEMED, NO_RESPONSE
+  filters                 Json     @default("{}")
+  actions                 Json     @default("[]")
+  isActive                Boolean  @default(true)
+  playbook                String?
+  quietStart              String?
+  quietEnd                String?
+  maxPerCustomerPerDay    Int      @default(3)
+  messageTemplateOverride Json?
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
 
   business   Business              @relation(fields: [businessId], references: [id])
   logs       AutomationLog[]

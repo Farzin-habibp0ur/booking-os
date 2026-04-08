@@ -19,6 +19,11 @@ import {
   Users,
   Workflow,
   Pencil,
+  Copy,
+  Download,
+  ChevronLeft,
+  ChevronRight,
+  Settings,
 } from 'lucide-react';
 import { TableRowSkeleton, EmptyState } from '@/components/skeleton';
 import TooltipNudge from '@/components/tooltip-nudge';
@@ -26,6 +31,10 @@ import { PlaybookCard } from './components/playbook-card';
 import { DryRunModal } from './components/dry-run-modal';
 import { UpgradeNudge } from '@/components/upgrade-nudge';
 import { usePlan } from '@/lib/use-plan';
+import { useSocket } from '@/lib/use-socket';
+import { getTriggerLabel, getActionLabel, TRIGGER_LABELS } from '@/lib/automation-labels';
+import { AutomationExplainer } from '@/components/automation-explainer';
+import React from 'react';
 
 type Tab = 'playbooks' | 'rules' | 'logs';
 
@@ -57,9 +66,27 @@ export default function AutomationsPage() {
   const [logDateTo, setLogDateTo] = useState('');
   const [dryRunResult, setDryRunResult] = useState<any>(null);
   const [dryRunLoading, setDryRunLoading] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [logPage, setLogPage] = useState(1);
+  const [logPageSize] = useState(25);
+  const [realtimeEvents, setRealtimeEvents] = useState<Record<string, Date>>({});
+  const [safetyDefaults, setSafetyDefaults] = useState<any>(null);
+  const [editingSafety, setEditingSafety] = useState(false);
+  const [safetyForm, setSafetyForm] = useState({
+    quietStart: '',
+    quietEnd: '',
+    maxPerCustomerPerDay: '',
+  });
   const router = useRouter();
   const { toast } = useToast();
   const plan = usePlan();
+
+  // UX-gap-2: Real-time automation execution events
+  useSocket({
+    'automation:executed': (data: { ruleId: string; timestamp: string }) => {
+      setRealtimeEvents((prev) => ({ ...prev, [data.ruleId]: new Date(data.timestamp) }));
+    },
+  });
 
   const loadPlaybooks = () =>
     api
@@ -73,8 +100,18 @@ export default function AutomationsPage() {
       .catch((err: any) => toast(err.message || 'Failed to load rules', 'error'));
 
   const loadLogs = useCallback(
-    (opts?: { search?: string; outcome?: string; dateFrom?: string; dateTo?: string }) => {
-      const params = new URLSearchParams({ pageSize: '50' });
+    (opts?: {
+      search?: string;
+      outcome?: string;
+      dateFrom?: string;
+      dateTo?: string;
+      page?: number;
+    }) => {
+      const currentPage = opts?.page ?? logPage;
+      const params = new URLSearchParams({
+        pageSize: String(logPageSize),
+        skip: String((currentPage - 1) * logPageSize),
+      });
       const s = opts?.search ?? logSearch;
       const o = opts?.outcome ?? logOutcome;
       const df = opts?.dateFrom ?? logDateFrom;
@@ -88,13 +125,21 @@ export default function AutomationsPage() {
         .then(setLogs)
         .catch((err: any) => toast(err.message || 'Failed to load activity logs', 'error'));
     },
-    [logSearch, logOutcome, logDateFrom, logDateTo, toast],
+    [logSearch, logOutcome, logDateFrom, logDateTo, logPage, logPageSize, toast],
   );
 
   useEffect(() => {
     setMounted(true);
     setLoading(true);
-    Promise.all([loadPlaybooks(), loadRules(), loadLogs({})]).finally(() => setLoading(false));
+    Promise.all([
+      loadPlaybooks(),
+      loadRules(),
+      loadLogs({}),
+      api
+        .get('/automations/safety-defaults')
+        .then(setSafetyDefaults)
+        .catch(() => {}),
+    ]).finally(() => setLoading(false));
   }, []);
 
   const handleTogglePlaybook = async (playbookId: string) => {
@@ -115,13 +160,42 @@ export default function AutomationsPage() {
     }
   };
 
-  const handleDeleteRule = async (id: string) => {
-    if (!confirm('Delete this rule?')) return;
+  const handleDeleteRule = async () => {
+    if (!deleteTarget) return;
     try {
-      await api.del(`/automations/rules/${id}`);
+      await api.del(`/automations/rules/${deleteTarget.id}`);
       loadRules();
+      toast('Rule deleted', 'success');
     } catch (err: any) {
       toast(err.message || 'Failed to delete rule', 'error');
+    } finally {
+      setDeleteTarget(null);
+    }
+  };
+
+  const handleDuplicateRule = async (ruleId: string) => {
+    try {
+      await api.post(`/automations/rules/${ruleId}/duplicate`);
+      loadRules();
+      toast('Rule duplicated', 'success');
+    } catch (err: any) {
+      toast(err.message || 'Failed to duplicate rule', 'error');
+    }
+  };
+
+  const handleSaveSafetyDefaults = async () => {
+    try {
+      const body: Record<string, unknown> = {};
+      if (safetyForm.quietStart) body.quietStart = safetyForm.quietStart;
+      if (safetyForm.quietEnd) body.quietEnd = safetyForm.quietEnd;
+      if (safetyForm.maxPerCustomerPerDay)
+        body.maxPerCustomerPerDay = Number(safetyForm.maxPerCustomerPerDay);
+      const result = await api.patch('/automations/safety-defaults', body);
+      setSafetyDefaults(result);
+      setEditingSafety(false);
+      toast('Safety defaults saved', 'success');
+    } catch (err: any) {
+      toast(err.message || 'Failed to save defaults', 'error');
     }
   };
 
@@ -146,7 +220,8 @@ export default function AutomationsPage() {
     setLogOutcome('');
     setLogDateFrom('');
     setLogDateTo('');
-    loadLogs({ search: '', outcome: '', dateFrom: '', dateTo: '' });
+    setLogPage(1);
+    loadLogs({ search: '', outcome: '', dateFrom: '', dateTo: '', page: 1 });
   };
 
   const hasActiveFilters = logSearch || logOutcome || logDateFrom || logDateTo;
@@ -159,6 +234,7 @@ export default function AutomationsPage() {
 
   return (
     <div className="p-6" data-tour-target="automations-list">
+      <AutomationExplainer />
       <TooltipNudge
         id="automations-intro"
         title="Automate your workflow"
@@ -222,7 +298,71 @@ export default function AutomationsPage() {
           <div className="flex items-center gap-2">
             <ShieldCheck size={18} className="text-sage-600" />
             <span className="text-sm font-medium text-slate-800">Safety Controls</span>
+            <button
+              onClick={() => {
+                if (!editingSafety) {
+                  setSafetyForm({
+                    quietStart: safetyDefaults?.quietStart || '',
+                    quietEnd: safetyDefaults?.quietEnd || '',
+                    maxPerCustomerPerDay: safetyDefaults?.maxPerCustomerPerDay?.toString() || '',
+                  });
+                }
+                setEditingSafety(!editingSafety);
+              }}
+              className="ml-auto text-slate-400 hover:text-sage-600 p-1"
+              title="Configure Safety Controls"
+              data-testid="safety-edit-btn"
+            >
+              <Settings size={14} />
+            </button>
           </div>
+          {editingSafety && (
+            <div className="w-full flex flex-col sm:flex-row gap-3 mt-2 p-3 bg-slate-50 rounded-xl">
+              <div className="flex items-center gap-2">
+                <label className="text-xs text-slate-500">Quiet start</label>
+                <input
+                  type="time"
+                  value={safetyForm.quietStart}
+                  onChange={(e) => setSafetyForm((f) => ({ ...f, quietStart: e.target.value }))}
+                  className="px-2 py-1.5 bg-white border-transparent rounded-lg text-xs focus:ring-2 focus:ring-sage-500"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-xs text-slate-500">Quiet end</label>
+                <input
+                  type="time"
+                  value={safetyForm.quietEnd}
+                  onChange={(e) => setSafetyForm((f) => ({ ...f, quietEnd: e.target.value }))}
+                  className="px-2 py-1.5 bg-white border-transparent rounded-lg text-xs focus:ring-2 focus:ring-sage-500"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-xs text-slate-500">Max/day</label>
+                <input
+                  type="number"
+                  min={1}
+                  max={20}
+                  value={safetyForm.maxPerCustomerPerDay}
+                  onChange={(e) =>
+                    setSafetyForm((f) => ({ ...f, maxPerCustomerPerDay: e.target.value }))
+                  }
+                  className="w-16 px-2 py-1.5 bg-white border-transparent rounded-lg text-xs focus:ring-2 focus:ring-sage-500"
+                />
+              </div>
+              <button
+                onClick={handleSaveSafetyDefaults}
+                className="px-3 py-1.5 bg-sage-600 text-white rounded-lg text-xs hover:bg-sage-700"
+              >
+                Save
+              </button>
+              <button
+                onClick={() => setEditingSafety(false)}
+                className="px-3 py-1.5 text-slate-500 text-xs hover:text-slate-700"
+              >
+                Cancel
+              </button>
+            </div>
+          )}
           <div className="flex flex-wrap gap-3">
             <div className="flex items-center gap-1.5">
               <Clock size={14} className="text-slate-400" />
@@ -320,6 +460,9 @@ export default function AutomationsPage() {
                     Status
                   </th>
                   <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
+                    Last Run
+                  </th>
+                  <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
                     Safety
                   </th>
                   <th className="text-left p-3 text-xs font-medium text-slate-500 uppercase">
@@ -329,13 +472,22 @@ export default function AutomationsPage() {
               </thead>
               <tbody className="divide-y">
                 {loading
-                  ? Array.from({ length: 3 }).map((_, i) => <TableRowSkeleton key={i} cols={5} />)
+                  ? Array.from({ length: 3 }).map((_, i) => <TableRowSkeleton key={i} cols={6} />)
                   : rules
                       .filter((r) => !r.playbook)
                       .map((rule) => (
                         <tr key={rule.id} className="hover:bg-slate-50">
                           <td className="p-3 text-sm font-medium">{rule.name}</td>
-                          <td className="p-3 text-sm text-slate-600">{rule.trigger}</td>
+                          <td className="p-3 text-sm text-slate-600">
+                            <div className="flex items-center gap-1.5">
+                              {TRIGGER_LABELS[rule.trigger]?.icon &&
+                                React.createElement(TRIGGER_LABELS[rule.trigger].icon, {
+                                  size: 14,
+                                  className: 'text-slate-400',
+                                })}
+                              {getTriggerLabel(rule.trigger)}
+                            </div>
+                          </td>
                           <td className="p-3">
                             <span
                               className={cn(
@@ -347,6 +499,14 @@ export default function AutomationsPage() {
                             >
                               {rule.isActive ? 'Active' : 'Off'}
                             </span>
+                          </td>
+                          <td className="p-3 text-xs text-slate-500">
+                            {realtimeEvents[rule.id]
+                              ? new Date(realtimeEvents[rule.id]).toLocaleTimeString('en-US', {
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })
+                              : 'Never'}
                           </td>
                           <td className="p-3" data-testid={`safety-col-${rule.id}`}>
                             <div className="flex items-center gap-1">
@@ -387,6 +547,14 @@ export default function AutomationsPage() {
                                 <Pencil size={14} />
                               </button>
                               <button
+                                onClick={() => handleDuplicateRule(rule.id)}
+                                className="text-slate-400 hover:text-sage-600 p-1"
+                                title="Duplicate"
+                                data-testid={`duplicate-rule-${rule.id}`}
+                              >
+                                <Copy size={14} />
+                              </button>
+                              <button
                                 onClick={() => handleTestRule(rule.id)}
                                 className="text-slate-400 hover:text-sage-600 p-1"
                                 data-testid={`test-rule-${rule.id}`}
@@ -394,8 +562,9 @@ export default function AutomationsPage() {
                                 <Play size={16} />
                               </button>
                               <button
-                                onClick={() => handleDeleteRule(rule.id)}
+                                onClick={() => setDeleteTarget({ id: rule.id, name: rule.name })}
                                 className="text-slate-400 hover:text-red-500 p-1"
+                                data-testid={`delete-rule-${rule.id}`}
                               >
                                 <Trash2 size={16} />
                               </button>
@@ -506,6 +675,22 @@ export default function AutomationsPage() {
                   Clear
                 </button>
               )}
+              <button
+                onClick={() => {
+                  const params = new URLSearchParams();
+                  if (logSearch) params.set('search', logSearch);
+                  if (logOutcome) params.set('outcome', logOutcome);
+                  if (logDateFrom) params.set('dateFrom', logDateFrom);
+                  if (logDateTo) params.set('dateTo', logDateTo);
+                  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+                  window.open(`${apiUrl}/automations/activity/export?${params.toString()}`);
+                }}
+                className="flex items-center gap-1 px-3 py-1.5 text-slate-600 hover:text-slate-800 text-xs"
+                data-testid="export-csv-btn"
+              >
+                <Download size={14} />
+                Export CSV
+              </button>
             </div>
           </div>
 
@@ -535,7 +720,9 @@ export default function AutomationsPage() {
                     : logs.data.map((log: any) => (
                         <tr key={log.id} className="hover:bg-slate-50">
                           <td className="p-3 text-sm font-medium">{log.rule?.name || '—'}</td>
-                          <td className="p-3 text-sm text-slate-600">{log.action}</td>
+                          <td className="p-3 text-sm text-slate-600">
+                            {getActionLabel(log.action)}
+                          </td>
                           <td className="p-3">
                             <div className="flex items-center gap-2">
                               <span
@@ -603,6 +790,67 @@ export default function AutomationsPage() {
                 description="Automation logs will appear here once rules start executing."
               />
             )}
+            {/* Pagination */}
+            {logs.total > logPageSize && (
+              <div className="flex items-center justify-between p-3 border-t">
+                <span className="text-xs text-slate-500">
+                  Showing {(logPage - 1) * logPageSize + 1}–
+                  {Math.min(logPage * logPageSize, logs.total)} of {logs.total}
+                </span>
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => {
+                      const prev = Math.max(1, logPage - 1);
+                      setLogPage(prev);
+                      loadLogs({ page: prev });
+                    }}
+                    disabled={logPage === 1}
+                    className="flex items-center gap-1 px-3 py-1 text-xs rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-50"
+                  >
+                    <ChevronLeft size={12} /> Previous
+                  </button>
+                  <button
+                    onClick={() => {
+                      const next = logPage + 1;
+                      setLogPage(next);
+                      loadLogs({ page: next });
+                    }}
+                    disabled={logPage * logPageSize >= logs.total}
+                    className="flex items-center gap-1 px-3 py-1 text-xs rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-50"
+                  >
+                    Next <ChevronRight size={12} />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+          <div className="bg-white rounded-2xl shadow-lg p-6 max-w-sm w-full mx-4">
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">Delete Rule</h3>
+            <p className="text-sm text-slate-600 mb-4">
+              Are you sure you want to permanently delete <strong>{deleteTarget.name}</strong>? This
+              action cannot be undone.
+            </p>
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                className="px-4 py-2 text-sm text-slate-600 hover:text-slate-800 rounded-xl"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteRule}
+                className="px-4 py-2 text-sm bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors"
+                data-testid="confirm-delete-btn"
+              >
+                Delete
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -7,6 +7,7 @@ import { UsageService } from '../usage/usage.service';
 import { TestimonialsService } from '../testimonials/testimonials.service';
 import { QUEUE_NAMES } from '../../common/queue/queue.module';
 import { DistributedLockService } from '../../common/distributed-lock.service';
+import { InboxGateway } from '../../common/inbox.gateway';
 
 @Injectable()
 export class AutomationExecutorService {
@@ -19,6 +20,7 @@ export class AutomationExecutorService {
     private testimonialsService: TestimonialsService,
     @Optional() @InjectQueue(QUEUE_NAMES.NOTIFICATIONS) private notificationQueue?: Queue,
     @Optional() private lockService?: DistributedLockService,
+    @Optional() private inboxGateway?: InboxGateway,
   ) {}
 
   // H5 fix: Paginated execution with time limit to prevent resource exhaustion
@@ -70,15 +72,18 @@ export class AutomationExecutorService {
   }
 
   private async processRule(rule: any) {
-    // Fetch business timezone for quiet hours check
+    // Fetch business timezone and automation defaults for quiet hours check
     const business = await this.prisma.business.findUnique({
       where: { id: rule.businessId },
-      select: { timezone: true },
+      select: { timezone: true, automationDefaults: true },
     });
     const timezone = business?.timezone || 'UTC';
+    const defaults = (business?.automationDefaults as Record<string, any>) || {};
 
-    // Check quiet hours using business timezone
-    if (this.isQuietHours(rule.quietStart, rule.quietEnd, timezone)) return;
+    // UX-gap-16: Fall back to business-level defaults for quiet hours and frequency cap
+    const quietStart = rule.quietStart || defaults.quietStart;
+    const quietEnd = rule.quietEnd || defaults.quietEnd;
+    if (this.isQuietHours(quietStart, quietEnd, timezone)) return;
 
     const now = new Date();
     const twoMinutesAgo = new Date(now.getTime() - 2 * 60 * 1000);
@@ -276,6 +281,214 @@ export class AutomationExecutorService {
               redemption.credit.businessId,
               redemption.bookingId,
               redemption.credit.customerId,
+              timezone,
+            );
+          }
+        }
+        break;
+      }
+      case 'CUSTOMER_CREATED': {
+        const customers = await this.prisma.customer.findMany({
+          where: {
+            businessId: rule.businessId,
+            createdAt: { gte: twoMinutesAgo },
+            ...(filters.tag && { tags: { has: filters.tag as string } }),
+          },
+        });
+        for (const customer of customers) {
+          if (hasSteps) {
+            await this.startStepExecution(
+              rule,
+              steps,
+              customer.businessId,
+              undefined,
+              customer.id,
+              customer,
+            );
+          } else {
+            await this.executeActions(
+              rule,
+              actions,
+              customer.businessId,
+              undefined,
+              customer.id,
+              timezone,
+            );
+          }
+        }
+        break;
+      }
+      case 'PAYMENT_RECEIVED': {
+        const payments = await this.prisma.payment.findMany({
+          where: {
+            businessId: rule.businessId,
+            createdAt: { gte: twoMinutesAgo },
+            status: 'SUCCEEDED',
+          },
+          include: { customer: true, booking: true },
+        });
+        for (const payment of payments) {
+          if (filters.minAmount && payment.amount < Number(filters.minAmount)) continue;
+          if (!payment.customerId) continue;
+          if (hasSteps) {
+            await this.startStepExecution(
+              rule,
+              steps,
+              payment.businessId,
+              payment.bookingId ?? undefined,
+              payment.customerId,
+              payment,
+            );
+          } else {
+            await this.executeActions(
+              rule,
+              actions,
+              payment.businessId,
+              payment.bookingId ?? undefined,
+              payment.customerId,
+              timezone,
+            );
+          }
+        }
+        break;
+      }
+      case 'MESSAGE_RECEIVED': {
+        const messages = await this.prisma.message.findMany({
+          where: {
+            conversation: { businessId: rule.businessId },
+            createdAt: { gte: twoMinutesAgo },
+            direction: 'INBOUND',
+          },
+          include: { conversation: { include: { customer: true } } },
+        });
+        for (const message of messages) {
+          const conv = message.conversation;
+          if (!conv?.customerId) continue;
+          if (hasSteps) {
+            await this.startStepExecution(
+              rule,
+              steps,
+              conv.businessId,
+              undefined,
+              conv.customerId,
+              message,
+            );
+          } else {
+            await this.executeActions(
+              rule,
+              actions,
+              conv.businessId,
+              undefined,
+              conv.customerId,
+              timezone,
+            );
+          }
+        }
+        break;
+      }
+      case 'TESTIMONIAL_SUBMITTED': {
+        const testimonials = await this.prisma.testimonial.findMany({
+          where: {
+            businessId: rule.businessId,
+            createdAt: { gte: twoMinutesAgo },
+          },
+          include: { customer: true },
+        });
+        for (const testimonial of testimonials) {
+          if (filters.minRating && (testimonial.rating ?? 0) < Number(filters.minRating)) continue;
+          if (!testimonial.customerId) continue;
+          if (hasSteps) {
+            await this.startStepExecution(
+              rule,
+              steps,
+              testimonial.businessId,
+              undefined,
+              testimonial.customerId,
+              testimonial,
+            );
+          } else {
+            await this.executeActions(
+              rule,
+              actions,
+              testimonial.businessId,
+              undefined,
+              testimonial.customerId,
+              timezone,
+            );
+          }
+        }
+        break;
+      }
+      case 'CAMPAIGN_SENT': {
+        const campaigns = await this.prisma.campaign.findMany({
+          where: {
+            businessId: rule.businessId,
+            updatedAt: { gte: twoMinutesAgo },
+            status: 'SENT',
+          },
+        });
+        for (const campaign of campaigns) {
+          if (filters.campaignName && !campaign.name.includes(filters.campaignName as string))
+            continue;
+          // Campaign-level triggers don't target individual customers — log at business level
+          if (hasSteps) {
+            await this.startStepExecution(
+              rule,
+              steps,
+              campaign.businessId,
+              undefined,
+              undefined,
+              campaign,
+            );
+          } else {
+            await this.executeActions(
+              rule,
+              actions,
+              campaign.businessId,
+              undefined,
+              undefined,
+              timezone,
+            );
+          }
+        }
+        break;
+      }
+      case 'NO_RESPONSE': {
+        // Scans for customers with no activity in the configured period (default 30 days)
+        const daysSince = Number(filters.daysSince) || 30;
+        const cutoff = new Date(now.getTime() - daysSince * 24 * 60 * 60 * 1000);
+        const inactiveCustomers = await this.prisma.customer.findMany({
+          where: {
+            businessId: rule.businessId,
+            bookings: {
+              none: { startTime: { gte: cutoff } },
+            },
+            conversations: {
+              none: {
+                messages: { some: { direction: 'INBOUND', createdAt: { gte: cutoff } } },
+              },
+            },
+            updatedAt: { gte: twoMinutesAgo }, // Only process recently-flagged customers
+          },
+          take: 50,
+        });
+        for (const customer of inactiveCustomers) {
+          if (hasSteps) {
+            await this.startStepExecution(
+              rule,
+              steps,
+              customer.businessId,
+              undefined,
+              customer.id,
+              customer,
+            );
+          } else {
+            await this.executeActions(
+              rule,
+              actions,
+              customer.businessId,
+              undefined,
+              customer.id,
               timezone,
             );
           }
@@ -912,6 +1125,16 @@ export class AutomationExecutorService {
         reason: reason || null,
       },
     });
+
+    // UX-gap-2: Emit real-time event for frontend activity indicators
+    if (this.inboxGateway && (outcome === 'SENT' || !outcome)) {
+      this.inboxGateway.emitToBusinessRoom(businessId, 'automation:executed', {
+        ruleId: rule.id,
+        ruleName: rule.name,
+        action,
+        timestamp: new Date().toISOString(),
+      });
+    }
   }
 
   isQuietHours(

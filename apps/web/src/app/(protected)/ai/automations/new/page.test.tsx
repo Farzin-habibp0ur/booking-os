@@ -24,6 +24,32 @@ jest.mock('lucide-react', () => ({
   ShieldCheck: () => <span>ShieldCheck</span>,
   Info: () => <span>Info</span>,
 }));
+jest.mock('@/lib/automation-labels', () => ({
+  TRIGGER_CATEGORIES: [
+    {
+      name: 'Booking Events',
+      triggers: ['BOOKING_CREATED', 'BOOKING_UPCOMING', 'STATUS_CHANGED', 'BOOKING_CANCELLED'],
+    },
+    { name: 'Customer Events', triggers: ['CUSTOMER_CREATED', 'TESTIMONIAL_SUBMITTED'] },
+    { name: 'Payment Events', triggers: ['PAYMENT_RECEIVED'] },
+    { name: 'Communication', triggers: ['MESSAGE_RECEIVED', 'NO_RESPONSE', 'CAMPAIGN_SENT'] },
+    { name: 'Referral Events', triggers: ['REFERRAL_EARNED', 'REFERRAL_REDEEMED'] },
+  ],
+  TRIGGER_LABELS: {
+    BOOKING_CREATED: { label: 'When a booking is created' },
+    BOOKING_UPCOMING: { label: 'Before an upcoming booking' },
+    STATUS_CHANGED: { label: 'When booking status changes' },
+    BOOKING_CANCELLED: { label: 'When a booking is cancelled' },
+    CUSTOMER_CREATED: { label: 'When a new customer is added' },
+    PAYMENT_RECEIVED: { label: 'When a payment is received' },
+    TESTIMONIAL_SUBMITTED: { label: 'When a testimonial is submitted' },
+    CAMPAIGN_SENT: { label: 'When a campaign is sent' },
+    REFERRAL_EARNED: { label: 'When a referral is earned' },
+    REFERRAL_REDEEMED: { label: 'When a referral is redeemed' },
+    MESSAGE_RECEIVED: { label: 'When a message is received' },
+    NO_RESPONSE: { label: "When customer doesn't respond" },
+  },
+}));
 
 import { api } from '@/lib/api';
 const mockApi = api as jest.Mocked<typeof api>;
@@ -48,20 +74,22 @@ describe('NewAutomationPage', () => {
 
   it('renders all trigger options', () => {
     render(<NewAutomationPage />);
-    expect(screen.getByText('Booking Created')).toBeInTheDocument();
-    expect(screen.getByText('Booking Upcoming')).toBeInTheDocument();
-    expect(screen.getByText('Status Changed')).toBeInTheDocument();
-    expect(screen.getByText('Booking Cancelled')).toBeInTheDocument();
-    expect(screen.getByText('No Response')).toBeInTheDocument();
+    expect(screen.getByText('When a booking is created')).toBeInTheDocument();
+    expect(screen.getByText('Before an upcoming booking')).toBeInTheDocument();
+    expect(screen.getByText('When booking status changes')).toBeInTheDocument();
+    expect(screen.getByText('When a booking is cancelled')).toBeInTheDocument();
+    expect(screen.getByText("When customer doesn't respond")).toBeInTheDocument();
+    // New triggers should also be present
+    expect(screen.getByText('When a new customer is added')).toBeInTheDocument();
+    expect(screen.getByText('When a payment is received')).toBeInTheDocument();
   });
 
-  it('shows example scenario when trigger is selected', () => {
+  it('shows example box when trigger is selected', () => {
     render(<NewAutomationPage />);
 
-    fireEvent.click(screen.getByText('Booking Created'));
+    fireEvent.click(screen.getByText('When a booking is created'));
 
     expect(screen.getByTestId('trigger-example')).toBeInTheDocument();
-    expect(screen.getByText(/Hydra Facial/)).toBeInTheDocument();
   });
 
   it('shows safety bar on trigger step', () => {
@@ -74,7 +102,7 @@ describe('NewAutomationPage', () => {
   it('advances to filter step and shows filter preview', () => {
     render(<NewAutomationPage />);
 
-    fireEvent.click(screen.getByText('Booking Created'));
+    fireEvent.click(screen.getByText('When a booking is created'));
     fireEvent.click(screen.getByText('Next'));
 
     expect(screen.getByTestId('filter-preview')).toBeInTheDocument();
@@ -84,7 +112,7 @@ describe('NewAutomationPage', () => {
   it('shows filter preview for BOOKING_UPCOMING with hoursBefore', () => {
     render(<NewAutomationPage />);
 
-    fireEvent.click(screen.getByText('Booking Upcoming'));
+    fireEvent.click(screen.getByText('Before an upcoming booking'));
     fireEvent.click(screen.getByText('Next'));
 
     expect(screen.getByTestId('filter-preview')).toBeInTheDocument();
@@ -95,7 +123,7 @@ describe('NewAutomationPage', () => {
   it('shows action preview on action step', () => {
     render(<NewAutomationPage />);
 
-    fireEvent.click(screen.getByText('Booking Created'));
+    fireEvent.click(screen.getByText('When a booking is created'));
     fireEvent.click(screen.getByText('Next'));
     fireEvent.click(screen.getByText('Next'));
 
@@ -107,7 +135,7 @@ describe('NewAutomationPage', () => {
   it('shows plain-language summary on review step', () => {
     render(<NewAutomationPage />);
 
-    fireEvent.click(screen.getByText('Booking Created'));
+    fireEvent.click(screen.getByText('When a booking is created'));
     fireEvent.click(screen.getByText('Next'));
     fireEvent.click(screen.getByText('Next'));
     fireEvent.click(screen.getByText('Next'));
@@ -116,7 +144,7 @@ describe('NewAutomationPage', () => {
     expect(screen.getByText(/In plain language/)).toBeInTheDocument();
     // Summary contains the trigger name within the plain language text
     const summary = screen.getByTestId('plain-language-summary');
-    expect(summary.textContent).toContain('Booking Created');
+    expect(summary.textContent).toContain('When a booking is created');
   });
 
   it('navigates back to automations when Back to Automations is clicked', () => {
@@ -132,7 +160,7 @@ describe('NewAutomationPage', () => {
     render(<NewAutomationPage />);
 
     // Step 0: Select trigger
-    fireEvent.click(screen.getByText('Booking Created'));
+    fireEvent.click(screen.getByText('When a booking is created'));
     fireEvent.click(screen.getByText('Next'));
     // Step 1: Filters (skip)
     fireEvent.click(screen.getByText('Next'));
