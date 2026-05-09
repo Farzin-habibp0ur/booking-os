@@ -52,10 +52,11 @@ describe('RecurringService', () => {
       const dates = service.generateOccurrenceDates(start, '10:00', [2], 2, 4);
 
       expect(dates).toHaveLength(4);
-      // Dates should be 2 weeks apart
+      // Compare in whole days to avoid false negatives across DST boundaries.
+      const oneDay = 24 * 60 * 60 * 1000;
       for (let i = 1; i < dates.length; i++) {
-        const diff = dates[i].getTime() - dates[i - 1].getTime();
-        expect(diff).toBe(14 * 24 * 60 * 60 * 1000);
+        const diffDays = Math.round((dates[i].getTime() - dates[i - 1].getTime()) / oneDay);
+        expect(diffDays).toBe(14);
       }
     });
 
