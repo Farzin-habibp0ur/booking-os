@@ -496,7 +496,7 @@ export default function EmailChannelSettingsPage() {
               type="text"
               value={testSubject}
               onChange={(e) => setTestSubject(e.target.value)}
-              placeholder="Test email from BookingOS"
+              placeholder="Test email from Business Command Centre"
               data-testid="test-subject-input"
               className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-sage-500 focus:border-transparent outline-none"
             />
@@ -509,7 +509,7 @@ export default function EmailChannelSettingsPage() {
             <textarea
               value={testMessage}
               onChange={(e) => setTestMessage(e.target.value)}
-              placeholder="Hello, this is a test email from BookingOS!"
+              placeholder="Hello, this is a test email from Business Command Centre!"
               rows={3}
               data-testid="test-message-input"
               className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-sage-500 focus:border-transparent outline-none resize-none"

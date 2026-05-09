@@ -3,7 +3,7 @@ title: 'The Complete Guide to Automated Email Sequences for Service Businesses'
 description: 'How to set up email drip campaigns that onboard new clients, reduce churn, and drive repeat bookings on autopilot.'
 date: '2026-03-03'
 category: 'Product Education'
-author: 'Booking OS Team'
+author: 'Business Command Centre Team'
 readTime: '6 min read'
 ---
 

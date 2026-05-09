@@ -41,7 +41,7 @@ export default function AILayout({ children }: { children: React.ReactNode }) {
             <div className="flex items-center gap-3">
               <Sparkles size={32} className="text-lavender-500" />
               <h1 className="font-serif text-3xl font-bold text-slate-900 dark:text-white">
-                AI Hub
+                AI Front Desk
               </h1>
             </div>
             <Link
@@ -53,7 +53,7 @@ export default function AILayout({ children }: { children: React.ReactNode }) {
             </Link>
           </div>
           <p className="text-slate-600 dark:text-slate-400">
-            Manage your AI agents, automations, and intelligence
+            Capture leads, approve drafted replies, fill cancellations, and prove recovered revenue
           </p>
         </div>
 

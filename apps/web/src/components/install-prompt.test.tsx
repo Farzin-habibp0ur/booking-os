@@ -48,7 +48,9 @@ describe('InstallPrompt', () => {
     });
 
     expect(screen.getByTestId('install-prompt')).toBeInTheDocument();
-    expect(screen.getByText('Install Booking OS for faster access')).toBeInTheDocument();
+    expect(
+      screen.getByText('Install Business Command Centre for faster access'),
+    ).toBeInTheDocument();
     expect(screen.getByTestId('install-button')).toBeInTheDocument();
   });
 

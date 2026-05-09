@@ -65,8 +65,8 @@ export const SETTINGS_CATEGORIES: SettingsCategory[] = [
   },
   {
     key: 'ai',
-    label: 'AI & Automation',
-    description: 'AI assistant, autonomy levels, and background agents',
+    label: 'AI Front Desk',
+    description: 'Approval mode, autonomy levels, and front desk agents',
     icon: Sparkles,
     accent: 'lavender',
     pages: ['ai', 'autonomy', 'agents'],

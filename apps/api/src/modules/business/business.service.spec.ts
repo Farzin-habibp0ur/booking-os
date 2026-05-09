@@ -169,7 +169,7 @@ describe('BusinessService', () => {
       const result = await service.getAiSettings('biz1');
 
       expect(result).toEqual({
-        enabled: false,
+        enabled: true,
         autoReplySuggestions: true,
         bookingAssistant: true,
         personality: 'friendly and professional',
@@ -182,7 +182,7 @@ describe('BusinessService', () => {
       const result = await service.getAiSettings('biz1');
 
       expect(result).toEqual({
-        enabled: false,
+        enabled: true,
         autoReplySuggestions: true,
         bookingAssistant: true,
         personality: 'friendly and professional',
@@ -214,7 +214,7 @@ describe('BusinessService', () => {
       const result = await service.getAiSettings('biz1');
 
       expect(result).toEqual({
-        enabled: false,
+        enabled: true,
         autoReplySuggestions: true,
         bookingAssistant: true,
         personality: 'friendly and professional',

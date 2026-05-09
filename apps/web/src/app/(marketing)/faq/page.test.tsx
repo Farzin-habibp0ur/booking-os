@@ -11,27 +11,26 @@ jest.mock('next/link', () => ({ children, href, ...rest }: any) => (
 describe('FaqPage', () => {
   it('renders the FAQ heading', () => {
     render(<FaqPage />);
-    expect(screen.getByText('Frequently Asked Questions')).toBeInTheDocument();
+    expect(screen.getByText('Frequently asked questions')).toBeInTheDocument();
   });
 
   it('renders category headers', () => {
     render(<FaqPage />);
-    expect(screen.getByText('General')).toBeInTheDocument();
-    expect(screen.getByText('Pricing')).toBeInTheDocument();
-    expect(screen.getByText('Features')).toBeInTheDocument();
-    expect(screen.getByText('Security')).toBeInTheDocument();
+    expect(screen.getByText('Pilot')).toBeInTheDocument();
+    expect(screen.getByText('AI Front Desk')).toBeInTheDocument();
+    expect(screen.getByText('Trust')).toBeInTheDocument();
   });
 
   it('renders FAQ questions', () => {
     render(<FaqPage />);
-    expect(screen.getByText('What is Booking OS?')).toBeInTheDocument();
-    expect(screen.getByText('How much does Booking OS cost?')).toBeInTheDocument();
-    expect(screen.getByText('Is my data secure?')).toBeInTheDocument();
+    expect(screen.getByText('What is Business Command Centre?')).toBeInTheDocument();
+    expect(screen.getByText('How is pricing handled?')).toBeInTheDocument();
+    expect(screen.getByText('Is this medical software?')).toBeInTheDocument();
   });
 
   it('expands FAQ answer on click', () => {
     render(<FaqPage />);
-    const question = screen.getByText('What is Booking OS?');
+    const question = screen.getByText('What is Business Command Centre?');
     const button = question.closest('button')!;
 
     expect(button).toHaveAttribute('aria-expanded', 'false');

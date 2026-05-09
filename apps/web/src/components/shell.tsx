@@ -338,13 +338,13 @@ function ShellInner({ children }: { children: ReactNode }) {
             </>
           )}
 
-          {/* AI & AGENTS section */}
+          {/* AI FRONT DESK section */}
           {aiAgentsNav.length > 0 && (
             <>
               <div className="my-2 border-t border-slate-100 dark:border-slate-800" />
               <p className="nav-section-label flex items-center gap-1">
                 <Sparkles size={12} />
-                {t('nav.section_ai_agents', undefined) || 'AI & Agents'}
+                {t('nav.section_ai_agents', undefined) || 'AI Front Desk'}
               </p>
               {aiAgentsNav.map(renderNavLink)}
             </>
@@ -391,7 +391,7 @@ function ShellInner({ children }: { children: ReactNode }) {
                     <>
                       <p className="nav-section-label text-slate-300 dark:text-slate-600 flex items-center gap-1">
                         <Sparkles size={10} />
-                        {t('nav.section_ai_agents', undefined) || 'AI & Agents'}
+                        {t('nav.section_ai_agents', undefined) || 'AI Front Desk'}
                       </p>
                       {overflowAiAgentsNav.map(renderNavLink)}
                     </>

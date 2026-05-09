@@ -3,7 +3,7 @@ title: '5 Service Industry Trends Reshaping How Businesses Operate in 2026'
 description: 'From AI-first customer interactions to hyper-personalization, the key trends transforming service businesses this year.'
 date: '2026-02-12'
 category: 'Industry Insights'
-author: 'Booking OS Team'
+author: 'Business Command Centre Team'
 readTime: '5 min read'
 ---
 

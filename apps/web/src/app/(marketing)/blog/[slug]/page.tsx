@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!post) return {};
 
   return {
-    title: `${post.title} — Booking OS Blog`,
+    title: `${post.title} — Business Command Centre Blog`,
     description: post.description,
     alternates: {
       canonical: `https://businesscommandcentre.com/blog/${slug}`,
@@ -54,7 +54,7 @@ export default async function BlogPostPage({ params }: Props) {
     },
     publisher: {
       '@type': 'Organization',
-      name: 'Booking OS',
+      name: 'Business Command Centre',
       url: 'https://businesscommandcentre.com',
     },
     url: `https://businesscommandcentre.com/blog/${slug}`,

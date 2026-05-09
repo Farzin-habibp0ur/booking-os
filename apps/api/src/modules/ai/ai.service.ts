@@ -43,7 +43,7 @@ interface AiSettings {
 }
 
 const DEFAULT_AI_SETTINGS: AiSettings = {
-  enabled: false,
+  enabled: true,
   autoReplySuggestions: true,
   bookingAssistant: true,
   personality: 'friendly and professional',

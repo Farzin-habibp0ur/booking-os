@@ -3,7 +3,7 @@ title: 'Optimizing Your Online Booking Page for Higher Conversion Rates'
 description: 'Practical tips for designing an online booking experience that converts visitors into confirmed appointments.'
 date: '2026-02-22'
 category: 'Product Education'
-author: 'Booking OS Team'
+author: 'Business Command Centre Team'
 readTime: '5 min read'
 ---
 

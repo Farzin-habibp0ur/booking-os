@@ -25,7 +25,7 @@ export default function PortalLayout({ children }: { children: ReactNode }) {
         <p className="text-xs text-slate-400">
           Powered by{' '}
           <Link href="/" className="text-sage-600 hover:text-sage-700">
-            Booking OS
+            Business Command Centre
           </Link>
         </p>
       </footer>

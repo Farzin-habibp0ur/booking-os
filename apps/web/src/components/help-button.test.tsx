@@ -182,7 +182,7 @@ describe('HelpButton', () => {
     await user.click(screen.getByTestId('help-button'));
 
     const link = screen.getByTestId('help-link-contact-support');
-    expect(link).toHaveAttribute('href', 'mailto:support@bookingos.com');
+    expect(link).toHaveAttribute('href', 'mailto:support@businesscommandcentre.com');
   });
 
   it('Feature Requests links to mailto', async () => {
@@ -192,6 +192,6 @@ describe('HelpButton', () => {
     await user.click(screen.getByTestId('help-button'));
 
     const link = screen.getByTestId('help-link-feature-requests');
-    expect(link).toHaveAttribute('href', 'mailto:feedback@bookingos.com');
+    expect(link).toHaveAttribute('href', 'mailto:feedback@businesscommandcentre.com');
   });
 });

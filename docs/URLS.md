@@ -1,6 +1,6 @@
 # URL Reference
 
-Quick-reference for all domains, services, dashboards, and endpoints used in Booking OS.
+Quick-reference for all domains, services, dashboards, and endpoints used in Business Command Centre.
 For detailed setup and deployment instructions, see [DEPLOY.md](../DEPLOY.md).
 
 ---
@@ -10,11 +10,14 @@ For detailed setup and deployment instructions, see [DEPLOY.md](../DEPLOY.md).
 | URL                                                     | Purpose                          |
 | ------------------------------------------------------- | -------------------------------- |
 | `https://businesscommandcentre.com`                     | Web app (root domain)            |
+| `https://businesscommandcentre.com/pilot`               | AI Front Desk pilot application  |
 | `https://www.businesscommandcentre.com`                 | Web app (www redirect)           |
 | `https://admin.businesscommandcentre.com`               | Admin console (SUPER_ADMIN only) |
 | `https://api.businesscommandcentre.com`                 | API root                         |
 | `https://api.businesscommandcentre.com/api/v1`          | API v1 base path                 |
 | `https://api.businesscommandcentre.com/api/v1/health`   | API health check                 |
+| `https://api.businesscommandcentre.com/api/v1/pilot-applications` | Public pilot application API |
+| `https://api.businesscommandcentre.com/api/v1/front-desk/summary` | Tenant AI Front Desk summary API |
 | `https://admin.businesscommandcentre.com/api/v1/health` | Admin health check               |
 | `https://businesscommandcentre.com/api/v1/health`       | Web-proxied health check         |
 

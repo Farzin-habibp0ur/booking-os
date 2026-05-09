@@ -251,7 +251,7 @@ export default function ConsoleAgentsPage() {
   return (
     <div className="p-6 md:p-8 max-w-6xl">
       <h1 className="text-2xl font-serif font-bold text-slate-900 dark:text-white mb-6">
-        AI & Agents
+        AI Front Desk
       </h1>
 
       {error && (

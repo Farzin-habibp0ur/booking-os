@@ -15,7 +15,7 @@ jest.mock('@/lib/blog', () => ({
       description: 'Description for post one',
       date: '2026-03-01',
       category: 'Industry Insights',
-      author: 'Booking OS Team',
+      author: 'Business Command Centre Team',
       readTime: '5 min read',
     },
     {
@@ -24,7 +24,7 @@ jest.mock('@/lib/blog', () => ({
       description: 'Description for post two',
       date: '2026-02-15',
       category: 'Technical',
-      author: 'Booking OS Team',
+      author: 'Business Command Centre Team',
       readTime: '8 min read',
     },
   ],

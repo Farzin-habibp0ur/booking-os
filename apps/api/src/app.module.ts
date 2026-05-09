@@ -87,6 +87,8 @@ import { CircuitBreakerModule } from './common/circuit-breaker';
 import { DeviceTokenModule } from './modules/device-token/device-token.module';
 import { PushNotificationModule } from './modules/push-notification/push-notification.module';
 import { TrackingModule } from './modules/tracking/tracking.module';
+import { PilotApplicationModule } from './modules/pilot-application/pilot-application.module';
+import { FrontDeskModule } from './modules/front-desk/front-desk.module';
 
 @Module({
   imports: [
@@ -189,6 +191,8 @@ import { TrackingModule } from './modules/tracking/tracking.module';
     DeviceTokenModule,
     PushNotificationModule,
     TrackingModule,
+    PilotApplicationModule,
+    FrontDeskModule,
     process.env.REDIS_URL ? QueueModule.forRootWithRedis() : QueueModule.forRoot(),
     DistributedLockModule,
   ],

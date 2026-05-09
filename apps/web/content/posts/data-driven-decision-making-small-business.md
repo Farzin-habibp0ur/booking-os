@@ -3,7 +3,7 @@ title: 'Data-Driven Decision Making for Small Service Businesses'
 description: 'How to use the data you already collect to make smarter decisions about staffing, marketing, pricing, and client experience.'
 date: '2026-02-28'
 category: 'Thought Leadership'
-author: 'Booking OS Team'
+author: 'Business Command Centre Team'
 readTime: '5 min read'
 ---
 

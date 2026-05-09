@@ -3,7 +3,7 @@ title: 'Managing Multiple Locations Without Losing Your Mind'
 description: 'Operational strategies and technology solutions for service businesses expanding to two, five, or twenty locations.'
 date: '2026-02-17'
 category: 'Industry Insights'
-author: 'Booking OS Team'
+author: 'Business Command Centre Team'
 readTime: '5 min read'
 ---
 

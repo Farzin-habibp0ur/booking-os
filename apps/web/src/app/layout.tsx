@@ -7,47 +7,46 @@ const SITE_URL = 'https://businesscommandcentre.com';
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: 'Booking OS — The All-in-One Command Center for Your Clinic',
-    template: '%s | Booking OS',
+    default: 'Business Command Centre — AI Front Desk for Aesthetic Clinics',
+    template: '%s | Business Command Centre',
   },
   description:
-    'Manage appointments, client messaging, and AI automation in one beautiful dashboard. Built for aesthetic clinics and service businesses.',
+    'Turn missed clinic messages into booked appointments with an AI front desk for aesthetic clinics.',
   keywords: [
-    'booking software',
-    'clinic management',
-    'appointment scheduling',
+    'AI front desk',
     'aesthetic clinic',
+    'med spa',
+    'Instagram leads',
     'WhatsApp business',
-    'AI automation',
-    'client messaging',
-    'service business',
-    'med spa software',
-    'practice management',
+    'clinic messaging',
+    'consult follow up',
+    'waitlist automation',
+    'recovered revenue',
   ],
-  authors: [{ name: 'Booking OS' }],
-  creator: 'Booking OS',
+  authors: [{ name: 'Business Command Centre' }],
+  creator: 'Business Command Centre',
   openGraph: {
     type: 'website',
     locale: 'en_US',
     url: SITE_URL,
-    siteName: 'Booking OS',
-    title: 'Booking OS — The All-in-One Command Center for Your Clinic',
+    siteName: 'Business Command Centre',
+    title: 'Business Command Centre — AI Front Desk for Aesthetic Clinics',
     description:
-      'Manage appointments, client messaging, and AI automation in one beautiful dashboard. Built for aesthetic clinics and service businesses.',
+      'Turn missed clinic messages into booked appointments with an AI front desk for aesthetic clinics.',
     images: [
       {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'Booking OS — The All-in-One Command Center for Your Clinic',
+        alt: 'Business Command Centre — AI Front Desk for Aesthetic Clinics',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Booking OS — The All-in-One Command Center for Your Clinic',
+    title: 'Business Command Centre — AI Front Desk for Aesthetic Clinics',
     description:
-      'Manage appointments, client messaging, and AI automation in one beautiful dashboard. Built for aesthetic clinics and service businesses.',
+      'Turn missed clinic messages into booked appointments with an AI front desk for aesthetic clinics.',
     images: ['/og-image.png'],
   },
   robots: {
@@ -58,7 +57,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Booking OS',
+    title: 'Business Command Centre',
   },
   other: {
     'mobile-web-app-capable': 'yes',

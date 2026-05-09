@@ -1,7 +1,7 @@
 {
-  "name": "Booking OS — Clinic Command Center",
-  "short_name": "Booking OS",
-  "description": "The All-in-One Command Center for Your Clinic",
+  "name": "Business Command Centre — AI Front Desk",
+  "short_name": "Business Command Centre",
+  "description": "AI front desk for aesthetic clinics",
   "start_url": "/dashboard",
   "scope": "/",
   "display": "standalone",

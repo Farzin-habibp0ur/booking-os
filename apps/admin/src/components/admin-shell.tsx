@@ -22,6 +22,7 @@ import {
   Menu,
   X,
   Megaphone,
+  ClipboardList,
 } from 'lucide-react';
 
 const adminNav = [
@@ -31,6 +32,7 @@ const adminNav = [
   { href: '/packs', label: 'Packs & Skills', icon: Package },
   { href: '/agents', label: 'AI Agents', icon: Bot },
   { href: '/marketing', label: 'Marketing', icon: Megaphone },
+  { href: '/pilot-applications', label: 'Pilot Apps', icon: ClipboardList },
   { href: '/messaging', label: 'Messaging', icon: MessageSquare },
   { href: '/support', label: 'Support', icon: LifeBuoy },
   { href: '/audit', label: 'Audit Log', icon: ScrollText },
@@ -69,7 +71,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
       {/* Logo area */}
       <div className="p-4 border-b border-slate-800 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-lg font-serif font-bold text-white">BookingOS</span>
+          <span className="text-lg font-serif font-bold text-white">Business Command Centre</span>
           <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded font-medium">
             ADMIN
           </span>
@@ -148,7 +150,9 @@ export function AdminShell({ children }: { children: ReactNode }) {
         >
           <Menu size={22} />
         </button>
-        <span className="text-sm font-serif font-bold text-white truncate">BookingOS Admin</span>
+        <span className="text-sm font-serif font-bold text-white truncate">
+          Business Command Centre Admin
+        </span>
         <div className="ml-auto w-7 h-7 rounded-full bg-slate-700 flex items-center justify-center text-xs text-slate-300">
           {user.name?.charAt(0) || user.email.charAt(0).toUpperCase()}
         </div>

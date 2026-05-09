@@ -1,6 +1,6 @@
 # Channel Configuration Guide
 
-Booking OS supports 6 messaging channels. This guide documents the exact configuration needed for each channel.
+Business Command Centre supports 6 messaging channels. This guide documents the exact configuration needed for each channel.
 
 **All webhook URLs use the global prefix:** `https://api.businesscommandcentre.com/api/v1/webhook/...`
 

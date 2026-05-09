@@ -163,11 +163,11 @@ export class AuthService {
     try {
       const webUrl = this.getWebUrl();
       await this.emailService.sendGeneric(staff.email, {
-        subject: "Welcome to Booking OS — let's get your first booking live in 10 minutes",
+        subject: "Welcome to Business Command Centre — let's set up your AI Front Desk",
         headline: `Welcome, ${staff.name}!`,
-        body: `You've just started your 14-day free trial of Booking OS. Every feature is unlocked — no credit card required. Let's get your clinic set up and accepting bookings.`,
-        ctaLabel: 'Start Setup',
-        ctaUrl: `${webUrl}/setup`,
+        body: `Your clinic workspace is ready. Start by connecting the channels where leads arrive, setting your clinic voice, and keeping AI replies in staff approval mode while you test the workflow.`,
+        ctaLabel: 'Set Up AI Front Desk',
+        ctaUrl: `${webUrl}/ai`,
       });
     } catch (err) {
       this.logger.warn(`Failed to send welcome email to ${staff.email}`, err);

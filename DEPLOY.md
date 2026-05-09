@@ -1,6 +1,6 @@
-# Booking OS — Deployment & Operations Guide
+# Business Command Centre — Deployment & Operations Guide
 
-Complete reference for deploying, configuring, and operating Booking OS in production. Covers Railway (current production), self-hosted Docker, and local demo setups.
+Complete reference for deploying, configuring, and operating Business Command Centre in production. Covers Railway (current production), self-hosted Docker, and local demo setups.
 
 ---
 
@@ -90,6 +90,7 @@ Complete reference for deploying, configuring, and operating Booking OS in produ
 | `WHATSAPP_ACCESS_TOKEN`    | API       | —       | Meta WhatsApp Cloud API                                                                                             |
 | `WHATSAPP_VERIFY_TOKEN`    | API       | —       | Meta webhook verification token                                                                                     |
 | `MESSAGING_PROVIDER`       | API       | `mock`  | Set to `whatsapp-cloud` for real WhatsApp messaging                                                                 |
+| `PILOT_APPLICATION_NOTIFY_EMAIL` | API | —       | Sends founder/admin notifications for public `/pilot` applications                                                   |
 | `WEBHOOK_SECRET`           | API       | —       | HMAC secret for inbound webhook verification                                                                        |
 | `CALENDAR_ENCRYPTION_KEY`  | API       | —       | Encrypts OAuth tokens at rest. Generate: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` |
 | `GOOGLE_CLIENT_ID`         | API       | —       | Google Calendar OAuth                                                                                               |

@@ -1,6 +1,6 @@
-# Booking OS
+# Business Command Centre
 
-A modern, full-featured appointment booking and business management platform built for service-based businesses (salons, clinics, spas, and more).
+Business Command Centre is an AI front desk for aesthetic clinics. It captures Instagram, WhatsApp, and website leads, drafts replies for staff approval, fills cancellations, follows up consults, and proves recovered revenue.
 
 ## Tech Stack
 

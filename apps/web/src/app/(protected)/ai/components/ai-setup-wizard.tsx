@@ -17,6 +17,8 @@ export function AISetupWizard({ onComplete }: Props) {
   const { toast } = useToast();
   const [step, setStep] = useState(0);
   const [personality, setPersonality] = useState('');
+  const [approvalMode, setApprovalMode] = useState('review');
+  const [roiBaseline, setRoiBaseline] = useState('');
   const [channels, setChannels] = useState<Record<string, boolean>>(
     Object.fromEntries(CHANNELS.map((ch) => [ch, true])),
   );
@@ -34,7 +36,13 @@ export function AISetupWizard({ onComplete }: Props) {
       await api.patch('/ai/settings', {
         enabled: true,
         personality,
+        approvalMode,
+        roiBaseline,
+        autoReplySuggestions: true,
         autoReply: {
+          enabled: false,
+          mode: 'all',
+          selectedIntents: ['GENERAL', 'BOOK_APPOINTMENT', 'CANCEL', 'RESCHEDULE', 'INQUIRY'],
           channelOverrides: Object.fromEntries(
             Object.entries(channels).map(([ch, enabled]) => [ch, { enabled }]),
           ),
@@ -42,7 +50,7 @@ export function AISetupWizard({ onComplete }: Props) {
       });
       localStorage.setItem(STORAGE_KEY, 'true');
       setDone(true);
-      toast('AI is ready! Your assistant is now active.');
+      toast('AI Front Desk is ready. Drafts will wait for staff approval.');
       setTimeout(() => onComplete?.(), 1500);
     } finally {
       setSaving(false);
@@ -60,13 +68,23 @@ export function AISetupWizard({ onComplete }: Props) {
         data-testid="ai-setup-wizard"
       >
         <CheckCircle size={48} className="text-sage-500 mx-auto mb-4" />
-        <h2 className="text-2xl font-serif font-bold text-slate-900 mb-2">AI is ready!</h2>
-        <p className="text-slate-500">Your AI assistant has been configured and is now active.</p>
+        <h2 className="text-2xl font-serif font-bold text-slate-900 mb-2">
+          AI Front Desk is ready!
+        </h2>
+        <p className="text-slate-500">
+          Your AI Front Desk has been configured with staff approval on.
+        </p>
       </div>
     );
   }
 
-  const steps = ['Enable AI', 'Set your voice', 'Choose channels'];
+  const steps = [
+    'Connect channels',
+    'Set voice',
+    'Approval mode',
+    'Draft channels',
+    'ROI baseline',
+  ];
 
   return (
     <div
@@ -110,24 +128,26 @@ export function AISetupWizard({ onComplete }: Props) {
         <div className="space-y-4">
           <div className="flex items-center gap-2 mb-4">
             <Sparkles size={24} className="text-lavender-600" />
-            <h2 className="text-xl font-serif font-bold text-slate-900">Enable AI</h2>
+            <h2 className="text-xl font-serif font-bold text-slate-900">
+              Connect front desk channels
+            </h2>
           </div>
           <p className="text-slate-600 leading-relaxed">
-            AI will help you respond to customers faster, fill cancelled appointment slots, and
-            identify at-risk patients.
+            AI Front Desk works best once your customer channels are connected. Start with the
+            inboxes where leads are easiest to miss.
           </p>
           <ul className="space-y-2 text-sm text-slate-600">
             <li className="flex items-center gap-2">
               <CheckCircle size={16} className="text-sage-500 flex-shrink-0" />
-              Auto-reply to common messages 24/7
+              Capture Instagram, WhatsApp, website chat, SMS, and email leads
             </li>
             <li className="flex items-center gap-2">
               <CheckCircle size={16} className="text-sage-500 flex-shrink-0" />
-              Fill cancelled slots from your waitlist
+              Draft replies for staff approval
             </li>
             <li className="flex items-center gap-2">
               <CheckCircle size={16} className="text-sage-500 flex-shrink-0" />
-              Identify at-risk patients before they churn
+              Fill cancelled slots and follow up consults
             </li>
           </ul>
         </div>
@@ -137,7 +157,7 @@ export function AISetupWizard({ onComplete }: Props) {
         <div className="space-y-4">
           <h2 className="text-xl font-serif font-bold text-slate-900">Set your voice</h2>
           <p className="text-sm text-slate-500">
-            Describe how you'd like AI to communicate with your customers.
+            Describe how the AI Front Desk should communicate with your customers.
           </p>
           <textarea
             value={personality}
@@ -152,9 +172,40 @@ export function AISetupWizard({ onComplete }: Props) {
 
       {step === 2 && (
         <div className="space-y-4">
-          <h2 className="text-xl font-serif font-bold text-slate-900">Choose channels</h2>
+          <h2 className="text-xl font-serif font-bold text-slate-900">Choose approval mode</h2>
           <p className="text-sm text-slate-500">
-            Select which channels AI can auto-reply on. You can change these later.
+            Staff approval is recommended for pilot clinics while tone, consent, and escalation
+            rules are being learned.
+          </p>
+          <div className="space-y-3">
+            {[
+              { value: 'review', label: 'Draft for staff approval' },
+              { value: 'suggest', label: 'Suggest next best action only' },
+            ].map((option) => (
+              <label
+                key={option.value}
+                className="flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50 p-3"
+              >
+                <input
+                  type="radio"
+                  name="approvalMode"
+                  value={option.value}
+                  checked={approvalMode === option.value}
+                  onChange={(e) => setApprovalMode(e.target.value)}
+                  className="text-sage-600 focus:ring-sage-500"
+                />
+                <span className="text-sm font-medium text-slate-700">{option.label}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {step === 3 && (
+        <div className="space-y-4">
+          <h2 className="text-xl font-serif font-bold text-slate-900">Choose draft channels</h2>
+          <p className="text-sm text-slate-500">
+            Select which channels can receive drafted replies. Auto-send stays off by default.
           </p>
           <div className="space-y-3">
             {CHANNELS.map((ch) => (
@@ -181,6 +232,22 @@ export function AISetupWizard({ onComplete }: Props) {
               </label>
             ))}
           </div>
+        </div>
+      )}
+
+      {step === 4 && (
+        <div className="space-y-4">
+          <h2 className="text-xl font-serif font-bold text-slate-900">Set an ROI baseline</h2>
+          <p className="text-sm text-slate-500">
+            Add the revenue signal you want to watch first. You can refine it after setup.
+          </p>
+          <textarea
+            value={roiBaseline}
+            onChange={(e) => setRoiBaseline(e.target.value)}
+            rows={4}
+            placeholder="e.g., missed Instagram leads after hours, cancellation slots not filled, consult quotes not followed up."
+            className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-lavender-500"
+          />
         </div>
       )}
 
@@ -222,7 +289,7 @@ export function AISetupWizard({ onComplete }: Props) {
               className="px-4 py-2 text-sm bg-sage-600 text-white rounded-xl hover:bg-sage-700 transition-colors disabled:opacity-50"
               data-testid="complete-button"
             >
-              {saving ? 'Saving...' : 'Enable AI'}
+              {saving ? 'Saving...' : 'Enable AI Front Desk'}
             </button>
           )}
         </div>

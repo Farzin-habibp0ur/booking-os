@@ -214,6 +214,6 @@ ${entries.map(([k, v]) => `<tr><td style="padding:8px 12px;font-size:14px;color:
 <h2 style="margin:0 0 4px 0;font-size:22px;color:#1E293B;">${reportName}</h2>
 <p style="margin:0 0 20px 0;font-size:14px;color:#94A3B8;">${businessName} — ${date} (Last 30 days)</p>
 ${dataRows}
-<p style="margin:24px 0 0 0;font-size:12px;color:#CBD5E1;">This is an automated report from Booking OS. Manage your report schedules in Settings → Reports.</p>`;
+<p style="margin:24px 0 0 0;font-size:12px;color:#CBD5E1;">This is an automated report from Business Command Centre. Manage your report schedules in Settings → Reports.</p>`;
   }
 }

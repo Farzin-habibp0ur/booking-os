@@ -18,6 +18,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
     },
     {
+      url: 'https://businesscommandcentre.com/pilot',
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    },
+    {
       url: 'https://businesscommandcentre.com/blog',
       lastModified: new Date(),
       changeFrequency: 'weekly',
@@ -28,6 +34,24 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 0.7,
+    },
+    {
+      url: 'https://businesscommandcentre.com/privacy',
+      lastModified: new Date(),
+      changeFrequency: 'yearly',
+      priority: 0.4,
+    },
+    {
+      url: 'https://businesscommandcentre.com/terms',
+      lastModified: new Date(),
+      changeFrequency: 'yearly',
+      priority: 0.4,
+    },
+    {
+      url: 'https://businesscommandcentre.com/security',
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.6,
     },
     ...blogSlugs.map((slug) => ({
       url: `https://businesscommandcentre.com/blog/${slug}`,

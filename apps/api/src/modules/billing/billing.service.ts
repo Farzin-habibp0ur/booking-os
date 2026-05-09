@@ -227,9 +227,9 @@ export class BillingService implements OnModuleInit {
       if (business?.staff[0]) {
         const staff = business.staff[0];
         await this.emailService.sendGeneric(staff.email, {
-          subject: `Welcome to Booking OS ${PLAN_CONFIGS[plan].label}!`,
+          subject: `Welcome to Business Command Centre ${PLAN_CONFIGS[plan].label}!`,
           headline: 'Your subscription is active',
-          body: `Thanks for subscribing to Booking OS ${PLAN_CONFIGS[plan].label}. All features for your plan are now unlocked. If you have any questions, reply to this email.`,
+          body: `Thanks for subscribing to Business Command Centre ${PLAN_CONFIGS[plan].label}. Your clinic workspace is active. If you have any questions, reply to this email.`,
           ctaLabel: 'Go to Dashboard',
           ctaUrl: `${this.configService.get('WEB_URL', 'http://localhost:3000')}/dashboard`,
         });
@@ -357,9 +357,9 @@ export class BillingService implements OnModuleInit {
         const staff = business.staff[0];
         const webUrl = this.configService.get('WEB_URL', 'http://localhost:3000');
         await this.emailService.sendGeneric(staff.email, {
-          subject: 'Your Booking OS trial ends in 3 days',
+          subject: 'Your Business Command Centre trial ends in 3 days',
           headline: 'Trial ending soon',
-          body: `Your 14-day free trial of Booking OS ends in 3 days. Choose a plan to keep all your data, settings, and automations running without interruption.`,
+          body: `Your Business Command Centre trial ends in 3 days. Choose a plan to keep your data, settings, and front desk workflows running without interruption.`,
           ctaLabel: 'Choose a Plan',
           ctaUrl: `${webUrl}/settings/billing`,
         });

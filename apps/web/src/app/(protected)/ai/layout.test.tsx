@@ -26,13 +26,13 @@ describe('AILayout', () => {
     (api.get as jest.Mock).mockResolvedValue({ count: 0 });
   });
 
-  it('renders AI Hub header', () => {
+  it('renders AI Front Desk header', () => {
     render(
       <AILayout>
         <div>child</div>
       </AILayout>,
     );
-    expect(screen.getByText('AI Hub')).toBeInTheDocument();
+    expect(screen.getByText('AI Front Desk')).toBeInTheDocument();
   });
 
   it('renders 5 tab links', () => {

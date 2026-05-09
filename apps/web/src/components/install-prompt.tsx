@@ -71,7 +71,7 @@ export function InstallPrompt() {
           {isIos ? (
             <>
               <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                Install Booking OS
+                Install Business Command Centre
               </p>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                 Tap the Share icon, then &quot;Add to Home Screen&quot;
@@ -80,7 +80,7 @@ export function InstallPrompt() {
           ) : (
             <>
               <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                Install Booking OS for faster access
+                Install Business Command Centre for faster access
               </p>
               <button
                 onClick={handleInstall}

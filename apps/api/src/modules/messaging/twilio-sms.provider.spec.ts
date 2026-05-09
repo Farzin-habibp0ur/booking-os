@@ -9,7 +9,7 @@ const mockConfig = {
 
 const mockMessage = {
   to: '+15559876543',
-  body: 'Hello from Booking OS',
+  body: 'Hello from Business Command Centre',
   businessId: 'biz-test-1',
 };
 
@@ -84,7 +84,7 @@ describe('TwilioSmsProvider', () => {
       const body = new URLSearchParams(options.body);
       expect(body.get('To')).toBe('+15559876543');
       expect(body.get('From')).toBe('+15551234567');
-      expect(body.get('Body')).toBe('Hello from Booking OS');
+      expect(body.get('Body')).toBe('Hello from Business Command Centre');
       expect(body.has('MediaUrl')).toBe(false);
       expect(body.has('StatusCallback')).toBe(false);
     });

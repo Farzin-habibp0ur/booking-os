@@ -59,8 +59,8 @@ async function bootstrap() {
   // Swagger API docs (non-production only)
   if (process.env.NODE_ENV !== 'production') {
     const swaggerConfig = new DocumentBuilder()
-      .setTitle('Booking OS API')
-      .setDescription('REST API for the Booking OS platform')
+      .setTitle('Business Command Centre API')
+      .setDescription('REST API for the Business Command Centre platform')
       .setVersion('0.1.0')
       .addBearerAuth()
       .build();
@@ -94,6 +94,6 @@ async function bootstrap() {
 
   const port = process.env.API_PORT || 3001;
   await app.listen(port);
-  logger.log(`Booking OS API running on http://localhost:${port}`);
+  logger.log(`Business Command Centre API running on http://localhost:${port}`);
 }
 bootstrap();

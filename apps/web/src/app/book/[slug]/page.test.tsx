@@ -986,7 +986,9 @@ describe('BookingPortalPage', () => {
     it('shows secure booking badge', async () => {
       await goToConfirmStep();
 
-      expect(screen.getByText('Secure booking powered by Booking OS')).toBeInTheDocument();
+      expect(
+        screen.getByText('Secure booking powered by Business Command Centre'),
+      ).toBeInTheDocument();
     });
 
     it('shows deposit warning for deposit-required services', async () => {

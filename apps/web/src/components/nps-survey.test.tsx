@@ -83,7 +83,7 @@ describe('NpsSurvey', () => {
 
     expect(screen.getByTestId('nps-survey')).toBeInTheDocument();
     expect(
-      screen.getByText('How likely are you to recommend Booking OS to a colleague?'),
+      screen.getByText('How likely are you to recommend Business Command Centre to a colleague?'),
     ).toBeInTheDocument();
   });
 

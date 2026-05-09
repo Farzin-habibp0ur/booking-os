@@ -3,7 +3,7 @@ title: 'The Future of AI in Service Businesses: Beyond Chatbots'
 description: 'Exploring how autonomous AI agents, predictive analytics, and intelligent automation will reshape service businesses over the next five years.'
 date: '2026-03-05'
 category: 'Thought Leadership'
-author: 'Booking OS Team'
+author: 'Business Command Centre Team'
 readTime: '7 min read'
 ---
 

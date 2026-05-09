@@ -28,14 +28,14 @@ export const DUNNING_EMAILS: DunningEmail[] = [
     delayMs: 0, // Immediately
     subject: 'Action required: Your payment failed',
     headline: 'Payment failed',
-    body: 'We were unable to process your latest payment. Please update your payment method to avoid any interruption to your Booking OS service.',
+    body: 'We were unable to process your latest payment. Please update your payment method to avoid any interruption to your Business Command Centre service.',
     ctaLabel: 'Update Payment Method',
     ctaPath: '/settings/billing',
   },
   {
     step: 2,
     delayMs: 3 * 24 * 60 * 60 * 1000, // 3 days
-    subject: 'Your Booking OS account may be restricted',
+    subject: 'Your Business Command Centre account may be restricted',
     headline: 'Account at risk',
     body: 'Your payment is still outstanding. If we cannot collect payment within the next few days, your account features will be restricted. Please update your payment method now to keep your account fully active.',
     ctaLabel: 'Update Payment Method',
@@ -210,7 +210,7 @@ export class DunningService {
         const staff = business.staff[0];
         const webUrl = this.configService.get<string>('WEB_URL', 'http://localhost:3000');
         await this.emailService.sendGeneric(staff.email, {
-          subject: 'Your Booking OS account has been downgraded',
+          subject: 'Your Business Command Centre account has been downgraded',
           headline: 'Account downgraded to Starter',
           body: 'Due to an unresolved payment issue, your account has been downgraded to the Starter plan. All your data has been preserved. Upgrade anytime to restore your premium features.',
           ctaLabel: 'Upgrade Now',

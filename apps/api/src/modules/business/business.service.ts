@@ -39,7 +39,7 @@ export class BusinessService {
     const business = await this.prisma.business.findUnique({ where: { id } });
     if (!business) return null;
     const defaults = {
-      enabled: false,
+      enabled: true,
       autoReplySuggestions: true,
       bookingAssistant: true,
       personality: 'friendly and professional',
