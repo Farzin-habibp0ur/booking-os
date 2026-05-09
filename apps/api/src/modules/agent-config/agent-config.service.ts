@@ -13,23 +13,25 @@ import { UpdateAgentConfigDto } from './dto';
 
 /**
  * Marketing agents are BookingOS's internal growth engine — they should NOT
- * be created or returned for customer businesses.  The list is kept here so
- * that existing marketing-agent rows can be excluded from customer-facing
- * queries (they may already exist in the DB from prior seeds).
+ * be created or returned for customer businesses. This is the current
+ * customer-facing exclusion list using the live MKT_* IDs as defined in
+ * `apps/api/src/modules/marketing-agent/agents/`. The legacy 'BlogWriter',
+ * 'SocialCreator', etc. IDs from before are no longer issued, so this filter
+ * matches what the marketing-agent module actually emits today.
  */
 const MARKETING_AGENT_TYPES = [
-  'BlogWriter',
-  'SocialCreator',
-  'EmailComposer',
-  'CaseStudyWriter',
-  'VideoScriptWriter',
-  'NewsletterComposer',
-  'ContentScheduler',
-  'ContentPublisher',
-  'PerformanceTracker',
-  'TrendAnalyzer',
-  'ContentCalendar',
-  'ContentROI',
+  'MKT_BLOG_WRITER',
+  'MKT_SOCIAL_CREATOR',
+  'MKT_EMAIL_COMPOSER',
+  'MKT_CASE_STUDY',
+  'MKT_VIDEO_SCRIPT',
+  'MKT_NEWSLETTER',
+  'MKT_SCHEDULER',
+  'MKT_PUBLISHER',
+  'MKT_PERF_TRACKER',
+  'MKT_TREND_ANALYZER',
+  'MKT_CALENDAR_PLANNER',
+  'MKT_ROI_REPORTER',
 ];
 
 @Injectable()

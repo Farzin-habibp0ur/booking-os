@@ -18,7 +18,6 @@ import { WaitlistService } from '../waitlist/waitlist.service';
 import { ActionHistoryService } from '../action-history/action-history.service';
 import { InvoiceService } from '../invoice/invoice.service';
 import { TreatmentPlanService } from '../treatment-plan/treatment-plan.service';
-import { AftercareService } from '../aftercare/aftercare.service';
 import { ReferralService } from '../referral/referral.service';
 
 @Injectable()
@@ -41,8 +40,6 @@ export class BookingService {
     private invoiceService?: InvoiceService,
     @Optional()
     private treatmentPlanService?: TreatmentPlanService,
-    @Optional()
-    private aftercareService?: AftercareService,
     @Optional()
     private referralService?: ReferralService,
   ) {}
@@ -607,18 +604,6 @@ export class BookingService {
         );
       }
 
-      // Medical clearance check: require MedicalRecord for TREATMENT confirmations
-      if (status === 'CONFIRMED' && (currentBooking as any).service?.kind === 'TREATMENT') {
-        const medicalRecord = await tx.medicalRecord.findFirst({
-          where: { customerId: (currentBooking as any).customerId, businessId, isCurrent: true },
-        });
-        if (!medicalRecord) {
-          throw new BadRequestException(
-            'Medical intake is required before confirming a treatment booking. Please complete the medical history form first.',
-          );
-        }
-      }
-
       const overrideEntries: Array<{
         type: string;
         action: string;
@@ -741,61 +726,6 @@ export class BookingService {
     }
 
     if (status === 'COMPLETED') {
-      // Check for before photos that may need an after photo
-      try {
-        const businessInfo = await this.prisma.business.findUnique({
-          where: { id: businessId },
-          select: { verticalPack: true },
-        });
-        if (businessInfo?.verticalPack === 'aesthetic' && booking.customer) {
-          const beforePhotos = await this.prisma.clinicalPhoto.findMany({
-            where: {
-              businessId,
-              customerId: booking.customerId,
-              type: 'BEFORE',
-              deletedAt: null,
-            },
-            select: { bodyArea: true },
-            distinct: ['bodyArea'],
-          });
-          if (beforePhotos.length > 0) {
-            const bodyAreas = beforePhotos.map((p) => p.bodyArea);
-            const afterPhotos = await this.prisma.clinicalPhoto.findMany({
-              where: {
-                businessId,
-                customerId: booking.customerId,
-                bookingId: id,
-                type: 'AFTER',
-                deletedAt: null,
-              },
-              select: { bodyArea: true },
-            });
-            const coveredAreas = new Set(afterPhotos.map((p) => p.bodyArea));
-            const missingAreas = bodyAreas.filter((area) => !coveredAreas.has(area));
-            if (missingAreas.length > 0) {
-              this.logger.log(
-                `Booking ${id} completed: AFTER photos suggested for body areas: ${missingAreas.join(', ')}`,
-              );
-              // Store suggestion in booking customFields for frontend to pick up
-              const existingFields = (booking.customFields as any) || {};
-              await this.prisma.booking.update({
-                where: { id },
-                data: {
-                  customFields: {
-                    ...existingFields,
-                    afterPhotoSuggested: missingAreas,
-                  },
-                },
-              });
-            }
-          }
-        }
-      } catch (err) {
-        this.logger.warn(`Failed to check after photo suggestions for booking ${id}`, {
-          error: (err as Error).message,
-        });
-      }
-
       const settings = await this.businessService.getNotificationSettings(businessId);
       const delayHours = settings?.followUpDelayHours || 2;
       await this.prisma.reminder.create({
@@ -822,37 +752,28 @@ export class BookingService {
       }
 
       if (booking.service?.kind === 'TREATMENT') {
-        // Enroll in aftercare protocol if available (replaces single-shot reminders)
-        if (this.aftercareService) {
-          this.aftercareService.enrollCustomer(id).catch((err) =>
-            this.logger.warn(`Failed to enroll booking ${id} in aftercare protocol`, {
-              bookingId: id,
-              error: err.message,
-            }),
-          );
-        } else {
-          // Fallback to single-shot reminders if aftercare module not available
-          await this.prisma.reminder.create({
-            data: {
-              businessId,
-              bookingId: id,
-              scheduledAt: new Date(),
-              status: 'PENDING',
-              type: 'AFTERCARE',
-            },
-          });
+        // Single-shot post-treatment reminders (aftercare protocol module removed
+        // per BCC-PIVOT-MASTER-PLAN.md (v3) Phase 2 — non-PHI launch).
+        await this.prisma.reminder.create({
+          data: {
+            businessId,
+            bookingId: id,
+            scheduledAt: new Date(),
+            status: 'PENDING',
+            type: 'AFTERCARE',
+          },
+        });
 
-          const checkInHours = settings?.treatmentCheckInHours || 24;
-          await this.prisma.reminder.create({
-            data: {
-              businessId,
-              bookingId: id,
-              scheduledAt: new Date(Date.now() + checkInHours * 3600000),
-              status: 'PENDING',
-              type: 'TREATMENT_CHECK_IN',
-            },
-          });
-        }
+        const checkInHours = settings?.treatmentCheckInHours || 24;
+        await this.prisma.reminder.create({
+          data: {
+            businessId,
+            bookingId: id,
+            scheduledAt: new Date(Date.now() + checkInHours * 3600000),
+            status: 'PENDING',
+            type: 'TREATMENT_CHECK_IN',
+          },
+        });
       }
 
       // Schedule Google Review request 2 hours after completion

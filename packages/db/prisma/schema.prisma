@@ -82,11 +82,7 @@ model Business {
   businessReviews          BusinessReview[]
   savedSegments            SavedSegment[]
   invoices                 Invoice[]
-  medicalRecords           MedicalRecord[]
-  clinicalPhotos           ClinicalPhoto[]
-  photoComparisons         PhotoComparison[]
   treatmentPlans           TreatmentPlan[]
-  aftercareProtocols       AftercareProtocol[]
 
   abTests            ABTest[]
   rejectionLogs      RejectionLog[]
@@ -147,8 +143,6 @@ model Staff {
   issuedCredits       BillingCredit[]      @relation("BillingCreditIssuer")
   packPins            PackTenantPin[]      @relation("PackPinStaff")
   staffServicePrices  StaffServicePrice[]
-  medicalRecords      MedicalRecord[]      @relation("MedicalRecordStaff")
-  clinicalPhotosTaken ClinicalPhoto[]      @relation("PhotoTakenByStaff")
   treatmentPlans      TreatmentPlan[]      @relation("TreatmentPlanCreator")
 
   rejectionLogReviews RejectionLog[]    @relation("RejectionLogReviewer")
@@ -190,11 +184,7 @@ model Customer {
   testimonials          Testimonial[]
   campaignUnsubscribes  CampaignUnsubscribe[]
   invoices              Invoice[]
-  medicalRecords        MedicalRecord[]
-  clinicalPhotos        ClinicalPhoto[]
-  photoComparisons      PhotoComparison[]
   treatmentPlans        TreatmentPlan[]
-  aftercareEnrollments  AftercareEnrollment[]
 
   referralCode      String?            @unique
   referralsGiven    CustomerReferral[] @relation("ReferrerCustomer")
@@ -239,7 +229,6 @@ model Service {
   staffServicePrices StaffServicePrice[]
   invoiceLineItems   InvoiceLineItem[]
   treatmentSessions  TreatmentSession[]
-  aftercareProtocols AftercareProtocol[]
 
   @@index([businessId])
   @@map("services")
@@ -281,10 +270,8 @@ model Booking {
   actionCards           ActionCard[]
   frontDeskAttributions FrontDeskAttribution[]
   invoices              Invoice[]
-  clinicalPhotos        ClinicalPhoto[]
   consultPlan           TreatmentPlan?         @relation("ConsultPlan")
   sessionBooking        TreatmentSession?      @relation("SessionBooking")
-  aftercareEnrollment   AftercareEnrollment?
 
   referral          CustomerReferral?
   creditRedemptions CreditRedemption[]
@@ -1693,88 +1680,6 @@ model InvoiceLineItem {
   @@map("invoice_line_items")
 }
 
-model MedicalRecord {
-  id                String    @id @default(cuid())
-  businessId        String
-  customerId        String
-  version           Int       @default(1)
-  isCurrent         Boolean   @default(true)
-  allergies         String[]  @default([])
-  contraindications String[]  @default([])
-  medications       String[]  @default([])
-  conditions        String[]  @default([])
-  skinType          String?
-  fitzpatrickScale  String?
-  bloodThinners     Boolean   @default(false)
-  pregnant          Boolean   @default(false)
-  breastfeeding     Boolean   @default(false)
-  recentSurgery     String?
-  notes             String?
-  flagged           Boolean   @default(false)
-  flagReason        String?
-  consentGiven      Boolean   @default(false)
-  consentDate       DateTime?
-  recordedById      String?
-  createdAt         DateTime  @default(now())
-
-  business   Business @relation(fields: [businessId], references: [id])
-  customer   Customer @relation(fields: [customerId], references: [id])
-  recordedBy Staff?   @relation("MedicalRecordStaff", fields: [recordedById], references: [id])
-
-  @@unique([customerId, version])
-  @@index([customerId])
-  @@index([businessId])
-  @@map("medical_records")
-}
-
-model ClinicalPhoto {
-  id           String    @id @default(cuid())
-  businessId   String
-  customerId   String
-  bookingId    String?
-  type         String // BEFORE, AFTER, PROGRESS
-  bodyArea     String
-  fileUrl      String
-  thumbnailUrl String?
-  notes        String?
-  takenAt      DateTime  @default(now())
-  takenById    String?
-  deletedAt    DateTime?
-  createdAt    DateTime  @default(now())
-
-  business Business @relation(fields: [businessId], references: [id])
-  customer Customer @relation(fields: [customerId], references: [id])
-  booking  Booking? @relation(fields: [bookingId], references: [id])
-  takenBy  Staff?   @relation("PhotoTakenByStaff", fields: [takenById], references: [id])
-
-  beforeComparisons PhotoComparison[] @relation("BeforePhoto")
-  afterComparisons  PhotoComparison[] @relation("AfterPhoto")
-
-  @@index([customerId])
-  @@index([businessId])
-  @@index([bookingId])
-  @@map("clinical_photos")
-}
-
-model PhotoComparison {
-  id            String   @id @default(cuid())
-  businessId    String
-  customerId    String
-  beforePhotoId String
-  afterPhotoId  String
-  bodyArea      String
-  notes         String?
-  createdAt     DateTime @default(now())
-
-  business    Business      @relation(fields: [businessId], references: [id])
-  customer    Customer      @relation(fields: [customerId], references: [id])
-  beforePhoto ClinicalPhoto @relation("BeforePhoto", fields: [beforePhotoId], references: [id])
-  afterPhoto  ClinicalPhoto @relation("AfterPhoto", fields: [afterPhotoId], references: [id])
-
-  @@index([customerId])
-  @@map("photo_comparisons")
-}
-
 model TreatmentPlan {
   id                String    @id @default(cuid())
   businessId        String
@@ -1822,77 +1727,6 @@ model TreatmentSession {
 
   @@index([treatmentPlanId])
   @@map("treatment_sessions")
-}
-
-model AftercareProtocol {
-  id         String   @id @default(cuid())
-  businessId String
-  serviceId  String?
-  name       String
-  isDefault  Boolean  @default(false)
-  isActive   Boolean  @default(true)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  business    Business              @relation(fields: [businessId], references: [id])
-  service     Service?              @relation(fields: [serviceId], references: [id])
-  steps       AftercareStep[]
-  enrollments AftercareEnrollment[]
-
-  @@unique([businessId, serviceId])
-  @@index([businessId])
-  @@map("aftercare_protocols")
-}
-
-model AftercareStep {
-  id            String  @id @default(cuid())
-  protocolId    String
-  sequenceOrder Int
-  delayHours    Int
-  channel       String  @default("WHATSAPP") // WHATSAPP | SMS | EMAIL
-  subject       String?
-  body          String
-  instructions  String?
-  isActive      Boolean @default(true)
-
-  protocol AftercareProtocol @relation(fields: [protocolId], references: [id], onDelete: Cascade)
-
-  @@index([protocolId])
-  @@map("aftercare_steps")
-}
-
-model AftercareEnrollment {
-  id          String    @id @default(cuid())
-  protocolId  String
-  bookingId   String    @unique
-  customerId  String
-  status      String    @default("ACTIVE") // ACTIVE | COMPLETED | CANCELLED
-  enrolledAt  DateTime  @default(now())
-  completedAt DateTime?
-
-  protocol AftercareProtocol  @relation(fields: [protocolId], references: [id])
-  booking  Booking            @relation(fields: [bookingId], references: [id])
-  customer Customer           @relation(fields: [customerId], references: [id])
-  messages AftercareMessage[]
-
-  @@index([customerId])
-  @@map("aftercare_enrollments")
-}
-
-model AftercareMessage {
-  id           String    @id @default(cuid())
-  enrollmentId String
-  stepId       String
-  scheduledFor DateTime
-  sentAt       DateTime?
-  status       String    @default("SCHEDULED") // SCHEDULED | SENT | FAILED | CANCELLED
-  messageId    String?
-
-  enrollment AftercareEnrollment @relation(fields: [enrollmentId], references: [id])
-
-  @@index([enrollmentId])
-  @@index([status, scheduledFor])
-  @@map("aftercare_messages")
 }
 
 // ── Marketing Command Center Models ──────────────────────────────────

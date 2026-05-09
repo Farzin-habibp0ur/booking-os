@@ -26,8 +26,8 @@ interface VerticalPack {
 }
 
 const DEFAULT_PACK: VerticalPack = {
-  name: 'general',
-  slug: 'general',
+  name: 'aesthetic',
+  slug: 'aesthetic',
   labels: { customer: 'Customer', booking: 'Booking', service: 'Service' },
   customerFields: [],
   bookingFields: [],
@@ -44,7 +44,7 @@ export function VerticalPackProvider({ children }: { children: ReactNode }) {
     api
       .get<any>('/business')
       .then((biz) => {
-        const packName = biz?.verticalPack || 'general';
+        const packName = biz?.verticalPack || 'aesthetic';
         // Then fetch pack definition (no auth required)
         fetch(
           `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1'}/vertical-packs/${packName}`,

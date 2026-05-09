@@ -16,7 +16,7 @@ async function main() {
       data: {
         name: 'Booking OS Platform',
         slug: 'platform',
-        verticalPack: 'general',
+        verticalPack: 'aesthetic',
         packConfig: { setupComplete: true },
       },
     });

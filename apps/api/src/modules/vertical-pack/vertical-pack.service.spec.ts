@@ -46,6 +46,6 @@ describe('VerticalPackService', () => {
 
   it('getAllPacks includes all packs', () => {
     const packs = service.getAllPacks();
-    expect(packs).toEqual(['aesthetic', 'general']);
+    expect(packs).toEqual(['aesthetic']);
   });
 });

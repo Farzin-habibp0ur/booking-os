@@ -22,7 +22,7 @@ jest.mock('@/lib/auth', () => ({
       name: 'Sarah',
       role: 'ADMIN',
       businessId: 'b1',
-      business: { id: 'b1', name: 'Test Clinic', verticalPack: 'general', packConfig: {} },
+      business: { id: 'b1', name: 'Test Clinic', verticalPack: 'aesthetic', packConfig: {} },
     },
     logout: jest.fn(),
     loading: false,
@@ -88,7 +88,7 @@ describe('SetupPage', () => {
         return Promise.resolve({
           id: 'b1',
           name: 'Test Clinic',
-          verticalPack: 'general',
+          verticalPack: 'aesthetic',
           timezone: 'America/Los_Angeles',
           currency: 'USD',
           packConfig: {},

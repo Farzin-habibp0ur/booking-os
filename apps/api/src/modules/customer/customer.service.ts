@@ -283,65 +283,51 @@ export class CustomerService {
   ) {
     const { types, showSystem = true, limit = 20, offset = 0 } = opts;
 
-    const [
-      bookings,
-      conversations,
-      notes,
-      waitlistEntries,
-      quotes,
-      campaignSends,
-      invoices,
-      clinicalPhotos,
-    ] = await Promise.all([
-      !types || types.includes('booking')
-        ? this.prisma.booking.findMany({
-            where: { customerId, businessId },
-            include: { service: true, staff: true },
-          })
-        : Promise.resolve([]),
-      !types || types.includes('conversation')
-        ? this.prisma.conversation.findMany({
-            where: { customerId, businessId },
-            include: { messages: { take: 1, orderBy: { createdAt: 'desc' } } },
-          })
-        : Promise.resolve([]),
-      !types || types.includes('note')
-        ? this.prisma.customerNote.findMany({
-            where: { customerId, businessId },
-            include: { staff: { select: { id: true, name: true } } },
-          })
-        : Promise.resolve([]),
-      !types || types.includes('waitlist')
-        ? this.prisma.waitlistEntry.findMany({
-            where: { customerId, businessId },
-            include: { service: true },
-          })
-        : Promise.resolve([]),
-      !types || types.includes('quote')
-        ? this.prisma.quote.findMany({
-            where: { businessId, booking: { customerId } },
-            include: { booking: { include: { service: true } } },
-          })
-        : Promise.resolve([]),
-      !types || types.includes('campaign')
-        ? this.prisma.campaignSend.findMany({
-            where: { customerId, campaign: { businessId } },
-            include: { campaign: true },
-          })
-        : Promise.resolve([]),
-      !types || types.includes('invoice')
-        ? this.prisma.invoice.findMany({
-            where: { customerId, businessId },
-            include: { lineItems: true },
-          })
-        : Promise.resolve([]),
-      !types || types.includes('photo')
-        ? this.prisma.clinicalPhoto.findMany({
-            where: { customerId, businessId, deletedAt: null },
-            select: { id: true, type: true, bodyArea: true, createdAt: true },
-          })
-        : Promise.resolve([]),
-    ]);
+    const [bookings, conversations, notes, waitlistEntries, quotes, campaignSends, invoices] =
+      await Promise.all([
+        !types || types.includes('booking')
+          ? this.prisma.booking.findMany({
+              where: { customerId, businessId },
+              include: { service: true, staff: true },
+            })
+          : Promise.resolve([]),
+        !types || types.includes('conversation')
+          ? this.prisma.conversation.findMany({
+              where: { customerId, businessId },
+              include: { messages: { take: 1, orderBy: { createdAt: 'desc' } } },
+            })
+          : Promise.resolve([]),
+        !types || types.includes('note')
+          ? this.prisma.customerNote.findMany({
+              where: { customerId, businessId },
+              include: { staff: { select: { id: true, name: true } } },
+            })
+          : Promise.resolve([]),
+        !types || types.includes('waitlist')
+          ? this.prisma.waitlistEntry.findMany({
+              where: { customerId, businessId },
+              include: { service: true },
+            })
+          : Promise.resolve([]),
+        !types || types.includes('quote')
+          ? this.prisma.quote.findMany({
+              where: { businessId, booking: { customerId } },
+              include: { booking: { include: { service: true } } },
+            })
+          : Promise.resolve([]),
+        !types || types.includes('campaign')
+          ? this.prisma.campaignSend.findMany({
+              where: { customerId, campaign: { businessId } },
+              include: { campaign: true },
+            })
+          : Promise.resolve([]),
+        !types || types.includes('invoice')
+          ? this.prisma.invoice.findMany({
+              where: { customerId, businessId },
+              include: { lineItems: true },
+            })
+          : Promise.resolve([]),
+      ]);
 
     const events: Array<{
       id: string;
@@ -450,20 +436,6 @@ export class CustomerService {
         metadata: { invoiceId: inv.id, status: inv.status, total: Number(inv.total) },
         isSystemEvent: false,
         deepLink: `/invoices/${inv.id}`,
-      });
-    }
-
-    // Clinical Photos
-    for (const photo of clinicalPhotos as any[]) {
-      events.push({
-        id: `photo-${photo.id}`,
-        type: 'photo',
-        timestamp: photo.createdAt.toISOString(),
-        title: `${photo.type} photo — ${photo.bodyArea}`,
-        description: `Clinical photo uploaded`,
-        metadata: { photoId: photo.id, photoType: photo.type, bodyArea: photo.bodyArea },
-        isSystemEvent: false,
-        deepLink: null,
       });
     }
 

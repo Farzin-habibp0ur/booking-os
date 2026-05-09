@@ -26,17 +26,11 @@ describe('AgentSkillsService', () => {
       expect(skills.some((s) => s.agentType === 'RETENTION')).toBe(true);
     });
 
-    it('returns skills for general pack', () => {
-      const skills = service.getSkillsForPack('general');
-
-      expect(skills.length).toBeGreaterThan(0);
-    });
-
-    it('falls back to general for unknown pack', () => {
+    it('falls back to aesthetic for unknown pack', () => {
       const skills = service.getSkillsForPack('unknown');
 
-      // Should return general pack skills as fallback
-      expect(skills.length).toBeGreaterThanOrEqual(0);
+      // Should return aesthetic pack skills as fallback
+      expect(skills.length).toBeGreaterThan(0);
     });
 
     it('each skill has required fields', () => {
@@ -57,7 +51,6 @@ describe('AgentSkillsService', () => {
       const allSkills = service.getAllPackSkills();
 
       expect(allSkills.aesthetic).toBeDefined();
-      expect(allSkills.general).toBeDefined();
     });
   });
 
@@ -100,7 +93,7 @@ describe('AgentSkillsService', () => {
       await expect(service.getBusinessSkills('biz1')).rejects.toThrow(NotFoundException);
     });
 
-    it('defaults to general pack when verticalPack is null', async () => {
+    it('defaults to aesthetic pack when verticalPack is null', async () => {
       prisma.business.findUnique.mockResolvedValue({
         id: 'biz1',
         verticalPack: null,

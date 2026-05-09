@@ -41,7 +41,7 @@ export class BusinessReviewService {
       try {
         aiSummary = await this.claude.complete(
           'sonnet',
-          `You are a business analytics assistant for a ${business?.verticalPack || 'general'} business called "${business?.name}". Generate a concise monthly business review summary. Write 3-4 paragraphs covering: overall performance, key wins, areas for improvement, and 3 specific actionable recommendations. Keep the tone professional but encouraging. End with a JSON array of exactly 3 recommendations, each with "title", "description", and "link" (a relative URL path like /calendar, /inbox, /campaigns, /services, /staff, /reports, /settings). Format the recommendations after a line that says "RECOMMENDATIONS_JSON:" followed by the JSON array.`,
+          `You are a business analytics assistant for a ${business?.verticalPack || 'aesthetic'} business called "${business?.name}". Generate a concise monthly business review summary. Write 3-4 paragraphs covering: overall performance, key wins, areas for improvement, and 3 specific actionable recommendations. Keep the tone professional but encouraging. End with a JSON array of exactly 3 recommendations, each with "title", "description", and "link" (a relative URL path like /calendar, /inbox, /campaigns, /services, /staff, /reports, /settings). Format the recommendations after a line that says "RECOMMENDATIONS_JSON:" followed by the JSON array.`,
           [
             {
               role: 'user',

@@ -117,7 +117,7 @@ describe('TreatmentPlanService', () => {
     it('rejects non-aesthetic business', async () => {
       prisma.booking.findFirst.mockResolvedValue({
         ...mockBooking,
-        business: { ...mockBooking.business, verticalPack: 'general' },
+        business: { ...mockBooking.business, verticalPack: 'other' },
       });
 
       await expect(

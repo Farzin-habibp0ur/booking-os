@@ -56,7 +56,7 @@ jest.mock('@/lib/auth', () => ({
         id: 'b1',
         name: 'Glow Clinic',
         slug: 'glow',
-        verticalPack: 'general',
+        verticalPack: 'aesthetic',
         defaultLocale: 'en',
         packConfig: {},
       },
@@ -76,7 +76,7 @@ jest.mock('@/lib/i18n', () => ({
 
 jest.mock('@/lib/vertical-pack', () => ({
   usePack: () => ({
-    name: 'general',
+    name: 'aesthetic',
     labels: { customer: 'Customer', booking: 'Booking', service: 'Service' },
   }),
   VerticalPackProvider: ({ children }) => children,

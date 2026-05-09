@@ -149,12 +149,6 @@ export class PortalController {
     );
   }
 
-  @Get('aftercare')
-  @UseGuards(PortalGuard)
-  getAftercare(@Req() req: any) {
-    return this.portalService.getAftercare(req.portalUser.customerId, req.portalUser.businessId);
-  }
-
   @Get('packages')
   @UseGuards(PortalGuard)
   getPackages(@Req() req: any) {
