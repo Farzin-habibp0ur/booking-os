@@ -8,11 +8,9 @@ export default function MarketingFooter() {
           {/* Logo + tagline */}
           <div>
             <Link href="/" className="font-serif text-lg font-bold text-slate-900">
-              Booking OS
+              Business Command Centre
             </Link>
-            <p className="mt-1 text-sm text-slate-400">
-              The operating system for service businesses.
-            </p>
+            <p className="mt-1 text-sm text-slate-400">AI front desk for aesthetic clinics.</p>
           </div>
 
           {/* Links */}
@@ -27,8 +25,8 @@ export default function MarketingFooter() {
               <Link href="/pricing" className="text-slate-500 hover:text-slate-700">
                 Pricing
               </Link>
-              <Link href="/blog" className="text-slate-500 hover:text-slate-700">
-                Blog
+              <Link href="/pilot" className="text-slate-500 hover:text-slate-700">
+                Apply for Pilot
               </Link>
               <Link href="/faq" className="text-slate-500 hover:text-slate-700">
                 FAQ
@@ -41,22 +39,29 @@ export default function MarketingFooter() {
               <Link href="/login" className="text-slate-500 hover:text-slate-700">
                 Login
               </Link>
-              <Link href="/signup" className="text-slate-500 hover:text-slate-700">
-                Sign Up
+              <Link href="/pilot" className="text-slate-500 hover:text-slate-700">
+                Pilot
               </Link>
             </div>
             <div className="flex flex-col gap-2.5">
               <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">
                 Legal
               </span>
-              <span className="cursor-default text-slate-400">Privacy Policy</span>
-              <span className="cursor-default text-slate-400">Terms of Service</span>
+              <Link href="/privacy" className="text-slate-500 hover:text-slate-700">
+                Privacy
+              </Link>
+              <Link href="/terms" className="text-slate-500 hover:text-slate-700">
+                Terms
+              </Link>
+              <Link href="/security" className="text-slate-500 hover:text-slate-700">
+                Security
+              </Link>
             </div>
           </div>
         </div>
 
         <div className="mt-10 border-t border-slate-100 pt-6 text-center text-xs text-slate-400">
-          &copy; {new Date().getFullYear()} Booking OS. All rights reserved.
+          &copy; {new Date().getFullYear()} Business Command Centre. All rights reserved.
         </div>
       </div>
     </footer>

@@ -5,7 +5,7 @@ import { ToastProvider } from '@/lib/toast';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'BookingOS Admin Console',
+  title: 'Business Command Centre Admin Console',
   description: 'Internal platform management',
   robots: 'noindex, nofollow',
 };

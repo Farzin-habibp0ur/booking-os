@@ -326,7 +326,7 @@ export default function DashboardPage() {
           <div className="flex items-center gap-3">
             <Zap size={18} className="text-sage-600 shrink-0" />
             <p className="text-sm text-sage-900 dark:text-sage-200">
-              Complete your setup to get the most out of Booking OS
+              Complete your setup to get the most out of Business Command Centre
             </p>
           </div>
           <div className="flex items-center gap-2 shrink-0">

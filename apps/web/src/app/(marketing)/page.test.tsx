@@ -12,14 +12,14 @@ jest.mock('./landing-page', () => {
   return function MockLandingPage() {
     return (
       <div>
-        <h1>The all-in-one command centre for your clinic.</h1>
+        <h1>Turn missed clinic messages into booked appointments.</h1>
         <section id="features">
-          <h2>Everything your clinic needs</h2>
+          <h2>Built around the moments clinics lose revenue.</h2>
         </section>
         <section id="pricing">
-          <h2>Simple, transparent pricing</h2>
+          <h2>Pricing is confirmed during onboarding.</h2>
         </section>
-        <a href="/signup">Start Free for 14 Days</a>
+        <a href="/pilot">Apply for Pilot</a>
       </div>
     );
   };
@@ -28,23 +28,25 @@ jest.mock('./landing-page', () => {
 describe('Home (marketing page)', () => {
   it('renders the landing page with hero', () => {
     render(<Home />);
-    expect(screen.getByText('The all-in-one command centre for your clinic.')).toBeInTheDocument();
+    expect(
+      screen.getByText('Turn missed clinic messages into booked appointments.'),
+    ).toBeInTheDocument();
   });
 
   it('renders features section', () => {
     render(<Home />);
-    expect(screen.getByText('Everything your clinic needs')).toBeInTheDocument();
+    expect(screen.getByText('Built around the moments clinics lose revenue.')).toBeInTheDocument();
   });
 
   it('renders pricing section', () => {
     render(<Home />);
-    expect(screen.getByText('Simple, transparent pricing')).toBeInTheDocument();
+    expect(screen.getByText('Pricing is confirmed during onboarding.')).toBeInTheDocument();
   });
 
-  it('renders CTA link to /signup', () => {
+  it('renders CTA link to /pilot', () => {
     render(<Home />);
-    const ctaLink = screen.getByText('Start Free for 14 Days');
-    expect(ctaLink).toHaveAttribute('href', '/signup');
+    const ctaLink = screen.getByText('Apply for Pilot');
+    expect(ctaLink).toHaveAttribute('href', '/pilot');
   });
 
   it('includes JSON-LD structured data', () => {
@@ -53,6 +55,6 @@ describe('Home (marketing page)', () => {
     expect(script).toBeInTheDocument();
     const data = JSON.parse(script!.textContent!);
     expect(data['@type']).toBe('SoftwareApplication');
-    expect(data.name).toBe('Booking OS');
+    expect(data.name).toBe('Business Command Centre');
   });
 });

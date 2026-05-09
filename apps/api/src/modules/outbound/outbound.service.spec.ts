@@ -68,6 +68,103 @@ describe('OutboundService', () => {
     });
   });
 
+  describe('createAiDraft', () => {
+    it('creates an AI draft and an OPEN front-desk attribution row', async () => {
+      prisma.outboundDraft.create.mockResolvedValue({
+        id: 'draft1',
+        status: 'DRAFT',
+        channel: 'WHATSAPP',
+        source: 'AI',
+        content: 'Hi Emma',
+      } as any);
+
+      const draft = await service.createAiDraft({
+        businessId: 'biz1',
+        customerId: 'cust1',
+        staffId: 'staff1',
+        conversationId: 'conv1',
+        channel: 'WHATSAPP',
+        content: 'Hi Emma',
+        intent: 'GENERAL_INQUIRY',
+        confidence: 0.91,
+        metadata: { foo: 'bar' },
+      });
+
+      expect(draft.id).toBe('draft1');
+      expect(prisma.outboundDraft.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            businessId: 'biz1',
+            conversationId: 'conv1',
+            source: 'AI',
+            status: 'DRAFT',
+          }),
+        }),
+      );
+      expect(prisma.frontDeskAttribution.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          businessId: 'biz1',
+          customerId: 'cust1',
+          conversationId: 'conv1',
+          outboundDraftId: 'draft1',
+          source: 'AI_DRAFT',
+          status: 'OPEN',
+          channel: 'WHATSAPP',
+          confidence: 0.91,
+          reason: 'GENERAL_INQUIRY',
+        }),
+      });
+    });
+
+    it('maps QUOTE_FOLLOWUP / CONSULT_FOLLOWUP intents to CONSULT_FOLLOWUP attribution source', async () => {
+      prisma.outboundDraft.create.mockResolvedValue({
+        id: 'draft2',
+        status: 'DRAFT',
+        channel: 'EMAIL',
+        source: 'AI',
+        content: 'Following up on your quote',
+      } as any);
+
+      await service.createAiDraft({
+        businessId: 'biz1',
+        customerId: 'cust1',
+        staffId: 'staff1',
+        conversationId: 'conv1',
+        channel: 'EMAIL',
+        content: 'Following up on your quote',
+        intent: 'QUOTE_FOLLOWUP',
+      });
+
+      expect(prisma.frontDeskAttribution.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          source: 'CONSULT_FOLLOWUP',
+          channel: 'EMAIL',
+        }),
+      });
+    });
+
+    it('does not write a front-desk attribution row for non-AI drafts', async () => {
+      prisma.outboundDraft.create.mockResolvedValue({
+        id: 'draft3',
+        status: 'DRAFT',
+        channel: 'WHATSAPP',
+        source: 'MANUAL',
+      } as any);
+
+      await service.createAiDraft({
+        businessId: 'biz1',
+        customerId: 'cust1',
+        staffId: 'staff1',
+        conversationId: 'conv1',
+        channel: 'WHATSAPP',
+        content: 'manual reply',
+        source: 'MANUAL',
+      });
+
+      expect(prisma.frontDeskAttribution.create).not.toHaveBeenCalled();
+    });
+  });
+
   describe('findAll', () => {
     it('returns paginated drafts', async () => {
       prisma.outboundDraft.findMany.mockResolvedValue([{ id: 'ob1' }] as any);
@@ -188,7 +285,7 @@ describe('OutboundService', () => {
   });
 
   describe('markSent', () => {
-    it('marks draft as sent with conversation link', async () => {
+    it('marks draft as sent with conversation link and updates the linked attribution row', async () => {
       prisma.outboundDraft.update.mockResolvedValue({
         id: 'ob1',
         status: 'SENT',
@@ -203,6 +300,14 @@ describe('OutboundService', () => {
         data: expect.objectContaining({
           status: 'SENT',
           conversationId: 'conv1',
+        }),
+      });
+      expect(prisma.frontDeskAttribution.updateMany).toHaveBeenCalledWith({
+        where: { businessId: 'biz1', outboundDraftId: 'ob1' },
+        data: expect.objectContaining({
+          status: 'OPEN',
+          conversationId: 'conv1',
+          openedAt: expect.any(Date),
         }),
       });
     });

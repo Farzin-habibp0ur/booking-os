@@ -38,7 +38,7 @@ const FAQ_ITEMS: FaqItem[] = [
   {
     question: 'Keyboard shortcuts',
     answer:
-      'Booking OS supports several keyboard shortcuts to speed up your workflow: Press Cmd+K (or Ctrl+K) to open the search palette. Press ? to open the help panel. Press Cmd+/ (or Ctrl+/) to view all keyboard shortcuts. Use arrow keys to navigate search results and Enter to select. Press Escape to close any open modal or panel.',
+      'Business Command Centre supports several keyboard shortcuts to speed up your workflow: Press Cmd+K (or Ctrl+K) to open the search palette. Press ? to open the help panel. Press Cmd+/ (or Ctrl+/) to view all keyboard shortcuts. Use arrow keys to navigate search results and Enter to select. Press Escape to close any open modal or panel.',
   },
 ];
 

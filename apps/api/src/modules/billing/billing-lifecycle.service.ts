@@ -55,7 +55,7 @@ export class BillingLifecycleService {
         await this.emailService.sendGeneric(staff.email, {
           subject: `Your annual subscription renews on ${renewDate}`,
           headline: 'Annual Renewal Reminder',
-          body: `Your Booking OS subscription renews on ${renewDate}. Here's your year in review: ${sub.business?._count?.bookings || 0} bookings managed, ${sub.business?._count?.customers || 0} customers served. Thank you for being a valued customer!`,
+          body: `Your Business Command Centre subscription renews on ${renewDate}. Here's your year in review: ${sub.business?._count?.bookings || 0} bookings managed, ${sub.business?._count?.customers || 0} customers served. Thank you for being a valued customer!`,
           ctaLabel: 'View Billing',
           ctaUrl: `${webUrl}/settings/billing`,
         });
@@ -100,9 +100,9 @@ export class BillingLifecycleService {
 
       try {
         await this.emailService.sendGeneric(staff.email, {
-          subject: `Happy ${years} year${years > 1 ? 's' : ''} with Booking OS!`,
+          subject: `Happy ${years} year${years > 1 ? 's' : ''} with Business Command Centre!`,
           headline: `Happy Anniversary! 🎉`,
-          body: `It's been ${years} year${years > 1 ? 's' : ''} since you joined Booking OS. Here's what you've achieved: ${biz._count?.bookings || 0} bookings managed, ${biz._count?.customers || 0} customers served. Thank you for being part of our journey!`,
+          body: `It's been ${years} year${years > 1 ? 's' : ''} since you joined Business Command Centre. Here's what you've achieved: ${biz._count?.bookings || 0} bookings managed, ${biz._count?.customers || 0} customers served. Thank you for being part of our journey!`,
           ctaLabel: 'View Dashboard',
           ctaUrl: `${webUrl}/dashboard`,
         });

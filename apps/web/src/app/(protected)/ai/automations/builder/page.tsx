@@ -229,9 +229,17 @@ function deserializeRule(rule: any): {
 
 const TRIGGER_LABELS: Record<string, string> = {
   BOOKING_CREATED: 'New Booking',
-  BOOKING_CANCELLED: 'Booking Cancelled',
-  STATUS_CHANGED: 'Status Changed',
   BOOKING_UPCOMING: 'Time-Based',
+  STATUS_CHANGED: 'Status Changed',
+  BOOKING_CANCELLED: 'Booking Cancelled',
+  MESSAGE_RECEIVED: 'Message Received',
+  CUSTOMER_CREATED: 'Customer Created',
+  PAYMENT_RECEIVED: 'Payment Received',
+  TESTIMONIAL_SUBMITTED: 'Testimonial',
+  CAMPAIGN_SENT: 'Campaign Sent',
+  REFERRAL_EARNED: 'Referral Earned',
+  REFERRAL_REDEEMED: 'Referral Redeemed',
+  NO_RESPONSE: 'No Response',
 };
 
 const CONDITION_LABELS: Record<string, string> = {
@@ -260,10 +268,15 @@ const FILTER_TO_CONFIG: Record<string, string> = {
 
 const ACTION_REVERSE_MAP: Record<string, string> = {
   SEND_TEMPLATE: 'SEND_TEMPLATE',
+  SEND_MESSAGE: 'SEND_MESSAGE',
+  SEND_EMAIL: 'SEND_EMAIL',
   UPDATE_STATUS: 'UPDATE_STATUS',
   ASSIGN_STAFF: 'ASSIGN_STAFF',
   ADD_TAG: 'ADD_TAG',
   SEND_NOTIFICATION: 'SEND_NOTIFICATION',
+  REQUEST_TESTIMONIAL: 'REQUEST_TESTIMONIAL',
+  UPDATE_CUSTOMER_FIELD: 'UPDATE_CUSTOMER_FIELD',
+  WEBHOOK: 'WEBHOOK',
 };
 
 const ACTION_LABELS: Record<string, string> = {
@@ -278,11 +291,17 @@ const ACTION_LABELS: Record<string, string> = {
 
 const BLOCK_LABELS: Record<string, string> = {
   BOOKING_CREATED: 'New Booking',
-  BOOKING_CANCELLED: 'Booking Cancelled',
-  CUSTOMER_CREATED: 'Customer Created',
-  MESSAGE_RECEIVED: 'Message Received',
-  STATUS_CHANGED: 'Status Changed',
   BOOKING_UPCOMING: 'Time-Based',
+  STATUS_CHANGED: 'Status Changed',
+  BOOKING_CANCELLED: 'Booking Cancelled',
+  MESSAGE_RECEIVED: 'Message Received',
+  CUSTOMER_CREATED: 'Customer Created',
+  PAYMENT_RECEIVED: 'Payment Received',
+  TESTIMONIAL_SUBMITTED: 'Testimonial',
+  CAMPAIGN_SENT: 'Campaign Sent',
+  REFERRAL_EARNED: 'Referral Earned',
+  REFERRAL_REDEEMED: 'Referral Redeemed',
+  NO_RESPONSE: 'No Response',
   IF_STATUS: 'If Status Is',
   IF_TAG: 'If Tag Contains',
   IF_TIME_SINCE: 'If Time Since > X',

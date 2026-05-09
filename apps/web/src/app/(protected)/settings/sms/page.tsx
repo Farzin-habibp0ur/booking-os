@@ -342,7 +342,7 @@ export default function SmsSettingsPage() {
             <textarea
               value={testMessage}
               onChange={(e) => setTestMessage(e.target.value)}
-              placeholder="Hello, this is a test message from BookingOS!"
+              placeholder="Hello, this is a test message from Business Command Centre!"
               rows={3}
               className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-sage-500 focus:border-transparent outline-none resize-none"
             />

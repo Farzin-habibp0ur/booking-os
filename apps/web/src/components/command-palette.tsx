@@ -215,7 +215,7 @@ export default function CommandPalette({
           else if (sections.insights.includes(item.href))
             section = t('nav.section_insights', undefined) || 'Insights';
           else if (sections.aiAgents?.includes(item.href))
-            section = t('nav.section_ai_agents', undefined) || 'AI & Agents';
+            section = t('nav.section_ai_agents', undefined) || 'AI Front Desk';
         }
         return { href: item.href, label: item.label, icon: item.icon, section };
       });
@@ -345,7 +345,7 @@ export default function CommandPalette({
 
   // Group matching pages by section
   const pageSections = useMemo(() => {
-    const sectionOrder = ['Workspace', 'Tools', 'Insights', 'AI & Agents', 'Pages'];
+    const sectionOrder = ['Workspace', 'Tools', 'Insights', 'AI Front Desk', 'Pages'];
     const groups: Record<string, PageItem[]> = {};
     for (const page of matchingPages) {
       if (!groups[page.section]) groups[page.section] = [];

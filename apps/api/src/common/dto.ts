@@ -1214,7 +1214,7 @@ export class CreateAutomationRuleDto {
   @MaxLength(200)
   name!: string;
 
-  // H4 fix: Validate trigger against known values (expanded in HIGH-05)
+  // H4 fix: Validate trigger against known values (expanded in HIGH-05, reconciled in UX-gaps)
   @IsString()
   @IsNotEmpty()
   @IsIn(
@@ -1228,10 +1228,13 @@ export class CreateAutomationRuleDto {
       'PAYMENT_RECEIVED',
       'TESTIMONIAL_SUBMITTED',
       'CAMPAIGN_SENT',
+      'REFERRAL_EARNED',
+      'REFERRAL_REDEEMED',
+      'NO_RESPONSE',
     ],
     {
       message:
-        'trigger must be one of: BOOKING_CREATED, BOOKING_UPCOMING, STATUS_CHANGED, BOOKING_CANCELLED, MESSAGE_RECEIVED, CUSTOMER_CREATED, PAYMENT_RECEIVED, TESTIMONIAL_SUBMITTED, CAMPAIGN_SENT',
+        'trigger must be one of: BOOKING_CREATED, BOOKING_UPCOMING, STATUS_CHANGED, BOOKING_CANCELLED, MESSAGE_RECEIVED, CUSTOMER_CREATED, PAYMENT_RECEIVED, TESTIMONIAL_SUBMITTED, CAMPAIGN_SENT, REFERRAL_EARNED, REFERRAL_REDEEMED, NO_RESPONSE',
     },
   )
   trigger!: string;
@@ -1263,6 +1266,10 @@ export class CreateAutomationRuleDto {
   @Min(0)
   @Max(100)
   maxPerCustomerPerDay?: number;
+
+  @IsObject()
+  @IsOptional()
+  messageTemplateOverride?: Record<string, unknown>;
 }
 
 export class UpdateAutomationRuleDto {
@@ -1271,7 +1278,7 @@ export class UpdateAutomationRuleDto {
   @MaxLength(200)
   name?: string;
 
-  // H4 fix: Validate trigger against known values (expanded in HIGH-05)
+  // H4 fix: Validate trigger against known values (expanded in HIGH-05, reconciled in UX-gaps)
   @IsString()
   @IsOptional()
   @IsIn(
@@ -1285,10 +1292,13 @@ export class UpdateAutomationRuleDto {
       'PAYMENT_RECEIVED',
       'TESTIMONIAL_SUBMITTED',
       'CAMPAIGN_SENT',
+      'REFERRAL_EARNED',
+      'REFERRAL_REDEEMED',
+      'NO_RESPONSE',
     ],
     {
       message:
-        'trigger must be one of: BOOKING_CREATED, BOOKING_UPCOMING, STATUS_CHANGED, BOOKING_CANCELLED, MESSAGE_RECEIVED, CUSTOMER_CREATED, PAYMENT_RECEIVED, TESTIMONIAL_SUBMITTED, CAMPAIGN_SENT',
+        'trigger must be one of: BOOKING_CREATED, BOOKING_UPCOMING, STATUS_CHANGED, BOOKING_CANCELLED, MESSAGE_RECEIVED, CUSTOMER_CREATED, PAYMENT_RECEIVED, TESTIMONIAL_SUBMITTED, CAMPAIGN_SENT, REFERRAL_EARNED, REFERRAL_REDEEMED, NO_RESPONSE',
     },
   )
   trigger?: string;
@@ -1323,6 +1333,30 @@ export class UpdateAutomationRuleDto {
   @IsOptional()
   @Min(0)
   @Max(100)
+  maxPerCustomerPerDay?: number;
+
+  @IsObject()
+  @IsOptional()
+  messageTemplateOverride?: Record<string, unknown>;
+}
+
+// ---- Automation Safety Defaults DTO (UX-gap-16) ----
+
+export class UpdateSafetyDefaultsDto {
+  @IsString()
+  @IsOptional()
+  @Matches(/^\d{2}:\d{2}$/, { message: 'quietStart must be in HH:mm format' })
+  quietStart?: string;
+
+  @IsString()
+  @IsOptional()
+  @Matches(/^\d{2}:\d{2}$/, { message: 'quietEnd must be in HH:mm format' })
+  quietEnd?: string;
+
+  @IsNumber()
+  @IsOptional()
+  @Min(1)
+  @Max(20)
   maxPerCustomerPerDay?: number;
 }
 

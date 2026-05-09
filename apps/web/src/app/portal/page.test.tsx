@@ -183,8 +183,8 @@ describe('PortalPage', () => {
     expect(body.slug).toBe('glow-clinic');
   });
 
-  it('shows the Booking OS branding footer', () => {
+  it('shows the Business Command Centre branding footer', () => {
     render(<PortalPage />);
-    expect(screen.getByText('Booking OS')).toBeInTheDocument();
+    expect(screen.getByText('Business Command Centre')).toBeInTheDocument();
   });
 });

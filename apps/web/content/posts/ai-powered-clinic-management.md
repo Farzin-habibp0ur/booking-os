@@ -3,7 +3,7 @@ title: 'How AI Is Transforming Clinic Management in 2026'
 description: 'Discover how artificial intelligence is reshaping appointment scheduling, patient communication, and operational efficiency for aesthetic clinics and med-spas.'
 date: '2026-02-15'
 category: 'Industry Insights'
-author: 'Booking OS Team'
+author: 'Business Command Centre Team'
 readTime: '5 min read'
 ---
 

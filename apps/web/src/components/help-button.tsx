@@ -228,13 +228,13 @@ export function HelpButton() {
     {
       label: 'Contact Support',
       icon: Mail,
-      href: 'mailto:support@bookingos.com',
+      href: 'mailto:support@businesscommandcentre.com',
       external: true,
     },
     {
       label: 'Feature Requests',
       icon: MessageSquare,
-      href: 'mailto:feedback@bookingos.com',
+      href: 'mailto:feedback@businesscommandcentre.com',
       external: true,
     },
   ];

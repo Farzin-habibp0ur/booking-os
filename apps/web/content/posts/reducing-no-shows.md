@@ -3,7 +3,7 @@ title: 'How One Clinic Reduced No-Shows by 60% with Smart Automation'
 description: 'A case study on how automated reminders, deposit collection, and waitlist management helped an aesthetic clinic dramatically reduce missed appointments.'
 date: '2026-03-01'
 category: 'Customer Success'
-author: 'Booking OS Team'
+author: 'Business Command Centre Team'
 readTime: '4 min read'
 ---
 

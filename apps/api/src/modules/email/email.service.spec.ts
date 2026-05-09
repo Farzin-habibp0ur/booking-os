@@ -270,10 +270,10 @@ describe('EmailService', () => {
   describe('buildBrandedHtml', () => {
     it('wraps content in branded layout with header and footer', () => {
       const html = service.buildBrandedHtml('<p>Hello</p>');
-      expect(html).toContain('Booking OS');
+      expect(html).toContain('Business Command Centre');
       expect(html).toContain('#71907C');
       expect(html).toContain('<p>Hello</p>');
-      expect(html).toContain('Powered by Booking OS');
+      expect(html).toContain('Powered by Business Command Centre');
     });
   });
 

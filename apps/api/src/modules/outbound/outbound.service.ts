@@ -57,22 +57,45 @@ export class OutboundService {
     metadata?: Record<string, any>;
     source?: string;
   }) {
-    const draft = await this.prisma.outboundDraft.create({
-      data: {
-        businessId: data.businessId,
-        customerId: data.customerId,
-        staffId: data.staffId,
-        conversationId: data.conversationId,
-        channel: data.channel || 'WHATSAPP',
-        content: data.content,
-        status: 'DRAFT',
-        source: data.source || 'AI',
-        sourceMessageId: data.sourceMessageId,
-        intent: data.intent,
-        confidence: data.confidence,
-        metadata: data.metadata as any,
-      },
-      include: { customer: true, staff: true },
+    const source = data.source || 'AI';
+    const channel = data.channel || 'WHATSAPP';
+    const draft = await this.prisma.$transaction(async (tx) => {
+      const created = await tx.outboundDraft.create({
+        data: {
+          businessId: data.businessId,
+          customerId: data.customerId,
+          staffId: data.staffId,
+          conversationId: data.conversationId,
+          channel,
+          content: data.content,
+          status: 'DRAFT',
+          source,
+          sourceMessageId: data.sourceMessageId,
+          intent: data.intent,
+          confidence: data.confidence,
+          metadata: data.metadata as any,
+        },
+        include: { customer: true, staff: true },
+      });
+
+      if (source === 'AI') {
+        await tx.frontDeskAttribution.create({
+          data: {
+            businessId: data.businessId,
+            customerId: data.customerId,
+            conversationId: data.conversationId,
+            outboundDraftId: created.id,
+            source: this.getAttributionSource(data.intent),
+            status: 'OPEN',
+            channel,
+            confidence: data.confidence ?? null,
+            reason: data.intent || null,
+            metadata: (data.metadata || {}) as any,
+          },
+        });
+      }
+
+      return created;
     });
 
     // Notify inbox in real-time
@@ -179,10 +202,28 @@ export class OutboundService {
   }
 
   async markSent(businessId: string, id: string, conversationId: string) {
-    return this.prisma.outboundDraft.update({
-      where: { id, businessId },
-      data: { status: 'SENT', sentAt: new Date(), conversationId },
+    const sentAt = new Date();
+    return this.prisma.$transaction(async (tx) => {
+      const draft = await tx.outboundDraft.update({
+        where: { id, businessId },
+        data: { status: 'SENT', sentAt, conversationId },
+      });
+
+      await tx.frontDeskAttribution.updateMany({
+        where: { businessId, outboundDraftId: id },
+        data: { status: 'OPEN', openedAt: sentAt, conversationId },
+      });
+
+      return draft;
     });
+  }
+
+  private getAttributionSource(intent?: string): string {
+    const normalized = intent?.toUpperCase();
+    if (normalized === 'QUOTE_FOLLOWUP' || normalized === 'CONSULT_FOLLOWUP') {
+      return 'CONSULT_FOLLOWUP';
+    }
+    return 'AI_DRAFT';
   }
 
   async autoSaveDraft(

@@ -72,6 +72,43 @@ const PLAYBOOK_DETAILS: Record<
       "Hi {name}, we haven't seen you in a while! We'd love to have you back. Book your next appointment and enjoy a returning client offer.",
     borderColor: 'border-l-amber-500',
   },
+  'welcome-new-customer': {
+    whatItDoes:
+      'Sends a personalized welcome message when a new customer is created, introducing your clinic and inviting them to book.',
+    whenItRuns: 'Immediately when a new customer record is created.',
+    whoItAffects: 'All new customers added to your system.',
+    examples: [
+      'Customer signs up through the booking portal → welcome sent instantly',
+      'Receptionist creates a new customer during a walk-in → welcome message sent',
+    ],
+    sampleMessage:
+      "Hi {name}, welcome to {businessName}! We're so glad you're here. Book your first appointment at {bookingLink}.",
+    borderColor: 'border-l-sage-500',
+  },
+  'post-treatment-testimonial': {
+    whatItDoes: 'Sends a friendly request for a testimonial 3 days after treatment completion.',
+    whenItRuns: '3 days after a booking is marked as completed.',
+    whoItAffects: 'Customers who have completed a treatment (not consultations).',
+    examples: [
+      'Patient completes a Botox session → review request sent 3 days later',
+      'Customer finishes laser treatment → receives a feedback link',
+    ],
+    sampleMessage:
+      "Hi {name}, we hope you're loving your results! Would you mind sharing your experience? It means the world to us.",
+    borderColor: 'border-l-amber-500',
+  },
+  'birthday-greeting': {
+    whatItDoes: 'Sends a birthday greeting with an optional special offer or discount code.',
+    whenItRuns: "On the customer's birthday (requires date of birth in profile).",
+    whoItAffects: 'Customers with a date of birth on file.',
+    examples: [
+      'Customer gets a 10% birthday discount code via WhatsApp',
+      'Patient receives a birthday greeting email with a booking link',
+    ],
+    sampleMessage:
+      'Happy birthday, {name}! As a special treat, enjoy 10% off your next visit. Book now: {bookingLink}',
+    borderColor: 'border-l-rose-400',
+  },
 };
 
 interface PlaybookCardProps {
@@ -87,9 +124,10 @@ interface PlaybookCardProps {
     actions: any[];
   };
   onToggle: (playbookId: string) => void;
+  compact?: boolean;
 }
 
-export function PlaybookCard({ playbook: pb, onToggle }: PlaybookCardProps) {
+export function PlaybookCard({ playbook: pb, onToggle, compact }: PlaybookCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [stats, setStats] = useState<PlaybookStats | null>(null);
 
@@ -130,8 +168,26 @@ export function PlaybookCard({ playbook: pb, onToggle }: PlaybookCardProps) {
         </div>
         <p className="text-xs text-slate-500 mb-3">{pb.description}</p>
 
-        {/* Stats row */}
-        {stats && stats.total > 0 && (
+        {/* Compact mode: only header + toggle */}
+        {compact && (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => onToggle(pb.playbook)}
+              className={cn(
+                'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm transition-colors',
+                pb.isActive
+                  ? 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  : 'bg-sage-600 text-white hover:bg-sage-700',
+              )}
+            >
+              {pb.isActive ? <ToggleRight size={16} /> : <ToggleLeft size={16} />}
+              {pb.isActive ? 'Disable' : 'Enable'}
+            </button>
+          </div>
+        )}
+
+        {/* Stats row (full mode only) */}
+        {!compact && stats && stats.total > 0 && (
           <div className="flex items-center gap-3 mb-3 text-xs" data-testid="playbook-stats">
             <span className="text-sage-600 font-medium">{stats.sent} sent</span>
             {stats.skipped > 0 && <span className="text-amber-600">{stats.skipped} skipped</span>}
@@ -140,35 +196,37 @@ export function PlaybookCard({ playbook: pb, onToggle }: PlaybookCardProps) {
           </div>
         )}
 
-        {/* Action row */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => onToggle(pb.playbook)}
-            className={cn(
-              'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm transition-colors',
-              pb.isActive
-                ? 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                : 'bg-sage-600 text-white hover:bg-sage-700',
-            )}
-          >
-            {pb.isActive ? <ToggleRight size={16} /> : <ToggleLeft size={16} />}
-            {pb.isActive ? 'Disable' : 'Enable'}
-          </button>
-          {details && (
+        {/* Action row (full mode only) */}
+        {!compact && (
+          <div className="flex items-center gap-2">
             <button
-              onClick={() => setExpanded(!expanded)}
-              className="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-600 px-2 py-1.5"
-              data-testid="expand-button"
+              onClick={() => onToggle(pb.playbook)}
+              className={cn(
+                'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm transition-colors',
+                pb.isActive
+                  ? 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  : 'bg-sage-600 text-white hover:bg-sage-700',
+              )}
             >
-              {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-              {expanded ? 'Less' : 'Details'}
+              {pb.isActive ? <ToggleRight size={16} /> : <ToggleLeft size={16} />}
+              {pb.isActive ? 'Disable' : 'Enable'}
             </button>
-          )}
-        </div>
+            {details && (
+              <button
+                onClick={() => setExpanded(!expanded)}
+                className="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-600 px-2 py-1.5"
+                data-testid="expand-button"
+              >
+                {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                {expanded ? 'Less' : 'Details'}
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Expandable details */}
-      {expanded && details && (
+      {!compact && expanded && details && (
         <div
           className="border-t border-slate-100 px-5 py-4 space-y-3 bg-slate-50/50"
           data-testid="playbook-details"

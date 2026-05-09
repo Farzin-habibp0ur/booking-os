@@ -33,3 +33,8 @@ apps/api/uploads/
 # Capacitor native projects (generated)
 apps/web/ios/
 apps/web/android/
+
+# Local-only tooling (skill prompts, plan output, sheet sync state)
+.agents/
+.claude/plans/
+.sheet-sync/

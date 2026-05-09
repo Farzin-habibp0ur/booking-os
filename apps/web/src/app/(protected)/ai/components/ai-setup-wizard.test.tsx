@@ -48,7 +48,9 @@ describe('AISetupWizard', () => {
 
   it('shows step 1 content on initial render', () => {
     render(<AISetupWizard />);
-    expect(screen.getByRole('heading', { name: 'Enable AI' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: 'Connect front desk channels' }),
+    ).toBeInTheDocument();
   });
 
   it('navigates to next step when Next is clicked', () => {
@@ -62,7 +64,9 @@ describe('AISetupWizard', () => {
     fireEvent.click(screen.getByTestId('next-button'));
     expect(screen.getByRole('heading', { name: 'Set your voice' })).toBeInTheDocument();
     fireEvent.click(screen.getByTestId('back-button'));
-    expect(screen.getByRole('heading', { name: 'Enable AI' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: 'Connect front desk channels' }),
+    ).toBeInTheDocument();
   });
 
   it('skip button sets localStorage and calls onComplete', () => {
@@ -84,7 +88,9 @@ describe('AISetupWizard', () => {
       target: { value: 'friendly and professional' },
     });
 
-    // Navigate to step 3 (channels)
+    // Navigate through approval mode and draft channels
+    fireEvent.click(screen.getByTestId('next-button'));
+    fireEvent.click(screen.getByTestId('next-button'));
     fireEvent.click(screen.getByTestId('next-button'));
 
     // Complete
@@ -93,7 +99,11 @@ describe('AISetupWizard', () => {
     await waitFor(() => {
       expect(mockApi.patch).toHaveBeenCalledWith(
         '/ai/settings',
-        expect.objectContaining({ enabled: true }),
+        expect.objectContaining({
+          enabled: true,
+          autoReplySuggestions: true,
+          autoReply: expect.objectContaining({ enabled: false }),
+        }),
       );
     });
   });
@@ -102,6 +112,8 @@ describe('AISetupWizard', () => {
     mockApi.patch.mockResolvedValue({});
     render(<AISetupWizard />);
 
+    fireEvent.click(screen.getByTestId('next-button'));
+    fireEvent.click(screen.getByTestId('next-button'));
     fireEvent.click(screen.getByTestId('next-button'));
     fireEvent.click(screen.getByTestId('next-button'));
     fireEvent.click(screen.getByTestId('complete-button'));
@@ -117,10 +129,12 @@ describe('AISetupWizard', () => {
 
     fireEvent.click(screen.getByTestId('next-button'));
     fireEvent.click(screen.getByTestId('next-button'));
+    fireEvent.click(screen.getByTestId('next-button'));
+    fireEvent.click(screen.getByTestId('next-button'));
     fireEvent.click(screen.getByTestId('complete-button'));
 
     await waitFor(() => {
-      expect(screen.getByText('AI is ready!')).toBeInTheDocument();
+      expect(screen.getByText('AI Front Desk is ready!')).toBeInTheDocument();
     });
   });
 });

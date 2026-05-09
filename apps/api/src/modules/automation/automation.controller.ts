@@ -22,6 +22,7 @@ import {
   CreateAutomationRuleDto,
   UpdateAutomationRuleDto,
   SetAutomationStepsDto,
+  UpdateSafetyDefaultsDto,
 } from '../../common/dto';
 
 @Throttle({ default: { limit: 20, ttl: 60000 } })
@@ -38,8 +39,12 @@ export class AutomationController {
 
   @Post('playbooks/:id/toggle')
   @Roles('ADMIN')
-  togglePlaybook(@BusinessId() businessId: string, @Param('id') id: string) {
-    return this.automationService.togglePlaybook(businessId, id);
+  togglePlaybook(
+    @BusinessId() businessId: string,
+    @Param('id') id: string,
+    @Body() body?: { messageOverride?: Record<string, string> },
+  ) {
+    return this.automationService.togglePlaybook(businessId, id, body?.messageOverride);
   }
 
   @Get('playbooks/:id/stats')
@@ -144,5 +149,30 @@ export class AutomationController {
   @Get('analytics/by-rule')
   getAnalyticsByRule(@BusinessId() businessId: string) {
     return this.automationService.getAnalyticsByRule(businessId);
+  }
+
+  // UX-gap-13: Duplicate a rule
+  @Post('rules/:id/duplicate')
+  @Roles('ADMIN')
+  duplicateRule(@BusinessId() businessId: string, @Param('id') id: string) {
+    return this.automationService.duplicateRule(id, businessId);
+  }
+
+  // UX-gap-16: Global safety defaults
+  @Get('safety-defaults')
+  getSafetyDefaults(@BusinessId() businessId: string) {
+    return this.automationService.getAutomationDefaults(businessId);
+  }
+
+  @Patch('safety-defaults')
+  @Roles('ADMIN')
+  updateSafetyDefaults(@BusinessId() businessId: string, @Body() body: UpdateSafetyDefaultsDto) {
+    return this.automationService.updateAutomationDefaults(businessId, body);
+  }
+
+  // UX-gap-17: Customer automation timeline
+  @Get('customer/:customerId/timeline')
+  getCustomerTimeline(@BusinessId() businessId: string, @Param('customerId') customerId: string) {
+    return this.automationService.getCustomerTimeline(customerId, businessId);
   }
 }

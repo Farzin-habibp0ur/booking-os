@@ -38,7 +38,7 @@ export class AiController {
     const business = await this.businessService.findById(businessId);
     if (!business) throw new BadRequestException('Business not found');
     const defaults = {
-      enabled: false,
+      enabled: true,
       autoReplySuggestions: true,
       bookingAssistant: true,
       personality: 'friendly and professional',

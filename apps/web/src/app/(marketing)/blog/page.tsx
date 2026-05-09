@@ -3,9 +3,9 @@ import Link from 'next/link';
 import { getAllPosts } from '@/lib/blog';
 
 export const metadata: Metadata = {
-  title: 'Blog — Booking OS',
+  title: 'Blog — Business Command Centre',
   description:
-    'Insights on clinic management, AI automation, appointment scheduling, and growing your service business.',
+    'Insights on clinic messaging, AI front desk workflows, consult follow-up, and recovered revenue.',
   alternates: {
     canonical: 'https://businesscommandcentre.com/blog',
   },
@@ -31,8 +31,8 @@ export default function BlogPage() {
             Insights & Resources
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-slate-500">
-            Expert advice on running a smarter service business with AI, automation, and modern
-            tools.
+            Practical notes on clinic messaging, AI-drafted replies, consult follow-up, and
+            recovered revenue.
           </p>
         </div>
 

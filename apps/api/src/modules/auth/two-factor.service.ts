@@ -148,7 +148,7 @@ export class TwoFactorService {
   }
 
   private generateOtpauthUrl(email: string, secret: string): string {
-    const issuer = 'BookingOS';
+    const issuer = 'Business Command Centre';
     const label = encodeURIComponent(`${issuer}:${email}`);
     return `otpauth://totp/${label}?secret=${secret}&issuer=${encodeURIComponent(issuer)}&algorithm=SHA1&digits=6&period=30`;
   }

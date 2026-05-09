@@ -313,13 +313,13 @@ export class RoiService {
             </tr>
           </tbody>
         </table>
-        <p style="color:#94a3b8;font-size:12px;margin-top:24px">Generated ${new Date(review.generatedAt).toLocaleString()} — Booking OS</p>
+        <p style="color:#94a3b8;font-size:12px;margin-top:24px">Generated ${new Date(review.generatedAt).toLocaleString()} — Business Command Centre</p>
       </div>
     `;
 
     await this.emailService.send({
       to: recipientEmail,
-      subject: `Week ${review.weekNumber} Review — Booking OS`,
+      subject: `Week ${review.weekNumber} Review — Business Command Centre`,
       html,
     });
 

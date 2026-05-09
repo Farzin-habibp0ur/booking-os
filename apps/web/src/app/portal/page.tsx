@@ -134,7 +134,7 @@ export default function PortalPage() {
         </div>
 
         <p className="text-center text-xs text-slate-400 mt-6">
-          Powered by <span className="font-medium text-slate-500">Booking OS</span>
+          Powered by <span className="font-medium text-slate-500">Business Command Centre</span>
         </p>
       </div>
     </div>

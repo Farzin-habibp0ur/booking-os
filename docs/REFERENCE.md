@@ -1,4 +1,4 @@
-# BookingOS — Reference Tables
+# Business Command Centre — Reference Tables
 
 > **Purpose:** Lookup tables and reference material extracted from CLAUDE.md for on-demand access. These are not needed every session but are essential when working in specific areas.
 
@@ -6,27 +6,27 @@
 
 ## Page Categories
 
-**91+ pages** across `apps/web/` and `apps/admin/`:
+**96+ web pages** and **21 admin pages** across `apps/web/` and `apps/admin/`:
 
 **Public pages:** `/login`, `/signup`, `/forgot-password`, `/reset-password`, `/verify-email`, `/accept-invite`, `/book/[slug]` (booking portal), `/manage/*` (self-serve links), `/portal/[slug]/*` (customer portal with OTP auth), `/unsubscribe/[token]` (campaign unsubscribe), `/testimonials/submit/[token]` (customer self-submission portal)
 
-**Marketing pages:** `/` (landing page with hero, features, pricing), `/blog`, `/blog/[slug]` (JSON-LD, OpenGraph), `/pricing`, `/faq`
+**Marketing pages:** `/` (AI Front Desk landing page), `/pilot`, `/blog`, `/blog/[slug]` (JSON-LD, OpenGraph), `/pricing`, `/faq`, `/privacy`, `/terms`, `/security`
 
-**Protected pages (tenant):** `/dashboard`, `/bookings`, `/calendar`, `/inbox`, `/customers`, `/customers/[id]`, `/services`, `/staff`, `/waitlist`, `/campaigns`, `/campaigns/new` (4-step wizard), `/campaigns/[id]` (detail with funnel + channel stats), `/automations` (redirects → `/ai/automations`), `/reports`, `/roi`, `/settings/*` (18 sub-pages including `/channels`, `/sms`, `/facebook`, `/email-channel`, `/web-chat`, `/testimonials`), `/settings/ai` (redirects → `/ai/settings`), `/testimonials`, `/marketing/*` (internal only — no sidebar nav), `/ai/*` (AI Hub: overview, agents, actions, automations, performance, settings — 6 sub-pages), `/search`, `/notifications`, `/help`
+**Protected pages (tenant):** `/dashboard`, `/bookings`, `/calendar`, `/inbox`, `/customers`, `/customers/[id]`, `/services`, `/staff`, `/waitlist`, `/campaigns`, `/campaigns/new` (4-step wizard), `/campaigns/[id]` (detail with funnel + channel stats), `/automations` (redirects → `/ai/automations`), `/reports`, `/roi`, `/settings/*` (18 sub-pages including `/channels`, `/sms`, `/facebook`, `/email-channel`, `/web-chat`, `/testimonials`), `/settings/ai` (redirects → `/ai/settings`), `/testimonials`, `/marketing/*` (internal only — no sidebar nav), `/ai/*` (AI Front Desk: overview, agents, actions, automations, performance, settings — 6 sub-pages), `/search`, `/notifications`, `/help`
 
-**Console pages (Super Admin):** These live in `apps/admin/` (port 3002). Routes: `/` (overview), `/businesses` (directory), `/businesses/[id]` (Business 360), `/audit`, `/health`, `/support`, `/billing`, `/billing/past-due`, `/billing/subscriptions`, `/packs`, `/packs/[slug]`, `/packs/skills`, `/agents`, `/messaging`, `/settings`, `/marketing` (landing), `/marketing/queue` (content approval), `/marketing/agents` (12 marketing agents), `/marketing/sequences` (email sequences), `/marketing/rejection-analytics`
+**Console pages (Super Admin):** These live in `apps/admin/` (port 3002). Routes: `/` (overview), `/businesses` (directory), `/businesses/[id]` (Business 360), `/audit`, `/health`, `/support`, `/pilot-applications`, `/billing`, `/billing/past-due`, `/billing/subscriptions`, `/packs`, `/packs/[slug]`, `/packs/skills`, `/agents`, `/messaging`, `/settings`, `/marketing` (landing), `/marketing/queue` (content approval), `/marketing/agents` (12 marketing agents), `/marketing/sequences` (email sequences), `/marketing/rejection-analytics`
 
 ---
 
 ## Navigation Structure
 
 - **Single source of truth:** All nav routes defined in `apps/web/src/lib/nav-config.ts`, consumed by shell sidebar, mobile tab bar, and command palette
-- Sidebar uses 4 sections: **Workspace** / **Tools** / **Insights** / **AI & Agents** (defined per mode in `apps/web/src/lib/mode-config.ts`)
+- Sidebar uses 4 sections: **Workspace** / **Tools** / **Insights** / **AI Front Desk** (defined per mode in `apps/web/src/lib/mode-config.ts`)
 - Admin mode splits sections into **primary** (always visible) and **overflow** (collapsible "More" toggle, collapsed by default, `localStorage` persisted). Agent/provider modes show all paths as primary
 - Admin workspace includes: Inbox, Calendar, Customers, Bookings, Waitlist
 - Admin primary tools: Services, Staff, Invoices, Marketing, Campaigns
 - Admin primary insights: Dashboard, Reports. Admin overflow insights: Monthly Review, ROI
-- Admin primary AI: AI & Agents (`/ai`). Admin overflow AI: Action Triage, Agent Status, Automations, AI Settings, Performance
+- Admin primary AI: AI Front Desk (`/ai`). Admin overflow AI: Action Triage, Agent Status, Automations, AI Settings, Performance
 - Every nav item has a distinct lucide-react icon — no duplicates across sections
 - All nav labels use i18n keys (`locales/en.json` + `es.json`)
 - Section labels use `.nav-section-label` CSS class from `globals.css`

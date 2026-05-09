@@ -60,7 +60,7 @@ const mockSettings = {
   },
 };
 
-describe('AiSettingsPage (AI Hub)', () => {
+describe('AiSettingsPage (AI Front Desk)', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });

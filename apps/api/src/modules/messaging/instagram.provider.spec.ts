@@ -7,7 +7,7 @@ const mockConfig = {
 
 const mockMessage = {
   to: 'IGSID_12345',
-  body: 'Hello from Booking OS',
+  body: 'Hello from Business Command Centre',
   businessId: 'biz-test-1',
 };
 
@@ -47,7 +47,7 @@ describe('InstagramProvider', () => {
 
       const body = JSON.parse(options.body);
       expect(body.recipient.id).toBe('IGSID_12345');
-      expect(body.message.text).toBe('Hello from Booking OS');
+      expect(body.message.text).toBe('Hello from Business Command Centre');
     });
 
     it('truncates text to 1000 characters', async () => {

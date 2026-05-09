@@ -3,7 +3,7 @@ title: 'WhatsApp Business for Appointment Booking: A Complete Guide'
 description: 'Learn how to leverage WhatsApp Business Cloud API to streamline appointment booking, reduce no-shows, and improve client communication.'
 date: '2026-02-20'
 category: 'Product Education'
-author: 'Booking OS Team'
+author: 'Business Command Centre Team'
 readTime: '6 min read'
 ---
 

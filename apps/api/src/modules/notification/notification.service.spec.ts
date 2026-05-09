@@ -71,7 +71,7 @@ describe('NotificationService', () => {
     emailService = {
       send: jest.fn().mockResolvedValue(true),
       buildBrandedHtml: jest.fn().mockImplementation((bodyContent: string) => {
-        return `<html><body>${bodyContent}<footer>Powered by Booking OS</footer></body></html>`;
+        return `<html><body>${bodyContent}<footer>Powered by Business Command Centre</footer></body></html>`;
       }),
     };
 
@@ -2039,7 +2039,7 @@ describe('NotificationService', () => {
       const emailCall = emailService.send.mock.calls[0][0];
       expect(emailCall.html).toContain('<html>');
       expect(emailCall.html).toContain(campaignBody);
-      expect(emailCall.html).toContain('Booking OS');
+      expect(emailCall.html).toContain('Business Command Centre');
     });
 
     it('handles error gracefully', async () => {

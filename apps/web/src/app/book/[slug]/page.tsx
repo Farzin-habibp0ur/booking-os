@@ -1258,7 +1258,7 @@ export default function BookingPortalPage() {
           {/* Trust badge */}
           <div className="flex items-center justify-center gap-1.5 text-xs text-slate-400">
             <ShieldCheck size={14} />
-            <span>Secure booking powered by Booking OS</span>
+            <span>Secure booking powered by Business Command Centre</span>
           </div>
         </div>
       )}
@@ -1358,24 +1358,24 @@ export default function BookingPortalPage() {
           <p className="text-xs text-slate-400">
             Powered by{' '}
             <a
-              href={`/signup?ref=booking-page&source=${encodeURIComponent(slug)}`}
+              href={`/pilot?ref=booking-page&source=${encodeURIComponent(slug)}`}
               onClick={() => trackEvent('plg_click', { source: slug, location: 'booking_footer' })}
               className="text-sage-600 hover:text-sage-700 hover:underline font-medium"
               target="_blank"
               rel="noopener noreferrer"
             >
-              Booking OS
+              Business Command Centre
             </a>
           </p>
           <p className="text-[10px] text-slate-300 mt-0.5">
             <a
-              href={`/signup?ref=booking-page&source=${encodeURIComponent(slug)}`}
+              href={`/pilot?ref=booking-page&source=${encodeURIComponent(slug)}`}
               onClick={() => trackEvent('plg_click', { source: slug, location: 'booking_cta' })}
               className="hover:text-slate-400 transition-colors"
               target="_blank"
               rel="noopener noreferrer"
             >
-              Get your own booking page — free for 14 days
+              Apply for the AI Front Desk pilot
             </a>
           </p>
         </div>

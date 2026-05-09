@@ -1,4 +1,4 @@
-# Sales Demo Plan — Booking OS for Aesthetic Clinics
+# Sales Demo Plan — Business Command Centre AI Front Desk
 
 > **Duration:** 25-30 minutes
 > **Login:** `sarah@glowclinic.com` / `Bk0s!DemoSecure#2026`
@@ -193,7 +193,7 @@
 - Show the recovered revenue calculation
 
 **What to say:**
-> "This is how you prove ROI to your clinic owner. We track no-show rate, consult conversion, response time — before and after Booking OS. This clinic recovered $X in revenue just from reducing no-shows."
+> "This is how you prove ROI to your clinic owner. We track captured leads, approved AI drafts, filled cancellations, consult follow-ups, attributed bookings, and estimated recovered revenue inside Business Command Centre."
 
 ---
 

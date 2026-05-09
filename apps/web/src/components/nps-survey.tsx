@@ -104,7 +104,7 @@ export function NpsSurvey() {
                 Thank you!
               </p>
               <p className="text-sm text-slate-500 mt-1">
-                Your feedback helps us improve Booking OS.
+                Your feedback helps us improve Business Command Centre.
               </p>
             </div>
           ) : (
@@ -127,7 +127,7 @@ export function NpsSurvey() {
               {/* Question */}
               <div className="px-6 pb-4">
                 <p className="text-sm text-slate-600 dark:text-slate-400">
-                  How likely are you to recommend Booking OS to a colleague?
+                  How likely are you to recommend Business Command Centre to a colleague?
                 </p>
               </div>
 

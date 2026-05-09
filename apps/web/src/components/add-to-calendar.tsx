@@ -63,7 +63,7 @@ function generateIcsBlob(props: AddToCalendarProps): Blob {
   const lines = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//BookingOS//EN',
+    'PRODID:-//Business Command Centre//EN',
     'BEGIN:VEVENT',
     `DTSTART:${fmt(start)}`,
     `DTEND:${fmt(end)}`,

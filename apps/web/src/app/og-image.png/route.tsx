@@ -26,13 +26,15 @@ export async function GET() {
       >
         <div
           style={{
-            fontSize: 72,
+            fontSize: 58,
             fontWeight: 800,
             color: '#ffffff',
-            letterSpacing: '-2px',
+            letterSpacing: 0,
+            maxWidth: '960px',
+            textAlign: 'center',
           }}
         >
-          Booking OS
+          Business Command Centre
         </div>
         <div
           style={{
@@ -42,7 +44,7 @@ export async function GET() {
             textAlign: 'center',
           }}
         >
-          The all-in-one command centre for your clinic.
+          AI front desk for aesthetic clinics.
         </div>
       </div>
     </div>,

@@ -17,7 +17,7 @@ describe('TwoFactorService', () => {
       expect(result.secret).toMatch(/^[A-Z2-7]+$/);
       expect(result.otpauthUrl).toContain('otpauth://totp/');
       expect(result.otpauthUrl).toContain('test%40example.com');
-      expect(result.otpauthUrl).toContain('BookingOS');
+      expect(result.otpauthUrl).toContain('Business%20Command%20Centre');
       expect(result.otpauthUrl).toContain(`secret=${result.secret}`);
     });
 

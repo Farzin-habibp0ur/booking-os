@@ -2,36 +2,21 @@
 
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
-import { MessageSquare, Zap, Bot, FileEdit } from 'lucide-react';
+import { CalendarCheck, DollarSign, FileEdit, MessageSquare } from 'lucide-react';
 
-interface AIStats {
-  processedToday: number;
-  autoReplied: number;
-  draftsCreated: number;
-  failed: number;
-  dailyLimit: number;
-  history: unknown[];
-}
-
-interface AgentStats {
-  totalRuns: number;
-  byAgent: unknown[];
-  byStatus: unknown[];
+interface FrontDeskSummary {
+  leadsCaptured: number;
+  approvedReplies: number;
+  bookingsAttributed: number;
+  estimatedRecoveredRevenue: number;
 }
 
 export function AIValueKPIs() {
-  const [stats, setStats] = useState<AIStats>({
-    processedToday: 0,
-    autoReplied: 0,
-    draftsCreated: 0,
-    failed: 0,
-    dailyLimit: 0,
-    history: [],
-  });
-  const [agentStats, setAgentStats] = useState<AgentStats>({
-    totalRuns: 0,
-    byAgent: [],
-    byStatus: [],
+  const [frontDesk, setFrontDesk] = useState<FrontDeskSummary>({
+    leadsCaptured: 0,
+    approvedReplies: 0,
+    bookingsAttributed: 0,
+    estimatedRecoveredRevenue: 0,
   });
   const [loading, setLoading] = useState(true);
 
@@ -39,18 +24,8 @@ export function AIValueKPIs() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [aiStatsData, agentStatsData] = await Promise.allSettled([
-          api.get<AIStats>('/ai/stats'),
-          api.get<AgentStats>('/agent-runs/stats'),
-        ]);
-
-        if (aiStatsData.status === 'fulfilled' && aiStatsData.value) {
-          setStats(aiStatsData.value);
-        }
-
-        if (agentStatsData.status === 'fulfilled' && agentStatsData.value) {
-          setAgentStats(agentStatsData.value);
-        }
+        const frontDeskData = await api.get<FrontDeskSummary>('/front-desk/summary?days=30');
+        setFrontDesk(frontDeskData);
       } catch {
         // defaults already set to 0
       } finally {
@@ -73,27 +48,27 @@ export function AIValueKPIs() {
 
   const kpis = [
     {
-      label: 'Conversations Handled',
-      value: stats.processedToday,
+      label: 'Leads Captured',
+      value: frontDesk.leadsCaptured,
       icon: <MessageSquare size={20} className="text-lavender-600" />,
       iconBg: 'bg-lavender-50',
     },
     {
-      label: 'Auto-Replies Sent',
-      value: stats.autoReplied,
-      icon: <Zap size={20} className="text-sage-600" />,
+      label: 'Drafts Approved',
+      value: frontDesk.approvedReplies,
+      icon: <FileEdit size={20} className="text-sage-600" />,
       iconBg: 'bg-sage-50',
     },
     {
-      label: 'Agent Tasks',
-      value: agentStats.totalRuns,
-      icon: <Bot size={20} className="text-slate-600" />,
+      label: 'Bookings Attributed',
+      value: frontDesk.bookingsAttributed,
+      icon: <CalendarCheck size={20} className="text-slate-600" />,
       iconBg: 'bg-slate-100',
     },
     {
-      label: 'Drafts Pending',
-      value: stats.draftsCreated,
-      icon: <FileEdit size={20} className="text-amber-700" />,
+      label: 'Recovered Revenue',
+      value: `$${frontDesk.estimatedRecoveredRevenue.toLocaleString()}`,
+      icon: <DollarSign size={20} className="text-amber-700" />,
       iconBg: 'bg-amber-50',
     },
   ];

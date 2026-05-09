@@ -1,4 +1,4 @@
-# Booking OS — Complete User Stories
+# Business Command Centre — Complete User Stories
 
 > **Last updated:** March 19, 2026 (Omnichannel Phases 0-5 COMPLETE — WhatsApp, Instagram, Facebook, SMS, Email, Web Chat)
 

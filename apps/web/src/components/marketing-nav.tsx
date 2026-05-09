@@ -5,10 +5,10 @@ import Link from 'next/link';
 import { Menu, X } from 'lucide-react';
 
 const NAV_LINKS = [
-  { label: 'Features', href: '/#features' },
+  { label: 'How it Works', href: '/#how-it-works' },
   { label: 'Pricing', href: '/pricing' },
-  { label: 'Blog', href: '/blog' },
   { label: 'FAQ', href: '/faq' },
+  { label: 'Security', href: '/security' },
 ];
 
 export default function MarketingNav() {
@@ -30,7 +30,7 @@ export default function MarketingNav() {
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-8">
         {/* Logo */}
         <Link href="/" className="font-serif text-xl font-bold tracking-tight text-slate-900">
-          Booking OS
+          Business Command Centre
         </Link>
 
         {/* Desktop nav */}
@@ -55,10 +55,10 @@ export default function MarketingNav() {
             Sign In
           </Link>
           <Link
-            href="/signup"
+            href="/pilot"
             className="btn-press rounded-xl bg-sage-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-sage-700"
           >
-            Start Free Trial
+            Apply for Pilot
           </Link>
         </div>
 
@@ -94,10 +94,10 @@ export default function MarketingNav() {
               Sign In
             </Link>
             <Link
-              href="/signup"
+              href="/pilot"
               className="btn-press mt-1 rounded-xl bg-sage-600 px-5 py-2.5 text-center text-sm font-semibold text-white hover:bg-sage-700"
             >
-              Start Free Trial
+              Apply for Pilot
             </Link>
           </div>
         </div>

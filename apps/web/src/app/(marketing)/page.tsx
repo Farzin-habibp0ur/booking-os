@@ -2,9 +2,9 @@ import type { Metadata } from 'next';
 import LandingPage from './landing-page';
 
 export const metadata: Metadata = {
-  title: 'Booking OS — The All-in-One Command Center for Your Clinic',
+  title: 'Business Command Centre — AI Front Desk for Aesthetic Clinics',
   description:
-    'Manage appointments, client messaging, and AI automation in one beautiful dashboard. Built for aesthetic clinics and service businesses.',
+    'Turn missed clinic messages into booked appointments with an AI front desk for aesthetic clinics.',
   alternates: {
     canonical: 'https://businesscommandcentre.com',
   },
@@ -13,25 +13,24 @@ export const metadata: Metadata = {
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'SoftwareApplication',
-  name: 'Booking OS',
+  name: 'Business Command Centre',
   applicationCategory: 'BusinessApplication',
   operatingSystem: 'Web',
   url: 'https://businesscommandcentre.com',
   description:
-    'All-in-one command center for aesthetic clinics and service businesses. Manage appointments, client messaging, and AI automation in one beautiful dashboard.',
+    'AI front desk for aesthetic clinics: captures Instagram, WhatsApp, and website leads, drafts replies, fills cancellations, follows up consults, and proves recovered revenue.',
   offers: {
     '@type': 'Offer',
     price: '0',
     priceCurrency: 'USD',
-    description: 'Free trial available',
+    description: 'Pilot applications available',
   },
   featureList: [
-    'Appointment Scheduling',
-    'Client Messaging via WhatsApp',
-    'AI-Powered Automation',
-    'Multi-Tenant Dashboard',
-    'Real-Time Notifications',
-    'Service Board Management',
+    'Instagram, WhatsApp, and Web Lead Capture',
+    'AI-Drafted Staff Replies',
+    'Cancellation Fill Workflows',
+    'Consult Follow-Up Tracking',
+    'Recovered Revenue Attribution',
   ],
 };
 

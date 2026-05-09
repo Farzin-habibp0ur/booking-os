@@ -27,72 +27,74 @@ model Business {
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 
-  staff                Staff[]
-  customers            Customer[]
-  services             Service[]
-  bookings             Booking[]
-  recurringSeries      RecurringSeries[]
-  conversations        Conversation[]
-  reminders            Reminder[]
-  messageTemplates     MessageTemplate[]
-  translations         Translation[]
-  subscription         Subscription?
-  billingCredits       BillingCredit[]
-  aiUsage              AiUsage[]
-  roiBaselines         RoiBaseline[]
-  waitlistEntries      WaitlistEntry[]
-  automationRules      AutomationRule[]
-  campaigns              Campaign[]
-  campaignUnsubscribes   CampaignUnsubscribe[]
-  offers                 Offer[]
-  locations            Location[]
-  quotes               Quote[]
-  verticalPackVersions VerticalPackVersion[]
-  savedViews           SavedView[]
-  customerNotes        CustomerNote[]
-  offerRedemptions     OfferRedemption[]
-  actionCards          ActionCard[]
-  actionHistory        ActionHistory[]
-  autonomyConfigs      AutonomyConfig[]
-  outboundDrafts       OutboundDraft[]
-  agentConfigs         AgentConfig[]
-  agentRuns            AgentRun[]
-  agentFeedback        AgentFeedback[]
-  duplicateCandidates  DuplicateCandidate[]
-  messageAttachments   MessageAttachment[]
-  viewAsSessions       ViewAsSession[]       @relation("ViewAsTarget")
-  supportCases         SupportCase[]
-  packTenantPins       PackTenantPin[]
-  trialEndsAt          DateTime?
-  graceEndsAt          DateTime?
-  channelSettings      Json     @default("{}")
+  staff                 Staff[]
+  customers             Customer[]
+  services              Service[]
+  bookings              Booking[]
+  recurringSeries       RecurringSeries[]
+  conversations         Conversation[]
+  reminders             Reminder[]
+  messageTemplates      MessageTemplate[]
+  translations          Translation[]
+  subscription          Subscription?
+  billingCredits        BillingCredit[]
+  aiUsage               AiUsage[]
+  roiBaselines          RoiBaseline[]
+  waitlistEntries       WaitlistEntry[]
+  automationRules       AutomationRule[]
+  campaigns             Campaign[]
+  campaignUnsubscribes  CampaignUnsubscribe[]
+  offers                Offer[]
+  locations             Location[]
+  quotes                Quote[]
+  verticalPackVersions  VerticalPackVersion[]
+  savedViews            SavedView[]
+  customerNotes         CustomerNote[]
+  offerRedemptions      OfferRedemption[]
+  actionCards           ActionCard[]
+  frontDeskAttributions FrontDeskAttribution[]
+  actionHistory         ActionHistory[]
+  autonomyConfigs       AutonomyConfig[]
+  outboundDrafts        OutboundDraft[]
+  agentConfigs          AgentConfig[]
+  agentRuns             AgentRun[]
+  agentFeedback         AgentFeedback[]
+  duplicateCandidates   DuplicateCandidate[]
+  messageAttachments    MessageAttachment[]
+  viewAsSessions        ViewAsSession[]        @relation("ViewAsTarget")
+  supportCases          SupportCase[]
+  packTenantPins        PackTenantPin[]
+  trialEndsAt           DateTime?
+  graceEndsAt           DateTime?
+  channelSettings       Json                   @default("{}")
 
-  messageUsage         MessageUsage[]
-  customerReferrals    CustomerReferral[]
-  customerCredits      CustomerCredit[]
-  staffServicePrices   StaffServicePrice[]
-  payments             Payment[]
-  refunds              Refund[]
-  contentDrafts              ContentDraft[]
-  emailSequences             EmailSequence[]
-  emailSequenceEnrollments   EmailSequenceEnrollment[]
-  testimonials               Testimonial[]
-  reportSchedules            ReportSchedule[]
-  businessReviews            BusinessReview[]
-  savedSegments              SavedSegment[]
-  invoices                   Invoice[]
-  medicalRecords             MedicalRecord[]
-  clinicalPhotos             ClinicalPhoto[]
-  photoComparisons           PhotoComparison[]
-  treatmentPlans             TreatmentPlan[]
-  aftercareProtocols         AftercareProtocol[]
+  messageUsage             MessageUsage[]
+  customerReferrals        CustomerReferral[]
+  customerCredits          CustomerCredit[]
+  staffServicePrices       StaffServicePrice[]
+  payments                 Payment[]
+  refunds                  Refund[]
+  contentDrafts            ContentDraft[]
+  emailSequences           EmailSequence[]
+  emailSequenceEnrollments EmailSequenceEnrollment[]
+  testimonials             Testimonial[]
+  reportSchedules          ReportSchedule[]
+  businessReviews          BusinessReview[]
+  savedSegments            SavedSegment[]
+  invoices                 Invoice[]
+  medicalRecords           MedicalRecord[]
+  clinicalPhotos           ClinicalPhoto[]
+  photoComparisons         PhotoComparison[]
+  treatmentPlans           TreatmentPlan[]
+  aftercareProtocols       AftercareProtocol[]
 
-  abTests                    ABTest[]
-  rejectionLogs              RejectionLog[]
-  platformConfigs            PlatformConfig[]
-  budgetEntries              BudgetEntry[]
-  escalationEvents           EscalationEvent[]
-  deviceTokens               DeviceToken[]
+  abTests            ABTest[]
+  rejectionLogs      RejectionLog[]
+  platformConfigs    PlatformConfig[]
+  budgetEntries      BudgetEntry[]
+  escalationEvents   EscalationEvent[]
+  deviceTokens       DeviceToken[]
+  automationDefaults Json              @default("{}")
 
   @@map("businesses")
 }
@@ -137,34 +139,34 @@ model Staff {
   issuedCredits       BillingCredit[]      @relation("BillingCreditIssuer")
   packPins            PackTenantPin[]      @relation("PackPinStaff")
   staffServicePrices  StaffServicePrice[]
-  medicalRecords      MedicalRecord[]  @relation("MedicalRecordStaff")
-  clinicalPhotosTaken ClinicalPhoto[]  @relation("PhotoTakenByStaff")
-  treatmentPlans      TreatmentPlan[]  @relation("TreatmentPlanCreator")
+  medicalRecords      MedicalRecord[]      @relation("MedicalRecordStaff")
+  clinicalPhotosTaken ClinicalPhoto[]      @relation("PhotoTakenByStaff")
+  treatmentPlans      TreatmentPlan[]      @relation("TreatmentPlanCreator")
 
-  rejectionLogReviews     RejectionLog[]      @relation("RejectionLogReviewer")
-  resolvedEscalations     EscalationEvent[]   @relation("EscalationResolver")
-  deviceTokens            DeviceToken[]
+  rejectionLogReviews RejectionLog[]    @relation("RejectionLogReviewer")
+  resolvedEscalations EscalationEvent[] @relation("EscalationResolver")
+  deviceTokens        DeviceToken[]
 
   @@index([businessId])
   @@map("staff")
 }
 
 model Customer {
-  id                String    @id @default(cuid())
-  businessId        String
-  name              String
-  phone             String
-  email             String?
-  instagramUserId   String?
-  facebookPsid      String?
-  webChatSessionId  String?
-  tags              String[]  @default([])
-  customFields      Json      @default("{}")
-  deletedAt         DateTime?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  id               String    @id @default(cuid())
+  businessId       String
+  name             String
+  phone            String
+  email            String?
+  instagramUserId  String?
+  facebookPsid     String?
+  webChatSessionId String?
+  tags             String[]  @default([])
+  customFields     Json      @default("{}")
+  deletedAt        DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
-  business              Business             @relation(fields: [businessId], references: [id])
+  business              Business               @relation(fields: [businessId], references: [id])
   bookings              Booking[]
   recurringSeries       RecurringSeries[]
   conversations         Conversation[]
@@ -173,22 +175,23 @@ model Customer {
   offerRedemptions      OfferRedemption[]
   actionCards           ActionCard[]
   outboundDrafts        OutboundDraft[]
-  duplicatesAsCustomer1 DuplicateCandidate[] @relation("DuplicateCustomer1")
-  duplicatesAsCustomer2 DuplicateCandidate[] @relation("DuplicateCustomer2")
+  frontDeskAttributions FrontDeskAttribution[]
+  duplicatesAsCustomer1 DuplicateCandidate[]   @relation("DuplicateCustomer1")
+  duplicatesAsCustomer2 DuplicateCandidate[]   @relation("DuplicateCustomer2")
   payments              Payment[]
-  testimonials            Testimonial[]
-  campaignUnsubscribes    CampaignUnsubscribe[]
-  invoices                Invoice[]
-  medicalRecords          MedicalRecord[]
-  clinicalPhotos          ClinicalPhoto[]
+  testimonials          Testimonial[]
+  campaignUnsubscribes  CampaignUnsubscribe[]
+  invoices              Invoice[]
+  medicalRecords        MedicalRecord[]
+  clinicalPhotos        ClinicalPhoto[]
   photoComparisons      PhotoComparison[]
-  treatmentPlans            TreatmentPlan[]
-  aftercareEnrollments      AftercareEnrollment[]
+  treatmentPlans        TreatmentPlan[]
+  aftercareEnrollments  AftercareEnrollment[]
 
-  referralCode              String?   @unique
-  referralsGiven            CustomerReferral[] @relation("ReferrerCustomer")
-  referralsReceived         CustomerReferral[] @relation("ReferredCustomer")
-  credits                   CustomerCredit[]
+  referralCode      String?            @unique
+  referralsGiven    CustomerReferral[] @relation("ReferrerCustomer")
+  referralsReceived CustomerReferral[] @relation("ReferredCustomer")
+  credits           CustomerCredit[]
 
   @@unique([businessId, phone])
   @@unique([businessId, instagramUserId])
@@ -201,15 +204,15 @@ model Customer {
 }
 
 model Service {
-  id              String   @id @default(cuid())
-  businessId      String
-  name            String
-  description     String?
-  durationMins    Int
-  price           Float    @default(0)
-  category        String   @default("General")
-  kind            String   @default("OTHER") // CONSULT, TREATMENT, OTHER
-  isActive        Boolean  @default(true)
+  id                    String   @id @default(cuid())
+  businessId            String
+  name                  String
+  description           String?
+  durationMins          Int
+  price                 Float    @default(0)
+  category              String   @default("General")
+  kind                  String   @default("OTHER") // CONSULT, TREATMENT, OTHER
+  isActive              Boolean  @default(true)
   depositRequired       Boolean  @default(false)
   depositAmount         Float?
   bufferBefore          Int      @default(0)
@@ -225,25 +228,25 @@ model Service {
   bookings           Booking[]
   recurringSeries    RecurringSeries[]
   waitlistEntries    WaitlistEntry[]
-  staffServicePrices  StaffServicePrice[]
-  invoiceLineItems    InvoiceLineItem[]
-  treatmentSessions    TreatmentSession[]
-  aftercareProtocols   AftercareProtocol[]
+  staffServicePrices StaffServicePrice[]
+  invoiceLineItems   InvoiceLineItem[]
+  treatmentSessions  TreatmentSession[]
+  aftercareProtocols AftercareProtocol[]
 
   @@index([businessId])
   @@map("services")
 }
 
 model Booking {
-  id                      String   @id @default(cuid())
-  businessId              String
-  customerId              String
-  serviceId               String
-  staffId                 String?
-  conversationId          String?
-  recurringSeriesId       String?
-  locationId              String?
-  resourceId              String?
+  id                String  @id @default(cuid())
+  businessId        String
+  customerId        String
+  serviceId         String
+  staffId           String?
+  conversationId    String?
+  recurringSeriesId String?
+  locationId        String?
+  resourceId        String?
 
   status                  String   @default("PENDING")
   startTime               DateTime
@@ -256,26 +259,27 @@ model Booking {
   createdAt               DateTime @default(now())
   updatedAt               DateTime @updatedAt
 
-  business        Business         @relation(fields: [businessId], references: [id])
-  customer        Customer         @relation(fields: [customerId], references: [id])
-  service         Service          @relation(fields: [serviceId], references: [id])
-  staff           Staff?           @relation(fields: [staffId], references: [id])
-  conversation    Conversation?    @relation(fields: [conversationId], references: [id])
-  recurringSeries RecurringSeries? @relation(fields: [recurringSeriesId], references: [id])
-  location        Location?        @relation(fields: [locationId], references: [id])
-  resource        Resource?        @relation(fields: [resourceId], references: [id])
-  reminders       Reminder[]
-  payments        Payment[]
-  quotes          Quote[]
-  actionCards     ActionCard[]
-  invoices        Invoice[]
-  clinicalPhotos  ClinicalPhoto[]
-  consultPlan          TreatmentPlan?        @relation("ConsultPlan")
-  sessionBooking       TreatmentSession?     @relation("SessionBooking")
-  aftercareEnrollment  AftercareEnrollment?
+  business              Business               @relation(fields: [businessId], references: [id])
+  customer              Customer               @relation(fields: [customerId], references: [id])
+  service               Service                @relation(fields: [serviceId], references: [id])
+  staff                 Staff?                 @relation(fields: [staffId], references: [id])
+  conversation          Conversation?          @relation(fields: [conversationId], references: [id])
+  recurringSeries       RecurringSeries?       @relation(fields: [recurringSeriesId], references: [id])
+  location              Location?              @relation(fields: [locationId], references: [id])
+  resource              Resource?              @relation(fields: [resourceId], references: [id])
+  reminders             Reminder[]
+  payments              Payment[]
+  quotes                Quote[]
+  actionCards           ActionCard[]
+  frontDeskAttributions FrontDeskAttribution[]
+  invoices              Invoice[]
+  clinicalPhotos        ClinicalPhoto[]
+  consultPlan           TreatmentPlan?         @relation("ConsultPlan")
+  sessionBooking        TreatmentSession?      @relation("SessionBooking")
+  aftercareEnrollment   AftercareEnrollment?
 
-  referral             CustomerReferral?
-  creditRedemptions    CreditRedemption[]
+  referral          CustomerReferral?
+  creditRedemptions CreditRedemption[]
 
   @@index([businessId])
   @@index([businessId, startTime])
@@ -313,30 +317,31 @@ model RecurringSeries {
 }
 
 model Conversation {
-  id            String    @id @default(cuid())
-  businessId    String
-  customerId    String
-  assignedToId  String?
-  locationId    String?
-  channel       String    @default("WHATSAPP")
-  status        String    @default("OPEN")
+  id                 String    @id @default(cuid())
+  businessId         String
+  customerId         String
+  assignedToId       String?
+  locationId         String?
+  channel            String    @default("WHATSAPP")
+  status             String    @default("OPEN")
   lastMessageAt      DateTime?
   lastInboundChannel String?
   snoozedUntil       DateTime?
-  tags          String[]  @default([])
-  metadata      Json      @default("{}")
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  tags               String[]  @default([])
+  metadata           Json      @default("{}")
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
-  business       Business           @relation(fields: [businessId], references: [id])
-  customer       Customer           @relation(fields: [customerId], references: [id])
-  assignedTo     Staff?             @relation("AssignedConversations", fields: [assignedToId], references: [id])
-  location       Location?          @relation(fields: [locationId], references: [id])
-  messages       Message[]
-  bookings       Booking[]
-  notes          ConversationNote[]
-  actionCards    ActionCard[]
-  outboundDrafts OutboundDraft[]
+  business              Business               @relation(fields: [businessId], references: [id])
+  customer              Customer               @relation(fields: [customerId], references: [id])
+  assignedTo            Staff?                 @relation("AssignedConversations", fields: [assignedToId], references: [id])
+  location              Location?              @relation(fields: [locationId], references: [id])
+  messages              Message[]
+  bookings              Booking[]
+  notes                 ConversationNote[]
+  actionCards           ActionCard[]
+  outboundDrafts        OutboundDraft[]
+  frontDeskAttributions FrontDeskAttribution[]
 
   @@index([businessId])
   @@index([businessId, status])
@@ -518,18 +523,18 @@ model Payment {
   currency              String   @default("usd")
   method                String   @default("STRIPE") // CASH, CARD, BANK_TRANSFER, STRIPE, OTHER
   status                String   @default("COMPLETED") // COMPLETED, REFUNDED, PARTIAL_REFUND, pending, succeeded, failed
-  reference             String?  // receipt number or external ref
+  reference             String? // receipt number or external ref
   notes                 String?
-  recordedById          String?  // staffId who recorded it
+  recordedById          String? // staffId who recorded it
   stripePaymentIntentId String?  @unique
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 
-  business        Business         @relation(fields: [businessId], references: [id])
-  booking         Booking?         @relation(fields: [bookingId], references: [id])
-  customer        Customer?        @relation(fields: [customerId], references: [id])
-  invoice         Invoice?         @relation(fields: [invoiceId], references: [id])
-  refunds         Refund[]
+  business Business  @relation(fields: [businessId], references: [id])
+  booking  Booking?  @relation(fields: [bookingId], references: [id])
+  customer Customer? @relation(fields: [customerId], references: [id])
+  invoice  Invoice?  @relation(fields: [invoiceId], references: [id])
+  refunds  Refund[]
 
   @@index([businessId])
   @@index([bookingId])
@@ -658,19 +663,20 @@ model WaitlistEntry {
 }
 
 model AutomationRule {
-  id                   String   @id @default(cuid())
-  businessId           String
-  name                 String
-  trigger              String // BOOKING_CREATED, BOOKING_UPCOMING, STATUS_CHANGED, BOOKING_CANCELLED, MESSAGE_RECEIVED, CUSTOMER_CREATED, PAYMENT_RECEIVED, TESTIMONIAL_SUBMITTED, CAMPAIGN_SENT
-  filters              Json     @default("{}")
-  actions              Json     @default("[]")
-  isActive             Boolean  @default(true)
-  playbook             String?
-  quietStart           String?
-  quietEnd             String?
-  maxPerCustomerPerDay Int      @default(3)
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  id                      String   @id @default(cuid())
+  businessId              String
+  name                    String
+  trigger                 String // BOOKING_CREATED, BOOKING_UPCOMING, STATUS_CHANGED, BOOKING_CANCELLED, MESSAGE_RECEIVED, CUSTOMER_CREATED, PAYMENT_RECEIVED, TESTIMONIAL_SUBMITTED, CAMPAIGN_SENT, REFERRAL_EARNED, REFERRAL_REDEEMED, NO_RESPONSE
+  filters                 Json     @default("{}")
+  actions                 Json     @default("[]")
+  isActive                Boolean  @default(true)
+  playbook                String?
+  quietStart              String?
+  quietEnd                String?
+  maxPerCustomerPerDay    Int      @default(3)
+  messageTemplateOverride Json?
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
 
   business   Business              @relation(fields: [businessId], references: [id])
   logs       AutomationLog[]
@@ -703,31 +709,31 @@ model AutomationLog {
 }
 
 model Campaign {
-  id                String    @id @default(cuid())
-  businessId        String
-  name              String
-  status            String    @default("DRAFT") // DRAFT, SCHEDULED, SENDING, SENT, CANCELLED
-  templateId        String?
-  filters           Json      @default("{}")
-  scheduledAt       DateTime?
-  sentAt            DateTime?
-  throttlePerMinute Int       @default(10)
-  stats             Json      @default("{}")
-  recurrenceRule    String    @default("NONE") // NONE, DAILY, WEEKLY, BIWEEKLY, MONTHLY
-  nextRunAt         DateTime?
-  parentCampaignId  String?
-  isABTest          Boolean   @default(false)
-  variants          Json      @default("[]")
-  winnerVariantId   String?
+  id                  String    @id @default(cuid())
+  businessId          String
+  name                String
+  status              String    @default("DRAFT") // DRAFT, SCHEDULED, SENDING, SENT, CANCELLED
+  templateId          String?
+  filters             Json      @default("{}")
+  scheduledAt         DateTime?
+  sentAt              DateTime?
+  throttlePerMinute   Int       @default(10)
+  stats               Json      @default("{}")
+  recurrenceRule      String    @default("NONE") // NONE, DAILY, WEEKLY, BIWEEKLY, MONTHLY
+  nextRunAt           DateTime?
+  parentCampaignId    String?
+  isABTest            Boolean   @default(false)
+  variants            Json      @default("[]")
+  winnerVariantId     String?
   winnerSelectedAt    DateTime?
-  winnerMetric        String?    // READ_RATE or BOOKING_RATE
-  testDurationMinutes Int?       // How long to run test phase (e.g. 120, 360, 720, 1440)
-  testAudiencePercent Int?       @default(20) // % of audience in test phase (10-50)
-  testPhaseEndsAt     DateTime?  // When the test phase window closes
-  autoWinnerSelected  Boolean    @default(false) // Whether system auto-picked the winner
-  channel             String?    @default("WHATSAPP") // WHATSAPP, SMS, EMAIL, MULTI
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  winnerMetric        String? // READ_RATE or BOOKING_RATE
+  testDurationMinutes Int? // How long to run test phase (e.g. 120, 360, 720, 1440)
+  testAudiencePercent Int?      @default(20) // % of audience in test phase (10-50)
+  testPhaseEndsAt     DateTime? // When the test phase window closes
+  autoWinnerSelected  Boolean   @default(false) // Whether system auto-picked the winner
+  channel             String?   @default("WHATSAPP") // WHATSAPP, SMS, EMAIL, MULTI
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
   business       Business              @relation(fields: [businessId], references: [id])
   sends          CampaignSend[]
@@ -749,7 +755,7 @@ model CampaignSend {
   sentAt     DateTime?
   bookingId  String?
   variantId  String?
-  channel    String?   // WHATSAPP, SMS, EMAIL — actual channel used for this send
+  channel    String? // WHATSAPP, SMS, EMAIL — actual channel used for this send
   openedAt   DateTime?
   createdAt  DateTime  @default(now())
 
@@ -774,16 +780,16 @@ model CampaignClick {
 }
 
 model CampaignUnsubscribe {
-  id         String    @id @default(cuid())
+  id         String   @id @default(cuid())
   businessId String
   customerId String
-  campaignId String?   // Null = global unsubscribe from all campaigns
-  token      String    @unique
-  createdAt  DateTime  @default(now())
+  campaignId String? // Null = global unsubscribe from all campaigns
+  token      String   @unique
+  createdAt  DateTime @default(now())
 
-  business   Business  @relation(fields: [businessId], references: [id])
-  customer   Customer  @relation(fields: [customerId], references: [id])
-  campaign   Campaign? @relation(fields: [campaignId], references: [id])
+  business Business  @relation(fields: [businessId], references: [id])
+  customer Customer  @relation(fields: [customerId], references: [id])
+  campaign Campaign? @relation(fields: [campaignId], references: [id])
 
   @@unique([businessId, customerId, campaignId])
   @@index([businessId, customerId])
@@ -846,11 +852,11 @@ model Location {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  business         Business         @relation(fields: [businessId], references: [id])
-  bookings         Booking[]
-  resources        Resource[]
-  staffLocations   StaffLocation[]
-  conversations    Conversation[]
+  business       Business        @relation(fields: [businessId], references: [id])
+  bookings       Booking[]
+  resources      Resource[]
+  staffLocations StaffLocation[]
+  conversations  Conversation[]
 
   @@index([businessId])
   @@map("locations")
@@ -866,8 +872,8 @@ model Resource {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  location         Location         @relation(fields: [locationId], references: [id])
-  bookings         Booking[]
+  location Location  @relation(fields: [locationId], references: [id])
+  bookings Booking[]
 
   @@index([locationId])
   @@index([type])
@@ -1020,13 +1026,14 @@ model ActionCard {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  business     Business        @relation(fields: [businessId], references: [id])
-  booking      Booking?        @relation(fields: [bookingId], references: [id])
-  customer     Customer?       @relation(fields: [customerId], references: [id])
-  conversation Conversation?   @relation(fields: [conversationId], references: [id])
-  staff        Staff?          @relation("AssignedActionCards", fields: [staffId], references: [id])
-  resolvedBy   Staff?          @relation("ResolvedActionCards", fields: [resolvedById], references: [id])
-  feedback     AgentFeedback[]
+  business              Business               @relation(fields: [businessId], references: [id])
+  booking               Booking?               @relation(fields: [bookingId], references: [id])
+  customer              Customer?              @relation(fields: [customerId], references: [id])
+  conversation          Conversation?          @relation(fields: [conversationId], references: [id])
+  staff                 Staff?                 @relation("AssignedActionCards", fields: [staffId], references: [id])
+  resolvedBy            Staff?                 @relation("ResolvedActionCards", fields: [resolvedById], references: [id])
+  feedback              AgentFeedback[]
+  frontDeskAttributions FrontDeskAttribution[]
 
   @@index([businessId, status])
   @@index([businessId, category, status])
@@ -1096,33 +1103,99 @@ model OutboundDraft {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  business     Business      @relation(fields: [businessId], references: [id])
-  customer     Customer      @relation(fields: [customerId], references: [id])
-  staff        Staff         @relation("StaffOutboundDrafts", fields: [staffId], references: [id])
-  approvedBy   Staff?        @relation("ApprovedOutboundDrafts", fields: [approvedById], references: [id])
-  conversation Conversation? @relation(fields: [conversationId], references: [id])
+  business             Business              @relation(fields: [businessId], references: [id])
+  customer             Customer              @relation(fields: [customerId], references: [id])
+  staff                Staff                 @relation("StaffOutboundDrafts", fields: [staffId], references: [id])
+  approvedBy           Staff?                @relation("ApprovedOutboundDrafts", fields: [approvedById], references: [id])
+  conversation         Conversation?         @relation(fields: [conversationId], references: [id])
+  frontDeskAttribution FrontDeskAttribution?
 
+  @@unique([conversationId, channel, staffId])
   @@index([businessId, status])
   @@index([businessId, customerId])
-  @@unique([conversationId, channel, staffId])
   @@index([businessId, conversationId, status])
   @@map("outbound_drafts")
 }
 
+model PilotApplication {
+  id                   String    @id @default(cuid())
+  clinicName           String
+  contactName          String
+  email                String
+  phone                String?
+  websiteOrInstagram   String?
+  countryTimezone      String?
+  monthlyLeadVolume    String?
+  currentChannels      String[]  @default([])
+  biggestFrontDeskPain String
+  consent              Boolean   @default(false)
+  status               String    @default("NEW") // NEW, CONTACTED, ACCEPTED, REJECTED
+  notes                String?
+  utmSource            String?
+  utmMedium            String?
+  utmCampaign          String?
+  referrer             String?
+  userAgent            String?
+  submittedAt          DateTime  @default(now())
+  contactedAt          DateTime?
+  acceptedAt           DateTime?
+  rejectedAt           DateTime?
+  updatedAt            DateTime  @updatedAt
+
+  @@index([status, submittedAt])
+  @@index([email])
+  @@map("pilot_applications")
+}
+
+model FrontDeskAttribution {
+  id                    String    @id @default(cuid())
+  businessId            String
+  customerId            String?
+  conversationId        String?
+  bookingId             String?
+  actionCardId          String?
+  outboundDraftId       String?   @unique
+  source                String // AI_DRAFT, WAITLIST_CANCELLATION_FILL, CONSULT_FOLLOWUP
+  status                String    @default("OPEN") // OPEN, BOOKED, WON, LOST
+  channel               String?
+  estimatedValue        Float?
+  confidence            Float?
+  attributionWindowDays Int       @default(14)
+  reason                String?
+  metadata              Json      @default("{}")
+  openedAt              DateTime  @default(now())
+  wonAt                 DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  business      Business       @relation(fields: [businessId], references: [id])
+  customer      Customer?      @relation(fields: [customerId], references: [id])
+  conversation  Conversation?  @relation(fields: [conversationId], references: [id])
+  booking       Booking?       @relation(fields: [bookingId], references: [id])
+  actionCard    ActionCard?    @relation(fields: [actionCardId], references: [id])
+  outboundDraft OutboundDraft? @relation(fields: [outboundDraftId], references: [id])
+
+  @@index([businessId, status])
+  @@index([businessId, source])
+  @@index([businessId, createdAt])
+  @@index([bookingId])
+  @@map("front_desk_attributions")
+}
+
 model AgentConfig {
-  id             String   @id @default(cuid())
-  businessId     String
-  agentType      String // WAITLIST, RETENTION, DATA_HYGIENE, SCHEDULING_OPTIMIZER, QUOTE_FOLLOWUP
-  isEnabled      Boolean  @default(false)
-  autonomyLevel  String   @default("SUGGEST") // AUTO, SUGGEST, REQUIRE_APPROVAL
-  config         Json     @default("{}")
-  roleVisibility     String[] @default([])
+  id                 String    @id @default(cuid())
+  businessId         String
+  agentType          String // WAITLIST, RETENTION, DATA_HYGIENE, SCHEDULING_OPTIMIZER, QUOTE_FOLLOWUP
+  isEnabled          Boolean   @default(false)
+  autonomyLevel      String    @default("SUGGEST") // AUTO, SUGGEST, REQUIRE_APPROVAL
+  config             Json      @default("{}")
+  roleVisibility     String[]  @default([])
   runIntervalMinutes Int?
   lastRunAt          DateTime?
   nextRunAt          DateTime?
   performanceScore   Float?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   business Business @relation(fields: [businessId], references: [id])
 
@@ -1308,7 +1381,6 @@ model PlatformSetting {
   @@map("platform_settings")
 }
 
-
 model StaffServicePrice {
   id         String   @id @default(cuid())
   staffId    String
@@ -1329,27 +1401,27 @@ model StaffServicePrice {
 }
 
 model ContentDraft {
-  id            String    @id @default(uuid())
-  businessId    String
-  title         String
-  body          String    @db.Text
-  contentType   String
-  channel       String
-  pillar        String?
-  status        String    @default("PENDING_REVIEW")
-  agentId       String?
-  scheduledFor  DateTime?
-  publishedAt   DateTime?
-  reviewedById  String?
-  reviewNote    String?
+  id              String    @id @default(uuid())
+  businessId      String
+  title           String
+  body            String    @db.Text
+  contentType     String
+  channel         String
+  pillar          String?
+  status          String    @default("PENDING_REVIEW")
+  agentId         String?
+  scheduledFor    DateTime?
+  publishedAt     DateTime?
+  reviewedById    String?
+  reviewNote      String?
   metadata        Json?
-  tier            String?   // GREEN, YELLOW, RED
+  tier            String? // GREEN, YELLOW, RED
   slug            String?
-  qualityScore    Int?      // 0-100
-  rejectionCode   String?   // R01-R10
+  qualityScore    Int? // 0-100
+  rejectionCode   String? // R01-R10
   rejectionReason String?
-  currentGate     String?   // GATE_1, GATE_2, GATE_3, GATE_4
-  platform        String?   // INSTAGRAM, TIKTOK, LINKEDIN, YOUTUBE, PINTEREST, TWITTER, BLOG
+  currentGate     String? // GATE_1, GATE_2, GATE_3, GATE_4
+  platform        String? // INSTAGRAM, TIKTOK, LINKEDIN, YOUTUBE, PINTEREST, TWITTER, BLOG
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
@@ -1378,7 +1450,7 @@ model EmailSequence {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  business    Business?                @relation(fields: [businessId], references: [id])
+  business    Business?                 @relation(fields: [businessId], references: [id])
   enrollments EmailSequenceEnrollment[]
 
   @@index([businessId])
@@ -1436,19 +1508,19 @@ model Testimonial {
 }
 
 model ReportSchedule {
-  id          String    @id @default(cuid())
-  businessId  String
-  reportType  String    // bookings-over-time, revenue-over-time, no-show-rate, etc.
-  frequency   String    // DAILY, WEEKLY, MONTHLY
-  recipients  String[]  // email addresses
-  dayOfWeek   Int?      // 0-6 (Sun-Sat) for WEEKLY
-  dayOfMonth  Int?      // 1-28 for MONTHLY
-  hour        Int       @default(9) // 0-23 UTC
-  timezone    String    @default("UTC")
-  isActive    Boolean   @default(true)
-  lastSentAt  DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id         String    @id @default(cuid())
+  businessId String
+  reportType String // bookings-over-time, revenue-over-time, no-show-rate, etc.
+  frequency  String // DAILY, WEEKLY, MONTHLY
+  recipients String[] // email addresses
+  dayOfWeek  Int? // 0-6 (Sun-Sat) for WEEKLY
+  dayOfMonth Int? // 1-28 for MONTHLY
+  hour       Int       @default(9) // 0-23 UTC
+  timezone   String    @default("UTC")
+  isActive   Boolean   @default(true)
+  lastSentAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
   business Business @relation(fields: [businessId], references: [id])
 
@@ -1458,12 +1530,12 @@ model ReportSchedule {
 }
 
 model BusinessReview {
-  id          String   @id @default(uuid())
-  businessId  String
-  month       String   // YYYY-MM
-  metrics     Json
-  aiSummary   String   @db.Text
-  createdAt   DateTime @default(now())
+  id         String   @id @default(uuid())
+  businessId String
+  month      String // YYYY-MM
+  metrics    Json
+  aiSummary  String   @db.Text
+  createdAt  DateTime @default(now())
 
   business Business @relation(fields: [businessId], references: [id])
 
@@ -1482,9 +1554,9 @@ model AutomationStep {
   branchLabel      String?
   createdAt        DateTime @default(now())
 
-  automationRule AutomationRule   @relation(fields: [automationRuleId], references: [id], onDelete: Cascade)
-  parentStep     AutomationStep?  @relation("StepBranch", fields: [parentStepId], references: [id])
-  childSteps     AutomationStep[] @relation("StepBranch")
+  automationRule AutomationRule        @relation(fields: [automationRuleId], references: [id], onDelete: Cascade)
+  parentStep     AutomationStep?       @relation("StepBranch", fields: [parentStepId], references: [id])
+  childSteps     AutomationStep[]      @relation("StepBranch")
   executions     AutomationExecution[]
 
   @@index([automationRuleId, order])
@@ -1529,15 +1601,15 @@ model SavedSegment {
 }
 
 model BookingAuditLog {
-  id        String   @id @default(cuid())
-  bookingId String
+  id         String   @id @default(cuid())
+  bookingId  String
   businessId String
-  userId    String?
-  userName  String?
-  action    String // CREATED, UPDATED, RESCHEDULED, CANCELLED, STATUS_CHANGED, PAYMENT_RECEIVED, NOTE_ADDED
-  changes   Json     @default("[]")
-  ipAddress String?
-  createdAt DateTime @default(now())
+  userId     String?
+  userName   String?
+  action     String // CREATED, UPDATED, RESCHEDULED, CANCELLED, STATUS_CHANGED, PAYMENT_RECEIVED, NOTE_ADDED
+  changes    Json     @default("[]")
+  ipAddress  String?
+  createdAt  DateTime @default(now())
 
   @@index([bookingId])
   @@index([businessId, createdAt])
@@ -1576,10 +1648,10 @@ model Invoice {
   lineItems InvoiceLineItem[]
   payments  Payment[]
 
+  @@unique([businessId, invoiceNumber])
   @@index([businessId])
   @@index([customerId])
   @@index([status])
-  @@unique([businessId, invoiceNumber])
   @@map("invoices")
 }
 
@@ -1600,32 +1672,32 @@ model InvoiceLineItem {
 }
 
 model MedicalRecord {
-  id                 String   @id @default(cuid())
-  businessId         String
-  customerId         String
-  version            Int      @default(1)
-  isCurrent          Boolean  @default(true)
-  allergies          String[] @default([])
-  contraindications  String[] @default([])
-  medications        String[] @default([])
-  conditions         String[] @default([])
-  skinType           String?
-  fitzpatrickScale   String?
-  bloodThinners      Boolean  @default(false)
-  pregnant           Boolean  @default(false)
-  breastfeeding      Boolean  @default(false)
-  recentSurgery      String?
-  notes              String?
-  flagged            Boolean  @default(false)
-  flagReason         String?
-  consentGiven       Boolean  @default(false)
-  consentDate        DateTime?
-  recordedById       String?
-  createdAt          DateTime @default(now())
+  id                String    @id @default(cuid())
+  businessId        String
+  customerId        String
+  version           Int       @default(1)
+  isCurrent         Boolean   @default(true)
+  allergies         String[]  @default([])
+  contraindications String[]  @default([])
+  medications       String[]  @default([])
+  conditions        String[]  @default([])
+  skinType          String?
+  fitzpatrickScale  String?
+  bloodThinners     Boolean   @default(false)
+  pregnant          Boolean   @default(false)
+  breastfeeding     Boolean   @default(false)
+  recentSurgery     String?
+  notes             String?
+  flagged           Boolean   @default(false)
+  flagReason        String?
+  consentGiven      Boolean   @default(false)
+  consentDate       DateTime?
+  recordedById      String?
+  createdAt         DateTime  @default(now())
 
-  business   Business  @relation(fields: [businessId], references: [id])
-  customer   Customer  @relation(fields: [customerId], references: [id])
-  recordedBy Staff?    @relation("MedicalRecordStaff", fields: [recordedById], references: [id])
+  business   Business @relation(fields: [businessId], references: [id])
+  customer   Customer @relation(fields: [customerId], references: [id])
+  recordedBy Staff?   @relation("MedicalRecordStaff", fields: [recordedById], references: [id])
 
   @@unique([customerId, version])
   @@index([customerId])
@@ -1634,24 +1706,24 @@ model MedicalRecord {
 }
 
 model ClinicalPhoto {
-  id           String   @id @default(cuid())
+  id           String    @id @default(cuid())
   businessId   String
   customerId   String
   bookingId    String?
-  type         String   // BEFORE, AFTER, PROGRESS
+  type         String // BEFORE, AFTER, PROGRESS
   bodyArea     String
   fileUrl      String
   thumbnailUrl String?
   notes        String?
-  takenAt      DateTime @default(now())
+  takenAt      DateTime  @default(now())
   takenById    String?
   deletedAt    DateTime?
-  createdAt    DateTime @default(now())
+  createdAt    DateTime  @default(now())
 
-  business Business  @relation(fields: [businessId], references: [id])
-  customer Customer  @relation(fields: [customerId], references: [id])
-  booking  Booking?  @relation(fields: [bookingId], references: [id])
-  takenBy  Staff?    @relation("PhotoTakenByStaff", fields: [takenById], references: [id])
+  business Business @relation(fields: [businessId], references: [id])
+  customer Customer @relation(fields: [customerId], references: [id])
+  booking  Booking? @relation(fields: [bookingId], references: [id])
+  takenBy  Staff?   @relation("PhotoTakenByStaff", fields: [takenById], references: [id])
 
   beforeComparisons PhotoComparison[] @relation("BeforePhoto")
   afterComparisons  PhotoComparison[] @relation("AfterPhoto")
@@ -1731,7 +1803,7 @@ model TreatmentSession {
 }
 
 model AftercareProtocol {
-  id        String   @id @default(cuid())
+  id         String   @id @default(cuid())
   businessId String
   serviceId  String?
   name       String
@@ -1740,8 +1812,8 @@ model AftercareProtocol {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  business    Business  @relation(fields: [businessId], references: [id])
-  service     Service?  @relation(fields: [serviceId], references: [id])
+  business    Business              @relation(fields: [businessId], references: [id])
+  service     Service?              @relation(fields: [serviceId], references: [id])
   steps       AftercareStep[]
   enrollments AftercareEnrollment[]
 
@@ -1776,9 +1848,9 @@ model AftercareEnrollment {
   enrolledAt  DateTime  @default(now())
   completedAt DateTime?
 
-  protocol AftercareProtocol @relation(fields: [protocolId], references: [id])
-  booking  Booking           @relation(fields: [bookingId], references: [id])
-  customer Customer          @relation(fields: [customerId], references: [id])
+  protocol AftercareProtocol  @relation(fields: [protocolId], references: [id])
+  booking  Booking            @relation(fields: [bookingId], references: [id])
+  customer Customer           @relation(fields: [customerId], references: [id])
   messages AftercareMessage[]
 
   @@index([customerId])
@@ -1804,21 +1876,21 @@ model AftercareMessage {
 // ── Marketing Command Center Models ──────────────────────────────────
 
 model ABTest {
-  id               String    @id @default(cuid())
-  businessId       String
-  name             String
-  description      String?
-  status           String    @default("DRAFT") // DRAFT, RUNNING, PAUSED, COMPLETED, CANCELLED
-  metric           String    // engagement_rate, click_through_rate, conversion_rate, etc.
-  startedAt        DateTime?
-  endedAt          DateTime?
-  winnerVariantId  String?
-  confidence       Float?
-  metadata         Json      @default("{}")
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  id              String    @id @default(cuid())
+  businessId      String
+  name            String
+  description     String?
+  status          String    @default("DRAFT") // DRAFT, RUNNING, PAUSED, COMPLETED, CANCELLED
+  metric          String // engagement_rate, click_through_rate, conversion_rate, etc.
+  startedAt       DateTime?
+  endedAt         DateTime?
+  winnerVariantId String?
+  confidence      Float?
+  metadata        Json      @default("{}")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
-  business Business       @relation(fields: [businessId], references: [id])
+  business Business        @relation(fields: [businessId], references: [id])
   variants ABTestVariant[]
 
   @@index([businessId])
@@ -1827,16 +1899,16 @@ model ABTest {
 }
 
 model ABTestVariant {
-  id              String  @id @default(cuid())
+  id              String   @id @default(cuid())
   abTestId        String
   contentDraftId  String?
   variantLabel    String
-  impressions     Int     @default(0)
-  clicks          Int     @default(0)
-  conversions     Int     @default(0)
+  impressions     Int      @default(0)
+  clicks          Int      @default(0)
+  conversions     Int      @default(0)
   engagementScore Float?
-  isWinner        Boolean @default(false)
-  metadata        Json    @default("{}")
+  isWinner        Boolean  @default(false)
+  metadata        Json     @default("{}")
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -1851,8 +1923,8 @@ model RejectionLog {
   id             String   @id @default(cuid())
   businessId     String
   contentDraftId String
-  gate           String   // GATE_1, GATE_2, GATE_3, GATE_4
-  rejectionCode  String   // R01-R10
+  gate           String // GATE_1, GATE_2, GATE_3, GATE_4
+  rejectionCode  String // R01-R10
   reason         String
   severity       String   @default("MINOR") // MINOR, MAJOR, CRITICAL
   agentId        String?
@@ -1860,9 +1932,9 @@ model RejectionLog {
   metadata       Json     @default("{}")
   createdAt      DateTime @default(now())
 
-  business     Business      @relation(fields: [businessId], references: [id])
-  contentDraft ContentDraft  @relation(fields: [contentDraftId], references: [id])
-  reviewedBy   Staff?        @relation("RejectionLogReviewer", fields: [reviewedById], references: [id])
+  business     Business     @relation(fields: [businessId], references: [id])
+  contentDraft ContentDraft @relation(fields: [contentDraftId], references: [id])
+  reviewedBy   Staff?       @relation("RejectionLogReviewer", fields: [reviewedById], references: [id])
 
   @@index([businessId])
   @@index([businessId, contentDraftId])
@@ -1873,7 +1945,7 @@ model RejectionLog {
 model PlatformConfig {
   id              String    @id @default(cuid())
   businessId      String
-  platform        String    // INSTAGRAM, TIKTOK, LINKEDIN, YOUTUBE, PINTEREST, TWITTER
+  platform        String // INSTAGRAM, TIKTOK, LINKEDIN, YOUTUBE, PINTEREST, TWITTER
   phase           String    @default("LOCKED") // LOCKED, ACTIVE, SCALING
   isEnabled       Boolean   @default(false)
   credentials     Json      @default("{}")
@@ -1895,12 +1967,12 @@ model PlatformConfig {
 model BudgetEntry {
   id          String   @id @default(cuid())
   businessId  String
-  category    String   // CONTENT_CREATION, ADVERTISING, TOOLS, FREELANCE, etc.
+  category    String // CONTENT_CREATION, ADVERTISING, TOOLS, FREELANCE, etc.
   description String?
   amount      Decimal  @db.Decimal(10, 2)
   currency    String   @default("USD")
-  period      String   // MONTHLY, QUARTERLY, ANNUAL, ONE_TIME
-  month       Int?     // 1-12
+  period      String // MONTHLY, QUARTERLY, ANNUAL, ONE_TIME
+  month       Int? // 1-12
   year        Int?
   isRecurring Boolean  @default(false)
   metadata    Json     @default("{}")
@@ -1917,7 +1989,7 @@ model BudgetEntry {
 model EscalationEvent {
   id             String    @id @default(cuid())
   businessId     String
-  triggerType    String    // QUALITY_FAILURE, BUDGET_EXCEEDED, AGENT_ERROR, COMPLIANCE, etc.
+  triggerType    String // QUALITY_FAILURE, BUDGET_EXCEEDED, AGENT_ERROR, COMPLIANCE, etc.
   severity       String    @default("MEDIUM") // LOW, MEDIUM, HIGH, CRITICAL
   title          String
   description    String?
@@ -1943,12 +2015,12 @@ model EscalationEvent {
 // ---------------------------------------------------------------------------
 
 model MessageUsage {
-  id         String @id @default(cuid())
+  id         String  @id @default(cuid())
   businessId String
   channel    String // WHATSAPP, INSTAGRAM, FACEBOOK, SMS, EMAIL, WEB_CHAT
   direction  String // INBOUND, OUTBOUND
   date       String // "2026-03-18" format
-  count      Int    @default(0)
+  count      Int     @default(0)
   segments   Int     @default(0)
   cost       Decimal @default(0)
 
@@ -1965,7 +2037,7 @@ model DeviceToken {
   staffId    String
   businessId String
   token      String
-  platform   String   // 'ios' | 'android' | 'web'
+  platform   String // 'ios' | 'android' | 'web'
   isActive   Boolean  @default(true)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
@@ -1980,26 +2052,26 @@ model DeviceToken {
 }
 
 model CustomerReferral {
-  id                  String    @id @default(cuid())
-  businessId          String
-  referrerCustomerId  String
-  referredCustomerId  String?
-  referralCode        String
-  status              String    @default("PENDING") // PENDING, COMPLETED, EXPIRED, CANCELLED
+  id                   String    @id @default(cuid())
+  businessId           String
+  referrerCustomerId   String
+  referredCustomerId   String?
+  referralCode         String
+  status               String    @default("PENDING") // PENDING, COMPLETED, EXPIRED, CANCELLED
   referrerCreditAmount Float
   refereeCreditAmount  Float
-  completedAt         DateTime?
-  expiresAt           DateTime?
-  bookingId           String?   @unique
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
+  completedAt          DateTime?
+  expiresAt            DateTime?
+  bookingId            String?   @unique
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 
-  business            Business  @relation(fields: [businessId], references: [id])
-  referrerCustomer    Customer  @relation("ReferrerCustomer", fields: [referrerCustomerId], references: [id])
-  referredCustomer    Customer? @relation("ReferredCustomer", fields: [referredCustomerId], references: [id])
-  booking             Booking?  @relation(fields: [bookingId], references: [id])
+  business         Business  @relation(fields: [businessId], references: [id])
+  referrerCustomer Customer  @relation("ReferrerCustomer", fields: [referrerCustomerId], references: [id])
+  referredCustomer Customer? @relation("ReferredCustomer", fields: [referredCustomerId], references: [id])
+  booking          Booking?  @relation(fields: [bookingId], references: [id])
 
-  credits             CustomerCredit[]
+  credits CustomerCredit[]
 
   @@unique([businessId, referrerCustomerId, referredCustomerId])
   @@index([businessId])
@@ -2016,16 +2088,16 @@ model CustomerCredit {
   customerId      String
   amount          Float
   remainingAmount Float
-  source          String    // REFERRAL_GIVEN, REFERRAL_RECEIVED, MANUAL
+  source          String // REFERRAL_GIVEN, REFERRAL_RECEIVED, MANUAL
   referralId      String?
   expiresAt       DateTime?
   redeemedAt      DateTime?
   createdAt       DateTime  @default(now())
 
-  business        Business  @relation(fields: [businessId], references: [id])
-  customer        Customer  @relation(fields: [customerId], references: [id])
-  referral        CustomerReferral? @relation(fields: [referralId], references: [id])
-  redemptions     CreditRedemption[]
+  business    Business           @relation(fields: [businessId], references: [id])
+  customer    Customer           @relation(fields: [customerId], references: [id])
+  referral    CustomerReferral?  @relation(fields: [referralId], references: [id])
+  redemptions CreditRedemption[]
 
   @@index([businessId, customerId])
   @@index([customerId, source])
@@ -2034,14 +2106,14 @@ model CustomerCredit {
 }
 
 model CreditRedemption {
-  id              String    @id @default(cuid())
-  creditId        String
-  bookingId       String
-  amount          Float
-  createdAt       DateTime  @default(now())
+  id        String   @id @default(cuid())
+  creditId  String
+  bookingId String
+  amount    Float
+  createdAt DateTime @default(now())
 
-  credit          CustomerCredit @relation(fields: [creditId], references: [id])
-  booking         Booking        @relation(fields: [bookingId], references: [id])
+  credit  CustomerCredit @relation(fields: [creditId], references: [id])
+  booking Booking        @relation(fields: [bookingId], references: [id])
 
   @@index([creditId])
   @@index([bookingId])

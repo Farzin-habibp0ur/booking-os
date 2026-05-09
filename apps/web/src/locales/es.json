@@ -48,7 +48,7 @@
   },
 
   "app": {
-    "title": "Booking OS"
+    "title": "Business Command Centre"
   },
 
   "nav": {
@@ -67,7 +67,7 @@
     "automations": "Automatizaciones",
     "marketing": "Marketing",
     "packages": "Paquetes",
-    "ai": "IA y Agentes",
+    "ai": "Recepción IA",
     "ai_actions": "Triaje de acciones",
     "ai_agents": "Estado de agentes",
     "ai_performance": "Rendimiento",
@@ -79,7 +79,7 @@
     "section_workspace": "Espacio de trabajo",
     "section_tools": "Herramientas",
     "section_insights": "Análisis",
-    "section_ai_agents": "IA y Agentes",
+    "section_ai_agents": "Recepción IA",
     "section_more": "Más"
   },
 
@@ -89,7 +89,7 @@
   },
 
   "login": {
-    "title": "Booking OS",
+    "title": "Business Command Centre",
     "subtitle": "Inicia sesión en tu cuenta",
     "email_label": "Correo electrónico",
     "password_label": "Contraseña",
@@ -513,7 +513,7 @@
   "roi": {
     "title": "Panel de ROI",
     "go_live_title": "Marca tu clínica como activa",
-    "go_live_description": "Captura una línea base de rendimiento de los últimos 7 días. Esta instantánea se usará para medir cómo Booking OS mejora tu negocio.",
+    "go_live_description": "Captura una línea base de rendimiento de los últimos 7 días. Esta instantánea se usará para medir cómo Business Command Centre mejora tu negocio.",
     "go_live_button": "Marcar como activa",
     "go_live_confirm": "Esto tomará una instantánea de los últimos 7 días como línea base. ¿Continuar?",
     "go_live_success": "¡Línea base capturada!",
@@ -772,7 +772,7 @@
   },
 
   "setup": {
-    "title": "Configura tu Booking OS",
+    "title": "Configura tu Business Command Centre",
     "step_label": "Paso {{current}} de {{total}}",
     "business_title": "Información del negocio",
     "business_subtitle": "Cuéntanos sobre tu negocio",
@@ -806,7 +806,7 @@
     "templates_subtitle": "Plantillas predefinidas para confirmaciones y recordatorios. Puedes editarlas en cualquier momento.",
     "templates_note": "Puedes crear y editar plantillas desde Configuración después de completar la configuración inicial.",
     "finish_title": "¡Todo listo!",
-    "finish_subtitle": "Tu Booking OS está listo. Aquí tienes un resumen:",
+    "finish_subtitle": "Tu Business Command Centre está listo. Aquí tienes un resumen:",
     "staff_members": "Miembros del personal",
     "services_count": "Servicios",
     "templates_count": "Plantillas",
@@ -1018,7 +1018,7 @@
 
   "signup": {
     "title": "Crea tu cuenta",
-    "subtitle": "Configura tu negocio en Booking OS",
+    "subtitle": "Configura tu negocio en Business Command Centre",
     "business_name": "Nombre del negocio",
     "business_name_placeholder": "Clínica Glow",
     "your_name": "Tu nombre",

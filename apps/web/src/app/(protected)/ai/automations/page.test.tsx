@@ -125,6 +125,24 @@ jest.mock('@/components/upgrade-nudge', () => ({
   UpgradeNudge: () => null,
 }));
 
+// Mock automation-explainer
+jest.mock('@/components/automation-explainer', () => ({
+  AutomationExplainer: () => <div data-testid="automation-explainer">Explainer</div>,
+}));
+
+// Mock useSocket
+jest.mock('@/lib/use-socket', () => ({
+  useSocket: () => {},
+}));
+
+// Mock automation-labels
+jest.mock('@/lib/automation-labels', () => ({
+  getTriggerLabel: (t: string) => t,
+  getActionLabel: (a: string) => a,
+  TRIGGER_LABELS: {},
+  TRIGGER_CATEGORIES: [],
+}));
+
 // Mock lucide-react icons
 jest.mock('lucide-react', () => ({
   Zap: () => <div data-testid="zap-icon" />,
@@ -140,6 +158,11 @@ jest.mock('lucide-react', () => ({
   Users: () => <div data-testid="users-icon" />,
   Workflow: () => <div data-testid="workflow-icon" />,
   Pencil: () => <div data-testid="pencil-icon" />,
+  Copy: () => <div data-testid="copy-icon" />,
+  Download: () => <div data-testid="download-icon" />,
+  ChevronLeft: () => <div data-testid="chevron-left-icon" />,
+  ChevronRight: () => <div data-testid="chevron-right-icon" />,
+  Settings: () => <div data-testid="settings-icon" />,
 }));
 
 import { api } from '@/lib/api';
@@ -465,7 +488,7 @@ describe('AutomationsPage', () => {
     });
   });
 
-  it('deletes a rule when delete button is clicked', async () => {
+  it('deletes a rule when delete button is clicked and confirmed', async () => {
     const user = userEvent.setup();
     setupDefaultMocks();
     mockApi.del.mockResolvedValue({});
@@ -484,10 +507,19 @@ describe('AutomationsPage', () => {
       expect(screen.getByText('Tag VIP')).toBeInTheDocument();
     });
 
-    // Click trash icon for first rule
+    // Click trash icon for first rule — opens confirmation modal
     const trashButtons = screen.getAllByTestId('trash2-icon');
     await act(async () => {
       await user.click(trashButtons[0]);
+    });
+
+    // Confirm deletion in modal
+    await waitFor(() => {
+      expect(screen.getByText('Delete Rule')).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      await user.click(screen.getByTestId('confirm-delete-btn'));
     });
 
     await waitFor(() => {
@@ -626,7 +658,7 @@ describe('AutomationsPage', () => {
     mockApi.get.mockImplementation((path: string) => {
       if (path === '/automations/playbooks') return Promise.reject(new Error('Network error'));
       if (path === '/automations/rules') return Promise.resolve(mockRules);
-      if (path === '/automations/logs?pageSize=50') return Promise.resolve(mockLogs);
+      if (path === '/automations/logs?pageSize=25&skip=0') return Promise.resolve(mockLogs);
       return Promise.resolve({});
     });
 
@@ -641,7 +673,7 @@ describe('AutomationsPage', () => {
     mockApi.get.mockImplementation((path: string) => {
       if (path === '/automations/playbooks') return Promise.resolve(mockPlaybooks);
       if (path === '/automations/rules') return Promise.reject(new Error('Network error'));
-      if (path === '/automations/logs?pageSize=50') return Promise.resolve(mockLogs);
+      if (path === '/automations/logs?pageSize=25&skip=0') return Promise.resolve(mockLogs);
       return Promise.resolve({});
     });
 
@@ -706,9 +738,19 @@ describe('AutomationsPage', () => {
       expect(screen.getByText('Tag VIP')).toBeInTheDocument();
     });
 
+    // Click trash icon — opens confirmation modal
     const trashButtons = screen.getAllByTestId('trash2-icon');
     await act(async () => {
       await user.click(trashButtons[0]);
+    });
+
+    // Confirm deletion in modal
+    await waitFor(() => {
+      expect(screen.getByText('Delete Rule')).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      await user.click(screen.getByTestId('confirm-delete-btn'));
     });
 
     await waitFor(() => {
@@ -898,7 +940,7 @@ describe('AutomationsPage', () => {
 
     await waitFor(() => {
       // Should reload without filters
-      expect(mockApi.get).toHaveBeenCalledWith('/automations/logs?pageSize=50');
+      expect(mockApi.get).toHaveBeenCalledWith('/automations/logs?pageSize=25&skip=0');
     });
   });
 

@@ -284,7 +284,7 @@ export class CalendarSyncService {
     const lines: string[] = [
       'BEGIN:VCALENDAR',
       'VERSION:2.0',
-      'PRODID:-//Booking OS//Calendar Feed//EN',
+      'PRODID:-//Business Command Centre//Calendar Feed//EN',
       'CALSCALE:GREGORIAN',
       'METHOD:PUBLISH',
       `X-WR-CALNAME:${connection.staff.name} - Bookings`,

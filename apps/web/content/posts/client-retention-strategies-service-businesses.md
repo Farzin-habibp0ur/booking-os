@@ -3,7 +3,7 @@ title: '5 Client Retention Strategies That Actually Work for Service Businesses'
 description: 'Proven retention tactics from referral programs to automated follow-ups that keep clients coming back and boost lifetime value.'
 date: '2026-02-25'
 category: 'Customer Success'
-author: 'Booking OS Team'
+author: 'Business Command Centre Team'
 readTime: '5 min read'
 ---
 

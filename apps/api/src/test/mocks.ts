@@ -5,11 +5,11 @@ export type MockPrisma = DeepMockProxy<PrismaClient>;
 
 export function createMockPrisma(): MockPrisma {
   const prisma = mockDeep<PrismaClient>();
-  // Make $transaction execute callbacks with the mock itself as tx
-  // This supports interactive transactions used in security-critical operations
-  (prisma.$transaction as jest.Mock).mockImplementation(async (fnOrArray: any) => {
+  // $transaction executes callbacks with the mock itself as tx, so interactive
+  // transactions (security-critical) are exercised end-to-end in unit tests.
+  (prisma.$transaction as jest.Mock).mockImplementation(async (fnOrArray: unknown) => {
     if (typeof fnOrArray === 'function') {
-      return fnOrArray(prisma);
+      return (fnOrArray as (tx: typeof prisma) => unknown)(prisma);
     }
     return fnOrArray;
   });

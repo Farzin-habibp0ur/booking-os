@@ -1,4 +1,5 @@
 import { Injectable, BadRequestException, NotFoundException, Logger } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../common/prisma.service';
 
 const BUILT_IN_PLAYBOOKS = [
@@ -91,7 +92,11 @@ export class AutomationService {
     });
   }
 
-  async togglePlaybook(businessId: string, playbookId: string) {
+  async togglePlaybook(
+    businessId: string,
+    playbookId: string,
+    messageOverride?: Record<string, string>,
+  ) {
     const playbook = BUILT_IN_PLAYBOOKS.find((p) => p.playbook === playbookId);
     if (!playbook) throw new NotFoundException('Playbook not found');
 
@@ -102,7 +107,10 @@ export class AutomationService {
     if (existing) {
       return this.prisma.automationRule.update({
         where: { id: existing.id },
-        data: { isActive: !existing.isActive },
+        data: {
+          isActive: !existing.isActive,
+          ...(messageOverride && { messageTemplateOverride: messageOverride }),
+        },
       });
     }
 
@@ -115,6 +123,7 @@ export class AutomationService {
         actions: playbook.actions,
         playbook: playbookId,
         isActive: true,
+        ...(messageOverride && { messageTemplateOverride: messageOverride }),
       },
     });
   }
@@ -463,13 +472,166 @@ export class AutomationService {
         matchedBookings = bookings;
         break;
       }
+      case 'CUSTOMER_CREATED': {
+        const customers = await this.prisma.customer.findMany({
+          where: {
+            businessId,
+            createdAt: { gte: new Date(now.getTime() - 24 * 60 * 60 * 1000) },
+            ...(filters.tag && { tags: { has: filters.tag as string } }),
+          },
+          take: 20,
+        });
+        matchedBookings = customers.map((c: any) => ({
+          id: c.id,
+          customer: { name: c.name },
+          service: { name: 'N/A' },
+          startTime: c.createdAt,
+          status: 'CREATED',
+        }));
+        break;
+      }
+      case 'PAYMENT_RECEIVED': {
+        const payments = await this.prisma.payment.findMany({
+          where: {
+            businessId,
+            createdAt: { gte: new Date(now.getTime() - 24 * 60 * 60 * 1000) },
+            status: 'SUCCEEDED',
+            ...(filters.minAmount && { amount: { gte: Number(filters.minAmount) } }),
+          },
+          include: { customer: { select: { name: true } } },
+          take: 20,
+        });
+        matchedBookings = payments.map((p: any) => ({
+          id: p.id,
+          customer: { name: p.customer?.name },
+          service: { name: 'Payment' },
+          startTime: p.createdAt,
+          status: 'SUCCEEDED',
+        }));
+        break;
+      }
+      case 'MESSAGE_RECEIVED': {
+        const messages = await this.prisma.message.findMany({
+          where: {
+            conversation: { businessId },
+            createdAt: { gte: new Date(now.getTime() - 24 * 60 * 60 * 1000) },
+            direction: 'INBOUND',
+          },
+          include: { conversation: { include: { customer: { select: { name: true } } } } },
+          take: 20,
+        });
+        matchedBookings = messages.map((m: any) => ({
+          id: m.id,
+          customer: { name: m.conversation?.customer?.name },
+          service: { name: 'Message' },
+          startTime: m.createdAt,
+          status: 'RECEIVED',
+        }));
+        break;
+      }
+      case 'TESTIMONIAL_SUBMITTED': {
+        const testimonials = await this.prisma.testimonial.findMany({
+          where: {
+            businessId,
+            createdAt: { gte: new Date(now.getTime() - 24 * 60 * 60 * 1000) },
+            ...(filters.minRating && { rating: { gte: Number(filters.minRating) } }),
+          },
+          include: { customer: { select: { name: true } } },
+          take: 20,
+        });
+        matchedBookings = testimonials.map((t: any) => ({
+          id: t.id,
+          customer: { name: t.customer?.name },
+          service: { name: 'Testimonial' },
+          startTime: t.createdAt,
+          status: 'SUBMITTED',
+        }));
+        break;
+      }
+      case 'CAMPAIGN_SENT': {
+        const campaigns = await this.prisma.campaign.findMany({
+          where: {
+            businessId,
+            status: 'SENT',
+            updatedAt: { gte: new Date(now.getTime() - 24 * 60 * 60 * 1000) },
+            ...(filters.campaignName && {
+              name: { contains: filters.campaignName as string, mode: 'insensitive' as const },
+            }),
+          },
+          take: 20,
+        });
+        matchedBookings = campaigns.map((c: any) => ({
+          id: c.id,
+          customer: { name: 'Campaign-level' },
+          service: { name: c.name },
+          startTime: c.updatedAt,
+          status: 'SENT',
+        }));
+        break;
+      }
+      case 'REFERRAL_EARNED': {
+        const credits = await this.prisma.customerCredit.findMany({
+          where: {
+            businessId,
+            createdAt: { gte: new Date(now.getTime() - 24 * 60 * 60 * 1000) },
+            source: { in: ['REFERRAL_GIVEN', 'REFERRAL_RECEIVED'] },
+          },
+          include: { customer: { select: { name: true } } },
+          take: 20,
+        });
+        matchedBookings = credits.map((c: any) => ({
+          id: c.id,
+          customer: { name: c.customer?.name },
+          service: { name: 'Referral Credit' },
+          startTime: c.createdAt,
+          status: c.source,
+        }));
+        break;
+      }
+      case 'REFERRAL_REDEEMED': {
+        const redemptions = await this.prisma.creditRedemption.findMany({
+          where: {
+            createdAt: { gte: new Date(now.getTime() - 24 * 60 * 60 * 1000) },
+            credit: { businessId },
+          },
+          include: { credit: { include: { customer: { select: { name: true } } } } },
+          take: 20,
+        });
+        matchedBookings = redemptions.map((r: any) => ({
+          id: r.id,
+          customer: { name: r.credit?.customer?.name },
+          service: { name: 'Credit Redemption' },
+          startTime: r.createdAt,
+          status: 'REDEEMED',
+        }));
+        break;
+      }
+      case 'NO_RESPONSE': {
+        const daysSince = Number(filters.daysSince) || 30;
+        const cutoff = new Date(now.getTime() - daysSince * 24 * 60 * 60 * 1000);
+        const inactiveCustomers = await this.prisma.customer.findMany({
+          where: {
+            businessId,
+            bookings: { none: { startTime: { gte: cutoff } } },
+          },
+          take: 20,
+        });
+        matchedBookings = inactiveCustomers.map((c: any) => ({
+          id: c.id,
+          customer: { name: c.name },
+          service: { name: 'N/A' },
+          startTime: c.updatedAt,
+          status: 'INACTIVE',
+        }));
+        break;
+      }
     }
 
     return {
       rule: { id: rule.id, name: rule.name, trigger: rule.trigger },
       dryRun: true,
       matchedCount: matchedBookings.length,
-      matchedBookings: matchedBookings.map((b) => ({
+      matchedBookings: matchedBookings.map((b: any) => ({
         id: b.id,
         customerName: b.customer?.name || 'Unknown',
         serviceName: b.service?.name || 'Unknown',
@@ -479,9 +641,153 @@ export class AutomationService {
       skipped: skippedReasons,
       message:
         matchedBookings.length > 0
-          ? `Rule "${rule.name}" would match ${matchedBookings.length} booking(s) in the last 24 hours`
-          : `Rule "${rule.name}" would not match any bookings right now`,
+          ? `Rule "${rule.name}" would match ${matchedBookings.length} record(s) in the last 24 hours`
+          : `Rule "${rule.name}" would not match any records right now`,
     };
+  }
+
+  // UX-gap-13: Duplicate a rule
+  async duplicateRule(ruleId: string, businessId: string) {
+    const original = await this.prisma.automationRule.findFirst({
+      where: { id: ruleId, businessId },
+      include: { steps: { orderBy: { order: 'asc' } } },
+    });
+    if (!original) throw new NotFoundException('Rule not found');
+
+    // Generate unique copy name
+    let copyName = `${original.name} (Copy)`;
+    const existing = await this.prisma.automationRule.findFirst({
+      where: { businessId, name: copyName },
+    });
+    if (existing) {
+      copyName = `${original.name} (Copy ${Date.now().toString(36)})`;
+    }
+
+    const newRule = await this.prisma.automationRule.create({
+      data: {
+        businessId: original.businessId,
+        name: copyName,
+        trigger: original.trigger,
+        filters: (original.filters as Prisma.InputJsonValue) ?? Prisma.JsonNull,
+        actions: (original.actions as Prisma.InputJsonValue) ?? Prisma.JsonNull,
+        isActive: false,
+        playbook: null, // duplicated rules are always custom
+        quietStart: original.quietStart,
+        quietEnd: original.quietEnd,
+        maxPerCustomerPerDay: original.maxPerCustomerPerDay,
+        messageTemplateOverride: original.messageTemplateOverride
+          ? (original.messageTemplateOverride as Prisma.InputJsonValue)
+          : Prisma.JsonNull,
+      },
+    });
+
+    // Copy steps if any exist
+    if (original.steps.length > 0) {
+      await this.prisma.automationStep.createMany({
+        data: original.steps.map((step) => ({
+          automationRuleId: newRule.id,
+          order: step.order,
+          type: step.type,
+          config: (step.config ?? Prisma.JsonNull) as Prisma.InputJsonValue,
+          parentStepId: step.parentStepId,
+          branchLabel: step.branchLabel,
+        })),
+      });
+    }
+
+    return newRule;
+  }
+
+  // UX-gap-16: Global safety defaults
+  async getAutomationDefaults(businessId: string) {
+    const business = await this.prisma.business.findUnique({
+      where: { id: businessId },
+      select: { automationDefaults: true },
+    });
+    return (business?.automationDefaults as Record<string, unknown>) || {};
+  }
+
+  async updateAutomationDefaults(
+    businessId: string,
+    defaults: { quietStart?: string; quietEnd?: string; maxPerCustomerPerDay?: number },
+  ) {
+    const current = await this.getAutomationDefaults(businessId);
+    const updated = { ...current, ...defaults };
+    await this.prisma.business.update({
+      where: { id: businessId },
+      data: { automationDefaults: updated },
+    });
+    return updated;
+  }
+
+  // UX-gap-17: Customer automation timeline
+  async getCustomerTimeline(customerId: string, businessId: string) {
+    const [logs, agentActions] = await Promise.all([
+      this.prisma.automationLog.findMany({
+        where: { customerId, businessId },
+        include: { rule: { select: { name: true, trigger: true } } },
+        orderBy: { createdAt: 'desc' },
+        take: 100,
+      }),
+      this.prisma.actionHistory.findMany({
+        where: {
+          businessId,
+          entityType: 'ACTION_CARD',
+          entityId: {
+            in: (
+              await this.prisma.actionCard.findMany({
+                where: { customerId, businessId },
+                select: { id: true },
+              })
+            ).map((c) => c.id),
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 100,
+      }),
+    ]);
+
+    return [
+      ...logs.map((l) => ({
+        id: l.id,
+        source: 'rule' as const,
+        title: l.rule?.name || 'Unknown Rule',
+        action: l.action,
+        outcome: l.outcome,
+        trigger: l.rule?.trigger,
+        createdAt: l.createdAt,
+      })),
+      ...agentActions.map((h) => ({
+        id: h.id,
+        source: 'agent' as const,
+        title: h.description || 'Agent Action',
+        action: h.action,
+        outcome: h.action,
+        trigger: h.entityType,
+        createdAt: h.createdAt,
+      })),
+    ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
+  // UX-gap-4: Cross-system conflict detection (extends existing checkConflicts)
+  private async checkAgentOverlap(businessId: string, trigger: string) {
+    const overlapMap: Record<string, string[]> = {
+      BOOKING_CANCELLED: ['WAITLIST'],
+      STATUS_CHANGED: ['RETENTION', 'QUOTE_FOLLOWUP'],
+      BOOKING_UPCOMING: ['SCHEDULING_OPTIMIZER'],
+      CUSTOMER_CREATED: ['DATA_HYGIENE'],
+    };
+    const potentialAgents = overlapMap[trigger] || [];
+    if (!potentialAgents.length) return [];
+
+    const activeAgents = await this.prisma.agentConfig.findMany({
+      where: { businessId, agentType: { in: potentialAgents }, isEnabled: true },
+    });
+    return activeAgents.map((a) => ({
+      agentType: a.agentType,
+      message: `The ${a.agentType} agent may also contact customers affected by this trigger.`,
+      suggestion: 'Review agent settings at /ai/agents to avoid duplicate outreach.',
+    }));
   }
 
   // MED-12: Conflict detection
@@ -514,12 +820,16 @@ export class AutomationService {
       return false;
     });
 
-    return conflicts.map((r) => ({
+    const ruleConflicts = conflicts.map((r) => ({
       id: r.id,
       name: r.name,
       trigger: r.trigger,
       overlap: 'Same trigger with overlapping filters',
     }));
+
+    const agentConflicts = await this.checkAgentOverlap(businessId, trigger);
+
+    return { ruleConflicts, agentConflicts };
   }
 
   // HIGH-07: Analytics overview

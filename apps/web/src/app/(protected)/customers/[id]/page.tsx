@@ -29,7 +29,9 @@ import {
   Camera,
   Gift,
   Copy,
+  Zap,
 } from 'lucide-react';
+import { CustomerAutomationTimeline } from '@/components/customer-automation-timeline';
 import BookingFormModal from '@/components/booking-form-modal';
 import IntakeCard from '@/components/intake-card';
 import { RecentChangesPanel } from '@/components/action-history';
@@ -505,6 +507,14 @@ export default function CustomerDetailPage() {
             </div>
           </div>
         )}
+
+        {/* Automation History */}
+        <div className={cn(ELEVATION.card, 'bg-white p-5 mb-6')}>
+          <h2 className="text-sm font-semibold text-slate-900 uppercase mb-3 flex items-center gap-2">
+            <Zap size={14} className="text-sage-600" /> Automation History
+          </h2>
+          <CustomerAutomationTimeline customerId={id as string} />
+        </div>
 
         {/* Unified Activity Feed */}
         <div className={cn(ELEVATION.card, 'bg-white p-5 mb-6')}>

@@ -1,6 +1,6 @@
 # Stripe Configuration Guide
 
-This document describes exactly how to configure Stripe for Booking OS billing. The billing code is fully implemented — this guide covers the Stripe dashboard setup and environment variables needed to activate it.
+This document describes exactly how to configure Stripe for Business Command Centre billing. The billing code is fully implemented — this guide covers the Stripe dashboard setup and environment variables needed to activate it.
 
 ---
 

@@ -14,48 +14,29 @@ import {
   ShieldCheck,
   Info,
 } from 'lucide-react';
+import { TRIGGER_CATEGORIES, TRIGGER_LABELS } from '@/lib/automation-labels';
 
-const TRIGGERS = [
-  {
-    value: 'BOOKING_CREATED',
-    label: 'Booking Created',
-    description: 'Fires when a new booking is created',
-    example: 'A customer books a Hydra Facial for next Tuesday → this rule fires immediately.',
-  },
-  {
-    value: 'BOOKING_UPCOMING',
-    label: 'Booking Upcoming',
-    description: 'Fires before an upcoming appointment',
-    example:
-      'A customer has an appointment tomorrow at 2 PM → this rule fires 24 hours before (today at 2 PM).',
-  },
-  {
-    value: 'STATUS_CHANGED',
-    label: 'Status Changed',
-    description: 'Fires when a booking status changes',
-    example:
-      'A booking is marked as Completed after the appointment → this rule fires on the status change.',
-  },
-  {
-    value: 'BOOKING_CANCELLED',
-    label: 'Booking Cancelled',
-    description: 'Fires when a booking is cancelled',
-    example:
-      'A customer cancels their appointment via self-serve link → this rule fires on cancellation.',
-  },
-  {
-    value: 'NO_RESPONSE',
-    label: 'No Response',
-    description: 'Fires when a customer has not responded',
-    example:
-      "A customer hasn't replied to a message or booked in the configured period → this rule fires.",
-  },
-];
+const TRIGGERS = TRIGGER_CATEGORIES.flatMap((cat) =>
+  cat.triggers.map((value) => ({
+    value,
+    label: TRIGGER_LABELS[value]?.label || value,
+    description: '',
+    example: '',
+    category: cat.name,
+  })),
+);
 
 const ACTION_TYPES = [
   { value: 'SEND_TEMPLATE', label: 'Send Template Message' },
+  { value: 'SEND_MESSAGE', label: 'Send Message' },
+  { value: 'SEND_EMAIL', label: 'Send Email' },
   { value: 'ADD_TAG', label: 'Add Customer Tag' },
-  { value: 'ASSIGN', label: 'Assign Staff' },
+  { value: 'ASSIGN_STAFF', label: 'Assign Staff' },
+  { value: 'UPDATE_STATUS', label: 'Update Status' },
+  { value: 'REQUEST_TESTIMONIAL', label: 'Request Testimonial' },
+  { value: 'SEND_NOTIFICATION', label: 'Send Staff Notification' },
+  { value: 'WEBHOOK', label: 'Call Webhook' },
+  { value: 'UPDATE_CUSTOMER_FIELD', label: 'Update Customer Field' },
 ];
 
 const STEPS = ['Trigger', 'Filters', 'Actions', 'Review'];
@@ -99,7 +80,7 @@ function getActionPreview(actions: any[]): string {
       ? `Add the "${action.tag}" tag to the customer's profile.`
       : "Add a tag to the customer's profile.";
   }
-  if (action.type === 'ASSIGN') {
+  if (action.type === 'ASSIGN_STAFF') {
     return 'Assign a staff member to the booking.';
   }
   return '';

@@ -1,6 +1,6 @@
 # CI/CD Pipeline
 
-Booking OS uses GitHub Actions for continuous integration and Railway for production deployment. Every push to `main` triggers the full pipeline: lint, test, build, and deploy.
+Business Command Centre uses GitHub Actions for continuous integration and Railway for production deployment. Every push to `main` triggers the full pipeline: lint, test, build, and deploy.
 
 ## Pipeline Overview
 

@@ -48,7 +48,7 @@
   },
 
   "app": {
-    "title": "Booking OS"
+    "title": "Business Command Centre"
   },
 
   "nav": {
@@ -67,7 +67,7 @@
     "automations": "Automations",
     "marketing": "Marketing",
     "packages": "Packages",
-    "ai": "AI & Agents",
+    "ai": "AI Front Desk",
     "ai_actions": "Action Triage",
     "ai_agents": "Agent Status",
     "ai_performance": "Performance",
@@ -81,7 +81,7 @@
     "section_workspace": "Workspace",
     "section_tools": "Tools",
     "section_insights": "Insights",
-    "section_ai_agents": "AI & Agents",
+    "section_ai_agents": "AI Front Desk",
     "section_more": "More"
   },
 
@@ -100,7 +100,7 @@
   },
 
   "login": {
-    "title": "Booking OS",
+    "title": "Business Command Centre",
     "subtitle": "Sign in to your account",
     "email_label": "Email",
     "password_label": "Password",
@@ -544,7 +544,7 @@
   "roi": {
     "title": "ROI Dashboard",
     "go_live_title": "Mark Your Clinic as Live",
-    "go_live_description": "Capture a performance baseline from the last 7 days. This snapshot will be used to measure how Booking OS improves your business.",
+    "go_live_description": "Capture a performance baseline from the last 7 days. This snapshot will be used to measure how Business Command Centre improves your business.",
     "go_live_button": "Mark as Live",
     "go_live_confirm": "This will snapshot your last 7 days as the baseline. Continue?",
     "go_live_success": "Baseline captured!",
@@ -803,7 +803,7 @@
   },
 
   "setup": {
-    "title": "Setup your Booking OS",
+    "title": "Setup your Business Command Centre",
     "step_label": "Step {{current}} of {{total}}",
     "business_title": "Business Information",
     "business_subtitle": "Tell us about your business",
@@ -837,7 +837,7 @@
     "templates_subtitle": "Pre-built templates for confirmations and reminders. You can edit these anytime.",
     "templates_note": "You can create and edit templates from Settings after setup is complete.",
     "finish_title": "You're all set!",
-    "finish_subtitle": "Your Booking OS is ready. Here's a quick summary:",
+    "finish_subtitle": "Your Business Command Centre is ready. Here's a quick summary:",
     "staff_members": "Staff members",
     "services_count": "Services",
     "templates_count": "Templates",
@@ -1067,7 +1067,7 @@
 
   "signup": {
     "title": "Create your account",
-    "subtitle": "Set up your business on Booking OS",
+    "subtitle": "Set up your business on Business Command Centre",
     "business_name": "Business name",
     "business_name_placeholder": "Glow Clinic",
     "your_name": "Your name",

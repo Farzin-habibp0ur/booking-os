@@ -86,7 +86,7 @@ export default function SecuritySettingsPage() {
 
   const downloadBackupCodes = () => {
     const content = [
-      'Booking OS - Two-Factor Authentication Backup Codes',
+      'Business Command Centre - Two-Factor Authentication Backup Codes',
       '='.repeat(50),
       '',
       'Keep these codes safe. Each code can only be used once.',

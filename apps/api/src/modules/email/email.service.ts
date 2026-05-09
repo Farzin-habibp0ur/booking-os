@@ -40,7 +40,9 @@ export class EmailService {
 
   async send(options: EmailOptions): Promise<boolean> {
     const from =
-      options.from || this.configService.get<string>('EMAIL_FROM') || 'noreply@booking-os.com';
+      options.from ||
+      this.configService.get<string>('EMAIL_FROM') ||
+      'noreply@businesscommandcentre.com';
 
     if (!this.apiKey || this.provider === 'none') {
       this.logger.log(`[Email] Would send to ${options.to}: ${options.subject}`);
@@ -106,7 +108,7 @@ export class EmailService {
   // ─── Branded email layout ────────────────────────────────────────────
 
   /**
-   * Wraps email body content in the Booking OS branded layout.
+   * Wraps email body content in the Business Command Centre branded layout.
    * Uses inline CSS for maximum email client compatibility.
    */
   buildBrandedHtml(bodyContent: string): string {
@@ -115,7 +117,7 @@ export class EmailService {
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Booking OS</title>
+<title>Business Command Centre</title>
 </head>
 <body style="margin:0;padding:0;background-color:#F7F7F8;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#F7F7F8;">
@@ -123,7 +125,7 @@ export class EmailService {
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background-color:#FFFFFF;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.06);">
 <!-- Header -->
 <tr><td style="background-color:#71907C;padding:28px 32px;text-align:center;">
-<span style="font-size:22px;font-weight:700;color:#FFFFFF;letter-spacing:0.5px;">Booking OS</span>
+<span style="font-size:22px;font-weight:700;color:#FFFFFF;letter-spacing:0.5px;">Business Command Centre</span>
 </td></tr>
 <!-- Body -->
 <tr><td style="padding:32px 32px 24px 32px;color:#1E293B;font-size:16px;line-height:1.6;">
@@ -131,7 +133,7 @@ ${bodyContent}
 </td></tr>
 <!-- Footer -->
 <tr><td style="padding:20px 32px 28px 32px;border-top:1px solid #E4EBE6;text-align:center;">
-<p style="margin:0 0 4px 0;font-size:12px;color:#94A3B8;">Powered by Booking OS</p>
+<p style="margin:0 0 4px 0;font-size:12px;color:#94A3B8;">Powered by Business Command Centre</p>
 <p style="margin:0;font-size:12px;color:#CBD5E1;">You received this email because of your account or booking activity.</p>
 </td></tr>
 </table>
@@ -221,7 +223,7 @@ ${locationLine}
 
     return this.send({
       to,
-      subject: 'Reset Your Password - Booking OS',
+      subject: 'Reset Your Password - Business Command Centre',
       html: this.buildBrandedHtml(body),
     });
   }
@@ -234,7 +236,7 @@ ${locationLine}
 
     const body = `
 <h2 style="margin:0 0 8px 0;font-size:22px;color:#1E293B;">You're Invited!</h2>
-<p style="margin:0 0 24px 0;color:#64748B;">Hi ${data.name}, you've been invited to join <strong>${data.businessName}</strong>${roleLabel} on Booking OS.</p>
+<p style="margin:0 0 24px 0;color:#64748B;">Hi ${data.name}, you've been invited to join <strong>${data.businessName}</strong>${roleLabel} on Business Command Centre.</p>
 <p style="margin:0 0 24px 0;">
 <a href="${data.inviteUrl}" style="display:inline-block;padding:14px 32px;background-color:#8A75BD;color:#FFFFFF;text-decoration:none;border-radius:12px;font-size:16px;font-weight:600;">Accept Invitation</a>
 </p>
@@ -243,7 +245,7 @@ ${locationLine}
 
     return this.send({
       to,
-      subject: `You've been invited to join ${data.businessName} on Booking OS`,
+      subject: `You've been invited to join ${data.businessName} on Business Command Centre`,
       html: this.buildBrandedHtml(body),
     });
   }
@@ -260,7 +262,7 @@ ${locationLine}
 
     return this.send({
       to,
-      subject: 'Verify Your Email - Booking OS',
+      subject: 'Verify Your Email - Business Command Centre',
       html: this.buildBrandedHtml(body),
     });
   }

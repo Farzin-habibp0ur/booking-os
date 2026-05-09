@@ -290,7 +290,7 @@ describe('DunningService', () => {
       expect(emailService.sendGeneric).toHaveBeenCalledWith(
         'admin@test.com',
         expect.objectContaining({
-          subject: 'Your Booking OS account has been downgraded',
+          subject: 'Your Business Command Centre account has been downgraded',
           headline: 'Account downgraded to Starter',
         }),
       );

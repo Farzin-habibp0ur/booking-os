@@ -3,7 +3,7 @@ title: 'Building Real-Time Features with WebSockets in a NestJS Monorepo'
 description: 'Architecture patterns for adding live updates, presence indicators, and collaborative features to a production NestJS application.'
 date: '2026-02-08'
 category: 'Technical'
-author: 'Booking OS Team'
+author: 'Business Command Centre Team'
 readTime: '7 min read'
 ---
 
