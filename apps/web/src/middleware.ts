@@ -23,6 +23,10 @@ const PUBLIC_PATHS = [
   '/upgrade',
   '/portal',
   '/og-image.png',
+  '/pilot',
+  '/privacy',
+  '/terms',
+  '/security',
 ];
 
 export function middleware(request: NextRequest) {
