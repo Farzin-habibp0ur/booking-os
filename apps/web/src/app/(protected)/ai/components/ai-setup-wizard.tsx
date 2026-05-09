@@ -6,24 +6,58 @@ import { useToast } from '@/lib/toast';
 import { Sparkles, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/cn';
 
-const CHANNELS = ['WHATSAPP', 'INSTAGRAM', 'FACEBOOK', 'SMS', 'EMAIL', 'WEB_CHAT'] as const;
+// Step 1 channels per BCC-PIVOT-MASTER-PLAN.md v3 Phase 6 spec:
+//   Instagram, WhatsApp, web chat, SMS, email (Facebook Messenger excluded from concierge default)
+const CHANNELS = ['INSTAGRAM', 'WHATSAPP', 'WEB_CHAT', 'SMS', 'EMAIL'] as const;
 const STORAGE_KEY = 'bookingos:ai-setup-dismissed';
 
 interface Props {
   onComplete?: () => void;
 }
 
+interface BusinessSummary {
+  baselineMonthlyBookings: number | null;
+}
+
 export function AISetupWizard({ onComplete }: Props) {
   const { toast } = useToast();
   const [step, setStep] = useState(0);
   const [personality, setPersonality] = useState('');
-  const [approvalMode, setApprovalMode] = useState('review');
-  const [roiBaseline, setRoiBaseline] = useState('');
+  // Step 3: explicit confirmation that approval mode stays ON (autoReply.enabled = false)
+  const [approvalConfirmed, setApprovalConfirmed] = useState(true);
+  // Step 4: waitlist + cancellation fill toggles (turned on by default)
+  const [waitlistFillEnabled, setWaitlistFillEnabled] = useState(true);
+  const [cancellationFillEnabled, setCancellationFillEnabled] = useState(true);
+  // Step 5: baseline is read-only — the founder sets it during the concierge call
+  const [baseline, setBaseline] = useState<number | null>(null);
+  const [baselineLoading, setBaselineLoading] = useState(true);
   const [channels, setChannels] = useState<Record<string, boolean>>(
     Object.fromEntries(CHANNELS.map((ch) => [ch, true])),
   );
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState(false);
+
+  // Fetch baseline from /business (set by founder during concierge call)
+  useEffect(() => {
+    let cancelled = false;
+    api
+      .get<BusinessSummary>('/business')
+      .then((b) => {
+        if (cancelled) return;
+        setBaseline(
+          typeof b?.baselineMonthlyBookings === 'number' ? b.baselineMonthlyBookings : null,
+        );
+      })
+      .catch(() => {
+        if (!cancelled) setBaseline(null);
+      })
+      .finally(() => {
+        if (!cancelled) setBaselineLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleSkip = () => {
     localStorage.setItem(STORAGE_KEY, 'true');
@@ -36,8 +70,8 @@ export function AISetupWizard({ onComplete }: Props) {
       await api.patch('/ai/settings', {
         enabled: true,
         personality,
-        approvalMode,
-        roiBaseline,
+        // Approval mode is locked ON during concierge pilot (autoReply.enabled = false).
+        approvalMode: 'review',
         autoReplySuggestions: true,
         autoReply: {
           enabled: false,
@@ -46,6 +80,11 @@ export function AISetupWizard({ onComplete }: Props) {
           channelOverrides: Object.fromEntries(
             Object.entries(channels).map(([ch, enabled]) => [ch, { enabled }]),
           ),
+        },
+        // Operational agent toggles for the wedge: waitlist auto-match + cancellation fill
+        agents: {
+          waitlistFillEnabled,
+          cancellationFillEnabled,
         },
       });
       localStorage.setItem(STORAGE_KEY, 'true');
@@ -82,9 +121,18 @@ export function AISetupWizard({ onComplete }: Props) {
     'Connect channels',
     'Set voice',
     'Approval mode',
-    'Draft channels',
-    'ROI baseline',
+    'Fill cancellations',
+    'Confirm baseline',
   ];
+
+  // Channel display labels
+  const channelLabels: Record<string, string> = {
+    INSTAGRAM: 'Instagram',
+    WHATSAPP: 'WhatsApp',
+    WEB_CHAT: 'Website chat',
+    SMS: 'SMS',
+    EMAIL: 'Email',
+  };
 
   return (
     <div
@@ -123,94 +171,23 @@ export function AISetupWizard({ onComplete }: Props) {
         ))}
       </div>
 
-      {/* Step content */}
+      {/* Step 1: Connect channels (Instagram, WhatsApp, web chat, SMS, email) */}
       {step === 0 && (
         <div className="space-y-4">
-          <div className="flex items-center gap-2 mb-4">
+          <div className="flex items-center gap-2 mb-2">
             <Sparkles size={24} className="text-lavender-600" />
             <h2 className="text-xl font-serif font-bold text-slate-900">
               Connect front desk channels
             </h2>
           </div>
-          <p className="text-slate-600 leading-relaxed">
-            AI Front Desk works best once your customer channels are connected. Start with the
-            inboxes where leads are easiest to miss.
-          </p>
-          <ul className="space-y-2 text-sm text-slate-600">
-            <li className="flex items-center gap-2">
-              <CheckCircle size={16} className="text-sage-500 flex-shrink-0" />
-              Capture Instagram, WhatsApp, website chat, SMS, and email leads
-            </li>
-            <li className="flex items-center gap-2">
-              <CheckCircle size={16} className="text-sage-500 flex-shrink-0" />
-              Draft replies for staff approval
-            </li>
-            <li className="flex items-center gap-2">
-              <CheckCircle size={16} className="text-sage-500 flex-shrink-0" />
-              Fill cancelled slots and follow up consults
-            </li>
-          </ul>
-        </div>
-      )}
-
-      {step === 1 && (
-        <div className="space-y-4">
-          <h2 className="text-xl font-serif font-bold text-slate-900">Set your voice</h2>
           <p className="text-sm text-slate-500">
-            Describe how the AI Front Desk should communicate with your customers.
-          </p>
-          <textarea
-            value={personality}
-            onChange={(e) => setPersonality(e.target.value)}
-            rows={4}
-            placeholder="e.g., Friendly and professional. Always mention our 24-hour cancellation policy."
-            className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-lavender-500"
-            data-testid="personality-input"
-          />
-        </div>
-      )}
-
-      {step === 2 && (
-        <div className="space-y-4">
-          <h2 className="text-xl font-serif font-bold text-slate-900">Choose approval mode</h2>
-          <p className="text-sm text-slate-500">
-            Staff approval is recommended for pilot clinics while tone, consent, and escalation
-            rules are being learned.
-          </p>
-          <div className="space-y-3">
-            {[
-              { value: 'review', label: 'Draft for staff approval' },
-              { value: 'suggest', label: 'Suggest next best action only' },
-            ].map((option) => (
-              <label
-                key={option.value}
-                className="flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50 p-3"
-              >
-                <input
-                  type="radio"
-                  name="approvalMode"
-                  value={option.value}
-                  checked={approvalMode === option.value}
-                  onChange={(e) => setApprovalMode(e.target.value)}
-                  className="text-sage-600 focus:ring-sage-500"
-                />
-                <span className="text-sm font-medium text-slate-700">{option.label}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {step === 3 && (
-        <div className="space-y-4">
-          <h2 className="text-xl font-serif font-bold text-slate-900">Choose draft channels</h2>
-          <p className="text-sm text-slate-500">
-            Select which channels can receive drafted replies. Auto-send stays off by default.
+            AI Front Desk drafts replies for each channel where leads arrive. Toggle off any channel
+            you do not want the AI to handle.
           </p>
           <div className="space-y-3">
             {CHANNELS.map((ch) => (
               <label key={ch} className="flex items-center justify-between py-2 cursor-pointer">
-                <span className="text-sm font-medium text-slate-700">{ch.replace(/_/g, ' ')}</span>
+                <span className="text-sm font-medium text-slate-700">{channelLabels[ch]}</span>
                 <button
                   type="button"
                   onClick={() => toggleChannel(ch)}
@@ -235,19 +212,131 @@ export function AISetupWizard({ onComplete }: Props) {
         </div>
       )}
 
-      {step === 4 && (
+      {/* Step 2: Set clinic voice */}
+      {step === 1 && (
         <div className="space-y-4">
-          <h2 className="text-xl font-serif font-bold text-slate-900">Set an ROI baseline</h2>
+          <h2 className="text-xl font-serif font-bold text-slate-900">Set your clinic voice</h2>
           <p className="text-sm text-slate-500">
-            Add the revenue signal you want to watch first. You can refine it after setup.
+            Describe how the AI Front Desk should communicate with your customers.
           </p>
           <textarea
-            value={roiBaseline}
-            onChange={(e) => setRoiBaseline(e.target.value)}
+            value={personality}
+            onChange={(e) => setPersonality(e.target.value)}
             rows={4}
-            placeholder="e.g., missed Instagram leads after hours, cancellation slots not filled, consult quotes not followed up."
+            placeholder="e.g., Friendly and professional. Always mention our 24-hour cancellation policy."
             className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-lavender-500"
+            data-testid="personality-input"
           />
+        </div>
+      )}
+
+      {/* Step 3: Confirm approval mode ON (locks autoReply.enabled = false) */}
+      {step === 2 && (
+        <div className="space-y-4">
+          <h2 className="text-xl font-serif font-bold text-slate-900">
+            Confirm approval mode is ON
+          </h2>
+          <p className="text-sm text-slate-500">
+            During the concierge pilot, every AI reply waits for staff approval before sending. This
+            stays on while we learn your tone, consent rules, and escalation patterns.
+          </p>
+          <label className="flex items-start gap-3 rounded-xl border border-lavender-100 bg-lavender-50 p-4">
+            <input
+              type="checkbox"
+              checked={approvalConfirmed}
+              onChange={(e) => setApprovalConfirmed(e.target.checked)}
+              className="mt-0.5 text-sage-600 focus:ring-sage-500"
+              data-testid="approval-confirm"
+            />
+            <span className="text-sm text-slate-700">
+              I understand AI drafts will not auto-send. Staff approves every outgoing message
+              (autoReply.enabled = false).
+            </span>
+          </label>
+        </div>
+      )}
+
+      {/* Step 4: Enable waitlist + cancellation fill */}
+      {step === 3 && (
+        <div className="space-y-4">
+          <h2 className="text-xl font-serif font-bold text-slate-900">
+            Enable waitlist + cancellation fill
+          </h2>
+          <p className="text-sm text-slate-500">
+            When a booking cancels, the AI matches your waitlist and drafts an offer. Staff approves
+            the message before it sends.
+          </p>
+          <div className="space-y-3">
+            <label className="flex items-center justify-between py-2 cursor-pointer">
+              <span className="text-sm font-medium text-slate-700">Waitlist auto-match</span>
+              <button
+                type="button"
+                onClick={() => setWaitlistFillEnabled((v) => !v)}
+                className={cn(
+                  'relative w-9 h-5 rounded-full transition-colors',
+                  waitlistFillEnabled ? 'bg-sage-500' : 'bg-slate-200',
+                )}
+                role="switch"
+                aria-checked={waitlistFillEnabled}
+                data-testid="waitlist-fill-toggle"
+              >
+                <span
+                  className={cn(
+                    'absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform',
+                    waitlistFillEnabled ? 'translate-x-4' : 'translate-x-0',
+                  )}
+                />
+              </button>
+            </label>
+            <label className="flex items-center justify-between py-2 cursor-pointer">
+              <span className="text-sm font-medium text-slate-700">Cancellation fill</span>
+              <button
+                type="button"
+                onClick={() => setCancellationFillEnabled((v) => !v)}
+                className={cn(
+                  'relative w-9 h-5 rounded-full transition-colors',
+                  cancellationFillEnabled ? 'bg-sage-500' : 'bg-slate-200',
+                )}
+                role="switch"
+                aria-checked={cancellationFillEnabled}
+                data-testid="cancellation-fill-toggle"
+              >
+                <span
+                  className={cn(
+                    'absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform',
+                    cancellationFillEnabled ? 'translate-x-4' : 'translate-x-0',
+                  )}
+                />
+              </button>
+            </label>
+          </div>
+        </div>
+      )}
+
+      {/* Step 5: Confirm baseline (read-only — set by founder during concierge call) */}
+      {step === 4 && (
+        <div className="space-y-4">
+          <h2 className="text-xl font-serif font-bold text-slate-900">
+            Confirm your pre-pilot baseline
+          </h2>
+          <p className="text-sm text-slate-500">
+            Your baseline was captured during the concierge call. The dashboard uses it to compute
+            booking lift. To change it, contact your concierge.
+          </p>
+          <div
+            className="rounded-xl border border-slate-100 bg-slate-50 p-4 flex items-baseline justify-between"
+            data-testid="baseline-display"
+          >
+            <span className="text-sm text-slate-500">Monthly bookings (baseline)</span>
+            <span className="text-2xl font-serif text-slate-900">
+              {baselineLoading ? '…' : baseline === null ? 'Not set' : baseline}
+            </span>
+          </div>
+          {baseline === null && !baselineLoading && (
+            <p className="text-xs text-slate-400">
+              No baseline yet — your concierge will set this before go-live.
+            </p>
+          )}
         </div>
       )}
 
@@ -276,7 +365,8 @@ export function AISetupWizard({ onComplete }: Props) {
             <button
               type="button"
               onClick={() => setStep(step + 1)}
-              className="px-4 py-2 text-sm bg-lavender-600 text-white rounded-xl hover:bg-lavender-700 transition-colors"
+              disabled={step === 2 && !approvalConfirmed}
+              className="px-4 py-2 text-sm bg-lavender-600 text-white rounded-xl hover:bg-lavender-700 transition-colors disabled:opacity-50"
               data-testid="next-button"
             >
               Next

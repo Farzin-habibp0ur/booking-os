@@ -104,10 +104,15 @@ describe('mode-config', () => {
     });
   });
 
-  describe('admin aiAgents section', () => {
-    it('admin mode includes /ai in aiAgents section', () => {
+  describe('admin AI Front Desk in workspace', () => {
+    it('admin mode includes /ai in workspace section as a primary item', () => {
       const admin = getModeByKey('admin');
-      expect(admin.sections.aiAgents).toContain('/ai');
+      expect(admin.sections.workspace).toContain('/ai');
+    });
+
+    it('admin mode does NOT duplicate /ai into aiAgents section', () => {
+      const admin = getModeByKey('admin');
+      expect(admin.sections.aiAgents).not.toContain('/ai');
     });
   });
 
@@ -137,24 +142,29 @@ describe('mode-config', () => {
       }
     });
 
-    it('admin sections include expected paths', () => {
+    it('admin sections include expected paths (BCC v3 Phase 6 layout)', () => {
       const admin = modes.find((m) => m.key === 'admin');
+      // Primary workspace: Inbox, AI Front Desk, Calendar, Waitlist, Customers, Bookings
       expect(admin.sections.workspace).toContain('/inbox');
+      expect(admin.sections.workspace).toContain('/ai');
       expect(admin.sections.workspace).toContain('/calendar');
+      expect(admin.sections.workspace).toContain('/waitlist');
       expect(admin.sections.workspace).toContain('/customers');
       expect(admin.sections.workspace).toContain('/bookings');
-      expect(admin.sections.workspace).toContain('/waitlist');
+      // Tools (some overflow): services, staff, campaigns, marketing, invoices
       expect(admin.sections.tools).toContain('/services');
       expect(admin.sections.tools).toContain('/staff');
       expect(admin.sections.tools).toContain('/marketing');
+      expect(admin.sections.tools).toContain('/invoices');
+      // Insights (mostly overflow)
       expect(admin.sections.insights).toContain('/dashboard');
       expect(admin.sections.insights).toContain('/reports');
       expect(admin.sections.insights).toContain('/roi');
     });
 
-    it('admin aiAgents includes AI sub-routes only (no marketing routes)', () => {
+    it('admin aiAgents includes AI sub-routes only (no marketing routes, /ai promoted to workspace)', () => {
       const admin = modes.find((m) => m.key === 'admin');
-      expect(admin.sections.aiAgents).toContain('/ai');
+      expect(admin.sections.aiAgents).not.toContain('/ai');
       expect(admin.sections.aiAgents).toContain('/ai/actions');
       expect(admin.sections.aiAgents).toContain('/ai/agents');
       expect(admin.sections.aiAgents).toContain('/ai/performance');
@@ -213,41 +223,36 @@ describe('mode-config', () => {
     const admin = getModeByKey('admin', 'aesthetic');
     const split = splitSectionPaths(admin.sections);
 
-    it('workspace is fully primary (no overflow)', () => {
+    it('workspace is fully primary (no overflow) — Phase 6 order', () => {
       expect(split.workspace.primary).toEqual([
         '/inbox',
+        '/ai',
         '/calendar',
+        '/waitlist',
         '/customers',
         '/bookings',
-        '/waitlist',
       ]);
       expect(split.workspace.overflow).toEqual([]);
     });
 
-    it('primary tools = services, staff, invoices, marketing, campaigns', () => {
-      expect(split.tools.primary).toEqual([
-        '/services',
-        '/staff',
-        '/invoices',
-        '/marketing',
-        '/campaigns',
-      ]);
+    it('primary tools = services + staff', () => {
+      expect(split.tools.primary).toEqual(['/services', '/staff']);
     });
 
-    it('overflow tools is empty', () => {
-      expect(split.tools.overflow).toEqual([]);
+    it('overflow tools = campaigns, marketing, invoices', () => {
+      expect(split.tools.overflow).toEqual(['/campaigns', '/marketing', '/invoices']);
     });
 
-    it('primary insights = dashboard + reports', () => {
-      expect(split.insights.primary).toEqual(['/dashboard', '/reports']);
+    it('primary insights = dashboard only', () => {
+      expect(split.insights.primary).toEqual(['/dashboard']);
     });
 
-    it('overflow insights = monthly-review + roi', () => {
-      expect(split.insights.overflow).toEqual(['/reports/monthly-review', '/roi']);
+    it('overflow insights = reports + monthly-review + roi', () => {
+      expect(split.insights.overflow).toEqual(['/reports', '/reports/monthly-review', '/roi']);
     });
 
-    it('primary aiAgents = /ai only', () => {
-      expect(split.aiAgents.primary).toEqual(['/ai']);
+    it('primary aiAgents is empty (/ai promoted to workspace)', () => {
+      expect(split.aiAgents.primary).toEqual([]);
     });
 
     it('overflow aiAgents = agents, actions, automations, settings, performance', () => {
@@ -330,6 +335,7 @@ describe('mode-config', () => {
     it('admin sections include overflow field', () => {
       const admin = getModeDefinitions('aesthetic').find((m) => m.key === 'admin');
       expect(admin.sections.overflow).toBeDefined();
+      expect(admin.sections.overflow.tools).toBeDefined();
       expect(admin.sections.overflow.insights).toBeDefined();
       expect(admin.sections.overflow.aiAgents).toBeDefined();
     });
@@ -337,6 +343,9 @@ describe('mode-config', () => {
     it('all overflow paths exist in their parent section array', () => {
       const admin = getModeByKey('admin', 'aesthetic');
       const overflow = admin.sections.overflow;
+      for (const path of overflow.tools) {
+        expect(admin.sections.tools).toContain(path);
+      }
       for (const path of overflow.insights) {
         expect(admin.sections.insights).toContain(path);
       }

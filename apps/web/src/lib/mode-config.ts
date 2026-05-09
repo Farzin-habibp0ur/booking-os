@@ -45,21 +45,21 @@ function flattenSections(s: NavSections): { primary: string[]; secondary: string
 }
 
 function getAdminSections(): NavSections {
+  // Primary order per BCC-PIVOT-MASTER-PLAN.md v3 Phase 6:
+  //   Inbox, AI Front Desk (/ai), Calendar, Waitlist, Customers, Bookings
+  // Secondary/overflow:
+  //   Campaigns, Marketing, Invoices, Reports, Performance, Automations
+  // /campaigns lives in the tools section but is hidden by getNavItems()
+  // unless business.campaignsEnabled === true (default false during pilot).
   return {
-    workspace: ['/inbox', '/calendar', '/customers', '/bookings', '/waitlist'],
-    tools: ['/services', '/staff', '/invoices', '/marketing', '/campaigns'],
+    workspace: ['/inbox', '/ai', '/calendar', '/waitlist', '/customers', '/bookings'],
+    tools: ['/services', '/staff', '/campaigns', '/marketing', '/invoices'],
     insights: ['/dashboard', '/reports', '/reports/monthly-review', '/roi'],
-    aiAgents: [
-      '/ai',
-      '/ai/agents',
-      '/ai/actions',
-      '/ai/automations',
-      '/ai/settings',
-      '/ai/performance',
-    ],
+    aiAgents: ['/ai/agents', '/ai/actions', '/ai/automations', '/ai/settings', '/ai/performance'],
     overflow: {
-      insights: ['/reports/monthly-review', '/roi'],
-      aiAgents: ['/ai/actions', '/ai/agents', '/ai/automations', '/ai/settings', '/ai/performance'],
+      tools: ['/campaigns', '/marketing', '/invoices'],
+      insights: ['/reports', '/reports/monthly-review', '/roi'],
+      aiAgents: ['/ai/agents', '/ai/actions', '/ai/automations', '/ai/settings', '/ai/performance'],
     },
   };
 }
