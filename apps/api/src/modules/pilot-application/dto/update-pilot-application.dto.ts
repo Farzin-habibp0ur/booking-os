@@ -1,6 +1,12 @@
 import { IsIn, IsOptional, IsString, MaxLength } from 'class-validator';
 
-export const PILOT_APPLICATION_STATUSES = ['NEW', 'CONTACTED', 'ACCEPTED', 'REJECTED'] as const;
+export const PILOT_APPLICATION_STATUSES = [
+  'NEW',
+  'CONTACTED',
+  'ACCEPTED',
+  'REJECTED',
+  'WAITLIST_YEAR_2',
+] as const;
 
 export class UpdatePilotApplicationDto {
   @IsOptional()

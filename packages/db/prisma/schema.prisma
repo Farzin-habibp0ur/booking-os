@@ -1130,6 +1130,8 @@ model PilotApplication {
   // practiceType values: MED_SPA, DERMATOLOGY, PLASTIC_SURGERY, HAIR_RESTORATION,
   // IV_WELLNESS, COSMETIC_DENTISTRY, OTHER. Year-1 launch only accepts MED_SPA.
   practiceType         String?
+  // Set when admin runs Accept and Provision; references the new Business id
+  acceptedBusinessId   String?
   utmSource            String?
   utmMedium            String?
   utmCampaign          String?

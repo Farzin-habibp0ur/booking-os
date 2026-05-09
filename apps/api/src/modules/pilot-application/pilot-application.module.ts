@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { TokenService } from '../../common/token.service';
 import {
   AdminPilotApplicationController,
   PilotApplicationController,
@@ -6,7 +8,8 @@ import {
 import { PilotApplicationService } from './pilot-application.service';
 
 @Module({
+  imports: [ConfigModule],
   controllers: [PilotApplicationController, AdminPilotApplicationController],
-  providers: [PilotApplicationService],
+  providers: [PilotApplicationService, TokenService],
 })
 export class PilotApplicationModule {}

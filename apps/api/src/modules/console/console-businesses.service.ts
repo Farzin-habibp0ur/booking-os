@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma.service';
 
 interface BusinessListQuery {
@@ -10,6 +10,15 @@ interface BusinessListQuery {
   page?: number;
   pageSize?: number;
 }
+
+interface UpdateBaselineInput {
+  monthlyBookings?: number | null;
+  monthlyRevenue?: number | string | null;
+  capturedAt?: string | Date | null;
+  notes?: string | null;
+}
+
+const PILOT_WINDOW_DAYS = 30;
 
 @Injectable()
 export class ConsoleBusinessesService {
@@ -246,5 +255,268 @@ export class ConsoleBusinessesService {
     if (billingStatus === 'past_due') return 'yellow';
     if (lastActive < sevenDaysAgo) return 'yellow';
     return 'green';
+  }
+
+  /**
+   * Concierge-call baseline: pre-pilot monthly bookings + revenue captured by founder.
+   */
+  async getBaseline(businessId: string) {
+    const business = await this.prisma.business.findUnique({
+      where: { id: businessId },
+      select: {
+        id: true,
+        baselineMonthlyBookings: true,
+        baselineMonthlyRevenue: true,
+        baselineCapturedAt: true,
+        baselineSource: true,
+      },
+    });
+    if (!business) throw new NotFoundException('Business not found');
+
+    return {
+      monthlyBookings: business.baselineMonthlyBookings,
+      monthlyRevenue:
+        business.baselineMonthlyRevenue == null ? null : Number(business.baselineMonthlyRevenue),
+      capturedAt: business.baselineCapturedAt,
+      source: business.baselineSource,
+    };
+  }
+
+  async updateBaseline(businessId: string, input: UpdateBaselineInput) {
+    const business = await this.prisma.business.findUnique({
+      where: { id: businessId },
+      select: { id: true },
+    });
+    if (!business) throw new NotFoundException('Business not found');
+
+    const data: Record<string, unknown> = {
+      baselineSource: 'concierge_call',
+    };
+
+    if (input.monthlyBookings !== undefined) {
+      data.baselineMonthlyBookings =
+        input.monthlyBookings === null
+          ? null
+          : Math.max(0, Math.floor(Number(input.monthlyBookings))) || 0;
+    }
+
+    if (input.monthlyRevenue !== undefined) {
+      if (input.monthlyRevenue === null || input.monthlyRevenue === '') {
+        data.baselineMonthlyRevenue = null;
+      } else {
+        const value = Number(input.monthlyRevenue);
+        if (!Number.isFinite(value) || value < 0) {
+          throw new BadRequestException('monthlyRevenue must be a non-negative number');
+        }
+        data.baselineMonthlyRevenue = value;
+      }
+    }
+
+    if (input.capturedAt !== undefined) {
+      data.baselineCapturedAt =
+        input.capturedAt === null || input.capturedAt === ''
+          ? new Date()
+          : new Date(input.capturedAt);
+    } else {
+      data.baselineCapturedAt = new Date();
+    }
+
+    const updated = await this.prisma.business.update({
+      where: { id: businessId },
+      data,
+      select: {
+        baselineMonthlyBookings: true,
+        baselineMonthlyRevenue: true,
+        baselineCapturedAt: true,
+        baselineSource: true,
+      },
+    });
+
+    return {
+      monthlyBookings: updated.baselineMonthlyBookings,
+      monthlyRevenue:
+        updated.baselineMonthlyRevenue == null ? null : Number(updated.baselineMonthlyRevenue),
+      capturedAt: updated.baselineCapturedAt,
+      source: updated.baselineSource,
+    };
+  }
+
+  /**
+   * Pilot health snapshot for a single business. Bypasses TenantGuard (SUPER_ADMIN only).
+   * Pilot start = OWNER staff createdAt; window = next 30 days.
+   */
+  async getPilotHealth(businessId: string) {
+    const business = await this.prisma.business.findUnique({
+      where: { id: businessId },
+      select: {
+        id: true,
+        baselineMonthlyBookings: true,
+        baselineMonthlyRevenue: true,
+        baselineCapturedAt: true,
+      },
+    });
+    if (!business) throw new NotFoundException('Business not found');
+
+    const owner = await this.prisma.staff.findFirst({
+      where: { businessId, role: 'OWNER' },
+      orderBy: { createdAt: 'asc' },
+      select: { id: true, createdAt: true },
+    });
+
+    const pilotStart = owner?.createdAt || null;
+    const now = new Date();
+    const daysIntoPilot = pilotStart
+      ? Math.max(0, Math.floor((now.getTime() - pilotStart.getTime()) / (24 * 60 * 60 * 1000)))
+      : 0;
+    const windowStart = pilotStart || now;
+    const windowEnd = pilotStart
+      ? new Date(pilotStart.getTime() + PILOT_WINDOW_DAYS * 24 * 60 * 60 * 1000)
+      : now;
+    const windowEndCapped = windowEnd > now ? now : windowEnd;
+
+    const [
+      messagesHandled,
+      draftsApproved,
+      responseMessages,
+      capturedAttributions,
+      missedAttributions,
+    ] = await Promise.all([
+      this.prisma.message.count({
+        where: {
+          direction: 'INBOUND',
+          createdAt: { gte: windowStart, lte: windowEndCapped },
+          conversation: { businessId },
+        },
+      }),
+      this.prisma.outboundDraft.count({
+        where: {
+          businessId,
+          status: { in: ['APPROVED', 'SENT'] },
+          createdAt: { gte: windowStart, lte: windowEndCapped },
+        },
+      }),
+      this.prisma.message.findMany({
+        where: {
+          createdAt: { gte: windowStart, lte: windowEndCapped },
+          conversation: { businessId },
+        },
+        orderBy: { createdAt: 'asc' },
+        take: 3000,
+        select: {
+          conversationId: true,
+          direction: true,
+          createdAt: true,
+        },
+      }),
+      this.prisma.frontDeskAttribution.findMany({
+        where: {
+          businessId,
+          voidedAt: null,
+          wouldHaveBeenMissed: false,
+          createdAt: { gte: windowStart, lte: windowEndCapped },
+        },
+        select: { revenueAtBooking: true, estimatedValue: true },
+      }),
+      this.prisma.frontDeskAttribution.findMany({
+        where: {
+          businessId,
+          voidedAt: null,
+          wouldHaveBeenMissed: true,
+          createdAt: { gte: windowStart, lte: windowEndCapped },
+        },
+        select: { revenueAtBooking: true, estimatedValue: true },
+      }),
+    ]);
+
+    const captured = {
+      count: capturedAttributions.length,
+      revenue:
+        Math.round(
+          capturedAttributions.reduce(
+            (sum, row) => sum + Number(row.revenueAtBooking ?? row.estimatedValue ?? 0),
+            0,
+          ) * 100,
+        ) / 100,
+    };
+    const wouldHaveBeenMissed = {
+      count: missedAttributions.length,
+      revenue:
+        Math.round(
+          missedAttributions.reduce(
+            (sum, row) => sum + Number(row.revenueAtBooking ?? row.estimatedValue ?? 0),
+            0,
+          ) * 100,
+        ) / 100,
+    };
+
+    const baseline = {
+      monthlyBookings: business.baselineMonthlyBookings,
+      monthlyRevenue:
+        business.baselineMonthlyRevenue == null ? null : Number(business.baselineMonthlyRevenue),
+      capturedAt: business.baselineCapturedAt,
+    };
+
+    const totalBookings = captured.count + wouldHaveBeenMissed.count;
+    const messagesTarget = 10;
+    const baselineBookings = baseline.monthlyBookings;
+    const bookingsTarget = Math.max(5, baselineBookings ? Math.round(baselineBookings / 12) : 0);
+
+    return {
+      daysIntoPilot,
+      messagesHandled,
+      draftsApproved,
+      responseTimeMedianMinutes: this.medianFirstResponseMinutes(responseMessages),
+      captured,
+      wouldHaveBeenMissed,
+      baseline,
+      scorecard: {
+        messagesHandled: {
+          value: messagesHandled,
+          target: messagesTarget,
+          met: messagesHandled >= messagesTarget,
+        },
+        bookings: {
+          value: totalBookings,
+          target: bookingsTarget,
+          met: totalBookings >= bookingsTarget,
+        },
+        continuationLogged: false,
+      },
+    };
+  }
+
+  private medianFirstResponseMinutes(
+    messages: Array<{ conversationId: string; direction: string; createdAt: Date }>,
+  ): number | null {
+    const byConversation = new Map<string, { inbound?: Date; outbound?: Date }>();
+
+    for (const message of messages) {
+      const state = byConversation.get(message.conversationId) || {};
+      if (message.direction === 'INBOUND' && !state.inbound) {
+        state.inbound = message.createdAt;
+      }
+      if (
+        message.direction === 'OUTBOUND' &&
+        state.inbound &&
+        message.createdAt > state.inbound &&
+        !state.outbound
+      ) {
+        state.outbound = message.createdAt;
+      }
+      byConversation.set(message.conversationId, state);
+    }
+
+    const responseMinutes = Array.from(byConversation.values())
+      .filter((state) => state.inbound && state.outbound)
+      .map((state) => (state.outbound!.getTime() - state.inbound!.getTime()) / 60000)
+      .sort((a, b) => a - b);
+
+    if (responseMinutes.length === 0) return null;
+    const mid = Math.floor(responseMinutes.length / 2);
+    const median =
+      responseMinutes.length % 2 === 0
+        ? (responseMinutes[mid - 1] + responseMinutes[mid]) / 2
+        : responseMinutes[mid];
+    return Math.round(median * 10) / 10;
   }
 }

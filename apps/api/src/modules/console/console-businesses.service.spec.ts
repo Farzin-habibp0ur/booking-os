@@ -263,4 +263,130 @@ describe('ConsoleBusinessesService', () => {
       expect(service.computeHealth(sixtyDaysAgo, 'active')).toBe('red');
     });
   });
+
+  describe('getBaseline', () => {
+    it('returns baseline values from the business row', async () => {
+      prisma.business.findUnique.mockResolvedValue({
+        id: 'biz1',
+        baselineMonthlyBookings: 80,
+        baselineMonthlyRevenue: 24500,
+        baselineCapturedAt: new Date('2026-05-01T00:00:00Z'),
+        baselineSource: 'concierge_call',
+      } as any);
+
+      const result = await service.getBaseline('biz1');
+      expect(result.monthlyBookings).toBe(80);
+      expect(result.monthlyRevenue).toBe(24500);
+      expect(result.source).toBe('concierge_call');
+    });
+
+    it('throws NotFoundException when business is missing', async () => {
+      prisma.business.findUnique.mockResolvedValue(null);
+      await expect(service.getBaseline('missing')).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('updateBaseline', () => {
+    it('persists numeric inputs and stamps source as concierge_call', async () => {
+      prisma.business.findUnique.mockResolvedValue({ id: 'biz1' } as any);
+      prisma.business.update.mockResolvedValue({
+        baselineMonthlyBookings: 90,
+        baselineMonthlyRevenue: 27000,
+        baselineCapturedAt: new Date('2026-05-08T00:00:00Z'),
+        baselineSource: 'concierge_call',
+      } as any);
+
+      const result = await service.updateBaseline('biz1', {
+        monthlyBookings: 90,
+        monthlyRevenue: 27000,
+        capturedAt: '2026-05-08T00:00:00Z',
+      });
+
+      expect(prisma.business.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'biz1' },
+          data: expect.objectContaining({
+            baselineMonthlyBookings: 90,
+            baselineMonthlyRevenue: 27000,
+            baselineSource: 'concierge_call',
+            baselineCapturedAt: expect.any(Date),
+          }),
+        }),
+      );
+      expect(result.monthlyBookings).toBe(90);
+      expect(result.monthlyRevenue).toBe(27000);
+    });
+
+    it('throws BadRequestException for negative revenue', async () => {
+      prisma.business.findUnique.mockResolvedValue({ id: 'biz1' } as any);
+      await expect(service.updateBaseline('biz1', { monthlyRevenue: -10 })).rejects.toThrow();
+    });
+  });
+
+  describe('getPilotHealth', () => {
+    it('computes scorecard, day count, and revenue rollups', async () => {
+      const now = new Date();
+      const ownerCreated = new Date(now.getTime() - 12 * 24 * 60 * 60 * 1000);
+
+      prisma.business.findUnique.mockResolvedValue({
+        id: 'biz1',
+        baselineMonthlyBookings: 60,
+        baselineMonthlyRevenue: 18000,
+        baselineCapturedAt: new Date(),
+      } as any);
+      prisma.staff.findFirst.mockResolvedValue({
+        id: 'staff1',
+        createdAt: ownerCreated,
+      } as any);
+      prisma.message.count.mockResolvedValue(20);
+      prisma.outboundDraft.count.mockResolvedValue(8);
+      prisma.message.findMany.mockResolvedValue([
+        { conversationId: 'c1', direction: 'INBOUND', createdAt: new Date(now.getTime() - 1000) },
+        { conversationId: 'c1', direction: 'OUTBOUND', createdAt: new Date(now.getTime() - 500) },
+      ] as any);
+      prisma.frontDeskAttribution.findMany
+        .mockResolvedValueOnce([
+          { revenueAtBooking: 500, estimatedValue: null },
+          { revenueAtBooking: 1500, estimatedValue: null },
+        ] as any)
+        .mockResolvedValueOnce([{ revenueAtBooking: null, estimatedValue: 1000 }] as any);
+
+      const result = await service.getPilotHealth('biz1');
+
+      expect(result.daysIntoPilot).toBe(12);
+      expect(result.messagesHandled).toBe(20);
+      expect(result.draftsApproved).toBe(8);
+      expect(result.captured).toEqual({ count: 2, revenue: 2000 });
+      expect(result.wouldHaveBeenMissed).toEqual({ count: 1, revenue: 1000 });
+      expect(result.scorecard.messagesHandled).toEqual({ value: 20, target: 10, met: true });
+      // baseline 60 / 12 = 5; max(5, 5) = 5; total bookings = 3 (captured 2 + missed 1) -> not met
+      expect(result.scorecard.bookings.target).toBe(5);
+      expect(result.scorecard.bookings.value).toBe(3);
+      expect(result.scorecard.bookings.met).toBe(false);
+      expect(result.scorecard.continuationLogged).toBe(false);
+    });
+
+    it('uses now as start when no OWNER staff exists', async () => {
+      prisma.business.findUnique.mockResolvedValue({
+        id: 'biz1',
+        baselineMonthlyBookings: null,
+        baselineMonthlyRevenue: null,
+        baselineCapturedAt: null,
+      } as any);
+      prisma.staff.findFirst.mockResolvedValue(null);
+      prisma.message.count.mockResolvedValue(0);
+      prisma.outboundDraft.count.mockResolvedValue(0);
+      prisma.message.findMany.mockResolvedValue([]);
+      prisma.frontDeskAttribution.findMany.mockResolvedValue([]);
+
+      const result = await service.getPilotHealth('biz1');
+      expect(result.daysIntoPilot).toBe(0);
+      expect(result.scorecard.bookings.target).toBe(5);
+    });
+
+    it('throws NotFoundException when business is missing', async () => {
+      prisma.business.findUnique.mockResolvedValue(null);
+      await expect(service.getPilotHealth('missing')).rejects.toThrow(NotFoundException);
+    });
+  });
 });
