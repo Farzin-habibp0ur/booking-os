@@ -45,6 +45,10 @@ describe('middleware', () => {
       '/blog',
       '/blog/some-post',
       '/faq',
+      '/pilot',
+      '/privacy',
+      '/terms',
+      '/security',
     ];
 
     it.each(publicPaths)('allows %s without auth', (path) => {
