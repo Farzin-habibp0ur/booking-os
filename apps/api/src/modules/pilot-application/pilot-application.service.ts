@@ -43,6 +43,7 @@ export class PilotApplicationService {
         monthlyLeadVolume: dto.monthlyLeadVolume || null,
         currentChannels: dto.currentChannels || [],
         biggestFrontDeskPain: dto.biggestFrontDeskPain.trim(),
+        practiceType: dto.practiceType,
         consent: dto.consent,
         utmSource: dto.utmSource?.trim() || null,
         utmMedium: dto.utmMedium?.trim() || null,

@@ -18,6 +18,16 @@ const CHANNEL_OPTIONS = [
   { value: 'OTHER', label: 'Other' },
 ];
 
+const PRACTICE_TYPE_OPTIONS = [
+  { value: 'MED_SPA', label: 'Medical spa' },
+  { value: 'DERMATOLOGY', label: 'Dermatology' },
+  { value: 'PLASTIC_SURGERY', label: 'Plastic surgery' },
+  { value: 'HAIR_RESTORATION', label: 'Hair restoration' },
+  { value: 'IV_WELLNESS', label: 'IV / wellness' },
+  { value: 'COSMETIC_DENTISTRY', label: 'Cosmetic dentistry' },
+  { value: 'OTHER', label: 'Other' },
+];
+
 const LEAD_VOLUME_OPTIONS = [
   { value: 'UNDER_50', label: 'Under 50/month' },
   { value: '50_150', label: '50-150/month' },
@@ -36,6 +46,7 @@ type FormState = {
   monthlyLeadVolume: string;
   currentChannels: string[];
   biggestFrontDeskPain: string;
+  practiceType: string;
   consent: boolean;
   company: string;
 };
@@ -50,6 +61,7 @@ const initialState: FormState = {
   monthlyLeadVolume: '',
   currentChannels: [],
   biggestFrontDeskPain: '',
+  practiceType: '',
   consent: false,
   company: '',
 };
@@ -133,151 +145,188 @@ export default function PilotApplicationForm() {
   }
 
   return (
-    <form onSubmit={submit} className="rounded-2xl bg-white p-6 shadow-soft sm:p-8">
-      {error && <div className="mb-5 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</div>}
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Clinic name">
-          <input
-            value={form.clinicName}
-            onChange={(e) => update('clinicName', e.target.value)}
-            required
-            minLength={2}
-            maxLength={120}
-            className={INPUT_CLASS}
-          />
-        </Field>
-        <Field label="Owner/contact name">
-          <input
-            value={form.contactName}
-            onChange={(e) => update('contactName', e.target.value)}
-            required
-            minLength={2}
-            maxLength={120}
-            className={INPUT_CLASS}
-          />
-        </Field>
-        <Field label="Email">
-          <input
-            type="email"
-            value={form.email}
-            onChange={(e) => update('email', e.target.value)}
-            required
-            maxLength={160}
-            className={INPUT_CLASS}
-          />
-        </Field>
-        <Field label="Phone">
-          <input
-            value={form.phone}
-            onChange={(e) => update('phone', e.target.value)}
-            maxLength={40}
-            className={INPUT_CLASS}
-          />
-        </Field>
-        <Field label="Website or Instagram">
-          <input
-            value={form.websiteOrInstagram}
-            onChange={(e) => update('websiteOrInstagram', e.target.value)}
-            maxLength={240}
-            placeholder="@clinic or https://..."
-            className={INPUT_CLASS}
-          />
-        </Field>
-        <Field label="Country / timezone">
-          <input
-            value={form.countryTimezone}
-            onChange={(e) => update('countryTimezone', e.target.value)}
-            maxLength={120}
-            placeholder="Canada / Pacific"
-            className={INPUT_CLASS}
-          />
-        </Field>
+    <div>
+      <div className="mb-5 rounded-2xl border border-lavender-100 bg-lavender-50 p-4 text-sm leading-relaxed text-lavender-900">
+        We&apos;re currently piloting with medical spas only. Other practice types are welcome to
+        apply for Year 2 access — we&apos;ll add you to the waitlist.
       </div>
 
-      <Field label="Monthly lead volume" className="mt-4">
-        <select
-          value={form.monthlyLeadVolume}
-          onChange={(e) => update('monthlyLeadVolume', e.target.value)}
-          className={INPUT_CLASS}
-        >
-          <option value="">Select a range</option>
-          {LEAD_VOLUME_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </Field>
+      <form onSubmit={submit} className="rounded-2xl bg-white p-6 shadow-soft sm:p-8">
+        {error && <div className="mb-5 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</div>}
 
-      <fieldset className="mt-5">
-        <legend className="mb-2 text-sm font-medium text-slate-700">Current channels</legend>
-        <div className="flex flex-wrap gap-2">
-          {CHANNEL_OPTIONS.map((option) => {
-            const selected = form.currentChannels.includes(option.value);
-            return (
-              <button
-                key={option.value}
-                type="button"
-                onClick={() => toggleChannel(option.value)}
-                className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
-                  selected
-                    ? 'bg-sage-600 text-white'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-              >
-                {option.label}
-              </button>
-            );
-          })}
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Clinic name">
+            <input
+              value={form.clinicName}
+              onChange={(e) => update('clinicName', e.target.value)}
+              required
+              minLength={2}
+              maxLength={120}
+              className={INPUT_CLASS}
+            />
+          </Field>
+          <Field label="Owner/contact name">
+            <input
+              value={form.contactName}
+              onChange={(e) => update('contactName', e.target.value)}
+              required
+              minLength={2}
+              maxLength={120}
+              className={INPUT_CLASS}
+            />
+          </Field>
+          <Field label="Email">
+            <input
+              type="email"
+              value={form.email}
+              onChange={(e) => update('email', e.target.value)}
+              required
+              maxLength={160}
+              className={INPUT_CLASS}
+            />
+          </Field>
+          <Field label="Phone">
+            <input
+              value={form.phone}
+              onChange={(e) => update('phone', e.target.value)}
+              maxLength={40}
+              className={INPUT_CLASS}
+            />
+          </Field>
+          <Field label="Website or Instagram">
+            <input
+              value={form.websiteOrInstagram}
+              onChange={(e) => update('websiteOrInstagram', e.target.value)}
+              maxLength={240}
+              placeholder="@clinic or https://..."
+              className={INPUT_CLASS}
+            />
+          </Field>
+          <Field label="Country / timezone">
+            <input
+              value={form.countryTimezone}
+              onChange={(e) => update('countryTimezone', e.target.value)}
+              maxLength={120}
+              placeholder="Canada / Pacific"
+              className={INPUT_CLASS}
+            />
+          </Field>
         </div>
-      </fieldset>
 
-      <Field label="Biggest front desk pain" className="mt-5">
-        <textarea
-          value={form.biggestFrontDeskPain}
-          onChange={(e) => update('biggestFrontDeskPain', e.target.value)}
-          required
-          minLength={10}
-          maxLength={1000}
-          rows={5}
-          placeholder="Example: Instagram leads get missed after hours, consult quotes need manual follow-up, and cancelled slots are hard to refill."
-          className={`${INPUT_CLASS} resize-none`}
-        />
-      </Field>
+        <Field label="Monthly lead volume" className="mt-4">
+          <select
+            value={form.monthlyLeadVolume}
+            onChange={(e) => update('monthlyLeadVolume', e.target.value)}
+            className={INPUT_CLASS}
+          >
+            <option value="">Select a range</option>
+            {LEAD_VOLUME_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </Field>
 
-      <input
-        tabIndex={-1}
-        autoComplete="off"
-        value={form.company}
-        onChange={(e) => update('company', e.target.value)}
-        className="hidden"
-        aria-hidden="true"
-      />
+        <fieldset className="mt-5">
+          <legend className="mb-2 text-sm font-medium text-slate-700">Current channels</legend>
+          <div className="flex flex-wrap gap-2">
+            {CHANNEL_OPTIONS.map((option) => {
+              const selected = form.currentChannels.includes(option.value);
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => toggleChannel(option.value)}
+                  className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+                    selected
+                      ? 'bg-sage-600 text-white'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  {option.label}
+                </button>
+              );
+            })}
+          </div>
+        </fieldset>
 
-      <label className="mt-5 flex items-start gap-3 text-sm text-slate-600">
+        <fieldset className="mt-5">
+          <legend className="mb-2 text-sm font-medium text-slate-700">Practice type</legend>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {PRACTICE_TYPE_OPTIONS.map((option) => {
+              const selected = form.practiceType === option.value;
+              return (
+                <label
+                  key={option.value}
+                  className={`flex cursor-pointer items-center gap-3 rounded-xl border px-3 py-2.5 text-sm font-medium transition-colors ${
+                    selected
+                      ? 'border-sage-500 bg-sage-50 text-sage-900'
+                      : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="practiceType"
+                    value={option.value}
+                    checked={selected}
+                    onChange={() => update('practiceType', option.value)}
+                    required
+                    className="h-4 w-4 border-slate-300 text-sage-600 focus:ring-sage-500"
+                  />
+                  <span>{option.label}</span>
+                </label>
+              );
+            })}
+          </div>
+        </fieldset>
+
+        <Field label="Biggest front desk pain" className="mt-5">
+          <textarea
+            value={form.biggestFrontDeskPain}
+            onChange={(e) => update('biggestFrontDeskPain', e.target.value)}
+            required
+            minLength={10}
+            maxLength={1000}
+            rows={5}
+            placeholder="Example: Instagram leads get missed after hours, consult quotes need manual follow-up, and cancelled slots are hard to refill."
+            className={`${INPUT_CLASS} resize-none`}
+          />
+        </Field>
+
         <input
-          type="checkbox"
-          checked={form.consent}
-          onChange={(e) => update('consent', e.target.checked)}
-          required
-          className="mt-1 h-4 w-4 rounded border-slate-300 text-sage-600 focus:ring-sage-500"
+          tabIndex={-1}
+          autoComplete="off"
+          value={form.company}
+          onChange={(e) => update('company', e.target.value)}
+          className="hidden"
+          aria-hidden="true"
         />
-        <span>
-          I agree to be contacted about the Business Command Centre pilot and understand this is not
-          medical software or clinical decision support.
-        </span>
-      </label>
 
-      <button
-        type="submit"
-        disabled={submitting}
-        className="btn-press mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-sage-600 px-5 py-3 text-sm font-semibold text-white shadow-md transition-colors hover:bg-sage-700 disabled:opacity-60"
-      >
-        {submitting ? 'Submitting...' : 'Submit application'}
-        <Send className="h-4 w-4" />
-      </button>
-    </form>
+        <label className="mt-5 flex items-start gap-3 text-sm text-slate-600">
+          <input
+            type="checkbox"
+            checked={form.consent}
+            onChange={(e) => update('consent', e.target.checked)}
+            required
+            className="mt-1 h-4 w-4 rounded border-slate-300 text-sage-600 focus:ring-sage-500"
+          />
+          <span>
+            I agree to be contacted about the Business Command Centre pilot and understand this is
+            not medical software or clinical decision support.
+          </span>
+        </label>
+
+        <button
+          type="submit"
+          disabled={submitting}
+          className="btn-press mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-sage-600 px-5 py-3 text-sm font-semibold text-white shadow-md transition-colors hover:bg-sage-700 disabled:opacity-60"
+        >
+          {submitting ? 'Submitting...' : 'Submit application'}
+          <Send className="h-4 w-4" />
+        </button>
+      </form>
+    </div>
   );
 }
 

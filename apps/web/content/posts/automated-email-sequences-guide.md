@@ -54,3 +54,7 @@ Track three metrics for each sequence: open rate, click-through rate, and the do
 ## Getting Started
 
 You don't need all five sequences on day one. Start with the welcome series — it delivers immediate value and teaches you how your audience responds to automated emails. Add the others one at a time, measuring results as you go.
+
+---
+
+If you run a medical spa and want consult follow-ups, no-show prevention, and re-engagement drafted for staff approval, [Apply for Pilot](/pilot) of the Business Command Centre AI Front Desk.

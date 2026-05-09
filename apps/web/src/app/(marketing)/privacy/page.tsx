@@ -18,10 +18,20 @@ export default function PrivacyPage() {
 
         <div className="mt-8 space-y-6 text-sm leading-relaxed text-slate-600">
           <p>
-            Business Command Centre helps aesthetic clinics manage front desk communication and
+            Business Command Centre helps medical spas manage front desk communication and
             appointment workflows. We collect the information needed to provide, secure, support,
             and improve the service.
           </p>
+
+          <section>
+            <h2 className="text-base font-semibold text-slate-900">Non-clinical infrastructure</h2>
+            <p className="mt-2">
+              Business Command Centre is non-clinical infrastructure. Your PMS, EMR, or
+              practice-management system remains the system of record for any patient health
+              information. We do not market HIPAA, BAA, PHIPA, or other regulated clinical
+              compliance frameworks for the pilot.
+            </p>
+          </section>
 
           <section>
             <h2 className="text-base font-semibold text-slate-900">Information we process</h2>

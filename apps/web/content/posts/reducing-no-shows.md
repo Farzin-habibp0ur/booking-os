@@ -34,3 +34,7 @@ Within three months, the clinic saw its no-show rate drop from 25% to under 10%.
 ## Key Takeaway
 
 The most effective no-show reduction strategies combine prevention (reminders and deposits) with recovery (waitlist automation). Technology handles the repetitive work, freeing your team to focus on delivering exceptional patient experiences.
+
+---
+
+Want this in your med spa? Business Command Centre is the AI Front Desk that fills cancellations from your waitlist, drafts deposit reminders for staff approval, and proves recovered revenue. [Apply for Pilot](/pilot).

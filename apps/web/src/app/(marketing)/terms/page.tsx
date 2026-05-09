@@ -45,8 +45,10 @@ export default function TermsPage() {
           <section>
             <h2 className="text-base font-semibold text-slate-900">Not medical software</h2>
             <p className="mt-2">
-              Business Command Centre is not an EMR, diagnosis tool, treatment recommendation
-              system, medical record system, or regulated clinical decision-support product.
+              Business Command Centre is non-clinical infrastructure. It is not an EMR, diagnosis
+              tool, treatment recommendation system, medical record system, or regulated clinical
+              decision-support product. Your PMS remains the system of record for any patient health
+              information.
             </p>
           </section>
 

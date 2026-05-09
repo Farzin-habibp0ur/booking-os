@@ -70,6 +70,7 @@ describe('PilotApplicationService', () => {
     monthlyLeadVolume: '50_150',
     currentChannels: ['INSTAGRAM', 'WHATSAPP'],
     biggestFrontDeskPain: 'Instagram leads are missed after hours.',
+    practiceType: 'MED_SPA',
     consent: true,
     startedAt: new Date(Date.now() - 5000).toISOString(),
   };
@@ -92,6 +93,7 @@ describe('PilotApplicationService', () => {
         clinicName: 'Glow Clinic',
         email: 'sarah@example.com',
         currentChannels: ['INSTAGRAM', 'WHATSAPP'],
+        practiceType: 'MED_SPA',
         referrer: 'https://example.com',
         userAgent: 'UnitTest',
       }),

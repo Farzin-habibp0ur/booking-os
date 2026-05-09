@@ -44,3 +44,7 @@ Suggesting available slots during off-peak hours can also help fill your schedul
 After booking, immediately confirm via the client's preferred channel — email, SMS, or WhatsApp. Include the appointment details, any preparation instructions, and a clear way to reschedule if needed.
 
 A well-designed post-booking experience reduces no-shows and sets the tone for the entire client relationship.
+
+---
+
+For medical spas: Business Command Centre captures Instagram, WhatsApp, and website inquiries that booking pages miss, drafts replies for staff approval, and reports recovered revenue. [Apply for Pilot](/pilot).

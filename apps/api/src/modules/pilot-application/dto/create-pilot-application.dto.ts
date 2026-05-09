@@ -13,6 +13,15 @@ import {
 
 const CHANNELS = ['INSTAGRAM', 'WHATSAPP', 'WEB_CHAT', 'SMS', 'EMAIL', 'FACEBOOK', 'OTHER'];
 const LEAD_VOLUME = ['UNDER_50', '50_150', '150_500', '500_PLUS', 'UNKNOWN'];
+const PRACTICE_TYPES = [
+  'MED_SPA',
+  'DERMATOLOGY',
+  'PLASTIC_SURGERY',
+  'HAIR_RESTORATION',
+  'IV_WELLNESS',
+  'COSMETIC_DENTISTRY',
+  'OTHER',
+];
 
 export class CreatePilotApplicationDto {
   @IsString()
@@ -58,6 +67,9 @@ export class CreatePilotApplicationDto {
   @MinLength(10)
   @MaxLength(1000)
   biggestFrontDeskPain!: string;
+
+  @IsIn(PRACTICE_TYPES)
+  practiceType!: string;
 
   @IsBoolean()
   consent!: boolean;
