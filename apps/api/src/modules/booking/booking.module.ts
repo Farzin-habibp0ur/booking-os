@@ -10,6 +10,7 @@ import { WaitlistModule } from '../waitlist/waitlist.module';
 import { InvoiceModule } from '../invoice/invoice.module';
 import { TreatmentPlanModule } from '../treatment-plan/treatment-plan.module';
 import { ReferralModule } from '../referral/referral.module';
+import { FrontDeskModule } from '../front-desk/front-desk.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { ReferralModule } from '../referral/referral.module';
     InvoiceModule,
     TreatmentPlanModule,
     ReferralModule,
+    FrontDeskModule,
   ],
   controllers: [RecurringController, BookingController],
   providers: [BookingService, RecurringService],

@@ -19,6 +19,7 @@ import { ActionHistoryService } from '../action-history/action-history.service';
 import { InvoiceService } from '../invoice/invoice.service';
 import { TreatmentPlanService } from '../treatment-plan/treatment-plan.service';
 import { ReferralService } from '../referral/referral.service';
+import { FrontDeskAttributionService } from '../front-desk/front-desk-attribution.service';
 
 @Injectable()
 export class BookingService {
@@ -42,6 +43,8 @@ export class BookingService {
     private treatmentPlanService?: TreatmentPlanService,
     @Optional()
     private referralService?: ReferralService,
+    @Optional()
+    private frontDeskAttributionService?: FrontDeskAttributionService,
   ) {}
 
   private static readonly VALID_SORT_FIELDS = [
@@ -300,7 +303,7 @@ export class BookingService {
         }
       }
 
-      return tx.booking.create({
+      const createdBooking = await tx.booking.create({
         data: {
           businessId,
           customerId: data.customerId,
@@ -319,6 +322,23 @@ export class BookingService {
         },
         include: { customer: true, service: true, staff: true },
       });
+
+      // Phase 4 (BCC v3): write the v3 attribution row inside the same
+      // transaction so the dashboard sees a row for every captured booking.
+      // The booking is the source of truth — log and continue on any failure.
+      if (this.frontDeskAttributionService) {
+        try {
+          await this.frontDeskAttributionService.createForBooking(tx, createdBooking, {
+            conversationId: data.conversationId,
+          });
+        } catch (err) {
+          this.logger.warn(
+            `Front desk attribution failed for booking ${createdBooking.id}: ${(err as Error).message}`,
+          );
+        }
+      }
+
+      return createdBooking;
     });
 
     // Post-creation side effects — must not fail the booking response
@@ -680,6 +700,20 @@ export class BookingService {
         data: updateData,
         include: { customer: true, service: true, staff: true },
       });
+
+      // Phase 4 (BCC v3): void the attribution row on terminal-failure
+      // transitions so the dashboard does not credit BCC for bookings that did
+      // not happen. CANCELLED / NO_SHOW are terminal in `validTransitions`, so
+      // un-voiding is not needed.
+      if (this.frontDeskAttributionService && (status === 'CANCELLED' || status === 'NO_SHOW')) {
+        try {
+          await this.frontDeskAttributionService.voidForBooking(tx, id);
+        } catch (err) {
+          this.logger.warn(
+            `Failed to void attribution for booking ${id}: ${(err as Error).message}`,
+          );
+        }
+      }
 
       return { booking: updatedBooking, previousStatus: currentBooking?.status };
     });
