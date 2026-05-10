@@ -1,9 +1,9 @@
 ---
-name: bookingos-brand
-description: "Applies BookingOS brand styling (Sage/Lavender palette, Inter/Playfair Display typography, rounded-2xl components) to any visual output. Use whenever creating styled documents, presentations, PDFs, UI mockups, charts, or any artifact that should match BookingOS's design system. Also trigger when the user mentions brand colors, styling, design guidelines, visual formatting, or wants something to 'look like BookingOS'. This skill should be used alongside docx, pptx, pdf, and canvas-design skills to ensure correct branding."
+name: bcc-brand
+description: "Applies Business Command Centre (BCC) brand styling (Sage/Lavender palette, Inter/Playfair Display typography, rounded-2xl components) to any visual output. Use whenever creating styled documents, presentations, PDFs, UI mockups, charts, or any artifact that should match Business Command Centre's design system. Also trigger when the user mentions brand colors, styling, design guidelines, visual formatting, or wants something to 'look like Business Command Centre' or 'look like BCC'. This skill should be used alongside docx, pptx, pdf, and canvas-design skills to ensure correct branding."
 ---
 
-# BookingOS Brand Guidelines
+# Business Command Centre Brand Guidelines
 
 ## Typography
 - **Display / Headers:** Playfair Display (Google Fonts) — use for page titles, large metrics, high-impact headers

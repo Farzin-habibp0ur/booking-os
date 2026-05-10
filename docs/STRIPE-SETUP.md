@@ -1,5 +1,7 @@
 # Stripe Configuration Guide
 
+> **Internal-only configuration.** Public CTA is /pilot. Subscription tiers exist for billing post-pilot graduation only — do not link to Stripe Checkout from the marketing site.
+
 This document describes exactly how to configure Stripe for Business Command Centre billing. The billing code is fully implemented — this guide covers the Stripe dashboard setup and environment variables needed to activate it.
 
 ---

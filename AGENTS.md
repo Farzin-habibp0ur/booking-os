@@ -9,7 +9,7 @@ Business Command Centre is a **multi-tenant SaaS platform** positioned publicly 
 - **Live production:** https://businesscommandcentre.com
 - **API:** https://api.businesscommandcentre.com/api/v1
 - **Verticals:** Aesthetic (primary), General (fallback)
-- **Target users:** Small to mid-size service businesses (1-20 staff) — owners, receptionists, service providers, and their end customers
+- **Target users:** Owner-operated US/Canada med spas (1–10 locations, $800K–$2.5M revenue, public Instagram presence) — owners, receptionists, service providers, and their end customers
 
 ### Demo Credentials
 

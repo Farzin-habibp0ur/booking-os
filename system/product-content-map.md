@@ -1,4 +1,4 @@
-# BookingOS Feature → Content Map
+# Business Command Centre Feature → Content Map
 
 > Last updated: 2026-03-12
 > Purpose: Living map between product features and content opportunities. Required reference for Blog Writer, Social Content Creator, and Video Producer agents.

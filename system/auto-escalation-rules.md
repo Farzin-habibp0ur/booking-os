@@ -15,7 +15,7 @@ Content is automatically promoted to a higher tier when it matches these pattern
 | Trigger                                        | Example                                                | Reason                                 |
 | ---------------------------------------------- | ------------------------------------------------------ | -------------------------------------- |
 | Mentions specific dollar amounts               | "$49/mo", "save $500/year"                             | Pricing claims need human verification |
-| Contains customer testimonials or quotes       | "Sarah said BookingOS saved her 10 hours/week"         | Quote accuracy must be verified        |
+| Contains customer testimonials or quotes       | "Sarah said Business Command Centre saved her 10 hours/week"         | Quote accuracy must be verified        |
 | References specific statistics or percentages  | "60% reduction in no-shows"                            | Data claims need source verification   |
 | Spanish content with cultural references       | Idioms, holidays, regional customs                     | Cultural appropriateness review        |
 | Contains time-sensitive offers or deadlines    | "Limited time", "Offer ends March 31"                  | Promotion terms need approval          |
@@ -25,7 +25,7 @@ Content is automatically promoted to a higher tier when it matches these pattern
 
 | Trigger                                     | Example                                            | Reason                                 |
 | ------------------------------------------- | -------------------------------------------------- | -------------------------------------- |
-| Compares BookingOS to competitors by name   | "BookingOS vs Calendly", "Unlike Fresha..."        | Legal risk — claims must be defensible |
+| Compares Business Command Centre to competitors by name   | "Business Command Centre vs Calendly", "Unlike Fresha..."        | Legal risk — claims must be defensible |
 | Contains health or medical claims           | "Improve patient outcomes", "HIPAA compliant"      | Regulatory risk                        |
 | Uses legal language                         | "Terms of service", "Privacy policy", "Compliance" | Legal accuracy required                |
 | Makes guarantees or promises                | "Guaranteed results", "100% uptime"                | Liability risk                         |

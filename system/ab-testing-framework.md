@@ -103,7 +103,7 @@ State what you expect before starting. Format:
 | Test ID | Element          | Hypothesis                                                                                       | Priority |
 | ------- | ---------------- | ------------------------------------------------------------------------------------------------ | -------- |
 | T001    | Video hook style | Question hooks ("Did you know...?") get 20% more completions than statement hooks on TikTok      | High     |
-| T002    | CTA variations   | Specific CTAs ("Start free trial") convert 25% better than soft CTAs ("Learn more") on Instagram | High     |
+| T002    | CTA variations   | Specific CTAs ("Apply for Pilot") convert 25% better than soft CTAs ("Learn more") on Instagram  | High     |
 | T003    | Posting times    | 9 AM posts get 15% more engagement than 5 PM posts on LinkedIn                                   | Medium   |
 
 ---
